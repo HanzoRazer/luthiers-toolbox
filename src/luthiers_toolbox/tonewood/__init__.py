@@ -6,7 +6,7 @@ tools for analyzing acoustic characteristics of different wood species.
 """
 
 from .database import TonewoodDatabase, Wood
-from .properties import WoodProperties, AcousticProperties
+from .properties import WoodProperties, AcousticProperties, TonalProfile
 from .analyzer import TonewoodAnalyzer
 
 __all__ = [
@@ -14,5 +14,6 @@ __all__ = [
     "Wood",
     "WoodProperties",
     "AcousticProperties",
+    "TonalProfile",
     "TonewoodAnalyzer",
 ]
