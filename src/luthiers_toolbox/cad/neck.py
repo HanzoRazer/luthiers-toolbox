@@ -61,7 +61,8 @@ class GuitarNeck:
         if fret_number < 1 or fret_number > self.frets:
             raise ValueError(f"Fret number must be between 1 and {self.frets}")
 
-        # Using the Rule of 18 (more precisely, the 17.817 constant)
+        # Using equal temperament formula: 2^(n/12) for semitone spacing
+        # Mathematically equivalent to dividing by 17.817 (Rule of 18)
         return self.scale_length - (self.scale_length / (2 ** (fret_number / 12)))
 
     def get_neck_width_at_fret(self, fret_number: int) -> float:

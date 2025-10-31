@@ -52,7 +52,8 @@ class Fretboard:
         """
         positions = []
         for i in range(1, self.frets + 1):
-            # Using the precise constant 17.817 for equal temperament
+            # Using equal temperament formula: position = scale_length - (scale_length / 2^(n/12))
+            # This is mathematically equivalent to the Rule of 18 (dividing by 17.817)
             position = self.scale_length - (self.scale_length / (2 ** (i / 12)))
             positions.append(position)
         return positions
