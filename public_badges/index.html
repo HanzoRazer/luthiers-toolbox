@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CAM Post Size — Smoke Badges</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#111823; --muted:#94a3b8; --text:#e5e7eb;
+    --chip-green:#16a34a; --chip-orange:#f59e0b; --chip-yellow:#eab308; --chip-red:#ef4444;
+    --bar-bg:#1f2937; --bar-pos:#22c55e; --bar-neg:#ef4444; --border:#263143; --link:#60a5fa;
+  }
+  html, body { background:var(--bg); color:var(--text); font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
+  .wrap { max-width: 1050px; margin: 32px auto; padding: 0 16px; }
+  .card { background: var(--panel); border:1px solid var(--border); border-radius: 14px; padding:18px; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+  h1 { font-size: 20px; margin:0 0 8px; }
+  .muted { color: var(--muted); }
+  .status { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .pill { padding:6px 10px; border-radius:999px; background:#0f172a; border:1px solid var(--border); font-weight:600; }
+  .ok { color:#22c55e; } .fail{ color:#ef4444; }
+  .grid { margin-top:14px; overflow:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { padding:10px 12px; border-bottom: 1px solid var(--border); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; }
+  th { position:sticky; top:0; background: #0e1726; cursor:pointer; user-select:none; }
+  th .sort { opacity:0.6; margin-left:6px; font-size:12px; }
+  .chip { display:inline-block; padding:4px 8px; border-radius:10px; font-weight:700; color:#0b0f14; }
+  .c-green{ background:var(--chip-green); }
+  .c-orange{ background:var(--chip-orange); }
+  .c-yellow{ background:var(--chip-yellow); }
+  .c-red{ background:var(--chip-red); }
+  .bar { height:10px; width:120px; background:var(--bar-bg); border-radius:6px; position:relative; overflow:hidden; margin-left:auto; }
+  .bar>span { position:absolute; top:0; bottom:0; left:50%; transform-origin:left center; }
+  .bar .pos { background: var(--bar-pos); }
+  .bar .neg { background: var(--bar-neg); left:auto; right:50%; transform-origin:right center; }
+  .legend { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .legend .chip { color:#111; font-weight:700; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .footer { margin-top: 14px; font-size:12px; color:var(--muted); }
+  .controls { margin-top: 10px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .controls input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: #0f172a; color: var(--text); }
+  .controls button { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: #1e293b; color: var(--text); cursor: pointer; font-weight: 600; }
+  .controls button:hover { background: #334155; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <h1>CAM Post Size — Smoke Dashboard</h1>
+          <div class="muted" id="updated"></div>
+        </div>
+        <div class="status">
+          <span class="pill" id="smoke-pill">Smoke: …</span>
+          <span class="pill" id="guard-pill">SizeGate: …</span>
+          <span class="pill"><a href="./badges.json">badges.json</a></span>
+        </div>
+      </div>
+
+      <div class="legend" style="margin-top:10px;">
+        <span class="chip c-green">green</span> normal
+        <span class="chip c-orange">orange</span> grew &gt; threshold
+        <span class="chip c-yellow">yellow</span> no baseline
+        <span class="chip c-red">red</span> empty output
+      </div>
+
+      <div class="controls">
+        <input type="text" id="filter" placeholder="Filter presets..." style="min-width: 200px;" />
+        <button onclick="location.reload()">↻ Refresh</button>
+        <button onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+
+      <div class="grid">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th data-key="preset">Preset <span class="sort">↕</span></th>
+              <th data-key="bytes" data-num>Bytes <span class="sort">↕</span></th>
+              <th data-key="baseline_bytes" data-num>Baseline <span class="sort">↕</span></th>
+              <th data-key="delta_bytes" data-num>Δ bytes <span class="sort">↕</span></th>
+              <th data-key="delta_pct" data-num>Δ % <span class="sort">↕</span></th>
+              <th>Δ Bar</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        Thresholds: growth=<span id="thr-grow">—</span>, shrink=<span id="thr-shrink">—</span>.
+        Colors follow red/orange/yellow/green rules (see legend). Data from <code>badges.json</code>.
+      </div>
+    </div>
+  </div>
+
+<script>
+const fmtPct = v => (v===null || v===undefined) ? "—" : (v*100).toFixed(1) + "%";
+const fmtInt = v => (v===null || v===undefined) ? "—" : v.toString();
+
+function chip(color){ return `<span class="chip c-${color}">${color}</span>`; }
+
+function barHTML(pct){
+  if (pct === null || pct === undefined) return '';
+  // pct is fractional (e.g., 0.12 = +12%)
+  const maxAbs = 0.50; // clamp at ±50% visually
+  const clamped = Math.max(-maxAbs, Math.min(maxAbs, pct));
+  const w = Math.abs(clamped) * 100; // % of half-bar (since center at 50%)
+  const cls = clamped >= 0 ? 'pos' : 'neg';
+  return `<div class="bar"><span class="${cls}" style="width:${w}%;"></span></div>`;
+}
+
+function setPill(el, ok, label){
+  el.textContent = `${label}: ${ok ? "OK" : "FAILED"}`;
+  el.classList.toggle('ok', ok);
+  el.classList.toggle('fail', !ok);
+}
+
+function attachSort(tbl, rowsData){
+  const thead = tbl.querySelector('thead');
+  let sortKey = 'preset';
+  let sortAsc = true;
+  const tbody = tbl.querySelector('tbody');
+
+  function render(){
+    const data = [...rowsData];
+    const filterVal = document.getElementById('filter').value.toLowerCase();
+    
+    data.sort((a,b)=>{
+      const av = a[sortKey], bv = b[sortKey];
+      if (a._isNum && b._isNum){
+        return sortAsc ? (av - bv) : (bv - av);
+      }else{
+        return sortAsc ? (''+av).localeCompare(''+bv) : (''+bv).localeCompare(''+av);
+      }
+    });
+    
+    // Apply filter
+    const filtered = filterVal ? data.filter(r => r.preset.toLowerCase().includes(filterVal)) : data;
+    tbody.innerHTML = filtered.map(r => r._html).join('');
+    
+    // Update filter count
+    if (filterVal && filtered.length < data.length) {
+      document.getElementById('filter').style.background = '#1e3a2c';
+    } else {
+      document.getElementById('filter').style.background = '#0f172a';
+    }
+  }
+
+  thead.addEventListener('click', e=>{
+    const th = e.target.closest('th');
+    if (!th || !th.dataset.key) return;
+    const key = th.dataset.key;
+    sortAsc = (key === sortKey) ? !sortAsc : true;
+    sortKey = key;
+    rowsData.forEach(r => r._isNum = !!th.dataset.num);
+    render();
+  });
+  
+  // Filter listener
+  document.getElementById('filter').addEventListener('input', render);
+
+  render();
+  
+  // Return render function for CSV export
+  window._renderData = () => data;
+}
+
+function exportCSV(){
+  const data = window._renderData ? window._renderData() : [];
+  if (!data.length) {
+    alert('No data to export');
+    return;
+  }
+  
+  const headers = ['Preset', 'Bytes', 'Baseline', 'Δ Bytes', 'Δ %', 'Status'];
+  const rows = data.map(r => [
+    r.preset,
+    r.bytes === -1 ? '' : r.bytes,
+    r.baseline_bytes === -1 ? '' : r.baseline_bytes,
+    r.delta_bytes === 0 && r.bytes === -1 ? '' : r.delta_bytes,
+    r.delta_pct === -999 ? '' : (r.delta_pct * 100).toFixed(1) + '%',
+    r._color || 'green'
+  ]);
+  
+  const csv = [
+    headers.join(','),
+    ...rows.map(r => r.map(v => `"${v}"`).join(','))
+  ].join('\n');
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cam-post-sizes-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function init(){
+  try{
+    const res = await fetch('./badges.json',{cache:'no-cache'});
+    const data = await res.json();
+
+    // Status header
+    setPill(document.getElementById('smoke-pill'), !!data.smoke_ok, 'Smoke');
+    setPill(document.getElementById('guard-pill'), !!data.size_gate_ok, 'SizeGate');
+    document.getElementById('thr-grow').textContent = (data.growth_threshold*100).toFixed(0)+'%';
+    document.getElementById('thr-shrink').textContent = (data.shrink_threshold*100).toFixed(0)+'%';
+
+    // Updated stamp (approx from this fetch)
+    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+    // Build rows
+    const rows = [];
+    for (const [preset, info] of Object.entries(data.presets)){
+      const bytes = info.bytes ?? null;
+      const base  = info.baseline_bytes ?? null;
+      const dB    = info.delta_bytes ?? null;
+      const dPct  = info.delta_pct ?? null;
+      const color = info.badge_color || 'green';
+      const rowHtml = `
+        <tr>
+          <td>${preset}</td>
+          <td>${fmtInt(bytes)}</td>
+          <td>${fmtInt(base)}</td>
+          <td>${fmtInt(dB)}</td>
+          <td>${fmtPct(dPct)}</td>
+          <td>${barHTML(dPct)}</td>
+          <td>${chip(color)}</td>
+        </tr>`;
+      rows.push({
+        preset,
+        bytes: bytes ?? -1,
+        baseline_bytes: base ?? -1,
+        delta_bytes: dB ?? 0,
+        delta_pct: (dPct===null||dPct===undefined) ? -999 : dPct,
+        _color: color,
+        _html: rowHtml,
+        _isNum: false
+      });
+    }
+
+    attachSort(document.getElementById('tbl'), rows);
+  }catch(err){
+    document.body.innerHTML = '<div class="wrap"><div class="card"><h1>Failed to load badges.json</h1><pre style="white-space:pre-wrap;color:#fca5a5">'+String(err)+'</pre></div></div>';
+  }
+}
+init();
+</script>
+</body>
+</html>

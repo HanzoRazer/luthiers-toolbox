@@ -1,0 +1,11 @@
+# Ignore all archive folders and extracted content
+**/Luthier*Tool*Box*/
+**/ToolBox_*/
+**/*_extracted/
+**/*.zip
+**/.venv/
+**/__pycache__/
+**/node_modules/
+*.pyc
+*.log
+.DS_Store

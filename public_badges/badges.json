@@ -1,0 +1,36 @@
+{
+  "smoke_ok": true,
+  "size_gate_ok": true,
+  "growth_threshold": 0.10,
+  "shrink_threshold": -0.05,
+  "presets": {
+    "GRBL": {
+      "bytes": 547,
+      "baseline_bytes": 523,
+      "delta_bytes": 24,
+      "delta_pct": 0.046,
+      "badge_color": "green"
+    },
+    "Mach3": {
+      "bytes": 612,
+      "baseline_bytes": 598,
+      "delta_bytes": 14,
+      "delta_pct": 0.023,
+      "badge_color": "green"
+    },
+    "Haas": {
+      "bytes": 498,
+      "baseline_bytes": 520,
+      "delta_bytes": -22,
+      "delta_pct": -0.042,
+      "badge_color": "green"
+    },
+    "Marlin": {
+      "bytes": 623,
+      "baseline_bytes": 600,
+      "delta_bytes": 23,
+      "delta_pct": 0.038,
+      "badge_color": "green"
+    }
+  }
+}
