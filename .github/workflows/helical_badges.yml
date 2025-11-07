@@ -1,0 +1,97 @@
+name: Helical Post-Processor Badge Generation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/app/routers/cam_helical_v161_router.py'
+      - 'services/api/app/utils/post_presets.py'
+      - 'tools/smoke_helix_posts.ps1'
+  workflow_dispatch:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  helical-badges:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install API dependencies
+        run: |
+          cd services/api
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Start API server
+        run: |
+          cd services/api
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          echo $! > /tmp/uvicorn.pid
+          sleep 5
+      
+      - name: Run helical smoke test
+        run: |
+          python tools/run_helical_smoke.py --api-base http://127.0.0.1:8000
+      
+      - name: Stop API server
+        if: always()
+        run: |
+          if [ -f /tmp/uvicorn.pid ]; then
+            kill $(cat /tmp/uvicorn.pid) || true
+            rm /tmp/uvicorn.pid
+          fi
+      
+      - name: Generate badges
+        run: |
+          python services/api/tools/gen_helical_badge.py
+      
+      - name: Upload badge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helical-badges
+          path: reports/badges/*
+          retention-days: 90
+      
+      - name: Deploy to GitHub Pages (if enabled)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports
+          destination_dir: reports
+          keep_files: true
+      
+      - name: Comment on PR with badge summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const badges = JSON.parse(fs.readFileSync('reports/badges/badges.json', 'utf8'));
+            
+            let table = '## 🌀 Helical Smoke Test Results\n\n';
+            table += '| Preset | Size | Segments | Arc Mode | Status |\n';
+            table += '|--------|------|----------|----------|--------|\n';
+            
+            for (const [name, data] of Object.entries(badges)) {
+              const emoji = data.color === '#28a745' ? '✅' : 
+                            data.color === '#0366d6' ? '🔵' :
+                            data.color === '#dbab09' ? '⚠️' : '❌';
+              table += `| ${name} | ${data.bytes}b | ${data.segments} | ${data.arc_mode} | ${emoji} |\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: table
+            });

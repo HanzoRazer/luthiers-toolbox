@@ -1,0 +1,26 @@
+{
+  "GRBL": {
+    "bytes": 1247,
+    "segments": 8,
+    "arc_mode": "IJ",
+    "color": "#28a745"
+  },
+  "Mach3": {
+    "bytes": 1248,
+    "segments": 8,
+    "arc_mode": "IJ",
+    "color": "#28a745"
+  },
+  "Haas": {
+    "bytes": 1203,
+    "segments": 8,
+    "arc_mode": "R",
+    "color": "#28a745"
+  },
+  "Marlin": {
+    "bytes": 1249,
+    "segments": 8,
+    "arc_mode": "IJ",
+    "color": "#28a745"
+  }
+}

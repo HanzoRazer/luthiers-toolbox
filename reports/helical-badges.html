@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helical Post-Processor Status | Luthier's Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .status-card .badge-img {
+            margin-bottom: 15px;
+        }
+        
+        .status-card .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .status-card .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .status-card .stat-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .status-card .stat-value {
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        
+        thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .timestamp {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌀 Helical Post-Processor Status</h1>
+            <p>Real-time G-code generation for CNC controllers</p>
+        </header>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                Loading badge data...
+            </div>
+            
+            <div id="error" class="error" style="display: none;">
+                Failed to load badge data. Make sure GitHub Pages is enabled and badges have been generated.
+            </div>
+            
+            <div id="status-grid" class="status-grid" style="display: none;">
+                <!-- Cards will be injected here -->
+            </div>
+            
+            <div id="table-container" style="display: none;">
+                <h2>Detailed Results</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Preset</th>
+                            <th>G-Code Size</th>
+                            <th>Segments</th>
+                            <th>Arc Mode</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="helicalBadgeTable">
+                        <!-- Rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Luthier's Toolbox - CNC Lutherie CAD/CAM Platform</p>
+            <p class="timestamp" id="timestamp"></p>
+        </footer>
+    </div>
+    
+    <script type="module">
+        async function loadBadges() {
+            try {
+                const response = await fetch('badges/badges.json');
+                if (!response.ok) throw new Error('Failed to fetch badges.json');
+                
+                const data = await response.json();
+                
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('status-grid').style.display = 'grid';
+                document.getElementById('table-container').style.display = 'block';
+                
+                // Generate status cards
+                const grid = document.getElementById('status-grid');
+                for (const [name, info] of Object.entries(data)) {
+                    const card = document.createElement('div');
+                    card.className = 'status-card';
+                    
+                    const colorName = 
+                        info.color === '#28a745' ? '🟢 Typical' :
+                        info.color === '#0366d6' ? '🔵 Complex' :
+                        info.color === '#dbab09' ? '🟡 Minimal' : '🔴 Error';
+                    
+                    card.innerHTML = `
+                        <h3>${name}</h3>
+                        <div class="badge-img">
+                            <img src="badges/${name}.svg" alt="${name} badge">
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Size</span>
+                            <span class="stat-value">${info.bytes} bytes</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Segments</span>
+                            <span class="stat-value">${info.segments}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Arc Mode</span>
+                            <span class="stat-value">${info.arc_mode}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Status</span>
+                            <span class="stat-value">${colorName}</span>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                }
+                
+                // Generate table rows
+                const table = document.getElementById('helicalBadgeTable');
+                for (const [name, info] of Object.entries(data)) {
+                    const tr = document.createElement('tr');
+                    
+                    const emoji = 
+                        info.color === '#28a745' ? '✅' :
+                        info.color === '#0366d6' ? '🔵' :
+                        info.color === '#dbab09' ? '⚠️' : '❌';
+                    
+                    tr.innerHTML = `
+                        <td><strong>${name}</strong></td>
+                        <td>${info.bytes} bytes</td>
+                        <td>${info.segments}</td>
+                        <td>${info.arc_mode}</td>
+                        <td><img src="badges/${name}.svg" alt="${name}"> ${emoji}</td>
+                    `;
+                    
+                    table.appendChild(tr);
+                }
+                
+                // Update timestamp
+                document.getElementById('timestamp').textContent = 
+                    `Last updated: ${new Date().toLocaleString()}`;
+                
+            } catch (error) {
+                console.error('Error loading badges:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        // Load on page load
+        loadBadges();
+    </script>
+</body>
+</html>
