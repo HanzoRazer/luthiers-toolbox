@@ -1,0 +1,133 @@
+# ==============================================================================
+# Docker Compose Configuration - Luthier's Tool Box Full Stack
+# ==============================================================================
+#
+# CRITICAL SAFETY RULES:
+# 1. API healthcheck MUST succeed before client starts (prevents race conditions)
+# 2. Port mappings MUST match .env defaults (8000=API, 8080=Client, 8088=Proxy)
+# 3. Volume mounts MUST preserve data directory (SQLite DB, posts, templates)
+# 4. CORS_ORIGINS MUST include client URL to prevent API access errors
+# 5. All services MUST have restart:unless-stopped for production stability
+#
+# Architecture:
+# - api: FastAPI backend (Python 3.11+) with CAM processing
+# - client: Vue 3 + Vite frontend (Node 20+) with design tools
+# - proxy: (optional) Nginx reverse proxy for unified endpoint
+#
+# Usage:
+#   Development:  docker compose up --build
+#   Production:   docker compose -f docker-compose.production.yml up -d
+#   Testing:      docker compose up api client (skip proxy)
+#
+# Environment Variables:
+#   See .env for configuration (PYTHON_VERSION, SERVER_PORT, etc.)
+#
+# ==============================================================================
+
+version: "3.9"
+
+services:
+  # ============================================================================
+  # API SERVICE - FastAPI Backend
+  # ============================================================================
+  # 
+  # Provides CAM processing endpoints:
+  # - /api/cam/pocket/adaptive/* - Adaptive pocketing engine
+  # - /api/geometry/* - DXF/SVG export with multi-post support
+  # - /api/tooling/* - Post-processor and machine configuration
+  # - /api/health - Health check endpoint
+  #
+  # Build Args:
+  #   PYTHON_VERSION: Python runtime version (default: 3.11)
+  #
+  # Ports:
+  #   ${SERVER_PORT}:8000 - API endpoint (default: 8000:8000)
+  #
+  # Volumes:
+  #   ./services/api/app/data - CRITICAL: Persists SQLite DB and JSON configs
+  #
+  # Health Check:
+  #   curl -fsS http://127.0.0.1:8000/health
+  #   - interval: 10s (check every 10 seconds)
+  #   - timeout: 3s (fail if response takes >3s)
+  #   - retries: 10 (allow 100s startup time)
+  #
+  # Dependencies:
+  #   None (independent service)
+  # ============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        # Python version for runtime (3.11+ required for type hints)
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
+    image: ${API_IMAGE:-toolbox/api:local}
+    container_name: ${COMPOSE_PROJECT_NAME:-toolbox}_api
+    env_file: .env  # Load environment variables from .env
+    environment:
+      # Server configuration
+      SERVER_PORT: ${SERVER_PORT:-8000}
+      # CORS origins MUST include client URL (prevent API access errors)
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+    volumes:
+      # CRITICAL: Persist data directory for SQLite DB and JSON configs
+      # Without this, database and post-processor configs are lost on rebuild
+      - ./services/api/app/data:/app/services/api/app/data
+    ports:
+      # Expose API on host:container (default: 8000:8000)
+      - "${SERVER_PORT:-8000}:8000"
+    healthcheck:
+      # Health check endpoint (MUST succeed before client starts)
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 10s   # Check every 10 seconds
+      timeout: 3s     # Fail if response takes >3 seconds
+      retries: 10     # Allow 100 seconds for startup (Python imports)
+    restart: unless-stopped  # CRITICAL: Auto-restart on crash (production stability)
+
+  # ============================================================================
+  # CLIENT SERVICE - Vue 3 + Vite Frontend
+  # ============================================================================
+  #
+  # Provides design tool UI:
+  # - Bridge Calculator - Acoustic guitar bridge design
+  # - Rosette Designer - Sound hole decoration patterns
+  # - Art Studio - CAM toolpath visualization
+  # - Geometry Overlay - Design verification
+  #
+  # Build Args:
+  #   NODE_VERSION: Node.js runtime version (default: 20)
+  #
+  # Ports:
+  #   ${CLIENT_PORT}:8080 - Web UI endpoint (default: 8080:8080)
+  #
+  # Dependencies:
+  #   api:service_healthy - CRITICAL: Wait for API health check to pass
+  #     Prevents race condition where client tries to fetch from unready API
+  #
+  # Build Process:
+  #   1. npm install (install Vue + Vite + TypeScript dependencies)
+  #   2. npm run build (compile Vue SFCs, bundle TypeScript, optimize assets)
+  #   3. Nginx serves dist/ with API proxy to /api → http://api:8000
+  #
+  # Volumes:
+  #   None (statically built assets served by Nginx)
+  # ============================================================================
+  client:
+    build:
+      context: .
+      dockerfile: docker/client/Dockerfile
+      args:
+        # Node.js version for build (20+ required for Vite 5)
+        NODE_VERSION: ${NODE_VERSION:-20}
+    image: ${CLIENT_IMAGE:-toolbox/client:local}
+    container_name: ${COMPOSE_PROJECT_NAME:-toolbox}_client
+    depends_on:
+      api:
+        # CRITICAL: Wait for API health check to pass before starting
+        # Prevents "Cannot connect to API" errors on client load
+        condition: service_healthy
+    ports:
+      # Expose web UI on host:container (default: 8080:8080)
+      - "${CLIENT_PORT:-8080}:8080"
+    restart: unless-stopped  # CRITICAL: Auto-restart on crash (production stability)
