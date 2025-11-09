@@ -1,21 +1,290 @@
 """
-DXF Preflight Validation System
-================================
+================================================================================
+DXF Preflight Validation System (Phase 3.2)
+================================================================================
 
-Phase 3.2: Port nc_lint.py concepts to DXF validation.
+PURPOSE:
+--------
+Pre-flight validation of DXF files before CAM processing to detect issues early.
+Ports nc_lint.py validation concepts to DXF geometry checks for lutherie CAM.
+Prevents downstream failures by catching format/topology issues at import time.
 
-Validates DXF files before CAM processing to catch issues early:
-- Layer validation (required layers present)
-- Closed path validation (all contours closed)
-- Unit consistency (mm vs inch)
-- Geometry sanity checks (no zero-length segments, no self-intersections)
-- Entity type validation (LWPOLYLINE, LINE, SPLINE, CIRCLE, ARC)
-- Dimension validation (reasonable sizes for guitar lutherie)
+CORE FUNCTIONS:
+--------------
+1. DXFPreflight.validate()
+   - Main validation orchestrator running all checks
+   - Returns: PreflightReport with issues list
+   - Combines: layer, closure, unit, entity, dimension checks
 
-Based on nc_lint.py pattern from legacy pipeline:
-- Three severity levels: ERROR, WARNING, INFO
-- HTML report generation
-- Issue location tracking (layer, entity handle)
+2. DXFPreflight.check_layers()
+   - Validates required CAM layers present
+   - Checks: "BODY", "NECK", "FRETBOARD" layers
+   - Severity: ERROR if required layer missing
+
+3. DXFPreflight.check_closed_paths()
+   - Ensures all contours are closed loops
+   - Checks: LWPOLYLINE closure flag, endpoint matching
+   - Severity: ERROR for open paths (CAM requires closed)
+
+4. DXFPreflight.check_units()
+   - Validates unit consistency (mm vs inch)
+   - Checks: $INSUNITS header variable
+   - Severity: WARNING for missing/inconsistent units
+
+5. DXFPreflight.check_entity_types()
+   - Validates supported entity types
+   - Supports: LWPOLYLINE, LINE, SPLINE, CIRCLE, ARC
+   - Severity: WARNING for TEXT/DIMENSION (ignored), ERROR for unknown
+
+6. DXFPreflight.check_dimensions()
+   - Validates geometry dimensions for lutherie ranges
+   - Checks: Guitar body typical: 300-600mm × 200-400mm
+   - Severity: WARNING for unusual dimensions
+
+7. generate_html_report(report)
+   - Generates HTML validation report
+   - Styled output with severity color-coding
+   - Includes: Issue summary, entity details, timestamps
+
+VALIDATION ALGORITHM:
+--------------------
+**6-Stage Preflight Pipeline:**
+
+**Stage 1: DXF Parsing**
+```
+DXF bytes → ezdxf.readfile() → Document object → Extract modelspace
+```
+
+**Stage 2: Layer Validation**
+```
+For each required layer:
+  - Check: layer in doc.layers
+  - Check: layer has entities
+  - Issue ERROR if missing/empty
+```
+
+**Stage 3: Closed Path Validation**
+```
+For each LWPOLYLINE:
+  - Check: entity.closed flag
+  - Check: start point == end point (tolerance 0.01mm)
+  - Issue ERROR if open (CAM requires closed loops)
+```
+
+**Stage 4: Unit Consistency**
+```
+Read: doc.header['$INSUNITS']
+Values:
+  - 1 = Inches
+  - 4 = Millimeters
+  - 0 = Unitless (WARNING)
+Issue WARNING if: unitless or missing
+```
+
+**Stage 5: Entity Type Validation**
+```
+For each entity in modelspace:
+  - Supported: LWPOLYLINE, LINE, SPLINE, CIRCLE, ARC
+  - Ignored: TEXT, DIMENSION, MTEXT, HATCH
+  - Issue WARNING: Ignored types
+  - Issue ERROR: Unknown types (not CAM-compatible)
+```
+
+**Stage 6: Dimension Sanity**
+```
+For all geometry:
+  - Compute bounding box: (min_x, min_y, max_x, max_y)
+  - width = max_x - min_x
+  - height = max_y - min_y
+  
+Guitar lutherie typical ranges:
+  - Body: 300-600mm × 200-400mm
+  - Neck: 600-800mm × 40-80mm
+  - Fretboard: 400-600mm × 40-60mm
+
+Issue WARNING if: outside typical ranges
+Issue ERROR if: width < 10mm or height < 10mm (likely scale error)
+```
+
+DATA STRUCTURES:
+---------------
+**Severity Enum:**
+```python
+class Severity(str, Enum):
+    ERROR = "ERROR"      # Blocks CAM processing
+    WARNING = "WARNING"  # May cause issues
+    INFO = "INFO"        # Optimization suggestions
+```
+
+**Issue (dataclass):**
+```python
+@dataclass
+class Issue:
+    severity: Severity
+    message: str
+    category: str              # "layer", "closure", "units", etc.
+    layer: Optional[str]
+    entity_handle: Optional[str]  # DXF entity handle
+    entity_type: Optional[str]
+    location: Optional[Tuple[float, float]]  # (x, y) coords
+```
+
+**PreflightReport (dataclass):**
+```python
+@dataclass
+class PreflightReport:
+    issues: List[Issue]
+    filename: str
+    timestamp: str
+    total_entities: int
+    error_count: int
+    warning_count: int
+    info_count: int
+    validation_passed: bool  # True if error_count == 0
+```
+
+USAGE EXAMPLE:
+-------------
+    from app.cam.dxf_preflight import DXFPreflight
+    
+    # Load DXF file
+    with open("les_paul_body.dxf", "rb") as f:
+        dxf_bytes = f.read()
+    
+    # Run preflight validation
+    preflight = DXFPreflight(dxf_bytes, filename="les_paul_body.dxf")
+    report = preflight.validate()
+    
+    # Check results
+    if report.validation_passed:
+        print("✓ DXF passed validation")
+    else:
+        print(f"✗ Found {report.error_count} errors:")
+        for issue in report.issues:
+            if issue.severity == Severity.ERROR:
+                print(f"  - {issue.message}")
+                if issue.layer:
+                    print(f"    Layer: {issue.layer}")
+                if issue.entity_handle:
+                    print(f"    Entity: {issue.entity_handle}")
+    
+    # Generate HTML report
+    from app.cam.dxf_preflight import generate_html_report
+    html = generate_html_report(report)
+    
+    with open("preflight_report.html", "w") as f:
+        f.write(html)
+
+INTEGRATION POINTS:
+------------------
+- **Used by**: Blueprint CAM bridge, DXF upload endpoints
+- **Precedes**: Topology validation (dxf_advanced_validation.py)
+- **Complements**: Contour reconstruction (contour_reconstructor.py)
+- **Dependencies**: ezdxf (DXF parsing)
+- **Exports**: DXFPreflight, PreflightReport, Issue, Severity, generate_html_report()
+
+CRITICAL SAFETY RULES:
+---------------------
+1. **Block CAM on Errors**: Never process DXF with ERROR-level issues
+   - Open paths: Undefined offset behavior
+   - Unknown entities: May crash CAM engine
+   - **Production**: Require error_count == 0 before CAM
+
+2. **Unit Consistency Critical**: mm vs inch confusion causes crashes
+   - 1 inch = 25.4mm scale difference
+   - Guitar body: 500mm vs 19.7 inches
+   - **Always validate**: $INSUNITS header present
+
+3. **Layer Validation Prevents Missing Geometry**: Required layers enforced
+   - Missing layer: Geometry not processed
+   - Empty layer: Zero toolpaths generated
+   - **Best practice**: Validate per-operation layer requirements
+
+4. **Closed Path Requirement**: CAM offsetting requires closed loops
+   - Open path: Offset operation fails or produces artifacts
+   - Tolerance: 0.01mm for endpoint matching
+   - **Repair**: Close paths in CAD before export
+
+5. **Dimension Sanity Prevents Scale Errors**: Detect mm/inch mistakes
+   - 500mm body exported as 500 inches = 12,700mm (wrong!)
+   - Check: Body dimensions in expected lutherie ranges
+   - **Flag**: Dimensions > 1000mm or < 10mm for review
+
+PERFORMANCE CHARACTERISTICS:
+---------------------------
+- **DXF Parsing**: 10-50ms (ezdxf overhead)
+- **Layer Check**: O(1) dictionary lookup
+- **Closure Check**: O(n) entity iteration
+- **Entity Type Check**: O(n) entity iteration
+- **Dimension Check**: O(n) bounding box calculation
+- **HTML Report**: 5-20ms string formatting
+- **Typical Performance**: 50-150ms for 10-100 entities
+
+LUTHERIE-SPECIFIC VALIDATION RANGES:
+-----------------------------------
+| Component | Typical Width (mm) | Typical Length (mm) |
+|-----------|-------------------|---------------------|
+| Guitar Body | 300-600 | 400-600 |
+| Bass Body | 350-500 | 500-700 |
+| Neck | 40-80 | 600-800 |
+| Fretboard | 40-60 | 400-600 |
+| Headstock | 80-120 | 150-250 |
+| Pickguard | 150-250 | 200-350 |
+
+**Dimension Validation Logic:**
+- ERROR: width < 10mm or height < 10mm (likely unit error)
+- WARNING: width > 1000mm or height > 1000mm (likely scale error)
+- WARNING: Outside typical lutherie ranges (may be valid, review)
+- INFO: Dimensions normal but unusual aspect ratio
+
+COMMON VALIDATION FAILURES:
+--------------------------
+**Failure 1: Open Contours**
+```
+Issue: LWPOLYLINE has closed=False
+Fix: In CAD, use "Join" or "Close" command
+AutoCAD: PEDIT → Close
+Fusion 360: Sketch → Trim → Close loop
+```
+
+**Failure 2: Missing Required Layer**
+```
+Issue: Layer "BODY" not found
+Fix: In CAD, create layer and assign geometry
+Check layer name spelling (case-sensitive)
+```
+
+**Failure 3: Unit Mismatch**
+```
+Issue: $INSUNITS = 0 (unitless)
+Fix: In CAD, set drawing units explicitly
+AutoCAD: UNITS command → set to Millimeters
+Fusion 360: Document Settings → Units → mm
+```
+
+**Failure 4: Scale Error**
+```
+Issue: Body dimensions 12,700mm × 9,500mm
+Likely: Exported inches as mm (500" → 500mm)
+Fix: Re-export with correct units or scale geometry
+```
+
+FUTURE ENHANCEMENTS:
+-------------------
+1. **Auto-Repair**: Attempt to fix common issues (close paths, set units)
+2. **Layer Presets**: Configurable required layers per project type
+3. **Material Validation**: Check dimensions against material stock sizes
+4. **Export Suggestions**: Recommend CAD export settings per platform
+5. **Visual Overlay**: Annotate issues on geometry preview
+
+PATCH HISTORY:
+-------------
+- Author: Phase 3.2 - DXF Preflight Validation System
+- Based on: nc_lint.py validation patterns (legacy pipeline)
+- Dependencies: ezdxf>=1.0
+- Enhanced: Phase 7a (Coding Policy Application)
+
+================================================================================
 """
 
 from typing import List, Dict, Any, Optional, Tuple
@@ -27,6 +296,10 @@ import math
 import json
 from datetime import datetime
 
+
+# =============================================================================
+# DATA STRUCTURES (SEVERITY, ISSUE, REPORT MODELS)
+# =============================================================================
 
 class Severity(str, Enum):
     """Issue severity levels (matches nc_lint.py)"""
