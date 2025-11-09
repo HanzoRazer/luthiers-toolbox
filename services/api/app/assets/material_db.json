@@ -1,0 +1,42 @@
+[
+  {
+    "id": "maple_hard",
+    "title": "Maple (hard)",
+    "sce_j_per_mm3": 0.55,
+    "heat_partition": {
+      "chip": 0.7,
+      "tool": 0.2,
+      "work": 0.1
+    }
+  },
+  {
+    "id": "mahogany",
+    "title": "Mahogany",
+    "sce_j_per_mm3": 0.45,
+    "heat_partition": {
+      "chip": 0.7,
+      "tool": 0.2,
+      "work": 0.1
+    }
+  },
+  {
+    "id": "al_6061",
+    "title": "Al 6061",
+    "sce_j_per_mm3": 0.35,
+    "heat_partition": {
+      "chip": 0.6,
+      "tool": 0.25,
+      "work": 0.15
+    }
+  },
+  {
+    "id": "custom",
+    "title": "Custom",
+    "sce_j_per_mm3": 0.5,
+    "heat_partition": {
+      "chip": 0.68,
+      "tool": 0.22,
+      "work": 0.1
+    }
+  }
+]

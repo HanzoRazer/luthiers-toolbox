@@ -1,0 +1,156 @@
+name: Adaptive Pocket (Proxy)
+on: [push, pull_request]
+
+env:
+  SERVER_PORT: 8000
+  CLIENT_PORT: 8080
+  FRONT_PORT: 8088
+
+jobs:
+  proxy-adaptive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env for compose
+        run: |
+          cat > .env <<EOF
+          SERVER_PORT=${SERVER_PORT}
+          CLIENT_PORT=${CLIENT_PORT}
+          FRONT_PORT=${FRONT_PORT}
+          CORS_ORIGINS=http://localhost:${FRONT_PORT}
+          COMPOSE_PROJECT_NAME=toolbox
+          API_IMAGE=toolbox/api:ci
+          CLIENT_IMAGE=toolbox/client:ci
+          PROXY_IMAGE=toolbox/proxy:ci
+          EOF
+
+      - name: Build API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          load: true
+          tags: toolbox/api:ci
+
+      - name: Build Client
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile
+          load: true
+          tags: toolbox/client:ci
+
+      - name: Build Proxy
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/proxy/Dockerfile
+          load: true
+          tags: toolbox/proxy:ci
+
+      - name: Up stack
+        run: docker compose up -d
+
+      - name: Wait for API via proxy
+        run: |
+          for i in $(seq 1 40); do
+            curl -fsS http://127.0.0.1:${FRONT_PORT}/api/health && break || sleep 2
+          done
+
+      - name: Test adaptive pocket plan via proxy
+        run: |
+          cat > pocket_plan.json <<'JSON'
+          {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.8,
+            "climb": true,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5
+          }
+          JSON
+          
+          echo "Testing /api/cam/pocket/adaptive/plan via proxy..."
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_plan.json | jq '.'
+          
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_plan.json | jq -r '.stats.length_mm' | grep -q '[0-9]' && echo "✓ Plan returned length"
+          
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_plan.json | jq -r '.stats.time_s' | grep -q '[0-9]' && echo "✓ Plan returned time"
+
+      - name: Test adaptive pocket G-code via proxy
+        run: |
+          cat > pocket_gcode.json <<'JSON'
+          {
+            "loops": [{"pts": [[0,0],[50,0],[50,30],[0,30]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.8,
+            "climb": true,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "post_id": "GRBL"
+          }
+          JSON
+          
+          echo "Testing /api/cam/pocket/adaptive/gcode via proxy..."
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/gcode" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_gcode.json \
+            -o pocket_adaptive.nc
+          
+          echo "G-code content (first 10 lines):"
+          head -n 10 pocket_adaptive.nc | cat
+          
+          grep -q "G21" pocket_adaptive.nc && echo "✓ G21 (mm units) found"
+          grep -q "G90" pocket_adaptive.nc && echo "✓ G90 (absolute mode) found"
+          grep -q "POST=GRBL" pocket_adaptive.nc && echo "✓ GRBL metadata found"
+
+      - name: Test adaptive pocket simulation via proxy
+        run: |
+          cat > pocket_sim.json <<'JSON'
+          {
+            "loops": [{"pts": [[0,0],[80,0],[80,50],[0,50]]}],
+            "units": "mm",
+            "tool_d": 8.0,
+            "stepover": 0.50,
+            "stepdown": 2.0,
+            "margin": 0.5,
+            "strategy": "Lanes",
+            "smoothing": 0.8,
+            "climb": false,
+            "feed_xy": 1500,
+            "safe_z": 5,
+            "z_rough": -2.0
+          }
+          JSON
+          
+          echo "Testing /api/cam/pocket/adaptive/sim via proxy..."
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/sim" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_sim.json | jq '.'
+          
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/sim" \
+            -H 'Content-Type: application/json' \
+            --data-binary @pocket_sim.json | jq -r '.success' | grep -q 'true' && echo "✓ Simulation successful"
+
+      - name: Down stack
+        if: always()
+        run: docker compose down -v

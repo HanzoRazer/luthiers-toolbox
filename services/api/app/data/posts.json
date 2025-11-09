@@ -1,0 +1,42 @@
+[
+  {
+    "id": "grbl",
+    "title": "GRBL Default",
+    "controller": "GRBL",
+    "header": ["(ToolBox)", "(Date {DATE})", "G21 ; units {UNITS}", "G90"],
+    "footer": ["M5", "G0 Z{SAFE_Z}", "G0 X0 Y0", "M30"],
+    "tokens": {}
+  },
+  {
+    "id": "linuxcnc",
+    "title": "LinuxCNC Default",
+    "controller": "LinuxCNC",
+    "header": ["(ToolBox)", "(Date {DATE})", "G21", "G90"],
+    "footer": ["M5", "G0 Z{SAFE_Z}", "G0 X0 Y0", "M2"],
+    "tokens": {}
+  },
+  {
+    "id": "pathpilot",
+    "title": "PathPilot Default",
+    "controller": "PathPilot",
+    "header": ["(ToolBox)", "(Date {DATE})", "G21", "G90"],
+    "footer": ["M5", "G0 Z{SAFE_Z}", "G0 X0 Y0", "M30"],
+    "tokens": {}
+  },
+  {
+    "id": "masso",
+    "title": "MASSO Default",
+    "controller": "MASSO",
+    "header": ["(ToolBox)", "(Date {DATE})", "G21", "G90"],
+    "footer": ["M5", "G0 Z{SAFE_Z}", "G0 X0 Y0", "M30"],
+    "tokens": {}
+  },
+  {
+    "id": "mach4",
+    "title": "Mach4 Default",
+    "controller": "Mach4",
+    "header": ["(ToolBox)", "(Date {DATE})", "G21", "G90"],
+    "footer": ["M5", "G0 Z{SAFE_Z}", "G0 X0 Y0", "M30"],
+    "tokens": {}
+  }
+]

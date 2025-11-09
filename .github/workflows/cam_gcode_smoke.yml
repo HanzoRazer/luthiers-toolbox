@@ -1,0 +1,185 @@
+name: CAM G-code Smoke Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'server/cam_router.py'
+      - 'server/roughing.py'
+      - 'server/gcode_post.py'
+      - '.github/workflows/cam_gcode_smoke.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'server/cam_router.py'
+      - 'server/roughing.py'
+      - 'server/gcode_post.py'
+
+jobs:
+  cam-smoke-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd server
+          pip install fastapi uvicorn pydantic
+      
+      - name: Start dev server
+        run: |
+          cd server
+          python -m ci.devserver &
+          sleep 5
+      
+      - name: Wait for server
+        run: |
+          cd server
+          bash ci/wait_for_server.sh http://localhost:8000/cam/roughing_gcode || exit 1
+      
+      - name: Test CAM roughing endpoint
+        run: |
+          curl -X POST http://localhost:8000/cam/roughing_gcode \
+            -H "Content-Type: application/json" \
+            -d '{
+              "polyline": {
+                "points": [[0,0], [100,0], [100,50], [0,50]]
+              },
+              "tool_diameter": 3.175,
+              "depth_per_pass": 1.5,
+              "stock_thickness": 6.0,
+              "feed_xy": 1200.0,
+              "feed_z": 300.0,
+              "tabs_count": 2,
+              "tab_width": 10.0,
+              "tab_height": 1.5,
+              "post": "grbl"
+            }' \
+            -o roughing.nc \
+            -D headers.txt \
+            -w "%{http_code}" > status.txt
+          
+          # Check HTTP status
+          if [ "$(cat status.txt)" != "200" ]; then
+            echo "❌ CAM endpoint returned status $(cat status.txt)"
+            exit 1
+          fi
+          
+          echo "✅ CAM endpoint returned 200"
+      
+      - name: Verify G-code output
+        run: |
+          # Check file exists and has content
+          if [ ! -f roughing.nc ]; then
+            echo "❌ G-code file not created"
+            exit 1
+          fi
+          
+          if [ ! -s roughing.nc ]; then
+            echo "❌ G-code file is empty"
+            exit 1
+          fi
+          
+          echo "✅ G-code file created"
+          
+          # Check for required G-code elements
+          if grep -q "G90" roughing.nc && \
+             grep -q "G0" roughing.nc && \
+             grep -q "G1" roughing.nc; then
+            echo "✅ G-code contains movement commands"
+          else
+            echo "❌ G-code missing required commands"
+            exit 1
+          fi
+          
+          # Check for comments
+          if grep -q ";" roughing.nc || grep -q "(" roughing.nc; then
+            echo "✅ G-code contains comments"
+          else
+            echo "⚠️ No comments found in G-code"
+          fi
+      
+      - name: Verify CAM summary header
+        run: |
+          if grep -q "X-CAM-Summary" headers.txt; then
+            echo "✅ X-CAM-Summary header present"
+            
+            # Extract and display summary
+            SUMMARY=$(grep "X-CAM-Summary" headers.txt | cut -d':' -f2-)
+            echo "CAM Summary: $SUMMARY"
+          else
+            echo "⚠️ X-CAM-Summary header missing"
+          fi
+      
+      - name: Test multiple post-processors
+        run: |
+          # Test Mach4 post
+          curl -X POST http://localhost:8000/cam/roughing_gcode \
+            -H "Content-Type: application/json" \
+            -d '{"polyline": {"points": [[0,0], [50,0], [50,25]]}, "post": "mach4"}' \
+            -o mach4.nc -f
+          
+          if grep -q "Mach4" mach4.nc; then
+            echo "✅ Mach4 post-processor working"
+          else
+            echo "❌ Mach4 post-processor failed"
+            exit 1
+          fi
+          
+          # Test LinuxCNC post
+          curl -X POST http://localhost:8000/cam/roughing_gcode \
+            -H "Content-Type: application/json" \
+            -d '{"polyline": {"points": [[0,0], [50,0], [50,25]]}, "post": "linuxcnc"}' \
+            -o linuxcnc.nc -f
+          
+          if grep -q "LinuxCNC" linuxcnc.nc; then
+            echo "✅ LinuxCNC post-processor working"
+          else
+            echo "❌ LinuxCNC post-processor failed"
+            exit 1
+          fi
+      
+      - name: Test error handling
+        run: |
+          # Test missing polyline
+          STATUS=$(curl -X POST http://localhost:8000/cam/roughing_gcode \
+            -H "Content-Type: application/json" \
+            -d '{"tool_diameter": 3.175}' \
+            -w "%{http_code}" -o /dev/null -s)
+          
+          if [ "$STATUS" == "400" ]; then
+            echo "✅ Correctly rejects missing polyline (400)"
+          else
+            echo "❌ Should return 400 for missing polyline, got $STATUS"
+            exit 1
+          fi
+          
+          # Test too few points
+          STATUS=$(curl -X POST http://localhost:8000/cam/roughing_gcode \
+            -H "Content-Type: application/json" \
+            -d '{"polyline": {"points": [[0,0]]}}' \
+            -w "%{http_code}" -o /dev/null -s)
+          
+          if [ "$STATUS" == "400" ]; then
+            echo "✅ Correctly rejects single point (400)"
+          else
+            echo "❌ Should return 400 for single point, got $STATUS"
+            exit 1
+          fi
+      
+      - name: Upload G-code artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcode-samples
+          path: |
+            roughing.nc
+            mach4.nc
+            linuxcnc.nc
+          retention-days: 7

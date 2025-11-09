@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Luthier's Tool Box — Client</title>
+    <style>
+      body {
+        font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+        margin: 2rem;
+        max-width: 800px;
+        line-height: 1.6;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+      }
+      .box {
+        background: #e8f4f8;
+        border-left: 4px solid #0066cc;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      h1 { color: #333; }
+      h2 { color: #666; margin-top: 2rem; }
+      .endpoint {
+        background: #f9f9f9;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎸 Luthier's Tool Box — Client Container</h1>
+    
+    <div class="box">
+      <strong>Status:</strong> Container running successfully!<br>
+      <strong>Note:</strong> This is a placeholder. Your real Vue build will replace this container's <code>/usr/share/nginx/html</code>.
+    </div>
+
+    <h2>📡 API Proxy</h2>
+    <p>This nginx container proxies API requests to the backend:</p>
+    <div class="endpoint">
+      <strong>Local API:</strong> <code>http://localhost:8000</code><br>
+      <strong>Proxied via:</strong> <code>http://localhost:8080/cam/*</code> and <code>/tooling/*</code>
+    </div>
+
+    <h2>🧪 Test the API</h2>
+    <p>Open your browser console and try:</p>
+    <pre><code>// Test health endpoint
+fetch('/health').then(r => r.json()).then(console.log)
+
+// Test arc simulation
+fetch('/cam/simulate_gcode', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    gcode: "G21 G90 G17 F1200\\nG0 Z5\\nG2 X60 Y40 I30 J20\\nG0 Z5"
+  })
+}).then(r => r.json()).then(console.log)
+
+// Test post-processors
+fetch('/tooling/posts').then(r => r.json()).then(console.log)</code></pre>
+
+    <h2>📚 Documentation</h2>
+    <ul>
+      <li><a href="http://localhost:8000/docs" target="_blank">API Documentation (Swagger)</a></li>
+      <li><a href="http://localhost:8000/openapi.json" target="_blank">OpenAPI Spec</a></li>
+    </ul>
+
+    <h2>🔧 Next Steps</h2>
+    <ol>
+      <li>Replace this container with your Vue build: <code>docker/client/Dockerfile</code></li>
+      <li>Update nginx config if needed: <code>docker/client/client.nginx.conf</code></li>
+      <li>Check <code>MONOREPO_SETUP.md</code> for integration details</li>
+    </ol>
+
+    <script>
+      // Auto-test health endpoint on load
+      fetch('/health')
+        .then(r => r.json())
+        .then(data => {
+          console.log('✅ API Health Check:', data);
+          const box = document.querySelector('.box');
+          box.innerHTML += '<br><strong>API Health:</strong> ✅ OK';
+        })
+        .catch(err => {
+          console.error('❌ API Health Check Failed:', err);
+          const box = document.querySelector('.box');
+          box.innerHTML += '<br><strong>API Health:</strong> ❌ Failed (check console)';
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,179 @@
+name: Publish Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/luthiers-toolbox
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    strategy:
+      matrix:
+        component:
+          - name: api
+            dockerfile: docker/api/Dockerfile
+            context: .
+          - name: client
+            dockerfile: docker/client/Dockerfile.production
+            context: .
+          - name: nginx
+            dockerfile: docker/nginx/Dockerfile
+            context: .
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component.name }}
+          tags: |
+            # Tag with branch name (main)
+            type=ref,event=branch
+            # Tag with version on tag push (v1.0.0)
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Tag with latest on main
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Tag with commit SHA (short)
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push ${{ matrix.component.name }}
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.component.context }}
+          file: ${{ matrix.component.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component.name }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+  verify-images:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and verify API image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+
+      - name: Pull and verify Client image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
+
+      - name: Pull and verify Nginx image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
+
+      - name: Test stack with published images
+        run: |
+          # Create test .env
+          cat > .env << EOF
+          API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+          CLIENT_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
+          NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
+          NGINX_PORT=8080
+          EOF
+          
+          # Launch stack
+          docker compose -f docker-compose.production.yml up -d
+          
+          # Wait for health
+          sleep 15
+          
+          # Test nginx proxy
+          curl -f http://localhost:8080/health || exit 1
+          curl -f http://localhost:8080/api/health || exit 1
+          
+          # Cleanup
+          docker compose -f docker-compose.production.yml down -v
+
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify-images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          body: |
+            ## Docker Images
+            
+            Pull the latest images:
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.ref_name }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:${{ github.ref_name }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:${{ github.ref_name }}
+            ```
+            
+            ## Deploy with Docker Compose
+            
+            ```bash
+            # Create .env file
+            cat > .env << EOF
+            API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.ref_name }}
+            CLIENT_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:${{ github.ref_name }}
+            NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:${{ github.ref_name }}
+            NGINX_PORT=80
+            EOF
+            
+            # Launch production stack
+            docker compose -f docker-compose.production.yml up -d
+            ```
+            
+            Access at: http://localhost (or your server IP)

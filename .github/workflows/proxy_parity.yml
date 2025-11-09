@@ -1,0 +1,205 @@
+name: Proxy Parity (DXF/SVG via Front Proxy)
+on: [push, pull_request]
+
+env:
+  SERVER_PORT: 8000
+  CLIENT_PORT: 8080
+  FRONT_PORT: 8088
+
+jobs:
+  proxy-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env for compose
+        run: |
+          cat > .env <<EOF
+          SERVER_PORT=${SERVER_PORT}
+          CLIENT_PORT=${CLIENT_PORT}
+          FRONT_PORT=${FRONT_PORT}
+          CORS_ORIGINS=http://localhost:${FRONT_PORT}
+          COMPOSE_PROJECT_NAME=toolbox
+          API_IMAGE=toolbox/api:ci
+          CLIENT_IMAGE=toolbox/client:ci
+          PROXY_IMAGE=toolbox/proxy:ci
+          EOF
+
+      - name: Build API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          load: true
+          tags: toolbox/api:ci
+
+      - name: Build Client
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile
+          load: true
+          tags: toolbox/client:ci
+
+      - name: Build Proxy
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/proxy/Dockerfile
+          load: true
+          tags: toolbox/proxy:ci
+
+      - name: Up stack
+        run: docker compose up -d
+
+      - name: Wait for API via proxy
+        run: |
+          for i in $(seq 1 40); do
+            curl -fsS http://127.0.0.1:${FRONT_PORT}/api/health && break || sleep 2
+          done
+
+      - name: List available post-processors
+        run: |
+          echo "Testing /api/tooling/posts endpoint:"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq '.'
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "GRBL" && echo "✓ GRBL found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "Mach4" && echo "✓ Mach4 found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "LinuxCNC" && echo "✓ LinuxCNC found"
+
+      - name: Parity via proxy
+        run: |
+          python - <<'PY'
+          import urllib.request, json, os, time
+          base = f"http://127.0.0.1:{os.getenv('FRONT_PORT','8088')}/api"
+          geometry = {
+            "units":"mm",
+            "paths":[
+              {"type":"line","x1":0,"y1":0,"x2":60,"y2":0},
+              {"type":"arc","cx":30,"cy":20,"r":20,"start":180,"end":0,"cw":False}
+            ]
+          }
+          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
+          url = f"{base}/geometry/parity"
+          req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
+          out = urllib.request.urlopen(req).read().decode()
+          result = json.loads(out)
+          assert "rms_error_mm" in result
+          assert "max_error_mm" in result
+          assert "pass" in result
+          assert result["pass"], f"Parity check failed: {result}"
+          print(f"✓ Parity check passed: RMS={result['rms_error_mm']}mm, Max={result['max_error_mm']}mm")
+          PY
+
+      - name: Export DXF via proxy (with post metadata)
+        run: |
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export?fmt=dxf" \
+            -H 'Content-Type: application/json' \
+            -d '{"geometry":{"units":"mm","paths":[{"type":"line","x1":0,"y1":0,"x2":60,"y2":0}]}, "post_id":"GRBL"}' \
+            -o export.dxf
+          echo "DXF content (first 6 lines):"
+          head -n 6 export.dxf | cat
+          grep -q "POST=GRBL" export.dxf || echo "⚠ Warning: GRBL metadata not found in DXF"
+
+      - name: Export SVG via proxy (with post metadata)
+        run: |
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export?fmt=svg" \
+            -H 'Content-Type: application/json' \
+            -d '{"geometry":{"units":"mm","paths":[{"type":"line","x1":0,"y1":0,"x2":60,"y2":0}]}, "post_id":"GRBL"}' \
+            -o export.svg
+          echo "SVG content (first 3 lines):"
+          head -n 3 export.svg | cat
+          grep -q "POST=GRBL" export.svg && echo "✓ GRBL metadata found in SVG"
+
+      - name: Export G-code via proxy (with post headers)
+        run: |
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export_gcode" \
+            -H 'Content-Type: application/json' \
+            -d '{"gcode":"G90\nM30\n","units":"mm","post_id":"GRBL"}' \
+            -o program.nc
+          echo "G-code content (first 10 lines):"
+          head -n 10 program.nc | cat
+          grep -q "(POST=GRBL" program.nc && echo "✓ GRBL metadata found in G-code"
+          grep -q "G21" program.nc && echo "✓ G21 (mm) found in G-code"
+
+      - name: Export Bundle via proxy
+        run: |
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export_bundle" \
+            -H 'Content-Type: application/json' \
+            -d '{"geometry":{"units":"mm","paths":[{"type":"line","x1":0,"y1":0,"x2":60,"y2":0}]}, "gcode":"G90\nM30\n", "post_id":"GRBL"}' \
+            -o ToolBox_Export_Bundle.zip
+          echo "Bundle ZIP contents:"
+          unzip -l ToolBox_Export_Bundle.zip
+          echo ""
+          echo "Checking program.nc in bundle:"
+          unzip -p ToolBox_Export_Bundle.zip program.nc | grep -q "(POST=GRBL" && echo "✓ GRBL metadata in bundled G-code"
+          echo ""
+          echo "Checking export.dxf in bundle:"
+          unzip -p ToolBox_Export_Bundle.zip export.dxf | head -n 6 | cat
+          echo ""
+          echo "Checking export.svg in bundle:"
+          unzip -p ToolBox_Export_Bundle.zip export.svg | head -n 3 | cat
+          echo ""
+          echo "Checking manifest.json:"
+          unzip -p ToolBox_Export_Bundle.zip manifest.json | cat
+
+      - name: Multi-post bundle via proxy (mm → bundle in mm)
+        run: |
+          cat > payload.json <<'JSON'
+          {
+            "geometry": {
+              "units": "mm",
+              "paths": [
+                {"type":"line","x1":0,"y1":0,"x2":60,"y2":0},
+                {"type":"arc","cx":30,"cy":20,"r":20,"start":180,"end":0,"cw":false}
+              ]
+            },
+            "gcode": "G21\nG1 X60 Y0 F1200\nM30\n",
+            "post_ids": ["GRBL","Mach4","LinuxCNC","PathPilot","MASSO"],
+            "target_units": "mm"
+          }
+          JSON
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export_bundle_multi" \
+            -H 'Content-Type: application/json' \
+            --data-binary @payload.json \
+            -o ToolBox_Export_MultiPost.zip
+
+          echo "Multi-post bundle ZIP contents:"
+          unzip -l ToolBox_Export_MultiPost.zip
+          echo ""
+          unzip -p ToolBox_Export_MultiPost.zip program_GRBL.nc   | grep -q "(POST=GRBL" && echo "✓ GRBL metadata found"
+          unzip -p ToolBox_Export_MultiPost.zip program_Mach4.nc  | grep -q "(POST=Mach4" && echo "✓ Mach4 metadata found"
+          unzip -p ToolBox_Export_MultiPost.zip program_LinuxCNC.nc | grep -q "(POST=LinuxCNC" && echo "✓ LinuxCNC metadata found"
+          unzip -p ToolBox_Export_MultiPost.zip program_PathPilot.nc | grep -q "(POST=PathPilot" && echo "✓ PathPilot metadata found"
+          unzip -p ToolBox_Export_MultiPost.zip program_MASSO.nc  | grep -q "(POST=MASSO" && echo "✓ MASSO metadata found"
+
+      - name: Multi-post bundle via proxy (inch target scaling)
+        run: |
+          cat > payload_in.json <<'JSON'
+          {
+            "geometry": {
+              "units": "mm",
+              "paths": [
+                {"type":"line","x1":0,"y1":0,"x2":25.4,"y2":0}
+              ]
+            },
+            "gcode": "G21\nG1 X25.4 Y0 F1200\nM30\n",
+            "post_ids": ["GRBL"],
+            "target_units": "inch"
+          }
+          JSON
+          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/geometry/export_bundle_multi" \
+            -H 'Content-Type: application/json' \
+            --data-binary @payload_in.json \
+            -o ToolBox_Export_MultiPost_inch.zip
+
+          echo "Inch-scaled bundle ZIP contents:"
+          unzip -l ToolBox_Export_MultiPost_inch.zip
+          echo ""
+          echo "Checking for G20 and POST metadata:"
+          unzip -p ToolBox_Export_MultiPost_inch.zip program_GRBL.nc | head -n 10
+          unzip -p ToolBox_Export_MultiPost_inch.zip program_GRBL.nc | grep -q "G20" && echo "✓ G20 (inch units) found"
+          unzip -p ToolBox_Export_MultiPost_inch.zip program_GRBL.nc | grep -q "(POST=GRBL" && echo "✓ GRBL metadata found"
+
+      - name: Down stack
+        if: always()
+        run: docker compose down -v

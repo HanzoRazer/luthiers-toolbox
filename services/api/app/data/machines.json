@@ -1,0 +1,56 @@
+{
+  "machines": [
+    {
+      "id": "m1",
+      "title": "Shop Fanuc Mill",
+      "post": "fanuc_haas",
+      "overrides": {},
+      "tools": [
+        {
+          "t": 1,
+          "name": "Ø6 flat endmill",
+          "type": "EM",
+          "dia_mm": 6.0,
+          "len_mm": 45.0,
+          "holder": "ER20",
+          "offset_len_mm": 120.0,
+          "spindle_rpm": 8000,
+          "feed_mm_min": 600,
+          "plunge_mm_min": 200
+        },
+        {
+          "t": 3,
+          "name": "Ø3 drill",
+          "type": "DRILL",
+          "dia_mm": 3.0,
+          "len_mm": 55.0,
+          "holder": "ER16",
+          "offset_len_mm": 121.2,
+          "spindle_rpm": 6000,
+          "feed_mm_min": 300,
+          "plunge_mm_min": 150
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "title": "Garage GRBL Router",
+      "post": "grbl",
+      "overrides": {},
+      "tools": [
+        {
+          "t": 1,
+          "name": "Ø3.175 flat",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 35.0,
+          "holder": "Collet",
+          "offset_len_mm": 0.0,
+          "spindle_rpm": 12000,
+          "feed_mm_min": 900,
+          "plunge_mm_min": 300
+        }
+      ]
+    }
+  ]
+}

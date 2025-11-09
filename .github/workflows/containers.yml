@@ -1,0 +1,115 @@
+name: Containers (Build + Smoke)
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      SERVER_PORT: 8000
+      CLIENT_PORT: 8080
+      API_IMAGE: toolbox/api:ci
+      CLIENT_IMAGE: toolbox/client:ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          load: true
+          tags: ${{ env.API_IMAGE }}
+          build-args: |
+            PYTHON_VERSION=3.11
+
+      - name: Build Client image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile
+          load: true
+          tags: ${{ env.CLIENT_IMAGE }}
+          build-args: |
+            NODE_VERSION=20
+
+      - name: Launch stack
+        run: |
+          cat > .env <<EOF
+          SERVER_PORT=${SERVER_PORT}
+          CLIENT_PORT=${CLIENT_PORT}
+          CORS_ORIGINS=http://localhost:${CLIENT_PORT}
+          API_IMAGE=${API_IMAGE}
+          CLIENT_IMAGE=${CLIENT_IMAGE}
+          COMPOSE_PROJECT_NAME=toolbox
+          EOF
+          docker compose up -d
+          # wait for health
+          for i in $(seq 1 30); do
+            docker compose ps
+            curl -fsS http://127.0.0.1:${SERVER_PORT}/health && break || sleep 2
+          done
+
+      - name: Smoke - Health check
+        run: |
+          curl -fsS http://127.0.0.1:${SERVER_PORT}/health | jq .
+
+      - name: Smoke - Simulate sample program with arcs
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG2 X60 Y40 I0 J20\nG0 Z5\n"
+          req = urllib.request.Request("http://127.0.0.1:8000/cam/simulate_gcode",
+                                       data=json.dumps({"gcode":gcode}).encode(),
+                                       headers={"Content-Type":"application/json"})
+          resp = urllib.request.urlopen(req)
+          data = resp.read().decode()
+          print(data)
+          # Check for arc move
+          import json as j
+          result = j.loads(data)
+          assert any(m.get('code') == 'G2' for m in result.get('moves', [])), "No G2 arc found!"
+          print("✓ Arc simulation working")
+          PY
+
+      - name: Smoke - Tooling endpoints
+        run: |
+          echo "Testing post-processors..."
+          curl -fsS http://127.0.0.1:${SERVER_PORT}/tooling/posts | jq .
+          
+          echo "Adding test tool..."
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/tools \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"Test Endmill","type":"flat","diameter_mm":6.0,"flute_count":2}' | jq .
+          
+          echo "Adding test material..."
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/materials \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"Test Wood","chipload_mm":0.15,"max_rpm":18000}' | jq .
+          
+          echo "Calculating feeds/speeds..."
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/feedspeeds \
+            -H 'Content-Type: application/json' \
+            -d '{"tool_name":"Test Endmill","material_name":"Test Wood","rpm":15000}' | jq .
+
+      - name: Smoke - Client container
+        run: |
+          echo "Testing client container..."
+          curl -fsS http://127.0.0.1:${CLIENT_PORT}/ | grep "Luthier's Tool Box"
+          
+          echo "Testing API proxy through client..."
+          curl -fsS http://127.0.0.1:${CLIENT_PORT}/health | jq .
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose logs api
+          docker compose logs client
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

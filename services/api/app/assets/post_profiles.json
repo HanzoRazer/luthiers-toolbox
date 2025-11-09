@@ -1,0 +1,101 @@
+[
+  {
+    "id": "GRBL",
+    "title": "GRBL CNC",
+    "header": [
+      "(GRBL CNC Controller)",
+      "G90",
+      "G17",
+      "G21"
+    ],
+    "footer": [
+      "M30",
+      "(End of program)"
+    ],
+    "adaptive_feed": {
+      "mode": "comment",
+      "slowdown_threshold": 0.95,
+      "inline_min_f": 120,
+      "mcode_start": "M200",
+      "mcode_end": "M201"
+    }
+  },
+  {
+    "id": "Mach4",
+    "title": "Mach4",
+    "header": [
+      "(Mach4 CNC Controller)",
+      "G90",
+      "G17",
+      "G21"
+    ],
+    "footer": [
+      "M30",
+      "(End of program)"
+    ],
+    "adaptive_feed": {
+      "mode": "inline_f",
+      "slowdown_threshold": 0.90,
+      "inline_min_f": 100
+    }
+  },
+  {
+    "id": "LinuxCNC",
+    "title": "LinuxCNC",
+    "header": [
+      "(LinuxCNC Controller)",
+      "G90",
+      "G17",
+      "G21"
+    ],
+    "footer": [
+      "M2",
+      "(End of program)"
+    ],
+    "adaptive_feed": {
+      "mode": "mcode",
+      "slowdown_threshold": 0.90,
+      "inline_min_f": 100,
+      "mcode_start": "M52 P0.7",
+      "mcode_end": "M52 P1.0"
+    }
+  },
+  {
+    "id": "PathPilot",
+    "title": "PathPilot",
+    "header": [
+      "(PathPilot CNC Controller)",
+      "G90",
+      "G17",
+      "G21"
+    ],
+    "footer": [
+      "M30",
+      "(End of program)"
+    ],
+    "adaptive_feed": {
+      "mode": "inline_f",
+      "slowdown_threshold": 0.92,
+      "inline_min_f": 100
+    }
+  },
+  {
+    "id": "MASSO",
+    "title": "MASSO",
+    "header": [
+      "(MASSO CNC Controller)",
+      "G90",
+      "G17",
+      "G21"
+    ],
+    "footer": [
+      "M30",
+      "(End of program)"
+    ],
+    "adaptive_feed": {
+      "mode": "comment",
+      "slowdown_threshold": 0.95,
+      "inline_min_f": 120
+    }
+  }
+]

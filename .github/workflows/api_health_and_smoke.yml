@@ -1,0 +1,405 @@
+name: API Health + Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 09:30 UTC daily ≈ 03:30 America/Chicago
+    - cron: "30 9 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  health-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.lock', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps (prefer requirements.lock)
+        shell: bash
+        run: |
+          if [ -f requirements.lock ]; then
+            pip install -r requirements.lock
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements file found. Installing minimal deps."
+            pip install fastapi uvicorn "pydantic>=2" requests
+
+      # (Optional) Reuse your existing health target; doesn't fail the build if missing
+      - name: Run API health (best-effort)
+        shell: bash
+        continue-on-error: true
+        run: |
+          if [ -f Makefile ] && make -n api-verify >/dev/null 2>&1; then
+            make api-verify
+          else
+            echo "No 'api-verify' target found; skipping."
+          fi
+
+      # Official v15.5 smoke test (fails job on error/empty)
+      - name: Run v15.5 smoke (all presets)
+        shell: bash
+        run: |
+          if [ -f Makefile ] && make -n api-smoke-posts >/dev/null 2>&1; then
+            make api-smoke-posts
+          else
+            echo "Missing Makefile or 'api-smoke-posts' target."
+            exit 1
+          fi
+
+      - name: Upload smoke_posts.json artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke_posts.json
+          path: smoke_posts.json
+          if-no-files-found: warn
+
+      # ---------- Baseline fetch for size regression ----------
+      - name: Fetch last green smoke_posts.json (baseline)
+        id: fetch-baseline
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const core = require('@actions/core');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Get recent successful runs of THIS workflow
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner, repo, per_page: 50, status: 'success'
+            });
+
+            const thisWf = context.workflow;
+            let baselineRun = null;
+            for (const run of runs.data.workflow_runs) {
+              if (run.name === thisWf && run.id !== context.runId) {
+                baselineRun = run;
+                break;
+              }
+            }
+
+            if (!baselineRun) {
+              core.notice('No previous successful run found – baseline compare skipped.');
+              core.setOutput('found', 'false');
+              return;
+            }
+
+            // Find matching artifact
+            const arts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner, repo, run_id: baselineRun.id, per_page: 50
+            });
+            const art = arts.data.artifacts.find(a => a.name === 'smoke_posts.json');
+            if (!art) {
+              core.notice('No smoke_posts.json artifact in last green – baseline compare skipped.');
+              core.setOutput('found', 'false');
+              return;
+            }
+
+            // Download artifact zip to workspace
+            const { data: zip } = await github.rest.actions.downloadArtifact({
+              owner, repo, artifact_id: art.id, archive_format: 'zip'
+            });
+
+            const fs = require('fs');
+            const path = require('path');
+            fs.writeFileSync(path.join(process.cwd(), 'baseline_smoke.zip'), Buffer.from(zip));
+            core.setOutput('found', 'true');
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unzip baseline artifact
+        if: steps.fetch-baseline.outputs.found == 'true'
+        run: |
+          unzip -o baseline_smoke.zip -d baseline_artifact || true
+          test -f baseline_artifact/smoke_posts.json && mv baseline_artifact/smoke_posts.json baseline_smoke_posts.json || true
+
+      # ---------- Size regression policy ----------
+      - name: Size regression check
+        id: size_guard
+        shell: bash
+        env:
+          SIZE_GROWTH_THRESH: ${{ vars.SIZE_GROWTH_THRESH || '0.35' }} # 35% by default
+          SIZE_SHRINK_THRESH: ${{ vars.SIZE_SHRINK_THRESH || '0.00' }} # set e.g. 0.30 to fail on >30% shrink
+        run: |
+          echo "Growth threshold: ${SIZE_GROWTH_THRESH}"
+          echo "Shrink threshold: ${SIZE_SHRINK_THRESH}"
+          if [ ! -f smoke_posts.json ]; then
+            echo "smoke_posts.json missing"; exit 1
+          fi
+
+          python - <<'PY'
+import json, os, sys
+
+grow_thr = float(os.environ.get("SIZE_GROWTH_THRESH","0.35"))
+shrink_thr = float(os.environ.get("SIZE_SHRINK_THRESH","0.00"))
+
+with open("smoke_posts.json","r",encoding="utf-8") as f:
+    curr = json.load(f)
+
+if not curr.get("ok", False):
+    print("Current smoke failed; size compare stops here.", file=sys.stderr)
+    sys.exit(1)
+
+# No baseline? Establish on this run.
+if not os.path.exists("baseline_smoke_posts.json"):
+    print("No baseline found; skipping size compare (establishing baseline now).")
+    sys.exit(0)
+
+with open("baseline_smoke_posts.json","r",encoding="utf-8") as f:
+    base = json.load(f)
+
+cres = curr.get("results",{})
+bres = base.get("results",{})
+
+errors = []
+for preset, cinfo in cres.items():
+    cb = int(cinfo.get("bytes",0))
+    if cb <= 0:
+        errors.append(f"{preset}: current bytes={cb} (shrank to zero)")
+        continue
+    if preset in bres:
+        bb = int(bres[preset].get("bytes",0))
+        if bb > 0:
+            # Growth guard
+            limit_hi = int(bb * (1.0 + grow_thr))
+            if cb > limit_hi:
+                pct = (cb/bb - 1.0) * 100.0
+                errors.append(f"{preset}: grew {cb-bb} bytes ({pct:.1f}% > {grow_thr*100:.1f}% limit). base={bb}, curr={cb}")
+            # Shrink guard (optional)
+            if shrink_thr > 0.0:
+                limit_lo = int(bb * (1.0 - shrink_thr))
+                if cb < limit_lo:
+                    pct = (1.0 - cb/bb) * 100.0
+                    errors.append(f"{preset}: shrank {bb-cb} bytes ({pct:.1f}% > {shrink_thr*100:.1f}% shrink limit). base={bb}, curr={cb}")
+        # else: no usable bytes in baseline for this preset; skip
+    # else: new preset, skip comparison this run
+
+if errors:
+    print("Size regression check FAILED:")
+    for e in errors: print(" -", e)
+    sys.exit(1)
+else:
+    print("Size regression check OK.")
+PY
+
+      # ---------- Notifications (optional) ----------
+      - name: Slack notify on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_COLOR: "#D72D2D"
+          SLACK_USERNAME: "CI Bot"
+          SLACK_TITLE: "API Health + Smoke failed"
+          SLACK_MESSAGE: |
+            Repo: ${{ github.repository }}
+            Run:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Branch: ${{ github.ref_name }}
+
+      - name: Email notify on failure
+        if: failure() && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.MAIL_TO != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ API Health + Smoke failed — ${{ github.repository }}"
+          to: ${{ secrets.MAIL_TO }}
+          from: ${{ secrets.MAIL_FROM || secrets.SMTP_USERNAME }}
+          content_type: text/plain
+          body: |
+            Repository:  ${{ github.repository }}
+            Workflow:    ${{ github.workflow }}
+            Run:         ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Ref:         ${{ github.ref_name }}
+
+            The nightly API Smoke test failed. See smoke_posts.json in the run artifacts.
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+
+      # ---------- Delta report ----------
+      - name: Delta report (markdown table)
+        if: always()
+        shell: bash
+        env:
+          SIZE_GUARD_OUTCOME: ${{ steps.size_guard.outcome }}
+        run: |
+          python - <<'PY'
+import json, os
+
+def load(path):
+    if not os.path.exists(path): return None
+    with open(path,'r',encoding='utf-8') as f: return json.load(f)
+
+curr = load('smoke_posts.json') or {"results":{}}
+base = load('baseline_smoke_posts.json') or {"results":{}}
+
+cres = curr.get("results",{})
+bres = base.get("results",{})
+
+rows = []
+rows.append("| Preset | Baseline bytes | Current bytes | Δ bytes | Δ % |")
+rows.append("|:------:|---------------:|-------------:|-------:|----:|")
+
+for p in sorted(cres.keys()):
+    cb = int(cres[p].get("bytes",0))
+    bb = int(bres.get(p,{}).get("bytes",0))
+    db = cb - bb if bb>0 else 0
+    dp = (cb/bb - 1.0)*100.0 if bb>0 else 0.0
+    if bb==0:
+        rows.append(f"| {p} | — | {cb} | — | — |")
+    else:
+        rows.append(f"| {p} | {bb} | {cb} | {db:+} | {dp:+.1f}% |")
+
+smoke_ok = bool(curr.get("ok", False))
+gate_outcome = os.environ.get("SIZE_GUARD_OUTCOME","success").lower()
+gate_ok = (gate_outcome == "success")
+
+status_smoke = "✅ Smoke OK" if smoke_ok else "❌ Smoke FAILED"
+status_gate  = "✅ SizeGate OK" if gate_ok else "❌ SizeGate FAILED"
+
+hdr = f"### v15.5 Smoke Delta Report — {status_smoke} · {status_gate}"
+md = hdr + "\n\n" + "\n".join(rows) + "\n"
+
+open('delta_report.md','w',encoding='utf-8').write(md)
+print(md)
+PY
+          # Attach to Job Summary
+          cat delta_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment delta on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('delta_report.md','utf8');
+            const issue_number = context.payload.pull_request.number;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body
+            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------- Badge generation for Shields.io ----------
+      - name: Build badge JSONs from smoke_posts.json (+ index)
+        if: always()
+        shell: bash
+        env:
+          SIZE_GROWTH_THRESH: ${{ vars.SIZE_GROWTH_THRESH || '0.35' }}
+          SIZE_SHRINK_THRESH: ${{ vars.SIZE_SHRINK_THRESH || '0.00' }}
+          SIZE_GUARD_OUTCOME: ${{ steps.size_guard.outcome }}
+        run: |
+          mkdir -p public_badges
+          python - <<'PY'
+import json, os, math, pathlib
+
+outdir = pathlib.Path("public_badges")
+grow_thr = float(os.environ.get("SIZE_GROWTH_THRESH","0.35"))
+shrink_thr = float(os.environ.get("SIZE_SHRINK_THRESH","0.00"))
+gate_outcome = (os.environ.get("SIZE_GUARD_OUTCOME","success") or "success").lower()
+gate_ok = (gate_outcome == "success")
+
+def load(path):
+    if not os.path.exists(path): return None
+    with open(path,'r',encoding='utf-8') as f: return json.load(f)
+
+curr = load("smoke_posts.json") or {"results":{}, "ok": False}
+base = load("baseline_smoke_posts.json") or {"results":{}}
+
+cres = curr.get("results",{})
+bres = base.get("results",{})
+smoke_ok = bool(curr.get("ok", False))
+
+def mkbadge(label, msg, color):
+    return {"schemaVersion": 1, "label": label, "message": msg, "color": color}
+
+def color_for(cb, bb):
+    if cb <= 0:
+        return "red"
+    if bb == 0:
+        return "yellow"
+    growth = (cb/bb - 1.0)
+    if growth > grow_thr:
+        return "orange"
+    return "green"
+
+index = {
+    "schema": "toolbox-art-studio/badges-v1",
+    "smoke_ok": smoke_ok,
+    "size_gate_ok": gate_ok,
+    "growth_threshold": grow_thr,
+    "shrink_threshold": shrink_thr,
+    "presets": {}
+}
+
+for preset, info in cres.items():
+    cb = int(info.get("bytes",0))
+    bb = int(bres.get(preset,{}).get("bytes",0))
+    delta_b = cb - bb if bb>0 else 0
+    delta_pct = (cb/bb - 1.0) if bb>0 and bb!=0 else None
+    col = color_for(cb, bb)
+    # Per-preset Shields endpoint file
+    name = preset.lower()
+    with open(outdir / f"{name}.json","w",encoding="utf-8") as f:
+        msg = f"{cb} B" if delta_pct is None else f"{cb} B ({delta_pct:+.1%})"
+        json.dump(mkbadge(preset, msg, col), f)
+    # badges.json aggregate entry
+    index["presets"][preset] = {
+        "bytes": cb,
+        "baseline_bytes": bb if bb>0 else None,
+        "delta_bytes": delta_b if bb>0 else None,
+        "delta_pct": round(delta_pct, 4) if delta_pct is not None else None,
+        "badge_color": col
+    }
+
+# Write the index
+with open(outdir / "badges.json","w",encoding="utf-8") as f:
+    json.dump(index, f, indent=2)
+PY
+
+      # ---------- GitHub Pages deployment ----------
+      - name: Configure Pages
+        if: always()
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact (badges)
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public_badges
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        id: deployment
+        uses: actions/deploy-pages@v4

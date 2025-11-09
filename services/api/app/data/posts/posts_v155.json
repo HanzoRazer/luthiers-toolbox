@@ -1,0 +1,78 @@
+{
+  "version": "v15.5",
+  "presets": {
+    "GRBL": {
+      "units": "metric",
+      "arc_mode": "IJ",
+      "allow_major_arc": false,
+      "axis_modal_opt": true,
+      "modal_compress": true,
+      "arc_max_sweep_deg": 179.9,
+      "header": [
+        "(GRBL post v15.5)",
+        "G21",
+        "G90",
+        "G94"
+      ],
+      "footer": [
+        "M5",
+        "G0 Z5.000"
+      ]
+    },
+    "Mach3": {
+      "units": "metric",
+      "arc_mode": "IJ",
+      "allow_major_arc": true,
+      "axis_modal_opt": true,
+      "modal_compress": true,
+      "arc_max_sweep_deg": 359.0,
+      "header": [
+        "(Mach3 post v15.5)",
+        "G21",
+        "G90",
+        "G94"
+      ],
+      "footer": [
+        "M5",
+        "G0 Z5.000"
+      ]
+    },
+    "Haas": {
+      "units": "inch",
+      "arc_mode": "IJ",
+      "allow_major_arc": true,
+      "axis_modal_opt": true,
+      "modal_compress": true,
+      "arc_max_sweep_deg": 359.0,
+      "header": [
+        "(Haas post v15.5)",
+        "G20",
+        "G90",
+        "G94"
+      ],
+      "footer": [
+        "M5",
+        "G28"
+      ]
+    },
+    "Marlin": {
+      "units": "metric",
+      "arc_mode": "R",
+      "allow_major_arc": false,
+      "axis_modal_opt": false,
+      "modal_compress": false,
+      "arc_max_sweep_deg": 179.9,
+      "header": [
+        "(Marlin post v15.5)",
+        "G21",
+        "G90",
+        "G94",
+        "M3 S10000"
+      ],
+      "footer": [
+        "M5",
+        "G0 Z5.000"
+      ]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "id": "GRBL_3018_Default",
+    "title": "GRBL 3018 (hobby)",
+    "controller": "GRBL",
+    "axes": {
+      "travel_mm": [300, 180, 45]
+    },
+    "limits": {
+      "feed_xy": 1200,
+      "rapid": 3000,
+      "accel": 600,
+      "jerk": 1500,
+      "corner_tol_mm": 0.20
+    },
+    "spindle": {
+      "max_rpm": 12000
+    },
+    "feed_override": {
+      "min": 0.5,
+      "max": 1.2
+    },
+    "post_id_default": "GRBL"
+  },
+  {
+    "id": "Mach4_Router_4x8",
+    "title": "Mach4 Router 4x8 (pro)",
+    "controller": "Mach4",
+    "axes": {
+      "travel_mm": [2440, 1220, 150]
+    },
+    "limits": {
+      "feed_xy": 15000,
+      "rapid": 24000,
+      "accel": 1800,
+      "jerk": 4000,
+      "corner_tol_mm": 0.30
+    },
+    "spindle": {
+      "max_rpm": 24000
+    },
+    "feed_override": {
+      "min": 0.5,
+      "max": 1.5
+    },
+    "post_id_default": "Mach4"
+  },
+  {
+    "id": "LinuxCNC_KneeMill",
+    "title": "LinuxCNC Knee Mill",
+    "controller": "LinuxCNC",
+    "axes": {
+      "travel_mm": [500, 300, 150]
+    },
+    "limits": {
+      "feed_xy": 6000,
+      "rapid": 9000,
+      "accel": 900,
+      "jerk": 2500,
+      "corner_tol_mm": 0.15
+    },
+    "spindle": {
+      "max_rpm": 8000
+    },
+    "feed_override": {
+      "min": 0.5,
+      "max": 1.3
+    },
+    "post_id_default": "LinuxCNC"
+  }
+]

@@ -1,0 +1,126 @@
+name: API Nightly Health Check
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC nightly
+  workflow_dispatch:
+
+jobs:
+  api-health:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl make jq
+
+      - name: Create venv & install deps (pinned if available)
+        run: |
+          python -m venv .venv311
+          . .venv311/bin/activate
+          pip install --upgrade pip setuptools wheel
+          if [ -f requirements.lock ]; then
+            pip install -r requirements.lock
+          else
+            pip install -r requirements.txt
+            pip install shapely==2.0.* pyclipper==1.3.*
+          fi
+
+      - name: Verify geometry imports
+        run: |
+          . .venv311/bin/activate
+          make api-verify
+
+      - name: Run API health test (capture status + body)
+        id: health
+        run: |
+          . .venv311/bin/activate
+          python -m uvicorn app.main:app --port 8088 --log-level warning &
+          SERVER_PID=$!
+          sleep 3
+          # Call endpoint, capture HTTP status and body separately
+          HTTP_CODE=$(curl -s -o api_health.json -w "%{http_code}" \
+            -X POST "http://127.0.0.1:8088/api/cam_vcarve/preview_infill" \
+            -H "Content-Type: application/json" \
+            -d '{"mode":"raster","approx_stroke_width_mm":1.2,"raster_angle_deg":45,"flat_stepover_mm":1.0}')
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          # Validate JSON structure (must parse; optionally require ok==true)
+          if ! jq . api_health.json >/dev/null 2>&1; then
+            echo "Malformed JSON response"; kill $SERVER_PID || true; exit 1
+          fi
+          if ! jq -e '.ok == true' api_health.json >/dev/null 2>&1; then
+            echo "Endpoint returned ok!=true"; kill $SERVER_PID || true; exit 1
+          fi
+          kill $SERVER_PID || true
+          # Trim preview in logs
+          head -c 400 api_health.json || true
+          echo
+        shell: bash
+
+      - name: Upload health JSON artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api_health
+          path: services/api/api_health.json
+          retention-days: 7
+
+      # -------- Slack notification on failure (optional) --------
+      - name: Slack notify on failure
+        if: ${{ failure() && secrets.SLACK_WEBHOOK_URL != '' }}
+        env:
+          WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          HTTP_CODE: ${{ steps.health.outputs.http_code }}
+        run: |
+          SNIPPET="$(head -c 400 api_health.json 2>/dev/null || echo 'no body')"
+          payload=$(jq -n \
+            --arg repo "$REPO" \
+            --arg url "$RUN_URL" \
+            --arg sha "$SHA" \
+            --arg branch "$BRANCH" \
+            --arg code "${HTTP_CODE:-unknown}" \
+            --arg snippet "$SNIPPET" \
+            '{text: ("❌ API Health FAILED\nRepo: \($repo)\nBranch: \($branch)\nSHA: \($sha)\nHTTP: \($code)\nRun: \($url)\nSnippet:\n```\($snippet)```")}')
+          curl -s -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK" >/dev/null
+
+      # -------- Email notification on failure (optional) --------
+      - name: Email notify on failure
+        if: ${{ failure() && secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.ALERT_TO != '' && secrets.ALERT_FROM != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ API Health FAILED – ${{ github.repository }} @ ${{ github.ref_name }}"
+          to: ${{ secrets.ALERT_TO }}
+          from: ${{ secrets.ALERT_FROM }}
+          content_type: text/plain
+          body: |
+            Repo:    ${{ github.repository }}
+            Branch:  ${{ github.ref_name }}
+            SHA:     ${{ github.sha }}
+            Run:     ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            HTTP:    ${{ steps.health.outputs.http_code }}
+            Snippet:
+            -------------------------
+            ${{ steps.health.outcome == 'failure' && '' || '' }}
+          attachments: |
+            services/api/api_health.json

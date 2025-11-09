@@ -1,0 +1,1502 @@
+name: Adaptive Pocket (API)
+on: [push, pull_request]
+
+jobs:
+  api-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with: 
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+      
+      - name: Boot API
+        run: |
+          cd services/api
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do 
+            curl -sSf http://127.0.0.1:8000/health >/dev/null && exit 0 || sleep 1
+          done
+          exit 1
+      
+      - name: Test adaptive pocket plan
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.8,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          out = json.loads(response.read().decode())
+          
+          print("✓ Plan endpoint returned successfully")
+          print(f"  Stats: {out['stats']}")
+          
+          # Sanity checks
+          assert out["stats"]["length_mm"] > 50, f"Path too short: {out['stats']['length_mm']}"
+          assert out["stats"]["time_s"] > 1, f"Time too short: {out['stats']['time_s']}"
+          assert out["stats"]["area_mm2"] > 5000, f"Area too small: {out['stats']['area_mm2']}"
+          assert len(out["moves"]) > 10, f"Too few moves: {len(out['moves'])}"
+          
+          print("✓ All sanity checks passed")
+          print(f"  Length: {out['stats']['length_mm']} mm")
+          print(f"  Time: {out['stats']['time_s']} s")
+          print(f"  Moves: {out['stats']['move_count']}")
+          PY
+      
+      - name: Test adaptive pocket G-code export
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[50,0],[50,30],[0,30]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.8,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "post_id": "GRBL"
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/gcode",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          gcode = response.read().decode()
+          
+          print("✓ G-code export successful")
+          print("  First 10 lines:")
+          for i, line in enumerate(gcode.split('\n')[:10]):
+              print(f"    {line}")
+          
+          # Verify G-code structure
+          assert "G21" in gcode, "Missing G21 (mm units)"
+          assert "G90" in gcode, "Missing G90 (absolute mode)"
+          assert "POST=GRBL" in gcode, "Missing post-processor metadata"
+          
+          print("✓ G-code validation passed")
+          PY
+      
+      - name: Test adaptive pocket simulation
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[80,0],[80,50],[0,50]]}],
+            "units": "mm",
+            "tool_d": 8.0,
+            "stepover": 0.50,
+            "stepdown": 2.0,
+            "margin": 0.5,
+            "strategy": "Lanes",
+            "smoothing": 0.8,
+            "climb": False,
+            "feed_xy": 1500,
+            "safe_z": 5,
+            "z_rough": -2.0
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/sim",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          result = json.loads(response.read().decode())
+          
+          print("✓ Simulation endpoint returned successfully")
+          print(f"  Stats: {result['stats']}")
+          
+          assert result["success"] == True, "Simulation failed"
+          assert "stats" in result, "Missing stats"
+          
+          print("✓ Simulation validation passed")
+          PY
+      
+      - name: Test L.1 - Plan with islands + sanity
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},           # outer boundary
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}          # island (hole)
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          out = json.loads(response.read().decode())
+          
+          stats = out["stats"]
+          moves = out["moves"]
+          
+          print("✓ L.1 Plan with island successful")
+          print(f"  Stats: {stats}")
+          
+          # Sanity checks for island handling
+          assert stats["length_mm"] > 100, f"Path too short (island test): {stats['length_mm']}"
+          assert any(m.get("code") == "G1" for m in moves), "No cutting moves found"
+          assert len(moves) > 20, f"Too few moves for island pocket: {len(moves)}"
+          
+          # Verify toolpath doesn't cross the hole (basic check: should have reasonable move count)
+          g1_moves = [m for m in moves if m.get("code") == "G1" and "x" in m and "y" in m]
+          assert len(g1_moves) > 10, f"Expected multiple cutting moves around island: {len(g1_moves)}"
+          
+          print("✓ L.1 Island handling validated")
+          print(f"  Length: {stats['length_mm']} mm")
+          print(f"  Cutting moves: {len(g1_moves)}")
+          print(f"  Total moves: {stats['move_count']}")
+          PY
+      
+      - name: Test L.2 - Spiral continuity and overlays
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "corner_radius_min": 1.0,
+            "target_stepover": 0.45,
+            "slowdown_feed_pct": 60.0
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          out = json.loads(response.read().decode())
+          
+          stats = out["stats"]
+          moves = out["moves"]
+          overlays = out.get("overlays", [])
+          
+          print("✓ L.2 Plan successful")
+          print(f"  Stats: {stats}")
+          print(f"  Overlays: {len(overlays)}")
+          
+          # Sanity checks for L.2 features
+          assert stats["length_mm"] > 100, f"Path too short (L.2): {stats['length_mm']}"
+          assert len(overlays) >= 1, f"Expected HUD overlays: {len(overlays)}"
+          
+          # Verify overlay structure
+          if overlays:
+            first_ovl = overlays[0]
+            assert "kind" in first_ovl, "Overlay missing 'kind' field"
+            assert first_ovl["kind"] in ["tight_radius", "slowdown", "fillet"], f"Invalid overlay kind: {first_ovl['kind']}"
+            assert "x" in first_ovl and "y" in first_ovl, "Overlay missing x/y coordinates"
+            print(f"  First overlay: {first_ovl}")
+          
+          # Check for fillet overlays
+          fillet_overlays = [o for o in overlays if o.get("kind") == "fillet"]
+          print(f"  Fillet overlays: {len(fillet_overlays)}")
+          
+          print("✓ L.2 Spiral continuity and overlays validated")
+          print(f"  Length: {stats['length_mm']} mm")
+          print(f"  Time: {stats['time_s']} s")
+          print(f"  HUD annotations: {len(overlays)}")
+          PY
+      
+      - name: Test L.2 Merged - Slowdown metadata and respacing
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "corner_radius_min": 1.0,
+            "target_stepover": 0.45,
+            "slowdown_feed_pct": 60.0
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          response = urllib.request.urlopen(req)
+          out = json.loads(response.read().decode())
+          
+          moves = out["moves"]
+          stats = out["stats"]
+          
+          # Verify slowdown metadata in moves
+          slowdown_moves = [m for m in moves if m.get("meta", {}).get("slowdown") is not None]
+          assert len(slowdown_moves) > 0, "No slowdown metadata found in moves"
+          
+          # Verify at least some moves have slowdown < 1.0
+          slow_moves = [m for m in slowdown_moves if m["meta"]["slowdown"] < 1.0]
+          assert len(slow_moves) > 0, "No slowdown detected (all moves at full speed)"
+          
+          # Verify tight_segments stat
+          assert "tight_segments" in stats, "Missing tight_segments statistic"
+          assert stats["tight_segments"] >= 1, f"Expected tight segments: {stats['tight_segments']}"
+          
+          print("✓ L.2 Merged features validated")
+          print(f"  Moves with slowdown metadata: {len(slowdown_moves)}")
+          print(f"  Moves with slowdown < 1.0: {len(slow_moves)}")
+          print(f"  Tight segments (< 85% speed): {stats['tight_segments']}")
+          
+          # Sample slowdown values
+          sample_slowdowns = [m["meta"]["slowdown"] for m in slow_moves[:5]]
+          print(f"  Sample slowdown factors: {sample_slowdowns}")
+          PY
+
+      - name: Test L.3 - Trochoids + Jerk-aware estimator
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},           # outer boundary
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}          # island
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            # L.3 parameters
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "jerk_aware": True,
+            "machine_feed_xy": 1200,
+            "machine_rapid": 3000,
+            "machine_accel": 800,
+            "machine_jerk": 2000,
+            "corner_tol_mm": 0.2
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          out = json.loads(urllib.request.urlopen(req).read().decode())
+          
+          moves = out["moves"]
+          stats = out["stats"]
+          
+          # Verify trochoid arcs (G2/G3 with meta.trochoid)
+          trochoid_moves = [m for m in moves if m.get("meta", {}).get("trochoid")]
+          assert len(trochoid_moves) > 0, "No trochoid arcs generated"
+          
+          # Verify G2/G3 codes in trochoid moves
+          g2g3_trochoids = [m for m in trochoid_moves if m.get("code") in ("G2", "G3")]
+          assert len(g2g3_trochoids) > 0, "Trochoid moves missing G2/G3 codes"
+          
+          # Verify trochoid_arcs statistic
+          assert "trochoid_arcs" in stats, "Missing trochoid_arcs statistic"
+          assert stats["trochoid_arcs"] > 0, f"Expected trochoid arcs: {stats['trochoid_arcs']}"
+          
+          # Verify jerk-aware time
+          assert "time_s_jerk" in stats, "Missing jerk-aware time statistic"
+          assert stats["time_s_jerk"] is not None, "Jerk-aware time is None"
+          assert stats["time_s_jerk"] > 0, f"Invalid jerk-aware time: {stats['time_s_jerk']}"
+          
+          # Verify classic time still present
+          assert "time_s_classic" in stats, "Missing classic time statistic"
+          assert stats["time_s_classic"] > 0, f"Invalid classic time: {stats['time_s_classic']}"
+          
+          print("✓ L.3 features validated")
+          print(f"  Trochoid arcs: {stats['trochoid_arcs']}")
+          print(f"  G2/G3 trochoid moves: {len(g2g3_trochoids)}")
+          print(f"  Classic time: {stats['time_s_classic']} s ({stats['time_s_classic']/60:.1f} min)")
+          print(f"  Jerk-aware time: {stats['time_s_jerk']} s ({stats['time_s_jerk']/60:.1f} min)")
+          print(f"  Time difference: {abs(stats['time_s_jerk'] - stats['time_s_classic']):.1f} s")
+          
+          # Sample trochoid moves
+          sample_trochoids = [{"code": m["code"], "x": m.get("x"), "y": m.get("y")} for m in trochoid_moves[:3]]
+          print(f"  Sample trochoid moves: {sample_trochoids}")
+          PY
+
+      - name: Test FEED_HINT - Adaptive feed translation (comment/inline_f/mcode)
+        run: |
+          python - <<'PY'
+          import urllib.request, json, re
+          
+          base = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "jerk_aware": False
+          }
+          
+          def fetch_gcode(post_id):
+            body = dict(base)
+            body["post_id"] = post_id
+            req = urllib.request.Request(
+              "http://127.0.0.1:8000/cam/pocket/adaptive/gcode",
+              data=json.dumps(body).encode(),
+              headers={"Content-Type": "application/json"}
+            )
+            return urllib.request.urlopen(req).read().decode()
+          
+          # Test 1: Comment mode (GRBL)
+          print("Testing GRBL (comment mode)...")
+          grbl_gcode = fetch_gcode("GRBL")
+          assert "(FEED_HINT START" in grbl_gcode, "FEED_HINT START comment missing"
+          assert "(FEED_HINT END)" in grbl_gcode, "FEED_HINT END comment missing"
+          # Check for scale value
+          scale_match = re.search(r'\(FEED_HINT START scale=([0-9.]+)\)', grbl_gcode)
+          assert scale_match, "FEED_HINT missing scale value"
+          scale_val = float(scale_match.group(1))
+          assert 0.0 < scale_val < 1.0, f"Invalid scale value: {scale_val}"
+          print(f"  ✓ Comment mode validated (scale={scale_val:.3f})")
+          
+          # Test 2: Inline F mode (Mach4)
+          print("Testing Mach4 (inline_f mode)...")
+          mach4_gcode = fetch_gcode("Mach4")
+          # Look for F words
+          f_values = [float(x) for x in re.findall(r'F(\d+\.?\d*)', mach4_gcode)]
+          assert len(f_values) > 0, "No F words found"
+          # Should have some slowed feeds (< 1000 mm/min when base is 1200)
+          slowed_feeds = [f for f in f_values if f < 1000]
+          assert len(slowed_feeds) > 0, f"No slowed inline F detected (min F: {min(f_values) if f_values else 0})"
+          print(f"  ✓ Inline F mode validated (min F: {min(f_values):.1f} mm/min, slowed moves: {len(slowed_feeds)})")
+          
+          # Test 3: M-code mode (LinuxCNC)
+          print("Testing LinuxCNC (mcode mode)...")
+          linuxcnc_gcode = fetch_gcode("LinuxCNC")
+          assert "M52 P0.7" in linuxcnc_gcode, "Adaptive M-code start (M52 P0.7) missing"
+          assert "M52 P1.0" in linuxcnc_gcode, "Adaptive M-code end (M52 P1.0) missing"
+          # Count occurrences (should be paired)
+          start_count = linuxcnc_gcode.count("M52 P0.7")
+          end_count = linuxcnc_gcode.count("M52 P1.0")
+          assert start_count > 0 and end_count > 0, "M52 codes not found"
+          print(f"  ✓ M-code mode validated (zones: {start_count})")
+          
+          print("✓ All FEED_HINT modes validated (comment/inline_f/mcode)")
+          PY
+      
+      - name: Test Batch Export ZIP (3 modes)
+        run: |
+          python - <<'PY'
+          import urllib.request, json, zipfile, io, re
+          
+          body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "post_id": "GRBL",
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "jerk_aware": False
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/batch_export",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          print("Fetching batch export ZIP...")
+          data = urllib.request.urlopen(req).read()
+          
+          # Open ZIP and verify contents
+          z = zipfile.ZipFile(io.BytesIO(data), 'r')
+          names = z.namelist()
+          
+          print(f"  ZIP contains {len(names)} files:")
+          for name in names:
+            print(f"    - {name}")
+          
+          # Verify all three NC files present
+          assert any(n.endswith("_comment.nc") for n in names), "Missing comment.nc"
+          assert any(n.endswith("_inline_f.nc") for n in names), "Missing inline_f.nc"
+          assert any(n.endswith("_mcode.nc") for n in names), "Missing mcode.nc"
+          assert any(n.endswith("_manifest.json") for n in names), "Missing manifest.json"
+          
+          # Extract and validate each mode
+          comment_file = [n for n in names if n.endswith("_comment.nc")][0]
+          inline_file = [n for n in names if n.endswith("_inline_f.nc")][0]
+          mcode_file = [n for n in names if n.endswith("_mcode.nc")][0]
+          manifest_file = [n for n in names if n.endswith("_manifest.json")][0]
+          
+          c = z.read(comment_file).decode()
+          i = z.read(inline_file).decode()
+          m = z.read(mcode_file).decode()
+          manifest = json.loads(z.read(manifest_file).decode())
+          
+          print("\n  Validating comment mode NC...")
+          assert "(FEED_HINT START" in c, "Comment mode: missing FEED_HINT START"
+          assert "(FEED_HINT END)" in c, "Comment mode: missing FEED_HINT END"
+          assert "MODE=comment" in c, "Comment mode: missing MODE metadata"
+          print("    ✓ Comment mode validated")
+          
+          print("\n  Validating inline_f mode NC...")
+          f_values = [float(x) for x in re.findall(r'F(\d+(?:\.\d+)?)', i)]
+          assert len(f_values) > 0, "Inline_f mode: no F words found"
+          slowed = [f for f in f_values if f < 1000]
+          assert len(slowed) > 0, f"Inline_f mode: no slowdown detected (min: {min(f_values) if f_values else 0})"
+          assert "MODE=inline_f" in i, "Inline_f mode: missing MODE metadata"
+          print(f"    ✓ Inline_f mode validated (min F: {min(f_values):.1f}, slowed: {len(slowed)})")
+          
+          print("\n  Validating mcode mode NC...")
+          assert "M" in m and "P" in m, "Mcode mode: no M-code wrapper detected"
+          assert "MODE=mcode" in m, "Mcode mode: missing MODE metadata"
+          print("    ✓ Mcode mode validated")
+          
+          print("\n  Validating manifest...")
+          assert manifest["post"] == "GRBL", f"Manifest: wrong post ({manifest['post']})"
+          assert manifest["units"] == "mm", f"Manifest: wrong units ({manifest['units']})"
+          assert manifest["tool_d"] == 6.0, f"Manifest: wrong tool_d ({manifest['tool_d']})"
+          assert manifest["trochoids"] == True, f"Manifest: wrong trochoids ({manifest['trochoids']})"
+          print(f"    ✓ Manifest validated: {manifest}")
+          
+          print("\n✓ Batch export ZIP validated successfully")
+          print(f"  Files: {names}")
+          PY
+
+      - name: Batch ZIP with subset ["comment","mcode"]
+        run: |
+          python - <<'PY'
+          import urllib.request, json, zipfile, io
+          
+          body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "post_id": "GRBL",
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "modes": ["comment", "mcode"]  # Subset: only comment and mcode
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/batch_export",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          print("Fetching subset batch export ZIP (comment + mcode only)...")
+          data = urllib.request.urlopen(req).read()
+          
+          # Open ZIP and verify contents
+          z = zipfile.ZipFile(io.BytesIO(data), 'r')
+          names = sorted(z.namelist())
+          
+          print(f"  ZIP contains {len(names)} files:")
+          for name in names:
+            print(f"    - {name}")
+          
+          # Verify only comment and mcode NC files present (NOT inline_f)
+          assert any(n.endswith("_comment.nc") for n in names), "Missing comment.nc"
+          assert any(n.endswith("_mcode.nc") for n in names), "Missing mcode.nc"
+          assert not any(n.endswith("_inline_f.nc") for n in names), "inline_f.nc should NOT be present"
+          assert any(n.endswith("_manifest.json") for n in names), "Missing manifest.json"
+          
+          # Verify manifest has correct modes list
+          manifest_file = [n for n in names if n.endswith("_manifest.json")][0]
+          manifest = json.loads(z.read(manifest_file).decode())
+          
+          assert "modes" in manifest, "Manifest missing modes field"
+          assert sorted(manifest["modes"]) == ["comment", "mcode"], f"Wrong modes in manifest: {manifest['modes']}"
+          
+          print(f"\n✓ Subset batch export validated")
+          print(f"  Requested modes: ['comment', 'mcode']")
+          print(f"  Manifest modes: {manifest['modes']}")
+          print(f"  Files: {names}")
+          PY
+
+      - name: Batch ZIP with custom job_name
+        run: |
+          python - <<'PY'
+          import urllib.request, json, zipfile, io
+          
+          body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "post_id": "GRBL",
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "modes": ["comment", "mcode"],
+            "job_name": "LP_top_pocket_R3"  # Custom filename stem
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/batch_export",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          print("Fetching batch export ZIP with custom job_name...")
+          data = urllib.request.urlopen(req).read()
+          
+          # Open ZIP and verify contents
+          z = zipfile.ZipFile(io.BytesIO(data), 'r')
+          names = sorted(z.namelist())
+          
+          print(f"  ZIP contains {len(names)} files:")
+          for name in names:
+            print(f"    - {name}")
+          
+          # Verify files use custom stem
+          assert "LP_top_pocket_R3_comment.nc" in names, f"Missing LP_top_pocket_R3_comment.nc in {names}"
+          assert "LP_top_pocket_R3_mcode.nc" in names, f"Missing LP_top_pocket_R3_mcode.nc in {names}"
+          assert "LP_top_pocket_R3_manifest.json" in names, f"Missing LP_top_pocket_R3_manifest.json in {names}"
+          
+          # Verify manifest has job_name field
+          manifest = json.loads(z.read("LP_top_pocket_R3_manifest.json").decode())
+          assert "job_name" in manifest, "Manifest missing job_name field"
+          assert manifest["job_name"] == "LP_top_pocket_R3", f"Wrong job_name in manifest: {manifest['job_name']}"
+          
+          print(f"\n✓ Custom job_name batch export validated")
+          print(f"  Job name: {manifest['job_name']}")
+          print(f"  Files: {names}")
+          PY
+
+      - name: Test M.1 - Machine profiles affect jerk-aware time
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          base = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "jerk_aware": True
+          }
+          
+          def plan(mp):
+            b = dict(base)
+            b["machine_profile_id"] = mp
+            req = urllib.request.Request(
+              "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+              data=json.dumps(b).encode(),
+              headers={"Content-Type": "application/json"}
+            )
+            return json.loads(urllib.request.urlopen(req).read().decode())
+          
+          # Test with GRBL (hobby machine: low accel/jerk)
+          result_grbl = plan("GRBL_3018_Default")
+          time_grbl = result_grbl["stats"]["time_s_jerk"]
+          
+          # Test with Mach4 (pro machine: high accel/jerk)
+          result_mach4 = plan("Mach4_Router_4x8")
+          time_mach4 = result_mach4["stats"]["time_s_jerk"]
+          
+          # Verify profiles affect time estimate
+          assert time_grbl is not None, "GRBL time_s_jerk is None"
+          assert time_mach4 is not None, "Mach4 time_s_jerk is None"
+          assert time_grbl != time_mach4, f"Machine profiles should yield different times: GRBL={time_grbl}, Mach4={time_mach4}"
+          
+          # Hobby machine should be slower due to lower accel/jerk
+          assert time_grbl > time_mach4, f"GRBL should be slower than Mach4: GRBL={time_grbl}s, Mach4={time_mach4}s"
+          
+          print("\n✓ M.1 Machine profiles validated")
+          print(f"  GRBL (hobby): {time_grbl}s")
+          print(f"  Mach4 (pro): {time_mach4}s")
+          print(f"  Speedup ratio: {round(time_grbl/time_mach4, 2)}x")
+          PY
+
+      - name: M.2 - What-If optimizer returns coherent result
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # First, get a plan (to collect moves)
+          plan_body = {
+            "loops": [
+              {"pts": [[0,0],[120,0],[120,80],[0,80]]},
+              {"pts": [[40,20],[80,20],[80,60],[40,60]]}
+            ],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "use_trochoids": True,
+            "trochoid_radius": 1.5,
+            "trochoid_pitch": 3.0,
+            "machine_profile_id": "Mach4_Router_4x8"
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(plan_body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          plan_out = json.loads(urllib.request.urlopen(req).read().decode())
+          moves = plan_out["moves"]
+          
+          assert len(moves) > 0, "Plan returned no moves"
+          
+          # Run optimizer
+          opt_body = {
+            "moves": moves,
+            "machine_profile_id": "Mach4_Router_4x8",
+            "z_total": -1.5,
+            "stepdown": 1.5,
+            "safe_z": 5,
+            "bounds": {
+              "feed": [800, 12000],
+              "stepover": [0.25, 0.85],
+              "rpm": [8000, 24000]
+            },
+            "tool": {
+              "flutes": 2,
+              "chipload_target_mm": 0.05
+            },
+            "grid": [5, 5]
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/opt/what_if",
+            data=json.dumps(opt_body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          out = json.loads(urllib.request.urlopen(req).read().decode())
+          
+          # Validate structure
+          assert "baseline" in out, "Missing baseline"
+          assert "opt" in out, "Missing opt"
+          assert "best" in out["opt"], "Missing opt.best"
+          assert "neighbors" in out["opt"], "Missing opt.neighbors"
+          
+          # Validate values
+          baseline = out["baseline"]
+          best = out["opt"]["best"]
+          
+          assert baseline["time_s"] > 0, f"Invalid baseline time: {baseline['time_s']}"
+          assert baseline["passes"] > 0, f"Invalid baseline passes: {baseline['passes']}"
+          assert "caps" in baseline, "Missing baseline caps"
+          
+          assert best["time_s"] > 0, f"Invalid best time: {best['time_s']}"
+          assert best["feed_mm_min"] > 0, f"Invalid best feed: {best['feed_mm_min']}"
+          assert 0 < best["stepover"] < 1, f"Invalid best stepover: {best['stepover']}"
+          assert best["rpm"] > 0, f"Invalid best rpm: {best['rpm']}"
+          
+          # Validate neighbors
+          assert len(out["opt"]["neighbors"]) >= 1, "No neighbors returned"
+          
+          print("\n✓ M.2 What-If optimizer validated")
+          print(f"  Baseline time: {baseline['time_s']}s ({baseline['passes']} passes)")
+          print(f"  Optimized time: {best['time_s']}s")
+          print(f"  Best feed: {best['feed_mm_min']} mm/min")
+          print(f"  Best stepover: {best['stepover']*100:.1f}%")
+          print(f"  Best RPM: {best['rpm']}")
+          print(f"  Improvement: {round((baseline['time_s']-best['time_s'])/baseline['time_s']*100, 1)}%")
+          PY
+      
+      - name: M.3 - Energy endpoint returns totals and segments
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # Step 1: Get a plan with moves
+          plan_body = {
+            "loops": [{"pts": [[0,0],[120,0],[120,80],[0,80]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.8,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(plan_body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          plan_out = json.loads(urllib.request.urlopen(req).read().decode())
+          moves = plan_out["moves"]
+          assert len(moves) > 0, "Plan returned no moves"
+          
+          # Step 2: Calculate energy for the toolpath
+          energy_body = {
+            "moves": moves,
+            "material_id": "maple_hard",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/metrics/energy",
+            data=json.dumps(energy_body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          out = json.loads(urllib.request.urlopen(req).read().decode())
+          
+          # Step 3: Validate structure
+          assert "totals" in out, "Missing totals"
+          assert "segments" in out, "Missing segments"
+          assert "material" in out, "Missing material"
+          
+          # Step 4: Validate totals
+          totals = out["totals"]
+          assert "volume_mm3" in totals, "Missing volume_mm3"
+          assert "energy_j" in totals, "Missing energy_j"
+          assert "heat" in totals, "Missing heat"
+          
+          # Step 5: Validate heat partition
+          heat = totals["heat"]
+          assert "chip_j" in heat, "Missing chip_j"
+          assert "tool_j" in heat, "Missing tool_j"
+          assert "work_j" in heat, "Missing work_j"
+          
+          # Step 6: Validate values are positive
+          assert totals["volume_mm3"] > 0, f"Invalid volume: {totals['volume_mm3']}"
+          assert totals["energy_j"] > 0, f"Invalid energy: {totals['energy_j']}"
+          assert heat["chip_j"] > 0, f"Invalid chip heat: {heat['chip_j']}"
+          assert heat["tool_j"] > 0, f"Invalid tool heat: {heat['tool_j']}"
+          assert heat["work_j"] > 0, f"Invalid work heat: {heat['work_j']}"
+          
+          # Step 7: Validate segments array
+          assert len(out["segments"]) > 0, "No segments returned"
+          seg0 = out["segments"][0]
+          assert "idx" in seg0, "Segment missing idx"
+          assert "code" in seg0, "Segment missing code"
+          assert "len_mm" in seg0, "Segment missing len_mm"
+          assert "vol_mm3" in seg0, "Segment missing vol_mm3"
+          assert "energy_j" in seg0, "Segment missing energy_j"
+          
+          # Step 8: Validate heat partition sums to total energy (within tolerance)
+          heat_sum = heat["chip_j"] + heat["tool_j"] + heat["work_j"]
+          energy_total = totals["energy_j"]
+          assert abs(heat_sum - energy_total) < 0.01, f"Heat partition doesn't sum: {heat_sum} vs {energy_total}"
+          
+          # Step 9: Print results
+          print("\n✓ M.3 Energy endpoint validated")
+          print(f"  Material: {out['material']}")
+          print(f"  Volume removed: {totals['volume_mm3']:.1f} mm³")
+          print(f"  Total energy: {totals['energy_j']:.1f} J")
+          print(f"  Heat partition (J): chip {heat['chip_j']:.1f}, tool {heat['tool_j']:.1f}, work {heat['work_j']:.1f}")
+          print(f"  Segments analyzed: {len(out['segments'])}")
+          PY
+      
+      - name: M.3 - Energy CSV export works
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # Step 1: Get a plan with moves
+          loops = [{"pts": [[0,0],[120,0],[120,80],[0,80]]}]
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps({"loops":loops,"units":"mm","tool_d":6,"stepover":0.45,"stepdown":1.5,"feed_xy":1200,"safe_z":5,"z_rough":-1.5}).encode(),
+            headers={"Content-Type":"application/json"}
+          )
+          moves = json.loads(urllib.request.urlopen(req).read().decode())["moves"]
+          
+          # Step 2: Request CSV export
+          body = {"moves":moves,"material_id":"maple_hard","tool_d":6,"stepover":0.45,"stepdown":1.5,"job_name":"Specimen"}
+          req2 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/metrics/energy_csv",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type":"application/json"}
+          )
+          resp = urllib.request.urlopen(req2)
+          
+          # Step 3: Validate Content-Disposition header
+          content_disp = resp.getheader("Content-Disposition", "")
+          assert "energy_Specimen.csv" in content_disp, f"Wrong filename in header: {content_disp}"
+          
+          # Step 4: Validate CSV structure
+          csv_data = resp.read().decode()
+          assert "idx,code,len_mm,vol_mm3,energy_j,cum_energy_j" in csv_data, "Missing CSV header"
+          
+          lines = csv_data.strip().split('\n')
+          assert len(lines) > 1, "CSV has no data rows"
+          
+          # Step 5: Validate data row format
+          row1 = lines[1].split(',')
+          assert len(row1) == 6, f"Wrong column count: {len(row1)}"
+          
+          print("\n✓ M.3 Energy CSV export validated")
+          print(f"  Filename: energy_Specimen.csv")
+          print(f"  CSV length: {len(csv_data)} bytes")
+          print(f"  Data rows: {len(lines)-1}")
+          PY
+      
+      - name: M.3 - Chipload enforcement nudges RPM
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # Step 1: Get a plan
+          loops = [{"pts": [[0,0],[100,0],[100,60],[0,60]]}]
+          plan_body = {
+            "loops":loops,"units":"mm","tool_d":6,"stepover":0.45,"stepdown":1.5,
+            "feed_xy":1200,"safe_z":5,"z_rough":-1.5,"machine_profile_id":"Mach4_Router_4x8"
+          }
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(plan_body).encode(),
+            headers={"Content-Type":"application/json"}
+          )
+          moves = json.loads(urllib.request.urlopen(req).read().decode())["moves"]
+          
+          # Step 2: Run optimizer with strict chipload tolerance
+          opt = {
+            "moves":moves,
+            "machine_profile_id":"Mach4_Router_4x8",
+            "z_total":-1.5,
+            "stepdown":1.5,
+            "safe_z":5,
+            "bounds":{"feed":[800,12000],"stepover":[0.25,0.85],"rpm":[6000,24000]},
+            "tool":{"flutes":2,"chipload_target_mm":0.05},
+            "grid":[5,5],
+            "tolerance_chip_mm":0.01
+          }
+          req2 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/opt/what_if",
+            data=json.dumps(opt).encode(),
+            headers={"Content-Type":"application/json"}
+          )
+          out = json.loads(urllib.request.urlopen(req2).read().decode())
+          
+          # Step 3: Validate RPM is within bounds
+          best = out["opt"]["best"]
+          assert best["rpm"] >= 6000, f"RPM below minimum: {best['rpm']}"
+          assert best["rpm"] <= 24000, f"RPM above maximum: {best['rpm']}"
+          
+          # Step 4: Validate chipload calculation
+          # chipload = feed / (rpm * flutes)
+          actual_chipload = best["feed_mm_min"] / (best["rpm"] * 2)
+          target_chipload = 0.05
+          chipload_error = abs(actual_chipload - target_chipload)
+          assert chipload_error <= 0.01, f"Chipload error too large: {chipload_error}"
+          
+          print("\n✓ M.3 Chipload enforcement validated")
+          print(f"  Target chipload: 0.05 mm/tooth")
+          print(f"  Best RPM: {best['rpm']}")
+          print(f"  Best feed: {best['feed_mm_min']} mm/min")
+          print(f"  Actual chipload: {actual_chipload:.4f} mm/tooth")
+          print(f"  Chipload error: {chipload_error:.4f} mm/tooth")
+          PY
+
+      - name: M.3 - Heat timeseries power over time
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+
+          # Step 1: Generate plan with moves
+          body1 = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "machine_profile_id": "default"
+          }
+          req1 = urllib.request.Request(
+            'http://localhost:8000/cam/pocket/adaptive/plan',
+            data=json.dumps(body1).encode(),
+            headers={'Content-Type': 'application/json'}
+          )
+          out1 = json.loads(urllib.request.urlopen(req1).read().decode())
+          moves = out1["moves"]
+          
+          # Step 2: Call heat_timeseries
+          body2 = {
+            "moves": moves,
+            "machine_profile_id": "default",
+            "material_id": "maple_hard",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "bins": 120
+          }
+          req2 = urllib.request.Request(
+            'http://localhost:8000/cam/metrics/heat_timeseries',
+            data=json.dumps(body2).encode(),
+            headers={'Content-Type': 'application/json'}
+          )
+          out2 = json.loads(urllib.request.urlopen(req2).read().decode())
+          
+          # Step 3: Validate structure
+          assert "t" in out2, "Missing t (time axis)"
+          assert "p_chip" in out2, "Missing p_chip"
+          assert "p_tool" in out2, "Missing p_tool"
+          assert "p_work" in out2, "Missing p_work"
+          assert "total_s" in out2, "Missing total_s"
+          
+          # Step 4: Validate array lengths
+          t_len = len(out2["t"])
+          assert len(out2["p_chip"]) == t_len, "p_chip length mismatch"
+          assert len(out2["p_tool"]) == t_len, "p_tool length mismatch"
+          assert len(out2["p_work"]) == t_len, "p_work length mismatch"
+          assert t_len > 0, "Empty timeseries"
+          
+          # Step 5: Validate power values
+          assert max(out2["p_chip"]) > 0, "No chip power"
+          assert max(out2["p_tool"]) > 0, "No tool power"
+          assert max(out2["p_work"]) > 0, "No work power"
+          
+          print("\n✓ M.3 Heat timeseries validated")
+          print(f"  Time bins: {t_len}")
+          print(f"  Total time: {out2['total_s']:.1f} s")
+          print(f"  Peak chip power: {max(out2['p_chip']):.1f} W")
+          print(f"  Peak tool power: {max(out2['p_tool']):.1f} W")
+          print(f"  Peak work power: {max(out2['p_work']):.1f} W")
+          PY
+
+      - name: M.3 - Bottleneck CSV export
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+
+          # Step 1: Generate plan with moves
+          body1 = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "margin": 0.5,
+            "strategy": "Spiral",
+            "smoothing": 0.3,
+            "climb": True,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "z_rough": -1.5,
+            "machine_profile_id": "default"
+          }
+          req1 = urllib.request.Request(
+            'http://localhost:8000/cam/pocket/adaptive/plan',
+            data=json.dumps(body1).encode(),
+            headers={'Content-Type': 'application/json'}
+          )
+          out1 = json.loads(urllib.request.urlopen(req1).read().decode())
+          moves = out1["moves"]
+          
+          # Step 2: Call bottleneck_csv
+          body2 = {
+            "moves": moves,
+            "machine_profile_id": "default",
+            "job_name": "test_pocket"
+          }
+          req2 = urllib.request.Request(
+            'http://localhost:8000/cam/metrics/bottleneck_csv',
+            data=json.dumps(body2).encode(),
+            headers={'Content-Type': 'application/json'}
+          )
+          r = urllib.request.urlopen(req2)
+          
+          # Step 3: Validate Content-Disposition header
+          cd = r.headers.get('Content-Disposition', '')
+          assert 'attachment' in cd, f"Missing attachment: {cd}"
+          assert 'bottleneck_test_pocket.csv' in cd, f"Wrong filename: {cd}"
+          
+          # Step 4: Validate CSV structure
+          csv_data = r.read().decode('utf-8')
+          lines = csv_data.strip().split('\n')
+          assert len(lines) >= 2, f"CSV too short: {len(lines)} lines"
+          
+          header = lines[0]
+          assert 'idx,code,x,y,len_mm,limit' in header, f"Wrong header: {header}"
+          
+          # Step 5: Validate at least one data row
+          row1 = lines[1]
+          parts = row1.split(',')
+          assert len(parts) == 6, f"Wrong column count: {len(parts)}"
+          
+          # Step 6: Validate limit values
+          limits = {line.split(',')[-1] for line in lines[1:]}
+          valid_limits = {'feed_cap', 'accel', 'jerk', 'none'}
+          assert limits.issubset(valid_limits), f"Invalid limits: {limits}"
+          
+          print("\n✓ M.3 Bottleneck CSV export validated")
+          print(f"  Content-Disposition: {cd}")
+          print(f"  CSV lines: {len(lines)}")
+          print(f"  Header: {header}")
+          print(f"  Limits found: {limits}")
+          PY
+
+      - name: M.3 - Thermal report (Markdown) renders and names file
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # Step 1: Generate plan with moves
+          plan = {
+            "loops": [{"pts": [[0,0],[120,0],[120,80],[0,80]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "machine_profile_id": "Mach4_Router_4x8"
+          }
+          req1 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(plan).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          out1 = json.loads(urllib.request.urlopen(req1).read().decode())
+          moves = out1["moves"]
+          
+          # Step 2: Call thermal_report_md
+          body = {
+            "moves": moves,
+            "machine_profile_id": "Mach4_Router_4x8",
+            "material_id": "maple_hard",
+            "tool_d": 6,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "bins": 120,
+            "job_name": "LP_test",
+            "budgets": {
+              "chip_j": 500,
+              "tool_j": 150,
+              "work_j": 100
+            }
+          }
+          req2 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/metrics/thermal_report_md",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          resp = urllib.request.urlopen(req2)
+          
+          # Step 3: Validate Content-Disposition header
+          cd = resp.getheader("Content-Disposition", "")
+          assert 'LP_test.md"' in cd, f"Wrong filename in CD: {cd}"
+          
+          # Step 4: Validate Markdown content
+          text = resp.read().decode()
+          assert "# Thermal Report" in text, "Missing title"
+          assert "## Totals" in text, "Missing totals section"
+          assert "Power (J/s) sparklines" in text, "Missing sparklines section"
+          assert "## Context" in text, "Missing context section"
+          assert "Heat partition" in text, "Missing heat partition table"
+          assert "Bottleneck share" in text, "Missing bottleneck section"
+          
+          # Step 5: Validate sparkline characters present
+          assert "▁" in text or "▂" in text or "▃" in text or "▄" in text or "▅" in text or "▆" in text or "▇" in text or "█" in text, "Missing sparkline characters"
+          
+          print("\n✓ M.3 Thermal report (Markdown) validated")
+          print(f"  Content-Disposition: {cd}")
+          print(f"  Markdown length: {len(text)} bytes")
+          print(f"  Contains sparklines: Yes")
+          PY
+
+      - name: M.3 - Thermal report includes CSV links section when requested
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          # Step 1: Generate plan with moves
+          plan_body = {
+            "loops": [{"pts": [[0,0],[120,0],[120,80],[0,80]]}],
+            "units": "mm",
+            "tool_d": 6.0,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "feed_xy": 1200,
+            "safe_z": 5,
+            "machine_profile_id": "Mach4_Router_4x8"
+          }
+          req1 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(plan_body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          r1 = urllib.request.urlopen(req1)
+          plan_data = json.loads(r1.read().decode())
+          moves = plan_data["moves"]
+          
+          # Step 2: Request thermal report with CSV links enabled
+          body = {
+            "moves": moves,
+            "machine_profile_id": "Mach4_Router_4x8",
+            "material_id": "maple_hard",
+            "tool_d": 6,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "bins": 60,
+            "job_name": "LP_test",
+            "include_csv_links": True
+          }
+          req2 = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/metrics/thermal_report_md",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          r2 = urllib.request.urlopen(req2)
+          text = r2.read().decode()
+          
+          # Step 3: Validate CSV Downloads section present
+          assert "## CSV Downloads" in text, "Missing CSV Downloads section"
+          assert "energy_csv" in text, "Missing energy_csv reference"
+          assert "heat_timeseries_csv" in text, "Missing heat_timeseries_csv reference"
+          assert "bottleneck_csv" in text, "Missing bottleneck_csv reference"
+          assert "curl -X POST $API/cam/metrics/energy_csv" in text, "Missing energy curl command"
+          assert "curl -X POST $API/cam/metrics/heat_timeseries_csv" in text, "Missing heat curl command"
+          assert "curl -X POST $API/cam/metrics/bottleneck_csv" in text, "Missing bottleneck curl command"
+          
+          print("\n✓ M.3 Thermal report CSV links validated")
+          print(f"  CSV Downloads section: Present")
+          print(f"  curl commands: 3 found")
+          print(f"  Endpoint references: energy_csv, heat_timeseries_csv, bottleneck_csv")
+          PY
+
+      - name: M.4 - Logs write + train round-trip
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          # Step 1: Write minimal fake run
+          segs = [
+            {"idx": 0, "code": "G1", "x": 10, "y": 0, "len_mm": 10.0, "limit": "none", "slowdown": 1.0},
+            {"idx": 1, "code": "G2", "x": 10, "y": 10, "len_mm": 10.0, "limit": "accel", "slowdown": 0.8, "radius_mm": 3.0}
+          ]
+          run = {
+            "job_name": "TrainSpec",
+            "machine_id": "Mach4_Router_4x8",
+            "material_id": "maple_hard",
+            "tool_d": 6,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "feed_xy": 1200,
+            "est_time_s": 12.3
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/logs/write",
+            data=json.dumps({"run": run, "segments": segs}).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          resp = urllib.request.urlopen(req)
+          assert resp.getcode() == 200, "Write log failed"
+          data = json.loads(resp.read().decode())
+          assert "run_id" in data, "Missing run_id in response"
+          print(f"✓ Logged run_id: {data['run_id']}")
+          
+          # Step 2: Train overrides
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/learn/train",
+            data=json.dumps({"machine_id": "Mach4_Router_4x8", "r_min_mm": 5}).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          resp = urllib.request.urlopen(req)
+          out = json.loads(resp.read().decode())
+          assert "machine_id" in out and "rules" in out, "Missing fields in train response"
+          print(f"✓ Trained rules: {out['rules']}")
+          print(f"  Samples: {out['meta']['samples']}")
+          
+          print("\n✓ M.4 Logs write + train round-trip validated")
+          PY
+
+      - name: M.4 - Thermal bundle returns .zip with MD and moves.json
+        run: |
+          python - <<'PY'
+          import urllib.request, json, zipfile, io
+          
+          # Step 1: Request bundle
+          body = {
+            "moves": [{"code": "G1", "x": 10, "y": 0}, {"code": "G1", "x": 10, "y": 10}],
+            "machine_profile_id": "Mach4_Router_4x8",
+            "material_id": "maple_hard",
+            "tool_d": 6,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "bins": 50,
+            "job_name": "BundleSpec"
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/metrics/thermal_report_bundle",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          resp = urllib.request.urlopen(req)
+          
+          # Step 2: Validate ZIP contents
+          z = io.BytesIO(resp.read())
+          with zipfile.ZipFile(z) as zf:
+            names = zf.namelist()
+            assert any(n.endswith(".md") for n in names), "Missing .md file in bundle"
+            assert any(n.startswith("moves_BundleSpec") and n.endswith(".json") for n in names), "Missing moves.json file"
+            
+            # Validate moves.json is valid JSON
+            moves_file = [n for n in names if n.endswith(".json")][0]
+            moves_data = json.loads(zf.read(moves_file).decode())
+            assert isinstance(moves_data, list), "moves.json should be array"
+            assert len(moves_data) == 2, "moves.json should have 2 moves"
+          
+          print(f"✓ Bundle contains: {names}")
+          print(f"  MD file: {[n for n in names if n.endswith('.md')][0]}")
+          print(f"  JSON file: {[n for n in names if n.endswith('.json')][0]}")
+          print("\n✓ M.4 Thermal bundle ZIP validated")
+          PY
+
+      - name: Live Learn - Session override factor echoes in plan response
+        run: |
+          python - <<'PY'
+          import urllib.request, json
+          
+          body = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "tool_d": 6.0,
+            "feed_xy": 1200,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "session_override_factor": 1.15  # +15% feed
+          }
+          
+          req = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/plan",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          with urllib.request.urlopen(req) as r:
+            data = json.load(r)
+          
+          # Verify session override echoed in stats
+          assert "session_override_factor" in data["stats"], "Stats should include session_override_factor"
+          assert data["stats"]["session_override_factor"] == 1.15, f"Expected 1.15, got {data['stats']['session_override_factor']}"
+          
+          # Verify moves have session override metadata
+          cutting_moves = [m for m in data["moves"] if m.get("code") == "G1" and "f" in m]
+          assert len(cutting_moves) > 0, "Should have cutting moves"
+          
+          # Check at least one move has session override tag
+          has_session_tag = any(m.get("meta", {}).get("session_override") == 1.15 for m in cutting_moves)
+          assert has_session_tag, "At least one move should have session_override metadata"
+          
+          print(f"✓ Session override factor: {data['stats']['session_override_factor']}")
+          print(f"✓ Cutting moves: {len(cutting_moves)}")
+          print(f"✓ Moves with session tag: {sum(1 for m in cutting_moves if m.get('meta',{}).get('session_override'))}")
+          print("\n✓ Live Learn session override echoed correctly")
+          PY
+
+      - name: Live Learn - Session override scales F words in G-code
+        run: |
+          python - <<'PY'
+          import urllib.request, json, re
+          
+          # Generate baseline G-code (no session override)
+          body_base = {
+            "loops": [{"pts": [[0,0],[100,0],[100,60],[0,60]]}],
+            "tool_d": 6.0,
+            "feed_xy": 1200,
+            "stepover": 0.45,
+            "stepdown": 1.5,
+            "post_id": "GRBL"
+          }
+          
+          req_base = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/gcode",
+            data=json.dumps(body_base).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          with urllib.request.urlopen(req_base) as r:
+            nc_base = r.read().decode()
+          
+          # Generate scaled G-code (session override = 1.2)
+          body_scaled = {**body_base, "session_override_factor": 1.2}
+          
+          req_scaled = urllib.request.Request(
+            "http://127.0.0.1:8000/cam/pocket/adaptive/gcode",
+            data=json.dumps(body_scaled).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          
+          with urllib.request.urlopen(req_scaled) as r:
+            nc_scaled = r.read().decode()
+          
+          # Extract F words from both
+          f_base = [float(m.group(1)) for m in re.finditer(r'F([\d.]+)', nc_base)]
+          f_scaled = [float(m.group(1)) for m in re.finditer(r'F([\d.]+)', nc_scaled)]
+          
+          assert len(f_base) > 0, "Baseline should have F words"
+          assert len(f_scaled) > 0, "Scaled should have F words"
+          assert len(f_scaled) == len(f_base), "Both should have same number of F words"
+          
+          # Verify scaling (allow 5% tolerance for rounding/clamping)
+          ratios = [s/b for s,b in zip(f_scaled, f_base) if b > 0]
+          avg_ratio = sum(ratios) / len(ratios)
+          
+          assert avg_ratio > 1.15, f"Expected ~1.20 ratio, got {avg_ratio:.3f}"
+          assert avg_ratio < 1.25, f"Expected ~1.20 ratio, got {avg_ratio:.3f}"
+          
+          print(f"✓ Baseline F words: {len(f_base)} (first: {f_base[0]:.1f})")
+          print(f"✓ Scaled F words: {len(f_scaled)} (first: {f_scaled[0]:.1f})")
+          print(f"✓ Average scale ratio: {avg_ratio:.3f} (expected ~1.20)")
+          print("\n✓ Live Learn session override scales G-code feeds correctly")
+          PY
+

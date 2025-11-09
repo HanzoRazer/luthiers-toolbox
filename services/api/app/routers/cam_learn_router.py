@@ -1,0 +1,41 @@
+"""CAM Learning API - Train feed overrides from logged runs."""
+
+from fastapi import APIRouter
+from pydantic import BaseModel
+from ..learn.overrides_learner import train_overrides
+
+router = APIRouter(prefix="/cam/learn", tags=["cam-learn"])
+
+
+class TrainIn(BaseModel):
+    """Training parameters for feed override learning."""
+
+    machine_id: str
+    r_min_mm: float = 5.0  # Minimum radius threshold for "tight arc" rule
+
+
+@router.post("/train")
+def train(body: TrainIn):
+    """
+    Train feed overrides from logged CAM runs.
+
+    Analyzes segment telemetry to learn scalar feed multipliers for:
+    - Tight arcs (radius < r_min_mm): Average observed slowdown
+    - Trochoidal moves: Average observed slowdown
+
+    Requires minimum 50 samples per rule to avoid overfitting.
+
+    Returns:
+        {
+          "machine_id": "Mach4_Router_4x8",
+          "rules": {
+            "arc_tight_mm<=5.00": 0.75,
+            "trochoid": 0.85
+          },
+          "meta": {"samples": 1234, "r_min": 5.0}
+        }
+
+    Saves model to: learn/models/overrides_{machine_id}.json
+    """
+    out = train_overrides(body.machine_id, r_min_mm=body.r_min_mm)
+    return out
