@@ -342,10 +342,9 @@ class PreflightReport:
     def info_count(self) -> int:
         return sum(1 for i in self.issues if i.severity == Severity.INFO)
 
-
-# ============================================================================
-# Validation Rules
-# ============================================================================
+# =============================================================================
+# VALIDATION ENGINE (DXF PREFLIGHT CHECKER)
+# =============================================================================
 
 class DXFPreflight:
     """DXF validation engine"""
@@ -672,6 +671,12 @@ class DXFPreflight:
 # ============================================================================
 # HTML Report Generation
 # ============================================================================
+
+        return report
+
+# =============================================================================
+# HTML REPORT GENERATION (NC_LINT.PY STYLE OUTPUT)
+# =============================================================================
 
 def generate_html_report(report: PreflightReport) -> str:
     """
