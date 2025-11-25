@@ -179,7 +179,31 @@ function setBaseline() {
   const winnerIdx = wins.indexOf(Math.max(...wins))
   if (winnerIdx >= 0) {
     const winnerId = comparisonData.value.jobs[winnerIdx].run_id
-    emit('set-baseline', winnerId)
+    markAsBaseline(winnerId)
+  }
+}
+
+async function markAsBaseline(runId: string) {
+  try {
+    const response = await fetch(`/api/cnc/jobs/${runId}/set-baseline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseline_id: runId })
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+
+    // Reload comparison to show baseline badge
+    await loadComparison()
+    
+    // Notify parent
+    emit('set-baseline', runId)
+  } catch (e: any) {
+    error.value = `Failed to set baseline: ${e.message}`
+    console.error(e)
   }
 }
 
@@ -189,12 +213,13 @@ function exportCsv() {
   const rows: string[][] = []
 
   // Header row
-  const header = ['Metric', ...comparisonData.value.jobs.map((j) => j.job_name || j.run_id)]
+  const header = ['Metric', ...comparisonData.value.jobs.map((j: Job) => j.job_name || j.run_id)]
   rows.push(header)
 
   // Data rows
-  Object.entries(comparisonData.value.comparison).forEach(([key, metric]) => {
-    const row = [formatMetricName(key), ...metric.values.map((v) => formatValue(v, key))]
+  Object.entries(comparisonData.value.comparison).forEach(([key, metricUnknown]) => {
+    const metric = metricUnknown as Metric
+    const row = [formatMetricName(key), ...metric.values.map((v: number | string | null) => formatValue(v, key))]
     rows.push(row)
   })
 

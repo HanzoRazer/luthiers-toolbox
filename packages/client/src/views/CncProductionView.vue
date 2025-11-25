@@ -71,7 +71,10 @@
                   @change="toggleSelection(job.run_id)"
                 />
               </td>
-              <td>{{ job.job_name || job.run_id.slice(0, 8) }}</td>
+              <td>
+                <span v-if="job.baseline_id" class="baseline-badge" title="Baseline">📍</span>
+                {{ job.job_name || job.run_id.slice(0, 8) }}
+              </td>
               <td>{{ job.machine_id || '—' }}</td>
               <td>{{ job.post_id || '—' }}</td>
               <td>{{ job.sim_time_s?.toFixed(2) || '—' }}</td>
@@ -119,6 +122,7 @@ interface Job {
   gcode_key?: string
   use_helical: boolean
   favorite: boolean
+  baseline_id?: string | null
   sim_time_s?: number
   sim_energy_j?: number
   sim_move_count?: number
@@ -201,7 +205,7 @@ function toggleSelectAll() {
   if (allSelected.value) {
     selectedRunIds.value = []
   } else {
-    selectedRunIds.value = jobs.value.slice(0, 4).map((j) => j.run_id)
+    selectedRunIds.value = jobs.value.slice(0, 4).map((j: Job) => j.run_id)
   }
 }
 
@@ -234,9 +238,8 @@ function viewDetails(runId: string) {
 }
 
 async function handleSetBaseline(runId: string) {
-  // Update baseline tracking (to be implemented in Phase 2)
-  console.log('Set baseline:', runId)
-  alert(`Baseline feature coming in Phase 2!\nWould mark ${runId.slice(0, 8)} as baseline.`)
+  // Reload jobs to show updated baseline indicator
+  await loadJobs()
 }
 
 function formatDate(isoString: string): string {
@@ -381,6 +384,17 @@ function formatDate(isoString: string): string {
 .jobs-table td.warning {
   color: #dc2626;
   font-weight: 600;
+}
+
+.baseline-badge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
 }
 
 .icon-button {
