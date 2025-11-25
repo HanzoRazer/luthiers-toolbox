@@ -207,7 +207,7 @@ PATCH HISTORY:
 import os
 import sqlite3
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 DB: str = os.getenv(
     "CAM_LOG_DB",
@@ -240,7 +240,12 @@ def _fetch_segments(machine_id: str):
 # HEURISTIC MODEL TRAINING
 # =============================================================================
 
-def train_overrides(machine_id: str, r_min_mm: float = 5.0) -> Dict[str, Any]:
+def train_overrides(
+    machine_id: Optional[str] = None,
+    *,
+    machine_profile: Optional[str] = None,
+    r_min_mm: float = 5.0,
+) -> Dict[str, Any]:
     """
     Train feed override rules from logged runs.
 
@@ -261,9 +266,13 @@ def train_overrides(machine_id: str, r_min_mm: float = 5.0) -> Dict[str, Any]:
 
     Saves to: learn/models/overrides_{machine_id}.json
     """
-    rows = _fetch_segments(machine_id)
+    mid = machine_profile or machine_id
+    if not mid:
+        raise ValueError("train_overrides requires machine_id or machine_profile")
+
+    rows = _fetch_segments(mid)
     if not rows:  # nothing to learn
-        return {"machine_id": machine_id, "rules": {}, "meta": {"samples": 0}}
+        return {"machine_id": mid, "machine_profile": mid, "rules": {}, "meta": {"samples": 0}}
 
     # Heuristic aggregates
     n_arc_tight = n_arc_loose = n_tro = 0
@@ -298,13 +307,14 @@ def train_overrides(machine_id: str, r_min_mm: float = 5.0) -> Dict[str, Any]:
         rules["trochoid"] = round(m, 3)
 
     out = {
-        "machine_id": machine_id,
+        "machine_id": mid,
+        "machine_profile": mid,
         "rules": rules,
         "meta": {"samples": len(rows), "r_min": r_min_mm},
     }
 
     # Save to disk
-    path = os.path.join(OUT_DIR, f"overrides_{machine_id}.json")
+    path = os.path.join(OUT_DIR, f"overrides_{mid}.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
 

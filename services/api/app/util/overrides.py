@@ -178,46 +178,65 @@ PATCH HISTORY:
 
 import os
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-
+# Models are written by overrides_learner.py into ../learn/models
 MODELS_DIR: str = os.path.join(os.path.dirname(__file__), "..", "learn", "models")
 
+
 _cache: Dict[str, Dict[str, Any]] = {}
+
+def _resolve_machine_id(
+    machine_id: Optional[str] = None,
+    machine_profile: Optional[str] = None,
+) -> str:
+    mid = machine_profile or machine_id or "default"
+    return mid
 
 
 # =============================================================================
 # OVERRIDE LOADING
 # =============================================================================
 
-def load_overrides(machine_id: str) -> Dict[str, Any] | None:
+def load_overrides(
+    machine_id: Optional[str] = None,
+    *,
+    machine_profile: Optional[str] = None,
+) -> Dict[str, Any] | None:
     """
     Load learned overrides for a machine.
 
     Returns None if no trained model exists.
     Caches in memory for performance.
     """
-    if machine_id in _cache:
-        return _cache[machine_id]
+    mid = _resolve_machine_id(machine_id, machine_profile)
 
-    path = os.path.join(MODELS_DIR, f"overrides_{machine_id}.json")
+    if mid in _cache:
+        return _cache[mid]
+
+    path = os.path.join(MODELS_DIR, f"overrides_{mid}.json")
     if not os.path.exists(path):
         return None
 
     with open(path, "r", encoding="utf-8") as f:
-        _cache[machine_id] = json.load(f)
+        _cache[mid] = json.load(f)
 
-    return _cache[machine_id]
+    return _cache[mid]
 
 
 # =============================================================================
 # FEED FACTOR EVALUATION
 # =============================================================================
 
-def feed_factor_for_move(m: Dict[str, Any], machine_id: str) -> float:
+def feed_factor_for_move(
+    m: Dict[str, Any],
+    machine_id: Optional[str] = None,
+    *,
+    machine_profile: Optional[str] = None,
+) -> float:
     """
     Get learned feed multiplier for a move.
 
@@ -233,7 +252,7 @@ def feed_factor_for_move(m: Dict[str, Any], machine_id: str) -> float:
         - Trochoid move: returns 0.85 (if learned)
         - Regular G1 move: returns 1.0
     """
-    ov = load_overrides(machine_id)
+    ov = load_overrides(machine_id, machine_profile=machine_profile)
     if not ov:
         return 1.0
 
