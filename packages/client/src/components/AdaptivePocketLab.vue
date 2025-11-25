@@ -103,8 +103,15 @@
         <div class="flex gap-2 pt-2 flex-wrap">
           <button class="px-3 py-1 border rounded bg-blue-50" @click="plan">Plan</button>
           <button class="px-3 py-1 border rounded bg-purple-50" @click="previewNc" :disabled="!moves.length">Preview NC</button>
-          <button class="px-3 py-1 border rounded" @click="openCompare" :disabled="!moves.length">Compare modes</button>
-          <button class="px-3 py-1 border rounded bg-green-50" @click="exportProgram" :disabled="!moves.length">Export G-code</button>
+          <button class="px-3 py-1 border rounded" @click="openCompare" :disabled="!moves.length" aria-label="Open compare modes">Compare modes</button>
+          <CompareModeButton
+            v-if="moves.length"
+            :baseline-id="jobName || 'baseline'"
+            :candidate-id="'candidate'"
+            class="ml-2"
+            aria-label="Go to Compare Lab"
+          >Compare in Lab</CompareModeButton>
+          <button class="px-3 py-1 border rounded bg-green-50" @click="exportProgram" :disabled="!moves.length" aria-label="Export G-code">Export G-code</button>
         </div>
         
         <div class="space-y-2 pt-2 border-t">
@@ -629,11 +636,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, reactive } from 'vue'
+
 import PreviewNcDrawer from './PreviewNcDrawer.vue'
 import CompareAfModes from './CompareAfModes.vue'
 import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
+import CompareModeButton from '@/components/compare/CompareModeButton.vue'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 const toolD = ref(6)
@@ -1754,7 +1763,7 @@ async function trainOverrides() {
     const r = await fetch('/api/cam/learn/train', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ machine_id: profileId.value, r_min_mm: 5 })
+      body: JSON.stringify({ machine_profile: profileId.value, r_min_mm: 5 })
     })
     
     if (!r.ok) {
@@ -1762,7 +1771,7 @@ async function trainOverrides() {
     }
     
     const out = await r.json()
-    alert(`Learned rules for ${out.machine_id}:\n` + JSON.stringify(out.rules, null, 2))
+    alert(`Learned rules for ${out.machine_profile || out.machine_id}:\n` + JSON.stringify(out.rules, null, 2))
   } catch (e: any) {
     alert('Train overrides failed: ' + e)
   }
