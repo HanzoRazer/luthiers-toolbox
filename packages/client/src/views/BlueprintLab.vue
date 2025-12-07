@@ -118,6 +118,12 @@
               </svg>
               Export SVG (Dimensions Only)
             </button>
+            <button @click="editDimensions" class="btn-primary" style="margin-left: 12px;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              📐 Edit Dimensions in Parametric Designer
+            </button>
           </div>
         </div>
       </section>
@@ -248,6 +254,9 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // File handling
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -420,6 +429,66 @@ const exportSVGBasic = async () => {
   } finally {
     isExporting.value = false
   }
+}
+
+// Navigate to Parametric Designer with extracted dimensions
+const editDimensions = () => {
+  if (!analysis.value?.dimensions) return
+
+  // Helper function to parse dimension value (handles "475mm", "18.7 inches", etc.)
+  const parseDimension = (label: string): number | undefined => {
+    const dim = analysis.value.dimensions.find((d: any) => 
+      d.label.toLowerCase().includes(label.toLowerCase())
+    )
+    if (!dim?.value) return undefined
+    
+    // Extract numeric value and unit
+    const match = dim.value.match(/([\d.]+)\s*(mm|inch|in|"|cm)?/i)
+    if (!match) return undefined
+    
+    let value = parseFloat(match[1])
+    const unit = match[2]?.toLowerCase()
+    
+    // Convert to mm if needed
+    if (unit === 'inch' || unit === 'in' || unit === '"') {
+      value = value * 25.4
+    } else if (unit === 'cm') {
+      value = value * 10
+    }
+    
+    return value
+  }
+
+  // Extract dimensions (try common guitar dimension labels)
+  const extractedDims: any = {
+    preset: 'ai-extracted'
+  }
+
+  // Body dimensions
+  const bodyLength = parseDimension('body length') || parseDimension('total length') || parseDimension('length')
+  const bodyWidthLower = parseDimension('lower bout') || parseDimension('body width') || parseDimension('width')
+  const bodyWidthUpper = parseDimension('upper bout')
+  const bodyWidthWaist = parseDimension('waist')
+
+  if (bodyLength) extractedDims.bodyLength = bodyLength
+  if (bodyWidthLower) extractedDims.bodyWidthLower = bodyWidthLower
+  if (bodyWidthUpper) extractedDims.bodyWidthUpper = bodyWidthUpper
+  if (bodyWidthWaist) extractedDims.bodyWidthWaist = bodyWidthWaist
+
+  // Neck dimensions (optional)
+  const neckLength = parseDimension('neck length')
+  const neckWidth = parseDimension('neck width') || parseDimension('nut width')
+  const scaleLength = parseDimension('scale length') || parseDimension('scale')
+
+  if (neckLength) extractedDims.neckLength = neckLength
+  if (neckWidth) extractedDims.neckWidth = neckWidth
+  if (scaleLength) extractedDims.scaleLength = scaleLength
+
+  // Navigate to GuitarDimensionsForm with query params
+  router.push({
+    path: '/guitar-dimensions',
+    query: extractedDims
+  })
 }
 
 const downloadVectorizedSVG = async () => {
