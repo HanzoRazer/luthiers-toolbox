@@ -20,16 +20,24 @@ This report documents ALL guitar models found in the Luthier's Tool Box codebase
 | Model | Active Code | Active Assets | Legacy Reference | Status |
 |-------|-------------|---------------|------------------|--------|
 | Stratocaster | ✅ Full router + presets | ✅ DXF/STL/PDF | ✅ Extensive | **Production** |
-| Telecaster | ⚠️ Presets only | ❌ None | ❌ None | **Stub** |
+| Telecaster | ⚠️ Presets only | ❌ None | ✅ Plans PDF | **Stub** |
 | Les Paul | ✅ Neck generator + presets | ❌ None | ✅ Extensive | **Partial** |
 | Dreadnought | ⚠️ Presets only | ❌ None | ✅ Martin 1937 | **Stub** |
 | OM / 000 | ⚠️ Presets only | ❌ None | ✅ Gibson OM | **Stub** |
 | J-45 | ❌ None | ✅ CAM Import Kit | ✅ Extensive | **Assets Only** |
 | Jazz Bass | ⚠️ Presets only | ❌ None | ❌ None | **Stub** |
-| Classical | ⚠️ Scale/rosette refs | ❌ None | ❌ None | **Reference** |
+| Classical | ⚠️ Scale/rosette refs | ❌ None | ✅ Plans PDF/DXF | **Reference** |
 | Archtop | ⚠️ Bridge calc preset | ❌ None | ✅ Measurement kit | **Reference** |
 | PRS | ⚠️ Scale refs only | ❌ None | ❌ None | **Reference** |
-| SG | ⚠️ Doc refs only | ❌ None | ❌ None | **Planned** |
+| SG | ⚠️ Doc refs only | ❌ None | ✅ Plans DXF/PDF | **Planned** |
+| **Jumbo (J-200)** | ❌ None | ❌ None | ✅ DXF/PDF | **Legacy** |
+| **Ukulele** | ❌ None | ✅ DXF (16+ files) | ✅ Soprano project | **Assets Only** |
+| **Gibson OO/L-00** | ⚠️ Test scripts | ❌ None | ✅ DXF/PDF | **Test Ref** |
+| **Flying V** | ❌ None | ❌ None | ✅ DWG/PDF | **Legacy** |
+| **ES-335** | ❌ None | ❌ None | ✅ PDF (7 files) | **Legacy** |
+| **Explorer** | ❌ None | ❌ None | ✅ PDF (5 files) | **Legacy** |
+| **Firebird** | ❌ None | ❌ None | ✅ PDF | **Legacy** |
+| **Moderne** | ❌ None | ❌ None | ✅ DXF/PDF | **Legacy** |
 
 ---
 
@@ -671,27 +679,242 @@ prs_25: { scale: 635, nut: 42.5, heel: 55.5 }
 
 ---
 
-## 12. Other Models (Brief References)
+## 12. Jumbo (J-200 Style)
+
+### Status: ⚠️ **LEGACY ASSETS** - DXF/PDF Available, No Active Code
+
+### 12.1 Active Code
+
+**NONE** - No presets in GuitarDimensionsForm.vue or other components
+
+### 12.2 Active Assets
+
+**NONE in active directories**
+
+### 12.3 Documentation References
+
+- `Guitar Design HTML app/_G_ Thang - Acoustic Guitar Design Tool_files/`: References "Jumbo (J-200) style SS Guitar"
+- `ScaleLengthDesigner.vue`: Mentions "jumbos" in fret height context (medium jumbo frets)
+
+### 12.4 Legacy Reference
+
+**Location:** `Lutherier Project/Lutherier Project/Guitar Plans/`
+
+| File | Description |
+|------|-------------|
+| `Guitar-Jumbo-MM.dxf` | Jumbo body outline (metric) |
+| `Guitar-Jumbo-MM-A4.pdf` | A4 format blueprint |
+| `Guitar-Jumbo-MM-A0.pdf` | A0 format blueprint |
+| `JUMBO-CARLOS-1-3.pdf` | Carlos Jumbo page 1 |
+| `JUMBO-CARLOS-2-3.pdf` | Carlos Jumbo page 2 |
+| `JUMBO-CARLOS-3-3.pdf` | Carlos Jumbo page 3 |
+
+### 12.5 Missing/Planned
+
+- [ ] GuitarDimensionsForm.vue preset
+- [ ] BridgeCalculator.vue preset
+- [ ] Body outline in active assets
+- [ ] Soundhole dimensions (larger than dreadnought)
+
+---
+
+## 13. Ukulele (Soprano/Concert/Tenor/Baritone)
+
+### Status: ⚠️ **ACTIVE ASSETS** - DXF Files Available, No Code Integration
+
+### 13.1 Active Code
+
+**NONE** - No presets in any calculator
+
+### 13.2 Active Assets
+
+**Location:** `Soprano Ukuele/` (root level - note typo in folder name)
+
+| File | Description |
+|------|-------------|
+| `Soprano_ukulele (1).dxf` | Soprano body outline |
+| `Soprano_ukulele - Copy (2-16).dxf` | Multiple copies (16+ DXF files) |
+
+### 13.3 Documentation References
+
+- `Guitar Design HTML app/_G_ Thang - Acoustic Guitar Design Tool_files/`: References Soprano, Concert, Tenor, Baritone sizes
+- `__ARCHIVE__/docs_historical/LEGACY_PIPELINE_DISCOVERY_SUMMARY.md`: "Ukuleles (Soprano, Concert)"
+
+### 13.4 Legacy Reference
+
+**Location:** `Lutherier Project/Lutherier Project/Soprano_Ukulele Project/`
+
+| File | Description |
+|------|-------------|
+| `Soprano_ukulele.dxf` | Master DXF |
+| `Soprano_ukulele (1).dxf` | Copy |
+| `Soprano_ukulele_en.pdf` | English blueprint |
+| `Soprano_ukulele_en (1).pdf` | Blueprint copy |
+
+**Location:** `Lutherier Project/Lutherier Project/Guitar Plans/`
+
+| File | Description |
+|------|-------------|
+| `Soprano_ukulele.dxf` | DXF copy |
+| `Soprano_ukulele_en.pdf` | PDF copy |
+| `Soprano-Ukelele-MM.dxf` | Metric version |
+| `Soprano-Ukelele-MM.pdf` | Metric PDF |
+| `Ukelele-Concert-MM.pdf` | Concert size PDF |
+| `Ukulele+Crown+Sander.zip` | Crown sander jig |
+
+### 13.5 Missing/Planned
+
+- [ ] GuitarDimensionsForm.vue presets (soprano, concert, tenor, baritone)
+- [ ] Scale length presets (soprano: 345mm, concert: 380mm, tenor: 430mm, baritone: 510mm)
+- [ ] Consolidate active folder name (fix "Ukuele" typo)
+
+---
+
+## 14. Gibson OO / L-00
+
+### Status: ⚠️ **LEGACY ASSETS + TEST INTEGRATION** - Used in Blueprint Tests
+
+### 14.1 Active Code
+
+**Test Integration:**
+- `test_real_blueprint_gibson_l00.py`: Full blueprint test using Gibson L-00
+- `test_contour_reconstruction.ps1`: LINE + SPLINE chaining test with L-00
+
+### 14.2 Active Assets
+
+**NONE in active directories** (used via legacy path in tests)
+
+### 14.3 Documentation References
+
+- `PHASE3_2_QUICKREF.md`: Gibson L-00 as test reference file
+- `PHASE3_3_QUICKSTART.md`: "Test with Gibson L-00 DXF"
+- Multiple test scripts reference `Gibson_L-00.dxf`
+
+### 14.4 Legacy Reference
+
+**Location:** `Lutherier Project/Lutherier Project/Gibson OO_Project/`
+
+| File | Description |
+|------|-------------|
+| `1940 Gibson L-00.pdf` | Historical 1940 spec |
+| `Acoustic_guitar_00 (2).dxf` | Body outline |
+| `Acoustic_guitar_00_en (1).pdf` | English blueprint |
+| `Gibson_L-00 (2).dxf` | L-00 outline |
+| `Gibson_L-00_en (1).pdf` | L-00 blueprint |
+| `L-OO mould.dxf` | Mould template |
+
+**Location:** `Lutherier Project/Lutherier Project/Guitar Plans/`
+
+| File | Description |
+|------|-------------|
+| `Gibson_L-00.dxf` | L-00 outline |
+| `Gibson_L-00_en.pdf` | L-00 blueprint |
+| `Gibson-L00-MM.dxf` | Metric version |
+| `Gibson-L0-IN.pdf` | Inch version |
+| `Acoustic_guitar_00.dxf` | 00 body outline |
+| `Acoustic_guitar_00_en.pdf` | 00 blueprint |
+
+### 14.5 Missing/Planned
+
+- [ ] GuitarDimensionsForm.vue preset (L-00 is smaller than OM)
+- [ ] Migrate DXF to active assets (used in tests)
+- [ ] Document body dimensions (~ 380mm lower bout)
+
+---
+
+## 15. Flying V
+
+### Status: ⚠️ **LEGACY ASSETS** - DWG/PDF Available
+
+### 15.1 Active Code
+
+**NONE** - No presets or components
+
+### 15.2 Active Assets
+
+**NONE**
+
+### 15.3 Documentation References
+
+- `templates/env/.env.parametric`: Lists "explorer, flying_v, firebird" as body style options
+
+### 15.4 Legacy Reference
+
+**Location:** `Lutherier Project/Lutherier Project/Guitar Plans/`
+
+| File | Description |
+|------|-------------|
+| `59_Flying_V.dwg` | 1959 Flying V AutoCAD |
+| `Flying_V_11.dwg` | Flying V variant |
+| `Gibson58FlyingV.pdf` | 1958 Flying V blueprint |
+| `Gibson83FlyingV.pdf` | 1983 Flying V blueprint |
+
+### 15.5 Missing/Planned
+
+- [ ] Convert DWG to DXF (CAM-ready)
+- [ ] GuitarDimensionsForm.vue preset
+- [ ] Body outline in active assets
+- [ ] Note: Unusual body shape requires special handling
+
+---
+
+## 16. Gibson (General Brand References)
+
+### Status: 📋 **INDEX** - References to Multiple Gibson Models
+
+The "Gibson" brand appears extensively across the codebase. Key Gibson models documented separately:
+- **Les Paul** - Section 3 (Partial implementation)
+- **SG** - Section 11 (Planned)
+- **J-45** - Section 6 (Assets only)
+- **L-00 / OO** - Section 14 (Legacy + tests)
+- **ES-335** - Section 17 (Reference only)
+
+### 16.1 Gibson-Specific Legacy Assets
+
+**Location:** `Lutherier Project/Lutherier Project/Guitar Plans/`
+
+| Category | Files |
+|----------|-------|
+| **SG Series** | `00-Gibson-1963-SG-JR.pdf`, `01-Gibson-SG-Complete-Template.pdf`, `02-Gibson-SG-Pickguard.pdf`, `03-Gibson-SG-Body-Headstock.pdf`, `04-Gibson-SG-Plans.pdf`, `05-Gibson-SG-full-assembled.pdf`, `DWG-00-Gibson-SG.dwg`, `DXF-00-Gibson-SG.dxf`, `Gibson-SG-Custom.pdf`, `Gibson-SG-Pickguard.pdf` |
+| **ES-335 Series** | `Gibson-335-Body-Front.pdf`, `Gibson-335-Dot-Complete.pdf`, `Gibson-335-Front-Contour.pdf`, `Gibson-335-Front-Pickups-Bridge.pdf`, `Gibson-335-Full-1.pdf`, `Gibson-335-Neck-Headstock-Side.pdf`, `Photoshop-Gibson-335-Full.psd` |
+| **Les Paul Series** | `Gibson-Les-Paul-1950s.pdf`, `Gibson-Les-Paul-59-Complete.pdf`, `Gibson-Les-Paul-59-Front-Body-Headstock.pdf`, `Gibson-Les-Paul-Custom.pdf`, `Gibson-Les-Paul-Isolines.pdf`, `Gibson-Les-Paul-Junior-Double-Cut.pdf`, `Gibson-Les-Paul-Junior-Single-Cut.pdf`, `Les-Paul-*.pdf` (multiple) |
+| **Explorer/Moderne/Firebird** | `Gibson-Explorer-00-1958.pdf`, `Gibson-Explorer-01.pdf` through `05`, `Gibson-Firebird-Studio.pdf`, `Gibson-Moderne-01.pdf` through `03` |
+| **Double Neck** | `Gibson-Double-Neck-esd1275.pdf` |
+| **Melody Maker** | `Gibson-Melody-Maker.pdf` |
+
+### 16.2 Gibson Scale Length Standard
+
+- **24.75" (628.65mm)**: Les Paul, SG, ES-335, Explorer, Flying V, Firebird
+- Defined in: `services/api/app/instrument_geometry/scale_length.py`: `"gibson_standard": 628.65`
+
+---
+
+## 17. Other Models (Brief References)
 
 ### ES-335 / Semi-Hollow
 - **Reference:** `docs/KnowledgeBase/Instrument_Geometry/Fret_Scale_Theory.md`: Gibson 24.75" scale
-- **Status:** Name mentioned only, no implementation
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-335-*.pdf` (7 files)
+- **Status:** Extensive legacy blueprints, no active code
 
-### Explorer / Flying V / Firebird
-- **Reference:** `templates/env/.env.parametric`: Listed as body style options
-- **Status:** Name mentioned only, no implementation
+### Explorer
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-Explorer-*.pdf` (5 files)
+- **Status:** Legacy blueprints only
 
-### Soprano Ukulele
-- **Reference:** `Lutherier Project/Lutherier Project/Soprano_Ukulele Project/`
-- **Status:** Legacy reference only
+### Firebird
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-Firebird-Studio.pdf`
+- **Status:** Single PDF reference
 
-### L-00 (Gibson)
-- **Reference:** `Lutherier Project/Lutherier Project/Gibson OO_Project/`
-- **Status:** Legacy reference only
+### Moderne
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-Moderne-*.pdf` (3 files), `Gibson-Moderne-01.dxf`
+- **Status:** DXF available, no active code
 
-### 00 (Gibson)
-- **Reference:** `Lutherier Project/Lutherier Project/Gibson OO_Project/`
-- **Status:** Legacy reference only
+### Melody Maker
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-Melody-Maker.pdf`
+- **Status:** Single PDF reference
+
+### Double Neck (EDS-1275)
+- **Legacy Assets:** `Lutherier Project/Guitar Plans/Gibson-Double-Neck-esd1275.pdf`
+- **Status:** Single PDF reference
 
 ---
 
@@ -704,17 +927,22 @@ prs_25: { scale: 635, nut: 42.5, heel: 55.5 }
 - ⚠️ **Les Paul** - Has neck generator, extensive legacy assets
 - ⚠️ **J-45** - Has CAM import kit, extensive legacy assets
 - ⚠️ **OM** - Has graduation maps in legacy
+- ⚠️ **Gibson L-00/OO** - Used in blueprint tests, legacy assets
+- ⚠️ **Ukulele (Soprano)** - Active DXF assets exist
 
 ### Tier 3: Stub Only (Need Full Implementation)
 - ⚠️ **Telecaster** - Presets only
 - ⚠️ **Dreadnought** - Presets only
 - ⚠️ **Jazz Bass** - Presets only
+- ⚠️ **Jumbo** - Legacy DXF/PDF available
 
 ### Tier 4: Reference Only (Need Everything)
 - ⚠️ **Classical** - Scale/rosette references
 - ⚠️ **Archtop** - Bridge preset, orphaned calculator
 - ⚠️ **PRS** - Scale references
-- ⚠️ **SG** - Doc references only
+- ⚠️ **SG** - Extensive legacy PDFs, DXF available
+- ⚠️ **Flying V** - Legacy DWG/PDF available
+- ⚠️ **ES-335** - Extensive legacy PDFs
 
 ---
 
