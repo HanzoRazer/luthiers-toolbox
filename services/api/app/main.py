@@ -20,6 +20,48 @@ except Exception as e:
     print(f"Warning: Could not load RMOS 2.0 router: {e}")
     rmos_router = None
 
+# Directional Workflow 2.0 — Art Studio integration
+try:
+    from .workflow.mode_preview_routes import router as workflow_router
+except Exception as e:
+    print(f"Warning: Could not load Directional Workflow router: {e}")
+    workflow_router = None
+
+# RMOS Constraint Search API
+try:
+    from .rmos.api.constraint_search_routes import router as rmos_constraint_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS constraint search router: {e}")
+    rmos_constraint_router = None
+
+# RMOS Logs API
+try:
+    from .rmos.api.log_routes import router as rmos_log_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS log router: {e}")
+    rmos_log_router = None
+
+# RMOS AI Logs Viewer API
+try:
+    from .rmos.api_logs_viewer import router as rmos_ai_logs_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS AI logs router: {e}")
+    rmos_ai_logs_router = None
+
+# RMOS AI Constraint Profiles API
+try:
+    from .rmos.api_constraint_profiles import router as rmos_constraint_profiles_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS constraint profiles router: {e}")
+    rmos_constraint_profiles_router = None
+
+# RMOS AI Generator Snapshots API
+try:
+    from .rmos.api_ai_snapshots import router as rmos_ai_snapshots_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS AI snapshots router: {e}")
+    rmos_ai_snapshots_router = None
+
 # B22: Compare Mode Diff API
 try:
     from .routers.cam_compare_diff_router import router as cam_compare_diff_router
@@ -38,6 +80,69 @@ try:
 except Exception as e:  # pragma: no cover - optional Art namespace
     print(f"Warning: Could not load Art Studio routers: {e}")
     art_root_router = None
+
+# Art Studio — Bracing Calculator API
+try:
+    from .art_studio.bracing_router import router as art_studio_bracing_router
+except Exception as e:
+    print(f"Warning: Could not load Art Studio bracing router: {e}")
+    art_studio_bracing_router = None
+
+# Art Studio — Rosette Calculator API
+try:
+    from .art_studio.rosette_router import router as art_studio_rosette_router_new
+except Exception as e:
+    print(f"Warning: Could not load Art Studio rosette router: {e}")
+    art_studio_rosette_router_new = None
+
+# Art Studio — Inlay Calculator API
+try:
+    from .art_studio.inlay_router import router as art_studio_inlay_router
+except Exception as e:
+    print(f"Warning: Could not load Art Studio inlay router: {e}")
+    art_studio_inlay_router = None
+
+# Art Studio — VCarve Router (Wave 1)
+try:
+    from .art_studio.vcarve_router import router as art_studio_vcarve_router
+except Exception as e:
+    print(f"Warning: Could not load Art Studio vcarve router: {e}")
+    art_studio_vcarve_router = None
+
+# Art Studio — Relief Router (Wave 3)
+try:
+    from .art_studio.relief_router import router as art_studio_relief_router
+except Exception as e:
+    print(f"Warning: Could not load Art Studio relief router: {e}")
+    art_studio_relief_router = None
+
+# Wave 7 — Instrument Geometry Router
+try:
+    from .routers.instrument_router import router as instrument_router
+except Exception as e:
+    print(f"Warning: Could not load instrument_router: {e}")
+    instrument_router = None
+
+# Wave 8 — Calculators Router (Unified chipload/heat/deflection)
+try:
+    from .routers.calculators_router import router as calculators_router
+except Exception as e:
+    print(f"Warning: Could not load calculators_router: {e}")
+    calculators_router = None
+
+# Wave 11 — AI-CAM Advisor + G-Code Explainer 2.0
+try:
+    from .routers.ai_cam_router import router as ai_cam_router
+except Exception as e:
+    print(f"Warning: Could not load ai_cam_router: {e}")
+    ai_cam_router = None
+
+# Wave 14 — Instrument Geometry Core (19-model expanded architecture)
+try:
+    from .routers.instrument_geometry_router import router as instrument_geometry_router
+except Exception as e:
+    print(f"Warning: Could not load instrument_geometry_router: {e}")
+    instrument_geometry_router = None
 
 # Patch N.12 — Machine Tool Tables
 try:
@@ -180,7 +285,7 @@ except Exception as e:
 # Pipeline Presets (Named machine/post recipes) [LEGACY - Use /api/presets instead]
 try:
     from .routers.pipeline_presets_router import router as pipeline_presets_router
-    print("⚠️  DEPRECATION WARNING: pipeline_presets_router at /api/cam/pipeline is deprecated. Use /api/presets with ?kind=cam instead.")
+    # Deprecated: Use /api/presets with ?kind=cam instead
 except Exception as e:
     print(f"Warning: Could not load pipeline_presets_router: {e}")
     pipeline_presets_router = None
@@ -244,7 +349,7 @@ except Exception as e:
 # CNC Production — Preset CRUD + lineage metadata (B20) [LEGACY - Use /api/presets instead]
 try:
     from .routers.cnc_production.presets_router import router as cnc_presets_router
-    print("⚠️  DEPRECATION WARNING: cnc_presets_router at /api/cnc/presets is deprecated. Use /api/presets with ?kind=cam instead.")
+    # Deprecated: Use /api/presets with ?kind=cam instead
 except Exception as e:
     print(f"Warning: Could not load cnc_presets_router: {e}")
     cnc_presets_router = None
@@ -523,6 +628,36 @@ except Exception as e:
     print(f"Warning: Could not load b22_diff_export_router: {e}")
     b22_diff_export_router = None
 
+# AI Graphics — AI-powered rosette parameter suggestions (sandbox mode)
+try:
+    from .ai_graphics.api.ai_routes import router as ai_graphics_router
+    from .ai_graphics.api.session_routes import router as ai_session_router
+except Exception as e:
+    print(f"Warning: Could not load AI Graphics routers: {e}")
+    ai_graphics_router = None
+    ai_session_router = None
+
+# RMOS Presets — Material and tool presets for RMOS context
+try:
+    from .rmos.api_presets import router as rmos_presets_api_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS presets router: {e}")
+    rmos_presets_api_router = None
+
+# RMOS Profile History — Profile versioning and rollback
+try:
+    from .rmos.api_profile_history import router as rmos_profile_history_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS profile history router: {e}")
+    rmos_profile_history_router = None
+
+# Saw Lab Physics Debug — Calculator debugging panel
+try:
+    from .saw_lab.debug_router import router as saw_physics_debug_router
+except Exception as e:
+    print(f"Warning: Could not load saw physics debug router: {e}")
+    saw_physics_debug_router = None
+
 import os
 
 app = FastAPI(title="ToolBox API", version="0.2.0")
@@ -544,6 +679,42 @@ if cnc_production_routers is not None:
 if art_root_router is not None:
     app.include_router(art_root_router)
 
+# Art Studio Bracing Calculator
+if art_studio_bracing_router is not None:
+    app.include_router(art_studio_bracing_router, prefix="/api", tags=["Art Studio"])
+
+# Art Studio Rosette Calculator (new façade-based)
+if art_studio_rosette_router_new is not None:
+    app.include_router(art_studio_rosette_router_new, prefix="/api", tags=["Art Studio"])
+
+# Art Studio Inlay Calculator
+if art_studio_inlay_router is not None:
+    app.include_router(art_studio_inlay_router, prefix="/api", tags=["Art Studio"])
+
+# Art Studio VCarve (Wave 1)
+if art_studio_vcarve_router is not None:
+    app.include_router(art_studio_vcarve_router, prefix="/api/art-studio/vcarve", tags=["Art Studio"])
+
+# Art Studio Relief (Wave 3)
+if art_studio_relief_router is not None:
+    app.include_router(art_studio_relief_router, prefix="/api/art-studio/relief", tags=["Art Studio"])
+
+# Wave 7 — Instrument Geometry (Frets, Fretboard, Bridge, Radius)
+if instrument_router is not None:
+    app.include_router(instrument_router, tags=["Instrument Geometry"])
+
+# Wave 14 — Instrument Geometry Core (19-model registry, expanded architecture)
+if instrument_geometry_router is not None:
+    app.include_router(instrument_geometry_router, prefix="/api/instrument_geometry", tags=["Instrument Geometry"])
+
+# Wave 8 — Calculator Service (Chipload, Heat, Deflection, Rim Speed)
+if calculators_router is not None:
+    app.include_router(calculators_router, tags=["Calculators"])
+
+# Wave 11 — AI-CAM Advisor + G-Code Explainer 2.0
+if ai_cam_router is not None:
+    app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
+
 app.include_router(sim_router)
 app.include_router(feeds_router)
 app.include_router(geometry_router)
@@ -561,6 +732,48 @@ app.include_router(cam_learn_router)  # M.4
 # RMOS 2.0: Feasibility, BOM, Toolpath endpoints
 if rmos_router:
     app.include_router(rmos_router, prefix="/api/rmos", tags=["RMOS"])
+
+# Directional Workflow 2.0: Mode preview and constraints
+if workflow_router:
+    app.include_router(workflow_router, prefix="/api/rmos/workflow", tags=["Workflow", "RMOS"])
+
+# RMOS Constraint Search: Generate feasible designs from constraints
+if rmos_constraint_router:
+    app.include_router(rmos_constraint_router, prefix="/api/rmos/constraint", tags=["RMOS", "Constraint Search"])
+
+# RMOS Logs: Event logging and export
+if rmos_log_router:
+    app.include_router(rmos_log_router, prefix="/api/rmos/logs", tags=["RMOS", "Logs"])
+
+# RMOS AI Logs Viewer: Query AI constraint search logs
+if rmos_ai_logs_router:
+    app.include_router(rmos_ai_logs_router, prefix="/api", tags=["RMOS", "AI Logs"])
+
+# RMOS Constraint Profiles: View and resolve AI constraint profiles
+if rmos_constraint_profiles_router:
+    app.include_router(rmos_constraint_profiles_router, prefix="/api", tags=["RMOS", "AI Profiles"])
+
+# RMOS AI Snapshots: Generator behavior inspection
+if rmos_ai_snapshots_router:
+    app.include_router(rmos_ai_snapshots_router, prefix="/api", tags=["RMOS", "AI Snapshots"])
+
+# AI Graphics: AI-powered rosette parameter suggestions
+if ai_graphics_router:
+    app.include_router(ai_graphics_router, tags=["AI Graphics"])
+if ai_session_router:
+    app.include_router(ai_session_router, tags=["AI Graphics", "Session"])
+
+# RMOS Presets: Material and tool presets
+if rmos_presets_api_router:
+    app.include_router(rmos_presets_api_router, tags=["RMOS", "Presets"])
+
+# RMOS Profile History: Versioning and rollback
+if rmos_profile_history_router:
+    app.include_router(rmos_profile_history_router, tags=["RMOS", "History"])
+
+# Saw Lab Physics Debug: Calculator debugging panel
+if saw_physics_debug_router:
+    app.include_router(saw_physics_debug_router, tags=["Saw Lab", "Debug"])
 
 # RMOS N10.1: LiveMonitor Drill-Down
 if live_monitor_drilldown_router:
