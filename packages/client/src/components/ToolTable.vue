@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 space-y-4">
+  <div class="p-4 space-y-4">b
     <h2 class="text-xl font-bold">Tool Table</h2>
     <div class="flex items-center gap-3">
       <label class="text-sm">Machine

@@ -1,0 +1,100 @@
+{
+  "materials": [
+    {
+      "id": "hardwood_maple",
+      "name": "Maple (Hardwood)",
+      "density_kg_per_m3": 700.0,
+      "burn_tendency": 0.5,
+      "tearout_tendency": 0.5,
+      "hardness_scale": 0.6
+    },
+    {
+      "id": "hardwood_oak",
+      "name": "Oak (Hardwood)",
+      "density_kg_per_m3": 750.0,
+      "burn_tendency": 0.4,
+      "tearout_tendency": 0.6,
+      "hardness_scale": 0.7
+    },
+    {
+      "id": "hardwood_walnut",
+      "name": "Walnut (Hardwood)",
+      "density_kg_per_m3": 640.0,
+      "burn_tendency": 0.3,
+      "tearout_tendency": 0.4,
+      "hardness_scale": 0.5
+    },
+    {
+      "id": "hardwood_mahogany",
+      "name": "Mahogany (Hardwood)",
+      "density_kg_per_m3": 560.0,
+      "burn_tendency": 0.35,
+      "tearout_tendency": 0.35,
+      "hardness_scale": 0.45
+    },
+    {
+      "id": "hardwood_rosewood",
+      "name": "Rosewood (Hardwood)",
+      "density_kg_per_m3": 880.0,
+      "burn_tendency": 0.2,
+      "tearout_tendency": 0.7,
+      "hardness_scale": 0.85
+    },
+    {
+      "id": "softwood_cedar",
+      "name": "Cedar (Softwood)",
+      "density_kg_per_m3": 380.0,
+      "burn_tendency": 0.7,
+      "tearout_tendency": 0.3,
+      "hardness_scale": 0.25
+    },
+    {
+      "id": "softwood_spruce",
+      "name": "Spruce (Softwood)",
+      "density_kg_per_m3": 450.0,
+      "burn_tendency": 0.6,
+      "tearout_tendency": 0.35,
+      "hardness_scale": 0.3
+    },
+    {
+      "id": "softwood_pine",
+      "name": "Pine (Softwood)",
+      "density_kg_per_m3": 500.0,
+      "burn_tendency": 0.55,
+      "tearout_tendency": 0.4,
+      "hardness_scale": 0.35
+    },
+    {
+      "id": "plywood_birch",
+      "name": "Birch Plywood",
+      "density_kg_per_m3": 680.0,
+      "burn_tendency": 0.45,
+      "tearout_tendency": 0.55,
+      "hardness_scale": 0.55
+    },
+    {
+      "id": "mdf_standard",
+      "name": "MDF Standard",
+      "density_kg_per_m3": 750.0,
+      "burn_tendency": 0.8,
+      "tearout_tendency": 0.2,
+      "hardness_scale": 0.4
+    },
+    {
+      "id": "acrylic_clear",
+      "name": "Acrylic (Clear)",
+      "density_kg_per_m3": 1190.0,
+      "burn_tendency": 0.9,
+      "tearout_tendency": 0.1,
+      "hardness_scale": 0.65
+    },
+    {
+      "id": "aluminum_6061",
+      "name": "Aluminum 6061-T6",
+      "density_kg_per_m3": 2700.0,
+      "burn_tendency": 0.15,
+      "tearout_tendency": 0.05,
+      "hardness_scale": 0.95
+    }
+  ]
+}
