@@ -20,6 +20,27 @@ except Exception as e:
     print(f"Warning: Could not load RMOS 2.0 router: {e}")
     rmos_router = None
 
+# Phase B (Wave 17→18): RMOS Context Management
+try:
+    from .rmos.context_router import router as rmos_context_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS context router: {e}")
+    rmos_context_router = None
+
+# Phase D (Wave 18): Feasibility Fusion
+try:
+    from .rmos.feasibility_router import router as rmos_feasibility_router
+except Exception as e:
+    print(f"Warning: Could not load RMOS feasibility router: {e}")
+    rmos_feasibility_router = None
+
+# Phase E (Wave 17→18): CAM Preview Integration
+try:
+    from .cam.cam_preview_router import router as cam_preview_router
+except Exception as e:
+    print(f"Warning: Could not load CAM preview router: {e}")
+    cam_preview_router = None
+
 # Directional Workflow 2.0 — Art Studio integration
 try:
     from .workflow.mode_preview_routes import router as workflow_router
@@ -143,6 +164,13 @@ try:
 except Exception as e:
     print(f"Warning: Could not load instrument_geometry_router: {e}")
     instrument_geometry_router = None
+
+# Wave 17 — Instrument Geometry: Neck Taper Suite
+try:
+    from .instrument_geometry.neck_taper.api_router import router as neck_taper_router
+except Exception as e:
+    print(f"Warning: Could not load neck_taper_router: {e}")
+    neck_taper_router = None
 
 # Patch N.12 — Machine Tool Tables
 try:
@@ -707,6 +735,10 @@ if instrument_router is not None:
 if instrument_geometry_router is not None:
     app.include_router(instrument_geometry_router, prefix="/api/instrument_geometry", tags=["Instrument Geometry"])
 
+# Wave 17 — Instrument Geometry: Neck Taper Suite
+if neck_taper_router is not None:
+    app.include_router(neck_taper_router, prefix="/api/instrument/neck_taper", tags=["Instrument Geometry"])
+
 # Wave 8 — Calculator Service (Chipload, Heat, Deflection, Rim Speed)
 if calculators_router is not None:
     app.include_router(calculators_router, tags=["Calculators"])
@@ -732,6 +764,18 @@ app.include_router(cam_learn_router)  # M.4
 # RMOS 2.0: Feasibility, BOM, Toolpath endpoints
 if rmos_router:
     app.include_router(rmos_router, prefix="/api/rmos", tags=["RMOS"])
+
+# Phase B (Wave 17→18): RMOS Context Management
+if rmos_context_router:
+    app.include_router(rmos_context_router, prefix="/api/rmos", tags=["RMOS", "Context"])
+
+# Phase D (Wave 18): Feasibility Fusion
+if rmos_feasibility_router:
+    app.include_router(rmos_feasibility_router, prefix="/api/rmos/feasibility", tags=["RMOS", "Feasibility"])
+
+# Phase E (Wave 17→18): CAM Preview Integration
+if cam_preview_router:
+    app.include_router(cam_preview_router, prefix="/api/cam", tags=["CAM", "Preview", "Wave17-18"])
 
 # Directional Workflow 2.0: Mode preview and constraints
 if workflow_router:

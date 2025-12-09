@@ -188,3 +188,66 @@ def compute_string_spacing_at_position(
         string_positions.append(y)
 
     return string_positions
+
+
+def compute_compound_radius_at_position(
+    base_radius_mm: Optional[float],
+    end_radius_mm: Optional[float],
+    position_mm: float,
+    scale_length_mm: float,
+) -> Optional[float]:
+    """
+    Compute fretboard radius at a specific position for compound radius boards.
+
+    Compound radius fretboards taper from a tighter curve at the nut
+    (e.g., 9.5" or 241.3mm) to a flatter curve at the heel (e.g., 12" or 304.8mm).
+    This provides comfortable chord playing at lower frets and easier bending
+    at higher frets.
+
+    Uses linear interpolation between base and end radii.
+
+    Args:
+        base_radius_mm: Radius at the nut (e.g., 241.3mm for 9.5").
+        end_radius_mm: Radius at the heel (e.g., 304.8mm for 12").
+        position_mm: Distance from the nut to the point of interest.
+        scale_length_mm: Full scale length for normalization.
+
+    Returns:
+        Interpolated radius in mm at the specified position.
+        Returns None if base_radius_mm is None (flat fretboard).
+
+    Example:
+        >>> # Compound 9.5" → 12" radius on 25.5" scale
+        >>> radius_at_12th = compute_compound_radius_at_position(
+        ...     241.3, 304.8, 324.0, 648.0
+        ... )
+        >>> round(radius_at_12th, 1)
+        273.1  # Halfway blend at 12th fret
+
+    Notes:
+        - If end_radius_mm is None, returns base_radius_mm (constant radius).
+        - Position beyond scale_length returns end_radius_mm.
+        - Common presets:
+            * Vintage Fender: 7.25" constant (184.2mm)
+            * Modern Fender: 9.5" constant (241.3mm)
+            * PRS Compound: 10" → 13.5" (254mm → 342.9mm)
+            * Ibanez Wizard: 15.75" → 17" (400mm → 431.8mm)
+
+    Wave 17 Phase C Enhancement (December 2025)
+    """
+    if base_radius_mm is None:
+        return None
+
+    if end_radius_mm is None:
+        return base_radius_mm
+
+    # Normalize position (0.0 at nut, 1.0 at scale length)
+    if scale_length_mm <= 0:
+        return base_radius_mm
+
+    blend_ratio = min(1.0, max(0.0, position_mm / scale_length_mm))
+
+    # Linear interpolation
+    current_radius = base_radius_mm + (end_radius_mm - base_radius_mm) * blend_ratio
+
+    return current_radius
