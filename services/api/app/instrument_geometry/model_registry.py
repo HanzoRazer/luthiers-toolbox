@@ -7,7 +7,7 @@ JSON-backed registry for instrument model metadata with caching.
 Loads model specifications from instrument_model_registry.json.
 
 Usage:
-    from instrument_geometry.registry import get_model_info, list_models
+    from instrument_geometry.model_registry import get_model_info, list_models
     
     info = get_model_info(InstrumentModelId.STRAT)
     print(info["display_name"])  # "Fender Stratocaster"

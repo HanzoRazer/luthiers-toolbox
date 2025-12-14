@@ -16,12 +16,12 @@ from pydantic import BaseModel, Field
 
 # Import Wave 14 modules
 from ..instrument_geometry.models import InstrumentModelId, InstrumentModelStatus
-from ..instrument_geometry.registry import (
+from ..instrument_geometry.model_registry import (
     get_model_info,
     list_models,
     get_all_models_summary,
 )
-from ..instrument_geometry.registry import get_default_scale
+from ..instrument_geometry.model_registry import get_default_scale
 from ..instrument_geometry.neck import (
     compute_fret_positions_mm,
     compute_compound_radius_at_fret,
