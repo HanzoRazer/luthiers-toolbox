@@ -83,6 +83,11 @@ from .routers.posts_router import router as posts_router
 from .routers.instrument_geometry_router import router as instrument_geometry_router
 
 # =============================================================================
+# DATA REGISTRY (1 router)
+# =============================================================================
+from .routers.registry_router import router as registry_router
+
+# =============================================================================
 # SAW LAB (1 router)
 # Note: saw_blade/gcode/validate/telemetry routers broken - need cam_core
 # =============================================================================
@@ -166,6 +171,9 @@ app.include_router(posts_router, prefix="/api/posts", tags=["Post Processors"])
 
 # Instrument Geometry (1)
 app.include_router(instrument_geometry_router, prefix="/api/instrument", tags=["Instrument Geometry"])
+
+# Data Registry (1)
+app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry"])
 
 # Saw Lab (1)
 app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
