@@ -10,10 +10,11 @@ Registered at: /api/registry/*
 """
 
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
 
-from ..data_registry import Registry, Edition, EntitlementError
+from ..data_registry import Registry, Edition as RegistryEdition, EntitlementError
+from ..middleware import get_edition, require_feature, EditionContext
 
 
 router = APIRouter()
@@ -146,7 +147,7 @@ def get_wood_species(
 
 @router.get("/empirical_limits", response_model=EmpiricalLimitsResponse)
 def get_empirical_limits(
-    edition: str = Query(default="pro", description="Edition (pro or enterprise required)")
+    ctx: EditionContext = Depends(require_feature("empirical_limits"))
 ) -> EmpiricalLimitsResponse:
     """
     Get empirical feed/speed limits per wood species.
@@ -161,7 +162,7 @@ def get_empirical_limits(
     - warnings: burn risk, tearout risk, dust hazard
     """
     try:
-        registry = Registry(edition=edition)
+        registry = Registry(edition=ctx.edition.value)
         data = registry.get_empirical_limits()
     except EntitlementError as e:
         raise HTTPException(
@@ -182,7 +183,7 @@ def get_empirical_limits(
 @router.get("/empirical_limits/{wood_id}")
 def get_empirical_limit_by_wood(
     wood_id: str,
-    edition: str = Query(default="pro", description="Edition (pro or enterprise required)")
+    ctx: EditionContext = Depends(require_feature("empirical_limits"))
 ) -> Dict[str, Any]:
     """
     Get empirical limits for a specific wood species.
@@ -191,13 +192,12 @@ def get_empirical_limit_by_wood(
     
     Args:
         wood_id: Wood species ID (e.g., "maple_hard", "ebony_african")
-        edition: Product edition
         
     Returns:
         Feed/speed limits for the specified wood species.
     """
     try:
-        registry = Registry(edition=edition)
+        registry = Registry(edition=ctx.edition.value)
         data = registry.get_empirical_limits()
     except EntitlementError as e:
         raise HTTPException(
@@ -218,7 +218,7 @@ def get_empirical_limit_by_wood(
     return {
         "wood_id": wood_id,
         "limits": limits[wood_id],
-        "edition": edition
+        "edition": ctx.edition.value
     }
 
 
