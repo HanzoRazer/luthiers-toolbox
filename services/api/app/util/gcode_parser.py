@@ -239,6 +239,14 @@ def _arc_len(center: Tuple[float, float], a: Tuple[float, float], b: Tuple[float
     rb = math.atan2(by, bx)
     d = rb - ra
     
+    # Check for full circle (start==end within tolerance)
+    dist_start_to_end = math.hypot(b[0] - a[0], b[1] - a[1])
+    r = math.hypot(ax, ay)
+    
+    if dist_start_to_end < 1e-6 and r > 1e-6:
+        # Full circle: return full circumference
+        return 2 * math.pi * r
+    
     # Adjust angle based on direction
     if cw:
         if d > 0:
@@ -247,7 +255,6 @@ def _arc_len(center: Tuple[float, float], a: Tuple[float, float], b: Tuple[float
         if d < 0:
             d += 2 * math.pi
     
-    r = math.hypot(ax, ay)
     return abs(d) * r
 
 
@@ -357,7 +364,11 @@ def simulate(
         code = modal["G"]
         
         # Process motion commands
-        if code in (0, 1, 2, 3) and (nx != pos[0] or ny != pos[1] or nz != pos[2]):
+        # For arcs (G2/G3), allow full circles (start==end) if IJ or R is specified
+        has_arc_params = (i is not None and j is not None) or (r is not None)
+        position_changed = (nx != pos[0] or ny != pos[1] or nz != pos[2])
+        
+        if code in (0, 1, 2, 3) and (position_changed or (code in (2, 3) and has_arc_params)):
             if code in (0, 1):  # Linear motion
                 dxy = _dist((pos[0], pos[1]), (nx, ny))
                 
@@ -380,15 +391,20 @@ def simulate(
                     
                 elif r is not None:  # R radius specification
                     c_len = _dist((pos[0], pos[1]), (nx, ny))
-                    if c_len > 2 * abs(r):
-                        # Invalid radius, use chord length
+                    # For full circles (start==end), R method doesn't apply
+                    if c_len < 1e-6:
+                        # Full circle: calculate from radius
+                        length = 2 * math.pi * abs(r)
+                    elif c_len > 2 * abs(r):
+                        # Invalid radius, use chord length as fallback
                         length = c_len
                     else:
                         # Calculate arc length from radius
                         theta = 2 * math.asin(max(-1.0, min(1.0, c_len / (2 * abs(r)))))
                         length = abs(theta) * abs(r)
                 else:
-                    # No center/radius specified, use chord length
+                    # No center/radius specified - this is malformed G-code
+                    # Use chord length as defensive fallback (should ideally error)
                     length = _dist((pos[0], pos[1]), (nx, ny))
                 
                 t = length / max(1e-6, modal["F"])

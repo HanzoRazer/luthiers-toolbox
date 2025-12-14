@@ -94,7 +94,7 @@ from typing import List, Tuple
 # MATERIAL REMOVAL CALCULATIONS
 # =============================================================================
 
-def rough_mrr_estimate(area_mm2: float, stepdown: float, path_len_mm: float, tool_d: float):
+def rough_mrr_estimate(area_mm2: float, stepdown: float, path_len_mm: float, tool_d: float) -> float:
     """
     Crude estimate of material removal rate.
     
@@ -104,7 +104,7 @@ def rough_mrr_estimate(area_mm2: float, stepdown: float, path_len_mm: float, too
     Args:
         area_mm2: Pocket area in square millimeters
         stepdown: Depth of cut in mm
-        path_len_mm: Total toolpath length in mm
+        path_len_mm: total toolpath length in mm
         tool_d: Tool diameter in mm
     
     Returns:

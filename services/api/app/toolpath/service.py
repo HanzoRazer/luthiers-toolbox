@@ -1,6 +1,10 @@
 """
 RMOS 2.0 Toolpath Service
 Facade for toolpath planning with geometry engine integration.
+
+Supports two modes:
+    - Router mode (default): For rosette/router operations
+    - Saw mode: Activated when tool_id starts with "saw:" prefix
 """
 from typing import List, Dict, Any
 from ..rmos.api_contracts import RmosContext, RmosToolpathPlan
@@ -12,10 +16,19 @@ except ImportError:
     from ..rmos.api_contracts import RosetteParamSpec
 
 
+def _is_saw_tool(tool_id: str | None) -> bool:
+    """Check if tool_id indicates a saw blade operation."""
+    if not tool_id:
+        return False
+    return tool_id.lower().startswith("saw:")
+
+
 class ToolpathService:
     """
     Unified toolpath planning facade.
     Integrates geometry engine with feed rate, plunge strategy, and G-code generation.
+    
+    Supports saw mode when tool_id starts with "saw:" prefix.
     """
     
     def generate_toolpaths(
@@ -33,6 +46,37 @@ class ToolpathService:
         Returns:
             RmosToolpathPlan with toolpath segments, length, time estimate
         """
+        # Check for saw mode
+        if _is_saw_tool(ctx.tool_id):
+            return self._generate_saw_toolpaths(design, ctx)
+        
+        # Router mode (default)
+        return self._generate_router_toolpaths(design, ctx)
+    
+    def _generate_saw_toolpaths(
+        self,
+        design: RosetteParamSpec,
+        ctx: RmosContext
+    ) -> RmosToolpathPlan:
+        """Generate toolpaths using Saw Lab engine."""
+        try:
+            from .saw_engine import get_saw_engine
+            engine = get_saw_engine()
+            return engine.generate_toolpaths(design, ctx)
+        except ImportError as e:
+            return RmosToolpathPlan(
+                toolpaths=[],
+                total_length_mm=0.0,
+                estimated_time_seconds=0.0,
+                warnings=[f"Saw Lab module not available: {str(e)}"]
+            )
+    
+    def _generate_router_toolpaths(
+        self,
+        design: RosetteParamSpec,
+        ctx: RmosContext
+    ) -> RmosToolpathPlan:
+        """Generate toolpaths using router/rosette engine (original logic)."""
         warnings: List[str] = []
         
         try:

@@ -641,11 +641,28 @@ def reconstruct_contours_from_dxf(
         warnings.append("No edges built from geometry")
         return ReconstructionResult(loops=[], warnings=warnings)
     
-    # Build adjacency map
-    adjacency, unique_points = build_adjacency_map(edges)
+    # Security patch: Use safe algorithms with O(n) spatial hash and iterative DFS
+    from app.cam.graph_algorithms import (
+        build_adjacency_map_safe,
+        find_cycles_iterative,
+        deduplicate_cycles,
+        GraphOverflowError,
+    )
     
-    # Find cycles
-    cycles = find_cycles_dfs(adjacency, unique_points)
+    # Build adjacency map with spatial hash (O(n) vs O(n²))
+    try:
+        adjacency, unique_points = build_adjacency_map_safe(edges, tolerance=tolerance)
+    except GraphOverflowError as e:
+        warnings.append(f"Graph construction failed: {str(e)}")
+        return ReconstructionResult(loops=[], warnings=warnings)
+    
+    # Find cycles with iterative DFS (prevents stack overflow)
+    try:
+        cycles = find_cycles_iterative(adjacency, unique_points)
+    except GraphOverflowError as e:
+        warnings.append(f"Cycle detection failed: {str(e)}")
+        return ReconstructionResult(loops=[], warnings=warnings)
+    
     if not cycles:
         warnings.append(f"No closed cycles found. Check geometry connectivity (tolerance={tolerance}mm)")
         return ReconstructionResult(loops=[], warnings=warnings)
