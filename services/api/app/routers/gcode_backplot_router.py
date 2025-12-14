@@ -17,9 +17,11 @@ Author: Patch N.15
 Integrated: November 2025
 """
 
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+
 from ..util.gcode_parser import simulate, svg_from_points
 
 router = APIRouter(prefix="/api/cam/gcode", tags=["cam", "gcode"])

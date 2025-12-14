@@ -488,17 +488,18 @@ PERFORMANCE CHARACTERISTICS
 =================================================================================
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from pydantic import BaseModel, Field
-from typing import List, Tuple, Optional, Dict, Any
-import ezdxf
 from io import BytesIO
+from typing import Any, Dict, List, Optional, Tuple
+
+import ezdxf
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 
 # Import existing CAM systems
 from ..cam.adaptive_core_l1 import plan_adaptive_l1, to_toolpath
-from ..util.units import scale_geom_units
 from ..cam.contour_reconstructor import reconstruct_contours_from_dxf
-from ..cam.dxf_preflight import DXFPreflight, generate_html_report, PreflightReport
+from ..cam.dxf_preflight import DXFPreflight, PreflightReport, generate_html_report
+from ..util.units import scale_geom_units
 
 router = APIRouter(prefix="/cam/blueprint", tags=["blueprint-cam-bridge"])
 
@@ -645,7 +646,7 @@ async def reconstruct_contours(
     layer_name: str = "Contours",
     tolerance: float = 0.1,
     min_loop_points: int = 3
-):
+) -> Dict[str, Any]:
     """
     **Phase 3.1: Contour Reconstruction**
     
@@ -676,24 +677,24 @@ async def reconstruct_contours(
     - stats: Geometry analysis (lines, splines, cycles found)
     - warnings: Non-fatal issues during reconstruction
     """
-    # Validate file type
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(status_code=400, detail="Only DXF files are supported")
+    # Security patch: Validate file size and extension before reading
+    from app.cam.dxf_upload_guard import read_dxf_with_validation
+    from app.cam.async_timeout import run_with_timeout, GeometryTimeout
     
-    # Read DXF file
-    try:
-        dxf_bytes = await file.read()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read uploaded file: {str(e)}")
+    dxf_bytes = await read_dxf_with_validation(file)
     
-    # Reconstruct contours
+    # Reconstruct contours with timeout protection
     try:
-        result = reconstruct_contours_from_dxf(
+        result = await run_with_timeout(
+            reconstruct_contours_from_dxf,
             dxf_bytes=dxf_bytes,
             layer_name=layer_name,
             tolerance=tolerance,
-            min_loop_points=min_loop_points
+            min_loop_points=min_loop_points,
+            timeout=30.0
         )
+    except GeometryTimeout as e:
+        raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -723,7 +724,7 @@ async def reconstruct_contours(
 async def dxf_preflight(
     file: UploadFile = File(..., description="DXF file to validate"),
     format: str = "json"  # "json" or "html"
-):
+) -> Dict[str, Any]:
     """
     **Phase 3.2: DXF Preflight Validation**
     
@@ -761,14 +762,10 @@ async def dxf_preflight(
     - HTML: Visual report with color-coded issues
     """
     # Validate file type
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(status_code=400, detail="Only DXF files are supported")
+    # Security patch: Validate file size and extension before reading
+    from app.cam.dxf_upload_guard import read_dxf_with_validation
     
-    # Read DXF file
-    try:
-        dxf_bytes = await file.read()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read uploaded file: {str(e)}")
+    dxf_bytes = await read_dxf_with_validation(file)
     
     # Run preflight checks
     try:
@@ -862,15 +859,10 @@ async def blueprint_to_adaptive(
       -F "strategy=Spiral"
     ```
     """
-    # Validate file type
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(status_code=400, detail="Only DXF files are supported")
+    # Security patch: Validate file size and extension before reading
+    from app.cam.dxf_upload_guard import read_dxf_with_validation
     
-    # Read DXF file
-    try:
-        dxf_bytes = await file.read()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read uploaded file: {str(e)}")
+    dxf_bytes = await read_dxf_with_validation(file)
     
     # Extract loops from DXF
     loops, warnings = extract_loops_from_dxf(dxf_bytes, layer_name)
@@ -953,7 +945,7 @@ async def blueprint_to_adaptive(
 # =============================================================================
 
 @router.get("/health")
-def health_check():
+def health_check() -> Dict[str, Any]:
     """Health check for blueprint CAM bridge"""
     return {
         "status": "ok",

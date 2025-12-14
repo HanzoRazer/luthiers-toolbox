@@ -7,19 +7,20 @@ Provides energy and heat analysis endpoints that integrate:
 - Heat distribution (chip/tool/workpiece)
 """
 
+import csv
+import io
+import json
+from typing import Any, Dict, List, Optional
+from zipfile import ZipFile
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
-import io
-import csv
-import json
-from zipfile import ZipFile
 
-from ..routers.material_router import get_material
-from ..routers.machine_router import get_profile
 from ..cam.energy_model import energy_breakdown
 from ..cam.heat_timeseries import heat_timeseries
+from ..routers.machine_router import get_profile
+from ..routers.material_router import get_material
 from ..util.names import safe_stem
 
 router = APIRouter(prefix="/cam/metrics", tags=["cam-metrics"])
@@ -36,7 +37,7 @@ class EnergyIn(BaseModel):
 
 
 @router.post("/energy")
-def energy(body: EnergyIn):
+def energy(body: EnergyIn) -> Dict[str, Any]:
     """
     Calculate cutting energy and heat distribution for a toolpath.
     
@@ -81,7 +82,7 @@ def energy(body: EnergyIn):
 
 
 @router.post("/energy_csv")
-def energy_csv(body: EnergyIn):
+def energy_csv(body: EnergyIn) -> StreamingResponse:
     """
     Export per-segment energy breakdown as CSV.
     
@@ -146,7 +147,7 @@ class HeatIn(BaseModel):
     bins: int = Field(default=120, ge=10, le=2000)
 
 @router.post("/heat_timeseries")
-def heat_ts(body: HeatIn):
+def heat_ts(body: HeatIn) -> Dict[str, Any]:
     """
     Calculate heat generation over time: power (J/s) in chip, tool, work.
     
@@ -187,7 +188,7 @@ class BottleneckCsvIn(BaseModel):
     job_name: str = "pocket"
 
 @router.post("/bottleneck_csv")
-def bottleneck_csv_export(body: BottleneckCsvIn):
+def bottleneck_csv_export(body: BottleneckCsvIn) -> StreamingResponse:
     """
     Export per-segment bottleneck data as CSV.
     
@@ -264,7 +265,7 @@ from datetime import datetime
 
 _SPARK = "▁▂▃▄▅▆▇█"
 
-def _sparkline(values, width=60):
+def _sparkline(values: List[float], width: int=60) -> str:
     """Generate ASCII sparkline from values."""
     if not values:
         return ""
@@ -297,7 +298,7 @@ class ThermalReportIn(BaseModel):
     include_csv_links: bool = False  # Include CSV download commands in footer
 
 @router.post("/thermal_report_md")
-def thermal_report_md(body: ThermalReportIn):
+def thermal_report_md(body: ThermalReportIn) -> StreamingResponse:
     """
     Generate comprehensive thermal report as Markdown with:
     - Job context (machine, material, tool)
@@ -450,7 +451,7 @@ def thermal_report_md(body: ThermalReportIn):
 
 
 @router.post("/thermal_report_bundle")
-def thermal_report_bundle(body: ThermalReportIn):
+def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
     """
     Export thermal report as ZIP bundle containing:
     - thermal_report_<job>.md (Markdown report)

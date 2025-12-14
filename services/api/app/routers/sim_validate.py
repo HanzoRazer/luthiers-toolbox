@@ -1,8 +1,8 @@
-import math
-import re
 import csv
 import io
-from typing import Dict, Any, List, Tuple
+import math
+import re
+from typing import Any, Dict, List, Tuple
 
 MOVE_RE = re.compile(r'^(?:N\d+\s+)?(G\d+(?:\.\d+)?|M\d+|T\d+|S\d+|F[-+]?\d*\.?\d+|[XYZIJKR][-+]?\d*\.?\d+|G\s*\d+)', re.I)
 TOK_RE = re.compile(r'([GMTFSXYZIJKR])\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)', re.I)
@@ -64,13 +64,13 @@ def as_units(ms: ModalState, val: float) -> float:
     return val if ms.units == 'mm' else val * 25.4
 
 
-def arc_center_from_ijk(ms: ModalState, start, params):
+def arc_center_from_ijk(ms: ModalState, start: Tuple[float, float], params: Dict[str, float]) -> Tuple[float, float]:
     cx = start[0] + as_units(ms, params.get('I', 0.0))
     cy = start[1] + as_units(ms, params.get('J', 0.0))
     return (cx, cy)
 
 
-def arc_center_from_r(ms: ModalState, start, end, r_user: float, cw: bool):
+def arc_center_from_r(ms: ModalState, start: Tuple[float, float], end: Tuple[float, float], r_user: float, cw: bool) -> Tuple[float, float]:
     sx, sy = start
     ex, ey = end
     r = abs(as_units(ms, r_user))
@@ -123,7 +123,7 @@ def trapezoidal_time(distance_mm: float, feed_mm_min: float, accel_mm_s2: float)
     return 2 * t_acc + cruise / v
 
 
-def within_envelope(pt, env) -> bool:
+def within_envelope(pt: Dict[str, float], env: Dict[str, Tuple[float, float]]) -> bool:
     for ax in ('X', 'Y', 'Z'):
         lo, hi = env[ax]
         if pt[ax] < lo - 1e-9 or pt[ax] > hi + 1e-9:
@@ -247,7 +247,7 @@ def simulate(gcode: str, accel: float = DEFAULT_ACCEL, clearance_z: float = DEFA
     return {'moves': moves, 'modal': {'units': ms.units, 'abs': ms.abs, 'plane': ms.plane, 'feed_mode': ms.feed_mode, 'F': ms.F, 'S': ms.S}, 'summary': summary, 'issues': issues}
 
 
-def csv_export(sim):
+def csv_export(sim: Dict[str, Any]) -> bytes:
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(['i', 'line', 'code', 'x', 'y', 'z', 'i', 'j', 'feed', 't'])

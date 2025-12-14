@@ -21,11 +21,19 @@ from ..instrument_geometry.registry import (
     list_models,
     get_all_models_summary,
 )
+from ..instrument_geometry.registry import get_default_scale
 from ..instrument_geometry.neck import (
     compute_fret_positions_mm,
     compute_compound_radius_at_fret,
     InstrumentSpec,
     FretboardSpec,
+)
+from ..instrument_geometry.neck.neck_profiles import get_default_neck_profile
+from ..instrument_geometry.neck.fret_math import (
+    compute_fan_fret_positions,
+    validate_fan_fret_geometry,
+    FanFretPoint,
+    FAN_FRET_PRESETS,
 )
 from ..instrument_geometry.body import (
     compute_fretboard_outline,
@@ -75,6 +83,53 @@ class FretPositionsRequest(BaseModel):
     scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
     num_frets: int = Field(22, ge=1, le=36, description="Number of frets")
     compensation_mm: float = Field(0.0, ge=0, description="Bridge compensation in mm")
+
+
+class FanFretCalculateRequest(BaseModel):
+    """Request body for fan-fret position calculation."""
+    treble_scale_mm: float = Field(..., gt=0, description="Treble side scale length in mm")
+    bass_scale_mm: float = Field(..., gt=0, description="Bass side scale length in mm")
+    num_frets: int = Field(24, ge=1, le=36, description="Number of frets")
+    nut_width_mm: float = Field(42.0, gt=0, description="Nut width in mm")
+    heel_width_mm: float = Field(56.0, gt=0, description="Heel width in mm")
+    perpendicular_fret: int = Field(7, ge=0, description="Fret number that remains perpendicular")
+
+
+class FanFretPointResponse(BaseModel):
+    """Single fan-fret point data."""
+    fret_number: int
+    treble_pos_mm: float
+    bass_pos_mm: float
+    angle_rad: float
+    angle_deg: float
+    center_x: float
+    center_y: float
+    is_perpendicular: bool
+
+
+class FanFretCalculateResponse(BaseModel):
+    """Response for fan-fret calculation."""
+    treble_scale_mm: float
+    bass_scale_mm: float
+    perpendicular_fret: int
+    num_frets: int
+    fret_points: List[FanFretPointResponse]
+    max_angle_deg: float
+
+
+class FanFretValidateRequest(BaseModel):
+    """Request body for fan-fret geometry validation."""
+    treble_scale_mm: float = Field(..., gt=0, description="Treble side scale length in mm")
+    bass_scale_mm: float = Field(..., gt=0, description="Bass side scale length in mm")
+    num_frets: int = Field(24, ge=1, le=36, description="Number of frets")
+    perpendicular_fret: int = Field(7, ge=0, description="Fret number that remains perpendicular")
+
+
+class FanFretValidateResponse(BaseModel):
+    """Response for fan-fret validation."""
+    valid: bool
+    message: str
+    warnings: Optional[List[str]] = None
 
 
 class FretPositionsResponse(BaseModel):
@@ -129,6 +184,30 @@ class RadiusAtFretResponse(BaseModel):
     fret_number: int
     radius_mm: float
     radius_inches: float
+
+
+class ScaleLengthResponse(BaseModel):
+    """Response model for scale length lookup."""
+    model_id: str
+    scale_length_mm: float
+    num_frets: int
+    description: Optional[str] = None
+    multiscale: bool = False
+    bass_length_mm: Optional[float] = None
+    treble_length_mm: Optional[float] = None
+
+
+class NeckProfileResponse(BaseModel):
+    """Response model for neck profile lookup."""
+    model_id: str
+    nut_width_mm: float
+    twelve_fret_width_mm: float
+    thickness_1st_mm: float
+    thickness_12th_mm: float
+    radius_nut_mm: float
+    radius_12th_mm: float
+    description: Optional[str] = None
+    profile_shape: Optional[str] = None
 
 
 # ============================================================================
@@ -378,4 +457,153 @@ async def list_statuses():
             {"key": s.name, "value": s.value}
             for s in InstrumentModelStatus
         ]
+    }
+
+
+
+@router.get("/scale-length/{model_id}", response_model=ScaleLengthResponse, tags=["Instrument Geometry"])
+async def api_get_scale_length(model_id: str):
+    """
+    Return the default ScaleLengthSpec for a given model_id.
+    """
+    try:
+        model_enum = InstrumentModelId(model_id)
+    except ValueError:
+        raise HTTPException(404, f"Model not found: {model_id}")
+
+    spec = get_default_scale(model_enum)
+    return ScaleLengthResponse(
+        model_id=model_enum.value,
+        scale_length_mm=spec.scale_length_mm,
+        num_frets=spec.num_frets,
+        description=getattr(spec, "description", None),
+        multiscale=getattr(spec, "multiscale", False),
+        bass_length_mm=getattr(spec, "bass_length_mm", None),
+        treble_length_mm=getattr(spec, "treble_length_mm", None),
+    )
+
+
+@router.get("/neck-profile/{model_id}", response_model=NeckProfileResponse, tags=["Instrument Geometry"])
+async def api_get_neck_profile(model_id: str):
+    """
+    Return the default NeckProfileSpec for a given model_id.
+    """
+    try:
+        model_enum = InstrumentModelId(model_id)
+    except ValueError:
+        raise HTTPException(404, f"Model not found: {model_id}")
+
+    spec = get_default_neck_profile(model_enum)
+    return NeckProfileResponse(
+        model_id=model_enum.value,
+        nut_width_mm=spec.nut_width_mm,
+        twelve_fret_width_mm=spec.twelve_fret_width_mm,
+        thickness_1st_mm=spec.thickness_1st_mm,
+        thickness_12th_mm=spec.thickness_12th_mm,
+        radius_nut_mm=spec.radius_nut_mm,
+        radius_12th_mm=spec.radius_12th_mm,
+        description=getattr(spec, "description", None),
+        profile_shape=getattr(spec, "profile_shape", None),
+    )
+
+
+# ============================================================================
+# Fan-Fret Endpoints (Wave 19 Phase A)
+# ============================================================================
+
+@router.post("/fan_fret/calculate", response_model=FanFretCalculateResponse, tags=["Instrument Geometry"])
+async def api_calculate_fan_fret(body: FanFretCalculateRequest):
+    """
+    Calculate fan-fret (multi-scale) fret positions.
+    
+    Returns position data for each fret including:
+    - Treble and bass side positions
+    - Slot angle in radians and degrees
+    - Center point coordinates
+    - Perpendicular fret marker
+    
+    Example:
+        7-string standard: treble=648mm (25.5"), bass=686mm (27"), perp=7
+    """
+    # Compute fan-fret positions
+    fret_points = compute_fan_fret_positions(
+        treble_scale_mm=body.treble_scale_mm,
+        bass_scale_mm=body.bass_scale_mm,
+        fret_count=body.num_frets,
+        nut_width_mm=body.nut_width_mm,
+        heel_width_mm=body.heel_width_mm,
+        perpendicular_fret=body.perpendicular_fret,
+        scale_length_reference_mm=body.treble_scale_mm,
+    )
+    
+    # Convert to response format
+    response_points = []
+    max_angle_deg = 0.0
+    
+    for fp in fret_points:
+        angle_deg = fp.angle_rad * 180.0 / 3.14159265359
+        is_perp = abs(fp.angle_rad) < 0.001
+        
+        response_points.append(FanFretPointResponse(
+            fret_number=fp.fret_number,
+            treble_pos_mm=fp.treble_pos_mm,
+            bass_pos_mm=fp.bass_pos_mm,
+            angle_rad=fp.angle_rad,
+            angle_deg=angle_deg,
+            center_x=fp.center_x,
+            center_y=fp.center_y,
+            is_perpendicular=is_perp,
+        ))
+        
+        max_angle_deg = max(max_angle_deg, abs(angle_deg))
+    
+    return FanFretCalculateResponse(
+        treble_scale_mm=body.treble_scale_mm,
+        bass_scale_mm=body.bass_scale_mm,
+        perpendicular_fret=body.perpendicular_fret,
+        num_frets=body.num_frets,
+        fret_points=response_points,
+        max_angle_deg=max_angle_deg,
+    )
+
+
+@router.post("/fan_fret/validate", response_model=FanFretValidateResponse, tags=["Instrument Geometry"])
+async def api_validate_fan_fret(body: FanFretValidateRequest):
+    """
+    Validate fan-fret geometry parameters.
+    
+    Checks:
+    - Bass scale >= treble scale
+    - Scale lengths in reasonable range (500-900mm)
+    - Perpendicular fret within valid range
+    
+    Returns validation status with detailed message.
+    """
+    result = validate_fan_fret_geometry(
+        treble_scale_mm=body.treble_scale_mm,
+        bass_scale_mm=body.bass_scale_mm,
+        fret_count=body.num_frets,
+        perpendicular_fret=body.perpendicular_fret,
+    )
+    
+    return FanFretValidateResponse(
+        valid=result["valid"],
+        message=result["message"],
+        warnings=result.get("warnings"),
+    )
+
+
+@router.get("/fan_fret/presets", tags=["Instrument Geometry"])
+async def api_get_fan_fret_presets():
+    """
+    Get predefined fan-fret configurations.
+    
+    Returns presets for:
+    - 7-string standard (25.5"-27")
+    - 8-string standard (25.5"-28")
+    - Baritone 6-string (26"-27")
+    """
+    return {
+        "presets": FAN_FRET_PRESETS,
+        "count": len(FAN_FRET_PRESETS),
     }

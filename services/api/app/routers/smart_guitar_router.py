@@ -3,11 +3,12 @@ Smart Guitar DAW Bundle Router
 Documentation and integration resources for Smart Guitar IoT/DAW system
 """
 
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from pathlib import Path
 from pydantic import BaseModel
-from typing import List, Optional
 
 router = APIRouter(prefix="/cam/smart-guitar", tags=["smart-guitar"])
 
@@ -105,7 +106,7 @@ def get_smart_guitar_info() -> SmartGuitarIntegrationInfo:
 
 
 @router.get("/overview")
-def get_smart_guitar_overview():
+def get_smart_guitar_overview() -> Dict[str, Any]:
     """
     Get Smart Guitar system overview and architecture.
     
@@ -178,7 +179,7 @@ def get_smart_guitar_overview():
 
 
 @router.get("/resources")
-def list_smart_guitar_resources():
+def list_smart_guitar_resources() -> Dict[str, Any]:
     """
     List all available Smart Guitar resources.
     
@@ -212,7 +213,7 @@ def list_smart_guitar_resources():
 
 
 @router.get("/resources/{filename}")
-def download_smart_guitar_resource(filename: str):
+def download_smart_guitar_resource(filename: str) -> FileResponse:
     """
     Download a specific Smart Guitar resource file.
     
@@ -244,7 +245,7 @@ def download_smart_guitar_resource(filename: str):
 
 
 @router.get("/integration-notes")
-def get_integration_notes():
+def get_integration_notes() -> Dict[str, Any]:
     """
     Get integration notes and requirements.
     
@@ -335,7 +336,7 @@ def get_integration_notes():
 
 
 @router.get("/health")
-def smart_guitar_health():
+def smart_guitar_health() -> Dict[str, Any]:
     """Health check for Smart Guitar module"""
     bundle_dir = Path("Luthiers_ToolBox_Smart_Guitar_DAW_Bundle_v1.0/Build_10-14-2025")
     bundle_exists = bundle_dir.exists()

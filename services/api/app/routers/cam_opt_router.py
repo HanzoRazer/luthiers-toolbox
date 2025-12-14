@@ -3,13 +3,14 @@ Module M.2: CAM Optimization Router
 API endpoints for what-if optimization and cycle time estimation.
 """
 
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 
-from ..routers.machine_router import get_profile
-from ..cam.whatif_opt import optimize_feed_stepover
 from ..cam.time_estimator_v2 import estimate_cycle_time_v2
+from ..cam.whatif_opt import optimize_feed_stepover
+from ..routers.machine_router import get_profile
 
 router = APIRouter(prefix="/cam/opt", tags=["cam-opt"])
 
@@ -42,7 +43,7 @@ class OptIn(BaseModel):
 
 
 @router.post("/what_if")
-def what_if_opt(body: OptIn):
+def what_if_opt(body: OptIn) -> Dict[str, Any]:
     """
     What-if optimizer for feed/stepover/RPM parameters.
     

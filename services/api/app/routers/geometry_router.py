@@ -29,11 +29,20 @@ API Endpoints:
 - POST /geometry/export_bundle_multi - Multi-post bundle (N × NC files)
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Body, Response
+import datetime
+import io
+import json
+import math
+import os
+import re
+import time
+import zipfile
+from typing import Any, Dict, List, Literal, Optional
+
+from fastapi import APIRouter, Body, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Literal
-import io, math, json, zipfile, datetime, os, re, time
+
 from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 
@@ -377,17 +386,16 @@ def _dxf_to_segments(dxf_bytes:bytes)->List[Dict[str,Any]]:
     return ents
 
 @router.post("/import")
-async def import_geometry(file: UploadFile = File(None), geometry: GeometryIn = Body(None)):
+async def import_geometry(request: Request):
     """
     Import geometry from DXF/SVG file or JSON body into canonical format.
     
     Accepts two input modes:
     1. File upload: multipart/form-data with .dxf or .svg file
-    2. JSON body: GeometryIn model with units and paths
+    2. JSON body: GeometryIn model with units and paths (send as top-level JSON)
     
     Args:
-        file: Optional uploaded file (.dxf or .svg extension required)
-        geometry: Optional JSON geometry in canonical format
+        request: FastAPI Request object (handles both JSON and multipart)
     
     Returns:
         GeometryIn dict with:
@@ -431,30 +439,53 @@ async def import_geometry(file: UploadFile = File(None), geometry: GeometryIn = 
         - DXF parser supports LINE and ARC entities only (R12+ format)
         - JSON input skips parsing (direct passthrough for validation)
     """
-    if geometry and geometry.paths:
-        return geometry.dict()
-    if not file:
+    content_type = request.headers.get("content-type", "")
+    
+    # Handle JSON body
+    if "application/json" in content_type:
+        body = await request.json()
+        geometry_data = body.get("geometry") or body  # Support both nested and flat
+        
+        if not geometry_data or not geometry_data.get("paths"):
+            raise HTTPException(400, "JSON body must contain geometry with paths")
+        
+        try:
+            geometry = GeometryIn(**geometry_data)
+            return geometry.dict()
+        except Exception as e:
+            raise HTTPException(400, f"Invalid geometry format: {str(e)}")
+    
+    # Handle file upload
+    elif "multipart/form-data" in content_type:
+        form = await request.form()
+        file = form.get("file")
+        
+        if not file or not isinstance(file, UploadFile):
+            raise HTTPException(400, "Provide either JSON geometry or a file (.svg/.dxf)")
+        
+        data = await file.read()
+        
+        # Validate file size
+        if len(data) > MAX_FILE_SIZE_BYTES:
+            raise HTTPException(400, f"File exceeds {MAX_FILE_SIZE_BYTES/1024/1024:.0f}MB limit")
+        
+        name = (file.filename or "").lower()
+        if name.endswith(".svg"):
+            segs = _svg_path_to_segments(data.decode(errors='ignore'))
+            # Validate segment count
+            if len(segs) > MAX_SEGMENTS:
+                raise HTTPException(400, f"Geometry exceeds {MAX_SEGMENTS} segment limit")
+            return {"units":"mm","paths":segs}
+        if name.endswith(".dxf"):
+            segs = _dxf_to_segments(data)
+            # Validate segment count
+            if len(segs) > MAX_SEGMENTS:
+                raise HTTPException(400, f"Geometry exceeds {MAX_SEGMENTS} segment limit")
+            return {"units":"mm","paths":segs}
+        raise HTTPException(415, "Only .svg or .dxf supported for file upload")
+    
+    else:
         raise HTTPException(400, "Provide either JSON geometry or a file (.svg/.dxf)")
-    data = await file.read()
-    
-    # Validate file size
-    if len(data) > MAX_FILE_SIZE_BYTES:
-        raise HTTPException(400, f"File exceeds {MAX_FILE_SIZE_BYTES/1024/1024:.0f}MB limit")
-    
-    name = (file.filename or "").lower()
-    if name.endswith(".svg"):
-        segs = _svg_path_to_segments(data.decode(errors='ignore'))
-        # Validate segment count
-        if len(segs) > MAX_SEGMENTS:
-            raise HTTPException(400, f"Geometry exceeds {MAX_SEGMENTS} segment limit")
-        return {"units":"mm","paths":segs}
-    if name.endswith(".dxf"):
-        segs = _dxf_to_segments(data)
-        # Validate segment count
-        if len(segs) > MAX_SEGMENTS:
-            raise HTTPException(400, f"Geometry exceeds {MAX_SEGMENTS} segment limit")
-        return {"units":"mm","paths":segs}
-    raise HTTPException(415, "Only .svg or .dxf supported for file upload")
 
 class ParityRequest(BaseModel):
     geometry: GeometryIn
@@ -462,7 +493,7 @@ class ParityRequest(BaseModel):
     tolerance_mm: float = 0.05
 
 @router.post("/parity")
-def parity(body: ParityRequest):
+def parity(body: ParityRequest) -> Dict[str, Any]:
     """
     Validate toolpath fidelity against design geometry (parity checking).
     
@@ -676,7 +707,7 @@ class GcodeExportIn(BaseModel):
     job_name: Optional[str] = Field(default=None, description="Filename stem for NC file (safe chars only)")
 
 @router.post("/export_gcode")
-def export_gcode(body: GcodeExportIn):
+def export_gcode(body: GcodeExportIn) -> Response:
     """
     Export G-code with post-processor headers/footers and metadata.
     
@@ -749,8 +780,10 @@ def export_gcode(body: GcodeExportIn):
     units_code = _units_gcode(body.units or "mm")
     meta = _metadata_comment(body.units or "mm", body.post_id or "")
     
-    if body.post_id and body.post_id in posts:
-        post = posts[body.post_id]
+    # Case-insensitive post lookup
+    posts_lower = {k.lower(): v for k, v in posts.items()}
+    if body.post_id and body.post_id.lower() in posts_lower:
+        post = posts_lower[body.post_id.lower()]
         hdr = (post.get("header") or [])[:]
         ftr = (post.get("footer") or [])[:]
     
@@ -775,10 +808,11 @@ class ExportBundleIn(BaseModel):
     geometry: GeometryIn
     gcode: str
     post_id: Optional[str] = None
+    target_units: Optional[str] = None  # if provided, geometry is scaled server-side before export
     job_name: Optional[str] = Field(default=None, description="Filename stem for bundle files (safe chars only)")
 
 @router.post("/export_bundle")
-def export_bundle(body: ExportBundleIn):
+def export_bundle(body: ExportBundleIn) -> Response:
     """
     Export complete CAM bundle: DXF + SVG + G-code + manifest as ZIP archive.
     
@@ -850,14 +884,21 @@ def export_bundle(body: ExportBundleIn):
         None (uses generic post if post_id invalid)
     """
     units = body.geometry.units or "mm"
+    target_units = (body.target_units or units).lower()
+    
+    # Scale geometry if a different target unit is requested
+    geom_src = body.geometry.dict()
+    geom = scale_geom_units(geom_src, target_units)
+    units = geom["units"]
+    
     meta = _metadata_comment(units, body.post_id or "")
     
-    # Use job_name for filenames if provided
-    stem = _safe_stem(body.job_name, default_prefix="export")
+    # Use job_name for filenames if provided, default to "program" for consistency
+    stem = body.job_name.strip() if body.job_name else "program"
     
     # Build files in-memory
-    dxf_txt = export_dxf(body.geometry.dict(), meta=meta)
-    svg_txt = export_svg(body.geometry.dict(), meta=meta)
+    dxf_txt = export_dxf(geom, meta=meta)
+    svg_txt = export_svg(geom, meta=meta)
     
     # G-code via post-processor
     gc_request = GcodeExportIn(gcode=body.gcode, units=units, post_id=body.post_id, job_name=body.job_name)
@@ -869,14 +910,14 @@ def export_bundle(body: ExportBundleIn):
         "post_id": body.post_id,
         "job_name": stem,
         "generated": datetime.datetime.utcnow().isoformat() + "Z",
-        "files": [f"{stem}.dxf", f"{stem}.svg", f"{stem}.nc"]
+        "files": [f"{stem}.dxf", f"{stem}.svg", f"{stem}_{body.post_id}.nc"]
     }
     
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED) as z:
         z.writestr(f"{stem}.dxf", dxf_txt)
         z.writestr(f"{stem}.svg", svg_txt)
-        z.writestr(f"{stem}.nc", program)
+        z.writestr(f"{stem}_{body.post_id}.nc", program)
         z.writestr(f"{stem}_manifest.json", json.dumps(manifest, indent=2))
         z.writestr("README.txt",
                    "ToolBox bundle export\nContains DXF/SVG/G-code with metadata comments for provenance.\n")
@@ -897,7 +938,7 @@ class ExportBundleMultiIn(BaseModel):
     job_name: Optional[str] = Field(default=None, description="Filename stem for bundle files (safe chars only)")
 
 @router.post("/export_bundle_multi")
-def export_bundle_multi(body: ExportBundleMultiIn):
+def export_bundle_multi(body: ExportBundleMultiIn) -> Response:
     """
     Export multi-post CAM bundle: DXF + SVG + N×G-code + manifest as ZIP archive.
     
@@ -1002,11 +1043,14 @@ def export_bundle_multi(body: ExportBundleMultiIn):
     geom = scale_geom_units(geom_src, target_units)
     units = geom["units"]
 
-    # Use job_name for filenames if provided
-    stem = _safe_stem(body.job_name, default_prefix="program")
+    # Use job_name for filenames if provided, default to "program" for consistency
+    stem = body.job_name.strip() if body.job_name else "program"
 
     posts = _load_posts()
-    requested = [p for p in body.post_ids if p in posts]
+    # Map lowercase post names to actual file names for case-insensitive lookup
+    posts_lower = {k.lower(): k for k in posts.keys()}
+    # Preserve original case from user input in filenames
+    requested = [p for p in body.post_ids if p.lower() in posts_lower]
     if not requested:
         raise HTTPException(400, "No valid post_ids supplied")
 

@@ -3,12 +3,13 @@ Stratocaster Guitar Router
 Endpoints for Fender Stratocaster templates, BOM, and design resources
 """
 
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from pathlib import Path
-from typing import List, Optional
-import json
 
 router = APIRouter(prefix="/cam/stratocaster", tags=["stratocaster"])
 
@@ -33,7 +34,7 @@ class StratocasterBOMResponse(BaseModel):
 
 
 @router.get("/templates")
-def list_stratocaster_templates():
+def list_stratocaster_templates() -> Dict[str, Any]:
     """
     List all available Stratocaster DXF templates.
     
@@ -120,7 +121,7 @@ def list_stratocaster_templates():
 
 
 @router.get("/templates/{component}/download")
-def download_stratocaster_template(component: str):
+def download_stratocaster_template(component: str) -> FileResponse:
     """
     Download specific Stratocaster template.
     
@@ -211,7 +212,7 @@ def get_stratocaster_bom(series: str = "Player II") -> StratocasterBOMResponse:
 
 
 @router.get("/specs")
-def get_stratocaster_specs():
+def get_stratocaster_specs() -> Dict[str, Any]:
     """
     Get standard Stratocaster specifications.
     
@@ -258,7 +259,7 @@ def get_stratocaster_specs():
 
 
 @router.get("/resources")
-def get_stratocaster_resources():
+def get_stratocaster_resources() -> Dict[str, Any]:
     """
     List available Stratocaster resources (PDFs, plans, STL files).
     """
@@ -299,7 +300,7 @@ def get_stratocaster_resources():
 
 
 @router.get("/presets")
-def get_stratocaster_presets():
+def get_stratocaster_presets() -> Dict[str, Any]:
     """
     Get recommended CAM presets for Stratocaster components.
     
@@ -398,7 +399,7 @@ def get_stratocaster_presets():
 
 
 @router.get("/health")
-def stratocaster_health():
+def stratocaster_health() -> Dict[str, Any]:
     """Health check for Stratocaster module"""
     strat_dir = Path("Stratocaster")
     templates_exist = strat_dir.exists()

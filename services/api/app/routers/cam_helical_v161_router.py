@@ -1,11 +1,37 @@
+"""
+Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+CAM Helical V16.1 Router - Helical Z-ramping for plunge entry
+
+Part of Art Studio v16.1: Helical Z-Ramping
+Repository: HanzoRazer/luthiers-toolbox
+Created: January 2025
+
+Features:
+- Helical plunge entry (prevents tool breakage in hardwood)
+- G2/G3 arc-based spiral descent
+- CW/CCW direction support
+- IJ mode (relative center offsets) and R mode (arc radius)
+- Post-processor presets (GRBL, Mach3, Haas, Marlin)
+- Configurable pitch, feed rates, and arc segmentation
+- Safe rapid to clearance plane
+- Dwell command support (post-aware G4 P/S)
+"""
+
+import math
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, Literal, Optional
-import math
-from ..utils.post_presets import get_post_preset, get_dwell_command
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-router = APIRouter(prefix="/api/cam/toolpath", tags=["helical_v161"])
+from ..cam.helical_core import (
+    helical_plunge,
+    helical_preview_points,
+    helical_stats,
+    helical_validate,
+)
+from ..utils.post_presets import get_dwell_command, get_post_preset
+
+router = APIRouter(prefix="/cam/toolpath", tags=["helical_v161"])
 
 class HelicalReq(BaseModel):
     # Geometry
@@ -31,6 +57,47 @@ class HelicalReq(BaseModel):
     max_arc_degrees: float = Field(360.0, gt=0, le=360.0, description="Split arcs to this maximum sweep each segment")
     # Post-processor preset
     post_preset: Optional[str] = Field(None, description="Optional controller preset: GRBL | Mach3 | Haas | Marlin")
+    # Safety validation parameters (optional)
+    tool_diameter_mm: Optional[float] = Field(None, gt=0, description="Tool diameter for safety checks (mm)")
+    material: Optional[str] = Field(None, description="Material type: hardwood | softwood | plywood | mdf | acrylic | aluminum")
+    spindle_rpm: Optional[int] = Field(None, gt=0, description="Spindle speed for chipload validation (RPM)")
+
+    @model_validator(mode='before')
+    @classmethod
+    def migrate_old_field_names(cls, data: Any) -> Any:
+        """
+        Backward compatibility: Accept old field names from tests and migrate to new names.
+        
+        Old → New mappings:
+        - entry_x → cx
+        - entry_y → cy
+        - helix_radius → radius_mm
+        - target_depth → z_target_mm
+        - pitch → pitch_mm_per_rev
+        - feed_xy → feed_xy_mm_min
+        - feed_z → feed_z_mm_min
+        - direction: lowercase → uppercase (cw → CW, ccw → CCW)
+        """
+        if isinstance(data, dict):
+            # Map old field names to new ones
+            if 'entry_x' in data:
+                data['cx'] = data.pop('entry_x')
+            if 'entry_y' in data:
+                data['cy'] = data.pop('entry_y')
+            if 'helix_radius' in data:
+                data['radius_mm'] = data.pop('helix_radius')
+            if 'target_depth' in data:
+                data['z_target_mm'] = data.pop('target_depth')
+            if 'pitch' in data and 'pitch_mm_per_rev' not in data:
+                data['pitch_mm_per_rev'] = data.pop('pitch')
+            if 'feed_xy' in data:
+                data['feed_xy_mm_min'] = data.pop('feed_xy')
+            if 'feed_z' in data:
+                data['feed_z_mm_min'] = data.pop('feed_z')
+            # Normalize direction to uppercase
+            if 'direction' in data and isinstance(data['direction'], str):
+                data['direction'] = data['direction'].upper()
+        return data
 
     @field_validator("z_target_mm")
     @classmethod
@@ -50,107 +117,121 @@ def helical_gcode(req: HelicalReq) -> Dict[str, Any]:
     # Override ij_mode if preset requires R-mode
     effective_ij_mode = not preset.use_r_mode if req.post_preset else req.ij_mode
     
-    # compute number of full revs and final remainder angle to hit target depth
-    start_z = req.start_z_mm
-    target_z = req.z_target_mm
-    dz_total = target_z - start_z  # negative if plunging down
-    if req.pitch_mm_per_rev == 0:
-        raise HTTPException(status_code=400, detail="pitch_mm_per_rev must be > 0")
-    # Determine number of full turns (sign handled by dz sign)
-    revs_exact = abs(dz_total) / req.pitch_mm_per_rev
-    full_revs = int(math.floor(revs_exact + 1e-9))
-    rem_frac = revs_exact - full_revs  # 0.. <1
-    # Determine sign for Z step per rev
-    z_per_rev = -abs(req.pitch_mm_per_rev) if dz_total < 0 else abs(req.pitch_mm_per_rev)
-    # Build program
+    # CRITICAL: Run safety validation BEFORE generating toolpath
+    warnings = helical_validate(
+        radius_mm=req.radius_mm,
+        pitch_mm_per_rev=req.pitch_mm_per_rev,
+        feed_xy_mm_min=req.feed_xy_mm_min,
+        tool_diameter_mm=req.tool_diameter_mm,
+        material=req.material,
+        spindle_rpm=req.spindle_rpm,
+    )
+    
+    # Generate toolpath using core module
+    moves = helical_plunge(
+        cx=req.cx,
+        cy=req.cy,
+        radius_mm=req.radius_mm,
+        direction=req.direction,
+        start_z_mm=req.start_z_mm,
+        z_target_mm=req.z_target_mm,
+        pitch_mm_per_rev=req.pitch_mm_per_rev,
+        feed_xy_mm_min=req.feed_xy_mm_min,
+        max_arc_degrees=req.max_arc_degrees,
+        ij_mode=effective_ij_mode,
+    )
+    
+    # Calculate statistics using core module
+    stats = helical_stats(
+        moves=moves,
+        radius_mm=req.radius_mm,
+        pitch_mm_per_rev=req.pitch_mm_per_rev,
+        start_z_mm=req.start_z_mm,
+        z_target_mm=req.z_target_mm,
+        feed_xy_mm_min=req.feed_xy_mm_min,
+        tool_diameter_mm=req.tool_diameter_mm,
+        spindle_rpm=req.spindle_rpm,
+    )
+    
+    # Generate preview points for visualization
+    preview = helical_preview_points(
+        cx=req.cx,
+        cy=req.cy,
+        radius_mm=req.radius_mm,
+        direction=req.direction,
+        start_z_mm=req.start_z_mm,
+        z_target_mm=req.z_target_mm,
+        pitch_mm_per_rev=req.pitch_mm_per_rev,
+        points_per_rev=16,  # 16 points per revolution for smooth preview
+    )
+    
+    # Convert moves to G-code
     lines = []
     units = "G21" if req.units_mm else "G20"
     preset_name = preset.name if req.post_preset else "default"
-    lines.append(f"({req.direction} Helical Z-Ramp, r={_fmt(req.radius_mm)} pitch={_fmt(req.pitch_mm_per_rev)} startZ={_fmt(start_z)} targetZ={_fmt(target_z)})")
+    
+    # Header
+    lines.append(f"({req.direction} Helical Z-Ramp, r={_fmt(req.radius_mm)} pitch={_fmt(req.pitch_mm_per_rev)} startZ={_fmt(req.start_z_mm)} targetZ={_fmt(req.z_target_mm)})")
     lines.append(f"(Post preset: {preset_name})")
+    if warnings:
+        lines.append(f"(WARNINGS: {len(warnings)} safety checks flagged - review before running)")
     lines.append(units)
     lines.append("G90" if req.absolute else "G91")
     lines.append("G17")  # XY plane
-
-    # Move to start XY at clearance plane
-    # Start point is at angle 0 on the circle: X = cx + r, Y = cy
+    
+    # Safe rapid to clearance
     sx = req.cx + req.radius_mm
     sy = req.cy
     if req.safe_rapid:
         lines.append(f"G0 Z{_fmt(req.plane_z_mm)}")
-    # XY rapid to start
     lines.append(f"G0 X{_fmt(sx)} Y{_fmt(sy)}")
-    # Move to start_z
-    if req.plane_z_mm != start_z:
-        lines.append(f"G1 Z{_fmt(start_z)} F{_fmt(req.feed_z_mm_min or req.feed_xy_mm_min)}")
-
-    # Determine G2/G3
-    g = "G2" if req.direction == "CW" else "G3"
-
-    def emit_arc_sweep(deg: float, z_end: float):
-        nonlocal lines, sx, sy
-        # Compute end point after sweep deg around center from current point
-        # Current angle from center:
-        ang0 = math.atan2(sy - req.cy, sx - req.cx)
-        ang = ang0 + math.radians(deg if req.direction=="CCW" else -deg)
-        ex = req.cx + req.radius_mm * math.cos(ang)
-        ey = req.cy + req.radius_mm * math.sin(ang)
-        if effective_ij_mode:
-            # I,J are center offset from CURRENT start point
-            I = req.cx - sx
-            J = req.cy - sy
-            lines.append(f"{g} X{_fmt(ex)} Y{_fmt(ey)} Z{_fmt(z_end)} I{_fmt(I)} J{_fmt(J)} F{_fmt(req.feed_xy_mm_min)}")
-        else:
-            # Use R word when possible (minor arc by default)
-            lines.append(f"{g} X{_fmt(ex)} Y{_fmt(ey)} Z{_fmt(z_end)} R{_fmt(req.radius_mm)} F{_fmt(req.feed_xy_mm_min)}")
-        sx, sy = ex, ey
-
-    # Emit full rev arcs chunked by max_arc_degrees
-    seg_deg = max(1.0, min(360.0, req.max_arc_degrees))
-    per_seg_rev = seg_deg / 360.0
-    # Full revs
-    curr_z = start_z
-    for r in range(full_revs):
-        z_next = curr_z + z_per_rev
-        # split one full rev into segments
-        steps = int(math.ceil(360.0 / seg_deg))
-        # recompute segment degrees to evenly divide 360
-        deg = 360.0 / steps
-        for s in range(steps):
-            # linear interpolate Z over steps within this rev
-            z_step = curr_z + z_per_rev * ((s+1)/steps)
-            emit_arc_sweep(deg, z_step)
-        curr_z = z_next
-
-    # Remainder fraction
-    if rem_frac > 1e-9:
-        rem_deg_total = rem_frac * 360.0
-        steps = int(math.ceil(rem_deg_total / seg_deg))
-        deg = rem_deg_total / steps
-        for s in range(steps):
-            # interpolate Z to final target
-            z_step = curr_z + (target_z - curr_z) * ((s+1)/steps)
-            emit_arc_sweep(deg, z_step)
-        curr_z = target_z
-
+    
+    # Plunge to start Z
+    if req.plane_z_mm != req.start_z_mm:
+        lines.append(f"G1 Z{_fmt(req.start_z_mm)} F{_fmt(req.feed_z_mm_min or req.feed_xy_mm_min)}")
+    
+    # Emit helical moves
+    for move in moves:
+        parts = [move["code"]]
+        if "x" in move:
+            parts.append(f"X{_fmt(move['x'])}")
+        if "y" in move:
+            parts.append(f"Y{_fmt(move['y'])}")
+        if "z" in move:
+            parts.append(f"Z{_fmt(move['z'])}")
+        if "i" in move:
+            parts.append(f"I{_fmt(move['i'])}")
+        if "j" in move:
+            parts.append(f"J{_fmt(move['j'])}")
+        if "r" in move:
+            parts.append(f"R{_fmt(move['r'])}")
+        if "f" in move:
+            parts.append(f"F{_fmt(move['f'])}")
+        lines.append(" ".join(parts))
+    
     # Optional dwell
     if req.dwell_ms and req.dwell_ms > 0:
-        # Use preset-aware dwell command (G4 P for GRBL/Mach3/Marlin, G4 S for Haas)
         dwell_cmd = get_dwell_command(req.dwell_ms, preset)
         if dwell_cmd:
             lines.append(dwell_cmd)
+    
     # Exit to clearance plane
     lines.append(f"G0 Z{_fmt(req.plane_z_mm)}")
+    
     program = "\n".join(lines)
-    stats = {
-        "revs_exact": revs_exact,
-        "full_revs": full_revs,
-        "rem_frac": rem_frac,
-        "segments": sum(1 for ln in lines if ln.startswith(("G2","G3"))),
-        "post_preset": preset_name,
-        "arc_mode": "R" if not effective_ij_mode else "IJ"
+    
+    # Add warning count and preview points to stats
+    stats["post_preset"] = preset_name
+    stats["arc_mode"] = "R" if not effective_ij_mode else "IJ"
+    stats["warning_count"] = len(warnings)
+    
+    return {
+        "ok": True,
+        "gcode": program,
+        "stats": stats,
+        "warnings": warnings,
+        "preview_points": preview,
     }
-    return {"ok": True, "gcode": program, "stats": stats}
 
 @router.post("/helical_entry")
 def helical_entry(req: HelicalReq) -> Dict[str, Any]:
@@ -163,4 +244,4 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
 
 @router.get("/helical_health")
 def helical_health() -> Dict[str, Any]:
-    return {"ok": True, "service": "helical_v161", "version": "16.1"}
+    return {"ok": True, "status": "ok", "service": "helical_v161", "module": "helical_v161", "version": "16.1"}

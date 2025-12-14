@@ -3,13 +3,14 @@ Archtop Guitar Router
 Endpoints for archtop guitar design: contour generation, floating bridge, saddle
 """
 
-from fastapi import APIRouter, Body, HTTPException
-from pydantic import BaseModel
-from pathlib import Path
 import subprocess
 import sys
 import time
-from typing import Optional
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Body, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/cam/archtop", tags=["archtop"])
 
@@ -58,7 +59,7 @@ class ArchtopSaddleRequest(BaseModel):
 
 
 @router.post("/contours/csv")
-def generate_contours_from_csv(req: ArchtopContourCSVRequest):
+def generate_contours_from_csv(req: ArchtopContourCSVRequest) -> Dict[str, Any]:
     """
     Generate archtop contour rings from CSV point cloud.
     
@@ -116,7 +117,7 @@ def generate_contours_from_csv(req: ArchtopContourCSVRequest):
 
 
 @router.post("/contours/outline")
-def generate_contours_from_outline(req: ArchtopContourOutlineRequest):
+def generate_contours_from_outline(req: ArchtopContourOutlineRequest) -> Dict[str, Any]:
     """
     Generate scaled contour rings from DXF outline (Mottola method).
     
@@ -171,7 +172,7 @@ def generate_contours_from_outline(req: ArchtopContourOutlineRequest):
 
 
 @router.post("/fit")
-def calculate_bridge_fit(req: ArchtopFitRequest):
+def calculate_bridge_fit(req: ArchtopFitRequest) -> Dict[str, Any]:
     """
     Calculate neck angle, bridge height range, and string compensation.
     
@@ -233,7 +234,7 @@ def calculate_bridge_fit(req: ArchtopFitRequest):
 
 
 @router.post("/bridge")
-def generate_floating_bridge(req: ArchtopBridgeRequest):
+def generate_floating_bridge(req: ArchtopBridgeRequest) -> Dict[str, Any]:
     """
     Generate floating bridge DXF with layers:
     - BRIDGE_BASE: Rectangle outline
@@ -253,7 +254,7 @@ def generate_floating_bridge(req: ArchtopBridgeRequest):
 
 
 @router.post("/saddle")
-def generate_saddle_profile(req: ArchtopSaddleRequest):
+def generate_saddle_profile(req: ArchtopSaddleRequest) -> Dict[str, Any]:
     """
     Generate crowned saddle profile with compensation.
     
@@ -266,7 +267,7 @@ def generate_saddle_profile(req: ArchtopSaddleRequest):
 
 
 @router.get("/kits")
-def list_contour_kits():
+def list_contour_kits() -> Dict[str, Any]:
     """List available archtop contour kits (templates and examples)"""
     kits_dir = Path("services/api/data/archtop_kits")
     if not kits_dir.exists():
@@ -288,7 +289,7 @@ def list_contour_kits():
 
 
 @router.get("/health")
-def archtop_health():
+def archtop_health() -> Dict[str, Any]:
     """Health check for archtop module"""
     script = Path("services/api/app/cam/archtop_contour_generator.py")
     script_exists = script.exists()

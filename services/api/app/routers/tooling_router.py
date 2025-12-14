@@ -39,11 +39,12 @@ Example:
     GET /api/tooling/posts/GRBL
     => {"id": "grbl", "name": "grbl", "title": "GRBL CNC", "header": [...], "footer": [...]}
 """
-from fastapi import APIRouter
-from typing import List, Dict, Any, Tuple
-import os
 import json
 import logging
+import os
+from typing import Any, Dict, List, Tuple
+
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
@@ -351,3 +352,161 @@ def get_post(post_id: str) -> Dict[str, Any]:
     
     return posts[post_id_lower]
 
+
+# =============================================================================
+# PHASE 1: TOOL & MATERIAL LIBRARY ENDPOINTS
+# =============================================================================
+
+from app.data.tool_library import (
+    load_tool_library,
+    get_tool_profile,
+    get_material_profile,
+)
+from app.data.validate_tool_library import validate_library
+
+
+@router.get("/library/tools", summary="List all tools from JSON library")
+def list_library_tools() -> List[Dict[str, Any]]:
+    """
+    List all tools from the JSON tool library.
+    
+    Returns lightweight summary for each tool (id, name, type, diameter, flutes).
+    Use GET /tooling/library/tools/{tool_id} for full details.
+    
+    Response Format:
+        [
+          {"tool_id": "flat_6.0", "name": "...", "type": "flat", "diameter_mm": 6.0, "flutes": 2},
+          {"tool_id": "ball_3.0", ...}
+        ]
+    """
+    lib = load_tool_library()
+    results = []
+    
+    for tool_id in lib.list_tool_ids():
+        tool = lib.get_tool(tool_id)
+        if tool:
+            results.append({
+                "tool_id": tool.tool_id,
+                "name": tool.name,
+                "type": tool.tool_type,
+                "diameter_mm": tool.diameter_mm,
+                "flutes": tool.flutes,
+            })
+    
+    return results
+
+
+@router.get("/library/tools/{tool_id}", summary="Get tool by ID from JSON library")
+def get_library_tool(tool_id: str) -> Dict[str, Any]:
+    """
+    Get detailed information for a specific tool from the JSON library.
+    
+    Args:
+        tool_id: Tool identifier (e.g., "flat_6.0", "ball_3.0")
+    
+    Returns:
+        Full tool profile including chipload range.
+        Returns error field if tool not found.
+    """
+    tool = get_tool_profile(tool_id)
+    
+    if tool is None:
+        return {
+            "tool_id": tool_id,
+            "error": f"Tool not found: {tool_id}"
+        }
+    
+    return {
+        "tool_id": tool.tool_id,
+        "name": tool.name,
+        "type": tool.tool_type,
+        "diameter_mm": tool.diameter_mm,
+        "flutes": tool.flutes,
+        "chipload_mm": {
+            "min": tool.chipload_min_mm,
+            "max": tool.chipload_max_mm,
+        },
+    }
+
+
+@router.get("/library/materials", summary="List all materials from JSON library")
+def list_library_materials() -> List[Dict[str, Any]]:
+    """
+    List all materials from the JSON library.
+    
+    Returns lightweight summary for each material.
+    Use GET /tooling/library/materials/{material_id} for full details.
+    """
+    lib = load_tool_library()
+    results = []
+    
+    for mat_id in lib.list_material_ids():
+        mat = lib.get_material(mat_id)
+        if mat:
+            results.append({
+                "material_id": mat.material_id,
+                "name": mat.name,
+                "heat_sensitivity": mat.heat_sensitivity,
+                "hardness": mat.hardness,
+            })
+    
+    return results
+
+
+@router.get("/library/materials/{material_id}", summary="Get material by ID from JSON library")
+def get_library_material(material_id: str) -> Dict[str, Any]:
+    """
+    Get detailed information for a specific material from the JSON library.
+    
+    Args:
+        material_id: Material identifier (e.g., "Ebony", "Hard Maple")
+    
+    Returns:
+        Full material profile including density.
+        Returns error field if material not found.
+    """
+    mat = get_material_profile(material_id)
+    
+    if mat is None:
+        return {
+            "material_id": material_id,
+            "error": f"Material not found: {material_id}"
+        }
+    
+    return {
+        "material_id": mat.material_id,
+        "name": mat.name,
+        "heat_sensitivity": mat.heat_sensitivity,
+        "hardness": mat.hardness,
+        "density_kg_m3": mat.density_kg_m3,
+    }
+
+
+@router.get("/library/validate", summary="Validate tool library")
+def validate_library_endpoint() -> Dict[str, Any]:
+    """
+    Validate the JSON tool and material library.
+    
+    Runs validation rules on all tools and materials.
+    Returns validation status and any errors found.
+    
+    Response Format:
+        {
+          "valid": true/false,
+          "tool_count": 15,
+          "material_count": 7,
+          "errors": ["tool_id: error message", ...]
+        }
+    """
+    lib = load_tool_library()
+    errors = validate_library(lib)
+    
+    tool_count = len(lib.list_tool_ids())
+    material_count = len(lib.list_material_ids())
+    
+    return {
+        "valid": len(errors) == 0,
+        "tool_count": tool_count,
+        "material_count": material_count,
+        "errors": errors,
+    }

@@ -412,12 +412,12 @@ PERFORMANCE CHARACTERISTICS
 """
 from __future__ import annotations
 
-from typing import Literal, Optional, Dict, Any, List
+from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from ..routers.blueprint_cam_bridge import extract_loops_from_dxf
 from ..cam.dxf_preflight import DXFPreflight
+from ..routers.blueprint_cam_bridge import extract_loops_from_dxf
 
 router = APIRouter(prefix="/cam", tags=["cam", "dxf", "adaptive"])
 
@@ -441,7 +441,7 @@ async def plan_from_dxf(
     feed_xy: float = Form(1200.0, description="XY feed rate"),
     safe_z: float = Form(5.0, description="Safe Z height"),
     z_rough: float = Form(-1.5, description="Rough cut depth"),
-):
+) -> Dict[str, Any]:
     """
     Convert DXF file into adaptive pocket plan request.
 
@@ -459,12 +459,10 @@ async def plan_from_dxf(
          http://localhost:8000/cam/plan_from_dxf
     ```
     """
-    if not file.filename or not file.filename.lower().endswith(".dxf"):
-        raise HTTPException(status_code=400, detail="Only .dxf files are supported.")
-
-    dxf_bytes = await file.read()
-    if not dxf_bytes:
-        raise HTTPException(status_code=400, detail="Empty DXF file.")
+    # Security patch: Validate file size and extension before reading
+    from app.cam.dxf_upload_guard import read_dxf_with_validation
+    
+    dxf_bytes = await read_dxf_with_validation(file)
 
     # Optional preflight for debug info
     preflight_debug: Optional[Dict[str, Any]] = None
