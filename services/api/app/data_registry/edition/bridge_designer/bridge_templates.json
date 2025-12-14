@@ -1,0 +1,189 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "bridge_designer",
+    "category": "bridge_templates",
+    "version": "1.0.0",
+    "description": "Bridge geometry templates for ltb-bridge-designer"
+  },
+  "templates": {
+    "strat_tremolo": {
+      "id": "strat_tremolo",
+      "name": "Stratocaster Tremolo",
+      "type": "tremolo",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 85,
+        "width_mm": 75,
+        "height_mm": 10,
+        "mounting_hole_spacing_mm": 55.9
+      },
+      "string_spacing": {
+        "e_to_e_mm": 52.5,
+        "per_string_mm": 10.5
+      },
+      "saddle_adjustment": {
+        "intonation_range_mm": 15,
+        "height_range_mm": 5
+      },
+      "tremolo_specs": {
+        "pivot_type": "6_screw",
+        "spring_count": 3,
+        "travel_mm": 10
+      }
+    },
+    "hardtail_strat": {
+      "id": "hardtail_strat",
+      "name": "Stratocaster Hardtail",
+      "type": "fixed",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 78,
+        "width_mm": 75,
+        "height_mm": 8,
+        "mounting_hole_spacing_mm": 55.9
+      },
+      "string_spacing": {
+        "e_to_e_mm": 52.5,
+        "per_string_mm": 10.5
+      },
+      "saddle_adjustment": {
+        "intonation_range_mm": 12,
+        "height_range_mm": 4
+      }
+    },
+    "tune_o_matic": {
+      "id": "tune_o_matic",
+      "name": "Tune-O-Matic",
+      "type": "fixed",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 82,
+        "width_mm": 12,
+        "height_mm": 10,
+        "stud_spacing_mm": 74
+      },
+      "string_spacing": {
+        "e_to_e_mm": 51.5,
+        "per_string_mm": 10.3
+      },
+      "saddle_adjustment": {
+        "intonation_range_mm": 8,
+        "height_per_stud": true
+      },
+      "requires_tailpiece": true,
+      "tailpiece_spacing_mm": 82
+    },
+    "acoustic_pin": {
+      "id": "acoustic_pin",
+      "name": "Acoustic Pin Bridge",
+      "type": "fixed",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 155,
+        "width_mm": 35,
+        "height_mm": 10,
+        "wings_mm": 25
+      },
+      "string_spacing": {
+        "e_to_e_mm": 55,
+        "per_string_mm": 11
+      },
+      "saddle_slot": {
+        "width_mm": 3.0,
+        "depth_mm": 10,
+        "length_mm": 72,
+        "compensation": "angled"
+      },
+      "pin_hole_diameter_mm": 5.5,
+      "pin_spacing_mm": 11
+    },
+    "classical_tie": {
+      "id": "classical_tie",
+      "name": "Classical Tie Bridge",
+      "type": "fixed",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 185,
+        "width_mm": 30,
+        "height_mm": 8,
+        "wings_mm": 20
+      },
+      "string_spacing": {
+        "e_to_e_mm": 58,
+        "per_string_mm": 11.6
+      },
+      "saddle_slot": {
+        "width_mm": 2.5,
+        "depth_mm": 8,
+        "length_mm": 78,
+        "compensation": "straight"
+      },
+      "tie_block": {
+        "holes_per_string": 1,
+        "hole_diameter_mm": 2.5
+      }
+    },
+    "floyd_rose": {
+      "id": "floyd_rose",
+      "name": "Floyd Rose",
+      "type": "locking_tremolo",
+      "strings": 6,
+      "dimensions": {
+        "length_mm": 85,
+        "width_mm": 95,
+        "height_mm": 20,
+        "stud_spacing_mm": 74
+      },
+      "string_spacing": {
+        "e_to_e_mm": 52,
+        "per_string_mm": 10.4
+      },
+      "saddle_adjustment": {
+        "intonation_range_mm": 10,
+        "fine_tuner_range_semitones": 1
+      },
+      "tremolo_specs": {
+        "pivot_type": "knife_edge",
+        "spring_count": 3,
+        "travel_mm": 15
+      },
+      "requires_locking_nut": true
+    }
+  },
+  "saddle_specs": {
+    "compensation_offsets": {
+      "description": "Typical saddle setback for intonation",
+      "wound_strings_mm": 2.5,
+      "plain_strings_mm": 1.5,
+      "by_string": {
+        "E_low": 3.0,
+        "A": 2.5,
+        "D": 2.0,
+        "G": 1.5,
+        "B": 1.5,
+        "E_high": 1.0
+      }
+    },
+    "acoustic_saddle_blanks": {
+      "standard": {
+        "length_mm": 72,
+        "width_mm": 3.0,
+        "height_mm": 12,
+        "material": "bone"
+      },
+      "wide": {
+        "length_mm": 72,
+        "width_mm": 3.5,
+        "height_mm": 12,
+        "material": "bone"
+      },
+      "classical": {
+        "length_mm": 78,
+        "width_mm": 2.5,
+        "height_mm": 10,
+        "material": "bone"
+      }
+    }
+  }
+}

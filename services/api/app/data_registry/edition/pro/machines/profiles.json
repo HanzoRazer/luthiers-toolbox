@@ -1,0 +1,211 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "pro",
+    "category": "machines",
+    "version": "1.0.0",
+    "description": "CNC machine profiles for Pro/Enterprise editions"
+  },
+  "machines": {
+    "bcamcnc_2030ca": {
+      "id": "bcamcnc_2030ca",
+      "name": "BCAMCNC 2030CA",
+      "manufacturer": "BCAMCNC",
+      "model": "2030CA",
+      "type": "gantry_router",
+      "work_envelope": {
+        "x_mm": 2000,
+        "y_mm": 3000,
+        "z_mm": 200
+      },
+      "spindle": {
+        "type": "air_cooled",
+        "power_kw": 9.0,
+        "max_rpm": 24000,
+        "min_rpm": 6000,
+        "collet": "ER32",
+        "runout_mm": 0.01
+      },
+      "axes": {
+        "x": {
+          "drive": "gear_rack",
+          "motor": "servo",
+          "motor_power_w": 750,
+          "max_rapid_mm_min": 25000,
+          "max_feed_mm_min": 15000,
+          "resolution_mm": 0.01
+        },
+        "y": {
+          "drive": "gear_rack",
+          "motor": "servo",
+          "motor_power_w": 750,
+          "max_rapid_mm_min": 25000,
+          "max_feed_mm_min": 15000,
+          "resolution_mm": 0.01
+        },
+        "z": {
+          "drive": "ball_screw",
+          "motor": "servo",
+          "motor_power_w": 750,
+          "max_rapid_mm_min": 10000,
+          "max_feed_mm_min": 5000,
+          "resolution_mm": 0.005,
+          "ball_screw": "TBI"
+        }
+      },
+      "linear_guides": {
+        "type": "Hiwin",
+        "size_mm": 20
+      },
+      "controller": {
+        "type": "DDCSV",
+        "version": "1.1",
+        "post_processor": "grbl"
+      },
+      "tool_changer": {
+        "type": "carousel",
+        "positions": 8,
+        "tool_change_time_s": 8
+      },
+      "table": {
+        "type": "vacuum_t_slot",
+        "vacuum_zones": 4,
+        "t_slot_spacing_mm": 100
+      },
+      "dust_collection": {
+        "type": "double",
+        "power_kw": 3.0
+      },
+      "safety": {
+        "limit_switches": "Omron",
+        "active_safety_system": true,
+        "ce_certified": true
+      },
+      "notes": "Heavy duty frame, excellent for guitar body profiling"
+    },
+    "shapeoko_4_xxl": {
+      "id": "shapeoko_4_xxl",
+      "name": "Shapeoko 4 XXL",
+      "manufacturer": "Carbide 3D",
+      "model": "Shapeoko 4 XXL",
+      "type": "gantry_router",
+      "work_envelope": {
+        "x_mm": 838,
+        "y_mm": 838,
+        "z_mm": 95
+      },
+      "spindle": {
+        "type": "router",
+        "power_kw": 1.25,
+        "max_rpm": 30000,
+        "min_rpm": 10000,
+        "collet": "ER11",
+        "runout_mm": 0.025,
+        "notes": "Carbide Compact Router or Makita RT0701"
+      },
+      "axes": {
+        "x": {
+          "drive": "belt",
+          "motor": "stepper",
+          "motor_power_w": 120,
+          "max_rapid_mm_min": 5000,
+          "max_feed_mm_min": 3000,
+          "resolution_mm": 0.025
+        },
+        "y": {
+          "drive": "belt",
+          "motor": "stepper",
+          "motor_power_w": 120,
+          "max_rapid_mm_min": 5000,
+          "max_feed_mm_min": 3000,
+          "resolution_mm": 0.025
+        },
+        "z": {
+          "drive": "belt",
+          "motor": "stepper",
+          "motor_power_w": 120,
+          "max_rapid_mm_min": 2500,
+          "max_feed_mm_min": 1500,
+          "resolution_mm": 0.025
+        }
+      },
+      "linear_guides": {
+        "type": "V_wheel",
+        "size_mm": null
+      },
+      "controller": {
+        "type": "Carbide Motion",
+        "version": "5.0",
+        "post_processor": "grbl"
+      },
+      "tool_changer": null,
+      "table": {
+        "type": "mdf_wasteboard",
+        "t_slot": true
+      },
+      "notes": "Popular hobbyist machine, good for smaller guitar parts"
+    },
+    "onefinity_woodworker": {
+      "id": "onefinity_woodworker",
+      "name": "Onefinity Woodworker X-35",
+      "manufacturer": "Onefinity",
+      "model": "Woodworker X-35",
+      "type": "gantry_router",
+      "work_envelope": {
+        "x_mm": 816,
+        "y_mm": 889,
+        "z_mm": 114
+      },
+      "spindle": {
+        "type": "router",
+        "power_kw": 2.2,
+        "max_rpm": 24000,
+        "min_rpm": 10000,
+        "collet": "ER20",
+        "runout_mm": 0.01,
+        "notes": "Makita or 80mm spindle"
+      },
+      "axes": {
+        "x": {
+          "drive": "ball_screw",
+          "motor": "stepper",
+          "motor_power_w": 200,
+          "max_rapid_mm_min": 7500,
+          "max_feed_mm_min": 4500,
+          "resolution_mm": 0.01
+        },
+        "y": {
+          "drive": "ball_screw",
+          "motor": "stepper",
+          "motor_power_w": 200,
+          "max_rapid_mm_min": 7500,
+          "max_feed_mm_min": 4500,
+          "resolution_mm": 0.01
+        },
+        "z": {
+          "drive": "ball_screw",
+          "motor": "stepper",
+          "motor_power_w": 200,
+          "max_rapid_mm_min": 5000,
+          "max_feed_mm_min": 3000,
+          "resolution_mm": 0.01
+        }
+      },
+      "linear_guides": {
+        "type": "linear_rail",
+        "size_mm": 15
+      },
+      "controller": {
+        "type": "Buildbotics",
+        "version": "1.0",
+        "post_processor": "grbl"
+      },
+      "tool_changer": null,
+      "table": {
+        "type": "spoilboard",
+        "t_slot": false
+      },
+      "notes": "Ball screw precision at hobbyist price point"
+    }
+  }
+}

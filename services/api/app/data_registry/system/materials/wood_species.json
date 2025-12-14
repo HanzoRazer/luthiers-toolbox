@@ -1,0 +1,166 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "materials",
+    "version": "1.0.0",
+    "description": "Wood species reference data for guitar building. Empirical machining limits are in edition/pro tier."
+  },
+  "species": {
+    "mahogany_honduran": {
+      "id": "mahogany_honduran",
+      "name": "Honduran Mahogany",
+      "scientific_name": "Swietenia macrophylla",
+      "janka_hardness": 800,
+      "density_kg_m3": 545,
+      "typical_uses": ["body", "neck", "back_sides"],
+      "tone_character": "warm, balanced, good sustain",
+      "workability": "excellent",
+      "grain": "interlocked",
+      "sustainability": "CITES Appendix II"
+    },
+    "mahogany_african": {
+      "id": "mahogany_african",
+      "name": "African Mahogany (Khaya)",
+      "scientific_name": "Khaya spp.",
+      "janka_hardness": 830,
+      "density_kg_m3": 530,
+      "typical_uses": ["body", "neck"],
+      "tone_character": "similar to honduran, slightly brighter",
+      "workability": "good",
+      "grain": "interlocked",
+      "sustainability": "sustainable alternative"
+    },
+    "maple_hard": {
+      "id": "maple_hard",
+      "name": "Hard Maple (Rock Maple)",
+      "scientific_name": "Acer saccharum",
+      "janka_hardness": 1450,
+      "density_kg_m3": 705,
+      "typical_uses": ["neck", "top", "fretboard"],
+      "tone_character": "bright, articulate, snappy",
+      "workability": "moderate - hard on tools",
+      "grain": "straight to figured",
+      "sustainability": "sustainable"
+    },
+    "maple_soft": {
+      "id": "maple_soft",
+      "name": "Soft Maple",
+      "scientific_name": "Acer rubrum",
+      "janka_hardness": 950,
+      "density_kg_m3": 610,
+      "typical_uses": ["body", "back_sides"],
+      "tone_character": "warm maple tone, less bright than hard",
+      "workability": "good",
+      "grain": "straight to figured",
+      "sustainability": "sustainable"
+    },
+    "rosewood_east_indian": {
+      "id": "rosewood_east_indian",
+      "name": "East Indian Rosewood",
+      "scientific_name": "Dalbergia latifolia",
+      "janka_hardness": 2440,
+      "density_kg_m3": 830,
+      "typical_uses": ["fretboard", "back_sides", "bridge"],
+      "tone_character": "warm, complex overtones, sustain",
+      "workability": "moderate - oily, dulls tools",
+      "grain": "interlocked",
+      "sustainability": "CITES regulated"
+    },
+    "rosewood_brazilian": {
+      "id": "rosewood_brazilian",
+      "name": "Brazilian Rosewood",
+      "scientific_name": "Dalbergia nigra",
+      "janka_hardness": 2790,
+      "density_kg_m3": 835,
+      "typical_uses": ["fretboard", "back_sides"],
+      "tone_character": "rich, complex, legendary",
+      "workability": "moderate",
+      "grain": "interlocked",
+      "sustainability": "CITES Appendix I - highly restricted"
+    },
+    "ebony_african": {
+      "id": "ebony_african",
+      "name": "African Ebony",
+      "scientific_name": "Diospyros crassiflora",
+      "janka_hardness": 3080,
+      "density_kg_m3": 1030,
+      "typical_uses": ["fretboard", "bridge", "nuts"],
+      "tone_character": "bright, articulate, percussive",
+      "workability": "difficult - very hard",
+      "grain": "straight",
+      "sustainability": "endangered, use alternatives"
+    },
+    "ebony_macassar": {
+      "id": "ebony_macassar",
+      "name": "Macassar Ebony",
+      "scientific_name": "Diospyros celebica",
+      "janka_hardness": 3220,
+      "density_kg_m3": 1120,
+      "typical_uses": ["fretboard", "bridge", "decorative"],
+      "tone_character": "bright, defined",
+      "workability": "difficult",
+      "grain": "striped",
+      "sustainability": "vulnerable"
+    },
+    "alder": {
+      "id": "alder",
+      "name": "Alder",
+      "scientific_name": "Alnus rubra",
+      "janka_hardness": 590,
+      "density_kg_m3": 420,
+      "typical_uses": ["body"],
+      "tone_character": "balanced, slightly bright, clear",
+      "workability": "excellent",
+      "grain": "straight",
+      "sustainability": "sustainable, abundant"
+    },
+    "ash_swamp": {
+      "id": "ash_swamp",
+      "name": "Swamp Ash",
+      "scientific_name": "Fraxinus spp.",
+      "janka_hardness": 1010,
+      "density_kg_m3": 500,
+      "typical_uses": ["body"],
+      "tone_character": "bright, twangy, scooped mids",
+      "workability": "good",
+      "grain": "prominent, open pore",
+      "sustainability": "declining (emerald ash borer)"
+    },
+    "basswood": {
+      "id": "basswood",
+      "name": "Basswood",
+      "scientific_name": "Tilia americana",
+      "janka_hardness": 410,
+      "density_kg_m3": 415,
+      "typical_uses": ["body"],
+      "tone_character": "warm, even, pickup-forward",
+      "workability": "excellent - very soft",
+      "grain": "straight, fine",
+      "sustainability": "sustainable"
+    },
+    "spruce_sitka": {
+      "id": "spruce_sitka",
+      "name": "Sitka Spruce",
+      "scientific_name": "Picea sitchensis",
+      "janka_hardness": 510,
+      "density_kg_m3": 425,
+      "typical_uses": ["soundboard"],
+      "tone_character": "versatile, strong fundamental",
+      "workability": "good - soft",
+      "grain": "straight, tight",
+      "sustainability": "sustainable"
+    },
+    "walnut_black": {
+      "id": "walnut_black",
+      "name": "Black Walnut",
+      "scientific_name": "Juglans nigra",
+      "janka_hardness": 1010,
+      "density_kg_m3": 610,
+      "typical_uses": ["body", "back_sides"],
+      "tone_character": "warm, rich mids, mahogany-like",
+      "workability": "excellent",
+      "grain": "straight to figured",
+      "sustainability": "sustainable"
+    }
+  }
+}

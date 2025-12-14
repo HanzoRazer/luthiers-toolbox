@@ -1,0 +1,317 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "pro",
+    "category": "empirical",
+    "version": "1.0.0",
+    "description": "Empirical feed/speed limits per wood species. Based on woodworking best practices and safety margins."
+  },
+  "limits": {
+    "mahogany_honduran": {
+      "id": "mahogany_honduran",
+      "chipload_multiplier": 1.0,
+      "feed_clamp": {
+        "roughing_max_mm_min": 4000,
+        "finishing_max_mm_min": 2500,
+        "plunge_max_mm_min": 1000
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 800
+      },
+      "doc_limits": {
+        "max_doc_mm": 12,
+        "optimal_doc_ratio": 0.5
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.5,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Watch for tearout on interlocked grain areas"
+      }
+    },
+    "mahogany_african": {
+      "id": "mahogany_african",
+      "chipload_multiplier": 1.0,
+      "feed_clamp": {
+        "roughing_max_mm_min": 4000,
+        "finishing_max_mm_min": 2500,
+        "plunge_max_mm_min": 1000
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 800
+      },
+      "doc_limits": {
+        "max_doc_mm": 12,
+        "optimal_doc_ratio": 0.5
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.5,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium"
+      }
+    },
+    "maple_hard": {
+      "id": "maple_hard",
+      "chipload_multiplier": 0.85,
+      "feed_clamp": {
+        "roughing_max_mm_min": 3000,
+        "finishing_max_mm_min": 2000,
+        "plunge_max_mm_min": 600
+      },
+      "speed_clamp": {
+        "min_rpm": 14000,
+        "max_rpm": 24000,
+        "optimal_sfm": 700
+      },
+      "doc_limits": {
+        "max_doc_mm": 8,
+        "optimal_doc_ratio": 0.35
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.4,
+        "finishing_woc_ratio": 0.08
+      },
+      "warnings": {
+        "burn_risk": "high",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Very prone to burning. Keep sharp tools, adequate feed rate."
+      }
+    },
+    "maple_soft": {
+      "id": "maple_soft",
+      "chipload_multiplier": 0.95,
+      "feed_clamp": {
+        "roughing_max_mm_min": 3500,
+        "finishing_max_mm_min": 2200,
+        "plunge_max_mm_min": 800
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 750
+      },
+      "doc_limits": {
+        "max_doc_mm": 10,
+        "optimal_doc_ratio": 0.45
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.45,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "low"
+      }
+    },
+    "rosewood_east_indian": {
+      "id": "rosewood_east_indian",
+      "chipload_multiplier": 0.7,
+      "feed_clamp": {
+        "roughing_max_mm_min": 2000,
+        "finishing_max_mm_min": 1200,
+        "plunge_max_mm_min": 400
+      },
+      "speed_clamp": {
+        "min_rpm": 16000,
+        "max_rpm": 24000,
+        "optimal_sfm": 500
+      },
+      "doc_limits": {
+        "max_doc_mm": 4,
+        "optimal_doc_ratio": 0.25
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.3,
+        "finishing_woc_ratio": 0.05
+      },
+      "warnings": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": "Oily wood dulls tools fast. Dust is sensitizing - use extraction."
+      }
+    },
+    "ebony_african": {
+      "id": "ebony_african",
+      "chipload_multiplier": 0.6,
+      "feed_clamp": {
+        "roughing_max_mm_min": 1500,
+        "finishing_max_mm_min": 800,
+        "plunge_max_mm_min": 300
+      },
+      "speed_clamp": {
+        "min_rpm": 18000,
+        "max_rpm": 24000,
+        "optimal_sfm": 400
+      },
+      "doc_limits": {
+        "max_doc_mm": 3,
+        "optimal_doc_ratio": 0.2
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.25,
+        "finishing_woc_ratio": 0.05
+      },
+      "warnings": {
+        "burn_risk": "high",
+        "tearout_risk": "high",
+        "dust_hazard": "high",
+        "notes": "Extremely hard. Use sharp carbide, light cuts. Dust is hazardous."
+      }
+    },
+    "alder": {
+      "id": "alder",
+      "chipload_multiplier": 1.2,
+      "feed_clamp": {
+        "roughing_max_mm_min": 5000,
+        "finishing_max_mm_min": 3000,
+        "plunge_max_mm_min": 1500
+      },
+      "speed_clamp": {
+        "min_rpm": 10000,
+        "max_rpm": 24000,
+        "optimal_sfm": 1000
+      },
+      "doc_limits": {
+        "max_doc_mm": 15,
+        "optimal_doc_ratio": 0.6
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.6,
+        "finishing_woc_ratio": 0.15
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Very easy to machine. Excellent for guitar bodies."
+      }
+    },
+    "ash_swamp": {
+      "id": "ash_swamp",
+      "chipload_multiplier": 1.0,
+      "feed_clamp": {
+        "roughing_max_mm_min": 4000,
+        "finishing_max_mm_min": 2500,
+        "plunge_max_mm_min": 1000
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 850
+      },
+      "doc_limits": {
+        "max_doc_mm": 12,
+        "optimal_doc_ratio": 0.5
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.5,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "medium",
+        "notes": "Open grain can tear. Use downcut or compression bits for edges."
+      }
+    },
+    "basswood": {
+      "id": "basswood",
+      "chipload_multiplier": 1.3,
+      "feed_clamp": {
+        "roughing_max_mm_min": 6000,
+        "finishing_max_mm_min": 3500,
+        "plunge_max_mm_min": 2000
+      },
+      "speed_clamp": {
+        "min_rpm": 10000,
+        "max_rpm": 24000,
+        "optimal_sfm": 1200
+      },
+      "doc_limits": {
+        "max_doc_mm": 18,
+        "optimal_doc_ratio": 0.7
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.7,
+        "finishing_woc_ratio": 0.2
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Very soft, machines like butter. Watch for fuzzing on end grain."
+      }
+    },
+    "spruce_sitka": {
+      "id": "spruce_sitka",
+      "chipload_multiplier": 1.15,
+      "feed_clamp": {
+        "roughing_max_mm_min": 4500,
+        "finishing_max_mm_min": 2800,
+        "plunge_max_mm_min": 1200
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 900
+      },
+      "doc_limits": {
+        "max_doc_mm": 10,
+        "optimal_doc_ratio": 0.5
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.5,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "low",
+        "notes": "Softwood tears easily across grain. Sharp tools essential."
+      }
+    },
+    "walnut_black": {
+      "id": "walnut_black",
+      "chipload_multiplier": 1.0,
+      "feed_clamp": {
+        "roughing_max_mm_min": 4000,
+        "finishing_max_mm_min": 2500,
+        "plunge_max_mm_min": 1000
+      },
+      "speed_clamp": {
+        "min_rpm": 12000,
+        "max_rpm": 24000,
+        "optimal_sfm": 800
+      },
+      "doc_limits": {
+        "max_doc_mm": 12,
+        "optimal_doc_ratio": 0.5
+      },
+      "woc_limits": {
+        "max_woc_ratio": 0.5,
+        "finishing_woc_ratio": 0.1
+      },
+      "warnings": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": "Excellent machining properties. Similar to mahogany."
+      }
+    }
+  }
+}

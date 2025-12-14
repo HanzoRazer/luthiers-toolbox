@@ -1,0 +1,115 @@
+{
+  "tools": {
+    "description": "Schema for tool library entries",
+    "required": ["tools"],
+    "properties": {
+      "tools": {
+        "type": "object",
+        "additionalProperties": {
+          "required": ["id", "name", "type", "diameter_mm"],
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "type": {"type": "string", "enum": ["flat_endmill", "ball_endmill", "upcut_spiral", "downcut_spiral", "compression", "v_bit", "drill"]},
+            "diameter_mm": {"type": "number", "minimum": 0.1, "maximum": 50},
+            "flutes": {"type": "integer", "minimum": 1, "maximum": 8},
+            "material": {"type": "string", "enum": ["carbide", "hss", "cobalt"]},
+            "chipload_base_mm": {"type": "number", "minimum": 0.001, "maximum": 1.0}
+          }
+        }
+      }
+    }
+  },
+  "machines": {
+    "description": "Schema for machine profile entries",
+    "required": ["machines"],
+    "properties": {
+      "machines": {
+        "type": "object",
+        "additionalProperties": {
+          "required": ["id", "name", "work_envelope", "spindle"],
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "work_envelope": {
+              "type": "object",
+              "required": ["x_mm", "y_mm", "z_mm"],
+              "properties": {
+                "x_mm": {"type": "number", "minimum": 0},
+                "y_mm": {"type": "number", "minimum": 0},
+                "z_mm": {"type": "number", "minimum": 0}
+              }
+            },
+            "spindle": {
+              "type": "object",
+              "required": ["max_rpm"],
+              "properties": {
+                "max_rpm": {"type": "integer", "minimum": 1000, "maximum": 60000},
+                "min_rpm": {"type": "integer", "minimum": 0},
+                "power_kw": {"type": "number", "minimum": 0}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "materials": {
+    "description": "Schema for wood species entries",
+    "required": ["species"],
+    "properties": {
+      "species": {
+        "type": "object",
+        "additionalProperties": {
+          "required": ["id", "name", "janka_hardness"],
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "janka_hardness": {"type": "integer", "minimum": 100, "maximum": 5000},
+            "density_kg_m3": {"type": "number", "minimum": 100, "maximum": 1500}
+          }
+        }
+      }
+    }
+  },
+  "empirical": {
+    "description": "Schema for empirical wood machining limits",
+    "required": ["limits"],
+    "properties": {
+      "limits": {
+        "type": "object",
+        "additionalProperties": {
+          "required": ["id", "chipload_multiplier", "feed_clamp"],
+          "properties": {
+            "id": {"type": "string"},
+            "chipload_multiplier": {"type": "number", "minimum": 0.1, "maximum": 2.0},
+            "feed_clamp": {
+              "type": "object",
+              "required": ["roughing_max_mm_min"],
+              "properties": {
+                "roughing_max_mm_min": {"type": "number", "minimum": 100},
+                "finishing_max_mm_min": {"type": "number", "minimum": 100},
+                "plunge_max_mm_min": {"type": "number", "minimum": 50}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "instruments": {
+    "description": "Schema for instrument geometry entries",
+    "properties": {
+      "bodies": {"type": "object"},
+      "profiles": {"type": "object"},
+      "scales": {"type": "object"}
+    }
+  },
+  "references": {
+    "description": "Schema for reference data",
+    "properties": {
+      "scales": {"type": "object"},
+      "formulas": {"type": "object"}
+    }
+  }
+}

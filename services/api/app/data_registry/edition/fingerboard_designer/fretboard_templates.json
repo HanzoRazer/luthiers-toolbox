@@ -1,0 +1,195 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "fingerboard_designer",
+    "category": "fretboard_templates",
+    "version": "1.0.0",
+    "description": "Fretboard templates and inlay patterns for ltb-fingerboard-designer"
+  },
+  "templates": {
+    "standard_22_fret": {
+      "id": "standard_22_fret",
+      "name": "Standard 22 Fret",
+      "fret_count": 22,
+      "scale_length_mm": 647.7,
+      "nut_width_mm": 43,
+      "width_at_last_fret_mm": 56,
+      "radius_mm": 241,
+      "radius_type": "constant",
+      "fret_tang_width_mm": 0.58,
+      "fret_slot_depth_mm": 3.0,
+      "side_dot_positions": [3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_dot_positions": [12]
+    },
+    "vintage_21_fret": {
+      "id": "vintage_21_fret",
+      "name": "Vintage 21 Fret",
+      "fret_count": 21,
+      "scale_length_mm": 647.7,
+      "nut_width_mm": 42.9,
+      "width_at_last_fret_mm": 54,
+      "radius_mm": 184,
+      "radius_type": "constant",
+      "fret_tang_width_mm": 0.53,
+      "fret_slot_depth_mm": 2.8,
+      "side_dot_positions": [3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_dot_positions": [12]
+    },
+    "gibson_22_fret": {
+      "id": "gibson_22_fret",
+      "name": "Gibson 22 Fret",
+      "fret_count": 22,
+      "scale_length_mm": 628.65,
+      "nut_width_mm": 43,
+      "width_at_last_fret_mm": 55,
+      "radius_mm": 305,
+      "radius_type": "constant",
+      "fret_tang_width_mm": 0.58,
+      "fret_slot_depth_mm": 3.0,
+      "side_dot_positions": [3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_dot_positions": [12]
+    },
+    "compound_radius_24": {
+      "id": "compound_radius_24",
+      "name": "Compound Radius 24 Fret",
+      "fret_count": 24,
+      "scale_length_mm": 647.7,
+      "nut_width_mm": 43,
+      "width_at_last_fret_mm": 58,
+      "radius_type": "compound",
+      "radius_at_nut_mm": 241,
+      "radius_at_last_fret_mm": 406,
+      "fret_tang_width_mm": 0.58,
+      "fret_slot_depth_mm": 3.0,
+      "side_dot_positions": [3, 5, 7, 9, 12, 15, 17, 19, 21, 24],
+      "double_dot_positions": [12, 24]
+    },
+    "classical_19_fret": {
+      "id": "classical_19_fret",
+      "name": "Classical 19 Fret",
+      "fret_count": 19,
+      "scale_length_mm": 650,
+      "nut_width_mm": 52,
+      "width_at_last_fret_mm": 62,
+      "radius_mm": 0,
+      "radius_type": "flat",
+      "fret_tang_width_mm": 0.50,
+      "fret_slot_depth_mm": 2.5,
+      "side_dot_positions": [5, 7, 9, 12, 15, 17, 19],
+      "double_dot_positions": [12]
+    },
+    "multiscale_24_fret": {
+      "id": "multiscale_24_fret",
+      "name": "Multiscale 24 Fret",
+      "fret_count": 24,
+      "scale_length_treble_mm": 647.7,
+      "scale_length_bass_mm": 685.8,
+      "perpendicular_fret": 12,
+      "fan_angle_deg": 2.5,
+      "nut_width_mm": 48,
+      "width_at_last_fret_mm": 62,
+      "radius_mm": 406,
+      "radius_type": "cylindrical",
+      "fret_tang_width_mm": 0.58,
+      "fret_slot_depth_mm": 3.0,
+      "side_dot_positions": [3, 5, 7, 9, 12, 15, 17, 19, 21, 24],
+      "double_dot_positions": [12, 24]
+    }
+  },
+  "inlay_patterns": {
+    "standard_dots": {
+      "id": "standard_dots",
+      "name": "Standard Dots",
+      "type": "dots",
+      "positions": [3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_positions": [12],
+      "dot_diameter_mm": 6.35,
+      "material": "mother_of_pearl"
+    },
+    "small_dots": {
+      "id": "small_dots",
+      "name": "Small Dots",
+      "type": "dots",
+      "positions": [3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_positions": [12],
+      "dot_diameter_mm": 4.0,
+      "material": "mother_of_pearl"
+    },
+    "block_inlays": {
+      "id": "block_inlays",
+      "name": "Block Inlays",
+      "type": "blocks",
+      "positions": [1, 3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_positions": [],
+      "block_dimensions": {
+        "width_mm": 30,
+        "height_mm": 8,
+        "corner_radius_mm": 1.5
+      },
+      "material": "mother_of_pearl"
+    },
+    "trapezoid_inlays": {
+      "id": "trapezoid_inlays",
+      "name": "Trapezoid Inlays",
+      "type": "trapezoids",
+      "positions": [1, 3, 5, 7, 9, 12, 15, 17, 19, 21],
+      "double_positions": [],
+      "trapezoid_dimensions": {
+        "width_top_mm": 22,
+        "width_bottom_mm": 28,
+        "height_mm": 8
+      },
+      "material": "mother_of_pearl"
+    },
+    "birds": {
+      "id": "birds",
+      "name": "Bird Inlays (PRS Style)",
+      "type": "custom",
+      "positions": [1, 3, 5, 7, 9, 12, 15, 17, 19, 21, 24],
+      "custom_shapes": true,
+      "material": "abalone"
+    },
+    "no_inlays": {
+      "id": "no_inlays",
+      "name": "No Inlays (Side Dots Only)",
+      "type": "none",
+      "positions": [],
+      "side_dots_only": true
+    }
+  },
+  "fret_wire_specs": {
+    "vintage_small": {
+      "id": "vintage_small",
+      "name": "Vintage Small",
+      "crown_width_mm": 1.98,
+      "crown_height_mm": 0.89,
+      "tang_width_mm": 0.53,
+      "tang_depth_mm": 1.14
+    },
+    "medium_jumbo": {
+      "id": "medium_jumbo",
+      "name": "Medium Jumbo",
+      "crown_width_mm": 2.69,
+      "crown_height_mm": 1.02,
+      "tang_width_mm": 0.58,
+      "tang_depth_mm": 1.40
+    },
+    "jumbo": {
+      "id": "jumbo",
+      "name": "Jumbo",
+      "crown_width_mm": 2.79,
+      "crown_height_mm": 1.40,
+      "tang_width_mm": 0.58,
+      "tang_depth_mm": 1.50
+    },
+    "stainless_medium": {
+      "id": "stainless_medium",
+      "name": "Stainless Steel Medium",
+      "crown_width_mm": 2.49,
+      "crown_height_mm": 1.19,
+      "tang_width_mm": 0.58,
+      "tang_depth_mm": 1.40,
+      "material": "stainless_steel"
+    }
+  }
+}

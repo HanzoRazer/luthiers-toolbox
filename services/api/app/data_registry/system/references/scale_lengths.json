@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "references",
+    "version": "1.0.0",
+    "description": "Standard guitar scale lengths used across all product editions"
+  },
+  "scales": {
+    "fender_25_5": {
+      "id": "fender_25_5",
+      "name": "Fender Standard",
+      "length_inches": 25.5,
+      "length_mm": 647.7,
+      "common_instruments": ["Stratocaster", "Telecaster", "Jazzmaster"],
+      "character": "Bright, snappy, increased string tension"
+    },
+    "gibson_24_75": {
+      "id": "gibson_24_75",
+      "name": "Gibson Standard",
+      "length_inches": 24.75,
+      "length_mm": 628.65,
+      "common_instruments": ["Les Paul", "SG", "ES-335"],
+      "character": "Warm, fat, easier bending"
+    },
+    "prs_25": {
+      "id": "prs_25",
+      "name": "PRS Standard",
+      "length_inches": 25.0,
+      "length_mm": 635.0,
+      "common_instruments": ["PRS Custom 24", "PRS McCarty"],
+      "character": "Balanced between Fender and Gibson"
+    },
+    "martin_25_4": {
+      "id": "martin_25_4",
+      "name": "Martin Standard",
+      "length_inches": 25.4,
+      "length_mm": 645.16,
+      "common_instruments": ["Martin D-28", "Martin OM"],
+      "character": "Classic acoustic projection"
+    },
+    "classical_25_6": {
+      "id": "classical_25_6",
+      "name": "Classical Standard",
+      "length_inches": 25.6,
+      "length_mm": 650.0,
+      "common_instruments": ["Classical guitars", "Flamenco guitars"],
+      "character": "Traditional nylon string spacing"
+    },
+    "baritone_27": {
+      "id": "baritone_27",
+      "name": "Baritone",
+      "length_inches": 27.0,
+      "length_mm": 685.8,
+      "common_instruments": ["Baritone guitars", "7-string guitars"],
+      "character": "Extended low range, heavy strings"
+    },
+    "short_24": {
+      "id": "short_24",
+      "name": "Short Scale",
+      "length_inches": 24.0,
+      "length_mm": 609.6,
+      "common_instruments": ["Jaguar", "Mustang", "Gibson Melody Maker"],
+      "character": "Looser feel, easier playability"
+    },
+    "multiscale_25_5_27": {
+      "id": "multiscale_25_5_27",
+      "name": "Multiscale (Fanned Fret)",
+      "length_treble_inches": 25.5,
+      "length_bass_inches": 27.0,
+      "length_treble_mm": 647.7,
+      "length_bass_mm": 685.8,
+      "common_instruments": ["Strandberg", "Dingwall"],
+      "character": "Optimized tension across all strings"
+    }
+  }
+}
