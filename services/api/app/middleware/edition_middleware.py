@@ -323,7 +323,12 @@ def require_feature(feature: str):
         def adaptive(ctx: EditionContext = Depends(require_feature("adaptive_pocketing"))):
             ...
     """
-    async def _require(ctx: EditionContext) -> EditionContext:
+    async def _require(
+        request: Request,
+        x_edition: Optional[str] = Header(None, alias="X-Edition"),
+        edition_param: Optional[str] = Query(None, alias="edition"),
+    ) -> EditionContext:
+        ctx = await get_edition(request, x_edition, edition_param)
         ctx.require_feature(feature)
         return ctx
     return _require
