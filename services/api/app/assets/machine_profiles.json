@@ -4,14 +4,18 @@
     "title": "GRBL 3018 (hobby)",
     "controller": "GRBL",
     "axes": {
-      "travel_mm": [300, 180, 45]
+      "travel_mm": [
+        300,
+        180,
+        45
+      ]
     },
     "limits": {
       "feed_xy": 1200,
       "rapid": 3000,
       "accel": 600,
       "jerk": 1500,
-      "corner_tol_mm": 0.20
+      "corner_tol_mm": 0.2
     },
     "spindle": {
       "max_rpm": 12000
@@ -27,14 +31,18 @@
     "title": "Mach4 Router 4x8 (pro)",
     "controller": "Mach4",
     "axes": {
-      "travel_mm": [2440, 1220, 150]
+      "travel_mm": [
+        2440,
+        1220,
+        150
+      ]
     },
     "limits": {
       "feed_xy": 15000,
       "rapid": 24000,
       "accel": 1800,
       "jerk": 4000,
-      "corner_tol_mm": 0.30
+      "corner_tol_mm": 0.3
     },
     "spindle": {
       "max_rpm": 24000
@@ -50,7 +58,11 @@
     "title": "LinuxCNC Knee Mill",
     "controller": "LinuxCNC",
     "axes": {
-      "travel_mm": [500, 300, 150]
+      "travel_mm": [
+        500,
+        300,
+        150
+      ]
     },
     "limits": {
       "feed_xy": 6000,
