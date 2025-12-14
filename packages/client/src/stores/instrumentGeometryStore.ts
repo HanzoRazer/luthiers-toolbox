@@ -143,10 +143,11 @@ export const useInstrumentGeometryStore = defineStore(
     const isLoadingPreview = ref(false);
     const previewError = ref<string | null>(null);
 
-    // Fan-fret mode (Wave 16 enhancement)
+    // Fan-fret mode (Wave 16 enhancement → Wave 19 implementation)
     const fanFretEnabled = ref(false);
     const trebleScaleLength = ref(647.7);
     const bassScaleLength = ref(660.4); // +0.5" typical
+    const perpendicularFret = ref(7); // Default perpendicular fret
 
     // ===== Computed =====
 
@@ -248,22 +249,25 @@ export const useInstrumentGeometryStore = defineStore(
       previewError.value = null;
 
       try {
-        const requestBody = {
+        const requestBody: any = {
           model_id: selectedModelId.value,
-          fretboard: {
-            scale_length_mm: fretboardSpec.value.scale_length_mm,
-            num_frets: fretboardSpec.value.num_frets,
-            nut_width_mm: fretboardSpec.value.nut_width_mm,
-            bridge_width_mm: fretboardSpec.value.bridge_width_mm,
-            base_radius_inches: fretboardSpec.value.base_radius_inches,
-            end_radius_inches: fretboardSpec.value.end_radius_inches,
-            slot_width_mm: fretboardSpec.value.slot_width_mm,
-            slot_depth_mm: fretboardSpec.value.slot_depth_mm,
-            material_id: fretboardSpec.value.material_id || "rosewood",
-          },
-          tool_id: "fret_saw_0.6mm",
+          mode: fanFretEnabled.value ? "fan" : "standard",
+          fret_count: fretboardSpec.value.num_frets,
+          nut_width_mm: fretboardSpec.value.nut_width_mm,
+          heel_width_mm: fretboardSpec.value.bridge_width_mm,
+          slot_width_mm: fretboardSpec.value.slot_width_mm,
+          slot_depth_mm: fretboardSpec.value.slot_depth_mm,
           post_id: "GRBL",
         };
+
+        // Add fan-fret specific parameters
+        if (fanFretEnabled.value) {
+          requestBody.treble_scale_mm = trebleScaleLength.value;
+          requestBody.bass_scale_mm = bassScaleLength.value;
+          requestBody.perpendicular_fret = perpendicularFret.value;
+        } else {
+          requestBody.scale_length_mm = fretboardSpec.value.scale_length_mm;
+        }
 
         const response = await fetch("/api/cam/fret_slots/preview", {
           method: "POST",
@@ -374,6 +378,7 @@ export const useInstrumentGeometryStore = defineStore(
       fanFretEnabled,
       trebleScaleLength,
       bassScaleLength,
+      perpendicularFret,
 
       // Computed
       selectedModel,

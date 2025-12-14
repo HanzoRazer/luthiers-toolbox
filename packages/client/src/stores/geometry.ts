@@ -154,7 +154,8 @@ export const useGeometryStore = defineStore('geometry', () => {
     { tool: 'adaptive', label: 'Adaptive Pocketing', icon: '⚡', route: '/lab/adaptive' },
     { tool: 'vcarve', label: 'V-Carve', icon: '🎨', route: '/lab/vcarve' },
     { tool: 'relief', label: 'Relief Mapping', icon: '🗺️', route: '/lab/relief' },
-    { tool: 'svg-editor', label: 'SVG Editor', icon: '✏️', route: '/lab/svg-editor' }
+    { tool: 'svg-editor', label: 'SVG Editor', icon: '✏️', route: '/lab/svg-editor' },
+    { tool: 'compare-runs', label: 'Multi-Run Comparison', icon: '📊', route: '/lab/compare-runs' }
   ])
 
   // ===========================================================================
