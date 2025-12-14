@@ -25,29 +25,30 @@ Design Principles:
 - Unit-testable: each function gets tests with known scales and geometries.
 """
 
-# Wave 14 Core: Model enums and registry
-from .models import (  # noqa: F401
-    InstrumentModelId,
-    InstrumentModelStatus,
-    InstrumentCategory,
-    ScaleLengthSpec,
-    FretPosition,
-    NeckProfileSpec,
-    COMMON_SCALE_LENGTHS,
-    MODEL_CATEGORIES,
+# Wave 19 Foundation: Model specs and loader
+from .models.specs import (  # noqa: F401
+    GuitarModelSpec,
+    ScaleSpec,
+    MultiScaleSpec,
+    NeckJointSpec,
+    BridgeSpec,
+    StringSpec,
+    StringSetSpec,
+    DXFMappingSpec,
 )
-from .registry import (  # noqa: F401
-    get_model_info,
-    get_model_status,
-    list_models,
-    list_production_models,
-    list_stub_models,
-    get_registry_version,
-    get_all_models_summary,
+from .models.loader import (  # noqa: F401
+    load_model_spec,
+    load_model_json,
+    list_available_model_ids,
+    list_model_files,
+    inch_to_mm,
+    INCH_TO_MM,
+    MODELS_DIR,
 )
 
 # Legacy compatibility: re-exports from shims (these still work)
-from .profiles import InstrumentSpec, FretboardSpec, BridgeSpec  # noqa: F401
+# Temporarily commented out due to Wave 14 dependency conflicts
+# from .profiles import InstrumentSpec, FretboardSpec  # noqa: F401
 from .scale_length import (  # noqa: F401
     compute_fret_positions_mm,
     compute_fret_spacing_mm,
@@ -55,27 +56,24 @@ from .scale_length import (  # noqa: F401
 )
 
 __all__ = [
-    # Wave 14 Core
-    "InstrumentModelId",
-    "InstrumentModelStatus",
-    "InstrumentCategory",
-    "ScaleLengthSpec",
-    "FretPosition",
-    "NeckProfileSpec",
-    "COMMON_SCALE_LENGTHS",
-    "MODEL_CATEGORIES",
-    # Registry
-    "get_model_info",
-    "get_model_status",
-    "list_models",
-    "list_production_models",
-    "list_stub_models",
-    "get_registry_version",
-    "get_all_models_summary",
-    # Legacy compatibility
-    "InstrumentSpec",
-    "FretboardSpec",
+    # Wave 19 Core Types
+    "GuitarModelSpec",
+    "ScaleSpec",
+    "MultiScaleSpec",
+    "NeckJointSpec",
     "BridgeSpec",
+    "StringSpec",
+    "StringSetSpec",
+    "DXFMappingSpec",
+    # Wave 19 Loader API
+    "load_model_spec",
+    "load_model_json",
+    "list_available_model_ids",
+    "list_model_files",
+    "inch_to_mm",
+    "INCH_TO_MM",
+    "MODELS_DIR",
+    # Legacy scale utilities (still supported)
     "compute_fret_positions_mm",
     "compute_fret_spacing_mm",
     "compute_compensated_scale_length_mm",

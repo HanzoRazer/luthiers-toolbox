@@ -22,7 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from .models import InstrumentModelId, InstrumentModelStatus, InstrumentCategory
+from .models import InstrumentModelId, InstrumentModelStatus, InstrumentCategory, ScaleLengthSpec
 
 
 # Path to JSON registry (same directory as this file)
@@ -227,3 +227,111 @@ def get_all_models_summary() -> Dict[str, Any]:
         "by_category": by_category,
         "models": model_summaries,
     }
+
+
+# =============================================================================
+# Wave 16: get_default_scale() - Real Tier 1 Scale Lengths
+# =============================================================================
+
+def get_default_scale(model_id: InstrumentModelId) -> ScaleLengthSpec:
+    """
+    Return a nominal scale length for a given model.
+
+    Wave 16:
+    - Stratocaster, Telecaster, Jazz Bass → 648.0 mm (25.5")
+    - Les Paul family → 628.65 mm (24.75")
+    - Steel-string acoustics (Dreadnought, OM, J-45, L-00, J-200) → 645.0 mm (25.4")
+    - Classical → 650.0 mm
+    - Ukulele (soprano-ish) → 349.0 mm
+    - PRS → 635.0 mm (25")
+    - Archtop → 648.0 mm (25.5") baseline
+    """
+
+    # Fender-style family
+    if model_id in (
+        InstrumentModelId.STRAT,
+        InstrumentModelId.TELE,
+        InstrumentModelId.JAZZ_BASS,
+    ):
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=648.0,  # 25.5"
+            num_frets=21,
+            description="Fender-style scale length (Tier 1 real geometry for Strat)",
+        )
+
+    # Gibson-style electrics
+    if model_id in (
+        InstrumentModelId.LES_PAUL,
+        InstrumentModelId.SG,
+        InstrumentModelId.FLYING_V,
+        InstrumentModelId.ES_335,
+        InstrumentModelId.EXPLORER,
+        InstrumentModelId.FIREBIRD,
+        InstrumentModelId.MODERNE,
+    ):
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=628.65,  # 24.75"
+            num_frets=22,
+            description="Gibson-style 24.75\" scale length",
+        )
+
+    # Steel-string acoustics
+    if model_id in (
+        InstrumentModelId.DREADNOUGHT,
+        InstrumentModelId.OM_000,
+        InstrumentModelId.J_45,
+        InstrumentModelId.JUMBO_J200,
+        InstrumentModelId.GIBSON_L_00,
+    ):
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=645.0,  # 25.4"
+            num_frets=20,
+            description="Steel-string acoustic scale length (Martin-style 25.4\")",
+        )
+
+    # Classical / nylon
+    if model_id == InstrumentModelId.CLASSICAL:
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=650.0,
+            num_frets=19,
+            description="Classical guitar scale length",
+        )
+
+    # Ukulele (soprano baseline)
+    if model_id == InstrumentModelId.UKULELE:
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=349.0,  # ~13.75"
+            num_frets=15,
+            description="Ukulele (soprano) scale length placeholder",
+        )
+
+    # PRS
+    if model_id == InstrumentModelId.PRS:
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=635.0,  # 25"
+            num_frets=22,
+            description="PRS-style 25\" scale length",
+        )
+
+    # Archtop default
+    if model_id == InstrumentModelId.ARCHTOP:
+        return ScaleLengthSpec(
+            model_id=model_id,
+            scale_length_mm=648.0,
+            num_frets=20,
+            description="Archtop scale length baseline",
+        )
+
+    # Fallback generic
+    return ScaleLengthSpec(
+        model_id=model_id,
+        scale_length_mm=648.0,
+        num_frets=21,
+        description="Generic fallback scale length (Wave 16)",
+    )

@@ -14,6 +14,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+from ..models import InstrumentModelId, NeckProfileSpec
+
 
 @dataclass
 class InstrumentSpec:
@@ -219,3 +221,117 @@ class RadiusProfile:
         # Linear interpolation for compound radius
         position_ratio = max(0.0, min(1.0, position_ratio))
         return self.base_radius_mm + (self.end_radius_mm - self.base_radius_mm) * position_ratio
+
+
+# =============================================================================
+# Wave 16: get_default_neck_profile() - Real Tier 1 Geometry
+# =============================================================================
+
+def get_default_neck_profile(model_id: InstrumentModelId) -> NeckProfileSpec:
+    """
+    Return a default neck profile for a given model.
+
+    Wave 16: Real Tier 1 geometry for:
+      - Stratocaster
+      - Les Paul
+      - Dreadnought acoustic
+
+    All other models get a generic placeholder that we can refine in later waves.
+    """
+
+    # --- Tier 1: Stratocaster (modern C, 9.5" radius) ----------------------
+    if model_id == InstrumentModelId.STRAT:
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=42.0,
+            twelve_fret_width_mm=52.0,
+            thickness_1st_mm=21.0,
+            thickness_12th_mm=23.0,
+            radius_nut_mm=241.3,   # 9.5"
+            radius_12th_mm=241.3,  # uniform radius for now
+            description="Stratocaster: modern C, 9.5\" radius (Tier 1 real geometry)",
+        )
+
+    # --- Tier 1: Les Paul (approx '59 style) -------------------------------
+    if model_id == InstrumentModelId.LES_PAUL:
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=43.0,
+            twelve_fret_width_mm=52.0,
+            thickness_1st_mm=22.0,
+            thickness_12th_mm=24.0,
+            radius_nut_mm=304.8,   # 12"
+            radius_12th_mm=304.8,  # uniform radius for now
+            description="Les Paul style: ~'59 neck, 12\" radius (Tier 1 real geometry)",
+        )
+
+    # --- Tier 1: Dreadnought acoustic -------------------------------------
+    if model_id == InstrumentModelId.DREADNOUGHT:
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=44.5,
+            twelve_fret_width_mm=55.5,
+            thickness_1st_mm=21.0,
+            thickness_12th_mm=23.0,
+            radius_nut_mm=406.4,   # 16"
+            radius_12th_mm=406.4,  # uniform radius for now
+            description="Dreadnought acoustic: 16\" radius (Tier 1 real geometry)",
+        )
+
+    # --- Optional: reasonable defaults for closely related models ----------
+
+    if model_id == InstrumentModelId.TELE:
+        # Tele often shares similar neck specs with Strat (varies by era)
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=42.0,
+            twelve_fret_width_mm=52.0,
+            thickness_1st_mm=21.5,
+            thickness_12th_mm=23.5,
+            radius_nut_mm=241.3,
+            radius_12th_mm=241.3,
+            description="Telecaster: modern C, 9.5\" radius (aligned with Strat family)",
+        )
+
+    if model_id in (
+        InstrumentModelId.J_45,
+        InstrumentModelId.OM_000,
+        InstrumentModelId.JUMBO_J200,
+        InstrumentModelId.GIBSON_L_00,
+    ):
+        # Share a general steel-string acoustic neck profile for now
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=44.5,
+            twelve_fret_width_mm=55.5,
+            thickness_1st_mm=21.0,
+            thickness_12th_mm=23.0,
+            radius_nut_mm=406.4,
+            radius_12th_mm=406.4,
+            description="Steel-string acoustic family neck (to be refined per model)",
+        )
+
+    if model_id == InstrumentModelId.CLASSICAL:
+        return NeckProfileSpec(
+            model_id=model_id,
+            nut_width_mm=52.0,
+            twelve_fret_width_mm=62.0,
+            thickness_1st_mm=21.5,
+            thickness_12th_mm=23.0,
+            radius_nut_mm=10_000.0,  # effectively flat; classical boards are usually flat
+            radius_12th_mm=10_000.0,
+            description="Classical guitar: wide, nearly flat board (placeholder)",
+        )
+
+    # --- Fallback generic profile ------------------------------------------
+
+    return NeckProfileSpec(
+        model_id=model_id,
+        nut_width_mm=43.0,
+        twelve_fret_width_mm=53.0,
+        thickness_1st_mm=21.0,
+        thickness_12th_mm=23.0,
+        radius_nut_mm=300.0,
+        radius_12th_mm=300.0,
+        description="Generic neck profile placeholder (Wave 16 fallback)",
+    )
