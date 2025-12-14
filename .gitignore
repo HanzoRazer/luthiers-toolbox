@@ -9,3 +9,7 @@
 *.pyc
 *.log
 .DS_Store
+
+# Data Registry - User SQLite databases (per-tenant isolation)
+services/api/app/data_registry/user/*.sqlite
+services/api/app/data_registry/user/*.db
