@@ -38,10 +38,14 @@ from .routers.cam_logs_router import router as cam_logs_router
 from .routers.cam_learn_router import router as cam_learn_router
 
 # =============================================================================
-# RMOS 2.0 - Rosette Manufacturing Orchestration System (1 router)
+# RMOS 2.0 - Rosette Manufacturing Orchestration System (4 routers)
 # Note: feasibility_router broken - needs rmos.context module
 # =============================================================================
 from .rmos import rmos_router
+# Phase B+C: AI Search + Profile Management (3 routers)
+from .rmos.api_ai_routes import router as rmos_ai_router
+from .rmos.api_constraint_profiles import router as rmos_profiles_router
+from .rmos.api_profile_history import router as rmos_history_router
 
 # =============================================================================
 # CAM SUBSYSTEM (8 routers)
@@ -246,8 +250,11 @@ app.include_router(cam_metrics_router, prefix="/api/cam/metrics", tags=["CAM Met
 app.include_router(cam_logs_router, prefix="/api/cam/logs", tags=["CAM Logs"])
 app.include_router(cam_learn_router, prefix="/api/cam/learn", tags=["CAM Learning"])
 
-# RMOS 2.0 (1)
+# RMOS 2.0 (4 routers)
 app.include_router(rmos_router, prefix="/api/rmos", tags=["RMOS"])
+app.include_router(rmos_ai_router, prefix="/api/rmos", tags=["RMOS AI"])
+app.include_router(rmos_profiles_router, prefix="/api/rmos", tags=["RMOS Profiles"])
+app.include_router(rmos_history_router, prefix="/api/rmos", tags=["RMOS History"])
 
 # CAM Subsystem (8)
 app.include_router(cam_vcarve_router, prefix="/api/cam/vcarve", tags=["V-Carve"])

@@ -20,7 +20,7 @@ router = APIRouter(
 async def list_patterns() -> List[RosettePattern]:
     """List all rosette patterns currently registered."""
     stores = get_rmos_stores()
-    pattern_dicts = stores.patterns.list_all()
+    pattern_dicts = stores.patterns.get_all()
     # Convert SQLite dicts to Pydantic models
     patterns = [RosettePattern(**p) for p in pattern_dicts]
     return patterns
