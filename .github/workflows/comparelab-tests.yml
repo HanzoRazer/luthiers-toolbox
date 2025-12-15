@@ -1,0 +1,53 @@
+name: CompareLab State Machine Tests
+
+on:
+  push:
+    paths:
+      - "client/src/components/compare/**"
+      - "client/src/composables/useCompareState.ts"
+      - "client/src/composables/useCompareState.spec.ts"
+      - "docs/COMPARELAB_*.md"
+      - "docs/B22_*.md"
+  pull_request:
+    paths:
+      - "client/src/components/compare/**"
+      - "client/src/composables/useCompareState.ts"
+      - "client/src/composables/useCompareState.spec.ts"
+      - "docs/COMPARELAB_*.md"
+      - "docs/B22_*.md"
+
+jobs:
+  comparelab-tests:
+    name: Run CompareLab unit tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CompareLab state machine tests
+        run: npm run test -- useCompareState
+
+      - name: Check test coverage for state machine
+        run: npm run test:coverage -- useCompareState
+        continue-on-error: true
+
+      - name: Comment test results summary
+        if: always()
+        run: |
+          echo "CompareLab state machine tests completed"
+          echo "Review coverage report for detailed results"

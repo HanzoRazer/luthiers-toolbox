@@ -148,12 +148,20 @@ from .routers.rosette_photo_router import router as rosette_photo_router
 # =============================================================================
 # WAVE 9: AI-CAM + DRILL/ROUGHING + COMPARE + DXF PREFLIGHT + JOBLOG + NECK (8 routers)
 # =============================================================================
-from .routers.ai_cam_router import router as ai_cam_router
+try:
+    from .routers.ai_cam_router import router as ai_cam_router
+except ImportError as e:
+    print(f"Warning: AI-CAM router not available (ai_cam in _experimental): {e}")
+    ai_cam_router = None
 from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
 from .routers.cam_roughing_router import router as cam_roughing_router
 from .routers.compare_router import router as compare_router
 from .routers.dxf_preflight_router import router as dxf_preflight_router
-from .routers.joblog_router import router as joblog_router
+try:
+    from .routers.joblog_router import router as joblog_router
+except ImportError as e:
+    print(f"Warning: JobLog router not available (cnc_production in _experimental): {e}")
+    joblog_router = None
 from .routers.neck_router import router as neck_router
 from .routers.parametric_guitar_router import router as parametric_guitar_router
 
@@ -165,18 +173,38 @@ from .routers.compare_lab_router import router as compare_lab_router
 from .routers.drilling_router import router as drilling_router
 from .routers.cam_risk_router import router as cam_risk_router
 from .routers.job_risk_router import router as job_risk_router
-from .routers.learn_router import router as learn_router
-from .routers.learned_overrides_router import router as learned_overrides_router
+try:
+    from .routers.learn_router import router as learn_router
+except ImportError as e:
+    print(f"Warning: Learn router not available (cnc_production in _experimental): {e}")
+    learn_router = None
+try:
+    from .routers.learned_overrides_router import router as learned_overrides_router
+except ImportError as e:
+    print(f"Warning: Learned overrides router not available (cnc_production in _experimental): {e}")
+    learned_overrides_router = None
 from .routers.cam_backup_router import router as cam_backup_router
 
 # =============================================================================
 # WAVE 11: ANALYTICS + PROBE + LTB CALCULATOR + CAM TOOLS (8 routers)
 # =============================================================================
-from .routers.analytics_router import router as analytics_router
-from .routers.advanced_analytics_router import router as advanced_analytics_router
+try:
+    from .routers.analytics_router import router as analytics_router
+except ImportError as e:
+    print(f"Warning: Analytics router not available (analytics module missing): {e}")
+    analytics_router = None
+try:
+    from .routers.advanced_analytics_router import router as advanced_analytics_router
+except ImportError as e:
+    print(f"Warning: Advanced analytics router not available (analytics module missing): {e}")
+    advanced_analytics_router = None
 from .routers.probe_router import router as probe_router
 from .routers.ltb_calculator_router import router as ltb_calculator_router
-from .routers.dashboard_router import router as dashboard_router
+try:
+    from .routers.dashboard_router import router as dashboard_router
+except ImportError as e:
+    print(f"Warning: Dashboard router not available (cnc_production in _experimental): {e}")
+    dashboard_router = None
 from .routers.cam_settings_router import router as cam_settings_router
 from .routers.cam_biarc_router import router as cam_biarc_router
 from .routers.job_intelligence_router import router as job_intelligence_router
@@ -322,12 +350,14 @@ app.include_router(retract_router, prefix="/api/cam/retract", tags=["CAM", "Retr
 app.include_router(rosette_photo_router, prefix="/api", tags=["Rosette", "Photo Import"])
 
 # Wave 9: AI-CAM + Drill/Roughing + Compare + DXF Preflight + JobLog + Neck (8)
-app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
+if ai_cam_router:
+    app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
 app.include_router(cam_drill_pattern_router, prefix="/api", tags=["CAM", "Drill Patterns"])
 app.include_router(cam_roughing_router, prefix="/api", tags=["CAM", "Roughing"])
 app.include_router(compare_router, prefix="/api", tags=["Compare", "Baselines"])
 app.include_router(dxf_preflight_router, prefix="/api", tags=["DXF", "Preflight"])
-app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
+if joblog_router:
+    app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
 app.include_router(neck_router, prefix="/api", tags=["Neck", "Generator"])
 app.include_router(parametric_guitar_router, prefix="/api", tags=["Guitar", "Parametric"])
 
@@ -337,16 +367,21 @@ app.include_router(compare_lab_router, prefix="/api", tags=["Compare", "Lab"])
 app.include_router(drilling_router, prefix="/api/cam/drilling", tags=["CAM", "Drilling"])
 app.include_router(cam_risk_router, prefix="/api", tags=["CAM", "Risk"])
 app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
-app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
-app.include_router(learned_overrides_router, prefix="/api", tags=["Feeds", "Learned"])
+if learn_router:
+    app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
+if learned_overrides_router:
+    app.include_router(learned_overrides_router, prefix="/api", tags=["Feeds", "Learned"])
 app.include_router(cam_backup_router, prefix="/api", tags=["CAM", "Backup"])
 
 # Wave 11: Analytics + Probe + LTB Calculator + CAM Tools (8)
-app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
-app.include_router(advanced_analytics_router, prefix="/api", tags=["Analytics", "Advanced"])
+if analytics_router:
+    app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
+if advanced_analytics_router:
+    app.include_router(advanced_analytics_router, prefix="/api", tags=["Analytics", "Advanced"])
 app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
 app.include_router(ltb_calculator_router, prefix="/api", tags=["Calculator", "LTB"])
-app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
+if dashboard_router:
+    app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
 app.include_router(cam_biarc_router, prefix="/api", tags=["CAM", "Biarc"])
 app.include_router(job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"])

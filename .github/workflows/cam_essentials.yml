@@ -1,0 +1,115 @@
+name: CAM Essentials N0-N10 Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'services/api/app/routers/cam_roughing_router.py'
+      - 'services/api/app/routers/drilling_router.py'
+      - 'services/api/app/routers/cam_drill_pattern_router.py'
+      - 'services/api/app/routers/retract_router.py'
+      - 'services/api/app/routers/probe_router.py'
+      - 'services/api/app/cam/modal_cycles.py'
+      - 'services/api/app/cam/probe_patterns.py'
+      - 'services/api/app/cam/retract_patterns.py'
+      - 'client/src/components/toolbox/CAMEssentialsLab.vue'
+      - 'client/src/components/DrillingLab.vue'
+      - 'test_cam_essentials_n0_n10.ps1'
+      - '.github/workflows/cam_essentials.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'services/api/app/routers/*roughing*'
+      - 'services/api/app/routers/*drill*'
+      - 'services/api/app/routers/*retract*'
+      - 'services/api/app/routers/*probe*'
+      - 'services/api/app/cam/*'
+      - 'client/src/components/toolbox/CAMEssentialsLab.vue'
+      - 'test_cam_essentials_n0_n10.ps1'
+
+jobs:
+  test-cam-essentials:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        working-directory: ./services/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start FastAPI backend
+        working-directory: ./services/api
+        shell: powershell
+        run: |
+          Start-Process powershell -ArgumentList "-Command `"uvicorn app.main:app --host 127.0.0.1 --port 8000`"" -WindowStyle Hidden
+          Write-Host "Waiting for backend to start..."
+          Start-Sleep -Seconds 10
+          
+          # Health check
+          $maxRetries = 12
+          $retryCount = 0
+          $backendReady = $false
+          
+          while ($retryCount -lt $maxRetries -and -not $backendReady) {
+            try {
+              $response = Invoke-WebRequest -Uri "http://localhost:8000/docs" -TimeoutSec 2 -UseBasicParsing
+              if ($response.StatusCode -eq 200) {
+                Write-Host "✓ Backend is ready"
+                $backendReady = $true
+              }
+            } catch {
+              $retryCount++
+              Write-Host "Waiting for backend... ($retryCount/$maxRetries)"
+              Start-Sleep -Seconds 5
+            }
+          }
+          
+          if (-not $backendReady) {
+            Write-Error "Backend failed to start"
+            exit 1
+          }
+
+      - name: Run CAM Essentials smoke tests
+        shell: powershell
+        run: |
+          .\test_cam_essentials_n0_n10.ps1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "CAM Essentials tests failed"
+            exit 1
+          }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cam-essentials-test-results
+          path: |
+            test_cam_essentials_n0_n10.ps1
+          retention-days: 30
+
+  badge-status:
+    runs-on: ubuntu-latest
+    needs: test-cam-essentials
+    if: always()
+    
+    steps:
+      - name: Generate badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: your-gist-id-here
+          filename: cam-essentials-status.json
+          label: CAM Essentials
+          message: ${{ needs.test-cam-essentials.result == 'success' && 'Production Ready' || 'Tests Failing' }}
+          color: ${{ needs.test-cam-essentials.result == 'success' && 'brightgreen' || 'red' }}

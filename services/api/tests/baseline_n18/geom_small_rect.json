@@ -1,0 +1,9 @@
+{
+  "outer": [[0,0],[100,0],[100,60],[0,60],[0,0]],
+  "tool_d": 6.0,
+  "stepover": 0.45,
+  "margin": 0.5,
+  "climb": true,
+  "corner_radius_min": 1.0,
+  "corner_tol_mm": 0.3
+}

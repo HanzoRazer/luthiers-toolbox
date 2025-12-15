@@ -1,0 +1,13 @@
+id,name,density_kg_per_m3,burn_tendency,tearout_tendency,hardness_scale
+hardwood_maple,Maple (Hardwood),700.0,0.5,0.5,0.6
+hardwood_oak,Oak (Hardwood),750.0,0.4,0.6,0.7
+hardwood_walnut,Walnut (Hardwood),640.0,0.3,0.4,0.5
+hardwood_mahogany,Mahogany (Hardwood),560.0,0.35,0.35,0.45
+hardwood_rosewood,Rosewood (Hardwood),880.0,0.2,0.7,0.85
+softwood_cedar,Cedar (Softwood),380.0,0.7,0.3,0.25
+softwood_spruce,Spruce (Softwood),450.0,0.6,0.35,0.3
+softwood_pine,Pine (Softwood),500.0,0.55,0.4,0.35
+plywood_birch,Birch Plywood,680.0,0.45,0.55,0.55
+mdf_standard,MDF Standard,750.0,0.8,0.2,0.4
+acrylic_clear,Acrylic (Clear),1190.0,0.9,0.1,0.65
+aluminum_6061,Aluminum 6061-T6,2700.0,0.15,0.05,0.95

@@ -28,17 +28,20 @@ Write-Host "`n[2/7] Testing POST /api/cam/toolpath/helical_entry (CW/G2)..." -Fo
 $body = @{
     cx = 50.0
     cy = 50.0
-    radius = 10.0
+    radius_mm = 10.0
     direction = "CW"
-    z_plane = 5.0
-    z_start = 0.0
-    z_target = -6.0
-    pitch = 2.0
-    feed_xy = 1200
-    feed_z = 600
+    plane_z_mm = 5.0
+    start_z_mm = 0.0
+    z_target_mm = -6.0
+    pitch_mm_per_rev = 2.0
+    feed_xy_mm_min = 1200
+    feed_z_mm_min = 600
     ij_mode = $true
+    absolute = $true
+    units_mm = $true
     safe_rapid = $true
-    max_arc_deg = 90
+    dwell_ms = 0
+    max_arc_degrees = 90.0
 } | ConvertTo-Json
 
 try {
@@ -77,17 +80,20 @@ Write-Host "`n[3/7] Testing POST /api/cam/toolpath/helical_entry (CCW/G3)..." -F
 $body_ccw = @{
     cx = 60.0
     cy = 60.0
-    radius = 8.0
+    radius_mm = 8.0
     direction = "CCW"
-    z_plane = 5.0
-    z_start = 0.0
-    z_target = -4.0
-    pitch = 1.5
-    feed_xy = 1000
-    feed_z = 500
+    plane_z_mm = 5.0
+    start_z_mm = 0.0
+    z_target_mm = -4.0
+    pitch_mm_per_rev = 1.5
+    feed_xy_mm_min = 1000
+    feed_z_mm_min = 500
     ij_mode = $true
+    absolute = $true
+    units_mm = $true
     safe_rapid = $true
-    max_arc_deg = 60
+    dwell_ms = 0
+    max_arc_degrees = 60.0
 } | ConvertTo-Json
 
 try {
@@ -118,16 +124,19 @@ Write-Host "`n[4/7] Testing IJ mode (I,J center offsets)..." -ForegroundColor Ye
 $body_ij = @{
     cx = 40.0
     cy = 40.0
-    radius = 12.0
+    radius_mm = 12.0
     direction = "CW"
-    z_plane = 3.0
-    z_start = 0.0
-    z_target = -5.0
-    pitch = 2.5
-    feed_xy = 1500
+    plane_z_mm = 3.0
+    start_z_mm = 0.0
+    z_target_mm = -5.0
+    pitch_mm_per_rev = 2.5
+    feed_xy_mm_min = 1500
     ij_mode = $true
+    absolute = $true
+    units_mm = $true
     safe_rapid = $false
-    max_arc_deg = 45
+    dwell_ms = 0
+    max_arc_degrees = 45.0
 } | ConvertTo-Json
 
 try {
@@ -150,16 +159,19 @@ Write-Host "`n[5/7] Testing R word mode (arc radius)..." -ForegroundColor Yellow
 $body_r = @{
     cx = 70.0
     cy = 30.0
-    radius = 15.0
+    radius_mm = 15.0
     direction = "CCW"
-    z_plane = 4.0
-    z_start = 0.0
-    z_target = -8.0
-    pitch = 3.0
-    feed_xy = 1300
+    plane_z_mm = 4.0
+    start_z_mm = 0.0
+    z_target_mm = -8.0
+    pitch_mm_per_rev = 3.0
+    feed_xy_mm_min = 1300
     ij_mode = $false
+    absolute = $true
+    units_mm = $true
     safe_rapid = $true
-    max_arc_deg = 90
+    dwell_ms = 0
+    max_arc_degrees = 90.0
 } | ConvertTo-Json
 
 try {
@@ -187,25 +199,28 @@ Write-Host "`n[6/7] Testing safe rapid to clearance plane..." -ForegroundColor Y
 $body_rapid = @{
     cx = 30.0
     cy = 70.0
-    radius = 6.0
+    radius_mm = 6.0
     direction = "CW"
-    z_plane = 10.0
-    z_start = 0.0
-    z_target = -3.0
-    pitch = 1.0
-    feed_xy = 800
+    plane_z_mm = 10.0
+    start_z_mm = 0.0
+    z_target_mm = -3.0
+    pitch_mm_per_rev = 1.0
+    feed_xy_mm_min = 800
     safe_rapid = $true
     ij_mode = $true
-    max_arc_deg = 60
+    absolute = $true
+    units_mm = $true
+    dwell_ms = 0
+    max_arc_degrees = 60.0
 } | ConvertTo-Json
 
 try {
     $result_rapid = Invoke-RestMethod -Uri "$API_BASE/api/cam/toolpath/helical_entry" -Method Post `
         -ContentType "application/json" -Body $body_rapid
     
-    # Validate G0 rapid to Z plane at start
-    if ($result_rapid.gcode -match "G0.*Z10\.0") {
-        Write-Host "  ✓ Safe rapid to clearance plane found (G0 Z10.0)" -ForegroundColor Green
+    # Validate G0 rapid to Z plane at start (flexible format matching)
+    if ($result_rapid.gcode -match "G0.*Z10(?:\.\d+)?") {
+        Write-Host "  ✓ Safe rapid to clearance plane found (G0 Z10)" -ForegroundColor Green
     } else {
         throw "Safe rapid enabled but no G0 to Z plane in output"
     }
@@ -215,20 +230,23 @@ try {
 }
 
 # Test 7: Arc segmentation validation
-Write-Host "`n[7/7] Testing arc segmentation (max_arc_deg)..." -ForegroundColor Yellow
+Write-Host "`n[7/7] Testing arc segmentation (max_arc_degrees)..." -ForegroundColor Yellow
 $body_seg = @{
     cx = 55.0
     cy = 45.0
-    radius = 10.0
+    radius_mm = 10.0
     direction = "CW"
-    z_plane = 5.0
-    z_start = 0.0
-    z_target = -6.0
-    pitch = 2.0
-    feed_xy = 1200
+    plane_z_mm = 5.0
+    start_z_mm = 0.0
+    z_target_mm = -6.0
+    pitch_mm_per_rev = 2.0
+    feed_xy_mm_min = 1200
     ij_mode = $true
+    absolute = $true
+    units_mm = $true
     safe_rapid = $true
-    max_arc_deg = 30  # Force smaller segments
+    dwell_ms = 0
+    max_arc_degrees = 30.0  # Force smaller segments
 } | ConvertTo-Json
 
 try {
