@@ -1,0 +1,77 @@
+{
+  "model": "Martin D-28",
+  "year": 1937,
+  "serial_reference": "65260",
+  "source": "John Arnold technical drawings",
+  "dimensions": {
+    "body_length": 20.0,
+    "upper_bout_width": 11.5,
+    "lower_bout_width": 15.625,
+    "waist_width": 11.0,
+    "scale_length": 25.4,
+    "soundhole_diameter": 4.0,
+    "total_length": 30.4375
+  },
+  "side_profile_raw": {
+    "0.0": 3.75,
+    "3.0": 3.74,
+    "6.0": 3.895,
+    "9.0": 4.085,
+    "10.5": 4.22,
+    "12.0": 4.24,
+    "15.0": 4.35,
+    "18.0": 4.455,
+    "21.0": 4.565,
+    "24.0": 4.64,
+    "27.0": 4.67,
+    "30.4375": 4.72
+  },
+  "side_profile_with_kerfing": {
+    "0.0": 4.0,
+    "3.0": 3.99,
+    "6.0": 4.145,
+    "9.0": 4.335,
+    "10.5": 4.47,
+    "12.0": 4.49,
+    "15.0": 4.6,
+    "18.0": 4.705,
+    "21.0": 4.815,
+    "24.0": 4.89,
+    "27.0": 4.92,
+    "30.4375": 4.97
+  },
+  "back_braces": {
+    "BB1": {
+      "width": 0.32,
+      "depth": 0.45,
+      "position": "upper bout"
+    },
+    "BB2": {
+      "width": 0.32,
+      "depth": 0.45,
+      "position": "above waist"
+    },
+    "BB3": {
+      "width": 0.735,
+      "depth": 0.385,
+      "position": "below waist"
+    },
+    "BB4": {
+      "width": 0.76,
+      "depth": 0.375,
+      "position": "lower bout"
+    }
+  },
+  "top_bracing": {
+    "pattern": "X-brace",
+    "thickness": 0.095,
+    "x_brace_intersection": "below soundhole"
+  },
+  "notes": [
+    "All dimensions in inches",
+    "Side profile excludes top/back thickness",
+    "Kerfing adds ~0.25\" to side depth",
+    "Drawing by John Arnold",
+    "Reference: 1937 D-28 Serial #65260"
+  ]
+}

@@ -1,0 +1,114 @@
+[
+  {
+    "model": "Fender Stratocaster",
+    "file": "Stratocaster_body.dxf",
+    "width_mm": 322.3,
+    "height_mm": 458.8,
+    "points": 1417
+  },
+  {
+    "model": "Gibson Les Paul",
+    "file": "LesPaul_body.dxf",
+    "width_mm": 383.5,
+    "height_mm": 269.2,
+    "points": 669
+  },
+  {
+    "model": "Gibson SG",
+    "file": "GibsonSG_body.dxf",
+    "width_mm": 905.3,
+    "height_mm": 340.4,
+    "points": 4502
+  },
+  {
+    "model": "Ibanez JS1000",
+    "file": "JS1000_body.dxf",
+    "width_mm": 450.7,
+    "height_mm": 314.6,
+    "points": 345
+  },
+  {
+    "model": "Gibson J45",
+    "file": "J45_body_outline.dxf",
+    "width_mm": 398.5,
+    "height_mm": 504.8,
+    "points": 30
+  },
+  {
+    "model": "Jumbo Acoustic",
+    "file": "Jumbo_body.dxf",
+    "width_mm": 474.2,
+    "height_mm": 385.1,
+    "points": 57
+  },
+  {
+    "model": "Dreadnought",
+    "file": "dreadnought_body.dxf",
+    "width_mm": 404.0,
+    "height_mm": 510.2,
+    "points": 2990
+  },
+  {
+    "model": "Classical",
+    "file": "classical_body.dxf",
+    "width_mm": 371.0,
+    "height_mm": 490.0,
+    "points": 1156
+  },
+  {
+    "model": "OM/000",
+    "file": "om_000_body.dxf",
+    "width_mm": 397.6,
+    "height_mm": 499.6,
+    "points": 5451
+  },
+  {
+    "model": "Gibson L-00",
+    "file": "gibson_l_00_body.dxf",
+    "width_mm": 376.3,
+    "height_mm": 500.0,
+    "points": 2510
+  },
+  {
+    "model": "Soprano Ukulele",
+    "file": "soprano_ukulele_body.dxf",
+    "width_mm": 176.9,
+    "height_mm": 200.0,
+    "points": 1572
+  },
+  {
+    "model": "Gibson Explorer",
+    "file": "gibson_explorer_body.dxf",
+    "width_mm": 556.5,
+    "height_mm": 434.7,
+    "points": 24
+  },
+  {
+    "model": "Concert Ukulele",
+    "file": "concert_ukulele_body.dxf",
+    "width_mm": 203.1,
+    "height_mm": 393.7,
+    "points": 14
+  },
+  {
+    "model": "1937 Martin D-28",
+    "file": "martin_d28_body.dxf",
+    "width_mm": 386.0,
+    "height_mm": 507.3,
+    "points": 64
+  },
+  {
+    "model": "Octave Mandolin",
+    "file": "octave_mandolin_body.dxf",
+    "width_mm": 364.8,
+    "height_mm": 408.3,
+    "points": 52
+  },
+  {
+    "model": "1957 Harmony H44",
+    "file": "harmony_h44_body.dxf",
+    "width_mm": 389.8,
+    "height_mm": 269.9,
+    "points": 389
+  }
+]
