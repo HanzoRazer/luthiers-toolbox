@@ -1,0 +1,288 @@
+{
+  "blades": [
+    {
+      "id": "ultra_thin_140",
+      "name": "Ultra-Thin Veneer Blade 140mm",
+      "diameter_mm": 140.0,
+      "kerf_mm": 1.0,
+      "plate_mm": 0.8,
+      "bore_mm": 20.0,
+      "tooth_count": 80,
+      "hook_angle_deg": 10.0,
+      "top_grind": "Hi-ATB",
+      "max_rpm": 12000,
+      "max_rim_speed_m_per_min": 5280,
+      "recommended_rim_speed_m_per_min": 4400,
+      "recommended_bite_mm_per_tooth": 0.15,
+      "material_class": ["hardwood", "softwood", "veneer"],
+      "notes": "Primary production blade for veneer and rosette logs. Ideal for ultra-thin slicing.",
+      "presets": [
+        {
+          "name": "Gentle",
+          "description": "Dense Hardwood - conservative settings",
+          "feed_mm_per_min": 300.0,
+          "rpm": 8000,
+          "doc_mm": 0.25,
+          "risk_band": "GREEN",
+          "material_tag": "hardwood",
+          "workholding_tag": "vacuum_jig"
+        },
+        {
+          "name": "Normal",
+          "description": "General Veneer - balanced settings",
+          "feed_mm_per_min": 500.0,
+          "rpm": 9000,
+          "doc_mm": 0.35,
+          "risk_band": "GREEN",
+          "material_tag": "veneer",
+          "workholding_tag": "vacuum_jig"
+        },
+        {
+          "name": "Aggressive",
+          "description": "Softwood only - faster production",
+          "feed_mm_per_min": 800.0,
+          "rpm": 10000,
+          "doc_mm": 0.5,
+          "risk_band": "YELLOW",
+          "material_tag": "softwood",
+          "workholding_tag": "vacuum_screw"
+        }
+      ]
+    },
+    {
+      "id": "veneer_160",
+      "name": "Veneer / Panel Blade 160mm",
+      "diameter_mm": 160.0,
+      "kerf_mm": 1.2,
+      "plate_mm": 0.9,
+      "bore_mm": 20.0,
+      "tooth_count": 96,
+      "hook_angle_deg": 5.0,
+      "top_grind": "ATB",
+      "max_rpm": 10000,
+      "max_rim_speed_m_per_min": 5027,
+      "recommended_rim_speed_m_per_min": 4000,
+      "recommended_bite_mm_per_tooth": 0.18,
+      "material_class": ["hardwood", "softwood", "plywood"],
+      "notes": "Secondary blade for longer veneer runs. Good for rosette sausage logs up to 4\" diameter.",
+      "presets": [
+        {
+          "name": "Gentle",
+          "description": "Long Rip - careful slicing",
+          "feed_mm_per_min": 300.0,
+          "rpm": 7500,
+          "doc_mm": 0.25,
+          "risk_band": "GREEN",
+          "material_tag": "hardwood",
+          "workholding_tag": "vacuum_jig"
+        },
+        {
+          "name": "Normal",
+          "description": "Standard production",
+          "feed_mm_per_min": 450.0,
+          "rpm": 8000,
+          "doc_mm": 0.35,
+          "risk_band": "GREEN",
+          "material_tag": "softwood",
+          "workholding_tag": "vacuum_jig"
+        }
+      ]
+    },
+    {
+      "id": "rosette_180",
+      "name": "Rosette Sausage Blade 180mm",
+      "diameter_mm": 180.0,
+      "kerf_mm": 1.4,
+      "plate_mm": 1.0,
+      "bore_mm": 30.0,
+      "tooth_count": 120,
+      "hook_angle_deg": 0.0,
+      "top_grind": "Hi-ATB",
+      "max_rpm": 9000,
+      "max_rim_speed_m_per_min": 5089,
+      "recommended_rim_speed_m_per_min": 4000,
+      "recommended_bite_mm_per_tooth": 0.12,
+      "material_class": ["hardwood", "rosette_log"],
+      "notes": "Designed for 4-4.5\" rosette sausage logs. High tooth count for ultra-clean slices.",
+      "presets": [
+        {
+          "name": "Gentle",
+          "description": "Multi-species sausage - maximum quality",
+          "feed_mm_per_min": 250.0,
+          "rpm": 7000,
+          "doc_mm": 0.2,
+          "risk_band": "GREEN",
+          "material_tag": "rosette_log",
+          "workholding_tag": "v_block_jig"
+        },
+        {
+          "name": "Normal",
+          "description": "Standard rosette production",
+          "feed_mm_per_min": 400.0,
+          "rpm": 8000,
+          "doc_mm": 0.3,
+          "risk_band": "GREEN",
+          "material_tag": "rosette_log",
+          "workholding_tag": "v_block_jig"
+        }
+      ]
+    },
+    {
+      "id": "slitting_75",
+      "name": "Slitting Saw 75mm (3\")",
+      "diameter_mm": 75.0,
+      "kerf_mm": 1.6,
+      "plate_mm": 1.2,
+      "bore_mm": 16.0,
+      "tooth_count": 36,
+      "hook_angle_deg": 15.0,
+      "top_grind": "ATB",
+      "max_rpm": 18000,
+      "max_rim_speed_m_per_min": 4241,
+      "recommended_rim_speed_m_per_min": 3500,
+      "recommended_bite_mm_per_tooth": 0.25,
+      "material_class": ["hardwood", "softwood", "binding"],
+      "notes": "Small slitting saw for binding channels, purfling slots, and thin strip cutting.",
+      "presets": [
+        {
+          "name": "Gentle",
+          "description": "Binding channels in hardwood",
+          "feed_mm_per_min": 400.0,
+          "rpm": 12000,
+          "doc_mm": 0.5,
+          "risk_band": "GREEN",
+          "material_tag": "hardwood",
+          "workholding_tag": "clamp_fixture"
+        },
+        {
+          "name": "Normal",
+          "description": "Purfling slots",
+          "feed_mm_per_min": 600.0,
+          "rpm": 14000,
+          "doc_mm": 0.75,
+          "risk_band": "GREEN",
+          "material_tag": "softwood",
+          "workholding_tag": "vacuum_table"
+        },
+        {
+          "name": "Aggressive",
+          "description": "Fast strip cutting in softwood",
+          "feed_mm_per_min": 900.0,
+          "rpm": 16000,
+          "doc_mm": 1.0,
+          "risk_band": "YELLOW",
+          "material_tag": "softwood",
+          "workholding_tag": "vacuum_screw"
+        }
+      ]
+    },
+    {
+      "id": "purfling_50",
+      "name": "Micro Slitting Saw 50mm (2\")",
+      "diameter_mm": 50.0,
+      "kerf_mm": 0.8,
+      "plate_mm": 0.6,
+      "bore_mm": 10.0,
+      "tooth_count": 48,
+      "hook_angle_deg": 5.0,
+      "top_grind": "Hi-ATB",
+      "max_rpm": 24000,
+      "max_rim_speed_m_per_min": 3770,
+      "recommended_rim_speed_m_per_min": 3000,
+      "recommended_bite_mm_per_tooth": 0.08,
+      "material_class": ["veneer", "inlay", "purfling"],
+      "notes": "Ultra-fine slitting saw for precision purfling and thin veneer work. Requires rigid workholding.",
+      "presets": [
+        {
+          "name": "Gentle",
+          "description": "Precision purfling cuts",
+          "feed_mm_per_min": 200.0,
+          "rpm": 18000,
+          "doc_mm": 0.3,
+          "risk_band": "GREEN",
+          "material_tag": "purfling",
+          "workholding_tag": "vacuum_fixture"
+        },
+        {
+          "name": "Normal",
+          "description": "Standard veneer strips",
+          "feed_mm_per_min": 350.0,
+          "rpm": 20000,
+          "doc_mm": 0.5,
+          "risk_band": "GREEN",
+          "material_tag": "veneer",
+          "workholding_tag": "vacuum_fixture"
+        }
+      ]
+    }
+  ],
+  "default_material": {
+    "id": "hardwood_generic",
+    "name": "Generic Hardwood",
+    "density_kg_per_m3": 720.0,
+    "burn_tendency": 0.6,
+    "tearout_tendency": 0.5,
+    "hardness_scale": 0.7
+  },
+  "workholding_types": [
+    {
+      "id": "vacuum_table",
+      "name": "Vacuum Table",
+      "stability_rating": 0.7,
+      "notes": "Standard vacuum hold, requires flat stock"
+    },
+    {
+      "id": "vacuum_jig",
+      "name": "Vacuum + Jig",
+      "stability_rating": 0.85,
+      "notes": "Vacuum with positioning jig for repeatability"
+    },
+    {
+      "id": "vacuum_screw",
+      "name": "Vacuum + Screw-Down",
+      "stability_rating": 0.95,
+      "notes": "Maximum stability, vacuum plus mechanical fasteners"
+    },
+    {
+      "id": "v_block_jig",
+      "name": "V-Block Fixture",
+      "stability_rating": 0.9,
+      "notes": "For cylindrical stock like rosette sausages"
+    },
+    {
+      "id": "clamp_fixture",
+      "name": "Clamp Fixture",
+      "stability_rating": 0.8,
+      "notes": "Mechanical clamping for odd-shaped pieces"
+    },
+    {
+      "id": "vacuum_fixture",
+      "name": "Custom Vacuum Fixture",
+      "stability_rating": 0.9,
+      "notes": "Purpose-built vacuum fixture for specific operations"
+    }
+  ],
+  "risk_bands": {
+    "GREEN": {
+      "description": "Safe to proceed",
+      "max_risk_score": 0.4,
+      "requires_review": false
+    },
+    "YELLOW": {
+      "description": "Proceed with caution - operator review recommended",
+      "max_risk_score": 0.7,
+      "requires_review": true
+    },
+    "RED": {
+      "description": "Do not proceed - unsafe parameters",
+      "max_risk_score": 1.0,
+      "requires_review": true
+    }
+  },
+  "_metadata": {
+    "version": "1.0.0",
+    "created": "2024-12-15",
+    "description": "CNC Saw Lab blade and preset library for Luthier's ToolBox",
+    "source": "Generated from CNC Saw Lab design session - cleaned and expanded"
+  }
+}
