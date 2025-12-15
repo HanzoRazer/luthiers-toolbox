@@ -53,10 +53,18 @@ class SawRunsFileCompat(_CompatBase):
     @classmethod
     def parse_payload(cls, payload: Any) -> "SawRunsFileCompat":
         if isinstance(payload, list):
+            # List of run objects
             return cls(runs=[SawRunCompat.model_validate(x) for x in payload])
         if isinstance(payload, dict):
             if "runs" in payload:
-                return cls(runs=[SawRunCompat.model_validate(x) for x in payload["runs"]])
+                runs_data = payload["runs"]
+                # Legacy format: runs is a dict keyed by run_id
+                if isinstance(runs_data, dict):
+                    return cls(runs=[SawRunCompat.model_validate(v) for v in runs_data.values()])
+                # Canonical format: runs is a list
+                if isinstance(runs_data, list):
+                    return cls(runs=[SawRunCompat.model_validate(x) for x in runs_data])
+            # Single run object
             return cls(runs=[SawRunCompat.model_validate(payload)])
         raise ValueError("Unsupported payload shape")
 
@@ -91,10 +99,22 @@ class SawTelemetryFileCompat(_CompatBase):
     @classmethod
     def parse_payload(cls, payload: Any) -> "SawTelemetryFileCompat":
         if isinstance(payload, list):
+            # Flat list of samples (single run)
             return cls(runs=[SawTelemetryRunCompat(samples=[TelemetrySampleCompat.model_validate(x) for x in payload])])
         if isinstance(payload, dict):
+            # Legacy format: telemetry is a dict keyed by run_id
+            if "telemetry" in payload:
+                tel_data = payload["telemetry"]
+                if isinstance(tel_data, dict):
+                    return cls(runs=[SawTelemetryRunCompat.model_validate(v) for v in tel_data.values()])
+            # Canonical format: runs is a list
             if "runs" in payload:
-                return cls(runs=[SawTelemetryRunCompat.model_validate(r) for r in payload["runs"]])
+                runs_data = payload["runs"]
+                if isinstance(runs_data, dict):
+                    return cls(runs=[SawTelemetryRunCompat.model_validate(v) for v in runs_data.values()])
+                if isinstance(runs_data, list):
+                    return cls(runs=[SawTelemetryRunCompat.model_validate(r) for r in runs_data])
+            # Single run with samples
             if "samples" in payload:
                 return cls(runs=[SawTelemetryRunCompat.model_validate(payload)])
         raise ValueError("Unsupported payload shape")
