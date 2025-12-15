@@ -1,9 +1,11 @@
 """Machine profiles API for controller-specific limits and capabilities."""
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 import json
 import os
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/machine", tags=["machine"])
 
@@ -22,26 +24,26 @@ class MachineProfile(BaseModel):
     post_id_default: str | None = None
 
 
-def _load():
+def _load() -> List[Dict[str, Any]]:
     """Load machine profiles from JSON asset."""
     with open(_ASSET, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def _save(lst):
+def _save(lst: List[Dict[str, Any]]) -> None:
     """Save machine profiles to JSON asset."""
     with open(_ASSET, "w", encoding="utf-8") as f:
         json.dump(lst, f, indent=2)
 
 
 @router.get("/profiles")
-def list_profiles():
+def list_profiles() -> List[Dict[str, Any]]:
     """List all machine profiles."""
     return _load()
 
 
 @router.get("/profiles/{pid}")
-def get_profile(pid: str):
+def get_profile(pid: str) -> Dict[str, Any]:
     """Get a specific machine profile by ID."""
     for p in _load():
         if p["id"] == pid:
@@ -50,7 +52,7 @@ def get_profile(pid: str):
 
 
 @router.post("/profiles")
-def upsert_profile(p: MachineProfile):
+def upsert_profile(p: MachineProfile) -> Dict[str, str]:
     """Create or update a machine profile."""
     items = _load()
     for i, it in enumerate(items):
@@ -64,7 +66,7 @@ def upsert_profile(p: MachineProfile):
 
 
 @router.delete("/profiles/{pid}")
-def delete_profile(pid: str):
+def delete_profile(pid: str) -> Dict[str, str]:
     """Delete a machine profile by ID."""
     items = _load()
     nxt = [x for x in items if x["id"] != pid]
@@ -75,7 +77,7 @@ def delete_profile(pid: str):
 
 
 @router.post("/profiles/clone/{src_id}")
-def clone_profile(src_id: str, new_id: str, new_title: str | None = None):
+def clone_profile(src_id: str, new_id: str, new_title: str | None = None) -> Dict[str, str]:
     """
     Clone an existing machine profile with a new ID and optional new title.
     

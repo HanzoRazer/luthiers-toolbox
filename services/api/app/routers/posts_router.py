@@ -3,12 +3,16 @@
 Patch N.14 - Post-Processor Template Editor
 API endpoints for reading and updating post-processor definitions
 """
+import json
+import os
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-import os, json
 
-POSTS_PATH = os.environ.get("TB_POSTS_PATH", "services/api/app/data/posts.json")
+# Default path relative to this router file
+_DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "posts.json")
+POSTS_PATH = os.environ.get("TB_POSTS_PATH", _DEFAULT_PATH)
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -49,7 +53,7 @@ def _load_posts() -> List[Dict[str, Any]]:
         return []
 
 
-def _save_posts(arr: List[Dict[str, Any]]):
+def _save_posts(arr: List[Dict[str, Any]]) -> None:
     """Save post-processor definitions to JSON file"""
     os.makedirs(os.path.dirname(POSTS_PATH), exist_ok=True)
     with open(POSTS_PATH, "w", encoding="utf-8") as f:
@@ -57,7 +61,7 @@ def _save_posts(arr: List[Dict[str, Any]]):
 
 
 @router.get("", response_model=List[PostDef])
-def list_posts():
+def list_posts() -> List[PostDef]:
     """
     List all post-processor definitions
     
@@ -69,7 +73,7 @@ def list_posts():
 
 
 @router.put("", response_model=dict)
-def replace_posts(posts: List[PostDef]):
+def replace_posts(posts: List[PostDef]) -> Dict[str, Any]:
     """
     Replace all post-processor definitions
     

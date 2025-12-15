@@ -46,6 +46,10 @@ jobs:
         run: |
           curl -fsS "http://localhost:8000/docs" | grep -i "openapi" >/dev/null
 
+      - name: Run repo health smoke test
+        run: |
+          pwsh -File ./scripts/Test-RepoHealth.ps1 -BaseUrl "http://localhost:8000"
+
       - name: Verify CORS allows configured origin
         run: |
           # Preflight against an API route with Origin= http://localhost:8080

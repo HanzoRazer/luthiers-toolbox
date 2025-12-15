@@ -1,9 +1,11 @@
 """CAM Run Logs API - Write and query execution telemetry."""
 
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from ..telemetry.cam_logs import insert_run, insert_segments, fetch_caps_by_machine
+
+from ..telemetry.cam_logs import fetch_caps_by_machine, insert_run, insert_segments
 
 router = APIRouter(prefix="/cam/logs", tags=["cam-logs"])
 
@@ -48,7 +50,7 @@ class RunWithSegmentsIn(BaseModel):
 
 
 @router.post("/write")
-def write_log(body: RunWithSegmentsIn):
+def write_log(body: RunWithSegmentsIn) -> Dict[str, Any]:
     """
     Log a CAM run with per-segment details.
 
@@ -60,7 +62,7 @@ def write_log(body: RunWithSegmentsIn):
 
 
 @router.get("/caps/{machine_id}")
-def caps(machine_id: str):
+def caps(machine_id: str) -> Dict[str, Any]:
     """
     Get bottleneck distribution (feed_cap/accel/jerk/none counts) for a machine.
 

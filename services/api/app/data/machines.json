@@ -1,54 +1,1853 @@
 {
   "machines": [
     {
-      "id": "m1",
-      "title": "Shop Fanuc Mill",
-      "post": "fanuc_haas",
-      "overrides": {},
+      "id": "IDC_WOODCRAFT",
+      "name": "IDC Woodcraft CNC Router",
+      "max_feed_xy": 2000.0,
+      "rapid": 4000.0,
+      "accel": 600.0,
+      "jerk": 1800.0,
+      "safe_z_default": 5.0,
       "tools": [
         {
           "t": 1,
-          "name": "Ø6 flat endmill",
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
           "type": "EM",
-          "dia_mm": 6.0,
-          "len_mm": 45.0,
-          "holder": "ER20",
-          "offset_len_mm": 120.0,
-          "spindle_rpm": 8000,
-          "feed_mm_min": 600,
-          "plunge_mm_min": 200
+          "dia_mm": 0.79248,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 2,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
         },
         {
           "t": 3,
-          "name": "Ø3 drill",
-          "type": "DRILL",
-          "dia_mm": 3.0,
-          "len_mm": 55.0,
-          "holder": "ER16",
-          "offset_len_mm": 121.2,
-          "spindle_rpm": 6000,
-          "feed_mm_min": 300,
-          "plunge_mm_min": 150
-        }
-      ]
-    },
-    {
-      "id": "m2",
-      "title": "Garage GRBL Router",
-      "post": "grbl",
-      "overrides": {},
-      "tools": [
-        {
-          "t": 1,
-          "name": "Ø3.175 flat",
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
           "type": "EM",
           "dia_mm": 3.175,
-          "len_mm": 35.0,
-          "holder": "Collet",
-          "offset_len_mm": 0.0,
-          "spindle_rpm": 12000,
-          "feed_mm_min": 900,
-          "plunge_mm_min": 300
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 4,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 4.7625,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 5,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 6,
+          "name": "Extended {Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 7,
+          "name": "Extended {Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 8,
+          "name": "End Mill (1/8\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 9,
+          "name": "End Mill (1/16\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 10,
+          "name": "Badger Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 11,
+          "name": "HOG Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 12,
+          "name": "BEAST Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 13,
+          "name": "SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 14,
+          "name": "DEEP SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 15,
+          "name": "RIPPER Roughing End Mill(1/2\") UP CUT",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 16,
+          "name": "DEEP RIPPER Roughing End Mill(1/2\") UP CUT",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 17,
+          "name": "1/4\" Big B Ballnose PN: 8675309-BB",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 100.0,
+          "plunge_mm_min": 55.0
+        },
+        {
+          "t": 19,
+          "name": "1/4\" Big B Ballnose PN: 8675309-BB",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 1397.0
+        },
+        {
+          "t": 21,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 22,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 23,
+          "name": "1/4\" Downtown Jenny Downshear PN: 8675309-250DJ",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 1524.0
+        },
+        {
+          "t": 25,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 4.7625,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 26,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 27,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 29,
+          "name": "1/4\" GrooVee 30° VBit PN: 8675309-V30°",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 23000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 31,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 32,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 33,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 34,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 35,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 36,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 37,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 38.1,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 38,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 39,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 40,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 41,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 42,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 43,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 44,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 45,
+          "name": "1/8 Radius {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.2503795258631323,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 46,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 47,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 48,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 49,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 50,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 51,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 52,
+          "name": "Ball Nose Downcut ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 53,
+          "name": "1/8\" Little B Tapered Ballnose  PN: 8675309-LB",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 100.0,
+          "plunge_mm_min": 55.0
+        },
+        {
+          "t": 55,
+          "name": "1/8\" Little B Tapered Ballnose  PN: 8675309-LB",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 1397.0
+        },
+        {
+          "t": 57,
+          "name": "1/8\" Mini Jenny Compression PN: 8675309-MJ",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 100.0,
+          "plunge_mm_min": 75.0
+        },
+        {
+          "t": 59,
+          "name": "1/8\" Mini Jenny Compression PN: 8675309-MJ",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 1905.0
+        },
+        {
+          "t": 61,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 62,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 63,
+          "name": "1/8\" Slim Jen Down Shear PN: 8675309 SLIM",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 2159.0,
+          "plunge_mm_min": 1397.0
+        },
+        {
+          "t": 65,
+          "name": "3/8\" GrooVee 60° VBit PN: 8675309-V60°",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 85.0,
+          "plunge_mm_min": 40.0
+        },
+        {
+          "t": 67,
+          "name": "Keyhole T-slot ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 69,
+          "name": "3/8\" GrooVee 90° VBit PN: 8675309-V90°",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 85.0,
+          "plunge_mm_min": 40.0
+        },
+        {
+          "t": 71,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 72,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 73,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 75,
+          "name": "BEAST Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 2032.0
+        },
+        {
+          "t": 77,
+          "name": "Badger Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 130.0,
+          "plunge_mm_min": 80.0
+        },
+        {
+          "t": 79,
+          "name": "Badger Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 3302.0,
+          "plunge_mm_min": 2032.0
+        },
+        {
+          "t": 81,
+          "name": "Ball Nose Downcut (1/4\")",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 70.0,
+          "plunge_mm_min": 40.0
+        },
+        {
+          "t": 83,
+          "name": "Ball Nose Downcut ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 15000.0,
+          "feed_mm_min": 1778.0,
+          "plunge_mm_min": 1016.0
+        },
+        {
+          "t": 85,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.1875,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 70.0,
+          "plunge_mm_min": 40.0
+        },
+        {
+          "t": 86,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 87,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 88,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 38.1,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 89,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 80.0
+        },
+        {
+          "t": 91,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 4.7625,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1778.0,
+          "plunge_mm_min": 1016.0
+        },
+        {
+          "t": 93,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 1270.0,
+          "plunge_mm_min": 889.0
+        },
+        {
+          "t": 95,
+          "name": "Compression {Tool Type} ({Diameter|F}{Units Short}) UP/DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 2032.0
+        },
+        {
+          "t": 96,
+          "name": "{Diameter|F}{Units Short} Lightning Drill - Crib board drill",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 97,
+          "name": "{Diameter|F}{Units Short} Lightning Drill",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 99,
+          "name": "DEEP RIPPER Roughing End Mill(1/2\") UP CUT",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 7620.0,
+          "plunge_mm_min": 5080.0
+        },
+        {
+          "t": 101,
+          "name": "DEEP SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 250.0,
+          "plunge_mm_min": 150.0
+        },
+        {
+          "t": 103,
+          "name": "DEEP SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 6350.0,
+          "plunge_mm_min": 3810.0
+        },
+        {
+          "t": 105,
+          "name": "End Mill (1/16\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 0.0625,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 20.0,
+          "plunge_mm_min": 10.0
+        },
+        {
+          "t": 106,
+          "name": "1/8 Radius {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.2503795258631323,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 107,
+          "name": "End Mill (1/16\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 508.0,
+          "plunge_mm_min": 254.0
+        },
+        {
+          "t": 109,
+          "name": "End Mill (1/8\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 50.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 111,
+          "name": "End Mill (1/8\") DOWN CUT, (1/4\" Shank)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 1.27,
+          "plunge_mm_min": 0.381
+        },
+        {
+          "t": 113,
+          "name": "Extended {Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 30.0,
+          "plunge_mm_min": 10.0
+        },
+        {
+          "t": 115,
+          "name": "Extended {Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 40.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 116,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 117,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 119,
+          "name": "Extended {Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 1016.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 121,
+          "name": "HOG Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 80.0
+        },
+        {
+          "t": 123,
+          "name": "HOG Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 2032.0
+        },
+        {
+          "t": 125,
+          "name": "Keyhole T-slot ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 21000.0,
+          "feed_mm_min": 30.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 127,
+          "name": "Keyhole T-slot ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 21000.0,
+          "feed_mm_min": 762.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 129,
+          "name": "RIPPER Roughing End Mill(1/2\") UP CUT",
+          "type": "EM",
+          "dia_mm": 0.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 300.0,
+          "plunge_mm_min": 200.0
+        },
+        {
+          "t": 131,
+          "name": "RIPPER Roughing End Mill(1/2\") UP CUT",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 7620.0,
+          "plunge_mm_min": 5080.0
+        },
+        {
+          "t": 133,
+          "name": "SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 250.0,
+          "plunge_mm_min": 150.0
+        },
+        {
+          "t": 135,
+          "name": "SLAYER Roughing {Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 18000.0,
+          "feed_mm_min": 6350.0,
+          "plunge_mm_min": 3810.0
+        },
+        {
+          "t": 137,
+          "name": "Skinny Jenny (1/16\" tapered ball nose)",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 150.0,
+          "plunge_mm_min": 75.0
+        },
+        {
+          "t": 139,
+          "name": "Skinny Jenny (1/16\" tapered ball nose)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 3810.0,
+          "plunge_mm_min": 1905.0
+        },
+        {
+          "t": 141,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.75,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 100.0,
+          "plunge_mm_min": 8.0
+        },
+        {
+          "t": 143,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.0,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 150.0,
+          "plunge_mm_min": 7.0
+        },
+        {
+          "t": 145,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 120.0,
+          "plunge_mm_min": 8.0
+        },
+        {
+          "t": 147,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 2540.0,
+          "plunge_mm_min": 203.2
+        },
+        {
+          "t": 149,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 3810.0,
+          "plunge_mm_min": 177.79999999999998
+        },
+        {
+          "t": 151,
+          "name": "Surfacing {Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 38.1,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 3048.0,
+          "plunge_mm_min": 203.2
+        },
+        {
+          "t": 153,
+          "name": "{Diameter|F}{Units Short} Lightning Drill",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 50.0
+        },
+        {
+          "t": 155,
+          "name": "{Diameter|F}{Units Short} Lightning Drill",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 0.0,
+          "plunge_mm_min": 1270.0
+        },
+        {
+          "t": 157,
+          "name": "{Diameter|F}{Units Short} Lightning Drill - Crib board drill",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 60.0
+        },
+        {
+          "t": 159,
+          "name": "{Diameter|F}{Units Short} Lightning Drill - Crib board drill",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 0.0,
+          "plunge_mm_min": 1524.0
+        },
+        {
+          "t": 161,
+          "name": "{Tool Type} (1/4)",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 70.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 163,
+          "name": "{Tool Type} (1/8)",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 165,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.0625,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 35.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 167,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 169,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.75,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 171,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.0,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 75.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 173,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 889.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 175,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 177,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 1778.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 179,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 181,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 16000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 183,
+          "name": "{Tool Type} ({Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 1905.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 185,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 0.0625,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 45.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 187,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 189,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 191,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 1143.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 193,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 195,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) 0-Flute Bit",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 381.0
+        },
+        {
+          "t": 197,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.03125,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 10.0,
+          "plunge_mm_min": 7.0
+        },
+        {
+          "t": 199,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.0625,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 20.0,
+          "plunge_mm_min": 10.0
+        },
+        {
+          "t": 200,
+          "name": "1/4\"  The Jenny Compression PN: 8675309-J",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 201,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 50.0,
+          "plunge_mm_min": 15.0
+        },
+        {
+          "t": 202,
+          "name": "1/8\" Slim Jen Down Shear PN: 8675309 SLIM",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 203,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.1875,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 30.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 204,
+          "name": "1/4\" Downtown Jenny Downshear PN: 8675309-250DJ",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 205,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 70.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 206,
+          "name": "1/4\" Oh, Jenny Downcut PN: 8675309-OJD",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 207,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 0.79248,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 254.0,
+          "plunge_mm_min": 177.79999999999998
+        },
+        {
+          "t": 208,
+          "name": "1/4\" Big B Ballnose PN: 8675309-BB",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 209,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 1.5875,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 508.0,
+          "plunge_mm_min": 254.0
+        },
+        {
+          "t": 210,
+          "name": "1/4\" GrooVee 30° VBit PN: 8675309-V30°",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 211,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 762.0,
+          "plunge_mm_min": 254.0
+        },
+        {
+          "t": 212,
+          "name": "3/8\" GrooVee 90° VBit PN: 8675309-V90°",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 213,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 4.7625,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1778.0,
+          "plunge_mm_min": 1016.0
+        },
+        {
+          "t": 214,
+          "name": "1/4\" Extended Reach Upcut Jenny PN: 8675309-ER",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 12000.0,
+          "feed_mm_min": 1000.0,
+          "plunge_mm_min": 500.0
+        },
+        {
+          "t": 215,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) DOWN CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 1778.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 217,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 50.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 219,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 40.0
+        },
+        {
+          "t": 221,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 1270.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 223,
+          "name": "{Tool Type} ({Diameter|F}{Units Short}) UP CUT",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 1016.0
+        },
+        {
+          "t": 225,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 0.0,
+          "feed_mm_min": 40.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 227,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 0.0,
+          "feed_mm_min": 40.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 229,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 0.0,
+          "feed_mm_min": 1016.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 231,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short} - {Line Width}{Units Short} Line Width)",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 0.0,
+          "feed_mm_min": 1016.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 233,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 35.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 235,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 237,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 45.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 239,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.75,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 241,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.75,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 243,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.0,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 245,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 1.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 247,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 40.0,
+          "plunge_mm_min": 20.0
+        },
+        {
+          "t": 249,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 50.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 251,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.125,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 50.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 253,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 90.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 255,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.5,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 90.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 257,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 259,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.375,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 80.0,
+          "plunge_mm_min": 30.0
+        },
+        {
+          "t": 261,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 27000.0,
+          "feed_mm_min": 889.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 263,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 265,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1143.0,
+          "plunge_mm_min": 635.0
+        },
+        {
+          "t": 267,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 635.0
+        },
+        {
+          "t": 269,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 19.05,
+          "len_mm": 25.0,
+          "spindle_rpm": 14000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 271,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 25.4,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 273,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 38.1,
+          "len_mm": 25.0,
+          "spindle_rpm": 17000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 275,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 1016.0,
+          "plunge_mm_min": 508.0
+        },
+        {
+          "t": 277,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 1270.0,
+          "plunge_mm_min": 635.0
+        },
+        {
+          "t": 279,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 3.175,
+          "len_mm": 25.0,
+          "spindle_rpm": 10000.0,
+          "feed_mm_min": 1270.0,
+          "plunge_mm_min": 635.0
+        },
+        {
+          "t": 281,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 2286.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 283,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 285,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 12.7,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 2286.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 287,
+          "name": "{Tool Type} ({Included Angle|.0}° - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 9.525,
+          "len_mm": 25.0,
+          "spindle_rpm": 22000.0,
+          "feed_mm_min": 2032.0,
+          "plunge_mm_min": 762.0
+        },
+        {
+          "t": 289,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 291,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 0.25,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 60.0,
+          "plunge_mm_min": 25.0
+        },
+        {
+          "t": 293,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 635.0
+        },
+        {
+          "t": 295,
+          "name": "{Tool Type} ({Side Angle|.0}°, Tip {Tip Radius} - {Diameter|F}{Units Short})",
+          "type": "EM",
+          "dia_mm": 6.35,
+          "len_mm": 25.0,
+          "spindle_rpm": 19000.0,
+          "feed_mm_min": 1524.0,
+          "plunge_mm_min": 635.0
         }
       ]
     }

@@ -1,8 +1,11 @@
 
+import json
+import math
+import os
+from typing import Any, Dict, List, Literal, Optional, Tuple
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Tuple, Optional, Dict, Any, Literal
-import math, json, os
 
 router = APIRouter(prefix="/api/cam_gcode", tags=["cam_gcode"])
 Point = Tuple[float, float]
@@ -46,11 +49,11 @@ def _load_preset(name: str) -> Dict[str, Any]:
 def _poly_is_closed(poly: List[Point], tol=1e-6)->bool:
     return len(poly)>2 and (abs(poly[0][0]-poly[-1][0])<tol and abs(poly[0][1]-poly[-1][1])<tol)
 
-def _unit(v):
+def _unit(v: float) -> float:
     return v
 
-def _dot(ax,ay,bx,by): return ax*bx + ay*by
-def _len(x,y): return math.hypot(x,y)
+def _dot(ax: float, ay: float, bx: float, by: float) -> float: return ax*bx + ay*by
+def _len(x: float, y: float) -> float: return math.hypot(x,y)
 
 def _fillet_between(a:Point, b:Point, c:Point, R:float):
     # Returns (p1, p2, cx, cy, dir) where p1 and p2 are trim points, fillet arc between them
@@ -91,10 +94,10 @@ def _fillet_between(a:Point, b:Point, c:Point, R:float):
     dirn = "CCW" if cross>0 else "CW"
     return (p1,p2,cx,cy,dirn)
 
-def _angle(cx,cy,p):
+def _angle(cx: float, cy: float, p: Point) -> float:
     return math.atan2(p[1]-cy, p[0]-cx)
 
-def _axis_modal_emit(line, last_xy):
+def _axis_modal_emit(line: str, last_xy: Optional[tuple]) -> tuple:
     tokens = line.split()
     if not tokens: return line, last_xy
     if tokens[0] not in ("G1","G2","G3"): return line, last_xy

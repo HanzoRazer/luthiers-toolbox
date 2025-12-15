@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "references",
+    "version": "1.0.0",
+    "description": "Fret position calculation formulas and temperament data"
+  },
+  "formulas": {
+    "equal_temperament_12": {
+      "id": "equal_temperament_12",
+      "name": "12-TET (Equal Temperament)",
+      "divisor": 17.817154,
+      "description": "Standard Western guitar fretting",
+      "formula": "fret_distance = scale_length / (2 ^ (fret_number / 12))",
+      "notes": "Most common. Each semitone is exactly 100 cents."
+    },
+    "rule_of_18": {
+      "id": "rule_of_18",
+      "name": "Rule of 18 (Historical)",
+      "divisor": 18.0,
+      "description": "Historical approximation, slightly sharp",
+      "formula": "fret_distance = remaining_length / 18",
+      "notes": "Pre-1900s method. Produces slight sharpness at higher frets."
+    },
+    "pythagorean": {
+      "id": "pythagorean",
+      "name": "Pythagorean Temperament",
+      "divisor": null,
+      "description": "Based on pure 3:2 fifths",
+      "notes": "Perfect fifths, wolf intervals. Rarely used on guitar."
+    }
+  },
+  "compensation": {
+    "saddle_setback": {
+      "description": "Saddle compensation for intonation",
+      "typical_plain_mm": 1.5,
+      "typical_wound_mm": 2.5,
+      "notes": "Wound strings need more compensation than plain strings"
+    },
+    "nut_compensation": {
+      "description": "Nut position adjustment for open string intonation",
+      "typical_mm": 0.5,
+      "notes": "Moves nut slightly toward bridge"
+    }
+  },
+  "reference_values": {
+    "cents_per_semitone": 100,
+    "semitones_per_octave": 12,
+    "frequency_ratio_octave": 2.0,
+    "frequency_ratio_semitone": 1.0594630943592953
+  }
+}

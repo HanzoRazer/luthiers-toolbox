@@ -1,0 +1,207 @@
+{
+  "units": "mm",
+  "materials": {
+    "Birch Ply": {
+      "k": 1.0,
+      "description": "Reference material, medium density",
+      "density_kg_m3": 680,
+      "hardness": "medium"
+    },
+    "Hard Maple": {
+      "k": 0.9,
+      "description": "Dense hardwood, excellent for necks and tops",
+      "density_kg_m3": 705,
+      "hardness": "hard"
+    },
+    "Mahogany": {
+      "k": 0.85,
+      "description": "Traditional guitar body wood, easy to machine",
+      "density_kg_m3": 560,
+      "hardness": "medium-soft"
+    },
+    "Spruce": {
+      "k": 1.1,
+      "description": "Softwood for acoustic tops, prone to tearout",
+      "density_kg_m3": 450,
+      "hardness": "soft"
+    },
+    "Rosewood": {
+      "k": 0.75,
+      "description": "Dense, oily wood for fretboards",
+      "density_kg_m3": 850,
+      "hardness": "hard"
+    },
+    "Ebony": {
+      "k": 0.7,
+      "description": "Very dense, used for fretboards and bridges",
+      "density_kg_m3": 1200,
+      "hardness": "very-hard"
+    },
+    "MDF": {
+      "k": 1.2,
+      "description": "Medium-density fiberboard for templates",
+      "density_kg_m3": 720,
+      "hardness": "medium"
+    }
+  },
+  "tools": [
+    {
+      "id": "flat_3.175",
+      "type": "flat",
+      "diameter_mm": 3.175,
+      "diameter_inch": 0.125,
+      "flutes": 2,
+      "shank_mm": 3.175,
+      "default_rpm": 18000,
+      "default_fxy": 1200,
+      "default_fz": 300,
+      "max_doc_mm": 3.0,
+      "notes": "1/8\" upcut spiral, ideal for inlay channels and fine details"
+    },
+    {
+      "id": "flat_6.0",
+      "type": "flat",
+      "diameter_mm": 6.0,
+      "diameter_inch": 0.236,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "default_rpm": 16000,
+      "default_fxy": 1800,
+      "default_fz": 400,
+      "max_doc_mm": 5.0,
+      "notes": "6mm upcut spiral, general-purpose profiling and pocketing"
+    },
+    {
+      "id": "flat_6.35",
+      "type": "flat",
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 2,
+      "shank_mm": 6.35,
+      "default_rpm": 16000,
+      "default_fxy": 2000,
+      "default_fz": 450,
+      "max_doc_mm": 6.0,
+      "notes": "1/4\" upcut spiral, heavy-duty profiling and roughing"
+    },
+    {
+      "id": "flat_12.7",
+      "type": "flat",
+      "diameter_mm": 12.7,
+      "diameter_inch": 0.5,
+      "flutes": 2,
+      "shank_mm": 12.7,
+      "default_rpm": 14000,
+      "default_fxy": 2500,
+      "default_fz": 600,
+      "max_doc_mm": 10.0,
+      "notes": "1/2\" upcut spiral, large body pocketing and roughing"
+    },
+    {
+      "id": "ball_3.0",
+      "type": "ball",
+      "diameter_mm": 3.0,
+      "diameter_inch": 0.118,
+      "flutes": 2,
+      "shank_mm": 3.175,
+      "default_rpm": 18000,
+      "default_fxy": 1000,
+      "default_fz": 250,
+      "max_doc_mm": 1.5,
+      "notes": "3mm ball nose, 3D contouring and archtop carving"
+    },
+    {
+      "id": "ball_6.0",
+      "type": "ball",
+      "diameter_mm": 6.0,
+      "diameter_inch": 0.236,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "default_rpm": 16000,
+      "default_fxy": 1500,
+      "default_fz": 350,
+      "max_doc_mm": 3.0,
+      "notes": "6mm ball nose, acoustic bracing and large-radius contours"
+    },
+    {
+      "id": "vbit_60",
+      "type": "v",
+      "angle_deg": 60,
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 2,
+      "shank_mm": 6.35,
+      "default_rpm": 16000,
+      "default_fxy": 1200,
+      "default_fz": 300,
+      "max_doc_mm": 3.0,
+      "notes": "60° V-bit for chamfers, engraving, and inlay work"
+    },
+    {
+      "id": "vbit_90",
+      "type": "v",
+      "angle_deg": 90,
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 2,
+      "shank_mm": 6.35,
+      "default_rpm": 16000,
+      "default_fxy": 1000,
+      "default_fz": 250,
+      "max_doc_mm": 4.0,
+      "notes": "90° V-bit for deep engraving and decorative routing"
+    },
+    {
+      "id": "drill_3.0",
+      "type": "drill",
+      "diameter_mm": 3.0,
+      "diameter_inch": 0.118,
+      "flutes": 2,
+      "shank_mm": 3.175,
+      "default_rpm": 3000,
+      "default_fxy": 0,
+      "default_fz": 150,
+      "max_doc_mm": 25.0,
+      "notes": "3mm brad-point drill for pilot holes"
+    },
+    {
+      "id": "drill_6.35",
+      "type": "drill",
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 2,
+      "shank_mm": 6.35,
+      "default_rpm": 2500,
+      "default_fxy": 0,
+      "default_fz": 200,
+      "max_doc_mm": 50.0,
+      "notes": "1/4\" brad-point drill for tuner holes"
+    },
+    {
+      "id": "drill_10.0",
+      "type": "drill",
+      "diameter_mm": 10.0,
+      "diameter_inch": 0.394,
+      "flutes": 2,
+      "shank_mm": 10.0,
+      "default_rpm": 2000,
+      "default_fxy": 0,
+      "default_fz": 250,
+      "max_doc_mm": 60.0,
+      "notes": "10mm brad-point drill for bridge pin holes"
+    },
+    {
+      "id": "compression_6.35",
+      "type": "compression",
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 2,
+      "shank_mm": 6.35,
+      "default_rpm": 18000,
+      "default_fxy": 2200,
+      "default_fz": 500,
+      "max_doc_mm": 6.0,
+      "notes": "1/4\" compression bit for clean top/bottom surface on thin stock"
+    }
+  ]
+}

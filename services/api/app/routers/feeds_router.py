@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
-from ..models.tool_db import SessionLocal, Tool, Material, init_db
 import json
 import os
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from ..models.tool_db import Material, SessionLocal, Tool, init_db
 
 router = APIRouter(prefix="/tooling", tags=["tooling"])
 init_db()
@@ -24,7 +26,7 @@ class MaterialIn(BaseModel):
 
 
 @router.get("/tools", response_model=List[ToolIn])
-def list_tools():
+def list_tools() -> List[ToolIn]:
     db = SessionLocal()
     try:
         return [ToolIn(name=t.name, type=t.type, diameter_mm=t.diameter_mm, flute_count=t.flute_count, helix_deg=t.helix_deg) for t in db.query(Tool).all()]
@@ -33,7 +35,7 @@ def list_tools():
 
 
 @router.post("/tools")
-def add_tool(t: ToolIn):
+def add_tool(t: ToolIn) -> Dict[str, Any]:
     db = SessionLocal()
     try:
         obj = Tool(name=t.name, type=t.type, diameter_mm=t.diameter_mm, flute_count=t.flute_count, helix_deg=t.helix_deg)
@@ -45,7 +47,7 @@ def add_tool(t: ToolIn):
 
 
 @router.get("/materials", response_model=List[MaterialIn])
-def list_materials():
+def list_materials() -> List[MaterialIn]:
     db = SessionLocal()
     try:
         return [MaterialIn(name=m.name, chipload_mm=m.chipload_mm, max_rpm=m.max_rpm) for m in db.query(Material).all()]
@@ -54,7 +56,7 @@ def list_materials():
 
 
 @router.post("/materials")
-def add_material(m: MaterialIn):
+def add_material(m: MaterialIn) -> Dict[str, Any]:
     db = SessionLocal()
     try:
         obj = Material(name=m.name, chipload_mm=m.chipload_mm, max_rpm=m.max_rpm)
@@ -74,7 +76,7 @@ class FeedRequest(BaseModel):
 
 
 @router.post("/feedspeeds")
-def feedspeeds(req: FeedRequest):
+def feedspeeds(req: FeedRequest) -> Dict[str, Any]:
     db = SessionLocal()
     try:
         t = db.query(Tool).filter(Tool.name == req.tool_name).first()
@@ -92,7 +94,7 @@ def feedspeeds(req: FeedRequest):
 
 
 @router.get("/posts")
-def list_posts():
+def list_posts() -> Dict[str, Any]:
     dirp = os.path.join(os.path.dirname(__file__), "..", "data", "posts")
     out = {}
     if os.path.exists(dirp):

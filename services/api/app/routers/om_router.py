@@ -3,12 +3,13 @@ OM Acoustic Guitar Router
 Provides API endpoints for OM-style acoustic guitar templates, graduation maps, and CNC kits.
 """
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
-from pathlib import Path
-from typing import List, Optional, Dict, Any
 import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/cam/om", tags=["om"])
 
@@ -243,7 +244,7 @@ def _scan_resources() -> List[OMResource]:
 # ============================================================================
 
 @router.get("/health")
-async def health():
+async def health() -> Dict[str, Any]:
     """Health check for OM module"""
     om_exists = OM_BASE.exists()
     
@@ -264,7 +265,7 @@ async def health():
 
 
 @router.get("/templates", response_model=List[OMTemplate])
-async def get_templates():
+async def get_templates() -> List[OMTemplate]:
     """List all OM DXF templates"""
     templates = _scan_templates()
     
@@ -278,7 +279,7 @@ async def get_templates():
 
 
 @router.get("/templates/{template_type}/download")
-async def download_template(template_type: str):
+async def download_template(template_type: str) -> FileResponse:
     """
     Download a specific OM template by type.
     
@@ -313,7 +314,7 @@ async def download_template(template_type: str):
 
 
 @router.get("/specs", response_model=OMSpecs)
-async def get_specs():
+async def get_specs() -> OMSpecs:
     """Get OM acoustic guitar specifications"""
     
     # Load defaults from OM/defaults.json if available
@@ -355,7 +356,7 @@ async def get_specs():
 
 
 @router.get("/graduation-maps", response_model=List[OMGraduationMap])
-async def get_graduation_maps():
+async def get_graduation_maps() -> List[OMGraduationMap]:
     """List all OM graduation thickness maps"""
     maps = _scan_graduation_maps()
     
@@ -369,7 +370,7 @@ async def get_graduation_maps():
 
 
 @router.get("/graduation-maps/{surface}/{format}/download")
-async def download_graduation_map(surface: str, format: str, grid: bool = False):
+async def download_graduation_map(surface: str, format: str, grid: bool = False) -> FileResponse:
     """
     Download a specific graduation map.
     
@@ -414,7 +415,7 @@ async def download_graduation_map(surface: str, format: str, grid: bool = False)
 
 
 @router.get("/kits", response_model=List[OMKit])
-async def get_kits():
+async def get_kits() -> List[OMKit]:
     """List available OM CNC kits"""
     kits = _scan_kits()
     
@@ -428,7 +429,7 @@ async def get_kits():
 
 
 @router.get("/kits/{kit_name}/download")
-async def download_kit(kit_name: str):
+async def download_kit(kit_name: str) -> StreamingResponse:
     """
     Download a complete OM kit as ZIP.
     
@@ -463,7 +464,7 @@ async def download_kit(kit_name: str):
 
 
 @router.get("/resources", response_model=List[OMResource])
-async def get_resources():
+async def get_resources() -> List[OMResource]:
     """List all OM project resources (PDFs, docs, etc.)"""
     resources = _scan_resources()
     
@@ -477,7 +478,7 @@ async def get_resources():
 
 
 @router.get("/resources/{resource_name}/download")
-async def download_resource(resource_name: str):
+async def download_resource(resource_name: str) -> FileResponse:
     """Download a specific OM resource file"""
     resources = _scan_resources()
     

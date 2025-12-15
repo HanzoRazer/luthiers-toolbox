@@ -369,3 +369,212 @@ def evaluate_feasibility_for_model(
     """
     context = RmosContext.from_model_id(model_id)
     return evaluate_feasibility(design, context)
+
+
+# =============================================================================
+# Wave 19 Phase C: Per-Fret Risk Analysis for Fan-Fret CAM
+# =============================================================================
+
+@dataclass
+class PerFretRisk:
+    """
+    Risk assessment for a single fret slot operation.
+    
+    Attributes:
+        fret_number: Fret number (1-24).
+        angle_deg: Slot angle in degrees.
+        chipload_risk: Chipload risk score (0-100).
+        heat_risk: Heat accumulation risk score (0-100).
+        deflection_risk: Tool deflection risk score (0-100).
+        overall_risk: RiskLevel (GREEN/YELLOW/RED).
+        warnings: List of warnings for this fret.
+    """
+    fret_number: int
+    angle_deg: float
+    chipload_risk: float
+    heat_risk: float
+    deflection_risk: float
+    overall_risk: RiskLevel
+    warnings: List[str]
+
+
+def evaluate_per_fret_feasibility(
+    toolpaths: List[Any],
+    context: RmosContext,
+) -> List[PerFretRisk]:
+    """
+    Evaluate feasibility for each fret slot individually.
+    
+    This function analyzes each fret's specific geometry (angle, length, depth)
+    and material properties to identify high-risk operations.
+    
+    Args:
+        toolpaths: List of FretSlotToolpath objects from CAM generator.
+        context: RMOS context with material and machine data.
+    
+    Returns:
+        List of PerFretRisk objects, one per fret.
+    
+    Notes:
+        - For fan-fret, angles affect chipload (oblique cutting increases load).
+        - Longer slots accumulate more heat (bass side slots longer than treble).
+        - Deeper slots (compound radius) increase deflection risk.
+    
+    Example:
+        >>> toolpaths = generate_fret_slot_cam(spec, ctx, mode='fan')
+        >>> risks = evaluate_per_fret_feasibility(toolpaths, ctx)
+        >>> high_risk_frets = [r for r in risks if r.overall_risk == RiskLevel.RED]
+    """
+    per_fret_risks = []
+    
+    for tp in toolpaths:
+        # Extract fret-specific parameters
+        fret_num = tp.fret_number
+        angle_rad = getattr(tp, 'angle_rad', 0.0)
+        angle_deg = abs(angle_rad * 180.0 / 3.14159265359)
+        slot_depth = tp.slot_depth_mm
+        feed_rate = tp.feed_rate_mmpm
+        
+        # Calculate slot length (bass to treble)
+        import math
+        slot_length = math.sqrt(
+            (tp.treble_point[0] - tp.bass_point[0])**2 +
+            (tp.treble_point[1] - tp.bass_point[1])**2
+        )
+        
+        warnings = []
+        
+        # ===== Chipload Risk Analysis =====
+        # Base chipload risk from standard calculation
+        chipload_base = 50.0  # Baseline risk
+        
+        # Angle penalty: Oblique cutting increases effective chipload
+        # 0° = no penalty, 30° = +50% risk
+        angle_factor = 1.0 + (angle_deg / 30.0) * 0.5
+        chipload_risk = min(100.0, chipload_base * angle_factor)
+        
+        if angle_deg > 20.0:
+            warnings.append(f"High angle ({angle_deg:.1f}°) increases chipload")
+            chipload_risk = min(100.0, chipload_risk * 1.2)
+        
+        # Material hardness factor
+        if context.materials and context.materials.density_kg_m3:
+            if context.materials.density_kg_m3 > 1000:  # Dense hardwood (ebony)
+                chipload_risk = min(100.0, chipload_risk * 1.3)
+                warnings.append("Dense material increases chipload stress")
+        
+        # ===== Heat Risk Analysis =====
+        # Longer slots accumulate more heat
+        # Base: 43mm slot (typical nut width) = 50 risk
+        # Each additional mm adds ~1% risk
+        heat_base = 50.0
+        length_factor = slot_length / 43.0
+        heat_risk = min(100.0, heat_base * length_factor)
+        
+        if slot_length > 56.0:  # Longer than typical heel width
+            warnings.append(f"Long slot ({slot_length:.1f}mm) may accumulate heat")
+            heat_risk = min(100.0, heat_risk * 1.15)
+        
+        # Feed rate adjustment (slower feed = more heat)
+        if feed_rate < 800:
+            heat_risk = min(100.0, heat_risk * 1.2)
+            warnings.append("Low feedrate increases heat risk")
+        
+        # ===== Deflection Risk Analysis =====
+        # Deeper cuts and angles increase deflection
+        deflection_base = 40.0
+        depth_factor = slot_depth / 3.0  # 3mm is nominal
+        angle_deflection = 1.0 + (angle_deg / 30.0) * 0.3
+        
+        deflection_risk = min(100.0, deflection_base * depth_factor * angle_deflection)
+        
+        if slot_depth > 3.5:
+            warnings.append(f"Deep slot ({slot_depth:.2f}mm) increases deflection")
+            deflection_risk = min(100.0, deflection_risk * 1.25)
+        
+        # ===== Overall Risk Determination =====
+        # Average the three risk factors
+        avg_risk = (chipload_risk + heat_risk + deflection_risk) / 3.0
+        
+        if avg_risk > 80:
+            overall_risk = RiskLevel.RED
+            warnings.append("Overall risk HIGH - review required")
+        elif avg_risk > 60:
+            overall_risk = RiskLevel.YELLOW
+        else:
+            overall_risk = RiskLevel.GREEN
+        
+        per_fret_risk = PerFretRisk(
+            fret_number=fret_num,
+            angle_deg=angle_deg,
+            chipload_risk=chipload_risk,
+            heat_risk=heat_risk,
+            deflection_risk=deflection_risk,
+            overall_risk=overall_risk,
+            warnings=warnings,
+        )
+        
+        per_fret_risks.append(per_fret_risk)
+    
+    return per_fret_risks
+
+
+def summarize_per_fret_risks(per_fret_risks: List[PerFretRisk]) -> Dict[str, Any]:
+    """
+    Summarize per-fret risk analysis for reporting.
+    
+    Args:
+        per_fret_risks: List of PerFretRisk objects.
+    
+    Returns:
+        Summary dict with counts, max risks, and high-risk frets.
+    
+    Example:
+        >>> summary = summarize_per_fret_risks(risks)
+        >>> summary['high_risk_count']
+        3
+        >>> summary['max_angle_deg']
+        27.5
+    """
+    if not per_fret_risks:
+        return {
+            "total_frets": 0,
+            "green_count": 0,
+            "yellow_count": 0,
+            "red_count": 0,
+            "high_risk_frets": [],
+            "max_angle_deg": 0.0,
+            "max_chipload_risk": 0.0,
+            "max_heat_risk": 0.0,
+            "max_deflection_risk": 0.0,
+        }
+    
+    green_count = sum(1 for r in per_fret_risks if r.overall_risk == RiskLevel.GREEN)
+    yellow_count = sum(1 for r in per_fret_risks if r.overall_risk == RiskLevel.YELLOW)
+    red_count = sum(1 for r in per_fret_risks if r.overall_risk == RiskLevel.RED)
+    
+    high_risk_frets = [
+        {
+            "fret_number": r.fret_number,
+            "angle_deg": round(r.angle_deg, 2),
+            "chipload_risk": round(r.chipload_risk, 1),
+            "heat_risk": round(r.heat_risk, 1),
+            "deflection_risk": round(r.deflection_risk, 1),
+            "warnings": r.warnings,
+        }
+        for r in per_fret_risks
+        if r.overall_risk in (RiskLevel.YELLOW, RiskLevel.RED)
+    ]
+    
+    return {
+        "total_frets": len(per_fret_risks),
+        "green_count": green_count,
+        "yellow_count": yellow_count,
+        "red_count": red_count,
+        "high_risk_frets": high_risk_frets,
+        "max_angle_deg": max(r.angle_deg for r in per_fret_risks),
+        "max_chipload_risk": max(r.chipload_risk for r in per_fret_risks),
+        "max_heat_risk": max(r.heat_risk for r in per_fret_risks),
+        "max_deflection_risk": max(r.deflection_risk for r in per_fret_risks),
+    }
+

@@ -6,29 +6,31 @@ Provides CRUD operations for material definitions including:
 - Heat partition ratios (chip/tool/work)
 """
 
-from fastapi import APIRouter, HTTPException
 import json
 import os
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/material", tags=["material"])
 
 _ASSET = os.path.join(os.path.dirname(__file__), "..", "assets", "material_db.json")
 
 
-def _load():
+def _load() -> List[Dict[str, Any]]:
     """Load material database from JSON file."""
     with open(_ASSET, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def _save(materials):
+def _save(materials: List[Dict[str, Any]]) -> None:
     """Save material database to JSON file."""
     with open(_ASSET, "w", encoding="utf-8") as f:
         json.dump(materials, f, indent=2)
 
 
 @router.get("/list")
-def list_materials():
+def list_materials() -> List[Dict[str, Any]]:
     """
     Get all materials in the database.
     
@@ -39,7 +41,7 @@ def list_materials():
 
 
 @router.get("/get/{mid}")
-def get_material(mid: str):
+def get_material(mid: str) -> Dict[str, Any]:
     """
     Get a specific material by ID.
     
@@ -59,7 +61,7 @@ def get_material(mid: str):
 
 
 @router.post("/upsert")
-def upsert_material(m: dict):
+def upsert_material(m: dict) -> Dict[str, Any]:
     """
     Create or update a material definition.
     

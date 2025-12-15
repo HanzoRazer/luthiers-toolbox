@@ -1,0 +1,232 @@
+{
+  "entries": [
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "rosette",
+      "preset": "GRBL",
+      "job_id": "rosette_job_0",
+      "added_paths": 3,
+      "removed_paths": 1,
+      "unchanged_paths": 45
+    },
+    {
+      "ts": "2025-11-12T08:31:28.074240",
+      "lane": "rosette",
+      "preset": "GRBL",
+      "job_id": "rosette_job_1",
+      "added_paths": 4,
+      "removed_paths": 2,
+      "unchanged_paths": 44
+    },
+    {
+      "ts": "2025-11-12T14:31:28.074240",
+      "lane": "rosette",
+      "preset": "GRBL",
+      "job_id": "rosette_job_2",
+      "added_paths": 5,
+      "removed_paths": 3,
+      "unchanged_paths": 43
+    },
+    {
+      "ts": "2025-11-12T20:31:28.074240",
+      "lane": "rosette",
+      "preset": "GRBL",
+      "job_id": "rosette_job_3",
+      "added_paths": 6,
+      "removed_paths": 4,
+      "unchanged_paths": 42
+    },
+    {
+      "ts": "2025-11-13T02:31:28.074240",
+      "lane": "rosette",
+      "preset": "GRBL",
+      "job_id": "rosette_job_4",
+      "added_paths": 7,
+      "removed_paths": 5,
+      "unchanged_paths": 41
+    },
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "rosette",
+      "preset": "Mach4",
+      "job_id": "rosette_mach_0",
+      "added_paths": 2,
+      "removed_paths": 0,
+      "unchanged_paths": 48
+    },
+    {
+      "ts": "2025-11-12T10:31:28.074240",
+      "lane": "rosette",
+      "preset": "Mach4",
+      "job_id": "rosette_mach_1",
+      "added_paths": 3,
+      "removed_paths": 0,
+      "unchanged_paths": 48
+    },
+    {
+      "ts": "2025-11-12T18:31:28.074240",
+      "lane": "rosette",
+      "preset": "Mach4",
+      "job_id": "rosette_mach_2",
+      "added_paths": 4,
+      "removed_paths": 0,
+      "unchanged_paths": 48
+    },
+    {
+      "ts": "2025-11-13T02:31:28.074240",
+      "lane": "rosette",
+      "preset": "Mach4",
+      "job_id": "rosette_mach_3",
+      "added_paths": 5,
+      "removed_paths": 0,
+      "unchanged_paths": 48
+    },
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_0",
+      "added_paths": 5,
+      "removed_paths": 2,
+      "unchanged_paths": 40
+    },
+    {
+      "ts": "2025-11-12T07:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_1",
+      "added_paths": 7,
+      "removed_paths": 3,
+      "unchanged_paths": 39
+    },
+    {
+      "ts": "2025-11-12T12:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_2",
+      "added_paths": 9,
+      "removed_paths": 4,
+      "unchanged_paths": 38
+    },
+    {
+      "ts": "2025-11-12T17:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_3",
+      "added_paths": 11,
+      "removed_paths": 5,
+      "unchanged_paths": 37
+    },
+    {
+      "ts": "2025-11-12T22:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_4",
+      "added_paths": 13,
+      "removed_paths": 6,
+      "unchanged_paths": 36
+    },
+    {
+      "ts": "2025-11-13T03:31:28.074240",
+      "lane": "adaptive",
+      "preset": "GRBL",
+      "job_id": "adaptive_job_5",
+      "added_paths": 15,
+      "removed_paths": 7,
+      "unchanged_paths": 35
+    },
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "relief",
+      "preset": "LinuxCNC",
+      "job_id": "relief_job_0",
+      "added_paths": 1,
+      "removed_paths": 0,
+      "unchanged_paths": 52
+    },
+    {
+      "ts": "2025-11-12T12:31:28.074240",
+      "lane": "relief",
+      "preset": "LinuxCNC",
+      "job_id": "relief_job_1",
+      "added_paths": 1,
+      "removed_paths": 0,
+      "unchanged_paths": 52
+    },
+    {
+      "ts": "2025-11-12T22:31:28.074240",
+      "lane": "relief",
+      "preset": "LinuxCNC",
+      "job_id": "relief_job_2",
+      "added_paths": 1,
+      "removed_paths": 0,
+      "unchanged_paths": 52
+    },
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "pipeline",
+      "preset": "PathPilot",
+      "job_id": "pipeline_job_0",
+      "added_paths": 8,
+      "removed_paths": 4,
+      "unchanged_paths": 30
+    },
+    {
+      "ts": "2025-11-12T09:31:28.074240",
+      "lane": "pipeline",
+      "preset": "PathPilot",
+      "job_id": "pipeline_job_1",
+      "added_paths": 11,
+      "removed_paths": 6,
+      "unchanged_paths": 29
+    },
+    {
+      "ts": "2025-11-12T16:31:28.074240",
+      "lane": "pipeline",
+      "preset": "PathPilot",
+      "job_id": "pipeline_job_2",
+      "added_paths": 14,
+      "removed_paths": 8,
+      "unchanged_paths": 28
+    },
+    {
+      "ts": "2025-11-12T23:31:28.074240",
+      "lane": "pipeline",
+      "preset": "PathPilot",
+      "job_id": "pipeline_job_3",
+      "added_paths": 17,
+      "removed_paths": 10,
+      "unchanged_paths": 27
+    },
+    {
+      "ts": "2025-11-12T02:31:28.074240",
+      "lane": "rosette",
+      "preset": "",
+      "job_id": "rosette_no_preset_0",
+      "added_paths": 1,
+      "removed_paths": 0,
+      "unchanged_paths": 50
+    },
+    {
+      "ts": "2025-11-12T14:31:28.074240",
+      "lane": "rosette",
+      "preset": "",
+      "job_id": "rosette_no_preset_1",
+      "added_paths": 1,
+      "removed_paths": 0,
+      "unchanged_paths": 50
+    },
+    {
+      "ts": "2025-11-19T20:39:09.148889",
+      "job_id": "rosette_326e59817c04",
+      "lane": "rosette",
+      "baseline_id": "rosette_61f38021546d",
+      "baseline_path_count": 2,
+      "current_path_count": 2,
+      "added_paths": 0.8,
+      "removed_paths": 0.0,
+      "unchanged_paths": 1.2,
+      "preset": "GRBL vs Mach4"
+    }
+  ]
+}

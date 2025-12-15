@@ -3,10 +3,11 @@
 Patch N.14 - Adaptive Toolpath Preview
 Generates SVG previews of adaptive toolpath patterns (spiral, trochoid)
 """
+import math
+from typing import List, Literal, Tuple
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
-from typing import Literal, List, Tuple
-import math
 
 router = APIRouter(prefix="/cam/adaptive", tags=["cam", "adaptive-preview"])
 
@@ -63,7 +64,7 @@ class TrochoidReq(BaseModel):
 
 
 @router.post("/spiral.svg")
-def spiral_svg(req: SpiralReq):
+def spiral_svg(req: SpiralReq) -> Response:
     """
     Generate rectangular spiral toolpath preview
     
@@ -102,7 +103,7 @@ def spiral_svg(req: SpiralReq):
 
 
 @router.post("/trochoid.svg")
-def trochoid_svg(req: TrochoidReq):
+def trochoid_svg(req: TrochoidReq) -> Response:
     """
     Generate trochoidal toolpath preview
     

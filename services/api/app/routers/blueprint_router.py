@@ -465,7 +465,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Optional, Tuple, Set
+from typing import Any, Dict, Optional, Set, Tuple
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -477,6 +477,7 @@ sys.path.insert(0, str(BLUEPRINT_SERVICE_PATH))
 
 from analyzer import create_analyzer
 from vectorizer import create_vectorizer
+
 try:
     from vectorizer_phase2 import create_phase2_vectorizer
     PHASE2_AVAILABLE = True
@@ -760,7 +761,7 @@ async def analyze_blueprint(file: UploadFile = File(...)):
 
 
 @router.post("/to-svg")
-async def export_to_svg(request: ExportRequest):
+async def export_to_svg(request: ExportRequest) -> FileResponse:
     """
     Convert AI analysis to SVG file with dimension annotations.
     
@@ -877,7 +878,7 @@ async def export_to_svg(request: ExportRequest):
 # =============================================================================
 
 @router.post("/to-dxf")
-async def export_to_dxf(request: ExportRequest):
+async def export_to_dxf(request: ExportRequest) -> FileResponse:
     """
     Convert AI analysis to DXF R12 file with intelligent geometry detection.
     
@@ -1074,8 +1075,8 @@ async def vectorize_geometry(
             detail="Phase 2 not available. Install: pip install opencv-python scikit-image"
         )
     
-    import time
     import json
+    import time
     start_time = time.time()
     
     try:
@@ -1157,7 +1158,7 @@ async def vectorize_geometry(
 # =============================================================================
 
 @router.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """
     Check blueprint import service health and feature availability.
     

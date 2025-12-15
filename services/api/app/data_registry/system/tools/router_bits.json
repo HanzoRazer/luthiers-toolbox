@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "tools",
+    "version": "1.0.0",
+    "description": "Common router bits for CNC guitar building. UPDATE WITH YOUR ACTUAL INVENTORY."
+  },
+  "tools": [
+    {
+      "id": "flat_6mm_2f",
+      "name": "6mm Flat Endmill 2-Flute",
+      "type": "flat_endmill",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 22,
+      "overall_length_mm": 50,
+      "material": "carbide",
+      "helix_angle_deg": 30,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.15,
+        "hardwood": 0.10,
+        "plywood": 0.12,
+        "mdf": 0.18
+      },
+      "atc_position": 1,
+      "notes": "General purpose body routing, pocket clearing"
+    },
+    {
+      "id": "spiral_up_6mm",
+      "name": "6mm Spiral Upcut",
+      "type": "spiral_upcut",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 25,
+      "overall_length_mm": 55,
+      "material": "carbide",
+      "helix_angle_deg": 35,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.12,
+        "hardwood": 0.08,
+        "plywood": 0.10,
+        "mdf": 0.15
+      },
+      "atc_position": 2,
+      "notes": "Excellent chip evacuation, roughing passes. Caution: pulls up on top surface"
+    },
+    {
+      "id": "spiral_down_6mm",
+      "name": "6mm Spiral Downcut",
+      "type": "spiral_downcut",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 22,
+      "overall_length_mm": 50,
+      "material": "carbide",
+      "helix_angle_deg": 35,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.10,
+        "hardwood": 0.07,
+        "plywood": 0.09,
+        "mdf": 0.12
+      },
+      "atc_position": 3,
+      "notes": "Clean top surface, finish passes. Watch chip packing in deep pockets"
+    },
+    {
+      "id": "ball_6mm",
+      "name": "6mm Ball Endmill",
+      "type": "ball_endmill",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 20,
+      "overall_length_mm": 50,
+      "material": "carbide",
+      "helix_angle_deg": 30,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.12,
+        "hardwood": 0.08,
+        "plywood": 0.10,
+        "mdf": 0.14
+      },
+      "atc_position": 4,
+      "notes": "3D contours, neck carving, arm contours"
+    },
+    {
+      "id": "flat_3mm_2f",
+      "name": "3mm Flat Endmill 2-Flute",
+      "type": "flat_endmill",
+      "diameter_mm": 3.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 12,
+      "overall_length_mm": 38,
+      "material": "carbide",
+      "helix_angle_deg": 30,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.08,
+        "hardwood": 0.05,
+        "plywood": 0.06,
+        "mdf": 0.10
+      },
+      "atc_position": 5,
+      "notes": "Detail work, pickup cavities, control routing, fret slots"
+    },
+    {
+      "id": "v_60deg",
+      "name": "60° V-Bit",
+      "type": "v_bit",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 10,
+      "overall_length_mm": 40,
+      "material": "carbide",
+      "v_angle_deg": 60,
+      "max_rpm": 18000,
+      "recommended_chipload_mm": {
+        "softwood": 0.05,
+        "hardwood": 0.03,
+        "plywood": 0.04,
+        "mdf": 0.06
+      },
+      "atc_position": 6,
+      "notes": "Inlay work, decorative carving, lettering"
+    },
+    {
+      "id": "surfacing_25mm",
+      "name": "25mm Surfacing Bit",
+      "type": "surfacing",
+      "diameter_mm": 25.0,
+      "flutes": 2,
+      "shank_mm": 12.0,
+      "flute_length_mm": 8,
+      "overall_length_mm": 45,
+      "material": "carbide",
+      "max_rpm": 18000,
+      "recommended_chipload_mm": {
+        "softwood": 0.25,
+        "hardwood": 0.18,
+        "plywood": 0.20,
+        "mdf": 0.30
+      },
+      "atc_position": 7,
+      "notes": "Spoilboard surfacing, body blank flattening"
+    },
+    {
+      "id": "compression_6mm",
+      "name": "6mm Compression Spiral",
+      "type": "compression",
+      "diameter_mm": 6.0,
+      "flutes": 2,
+      "shank_mm": 6.0,
+      "flute_length_mm": 22,
+      "overall_length_mm": 55,
+      "material": "carbide",
+      "helix_angle_deg": 35,
+      "max_rpm": 24000,
+      "recommended_chipload_mm": {
+        "softwood": 0.10,
+        "hardwood": 0.07,
+        "plywood": 0.12,
+        "mdf": 0.14
+      },
+      "atc_position": 8,
+      "notes": "Clean top AND bottom - ideal for through-cuts on veneered/laminated stock"
+    }
+  ]
+}

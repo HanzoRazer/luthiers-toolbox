@@ -1,8 +1,9 @@
 
+import base64
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
-import base64
 
 router = APIRouter(prefix="/api/art/svg", tags=["art_svg_v160"])
 

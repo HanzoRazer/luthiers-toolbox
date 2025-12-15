@@ -1,8 +1,16 @@
+import json
+from typing import Dict, Optional
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
-import json
-from .sim_validate import simulate, csv_export, DEFAULT_ENVELOPE, DEFAULT_ACCEL, DEFAULT_CLEAR_Z
+
+from .sim_validate import (
+    DEFAULT_ACCEL,
+    DEFAULT_CLEAR_Z,
+    DEFAULT_ENVELOPE,
+    csv_export,
+    simulate,
+)
 
 router = APIRouter(prefix="/cam", tags=["cam-sim"])
 
@@ -16,7 +24,7 @@ class SimInput(BaseModel):
 
 
 @router.post("/simulate_gcode")
-def simulate_gcode(body: SimInput):
+def simulate_gcode(body: SimInput) -> Response:
     sim = simulate(body.gcode, accel=body.accel or DEFAULT_ACCEL,
                    clearance_z=body.clearance_z or DEFAULT_CLEAR_Z,
                    env=body.envelope or DEFAULT_ENVELOPE)

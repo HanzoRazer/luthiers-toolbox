@@ -1,0 +1,45 @@
+name: RTL CI
+
+on:
+  push:
+    paths:
+      - "services/api/**"
+      - "scripts/**"
+      - ".github/workflows/rmos_ci.yml"
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "scripts/**"
+      - ".github/workflows/rmos_ci.yml"
+
+jobs:
+  rmos-ci:
+    runs-on: ubuntu-latest
+
+    env:
+      RMOS_BASE_URL: "http://127.0.0.1:8000/rmos"
+      APP_MODULE: "app.main:app"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        working-directory: services/api
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install "uvicorn[standard]" requests fastapi pydantic
+          fi
+
+      - name: Run RMOS CI smoke test
+        working-directory: services/api
+        run: |
+          python ../../scripts/rmos_ci_test.py

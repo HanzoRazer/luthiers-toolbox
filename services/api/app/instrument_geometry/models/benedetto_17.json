@@ -1,0 +1,63 @@
+{
+  "model_id": "benedetto_17",
+  "display_name": "Benedetto 16\" Archtop (25.5\" scale)",
+  "description": "Classic 16-inch archtop with 25.5-inch scale, 22 frets, 14th-fret neck joint, floating bridge.",
+
+  "scale": {
+    "scale_length_in": 25.5,
+    "num_frets": 22,
+    "joint_fret": 14,
+    "fingerboard_overhang_frets": 2
+  },
+
+  "neck_joint": {
+    "type": "mortise_tenon",
+    "body_join_fret": 14,
+    "pocket_depth_in": 0.63,
+    "pocket_length_in": 3.0,
+    "pocket_width_in": 2.2,
+    "heel_thickness_in": 0.98,
+    "neck_angle_degrees": 3.5
+  },
+
+  "bridge": {
+    "type": "floating_archtop",
+    "reference_line": "theoretical_scale_length",
+    "saddle_profile": "tune_o_matic",
+    "base_offset_in": 0.0
+  },
+
+  "string_set": {
+    "string_set_id": "jazz_012_052",
+    "description": "Typical archtop jazz set 0.012–0.052",
+    "strings": [
+      { "index": 1, "name": "E1", "gauge_in": 0.012, "wound": false },
+      { "index": 2, "name": "B2", "gauge_in": 0.016, "wound": false },
+      { "index": 3, "name": "G3", "gauge_in": 0.024, "wound": true },
+      { "index": 4, "name": "D4", "gauge_in": 0.032, "wound": true },
+      { "index": 5, "name": "A5", "gauge_in": 0.042, "wound": true },
+      { "index": 6, "name": "E6", "gauge_in": 0.052, "wound": true }
+    ]
+  },
+
+  "reference_compensation_in": {
+    "1": 0.047,
+    "2": 0.079,
+    "3": 0.110,
+    "4": 0.142,
+    "5": 0.173,
+    "6": 0.205
+  },
+
+  "dxf_mappings": {
+    "body_outline_id": "benedetto17_body_v1",
+    "fretboard_outline_id": "benedetto17_fretboard_v1",
+    "bridge_footprint_id": "benedetto17_bridge_v1"
+  },
+
+  "notes": [
+    "Compensation values are reference starting points; real setups should calibrate per instrument.",
+    "JSON is inches-only; loader converts to mm for downstream geometry and CAM.",
+    "Scale/intonation math is handled by instrument_geometry.scale_intonation."
+  ]
+}

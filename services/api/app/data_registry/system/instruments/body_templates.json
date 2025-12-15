@@ -1,0 +1,166 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "instruments",
+    "version": "1.0.0",
+    "description": "Standard guitar body templates and dimensions"
+  },
+  "bodies": {
+    "stratocaster": {
+      "id": "stratocaster",
+      "name": "Stratocaster Style",
+      "type": "solid_body",
+      "dimensions": {
+        "length_mm": 396,
+        "width_mm": 318,
+        "thickness_mm": 44.5,
+        "weight_typical_kg": 1.8
+      },
+      "features": {
+        "contours": ["belly_cut", "forearm_contour"],
+        "pickup_routes": ["sss", "hss", "hsh"],
+        "tremolo_route": "vintage_trem"
+      },
+      "scale_length_mm": 647.7,
+      "neck_pocket": {
+        "width_mm": 56,
+        "length_mm": 76,
+        "depth_mm": 16
+      },
+      "outline_available": true
+    },
+    "les_paul": {
+      "id": "les_paul",
+      "name": "Les Paul Style",
+      "type": "solid_body",
+      "dimensions": {
+        "length_mm": 444,
+        "width_mm": 330,
+        "thickness_mm": 50,
+        "weight_typical_kg": 4.0
+      },
+      "features": {
+        "contours": ["carved_top"],
+        "pickup_routes": ["hh"],
+        "tremolo_route": null
+      },
+      "top_carve": {
+        "type": "maple_cap",
+        "thickness_mm": 12,
+        "radius_mm": 305
+      },
+      "scale_length_mm": 628.65,
+      "neck_pocket": {
+        "width_mm": 53,
+        "length_mm": 89,
+        "depth_mm": 16,
+        "type": "set_neck"
+      },
+      "outline_available": true
+    },
+    "telecaster": {
+      "id": "telecaster",
+      "name": "Telecaster Style",
+      "type": "solid_body",
+      "dimensions": {
+        "length_mm": 396,
+        "width_mm": 318,
+        "thickness_mm": 44.5,
+        "weight_typical_kg": 1.7
+      },
+      "features": {
+        "contours": [],
+        "pickup_routes": ["ss", "hs"],
+        "tremolo_route": null
+      },
+      "scale_length_mm": 647.7,
+      "neck_pocket": {
+        "width_mm": 56,
+        "length_mm": 76,
+        "depth_mm": 16
+      },
+      "outline_available": true
+    },
+    "gibson_j45": {
+      "id": "gibson_j45",
+      "name": "Gibson J-45 Style",
+      "type": "acoustic_dreadnought",
+      "dimensions": {
+        "lower_bout_mm": 412,
+        "upper_bout_mm": 292,
+        "waist_mm": 267,
+        "body_depth_mm": 121,
+        "length_mm": 508
+      },
+      "features": {
+        "bracing": "x_bracing",
+        "soundhole_diameter_mm": 100,
+        "pickguard": true
+      },
+      "scale_length_mm": 628.65,
+      "outline_available": true
+    },
+    "dreadnought": {
+      "id": "dreadnought",
+      "name": "Dreadnought (Martin Style)",
+      "type": "acoustic_dreadnought",
+      "dimensions": {
+        "lower_bout_mm": 396,
+        "upper_bout_mm": 286,
+        "waist_mm": 279,
+        "body_depth_mm": 119,
+        "length_mm": 508
+      },
+      "features": {
+        "bracing": "x_bracing",
+        "soundhole_diameter_mm": 102,
+        "pickguard": true
+      },
+      "scale_length_mm": 645.16,
+      "outline_available": false
+    },
+    "jumbo": {
+      "id": "jumbo",
+      "name": "Jumbo Acoustic",
+      "type": "acoustic_jumbo",
+      "dimensions": {
+        "lower_bout_mm": 432,
+        "upper_bout_mm": 318,
+        "waist_mm": 279,
+        "body_depth_mm": 127,
+        "length_mm": 533
+      },
+      "features": {
+        "bracing": "x_bracing",
+        "soundhole_diameter_mm": 102,
+        "pickguard": true
+      },
+      "scale_length_mm": 647.7,
+      "outline_available": true
+    },
+    "sg": {
+      "id": "sg",
+      "name": "SG Style",
+      "type": "solid_body",
+      "dimensions": {
+        "length_mm": 394,
+        "width_mm": 343,
+        "thickness_mm": 35,
+        "weight_typical_kg": 2.7
+      },
+      "features": {
+        "contours": ["beveled_edge"],
+        "pickup_routes": ["hh"],
+        "tremolo_route": "maestro"
+      },
+      "scale_length_mm": 628.65,
+      "neck_pocket": {
+        "width_mm": 53,
+        "length_mm": 89,
+        "depth_mm": 16,
+        "type": "set_neck"
+      },
+      "outline_available": true
+    }
+  }
+}

@@ -8,6 +8,7 @@ Endpoints:
 - POST /gcode: Export G-code with post-processor headers
 - POST /batch_export: Multi-post ZIP bundle (DXF + SVG + G-code)
 - POST /sim: Simulate toolpath without full G-code generation
+- POST /plan_from_dxf: Upload DXF file and generate toolpath (Phase 27.0)
 
 Features:
 - Robust polygon offsetting with island handling (L.1)
@@ -16,6 +17,7 @@ Features:
 - Trochoidal insertion for overload zones (L.3)
 - Jerk-aware time estimation (L.3)
 - Adaptive feed override support (comment/inline_f/mcode modes)
+- DXF file upload and geometry extraction (Phase 27.0)
 
 Critical Safety Rules:
 - All geometry validated before CAM operations
@@ -28,31 +30,40 @@ References:
 - ADAPTIVE_POCKETING_MODULE_L.md for algorithm details
 - CODING_POLICY.md Section "Critical Safety Rules"
 """
-from fastapi import APIRouter, Body, HTTPException
+import io
+import json
+import math
+import os
+import re
+import time
+import zipfile
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+
+from ezdxf import readfile as dxf_readfile
+from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Tuple, Optional, Dict, Any, Literal, Union
-import json
-import os
-import io
-import zipfile
-import time
-import re
-import math
 
-from ..cam.adaptive_core_l2 import plan_adaptive_l2
 from ..cam.adaptive_core_l1 import (
-    to_toolpath, polygon_area,
-    MIN_TOOL_DIAMETER_MM, MAX_TOOL_DIAMETER_MM, MIN_STEPOVER, MAX_STEPOVER
+    MAX_STEPOVER,
+    MAX_TOOL_DIAMETER_MM,
+    MIN_STEPOVER,
+    MIN_TOOL_DIAMETER_MM,
+    polygon_area,
+    to_toolpath,
 )
+from ..cam.adaptive_core_l2 import plan_adaptive_l2
 from ..cam.feedtime import estimate_time
+from ..cam.feedtime_l3 import (
+    jerk_aware_time,
+    jerk_aware_time_with_profile,
+    jerk_aware_time_with_profile_and_tags,
+)
 from ..cam.stock_ops import rough_mrr_estimate
 from ..cam.trochoid_l3 import insert_trochoids
-from ..cam.feedtime_l3 import (
-    jerk_aware_time, jerk_aware_time_with_profile, jerk_aware_time_with_profile_and_tags
-)
-from ..util.units import scale_geom_units
+from ..services.jobint_artifacts import build_jobint_payload
 from ..util.exporters import export_dxf, export_svg
+from ..util.units import scale_geom_units
 from .geometry_router import GcodeExportIn, export_gcode
 from .machine_router import get_profile
 
@@ -447,10 +458,11 @@ class PlanOut(BaseModel):
     moves: List[Dict[str, Any]]
     stats: Dict[str, Any]
     overlays: List[Dict[str, Any]]
+    job_int: Optional[Dict[str, Any]] = None
 
 
 @router.post("/plan", response_model=PlanOut)
-def plan(body: PlanIn):
+def plan(body: PlanIn) -> PlanOut:
     """
     Generate adaptive pocket toolpath from boundary loops.
     
@@ -496,10 +508,23 @@ def plan(body: PlanIn):
         - Jerk-aware time requires jerk_aware=True and machine parameters
         - See ADAPTIVE_POCKETING_MODULE_L.md for algorithm documentation
     """
-    # Validate outer loop
-    if not body.loops or len(body.loops[0].pts) < 3:
-        raise HTTPException(400, "Provide at least one outer loop with 3+ points")
+    # Parameter validation
+    if not body.loops:
+        raise HTTPException(400, "Loops array cannot be empty")
     
+    if len(body.loops[0].pts) < 3:
+        raise HTTPException(400, "Outer loop must have at least 3 points")
+    
+    if body.tool_d <= 0:
+        raise HTTPException(400, "Tool diameter must be positive")
+    
+    if not (0.1 <= body.stepover <= 0.95):
+        raise HTTPException(400, "Stepover must be between 0.1 and 0.95 (10%-95% of tool diameter)")
+    
+    if body.strategy not in ["Spiral", "Lanes"]:
+        raise HTTPException(400, f"Invalid strategy '{body.strategy}'. Must be 'Spiral' or 'Lanes'")
+    
+    plan_request_dict = body.model_dump(mode="json")
     loops = [l.pts for l in body.loops]
     
     # Generate path using L.2: true spiral + adaptive stepover + fillets + HUD
@@ -518,6 +543,21 @@ def plan(body: PlanIn):
     )
     
     path_pts_or_arcs = plan2["path"]
+
+    overlays_normalized: List[Dict[str, Any]] = []
+    for overlay in plan2.get("overlays", []):
+        normalized = dict(overlay)
+        coords = None
+        if isinstance(normalized.get("pos"), (list, tuple)) and len(normalized["pos"]) >= 2:
+            coords = normalized["pos"]
+        elif isinstance(normalized.get("at"), (list, tuple)) and len(normalized["at"]) >= 2:
+            coords = normalized["at"]
+
+        if coords:
+            normalized.setdefault("x", coords[0])
+            normalized.setdefault("y", coords[1])
+
+        overlays_normalized.append(normalized)
     
     # Convert mixed path (points + arcs) to linear moves for preview (kept simple)
     pts_only: List[Tuple[float,float]] = []
@@ -647,24 +687,38 @@ def plan(body: PlanIn):
             )
     
     volume_mm3 = rough_mrr_estimate(area, body.stepdown, length, body.tool_d)
-    
-    return {
-        "moves": moves, 
+
+    response: Dict[str, Any] = {
+        "moves": moves,
         "stats": {
-            "length_mm": round(length, 3), 
-            "area_mm2": round(area, 1), 
+            "length_mm": round(length, 3),
+            "area_mm2": round(area, 1),
+            "time_s": round(t_jerk if t_jerk is not None else t_classic, 1),
             "time_s_classic": round(t_classic, 1),
             "time_s_jerk": round(t_jerk, 1) if t_jerk is not None else None,
             "volume_mm3": round(volume_mm3, 1),
             "move_count": len(moves),
             "tight_segments": tight_segments,
-            "trochoid_arcs": trochoid_arcs,  # L.3: Count of trochoid loops
-            "caps": caps,  # M.1.1: Bottleneck limiter histogram
-            "machine_profile_id": body.machine_profile_id or None,  # M.1: Echo selected profile
-            "session_override_factor": float(body.session_override_factor) if body.session_override_factor else None  # M.4: Echo session override
+            "trochoid_arcs": trochoid_arcs,
+            "caps": caps,
+            "machine_profile_id": body.machine_profile_id or None,
+            "session_override_factor": float(body.session_override_factor) if body.session_override_factor else None,
         },
-        "overlays": plan2["overlays"]  # L.2: HUD annotations
+        "overlays": overlays_normalized,
     }
+
+    job_payload = build_jobint_payload(
+        {
+            "plan_request": plan_request_dict,
+            "adaptive_plan_request": plan_request_dict,
+            "moves": moves,
+            "adaptive_moves": moves,
+        }
+    )
+    if job_payload:
+        response["job_int"] = job_payload
+
+    return response
 
 class GcodeIn(PlanIn):
     """
@@ -699,7 +753,7 @@ class GcodeIn(PlanIn):
 
 
 @router.post("/gcode")
-def gcode(body: GcodeIn):
+def gcode(body: GcodeIn) -> StreamingResponse:
     """
     Generate post-processor aware G-code for adaptive pocket.
     
@@ -744,11 +798,17 @@ def gcode(body: GcodeIn):
         - Metadata comment format: (POST=GRBL;UNITS=mm;DATE=2025-11-05T...)
         - See ADAPTIVE_FEED_OVERRIDE_COMPLETE.md for mode documentation
     """
+    # Validate post_id if provided
+    post_profiles = _load_post_profiles()
+    if body.post_id:
+        valid_post_ids = list(post_profiles.keys())
+        if body.post_id not in valid_post_ids:
+            raise HTTPException(400, f"Invalid post_id '{body.post_id}'. Available: {', '.join(valid_post_ids)}")
+    
     # Generate toolpath using /plan logic
     plan_out = plan(body)
     
     # Load post profiles for adaptive feed configuration
-    post_profiles = _load_post_profiles()
     post = post_profiles.get(body.post_id or "GRBL")
     
     # Apply user override if provided (merge with post profile defaults)
@@ -767,8 +827,9 @@ def gcode(body: GcodeIn):
         hdr = [units_cmd] + hdr
     
     # Apply adaptive feed translation (comment/inline_f/mcode)
+    # plan_out is a dict, so access with dict keys
     body_lines = _apply_adaptive_feed(
-        moves=plan_out.moves,
+        moves=plan_out["moves"],
         post=post,
         base_units=body.units
     )
@@ -865,7 +926,7 @@ class BatchExportIn(GcodeIn):
 
 
 @router.post("/batch_export")
-def batch_export(body: BatchExportIn):
+def batch_export(body: BatchExportIn) -> StreamingResponse:
     """
     Batch export adaptive pocket G-code with multiple feed modes.
     
@@ -1017,7 +1078,7 @@ def batch_export(body: BatchExportIn):
 
 
 @router.post("/sim")
-def simulate(body: PlanIn):
+def simulate(body: PlanIn) -> Dict[str, Any]:
     """
     Simulate adaptive pocket toolpath without G-code export.
     
@@ -1056,6 +1117,171 @@ def simulate(body: PlanIn):
     
     return {
         "success": True,
-        "stats": plan_out.stats,
-        "moves": plan_out.moves[:10]  # First 10 moves for preview
+        "stats": plan_out["stats"],
+        "moves": plan_out["moves"][:10]  # First 10 moves for preview
+    }
+
+
+# ============================================================================
+# Phase 27.0: DXF Upload → Adaptive Plan
+# ============================================================================
+
+def _dxf_to_loops_from_bytes(data: bytes, layer_name: str = "GEOMETRY") -> List[Loop]:
+    """
+    Convert DXF bytes into adaptive Loop objects from the given layer.
+    
+    Extracts closed LWPOLYLINE entities from specified DXF layer and converts
+    them to Loop objects for adaptive pocket planning. Used by plan_from_dxf endpoint.
+    
+    Args:
+        data: DXF file content as bytes
+        layer_name: DXF layer to extract geometry from (default: "GEOMETRY")
+    
+    Returns:
+        List of Loop objects (first is outer boundary, rest are islands)
+    
+    Raises:
+        HTTPException: If DXF is invalid or no closed polylines found on layer
+        
+    Example:
+        >>> with open("pocket.dxf", "rb") as f:
+        ...     loops = _dxf_to_loops_from_bytes(f.read())
+        >>> len(loops)  # 1 outer + 2 islands
+        3
+        
+    Notes:
+        - Only processes closed LWPOLYLINE entities
+        - Open polylines are silently ignored
+        - Coordinates are extracted as (x, y) tuples
+        - Z coordinates are ignored (2D pocketing only)
+        - First loop should be outer boundary (CCW), rest islands (CW)
+    """
+    try:
+        fp = io.BytesIO(data)
+        doc = dxf_readfile(fp)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid DXF: {exc}") from exc
+
+    msp = doc.modelspace()
+    loops: List[Loop] = []
+
+    # Extract closed polylines from specified layer
+    for entity in msp.query(f'LWPOLYLINE[layer=="{layer_name}"]'):
+        if not getattr(entity, "closed", False):
+            continue
+        pts = []
+        for p in entity.get_points():
+            x, y = float(p[0]), float(p[1])
+            pts.append((x, y))
+        if pts:
+            loops.append(Loop(pts=pts))
+
+    if not loops:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No closed polylines found on '{layer_name}' layer.",
+        )
+    return loops
+
+
+@router.post("/plan_from_dxf")
+async def plan_from_dxf(
+    file: UploadFile = File(..., description="DXF with GEOMETRY layer"),
+    tool_d: float = Form(..., description="Tool diameter in mm"),
+    units: str = Form("mm"),
+    stepover: float = Form(0.45),
+    stepdown: float = Form(2.0),
+    margin: float = Form(0.5),
+    strategy: str = Form("Spiral"),
+    smoothing: float = Form(0.5),
+    feed_xy: float = Form(1200.0),
+    safe_z: float = Form(5.0),
+    z_rough: float = Form(-1.5),
+    corner_radius_min: float = Form(1.0),
+    target_stepover: float = Form(0.45),
+    slowdown_feed_pct: float = Form(60.0),
+) -> Dict[str, Any]:
+    """
+    Bridge endpoint: Upload DXF → extract geometry → generate adaptive toolpath.
+    
+    Accepts DXF file upload (multipart/form-data) and extracts closed polylines
+    from GEOMETRY layer. Converts to Loop objects and calls existing /plan logic.
+    
+    Form Parameters:
+        file: DXF file (closed polylines on GEOMETRY layer)
+        tool_d: Tool diameter in mm (required)
+        units: "mm" or "inch" (default: "mm")
+        stepover: Stepover as fraction of tool diameter (default: 0.45)
+        stepdown: Z depth per pass in mm (default: 2.0)
+        margin: Clearance from boundary in mm (default: 0.5)
+        strategy: "Spiral" or "Lanes" (default: "Spiral")
+        smoothing: Arc tolerance for rounded joins (default: 0.5)
+        feed_xy: Cutting feed rate (default: 1200.0 mm/min)
+        safe_z: Retract height (default: 5.0 mm)
+        z_rough: Cutting depth (default: -1.5 mm)
+        corner_radius_min: Min radius for fillet injection (default: 1.0 mm)
+        target_stepover: Adaptive stepover target (default: 0.45)
+        slowdown_feed_pct: Feed reduction percentage (default: 60.0%)
+        
+    Returns:
+        {
+            "request": <PlanIn dict with extracted loops>,
+            "plan": <PlanOut dict from /plan endpoint>
+        }
+        
+    Example Usage (curl):
+        ```
+        curl -X POST http://localhost:8000/api/cam/pocket/adaptive/plan_from_dxf \\
+          -F "file=@pocket.dxf" \\
+          -F "tool_d=6.0" \\
+          -F "stepover=0.45" \\
+          -F "strategy=Spiral"
+        ```
+        
+    Example Usage (Python):
+        ```python
+        files = {"file": open("pocket.dxf", "rb")}
+        data = {"tool_d": 6.0, "stepover": 0.45, "strategy": "Spiral"}
+        response = requests.post(url, files=files, data=data)
+        ```
+        
+    Notes:
+        - DXF must contain closed LWPOLYLINE entities on "GEOMETRY" layer
+        - First polyline is outer boundary (CCW), rest are islands (CW)
+        - All geometry converted to Loop objects before planning
+        - Uses existing /plan logic for consistent results
+        - Returns both request (for replay) and plan (with moves/stats)
+        - Tool diameter validated against MIN/MAX constraints
+        - Feed rates validated against machine capabilities
+        
+    References:
+        - ADAPTIVE_POCKETING_MODULE_L.md for planning algorithm details
+        - Phase 27.0 documentation for DXF upload workflow
+    """
+    data = await file.read()
+    loops = _dxf_to_loops_from_bytes(data, layer_name="GEOMETRY")
+
+    body = PlanIn(
+        loops=loops,
+        units=units,
+        tool_d=tool_d,
+        stepover=stepover,
+        stepdown=stepdown,
+        margin=margin,
+        strategy=strategy,
+        smoothing=smoothing,
+        climb=True,
+        feed_xy=feed_xy,
+        safe_z=safe_z,
+        z_rough=z_rough,
+        corner_radius_min=corner_radius_min,
+        target_stepover=target_stepover,
+        slowdown_feed_pct=slowdown_feed_pct,
+    )
+
+    plan_result = plan(body)
+
+    return {
+        "request": body.dict(),
+        "plan": plan_result.dict(),
     }

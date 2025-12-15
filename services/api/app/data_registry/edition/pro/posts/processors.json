@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "pro",
+    "category": "posts",
+    "version": "1.0.0",
+    "description": "G-code post processor configurations for various CNC controllers"
+  },
+  "processors": {
+    "grbl": {
+      "id": "grbl",
+      "name": "GRBL",
+      "description": "Standard GRBL for most hobby CNC routers",
+      "file_extension": ".nc",
+      "line_ending": "\n",
+      "units": "mm",
+      "modal_groups": true,
+      "capabilities": {
+        "arcs": true,
+        "helical": false,
+        "canned_cycles": false,
+        "tool_change": false,
+        "coolant": false,
+        "spindle_speed": true
+      },
+      "format": {
+        "coordinate_precision": 3,
+        "feed_precision": 0,
+        "spindle_precision": 0,
+        "line_numbers": false
+      },
+      "commands": {
+        "program_start": ["G21", "G90", "G17"],
+        "program_end": ["M5", "G0 Z25", "G0 X0 Y0", "M30"],
+        "spindle_on_cw": "M3 S{speed}",
+        "spindle_on_ccw": "M4 S{speed}",
+        "spindle_off": "M5",
+        "rapid": "G0",
+        "linear": "G1",
+        "arc_cw": "G2",
+        "arc_ccw": "G3",
+        "dwell": "G4 P{seconds}",
+        "absolute": "G90",
+        "incremental": "G91"
+      },
+      "safe_z_mm": 25,
+      "notes": "Compatible with Shapeoko, X-Carve, Onefinity, most Chinese routers"
+    },
+    "linuxcnc": {
+      "id": "linuxcnc",
+      "name": "LinuxCNC",
+      "description": "LinuxCNC with full G-code support",
+      "file_extension": ".ngc",
+      "line_ending": "\n",
+      "units": "mm",
+      "modal_groups": true,
+      "capabilities": {
+        "arcs": true,
+        "helical": true,
+        "canned_cycles": true,
+        "tool_change": true,
+        "coolant": true,
+        "spindle_speed": true
+      },
+      "format": {
+        "coordinate_precision": 4,
+        "feed_precision": 1,
+        "spindle_precision": 0,
+        "line_numbers": true,
+        "line_number_increment": 10
+      },
+      "commands": {
+        "program_start": ["G21", "G90", "G17", "G40", "G49", "G80"],
+        "program_end": ["M5", "G0 Z50", "G0 X0 Y0", "M2"],
+        "spindle_on_cw": "M3 S{speed}",
+        "spindle_on_ccw": "M4 S{speed}",
+        "spindle_off": "M5",
+        "tool_change": "T{tool} M6",
+        "coolant_on": "M8",
+        "coolant_off": "M9",
+        "rapid": "G0",
+        "linear": "G1",
+        "arc_cw": "G2",
+        "arc_ccw": "G3",
+        "drill_cycle": "G81",
+        "peck_drill": "G83",
+        "dwell": "G4 P{seconds}",
+        "absolute": "G90",
+        "incremental": "G91"
+      },
+      "safe_z_mm": 50,
+      "notes": "Full-featured CNC controller, supports canned cycles and tool changes"
+    },
+    "mach3": {
+      "id": "mach3",
+      "name": "Mach3/Mach4",
+      "description": "Mach3 and Mach4 controllers",
+      "file_extension": ".tap",
+      "line_ending": "\r\n",
+      "units": "mm",
+      "modal_groups": true,
+      "capabilities": {
+        "arcs": true,
+        "helical": false,
+        "canned_cycles": true,
+        "tool_change": true,
+        "coolant": true,
+        "spindle_speed": true
+      },
+      "format": {
+        "coordinate_precision": 4,
+        "feed_precision": 1,
+        "spindle_precision": 0,
+        "line_numbers": true,
+        "line_number_increment": 10
+      },
+      "commands": {
+        "program_start": ["G21", "G90", "G17", "G40", "G80"],
+        "program_end": ["M5", "M9", "G0 Z25", "G28 G91 Z0", "G28 X0 Y0", "M30"],
+        "spindle_on_cw": "M3 S{speed}",
+        "spindle_on_ccw": "M4 S{speed}",
+        "spindle_off": "M5",
+        "tool_change": "T{tool} M6",
+        "coolant_on": "M8",
+        "coolant_off": "M9",
+        "rapid": "G0",
+        "linear": "G1",
+        "arc_cw": "G2",
+        "arc_ccw": "G3",
+        "drill_cycle": "G81",
+        "peck_drill": "G83",
+        "dwell": "G4 P{seconds}",
+        "absolute": "G90",
+        "incremental": "G91"
+      },
+      "safe_z_mm": 25,
+      "notes": "Popular Windows-based CNC controller"
+    },
+    "ddcsv": {
+      "id": "ddcsv",
+      "name": "DDCSV Standalone",
+      "description": "DDCSV standalone controller (BCAMCNC default)",
+      "file_extension": ".nc",
+      "line_ending": "\n",
+      "units": "mm",
+      "modal_groups": true,
+      "capabilities": {
+        "arcs": true,
+        "helical": false,
+        "canned_cycles": false,
+        "tool_change": true,
+        "coolant": false,
+        "spindle_speed": true
+      },
+      "format": {
+        "coordinate_precision": 3,
+        "feed_precision": 0,
+        "spindle_precision": 0,
+        "line_numbers": false
+      },
+      "commands": {
+        "program_start": ["G21", "G90", "G17"],
+        "program_end": ["M5", "G0 Z50", "G0 X0 Y0", "M30"],
+        "spindle_on_cw": "M3 S{speed}",
+        "spindle_on_ccw": "M4 S{speed}",
+        "spindle_off": "M5",
+        "tool_change": "M6 T{tool}",
+        "rapid": "G0",
+        "linear": "G1",
+        "arc_cw": "G2",
+        "arc_ccw": "G3",
+        "dwell": "G4 P{seconds}",
+        "absolute": "G90",
+        "incremental": "G91"
+      },
+      "safe_z_mm": 50,
+      "tool_change_position": {
+        "x_mm": 0,
+        "y_mm": 0,
+        "z_mm": 100
+      },
+      "notes": "Default for BCAMCNC 2030CA, supports 8-position ATC"
+    }
+  }
+}

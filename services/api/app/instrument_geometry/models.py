@@ -114,18 +114,33 @@ class ScaleLengthSpec:
     """
     Scale length specification for fret calculations.
     
+    Wave 16: Extended with model_id and description for registry lookups.
+    
     Attributes:
-        length_mm: Nominal scale length in millimeters
-        fret_count: Number of frets (typically 20-24)
+        scale_length_mm: Nominal scale length in millimeters (alias: length_mm)
+        num_frets: Number of frets (typically 20-24) (alias: fret_count)
+        model_id: Optional InstrumentModelId this spec belongs to
+        description: Human-readable description
         multiscale: Whether this is a fanned-fret instrument
         bass_length_mm: Scale length on bass side (if multiscale)
         treble_length_mm: Scale length on treble side (if multiscale)
     """
-    length_mm: float
-    fret_count: int = 22
+    scale_length_mm: float
+    num_frets: int = 22
+    model_id: Optional["InstrumentModelId"] = None
+    description: str = ""
     multiscale: bool = False
     bass_length_mm: Optional[float] = None
     treble_length_mm: Optional[float] = None
+    
+    # Backward compat aliases
+    @property
+    def length_mm(self) -> float:
+        return self.scale_length_mm
+    
+    @property
+    def fret_count(self) -> int:
+        return self.num_frets
 
 
 @dataclass
@@ -148,32 +163,103 @@ class NeckProfileSpec:
     """
     Neck profile specification.
     
+    Wave 16: Extended with model_id, twelve_fret_width, radius values, and description.
+    
     Attributes:
+        model_id: Optional InstrumentModelId this spec belongs to
         nut_width_mm: Width at nut
-        heel_width_mm: Width at heel/body joint
-        thickness_1st_fret_mm: Neck thickness at 1st fret
-        thickness_12th_fret_mm: Neck thickness at 12th fret
+        twelve_fret_width_mm: Width at 12th fret (heel_width_mm alias for compat)
+        thickness_1st_mm: Neck thickness at 1st fret
+        thickness_12th_mm: Neck thickness at 12th fret
+        radius_nut_mm: Fretboard radius at nut (mm)
+        radius_12th_mm: Fretboard radius at 12th fret (mm) - same as nut for non-compound
+        description: Human-readable description
         profile_shape: Shape code ("C", "D", "V", "U", "asymmetric")
     """
-    nut_width_mm: float
-    heel_width_mm: float
-    thickness_1st_fret_mm: float = 20.0
-    thickness_12th_fret_mm: float = 22.0
+    model_id: Optional["InstrumentModelId"] = None
+    nut_width_mm: float = 43.0
+    twelve_fret_width_mm: float = 53.0
+    thickness_1st_mm: float = 21.0
+    thickness_12th_mm: float = 23.0
+    radius_nut_mm: float = 300.0
+    radius_12th_mm: float = 300.0
+    description: str = ""
     profile_shape: str = "C"
+    
+    # Backward compat aliases
+    @property
+    def heel_width_mm(self) -> float:
+        return self.twelve_fret_width_mm
+    
+    @property
+    def thickness_1st_fret_mm(self) -> float:
+        return self.thickness_1st_mm
+    
+    @property
+    def thickness_12th_fret_mm(self) -> float:
+        return self.thickness_12th_mm
+
+
+@dataclass
+class StringSpec:
+    """
+    Specification for a single guitar string.
+    
+    Wave 17: Added for GuitarModelSpec integration.
+    
+    Attributes:
+        name: String designation (e.g. "E4", "B3", "G3")
+        gauge_in: String gauge in inches (e.g. 0.009, 0.046)
+        is_wound: True for wound strings, False for plain
+        frequency_hz: Open string fundamental frequency in Hz
+        open_note: Musical note name (e.g. "E4", "A3")
+        material: String material (default "steel")
+    """
+    name: str
+    gauge_in: float
+    is_wound: bool
+    frequency_hz: float
+    open_note: str = ""
+    material: str = "steel"
+
+
+@dataclass
+class ScaleProfile:
+    """
+    Complete scale length profile with multiscale support.
+    
+    Wave 17: Added for GuitarModelSpec integration.
+    
+    Attributes:
+        id: Profile identifier (e.g. "fender_25_5", "gibson_24_75")
+        scale_length_mm: Primary scale length in mm
+        num_frets: Number of frets (typically 20-24)
+        description: Human-readable description
+        treble_scale_mm: Treble-side scale for multiscale (fanned fret)
+        bass_scale_mm: Bass-side scale for multiscale
+        perpendicular_fret: Fret number where strings are perpendicular (multiscale pivot)
+    """
+    id: str
+    scale_length_mm: float
+    num_frets: int
+    description: str = ""
+    treble_scale_mm: Optional[float] = None
+    bass_scale_mm: Optional[float] = None
+    perpendicular_fret: Optional[int] = None
 
 
 # Common scale lengths for quick reference
 COMMON_SCALE_LENGTHS = {
-    "fender": ScaleLengthSpec(648.0, 22),        # 25.5"
-    "gibson": ScaleLengthSpec(628.65, 22),       # 24.75"
-    "prs": ScaleLengthSpec(635.0, 24),           # 25"
-    "classical": ScaleLengthSpec(650.0, 19),     # 25.6"
-    "dreadnought": ScaleLengthSpec(645.16, 20),  # 25.4"
-    "bass_long": ScaleLengthSpec(863.6, 21),     # 34"
-    "bass_short": ScaleLengthSpec(762.0, 21),    # 30"
-    "ukulele_soprano": ScaleLengthSpec(330.0, 12),
-    "ukulele_concert": ScaleLengthSpec(381.0, 15),
-    "ukulele_tenor": ScaleLengthSpec(432.0, 17),
+    "fender": ScaleLengthSpec(scale_length_mm=648.0, num_frets=22),        # 25.5"
+    "gibson": ScaleLengthSpec(scale_length_mm=628.65, num_frets=22),       # 24.75"
+    "prs": ScaleLengthSpec(scale_length_mm=635.0, num_frets=24),           # 25"
+    "classical": ScaleLengthSpec(scale_length_mm=650.0, num_frets=19),     # 25.6"
+    "dreadnought": ScaleLengthSpec(scale_length_mm=645.16, num_frets=20),  # 25.4"
+    "bass_long": ScaleLengthSpec(scale_length_mm=863.6, num_frets=21),     # 34"
+    "bass_short": ScaleLengthSpec(scale_length_mm=762.0, num_frets=21),    # 30"
+    "ukulele_soprano": ScaleLengthSpec(scale_length_mm=330.0, num_frets=12),
+    "ukulele_concert": ScaleLengthSpec(scale_length_mm=381.0, num_frets=15),
+    "ukulele_tenor": ScaleLengthSpec(scale_length_mm=432.0, num_frets=17),
 }
 
 

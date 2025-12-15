@@ -1,0 +1,172 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "cnc_blueprints",
+    "category": "blueprint_standards",
+    "version": "1.0.0",
+    "description": "Housing industry blueprint standards and dimension tables for ltb-cnc-blueprints"
+  },
+  "blueprint_standards": {
+    "residential_framing": {
+      "id": "residential_framing",
+      "name": "Residential Framing Standards",
+      "code_reference": "IRC 2021",
+      "stud_spacing": {
+        "standard_inches": 16,
+        "alternative_inches": 24,
+        "metric_mm": 406
+      },
+      "wall_heights": {
+        "standard_ft": 8,
+        "standard_mm": 2438,
+        "tall_ft": 9,
+        "tall_mm": 2743
+      },
+      "header_sizes": {
+        "4ft_span": "2x6",
+        "6ft_span": "2x8",
+        "8ft_span": "2x10",
+        "10ft_span": "2x12"
+      },
+      "lumber_dimensions": {
+        "2x4_actual_inches": [1.5, 3.5],
+        "2x6_actual_inches": [1.5, 5.5],
+        "2x8_actual_inches": [1.5, 7.25],
+        "2x10_actual_inches": [1.5, 9.25],
+        "2x12_actual_inches": [1.5, 11.25]
+      }
+    },
+    "cabinet_standards": {
+      "id": "cabinet_standards",
+      "name": "Cabinet Industry Standards",
+      "code_reference": "KCMA",
+      "base_cabinet": {
+        "height_inches": 34.5,
+        "depth_inches": 24,
+        "toe_kick_height_inches": 4,
+        "toe_kick_depth_inches": 3
+      },
+      "wall_cabinet": {
+        "heights_inches": [30, 36, 42],
+        "depth_inches": 12,
+        "clearance_above_counter_inches": 18
+      },
+      "countertop": {
+        "height_from_floor_inches": 36,
+        "overhang_inches": 1.5,
+        "thickness_inches": 1.5
+      },
+      "standard_widths_inches": [9, 12, 15, 18, 21, 24, 27, 30, 33, 36]
+    },
+    "door_standards": {
+      "id": "door_standards",
+      "name": "Door Opening Standards",
+      "code_reference": "IRC/ADA",
+      "interior_doors": {
+        "standard_widths_inches": [24, 28, 30, 32, 36],
+        "standard_height_inches": 80,
+        "rough_opening_add_width_inches": 2,
+        "rough_opening_add_height_inches": 2.5
+      },
+      "exterior_doors": {
+        "standard_widths_inches": [32, 34, 36],
+        "standard_height_inches": 80,
+        "rough_opening_add_width_inches": 2.5,
+        "rough_opening_add_height_inches": 2.5
+      },
+      "ada_minimum_width_inches": 32
+    },
+    "window_standards": {
+      "id": "window_standards",
+      "name": "Window Standards",
+      "code_reference": "IRC/NFRC",
+      "common_sizes_inches": [
+        {"width": 24, "height": 36},
+        {"width": 30, "height": 48},
+        {"width": 36, "height": 48},
+        {"width": 36, "height": 60},
+        {"width": 48, "height": 48}
+      ],
+      "rough_opening_add_width_inches": 0.5,
+      "rough_opening_add_height_inches": 0.5,
+      "egress_requirements": {
+        "min_opening_sqft": 5.7,
+        "min_width_inches": 20,
+        "min_height_inches": 24,
+        "max_sill_height_inches": 44
+      }
+    }
+  },
+  "dimension_tables": {
+    "plywood_sheets": {
+      "id": "plywood_sheets",
+      "standard_sizes": [
+        {"width_ft": 4, "length_ft": 8, "width_mm": 1220, "length_mm": 2440},
+        {"width_ft": 4, "length_ft": 10, "width_mm": 1220, "length_mm": 3050},
+        {"width_ft": 5, "length_ft": 5, "width_mm": 1525, "length_mm": 1525}
+      ],
+      "thicknesses_inches": [0.25, 0.375, 0.5, 0.625, 0.75, 1.0],
+      "thicknesses_mm": [6, 9, 12, 15, 18, 25]
+    },
+    "mdf_sheets": {
+      "id": "mdf_sheets",
+      "standard_sizes": [
+        {"width_ft": 4, "length_ft": 8, "width_mm": 1220, "length_mm": 2440},
+        {"width_ft": 5, "length_ft": 8, "width_mm": 1525, "length_mm": 2440}
+      ],
+      "thicknesses_inches": [0.25, 0.5, 0.75, 1.0],
+      "thicknesses_mm": [6, 12, 18, 25]
+    },
+    "drywall_sheets": {
+      "id": "drywall_sheets",
+      "standard_sizes": [
+        {"width_ft": 4, "length_ft": 8},
+        {"width_ft": 4, "length_ft": 10},
+        {"width_ft": 4, "length_ft": 12}
+      ],
+      "thicknesses_inches": [0.25, 0.375, 0.5, 0.625],
+      "fire_rated_thickness_inches": 0.625
+    },
+    "fastener_schedules": {
+      "id": "fastener_schedules",
+      "framing_nails": {
+        "stud_to_plate": {"size": "16d", "spacing_inches": 16, "quantity": 2},
+        "header_to_king_stud": {"size": "16d", "spacing_inches": 16},
+        "sheathing_to_stud": {"size": "8d", "edge_spacing_inches": 6, "field_spacing_inches": 12}
+      },
+      "cabinet_screws": {
+        "face_frame": {"gauge": 18, "length_inches": 1.25},
+        "cabinet_to_wall": {"gauge": 8, "length_inches": 2.5, "spacing_inches": 16},
+        "drawer_slides": {"gauge": 8, "length_inches": 0.625}
+      }
+    }
+  },
+  "construction_codes": {
+    "fire_blocking": {
+      "id": "fire_blocking",
+      "code_reference": "IRC R302.11",
+      "requirements": {
+        "vertical_runs_max_ft": 10,
+        "horizontal_runs_max_ft": 10,
+        "stair_stringers": "block at top and bottom",
+        "soffits_and_coves": "block at each floor level"
+      }
+    },
+    "electrical_clearances": {
+      "id": "electrical_clearances",
+      "code_reference": "NEC",
+      "outlet_spacing_max_ft": 12,
+      "outlet_from_corner_max_ft": 6,
+      "countertop_outlet_spacing_max_inches": 48,
+      "gfci_required": ["bathroom", "kitchen", "garage", "outdoor", "basement"]
+    },
+    "structural_requirements": {
+      "id": "structural_requirements",
+      "code_reference": "IRC R602",
+      "bearing_wall_stud_spacing_max_inches": 24,
+      "non_bearing_wall_stud_spacing_max_inches": 24,
+      "floor_joist_max_spacing_inches": 16,
+      "ceiling_joist_max_spacing_inches": 24
+    }
+  }
+}

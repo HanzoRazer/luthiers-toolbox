@@ -1,4 +1,4 @@
-# Guitar Model Inventory Report
+you# Guitar Model Inventory Report
 
 **Date:** January 2025  
 **Branch:** `feature/client-migration`  

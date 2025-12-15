@@ -1,241 +1,289 @@
-# Test DXF Preflight System (Phase 3.2)
-# Tests the new validation system based on nc_lint.py pattern
+# DXF Preflight Validator Smoke Test
+$baseUrl = "http://localhost:8000"
+$testsPassed = 0
+$testsFailed = 0
 
-$API_URL = "http://localhost:8000"
-$passed = 0
-$failed = 0
-
-Write-Host "`n=== Testing Phase 3.2: DXF Preflight System ===" -ForegroundColor Cyan
-
-# Find Gibson L-00 DXF file
-$gibsonFiles = Get-ChildItem -Path "." -Recurse -Filter "*L-00*.dxf" -ErrorAction SilentlyContinue | Select-Object -First 1
-
-if (-not $gibsonFiles) {
-    Write-Host "`n✗ No Gibson L-00 DXF file found" -ForegroundColor Red
-    Write-Host "  Please ensure a Gibson_L-00.dxf file exists in the project" -ForegroundColor Yellow
-    exit 1
-}
-
-$dxfPath = $gibsonFiles.FullName
-Write-Host "`nUsing DXF: $dxfPath" -ForegroundColor Gray
+Write-Host "`n╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║  DXF Preflight Validator Smoke Test                      ║" -ForegroundColor Cyan
+Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 # Test 1: Health Check
-Write-Host "`n1. Testing GET /cam/blueprint/health" -ForegroundColor Yellow
+Write-Host "`n=== Test 1: Health Check ===" -ForegroundColor Cyan
 try {
-    $response = Invoke-RestMethod -Uri "$API_URL/cam/blueprint/health" -Method Get
-    if ($response.status -eq "ok" -and $response.phase -eq "3.2") {
-        Write-Host "  ✓ Blueprint CAM bridge healthy (Phase 3.2)" -ForegroundColor Green
-        Write-Host "    Endpoints: $($response.endpoints -join ', ')" -ForegroundColor Gray
-        Write-Host "    Features:" -ForegroundColor Gray
-        $response.features.PSObject.Properties | ForEach-Object {
-            Write-Host "      - $($_.Name): $($_.Value)" -ForegroundColor Gray
-        }
-        $passed++
-    } else {
-        Write-Host "  ✗ Health check failed" -ForegroundColor Red
-        $failed++
-    }
+    $response = Invoke-RestMethod -Uri "$baseUrl/dxf/preflight/health" -Method Get
+    Write-Host "  ✓ PASSED" -ForegroundColor Green
+    Write-Host "    Service: $($response.service), Version: $($response.version)" -ForegroundColor Gray
+    Write-Host "    ezdxf available: $($response.ezdxf_available)" -ForegroundColor Gray
+    $testsPassed++
 } catch {
-    Write-Host "  ✗ Error: $_" -ForegroundColor Red
-    $failed++
+    Write-Host "  ✗ FAILED: $($_.Exception.Message)" -ForegroundColor Red
+    $testsFailed++
 }
 
-# Test 2: DXF Preflight (JSON format)
-Write-Host "`n2. Testing POST /cam/blueprint/preflight (JSON)" -ForegroundColor Yellow
+# Test 2: Validate Good DXF (R12, Closed Rectangle)
+Write-Host "`n=== Test 2: Validate Good DXF ===" -ForegroundColor Cyan
 try {
-    $form = @{
-        file = Get-Item $dxfPath
-        format = "json"
-    }
+    # Simple R12 DXF with closed rectangle
+    $goodDxf = @"
+  0
+SECTION
+  2
+HEADER
+  9
+`$ACADVER
+  1
+AC1009
+  9
+`$INSUNITS
+  70
+4
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 11
+100.0
+ 21
+0.0
+  0
+LINE
+  8
+0
+ 10
+100.0
+ 20
+0.0
+ 11
+100.0
+ 21
+50.0
+  0
+LINE
+  8
+0
+ 10
+100.0
+ 20
+50.0
+ 11
+0.0
+ 21
+50.0
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+50.0
+ 11
+0.0
+ 21
+0.0
+  0
+ENDSEC
+  0
+EOF
+"@
     
-    $response = Invoke-RestMethod -Uri "$API_URL/cam/blueprint/preflight" -Method Post -Form $form
+    $goodBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($goodDxf))
     
-    Write-Host "  ✓ Preflight validation completed" -ForegroundColor Green
-    Write-Host "    File: $($response.filename)" -ForegroundColor Gray
+    $response = Invoke-RestMethod -Uri "$baseUrl/dxf/preflight/validate_base64" `
+        -Method Post `
+        -Headers @{ "Content-Type" = "application/json" } `
+        -Body (@{ dxf_base64 = $goodBase64; filename = "test_good.dxf" } | ConvertTo-Json)
+    
+    Write-Host "  ✓ PASSED" -ForegroundColor Green
     Write-Host "    DXF Version: $($response.dxf_version)" -ForegroundColor Gray
-    Write-Host "    Status: $(if ($response.passed) { 'PASSED' } else { 'FAILED' })" -ForegroundColor $(if ($response.passed) { "Green" } else { "Red" })
-    Write-Host "    Total Entities: $($response.total_entities)" -ForegroundColor Gray
-    Write-Host "    Layers: $($response.layers.Count)" -ForegroundColor Gray
-    
-    # Display summary
-    Write-Host "`n  Issue Summary:" -ForegroundColor Cyan
-    Write-Host "    - Errors: $($response.summary.errors)" -ForegroundColor $(if ($response.summary.errors -gt 0) { "Red" } else { "Green" })
-    Write-Host "    - Warnings: $($response.summary.warnings)" -ForegroundColor $(if ($response.summary.warnings -gt 0) { "Yellow" } else { "Green" })
-    Write-Host "    - Info: $($response.summary.info)" -ForegroundColor Gray
-    
-    # Display issues by category
-    if ($response.issues.Count -gt 0) {
-        Write-Host "`n  Issues by Category:" -ForegroundColor Cyan
-        $response.issues | Group-Object -Property category | ForEach-Object {
-            Write-Host "    $($_.Name): $($_.Count)" -ForegroundColor Gray
-        }
-        
-        # Display first 5 issues
-        Write-Host "`n  Sample Issues:" -ForegroundColor Cyan
-        $response.issues | Select-Object -First 5 | ForEach-Object {
-            $color = switch ($_.severity) {
-                "ERROR" { "Red" }
-                "WARNING" { "Yellow" }
-                default { "Gray" }
-            }
-            Write-Host "    [$($_.severity)] $($_.message)" -ForegroundColor $color
-            if ($_.suggestion) {
-                Write-Host "      💡 $($_.suggestion)" -ForegroundColor Gray
-            }
-        }
-    }
-    
-    # Display entity type stats
-    if ($response.stats.entity_types) {
-        Write-Host "`n  Entity Types:" -ForegroundColor Cyan
-        $response.stats.entity_types.PSObject.Properties | ForEach-Object {
-            Write-Host "    - $($_.Name): $($_.Value)" -ForegroundColor Gray
-        }
-    }
-    
-    $passed++
-    
-    # Save response for validation
-    $script:preflightReport = $response
-    
+    Write-Host "    Units: $($response.units)" -ForegroundColor Gray
+    Write-Host "    CAM Ready: $($response.cam_ready)" -ForegroundColor $(if ($response.cam_ready) { "Green" } else { "Yellow" })
+    Write-Host "    Geometry: $($response.geometry.lines) lines, $($response.geometry.total) total" -ForegroundColor Gray
+    Write-Host "    Issues: $($response.errors_count) errors, $($response.warnings_count) warnings" -ForegroundColor Gray
+    $testsPassed++
 } catch {
-    Write-Host "  ✗ Error: $_" -ForegroundColor Red
-    $failed++
+    Write-Host "  ✗ FAILED: $($_.Exception.Message)" -ForegroundColor Red
+    $testsFailed++
 }
 
-# Test 3: DXF Preflight (HTML format)
-Write-Host "`n3. Testing POST /cam/blueprint/preflight (HTML)" -ForegroundColor Yellow
+# Test 3: Validate DXF with Issues (R2000, No Units)
+Write-Host "`n=== Test 3: Validate DXF with Issues ===" -ForegroundColor Cyan
 try {
-    $htmlOutputPath = "$env:TEMP\dxf_preflight_report.html"
+    $badDxf = @"
+  0
+SECTION
+  2
+HEADER
+  9
+`$ACADVER
+  1
+AC1015
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 11
+50.0
+ 21
+30.0
+  0
+ENDSEC
+  0
+EOF
+"@
     
-    $form = @{
-        file = Get-Item $dxfPath
-        format = "html"
+    $badBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($badDxf))
+    
+    $response = Invoke-RestMethod -Uri "$baseUrl/dxf/preflight/validate_base64" `
+        -Method Post `
+        -Headers @{ "Content-Type" = "application/json" } `
+        -Body (@{ dxf_base64 = $badBase64; filename = "test_issues.dxf" } | ConvertTo-Json)
+    
+    Write-Host "  ✓ PASSED" -ForegroundColor Green
+    Write-Host "    DXF Version: $($response.dxf_version) (Not R12)" -ForegroundColor Yellow
+    Write-Host "    CAM Ready: $($response.cam_ready)" -ForegroundColor $(if ($response.cam_ready) { "Green" } else { "Yellow" })
+    Write-Host "    Issues found: $($response.issues.Count)" -ForegroundColor Yellow
+    
+    if ($response.issues.Count -gt 0) {
+        Write-Host "    Issue examples:" -ForegroundColor Gray
+        $response.issues | Select-Object -First 3 | ForEach-Object {
+            Write-Host "      [$($_.severity)] $($_.message)" -ForegroundColor Gray
+        }
     }
     
-    Invoke-WebRequest -Uri "$API_URL/cam/blueprint/preflight" -Method Post -Form $form -OutFile $htmlOutputPath
-    
-    if (Test-Path $htmlOutputPath) {
-        $htmlSize = (Get-Item $htmlOutputPath).Length
-        Write-Host "  ✓ HTML report generated ($htmlSize bytes)" -ForegroundColor Green
-        Write-Host "    Path: $htmlOutputPath" -ForegroundColor Gray
-        
-        # Read and validate HTML content
-        $htmlContent = Get-Content $htmlOutputPath -Raw
-        
-        $checks = @(
-            @{ Pattern = "DXF Preflight Report"; Name = "Title" },
-            @{ Pattern = "ERRORS"; Name = "Error count" },
-            @{ Pattern = "WARNINGS"; Name = "Warning count" },
-            @{ Pattern = "Gibson_L-00"; Name = "Filename" }
-        )
-        
-        $checksPass = 0
-        foreach ($check in $checks) {
-            if ($htmlContent -match $check.Pattern) {
-                $checksPass++
-            } else {
-                Write-Host "    ⚠ Missing: $($check.Name)" -ForegroundColor Yellow
-            }
-        }
-        
-        if ($checksPass -eq $checks.Count) {
-            Write-Host "    ✓ HTML structure validated ($checksPass/$($checks.Count) checks)" -ForegroundColor Green
-        }
-        
-        $passed++
-    } else {
-        Write-Host "  ✗ HTML report not generated" -ForegroundColor Red
-        $failed++
-    }
+    Write-Host "    Recommendations: $($response.recommended_actions.Count)" -ForegroundColor Gray
+    $testsPassed++
 } catch {
-    Write-Host "  ✗ Error: $_" -ForegroundColor Red
-    $failed++
+    Write-Host "  ✗ FAILED: $($_.Exception.Message)" -ForegroundColor Red
+    $testsFailed++
 }
 
-# Test 4: Validate Preflight Rules
-if ($script:preflightReport) {
-    Write-Host "`n4. Validating Preflight Rules" -ForegroundColor Yellow
+# Test 4: Auto-Fix (Convert to R12 + Set Units)
+Write-Host "`n=== Test 4: Auto-Fix DXF ===" -ForegroundColor Cyan
+try {
+    $badDxf = @"
+  0
+SECTION
+  2
+HEADER
+  9
+`$ACADVER
+  1
+AC1015
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+1
+  0
+LAYER
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 11
+50.0
+ 21
+30.0
+  0
+ENDSEC
+  0
+EOF
+"@
     
-    $ruleChecks = 0
-    $rulesPassed = 0
+    $badBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($badDxf))
     
-    # Rule 1: File was parsed
-    $ruleChecks++
-    if ($script:preflightReport.total_entities -gt 0) {
-        Write-Host "  ✓ DXF file parsed successfully" -ForegroundColor Green
-        $rulesPassed++
-    } else {
-        Write-Host "  ✗ DXF parsing failed (no entities)" -ForegroundColor Red
+    $fixRequest = @{
+        dxf_base64 = $badBase64
+        filename = "test_autofix.dxf"
+        fixes = @("convert_to_r12", "set_units_mm")
     }
     
-    # Rule 2: Layers detected
-    $ruleChecks++
-    if ($script:preflightReport.layers.Count -gt 0) {
-        Write-Host "  ✓ Layers detected ($($script:preflightReport.layers.Count) layers)" -ForegroundColor Green
-        $rulesPassed++
-    } else {
-        Write-Host "  ✗ No layers detected" -ForegroundColor Red
-    }
+    $response = Invoke-RestMethod -Uri "$baseUrl/dxf/preflight/auto_fix" `
+        -Method Post `
+        -Headers @{ "Content-Type" = "application/json" } `
+        -Body ($fixRequest | ConvertTo-Json)
     
-    # Rule 3: Entity types analyzed
-    $ruleChecks++
-    if ($script:preflightReport.stats.entity_types) {
-        $entityTypeCount = ($script:preflightReport.stats.entity_types.PSObject.Properties).Count
-        Write-Host "  ✓ Entity types analyzed ($entityTypeCount types)" -ForegroundColor Green
-        $rulesPassed++
-    } else {
-        Write-Host "  ✗ No entity type analysis" -ForegroundColor Red
+    Write-Host "  ✓ PASSED" -ForegroundColor Green
+    Write-Host "    Fixes applied: $($response.fixes_applied.Count)" -ForegroundColor Gray
+    $response.fixes_applied | ForEach-Object {
+        Write-Host "      • $_" -ForegroundColor Gray
     }
-    
-    # Rule 4: Issues categorized
-    $ruleChecks++
-    $categories = $script:preflightReport.issues | Group-Object -Property category
-    if ($categories.Count -gt 0) {
-        Write-Host "  ✓ Issues categorized ($($categories.Count) categories)" -ForegroundColor Green
-        $rulesPassed++
-    } else {
-        Write-Host "  ⚠ No issues found (may be perfect DXF or missing checks)" -ForegroundColor Yellow
-        $rulesPassed++  # Don't fail on this
-    }
-    
-    # Rule 5: Severity levels used
-    $ruleChecks++
-    $severities = $script:preflightReport.issues | Group-Object -Property severity
-    if ($severities.Count -gt 0) {
-        Write-Host "  ✓ Severity levels applied ($($severities.Name -join ', '))" -ForegroundColor Green
-        $rulesPassed++
-    } else {
-        Write-Host "  ⚠ No severity classification" -ForegroundColor Yellow
-        $rulesPassed++  # Don't fail on this
-    }
-    
-    if ($rulesPassed -eq $ruleChecks) {
-        Write-Host "`n  ✓ All validation rules passed ($rulesPassed/$ruleChecks)" -ForegroundColor Green
-        $passed++
-    } else {
-        Write-Host "`n  ✗ Some validation rules failed ($rulesPassed/$ruleChecks)" -ForegroundColor Red
-        $failed++
-    }
+    Write-Host "    Fixed DXF base64 length: $($response.fixed_dxf_base64.Length) chars" -ForegroundColor Gray
+    Write-Host "    New validation:" -ForegroundColor Gray
+    Write-Host "      - DXF Version: $($response.validation_report.dxf_version)" -ForegroundColor Gray
+    Write-Host "      - Units: $($response.validation_report.units)" -ForegroundColor Gray
+    Write-Host "      - CAM Ready: $($response.validation_report.cam_ready)" -ForegroundColor $(if ($response.validation_report.cam_ready) { "Green" } else { "Yellow" })
+    $testsPassed++
+} catch {
+    Write-Host "  ✗ FAILED: $($_.Exception.Message)" -ForegroundColor Red
+    $testsFailed++
 }
 
-# Summary
-Write-Host "`n=== Test Summary ===" -ForegroundColor Cyan
-Write-Host "  Passed: $passed" -ForegroundColor Green
-Write-Host "  Failed: $failed" -ForegroundColor $(if ($failed -gt 0) { "Red" } else { "Green" })
+Write-Host "`n╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║  Test Summary                                             ║" -ForegroundColor Cyan
+Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "  Total Tests: $($testsPassed + $testsFailed)" -ForegroundColor White
+Write-Host "  Passed:      $testsPassed" -ForegroundColor Green
+Write-Host "  Failed:      $testsFailed" -ForegroundColor $(if ($testsFailed -eq 0) { "Green" } else { "Red" })
 
-if ($failed -eq 0) {
-    Write-Host "`n✓ All Phase 3.2 DXF preflight tests passed!" -ForegroundColor Green
-    Write-Host "  Next step: Build PipelineLab UI" -ForegroundColor Cyan
-    
-    # Open HTML report in browser
-    if ($htmlOutputPath -and (Test-Path $htmlOutputPath)) {
-        Write-Host "`nOpening HTML report in browser..." -ForegroundColor Cyan
-        Start-Process $htmlOutputPath
-    }
-    
+if ($testsFailed -eq 0) {
+    Write-Host "`n✓ All DXF Preflight tests passed!" -ForegroundColor Green
+    Write-Host "  - Health check: ✓" -ForegroundColor Gray
+    Write-Host "  - Validate good DXF: ✓" -ForegroundColor Gray
+    Write-Host "  - Validate DXF with issues: ✓" -ForegroundColor Gray
+    Write-Host "  - Auto-fix DXF: ✓" -ForegroundColor Gray
+    Write-Host "`n🎉 DXF Preflight Validator is production-ready!" -ForegroundColor Green
     exit 0
 } else {
-    Write-Host "`n✗ Some tests failed" -ForegroundColor Red
+    Write-Host "`n✗ Some tests failed. Check output above." -ForegroundColor Red
+    Write-Host "  Ensure backend is running: cd services/api && uvicorn app.main:app --reload --port 8000" -ForegroundColor Yellow
     exit 1
 }

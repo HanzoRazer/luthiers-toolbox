@@ -38,5 +38,35 @@
       "tool": 0.22,
       "work": 0.1
     }
+  },
+  {
+    "title": "Black Walnut (Updated)",
+    "id": "test_walnut",
+    "heat_partition": {
+      "tool": 0.22,
+      "chip": 0.68,
+      "work": 0.1
+    },
+    "sce_j_per_mm3": 0.52
+  },
+  {
+    "title": "MDF (Test)",
+    "id": "test_mdf",
+    "heat_partition": {
+      "tool": 0.18,
+      "chip": 0.72,
+      "work": 0.1
+    },
+    "sce_j_per_mm3": 0.42
+  },
+  {
+    "title": "Red Oak (Test)",
+    "id": "test_oak",
+    "heat_partition": {
+      "tool": 0.2,
+      "chip": 0.7,
+      "work": 0.1
+    },
+    "sce_j_per_mm3": 0.53
   }
 ]

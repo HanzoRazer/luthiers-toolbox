@@ -24,6 +24,34 @@ jobs:
             curl -sSf http://127.0.0.1:8000/health >/dev/null && exit 0 || sleep 1
           done
           exit 1
+
+      - name: N.17 polygon-offset smoke (PowerShell)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ApiBase = "http://127.0.0.1:8000"
+
+          $body = @{
+            polygon   = @(@(0,0), @(40,0), @(40,30), @(0,30), @(0,0))
+            tool_dia  = 6.0
+            stepover  = 0.4
+            link_mode = "arc"
+            units     = "mm"
+          } | ConvertTo-Json
+
+          $resp = Invoke-RestMethod -Uri "$ApiBase/cam/polygon_offset.nc" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 60
+          if ([string]::IsNullOrWhiteSpace($resp)) { throw "Empty G-code" }
+
+          if ($resp -notmatch "\bG21\b") { throw "Missing G21" }
+          if ($resp -notmatch "\bG90\b") { throw "Missing G90" }
+          if ($resp -notmatch "\bG17\b") { throw "Missing G17" }
+          if ($resp -notmatch "\bM3\b")  { throw "Missing M3" }
+          if ($resp -notmatch "\bM5\b")  { throw "Missing M5" }
+
+          $arcCount = ([regex]::Matches($resp, '\bG[23]\b')).Count
+          if ($arcCount -le 4) { throw "Arc count too low: $arcCount" }
+
+          Write-Host "N.17 polygon-offset smoke passed with $arcCount arcs."
       
       - name: Test adaptive pocket plan
         run: |

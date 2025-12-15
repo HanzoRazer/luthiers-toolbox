@@ -1,0 +1,73 @@
+{
+  "model": "1959 Les Paul Standard",
+  "source_dxf": "Les Paul CNC Files.dxf",
+  "body_dimensions": {
+    "width_in": 17.33,
+    "height_in": 12.79,
+    "perimeter_in": 52.9,
+    "note": "Body oriented horizontally in DXF (width=length, height=body width)"
+  },
+  "stock": {
+    "thickness_in": 1.75,
+    "material": "mahogany (recommended)"
+  },
+  "operations": [
+    {
+      "op": "OP20",
+      "name": "Neck Pocket Rough",
+      "tool": "T1 10mm",
+      "depth": 0.75
+    },
+    {
+      "op": "OP21",
+      "name": "Pickup Cavity Rough",
+      "tool": "T1 10mm",
+      "depth": 0.75
+    },
+    {
+      "op": "OP22",
+      "name": "Electronics Cavity Rough",
+      "tool": "T1 10mm",
+      "depth": 1.25
+    },
+    {
+      "op": "OP30",
+      "name": "Neck Pocket Finish",
+      "tool": "T2 6mm",
+      "depth": 0.75
+    },
+    {
+      "op": "OP31",
+      "name": "Pickup Cavity Finish",
+      "tool": "T2 6mm",
+      "depth": 0.75
+    },
+    {
+      "op": "OP40",
+      "name": "Wiring Channel",
+      "tool": "T3 3mm",
+      "depth": 0.5
+    },
+    {
+      "op": "OP50",
+      "name": "Body Perimeter",
+      "tool": "T2 6mm",
+      "depth": 1.75,
+      "tabs": 6
+    }
+  ],
+  "layers_mapped": [
+    "Cutout -> Body perimeter",
+    "Neck Mortise -> Neck pocket",
+    "Pickup Cavity -> Humbucker routes",
+    "Electronic Cavities -> Control cavity",
+    "Wiring Channel -> Wire routes"
+  ],
+  "gcode_stats": {
+    "lines": 18394,
+    "cut_distance_in": 1586.1,
+    "estimated_time_min": 10.6,
+    "note": "Time estimate is cutting only, add setup/tool change time"
+  },
+  "machine_target": "TXRX Labs Router / BCAMCNC 2030CA / Mach4"
+}

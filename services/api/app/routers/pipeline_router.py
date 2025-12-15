@@ -89,22 +89,24 @@ Post-Processor Awareness (v1.1):
 """
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Dict, Any, Tuple
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Query
-from pydantic import BaseModel, Field, ValidationError
-import httpx
 import json
 import logging
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
+import httpx
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from pydantic import BaseModel, Field, ValidationError
+
+from ..services.jobint_artifacts import build_jobint_payload
 logger = logging.getLogger(__name__)
 
 # Import utility functions (graceful fallback if not available)
 try:
     from ..util.dxf_preflight import (
-        preflight_dxf_bytes,
         PreflightEngineMissingError,
-        PreflightParseError,
         PreflightGeometryError,
+        PreflightParseError,
+        preflight_dxf_bytes,
     )
 except ImportError:
     # Fallback stubs if preflight not available yet
@@ -342,6 +344,10 @@ class PipelineResponse(BaseModel):
     summary: Dict[str, Any] = Field(
         default_factory=dict,
         description="High-level summary (e.g. last op stats).",
+    )
+    job_int: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Job intelligence artifact payload (loops/plan/moves).",
     )
 
 
@@ -1025,8 +1031,8 @@ async def run_pipeline(
             - Required before adaptive_plan_run (provides loop geometry)
             - Temp file used for DXF parsing (cleaned up automatically)
         """
-        import tempfile
         import os
+        import tempfile
         
         # Write DXF to temp file for extraction
         with tempfile.NamedTemporaryFile(mode='wb', suffix='.dxf', delete=False) as tmp:
@@ -1361,4 +1367,14 @@ async def run_pipeline(
         # Fallback to adaptive stats
         summary = ctx["plan_result"].get("stats", {})
 
-    return PipelineResponse(ops=results, summary=summary)
+    job_payload = build_jobint_payload(
+        {
+            "plan_request": ctx.get("plan"),
+            "adaptive_plan_request": ctx.get("plan"),
+            "moves": (ctx.get("plan_result") or {}).get("moves"),
+            "adaptive_moves": (ctx.get("plan_result") or {}).get("moves"),
+            "moves_path": ctx.get("moves_path"),
+        }
+    )
+
+    return PipelineResponse(ops=results, summary=summary, job_int=job_payload)

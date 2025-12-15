@@ -1,0 +1,150 @@
+{
+  "version": "1.0.0",
+  "generated": "2025-12-13",
+  "total_bodies": 19,
+  "categories": {
+    "electric": 7,
+    "acoustic": 9,
+    "other": 3
+  },
+  "bodies": {
+    "stratocaster": {
+      "name": "Fender Stratocaster",
+      "category": "electric",
+      "dimensions_mm": {"width": 322.3, "height": 458.8},
+      "points": 1417,
+      "dxf": "electric/Stratocaster_body.dxf",
+      "source": "DXF extraction"
+    },
+    "les_paul": {
+      "name": "Gibson Les Paul",
+      "category": "electric",
+      "dimensions_mm": {"width": 383.5, "height": 269.2},
+      "points": 669,
+      "dxf": "electric/LesPaul_body.dxf",
+      "source": "DXF extraction"
+    },
+    "js1000": {
+      "name": "Ibanez JS1000",
+      "category": "electric",
+      "dimensions_mm": {"width": 450.7, "height": 314.6},
+      "points": 345,
+      "dxf": "electric/JS1000_body.dxf",
+      "source": "DXF extraction"
+    },
+    "gibson_explorer": {
+      "name": "Gibson Explorer 1958",
+      "category": "electric",
+      "dimensions_mm": {"width": 556.5, "height": 434.7},
+      "points": 24,
+      "dxf": "electric/gibson_explorer_body.dxf",
+      "source": "DXF extraction"
+    },
+    "flying_v": {
+      "name": "1959 Gibson Flying V",
+      "category": "electric",
+      "dimensions_mm": {"width": 486.0, "height": 607.0},
+      "points": 48,
+      "dxf": "electric/flying_v_body.dxf",
+      "source": "DXF extraction"
+    },
+    "harmony_h44": {
+      "name": "1957 Harmony H44 Stratotone",
+      "category": "electric",
+      "dimensions_mm": {"width": 390.0, "height": 270.0},
+      "points": 120,
+      "dxf": "electric/harmony_h44_body.dxf",
+      "source": "DXF extraction"
+    },
+    "j45": {
+      "name": "Gibson J-45",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 398.5, "height": 504.8},
+      "points": 30,
+      "dxf": "acoustic/J45_body_outline.dxf",
+      "dxf_dense": "acoustic/J45_body_outline_dense.dxf",
+      "has_bulge_data": true,
+      "source": "DXF extraction with arc bulge"
+    },
+    "jumbo": {
+      "name": "Jumbo Acoustic",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 474.2, "height": 385.1},
+      "points": 57,
+      "dxf": "acoustic/Jumbo_body.dxf",
+      "source": "DXF extraction"
+    },
+    "dreadnought": {
+      "name": "Dreadnought",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 404.0, "height": 510.2},
+      "points": 2990,
+      "dxf": "acoustic/dreadnought_body.dxf",
+      "source": "DXF extraction"
+    },
+    "classical": {
+      "name": "Classical Guitar",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 371.0, "height": 490.0},
+      "points": 1156,
+      "dxf": "acoustic/classical_body.dxf",
+      "source": "DXF extraction"
+    },
+    "om_000": {
+      "name": "Orchestra Model (OM/000)",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 397.6, "height": 499.6},
+      "points": 5451,
+      "dxf": "acoustic/om_000_body.dxf",
+      "dxf_clean": "acoustic/orchestra_model_clean.dxf",
+      "source": "DXF extraction"
+    },
+    "gibson_l_00": {
+      "name": "Gibson L-00",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 376.3, "height": 500.0},
+      "points": 2510,
+      "dxf": "acoustic/gibson_l_00_body.dxf",
+      "source": "DXF extraction"
+    },
+    "martin_d28": {
+      "name": "1937 Martin D-28",
+      "category": "acoustic",
+      "dimensions_mm": {"width": 386.0, "height": 507.3},
+      "points": 64,
+      "has_specs": true,
+      "specs_file": "specs/martin_d28_1937.json",
+      "source": "John Arnold technical drawings"
+    },
+    "soprano_ukulele": {
+      "name": "Soprano Ukulele",
+      "category": "other",
+      "dimensions_mm": {"width": 176.9, "height": 200.0},
+      "points": 1572,
+      "dxf": "other/soprano_ukulele_body.dxf",
+      "source": "DXF extraction"
+    },
+    "concert_ukulele": {
+      "name": "Concert Ukulele",
+      "category": "other",
+      "dimensions_mm": {"width": 203.1, "height": 393.7},
+      "points": 14,
+      "dxf": "other/concert_ukulele_body.dxf",
+      "source": "DXF extraction"
+    },
+    "octave_mandolin": {
+      "name": "Octave Mandolin",
+      "category": "other",
+      "dimensions_mm": {"width": 280.0, "height": 350.0},
+      "points": 85,
+      "dxf": "other/octave_mandolin_body.dxf",
+      "source": "DXF extraction"
+    }
+  },
+  "pending": [
+    {"id": "gibson_sg", "reason": "DXF has 4502 points across multiple views"},
+    {"id": "gibson_moderne", "reason": "DXF has 300+ fragmented blocks"},
+    {"id": "red_special", "reason": "DXF has 1300+ fragmented blocks"},
+    {"id": "telemaster", "reason": "Complex multi-view PDF"}
+  ]
+}

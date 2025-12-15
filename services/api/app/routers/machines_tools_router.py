@@ -3,12 +3,16 @@
 Patch N.12 - Per-Machine Tool Tables
 API endpoints for CRUD operations on tool tables with CSV import/export
 """
-from fastapi import APIRouter, HTTPException, Response, UploadFile, File
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-import io, csv, json, os
+import csv
+import io
+import json
+import os
+from typing import Any, Dict, List, Optional
 
-MACHINES_PATH = os.environ.get("TB_MACHINES_PATH", "services/api/app/data/machines.json")
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile
+from pydantic import BaseModel
+
+MACHINES_PATH = os.environ.get("TB_MACHINES_PATH", "app/data/machines.json")
 router = APIRouter(prefix="/machines/tools", tags=["machines", "tools"])
 
 
@@ -35,7 +39,7 @@ def _load() -> Dict[str, Any]:
         return {"machines": []}
 
 
-def _save(obj: Dict[str, Any]):
+def _save(obj: Dict[str, Any]) -> None:
     """Save machines.json file"""
     os.makedirs(os.path.dirname(MACHINES_PATH), exist_ok=True)
     with open(MACHINES_PATH, "w", encoding="utf-8") as f:
@@ -51,7 +55,7 @@ def _find_machine(data, mid: str) -> Optional[Dict[str, Any]]:
 
 
 @router.get("/{mid}", response_model=dict)
-def list_tools(mid: str):
+def list_tools(mid: str) -> Dict[str, Any]:
     """List all tools for a specific machine"""
     d = _load()
     m = _find_machine(d, mid)
@@ -61,7 +65,7 @@ def list_tools(mid: str):
 
 
 @router.put("/{mid}", response_model=dict)
-def upsert_tools(mid: str, tools: List[Tool]):
+def upsert_tools(mid: str, tools: List[Tool]) -> Dict[str, Any]:
     """
     Upsert tools for a machine (merge by T number)
     - Existing tools with same T are replaced
@@ -88,7 +92,7 @@ def upsert_tools(mid: str, tools: List[Tool]):
 
 
 @router.delete("/{mid}/{tnum}", response_model=dict)
-def delete_tool(mid: str, tnum: int):
+def delete_tool(mid: str, tnum: int) -> Dict[str, Any]:
     """Delete a specific tool by T number"""
     d = _load()
     m = _find_machine(d, mid)
@@ -104,7 +108,7 @@ def delete_tool(mid: str, tnum: int):
 
 
 @router.get("/{mid}.csv")
-def export_csv(mid: str):
+def export_csv(mid: str) -> str:
     """Export tool table as CSV"""
     d = _load()
     m = _find_machine(d, mid)

@@ -1,0 +1,152 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "headstock_designer",
+    "category": "headstock_templates",
+    "version": "1.0.0",
+    "description": "Headstock shape templates and tuner layouts for ltb-headstock-designer"
+  },
+  "templates": {
+    "strat_6_inline": {
+      "id": "strat_6_inline",
+      "name": "Stratocaster 6-Inline",
+      "tuner_arrangement": "6_inline",
+      "string_count": 6,
+      "dimensions": {
+        "length_mm": 178,
+        "width_max_mm": 85,
+        "width_nut_mm": 43,
+        "thickness_mm": 15,
+        "angle_deg": 13
+      },
+      "nut_to_first_tuner_mm": 38,
+      "tuner_spacing_mm": 25.4
+    },
+    "tele_6_inline": {
+      "id": "tele_6_inline",
+      "name": "Telecaster 6-Inline",
+      "tuner_arrangement": "6_inline",
+      "string_count": 6,
+      "dimensions": {
+        "length_mm": 165,
+        "width_max_mm": 80,
+        "width_nut_mm": 43,
+        "thickness_mm": 15,
+        "angle_deg": 12
+      },
+      "nut_to_first_tuner_mm": 35,
+      "tuner_spacing_mm": 25.0
+    },
+    "lp_3x3": {
+      "id": "lp_3x3",
+      "name": "Les Paul 3+3",
+      "tuner_arrangement": "3x3",
+      "string_count": 6,
+      "dimensions": {
+        "length_mm": 190,
+        "width_max_mm": 115,
+        "width_nut_mm": 43,
+        "thickness_mm": 15,
+        "angle_deg": 17
+      },
+      "nut_to_first_tuner_mm": 45,
+      "tuner_spacing_bass_mm": 35,
+      "tuner_spacing_treble_mm": 35
+    },
+    "classical_slotted": {
+      "id": "classical_slotted",
+      "name": "Classical Slotted",
+      "tuner_arrangement": "slotted_3x3",
+      "string_count": 6,
+      "dimensions": {
+        "length_mm": 200,
+        "width_max_mm": 85,
+        "width_nut_mm": 52,
+        "thickness_mm": 19,
+        "angle_deg": 14,
+        "slot_length_mm": 75,
+        "slot_width_mm": 15
+      },
+      "nut_to_slot_mm": 20,
+      "roller_spacing_mm": 18
+    },
+    "reverse_inline": {
+      "id": "reverse_inline",
+      "name": "Reverse 6-Inline",
+      "tuner_arrangement": "6_inline_reverse",
+      "string_count": 6,
+      "dimensions": {
+        "length_mm": 178,
+        "width_max_mm": 85,
+        "width_nut_mm": 43,
+        "thickness_mm": 15,
+        "angle_deg": 13
+      },
+      "nut_to_first_tuner_mm": 38,
+      "tuner_spacing_mm": 25.4,
+      "notes": "Bass strings on short post side"
+    },
+    "4_inline_bass": {
+      "id": "4_inline_bass",
+      "name": "Bass 4-Inline",
+      "tuner_arrangement": "4_inline",
+      "string_count": 4,
+      "dimensions": {
+        "length_mm": 210,
+        "width_max_mm": 100,
+        "width_nut_mm": 42,
+        "thickness_mm": 18,
+        "angle_deg": 11
+      },
+      "nut_to_first_tuner_mm": 50,
+      "tuner_spacing_mm": 40
+    }
+  },
+  "tuner_layouts": {
+    "vintage_kluson": {
+      "id": "vintage_kluson",
+      "name": "Vintage Kluson Style",
+      "mounting": "single_screw",
+      "hole_diameter_mm": 8.8,
+      "bushing_diameter_mm": 10.0,
+      "screw_offset_mm": 15,
+      "button_length_mm": 28
+    },
+    "modern_locking": {
+      "id": "modern_locking",
+      "name": "Modern Locking",
+      "mounting": "two_pin",
+      "hole_diameter_mm": 10.0,
+      "bushing_diameter_mm": 13.0,
+      "pin_spacing_mm": 25.4,
+      "pin_diameter_mm": 2.0,
+      "button_length_mm": 45
+    },
+    "grover_rotomatic": {
+      "id": "grover_rotomatic",
+      "name": "Grover Rotomatic",
+      "mounting": "single_screw",
+      "hole_diameter_mm": 10.0,
+      "bushing_diameter_mm": 13.5,
+      "screw_offset_mm": 18,
+      "button_length_mm": 42
+    },
+    "classical_roller": {
+      "id": "classical_roller",
+      "name": "Classical Roller",
+      "mounting": "barrel",
+      "barrel_diameter_mm": 10.0,
+      "plate_width_mm": 35,
+      "plate_length_mm": 85,
+      "mounting_holes": 3
+    },
+    "hipshot_ultralite": {
+      "id": "hipshot_ultralite",
+      "name": "Hipshot Ultralite (Bass)",
+      "mounting": "two_screw",
+      "hole_diameter_mm": 16.7,
+      "screw_spacing_mm": 30,
+      "button_length_mm": 55
+    }
+  }
+}

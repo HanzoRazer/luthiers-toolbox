@@ -1,0 +1,15 @@
+{
+  "material": "veneer",
+  "presets": {
+    "slitting_3in:roughing": {
+      "rpm": 3200,
+      "feed_mm_min": 600,
+      "stepdown_mm": 1.5,
+      "stepover_mm": 0.01,
+      "strategy": "contour",
+      "finish_quality": "rough",
+      "max_chipload_mm": 0.04,
+      "recommended_chipload_mm": 0.02
+    }
+  }
+}

@@ -1,8 +1,9 @@
 
+import re
+from typing import Any, Dict, List, Optional, Tuple
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Tuple, Dict, Any
-import re
 
 try:
     import pyclipper
@@ -11,9 +12,10 @@ except Exception:
     HAVE_PYCLIPPER = False
 
 try:
-    from shapely.geometry import Polygon, LineString
+    from shapely.affinity import rotate as shp_rotate
+    from shapely.affinity import translate as shp_translate
+    from shapely.geometry import LineString, Polygon
     from shapely.ops import unary_union
-    from shapely.affinity import rotate as shp_rotate, translate as shp_translate
     HAVE_SHAPELY = True
 except Exception:
     HAVE_SHAPELY = False
@@ -50,7 +52,7 @@ def _parse_svg_polylines(svg: str) -> List[List[Tuple[float,float]]]:
         if pts: pl.append(pts)
     return pl
 
-def _polylines_to_svg(polylines: List[List[Tuple[float,float]]], stroke="royalblue", stroke_width=0.6) -> str:
+def _polylines_to_svg(polylines: List[List[Tuple[float,float]]], stroke: str="royalblue", stroke_width: float=0.6) -> str:
     xs, ys = [], []
     for poly in polylines:
         for x,y in poly:
@@ -108,7 +110,7 @@ def preview_infill(req: PreviewReq) -> Dict[str, Any]:
             for g in geoms:
                 coords = list(g.coords)
                 if len(coords) >= 2:
-                    from shapely.affinity import translate, rotate
+                    from shapely.affinity import rotate, translate
                     ls = LineString(coords)
                     ls = translate(ls, xoff=-tx, yoff=-ty)
                     ls = rotate(ls, angle, origin=(0,0), use_radians=False)

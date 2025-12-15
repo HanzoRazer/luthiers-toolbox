@@ -4,22 +4,26 @@
 This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 - **Vue 3 + Vite** frontend (TypeScript) in `packages/client/` for guitar design visualization
 - **FastAPI** backend (Python 3.11+) in `services/api/` for DXF/SVG export, geometry processing, and multi-post CNC workflows
-- **Multi-post processor support**: GRBL, Mach4, LinuxCNC, PathPilot, MASSO with JSON configuration files
+- **Multi-post processor support**: GRBL, Mach4, LinuxCNC, PathPilot, MASSO, Haas, Marlin with JSON configuration files
 - **Unit conversion**: Bidirectional mm ↔ inch geometry scaling (client + server)
+- **Blueprint Import** pipeline in `services/blueprint-import/` for image-based guitar template extraction
 - **Smart Guitar Project** (separate) for IoT/embedded lutherie with Raspberry Pi 5
 
 **Core Mission**: Enable luthiers to design guitar components, export CAM-ready files (DXF R12 + SVG + G-code), and support multiple CNC platforms through a unified web interface.
 
-**Repository Structure**: Mono-repo with active development in `services/api/`, `packages/client/`, and `packages/shared/`. Legacy MVP builds and CAD archives in `Luthiers Tool Box/` are reference implementations only.
+**Repository Structure**: Mono-repo with active development in `services/api/`, `packages/client/`, and `packages/shared/`. Legacy MVP builds and CAD archives in `Luthiers Tool Box/`, `Guitar Design HTML app/`, and `Lutherier Project/` are **reference implementations only - DO NOT modify these directories**.
 
 ---
 
 ## Architecture & Key Patterns
 
 ### 1. **Multi-Post CAM Export System**
-- **5 CNC post-processors** with JSON configs in `services/api/app/data/posts/`:
-  - `grbl.json`, `mach4.json`, `linuxcnc.json`, `pathpilot.json`, `masso.json`
+- **7+ CNC post-processors** with JSON configs in `services/api/app/data/posts/`:
+  - Core: `grbl.json`, `mach4.json`, `linuxcnc.json`, `pathpilot.json`, `masso.json`
+  - Industrial: `haas.json` (R-mode arcs, G4 S dwell in seconds)
+  - Hobby: `marlin.json` (3D printer CNC conversions)
   - Each defines `header` and `footer` arrays for machine-specific G-code wrapping
+- **Post presets**: `services/api/app/utils/post_presets.py` provides machine-specific arc modes and dwell syntax
 - **Geometry format**: Canonical JSON with `paths` array of `line` and `arc` segments
 - **Units**: Bidirectional mm ↔ inch conversion via `services/api/app/util/units.py`
 - **Export endpoints**:
@@ -60,22 +64,30 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 - **Closed paths**: CNC operations require closed LWPolylines (use cleaning scripts for legacy files)
 
 ### 5. **Adaptive Pocketing Engine (Module L)**
-- **Current Version**: L.1 (Robust Offsetting + Island Subtraction)
+- **Current Version**: L.3 (Trochoidal Insertion + Jerk-Aware Time)
 - **Core Algorithm**: Pyclipper-based polygon offsetting with integer-safe operations
-- **Island Handling**: Automatic keepout zones around holes/islands
+- **Island Handling**: Automatic keepout zones around holes/islands (L.1)
 - **Smoothing**: Rounded joins with configurable arc tolerance (0.05-1.0 mm)
+- **True Spiral**: Nearest-point ring stitching for continuous toolpaths (L.2)
+- **Adaptive Stepover**: Curvature-based respacing for uniform engagement (L.2)
+- **Trochoids**: G2/G3 loop insertion in high-engagement zones (L.3)
+- **Jerk-Aware Time**: S-curve acceleration model for realistic estimates (L.3)
 - **API Endpoints**:
   - `/api/cam/pocket/adaptive/plan` – Generate toolpath from boundary loops
   - `/api/cam/pocket/adaptive/gcode` – Export with post-processor headers
   - `/api/cam/pocket/adaptive/sim` – Simulate without full G-code generation
+  - `/api/cam/pocket/adaptive/batch_export` – Multi-post bundle generation
 - **Key Files**:
   - `services/api/app/cam/adaptive_core_l1.py` – L.1 robust offsetting engine
-  - `services/api/app/cam/feedtime.py` – Time estimation utilities
+  - `services/api/app/cam/adaptive_core_l2.py` – L.2 spiralizer + adaptive features
+  - `services/api/app/cam/trochoid_l3.py` – L.3 trochoidal insertion
+  - `services/api/app/cam/feedtime_l3.py` – L.3 jerk-aware time estimator
+  - `services/api/app/cam/feedtime.py` – Classic time estimation utilities
   - `services/api/app/cam/stock_ops.py` – Material removal calculations
   - `services/api/app/routers/adaptive_router.py` – FastAPI endpoints
   - `packages/client/src/components/AdaptivePocketLab.vue` – Interactive UI
-- **Testing**: `test_adaptive_l1.ps1` for island handling validation
-- **Documentation**: See [ADAPTIVE_POCKETING_MODULE_L.md](../ADAPTIVE_POCKETING_MODULE_L.md) and [PATCH_L1_ROBUST_OFFSETTING.md](../PATCH_L1_ROBUST_OFFSETTING.md)
+- **Testing**: `test_adaptive_l1.ps1`, `test_adaptive_l2.ps1` for validation
+- **Documentation**: See [ADAPTIVE_POCKETING_MODULE_L.md](../ADAPTIVE_POCKETING_MODULE_L.md), [PATCH_L1_ROBUST_OFFSETTING.md](../PATCH_L1_ROBUST_OFFSETTING.md), [PATCH_L2_MERGED_SUMMARY.md](../PATCH_L2_MERGED_SUMMARY.md), and [PATCH_L3_SUMMARY.md](../PATCH_L3_SUMMARY.md)
 
 **Example**: Pocket with island
 ```json
@@ -115,6 +127,25 @@ npm run dev  # Runs on http://localhost:5173 with /api proxy
 docker compose up --build  # Runs API:8000, Client:8080, Proxy:8088
 ```
 
+### **Testing Strategy**
+The project uses **PowerShell test scripts** for Windows-first development:
+```powershell
+# Test patterns: test_<feature>.ps1
+.\test_adaptive_l1.ps1      # L.1 island handling
+.\test_adaptive_l2.ps1      # L.2 spiralizer + HUD overlays
+.\test_api.ps1              # Core API smoke tests
+.\smoke_v161_helical.ps1    # Helical ramping smoke tests
+```
+
+**Key testing conventions:**
+- Test scripts make direct HTTP calls to `http://localhost:8000` (server must be running)
+- Use `Invoke-RestMethod` for JSON APIs, `curl` for file downloads
+- Validate response structure, statistics, and G-code metadata
+- Check for specific patterns: `G21` (mm), `G20` (inch), `(POST=<id>` metadata comments
+- Each test script is self-contained and reports ✓/✗ with colored output
+
+**CI/CD equivalents**: `.github/workflows/*.yml` files run same tests in GitHub Actions
+
 ### **Testing Multi-Post Exports**
 ```powershell
 # Test single-post bundle
@@ -142,8 +173,25 @@ unzip -p multi_bundle.zip program_GRBL.nc | head -n 10  # Check for G20, (POST=G
   "footer": ["M30", "(End of program)"]
 }
 ```
-2. Test with export endpoint using `post_id="<name>"`
-3. Add to CI test in `.github/workflows/proxy_parity.yml`
+2. (Optional) Add post preset in `services/api/app/utils/post_presets.py` for arc mode/dwell syntax
+3. Test with export endpoint using `post_id="<name>"`
+4. Add to CI test in `.github/workflows/proxy_parity.yml`
+
+### **Module Versioning Pattern**
+The project uses **patch-based versioning** for major features:
+- **L-series**: Adaptive pocketing (L.1 → L.2 → L.3)
+- **M-series**: Machine profiles and optimization (M.1 → M.2 → M.3 → M.4)
+- **N-series**: Post-processor enhancements (N.0 → N.18)
+- **Patch letters**: Single-file fixes (Patch A-D, Patch W)
+
+**Key pattern**: Each version builds on previous, never breaks backward compatibility. Router code uses versioned imports:
+```python
+from ..cam.adaptive_core_l3 import plan_adaptive_l3  # Latest
+from ..cam.adaptive_core_l2 import plan_adaptive_l2  # Still available
+from ..cam.adaptive_core_l1 import plan_adaptive_l1  # Still available
+```
+
+**Documentation**: Each module has 3 docs - `MODULE_X.md` (overview), `PATCH_X_SUMMARY.md` (implementation), `PATCH_X_QUICKREF.md` (quick reference)
 
 ---
 
@@ -165,6 +213,40 @@ def export_bundle_multi(body: ExportBundleMultiIn):
     geom_src = body.geometry.dict()
     geom = scale_geom_units(geom_src, body.target_units or body.geometry.units)
     # ... export using converted geometry
+```
+
+### **Router Registration Pattern**
+Routers are dynamically imported in `services/api/app/main.py` with try/except for optional features:
+```python
+# Core features (always available)
+from .routers.adaptive_router import router as adaptive_router
+app.include_router(adaptive_router, prefix="/cam/pocket/adaptive", tags=["CAM"])
+
+# Optional features (graceful degradation)
+try:
+    from .routers.cam_helical_v161_router import router as cam_helical_v161_router
+    app.include_router(cam_helical_v161_router, prefix="/cam/toolpath", tags=["CAM"])
+except Exception as e:
+    print(f"Warning: Helical router not available: {e}")
+    cam_helical_v161_router = None
+```
+**Why**: Allows progressive feature rollout without breaking existing deployments.
+
+### **Error Handling Pattern**
+```python
+# Validation errors → 400 Bad Request
+if tool_d <= 0:
+    raise HTTPException(status_code=400, detail="Tool diameter must be positive")
+
+# Conservative fallbacks (don't crash on bad config)
+try:
+    smoothing = max(0.05, min(1.0, body.smoothing))
+except Exception:
+    smoothing = 0.3  # Safe default
+
+# Geometry validation with detailed messages
+if not loops or len(loops) < 1:
+    raise HTTPException(400, detail="At least one boundary loop required")
 ```
 
 ### **Vue Component Structure**
@@ -219,6 +301,8 @@ The toolbox supports **5 CAM platforms** (current placeholders):
 - **LinuxCNC (EMC2)**: RS274/NGC G-code dialect (placeholder, post-processor TBD)
 - **Masso Controller**: Masso G3 G-code variant (placeholder, adapter script TBD)
 
+**CRITICAL**: CAM files in `Lutherier Project*/` contain production tooling data (feeds, speeds, tool library). DO NOT modify unless updating actual shop equipment specs.
+
 ### **Key Python Libraries**
 - **ezdxf** – DXF file read/write (R12 format)
 - **shapely** – Geometry operations (union, intersect, polygon processing)
@@ -240,18 +324,35 @@ The toolbox supports **5 CAM platforms** (current placeholders):
 | `services/api/app/main.py` | FastAPI application entry point, router registration |
 | `services/api/app/routers/geometry_router.py` | Geometry import/export, parity checking, multi-post bundles |
 | `services/api/app/routers/tooling_router.py` | Post-processor listing and configuration management |
+| `services/api/app/routers/adaptive_router.py` | Adaptive pocketing endpoints (Module L) |
+| `services/api/app/routers/machine_router.py` | Machine profile CRUD (Module M) |
+| `services/api/app/routers/cam_helical_v161_router.py` | Helical ramping endpoint (Art Studio v16.1) |
+| `services/api/app/cam/adaptive_core_l*.py` | Adaptive pocketing versions (L.1, L.2, L.3) |
+| `services/api/app/cam/trochoid_l3.py` | Trochoidal insertion logic (L.3) |
+| `services/api/app/cam/feedtime_l3.py` | Jerk-aware time estimation (L.3) |
 | `services/api/app/util/units.py` | Unit conversion utilities (mm ↔ inch) |
 | `services/api/app/util/exporters.py` | DXF R12 and SVG export functions |
+| `services/api/app/utils/post_presets.py` | Post-processor presets (arc modes, dwell syntax) |
 | `services/api/app/data/posts/*.json` | Post-processor configurations (GRBL, Mach4, etc.) |
 | `packages/client/src/components/GeometryOverlay.vue` | Main geometry UI with export buttons and post chooser |
 | `packages/client/src/components/PostChooser.vue` | Multi-select post-processor picker with localStorage persistence |
 | `packages/client/src/components/PostPreviewDrawer.vue` | Side drawer for previewing post headers/footers and NC output |
 | `packages/client/src/components/GeometryUpload.vue` | DXF/SVG file import component |
+| `packages/client/src/components/AdaptivePocketLab.vue` | Interactive adaptive pocketing UI (Module L) |
 | `.github/workflows/proxy_parity.yml` | CI pipeline testing multi-post exports |
+| `.github/workflows/adaptive_pocket.yml` | CI tests for adaptive pocketing (Module L) |
+| `.github/workflows/helical_badges.yml` | CI tests for helical ramping (v16.1) |
 | `docker-compose.yml` | Full stack deployment (API:8000, Client:8080, Proxy:8088) |
 | `docker/api/Dockerfile` | FastAPI container build |
 | `docker/client/Dockerfile` | Vue client container build |
 | `docker/proxy/Dockerfile` | Nginx reverse proxy configuration |
+| `test_adaptive_l1.ps1`, `test_adaptive_l2.ps1` | PowerShell test scripts for Module L |
+| `smoke_v161_helical.ps1` | Smoke tests for helical ramping |
+| `ADAPTIVE_POCKETING_MODULE_L.md` | Module L overview |
+| `PATCH_L*_SUMMARY.md` | Implementation docs for L.1, L.2, L.3 |
+| `MACHINE_PROFILES_MODULE_M.md` | Module M overview (machine profiles) |
+| `HELICAL_POST_PRESETS.md` | Post preset system documentation |
+| `CODING_POLICY.md` | Comprehensive coding standards and patterns |
 
 ---
 

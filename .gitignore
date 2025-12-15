@@ -1,11 +1,365 @@
-# Ignore all archive folders and extracted content
+# ==========================================
+# Luthier's Tool Box - Comprehensive .gitignore
+# Updated: 2025-12-14
+# ==========================================
+
+# ------------------------------------------
+# Build Artifacts & Coverage
+# ------------------------------------------
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+coverage.json
+coverage.xml
+htmlcov/
+*.egg-info/
+dist/
+build/
+*.whl
+
+# ------------------------------------------
+# IDE & Editor
+# ------------------------------------------
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ------------------------------------------
+# Node.js
+# ------------------------------------------
+node_modules/
+.npm/
+.pnpm-store/
+
+# ------------------------------------------
+# Virtual Environments
+# ------------------------------------------
+.venv/
+venv/
+env/
+
+# ------------------------------------------
+# Temporary Files
+# ------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.backup
+temp_*/
+tmp/
+
+# ------------------------------------------
+# Archive & Extracted Content
+# ------------------------------------------
 **/Luthier*Tool*Box*/
 **/ToolBox_*/
 **/*_extracted/
 **/*.zip
-**/.venv/
-**/__pycache__/
-**/node_modules/
-*.pyc
+
+# ------------------------------------------
+# Database Files (Local Dev)
+# ------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+services/api/*.db
+services/api/data/backups/
+
+# Data Registry - User SQLite databases (per-tenant isolation)
+services/api/app/data_registry/user/*.sqlite
+services/api/app/data_registry/user/*.db
+
+# ------------------------------------------
+# Log Files
+# ------------------------------------------
 *.log
-.DS_Store
+services/api/app/data/*.jsonl
+
+# ------------------------------------------
+# Test Outputs
+# ------------------------------------------
+test_output.json
+test_*.dxf
+test_*.svg
+test_*.nc
+test_log.txt
+risk_bucket_test.csv
+services/api/tests/test_log.txt
+
+# ------------------------------------------
+# Export Artifacts
+# ------------------------------------------
+test_program.nc
+test_sample.nc
+
+# ------------------------------------------
+# Legacy/Archive Directories (DO NOT TRACK)
+# ------------------------------------------
+__ARCHIVE__/
+Archtop/
+Stratocaster/
+client/
+server/
+/data/
+migrations/
+templates/
+/tools/
+assets_staging/
+blueprint-reader/
+guitar_tap/
+"Guitar Design HTML app"/
+Guitar Design HTML app/
+"Feature_N17_Polygon_Offset_Arc (1)"/
+Feature_N17_Polygon_Offset_Arc*/
+"Lutherier Project"/
+Lutherier Project/
+files/
+"files (*/
+phantom_cleanup_patch/
+security_patch_dxf/
+temp_extract_*/
+temp_patch/
+vibe-blueprintanalyzer-main/
+/Calculators/
+
+# ------------------------------------------
+# Product Segmentation Stubs (DO NOT TRACK)
+# ------------------------------------------
+ltb-bridge-designer/
+ltb-enterprise/
+ltb-express/
+ltb-fingerboard-designer/
+ltb-headstock-designer/
+ltb-neck-designer/
+ltb-parametric-guitar/
+ltb-pro/
+ltb-test-dummy/
+
+# ------------------------------------------
+# Vendor Tool Databases (Large Files)
+# ------------------------------------------
+Bits-Bits-CarveCo-Complete-V1.2/
+Myers-Woodshop-Set-CarveCo-V1.2/
+Two-Moose-Set-CarveCo-V1.2/
+MUST-Be-UNZIPPED-IDC-Woodcraft-Carveco-Tool-Database/
+*.tool
+*.vtdb
+Amana-Tool-Vectric*.csv
+Amana-Tool-Vectric*.txt
+IDC-Woodcraft-*.csv
+
+# ------------------------------------------
+# Integration Patches (One-time use)
+# ------------------------------------------
+Integration_Patch_WiringFinish_v1/
+Integration_Patch_WiringFinish_v2/
+WiringWorkbench_Docs_Patch_v1/
+WiringWorkbench_Enhancements_v1/
+Feature_v16_1_Helical_Ramping/
+README_Community_Patch/
+README_Community_Patch_Additions/
+CAM_Roadmap_AlphaNightingale/
+
+# ------------------------------------------
+# PDF Documentation (External/Vendor)
+# ------------------------------------------
+*.pdf
+!docs/**/*.pdf
+
+# ------------------------------------------
+# Large Data Files
+# ------------------------------------------
+*.xlsx
+*.f3d
+ExportedParameters*.csv
+FenderNeckParameters.xlsx
+Parametric_Fender_neck_v2.f3d
+IDCWoodcraftFusion360Library.json
+Starter_tool_library.json
+Updated_material_library.json
+Updated_tool_library.json
+
+# ------------------------------------------
+# Config Backups
+# ------------------------------------------
+*_backup_*.py
+*_backup_*.json
+services/api/app/main_backup_*.py
+
+# ------------------------------------------
+# CI/Local Only
+# ------------------------------------------
+ci/
+.husky/
+.eslint-rules/
+
+# ------------------------------------------
+# Root-Level Extracted Code (Deprecated)
+# These are extractions from services/api/app/
+# The canonical versions live in services/api/app/
+# ------------------------------------------
+ai_core_generator_constraints.py
+ai_graphics_schemas.py
+ai_graphics_schemas_ai_schemas.py
+ai_graphics_sessions.py
+ai_rmos_generator_snapshot.py
+art_studio___init__.py
+Art_studio_calculators_service.py
+art_studio_constraint_search.py
+art_studio_directional_workflow.py
+art_studio_rmos_logs.py
+art_studio_rmos_logs_2.py
+art_studio_test_rmos_mode_preview.py
+calculators_bracing_calc.py
+calculators_router.py
+calculators_saw_bite_load.py
+calculators_saw_deflection.py
+calculators_saw_heat.py
+calculators_saw_kickback.py
+calculators_saw_rimspeed.py
+calculators_service.py
+calculators_service_2.py
+compare_automation_router.py
+constraint_profiles_ai.py
+instrument_geometry__init__.py
+instrument_geometry_dxf_registry.py
+instrument_geometry_neck_taper_aper_math.py
+instrument_geometry_test_instrument_geometry_imports.py
+mode_preview_routes.py
+rmos__init__.py
+rmos__init__2.py
+rmos_ai_analytics.py
+rmos_api_contracts.py
+rmos_api_routes.py
+rmos_feasibility.py
+rmos_feasibility_2.py
+rmos_feasibility_scorer.py
+rmos_logging_ai.py
+rmos_logs_helper.py
+rmos_presets.py
+rmos_profile_history.py
+rosette_feasibility_scorer.py
+routers_ai_cam_router.py
+routers_instrument_router.py
+saw_calculators_service.py
+saw_lab_debug_schemas.py
+saw_lab_path_planner.py
+Saw_Planner_Config.py
+/schemas_logs_ai.py
+services_api_pp_toolpath_vcarve_toolpath.py
+toolpath_geometry_engine.py
+toolpath_geometry_engine_2.py
+toolpath_geometry_selector_engine.py
+toolpath_saw_engine.py
+toolpath_service.py
+toolpath_vcarve_toolpath.py
+upgradecalculators_service.py
+tests_instrument_geomety_test_instrument_geometry_imports.py
+
+# ------------------------------------------
+# Root-Level Vue/TS Extractions (Deprecated)
+# ------------------------------------------
+art_show_types_rosette.ts
+art_studio_types_rmos.ts
+art_Studio_toast_Store.ts
+Rmos_Ai_Ops_Dashboard.vue
+Rmos_Ai_Snapshot_Inspector.vue
+Rosette_Ai_Suggestion_Panel.vue
+src_stores_useArtStudioEngine.ts
+
+# ------------------------------------------
+# Misc Config/Data Files
+# ------------------------------------------
+files.json
+long_filenames_report.csv
+longpaths.csv
+lpmd-inventory.yml
+lpmd_python_inventory.txt
+[TITLE].inp
+openapi.json
+rmos_pytest.ini
+RMOS_2_0_ClassDiagram.puml
+
+# ------------------------------------------
+# HTML Test Files
+# ------------------------------------------
+test-viewer.html
+svg-viewer.html
+index.html
+Altitude vs Modal frequencies_.html
+
+# ------------------------------------------
+# Text Dumps & Conversation Logs
+# ------------------------------------------
+*.txt
+!requirements.txt
+!README.txt
+!services/api/requirements.txt
+
+# ------------------------------------------
+# JSON Data Files (Root Level)
+# ------------------------------------------
+/files.json
+/test_bridge_payload.json
+/test_output.json
+/instrument_geometry_instrument_model_registry.json
+/docs/rmos_bundles.json
+
+# ------------------------------------------
+# YAML Config (Root Level)
+# ------------------------------------------
+/ai_rmos_constraint_profiles.yaml
+/rmos_ai_constraint_profiles.yaml
+
+# ------------------------------------------
+# DXF Test Files (Root Level)
+# ------------------------------------------
+/test_bridge3.dxf
+/test_export.dxf
+/test_export.svg
+/tmp_bridge.dxf
+/tmp_bridge.json
+/Radius_Arc_*.svg
+
+# ------------------------------------------
+# Wave File Tree Dumps
+# ------------------------------------------
+WAVE15_18_FILE_TREE.txt
+
+# ------------------------------------------
+# Files with Spaces/Special Characters (Root Level)
+# ------------------------------------------
+files\ (*/
+Saw\ Lab\ */
+Soprano\ Ukuele*/
+SainSmart\ */
+OM\ Project*/
+Golden\ Path*/
+Fusion360\ Tool\ Database*/
+Fusion\ Le*/
+Carveco\ Tool\ Database*/
+Altitude\ vs\ Modal*/
+RMOS\ 2.0*/
+RMOS_\ 2.0*/
+rmos_api_contracts_2\ .py
+
+# ------------------------------------------
+# Docx Files (Root Level)
+# ------------------------------------------
+*.docx
+
+# ------------------------------------------
+# Patch Files
+# ------------------------------------------
+*.patch
+
+# ------------------------------------------
+# XML Theme Files
+# ------------------------------------------
+G-CODE_*.xml

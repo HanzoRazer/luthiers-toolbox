@@ -164,8 +164,21 @@
               <span class="unit">mm</span>
             </div>
 
-            <div class="info-banner warning">
-              ⚠️ Fan-fret CAM generation not yet implemented (Wave 16 roadmap)
+            <div class="input-group">
+              <label>Perpendicular Fret</label>
+              <input
+                type="number"
+                v-model.number="store.perpendicularFret"
+                step="1"
+                min="0"
+                :max="store.selectedModel.num_frets"
+                class="number-input"
+              />
+              <span class="unit">fret #</span>
+            </div>
+
+            <div class="info-banner info">
+              ℹ️ Fan-fret CAM with per-fret risk analysis (Wave 19)
             </div>
           </div>
         </section>
@@ -174,7 +187,7 @@
         <section class="control-section">
           <button
             @click="handleGeneratePreview"
-            :disabled="store.isLoadingPreview || store.fanFretEnabled"
+            :disabled="store.isLoadingPreview"
             class="btn-primary btn-large"
           >
             <span v-if="store.isLoadingPreview">⏳ Generating...</span>

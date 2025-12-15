@@ -1,0 +1,144 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "neck_designer",
+    "category": "neck_templates",
+    "version": "1.0.0",
+    "description": "Advanced neck profile templates for ltb-neck-designer"
+  },
+  "templates": {
+    "vintage_50s_v": {
+      "id": "vintage_50s_v",
+      "name": "Vintage 50s V",
+      "era": "1950s",
+      "profile_type": "v_hard",
+      "dimensions": {
+        "nut_width_mm": 42.9,
+        "depth_1st_mm": 23.0,
+        "depth_12th_mm": 25.0,
+        "width_12th_mm": 52.0,
+        "shoulder_angle_deg": 35
+      },
+      "taper": {
+        "type": "linear",
+        "rate_mm_per_fret": 0.75
+      },
+      "radius_mm": 184
+    },
+    "modern_c": {
+      "id": "modern_c",
+      "name": "Modern C",
+      "era": "2000s+",
+      "profile_type": "c_standard",
+      "dimensions": {
+        "nut_width_mm": 42.0,
+        "depth_1st_mm": 20.5,
+        "depth_12th_mm": 22.5,
+        "width_12th_mm": 52.0,
+        "shoulder_angle_deg": 40
+      },
+      "taper": {
+        "type": "linear",
+        "rate_mm_per_fret": 0.8
+      },
+      "radius_mm": 241
+    },
+    "slim_shred": {
+      "id": "slim_shred",
+      "name": "Slim Shred",
+      "era": "1980s+",
+      "profile_type": "d_shape",
+      "dimensions": {
+        "nut_width_mm": 43.0,
+        "depth_1st_mm": 19.0,
+        "depth_12th_mm": 21.0,
+        "width_12th_mm": 55.0,
+        "shoulder_angle_deg": 45
+      },
+      "taper": {
+        "type": "linear",
+        "rate_mm_per_fret": 1.0
+      },
+      "radius_mm": 305
+    },
+    "classical_flat": {
+      "id": "classical_flat",
+      "name": "Classical Flat",
+      "era": "traditional",
+      "profile_type": "classical_flat",
+      "dimensions": {
+        "nut_width_mm": 52.0,
+        "depth_1st_mm": 19.0,
+        "depth_12th_mm": 20.5,
+        "width_12th_mm": 62.0,
+        "shoulder_angle_deg": 50
+      },
+      "taper": {
+        "type": "linear",
+        "rate_mm_per_fret": 0.5
+      },
+      "radius_mm": 0
+    },
+    "asymmetric_ergo": {
+      "id": "asymmetric_ergo",
+      "name": "Asymmetric Ergonomic",
+      "era": "2010s+",
+      "profile_type": "asymmetric_modern",
+      "dimensions": {
+        "nut_width_mm": 43.0,
+        "depth_1st_mm": 21.0,
+        "depth_12th_mm": 23.0,
+        "width_12th_mm": 54.0,
+        "bass_shoulder_angle_deg": 35,
+        "treble_shoulder_angle_deg": 45
+      },
+      "taper": {
+        "type": "compound",
+        "bass_rate_mm_per_fret": 0.7,
+        "treble_rate_mm_per_fret": 0.9
+      },
+      "radius_mm": 305
+    }
+  },
+  "truss_specs": {
+    "single_action": {
+      "id": "single_action",
+      "name": "Single Action (Vintage)",
+      "type": "compression",
+      "channel_width_mm": 6.4,
+      "channel_depth_mm": 9.5,
+      "adjustment_end": "headstock",
+      "relief_range_mm": {"min": 0, "max": 0.5},
+      "notes": "Traditional Fender style, tightening adds relief"
+    },
+    "dual_action": {
+      "id": "dual_action",
+      "name": "Dual Action (Modern)",
+      "type": "bi_directional",
+      "channel_width_mm": 9.5,
+      "channel_depth_mm": 12.7,
+      "adjustment_end": "either",
+      "relief_range_mm": {"min": -0.3, "max": 0.5},
+      "notes": "Can add or remove relief, more adjustment range"
+    },
+    "carbon_fiber": {
+      "id": "carbon_fiber",
+      "name": "Carbon Fiber Reinforcement",
+      "type": "non_adjustable",
+      "channel_width_mm": 6.0,
+      "channel_depth_mm": 3.0,
+      "quantity": 2,
+      "notes": "Stiffening bars, used alongside truss rod or alone in classical"
+    },
+    "spoke_wheel": {
+      "id": "spoke_wheel",
+      "name": "Spoke Wheel (Body End)",
+      "type": "bi_directional",
+      "channel_width_mm": 9.5,
+      "channel_depth_mm": 12.7,
+      "adjustment_end": "body",
+      "relief_range_mm": {"min": -0.3, "max": 0.5},
+      "notes": "Adjust at body end without removing strings"
+    }
+  }
+}

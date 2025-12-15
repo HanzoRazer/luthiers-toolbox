@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "tier": "edition",
+    "edition": "pro",
+    "category": "cam_presets",
+    "version": "1.0.0",
+    "description": "Pre-configured CAM operation recipes for common guitar building tasks"
+  },
+  "presets": {
+    "body_rough_alder": {
+      "id": "body_rough_alder",
+      "name": "Body Roughing - Alder",
+      "description": "Aggressive roughing for alder guitar bodies",
+      "operation": "adaptive_pocket",
+      "material": "alder",
+      "tool_recommendation": "flat_6mm_2f",
+      "parameters": {
+        "stepover_percent": 40,
+        "stepdown_mm": 6,
+        "feed_mm_min": 4000,
+        "plunge_mm_min": 1200,
+        "spindle_rpm": 18000,
+        "ramp_angle_deg": 3,
+        "helical_entry": true
+      },
+      "safety_margins": {
+        "stock_to_leave_mm": 0.5,
+        "minimum_tool_engagement": 0.1
+      }
+    },
+    "body_finish_alder": {
+      "id": "body_finish_alder",
+      "name": "Body Finishing - Alder",
+      "description": "Final profile pass for alder bodies",
+      "operation": "profile",
+      "material": "alder",
+      "tool_recommendation": "downcut_6mm_2f",
+      "parameters": {
+        "stepover_percent": 10,
+        "stepdown_mm": 3,
+        "feed_mm_min": 2500,
+        "plunge_mm_min": 800,
+        "spindle_rpm": 18000,
+        "climb_milling": true
+      },
+      "safety_margins": {
+        "stock_to_leave_mm": 0,
+        "tab_width_mm": 8,
+        "tab_height_mm": 3
+      }
+    },
+    "neck_pocket_standard": {
+      "id": "neck_pocket_standard",
+      "name": "Neck Pocket - Standard",
+      "description": "Precision neck pocket routing",
+      "operation": "pocket",
+      "material": "any_hardwood",
+      "tool_recommendation": "flat_6mm_3f",
+      "parameters": {
+        "stepover_percent": 35,
+        "stepdown_mm": 4,
+        "feed_mm_min": 2500,
+        "plunge_mm_min": 600,
+        "spindle_rpm": 18000,
+        "corner_cleanup": true,
+        "corner_tool": "flat_3mm_2f"
+      },
+      "tolerances": {
+        "width_tolerance_mm": 0.1,
+        "depth_tolerance_mm": 0.05
+      }
+    },
+    "pickup_route_hh": {
+      "id": "pickup_route_hh",
+      "name": "Humbucker Pickup Route",
+      "description": "Standard humbucker cavity",
+      "operation": "pocket",
+      "material": "any",
+      "tool_recommendation": "flat_6mm_2f",
+      "parameters": {
+        "stepover_percent": 40,
+        "stepdown_mm": 5,
+        "feed_mm_min": 3000,
+        "plunge_mm_min": 800,
+        "spindle_rpm": 18000
+      },
+      "geometry": {
+        "width_mm": 39,
+        "length_mm": 72,
+        "depth_mm": 20,
+        "corner_radius_mm": 3
+      }
+    },
+    "fret_slots": {
+      "id": "fret_slots",
+      "name": "Fret Slot Cutting",
+      "description": "Precision fret slot routing",
+      "operation": "slot",
+      "material": "rosewood_east_indian",
+      "tool_recommendation": "slot_cutter_0_6mm",
+      "parameters": {
+        "feed_mm_min": 500,
+        "plunge_mm_min": 200,
+        "spindle_rpm": 20000,
+        "depth_mm": 3.0
+      },
+      "tolerances": {
+        "slot_width_mm": 0.6,
+        "slot_width_tolerance_mm": 0.02,
+        "position_tolerance_mm": 0.05
+      }
+    },
+    "inlay_pocket": {
+      "id": "inlay_pocket",
+      "name": "Inlay Pocket",
+      "description": "Shallow pockets for inlay work",
+      "operation": "pocket",
+      "material": "any",
+      "tool_recommendation": "flat_3mm_2f",
+      "parameters": {
+        "stepover_percent": 30,
+        "stepdown_mm": 0.5,
+        "feed_mm_min": 1500,
+        "plunge_mm_min": 400,
+        "spindle_rpm": 20000
+      },
+      "tolerances": {
+        "depth_mm": 1.5,
+        "depth_tolerance_mm": 0.02
+      }
+    },
+    "vcarve_rosette": {
+      "id": "vcarve_rosette",
+      "name": "V-Carve Rosette",
+      "description": "V-carving for rosette patterns",
+      "operation": "vcarve",
+      "material": "spruce_sitka",
+      "tool_recommendation": "vbit_60deg",
+      "parameters": {
+        "feed_mm_min": 1500,
+        "plunge_mm_min": 500,
+        "spindle_rpm": 18000,
+        "max_depth_mm": 3
+      },
+      "notes": "Use flat_depth option for inlay prep"
+    },
+    "contour_3d_carve": {
+      "id": "contour_3d_carve",
+      "name": "3D Contour Carving",
+      "description": "3D surface machining for tops/backs",
+      "operation": "3d_parallel",
+      "material": "maple_hard",
+      "tool_recommendation": "ball_6mm_2f",
+      "parameters": {
+        "stepover_mm": 0.5,
+        "stepdown_mm": 2,
+        "feed_mm_min": 2000,
+        "plunge_mm_min": 500,
+        "spindle_rpm": 18000,
+        "boundary_offset_mm": 3
+      }
+    }
+  }
+}

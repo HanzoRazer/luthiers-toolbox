@@ -1,0 +1,135 @@
+name: CompareLab Golden Checks
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - "tools/compare_golden_cli.py"
+      - "tools/golden_compare_lib.py"
+      - "tools/compare_report_lib.py"
+      - ".golden/**"
+      - "examples/comparelab/**"
+      - "services/api/app/routers/compare_automation_router.py"
+  pull_request:
+    paths:
+      - "tools/compare_golden_cli.py"
+      - "tools/golden_compare_lib.py"
+      - "tools/compare_report_lib.py"
+      - ".golden/**"
+      - "examples/comparelab/**"
+      - "services/api/app/routers/compare_automation_router.py"
+
+jobs:
+  golden-checks:
+    name: Golden Baseline Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install httpx uvicorn fastapi pydantic
+
+      - name: Install CompareLab dependencies
+        working-directory: services/api
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Start CompareLab server
+        working-directory: services/api
+        run: |
+          # Start server in background
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          
+          # Wait for server to be ready
+          echo "⏳ Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ Server is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Server failed to start"
+              exit 1
+            fi
+            echo "   Attempt $i/30..."
+            sleep 1
+          done
+
+      - name: Verify golden directory exists
+        run: |
+          if [ ! -d .golden ]; then
+            echo "⚠️  No .golden directory found - skipping checks"
+            echo "   Create golden baselines with: python tools/compare_golden_cli.py create"
+            exit 0
+          fi
+          
+          golden_count=$(find .golden -name "*.json" | wc -l)
+          echo "📋 Found $golden_count golden baseline(s)"
+          
+          if [ $golden_count -eq 0 ]; then
+            echo "⚠️  No golden files to check"
+            exit 0
+          fi
+
+      - name: Run golden checks
+        run: |
+          # B22.16: Reports generated automatically in ./reports
+          python tools/compare_golden_cli.py check-all --dir .golden --report-dir reports
+
+      - name: Upload CompareLab reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparelab-reports
+          path: reports/*.html
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload golden baselines (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-baselines
+          path: |
+            .golden/
+            examples/comparelab/
+          retention-days: 7
+
+      - name: Comment on PR (on drift)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **Golden baseline drift detected!**\n\n' +
+                    'One or more SVG comparisons produced different results than the golden baseline.\n\n' +
+                    'This indicates that geometry, layers, or bounding boxes have changed.\n\n' +
+                    '**Action required:**\n' +
+                    '1. Review the drift details in the CI logs\n' +
+                    '2. If the change is intentional, update the golden baseline:\n' +
+                    '   ```bash\n' +
+                    '   python tools/compare_golden_cli.py create \\\n' +
+                    '     --left <path> --right <path> \\\n' +
+                    '     --out .golden/<name>.json\n' +
+                    '   ```\n' +
+                    '3. Commit the updated golden file\n\n' +
+                    'See [CompareLab Golden Checks](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ') for details.'
+            })

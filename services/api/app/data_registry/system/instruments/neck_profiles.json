@@ -1,0 +1,83 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "instruments",
+    "version": "1.0.0",
+    "description": "Standard neck profile shapes used in guitar building"
+  },
+  "profiles": {
+    "c_standard": {
+      "id": "c_standard",
+      "name": "C Shape (Standard)",
+      "description": "Most common modern profile, comfortable for most players",
+      "depth_1st_fret_mm": 20.5,
+      "depth_12th_fret_mm": 22.5,
+      "radius_mm": 254,
+      "suitable_for": ["rock", "blues", "jazz", "general"],
+      "feel": "Balanced, versatile"
+    },
+    "d_shape": {
+      "id": "d_shape",
+      "name": "D Shape (Flatter)",
+      "description": "Flatter profile, more surface contact",
+      "depth_1st_fret_mm": 19.5,
+      "depth_12th_fret_mm": 21.5,
+      "radius_mm": 305,
+      "suitable_for": ["shred", "metal", "fast playing"],
+      "feel": "Fast, less grip"
+    },
+    "v_soft": {
+      "id": "v_soft",
+      "name": "Soft V",
+      "description": "Subtle V, vintage feel",
+      "depth_1st_fret_mm": 22.0,
+      "depth_12th_fret_mm": 24.0,
+      "radius_mm": 184,
+      "suitable_for": ["vintage", "blues", "country"],
+      "feel": "Thumb-over friendly"
+    },
+    "v_hard": {
+      "id": "v_hard",
+      "name": "Hard V",
+      "description": "Pronounced V, 50s vintage style",
+      "depth_1st_fret_mm": 23.0,
+      "depth_12th_fret_mm": 25.0,
+      "radius_mm": 184,
+      "suitable_for": ["vintage", "traditional"],
+      "feel": "Very pronounced spine"
+    },
+    "u_chunky": {
+      "id": "u_chunky",
+      "name": "U Shape (Chunky)",
+      "description": "Baseball bat profile, substantial",
+      "depth_1st_fret_mm": 24.0,
+      "depth_12th_fret_mm": 26.0,
+      "radius_mm": 184,
+      "suitable_for": ["blues", "SRV style", "heavy hands"],
+      "feel": "Full, substantial"
+    },
+    "asymmetric_modern": {
+      "id": "asymmetric_modern",
+      "name": "Asymmetric Modern",
+      "description": "Different profile bass vs treble side",
+      "depth_1st_fret_mm": 21.0,
+      "depth_12th_fret_mm": 23.0,
+      "radius_mm": 305,
+      "bass_side": "fuller",
+      "treble_side": "flatter",
+      "suitable_for": ["ergonomic", "modern", "extended range"],
+      "feel": "Optimized ergonomics"
+    },
+    "classical_flat": {
+      "id": "classical_flat",
+      "name": "Classical Flat",
+      "description": "Wide, flat profile for classical technique",
+      "depth_1st_fret_mm": 19.0,
+      "depth_12th_fret_mm": 20.5,
+      "radius_mm": 0,
+      "width_nut_mm": 52,
+      "suitable_for": ["classical", "fingerstyle"],
+      "feel": "Flat, wide"
+    }
+  }
+}
