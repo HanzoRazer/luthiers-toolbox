@@ -1,58 +1,149 @@
 {
   "runs": {
-    "SAW_20251127_001": {
-      "run_id": "SAW_20251127_001",
-      "created_at": "2025-11-27T10:15:30",
-      "status": "completed",
+    "test_20251127_150930": {
+      "run_id": "test_20251127_150930",
       "meta": {
         "op_type": "slice",
-        "machine_profile": "Saw_Alpha_01",
-        "material_family": "hardwood_maple",
-        "blade_id": "TCT_250_80T",
+        "machine_profile": "SAW_LAB_01",
+        "material_family": "hardwood",
+        "blade_id": "BLADE_10IN_60T",
+        "program_id": "SAW_JOB",
+        "program_comment": null,
+        "rpm": null,
+        "feed_ipm": null,
+        "plunge_ipm": null,
+        "safe_z_mm": 5.0,
         "depth_passes": 1,
-        "total_length_mm": 1200.5
+        "doc_per_pass_mm": null,
+        "total_depth_mm": null,
+        "total_length_mm": 1200.0,
+        "risk_grade": null,
+        "risk_warnings": [],
+        "notes": null,
+        "extra": {}
       },
-      "gcode": "G0 X0 Y0\nG1 X100 F1200\nM30",
-      "stats": {
-        "duration_s": 45.2,
-        "total_length_mm": 1200.5
-      }
-    },
-    "SAW_20251127_002": {
-      "run_id": "SAW_20251127_002",
-      "created_at": "2025-11-27T10:22:15",
+      "gcode": "G90 G21 G1 X100 Y50 F1200 M30",
+      "created_at": "2025-11-27T15:09:30.632421",
+      "started_at": "2025-11-27T15:09:30.632421",
+      "completed_at": "2025-11-27T15:14:30.632421",
       "status": "completed",
+      "error_message": null
+    },
+    "run_20251127_133237": {
+      "run_id": "run_20251127_133237",
+      "meta": {
+        "op_type": "slice",
+        "machine_profile": "SAW_LAB_01",
+        "material_family": "softwood",
+        "blade_id": "BLADE_10IN_40T",
+        "program_id": "SAW_JOB",
+        "program_comment": null,
+        "rpm": null,
+        "feed_ipm": null,
+        "plunge_ipm": null,
+        "safe_z_mm": 5.0,
+        "depth_passes": 1,
+        "doc_per_pass_mm": null,
+        "total_depth_mm": null,
+        "total_length_mm": 1200.0,
+        "risk_grade": null,
+        "risk_warnings": [],
+        "notes": null,
+        "extra": {}
+      },
+      "gcode": "G90 G21 G1 X100 Y50 F1200 M30",
+      "created_at": "2025-11-27T13:32:37.449310",
+      "started_at": "2025-11-27T13:32:37.449310",
+      "completed_at": "2025-11-27T13:37:37.449310",
+      "status": "completed",
+      "error_message": null
+    },
+    "run_20251127_133713": {
+      "run_id": "run_20251127_133713",
+      "meta": {
+        "op_type": "slice",
+        "machine_profile": "SAW_LAB_01",
+        "material_family": "softwood",
+        "blade_id": "BLADE_10IN_40T",
+        "program_id": "SAW_JOB",
+        "program_comment": null,
+        "rpm": null,
+        "feed_ipm": null,
+        "plunge_ipm": null,
+        "safe_z_mm": 5.0,
+        "depth_passes": 1,
+        "doc_per_pass_mm": null,
+        "total_depth_mm": null,
+        "total_length_mm": 1200.0,
+        "risk_grade": null,
+        "risk_warnings": [],
+        "notes": null,
+        "extra": {}
+      },
+      "gcode": "G90 G21 G1 X100 Y50 F1200 M30",
+      "created_at": "2025-11-27T13:37:13.217843",
+      "started_at": "2025-11-27T13:37:13.217843",
+      "completed_at": "2025-11-27T13:42:13.217843",
+      "status": "completed",
+      "error_message": null
+    },
+    "run_20251127_140713": {
+      "run_id": "run_20251127_140713",
+      "meta": {
+        "op_type": "batch",
+        "machine_profile": "SAW_LAB_01",
+        "material_family": "hardwood",
+        "blade_id": "BLADE_10IN_60T",
+        "program_id": "SAW_JOB",
+        "program_comment": null,
+        "rpm": null,
+        "feed_ipm": null,
+        "plunge_ipm": null,
+        "safe_z_mm": 5.0,
+        "depth_passes": 1,
+        "doc_per_pass_mm": null,
+        "total_depth_mm": null,
+        "total_length_mm": 1200.0,
+        "risk_grade": null,
+        "risk_warnings": [],
+        "notes": null,
+        "extra": {}
+      },
+      "gcode": "G90 G21 G1 X100 Y50 F1200 M30",
+      "created_at": "2025-11-27T14:07:13.217843",
+      "started_at": "2025-11-27T14:07:13.217843",
+      "completed_at": "2025-11-27T14:12:13.217843",
+      "status": "completed",
+      "error_message": null
+    },
+    "run_20251127_143713": {
+      "run_id": "run_20251127_143713",
       "meta": {
         "op_type": "contour",
-        "machine_profile": "Saw_Beta_02",
-        "material_family": "plywood_birch",
-        "blade_id": "ATB_300_60T",
+        "machine_profile": "SAW_LAB_01",
+        "material_family": "plywood",
+        "blade_id": "BLADE_12IN_80T",
+        "program_id": "SAW_JOB",
+        "program_comment": null,
+        "rpm": null,
+        "feed_ipm": null,
+        "plunge_ipm": null,
+        "safe_z_mm": 5.0,
         "depth_passes": 1,
-        "total_length_mm": 850.3
+        "doc_per_pass_mm": null,
+        "total_depth_mm": null,
+        "total_length_mm": 1200.0,
+        "risk_grade": null,
+        "risk_warnings": [],
+        "notes": null,
+        "extra": {}
       },
-      "gcode": "G0 X0 Y0\nG2 X50 Y50 I25 J25 F800\nM30",
-      "stats": {
-        "duration_s": 62.8,
-        "total_length_mm": 850.3
-      }
-    },
-    "SAW_20251127_003": {
-      "run_id": "SAW_20251127_003",
-      "created_at": "2025-11-27T10:35:42",
+      "gcode": "G90 G21 G1 X100 Y50 F1200 M30",
+      "created_at": "2025-11-27T14:37:13.217843",
+      "started_at": "2025-11-27T14:37:13.217843",
+      "completed_at": "2025-11-27T14:42:13.217843",
       "status": "completed",
-      "meta": {
-        "op_type": "slice",
-        "machine_profile": "Saw_Alpha_01",
-        "material_family": "softwood_pine",
-        "blade_id": "TCT_250_80T",
-        "depth_passes": 1,
-        "total_length_mm": 950.0
-      },
-      "gcode": "G0 X0 Y0\nG1 X80 F1500\nM30",
-      "stats": {
-        "duration_s": 38.5,
-        "total_length_mm": 950.0
-      }
+      "error_message": null
     }
   }
 }
