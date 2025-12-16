@@ -2,7 +2,9 @@
   <div class="saw-slice-panel">
     <div class="panel-header">
       <h2>Saw Slice Operation</h2>
-      <p class="subtitle">Kerf-aware straight cuts with multi-pass depth control</p>
+      <p class="subtitle">
+        Kerf-aware straight cuts with multi-pass depth control
+      </p>
     </div>
 
     <div class="panel-content">
@@ -15,12 +17,19 @@
           <label>Saw Blade</label>
           <select v-model="selectedBladeId" @change="onBladeChange">
             <option value="">Select blade...</option>
-            <option v-for="blade in blades" :key="blade.blade_id" :value="blade.blade_id">
-              {{ blade.vendor }} {{ blade.model_code }} ({{ blade.diameter_mm }}mm)
+            <option
+              v-for="blade in blades"
+              :key="blade.blade_id"
+              :value="blade.blade_id"
+            >
+              {{ blade.vendor }} {{ blade.model_code }} ({{
+                blade.diameter_mm
+              }}mm)
             </option>
           </select>
           <div v-if="selectedBlade" class="blade-info">
-            Kerf: {{ selectedBlade.kerf_mm }}mm | Teeth: {{ selectedBlade.teeth }}
+            Kerf: {{ selectedBlade.kerf_mm }}mm | Teeth:
+            {{ selectedBlade.teeth }}
           </div>
         </div>
 
@@ -68,23 +77,45 @@
 
         <div class="form-group">
           <label>Total Depth (mm)</label>
-          <input type="number" v-model.number="totalDepth" step="0.5" min="0.5" />
+          <input
+            type="number"
+            v-model.number="totalDepth"
+            step="0.5"
+            min="0.5"
+          />
         </div>
 
         <div class="form-group">
           <label>Depth Per Pass (mm)</label>
-          <input type="number" v-model.number="depthPerPass" step="0.5" min="0.5" />
+          <input
+            type="number"
+            v-model.number="depthPerPass"
+            step="0.5"
+            min="0.5"
+          />
         </div>
 
         <!-- Feeds & Speeds -->
         <div class="form-group">
           <label>RPM</label>
-          <input type="number" v-model.number="rpm" step="100" min="2000" max="6000" />
+          <input
+            type="number"
+            v-model.number="rpm"
+            step="100"
+            min="2000"
+            max="6000"
+          />
         </div>
 
         <div class="form-group">
           <label>Feed Rate (IPM)</label>
-          <input type="number" v-model.number="feedIpm" step="5" min="10" max="300" />
+          <input
+            type="number"
+            v-model.number="feedIpm"
+            step="5"
+            min="10"
+            max="300"
+          />
         </div>
 
         <div class="form-group">
@@ -94,16 +125,32 @@
 
         <!-- Actions -->
         <div class="actions">
-          <button @click="validateOperation" :disabled="!canValidate" class="btn-primary">
+          <button
+            @click="validateOperation"
+            :disabled="!canValidate"
+            class="btn-primary"
+          >
             Validate Parameters
           </button>
-          <button @click="mergeLearnedParams" :disabled="!canMerge" class="btn-secondary">
+          <button
+            @click="mergeLearnedParams"
+            :disabled="!canMerge"
+            class="btn-secondary"
+          >
             Apply Learned Overrides
           </button>
-          <button @click="generateGcode" :disabled="!isValid" class="btn-primary">
+          <button
+            @click="generateGcode"
+            :disabled="!isValid"
+            class="btn-primary"
+          >
             Generate G-code
           </button>
-          <button @click="sendToJobLog" :disabled="!hasGcode" class="btn-success">
+          <button
+            @click="sendToJobLog"
+            :disabled="!hasGcode"
+            class="btn-success"
+          >
             Send to JobLog
           </button>
         </div>
@@ -114,13 +161,27 @@
         <!-- Validation Results -->
         <div v-if="validationResult" class="validation-results">
           <h3>Validation Results</h3>
-          <div :class="['validation-badge', validationResult.overall_result.toLowerCase()]">
+          <div
+            :class="[
+              'validation-badge',
+              validationResult.overall_result.toLowerCase(),
+            ]"
+          >
             {{ validationResult.overall_result }}
           </div>
           <div class="validation-checks">
-            <div v-for="(check, key) in validationResult.checks" :key="key" 
-                 :class="['check-item', check.result.toLowerCase()]">
-              <span class="check-icon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
+            <div
+              v-for="(check, key) in validationResult.checks"
+              :key="key"
+              :class="['check-item', check.result.toLowerCase()]"
+            >
+              <span class="check-icon">{{
+                check.result === "OK"
+                  ? "✓"
+                  : check.result === "WARN"
+                  ? "⚠"
+                  : "✗"
+              }}</span>
               <span class="check-name">{{ formatCheckName(key) }}</span>
               <span class="check-message">{{ check.message }}</span>
             </div>
@@ -135,23 +196,29 @@
               <span class="label">RPM:</span>
               <span class="baseline">{{ rpm }}</span>
               <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.rpm?.toFixed(0) || rpm }}</span>
+              <span class="merged">{{
+                mergedParams.rpm?.toFixed(0) || rpm
+              }}</span>
             </div>
             <div class="param-row">
               <span class="label">Feed:</span>
               <span class="baseline">{{ feedIpm }}</span>
               <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.feed_ipm?.toFixed(1) || feedIpm }}</span>
+              <span class="merged">{{
+                mergedParams.feed_ipm?.toFixed(1) || feedIpm
+              }}</span>
             </div>
             <div class="param-row">
               <span class="label">DOC:</span>
               <span class="baseline">{{ depthPerPass }}</span>
               <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.doc_mm?.toFixed(1) || depthPerPass }}</span>
+              <span class="merged">{{
+                mergedParams.doc_mm?.toFixed(1) || depthPerPass
+              }}</span>
             </div>
           </div>
           <div class="lane-info">
-            Lane scale: {{ mergedParams.lane_scale?.toFixed(2) || '1.00' }}
+            Lane scale: {{ mergedParams.lane_scale?.toFixed(2) || "1.00" }}
           </div>
         </div>
 
@@ -178,43 +245,110 @@
           </button>
         </div>
 
+        <!-- Run Artifact Link -->
+        <div v-if="runId" class="run-artifact-link">
+          <h3>Run Artifact</h3>
+          <p>
+            Job logged with Run ID: <code>{{ runId }}</code>
+          </p>
+          <router-link :to="`/rmos/runs?run_id=${runId}`" class="btn-primary">
+            View Run Artifact
+          </router-link>
+        </div>
+
         <!-- SVG Preview -->
         <div class="svg-preview">
           <h3>Path Preview</h3>
-          <svg :viewBox="svgViewBox" width="400" height="300" class="preview-canvas">
+          <svg
+            :viewBox="svgViewBox"
+            width="400"
+            height="300"
+            class="preview-canvas"
+          >
             <!-- Grid -->
             <defs>
-              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+              <pattern
+                id="grid"
+                width="10"
+                height="10"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 10 0 L 0 0 0 10"
+                  fill="none"
+                  stroke="#e0e0e0"
+                  stroke-width="0.5"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
-            
+
             <!-- Cut path -->
-            <line v-if="startX !== null && endX !== null"
-                  :x1="startX" :y1="startY"
-                  :x2="endX" :y2="endY"
-                  stroke="#2196F3" stroke-width="2" />
-            
+            <line
+              v-if="startX !== null && endX !== null"
+              :x1="startX"
+              :y1="startY"
+              :x2="endX"
+              :y2="endY"
+              stroke="#2196F3"
+              stroke-width="2"
+            />
+
             <!-- Kerf width visualization -->
-            <line v-if="startX !== null && endX !== null && selectedBlade"
-                  :x1="startX" :y1="startY + (selectedBlade.kerf_mm / 2)"
-                  :x2="endX" :y2="endY + (selectedBlade.kerf_mm / 2)"
-                  stroke="#FF9800" stroke-width="1" stroke-dasharray="2,2" />
-            <line v-if="startX !== null && endX !== null && selectedBlade"
-                  :x1="startX" :y1="startY - (selectedBlade.kerf_mm / 2)"
-                  :x2="endX" :y2="endY - (selectedBlade.kerf_mm / 2)"
-                  stroke="#FF9800" stroke-width="1" stroke-dasharray="2,2" />
-            
+            <line
+              v-if="startX !== null && endX !== null && selectedBlade"
+              :x1="startX"
+              :y1="startY + selectedBlade.kerf_mm / 2"
+              :x2="endX"
+              :y2="endY + selectedBlade.kerf_mm / 2"
+              stroke="#FF9800"
+              stroke-width="1"
+              stroke-dasharray="2,2"
+            />
+            <line
+              v-if="startX !== null && endX !== null && selectedBlade"
+              :x1="startX"
+              :y1="startY - selectedBlade.kerf_mm / 2"
+              :x2="endX"
+              :y2="endY - selectedBlade.kerf_mm / 2"
+              stroke="#FF9800"
+              stroke-width="1"
+              stroke-dasharray="2,2"
+            />
+
             <!-- Start/End markers -->
-            <circle v-if="startX !== null" :cx="startX" :cy="startY" r="2" fill="#4CAF50" />
-            <circle v-if="endX !== null" :cx="endX" :cy="endY" r="2" fill="#F44336" />
+            <circle
+              v-if="startX !== null"
+              :cx="startX"
+              :cy="startY"
+              r="2"
+              fill="#4CAF50"
+            />
+            <circle
+              v-if="endX !== null"
+              :cx="endX"
+              :cy="endY"
+              r="2"
+              fill="#F44336"
+            />
           </svg>
           <div class="legend">
-            <span><span class="color-box" style="background: #2196F3;"></span> Cut path</span>
-            <span><span class="color-box" style="background: #FF9800;"></span> Kerf boundary</span>
-            <span><span class="color-box" style="background: #4CAF50;"></span> Start</span>
-            <span><span class="color-box" style="background: #F44336;"></span> End</span>
+            <span
+              ><span class="color-box" style="background: #2196f3"></span> Cut
+              path</span
+            >
+            <span
+              ><span class="color-box" style="background: #ff9800"></span> Kerf
+              boundary</span
+            >
+            <span
+              ><span class="color-box" style="background: #4caf50"></span>
+              Start</span
+            >
+            <span
+              ><span class="color-box" style="background: #f44336"></span>
+              End</span
+            >
           </div>
         </div>
       </div>
@@ -223,91 +357,93 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from "vue";
 
 // ============================================================================
 // State
 // ============================================================================
 
-const blades = ref<any[]>([])
-const selectedBladeId = ref<string>('')
-const selectedBlade = ref<any>(null)
+const blades = ref<any[]>([]);
+const selectedBladeId = ref<string>("");
+const selectedBlade = ref<any>(null);
 
-const machineProfile = ref<string>('bcam_router_2030')
-const materialFamily = ref<string>('hardwood')
+const machineProfile = ref<string>("bcam_router_2030");
+const materialFamily = ref<string>("hardwood");
 
-const startX = ref<number>(0)
-const startY = ref<number>(0)
-const endX = ref<number>(100)
-const endY = ref<number>(0)
+const startX = ref<number>(0);
+const startY = ref<number>(0);
+const endX = ref<number>(100);
+const endY = ref<number>(0);
 
-const totalDepth = ref<number>(12)
-const depthPerPass = ref<number>(3)
+const totalDepth = ref<number>(12);
+const depthPerPass = ref<number>(3);
 
-const rpm = ref<number>(3600)
-const feedIpm = ref<number>(120)
-const safeZ = ref<number>(5)
+const rpm = ref<number>(3600);
+const feedIpm = ref<number>(120);
+const safeZ = ref<number>(5);
 
-const validationResult = ref<any>(null)
-const mergedParams = ref<any>(null)
-const gcode = ref<string>('')
-const runId = ref<string>('')
+const validationResult = ref<any>(null);
+const mergedParams = ref<any>(null);
+const gcode = ref<string>("");
+const runId = ref<string>("");
 
 // ============================================================================
 // Computed
 // ============================================================================
 
 const canValidate = computed(() => {
-  return selectedBladeId.value && startX.value !== null && endX.value !== null
-})
+  return selectedBladeId.value && startX.value !== null && endX.value !== null;
+});
 
 const canMerge = computed(() => {
-  return selectedBladeId.value && machineProfile.value && materialFamily.value
-})
+  return selectedBladeId.value && machineProfile.value && materialFamily.value;
+});
 
 const isValid = computed(() => {
-  return validationResult.value && validationResult.value.overall_result !== 'ERROR'
-})
+  return (
+    validationResult.value && validationResult.value.overall_result !== "ERROR"
+  );
+});
 
 const hasGcode = computed(() => {
-  return gcode.value.length > 0
-})
+  return gcode.value.length > 0;
+});
 
 const pathLengthMm = computed(() => {
-  const dx = endX.value - startX.value
-  const dy = endY.value - startY.value
-  return Math.sqrt(dx * dx + dy * dy)
-})
+  const dx = endX.value - startX.value;
+  const dy = endY.value - startY.value;
+  return Math.sqrt(dx * dx + dy * dy);
+});
 
 const depthPasses = computed(() => {
-  return Math.ceil(totalDepth.value / depthPerPass.value)
-})
+  return Math.ceil(totalDepth.value / depthPerPass.value);
+});
 
 const totalLengthMm = computed(() => {
-  return pathLengthMm.value * depthPasses.value
-})
+  return pathLengthMm.value * depthPasses.value;
+});
 
 const estimatedTimeSec = computed(() => {
   // Convert IPM to mm/min
-  const feedMmMin = feedIpm.value * 25.4
+  const feedMmMin = feedIpm.value * 25.4;
   // Time = distance / speed
-  return (totalLengthMm.value / feedMmMin) * 60
-})
+  return (totalLengthMm.value / feedMmMin) * 60;
+});
 
 const gcodePreview = computed(() => {
-  if (!gcode.value) return ''
-  const lines = gcode.value.split('\n')
-  return lines.slice(0, 20).join('\n') + '\n...\n' + lines.slice(-5).join('\n')
-})
+  if (!gcode.value) return "";
+  const lines = gcode.value.split("\n");
+  return lines.slice(0, 20).join("\n") + "\n...\n" + lines.slice(-5).join("\n");
+});
 
 const svgViewBox = computed(() => {
-  const padding = 20
-  const minX = Math.min(startX.value, endX.value) - padding
-  const minY = Math.min(startY.value, endY.value) - padding
-  const maxX = Math.max(startX.value, endX.value) + padding
-  const maxY = Math.max(startY.value, endY.value) + padding
-  return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
-})
+  const padding = 20;
+  const minX = Math.min(startX.value, endX.value) - padding;
+  const minY = Math.min(startY.value, endY.value) - padding;
+  const maxX = Math.max(startX.value, endX.value) + padding;
+  const maxY = Math.max(startY.value, endY.value) + padding;
+  return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
+});
 
 // ============================================================================
 // API Calls
@@ -315,43 +451,43 @@ const svgViewBox = computed(() => {
 
 async function loadBlades() {
   try {
-    const response = await fetch('/api/saw/blades')
-    blades.value = await response.json()
+    const response = await fetch("/api/saw/blades");
+    blades.value = await response.json();
   } catch (err) {
-    console.error('Failed to load blades:', err)
+    console.error("Failed to load blades:", err);
   }
 }
 
 async function onBladeChange() {
-  const blade = blades.value.find(b => b.blade_id === selectedBladeId.value)
-  selectedBlade.value = blade
-  
+  const blade = blades.value.find((b) => b.blade_id === selectedBladeId.value);
+  selectedBlade.value = blade;
+
   // Clear previous results
-  validationResult.value = null
-  mergedParams.value = null
+  validationResult.value = null;
+  mergedParams.value = null;
 }
 
 async function validateOperation() {
-  if (!selectedBlade.value) return
-  
+  if (!selectedBlade.value) return;
+
   const payload = {
     blade: selectedBlade.value,
-    op_type: 'slice',
+    op_type: "slice",
     material_family: materialFamily.value,
     planned_rpm: rpm.value,
     planned_feed_ipm: feedIpm.value,
-    planned_doc_mm: depthPerPass.value
-  }
-  
+    planned_doc_mm: depthPerPass.value,
+  };
+
   try {
-    const response = await fetch('/api/saw/validate/operation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    validationResult.value = await response.json()
+    const response = await fetch("/api/saw/validate/operation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    validationResult.value = await response.json();
   } catch (err) {
-    console.error('Validation failed:', err)
+    console.error("Validation failed:", err);
   }
 }
 
@@ -359,76 +495,96 @@ async function mergeLearnedParams() {
   const laneKey = {
     tool_id: selectedBladeId.value,
     material: materialFamily.value,
-    mode: 'slice',
-    machine_profile: machineProfile.value
-  }
-  
+    mode: "slice",
+    machine_profile: machineProfile.value,
+  };
+
   const baseline = {
     rpm: rpm.value,
     feed_ipm: feedIpm.value,
     doc_mm: depthPerPass.value,
-    safe_z: safeZ.value
-  }
-  
+    safe_z: safeZ.value,
+  };
+
   try {
-    const response = await fetch('/api/feeds/learned/merge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lane_key: laneKey, baseline })
-    })
-    const result = await response.json()
-    mergedParams.value = result.merged
-    
+    const response = await fetch("/api/feeds/learned/merge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lane_key: laneKey, baseline }),
+    });
+    const result = await response.json();
+    mergedParams.value = result.merged;
+
     // Apply merged params
-    rpm.value = result.merged.rpm
-    feedIpm.value = result.merged.feed_ipm
-    depthPerPass.value = result.merged.doc_mm
+    rpm.value = result.merged.rpm;
+    feedIpm.value = result.merged.feed_ipm;
+    depthPerPass.value = result.merged.doc_mm;
   } catch (err) {
-    console.error('Failed to merge learned params:', err)
+    console.error("Failed to merge learned params:", err);
   }
 }
 
 async function generateGcode() {
-  const lines: string[] = []
-  
+  const lines: string[] = [];
+
   // Header
-  lines.push('G21  ; Metric units')
-  lines.push('G90  ; Absolute positioning')
-  lines.push('G17  ; XY plane')
-  lines.push(`(Saw Slice: ${selectedBlade.value.vendor} ${selectedBlade.value.model_code})`)
-  lines.push(`(Material: ${materialFamily.value})`)
-  lines.push(`(Total depth: ${totalDepth.value}mm in ${depthPasses.value} passes)`)
-  lines.push('')
-  
+  lines.push("G21  ; Metric units");
+  lines.push("G90  ; Absolute positioning");
+  lines.push("G17  ; XY plane");
+  lines.push(
+    `(Saw Slice: ${selectedBlade.value.vendor} ${selectedBlade.value.model_code})`
+  );
+  lines.push(`(Material: ${materialFamily.value})`);
+  lines.push(
+    `(Total depth: ${totalDepth.value}mm in ${depthPasses.value} passes)`
+  );
+  lines.push("");
+
   // Rapid to start
-  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Safe Z`)
-  lines.push(`G0 X${startX.value.toFixed(3)} Y${startY.value.toFixed(3)}  ; Move to start`)
-  lines.push('')
-  
+  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Safe Z`);
+  lines.push(
+    `G0 X${startX.value.toFixed(3)} Y${startY.value.toFixed(
+      3
+    )}  ; Move to start`
+  );
+  lines.push("");
+
   // Multi-pass depth
   for (let pass = 1; pass <= depthPasses.value; pass++) {
-    const depth = Math.min(pass * depthPerPass.value, totalDepth.value)
-    lines.push(`; Pass ${pass} of ${depthPasses.value} (depth: ${depth}mm)`)
-    lines.push(`G1 Z${-depth.toFixed(3)} F${(feedIpm.value * 25.4 / 5).toFixed(1)}  ; Plunge`)
-    lines.push(`G1 X${endX.value.toFixed(3)} Y${endY.value.toFixed(3)} F${(feedIpm.value * 25.4).toFixed(1)}  ; Cut`)
-    lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Retract`)
-    
+    const depth = Math.min(pass * depthPerPass.value, totalDepth.value);
+    lines.push(`; Pass ${pass} of ${depthPasses.value} (depth: ${depth}mm)`);
+    lines.push(
+      `G1 Z${-depth.toFixed(3)} F${((feedIpm.value * 25.4) / 5).toFixed(
+        1
+      )}  ; Plunge`
+    );
+    lines.push(
+      `G1 X${endX.value.toFixed(3)} Y${endY.value.toFixed(3)} F${(
+        feedIpm.value * 25.4
+      ).toFixed(1)}  ; Cut`
+    );
+    lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Retract`);
+
     if (pass < depthPasses.value) {
-      lines.push(`G0 X${startX.value.toFixed(3)} Y${startY.value.toFixed(3)}  ; Return to start`)
+      lines.push(
+        `G0 X${startX.value.toFixed(3)} Y${startY.value.toFixed(
+          3
+        )}  ; Return to start`
+      );
     }
-    lines.push('')
+    lines.push("");
   }
-  
+
   // Footer
-  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Final retract`)
-  lines.push('M30  ; Program end')
-  
-  gcode.value = lines.join('\n')
+  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Final retract`);
+  lines.push("M30  ; Program end");
+
+  gcode.value = lines.join("\n");
 }
 
 async function sendToJobLog() {
   const payload = {
-    op_type: 'slice',
+    op_type: "slice",
     machine_profile: machineProfile.value,
     material_family: materialFamily.value,
     blade_id: selectedBladeId.value,
@@ -438,37 +594,39 @@ async function sendToJobLog() {
     planned_rpm: rpm.value,
     planned_feed_ipm: feedIpm.value,
     planned_doc_mm: depthPerPass.value,
-    operator_notes: `Slice from (${startX.value},${startY.value}) to (${endX.value},${endY.value})`
-  }
-  
+    operator_notes: `Slice from (${startX.value},${startY.value}) to (${endX.value},${endY.value})`,
+  };
+
   try {
-    const response = await fetch('/api/saw/joblog/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    const run = await response.json()
-    runId.value = run.run_id
-    
-    alert(`Job sent to log! Run ID: ${run.run_id}\n\nReady to execute. Telemetry will be captured automatically.`)
+    const response = await fetch("/api/saw/joblog/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const run = await response.json();
+    runId.value = run.run_id;
+
+    alert(
+      `Job sent to log! Run ID: ${run.run_id}\n\nReady to execute. Telemetry will be captured automatically.`
+    );
   } catch (err) {
-    console.error('Failed to send to job log:', err)
-    alert('Failed to send to job log')
+    console.error("Failed to send to job log:", err);
+    alert("Failed to send to job log");
   }
 }
 
 function downloadGcode() {
-  const blob = new Blob([gcode.value], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `saw_slice_${selectedBlade.value?.model_code || 'unknown'}.nc`
-  a.click()
-  URL.revokeObjectURL(url)
+  const blob = new Blob([gcode.value], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `saw_slice_${selectedBlade.value?.model_code || "unknown"}.nc`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function formatCheckName(key: string): string {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  return key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 // ============================================================================
@@ -476,8 +634,8 @@ function formatCheckName(key: string): string {
 // ============================================================================
 
 onMounted(() => {
-  loadBlades()
-})
+  loadBlades();
+});
 </script>
 
 <style scoped>
@@ -598,6 +756,7 @@ onMounted(() => {
 .validation-results,
 .learned-params,
 .gcode-preview,
+.run-artifact-link,
 .svg-preview {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
@@ -737,7 +896,7 @@ onMounted(() => {
   color: #ecf0f1;
   padding: 15px;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 12px;
   line-height: 1.5;
   overflow-x: auto;
@@ -771,5 +930,23 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   border-radius: 2px;
+}
+
+.run-artifact-link {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.run-artifact-link code {
+  background: #c8e6c9;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.run-artifact-link a {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
 }
 </style>

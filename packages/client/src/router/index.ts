@@ -127,6 +127,20 @@ const routes: RouteRecordRaw[] = [
     name: "InstrumentGeometry",
     component: () => import("@/views/InstrumentGeometryView.vue"),
   },
+
+  // Run Artifacts Browser
+  {
+    path: "/rmos/runs",
+    name: "RmosRuns",
+    component: () => import("@/views/RmosRunsView.vue"),
+  },
+
+  // Run Artifact Diff Viewer
+  {
+    path: "/rmos/runs/diff",
+    name: "RmosRunsDiff",
+    component: () => import("@/views/RmosRunsDiffView.vue"),
+  },
 ];
 
 const router = createRouter({

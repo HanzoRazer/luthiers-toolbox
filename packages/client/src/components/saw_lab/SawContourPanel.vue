@@ -332,6 +332,15 @@
             Download G-code
           </button>
         </div>
+
+        <!-- Run Artifact Link -->
+        <div v-if="runId" class="run-artifact-link">
+          <h3>Run Artifact</h3>
+          <p>Job logged with Run ID: <code>{{ runId }}</code></p>
+          <router-link :to="`/rmos/runs?run_id=${runId}`" class="btn-primary">
+            View Run Artifact
+          </router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -374,6 +383,7 @@ const validationResult = ref<any>(null)
 const mergedParams = ref<any>(null)
 const gcode = ref<string>('')
 const contourPath = ref<string>('')
+const runId = ref<string>('')
 
 // ============================================================================
 // Computed
@@ -644,7 +654,8 @@ async function sendToJobLog() {
       body: JSON.stringify(payload)
     })
     const run = await response.json()
-    
+    runId.value = run.run_id
+
     alert(`Contour sent to job log! Run ID: ${run.run_id}`)
   } catch (err) {
     console.error('Failed to send to job log:', err)
@@ -1010,5 +1021,26 @@ h3 {
   margin-bottom: 10px;
   max-height: 300px;
   overflow-y: auto;
+}
+
+.run-artifact-link {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.run-artifact-link code {
+  background: #c8e6c9;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.run-artifact-link a {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
 }
 </style>
