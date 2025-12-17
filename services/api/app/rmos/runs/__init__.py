@@ -14,17 +14,19 @@ from .store import (
     get_run,
     list_runs_filtered,
     persist_run,
-    get_store_path,
+    create_run_id,
 )
 from .hashing import (
-    compute_request_hash,
-    compute_canonical_hash,
+    sha256_of_obj,
+    sha256_of_text,
+    sha256_of_bytes,
+    stable_json_dumps,
 )
 from .attachments import (
-    store_attachment,
+    put_text_attachment,
+    put_json_attachment,
     get_attachment_path,
-    verify_attachment,
-    list_attachments,
+    load_json_attachment,
 )
 from .diff import diff_runs
 from .api_runs import router
@@ -38,15 +40,17 @@ __all__ = [
     "get_run",
     "list_runs_filtered",
     "persist_run",
-    "get_store_path",
+    "create_run_id",
     # Hashing
-    "compute_request_hash",
-    "compute_canonical_hash",
+    "sha256_of_obj",
+    "sha256_of_text",
+    "sha256_of_bytes",
+    "stable_json_dumps",
     # Attachments
-    "store_attachment",
+    "put_text_attachment",
+    "put_json_attachment",
     "get_attachment_path",
-    "verify_attachment",
-    "list_attachments",
+    "load_json_attachment",
     # Diff
     "diff_runs",
     # Router
