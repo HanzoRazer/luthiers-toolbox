@@ -97,12 +97,12 @@ def main() -> int:
             errors.extend(list(set(file_violations)))
     
     if checked == 0:
-        print("⚠️  No AI sandbox directories found to check.")
-        print("   Skipping write-path check.")
+        print("[WARN] No AI sandbox directories found to check.")
+        print("       Skipping write-path check.")
         return 0
-    
+
     if errors:
-        print("❌ AI sandbox write-path violations detected:")
+        print("[FAIL] AI sandbox write-path violations detected:")
         print()
         for e in sorted(set(errors)):
             print(f"  {e}")
@@ -112,8 +112,8 @@ def main() -> int:
         print("AI sandbox code must not write to RMOS execution directories.")
         print("See docs/AI_SANDBOX_GOVERNANCE.md for details.")
         return 1
-    
-    print(f"✅ AI sandbox write-path check passed. ({checked} files)")
+
+    print(f"[PASS] AI sandbox write-path check passed. ({checked} files)")
     return 0
 
 

@@ -118,12 +118,12 @@ def main() -> int:
             errors.extend(check_file(py_file))
     
     if checked == 0:
-        print("⚠️  No AI sandbox directories found to check.")
-        print("   Skipping forbidden-call check.")
+        print("[WARN] No AI sandbox directories found to check.")
+        print("       Skipping forbidden-call check.")
         return 0
-    
+
     if errors:
-        print("❌ Forbidden RMOS execution calls detected in AI sandbox:")
+        print("[FAIL] Forbidden RMOS execution calls detected in AI sandbox:")
         print()
         for e in errors:
             print(f"  {e}")
@@ -133,8 +133,8 @@ def main() -> int:
         print("AI sandbox code must not import RMOS modules or call authority functions.")
         print("See docs/AI_SANDBOX_GOVERNANCE.md for details.")
         return 1
-    
-    print(f"✅ AI sandbox forbidden-call check passed. ({checked} files)")
+
+    print(f"[PASS] AI sandbox forbidden-call check passed. ({checked} files)")
     return 0
 
 

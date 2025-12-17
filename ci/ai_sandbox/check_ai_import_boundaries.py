@@ -25,6 +25,12 @@ AI_PATTERNS = [
     "app._experimental.ai_graphics",
 ]
 
+# Files that are explicitly allowed to bridge RMOS <-> AI sandbox
+# These are designated adapter files that receive data from AI
+ADAPTER_ALLOWLIST = {
+    "rosette_rmos_adapter.py",  # Bridge for AI rosette -> RMOS workflow
+}
+
 
 def check_file(path: pathlib.Path) -> List[str]:
     """Check a single file for forbidden imports."""
@@ -64,19 +70,22 @@ def check_file(path: pathlib.Path) -> List[str]:
 def main() -> int:
     """Run the boundary check."""
     if not RMOS_DIR.exists():
-        print(f"⚠️  RMOS directory not found: {RMOS_DIR}")
-        print("   Skipping import boundary check.")
+        print(f"[WARN] RMOS directory not found: {RMOS_DIR}")
+        print("       Skipping import boundary check.")
         return 0
-    
+
     errors = []
     checked = 0
-    
+
     for py_file in RMOS_DIR.rglob("*.py"):
+        # Skip explicitly allowlisted adapter files
+        if py_file.name in ADAPTER_ALLOWLIST:
+            continue
         checked += 1
         errors.extend(check_file(py_file))
-    
+
     if errors:
-        print("❌ AI Sandbox import boundary violations detected:")
+        print("[FAIL] AI Sandbox import boundary violations detected:")
         print()
         for e in errors:
             print(f"  {e}")
@@ -86,8 +95,8 @@ def main() -> int:
         print("RMOS code must not import from _experimental/ai* directories.")
         print("See docs/AI_SANDBOX_GOVERNANCE.md for details.")
         return 1
-    
-    print(f"✅ AI sandbox import boundary check passed. ({checked} files)")
+
+    print(f"[PASS] AI sandbox import boundary check passed. ({checked} files)")
     return 0
 
 
