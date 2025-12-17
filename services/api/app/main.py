@@ -256,6 +256,34 @@ except ImportError as e:
     vision_router = None
 
 # =============================================================================
+# WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (4 routers)
+# Design-First Mode: Pattern Library + Generators + Preview + Snapshots
+# =============================================================================
+try:
+    from .art_studio.api.pattern_routes import router as art_patterns_router
+except ImportError as e:
+    print(f"Warning: Art Studio Pattern router not available: {e}")
+    art_patterns_router = None
+
+try:
+    from .art_studio.api.generator_routes import router as art_generators_router
+except ImportError as e:
+    print(f"Warning: Art Studio Generator router not available: {e}")
+    art_generators_router = None
+
+try:
+    from .art_studio.api.preview_routes import router as art_preview_router
+except ImportError as e:
+    print(f"Warning: Art Studio Preview router not available: {e}")
+    art_preview_router = None
+
+try:
+    from .art_studio.api.snapshot_routes import router as art_snapshots_router
+except ImportError as e:
+    print(f"Warning: Art Studio Snapshot router not available: {e}")
+    art_snapshots_router = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -432,6 +460,17 @@ if rmos_runs_router:
 if vision_router:
     app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
 
+# Wave 15: Art Studio Core Completion (4)
+# Note: These routers have their own prefix defined (e.g., /api/art/patterns)
+if art_patterns_router:
+    app.include_router(art_patterns_router, tags=["Art Studio", "Patterns"])
+if art_generators_router:
+    app.include_router(art_generators_router, tags=["Art Studio", "Generators"])
+if art_preview_router:
+    app.include_router(art_preview_router, tags=["Art Studio", "Preview"])
+if art_snapshots_router:
+    app.include_router(art_snapshots_router, tags=["Art Studio", "Snapshots"])
+
 # =============================================================================
 # HEALTH CHECK
 # =============================================================================
@@ -471,8 +510,9 @@ async def api_health_check():
             "wave12_cam_risk_polygon": 8,
             "wave13_final_art_monitor": 10,
             "wave14_vision_rmos_runs": 2,
+            "wave15_art_studio_core": 4,
         },
-        "total_working": 93,
+        "total_working": 97,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }
