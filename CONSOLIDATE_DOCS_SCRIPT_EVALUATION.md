@@ -409,7 +409,142 @@ foreach ($file in $files) {
 
 ---
 
-## 9. Summary
+## 9. Risk Re-Assessment (Updated)
+
+### 1. Files Overwritten Analysis
+
+**Finding: NO OVERWRITE RISK**
+
+The destination directories do not exist yet:
+```
+docs/canonical/           - Does NOT exist
+docs/canonical/governance - Does NOT exist
+docs/advisory/            - Does NOT exist
+docs/quickref/            - Does NOT exist
+docs/archive/2025-12/     - Does NOT exist
+```
+
+The script creates these directories in Phase 1 before moving files. Since destinations are new paths that don't exist, `-Force` has no destructive effect on first run.
+
+**Risk if run twice:** Second run would overwrite files moved in first run - but they're the same files, so no data loss.
+
+---
+
+### 2. Correct Working Directory
+
+**Validation Markers:**
+
+| Marker | Exists | Purpose |
+|--------|--------|---------|
+| `.git/` | ✅ Yes | Git repository root |
+| `services/` | ✅ Yes | API backend |
+| `packages/` | ✅ Yes | Client frontend |
+| `docs/` | ✅ Yes | Documentation folder |
+| `consolidate_docs.ps1` | ✅ Yes | The script itself |
+
+**Correct Directory:** `C:\Users\thepr\Downloads\luthiers-toolbox`
+
+**Recommended Validation (add to script line 43):**
+```powershell
+# Validate working directory
+$requiredMarkers = @(".git", "services", "packages", "docs")
+foreach ($marker in $requiredMarkers) {
+    if (-not (Test-Path $marker)) {
+        Write-Host "ERROR: Not in repo root. Missing: $marker" -ForegroundColor Red
+        Write-Host "Run from: C:\Users\thepr\Downloads\luthiers-toolbox" -ForegroundColor Yellow
+        exit 1
+    }
+}
+Write-Host "Working directory validated: $(Get-Location)" -ForegroundColor Green
+```
+
+---
+
+### 3. Backup Concern - RESOLVED
+
+**Finding: NOT AN ISSUE**
+
+Files are tracked in git. Recovery options:
+- `git checkout -- <file>` - Restore individual file
+- `git checkout HEAD~1 -- <file>` - Restore from previous commit
+- `git stash` before running - Creates named backup point
+- `git reflog` - Full history available
+
+The "no backup" risk is mitigated by git version control.
+
+---
+
+### 4. Inconsistent State Mitigation
+
+**Causes of Inconsistent State:**
+1. Ctrl+C during execution
+2. File lock by another process
+3. Permission error on specific file
+4. Path too long error
+
+**Mitigation Strategy:**
+
+```powershell
+# Add checkpoint file tracking (insert after Phase 1)
+$checkpointFile = "consolidation_checkpoint.json"
+$checkpoint = @{
+    phase = 0
+    completed = @()
+    started = (Get-Date).ToString("o")
+}
+
+# Before each move, record intent
+function Safe-Move {
+    param($Source, $Destination, $Phase)
+
+    # Record in checkpoint
+    $checkpoint.phase = $Phase
+    $checkpoint.completed += @{src=$Source; dst=$Destination; time=(Get-Date).ToString("o")}
+    $checkpoint | ConvertTo-Json | Out-File $checkpointFile
+
+    # Perform move
+    if (Test-Path $Source) {
+        Move-Item -Path $Source -Destination $Destination -Force
+        return $true
+    }
+    return $false
+}
+
+# At script end, remove checkpoint
+Remove-Item $checkpointFile -ErrorAction SilentlyContinue
+```
+
+**Recovery from Inconsistent State:**
+
+```powershell
+# If script fails, read checkpoint to see what moved:
+$checkpoint = Get-Content "consolidation_checkpoint.json" | ConvertFrom-Json
+Write-Host "Failed at Phase: $($checkpoint.phase)"
+Write-Host "Last completed moves: $($checkpoint.completed.Count)"
+
+# Option 1: Resume from checkpoint
+# Option 2: Reverse completed moves:
+foreach ($move in $checkpoint.completed) {
+    if (Test-Path $move.dst) {
+        Move-Item -Path $move.dst -Destination $move.src -Force
+        Write-Host "Reversed: $($move.dst) -> $($move.src)"
+    }
+}
+```
+
+**Simpler Alternative - Git-Based Recovery:**
+
+```powershell
+# If script fails mid-execution:
+git status                    # See what moved
+git checkout -- .             # Restore all tracked files to original location
+git clean -n                  # Preview untracked changes
+git clean -fd                 # Remove new directories (CAREFUL)
+```
+
+---
+
+## 10. Summary
 
 ### Strengths
 
