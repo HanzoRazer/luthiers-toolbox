@@ -5,6 +5,8 @@ jinja2
 python-multipart
 sqlalchemy
 sqlite-utils
+alembic>=1.13.0
+psycopg2-binary>=2.9.0  # Postgres driver (optional, for production)
 httpx>=0.24.0
 
 # CAM Core & Geometry (Phase 1 - Foundation)

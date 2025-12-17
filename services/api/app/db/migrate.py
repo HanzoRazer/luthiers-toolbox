@@ -1,8 +1,15 @@
 """
 Lightweight SQL migration system for Luthier's ToolBox.
 
-Applies SQL files from migrations directory in alphabetical order.
-Tracks applied migrations in schema_migrations table.
+DEPRECATED: Use Alembic instead.
+    cd services/api
+    alembic revision --autogenerate -m "description"
+    alembic upgrade head
+
+This module is retained for reference and legacy migration support.
+New migrations should use Alembic (see app/db/migrations/env.py).
+
+Legacy SQL files are archived in: app/db/migrations/legacy/
 """
 from __future__ import annotations
 
