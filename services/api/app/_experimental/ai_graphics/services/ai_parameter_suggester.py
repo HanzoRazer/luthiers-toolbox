@@ -33,7 +33,7 @@ from ..sessions import (
     is_explored,
     add_suggestion_to_history,
 )
-from .llm_client import generate_rosette_param_candidates
+from .providers import generate_rosette_param_candidates
 
 
 # ---------------------------------------------------------------------------
