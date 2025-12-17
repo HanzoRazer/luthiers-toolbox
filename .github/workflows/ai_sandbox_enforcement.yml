@@ -1,0 +1,53 @@
+name: AI Sandbox Governance Enforcement
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  ai-sandbox-guard:
+    name: AI Sandbox Boundary Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Enforce AI sandbox import boundaries
+        run: python ci/ai_sandbox/check_ai_import_boundaries.py
+
+      - name: Enforce forbidden RMOS calls from AI sandbox
+        run: python ci/ai_sandbox/check_ai_forbidden_calls.py
+
+      - name: Enforce AI sandbox write-path restrictions
+        run: python ci/ai_sandbox/check_ai_write_paths.py
+
+  ai-sandbox-summary:
+    name: Governance Summary
+    runs-on: ubuntu-latest
+    needs: ai-sandbox-guard
+    if: always()
+
+    steps:
+      - name: Report status
+        run: |
+          echo "## AI Sandbox Governance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.ai-sandbox-guard.result }}" == "success" ]; then
+            echo "✅ All governance checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Governance violations detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review:" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/SECURITY.md" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/GOVERNANCE.md" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/AI_SANDBOX_GOVERNANCE.md" >> $GITHUB_STEP_SUMMARY
+          fi

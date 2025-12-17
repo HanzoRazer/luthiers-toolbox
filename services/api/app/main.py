@@ -241,6 +241,21 @@ from .routers.live_monitor_drilldown_api import router as live_monitor_router
 from .routers.cnc_production.compare_jobs_router import router as cnc_compare_jobs_router
 
 # =============================================================================
+# WAVE 14: VISION ENGINE + RMOS RUNS (2 routers)
+# =============================================================================
+try:
+    from .rmos.runs.api_runs import router as rmos_runs_router
+except ImportError as e:
+    print(f"Warning: RMOS Runs router not available: {e}")
+    rmos_runs_router = None
+
+try:
+    from ._experimental.ai_graphics.api.vision_routes import router as vision_router
+except ImportError as e:
+    print(f"Warning: Vision Engine router not available: {e}")
+    vision_router = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -411,6 +426,12 @@ app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 # CNC Production (1)
 app.include_router(cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CNC Production"])
 
+# Wave 14: Vision Engine + RMOS Runs (2)
+if rmos_runs_router:
+    app.include_router(rmos_runs_router, prefix="/api", tags=["RMOS", "Runs"])
+if vision_router:
+    app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
+
 # =============================================================================
 # HEALTH CHECK
 # =============================================================================
@@ -449,8 +470,9 @@ async def api_health_check():
             "wave11_analytics_probe_calc": 8,
             "wave12_cam_risk_polygon": 8,
             "wave13_final_art_monitor": 10,
+            "wave14_vision_rmos_runs": 2,
         },
-        "total_working": 91,
+        "total_working": 93,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }

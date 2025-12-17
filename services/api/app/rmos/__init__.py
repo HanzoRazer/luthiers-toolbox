@@ -86,6 +86,41 @@ from .api_constraint_profiles import router as profiles_router
 from .api_profile_history import router as history_router
 from .api_routes import router as rmos_router  # Existing core RMOS router
 
+# Runs Module (Phase D - Audit Trail)
+try:
+    from .runs import (
+        RunArtifact,
+        RunAttachment,
+        RunStatus,
+        get_run,
+        list_runs_filtered,
+        persist_run,
+        diff_runs,
+    )
+    from .runs.api_runs import router as runs_router
+except ImportError:
+    runs_router = None
+
+# Engines Registry
+try:
+    from .engines.registry import (
+        EngineVersion,
+        get_engine_version,
+        register_engine,
+    )
+except ImportError:
+    pass
+
+# Gates Policy
+try:
+    from .gates.policy import (
+        GatePolicy,
+        ReplayGateResult,
+        check_replay_gate,
+    )
+except ImportError:
+    pass
+
 # Re-export from existing modules for convenience
 try:
     from .logging_ai import (
@@ -158,6 +193,23 @@ __all__ = [
     "profiles_router",
     "history_router",
     "rmos_router",
+    "runs_router",
+    # Runs Module (Phase D)
+    "RunArtifact",
+    "RunAttachment",
+    "RunStatus",
+    "get_run",
+    "list_runs_filtered",
+    "persist_run",
+    "diff_runs",
+    # Engines Registry
+    "EngineVersion",
+    "get_engine_version",
+    "register_engine",
+    # Gates Policy
+    "GatePolicy",
+    "ReplayGateResult",
+    "check_replay_gate",
     # Logging (from existing)
     "new_run_id",
     "log_ai_constraint_attempt",
