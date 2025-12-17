@@ -9,7 +9,8 @@
       "Bash(tasklist:*)",
       "Bash(git fetch:*)",
       "Bash(python -m uvicorn:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir \"C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\Governance_Code_Bundle\" /b)"
     ]
   }
 }
