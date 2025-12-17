@@ -284,6 +284,34 @@ except ImportError as e:
     art_snapshots_router = None
 
 # =============================================================================
+# WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
+# Implements governance contracts for server-side feasibility, artifact persistence
+# =============================================================================
+try:
+    from .rmos.api.rmos_feasibility_router import router as rmos_feasibility_router
+except ImportError as e:
+    print(f"Warning: RMOS Feasibility router not available: {e}")
+    rmos_feasibility_router = None
+
+try:
+    from .rmos.api.rmos_toolpaths_router import router as rmos_toolpaths_router
+except ImportError as e:
+    print(f"Warning: RMOS Toolpaths router not available: {e}")
+    rmos_toolpaths_router = None
+
+try:
+    from .rmos.api.rmos_runs_router import router as rmos_runs_api_router
+except ImportError as e:
+    print(f"Warning: RMOS Runs API router not available: {e}")
+    rmos_runs_api_router = None
+
+try:
+    from .rmos.api.rmos_workflow_router import router as rmos_workflow_router
+except ImportError as e:
+    print(f"Warning: RMOS Workflow router not available: {e}")
+    rmos_workflow_router = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -471,6 +499,21 @@ if art_preview_router:
 if art_snapshots_router:
     app.include_router(art_snapshots_router, tags=["Art Studio", "Snapshots"])
 
+# Wave 16: Governance Code Bundle - Canonical Workflow + Run Artifacts (4)
+# Implements governance contracts:
+# - SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md
+# - RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md
+# - RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md
+# - RUN_DIFF_VIEWER_CONTRACT_v1.md
+if rmos_feasibility_router:
+    app.include_router(rmos_feasibility_router, tags=["RMOS", "Feasibility"])
+if rmos_toolpaths_router:
+    app.include_router(rmos_toolpaths_router, tags=["RMOS", "Toolpaths"])
+if rmos_runs_api_router:
+    app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
+if rmos_workflow_router:
+    app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
+
 # =============================================================================
 # HEALTH CHECK
 # =============================================================================
@@ -511,8 +554,9 @@ async def api_health_check():
             "wave13_final_art_monitor": 10,
             "wave14_vision_rmos_runs": 2,
             "wave15_art_studio_core": 4,
+            "wave16_governance_code_bundle": 4,
         },
-        "total_working": 97,
+        "total_working": 101,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }
