@@ -108,6 +108,9 @@ client/
 server/
 /data/
 migrations/
+# But allow Alembic migrations
+!services/api/app/db/migrations/
+!services/api/app/db/migrations/**
 templates/
 /tools/
 assets_staging/
