@@ -6,7 +6,7 @@ Wave 18: Phase D - Feasibility Fusion Endpoints
 FastAPI endpoints for unified feasibility scoring across all risk dimensions.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
 
@@ -18,6 +18,7 @@ from .feasibility_fusion import (
     RiskLevel,
 )
 from .context import RmosContext
+from .engines.registry import get_feasibility_engine, list_feasibility_engines
 
 
 router = APIRouter()
@@ -70,12 +71,15 @@ class FeasibilityResponse(BaseModel):
 # ============================================================================
 
 @router.post("/evaluate", response_model=FeasibilityResponse)
-async def evaluate_feasibility_endpoint(request: FeasibilityRequest):
+async def evaluate_feasibility_endpoint(
+    request_body: FeasibilityRequest,
+    request: Request,
+):
     """
     Evaluate manufacturing feasibility with custom RMOS context.
-    
+
     POST /api/rmos/feasibility/evaluate
-    
+
     Request body:
     ```json
     {
@@ -92,7 +96,7 @@ async def evaluate_feasibility_endpoint(request: FeasibilityRequest):
       }
     }
     ```
-    
+
     Response:
     ```json
     {
@@ -111,46 +115,57 @@ async def evaluate_feasibility_endpoint(request: FeasibilityRequest):
         ...
       ],
       "recommendations": [
-        "✅ All parameters within safe operating range."
+        "All parameters within safe operating range."
       ]
     }
     ```
+
+    Now routed through engine layer for provenance stamping and observability.
     """
     try:
+        # Extract request correlation ID
+        req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+
         # Build or deserialize context
-        if request.context:
-            context = RmosContext.from_dict(request.context)
+        if request_body.context:
+            context = RmosContext.from_dict(request_body.context)
         else:
             raise HTTPException(
                 status_code=400,
                 detail="Either 'context' dict or use /evaluate/model/{model_id} endpoint"
             )
-        
-        # Evaluate feasibility
-        report = evaluate_feasibility(request.design, context)
-        
-        # Convert to response format
-        assessments_response = [
-            RiskAssessmentResponse(
-                category=a.category,
-                score=a.score,
-                risk=a.risk.value,
-                warnings=a.warnings,
-                details=a.details,
-            )
-            for a in report.assessments
-        ]
-        
+
+        # Get engine (supports future engine_id override via context)
+        engine_id = request_body.context.get("feasibility_engine_id") if request_body.context else None
+        engine = get_feasibility_engine(engine_id, request_id=req_id)
+
+        # Evaluate via engine layer
+        result = engine.compute(spec=request_body.design, ctx=context, request_id=req_id)
+
+        # Convert engine result to response format
+        assessments_response = []
+        for a in result.get("assessments", []):
+            if isinstance(a, dict):
+                assessments_response.append(
+                    RiskAssessmentResponse(
+                        category=a.get("category", "unknown"),
+                        score=a.get("score", 0.0),
+                        risk=a.get("risk", "UNKNOWN"),
+                        warnings=a.get("warnings", []),
+                        details=a.get("details", {}),
+                    )
+                )
+
         return FeasibilityResponse(
-            overall_score=report.overall_score,
-            overall_risk=report.overall_risk.value,
-            is_feasible=report.is_feasible(),
-            needs_review=report.needs_review(),
+            overall_score=result.get("overall_score", 0.0),
+            overall_risk=result.get("status", "ERROR"),
+            is_feasible=result.get("is_feasible", False),
+            needs_review=result.get("needs_review", True),
             assessments=assessments_response,
-            recommendations=report.recommendations,
-            pass_threshold=report.pass_threshold,
+            recommendations=result.get("reasons", []),
+            pass_threshold=70.0,
         )
-    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -320,5 +335,45 @@ async def list_risk_categories():
                 "weight": 0.10,
                 "description": "Material efficiency optimization (cost reduction)",
             },
+        ]
+    }
+
+
+@router.get("/engines")
+async def list_engines():
+    """
+    List available feasibility engines.
+
+    GET /api/rmos/feasibility/engines
+
+    Response:
+    ```json
+    {
+      "engines": [
+        {
+          "engine_id": "baseline_v1",
+          "version": "1.0.0",
+          "description": "Deterministic baseline feasibility..."
+        },
+        {
+          "engine_id": "stub",
+          "version": "0.0.0",
+          "description": "Stub feasibility engine for tests/dev..."
+        }
+      ]
+    }
+    ```
+
+    Use engine_id in context.feasibility_engine_id to override default.
+    """
+    engines = list_feasibility_engines()
+    return {
+        "engines": [
+            {
+                "engine_id": e.engine_id,
+                "version": e.version,
+                "description": e.description,
+            }
+            for e in engines
         ]
     }
