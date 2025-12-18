@@ -1,8 +1,50 @@
 # RMOS Runs Governance Compliance Migration Plan
 
 **Date:** December 18, 2025
-**Status:** Approved - Implementation In Progress
+**Status:** Phase 0-3 Complete - Ready for Phase 4-5
 **Contract Reference:** `docs/governance/RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md`
+
+---
+
+## Implementation Progress
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 0: Preparation | ✅ COMPLETE | Directory structure created |
+| Phase 1: Schema Migration | ✅ COMPLETE | Pydantic models with required fields |
+| Phase 2: Storage Layer | ✅ COMPLETE | Date-partitioned immutable store |
+| Phase 3: Data Migration | ✅ COMPLETE | No v1 data exists; CLI ready for future use |
+| Phase 4: API Router | 🔲 PENDING | Wire up feature flag |
+| Phase 5: Dependent Files | 🔲 PENDING | Update imports |
+| Phase 6: Cleanup | 🔲 PENDING | Set v2 as default |
+
+### Phase 3 Notes (Data Migration)
+
+**Status:** No existing v1 data to migrate
+
+The v1 store file (`services/api/app/data/runs.json`) does not exist, indicating
+no production run data has been accumulated yet. The migration infrastructure is
+ready for future use:
+
+```bash
+# Check migration status
+python -m rmos.runs_v2.cli_migrate status
+
+# Dry-run migration (validate without writing)
+python -m rmos.runs_v2.cli_migrate migrate --dry-run
+
+# Run actual migration
+python -m rmos.runs_v2.cli_migrate migrate
+
+# Verify migration
+python -m rmos.runs_v2.cli_migrate verify
+```
+
+When v1 data exists, the migration will:
+1. Backup `runs.json` with timestamp
+2. Convert each artifact to v2 format (Pydantic, required fields)
+3. Write to date-partitioned structure (`{YYYY-MM-DD}/{run_id}.json`)
+4. Generate migration report
 
 ---
 

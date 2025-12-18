@@ -132,6 +132,16 @@ from .api_runs import router
 
 
 # =============================================================================
+# CLI (for direct execution)
+# =============================================================================
+
+# Migration CLI available via:
+#   python -m rmos.runs_v2.cli_migrate status
+#   python -m rmos.runs_v2.cli_migrate migrate
+#   python -m rmos.runs_v2.cli_migrate verify
+
+
+# =============================================================================
 # Public API
 # =============================================================================
 
