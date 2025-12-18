@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from .schemas import RunArtifact, RunAttachment
+from .schemas import RunArtifact, RunAttachment, RunDecision, AdvisoryInputRef
 
 STORE_PATH_DEFAULT = "services/api/app/data/runs.json"
 _LOCK = threading.Lock()
@@ -57,6 +57,15 @@ def _serialize_artifact(artifact: RunArtifact) -> Dict[str, Any]:
             asdict(a) if hasattr(a, "__dataclass_fields__") else a
             for a in artifact.attachments or []
         ]
+    # Handle decision dataclass
+    if artifact.decision is not None:
+        d["decision"] = asdict(artifact.decision)
+    # Handle advisory_inputs list
+    if d.get("advisory_inputs"):
+        d["advisory_inputs"] = [
+            asdict(a) if hasattr(a, "__dataclass_fields__") else a
+            for a in artifact.advisory_inputs or []
+        ]
     return d
 
 
@@ -67,6 +76,15 @@ def _deserialize_artifact(data: Dict[str, Any]) -> RunArtifact:
         data["attachments"] = [
             RunAttachment(**a) if isinstance(a, dict) else a
             for a in data["attachments"]
+        ]
+    # Handle decision dataclass
+    if data.get("decision") and isinstance(data["decision"], dict):
+        data["decision"] = RunDecision(**data["decision"])
+    # Handle advisory_inputs list
+    if data.get("advisory_inputs"):
+        data["advisory_inputs"] = [
+            AdvisoryInputRef(**a) if isinstance(a, dict) else a
+            for a in data["advisory_inputs"]
         ]
     return RunArtifact(**data)
 
@@ -142,3 +160,37 @@ def list_runs_filtered(
     items = [r for r in items if match(r)]
     items.sort(key=lambda r: r.created_at_utc, reverse=True)
     return items[:limit]
+
+
+# --- NEW FUNCTIONS FROM GAP ANALYSIS ---
+
+def patch_run_meta(run_id: str, meta_updates: Dict[str, Any]) -> RunArtifact:
+    """
+    Update the meta field of a run artifact.
+
+    Thread-safe patch operation that preserves existing meta keys
+    while adding/updating specified keys.
+
+    Args:
+        run_id: The run ID to patch
+        meta_updates: Dict of key-value pairs to merge into meta
+
+    Returns:
+        Updated RunArtifact
+
+    Raises:
+        KeyError: If run_id not found
+    """
+    with _LOCK:
+        data = _read_all()
+        if run_id not in data:
+            raise KeyError(f"Run {run_id} not found")
+
+        raw = data[run_id]
+        if raw.get("meta") is None:
+            raw["meta"] = {}
+        raw["meta"].update(meta_updates)
+
+        _write_all(data)
+
+    return _deserialize_artifact(raw)

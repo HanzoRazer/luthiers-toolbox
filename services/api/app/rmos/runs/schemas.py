@@ -11,6 +11,36 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Literal, List
 
 RunStatus = Literal["OK", "BLOCKED", "ERROR"]
+ExplanationStatus = Literal["NONE", "PENDING", "READY", "ERROR"]
+
+
+@dataclass
+class RunDecision:
+    """
+    Structured decision data from feasibility evaluation.
+
+    Provides a normalized view of feasibility results for audit/reporting.
+    """
+    risk_level: Optional[str] = None  # GREEN/YELLOW/RED/ERROR
+    score: Optional[float] = None
+    block_reason: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+    details: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AdvisoryInputRef:
+    """
+    Reference to an attached advisory/explanation asset.
+
+    Supports append-only advisory linking for audit trail.
+    """
+    advisory_id: str
+    kind: str = "unknown"  # "explanation", "advisory", "note"
+    created_at_utc: str = ""
+    request_id: Optional[str] = None
+    engine_id: Optional[str] = None
+    engine_version: Optional[str] = None
 
 
 @dataclass
@@ -89,3 +119,23 @@ class RunArtifact:
     # Misc
     notes: Optional[str] = None
     errors: Optional[List[str]] = None
+
+    # --- NEW FIELDS FROM GAP ANALYSIS ---
+    # Operation mode (e.g., "cam", "preview", "simulation")
+    mode: Optional[str] = None
+
+    # Redacted request summary for audit logging (keys, identifiers only)
+    request_summary: Optional[Dict[str, Any]] = None
+
+    # Structured decision from feasibility evaluation
+    decision: Optional[RunDecision] = None
+
+    # Advisory/explanation references (append-only)
+    advisory_inputs: Optional[List[AdvisoryInputRef]] = None
+
+    # Explanation generation status
+    explanation_status: ExplanationStatus = "NONE"
+    explanation_summary: Optional[str] = None
+
+    # Free-form metadata (client version, correlation ids, etc.)
+    meta: Optional[Dict[str, Any]] = None
