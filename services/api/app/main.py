@@ -242,10 +242,12 @@ from .routers.cnc_production.compare_jobs_router import router as cnc_compare_jo
 
 # =============================================================================
 # WAVE 14: VISION ENGINE + RMOS RUNS (2 routers)
-# Feature flag: RMOS_RUNS_V2_ENABLED enables governance-compliant v2 implementation
+# Feature flag: RMOS_RUNS_V2_ENABLED controls v1/v2 implementation
+# DEFAULT: true (v2 governance-compliant implementation)
+# Set to "false" to use legacy v1 if needed for rollback
 # =============================================================================
 import os
-_RMOS_RUNS_V2_ENABLED = os.getenv("RMOS_RUNS_V2_ENABLED", "false").lower() == "true"
+_RMOS_RUNS_V2_ENABLED = os.getenv("RMOS_RUNS_V2_ENABLED", "true").lower() == "true"
 
 if _RMOS_RUNS_V2_ENABLED:
     try:

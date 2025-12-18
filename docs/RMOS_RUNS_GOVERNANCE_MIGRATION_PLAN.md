@@ -1,7 +1,7 @@
 # RMOS Runs Governance Compliance Migration Plan
 
 **Date:** December 18, 2025
-**Status:** Phase 0-3 Complete - Ready for Phase 4-5
+**Status:** ✅ MIGRATION COMPLETE - v2 is now default
 **Contract Reference:** `docs/governance/RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md`
 
 ---
@@ -16,7 +16,7 @@
 | Phase 3: Data Migration | ✅ COMPLETE | No v1 data exists; CLI ready for future use |
 | Phase 4: API Router | ✅ COMPLETE | Feature flag wired in main.py and rmos/__init__.py |
 | Phase 5: Dependent Files | ✅ COMPLETE | Conditional imports working |
-| Phase 6: Cleanup | 🔲 PENDING | Set v2 as default |
+| Phase 6: Cleanup | ✅ COMPLETE | v2 is now the default implementation |
 
 ### Phase 3 Notes (Data Migration)
 
@@ -77,6 +77,37 @@ export RMOS_RUNS_V2_ENABLED=false
 
 **Removed from v2 (strict immutability):**
 - `PATCH /runs/{id}/meta` - Use `attach-advisory` instead
+
+### Phase 6 Notes (v2 Default)
+
+**Status:** Complete
+
+The v2 implementation is now the **default**. The feature flag has been changed:
+
+```bash
+# v2 is now the DEFAULT (no env var needed)
+# System automatically uses governance-compliant implementation
+
+# To rollback to v1 (if needed)
+export RMOS_RUNS_V2_ENABLED=false
+```
+
+**What Changed:**
+- Default value: `false` → `true`
+- Feature flag retained for emergency rollback
+- v1 code preserved in `runs/` directory
+
+**Rollback Procedure (if needed):**
+1. Set `RMOS_RUNS_V2_ENABLED=false` in environment
+2. Restart API server
+3. System will use v1 single-file store
+
+**Future Cleanup (optional):**
+When confident v2 is stable:
+1. Rename `runs/` → `runs_legacy/`
+2. Rename `runs_v2/` → `runs/`
+3. Remove feature flag conditionals
+4. Update all imports
 
 ---
 
