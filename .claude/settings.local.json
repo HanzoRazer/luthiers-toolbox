@@ -11,7 +11,10 @@
       "Bash(python -m uvicorn:*)",
       "Bash(curl:*)",
       "Bash(dir \"C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\Governance_Code_Bundle\" /b)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(dir:*)",
+      "Bash(ls -la \"C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\docs\\Runs_Advisory_Integration\"\" 2>&1 || echo \"Directory not found \")",
+      "Bash(wc:*)"
     ]
   }
 }
