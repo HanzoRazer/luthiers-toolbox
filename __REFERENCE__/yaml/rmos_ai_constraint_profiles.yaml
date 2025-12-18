@@ -1,0 +1,807 @@
+Love this move. Let’s give you a real profile-edit loop end-to-end.
+
+This bundle will let you:
+
+Pick a profile (e.g. thin_saw, premium_shell) in the UI
+
+Edit its numeric fields + flags
+
+Save, which:
+
+Updates the in-memory profile registry
+
+Writes the updated profiles back to your YAML file
+
+Immediately run a Snapshot on a context to see how it behaves
+
+I’ll keep it dev-only by design (no auth logic baked in, but clearly separated under a /profile-admin path so you can firewall it if needed).
+
+0. Assumptions
+
+I’ll assume:
+
+Profiles YAML is at:
+services/api/app/config/rmos_constraint_profiles.yaml
+
+You already have rmos/constraint_profiles.py with:
+
+_BASE_PROFILES
+
+RosetteGeneratorConstraints
+
+load_profiles_from_yaml()
+
+Frontend: Vue 3 + TS + existing AI Ops dashboard we built.
+
+You can tweak paths as needed.
+
+1️⃣ Extend rmos/constraint_profiles.py with update + save helpers
+
+File: services/api/app/rmos/constraint_profiles.py
+(Add the following to the bottom of the file, after the YAML loader code you already have.)
+
+# -------------------------------------------------------------------
+# Profile update + save helpers
+# -------------------------------------------------------------------
+
+from typing import Any
+
+
+def profiles_to_dict() -> dict[str, dict[str, Any]]:
+    """
+    Export all current profiles (from _BASE_PROFILES) as plain dicts,
+    suitable for YAML/JSON.
+    """
+    result: dict[str, dict[str, Any]] = {}
+    for name, c in _BASE_PROFILES.items():
+        result[name] = {
+            "min_rings": c.min_rings,
+            "max_rings": c.max_rings,
+            "min_ring_width_mm": c.min_ring_width_mm,
+            "max_ring_width_mm": c.max_ring_width_mm,
+            "min_total_width_mm": c.min_total_width_mm,
+            "max_total_width_mm": c.max_total_width_mm,
+            "allow_mosaic": c.allow_mosaic,
+            "allow_segmented": c.allow_segmented,
+            "palette_key": c.palette_key,
+            "bias_simple": c.bias_simple,
+        }
+    return result
+
+
+def update_profile_from_data(name: str, data: dict[str, Any]) -> RosetteGeneratorConstraints:
+    """
+    Update (or create) a single profile by name using a partial dict of fields.
+
+    - Unknown fields are ignored.
+    - Missing fields keep their existing values.
+    """
+    existing = _BASE_PROFILES.get(name, _BASE_PROFILES["default"])
+    c = replace(existing)
+
+    if "min_rings" in data:
+        c.min_rings = int(data["min_rings"])
+    if "max_rings" in data:
+        c.max_rings = int(data["max_rings"])
+    if "min_ring_width_mm" in data:
+        c.min_ring_width_mm = float(data["min_ring_width_mm"])
+    if "max_ring_width_mm" in data:
+        c.max_ring_width_mm = float(data["max_ring_width_mm"])
+    if "min_total_width_mm" in data:
+        c.min_total_width_mm = float(data["min_total_width_mm"])
+    if "max_total_width_mm" in data:
+        c.max_total_width_mm = float(data["max_total_width_mm"])
+    if "allow_mosaic" in data:
+        c.allow_mosaic = bool(data["allow_mosaic"])
+    if "allow_segmented" in data:
+        c.allow_segmented = bool(data["allow_segmented"])
+    if "palette_key" in data:
+        c.palette_key = str(data["palette_key"])
+    if "bias_simple" in data:
+        c.bias_simple = bool(data["bias_simple"])
+
+    # Sanity clamps
+    if c.min_rings > c.max_rings:
+        c.min_rings = c.max_rings
+    if c.min_ring_width_mm > c.max_ring_width_mm:
+        c.min_ring_width_mm = c.max_ring_width_mm
+    if c.min_total_width_mm > c.max_total_width_mm:
+        c.min_total_width_mm = c.max_total_width_mm
+
+    _BASE_PROFILES[name] = c
+    return c
+
+
+def save_profiles_to_yaml(path: str) -> None:
+    """
+    Persist all profiles to a YAML file at the given path.
+
+    This overwrites the file; in dev usage, you'll check it into git.
+    """
+    if not _YAML_AVAILABLE:
+        raise ProfileLoaderError(
+            "PyYAML is not installed. Install 'pyyaml' to save YAML profiles."
+        )
+
+    data = profiles_to_dict()
+
+    # Create directory if needed
+    directory = os.path.dirname(path)
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
+
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, sort_keys=True)  # type: ignore[union-attr]
+
+2️⃣ Profile Admin API router (dev-only)
+
+File: services/api/app/rmos/api_profile_admin.py
+
+This gives you:
+
+GET /api/rmos/ai/profile-admin/list – list profiles and preview values
+
+GET /api/rmos/ai/profile-admin/{name} – fetch one profile
+
+PUT /api/rmos/ai/profile-admin/{name} – update + save to YAML
+
+# services/api/app/rmos/api_profile_admin.py
+
+from __future__ import annotations
+
+import os
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel
+
+from .constraint_profiles import (
+    RosetteGeneratorConstraints,
+    list_profile_names,
+    get_profile,
+    update_profile_from_data,
+    save_profiles_to_yaml,
+)
+
+
+# IMPORTANT:
+# This is a DEV-ONLY API. Protect it with:
+# - env flags
+# - auth
+# - IP whitelisting
+# or only expose it on a dev server.
+DEV_PROFILE_YAML_PATH = os.getenv(
+    "RMOS_PROFILE_YAML_PATH",
+    "services/api/app/config/rmos_constraint_profiles.yaml",
+)
+
+router = APIRouter(
+    prefix="/rmos/ai/profile-admin",
+    tags=["rmos-profile-admin"],
+)
+
+
+class RosetteProfileModel(BaseModel):
+    min_rings: int
+    max_rings: int
+    min_ring_width_mm: float
+    max_ring_width_mm: float
+    min_total_width_mm: float
+    max_total_width_mm: float
+    allow_mosaic: bool
+    allow_segmented: bool
+    palette_key: str
+    bias_simple: bool
+
+    @classmethod
+    def from_constraints(cls, c: RosetteGeneratorConstraints) -> "RosetteProfileModel":
+        return cls(
+            min_rings=c.min_rings,
+            max_rings=c.max_rings,
+            min_ring_width_mm=c.min_ring_width_mm,
+            max_ring_width_mm=c.max_ring_width_mm,
+            min_total_width_mm=c.min_total_width_mm,
+            max_total_width_mm=c.max_total_width_mm,
+            allow_mosaic=c.allow_mosaic,
+            allow_segmented=c.allow_segmented,
+            palette_key=c.palette_key,
+            bias_simple=c.bias_simple,
+        )
+
+
+class ProfileListItem(BaseModel):
+    name: str
+    profile: RosetteProfileModel
+
+
+class UpdateProfileRequest(BaseModel):
+    # All fields optional – partial updates allowed
+    min_rings: Optional[int] = None
+    max_rings: Optional[int] = None
+    min_ring_width_mm: Optional[float] = None
+    max_ring_width_mm: Optional[float] = None
+    min_total_width_mm: Optional[float] = None
+    max_total_width_mm: Optional[float] = None
+    allow_mosaic: Optional[bool] = None
+    allow_segmented: Optional[bool] = None
+    palette_key: Optional[str] = None
+    bias_simple: Optional[bool] = None
+
+
+@router.get(
+    "/list",
+    response_model=list[ProfileListItem],
+    summary="List all constraint profiles and their current values (DEV-ONLY).",
+)
+def list_profiles() -> list[ProfileListItem]:
+    names = list_profile_names()
+    items: list[ProfileListItem] = []
+    for name in names:
+        c = get_profile(name)
+        items.append(
+            ProfileListItem(
+                name=name,
+                profile=RosetteProfileModel.from_constraints(c),
+            )
+        )
+    return items
+
+
+@router.get(
+    "/{name}",
+    response_model=RosetteProfileModel,
+    summary="Get a specific profile by name (DEV-ONLY).",
+)
+def get_profile_detail(name: str) -> RosetteProfileModel:
+    names = list_profile_names()
+    if name not in names:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Profile '{name}' not found.",
+        )
+    c = get_profile(name)
+    return RosetteProfileModel.from_constraints(c)
+
+
+@router.put(
+    "/{name}",
+    response_model=RosetteProfileModel,
+    summary="Update a profile and persist to YAML (DEV-ONLY).",
+)
+def update_profile(
+    name: str,
+    payload: UpdateProfileRequest,
+) -> RosetteProfileModel:
+    if name not in list_profile_names():
+        # We allow creating a new profile, but warn via status code 201 if desired.
+        # For now, treat new names as valid.
+        pass
+
+    # Convert payload to dict ignoring None fields.
+    data = {k: v for k, v in payload.model_dump().items() if v is not None}
+
+    try:
+        c = update_profile_from_data(name, data)
+        # Persist to YAML
+        save_profiles_to_yaml(DEV_PROFILE_YAML_PATH)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update/save profile '{name}': {exc}",
+        ) from exc
+
+    return RosetteProfileModel.from_constraints(c)
+
+Wire the router in
+
+In your FastAPI app:
+
+from rmos.api_profile_admin import router as rmos_profile_admin_router
+
+app.include_router(rmos_profile_admin_router, prefix="/api")
+
+
+Again: this is dev-only; lock it down however you like.
+
+3️⃣ Vue Profile Editor component
+
+This will:
+
+List profiles
+
+Let you pick one
+
+Edit the numeric fields/flags
+
+Save (PUT → backend)
+
+Show “Preview YAML” so you can copy to git if you prefer manual flow
+
+File: frontend/src/components/RmosAiProfileEditor.vue
+
+<template>
+  <div class="rmos-profile-editor p-4 space-y-4 border rounded-lg bg-white shadow-sm">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-2">
+      <h2 class="text-lg font-semibold">
+        Profile Editor (DEV)
+      </h2>
+      <div class="text-xs text-gray-500">
+        Edit constraint profiles → save to YAML → test with snapshot.
+      </div>
+    </div>
+
+    <!-- Profile selection -->
+    <div class="flex flex-col md:flex-row gap-3">
+      <div class="md:w-1/3">
+        <label class="block text-xs font-medium text-gray-600 mb-1">
+          Profile
+        </label>
+        <select
+          v-model="selectedName"
+          class="w-full border rounded px-2 py-1 text-sm"
+          @change="onSelectProfile"
+        >
+          <option value="" disabled>Select a profile</option>
+          <option
+            v-for="item in profiles"
+            :key="item.name"
+            :value="item.name"
+          >
+            {{ item.name }}
+          </option>
+        </select>
+        <div class="text-[10px] text-gray-500 mt-1">
+          Profiles map to contexts via tool_id/material_id/machine_id rules.
+        </div>
+      </div>
+
+      <div class="md:flex-1 text-xs text-gray-600">
+        <p>
+          Typical mapping:
+        </p>
+        <ul class="list-disc list-inside">
+          <li><code>thin_saw</code> → saw tools</li>
+          <li><code>router_bit</code> → router tools</li>
+          <li><code>proto_machine</code> / <code>production_machine</code> → machine_id hints</li>
+          <li><code>premium_shell</code> / <code>maple_contrast</code> → material palettes</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div v-if="error" class="text-sm text-red-600">
+      {{ error }}
+    </div>
+
+    <!-- No selection -->
+    <div
+      v-if="!selectedProfile"
+      class="text-sm text-gray-500 border border-dashed rounded p-3"
+    >
+      Select a profile to edit. After saving, re-run a snapshot for a context
+      that uses this profile to see changes.
+    </div>
+
+    <!-- Editor form -->
+    <div
+      v-if="selectedProfile"
+      class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs"
+    >
+      <!-- Numeric fields -->
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Min Rings
+            </label>
+            <input
+              v-model.number="editForm.min_rings"
+              type="number"
+              min="0"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Max Rings
+            </label>
+            <input
+              v-model.number="editForm.max_rings"
+              type="number"
+              min="0"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Min Ring Width (mm)
+            </label>
+            <input
+              v-model.number="editForm.min_ring_width_mm"
+              type="number"
+              step="0.01"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Max Ring Width (mm)
+            </label>
+            <input
+              v-model.number="editForm.max_ring_width_mm"
+              type="number"
+              step="0.01"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Min Total Width (mm)
+            </label>
+            <input
+              v-model.number="editForm.min_total_width_mm"
+              type="number"
+              step="0.01"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Max Total Width (mm)
+            </label>
+            <input
+              v-model.number="editForm.max_total_width_mm"
+              type="number"
+              step="0.01"
+              class="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Flags + palette + actions -->
+      <div class="space-y-3">
+        <div class="flex flex-col space-y-1">
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            Palette Key
+          </label>
+          <input
+            v-model="editForm.palette_key"
+            type="text"
+            class="w-full border rounded px-2 py-1 text-sm"
+          />
+          <div class="text-[10px] text-gray-500">
+            Describes material/color palette, e.g. <code>premium_shell</code>,
+            <code>maple_contrast</code>.
+          </div>
+        </div>
+
+        <div class="flex flex-col space-y-1">
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            Flags
+          </label>
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center">
+              <input
+                v-model="editForm.allow_mosaic"
+                type="checkbox"
+                class="mr-1"
+              />
+              <span>Allow mosaic</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input
+                v-model="editForm.allow_segmented"
+                type="checkbox"
+                class="mr-1"
+              />
+              <span>Allow segmented</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input
+                v-model="editForm.bias_simple"
+                type="checkbox"
+                class="mr-1"
+              />
+              <span>Bias simple</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-2">
+          <button
+            class="flex-1 text-sm border rounded px-2 py-1 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="saveProfile"
+            :disabled="saving"
+          >
+            <span v-if="!saving">Save Profile (YAML)</span>
+            <span v-else>Saving...</span>
+          </button>
+          <button
+            class="flex-1 text-sm border rounded px-2 py-1 bg-white hover:bg-gray-50"
+            @click="resetForm"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div
+          v-if="saveMessage"
+          class="text-xs mt-1"
+          :class="saveError ? 'text-red-600' : 'text-green-600'"
+        >
+          {{ saveMessage }}
+        </div>
+      </div>
+    </div>
+
+    <!-- YAML preview -->
+    <div v-if="selectedProfile" class="border rounded p-3 text-xs">
+      <details>
+        <summary class="cursor-pointer font-semibold">
+          YAML Preview for <code>{{ selectedName }}</code>
+        </summary>
+        <pre class="mt-2 whitespace-pre">
+{{ yamlPreview }}
+        </pre>
+      </details>
+      <div class="text-[10px] text-gray-500 mt-1">
+        This reflects your current edits (not necessarily what is on disk if save fails).
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+type ProfileModel = {
+  min_rings: number
+  max_rings: number
+  min_ring_width_mm: number
+  max_ring_width_mm: number
+  min_total_width_mm: number
+  max_total_width_mm: number
+  allow_mosaic: boolean
+  allow_segmented: boolean
+  palette_key: string
+  bias_simple: boolean
+}
+
+type ProfileListItem = {
+  name: string
+  profile: ProfileModel
+}
+
+const API_BASE = '/api/rmos/ai/profile-admin'
+
+const profiles = ref<ProfileListItem[]>([])
+const selectedName = ref('')
+const selectedProfile = ref<ProfileModel | null>(null)
+const editForm = ref<ProfileModel | null>(null)
+const loading = ref(false)
+const saving = ref(false)
+const error = ref<string | null>(null)
+const saveMessage = ref<string | null>(null)
+const saveError = ref(false)
+
+async function loadProfiles() {
+  loading.value = true
+  error.value = null
+  try {
+    const res = await fetch(`${API_BASE}/list`)
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    const data: ProfileListItem[] = await res.json()
+    profiles.value = data
+  } catch (e: any) {
+    console.error(e)
+    error.value = 'Failed to load profiles. This editor is dev-only.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function onSelectProfile() {
+  if (!selectedName.value) {
+    selectedProfile.value = null
+    editForm.value = null
+    return
+  }
+  error.value = null
+  saveMessage.value = null
+  saveError.value = false
+  try {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(selectedName.value)}`)
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    const data: ProfileModel = await res.json()
+    selectedProfile.value = data
+    // Deep copy to editForm
+    editForm.value = JSON.parse(JSON.stringify(data))
+  } catch (e: any) {
+    console.error(e)
+    error.value = `Failed to load profile '${selectedName.value}'.`
+  }
+}
+
+function resetForm() {
+  if (selectedProfile.value) {
+    editForm.value = JSON.parse(JSON.stringify(selectedProfile.value))
+    saveMessage.value = null
+    saveError.value = false
+  }
+}
+
+async function saveProfile() {
+  if (!selectedName.value || !editForm.value) return
+
+  saving.value = true
+  saveMessage.value = null
+  saveError.value = false
+
+  try {
+    const res = await fetch(`${API_BASE}/${encodeURIComponent(selectedName.value)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editForm.value),
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    const updated: ProfileModel = await res.json()
+    selectedProfile.value = updated
+    editForm.value = JSON.parse(JSON.stringify(updated))
+    saveMessage.value = `Profile '${selectedName.value}' saved and written to YAML.`
+    saveError.value = false
+
+    // Keep local list in sync (optional)
+    const idx = profiles.value.findIndex((p) => p.name === selectedName.value)
+    if (idx !== -1) {
+      profiles.value[idx].profile = updated
+    }
+  } catch (e: any) {
+    console.error(e)
+    saveMessage.value = `Failed to save profile '${selectedName.value}'. Check console/API.`
+    saveError.value = true
+  } finally {
+    saving.value = false
+  }
+}
+
+const yamlPreview = computed(() => {
+  if (!editForm.value || !selectedName.value) return ''
+  const p = editForm.value
+  // simple YAML-ish formatting without relying on yaml lib in the browser
+  return [
+    `${selectedName.value}:`,
+    `  min_rings: ${p.min_rings}`,
+    `  max_rings: ${p.max_rings}`,
+    `  min_ring_width_mm: ${p.min_ring_width_mm}`,
+    `  max_ring_width_mm: ${p.max_ring_width_mm}`,
+    `  min_total_width_mm: ${p.min_total_width_mm}`,
+    `  max_total_width_mm: ${p.max_total_width_mm}`,
+    `  allow_mosaic: ${p.allow_mosaic}`,
+    `  allow_segmented: ${p.allow_segmented}`,
+    `  palette_key: "${p.palette_key}"`,
+    `  bias_simple: ${p.bias_simple}`,
+  ].join('\n')
+})
+
+// Initial load
+void loadProfiles()
+</script>
+
+<style scoped>
+.rmos-profile-editor {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+</style>
+
+4️⃣ Embed the Profile Editor into the AI Ops dashboard
+
+Let’s add the editor under the analytics panel so you’ve got:
+
+Logs + Snapshot (row 1)
+
+Performance Analytics (row 2)
+
+Profile Editor (row 3 – dev only)
+
+Update: frontend/src/views/RmosAiOpsDashboard.vue
+
+<template>
+  <div class="rmos-ai-ops-dashboard max-w-7xl mx-auto p-4 space-y-4">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      <div>
+        <h1 class="text-2xl font-bold">
+          RMOS AI Ops Dashboard
+        </h1>
+        <p class="text-sm text-gray-600">
+          Monitor AI runs, inspect generator behavior, and tune profiles per tool/material/machine.
+        </p>
+      </div>
+    </header>
+
+    <!-- Row 1: Logs + Snapshot -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+      <section>
+        <RmosAiLogViewer @select-context="onSelectContext" />
+      </section>
+      <section>
+        <RmosAiSnapshotInspector :selected-context="selectedContext" />
+      </section>
+    </div>
+
+    <!-- Row 2: Profile performance analytics -->
+    <div>
+      <RmosAiProfilePerformance @select-context="onSelectContext" />
+    </div>
+
+    <!-- Row 3: Profile editor (DEV) -->
+    <div>
+      <RmosAiProfileEditor />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import RmosAiLogViewer from '@/components/RmosAiLogViewer.vue'
+import RmosAiSnapshotInspector from '@/components/RmosAiSnapshotInspector.vue'
+import RmosAiProfilePerformance from '@/components/RmosAiProfilePerformance.vue'
+import RmosAiProfileEditor from '@/components/RmosAiProfileEditor.vue'
+
+type SelectedContext = {
+  toolId: string | null
+  materialId: string | null
+  machineId: string | null
+} | null
+
+const selectedContext = ref<SelectedContext>(null)
+
+function onSelectContext(ctx: SelectedContext) {
+  selectedContext.value = ctx
+}
+</script>
+
+<style scoped>
+.rmos-ai-ops-dashboard {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+</style>
+
+5️⃣ How you’ll use this in practice
+
+Run some AI searches (constraint-first / ai_assisted).
+
+Visit /dev/rmos-ai-ops:
+
+Performance panel → find underperforming contexts (low success / high RED%).
+
+Click a row → Snapshot Inspector auto-loads that context.
+
+Look at the snapshot:
+
+See if ring counts/widths look too wild or too timid.
+
+Open Profile Editor:
+
+Pick the relevant profile (e.g. thin_saw, premium_shell).
+
+Tweak min/max rings, widths, total widths, flags.
+
+Hit Save Profile (YAML) → backend updates registry + rewrites YAML.
+
+Re-run snapshot for the same context to see if behavior improved.
+
+Re-run AI search and watch performance/logs improve.

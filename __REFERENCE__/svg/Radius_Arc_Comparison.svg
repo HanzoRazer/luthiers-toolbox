@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="600" 
+     height="400" 
+     viewBox="0 0 600 400">
+  
+  <defs>
+    <style>
+      .title { font: bold 18px sans-serif; fill: #2d3748; }
+      .subtitle { font: 14px sans-serif; fill: #4a5568; }
+      .label { font: 12px sans-serif; fill: #4a5568; }
+      .dim { font: 10px monospace; fill: #718096; }
+      .arc15 { fill: none; stroke: #667eea; stroke-width: 3; }
+      .arc28 { fill: none; stroke: #ed8936; stroke-width: 3; }
+      .chord { fill: none; stroke: #e53e3e; stroke-width: 1; stroke-dasharray: 4,2; }
+      .sagitta15 { fill: none; stroke: #667eea; stroke-width: 2; stroke-dasharray: 6,3; }
+      .sagitta28 { fill: none; stroke: #ed8936; stroke-width: 2; stroke-dasharray: 6,3; }
+      .grid { stroke: #e2e8f0; stroke-width: 0.5; }
+      .axis { stroke: #cbd5e0; stroke-width: 1; }
+      .point { fill: #e53e3e; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="400" fill="#fafafa"/>
+  
+  <!-- Title -->
+  <text x="300" y="30" class="title" text-anchor="middle">Radius Arc Comparison: 15ft vs 28ft</text>
+  <text x="300" y="50" class="subtitle" text-anchor="middle">Guitar Top/Back Arching Reference Templates</text>
+  
+  <!-- Grid -->
+  <g class="grid">
+    <line x1="50" y1="100" x2="550" y2="100"/>
+    <line x1="50" y1="150" x2="550" y2="150"/>
+    <line x1="50" y1="200" x2="550" y2="200"/>
+    <line x1="50" y1="250" x2="550" y2="250"/>
+    
+    <line x1="100" y1="80" x2="100" y2="270"/>
+    <line x1="200" y1="80" x2="200" y2="270"/>
+    <line x1="300" y1="80" x2="300" y2="270"/>
+    <line x1="400" y1="80" x2="400" y2="270"/>
+    <line x1="500" y1="80" x2="500" y2="270"/>
+  </g>
+  
+  <!-- Center axis -->
+  <line x1="300" y1="80" x2="300" y2="270" class="axis" stroke-dasharray="2,2"/>
+  
+  <!-- 15ft radius arc (pronounced curvature) -->
+  <!-- Radius = 15ft = 4572mm, Span = 500mm, Sagitta ≈ 6.84mm -->
+  <path d="M 50,200 Q 300,186 550,200" 
+        class="arc15"
+        stroke-linecap="round"/>
+  
+  <!-- 28ft radius arc (subtle curvature) -->
+  <!-- Radius = 28ft = 8534mm, Span = 500mm, Sagitta ≈ 3.66mm -->
+  <path d="M 50,200 Q 300,193 550,200" 
+        class="arc28"
+        stroke-linecap="round"/>
+  
+  <!-- Chord line (flat reference) -->
+  <line x1="50" y1="200" x2="550" y2="200" class="chord"/>
+  
+  <!-- Sagitta markers -->
+  <line x1="295" y1="200" x2="295" y2="186" class="sagitta15" stroke-width="2"/>
+  <line x1="305" y1="200" x2="305" y2="193" class="sagitta28" stroke-width="2"/>
+  
+  <!-- Endpoint markers -->
+  <circle cx="50" cy="200" r="3" class="point"/>
+  <circle cx="550" cy="200" r="3" class="point"/>
+  <circle cx="295" cy="186" r="2.5" fill="#667eea"/>
+  <circle cx="305" cy="193" r="2.5" fill="#ed8936"/>
+  
+  <!-- Annotations -->
+  <text x="295" y="180" class="label" text-anchor="end" fill="#667eea">15ft Peak</text>
+  <text x="310" y="188" class="label" fill="#ed8936">28ft Peak</text>
+  
+  <!-- Legend -->
+  <g transform="translate(70, 290)">
+    <rect x="-10" y="-15" width="220" height="95" fill="white" stroke="#cbd5e0" rx="4"/>
+    
+    <text x="0" y="0" class="subtitle">Legend</text>
+    
+    <line x1="0" y1="12" x2="30" y2="12" class="arc15"/>
+    <text x="35" y="16" class="label">15 Foot Radius</text>
+    
+    <line x1="0" y1="28" x2="30" y2="28" class="arc28"/>
+    <text x="35" y="32" class="label">28 Foot Radius</text>
+    
+    <line x1="0" y1="44" x2="30" y2="44" class="chord"/>
+    <text x="35" y="48" class="label">Flat Reference</text>
+    
+    <text x="0" y="65" class="dim">Span: 500mm (19.69")</text>
+  </g>
+  
+  <!-- Specifications Table -->
+  <g transform="translate(330, 290)">
+    <rect x="-10" y="-15" width="220" height="95" fill="white" stroke="#cbd5e0" rx="4"/>
+    
+    <text x="0" y="0" class="subtitle">Specifications</text>
+    
+    <text x="0" y="18" class="dim">15ft Radius: 4572mm (180")</text>
+    <text x="0" y="32" class="dim">15ft Sagitta: 6.84mm (0.269")</text>
+    
+    <text x="0" y="50" class="dim">28ft Radius: 8534mm (336")</text>
+    <text x="0" y="64" class="dim">28ft Sagitta: 3.66mm (0.144")</text>
+  </g>
+  
+  <!-- Usage Notes -->
+  <g transform="translate(50, 310)">
+    <text x="0" y="65" class="dim" font-weight="bold">Common Guitar Applications:</text>
+    <text x="0" y="78" class="dim">• 15ft radius: Classical guitar tops (pronounced arch)</text>
+    <text x="280" y="78" class="dim">• 28ft radius: Steel-string tops (subtle arch)</text>
+  </g>
+</svg>

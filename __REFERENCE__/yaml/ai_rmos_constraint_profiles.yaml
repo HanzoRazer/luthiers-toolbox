@@ -1,0 +1,423 @@
+Love it. Let’s make the profiles tunable and testable instead of “code magic”.
+
+Here’s the Profile Tuning & Test Bundle:
+
+A tiny YAML loader for constraint profiles
+
+A sample YAML config file you can drop into config/
+
+Pytest tests for:
+
+YAML loading
+
+Context → profile resolution
+
+Global AI policy caps
+
+I’ll assume the constraint/profile code I just shipped is in place.
+
+1. YAML config for profiles
+
+Suggested path: services/api/app/config/rmos_constraint_profiles.yaml
+
+This is a sample you can adjust. Profiles here will override / extend your in-code base profiles.
+
+# services/api/app/config/rmos_constraint_profiles.yaml
+
+default:
+  min_rings: 1
+  max_rings: 8
+  min_ring_width_mm: 0.3
+  max_ring_width_mm: 2.5
+  min_total_width_mm: 1.0
+  max_total_width_mm: 10.0
+  allow_mosaic: true
+  allow_segmented: true
+  palette_key: "default"
+  bias_simple: true
+
+thin_saw:
+  min_rings: 1
+  max_rings: 6
+  min_ring_width_mm: 0.4
+  max_ring_width_mm: 2.0
+  min_total_width_mm: 1.0
+  max_total_width_mm: 8.0
+  allow_mosaic: false
+  allow_segmented: true
+  palette_key: "thin_saw_default"
+  bias_simple: true
+
+proto_machine:
+  min_rings: 1
+  max_rings: 4
+  min_ring_width_mm: 0.4
+  max_ring_width_mm: 2.0
+  min_total_width_mm: 1.0
+  max_total_width_mm: 6.0
+  allow_mosaic: false
+  allow_segmented: false
+  palette_key: "proto"
+  bias_simple: true
+
+premium_shell:
+  min_rings: 3
+  max_rings: 10
+  min_ring_width_mm: 0.4
+  max_ring_width_mm: 2.0
+  min_total_width_mm: 2.0
+  max_total_width_mm: 9.0
+  allow_mosaic: true
+  allow_segmented: true
+  palette_key: "premium_shell"
+  bias_simple: false
+
+
+You can start with this and tweak in a text editor instead of touching Python.
+
+2. Add a YAML loader to rmos/constraint_profiles.py
+
+We’ll extend the existing file with a loader function (no breaking changes).
+
+File: services/api/app/rmos/constraint_profiles.py
+(Only the new bits are shown; keep all your existing code above.)
+
+# add near the top
+import os
+from typing import Any
+
+
+Then, at the bottom of the file, add:
+
+# -------------------------------------------------------------------
+# YAML loading for profiles
+# -------------------------------------------------------------------
+
+try:
+    import yaml  # type: ignore[import]
+    _YAML_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    _YAML_AVAILABLE = False
+
+
+class ProfileLoaderError(Exception):
+    ...
+
+
+def _parse_profile_dict(name: str, data: dict[str, Any]) -> RosetteGeneratorConstraints:
+    """
+    Parse a single profile dict from YAML into RosetteGeneratorConstraints.
+
+    Missing fields fall back to current profile defaults.
+    """
+    base = _BASE_PROFILES.get(name, _BASE_PROFILES["default"])
+    c = replace(base)
+
+    # Use dict.get with fallback to preserve unspecified values.
+    c.min_rings = int(data.get("min_rings", c.min_rings))
+    c.max_rings = int(data.get("max_rings", c.max_rings))
+
+    c.min_ring_width_mm = float(data.get("min_ring_width_mm", c.min_ring_width_mm))
+    c.max_ring_width_mm = float(data.get("max_ring_width_mm", c.max_ring_width_mm))
+
+    c.min_total_width_mm = float(data.get("min_total_width_mm", c.min_total_width_mm))
+    c.max_total_width_mm = float(data.get("max_total_width_mm", c.max_total_width_mm))
+
+    if "allow_mosaic" in data:
+        c.allow_mosaic = bool(data["allow_mosaic"])
+    if "allow_segmented" in data:
+        c.allow_segmented = bool(data["allow_segmented"])
+    if "palette_key" in data:
+        c.palette_key = str(data["palette_key"])
+    if "bias_simple" in data:
+        c.bias_simple = bool(data["bias_simple"])
+
+    # Sanity clamping
+    if c.min_rings > c.max_rings:
+        c.min_rings = c.max_rings
+    if c.min_ring_width_mm > c.max_ring_width_mm:
+        c.min_ring_width_mm = c.max_ring_width_mm
+    if c.min_total_width_mm > c.max_total_width_mm:
+        c.min_total_width_mm = c.max_total_width_mm
+
+    return c
+
+
+def load_profiles_from_yaml(path: str) -> None:
+    """
+    Load/override constraint profiles from a YAML file.
+
+    Expected structure:
+
+        profile_name:
+          min_rings: ...
+          max_rings: ...
+          ...
+
+    Fields are optional; unspecified fields inherit from existing profiles.
+    """
+    if not _YAML_AVAILABLE:
+        raise ProfileLoaderError(
+            "PyYAML is not installed. Install 'pyyaml' to use YAML-based profiles."
+        )
+
+    if not os.path.exists(path):
+        raise ProfileLoaderError(f"Profile YAML not found at path: {path}")
+
+    with open(path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)  # type: ignore[union-attr]
+
+    if not isinstance(raw, dict):
+        raise ProfileLoaderError("Profile YAML root must be a mapping of profile_name -> profile_data.")
+
+    for name, data in raw.items():
+        if not isinstance(data, dict):
+            continue
+        _BASE_PROFILES[name] = _parse_profile_dict(name, data)
+
+
+Usage later (e.g., in app startup or a small admin script):
+
+from rmos.constraint_profiles import load_profiles_from_yaml
+
+load_profiles_from_yaml("services/api/app/config/rmos_constraint_profiles.yaml")
+
+
+If you don’t call it, the in-code defaults still work.
+
+3. Pytest: test the YAML loader + profile resolution
+
+File: services/api/tests/test_constraint_profiles_yaml.py
+
+# services/api/tests/test_constraint_profiles_yaml.py
+
+from __future__ import annotations
+
+import textwrap
+
+from pathlib import Path
+
+import pytest
+
+from app.rmos.constraint_profiles import (
+    list_profile_names,
+    get_profile,
+    load_profiles_from_yaml,
+    resolve_constraints_for_context,
+)
+from app.rmos.models import RmosContext  # adjust if needed
+from app.rmos.ai_policy import apply_global_policy_to_constraints
+
+
+@pytest.fixture
+def sample_yaml(tmp_path: Path) -> Path:
+    content = textwrap.dedent(
+        """
+        default:
+          min_rings: 2
+          max_rings: 6
+          min_ring_width_mm: 0.4
+          max_ring_width_mm: 2.0
+          max_total_width_mm: 9.0
+          allow_mosaic: false
+          palette_key: "test_default"
+
+        custom_shell:
+          min_rings: 3
+          max_rings: 9
+          min_ring_width_mm: 0.5
+          max_ring_width_mm: 2.1
+          min_total_width_mm: 2.0
+          max_total_width_mm: 8.5
+          allow_mosaic: true
+          allow_segmented: true
+          palette_key: "custom_shell"
+        """
+    ).strip()
+
+    path = tmp_path / "profiles.yaml"
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+def test_load_profiles_from_yaml_overrides_defaults(sample_yaml: Path) -> None:
+    # Before loading, 'default' exists.
+    assert "default" in list_profile_names()
+
+    # Load test profiles.
+    load_profiles_from_yaml(str(sample_yaml))
+
+    # Default profile should be updated.
+    default_profile = get_profile("default")
+    assert default_profile.min_rings == 2
+    assert default_profile.max_rings == 6
+    assert default_profile.min_ring_width_mm == 0.4
+    assert default_profile.max_total_width_mm == 9.0
+    assert default_profile.allow_mosaic is False
+    assert default_profile.palette_key == "test_default"
+
+    # New profile should be present.
+    shell_profile = get_profile("custom_shell")
+    assert shell_profile.min_rings == 3
+    assert shell_profile.max_rings == 9
+    assert shell_profile.palette_key == "custom_shell"
+    assert shell_profile.allow_mosaic is True
+
+
+def test_resolve_constraints_for_context_uses_profiles(sample_yaml: Path) -> None:
+    load_profiles_from_yaml(str(sample_yaml))
+
+    # Create a fake context with material_id mapped to custom_shell.
+    # This depends on your _material_profile_name logic;
+    # for this test we simply name it so that logic maps correctly in your real code.
+    ctx = RmosContext(
+        tool_id=None,
+        material_id="custom_shell",  # ensures _material_profile_name returns "custom_shell"
+        machine_id=None,
+    )
+
+    constraints = resolve_constraints_for_context(ctx)
+    assert constraints.palette_key == "custom_shell"
+    assert 3 <= constraints.min_rings <= constraints.max_rings
+
+
+def test_apply_global_policy_clamps_extreme_profiles(sample_yaml: Path) -> None:
+    load_profiles_from_yaml(str(sample_yaml))
+
+    # This profile is within reasonable bounds, but we can artificially
+    # push a profile beyond system caps to verify clamping.
+    extreme = get_profile("custom_shell")
+    extreme.max_rings = 999
+    extreme.max_total_width_mm = 999.0
+
+    clamped = apply_global_policy_to_constraints(extreme)
+
+    from app.rmos.ai_policy import MAX_SYSTEM_RINGS, MAX_SYSTEM_TOTAL_WIDTH_MM
+
+    assert clamped.max_rings <= MAX_SYSTEM_RINGS
+    assert clamped.max_total_width_mm <= MAX_SYSTEM_TOTAL_WIDTH_MM
+
+
+If RmosContext requires more fields, just add dummy values in the test constructors.
+
+4. Pytest: policy tests (search budget caps)
+
+File: services/api/tests/test_ai_policy.py
+
+# services/api/tests/test_ai_policy.py
+
+from __future__ import annotations
+
+import pytest
+
+from app.rmos.ai_policy import (
+    validate_request_against_policy,
+    PolicyViolationError,
+    MAX_SYSTEM_ATTEMPTS,
+    MAX_SYSTEM_TIME_LIMIT_SECONDS,
+)
+from app.rmos.schemas_ai import ConstraintFirstRequest
+from app.rmos.models import RmosContext, SearchBudgetSpec, RosetteParamSpec  # adjust imports
+
+
+def _make_minimal_request(
+    *,
+    max_attempts: int,
+    time_limit: float,
+) -> ConstraintFirstRequest:
+    # Minimal RmosContext & SearchBudgetSpec; adjust fields as needed.
+    ctx = RmosContext(
+        tool_id=None,
+        material_id=None,
+        machine_id=None,
+    )
+    budget = SearchBudgetSpec(
+        max_attempts=max_attempts,
+        time_limit_seconds=time_limit,
+        min_feasibility_score=0.0,
+        stop_on_first_green=False,
+        deterministic=True,
+    )
+    return ConstraintFirstRequest(
+        initial_design=None,
+        context=ctx,
+        search_budget=budget,
+        workflow_mode="ai_assisted",
+    )
+
+
+def test_validate_request_allows_reasonable_budget() -> None:
+    req = _make_minimal_request(
+        max_attempts=min(10, MAX_SYSTEM_ATTEMPTS),
+        time_limit=min(5.0, MAX_SYSTEM_TIME_LIMIT_SECONDS),
+    )
+    # Should not raise.
+    validate_request_against_policy(req)
+
+
+def test_validate_request_rejects_excessive_attempts() -> None:
+    req = _make_minimal_request(
+        max_attempts=MAX_SYSTEM_ATTEMPTS + 10,
+        time_limit=1.0,
+    )
+    with pytest.raises(PolicyViolationError):
+        validate_request_against_policy(req)
+
+
+def test_validate_request_rejects_excessive_time_limit() -> None:
+    req = _make_minimal_request(
+        max_attempts=10,
+        time_limit=MAX_SYSTEM_TIME_LIMIT_SECONDS + 10.0,
+    )
+    with pytest.raises(PolicyViolationError):
+        validate_request_against_policy(req)
+
+5. Optional: quick “developer sanity” script (not required, but handy)
+
+If you like having a quick CLI check, you can add a tiny script to verify profiles load correctly:
+
+File: services/api/scripts/print_constraint_profiles.py (optional)
+
+from app.rmos.constraint_profiles import (
+    list_profile_names,
+    get_profile,
+    load_profiles_from_yaml,
+)
+
+if __name__ == "__main__":
+    path = "services/api/app/config/rmos_constraint_profiles.yaml"
+    try:
+        load_profiles_from_yaml(path)
+        print(f"Loaded profiles from {path}")
+    except Exception as exc:
+        print(f"Warning: could not load profiles from {path}: {exc}")
+
+    print("Available profiles:")
+    for name in list_profile_names():
+        p = get_profile(name)
+        print(
+            f"- {name}: rings={p.min_rings}-{p.max_rings}, "
+            f"width={p.min_ring_width_mm}-{p.max_ring_width_mm} mm, "
+            f"total_width={p.min_total_width_mm}-{p.max_total_width_mm} mm, "
+            f"palette={p.palette_key}"
+        )
+
+What this bundle gives you
+
+Profiles are now data: tweak YAML, rerun tests, done.
+
+Constraints are:
+
+Registry-driven
+
+Policy-clamped
+
+Test-covered
+
+You have:
+
+A YAML loader
+
+Sample contexts embedded in tests
+
+Policy tests to catch runaway budgets
