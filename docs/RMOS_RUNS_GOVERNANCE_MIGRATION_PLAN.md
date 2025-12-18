@@ -14,8 +14,8 @@
 | Phase 1: Schema Migration | ✅ COMPLETE | Pydantic models with required fields |
 | Phase 2: Storage Layer | ✅ COMPLETE | Date-partitioned immutable store |
 | Phase 3: Data Migration | ✅ COMPLETE | No v1 data exists; CLI ready for future use |
-| Phase 4: API Router | 🔲 PENDING | Wire up feature flag |
-| Phase 5: Dependent Files | 🔲 PENDING | Update imports |
+| Phase 4: API Router | ✅ COMPLETE | Feature flag wired in main.py and rmos/__init__.py |
+| Phase 5: Dependent Files | ✅ COMPLETE | Conditional imports working |
 | Phase 6: Cleanup | 🔲 PENDING | Set v2 as default |
 
 ### Phase 3 Notes (Data Migration)
@@ -45,6 +45,38 @@ When v1 data exists, the migration will:
 2. Convert each artifact to v2 format (Pydantic, required fields)
 3. Write to date-partitioned structure (`{YYYY-MM-DD}/{run_id}.json`)
 4. Generate migration report
+
+### Phase 4-5 Notes (Feature Flag Wiring)
+
+**Status:** Complete
+
+The feature flag `RMOS_RUNS_V2_ENABLED` controls which implementation is used:
+
+```bash
+# Use v2 (governance-compliant)
+export RMOS_RUNS_V2_ENABLED=true
+
+# Use v1 (legacy, default)
+export RMOS_RUNS_V2_ENABLED=false
+```
+
+**Files Updated:**
+- `services/api/app/main.py` - Conditional router import
+- `services/api/app/rmos/__init__.py` - Conditional module exports
+
+**v2 Router Endpoints (9 total):**
+- `GET /runs` - List with filtering
+- `POST /runs` - Create (immutable)
+- `GET /runs/{id}` - Get details
+- `GET /runs/diff` - Compare two runs
+- `POST /runs/{id}/attach-advisory` - Append-only advisory
+- `GET /runs/{id}/advisories` - List advisories
+- `GET /runs/{id}/attachments` - List attachments
+- `GET /runs/{id}/attachments/{sha256}` - Download
+- `GET /runs/{id}/attachments/verify` - Verify integrity
+
+**Removed from v2 (strict immutability):**
+- `PATCH /runs/{id}/meta` - Use `attach-advisory` instead
 
 ---
 

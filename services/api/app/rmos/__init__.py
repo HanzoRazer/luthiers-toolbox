@@ -87,19 +87,52 @@ from .api_profile_history import router as history_router
 from .api_routes import router as rmos_router  # Existing core RMOS router
 
 # Runs Module (Phase D - Audit Trail)
-try:
-    from .runs import (
-        RunArtifact,
-        RunAttachment,
-        RunStatus,
-        get_run,
-        list_runs_filtered,
-        persist_run,
-        diff_runs,
-    )
-    from .runs.api_runs import router as runs_router
-except ImportError:
-    runs_router = None
+# Feature flag: RMOS_RUNS_V2_ENABLED enables governance-compliant v2 implementation
+import os
+_RMOS_RUNS_V2_ENABLED = os.getenv("RMOS_RUNS_V2_ENABLED", "false").lower() == "true"
+
+if _RMOS_RUNS_V2_ENABLED:
+    # v2: Pydantic schemas, date-partitioned storage, immutable artifacts
+    try:
+        from .runs_v2 import (
+            RunArtifact,
+            RunAttachment,
+            RunDecision,
+            Hashes,
+            RunOutputs,
+            AdvisoryInputRef,
+            RunStatus,
+            get_run,
+            list_runs_filtered,
+            persist_run,
+            diff_runs,
+            attach_advisory,
+            create_run_id,
+            # Hashing
+            sha256_of_obj,
+            compute_feasibility_hash,
+            # Migration
+            migrate_v1_to_v2,
+            migration_status,
+        )
+        from .runs_v2.api_runs import router as runs_router
+    except ImportError:
+        runs_router = None
+else:
+    # v1: Dataclass schemas, single-file storage (legacy)
+    try:
+        from .runs import (
+            RunArtifact,
+            RunAttachment,
+            RunStatus,
+            get_run,
+            list_runs_filtered,
+            persist_run,
+            diff_runs,
+        )
+        from .runs.api_runs import router as runs_router
+    except ImportError:
+        runs_router = None
 
 # Engines Registry
 try:
@@ -194,7 +227,7 @@ __all__ = [
     "history_router",
     "rmos_router",
     "runs_router",
-    # Runs Module (Phase D)
+    # Runs Module (Phase D - v1/v2 conditional)
     "RunArtifact",
     "RunAttachment",
     "RunStatus",
@@ -202,6 +235,17 @@ __all__ = [
     "list_runs_filtered",
     "persist_run",
     "diff_runs",
+    # v2-only exports (available when RMOS_RUNS_V2_ENABLED=true)
+    "RunDecision",
+    "Hashes",
+    "RunOutputs",
+    "AdvisoryInputRef",
+    "attach_advisory",
+    "create_run_id",
+    "sha256_of_obj",
+    "compute_feasibility_hash",
+    "migrate_v1_to_v2",
+    "migration_status",
     # Engines Registry
     "EngineVersion",
     "get_engine_version",

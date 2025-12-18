@@ -242,12 +242,25 @@ from .routers.cnc_production.compare_jobs_router import router as cnc_compare_jo
 
 # =============================================================================
 # WAVE 14: VISION ENGINE + RMOS RUNS (2 routers)
+# Feature flag: RMOS_RUNS_V2_ENABLED enables governance-compliant v2 implementation
 # =============================================================================
-try:
-    from .rmos.runs.api_runs import router as rmos_runs_router
-except ImportError as e:
-    print(f"Warning: RMOS Runs router not available: {e}")
-    rmos_runs_router = None
+import os
+_RMOS_RUNS_V2_ENABLED = os.getenv("RMOS_RUNS_V2_ENABLED", "false").lower() == "true"
+
+if _RMOS_RUNS_V2_ENABLED:
+    try:
+        from .rmos.runs_v2.api_runs import router as rmos_runs_router
+        print("RMOS Runs: Using v2 (governance-compliant, date-partitioned)")
+    except ImportError as e:
+        print(f"Warning: RMOS Runs v2 router not available: {e}")
+        rmos_runs_router = None
+else:
+    try:
+        from .rmos.runs.api_runs import router as rmos_runs_router
+        print("RMOS Runs: Using v1 (legacy single-file)")
+    except ImportError as e:
+        print(f"Warning: RMOS Runs router not available: {e}")
+        rmos_runs_router = None
 
 try:
     from ._experimental.ai_graphics.api.vision_routes import router as vision_router
