@@ -9,7 +9,7 @@ CLEANED: 2024-12-13
 
 BROKEN ROUTERS (files exist but won't load - fix dependencies to restore):
 - rmos.feasibility_router      → needs rmos.context
-- cam.cam_preview_router       → needs rmos.context  
+- cam.cam_preview_router       → needs rmos.context
 - routers.adaptive_poly_gcode_router → needs routers.util
 - routers.pipeline_router      → needs httpx
 - routers.blueprint_router     → needs analyzer
@@ -18,6 +18,10 @@ BROKEN ROUTERS (files exist but won't load - fix dependencies to restore):
 - routers.saw_validate_router  → needs cam_core
 - routers.saw_telemetry_router → needs cnc_production
 """
+
+# Load environment variables from .env file FIRST (before any imports that need them)
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
