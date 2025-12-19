@@ -270,6 +270,12 @@ except ImportError as e:
     print(f"Warning: Vision Engine router not available: {e}")
     vision_router = None
 
+try:
+    from ._experimental.ai_graphics.api.advisory_routes import router as advisory_router
+except ImportError as e:
+    print(f"Warning: Advisory router not available: {e}")
+    advisory_router = None
+
 # =============================================================================
 # WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (4 routers)
 # Design-First Mode: Pattern Library + Generators + Preview + Snapshots
@@ -497,11 +503,13 @@ app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 # CNC Production (1)
 app.include_router(cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CNC Production"])
 
-# Wave 14: Vision Engine + RMOS Runs (2)
+# Wave 14: Vision Engine + RMOS Runs + Advisory (3)
 if rmos_runs_router:
     app.include_router(rmos_runs_router, prefix="/api", tags=["RMOS", "Runs"])
 if vision_router:
     app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
+if advisory_router:
+    app.include_router(advisory_router, tags=["Advisory", "AI Graphics"])
 
 # Wave 15: Art Studio Core Completion (4)
 # Note: These routers have their own prefix defined (e.g., /api/art/patterns)
@@ -567,11 +575,11 @@ async def api_health_check():
             "wave11_analytics_probe_calc": 8,
             "wave12_cam_risk_polygon": 8,
             "wave13_final_art_monitor": 10,
-            "wave14_vision_rmos_runs": 2,
+            "wave14_vision_rmos_runs_advisory": 3,
             "wave15_art_studio_core": 4,
             "wave16_governance_code_bundle": 4,
         },
-        "total_working": 101,
+        "total_working": 102,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }
