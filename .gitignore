@@ -112,8 +112,8 @@ test_sample.nc
 __ARCHIVE__/
 Archtop/
 Stratocaster/
-client/
-server/
+/client/
+/server/
 /data/
 /migrations/
 # But allow Alembic migrations
