@@ -6,6 +6,8 @@ Wave 18: Phase D - Feasibility Fusion Endpoints
 FastAPI endpoints for unified feasibility scoring across all risk dimensions.
 """
 
+import time
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
@@ -64,6 +66,8 @@ class FeasibilityResponse(BaseModel):
     assessments: List[RiskAssessmentResponse]
     recommendations: List[str]
     pass_threshold: float = 70.0
+    request_id: Optional[str] = Field(None, description="Request correlation ID")
+    compute_ms: Optional[float] = Field(None, description="Computation time in milliseconds")
 
 
 # ============================================================================
@@ -139,8 +143,10 @@ async def evaluate_feasibility_endpoint(
         engine_id = request_body.context.get("feasibility_engine_id") if request_body.context else None
         engine = get_feasibility_engine(engine_id, request_id=req_id)
 
-        # Evaluate via engine layer
+        # Evaluate via engine layer with timing
+        t0 = time.perf_counter()
         result = engine.compute(spec=request_body.design, ctx=context, request_id=req_id)
+        compute_ms = (time.perf_counter() - t0) * 1000.0
 
         # Convert engine result to response format
         assessments_response = []
@@ -164,6 +170,8 @@ async def evaluate_feasibility_endpoint(
             assessments=assessments_response,
             recommendations=result.get("reasons", []),
             pass_threshold=70.0,
+            request_id=req_id,
+            compute_ms=compute_ms,
         )
 
     except ValueError as e:
@@ -175,7 +183,8 @@ async def evaluate_feasibility_endpoint(
 @router.post("/evaluate/model/{model_id}", response_model=FeasibilityResponse)
 async def evaluate_feasibility_for_model_endpoint(
     model_id: str,
-    request: FeasibilityRequest,
+    request_body: FeasibilityRequest,
+    request: Request,
 ):
     """
     Evaluate manufacturing feasibility for a specific guitar model.
@@ -198,8 +207,13 @@ async def evaluate_feasibility_for_model_endpoint(
     Available models: strat_25_5, lp_24_75
     """
     try:
-        # Evaluate with model_id
-        report = evaluate_feasibility_for_model(model_id, request.design)
+        # Extract request correlation ID
+        req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+
+        # Evaluate with model_id and timing
+        t0 = time.perf_counter()
+        report = evaluate_feasibility_for_model(model_id, request_body.design)
+        compute_ms = (time.perf_counter() - t0) * 1000.0
         
         # Convert to response format
         assessments_response = [
@@ -221,8 +235,10 @@ async def evaluate_feasibility_for_model_endpoint(
             assessments=assessments_response,
             recommendations=report.recommendations,
             pass_threshold=report.pass_threshold,
+            request_id=req_id,
+            compute_ms=compute_ms,
         )
-    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
