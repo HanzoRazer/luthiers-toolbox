@@ -65,48 +65,51 @@ from .feasibility_my_engine import MyFeasibilityEngine
 
 Immutable records of all CAM operations for audit-grade tracking.
 
-### File Locations
+> **NOTE:** The `runs/` module has been superseded by `runs_v2/` which implements
+> governance-compliant, date-partitioned storage with Pydantic schemas.
+
+### File Locations (v2 — CURRENT)
 
 | Component | Path | Purpose |
 |-----------|------|---------|
-| **Schemas** | `rmos/runs/schemas.py` | `RunArtifact`, `RunDecision`, `RunAttachment` |
-| **Hashing** | `rmos/runs/hashing.py` | `sha256_text`, `sha256_json`, content hashing |
-| **Store** | `rmos/runs/store.py` | `RunStore` — file-based persistence |
-| **Diff** | `rmos/runs/diff.py` | Artifact comparison utilities |
-| **Attachments** | `rmos/runs/attachments.py` | Content-addressed blob storage |
-| **API** | `rmos/runs/api_runs.py` | REST endpoints for run queries |
-| **Index** | `rmos/run_artifacts/index.py` | Artifact indexing/search |
+| **Schemas** | `rmos/runs_v2/schemas.py` | `RunArtifact`, `RunDecision`, `Hashes` (Pydantic) |
+| **Store** | `rmos/runs_v2/store.py` | `RunStoreV2` — date-partitioned, immutable |
+| **Hashing** | `rmos/runs_v2/hashing.py` | `sha256_text`, `sha256_json`, content hashing |
+| **Diff** | `rmos/runs_v2/diff.py` | Artifact comparison utilities |
+| **Attachments** | `rmos/runs_v2/attachments.py` | Content-addressed blob storage |
+| **API** | `rmos/runs_v2/api_runs.py` | REST endpoints `/api/runs/*` |
 
 ### Key Data Structure
 
 ```python
-# File: rmos/runs/schemas.py
+# File: rmos/runs_v2/schemas.py
 
-@dataclass
-class RunArtifact:
+class RunArtifact(BaseModel):
     run_id: str
-    created_at_utc: str
-    workflow_session_id: Optional[str]
-    tool_id: Optional[str]
-    material_id: Optional[str]
-    machine_id: Optional[str]
-    workflow_mode: Optional[str]
-    toolchain_id: Optional[str]
-    post_processor_id: Optional[str]
+    created_at_utc: datetime
+    request_id: Optional[str]              # Correlation ID
+    event_type: str
+    status: Literal["OK", "BLOCKED", "ERROR"]
+    tool_id: str
+    mode: str
+    decision: RunDecision
+    hashes: Hashes
+    advisory_inputs: List[AdvisoryInputRef]  # Append-only
+    explanation_status: str
+    explanation_summary: Optional[str]
     # ... additional fields
 ```
 
 ### Integration Point: Adding New Artifact Fields
 
 ```python
-# 1. Extend: rmos/runs/schemas.py → RunArtifact dataclass
-@dataclass
-class RunArtifact:
+# 1. Extend: rmos/runs_v2/schemas.py → RunArtifact (Pydantic BaseModel)
+class RunArtifact(BaseModel):
     # ... existing fields ...
-    my_new_field: Optional[str] = None  # Add here
+    my_new_field: Optional[str] = Field(None, description="My new field")
 
-# 2. Update: rmos/runs/hashing.py if field needs hashing
-# 3. Update: rmos/runs/store.py for persistence logic
+# 2. Update: rmos/runs_v2/hashing.py if field needs hashing
+# 3. Storage is automatic via Pydantic serialization
 ```
 
 ---
@@ -312,10 +315,10 @@ from app.rmos.engines.base import FeasibilityEngine
 from app.rmos.engines.registry import get_engine_registry
 from app.rmos.feasibility_fusion import evaluate_feasibility
 
-# Run Artifacts
-from app.rmos.runs.schemas import RunArtifact, RunDecision
-from app.rmos.runs.store import RunStore
-from app.rmos.runs.hashing import sha256_json, sha256_text
+# Run Artifacts (v2)
+from app.rmos.runs_v2.schemas import RunArtifact, RunDecision, Hashes
+from app.rmos.runs_v2.store import get_run, persist_run, list_runs_filtered
+from app.rmos.runs_v2.hashing import sha256_json, sha256_text
 
 # Advisory Assets
 from app._experimental.ai_graphics.advisory_store import AdvisoryAssetStore
@@ -349,8 +352,15 @@ from app.rmos.presets import get_preset_registry, PresetRegistry
 ### Run Artifact Endpoints
 | Endpoint | Method | Handler |
 |----------|--------|---------|
-| `/api/rmos/runs` | GET | `runs/api_runs.py` |
-| `/api/rmos/runs/{run_id}` | GET | `runs/api_runs.py` |
+| `/api/runs` | GET | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}` | GET | `runs_v2/api_runs.py` |
+| `/api/runs` | POST | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}/attach-advisory` | POST | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}/advisories` | GET | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}/suggest-and-attach` | POST | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}/attachments` | GET | `runs_v2/api_runs.py` |
+| `/api/runs/{run_id}/attachments/{sha256}` | GET | `runs_v2/api_runs.py` |
+| `/api/runs/diff` | GET | `runs_v2/api_runs.py` |
 
 ### Preset Endpoints
 | Endpoint | Method | Handler |
@@ -368,8 +378,8 @@ from app.rmos.presets import get_preset_registry, PresetRegistry
 # Test feasibility imports
 python -c "from app.rmos.engines.registry import EngineRegistry; print('✅ Engine Registry OK')"
 
-# Test run artifact imports
-python -c "from app.rmos.runs import RunArtifact, RunStore; print('✅ Run Artifacts OK')"
+# Test run artifact imports (v2)
+python -c "from app.rmos.runs_v2.schemas import RunArtifact; print('✅ Run Artifacts OK')"
 
 # Test advisory imports  
 python -c "from app._experimental.ai_graphics.advisory_store import AdvisoryAssetStore; print('✅ Advisory Store OK')"

@@ -115,7 +115,7 @@ Stratocaster/
 client/
 server/
 /data/
-migrations/
+/migrations/
 # But allow Alembic migrations
 !services/api/app/db/migrations/
 !services/api/app/db/migrations/**
