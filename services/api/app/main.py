@@ -23,8 +23,71 @@ BROKEN ROUTERS (files exist but won't load - fix dependencies to restore):
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+import logging
+import uuid
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+from .util.request_context import set_request_id
+from .util.logging_request_id import RequestIdFilter
+
+
+# =============================================================================
+# REQUEST ID MIDDLEWARE
+# =============================================================================
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    """
+    Global request correlation middleware.
+
+    - Accepts client-provided X-Request-Id or generates one
+    - Attaches to request.state.request_id (C# HttpContext.Items equivalent)
+    - Sets ContextVar for deep logging
+    - Echoes back for client-side correlation
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        # Prefer client-supplied ID, otherwise generate one
+        req_id = request.headers.get("x-request-id")
+        if not req_id:
+            req_id = f"req_{uuid.uuid4().hex[:12]}"
+
+        # Attach to request context
+        request.state.request_id = req_id
+
+        # Set ContextVar for deep logging
+        set_request_id(req_id)
+
+        # Continue request
+        response: Response = await call_next(request)
+
+        # Echo back for client-side correlation
+        response.headers["x-request-id"] = req_id
+
+        # Clear ContextVar after request
+        set_request_id(None)
+
+        return response
+
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+LOG_FORMAT = "%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s"
+
+_log_handler = logging.StreamHandler()
+_log_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+_log_handler.addFilter(RequestIdFilter())
+
+_root_logger = logging.getLogger()
+# Avoid duplicating handlers on reload
+if not any(isinstance(h, logging.StreamHandler) for h in _root_logger.handlers):
+    _root_logger.addHandler(_log_handler)
+_root_logger.setLevel(logging.INFO)
 
 # =============================================================================
 # CORE ROUTERS (11 routers)
@@ -280,6 +343,12 @@ except ImportError as e:
     print(f"Warning: Advisory router not available: {e}")
     advisory_router = None
 
+try:
+    from ._experimental.ai_graphics.api.teaching_routes import router as teaching_router
+except ImportError as e:
+    print(f"Warning: Teaching Loop router not available: {e}")
+    teaching_router = None
+
 # =============================================================================
 # WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (4 routers)
 # Design-First Mode: Pattern Library + Generators + Preview + Snapshots
@@ -347,6 +416,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Request ID middleware - MUST be registered FIRST (before CORS)
+# Provides request correlation for logging, auditing, and debugging
+app.add_middleware(RequestIdMiddleware)
 
 # CORS configuration
 app.add_middleware(
@@ -514,6 +587,8 @@ if vision_router:
     app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
 if advisory_router:
     app.include_router(advisory_router, tags=["Advisory", "AI Graphics"])
+if teaching_router:
+    app.include_router(teaching_router, tags=["Teaching Loop", "Training"])
 
 # Wave 15: Art Studio Core Completion (4)
 # Note: These routers have their own prefix defined (e.g., /api/art/patterns)

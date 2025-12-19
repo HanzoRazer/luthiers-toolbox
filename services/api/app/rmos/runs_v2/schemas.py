@@ -213,6 +213,12 @@ class RunArtifact(BaseModel):
         description="UTC timestamp of creation",
     )
 
+    # Provenance (OPTIONAL but recommended for audit trail)
+    request_id: Optional[str] = Field(
+        None,
+        description="Request correlation ID from middleware (for audit/tracing)",
+    )
+
     # Context (REQUIRED)
     mode: str = Field(
         ...,

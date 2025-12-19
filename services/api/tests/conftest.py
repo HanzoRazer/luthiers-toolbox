@@ -12,6 +12,7 @@ Part of P3.1 - Test Coverage to 80% (A_N roadmap requirement)
 
 import pytest
 import sys
+import uuid
 from pathlib import Path
 from fastapi.testclient import TestClient
 import json
@@ -26,13 +27,64 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def api_client():
     """
     FastAPI TestClient for testing API endpoints.
-    
+
     Uses session scope to reuse across all tests.
     Imports app lazily to avoid import-time side effects.
     """
     from app.main import app
     return TestClient(app)
 
+
+# =============================================================================
+# REQUEST ID FIXTURES
+# =============================================================================
+
+@pytest.fixture()
+def client():
+    """
+    TestClient that auto-injects X-Request-Id unless explicitly provided.
+
+    Usage:
+        def test_something(client):
+            r = client.get("/health")
+            assert r.headers.get("x-request-id")
+
+    To override:
+        client.get("/api/runs", headers={"x-request-id": "test_fixed"})
+    """
+    from app.main import app
+    base = TestClient(app)
+    orig_request = base.request
+
+    def request_with_rid(method, url, **kwargs):
+        headers = dict(kwargs.pop("headers", {}) or {})
+        headers.setdefault("x-request-id", f"test_{uuid.uuid4().hex[:12]}")
+        return orig_request(method, url, headers=headers, **kwargs)
+
+    base.request = request_with_rid  # type: ignore[assignment]
+    return base
+
+
+@pytest.fixture(autouse=True)
+def _clear_request_id_context():
+    """
+    Ensure request_id ContextVar is cleared between tests.
+
+    Prevents cross-test leakage when logs fire outside request scope.
+    This is the same class of hygiene as:
+    - ASP.NET scoped services
+    - Request-scoped DI containers
+    - OpenTelemetry tracing
+    """
+    from app.util.request_context import set_request_id
+    set_request_id(None)
+    yield
+    set_request_id(None)
+
+
+# =============================================================================
+# GEOMETRY & CAM FIXTURES
+# =============================================================================
 
 @pytest.fixture
 def sample_geometry_simple():
@@ -304,7 +356,10 @@ def assert_valid_moves(moves: list):
 
 # Export for use in tests
 __all__ = [
+    # Client fixtures
     "api_client",
+    "client",  # NEW: Auto-injects X-Request-Id
+    # Geometry fixtures
     "sample_geometry_simple",
     "sample_geometry_with_arcs",
     "sample_pocket_loops",
@@ -317,6 +372,7 @@ __all__ = [
     "encode_dxf_base64",
     "decode_dxf_base64",
     "test_data_dir",
+    # Assertion utilities
     "assert_valid_geometry",
     "assert_valid_gcode",
     "assert_valid_moves",
