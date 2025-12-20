@@ -24,6 +24,9 @@
 export { default as AiImagePanel } from './AiImagePanel.vue';
 export { default as AiImageGallery } from './AiImageGallery.vue';
 export { default as AiImageProperties } from './AiImageProperties.vue';
+export { default as AdvisoryReviewPanel } from './AdvisoryReviewPanel.vue';
+export { default as AiImageFilterToolbar } from './AiImageFilterToolbar.vue';
+export { default as TeachingLoopPanel } from './TeachingLoopPanel.vue';
 
 // =============================================================================
 // STORE
@@ -50,6 +53,12 @@ export {
   estimateCost,
   ApiError,
 } from './api';
+
+// Re-export modular API clients for advanced usage
+export * as aiApi from './api/ai';
+export * as sessionApi from './api/session';
+export * as teachingApi from './api/teaching';
+export * as advisoryApi from './api/advisory';
 
 // =============================================================================
 // TYPES
