@@ -49,6 +49,13 @@ from .state_machine import (
 
 from .session_store import InMemoryWorkflowSessionStore, STORE
 
+# Runs V2 Bridge
+from .workflow_runs_bridge import (
+    WorkflowRunsBridge,
+    get_workflow_runs_bridge,
+    reset_bridge,
+)
+
 __all__ = [
     # Directional workflow (existing)
     "DirectionalMode",
@@ -83,4 +90,8 @@ __all__ = [
     "next_step_hint",
     "InMemoryWorkflowSessionStore",
     "STORE",
+    # Runs V2 Bridge
+    "WorkflowRunsBridge",
+    "get_workflow_runs_bridge",
+    "reset_bridge",
 ]

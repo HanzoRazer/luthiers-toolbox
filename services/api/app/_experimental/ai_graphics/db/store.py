@@ -84,6 +84,7 @@ class DbAiSessionStore:
                 session_json=json.dumps(state),
             )
             db.add(row)
+            db.flush()  # Ensure row is visible to subsequent queries
             return state
         return json.loads(row.session_json)
 
