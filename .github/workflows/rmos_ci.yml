@@ -38,6 +38,16 @@ jobs:
           else
             pip install "uvicorn[standard]" requests fastapi pydantic
           fi
+          # Install test dependencies
+          pip install pytest
+
+      - name: Run RMOS runs_v2 split store tests
+        working-directory: services/api
+        env:
+          RMOS_RUNS_DIR: ${{ runner.temp }}/rmos_runs
+        run: |
+          echo "Running runs_v2 split store verification tests..."
+          python -m pytest tests/test_runs_v2_split_store.py -v --tb=short
 
       - name: Run RMOS CI smoke test
         working-directory: services/api

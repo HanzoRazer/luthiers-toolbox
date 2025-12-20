@@ -9,12 +9,14 @@ Key Features:
 - Atomic writes via .tmp + os.replace()
 - Append-only advisory links (preserves immutability)
 - Thread-safe with file locking
+- Global index for fast list/filter/count operations (_index.json)
 """
 
 from __future__ import annotations
 
 import json
 import os
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -26,10 +28,54 @@ from .schemas import RunArtifact, AdvisoryInputRef
 # Default storage path per governance contract
 STORE_ROOT_DEFAULT = "services/api/data/runs/rmos"
 
+# Thread lock for index operations
+_INDEX_LOCK = threading.Lock()
+
 
 def _get_store_root() -> str:
     """Get the store root from environment or default."""
     return os.getenv("RMOS_RUNS_DIR", STORE_ROOT_DEFAULT)
+
+
+def _extract_index_meta(artifact: RunArtifact) -> Dict[str, Any]:
+    """
+    Extract lightweight metadata for the index.
+
+    Only includes fields needed for list/filter/count operations.
+    """
+    return {
+        "run_id": artifact.run_id,
+        "created_at_utc": artifact.created_at_utc.isoformat() if artifact.created_at_utc else None,
+        "event_type": getattr(artifact, 'event_type', None),
+        "status": artifact.status,
+        "workflow_session_id": getattr(artifact, 'workflow_session_id', None),
+        "tool_id": artifact.tool_id,
+        "mode": artifact.mode,
+        "partition": artifact.created_at_utc.strftime("%Y-%m-%d") if artifact.created_at_utc else None,
+    }
+
+
+def _read_json_file(path: Path) -> Dict[str, Any]:
+    """Read a JSON file, returning empty dict if not found."""
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _write_json_file(path: Path, data: Dict[str, Any]) -> None:
+    """Atomically write a JSON file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, path)
+    except Exception:
+        if tmp.exists():
+            tmp.unlink()
+        raise
 
 
 class RunStoreV2:
@@ -59,6 +105,54 @@ class RunStoreV2:
         """
         self.root = Path(root_dir or _get_store_root()).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
+        self._index_path = self.root / "_index.json"
+
+    def _read_index(self) -> Dict[str, Dict[str, Any]]:
+        """Read the global index file."""
+        with _INDEX_LOCK:
+            return _read_json_file(self._index_path)
+
+    def _write_index(self, index: Dict[str, Dict[str, Any]]) -> None:
+        """Write the global index file atomically."""
+        with _INDEX_LOCK:
+            _write_json_file(self._index_path, index)
+
+    def _update_index_entry(self, run_id: str, meta: Dict[str, Any]) -> None:
+        """Add or update a single entry in the index."""
+        with _INDEX_LOCK:
+            index = _read_json_file(self._index_path)
+            index[run_id] = meta
+            _write_json_file(self._index_path, index)
+
+    def rebuild_index(self) -> int:
+        """
+        Rebuild the index by scanning all date partitions.
+
+        Returns:
+            Number of runs indexed
+        """
+        index: Dict[str, Dict[str, Any]] = {}
+
+        partitions = [
+            p for p in self.root.iterdir()
+            if p.is_dir() and not p.name.startswith("_")
+        ]
+
+        for partition in partitions:
+            for path in partition.glob("*.json"):
+                # Skip advisory links and temp files
+                if "_advisory_" in path.name or path.suffix == ".tmp":
+                    continue
+
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    artifact = RunArtifact.model_validate(data)
+                    index[artifact.run_id] = _extract_index_meta(artifact)
+                except Exception:
+                    continue
+
+        self._write_index(index)
+        return len(index)
 
     def _date_partition(self, dt: datetime) -> str:
         """Get date partition string from datetime."""
@@ -117,6 +211,9 @@ class RunStoreV2:
                 encoding="utf-8",
             )
             os.replace(tmp, path)
+
+            # Update the global index with lightweight metadata
+            self._update_index_entry(artifact.run_id, _extract_index_meta(artifact))
         except Exception:
             # Clean up temp file on failure
             if tmp.exists():
@@ -307,44 +404,161 @@ class RunStoreV2:
         self,
         *,
         limit: int = 50,
+        offset: int = 0,
         event_type: Optional[str] = None,
         status: Optional[str] = None,
         tool_id: Optional[str] = None,
         mode: Optional[str] = None,
+        workflow_session_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[RunArtifact]:
         """
-        List runs with optional filtering.
+        List runs with optional filtering using the index.
+
+        Uses the lightweight index for fast filtering, then loads
+        only the artifacts needed for the result page.
 
         Args:
             limit: Maximum results
+            offset: Number of results to skip (for pagination)
             event_type: Filter by event_type
             status: Filter by status (OK, BLOCKED, ERROR)
             tool_id: Filter by tool_id
             mode: Filter by mode
+            workflow_session_id: Filter by workflow session linkage
             date_from: Filter by date >=
             date_to: Filter by date <=
 
         Returns:
             Filtered list of RunArtifact objects
         """
-        # Get all runs within date range
-        all_runs = self.list_runs(limit=limit * 3, date_from=date_from, date_to=date_to)
+        index = self._read_index()
 
-        def matches(r: RunArtifact) -> bool:
-            if event_type and r.event_type != event_type:
+        # If index is empty, rebuild it from partitions
+        if not index:
+            self.rebuild_index()
+            index = self._read_index()
+
+        def matches_meta(m: Dict[str, Any]) -> bool:
+            # Date filtering
+            if date_from or date_to:
+                created = m.get("created_at_utc")
+                if created:
+                    try:
+                        created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        if date_from and created_dt < date_from:
+                            return False
+                        if date_to and created_dt > date_to:
+                            return False
+                    except Exception:
+                        pass
+
+            if event_type and m.get("event_type") != event_type:
                 return False
-            if status and r.status != status:
+            if status and m.get("status") != status:
                 return False
-            if tool_id and r.tool_id != tool_id:
+            if tool_id and m.get("tool_id") != tool_id:
                 return False
-            if mode and r.mode != mode:
+            if mode and m.get("mode") != mode:
+                return False
+            if workflow_session_id and m.get("workflow_session_id") != workflow_session_id:
                 return False
             return True
 
-        filtered = [r for r in all_runs if matches(r)]
-        return filtered[:limit]
+        # Filter using index metadata
+        matching_metas = [m for m in index.values() if matches_meta(m)]
+
+        # Sort by created_at_utc descending
+        matching_metas.sort(
+            key=lambda m: m.get("created_at_utc") or "",
+            reverse=True
+        )
+
+        # Apply pagination
+        page_metas = matching_metas[offset:offset + limit]
+
+        # Load full artifacts only for the page
+        results: List[RunArtifact] = []
+        for meta in page_metas:
+            run_id = meta.get("run_id")
+            partition = meta.get("partition")
+            if not run_id:
+                continue
+
+            # Try to load from the known partition first
+            artifact = None
+            if partition:
+                path = self.root / partition / f"{run_id.replace('/', '_').replace(chr(92), '_')}.json"
+                if path.exists():
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        artifact = RunArtifact.model_validate(data)
+                        artifact = self._load_advisory_links(artifact, path.parent)
+                    except Exception:
+                        pass
+
+            # Fall back to full search if partition lookup failed
+            if artifact is None:
+                artifact = self.get(run_id)
+
+            if artifact:
+                results.append(artifact)
+
+        return results
+
+    def count_runs_filtered(
+        self,
+        *,
+        event_type: Optional[str] = None,
+        status: Optional[str] = None,
+        tool_id: Optional[str] = None,
+        mode: Optional[str] = None,
+        workflow_session_id: Optional[str] = None,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None,
+    ) -> int:
+        """
+        Count runs matching filters using the index (fast).
+
+        Uses the lightweight index for efficient counting without
+        loading full artifacts.
+        """
+        index = self._read_index()
+
+        # If index is empty, fall back to partition scan
+        if not index:
+            # Rebuild index to populate it
+            self.rebuild_index()
+            index = self._read_index()
+
+        def matches_meta(m: Dict[str, Any]) -> bool:
+            # Date filtering
+            if date_from or date_to:
+                created = m.get("created_at_utc")
+                if created:
+                    try:
+                        created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        if date_from and created_dt < date_from:
+                            return False
+                        if date_to and created_dt > date_to:
+                            return False
+                    except Exception:
+                        pass
+
+            if event_type and m.get("event_type") != event_type:
+                return False
+            if status and m.get("status") != status:
+                return False
+            if tool_id and m.get("tool_id") != tool_id:
+                return False
+            if mode and m.get("mode") != mode:
+                return False
+            if workflow_session_id and m.get("workflow_session_id") != workflow_session_id:
+                return False
+            return True
+
+        return sum(1 for m in index.values() if matches_meta(m))
 
 
 # =============================================================================
@@ -383,20 +597,49 @@ def get_run(run_id: str) -> Optional[RunArtifact]:
 def list_runs_filtered(
     *,
     limit: int = 50,
+    offset: int = 0,
     event_type: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
+    workflow_session_id: Optional[str] = None,
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
     return store.list_runs_filtered(
         limit=limit,
+        offset=offset,
         event_type=event_type,
         status=status,
         tool_id=tool_id,
         mode=mode,
+        workflow_session_id=workflow_session_id,
     )
+
+
+def count_runs_filtered(
+    *,
+    event_type: Optional[str] = None,
+    status: Optional[str] = None,
+    tool_id: Optional[str] = None,
+    mode: Optional[str] = None,
+    workflow_session_id: Optional[str] = None,
+) -> int:
+    """Count runs matching filters from the default store."""
+    store = _get_default_store()
+    return store.count_runs_filtered(
+        event_type=event_type,
+        status=status,
+        tool_id=tool_id,
+        mode=mode,
+        workflow_session_id=workflow_session_id,
+    )
+
+
+def rebuild_index() -> int:
+    """Rebuild the global index from the default store."""
+    store = _get_default_store()
+    return store.rebuild_index()
 
 
 def attach_advisory(

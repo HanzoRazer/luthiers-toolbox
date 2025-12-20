@@ -406,6 +406,15 @@ except ImportError as e:
     rmos_workflow_router = None
 
 # =============================================================================
+# WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
+# =============================================================================
+try:
+    from .workflow.sessions.routes import router as workflow_sessions_router
+except ImportError as e:
+    print(f"Warning: Workflow Sessions router not available: {e}")
+    workflow_sessions_router = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -429,6 +438,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# =============================================================================
+# STARTUP EVENTS
+# =============================================================================
+
+from app.db.startup import run_migrations_on_startup
+
+
+@app.on_event("startup")
+def _startup_db_migrations() -> None:
+    """
+    Run database migrations on startup (if enabled).
+
+    Controlled by env vars:
+        RUN_MIGRATIONS_ON_STARTUP=true|false  (default false)
+        MIGRATIONS_DRY_RUN=true|false         (default false)
+        MIGRATIONS_FAIL_HARD=true|false       (default true)
+    """
+    run_migrations_on_startup()
 
 # =============================================================================
 # ROUTER REGISTRATION
@@ -615,6 +643,10 @@ if rmos_runs_api_router:
     app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
 if rmos_workflow_router:
     app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
+
+# Wave 17: Workflow Sessions (SQLite persistence layer)
+if workflow_sessions_router:
+    app.include_router(workflow_sessions_router, tags=["Workflow", "Sessions"])
 
 # =============================================================================
 # HEALTH CHECK
