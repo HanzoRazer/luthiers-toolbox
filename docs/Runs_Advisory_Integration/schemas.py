@@ -1,3 +1,17 @@
+"""
+REFERENCE ONLY - DO NOT IMPORT IN PRODUCTION
+
+This file is preserved for documentation purposes.
+Production implementation: services/api/app/rmos/runs_v2/schemas.py
+
+Key differences from production:
+- Production requires feasibility_sha256 (not optional)
+- Production requires risk_level (not optional)
+- Production includes completeness validation
+
+See: docs/Runs_Advisory_Integration/README.md
+"""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

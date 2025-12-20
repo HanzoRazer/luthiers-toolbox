@@ -1,3 +1,17 @@
+"""
+REFERENCE ONLY - DO NOT IMPORT IN PRODUCTION
+
+This file is preserved for documentation purposes.
+Production implementation: services/api/app/rmos/runs_v2/api_runs.py
+
+Key differences from production:
+- Production removes PATCH /runs/{run_id}/meta (immutability)
+- Production adds completeness validation on create
+- Production uses orchestration services for cross-domain workflows
+
+See: docs/Runs_Advisory_Integration/README.md
+"""
+
 from __future__ import annotations
 
 import os

@@ -1,3 +1,18 @@
+"""
+REFERENCE ONLY - DO NOT IMPORT IN PRODUCTION
+
+This file is preserved for documentation purposes.
+Production implementation: services/api/app/rmos/runs_v2/store.py
+
+Key differences from production:
+- Production uses date-partitioned storage ({YYYY-MM-DD}/{run_id}.json)
+- Production enforces strict immutability (no patch_meta)
+- Production includes completeness guard (validate_and_persist)
+- Production uses append-only advisory links
+
+See: docs/Runs_Advisory_Integration/README.md
+"""
+
 from __future__ import annotations
 
 import json

@@ -1,3 +1,16 @@
+"""
+REFERENCE ONLY - DO NOT IMPORT IN PRODUCTION
+
+This file is preserved for documentation purposes.
+Production implementation: services/api/app/rmos/runs_v2/hashing.py
+
+The production implementation adds:
+- compute_feasibility_hash() for RMOS invariants
+- sha256_of_obj() convenience wrapper
+
+See: docs/Runs_Advisory_Integration/README.md
+"""
+
 from __future__ import annotations
 
 import hashlib
