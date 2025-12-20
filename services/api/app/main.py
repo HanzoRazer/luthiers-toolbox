@@ -351,8 +351,8 @@ except ImportError as e:
     teaching_router = None
 
 # =============================================================================
-# WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (4 routers)
-# Design-First Mode: Pattern Library + Generators + Preview + Snapshots
+# WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (5 routers)
+# Design-First Mode: Pattern Library + Generators + Preview + Snapshots + Workflow
 # =============================================================================
 try:
     from .art_studio.api.pattern_routes import router as art_patterns_router
@@ -377,6 +377,12 @@ try:
 except ImportError as e:
     print(f"Warning: Art Studio Snapshot router not available: {e}")
     art_snapshots_router = None
+
+try:
+    from .art_studio.api.workflow_routes import router as art_workflow_router
+except ImportError as e:
+    print(f"Warning: Art Studio Workflow router not available: {e}")
+    art_workflow_router = None
 
 # =============================================================================
 # WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
@@ -620,7 +626,7 @@ if advisory_router:
 if teaching_router:
     app.include_router(teaching_router, tags=["Teaching Loop", "Training"])
 
-# Wave 15: Art Studio Core Completion (4)
+# Wave 15: Art Studio Core Completion (5)
 # Note: These routers have their own prefix defined (e.g., /api/art/patterns)
 if art_patterns_router:
     app.include_router(art_patterns_router, tags=["Art Studio", "Patterns"])
@@ -630,6 +636,8 @@ if art_preview_router:
     app.include_router(art_preview_router, tags=["Art Studio", "Preview"])
 if art_snapshots_router:
     app.include_router(art_snapshots_router, tags=["Art Studio", "Snapshots"])
+if art_workflow_router:
+    app.include_router(art_workflow_router, tags=["Art Studio", "Workflow"])
 
 # Wave 16: Governance Code Bundle - Canonical Workflow + Run Artifacts (4)
 # Implements governance contracts:
