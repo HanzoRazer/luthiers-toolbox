@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 """
-Guitar Vision Engine — FastAPI Routes
+REFERENCE ONLY - DO NOT IMPORT IN PRODUCTION
+
+This file is preserved for standalone testing and reference.
+Production implementation: app/routers/vision_router.py
+Service layer: app/services/vision_service.py
+
+Key differences from production:
+- Production creates AdvisoryAssets (audit trail)
+- Production uses request_id correlation
+- Production delegates to services/ layer
+
+See: docs/governance/AI_SANDBOX_HANDOFF.md
+
+---
+
+Guitar Vision Engine — FastAPI Routes (LEGACY)
 
 REST endpoints for the frontend sandbox to generate guitar images.
 
