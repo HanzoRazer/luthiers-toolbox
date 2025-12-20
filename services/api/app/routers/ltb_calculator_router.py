@@ -82,19 +82,8 @@ class CompoundRadiusRequest(BaseModel):
     scale_length: float
     position: float = Field(..., description="Distance from nut")
 
-class FretPositionRequest(BaseModel):
-    scale_length: float
-    fret_number: int
-
-class FretTableRequest(BaseModel):
-    scale_length: float
-    num_frets: int = Field(24, ge=1, le=36)
-
-class FretPosition(BaseModel):
-    fret_number: int
-    distance_from_nut: float
-    distance_from_previous: float
-    remaining_to_bridge: float
+# NOTE: Fret models moved to fret_router.py (December 2025)
+# See: /api/fret/position, /api/fret/table
 
 class WedgeAngleRequest(BaseModel):
     length: float
@@ -248,35 +237,10 @@ async def compound_radius(request: CompoundRadiusRequest):
     }
 
 
-@router.post("/fret/position")
-async def fret_position(request: FretPositionRequest):
-    """Calculate single fret position."""
-    calc = LTBLuthierCalculator()
-    position = calc.fret_position(request.scale_length, request.fret_number)
-    spacing = calc.fret_spacing(request.scale_length, request.fret_number)
-    return {
-        "fret": request.fret_number,
-        "distance_from_nut": position,
-        "spacing_from_previous": spacing,
-        "scale_length": request.scale_length
-    }
-
-
-@router.post("/fret/table", response_model=List[FretPosition])
-async def fret_table(request: FretTableRequest):
-    """Generate complete fret position table."""
-    calc = LTBLuthierCalculator()
-    table = calc.fret_table(request.scale_length, request.num_frets)
-    return [
-        FretPosition(
-            fret_number=f.fret_number,
-            distance_from_nut=f.distance_from_nut,
-            distance_from_previous=f.distance_from_previous,
-            remaining_to_bridge=f.remaining_to_bridge
-        )
-        for f in table
-    ]
-
+# =============================================================================
+# NOTE: Fret endpoints moved to fret_router.py (December 2025)
+# See: /api/fret/position, /api/fret/table
+# =============================================================================
 
 @router.post("/wedge/angle")
 async def wedge_angle(request: WedgeAngleRequest):

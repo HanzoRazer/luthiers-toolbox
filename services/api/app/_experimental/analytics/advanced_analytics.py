@@ -13,7 +13,7 @@ import math
 from collections import defaultdict
 import statistics
 
-from ..stores.rmos_stores import get_rmos_stores
+from ...stores.rmos_stores import get_rmos_stores
 
 
 class AdvancedAnalytics:

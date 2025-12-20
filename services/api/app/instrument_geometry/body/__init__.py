@@ -30,6 +30,13 @@ from .outlines import (
     get_dxf_path,
     list_bodies_by_category,
 )
+from .parametric import (
+    BodyDimensions,
+    generate_body_outline as generate_parametric_outline,
+    cubic_bezier,
+    ellipse_point,
+    compute_bounding_box,
+)
 
 __all__ = [
     # fretboard_geometry
@@ -44,4 +51,10 @@ __all__ = [
     "get_body_metadata",
     "get_dxf_path",
     "list_bodies_by_category",
+    # parametric
+    "BodyDimensions",
+    "generate_parametric_outline",
+    "cubic_bezier",
+    "ellipse_point",
+    "compute_bounding_box",
 ]

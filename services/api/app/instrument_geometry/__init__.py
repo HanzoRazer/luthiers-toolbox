@@ -46,13 +46,15 @@ from .models.loader import (  # noqa: F401
     MODELS_DIR,
 )
 
-# Legacy compatibility: re-exports from shims (these still work)
-# Temporarily commented out due to Wave 14 dependency conflicts
-# from .profiles import InstrumentSpec, FretboardSpec  # noqa: F401
-from .scale_length import (  # noqa: F401
+# Canonical exports (updated December 2025 - shims deprecated)
+from .neck.fret_math import (  # noqa: F401
     compute_fret_positions_mm,
     compute_fret_spacing_mm,
     compute_compensated_scale_length_mm,
+)
+from .neck.neck_profiles import (  # noqa: F401
+    InstrumentSpec,
+    FretboardSpec,
 )
 
 __all__ = [

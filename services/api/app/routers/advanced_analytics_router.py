@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Body
 from typing import Optional
 import logging
 
-from ..analytics.advanced_analytics import get_advanced_analytics
+from .._experimental.analytics.advanced_analytics import get_advanced_analytics
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

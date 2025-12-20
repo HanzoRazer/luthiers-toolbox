@@ -13,9 +13,9 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..ai_cam.advisor import CAMAdvisor
-from ..ai_cam.explain_gcode import GCodeExplainer
-from ..ai_cam.optimize import CAMOptimizer
+from .ai_cam.advisor import CAMAdvisor
+from .ai_cam.explain_gcode import GCodeExplainer
+from .ai_cam.optimize import CAMOptimizer
 
 
 router = APIRouter(prefix="/ai-cam", tags=["AI-CAM"])

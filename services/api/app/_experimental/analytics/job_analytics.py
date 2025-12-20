@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from ..stores.rmos_stores import get_rmos_stores
+from ...stores.rmos_stores import get_rmos_stores
 
 logger = logging.getLogger(__name__)
 

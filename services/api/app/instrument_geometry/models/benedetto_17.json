@@ -58,6 +58,6 @@
   "notes": [
     "Compensation values are reference starting points; real setups should calibrate per instrument.",
     "JSON is inches-only; loader converts to mm for downstream geometry and CAM.",
-    "Scale/intonation math is handled by instrument_geometry.scale_intonation."
+    "Scale/intonation math is handled by instrument_geometry.neck.fret_math and bridge.compensation."
   ]
 }

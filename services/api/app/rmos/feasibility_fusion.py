@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 from enum import Enum
+from math import pi
 
 from .context import RmosContext
 from ..calculators.service import (
@@ -431,7 +432,7 @@ def evaluate_per_fret_feasibility(
         # Extract fret-specific parameters
         fret_num = tp.fret_number
         angle_rad = getattr(tp, 'angle_rad', 0.0)
-        angle_deg = abs(angle_rad * 180.0 / 3.14159265359)
+        angle_deg = abs(angle_rad * 180.0 / pi)
         slot_depth = tp.slot_depth_mm
         feed_rate = tp.feed_rate_mmpm
         

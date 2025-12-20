@@ -1,4 +1,10 @@
 # services/api/app/routers/rmos_saw_ops_router.py
+"""
+RMOS Saw Operations Router
+
+Note: Circle/arc geometry extracted to geometry/arc_utils.py
+following the Fortran Rule (all math in subroutines).
+"""
 
 from __future__ import annotations
 
@@ -7,6 +13,9 @@ import uuid
 from typing import Dict, Any, List
 
 from fastapi import APIRouter
+
+# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from ..geometry.arc_utils import circle_circumference, arc_length_from_angle
 
 from ..rmos.models.pattern import (
     SlicePreviewRequest,
@@ -22,7 +31,10 @@ router = APIRouter(
 
 
 def _estimate_path_length_mm(geometry: Dict[str, Any]) -> float:
-    """Very simple path-length estimate based on geometry descriptor.
+    """
+    Very simple path-length estimate based on geometry descriptor.
+
+    Delegates to canonical geometry functions from geometry/arc_utils.py.
 
     This is intentionally conservative and stubby for Wave E1.
     Saw Lab can override this later with real slice planning.
@@ -31,12 +43,12 @@ def _estimate_path_length_mm(geometry: Dict[str, Any]) -> float:
 
     if gtype == "circle":
         r = float(geometry.get("radius_mm", 0.0))
-        return 2.0 * math.pi * r
+        return circle_circumference(r)
 
     if gtype == "arc":
         r = float(geometry.get("radius_mm", 0.0))
         angle_deg = float(geometry.get("angle_deg", 0.0))
-        return 2.0 * math.pi * r * (angle_deg / 360.0)
+        return arc_length_from_angle(r, angle_deg)
 
     if gtype == "polyline":
         pts = geometry.get("points") or []
@@ -44,7 +56,7 @@ def _estimate_path_length_mm(geometry: Dict[str, Any]) -> float:
         for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
             dx = float(x2) - float(x1)
             dy = float(y2) - float(y1)
-            total += math.hypot(dx, dy)
+            total += math.hypot(dx, dy)  # hypot is stdlib, not algorithm
         return total
 
     # Fallback: unknown type, assume short path

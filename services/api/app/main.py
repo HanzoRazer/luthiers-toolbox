@@ -195,11 +195,12 @@ from .art_studio.rosette_router import router as art_studio_rosette_router
 from .routers.temperament_router import router as temperament_router
 
 # =============================================================================
-# WAVE 7: CALCULATOR SUITE + FRET SLOTS CAM + BRIDGE CALCULATOR (3 routers)
+# WAVE 7: CALCULATOR SUITE + FRET SLOTS CAM + BRIDGE CALCULATOR + FRET DESIGN (4 routers)
 # =============================================================================
 from .routers.calculators_router import router as calculators_router
 from .routers.cam_fret_slots_router import router as cam_fret_slots_router
 from .routers.bridge_router import router as bridge_router
+from .routers.fret_router import router as fret_router
 
 # =============================================================================
 # WAVE 8: PRESETS + RMOS EXTENSIONS + CAM TOOLS (7 routers)
@@ -216,18 +217,18 @@ from .routers.rosette_photo_router import router as rosette_photo_router
 # WAVE 9: AI-CAM + DRILL/ROUGHING + COMPARE + DXF PREFLIGHT + JOBLOG + NECK (8 routers)
 # =============================================================================
 try:
-    from .routers.ai_cam_router import router as ai_cam_router
+    from ._experimental.ai_cam_router import router as ai_cam_router
 except ImportError as e:
-    print(f"Warning: AI-CAM router not available (ai_cam in _experimental): {e}")
+    print(f"Warning: AI-CAM router not available: {e}")
     ai_cam_router = None
 from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
 from .routers.cam_roughing_router import router as cam_roughing_router
 from .routers.compare_router import router as compare_router
 from .routers.dxf_preflight_router import router as dxf_preflight_router
 try:
-    from .routers.joblog_router import router as joblog_router
+    from ._experimental.joblog_router import router as joblog_router
 except ImportError as e:
-    print(f"Warning: JobLog router not available (cnc_production in _experimental): {e}")
+    print(f"Warning: JobLog router not available: {e}")
     joblog_router = None
 from .routers.neck_router import router as neck_router
 from .routers.parametric_guitar_router import router as parametric_guitar_router
@@ -532,10 +533,11 @@ app.include_router(art_studio_rosette_router, prefix="/api", tags=["Rosette", "A
 # Smart Guitar Temperaments (1) - Wave 6
 app.include_router(temperament_router, prefix="/api/smart-guitar", tags=["Smart Guitar", "Temperaments"])
 
-# Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator (3)
+# Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
 app.include_router(calculators_router, prefix="/api", tags=["Calculators"])
 app.include_router(cam_fret_slots_router, prefix="/api/cam/fret_slots", tags=["CAM", "Fret Slots"])
 app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
+app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
 
 # Wave 8: Presets + RMOS Extensions + CAM Tools (7)
 app.include_router(unified_presets_router, prefix="/api", tags=["Presets", "Unified"])
@@ -551,7 +553,7 @@ if ai_cam_router:
     app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
 app.include_router(cam_drill_pattern_router, prefix="/api", tags=["CAM", "Drill Patterns"])
 app.include_router(cam_roughing_router, prefix="/api", tags=["CAM", "Roughing"])
-app.include_router(compare_router, prefix="/api", tags=["Compare", "Baselines"])
+app.include_router(compare_router, prefix="", tags=["Compare", "Baselines"])  # Router has /api/compare prefix
 app.include_router(dxf_preflight_router, prefix="/api", tags=["DXF", "Preflight"])
 if joblog_router:
     app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
@@ -559,10 +561,10 @@ app.include_router(neck_router, prefix="/api", tags=["Neck", "Generator"])
 app.include_router(parametric_guitar_router, prefix="/api", tags=["Guitar", "Parametric"])
 
 # Wave 10: Instrument + Compare Lab + Drilling + Risk + Learn + Backup (8)
-app.include_router(instrument_router, prefix="/api", tags=["Instrument"])
-app.include_router(compare_lab_router, prefix="/api", tags=["Compare", "Lab"])
+app.include_router(instrument_router, prefix="", tags=["Instrument"])  # Router has /api/instrument prefix
+app.include_router(compare_lab_router, prefix="", tags=["Compare", "Lab"])  # Router has /api/compare/lab prefix
 app.include_router(drilling_router, prefix="/api/cam/drilling", tags=["CAM", "Drilling"])
-app.include_router(cam_risk_router, prefix="/api", tags=["CAM", "Risk"])
+app.include_router(cam_risk_router, prefix="", tags=["CAM", "Risk"])  # Router has /api/cam/risk prefix
 app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
 if learn_router:
     app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
@@ -576,7 +578,7 @@ if analytics_router:
 if advanced_analytics_router:
     app.include_router(advanced_analytics_router, prefix="/api", tags=["Analytics", "Advanced"])
 app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
-app.include_router(ltb_calculator_router, prefix="/api", tags=["Calculator", "LTB"])
+app.include_router(ltb_calculator_router, prefix="", tags=["Calculator", "LTB"])  # Router has /api/calculators prefix
 if dashboard_router:
     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
@@ -585,12 +587,12 @@ app.include_router(job_intelligence_router, prefix="/api", tags=["Jobs", "Intell
 
 # Wave 12: CAM Extensions + Compare Risk + Fret Export + Polygon (8)
 app.include_router(cam_adaptive_benchmark_router, prefix="/api", tags=["CAM", "Benchmark"])
-app.include_router(cam_fret_slots_export_router, prefix="/api", tags=["CAM", "Fret Export"])
-app.include_router(cam_risk_aggregate_router, prefix="/api", tags=["CAM", "Risk"])
-app.include_router(compare_risk_aggregate_router, prefix="/api", tags=["Compare", "Risk"])
-app.include_router(compare_risk_bucket_detail_router, prefix="/api", tags=["Compare", "Risk"])
+app.include_router(cam_fret_slots_export_router, prefix="", tags=["CAM", "Fret Export"])  # Router has /api/cam/fret_slots prefix
+app.include_router(cam_risk_aggregate_router, prefix="", tags=["CAM", "Risk"])  # Router has /api/cam/jobs prefix
+app.include_router(compare_risk_aggregate_router, prefix="", tags=["Compare", "Risk"])  # Router has /api/compare prefix
+app.include_router(compare_risk_bucket_detail_router, prefix="", tags=["Compare", "Risk"])  # Router has /api/compare prefix
 app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
-app.include_router(job_insights_router, prefix="/api", tags=["Jobs", "Insights"])
+app.include_router(job_insights_router, prefix="", tags=["Jobs", "Insights"])  # Router has /api/cam/job_log prefix
 app.include_router(pipeline_preset_router, prefix="/api", tags=["Pipeline", "Presets"])
 
 # Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (10)
@@ -601,7 +603,7 @@ app.include_router(cam_pipeline_preset_run_router, prefix="/api", tags=["CAM", "
 app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
 app.include_router(compare_automation_router, prefix="/api", tags=["Compare", "Automation"])
-app.include_router(compare_risk_bucket_export_router, prefix="/api", tags=["Compare", "Export"])
+app.include_router(compare_risk_bucket_export_router, prefix="", tags=["Compare", "Export"])  # Router has /api/compare prefix
 app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
 app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 

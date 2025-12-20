@@ -55,6 +55,11 @@ from .schemas import (
 from .store import (
     # Class
     RunStoreV2,
+    # Completeness guard (meta validation)
+    CompletenessViolation,
+    check_completeness,
+    create_blocked_artifact_for_violations,
+    validate_and_persist,
     # Module-level functions
     create_run_id,
     persist_run,
@@ -159,6 +164,10 @@ __all__ = [
     "utc_now",
     # Store
     "RunStoreV2",
+    "CompletenessViolation",
+    "check_completeness",
+    "create_blocked_artifact_for_violations",
+    "validate_and_persist",
     "create_run_id",
     "persist_run",
     "get_run",

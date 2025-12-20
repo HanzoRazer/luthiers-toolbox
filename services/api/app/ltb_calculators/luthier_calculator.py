@@ -59,6 +59,12 @@ from typing import Tuple, List, Optional
 import math
 from .scientific_calculator import LTBScientificCalculator
 
+# Import canonical fret math - Fortran Rule: all math in subroutines
+from ..instrument_geometry.neck.fret_math import (
+    compute_fret_positions_mm,
+    compute_fret_spacing_mm,
+)
+
 
 # =============================================================================
 # DATA CLASSES
@@ -330,56 +336,61 @@ class LTBLuthierCalculator(LTBScientificCalculator):
                       use_rule_of_18: bool = False) -> float:
         """
         Calculate fret position from nut.
-        
+
         Args:
-            scale_length: Scale length (nut to saddle)
+            scale_length: Scale length (nut to saddle) in inches
             fret_number: Fret number (1 = first fret)
             use_rule_of_18: Use traditional approximation vs precise 12-TET
-            
+
         Returns:
-            Distance from nut to fret
-            
-        Formula:
-            position = scale_length * (1 - (1 / 2^(fret/12)))
-            
+            Distance from nut to fret in inches
+
+        Delegates to canonical compute_fret_positions_mm() from fret_math.py.
+
         Example:
             >>> calc.fret_position(25.5, 12)
             12.75  # 12th fret is exactly half scale length
         """
-        divisor = self.RULE_OF_18 if use_rule_of_18 else self.EQUAL_TEMPERAMENT
-        
-        # Precise formula: position = scale * (1 - 2^(-fret/12))
-        if not use_rule_of_18:
-            position = scale_length * (1 - math.pow(2, -fret_number / 12))
-        else:
-            # Iterative rule of 18
+        if use_rule_of_18:
+            # Legacy iterative rule of 18 (not in canonical fret_math)
+            divisor = self.RULE_OF_18
             remaining = scale_length
             position = 0
             for _ in range(fret_number):
                 fret_distance = remaining / divisor
                 position += fret_distance
                 remaining -= fret_distance
-        
-        return round(position, 4)
+            return round(position, 4)
+
+        # Delegate to canonical fret_math (convert inches <-> mm)
+        scale_mm = scale_length * 25.4
+        positions_mm = compute_fret_positions_mm(scale_mm, fret_number)
+        position_in = positions_mm[fret_number - 1] / 25.4
+
+        return round(position_in, 4)
     
     def fret_spacing(self, scale_length: float, fret_number: int) -> float:
         """
         Calculate spacing between fret and previous fret.
-        
+
         Args:
-            scale_length: Scale length
+            scale_length: Scale length in inches
             fret_number: Fret number (1 = nut to first fret)
-            
+
         Returns:
-            Distance from previous fret (or nut if fret 1)
+            Distance from previous fret (or nut if fret 1) in inches
+
+        Delegates to canonical compute_fret_spacing_mm() from fret_math.py.
         """
         if fret_number < 1:
             return 0.0
-        
-        current = self.fret_position(scale_length, fret_number)
-        previous = self.fret_position(scale_length, fret_number - 1) if fret_number > 1 else 0
-        
-        return round(current - previous, 4)
+
+        # Delegate to canonical fret_math (convert inches <-> mm)
+        scale_mm = scale_length * 25.4
+        spacings_mm = compute_fret_spacing_mm(scale_mm, fret_number)
+        spacing_in = spacings_mm[fret_number - 1] / 25.4
+
+        return round(spacing_in, 4)
     
     def fret_table(self, scale_length: float, num_frets: int = 24) -> List[FretPosition]:
         """

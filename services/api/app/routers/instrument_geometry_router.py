@@ -297,74 +297,11 @@ async def get_status_summary():
 
 
 # ============================================================================
-
-
-# ============================================================================
 # Geometry Calculation Endpoints
 # ============================================================================
-
-@router.post("/frets/positions", response_model=FretPositionsResponse, tags=["Instrument Geometry"])
-async def calculate_fret_positions(body: FretPositionsRequest):
-    """
-    Calculate fret positions for a given scale length.
-    
-    Returns positions (distance from nut) and spacings (fret-to-fret distances).
-    """
-    positions = compute_fret_positions_mm(
-        scale_length_mm=body.scale_length_mm,
-        num_frets=body.num_frets,
-    )
-    
-    # Calculate spacings
-    spacings = [positions[0]]  # First fret spacing from nut
-    for i in range(1, len(positions)):
-        spacings.append(positions[i] - positions[i - 1])
-    
-    # Apply compensation to final bridge position (informational)
-    compensated_positions = [p for p in positions]
-    
-    return FretPositionsResponse(
-        scale_length_mm=body.scale_length_mm,
-        num_frets=body.num_frets,
-        compensation_mm=body.compensation_mm,
-        positions_mm=[round(p, 4) for p in compensated_positions],
-        spacings_mm=[round(s, 4) for s in spacings],
-    )
-
-
-@router.post("/fretboard/outline", response_model=FretboardOutlineResponse, tags=["Instrument Geometry"])
-async def calculate_fretboard_outline(body: FretboardOutlineRequest):
-    """
-    Calculate fretboard outline and fret slot positions.
-    
-    Returns outline polygon and fret slot line coordinates.
-    """
-    # Create a FretboardSpec from the request
-    spec = FretboardSpec(
-        scale_length_mm=body.scale_length_mm,
-        nut_width_mm=body.nut_width_mm,
-        width_at_12th_fret_mm=body.width_at_12th_mm,
-        num_frets=body.num_frets,
-        fret_overhang_mm=body.overhang_mm,
-    )
-    
-    outline = compute_fretboard_outline(spec)
-    slot_lines = compute_fret_slot_lines(spec)
-    
-    return FretboardOutlineResponse(
-        outline_points=[[round(p[0], 4), round(p[1], 4)] for p in outline],
-        slot_lines=[
-            {
-                "fret": sl["fret"],
-                "x1": round(sl["x1"], 4),
-                "y1": round(sl["y1"], 4),
-                "x2": round(sl["x2"], 4),
-                "y2": round(sl["y2"], 4),
-            }
-            for sl in slot_lines
-        ],
-    )
-
+# NOTE: Fret-related endpoints moved to fret_router.py (December 2025)
+# See: /api/fret/table, /api/fret/board/outline, /api/fret/radius/compound
+# ============================================================================
 
 @router.post("/bridge/placement", response_model=BridgePlacementResponse, tags=["Instrument Geometry"])
 async def calculate_bridge_placement(body: BridgePlacementRequest):
@@ -409,26 +346,7 @@ async def calculate_bridge_placement(body: BridgePlacementRequest):
     )
 
 
-@router.post("/radius/at_fret", response_model=RadiusAtFretResponse, tags=["Instrument Geometry"])
-async def calculate_radius_at_fret(body: RadiusAtFretRequest):
-    """
-    Calculate the fretboard radius at a specific fret for compound radius necks.
-    
-    Interpolates between nut and heel radius based on fret position.
-    """
-    radius_mm = compute_compound_radius_at_fret(
-        nut_radius_mm=body.nut_radius_mm,
-        heel_radius_mm=body.heel_radius_mm,
-        fret_number=body.fret_number,
-        total_frets=body.total_frets,
-    )
-    
-    return RadiusAtFretResponse(
-        fret_number=body.fret_number,
-        radius_mm=round(radius_mm, 4),
-        radius_inches=round(radius_mm / 25.4, 4),
-    )
-
+# NOTE: /radius/at_fret moved to fret_router.py → /api/fret/radius/compound
 
 # ============================================================================
 # Utility Endpoints
@@ -508,102 +426,7 @@ async def api_get_neck_profile(model_id: str):
 
 
 # ============================================================================
-# Fan-Fret Endpoints (Wave 19 Phase A)
+# Fan-Fret Endpoints - MOVED TO fret_router.py (December 2025)
 # ============================================================================
-
-@router.post("/fan_fret/calculate", response_model=FanFretCalculateResponse, tags=["Instrument Geometry"])
-async def api_calculate_fan_fret(body: FanFretCalculateRequest):
-    """
-    Calculate fan-fret (multi-scale) fret positions.
-    
-    Returns position data for each fret including:
-    - Treble and bass side positions
-    - Slot angle in radians and degrees
-    - Center point coordinates
-    - Perpendicular fret marker
-    
-    Example:
-        7-string standard: treble=648mm (25.5"), bass=686mm (27"), perp=7
-    """
-    # Compute fan-fret positions
-    fret_points = compute_fan_fret_positions(
-        treble_scale_mm=body.treble_scale_mm,
-        bass_scale_mm=body.bass_scale_mm,
-        fret_count=body.num_frets,
-        nut_width_mm=body.nut_width_mm,
-        heel_width_mm=body.heel_width_mm,
-        perpendicular_fret=body.perpendicular_fret,
-        scale_length_reference_mm=body.treble_scale_mm,
-    )
-    
-    # Convert to response format
-    response_points = []
-    max_angle_deg = 0.0
-    
-    for fp in fret_points:
-        angle_deg = fp.angle_rad * 180.0 / 3.14159265359
-        is_perp = abs(fp.angle_rad) < 0.001
-        
-        response_points.append(FanFretPointResponse(
-            fret_number=fp.fret_number,
-            treble_pos_mm=fp.treble_pos_mm,
-            bass_pos_mm=fp.bass_pos_mm,
-            angle_rad=fp.angle_rad,
-            angle_deg=angle_deg,
-            center_x=fp.center_x,
-            center_y=fp.center_y,
-            is_perpendicular=is_perp,
-        ))
-        
-        max_angle_deg = max(max_angle_deg, abs(angle_deg))
-    
-    return FanFretCalculateResponse(
-        treble_scale_mm=body.treble_scale_mm,
-        bass_scale_mm=body.bass_scale_mm,
-        perpendicular_fret=body.perpendicular_fret,
-        num_frets=body.num_frets,
-        fret_points=response_points,
-        max_angle_deg=max_angle_deg,
-    )
-
-
-@router.post("/fan_fret/validate", response_model=FanFretValidateResponse, tags=["Instrument Geometry"])
-async def api_validate_fan_fret(body: FanFretValidateRequest):
-    """
-    Validate fan-fret geometry parameters.
-    
-    Checks:
-    - Bass scale >= treble scale
-    - Scale lengths in reasonable range (500-900mm)
-    - Perpendicular fret within valid range
-    
-    Returns validation status with detailed message.
-    """
-    result = validate_fan_fret_geometry(
-        treble_scale_mm=body.treble_scale_mm,
-        bass_scale_mm=body.bass_scale_mm,
-        fret_count=body.num_frets,
-        perpendicular_fret=body.perpendicular_fret,
-    )
-    
-    return FanFretValidateResponse(
-        valid=result["valid"],
-        message=result["message"],
-        warnings=result.get("warnings"),
-    )
-
-
-@router.get("/fan_fret/presets", tags=["Instrument Geometry"])
-async def api_get_fan_fret_presets():
-    """
-    Get predefined fan-fret configurations.
-    
-    Returns presets for:
-    - 7-string standard (25.5"-27")
-    - 8-string standard (25.5"-28")
-    - Baritone 6-string (26"-27")
-    """
-    return {
-        "presets": FAN_FRET_PRESETS,
-        "count": len(FAN_FRET_PRESETS),
-    }
+# See: /api/fret/fan/calculate, /api/fret/fan/validate, /api/fret/fan/presets
+# ============================================================================

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Any, Optional, Literal
-from math import sqrt
+from math import sqrt, pi
 
 from ..instrument_geometry.neck.fret_math import (
     compute_fret_positions_mm,
@@ -341,7 +341,7 @@ def _generate_fan_fret_toolpaths(
         
         # Adjust feedrate for angle (more aggressive angle → slower feed)
         # Max angle typically ~5°, reduce feed by up to 20% for extreme angles
-        angle_deg = abs(fan_pt.angle_rad * 180.0 / 3.14159)
+        angle_deg = abs(fan_pt.angle_rad * 180.0 / pi)
         angle_factor = 1.0 - (min(angle_deg, 5.0) / 5.0) * 0.2
         
         toolpath = FretSlotToolpath(
@@ -433,7 +433,7 @@ def export_dxf_r12(toolpaths: List[FretSlotToolpath], mode: str = 'standard') ->
         
         # Add comment for fan-fret angles
         if mode == 'fan' and abs(tp.angle_rad) > 0.001:
-            angle_deg = tp.angle_rad * 180.0 / 3.14159
+            angle_deg = tp.angle_rad * 180.0 / pi
             lines.extend([
                 "999",
                 f"FRET_{tp.fret_number}_ANGLE_{angle_deg:.2f}_DEG",
@@ -512,7 +512,7 @@ def generate_gcode(
         
         # Add angle info for fan-fret
         if mode == 'fan' and abs(tp.angle_rad) > 0.001:
-            angle_deg = tp.angle_rad * 180.0 / 3.14159
+            angle_deg = tp.angle_rad * 180.0 / pi
             lines.append(f"(Fret {tp.fret_number} - Position: {tp.position_mm:.2f}mm - Angle: {angle_deg:.2f}°)")
         else:
             lines.append(f"(Fret {tp.fret_number} - Position: {tp.position_mm:.2f}mm)")
@@ -575,7 +575,7 @@ def compute_cam_statistics(
     
     # Calculate max angle for fan-fret (in degrees)
     max_angle_rad = max((abs(tp.angle_rad) for tp in toolpaths), default=0.0)
-    max_angle_deg = max_angle_rad * 180.0 / 3.14159
+    max_angle_deg = max_angle_rad * 180.0 / pi
     
     return {
         "slot_count": len(toolpaths),
@@ -740,7 +740,7 @@ def _generate_fan_fret_cam(
     statistics["bass_scale_mm"] = bass_scale_mm
     statistics["perpendicular_fret"] = perpendicular_fret
     statistics["max_angle_deg"] = max(
-        abs(tp.angle_rad) * 180.0 / 3.14159 for tp in toolpaths
+        abs(tp.angle_rad) * 180.0 / pi for tp in toolpaths
     )
     
     return FretSlotCAMOutput(
@@ -895,7 +895,7 @@ def _export_fan_fret_dxf_r12(toolpaths: List[FretSlotToolpath]) -> str:
     
     for tp in toolpaths:
         # Angle in degrees for metadata
-        angle_deg = tp.angle_rad * 180.0 / 3.14159
+        angle_deg = tp.angle_rad * 180.0 / pi
         
         # Color code: cyan (4) for perpendicular, white (7) for angled
         color = "4" if tp.is_perpendicular else "7"

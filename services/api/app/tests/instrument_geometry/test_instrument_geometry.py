@@ -10,30 +10,31 @@ See docs/KnowledgeBase/Instrument_Geometry/ for formula derivations.
 import pytest
 from math import isclose
 
-from app.instrument_geometry.scale_length import (
+# Canonical imports (updated from shims - December 2025)
+from app.instrument_geometry.neck.fret_math import (
     compute_fret_positions_mm,
     compute_fret_spacing_mm,
     compute_compensated_scale_length_mm,
     compute_fret_to_bridge_mm,
     SCALE_LENGTHS_MM,
 )
-from app.instrument_geometry.profiles import (
+from app.instrument_geometry.neck.neck_profiles import (
     InstrumentSpec,
     FretboardSpec,
     BridgeSpec,
     RadiusProfile,
 )
-from app.instrument_geometry.fretboard_geometry import (
+from app.instrument_geometry.body.fretboard_geometry import (
     compute_fretboard_outline,
     compute_width_at_position_mm,
     compute_fret_slot_lines,
 )
-from app.instrument_geometry.radius_profiles import (
+from app.instrument_geometry.neck.radius_profiles import (
     compute_compound_radius_at_fret,
     compute_radius_drop_mm,
     compute_radius_arc_points,
 )
-from app.instrument_geometry.bridge_geometry import (
+from app.instrument_geometry.bridge.geometry import (
     compute_bridge_location_mm,
     compute_saddle_positions_mm,
 )

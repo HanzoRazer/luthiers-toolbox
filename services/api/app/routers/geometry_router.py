@@ -43,6 +43,9 @@ from fastapi import APIRouter, Body, File, HTTPException, Request, Response, Upl
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from ..geometry.arc_utils import tessellate_arc_radians, nearest_point_distance
+
 from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 
@@ -551,53 +554,43 @@ def parity(body: ParityRequest) -> Dict[str, Any]:
         None (returns pass=False if geometry deviates beyond tolerance)
     """
     from .sim_validate import simulate
-    # Sample geometry to points
+    # Sample geometry to points - Arc tessellation delegated to geometry/arc_utils.py
     gpts = []
     for s in body.geometry.paths:
         if s.type == "line" and s.x1 is not None:
-            gpts.append((s.x1, s.y1)); gpts.append((s.x2, s.y2))
-        elif s.type == "arc" and None not in (s.cx,s.cy,s.r,s.start,s.end):
-            a0 = math.radians(s.start); a1 = math.radians(s.end)
-            cw = bool(s.cw)
-            if cw:
-                while a1 > a0: a1 -= 2*math.pi
-            else:
-                while a1 < a0: a1 += 2*math.pi
-            steps=64
-            for k in range(steps+1):
-                t = k/steps; a = a0 + (a1-a0)*t
-                gpts.append((s.cx + s.r*math.cos(a), s.cy + s.r*math.sin(a)))
+            gpts.append((s.x1, s.y1))
+            gpts.append((s.x2, s.y2))
+        elif s.type == "arc" and None not in (s.cx, s.cy, s.r, s.start, s.end):
+            arc_pts = tessellate_arc_radians(
+                s.cx, s.cy, s.r,
+                math.radians(s.start), math.radians(s.end),
+                clockwise=bool(s.cw), steps=64
+            )
+            gpts.extend(arc_pts)
 
     # Sample toolpath to points
     sim = simulate(body.gcode)
     mpts = []
-    last = {'x':0.0,'y':0.0,'z':5.0}
+    last = {'x': 0.0, 'y': 0.0, 'z': 5.0}
     for m in sim['moves']:
-        if m['code'] in ('G0','G1') and 'x' in m and 'y' in m:
-            mpts.append((last['x'], last['y'])); mpts.append((m['x'], m['y']))
-            last = {'x':m.get('x', last['x']), 'y':m.get('y', last['y']), 'z':m.get('z', last['z'])}
-        elif m['code'] in ('G2','G3') and all(k in m for k in ('x','y','i','j')):
-            sx,sy = last['x'], last['y']; ex,ey = m['x'], m['y']
-            cx,cy = sx + m['i'], sy + m['j']; r = math.hypot(sx-cx, sy-cy)
-            a0 = math.atan2(sy-cy, sx-cx); a1 = math.atan2(ey-cy, ex-cx)
-            if m['code']=='G2':
-                while a1 > a0: a1 -= 2*math.pi
-            else:
-                while a1 < a0: a1 += 2*math.pi
-            steps=64
-            for k in range(steps+1):
-                t=k/steps; a=a0+(a1-a0)*t
-                mpts.append((cx + r*math.cos(a), cy + r*math.sin(a)))
-            last = {'x':ex,'y':ey,'z':m.get('z', last['z'])}
+        if m['code'] in ('G0', 'G1') and 'x' in m and 'y' in m:
+            mpts.append((last['x'], last['y']))
+            mpts.append((m['x'], m['y']))
+            last = {'x': m.get('x', last['x']), 'y': m.get('y', last['y']), 'z': m.get('z', last['z'])}
+        elif m['code'] in ('G2', 'G3') and all(k in m for k in ('x', 'y', 'i', 'j')):
+            sx, sy = last['x'], last['y']
+            ex, ey = m['x'], m['y']
+            cx, cy = sx + m['i'], sy + m['j']
+            r = math.hypot(sx - cx, sy - cy)
+            a0 = math.atan2(sy - cy, sx - cx)
+            a1 = math.atan2(ey - cy, ex - cx)
+            cw = m['code'] == 'G2'
+            arc_pts = tessellate_arc_radians(cx, cy, r, a0, a1, clockwise=cw, steps=64)
+            mpts.extend(arc_pts)
+            last = {'x': ex, 'y': ey, 'z': m.get('z', last['z'])}
 
-    def nearest_dist(pt, cloud):
-        px,py = pt; md = 1e9
-        for qx,qy in cloud:
-            d = math.hypot(px-qx, py-qy)
-            if d < md: md = d
-        return md
-
-    errs = [nearest_dist(p, mpts) for p in gpts] if (gpts and mpts) else [999.0]
+    # Calculate errors using canonical nearest_point_distance
+    errs = [nearest_point_distance(p, mpts) for p in gpts] if (gpts and mpts) else [999.0]
     rms = (sum(e*e for e in errs)/len(errs))**0.5
     mx = max(errs) if errs else 999.0
     return {"rms_error_mm": round(rms,4), "max_error_mm": round(mx,4), "tolerance_mm": body.tolerance_mm, "pass": mx <= body.tolerance_mm}

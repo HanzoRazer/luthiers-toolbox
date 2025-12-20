@@ -1,15 +1,24 @@
 """
 Parametric Guitar Design Router
 Generate guitar body outlines from dimensional inputs (dimension-driven CAD)
+
+Note: Core geometry math extracted to instrument_geometry/body/parametric.py
+following the Fortran Rule (all math in subroutines).
 """
 
 import io
-import math
 from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
+
+# Import canonical parametric geometry - NO inline math in routers (Fortran Rule)
+from ..instrument_geometry.body.parametric import (
+    BodyDimensions,
+    generate_body_outline as _generate_body_outline,
+    compute_bounding_box,
+)
 
 router = APIRouter(prefix="/guitar/design", tags=["parametric", "guitar"])
 
@@ -53,7 +62,7 @@ class BodyOutlineResponse(BaseModel):
 
 
 # ============================================================================
-# Parametric Body Generation
+# Parametric Body Generation - Delegated to body/parametric.py (Fortran Rule)
 # ============================================================================
 
 def generate_body_outline(
@@ -63,118 +72,26 @@ def generate_body_outline(
 ) -> List[Tuple[float, float]]:
     """
     Generate parametric body outline from dimensions.
-    
-    Uses ellipse approximations and bezier curves for organic guitar shapes.
-    Algorithm:
-    1. Create upper bout ellipse (centered at 0, dimensions.bodyWidthUpper/2 radius)
-    2. Create waist narrowing (bezier curve transition)
-    3. Create lower bout ellipse (larger, offset downward)
-    4. Blend curves for smooth continuous outline
-    
+
+    Delegates to canonical generate_body_outline() in body/parametric.py.
+
     Args:
         dimensions: GuitarDimensions with all measurements
         guitar_type: "Acoustic", "Electric", "Classical", "Bass"
         resolution: Points per curve segment (higher = smoother)
-    
+
     Returns:
         List of (x, y) tuples forming closed polyline
     """
-    length = dimensions.bodyLength
-    upper_width = dimensions.bodyWidthUpper
-    lower_width = dimensions.bodyWidthLower
-    waist = dimensions.waistWidth
-    
-    # Calculate key Y positions along body
-    upper_center_y = length * 0.25  # Upper bout center at 25% from top
-    waist_y = length * 0.50  # Waist at 50% (midpoint)
-    lower_center_y = length * 0.75  # Lower bout center at 75% from top
-    
-    # Radii for ellipses
-    upper_radius_x = upper_width / 2.0
-    upper_radius_y = length * 0.20  # Upper bout height
-    
-    lower_radius_x = lower_width / 2.0
-    lower_radius_y = length * 0.25  # Lower bout height (slightly larger)
-    
-    waist_half = waist / 2.0
-    
-    outline = []
-    
-    # === RIGHT SIDE (positive X) ===
-    
-    # 1. Upper bout (right side, top to waist)
-    for i in range(resolution // 4):
-        t = i / (resolution // 4 - 1)  # 0.0 to 1.0
-        angle = math.pi / 2 - t * math.pi / 2  # 90° to 0° (top to side)
-        x = upper_radius_x * math.cos(angle)
-        y = upper_center_y + upper_radius_y * math.sin(angle)
-        outline.append((x, y))
-    
-    # 2. Waist transition (right side, bezier curve)
-    waist_start_y = upper_center_y - upper_radius_y * 0.5
-    waist_end_y = waist_y + (lower_center_y - waist_y) * 0.3
-    
-    for i in range(resolution // 8):
-        t = i / (resolution // 8 - 1)
-        # Cubic bezier: P0 = (upper_radius_x, waist_start_y), P3 = (waist_half, waist_end_y)
-        # Control points pull curve inward
-        p0_x, p0_y = upper_radius_x, waist_start_y
-        p1_x, p1_y = upper_radius_x * 0.9, waist_y - 20
-        p2_x, p2_y = waist_half * 1.1, waist_y + 20
-        p3_x, p3_y = waist_half, waist_end_y
-        
-        # Cubic bezier formula
-        x = (1-t)**3 * p0_x + 3*(1-t)**2*t * p1_x + 3*(1-t)*t**2 * p2_x + t**3 * p3_x
-        y = (1-t)**3 * p0_y + 3*(1-t)**2*t * p1_y + 3*(1-t)*t**2 * p2_y + t**3 * p3_y
-        outline.append((x, y))
-    
-    # 3. Lower bout (right side, waist to bottom)
-    for i in range(resolution // 4):
-        t = i / (resolution // 4 - 1)
-        angle = t * math.pi  # 0° to 180° (side to bottom)
-        x = lower_radius_x * math.cos(angle)
-        y = lower_center_y + lower_radius_y * math.sin(angle)
-        if y < waist_end_y:  # Only add points below waist transition
-            continue
-        outline.append((x, y))
-    
-    # === LEFT SIDE (negative X, mirror right side) ===
-    
-    # 4. Lower bout (left side, bottom to waist)
-    for i in range(resolution // 4):
-        t = i / (resolution // 4 - 1)
-        angle = math.pi + t * math.pi  # 180° to 360° (bottom to side)
-        x = lower_radius_x * math.cos(angle)
-        y = lower_center_y + lower_radius_y * math.sin(angle)
-        if y < waist_end_y:
-            continue
-        outline.append((x, y))
-    
-    # 5. Waist transition (left side, bezier curve)
-    for i in range(resolution // 8):
-        t = i / (resolution // 8 - 1)
-        p0_x, p0_y = -waist_half, waist_end_y
-        p1_x, p1_y = -waist_half * 1.1, waist_y + 20
-        p2_x, p2_y = -upper_radius_x * 0.9, waist_y - 20
-        p3_x, p3_y = -upper_radius_x, waist_start_y
-        
-        x = (1-t)**3 * p0_x + 3*(1-t)**2*t * p1_x + 3*(1-t)*t**2 * p2_x + t**3 * p3_x
-        y = (1-t)**3 * p0_y + 3*(1-t)**2*t * p1_y + 3*(1-t)*t**2 * p2_y + t**3 * p3_y
-        outline.append((x, y))
-    
-    # 6. Upper bout (left side, waist to top)
-    for i in range(resolution // 4):
-        t = i / (resolution // 4 - 1)
-        angle = math.pi + t * math.pi / 2  # 180° to 270° (side to top)
-        x = upper_radius_x * math.cos(angle)
-        y = upper_center_y + upper_radius_y * math.sin(angle)
-        outline.append((x, y))
-    
-    # Close the loop
-    if outline[0] != outline[-1]:
-        outline.append(outline[0])
-    
-    return outline
+    # Convert Pydantic model to dataclass for canonical function
+    body_dims = BodyDimensions(
+        body_length_mm=dimensions.bodyLength,
+        upper_width_mm=dimensions.bodyWidthUpper,
+        lower_width_mm=dimensions.bodyWidthLower,
+        waist_width_mm=dimensions.waistWidth,
+        scale_length_mm=dimensions.scaleLength,
+    )
+    return _generate_body_outline(body_dims, guitar_type, resolution)
 
 
 def outline_to_dxf_r12(outline: List[Tuple[float, float]], metadata: dict) -> str:

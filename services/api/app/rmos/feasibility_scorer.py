@@ -16,6 +16,7 @@ Integrates with migrated pipeline calculators:
     - bracing_calc: Brace mass/glue calculations (future)
 """
 from typing import Dict, Any, List, Optional
+from math import pi
 from .api_contracts import RmosContext, RmosFeasibilityResult, RiskBucket
 
 # Import migrated rosette calculator
@@ -406,16 +407,16 @@ def _estimate_efficiency(design: RosetteParamSpec, ctx: RmosContext) -> float:
                     channel_outer_r = (outer_d / 2) + (channel_width / 2)
                     channel_inner_r = (inner_d / 2) - (channel_width / 2)
                     
-                    rosette_area = 3.14159 * (channel_outer_r**2 - channel_inner_r**2)
-                    bounding_area = 3.14159 * channel_outer_r**2
+                    rosette_area = pi * (channel_outer_r**2 - channel_inner_r**2)
+                    bounding_area = pi * channel_outer_r**2
                     
                     return round((rosette_area / bounding_area) * 100, 2)
             except Exception:
                 pass  # Fall through to basic estimate
         
         # Basic estimate: larger inner diameter = higher waste
-        outer_area = 3.14159 * (outer_d / 2) ** 2
-        inner_area = 3.14159 * (inner_d / 2) ** 2
+        outer_area = pi * (outer_d / 2) ** 2
+        inner_area = pi * (inner_d / 2) ** 2
         usable_area = outer_area - inner_area
         return round((usable_area / outer_area) * 100, 2)
     except Exception:
@@ -429,7 +430,7 @@ def _estimate_cut_time(design: RosetteParamSpec, ctx: RmosContext) -> float:
     """
     # Simplified heuristic: proportional to ring count and diameter
     try:
-        perimeter_mm = 3.14159 * design.outer_diameter_mm
+        perimeter_mm = pi * design.outer_diameter_mm
         total_path_mm = perimeter_mm * design.ring_count * 2  # Rough estimate
         feed_rate_mm_per_min = 1200.0  # Typical feed rate
         time_minutes = total_path_mm / feed_rate_mm_per_min

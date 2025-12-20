@@ -39,6 +39,9 @@ import time
 import zipfile
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
+# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from ..geometry.arc_utils import tessellate_arc_radians
+
 from ezdxf import readfile as dxf_readfile
 from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -559,25 +562,18 @@ def plan(body: PlanIn) -> PlanOut:
 
         overlays_normalized.append(normalized)
     
-    # Convert mixed path (points + arcs) to linear moves for preview (kept simple)
-    pts_only: List[Tuple[float,float]] = []
+    # Convert mixed path (points + arcs) to linear moves for preview
+    # Arc tessellation delegated to geometry/arc_utils.py (Fortran Rule)
+    pts_only: List[Tuple[float, float]] = []
     for item in path_pts_or_arcs:
-        if isinstance(item, dict) and item.get("type")=="arc":
-            # Sample arc into short chords for preview
-            import math
-            cx,cy,r = item["cx"], item["cy"], abs(item["r"])
-            a0 = math.radians(item["start"])
-            a1 = math.radians(item["end"])
+        if isinstance(item, dict) and item.get("type") == "arc":
+            cx, cy, r = item["cx"], item["cy"], abs(item["r"])
+            start_rad = math.radians(item["start"])
+            end_rad = math.radians(item["end"])
             cw = item.get("cw", False)
-            if cw:
-                while a1 > a0: a1 -= 2*math.pi
-            else:
-                while a1 < a0: a1 += 2*math.pi
-            N = max(6, int(r/1.0))  # 1mm chord approx
-            for k in range(N+1):
-                t = k/N
-                a = a0 + (a1-a0)*t
-                pts_only.append((cx + r*math.cos(a), cy + r*math.sin(a)))
+            steps = max(6, int(r / 1.0))  # 1mm chord approx
+            arc_pts = tessellate_arc_radians(cx, cy, r, start_rad, end_rad, cw, steps)
+            pts_only.extend(arc_pts)
         else:
             pts_only.append(tuple(item))
     

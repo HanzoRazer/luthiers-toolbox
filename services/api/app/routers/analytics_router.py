@@ -8,9 +8,9 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
-from ..analytics.pattern_analytics import get_pattern_analytics
-from ..analytics.material_analytics import get_material_analytics
-from ..analytics.job_analytics import get_job_analytics
+from .._experimental.analytics.pattern_analytics import get_pattern_analytics
+from .._experimental.analytics.material_analytics import get_material_analytics
+from .._experimental.analytics.job_analytics import get_job_analytics
 
 logger = logging.getLogger(__name__)
 

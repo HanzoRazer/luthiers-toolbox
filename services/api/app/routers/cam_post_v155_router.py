@@ -1,3 +1,11 @@
+"""
+CAM Post-Processor Router (v15.5)
+
+G-code generation with advanced post-processing features.
+
+Note: Core arc/fillet math extracted to cam/biarc_math.py
+following the Fortran Rule (all math in subroutines).
+"""
 
 import json
 import math
@@ -6,6 +14,16 @@ from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+# Import canonical arc/fillet math - NO inline math in routers (Fortran Rule)
+from ..cam.biarc_math import (
+    vec_len,
+    vec_dot,
+    fillet_between,
+    angle_to_point,
+    arc_center_from_radius,
+    arc_tessellate,
+)
 
 router = APIRouter(prefix="/api/cam_gcode", tags=["cam_gcode"])
 Point = Tuple[float, float]
@@ -46,56 +64,26 @@ def _load_preset(name: str) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Preset load failed: {e}")
 
-def _poly_is_closed(poly: List[Point], tol=1e-6)->bool:
-    return len(poly)>2 and (abs(poly[0][0]-poly[-1][0])<tol and abs(poly[0][1]-poly[-1][1])<tol)
+# ============================================================================
+# Helper Functions - Core math delegated to cam/biarc_math.py (Fortran Rule)
+# ============================================================================
 
-def _unit(v: float) -> float:
-    return v
+def _poly_is_closed(poly: List[Point], tol=1e-6) -> bool:
+    """Check if polyline is closed (first point equals last)."""
+    return len(poly) > 2 and (abs(poly[0][0] - poly[-1][0]) < tol and abs(poly[0][1] - poly[-1][1]) < tol)
 
-def _dot(ax: float, ay: float, bx: float, by: float) -> float: return ax*bx + ay*by
-def _len(x: float, y: float) -> float: return math.hypot(x,y)
 
-def _fillet_between(a:Point, b:Point, c:Point, R:float):
-    # Returns (p1, p2, cx, cy, dir) where p1 and p2 are trim points, fillet arc between them
-    (x1,y1)=a; (x2,y2)=b; (x3,y3)=c
-    v1x, v1y = x1-x2, y1-y2   # vector BA
-    v2x, v2y = x3-x2, y3-y2   # vector BC
-    L1 = _len(v1x,v1y); L2 = _len(v2x,v2y)
-    if L1<1e-9 or L2<1e-9: return None
-    v1x/=L1; v1y/=L1; v2x/=L2; v2y/=L2
-    # angle between -v1 and v2
-    cos_theta = _dot(-v1x,-v1y, v2x,v2y)
-    cos_theta = max(-1.0, min(1.0, cos_theta))
-    theta = math.acos(cos_theta)  # interior angle at b (0..pi)
-    if theta < 1e-6 or theta > math.pi-1e-6: 
+def _fillet_between(a: Point, b: Point, c: Point, R: float):
+    """
+    Wrapper for fillet_between from biarc_math.
+
+    Returns (p1, p2, cx, cy, dir) or None.
+    """
+    result = fillet_between(a, b, c, R)
+    if result is None:
         return None
-    # distance from corner to tangent points along each segment
-    t = R * math.tan(theta/2.0)
-    if t > L1-1e-6 or t > L2-1e-6:
-        return None
-    p1 = (x2 + (-v1x)*t, y2 + (-v1y)*t)
-    p2 = (x2 + v2x*t,     y2 + v2y*t)
-    # bisector direction
-    bisx = (-v1x + v2x); bisy = (-v1y + v2y)
-    bl = _len(bisx,bisy)
-    if bl<1e-9: 
-        return None
-    bisx/=bl; bisy/=bl
-    # distance from tangent points to center along normals: R / sin(theta/2)
-    h = R / math.sin(theta/2.0)
-    # center from corner along bisector
-    cx = x2 + bisx * h
-    cy = y2 + bisy * h
-    # direction (CW/CCW) from p1->p2
-    # vectors from center
-    u1x,u1y = p1[0]-cx, p1[1]-cy
-    u2x,u2y = p2[0]-cx, p2[1]-cy
-    cross = u1x*u2y - u1y*u2x
-    dirn = "CCW" if cross>0 else "CW"
-    return (p1,p2,cx,cy,dirn)
-
-def _angle(cx: float, cy: float, p: Point) -> float:
-    return math.atan2(p[1]-cy, p[0]-cx)
+    p1, p2, cx, cy, direction = result
+    return (p1, p2, cx, cy, direction)
 
 def _axis_modal_emit(line: str, last_xy: Optional[tuple]) -> tuple:
     tokens = line.split()

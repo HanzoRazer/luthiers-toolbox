@@ -6,8 +6,10 @@ Generates neck profiles, fretboard geometry, and fret slot positions
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
-import math
 import io
+
+# Import canonical fret math - NO inline math in routers (Fortran Rule)
+from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
 
 try:
     import ezdxf
@@ -80,21 +82,20 @@ class NeckGeometryOut(BaseModel):
 
 
 # ============================================================================
-# FRET CALCULATIONS (FretFind2D Algorithm)
+# FRET CALCULATIONS - Delegated to fret_math.py (Fortran Rule)
 # ============================================================================
 
-def calculate_fret_positions(scale_length: float, num_frets: int = 22) -> List[float]:
+def calculate_fret_positions(scale_length_in: float, num_frets: int = 22) -> List[float]:
     """
     Calculate fret positions using equal temperament formula.
-    Returns distance from nut to each fret.
-    
-    Formula: d = scale_length - (scale_length / (2^(n/12)))
+    Returns distance from nut to each fret in inches.
+
+    Delegates to canonical compute_fret_positions_mm() from fret_math.py.
     """
-    positions = []
-    for n in range(1, num_frets + 1):
-        distance = scale_length - (scale_length / (2 ** (n / 12)))
-        positions.append(distance)
-    return positions
+    # Convert inches to mm, call canonical function, convert back
+    scale_length_mm = scale_length_in * 25.4
+    positions_mm = compute_fret_positions_mm(scale_length_mm, num_frets)
+    return [pos / 25.4 for pos in positions_mm]
 
 
 # ============================================================================

@@ -1,7 +1,13 @@
 
+"""
+Art Studio Rosette Router
+
+Note: Circle generation math extracted to geometry/arc_utils.py
+following the Fortran Rule (all math in subroutines).
+"""
+
 from __future__ import annotations
 
-import math
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -9,6 +15,9 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, validator
 import io
+
+# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from ..geometry.arc_utils import generate_circle_points
 
 from ..art_studio_rosette_store import (
     get_compare_snapshots,
@@ -128,7 +137,7 @@ class RosetteCompareOut(BaseModel):
     diff_summary: RosetteDiffSummary
 
 
-# ---- Geometry stub ----------------------------------------------------------
+# ---- Geometry stub - Delegates to geometry/arc_utils.py (Fortran Rule) ------
 
 
 def _generate_simple_ring_paths(
@@ -136,21 +145,13 @@ def _generate_simple_ring_paths(
     inner_radius: float,
     outer_radius: float,
 ) -> List[List[Tuple[float, float]]]:
-    """Very simple stub: two concentric circles as polygons."""
-    inner: List[Tuple[float, float]] = []
-    outer: List[Tuple[float, float]] = []
+    """
+    Generate two concentric circles as polygons.
 
-    for i in range(segments):
-        angle = (2.0 * math.pi * i) / segments
-        inner.append((inner_radius * math.cos(angle), inner_radius * math.sin(angle)))
-        outer.append((outer_radius * math.cos(angle), outer_radius * math.sin(angle)))
-
-    # close the loops
-    if inner:
-        inner.append(inner[0])
-    if outer:
-        outer.append(outer[0])
-
+    Delegates to canonical generate_circle_points() from geometry/arc_utils.py.
+    """
+    inner = generate_circle_points(inner_radius, segments, closed=True)
+    outer = generate_circle_points(outer_radius, segments, closed=True)
     return [inner, outer]
 
 

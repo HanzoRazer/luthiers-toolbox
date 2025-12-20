@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel
 
-from ..cnc_production.feeds_speeds.core.learned_overrides import (
+from .._experimental.cnc_production.feeds_speeds.core.learned_overrides import (
     get_learned_overrides_store,
     LaneKey,
     LaneOverrides,

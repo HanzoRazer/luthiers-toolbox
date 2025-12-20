@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 try:
-    from ..cnc_production.learn.saw_live_learn_dashboard import list_run_summaries
+    from .._experimental.cnc_production.learn.saw_live_learn_dashboard import list_run_summaries
 except ImportError:
     # Direct testing import
-    from cnc_production.learn.saw_live_learn_dashboard import list_run_summaries
+    from _experimental.cnc_production.learn.saw_live_learn_dashboard import list_run_summaries
 
 
 router = APIRouter(prefix="/dashboard/saw", tags=["dashboard", "saw_lab"])

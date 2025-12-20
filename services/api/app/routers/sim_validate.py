@@ -1,8 +1,22 @@
+"""
+G-Code Simulation and Validation Router
+
+Note: Arc geometry math extracted to geometry/arc_utils.py
+following the Fortran Rule (all math in subroutines).
+"""
+
 import csv
 import io
 import math
 import re
 from typing import Any, Dict, List, Tuple
+
+# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from ..geometry.arc_utils import (
+    arc_center_from_endpoints,
+    arc_length as compute_arc_length,
+    trapezoidal_motion_time,
+)
 
 MOVE_RE = re.compile(r'^(?:N\d+\s+)?(G\d+(?:\.\d+)?|M\d+|T\d+|S\d+|F[-+]?\d*\.?\d+|[XYZIJKR][-+]?\d*\.?\d+|G\s*\d+)', re.I)
 TOK_RE = re.compile(r'([GMTFSXYZIJKR])\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)', re.I)
@@ -71,56 +85,33 @@ def arc_center_from_ijk(ms: ModalState, start: Tuple[float, float], params: Dict
 
 
 def arc_center_from_r(ms: ModalState, start: Tuple[float, float], end: Tuple[float, float], r_user: float, cw: bool) -> Tuple[float, float]:
+    """
+    Calculate arc center from R parameter.
+
+    Delegates to canonical arc_center_from_endpoints() from geometry/arc_utils.py.
+    """
     sx, sy = start
     ex, ey = end
     r = abs(as_units(ms, r_user))
-    dx = ex - sx
-    dy = ey - sy
-    d = math.hypot(dx, dy)
-    if d < 1e-9:
-        return (sx, sy + r)
-    h2 = r * r - (d * d) / 4.0
-    h = math.sqrt(max(0.0, h2))
-    mx = (sx + ex) / 2.0
-    my = (sy + ey) / 2.0
-    ux, uy = (-dy / d, dx / d)
-    cands = [(mx + ux * h, my + uy * h), (mx - ux * h, my - uy * h)]
-
-    def signed_sweep(cx, cy):
-        a0 = math.atan2(sy - cy, sx - cx)
-        a1 = math.atan2(ey - cy, ex - cx)
-        return ((a1 - a0 + math.pi) % (2 * math.pi) - math.pi)
-
-    c = cands[0]
-    s = signed_sweep(*c)
-    if (cw and s > 0) or ((not cw) and s < 0):
-        c = cands[1]
-    return c
+    return arc_center_from_endpoints(sx, sy, ex, ey, r, clockwise=cw)
 
 
 def arc_length(cx, cy, sx, sy, ex, ey, cw: bool) -> float:
-    a0 = math.atan2(sy - cy, sx - cx)
-    a1 = math.atan2(ey - cy, ex - cx)
-    r = math.hypot(sx - cx, sy - cy)
-    da = (a1 - a0)
-    if cw:
-        while da > 0:
-            da -= 2 * math.pi
-    else:
-        while da < 0:
-            da += 2 * math.pi
-    return abs(da) * abs(r)
+    """
+    Calculate arc length.
+
+    Delegates to canonical compute_arc_length() from geometry/arc_utils.py.
+    """
+    return compute_arc_length(cx, cy, sx, sy, ex, ey, clockwise=cw)
 
 
 def trapezoidal_time(distance_mm: float, feed_mm_min: float, accel_mm_s2: float) -> float:
-    v = max(feed_mm_min, 1e-6) / 60.0  # mm/s
-    a = max(accel_mm_s2, 1e-6)
-    t_acc = v / a
-    d_acc = 0.5 * a * t_acc * t_acc
-    if 2 * d_acc >= distance_mm:
-        return 2.0 * (distance_mm / a) ** 0.5  # triangular
-    cruise = distance_mm - 2 * d_acc
-    return 2 * t_acc + cruise / v
+    """
+    Calculate motion time using trapezoidal profile.
+
+    Delegates to canonical trapezoidal_motion_time() from geometry/arc_utils.py.
+    """
+    return trapezoidal_motion_time(distance_mm, feed_mm_min, accel_mm_s2)
 
 
 def within_envelope(pt: Dict[str, float], env: Dict[str, Tuple[float, float]]) -> bool:

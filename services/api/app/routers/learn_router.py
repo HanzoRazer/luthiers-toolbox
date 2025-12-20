@@ -61,18 +61,18 @@ from fastapi import APIRouter, HTTPException
 
 try:
     # FastAPI application import (normal deployment)
-    from ..cnc_production.learn.models import (
+    from .._experimental.cnc_production.learn.models import (
         TelemetryIngestRequest,
         TelemetryIngestResponse,
     )
-    from ..cnc_production.learn.live_learn_ingestor import ingest_run_telemetry_by_id
+    from .._experimental.cnc_production.learn.live_learn_ingestor import ingest_run_telemetry_by_id
 except ImportError:
     # Direct testing import
-    from cnc_production.learn.models import (
+    from _experimental.cnc_production.learn.models import (
         TelemetryIngestRequest,
         TelemetryIngestResponse,
     )
-    from cnc_production.learn.live_learn_ingestor import ingest_run_telemetry_by_id
+    from _experimental.cnc_production.learn.live_learn_ingestor import ingest_run_telemetry_by_id
 
 
 router = APIRouter(prefix="/learn", tags=["learn", "telemetry"])

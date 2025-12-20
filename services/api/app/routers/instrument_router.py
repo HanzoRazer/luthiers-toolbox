@@ -2,10 +2,12 @@
 Wave 7: Instrument Geometry Router
 
 Exposes endpoints for guitar instrument geometry calculations:
-- Fret positions (12-TET equal temperament)
-- Fretboard outline (tapered trapezoid)
 - Bridge location with compensation
 - Compound radius profiles
+- Standard guitar presets (convenience endpoints)
+
+NOTE: Fret-specific endpoints (positions, outline, slots) moved to fret_router.py (December 2025)
+See: /api/fret/table, /api/fret/board/outline, /api/fret/slots
 
 All calculations use the instrument_geometry package.
 """
@@ -15,19 +17,15 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from ..instrument_geometry.scale_length import compute_fret_positions_mm
-from ..instrument_geometry.fretboard_geometry import (
-    compute_fretboard_outline,
-    compute_fret_slot_lines,
-)
-from ..instrument_geometry.bridge_geometry import (
+# Canonical imports (updated from shims - December 2025)
+from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
+from ..instrument_geometry.bridge.geometry import (
     compute_bridge_location_mm,
     compute_compensation_estimate,
 )
-from ..instrument_geometry.radius_profiles import (
+from ..instrument_geometry.neck.radius_profiles import (
     compute_compound_radius_at_fret,
 )
-from ..instrument_geometry.profiles import FretboardSpec
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -38,61 +36,9 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
-
-class FretPositionsRequest(BaseModel):
-    """Request for fret position calculations."""
-    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm (e.g., 648 for 25.5 inches)")
-    fret_count: int = Field(..., gt=0, le=36, description="Number of frets (typically 19-24)")
-
-
-class FretPositionsResponse(BaseModel):
-    """Response with fret positions from nut."""
-    scale_length_mm: float
-    fret_count: int
-    frets_mm: List[float]
-
-
-class FretboardOutlineRequest(BaseModel):
-    """Request for fretboard outline calculation."""
-    nut_width_mm: float = Field(..., gt=0, description="Width at nut (e.g., 42-44mm)")
-    heel_width_mm: float = Field(..., gt=0, description="Width at heel/body junction")
-    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
-    fret_count: int = Field(..., gt=0, le=36, description="Number of frets")
-    extension_mm: float = Field(default=0.0, ge=0, description="Extension past last fret")
-
-
-class OutlinePoint(BaseModel):
-    """A 2D point in the fretboard coordinate system."""
-    x: float
-    y: float
-
-
-class FretboardOutlineResponse(BaseModel):
-    """Response with fretboard outline polygon."""
-    points: List[OutlinePoint]
-    fretboard_length_mm: float
-
-
-class FretSlotsRequest(BaseModel):
-    """Request for fret slot endpoint coordinates."""
-    scale_length_mm: float = Field(..., gt=0)
-    fret_count: int = Field(..., gt=0, le=36)
-    nut_width_mm: float = Field(..., gt=0)
-    heel_width_mm: float = Field(..., gt=0)
-
-
-class FretSlot(BaseModel):
-    """A single fret slot with left and right endpoints."""
-    fret_number: int
-    distance_from_nut_mm: float
-    left: OutlinePoint
-    right: OutlinePoint
-
-
-class FretSlotsResponse(BaseModel):
-    """Response with all fret slot endpoints."""
-    slots: List[FretSlot]
-
+# NOTE: Fret-related models moved to fret_router.py (December 2025)
+# See: /api/fret/table, /api/fret/board/outline, /api/fret/slots
+# ---------------------------------------------------------------------------
 
 class BridgeLocationRequest(BaseModel):
     """Request for bridge saddle location."""
@@ -151,83 +97,11 @@ class RadiusAtPositionResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
-
-@router.post("/geometry/frets", response_model=FretPositionsResponse)
-def get_fret_positions(payload: FretPositionsRequest) -> FretPositionsResponse:
-    """
-    Calculate fret positions using 12-TET equal temperament.
-    
-    Returns distances from the nut for each fret (1 through fret_count).
-    Uses the formula: position = scale_length * (1 - 2^(-fret/12))
-    """
-    frets = compute_fret_positions_mm(
-        scale_length_mm=payload.scale_length_mm,
-        fret_count=payload.fret_count,
-    )
-    return FretPositionsResponse(
-        scale_length_mm=payload.scale_length_mm,
-        fret_count=payload.fret_count,
-        frets_mm=frets,
-    )
-
-
-@router.post("/geometry/fretboard", response_model=FretboardOutlineResponse)
-def get_fretboard_outline(payload: FretboardOutlineRequest) -> FretboardOutlineResponse:
-    """
-    Calculate fretboard outline as a tapered polygon.
-    
-    Returns corner points for a trapezoid that tapers from nut width to heel width.
-    The fretboard extends from the nut to the last fret position plus any extension.
-    """
-    outline = compute_fretboard_outline(
-        nut_width_mm=payload.nut_width_mm,
-        heel_width_mm=payload.heel_width_mm,
-        scale_length_mm=payload.scale_length_mm,
-        fret_count=payload.fret_count,
-        extension_mm=payload.extension_mm,
-    )
-    
-    # Calculate fretboard length (to last fret + extension)
-    frets = compute_fret_positions_mm(payload.scale_length_mm, payload.fret_count)
-    fretboard_length = frets[-1] + payload.extension_mm if frets else 0
-    
-    points = [OutlinePoint(x=p[0], y=p[1]) for p in outline]
-    return FretboardOutlineResponse(
-        points=points,
-        fretboard_length_mm=fretboard_length,
-    )
-
-
-@router.post("/geometry/fret-slots", response_model=FretSlotsResponse)
-def get_fret_slots(payload: FretSlotsRequest) -> FretSlotsResponse:
-    """
-    Calculate fret slot endpoints for CNC machining.
-    
-    Returns left and right endpoints for each fret slot,
-    accounting for fretboard taper.
-    """
-    # Create FretboardSpec for the slot calculation function
-    spec = FretboardSpec(
-        nut_width_mm=payload.nut_width_mm,
-        heel_width_mm=payload.heel_width_mm,
-        scale_length_mm=payload.scale_length_mm,
-        fret_count=payload.fret_count,
-    )
-    
-    slots_data = compute_fret_slot_lines(spec)
-    fret_positions = compute_fret_positions_mm(payload.scale_length_mm, payload.fret_count)
-    
-    slots = []
-    for i, ((bass_pt, treble_pt), dist) in enumerate(zip(slots_data, fret_positions), start=1):
-        slots.append(FretSlot(
-            fret_number=i,
-            distance_from_nut_mm=dist,
-            left=OutlinePoint(x=bass_pt[0], y=bass_pt[1]),
-            right=OutlinePoint(x=treble_pt[0], y=treble_pt[1]),
-        ))
-    
-    return FretSlotsResponse(slots=slots)
-
+# NOTE: Fret endpoints moved to fret_router.py (December 2025)
+# - /geometry/frets → /api/fret/table
+# - /geometry/fretboard → /api/fret/board/outline
+# - /geometry/fret-slots → /api/fret/slots
+# ---------------------------------------------------------------------------
 
 @router.post("/geometry/bridge", response_model=BridgeLocationResponse)
 def get_bridge_location(payload: BridgeLocationRequest) -> BridgeLocationResponse:

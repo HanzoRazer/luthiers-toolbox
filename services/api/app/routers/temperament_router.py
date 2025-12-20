@@ -2,8 +2,10 @@
 Alternative Temperaments Router
 
 API endpoints for Smart Guitar alternative temperament calculations.
-Provides fret position comparisons, staggered fret calculations,
-and temperament analysis for key-optimized guitar fretboards.
+Provides fret position comparisons and temperament analysis.
+
+NOTE: Staggered fret calculations moved to fret_router.py (December 2025)
+See: /api/fret/staggered
 
 Wave 6: Smart Guitar Alternative Temperaments System
 """
@@ -18,7 +20,6 @@ from ..calculators.alternative_temperaments import (
     compute_just_intonation_positions,
     compute_pythagorean_positions,
     compute_meantone_positions,
-    compute_staggered_fret_positions,
     compute_equal_temperament_position,
     analyze_temperament_deviations,
     list_temperament_systems,
@@ -26,6 +27,7 @@ from ..calculators.alternative_temperaments import (
     NOTE_NAMES,
     STANDARD_TUNING_SEMITONES,
 )
+# NOTE: compute_staggered_fret_positions moved to fret_router.py
 
 router = APIRouter(
     prefix="/temperaments",
@@ -77,38 +79,8 @@ class TemperamentComparisonResponse(BaseModel):
     summary: dict
 
 
-class StaggeredFretRequest(BaseModel):
-    """Request for staggered fret calculation."""
-    scale_length_mm: float = Field(default=648.0, ge=400.0, le=900.0)
-    fret_count: int = Field(default=22, ge=12, le=36)
-    string_count: int = Field(default=6, ge=4, le=12)
-    target_key: str = Field(
-        default="E",
-        description="Root note for optimization (E, A, C, G, etc.)"
-    )
-    temperament: TemperamentSystem = Field(default=TemperamentSystem.JUST_MAJOR)
-    tuning_semitones: Optional[List[int]] = Field(
-        default=None,
-        description="Open string pitches in semitones from bass (default: standard tuning)"
-    )
-    nut_width_mm: float = Field(default=43.0, ge=30.0, le=60.0)
-    fret_width_mm: float = Field(default=56.0, ge=40.0, le=80.0)
-
-
-class StaggeredFretResponse(BaseModel):
-    """Single staggered fret with per-string positions."""
-    fret_number: int
-    string_positions: List[float]
-    endpoints: List[List[float]]
-
-
-class StaggeredFretsResponse(BaseModel):
-    """Response with all staggered fret data."""
-    scale_length_mm: float
-    target_key: str
-    temperament: str
-    string_count: int
-    frets: List[StaggeredFretResponse]
+# NOTE: Staggered fret models moved to fret_router.py (December 2025)
+# See: /api/fret/staggered
 
 
 class TemperamentSystemInfo(BaseModel):
@@ -242,50 +214,10 @@ def compare_temperament(req: TemperamentComparisonRequest):
     )
 
 
-@router.post("/staggered", response_model=StaggeredFretsResponse)
-def compute_staggered_frets(req: StaggeredFretRequest):
-    """
-    Compute staggered (angled) fret positions for key-optimized intonation.
-    
-    Staggered frets allow each string to have a different fret position,
-    enabling pure intervals for a specific key while maintaining playability.
-    
-    This is the "Smart Guitar" concept - frets optimized for a single key
-    that produce mathematically perfect intervals.
-    """
-    if req.target_key.upper() not in NOTE_NAMES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid key '{req.target_key}'. Use one of: {NOTE_NAMES}"
-        )
-    
-    frets = compute_staggered_fret_positions(
-        scale_length_mm=req.scale_length_mm,
-        fret_count=req.fret_count,
-        string_count=req.string_count,
-        tuning_semitones=req.tuning_semitones,
-        target_key=req.target_key,
-        temperament=req.temperament,
-        nut_width_mm=req.nut_width_mm,
-        fret_width_mm=req.fret_width_mm,
-    )
-    
-    fret_responses = [
-        StaggeredFretResponse(
-            fret_number=f.fret_number,
-            string_positions=f.string_positions,
-            endpoints=[list(p) for p in f.endpoints]
-        )
-        for f in frets
-    ]
-    
-    return StaggeredFretsResponse(
-        scale_length_mm=req.scale_length_mm,
-        target_key=req.target_key,
-        temperament=req.temperament.value,
-        string_count=req.string_count,
-        frets=fret_responses
-    )
+# =============================================================================
+# NOTE: /staggered endpoint moved to fret_router.py (December 2025)
+# See: /api/fret/staggered
+# =============================================================================
 
 
 @router.get("/compare-all", response_model=AllTemperamentsResponse)
@@ -348,17 +280,17 @@ def get_temperament_status():
         "wave": "Wave 6",
         "features": {
             "temperament_comparison": True,
-            "staggered_frets": True,
+            "staggered_frets": False,  # Moved to fret_router.py
             "key_optimization": True,
             "supported_temperaments": [t.value for t in TemperamentSystem if t != TemperamentSystem.CUSTOM],
             "supported_keys": NOTE_NAMES,
         },
         "endpoints": [
             "/systems",
-            "/keys", 
+            "/keys",
             "/tunings",
             "/compare",
-            "/staggered",
+            # "/staggered" moved to /api/fret/staggered
             "/compare-all",
             "/equal-temperament",
         ]

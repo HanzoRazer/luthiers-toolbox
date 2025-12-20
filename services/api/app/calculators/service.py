@@ -7,6 +7,7 @@ Supports two modes:
     - Saw mode: Activated when tool_id starts with "saw:" prefix
 """
 from typing import Dict, Any, Optional
+from math import pi
 from ..rmos.api_contracts import RmosContext, RmosBomResult, RmosFeasibilityResult
 from ..data_registry import Registry, Edition
 
@@ -312,7 +313,7 @@ class CalculatorService:
                     pass  # Fall back to default
             
             # Rim speed = π * diameter * RPM / 1000 (convert mm to m)
-            rim_speed_m_per_min = (3.14159 * design.outer_diameter_mm * spindle_rpm) / 1000
+            rim_speed_m_per_min = (pi * design.outer_diameter_mm * spindle_rpm) / 1000
             
             # Safe range for wood: 30-100 m/min
             if 30 <= rim_speed_m_per_min <= 100:
@@ -390,13 +391,13 @@ class CalculatorService:
         """
         try:
             # Calculate material area (outer circle)
-            material_required_mm2 = 3.14159 * (design.outer_diameter_mm / 2) ** 2
+            material_required_mm2 = pi * (design.outer_diameter_mm / 2) ** 2
             
             # Typical tools for rosette cutting
             tool_ids = ["end_mill_6mm", "v_bit_60deg"]
             
             # Waste estimate (inner circle + kerf)
-            inner_area = 3.14159 * (design.inner_diameter_mm / 2) ** 2
+            inner_area = pi * (design.inner_diameter_mm / 2) ** 2
             waste_percent = (inner_area / material_required_mm2) * 100
             
             notes = [

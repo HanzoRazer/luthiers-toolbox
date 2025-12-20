@@ -6,6 +6,7 @@ Evaluates safety risks for saw blade operations.
 from __future__ import annotations
 
 from typing import List, Dict, Any
+from math import pi
 
 from .models import SawContext, SawDesign, SawRiskLevel
 
@@ -151,7 +152,7 @@ class SawRiskEvaluator:
         max_rim_speed_m_s = 80.0
         
         # Rim speed = π * D * RPM / (1000 * 60) in m/s
-        rim_speed = (3.14159 * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
+        rim_speed = (pi * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
         
         if rim_speed > max_rim_speed_m_s:
             return SawRiskLevel.RED
@@ -206,7 +207,7 @@ class SawRiskEvaluator:
     def _get_rpm_factors(self, ctx: SawContext) -> List[str]:
         """Get factors for RPM risk."""
         factors = []
-        rim_speed = (3.14159 * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
+        rim_speed = (pi * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
         factors.append(f"Rim speed: {rim_speed:.1f} m/s")
         if rim_speed > 72:
             factors.append("Approaching maximum safe rim speed")

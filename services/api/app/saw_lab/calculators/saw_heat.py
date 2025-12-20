@@ -5,6 +5,8 @@ Calculates heat buildup risk for saw blade operations.
 """
 from __future__ import annotations
 
+from math import pi
+
 from ..models import SawContext, SawDesign, SawCalculatorResult
 
 
@@ -36,7 +38,7 @@ class SawHeatCalculator:
         """
         try:
             # Calculate rim speed (m/s)
-            rim_speed_m_s = (3.14159 * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
+            rim_speed_m_s = (pi * ctx.blade_diameter_mm * ctx.max_rpm) / (1000 * 60)
             
             # Heat index based on rim speed
             # Optimal: 40-60 m/s for wood

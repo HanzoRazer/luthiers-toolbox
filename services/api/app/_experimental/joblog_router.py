@@ -56,13 +56,13 @@ from pydantic import BaseModel
 
 try:
     # FastAPI application import (normal deployment)
-    from ..cnc_production.joblog.models import (
+    from .cnc_production.joblog.models import (
         SawRunRecord,
         SawRunMeta,
         TelemetrySample,
         SawTelemetryRecord
     )
-    from ..cnc_production.joblog.storage import (
+    from .cnc_production.joblog.storage import (
         save_run,
         get_run,
         list_runs,
@@ -384,7 +384,7 @@ def clear_run_telemetry(run_id: str):
         DELETE /joblog/saw_runs/20251127T120000Z_a1b2/telemetry
         ```
     """
-    from ..cnc_production.joblog.storage import TELEMETRY_PATH, _load_json, _save_json
+    from .cnc_production.joblog.storage import TELEMETRY_PATH, _load_json, _save_json
     
     data = _load_json(TELEMETRY_PATH)
     telem: dict = data.get("telemetry", {})
