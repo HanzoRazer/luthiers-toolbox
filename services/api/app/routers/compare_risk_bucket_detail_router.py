@@ -2,6 +2,10 @@
 Phase 28.4: Risk Bucket Detail Router
 
 API endpoint to retrieve individual entries for a specific risk bucket.
+
+DEPRECATED: Migrated to compare/routers/risk/ in Wave 19 consolidation.
+This file remains for backward compatibility during transition.
+New code should import from app.compare.routers.
 """
 
 from typing import Optional, List

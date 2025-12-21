@@ -452,6 +452,17 @@ except ImportError as e:
     rosette_pattern_router_v2 = None
 
 # =============================================================================
+# WAVE 19: COMPARE ROUTER CONSOLIDATION
+# Single aggregator for all compare routers organized by category
+# =============================================================================
+try:
+    from .compare.routers import compare_router
+    print("Compare Router: Using consolidated aggregator (Wave 19)")
+except ImportError as e:
+    print(f"Warning: Consolidated Compare router not available: {e}")
+    compare_router = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -704,6 +715,12 @@ if rosette_compare_router:
 if rosette_pattern_router_v2:
     app.include_router(rosette_pattern_router_v2, tags=["Art Studio", "Rosette Patterns v2"])
 
+# Wave 19: Compare Router Consolidation
+# This aggregator provides organized compare endpoints at /api/compare/<category>/<operation>
+# Categories: baselines, risk, lab, automation
+if compare_router:
+    app.include_router(compare_router, prefix="/api/compare", tags=["Compare Consolidated"])
+
 # =============================================================================
 # HEALTH CHECK
 # =============================================================================
@@ -746,8 +763,9 @@ async def api_health_check():
             "wave15_art_studio_core": 4,
             "wave16_governance_code_bundle": 4,
             "wave18_cam_consolidation": 4,  # cam_router + 3 rosette routes
+            "wave19_compare_consolidation": 1,  # compare_router
         },
-        "total_working": 106,
+        "total_working": 107,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }

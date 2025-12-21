@@ -3,6 +3,10 @@ Phase 28.5: Risk Bucket Export Router
 Phase 28.7: Time-window filtering support
 
 Export detailed bucket data as CSV or JSON files.
+
+DEPRECATED: Migrated to compare/routers/risk/ in Wave 19 consolidation.
+This file remains for backward compatibility during transition.
+New code should import from app.compare.routers.
 """
 
 import io

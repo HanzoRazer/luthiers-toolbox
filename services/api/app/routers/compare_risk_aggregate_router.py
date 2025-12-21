@@ -1,4 +1,11 @@
 # services/api/app/routers/compare_risk_aggregate_router.py
+"""
+Compare Risk Aggregate Router
+
+DEPRECATED: Migrated to compare/routers/risk/ in Wave 19 consolidation.
+This file remains for backward compatibility during transition.
+New code should import from app.compare.routers.
+"""
 from __future__ import annotations
 
 from typing import List, Optional

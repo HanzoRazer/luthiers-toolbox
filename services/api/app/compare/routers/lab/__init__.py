@@ -1,22 +1,32 @@
-"""Compare Lab router for B22.
-
-DEPRECATED: Migrated to compare/routers/lab/ in Wave 19 consolidation.
-This file remains for backward compatibility during transition.
-New code should import from app.compare.routers.
 """
+Compare Lab Router
+
+Lab-specific baseline and diff operations for the Compare Lab UI.
+
+Migrated from:
+    - routers/compare_lab_router.py
+
+Endpoints (under /lab):
+    GET    /baselines          - List lab baselines
+    POST   /baselines          - Save lab baseline
+    DELETE /baselines/{id}     - Delete lab baseline
+    POST   /diff               - Compute geometry diff
+    POST   /export             - Export compare overlay
+"""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..models.compare_baseline import (
+from ....models.compare_baseline import (
     Baseline,
     BaselineGeometry,
     BaselineToolpath,
 )
-from ..models.compare_diff import DiffResult
-from ..services import compare_baseline_store
-from ..services.geometry_diff import diff_geometry_segments
+from ....models.compare_diff import DiffResult
+from ....services import compare_baseline_store
+from ....services.geometry_diff import diff_geometry_segments
 
 
 class BaselineCreate(BaseModel):
@@ -40,7 +50,8 @@ class DiffPayload(BaseModel):
 class ExportPayload(DiffPayload):
     format: str = "json"
 
-router = APIRouter(prefix="/api/compare/lab", tags=["Compare Lab"])
+
+router = APIRouter()
 
 
 @router.get("/baselines", response_model=list[Baseline])

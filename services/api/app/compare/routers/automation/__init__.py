@@ -1,16 +1,20 @@
 """
 Compare Automation Router
 
-DEPRECATED: Migrated to compare/routers/automation/ in Wave 19 consolidation.
-This file remains for backward compatibility during transition.
-New code should import from app.compare.routers.
+SVG comparison automation for CLI and batch operations.
+
+Migrated from:
+    - routers/compare_automation_router.py
+
+Endpoints:
+    POST /run    - Compare two SVG images
 """
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Literal, Optional
 
-router = APIRouter(prefix="/compare", tags=["compare"])
+router = APIRouter()
 
 CompareMode = Literal["side-by-side", "overlay", "delta"]
 

@@ -1,11 +1,19 @@
 """
-Phase 27.0 + 27.1 + 27.2: Rosette Compare Mode MVP
-Router endpoints for baseline management, geometry diffing, and compare history
+Compare Baselines Router
 
-DEPRECATED: Migrated to compare/routers/baselines/ in Wave 19 consolidation.
-This file remains for backward compatibility during transition.
-New code should import from app.compare.routers.
+Baseline management and geometry diff operations.
+
+Migrated from:
+    - routers/compare_router.py
+
+Endpoints:
+    POST /baselines          - Create baseline
+    GET  /baselines          - List baselines
+    GET  /baselines/{id}     - Get baseline by ID
+    POST /diff               - Compare geometry against baseline
+    GET  /history            - Get compare history
 """
+
 from __future__ import annotations
 
 import uuid
@@ -14,28 +22,28 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException
 
-from ..models.compare_baseline import (
+from ....models.compare_baseline import (
     CompareBaselineIn,
     CompareBaselineOut,
     CompareBaselineSummary,
     CompareDiffRequest,
     CompareDiffOut,
 )
-from ..services.baseline_storage import (
+from ....services.baseline_storage import (
     save_baseline,
     list_baselines,
     load_baseline,
 )
-from ..services.geometry_diff import annotate_geometries_with_colors
-from ..services.compare_risk_log import log_compare_diff, list_compare_history
+from ....services.geometry_diff import annotate_geometries_with_colors
+from ....services.compare_risk_log import log_compare_diff, list_compare_history
 
-router = APIRouter(prefix="/api/compare", tags=["compare"])
+router = APIRouter()
 
 
 @router.post("/baselines", response_model=CompareBaselineOut)
 def create_baseline(payload: CompareBaselineIn) -> CompareBaselineOut:
     """Save a new baseline geometry snapshot.
-    
+
     Phase 27.0: Manual baseline naming for rosette, headstock, or relief.
     """
     baseline_id = str(uuid.uuid4())
@@ -53,7 +61,7 @@ def create_baseline(payload: CompareBaselineIn) -> CompareBaselineOut:
 @router.get("/baselines", response_model=List[CompareBaselineSummary])
 def get_baselines(lane: str | None = None) -> List[CompareBaselineSummary]:
     """List all saved baselines, optionally filtered by lane.
-    
+
     Phase 27.0: Supports rosette, headstock, relief lanes.
     """
     return list_baselines(lane=lane)
@@ -62,7 +70,7 @@ def get_baselines(lane: str | None = None) -> List[CompareBaselineSummary]:
 @router.get("/baselines/{baseline_id}", response_model=CompareBaselineOut)
 def get_baseline(baseline_id: str) -> CompareBaselineOut:
     """Retrieve a single baseline by ID with full geometry.
-    
+
     Phase 27.0: Returns complete baseline for diff computation.
     """
     baseline = load_baseline(baseline_id)
@@ -74,7 +82,7 @@ def get_baseline(baseline_id: str) -> CompareBaselineOut:
 @router.post("/diff", response_model=CompareDiffOut)
 def compare_geometry(payload: CompareDiffRequest) -> CompareDiffOut:
     """Compare current geometry against a saved baseline.
-    
+
     Phase 27.0: Basic path-count diff.
     Phase 27.1: Color-annotated geometry (green=added, red=removed, gray=unchanged).
     Phase 27.1: Optional job_id logging to compare_risk_log.json.
@@ -113,9 +121,9 @@ def get_compare_history(
     job_id: str | None = None,
 ) -> List[Dict[str, Any]]:
     """Return compare history entries from compare_risk_log.json.
-    
+
     Phase 27.2: Compare History pane for tracking geometry changes over time.
-    
+
     Optional filters:
       - lane: e.g. 'rosette', 'headstock', 'relief'
       - job_id: exact job id string, e.g. 'rosette_job_001'
