@@ -1,13 +1,18 @@
 """
-Rosette Pattern Router - Traditional Matrix + Modern Parametric Methods
+Rosette Pattern Routes - Phase 5 Consolidation
 
-DEPRECATED: Migrated to art_studio/api/rosette_pattern_routes.py in Phase 5.
-This file remains for backward compatibility during transition.
-New code should import from app.art_studio.api.
+Traditional Matrix + Modern Parametric pattern generation methods.
 
-Provides endpoints for rosette pattern generation using both:
-1. Traditional matrix method (craftsman laminate-slice-assemble)
-2. Modern parametric method (CAD ring definitions)
+Migrated from:
+    - routers/rosette_pattern_router.py
+
+Endpoints:
+    GET  /status               - Check pattern generator availability
+    GET  /patterns             - List available preset patterns
+    GET  /patterns/{id}        - Get pattern details
+    POST /generate_traditional - Traditional matrix method
+    POST /generate_modern      - Modern parametric method
+    POST /export               - Export pattern in various formats
 
 Target: TXRX Labs January 2026 presentation
 """
@@ -18,12 +23,15 @@ from typing import List, Dict, Optional, Literal, Any
 import json
 from pathlib import Path
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/art/rosette/pattern",
+    tags=["art_studio_rosette_pattern"],
+)
 
 # Try to import pattern generator, gracefully degrade if unavailable
 GENERATOR_AVAILABLE = False
 try:
-    from ..cam.rosette.pattern_generator import (
+    from ...cam.rosette.pattern_generator import (
         RosettePatternEngine,
         MatrixFormula,
         RosetteSpec,
@@ -131,7 +139,7 @@ async def get_status():
             "error": "Pattern generator module not loaded",
             "details": "Check that rosette pattern_generator.py is installed"
         }
-    
+
     return {
         "available": True,
         "error": None,
@@ -154,20 +162,20 @@ async def list_patterns(
             status_code=501,
             detail="Pattern generator not available"
         )
-    
+
     try:
         engine = RosettePatternEngine()
         presets = engine.list_preset_matrices()
-        
+
         # Load catalog to get categories
-        catalog_path = Path(__file__).parent.parent / "data" / "rosette_pattern_catalog.json"
+        catalog_path = Path(__file__).parent.parent.parent / "data" / "rosette_pattern_catalog.json"
         if catalog_path.exists():
             with open(catalog_path) as f:
                 catalog = json.load(f)
                 categories = list(catalog.get("categories", {}).keys())
         else:
             categories = ["basic", "torres", "hauser", "romanillos", "fleta"]
-        
+
         # Build pattern list
         patterns = []
         for preset in presets:
@@ -177,7 +185,7 @@ async def list_patterns(
                 if cat in preset['id']:
                     preset_category = cat
                     break
-            
+
             if category is None or preset_category == category:
                 patterns.append(PatternListItem(
                     id=preset['id'],
@@ -188,13 +196,13 @@ async def list_patterns(
                     category=preset_category,
                     notes=preset.get('notes')
                 ))
-        
+
         return PatternCatalogResponse(
             total_patterns=len(patterns),
             categories=categories,
             patterns=patterns
         )
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -210,10 +218,10 @@ async def generate_traditional_pattern(body: TraditionalPatternRequest):
             status_code=501,
             detail="Pattern generator not available"
         )
-    
+
     try:
         engine = RosettePatternEngine()
-        
+
         # Use preset or custom matrix
         if body.preset_id:
             result = engine.generate_traditional(
@@ -233,7 +241,7 @@ async def generate_traditional_pattern(body: TraditionalPatternRequest):
                 status_code=400,
                 detail="Must provide either preset_id or custom_matrix"
             )
-        
+
         return TraditionalPatternResponse(
             formula=result.formula.to_dict(),
             pattern_dimensions=result.pattern_dimensions,
@@ -242,7 +250,7 @@ async def generate_traditional_pattern(body: TraditionalPatternRequest):
             assembly_instructions=[instr.to_dict() for instr in result.assembly_instructions],
             bom=result.bom
         )
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -258,10 +266,10 @@ async def generate_modern_pattern(body: ModernPatternRequest):
             status_code=501,
             detail="Pattern generator not available"
         )
-    
+
     try:
         engine = RosettePatternEngine()
-        
+
         # Convert ring definitions
         rings = []
         for ring_def in body.rings:
@@ -273,14 +281,14 @@ async def generate_modern_pattern(body: ModernPatternRequest):
                 "secondary_color": ring_def.secondary_color,
                 "segment_count": ring_def.segment_count
             })
-        
+
         result = engine.generate_modern(
             name=body.name,
             rings=rings,
             soundhole_diameter_mm=body.soundhole_diameter_mm,
             chip_length_mm=body.chip_length_mm
         )
-        
+
         return ModernPatternResponse(
             spec=result.spec.to_dict(),
             paths=result.paths,
@@ -289,7 +297,7 @@ async def generate_modern_pattern(body: ModernPatternRequest):
             dxf_content=result.dxf_content,
             svg_content=result.svg_content
         )
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -305,19 +313,19 @@ async def get_pattern_details(pattern_id: str):
             status_code=501,
             detail="Pattern generator not available"
         )
-    
+
     try:
         # Load catalog
-        catalog_path = Path(__file__).parent.parent / "data" / "rosette_pattern_catalog.json"
+        catalog_path = Path(__file__).parent.parent.parent / "data" / "rosette_pattern_catalog.json"
         if not catalog_path.exists():
             raise HTTPException(
                 status_code=404,
                 detail="Pattern catalog not found"
             )
-        
+
         with open(catalog_path) as f:
             catalog = json.load(f)
-        
+
         # Search all categories
         for category_name, patterns in catalog.get("categories", {}).items():
             for pattern in patterns:
@@ -326,12 +334,12 @@ async def get_pattern_details(pattern_id: str):
                         **pattern,
                         "category": category_name
                     }
-        
+
         raise HTTPException(
             status_code=404,
             detail=f"Pattern '{pattern_id}' not found"
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -349,7 +357,7 @@ async def export_pattern(body: PatternExportRequest):
             status_code=501,
             detail="Pattern generator not available"
         )
-    
+
     # For now, return the pattern data as-is
     # Future: Implement format conversion and unit scaling
     return {

@@ -1,66 +1,45 @@
 """
-Art Studio Rosette Router
+Rosette Compare Routes - Phase 5 Consolidation
 
-DEPRECATED: Routes migrated to art_studio/api/ in Phase 5 consolidation:
-    - rosette_jobs_routes.py    (preview, save, jobs, presets)
-    - rosette_compare_routes.py (compare, snapshots, export_csv)
+Comparison, risk snapshots, and CSV export for rosette jobs.
 
-This file remains for backward compatibility during transition.
-New code should import from app.art_studio.api.
+Migrated from:
+    - routers/art_studio_rosette_router.py (lines 304-590)
 
-Note: Circle generation math extracted to geometry/arc_utils.py
-following the Fortran Rule (all math in subroutines).
+Endpoints:
+    POST /compare           - Compare two saved rosette jobs
+    POST /compare/snapshot  - Save comparison snapshot to risk timeline
+    GET  /compare/snapshots - List comparison snapshots
+    GET  /compare/export_csv - Export comparison history as CSV
 """
 
 from __future__ import annotations
 
-import uuid
+import io
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, validator
-import io
+from pydantic import BaseModel, Field
 
-# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
-from ..geometry.arc_utils import generate_circle_points
-
-from ..art_studio_rosette_store import (
+from ...art_studio_rosette_store import (
     get_compare_snapshots,
     get_job,
-    init_db,
-    list_jobs,
-    list_presets,
     save_compare_snapshot,
-    save_job,
 )
-from ..services.art_job_store import create_art_job
-from ..services import compare_risk_log  # Phase 28.1: Sync to legacy log
+from ...services import compare_risk_log  # Phase 28.1: Sync to legacy log
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/art/rosette",
+    tags=["art_studio_rosette_compare"],
+)
+
 
 # ---- Pydantic models --------------------------------------------------------
 
 
-class RosettePreviewIn(BaseModel):
-    pattern_type: str = Field(..., description="e.g. 'herringbone', 'rope', 'simple_ring'")
-    segments: int = Field(64, ge=8, le=720)
-    inner_radius: float = Field(40.0, gt=0)
-    outer_radius: float = Field(45.0, gt=0)
-    units: str = Field("mm", pattern="^(mm|inch)$")
-    preset: Optional[str] = Field(None, description="Optional preset name")
-    name: Optional[str] = Field(None, description="Optional friendly job name for saving")
-
-    @validator("outer_radius")
-    def check_radii(cls, v, values):
-        inner = values.get("inner_radius", None)
-        if inner is not None and v <= inner:
-            raise ValueError("outer_radius must be greater than inner_radius")
-        return v
-
-
 class RosettePath(BaseModel):
-    points: List[Tuple[float, float]]  # [ [x,y], ... ]
+    points: List[Tuple[float, float]]
 
 
 class RosettePreviewOut(BaseModel):
@@ -73,34 +52,7 @@ class RosettePreviewOut(BaseModel):
     preset: Optional[str]
     name: Optional[str]
     paths: List[RosettePath]
-    bbox: Tuple[float, float, float, float]  # (min_x, min_y, max_x, max_y)
-
-
-class RosetteSaveIn(BaseModel):
-    """Save a rosette job with full preview data"""
-    preview: RosettePreviewOut
-    name: Optional[str] = None
-    preset: Optional[str] = None
-
-
-class RosetteJobOut(BaseModel):
-    job_id: str
-    name: Optional[str]
-    preset: Optional[str]
-    created_at: str
-    preview: RosettePreviewOut
-
-
-class RosettePresetOut(BaseModel):
-    name: str
-    pattern_type: str
-    segments: int
-    inner_radius: float
-    outer_radius: float
-    metadata: Dict[str, Any]
-
-
-# ---- Compare Mode models ----------------------------------------------------
+    bbox: Tuple[float, float, float, float]
 
 
 class RosetteCompareIn(BaseModel):
@@ -143,50 +95,29 @@ class RosetteCompareOut(BaseModel):
     diff_summary: RosetteDiffSummary
 
 
-# ---- Geometry stub - Delegates to geometry/arc_utils.py (Fortran Rule) ------
+class CompareSnapshotIn(BaseModel):
+    """Request to save a comparison snapshot to risk timeline."""
+    job_id_a: str
+    job_id_b: str
+    risk_score: float = Field(..., ge=0, le=100, description="Risk score 0-100")
+    diff_summary: Dict[str, Any]
+    lane: Optional[str] = Field(None, description="Optional lane (e.g., 'production')")
+    note: Optional[str] = Field(None, description="Optional note about this comparison")
 
 
-def _generate_simple_ring_paths(
-    segments: int,
-    inner_radius: float,
-    outer_radius: float,
-) -> List[List[Tuple[float, float]]]:
-    """
-    Generate two concentric circles as polygons.
-
-    Delegates to canonical generate_circle_points() from geometry/arc_utils.py.
-    """
-    inner = generate_circle_points(inner_radius, segments, closed=True)
-    outer = generate_circle_points(outer_radius, segments, closed=True)
-    return [inner, outer]
+class CompareSnapshotOut(BaseModel):
+    """Snapshot record from risk timeline."""
+    id: int
+    job_id_a: str
+    job_id_b: str
+    lane: str
+    risk_score: float
+    diff_summary: Dict[str, Any]
+    note: Optional[str]
+    created_at: str
 
 
-def _generate_rosette_paths(body: RosettePreviewIn) -> List[List[Tuple[float, float]]]:
-    """Stub rosette generator; later we can plug in the true Art Studio kernel.
-
-    For now:
-    - pattern_type 'simple_ring' or unknown => two concentric circles.
-    - pattern_type 'herringbone' => same geometry, different metadata (future ready).
-    - pattern_type 'rope' => same geometry, but you can tweak radii slightly if desired.
-    """
-    segments = body.segments
-    inner_radius = body.inner_radius
-    outer_radius = body.outer_radius
-
-    # you can branch by pattern_type here later
-    return _generate_simple_ring_paths(segments, inner_radius, outer_radius)
-
-
-def _compute_bbox(paths: List[List[Tuple[float, float]]]) -> Tuple[float, float, float, float]:
-    xs: List[float] = []
-    ys: List[float] = []
-    for path in paths:
-        for (x, y) in path:
-            xs.append(x)
-            ys.append(y)
-    if not xs:
-        return (0.0, 0.0, 0.0, 0.0)
-    return (min(xs), min(ys), max(xs), max(ys))
+# ---- Helpers ----------------------------------------------------------------
 
 
 def _union_bbox(
@@ -201,110 +132,6 @@ def _union_bbox(
 
 
 # ---- Routes -----------------------------------------------------------------
-
-
-@router.on_event("startup")
-def _on_startup() -> None:
-    # ensure DB tables & default presets exist
-    init_db()
-
-
-@router.post("/preview", response_model=RosettePreviewOut)
-def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
-    """Generate a stub rosette geometry preview (paths + bbox)."""
-    job_id = f"rosette_{uuid.uuid4().hex[:12]}"
-    paths_xy = _generate_rosette_paths(body)
-    bbox = _compute_bbox(paths_xy)
-    paths = [RosettePath(points=p) for p in paths_xy]
-
-    return RosettePreviewOut(
-        job_id=job_id,
-        pattern_type=body.pattern_type,
-        segments=body.segments,
-        inner_radius=body.inner_radius,
-        outer_radius=body.outer_radius,
-        units=body.units,
-        preset=body.preset,
-        name=body.name,
-        paths=paths,
-        bbox=bbox,
-    )
-
-
-@router.post("/save", response_model=RosetteJobOut)
-def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
-    """Persist a rosette preview payload to the database."""
-    preview = body.preview
-    
-    # Override name/preset if provided in save request
-    if body.name:
-        preview.name = body.name
-    if body.preset:
-        preview.preset = body.preset
-
-    save_job(
-        job_id=preview.job_id,
-        name=preview.name or preview.job_id,
-        preset=preview.preset,
-        payload=preview.dict(),
-    )
-
-    # Verify it was saved
-    stored = get_job(preview.job_id)
-    if not stored:
-        raise HTTPException(status_code=500, detail="Failed to save rosette job")
-
-    # Register job within the Art Studio job spine for global timelines
-    try:
-        create_art_job("rosette", stored, job_id=stored["job_id"])
-    except Exception:
-        # Non-fatal: job timelines will simply omit this entry if persistence fails
-        pass
-
-    return RosetteJobOut(
-        job_id=stored["job_id"],
-        name=stored["name"],
-        preset=stored["preset"],
-        created_at=stored["created_at"],
-        preview=preview,
-    )
-
-
-@router.get("/jobs", response_model=List[RosetteJobOut])
-def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
-    jobs = list_jobs(limit=limit)
-    out: List[RosetteJobOut] = []
-    for j in jobs:
-        preview = RosettePreviewOut(**j["payload"])
-        out.append(
-            RosetteJobOut(
-                job_id=j["job_id"],
-                name=j["name"],
-                preset=j["preset"],
-                created_at=j["created_at"],
-                preview=preview,
-            )
-        )
-    return out
-
-
-@router.get("/presets", response_model=List[RosettePresetOut])
-def get_rosette_presets() -> List[RosettePresetOut]:
-    rows = list_presets()
-    return [
-        RosettePresetOut(
-            name=r["name"],
-            pattern_type=r["pattern_type"],
-            segments=r["segments"],
-            inner_radius=r["inner_radius"],
-            outer_radius=r["outer_radius"],
-            metadata=r["metadata"],
-        )
-        for r in rows
-    ]
-
-
-# ---- Compare Route ----------------------------------------------------------
 
 
 @router.post("/compare", response_model=RosetteCompareOut)
@@ -353,41 +180,16 @@ def compare_rosette_jobs(body: RosetteCompareIn) -> RosetteCompareOut:
     )
 
 
-# ---- Phase 27.2: Risk Snapshot Routes ---------------------------------------
-
-
-class CompareSnapshotIn(BaseModel):
-    """Request to save a comparison snapshot to risk timeline."""
-    job_id_a: str
-    job_id_b: str
-    risk_score: float = Field(..., ge=0, le=100, description="Risk score 0-100")
-    diff_summary: Dict[str, Any]
-    lane: Optional[str] = Field(None, description="Optional lane (e.g., 'production')")
-    note: Optional[str] = Field(None, description="Optional note about this comparison")
-
-
-class CompareSnapshotOut(BaseModel):
-    """Snapshot record from risk timeline."""
-    id: int
-    job_id_a: str
-    job_id_b: str
-    lane: str
-    risk_score: float
-    diff_summary: Dict[str, Any]
-    note: Optional[str]
-    created_at: str
-
-
 @router.post("/compare/snapshot", response_model=CompareSnapshotOut)
 def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
     """
     Save a comparison snapshot to the risk timeline.
-    
+
     Risk score calculation (client-side):
     - Base score from segment delta: abs(delta) / max(seg_a, seg_b) * 50
     - Radius delta contribution: abs(inner_delta + outer_delta) / 10 * 50
     - Clamp to 0-100
-    
+
     Phase 28.1: Also syncs to compare_risk_log for cross-lab dashboard integration.
     """
     snapshot_id = save_compare_snapshot(
@@ -398,7 +200,7 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
         lane=body.lane,
         note=body.note,
     )
-    
+
     # Phase 28.1: Sync to legacy compare_risk_log for dashboard aggregation
     try:
         diff = body.diff_summary
@@ -406,18 +208,18 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
         preset_a = diff.get("preset_a") or "(none)"
         preset_b = diff.get("preset_b") or "(none)"
         preset_label = f"{preset_a} vs {preset_b}"
-        
+
         # Calculate path deltas from segments
         segments_a = diff.get("segments_a", 0)
         segments_b = diff.get("segments_b", 0)
         segments_delta = diff.get("segments_delta", 0)
-        
+
         # Estimate path changes (rosette typically has 2 paths: inner + outer rings)
         # If segments increased, consider it "added" paths complexity
         # If segments decreased, consider it "removed" paths complexity
         added_paths = max(0, segments_delta) / 10.0  # Scale to reasonable numbers
         removed_paths = max(0, -segments_delta) / 10.0
-        
+
         compare_risk_log.log_compare_diff(
             job_id=body.job_id_a,  # Use baseline job as reference
             lane="rosette",
@@ -434,17 +236,17 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
     except Exception as e:
         # Don't fail snapshot save if log sync fails
         print(f"Warning: Failed to sync snapshot to compare_risk_log: {e}")
-    
+
     # Retrieve and return the saved snapshot
     snapshots = get_compare_snapshots(
         job_id_a=body.job_id_a,
         job_id_b=body.job_id_b,
         limit=1,
     )
-    
+
     if not snapshots:
         raise HTTPException(status_code=500, detail="Failed to retrieve saved snapshot")
-    
+
     snapshot = snapshots[0]
     return CompareSnapshotOut(
         id=snapshot["id"],
@@ -467,7 +269,7 @@ def list_snapshots(
 ) -> List[CompareSnapshotOut]:
     """
     Retrieve comparison snapshots from risk timeline with optional filtering.
-    
+
     Query params:
     - job_id_a: Filter by first job ID
     - job_id_b: Filter by second job ID
@@ -480,7 +282,7 @@ def list_snapshots(
         lane=lane,
         limit=limit,
     )
-    
+
     return [
         CompareSnapshotOut(
             id=s["id"],
@@ -494,11 +296,6 @@ def list_snapshots(
         )
         for s in snapshots
     ]
-
-
-# ============================================================================
-# Phase 27.3: CSV Export Endpoint
-# ============================================================================
 
 
 @router.get("/compare/export_csv")
@@ -541,7 +338,7 @@ def export_compare_csv(
 
         # Generate CSV in memory
         output = io.StringIO()
-        
+
         # Write header
         output.write(
             "timestamp,job_id_a,job_id_b,lane,risk_score,"
@@ -552,26 +349,26 @@ def export_compare_csv(
         # Write rows
         for s in snapshots:
             diff = s.get("diff_summary", {})
-            
+
             # Extract values with safe defaults
             timestamp = s.get("created_at", "")
             job_a = s.get("job_id_a", "")
             job_b = s.get("job_id_b", "")
             lane_val = s.get("lane", "")
             risk = s.get("risk_score", 0.0)
-            
+
             seg_delta = diff.get("segments_delta", 0)
             inner_delta = diff.get("inner_radius_delta", 0.0)
             outer_delta = diff.get("outer_radius_delta", 0.0)
             pattern_a = diff.get("pattern_type_a", "")
             pattern_b = diff.get("pattern_type_b", "")
             note = s.get("note", "") or ""
-            
+
             # Escape note if it contains commas/quotes
             note_escaped = note.replace('"', '""')
             if "," in note or '"' in note:
                 note_escaped = f'"{note_escaped}"'
-            
+
             # Write CSV row
             output.write(
                 f"{timestamp},{job_a},{job_b},{lane_val},{risk:.2f},"
@@ -593,21 +390,3 @@ def export_compare_csv(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")
-
-
-# ============================================================================
-# CAM Integration Endpoints - MOVED
-# ============================================================================
-# CAM endpoints have been extracted to:
-#   app/cam/routers/rosette/cam_router.py
-#
-# New paths (via cam_router aggregator at /api/cam/rosette):
-#   POST /api/cam/rosette/plan-toolpath
-#   POST /api/cam/rosette/post-gcode
-#   POST /api/cam/rosette/jobs
-#   GET  /api/cam/rosette/jobs/{job_id}
-# ============================================================================
-
-
-
-
