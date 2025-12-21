@@ -1,0 +1,30 @@
+[
+  {
+    "blade_id": "saw:thin_140",
+    "diameter_mm": 140,
+    "kerf_mm": 1.0,
+    "tooth_count": 40,
+    "material": "carbide"
+  },
+  {
+    "blade_id": "saw:thin_125",
+    "diameter_mm": 125,
+    "kerf_mm": 0.8,
+    "tooth_count": 36,
+    "material": "carbide"
+  },
+  {
+    "blade_id": "saw:standard_150",
+    "diameter_mm": 150,
+    "kerf_mm": 1.2,
+    "tooth_count": 48,
+    "material": "carbide"
+  },
+  {
+    "blade_id": "saw:heavy_180",
+    "diameter_mm": 180,
+    "kerf_mm": 1.5,
+    "tooth_count": 60,
+    "material": "carbide"
+  }
+]

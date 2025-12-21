@@ -1,0 +1,5 @@
+blade_id,rpm_max,rpm_min,rpm_recommended,source
+saw:thin_140,24000,8000,18000,"Freud sheet rev B"
+saw:thin_125,22000,8000,17000,"Vendor email 2025-12-10"
+saw:standard_150,20000,6000,15000,"CMT catalog 2025"
+saw:heavy_180,18000,5000,12000,"Manufacturer datasheet"
