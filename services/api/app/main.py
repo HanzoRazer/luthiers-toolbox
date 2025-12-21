@@ -422,6 +422,36 @@ except ImportError as e:
     workflow_sessions_router = None
 
 # =============================================================================
+# WAVE 18: CAM ROUTER CONSOLIDATION (Phase 5+6)
+# Single aggregator for all CAM routers organized by category
+# =============================================================================
+try:
+    from .cam.routers import cam_router
+    print("CAM Router: Using consolidated aggregator (Phase 5+6)")
+except ImportError as e:
+    print(f"Warning: Consolidated CAM router not available: {e}")
+    cam_router = None
+
+# Phase 5: Consolidated Art Studio rosette routes
+try:
+    from .art_studio.api.rosette_jobs_routes import router as rosette_jobs_router
+except ImportError as e:
+    print(f"Warning: Rosette Jobs router not available: {e}")
+    rosette_jobs_router = None
+
+try:
+    from .art_studio.api.rosette_compare_routes import router as rosette_compare_router
+except ImportError as e:
+    print(f"Warning: Rosette Compare router not available: {e}")
+    rosette_compare_router = None
+
+try:
+    from .art_studio.api.rosette_pattern_routes import router as rosette_pattern_router_v2
+except ImportError as e:
+    print(f"Warning: Rosette Pattern v2 router not available: {e}")
+    rosette_pattern_router_v2 = None
+
+# =============================================================================
 # APPLICATION SETUP
 # =============================================================================
 
@@ -658,6 +688,22 @@ if rmos_workflow_router:
 if workflow_sessions_router:
     app.include_router(workflow_sessions_router, tags=["Workflow", "Sessions"])
 
+# Wave 18: CAM Router Consolidation (Phase 5+6)
+# This aggregator provides organized CAM endpoints at /api/cam/<category>/<operation>
+# Categories: drilling, fret_slots, relief, risk, rosette, simulation, toolpath,
+#             export, monitoring, pipeline, utility
+if cam_router:
+    app.include_router(cam_router, prefix="/api/cam", tags=["CAM Consolidated"])
+
+# Phase 5: Consolidated Art Studio rosette routes
+# These provide the new organized endpoints alongside legacy routes for transition
+if rosette_jobs_router:
+    app.include_router(rosette_jobs_router, tags=["Art Studio", "Rosette Jobs"])
+if rosette_compare_router:
+    app.include_router(rosette_compare_router, tags=["Art Studio", "Rosette Compare"])
+if rosette_pattern_router_v2:
+    app.include_router(rosette_pattern_router_v2, tags=["Art Studio", "Rosette Patterns v2"])
+
 # =============================================================================
 # HEALTH CHECK
 # =============================================================================
@@ -699,8 +745,9 @@ async def api_health_check():
             "wave14_vision_rmos_runs_advisory": 3,
             "wave15_art_studio_core": 4,
             "wave16_governance_code_bundle": 4,
+            "wave18_cam_consolidation": 4,  # cam_router + 3 rosette routes
         },
-        "total_working": 102,
+        "total_working": 106,
         "broken_pending_fix": 9,
         "phantoms_removed": 84,
     }
