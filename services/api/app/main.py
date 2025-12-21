@@ -127,7 +127,6 @@ from .routers.cam_learn_router import router as cam_learn_router
 
 # =============================================================================
 # RMOS 2.0 - Rosette Manufacturing Orchestration System (4 routers)
-# Note: feasibility_router broken - needs rmos.context module
 # =============================================================================
 from .rmos import rmos_router
 # Phase B+C: AI Search + Profile Management (3 routers)
@@ -137,8 +136,6 @@ from .rmos.api_profile_history import router as rmos_history_router
 
 # =============================================================================
 # CAM SUBSYSTEM (8 routers)
-# Note: cam_preview_router broken - needs rmos.context
-# Note: adaptive_poly_gcode_router broken - needs routers.util
 # =============================================================================
 from .routers.cam_vcarve_router import router as cam_vcarve_router
 from .routers.cam_post_v155_router import router as cam_post_v155_router
@@ -151,14 +148,12 @@ from .routers.adaptive_preview_router import router as adaptive_preview_router
 
 # =============================================================================
 # PIPELINE & PRESETS (2 routers)
-# Note: pipeline_router broken - needs httpx
 # =============================================================================
 from .routers.pipeline_presets_router import router as pipeline_presets_router
 from .routers.dxf_plan_router import router as dxf_plan_router
 
 # =============================================================================
 # BLUEPRINT IMPORT (1 router)
-# Note: blueprint_router broken - needs analyzer module
 # =============================================================================
 from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
 
@@ -446,6 +441,39 @@ except ImportError as e:
     workflow_sessions_router = None
 
 # =============================================================================
+# WAVE 20: OPTION C API RESTRUCTURING
+# Canonical axes: /api/instruments, /api/cam, /api/music
+# Legacy aliases for backward compatibility
+# =============================================================================
+try:
+    from .routers.instruments import router as instruments_router
+    print("Instruments Router: Using canonical axis (Wave 20 - Option C)")
+except ImportError as e:
+    print(f"Warning: Instruments router not available: {e}")
+    instruments_router = None
+
+try:
+    from .routers.cam import router as cam_guitar_router
+    print("CAM Guitar Router: Using canonical axis (Wave 20 - Option C)")
+except ImportError as e:
+    print(f"Warning: CAM Guitar router not available: {e}")
+    cam_guitar_router = None
+
+try:
+    from .routers.music import router as music_router
+    print("Music Router: Using canonical axis (Wave 20 - Option C)")
+except ImportError as e:
+    print(f"Warning: Music router not available: {e}")
+    music_router = None
+
+try:
+    from .routers.legacy import router as legacy_router
+    print("Legacy Router: Backward compatibility aliases active (Wave 20)")
+except ImportError as e:
+    print(f"Warning: Legacy router not available: {e}")
+    legacy_router = None
+
+# =============================================================================
 # WAVE 18: CAM ROUTER CONSOLIDATION (Phase 5+6)
 # Single aggregator for all CAM routers organized by category
 # =============================================================================
@@ -591,11 +619,52 @@ app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry
 app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 
-# Specialty Modules (4)
-app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
-app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster"])
-app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"])
-app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
+# =============================================================================
+# WAVE 20: OPTION C - CANONICAL API AXES (December 2025)
+# Three clean axes: instruments, cam, music
+# These are the NEW canonical routes - use these going forward
+# =============================================================================
+
+# Instruments Axis: /api/instruments/{instrument_type}/{model_id}/*
+# Examples:
+#   /api/instruments/guitar/archtop/spec
+#   /api/instruments/guitar/stratocaster/geometry
+#   /api/instruments/guitar/smart/info
+if instruments_router:
+    app.include_router(instruments_router, prefix="/api/instruments", tags=["Instruments"])
+
+# CAM Axis (Guitar): /api/cam/guitar/{model_id}/*
+# Examples:
+#   /api/cam/guitar/archtop/contours/csv
+#   /api/cam/guitar/stratocaster/templates
+#   /api/cam/guitar/om/graduation
+if cam_guitar_router:
+    app.include_router(cam_guitar_router, prefix="/api/cam", tags=["CAM", "Guitar"])
+
+# Music Axis: /api/music/temperament/*
+# Examples:
+#   /api/music/temperament/compare
+#   /api/music/temperament/systems
+#   /api/music/temperament/resolve?instrument_type=guitar&model_id=smart
+if music_router:
+    app.include_router(music_router, prefix="/api/music", tags=["Music", "Temperament"])
+
+# Legacy Aliases (Phase 2: Backward Compatibility)
+# Routes old URLs to new canonical endpoints
+# Will be removed in next major release
+if legacy_router:
+    app.include_router(legacy_router, prefix="/api", tags=["Legacy", "Deprecated"])
+
+# =============================================================================
+# LEGACY: Specialty Modules (4) - DEPRECATED, use canonical routes above
+# Keeping for backward compatibility - will remove in next major release
+# Old: /api/guitar/{model}/cam/{model}/* → New: /api/cam/guitar/{model}/*
+# Old: /api/smart-guitar/temperaments/* → New: /api/music/temperament/*
+# =============================================================================
+app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop", "Legacy"])
+app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster", "Legacy"])
+app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar", "Legacy"])
+app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM", "Legacy"])
 
 # G-Code Generators (2)
 app.include_router(body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"])
@@ -608,8 +677,8 @@ app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 app.include_router(rosette_pattern_router, prefix="/api/rosette", tags=["Rosette", "Patterns", "Legacy"])  # → /api/cam/rosette or /api/art/rosette
 app.include_router(art_studio_rosette_router, prefix="/api", tags=["Rosette", "Art Studio", "Legacy"])  # → /api/art/rosette (v2)
 
-# Smart Guitar Temperaments (1) - Wave 6
-app.include_router(temperament_router, prefix="/api/smart-guitar", tags=["Smart Guitar", "Temperaments"])
+# Smart Guitar Temperaments (1) - Wave 6 - LEGACY: Use /api/music/temperament/* instead
+app.include_router(temperament_router, prefix="/api/smart-guitar", tags=["Smart Guitar", "Temperaments", "Legacy"])
 
 # Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
 app.include_router(calculators_router, prefix="/api", tags=["Calculators"])
@@ -866,8 +935,18 @@ async def api_health_check():
             "wave16_governance_code_bundle": 4,
             "wave18_cam_consolidation": 4,  # cam_router + 3 rosette routes
             "wave19_compare_consolidation": 1,  # compare_router
+            "wave20_option_c_canonical": 4,  # instruments, cam_guitar, music, legacy
         },
-        "total_working": 116,
+        "total_working": 120,
         "broken_pending_fix": 0,
         "phantoms_removed": 84,
+        "option_c_status": {
+            "canonical_axes": [
+                "/api/instruments - Instrument specs, geometry, templates",
+                "/api/cam/guitar - Model-specific CAM operations",
+                "/api/music - Temperament, tunings (global)"
+            ],
+            "legacy_aliases": "/api (backward compat, will be removed)",
+            "migration_phase": "Phase 1 - Canonical routes live, legacy preserved"
+        }
     }

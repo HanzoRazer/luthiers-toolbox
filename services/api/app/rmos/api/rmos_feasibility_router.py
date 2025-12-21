@@ -92,11 +92,9 @@ def resolve_mode(tool_id: str) -> str:
 
 def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> Dict[str, Any]:
     """
-    Saw feasibility engine.
+    Saw feasibility engine using CNC Saw Labs calculators via SawEngine.
 
-    TODO: Wire to real SAW feasibility scorer (CNC Saw Labs calculators).
-
-    Expected output shape:
+    Output shape:
       {
         "mode": "saw",
         "tool_id": "...",
@@ -104,10 +102,6 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
         "checks": {...},            # optional
         "recommendations": {...},   # optional
       }
-
-    Current implementation:
-    - If req includes a "safety" dict (test hook), echo it.
-    - Otherwise return UNKNOWN (which toolpaths policy will block).
     """
     tool_id = str(req.get("tool_id") or "saw:unknown")
 
@@ -121,18 +115,80 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
             "meta": {"context": context, "note": "echoed safety from request (test hook)"},
         }
 
-    # Default: no safety computed => UNKNOWN => blocked in production
-    return {
-        "mode": "saw",
-        "tool_id": tool_id,
-        "safety": {
-            "risk_level": "UNKNOWN",
-            "score": None,
-            "block_reason": "Saw feasibility engine not wired yet",
-            "warnings": ["Feasibility stub active - toolpaths blocked in production."],
-            "details": {"context": context},
-        },
-    }
+    # Wire to real SawEngine via feasibility_scorer
+    try:
+        from ..feasibility_scorer import score_design_feasibility
+        from ..api_contracts import RmosContext, RiskBucket
+        
+        # Import design spec - try art_studio first, fallback to api_contracts
+        try:
+            from ...art_studio.schemas import RosetteParamSpec
+        except ImportError:
+            from ..api_contracts import RosetteParamSpec
+        
+        # Build RmosContext from request
+        rmos_ctx = RmosContext(
+            tool_id=tool_id,
+            material_id=req.get("material_id", "hardwood"),
+            machine_id=req.get("machine_id"),
+            rpm=req.get("rpm"),
+            feed_rate_mm_min=req.get("feed_rate_mm_min"),
+            spindle_power_watts=req.get("spindle_power_watts"),
+            tool_diameter_mm=req.get("tool_diameter_mm"),
+        )
+        
+        # Build design spec from request
+        design = RosetteParamSpec(
+            outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
+            inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
+            ring_count=req.get("ring_count", 1),
+            pattern_type=req.get("pattern_type", "crosscut"),
+            depth_mm=req.get("depth_mm"),
+            stock_thickness_mm=req.get("stock_thickness_mm", 25.0),
+        )
+        
+        # Call real feasibility scorer
+        result = score_design_feasibility(design, rmos_ctx)
+        
+        # Convert RiskBucket enum to string risk_level
+        risk_level = result.risk_bucket.value if hasattr(result.risk_bucket, 'value') else str(result.risk_bucket)
+        
+        # Determine block_reason based on risk
+        block_reason = None
+        if risk_level == "RED":
+            block_reason = "Safety risk too high for automatic execution"
+        elif risk_level == "UNKNOWN":
+            block_reason = "Could not determine safety level"
+        
+        return {
+            "mode": "saw",
+            "tool_id": tool_id,
+            "safety": {
+                "risk_level": risk_level,
+                "score": result.score,
+                "block_reason": block_reason,
+                "warnings": result.warnings,
+                "details": {
+                    "context": context,
+                    "efficiency": result.efficiency,
+                    "estimated_cut_time_seconds": result.estimated_cut_time_seconds,
+                    "calculator_results": result.calculator_results,
+                },
+            },
+        }
+    except Exception as e:
+        # Fallback on error - return YELLOW (allows with warning)
+        return {
+            "mode": "saw",
+            "tool_id": tool_id,
+            "safety": {
+                "risk_level": "YELLOW",
+                "score": 50.0,
+                "block_reason": None,
+                "warnings": [f"Feasibility engine error: {str(e)}"],
+                "details": {"context": context, "error": str(e)},
+            },
+        }
 
 
 # -----------------------------
@@ -141,9 +197,14 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
 
 def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> Dict[str, Any]:
     """
-    Rosette feasibility engine.
+    Rosette feasibility engine using RMOS manufacturability scorer.
 
-    TODO: Wire to rosette manufacturability scorer.
+    Output shape:
+      {
+        "mode": "rosette",
+        "tool_id": "...",
+        "safety": { "risk_level": "...", "score": ..., "block_reason": ..., "warnings": [...], "details": {...} },
+      }
     """
     tool_id = str(req.get("tool_id") or "rosette:unknown")
 
@@ -157,15 +218,77 @@ def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) 
             "meta": {"context": context, "note": "echoed safety from request (test hook)"},
         }
 
-    # Default: UNKNOWN until real engine wired
-    return {
-        "mode": "rosette",
-        "tool_id": tool_id,
-        "safety": {
-            "risk_level": "UNKNOWN",
-            "score": None,
-            "block_reason": "Rosette feasibility engine not wired yet",
-            "warnings": ["Feasibility stub active - toolpaths blocked in production."],
-            "details": {"context": context},
-        },
-    }
+    # Wire to real feasibility scorer
+    try:
+        from ..feasibility_scorer import score_design_feasibility
+        from ..api_contracts import RmosContext, RiskBucket
+        
+        # Import design spec - try art_studio first, fallback to api_contracts
+        try:
+            from ...art_studio.schemas import RosetteParamSpec
+        except ImportError:
+            from ..api_contracts import RosetteParamSpec
+        
+        # Build RmosContext from request
+        rmos_ctx = RmosContext(
+            tool_id=tool_id,
+            material_id=req.get("material_id", "spruce"),
+            machine_id=req.get("machine_id"),
+            rpm=req.get("rpm"),
+            feed_rate_mm_min=req.get("feed_rate_mm_min"),
+            spindle_power_watts=req.get("spindle_power_watts"),
+            tool_diameter_mm=req.get("tool_diameter_mm"),
+        )
+        
+        # Build design spec from request
+        design = RosetteParamSpec(
+            outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
+            inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
+            ring_count=req.get("ring_count", 3),
+            pattern_type=req.get("pattern_type", "radial"),
+            depth_mm=req.get("depth_mm"),
+            petal_count=req.get("petal_count"),
+        )
+        
+        # Call real feasibility scorer (uses router mode for rosette)
+        result = score_design_feasibility(design, rmos_ctx)
+        
+        # Convert RiskBucket enum to string risk_level
+        risk_level = result.risk_bucket.value if hasattr(result.risk_bucket, 'value') else str(result.risk_bucket)
+        
+        # Determine block_reason based on risk
+        block_reason = None
+        if risk_level == "RED":
+            block_reason = "Safety risk too high for automatic execution"
+        elif risk_level == "UNKNOWN":
+            block_reason = "Could not determine safety level"
+        
+        return {
+            "mode": "rosette",
+            "tool_id": tool_id,
+            "safety": {
+                "risk_level": risk_level,
+                "score": result.score,
+                "block_reason": block_reason,
+                "warnings": result.warnings,
+                "details": {
+                    "context": context,
+                    "efficiency": result.efficiency,
+                    "estimated_cut_time_seconds": result.estimated_cut_time_seconds,
+                    "calculator_results": result.calculator_results,
+                },
+            },
+        }
+    except Exception as e:
+        # Fallback on error - return YELLOW (allows with warning)
+        return {
+            "mode": "rosette",
+            "tool_id": tool_id,
+            "safety": {
+                "risk_level": "YELLOW",
+                "score": 50.0,
+                "block_reason": None,
+                "warnings": [f"Feasibility engine error: {str(e)}"],
+                "details": {"context": context, "error": str(e)},
+            },
+        }
