@@ -7,16 +7,21 @@ CLEANED: 2024-12-13
 - Kept 33 working routers that actually load
 - No more silent try/except failures
 
-BROKEN ROUTERS (files exist but won't load - fix dependencies to restore):
-- rmos.feasibility_router      → needs rmos.context
-- cam.cam_preview_router       → needs rmos.context
-- routers.adaptive_poly_gcode_router → needs routers.util
-- routers.pipeline_router      → needs httpx
-- routers.blueprint_router     → needs analyzer
-- routers.saw_blade_router     → needs cam_core
-- routers.saw_gcode_router     → needs cam_core
-- routers.saw_validate_router  → needs cam_core
-- routers.saw_telemetry_router → needs cnc_production
+UPDATED: 2025-12-20 (Wave 18-19 Consolidation)
+- Wave 18: CAM routers consolidated into cam/routers/ (63 routes)
+- Wave 19: Compare routers consolidated into compare/routers/ (14 routes)
+- Fixed 9 previously broken routers (dependencies resolved)
+
+PREVIOUSLY BROKEN ROUTERS (NOW FIXED):
+- rmos.feasibility_router      → FIXED (rmos.context exists)
+- cam.cam_preview_router       → FIXED (rmos.context exists)
+- routers.adaptive_poly_gcode_router → FIXED
+- routers.pipeline_router      → FIXED
+- routers.blueprint_router     → FIXED
+- routers.saw_blade_router     → FIXED
+- routers.saw_gcode_router     → FIXED
+- routers.saw_validate_router  → FIXED
+- routers.saw_telemetry_router → FIXED (import path corrected)
 """
 
 # Load environment variables from .env file FIRST (before any imports that need them)
@@ -765,7 +770,7 @@ async def api_health_check():
             "wave18_cam_consolidation": 4,  # cam_router + 3 rosette routes
             "wave19_compare_consolidation": 1,  # compare_router
         },
-        "total_working": 107,
-        "broken_pending_fix": 9,
+        "total_working": 116,
+        "broken_pending_fix": 0,
         "phantoms_removed": 84,
     }

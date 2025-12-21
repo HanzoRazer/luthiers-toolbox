@@ -29,7 +29,7 @@ Integration:
 from fastapi import APIRouter, HTTPException
 from typing import List, Optional
 
-from ..cnc_production.joblog.saw_joblog_models import (
+from .._experimental.cnc_production.joblog.saw_joblog_models import (
     SawRunRecord,
     SawRunRecordCreate,
     SawRunRecordUpdate,
@@ -38,7 +38,7 @@ from ..cnc_production.joblog.saw_joblog_models import (
     SawOperationType,
     get_saw_joblog_store
 )
-from ..cnc_production.feeds_speeds.core.learned_overrides import (
+from .._experimental.cnc_production.feeds_speeds.core.learned_overrides import (
     LaneKey,
     OverrideSource,
     get_learned_overrides_store
