@@ -1,0 +1,337 @@
+/**
+ * Rosette Store - Bundle 31.0.5, 31.0.6
+ *
+ * Pinia store for Design-First Mode rosette editor state.
+ */
+
+import { defineStore } from "pinia";
+import type { RosetteParamSpec } from "../types/rosette";
+import type { PatternRecord, PatternSummary } from "../types/patternLibrary";
+import type { GeneratorDescriptor } from "../types/generators";
+import type { RosettePreviewSvgResponse } from "../types/preview";
+import type { DesignSnapshot, SnapshotSummary } from "../types/designSnapshot";
+import type { RosetteFeasibilitySummary, RiskBucket } from "../types/feasibility";
+
+import { artPatternsClient } from "../api/artPatternsClient";
+import { artGeneratorsClient } from "../api/artGeneratorsClient";
+import { artPreviewClient } from "../api/artPreviewClient";
+import { artSnapshotsClient } from "../api/artSnapshotsClient";
+import { artFeasibilityClient } from "../api/artFeasibilityClient";
+import { useToastStore } from "./toastStore";
+import { debounce } from "../utils/debounce";
+
+function defaultSpec(): RosetteParamSpec {
+  return {
+    outer_diameter_mm: 120,
+    inner_diameter_mm: 100,
+    ring_params: [],
+  };
+}
+
+export const useRosetteStore = defineStore("rosette", {
+  state: () => ({
+    // Canonical design
+    currentParams: defaultSpec() as RosetteParamSpec,
+
+    // Pattern library
+    patterns: [] as PatternSummary[],
+    selectedPattern: null as PatternRecord | null,
+    patternsLoading: false,
+    patternsError: "" as string,
+
+    // Generators
+    generators: [] as GeneratorDescriptor[],
+    selectedGeneratorKey: "basic_rings@1" as string,
+    generatorParams: {} as Record<string, any>,
+    generatorsLoading: false,
+    generatorsError: "" as string,
+    generatorWarnings: [] as string[],
+
+    // Preview
+    preview: null as RosettePreviewSvgResponse | null,
+    previewLoading: false,
+    previewError: "" as string,
+
+    // Snapshots
+    snapshots: [] as SnapshotSummary[],
+    snapshotsLoading: false,
+    snapshotsError: "" as string,
+    lastSavedSnapshot: null as DesignSnapshot | null,
+
+    // Feasibility
+    lastFeasibility: null as RosetteFeasibilitySummary | null,
+    feasibilityLoading: false,
+    feasibilityError: "" as string,
+
+    // Auto-refresh settings
+    autoRefreshEnabled: true,
+    autoRefreshDebounceMs: 350,
+    _lastAutoRefreshToken: 0,
+    _debouncedAutoRefresh: null as (() => void) | null,
+  }),
+
+  getters: {
+    feasibilityRisk(): RiskBucket | null {
+      return this.lastFeasibility?.risk_bucket || null;
+    },
+
+    isRedBlocked(): boolean {
+      return (this.lastFeasibility?.risk_bucket || null) === "RED";
+    },
+
+    feasibilityLabel(): string {
+      const f = this.lastFeasibility;
+      if (!f) return "No feasibility yet";
+      return `${f.risk_bucket} - Score ${Math.round(f.overall_score)} - ${f.estimated_cut_time_min.toFixed(1)} min`;
+    },
+  },
+
+  actions: {
+    // -------------------------
+    // Patterns
+    // -------------------------
+    async loadPatterns(filters?: { q?: string; tag?: string; generator_key?: string }) {
+      this.patternsLoading = true;
+      this.patternsError = "";
+      try {
+        const res = await artPatternsClient.list({ ...filters, limit: 200 });
+        this.patterns = res.items;
+      } catch (e: any) {
+        this.patternsError = e?.message || String(e);
+      } finally {
+        this.patternsLoading = false;
+      }
+    },
+
+    async openPattern(pattern_id: string) {
+      const toast = useToastStore();
+      try {
+        const rec = await artPatternsClient.get(pattern_id);
+        this.selectedPattern = rec;
+        this.selectedGeneratorKey = rec.generator_key;
+        this.generatorParams = { ...(rec.params || {}) };
+        toast.push("success", `Loaded pattern: ${rec.name}`);
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to load pattern");
+      }
+    },
+
+    async saveCurrentAsPattern(opts: { name: string; description?: string; tags?: string[] }) {
+      const toast = useToastStore();
+      try {
+        const rec = await artPatternsClient.create({
+          name: opts.name,
+          description: opts.description || null,
+          tags: opts.tags || [],
+          generator_key: this.selectedGeneratorKey,
+          params: this.generatorParams || {},
+        });
+        toast.push("success", `Saved pattern: ${rec.name}`);
+        await this.loadPatterns();
+        this.selectedPattern = rec;
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to save pattern");
+      }
+    },
+
+    async deleteSelectedPattern() {
+      const toast = useToastStore();
+      if (!this.selectedPattern) {
+        toast.push("warning", "No pattern selected.");
+        return;
+      }
+      try {
+        await artPatternsClient.delete(this.selectedPattern.pattern_id);
+        toast.push("success", "Pattern deleted.");
+        this.selectedPattern = null;
+        await this.loadPatterns();
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to delete pattern");
+      }
+    },
+
+    // -------------------------
+    // Generators
+    // -------------------------
+    async loadGenerators() {
+      this.generatorsLoading = true;
+      this.generatorsError = "";
+      try {
+        const res = await artGeneratorsClient.list();
+        this.generators = res.generators;
+        if (!this.generators.find((g) => g.generator_key === this.selectedGeneratorKey) && this.generators.length) {
+          this.selectedGeneratorKey = this.generators[0].generator_key;
+        }
+      } catch (e: any) {
+        this.generatorsError = e?.message || String(e);
+      } finally {
+        this.generatorsLoading = false;
+      }
+    },
+
+    async generateSpecFromGenerator() {
+      const toast = useToastStore();
+      this.generatorWarnings = [];
+      try {
+        const res = await artGeneratorsClient.generate(this.selectedGeneratorKey, {
+          outer_diameter_mm: this.currentParams.outer_diameter_mm,
+          inner_diameter_mm: this.currentParams.inner_diameter_mm,
+          params: this.generatorParams || {},
+        });
+        this.currentParams = res.spec;
+        this.generatorWarnings = res.warnings || [];
+        if (this.generatorWarnings.length) {
+          toast.push("warning", `Generated with warnings: ${this.generatorWarnings[0]}`);
+        } else {
+          toast.push("success", "Generated RosetteParamSpec.");
+        }
+        this.requestAutoRefresh();
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to generate design");
+      }
+    },
+
+    // -------------------------
+    // Preview
+    // -------------------------
+    async refreshPreview() {
+      this.previewLoading = true;
+      this.previewError = "";
+      try {
+        this.preview = await artPreviewClient.previewSvg({ spec: this.currentParams, size_px: 520, padding_px: 20 });
+      } catch (e: any) {
+        this.previewError = e?.message || String(e);
+        this.preview = null;
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+
+    // -------------------------
+    // Feasibility
+    // -------------------------
+    async refreshFeasibility() {
+      this.feasibilityLoading = true;
+      this.feasibilityError = "";
+      try {
+        const res = await artFeasibilityClient.batch({ specs: [this.currentParams] });
+        const s = res.summaries?.[0] || null;
+        this.lastFeasibility = s;
+      } catch (e: any) {
+        this.feasibilityError = e?.message || String(e);
+        this.lastFeasibility = null;
+      } finally {
+        this.feasibilityLoading = false;
+      }
+    },
+
+    async refreshPreviewAndFeasibility() {
+      await Promise.allSettled([this.refreshPreview(), this.refreshFeasibility()]);
+    },
+
+    setCurrentParams(next: RosetteParamSpec) {
+      this.currentParams = next;
+    },
+
+    requestAutoRefresh() {
+      if (!this.autoRefreshEnabled) return;
+      const token = ++this._lastAutoRefreshToken;
+
+      if (!this._debouncedAutoRefresh) {
+        this._debouncedAutoRefresh = debounce(async () => {
+          if (token !== this._lastAutoRefreshToken) return;
+          await this.refreshPreviewAndFeasibility();
+        }, this.autoRefreshDebounceMs);
+      }
+      this._debouncedAutoRefresh();
+    },
+
+    // -------------------------
+    // Snapshots
+    // -------------------------
+    async loadRecentSnapshots(filters?: { q?: string; tag?: string; pattern_id?: string }) {
+      this.snapshotsLoading = true;
+      this.snapshotsError = "";
+      try {
+        const res = await artSnapshotsClient.listRecent({ ...filters, limit: 50 });
+        this.snapshots = res.items;
+      } catch (e: any) {
+        this.snapshotsError = e?.message || String(e);
+      } finally {
+        this.snapshotsLoading = false;
+      }
+    },
+
+    async saveSnapshot(opts: { name: string; notes?: string; tags?: string[] }) {
+      const toast = useToastStore();
+
+      if (this.isRedBlocked) {
+        toast.push("warning", "Blocked: Feasibility is RED. Adjust design before saving a snapshot.");
+        return;
+      }
+
+      try {
+        const snap = await artSnapshotsClient.create({
+          name: opts.name,
+          notes: opts.notes || null,
+          tags: opts.tags || [],
+          pattern_id: this.selectedPattern?.pattern_id || null,
+          context_refs: { mode: "MODE_A" },
+          rosette_params: this.currentParams,
+          feasibility: this.lastFeasibility || null,
+        });
+        this.lastSavedSnapshot = snap;
+        toast.push("success", `Snapshot saved: ${snap.name}`);
+        await this.loadRecentSnapshots();
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to save snapshot");
+      }
+    },
+
+    async loadSnapshot(snapshot_id: string) {
+      const toast = useToastStore();
+      try {
+        const snap = await artSnapshotsClient.get(snapshot_id);
+        this.currentParams = snap.rosette_params;
+        this.lastFeasibility = (snap.feasibility as any) || null;
+        toast.push("success", `Loaded snapshot: ${snap.name}`);
+        this.requestAutoRefresh();
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to load snapshot");
+      }
+    },
+
+    async exportSnapshot(snapshot_id: string) {
+      const toast = useToastStore();
+      try {
+        const res = await artSnapshotsClient.export(snapshot_id);
+        const blob = new Blob([JSON.stringify(res.snapshot, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${snapshot_id}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast.push("success", "Snapshot exported.");
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to export snapshot");
+      }
+    },
+
+    async importSnapshotFromJsonText(jsonText: string) {
+      const toast = useToastStore();
+      try {
+        const parsed = JSON.parse(jsonText);
+        const snap = await artSnapshotsClient.import({ snapshot: parsed });
+        toast.push("success", `Imported snapshot: ${snap.name}`);
+        await this.loadRecentSnapshots();
+        this.currentParams = snap.rosette_params;
+        this.lastFeasibility = (snap.feasibility as any) || null;
+      } catch (e: any) {
+        toast.push("error", e?.message || "Failed to import snapshot");
+      }
+    },
+  },
+});
