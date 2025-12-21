@@ -1,5 +1,5 @@
 /**
- * Wave 7: Art Studio Engine Composable
+ * Wave 7: Art Studio Engine Composable (updated Wave 20)
  *
  * Central facade for all Art Studio operations:
  * - Tools & materials loading
@@ -8,8 +8,18 @@
  * - Toolpath planning
  * - Instrument geometry calculations
  * - Calculator debug integration
+ *
+ * Wave 20 Migration:
+ * - Uses centralized apiBase for URL construction
+ * - Rosette uses canonical /api/art/rosette/* paths via artStudioApi
+ * - Fallback to legacy paths on 404
  */
 import { ref, computed, reactive } from "vue";
+import { API_BASE, apiFetchWithFallback, buildUrl } from "@/services/apiBase";
+import {
+  buildRosetteUrl,
+  buildLegacyRosetteUrl,
+} from "@/services/artStudioApi";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -154,7 +164,7 @@ export interface CutOperationSpec {
 // State
 // ---------------------------------------------------------------------------
 
-const API_BASE = "/api";
+// Note: API_BASE now imported from @/services/apiBase
 
 // Geometry state
 const currentPaths = ref<MLPath[]>([]);
@@ -345,17 +355,32 @@ async function generateReliefGeometry(requestBody: unknown) {
   }
 }
 
+/**
+ * Generate rosette geometry.
+ * Wave 20: Uses canonical /api/art/rosette/geometry with fallback to legacy.
+ */
 async function generateRosetteGeometry(requestBody: unknown) {
   loading.geometry = true;
+  lastError.value = null;
+
   try {
-    const data = await fetchJSON<{ paths: MLPath[] }>(
-      `${API_BASE}/artstudio/geometry/rosette`,
+    // Canonical: /api/art/rosette/geometry (Art Studio owns rosette)
+    // Legacy: /api/artstudio/geometry/rosette
+    const canonicalUrl = buildRosetteUrl("geometry");
+    const legacyUrl = `${API_BASE}/artstudio/geometry/rosette`;
+
+    const data = await apiFetchWithFallback<{ paths: MLPath[] }>(
+      canonicalUrl,
+      legacyUrl,
       {
         method: "POST",
         body: JSON.stringify(requestBody),
       }
     );
     currentPaths.value = data.paths;
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to generate rosette geometry";
+    throw err;
   } finally {
     loading.geometry = false;
   }
