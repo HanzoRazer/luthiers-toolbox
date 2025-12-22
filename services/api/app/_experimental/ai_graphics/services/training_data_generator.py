@@ -438,45 +438,50 @@ class DallETrainingGenerator:
         return hashlib.md5(key.encode()).hexdigest()[:12]
     
     def _generate_one(self, sample: TrainingSample) -> TrainingSample:
-        """Generate a single training image."""
-        import openai
-        import requests
-        
-        client = openai.OpenAI(api_key=self.api_key)
-        
+        """Generate a single training image using AI Platform."""
+        # Use canonical AI Platform transport (no direct openai import)
+        try:
+            from app.ai.transport import get_image_client
+            from app.ai.observability import audit_ai_call
+        except ImportError:
+            # Fallback for standalone usage
+            import openai
+            import requests
+            return self._generate_one_legacy(sample)
+
         # Build prompt
         user_prompt = f"{sample.finish} {sample.body_shape} guitar"
         guitar_prompt = engineer_guitar_prompt(
             user_prompt,
             photo_style=sample.photo_style,
         )
-        
+
         sample.user_prompt = user_prompt
         sample.engineered_prompt = guitar_prompt.positive_prompt
-        
+
         start = time.time()
-        
+
         try:
-            response = client.images.generate(
-                model="dall-e-3",
+            # Use AI Platform image client
+            client = get_image_client(provider="openai")
+            response = client.generate(
                 prompt=guitar_prompt.positive_prompt,
                 size=self.config.image_size,
                 quality=self.config.image_quality,
-                n=1,
+                model="dall-e-3",
             )
-            
+
             sample.generation_time_seconds = time.time() - start
-            sample.dalle_revised_prompt = response.data[0].revised_prompt or ""
-            
-            # Download image
-            img_url = response.data[0].url
-            img_response = requests.get(img_url)
-            
-            if img_response.status_code == 200:
+            sample.dalle_revised_prompt = response.revised_prompt or ""
+
+            # Response includes image bytes directly
+            image_bytes = response.image_bytes
+
+            if image_bytes:
                 # Save image
                 filename = sample.to_filename()
                 img_path = self.images_dir / f"{filename}.png"
-                img_path.write_bytes(img_response.content)
+                img_path.write_bytes(image_bytes)
                 sample.image_path = f"images/{filename}.png"
                 
                 # Save caption
@@ -487,16 +492,87 @@ class DallETrainingGenerator:
                 sample.success = True
                 sample.generated_at = datetime.utcnow().isoformat()
                 sample.cost_usd = self.config.cost_per_image
-                
+
+                # Audit the call
+                audit_ai_call(
+                    operation="image",
+                    provider="openai",
+                    model="dall-e-3",
+                    prompt=guitar_prompt.positive_prompt,
+                    response_bytes=image_bytes,
+                    revised_prompt=sample.dalle_revised_prompt,
+                    cost_estimate_usd=sample.cost_usd,
+                )
+
             else:
-                sample.error = f"Image download failed: {img_response.status_code}"
-                
+                sample.error = "Image generation returned empty bytes"
+
         except Exception as e:
             sample.error = str(e)
             sample.generation_time_seconds = time.time() - start
-        
+
         return sample
-    
+
+    def _generate_one_legacy(self, sample: TrainingSample) -> TrainingSample:
+        """Legacy fallback for standalone usage (direct OpenAI SDK)."""
+        import openai
+        import requests
+
+        client = openai.OpenAI(api_key=self.api_key)
+
+        # Build prompt
+        user_prompt = f"{sample.finish} {sample.body_shape} guitar"
+        guitar_prompt = engineer_guitar_prompt(
+            user_prompt,
+            photo_style=sample.photo_style,
+        )
+
+        sample.user_prompt = user_prompt
+        sample.engineered_prompt = guitar_prompt.positive_prompt
+
+        start = time.time()
+
+        try:
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=guitar_prompt.positive_prompt,
+                size=self.config.image_size,
+                quality=self.config.image_quality,
+                n=1,
+            )
+
+            sample.generation_time_seconds = time.time() - start
+            sample.dalle_revised_prompt = response.data[0].revised_prompt or ""
+
+            # Download image
+            img_url = response.data[0].url
+            img_response = requests.get(img_url)
+
+            if img_response.status_code == 200:
+                # Save image
+                filename = sample.to_filename()
+                img_path = self.images_dir / f"{filename}.png"
+                img_path.write_bytes(img_response.content)
+                sample.image_path = f"images/{filename}.png"
+
+                # Save caption
+                caption_path = self.images_dir / f"{filename}.txt"
+                caption_path.write_text(sample.to_caption())
+                sample.caption_path = f"images/{filename}.txt"
+
+                sample.success = True
+                sample.generated_at = datetime.utcnow().isoformat()
+                sample.cost_usd = self.config.cost_per_image
+
+            else:
+                sample.error = f"Image download failed: {img_response.status_code}"
+
+        except Exception as e:
+            sample.error = str(e)
+            sample.generation_time_seconds = time.time() - start
+
+        return sample
+
     def generate_dataset(
         self,
         combinations: List[Dict[str, Any]],

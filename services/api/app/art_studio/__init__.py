@@ -40,9 +40,11 @@ pipelines/*/*.py (legacy math implementations)
 - `inlay_router`: Fretboard inlay pattern design and DXF export
 - `vcarve_router`: SVG → toolpath → G-code conversion (Wave 1)
 - `relief_router`: Relief SVG → DXF export with feasibility (Wave 3)
+- `svg`: Prompt→SVG generation using AI Platform (AI Realignment)
 """
 
 from . import bracing_router
+from . import svg  # AI-powered SVG generation (Option 2 architecture)
 from . import rosette_router
 from . import inlay_router
 from . import vcarve_router
@@ -54,4 +56,5 @@ __all__ = [
     "inlay_router",
     "vcarve_router",
     "relief_router",
+    "svg",  # AI-powered Prompt→SVG generation
 ]

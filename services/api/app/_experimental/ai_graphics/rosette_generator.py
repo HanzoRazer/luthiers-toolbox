@@ -378,38 +378,56 @@ class RosetteAIGenerator:
             )
     
     def _generate_openai(self, prompt: str) -> AIGenerationResult:
-        """Generate using OpenAI API."""
+        """Generate using OpenAI API via AI Platform layer."""
         try:
-            import openai
-            import os
-            
-            if not self._openai_client:
-                api_key = os.environ.get("OPENAI_API_KEY")
-                if not api_key:
-                    return AIGenerationResult(
-                        success=False,
-                        error="OPENAI_API_KEY not set",
-                        prompt_used=prompt,
-                    )
-                self._openai_client = openai.OpenAI(api_key=api_key)
-            
-            response = self._openai_client.chat.completions.create(
-                model=os.environ.get("AI_MODEL", "gpt-4"),
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt},
-                ],
+            # Use canonical AI Platform transport (no direct openai import)
+            from app.ai.transport import get_llm_client
+            from app.ai.safety import assert_allowed, SafetyCategory
+            from app.ai.observability import audit_ai_call
+
+            # Safety check
+            try:
+                assert_allowed(prompt, category=SafetyCategory.ROSETTE_DESIGN)
+            except Exception as e:
+                return AIGenerationResult(
+                    success=False,
+                    error=f"Safety check failed: {e}",
+                    prompt_used=prompt,
+                )
+
+            client = get_llm_client(provider="openai")
+
+            if not client.is_configured:
+                return AIGenerationResult(
+                    success=False,
+                    error="OPENAI_API_KEY not set",
+                    prompt_used=prompt,
+                )
+
+            response = client.request_text(
+                prompt=prompt,
+                system_prompt=SYSTEM_PROMPT,
                 temperature=0.7,
                 max_tokens=1000,
             )
-            
-            raw = response.choices[0].message.content.strip()
+
+            raw = response.content.strip()
+
+            # Audit the call
+            audit_ai_call(
+                operation="llm",
+                provider="openai",
+                model=response.model,
+                prompt=prompt,
+                response_content=raw,
+            )
+
             return self._parse_response(raw, prompt, "openai")
-            
-        except ImportError:
+
+        except ImportError as e:
             return AIGenerationResult(
                 success=False,
-                error="openai package not installed",
+                error=f"AI Platform not available: {e}",
                 prompt_used=prompt,
             )
         except Exception as e:
@@ -420,37 +438,56 @@ class RosetteAIGenerator:
             )
     
     def _generate_anthropic(self, prompt: str) -> AIGenerationResult:
-        """Generate using Anthropic API."""
+        """Generate using Anthropic API via AI Platform layer."""
         try:
-            import anthropic
-            import os
-            
-            if not self._anthropic_client:
-                api_key = os.environ.get("ANTHROPIC_API_KEY")
-                if not api_key:
-                    return AIGenerationResult(
-                        success=False,
-                        error="ANTHROPIC_API_KEY not set",
-                        prompt_used=prompt,
-                    )
-                self._anthropic_client = anthropic.Anthropic(api_key=api_key)
-            
-            response = self._anthropic_client.messages.create(
-                model=os.environ.get("AI_MODEL", "claude-sonnet-4-20250514"),
+            # Use canonical AI Platform transport (no direct anthropic import)
+            from app.ai.transport import get_llm_client
+            from app.ai.safety import assert_allowed, SafetyCategory
+            from app.ai.observability import audit_ai_call
+
+            # Safety check
+            try:
+                assert_allowed(prompt, category=SafetyCategory.ROSETTE_DESIGN)
+            except Exception as e:
+                return AIGenerationResult(
+                    success=False,
+                    error=f"Safety check failed: {e}",
+                    prompt_used=prompt,
+                )
+
+            client = get_llm_client(provider="anthropic")
+
+            if not client.is_configured:
+                return AIGenerationResult(
+                    success=False,
+                    error="ANTHROPIC_API_KEY not set",
+                    prompt_used=prompt,
+                )
+
+            response = client.request_text(
+                prompt=prompt,
+                system_prompt=SYSTEM_PROMPT,
+                temperature=0.7,
                 max_tokens=1000,
-                system=SYSTEM_PROMPT,
-                messages=[
-                    {"role": "user", "content": prompt},
-                ],
             )
-            
-            raw = response.content[0].text.strip()
+
+            raw = response.content.strip()
+
+            # Audit the call
+            audit_ai_call(
+                operation="llm",
+                provider="anthropic",
+                model=response.model,
+                prompt=prompt,
+                response_content=raw,
+            )
+
             return self._parse_response(raw, prompt, "anthropic")
-            
-        except ImportError:
+
+        except ImportError as e:
             return AIGenerationResult(
                 success=False,
-                error="anthropic package not installed",
+                error=f"AI Platform not available: {e}",
                 prompt_used=prompt,
             )
         except Exception as e:

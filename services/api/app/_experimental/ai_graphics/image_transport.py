@@ -2,16 +2,38 @@
 """
 Image Transport Layer — HTTP/SDK for Image Generation APIs
 
+DEPRECATED: This module is being replaced by app.ai.transport.image_client
+as part of the AI Platform realignment. Import from there instead.
+
 GOVERNANCE CONTRACT:
     Transport returns: tuple[bytes, Dict[str, Any]]
     Transport method: generate_image_bytes()
-    
+
 This module handles RAW HTTP calls only. No business logic.
 Provider layer (providers.py) handles normalization.
 
 Author: Luthier's ToolBox
 Date: December 17, 2025
+
+MIGRATION NOTE (AI Realignment):
+    Old: from _experimental.ai_graphics.image_transport import OpenAIImageTransport
+    New: from app.ai.transport import get_image_client
+
+    The new AI Platform layer provides:
+    - Centralized safety enforcement
+    - Audit logging
+    - Cost estimation
+    - Request ID propagation
 """
+import warnings
+
+def _deprecation_warning():
+    warnings.warn(
+        "ai_graphics.image_transport is deprecated. "
+        "Use app.ai.transport.image_client instead.",
+        DeprecationWarning,
+        stacklevel=3
+    )
 
 from __future__ import annotations
 

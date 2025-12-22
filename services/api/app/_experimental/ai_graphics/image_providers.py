@@ -2,6 +2,13 @@
 """
 Image Providers — Governance-Aligned Implementation
 
+MIGRATION NOTE (AI Realignment):
+    This module is being migrated to use app.ai.transport.image_client.
+    New code should use:
+        from app.ai.transport import get_image_client
+        client = get_image_client(provider="openai")
+        response = client.generate(prompt="...")
+
 GOVERNANCE CONTRACT (from OpenAI_Provider_Contract.md):
 
     @dataclass
