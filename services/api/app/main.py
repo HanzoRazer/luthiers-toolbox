@@ -182,12 +182,12 @@ from .saw_lab.debug_router import router as saw_debug_router
 from .saw_lab.compare_router import router as saw_compare_router
 
 # =============================================================================
-# SPECIALTY MODULES - Guitar-specific calculators (4 routers)
+# SPECIALTY MODULES - Guitar-specific calculators
+# REMOVED: Legacy routers deleted - use canonical routes:
+#   /api/instruments/guitar/{model}/* - Instrument specs
+#   /api/cam/guitar/{model}/*        - CAM operations
+# 308 redirects preserved via legacy/guitar_model_redirects.py
 # =============================================================================
-from .routers.archtop_router import router as archtop_router
-from .routers.stratocaster_router import router as stratocaster_router
-from .routers.smart_guitar_router import router as smart_guitar_router
-from .routers.om_router import router as om_router
 
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
@@ -474,6 +474,19 @@ except ImportError as e:
     legacy_router = None
 
 # =============================================================================
+# WAVE 20: SANDBOXES (Self-contained experimental modules)
+# Each sandbox follows Option C: single canonical mount with instruments + CAM
+# =============================================================================
+try:
+    from .sandboxes.smart_guitar.instruments_router import router as sg_instruments_router
+    from .sandboxes.smart_guitar.cam_router import router as sg_cam_router
+    print("Smart Guitar Sandbox: Loaded (SG-SBX-0.1)")
+except ImportError as e:
+    print(f"Warning: Smart Guitar sandbox not available: {e}")
+    sg_instruments_router = None
+    sg_cam_router = None
+
+# =============================================================================
 # WAVE 18: CAM ROUTER CONSOLIDATION (Phase 5+6)
 # Single aggregator for all CAM routers organized by category
 # =============================================================================
@@ -656,15 +669,30 @@ if legacy_router:
     app.include_router(legacy_router, prefix="/api", tags=["Legacy", "Deprecated"])
 
 # =============================================================================
-# LEGACY: Specialty Modules (4) - DEPRECATED, use canonical routes above
-# Keeping for backward compatibility - will remove in next major release
-# Old: /api/guitar/{model}/cam/{model}/* → New: /api/cam/guitar/{model}/*
-# Old: /api/smart-guitar/temperaments/* → New: /api/music/temperament/*
+# LEGACY GUITAR ROUTERS - REMOVED (December 2025)
+# Old routes now redirect via 308 to canonical endpoints:
+#   /api/guitar/{model}/cam/{model}/* → /api/cam/guitar/{model}/*
+#   /api/smart-guitar/temperaments/*  → /api/music/temperament/*
+# See: routers/legacy/guitar_model_redirects.py
 # =============================================================================
-app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop", "Legacy"])
-app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster", "Legacy"])
-app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar", "Legacy"])
-app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM", "Legacy"])
+
+# =============================================================================
+# WAVE 20: SANDBOXES - SMART GUITAR (SG-SBX-0.1)
+# Single canonical mount: /api/instruments/smart-guitar/*
+# CAM projection: /api/cam/smart-guitar/*
+# =============================================================================
+if sg_instruments_router:
+    app.include_router(
+        sg_instruments_router,
+        prefix="/api/instruments/smart-guitar",
+        tags=["Instruments", "Smart Guitar", "Sandbox"],
+    )
+if sg_cam_router:
+    app.include_router(
+        sg_cam_router,
+        prefix="/api/cam/smart-guitar",
+        tags=["CAM", "Smart Guitar", "Sandbox"],
+    )
 
 # G-Code Generators (2)
 app.include_router(body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"])
