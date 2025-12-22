@@ -41,6 +41,17 @@ jobs:
           # Install test dependencies
           pip install pytest
 
+      - name: Ban new experimental ai_core imports
+        working-directory: services/api
+        run: |
+          echo "Checking for banned imports from _experimental/ai_core..."
+          python -m app.ci.ban_experimental_ai_core_imports
+          if [ $? -ne 0 ]; then
+            echo "❌ Found imports from deprecated _experimental/ai_core module"
+            echo "Please migrate to: from app.rmos.ai import ..."
+            exit 1
+          fi
+
       - name: Run RMOS runs_v2 split store tests
         working-directory: services/api
         env:

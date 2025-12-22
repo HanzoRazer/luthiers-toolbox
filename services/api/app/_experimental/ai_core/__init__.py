@@ -1,24 +1,45 @@
-# services/api/app/ai_core/__init__.py
 """
-AI Core Package - Constraint-aware rosette generation and safety utilities.
+DEPRECATED: This module has been migrated to app.rmos.ai
+
+This is a compatibility shim. All exports now come from the canonical location.
+Please update your imports to use 'from app.rmos.ai import ...' instead.
+
+Migration Path:
+    # Old (deprecated)
+    from app._experimental.ai_core import make_candidate_generator_for_request
+    
+    # New (canonical)
+    from app.rmos.ai import make_candidate_generator_for_request
+
+This shim will be removed in Wave 21 (January 2026).
 """
 
-from .generator_constraints import (
-    RosetteGeneratorConstraints,
-    constraints_from_context,
-)
+import warnings
+from functools import lru_cache
 
-from .safety import coerce_to_rosette_spec
-
-from .generators import (
-    get_default_candidate_generator,
-    make_candidate_generator_for_request,
-)
+# Re-export everything from canonical location
+from app.rmos.ai import *  # noqa: F401, F403
 
 __all__ = [
-    "RosetteGeneratorConstraints",
-    "constraints_from_context",
-    "coerce_to_rosette_spec",
-    "get_default_candidate_generator",
     "make_candidate_generator_for_request",
+    "generate_constrained_candidate",
+    "coerce_to_rosette_spec",
+    "constraints_from_context",
+    "get_ai_client",
 ]
+
+
+@lru_cache(maxsize=1)
+def _warn_once() -> None:
+    """Emit deprecation warning only once per process."""
+    warnings.warn(
+        "Module 'app._experimental.ai_core' is deprecated. "
+        "Please import from 'app.rmos.ai' instead. "
+        "This shim will be removed in Wave 21 (January 2026).",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+
+# Trigger warning on first import
+_warn_once()
