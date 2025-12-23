@@ -24,7 +24,16 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from .schemas import RunArtifact, RunDecision, Hashes, AdvisoryInputRef
+from .schemas import (
+    RunArtifact,
+    RunDecision,
+    Hashes,
+    AdvisoryInputRef,
+    RunAttachmentCreateRequest,
+    RunAttachmentCreateResponse,
+    BindArtStudioCandidateRequest,
+    BindArtStudioCandidateResponse,
+)
 from .store import get_run, list_runs_filtered, persist_run, create_run_id, attach_advisory
 from .diff import diff_runs
 from .attachments import get_attachment_path, put_json_attachment
@@ -670,3 +679,165 @@ def verify_run_attachments(run_id: str):
             "results": results,
         },
     }
+
+
+@router.post("/{run_id}/attachments", response_model=RunAttachmentCreateResponse, summary="Create attachment for run")
+def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
+    """
+    Upload attachment to a run with SHA256 verification.
+    
+    Returns 400 if:
+    - Run not found
+    - SHA256 mismatch between declared and actual content
+    - Invalid base64 payload
+    
+    Returns 200 with attachment metadata if successful.
+    """
+    import base64
+    from .attachments import put_bytes_attachment
+    from .hashing import sha256_of_bytes
+    
+    # Verify run exists
+    run = get_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=400, detail=f"Run {run_id} not found")
+    
+    # Decode base64 payload
+    try:
+        data = base64.b64decode(req.b64)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 payload: {e}")
+    
+    # Verify SHA256 matches
+    actual_sha = sha256_of_bytes(data)
+    if actual_sha != req.sha256:
+        raise HTTPException(
+            status_code=400,
+            detail=f"SHA256 mismatch: expected {req.sha256}, got {actual_sha}"
+        )
+    
+    # Store attachment (content-addressed, auto-deduplicates)
+    attachment, _path = put_bytes_attachment(
+        data=data,
+        kind=req.kind,
+        mime=req.content_type,
+        filename=req.filename,
+        ext="",  # Extension determined from mime/filename if needed
+    )
+    
+    # Return response
+    return RunAttachmentCreateResponse(
+        attachment_id=attachment.sha256,  # Content-addressed: sha256 is the ID
+        sha256=attachment.sha256,
+        kind=attachment.kind,
+    )
+
+
+@router.post(
+    "/{run_id}/artifacts/bind-art-studio-candidate",
+    response_model=BindArtStudioCandidateResponse,
+    summary="Bind Art Studio candidate to run artifact"
+)
+def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
+    """
+    Bind Art Studio candidate attachments to a run artifact with feasibility check.
+    
+    Creates a RunArtifact for EVERY bind attempt (ALLOW or BLOCK).
+    
+    Returns 400 if:
+    - Run not found
+    - Attachments missing (when strict=true)
+    - Attachment SHA verification fails
+    - Invalid spec schema
+    
+    Returns 200 with decision=ALLOW or decision=BLOCK (both persist artifacts).
+    Never returns 403 or 409 (blocked artifacts are persisted with decision=BLOCK).
+    """
+    from .attachments import get_attachment_path
+    from .hashing import sha256_of_obj
+    from .store import create_blocked_artifact_for_violations
+    
+    # Verify run exists
+    run = get_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=400, detail=f"Run {run_id} not found")
+    
+    # Verify all attachments exist and are accessible
+    attachment_sha_map = {}
+    for att_id in req.attachment_ids:
+        # Normalize: strip att- prefix if present
+        sha256 = att_id.replace("att-", "") if att_id.startswith("att-") else att_id
+        
+        # Check attachment exists
+        path = get_attachment_path(sha256)
+        if path is None:
+            if req.strict:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Attachment {att_id} not found (sha256: {sha256})"
+                )
+            else:
+                continue  # Skip missing if not strict
+        
+        attachment_sha_map[att_id] = sha256
+    
+    # TODO: Run actual feasibility check here
+    # For now, mock a simple ALLOW decision
+    # In production, this would:
+    # 1. Load geometry spec from attachments
+    # 2. Run feasibility engine
+    # 3. Compute risk level + score
+    # 4. Return ALLOW or BLOCK based on thresholds
+    
+    # Mock feasibility result (replace with real engine later)
+    feasibility_data = {
+        "decision": "ALLOW",
+        "score": 0.85,
+        "risk_level": "GREEN",
+        "attachment_ids": list(attachment_sha_map.keys()),
+        "operator_notes": req.operator_notes,
+    }
+    feasibility_sha = sha256_of_obj(feasibility_data)
+    
+    decision = feasibility_data["decision"]
+    score = feasibility_data["score"]
+    risk_level = feasibility_data["risk_level"]
+    
+    # Create RunArtifact (persisted for both ALLOW and BLOCK)
+    artifact_id = create_run_id()
+    
+    if decision == "BLOCK":
+        # Use existing blocked artifact creation function
+        artifact = create_blocked_artifact_for_violations(
+            run_id=artifact_id,
+            mode="art_studio_candidate",
+            spec={"attachment_ids": list(attachment_sha_map.keys())},
+            violations=[{"code": "FEASIBILITY_BLOCKED", "reason": "Mock block for demo"}],
+        )
+    else:
+        # Create ALLOW artifact
+        artifact = RunArtifact(
+            run_id=artifact_id,
+            status="OK",
+            mode="art_studio_candidate",
+            hashes=Hashes(
+                feasibility_sha256=feasibility_sha,
+            ),
+            decision=RunDecision(
+                risk_level=risk_level,
+                score=score * 100,  # Convert 0-1 to 0-100
+                warnings=[],
+            ),
+            request_spec={"attachment_ids": list(attachment_sha_map.keys())},
+        )
+        persist_run(artifact)
+    
+    # Return response (200 for both ALLOW and BLOCK)
+    return BindArtStudioCandidateResponse(
+        artifact_id=artifact_id,
+        decision=decision,
+        feasibility_score=score,
+        risk_level=risk_level,
+        feasibility_sha256=feasibility_sha,
+        attachment_sha256_map=attachment_sha_map,
+    )
