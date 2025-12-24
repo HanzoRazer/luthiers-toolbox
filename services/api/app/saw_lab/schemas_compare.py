@@ -39,3 +39,24 @@ class SawCompareResponse(BaseModel):
     session_id: Optional[str] = None
     parent_artifact_id: Optional[str] = None
     items: List[SawCompareItem]
+
+
+class SawCompareDecisionRequest(BaseModel):
+    """
+    Records an operator decision selecting a specific child artifact from a batch.
+    This creates a new decision artifact (it does not mutate the batch artifact).
+    """
+    parent_batch_artifact_id: str = Field(..., description="Artifact ID for kind='saw_compare_batch'")
+    selected_child_artifact_id: str = Field(..., description="Artifact ID for the chosen candidate run")
+    approved_by: str = Field(..., min_length=1, description="Operator identity (name/email/handle)")
+    reason: str = Field(..., min_length=1, description="Why this candidate was selected")
+    ticket_id: Optional[str] = Field(None, description="Optional external ticket/change reference")
+
+
+class SawCompareDecisionResponse(BaseModel):
+    decision_artifact_id: str
+    parent_batch_artifact_id: str
+    selected_child_artifact_id: str
+    approved_by: str
+    reason: str
+    ticket_id: Optional[str] = None

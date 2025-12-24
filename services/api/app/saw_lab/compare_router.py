@@ -4,9 +4,16 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Query
 
-from app.saw_lab.schemas_compare import SawCompareRequest, SawCompareResponse, SawCompareItem
+from app.saw_lab.schemas_compare import (
+    SawCompareRequest,
+    SawCompareResponse,
+    SawCompareItem,
+    SawCompareDecisionRequest,
+    SawCompareDecisionResponse,
+)
 from app.services.saw_lab_compare_service import compare_saw_candidates
 from app.services.saw_lab_batch_lookup_service import list_saw_compare_batches
+from app.services.saw_lab_decision_service import create_saw_compare_decision
 
 
 router = APIRouter(prefix="/api/saw", tags=["saw"])
@@ -54,3 +61,24 @@ def list_compare_batches(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post("/compare/approve", response_model=SawCompareDecisionResponse)
+def approve_compare_selection(req: SawCompareDecisionRequest) -> SawCompareDecisionResponse:
+    """
+    Records an operator decision choosing a candidate from a compare batch.
+    Creates a new RunArtifact kind='saw_compare_decision' (does not mutate batch).
+
+    Governance rules:
+    - Never mutates existing artifacts
+    - Decision artifact is independently auditable
+    - Even failures create ERROR artifacts for forensics
+    """
+    out = create_saw_compare_decision(
+        parent_batch_artifact_id=req.parent_batch_artifact_id,
+        selected_child_artifact_id=req.selected_child_artifact_id,
+        approved_by=req.approved_by,
+        reason=req.reason,
+        ticket_id=req.ticket_id,
+    )
+    return SawCompareDecisionResponse(**out)
