@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.0.0",
+  "pack_id": "cnc_art_studio_v1",
+  "description": "CNC-oriented prompt library for Art Studio - vectors, reliefs, and design lenses",
+  "prompts": [
+    {
+      "prompt_id": "cnc_vector_from_text_v1",
+      "category": "cnc_vector",
+      "label": "CNC Vector from Text",
+      "description": "Generate clean CNC-ready vector graphics from text descriptions",
+      "template": "Create a CNC-ready vector design of {subject}.\n\nRequirements:\n- Clean, closed paths suitable for CNC cutting\n- No gradients or fills that can't be machined\n- Minimum feature size: {min_feature_size} {units}\n- Output dimensions: {width} x {height} {units}\n- Style: {style}\n\nThe design must be manufacturable on a CNC router with a {tool_diameter} {units} end mill.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true, "description": "What to generate"},
+        {"name": "width", "type": "number", "default": 6, "description": "Width in units"},
+        {"name": "height", "type": "number", "default": 6, "description": "Height in units"},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"], "description": "Measurement units"},
+        {"name": "min_feature_size", "type": "number", "default": 0.125, "description": "Minimum feature size"},
+        {"name": "tool_diameter", "type": "number", "default": 0.125, "description": "CNC tool diameter"},
+        {"name": "style", "type": "string", "default": "line_art", "description": "Visual style"}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "closed_paths": true,
+          "no_gradients": true,
+          "min_path_length": 0.01
+        }
+      },
+      "validation": {
+        "required_elements": ["path"],
+        "forbidden_elements": ["linearGradient", "radialGradient", "pattern"],
+        "max_file_size_kb": 500
+      }
+    },
+    {
+      "prompt_id": "cnc_vector_from_photo_manual_v1",
+      "category": "cnc_vector",
+      "label": "Vector from Reference Photo",
+      "description": "Rebuild a clean CNC vector from a reference photograph",
+      "template": "Analyze this reference image and create a CNC-ready vector recreation.\n\nSubject: {subject}\nStyle interpretation: {interpretation}\n\nRequirements:\n- Rebuild as clean vector paths, not trace\n- Capture essential design elements\n- Simplify for CNC manufacturability\n- Minimum feature size: {min_feature_size} {units}\n- Target dimensions: {width} x {height} {units}",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true, "description": "Description of what's in the photo"},
+        {"name": "interpretation", "type": "string", "default": "faithful", "enum": ["faithful", "stylized", "simplified"], "description": "How to interpret the reference"},
+        {"name": "width", "type": "number", "default": 6, "description": "Target width"},
+        {"name": "height", "type": "number", "default": 6, "description": "Target height"},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"]},
+        {"name": "min_feature_size", "type": "number", "default": 0.125}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "closed_paths": true,
+          "no_gradients": true
+        }
+      },
+      "requires_image": true,
+      "validation": {
+        "required_elements": ["path"],
+        "forbidden_elements": ["linearGradient", "radialGradient"]
+      }
+    },
+    {
+      "prompt_id": "bas_relief_reference_image_v1",
+      "category": "relief_image",
+      "label": "Bas-Relief from Text",
+      "description": "Generate grayscale heightmap image for bas-relief carving",
+      "template": "Create a grayscale bas-relief heightmap of {subject}.\n\nDepth mapping:\n- White (255) = highest relief, closest to viewer\n- Black (0) = deepest cut, furthest from viewer\n- Smooth gradients for slopes and transitions\n\nRelief style: {relief_style}\nMax relief height: {max_relief_height} {units}\nBase thickness: {base_thickness} {units}\n\nThe image will be converted to a 3D mesh for CNC carving. Ensure smooth depth transitions to avoid toolpath issues.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true, "description": "What to depict in relief"},
+        {"name": "relief_style", "type": "string", "default": "classical", "enum": ["classical", "modern", "organic", "geometric"], "description": "Style of relief"},
+        {"name": "max_relief_height", "type": "number", "default": 0.25, "description": "Maximum Z height"},
+        {"name": "base_thickness", "type": "number", "default": 0.125, "description": "Base material thickness"},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"]}
+      ],
+      "outputs": {
+        "format": "png",
+        "constraints": {
+          "color_mode": "grayscale",
+          "bit_depth": 8,
+          "min_resolution": 1024
+        }
+      },
+      "validation": {
+        "grayscale_only": true,
+        "min_width": 1024,
+        "min_height": 1024
+      }
+    },
+    {
+      "prompt_id": "heightmap_to_stl_conversion_v1",
+      "category": "relief_conversion",
+      "label": "Heightmap to STL",
+      "description": "Convert grayscale heightmap to 3D STL mesh",
+      "template": "Convert this grayscale heightmap to a 3D STL mesh.\n\nConversion parameters:\n- Max Z height: {max_z_height} {units}\n- Base thickness: {base_thickness} {units}\n- X dimension: {x_size} {units}\n- Y dimension: {y_size} {units}\n- Mesh resolution: {resolution}\n\nThe resulting mesh should be watertight and suitable for CNC machining.",
+      "inputs": [
+        {"name": "max_z_height", "type": "number", "default": 0.25, "required": true},
+        {"name": "base_thickness", "type": "number", "default": 0.125, "required": true},
+        {"name": "x_size", "type": "number", "default": 6},
+        {"name": "y_size", "type": "number", "default": 6},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"]},
+        {"name": "resolution", "type": "string", "default": "medium", "enum": ["low", "medium", "high"]}
+      ],
+      "outputs": {
+        "format": "stl",
+        "constraints": {
+          "watertight": true,
+          "manifold": true
+        }
+      },
+      "requires_image": true,
+      "validation": {
+        "mesh_watertight": true,
+        "max_triangles": 500000
+      }
+    },
+    {
+      "prompt_id": "lens_tool_first_v1",
+      "category": "design_lens",
+      "label": "Tool-First Design",
+      "description": "Design as if the cutting tool decides the geometry",
+      "template": "Reframe this design through the TOOL-FIRST lens.\n\nOriginal concept: {subject}\nTool diameter: {tool_diameter} {units}\n\nTool-First Principles:\n1. Every corner radius must accommodate the tool\n2. No internal features smaller than tool diameter\n3. Depth-to-width ratios must allow chip clearance\n4. Prefer tool-native geometries (arcs, not sharp corners)\n\nRedesign the concept so the cutting tool dictates what's possible. The geometry should feel natural to a {tool_diameter} {units} end mill.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true, "description": "Design concept to reframe"},
+        {"name": "tool_diameter", "type": "number", "default": 0.125, "description": "End mill diameter"},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"]}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "min_corner_radius": "{tool_diameter / 2}"
+        }
+      }
+    },
+    {
+      "prompt_id": "lens_failure_first_v1",
+      "category": "design_lens",
+      "label": "Failure-First Design",
+      "description": "Anticipate machining failures and build robustness",
+      "template": "Reframe this design through the FAILURE-FIRST lens.\n\nOriginal concept: {subject}\nMaterial: {material}\n\nFailure-First Principles:\n1. Identify thin bridges that could snap\n2. Find grain directions that invite tear-out\n3. Locate features prone to chatter\n4. Anticipate chip evacuation problems\n5. Consider tool deflection on deep features\n\nRedesign to eliminate or strengthen failure-prone features. Every element should survive the worst-case machining scenario.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true},
+        {"name": "material", "type": "string", "default": "hardwood", "enum": ["hardwood", "softwood", "plywood", "mdf", "acrylic", "aluminum"]}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_material_alive_v1",
+      "category": "design_lens",
+      "label": "Grain-Aware Design",
+      "description": "Design respecting grain direction and material behavior",
+      "template": "Reframe this design through the MATERIAL-ALIVE lens (Luthier thinking).\n\nOriginal concept: {subject}\nWood species: {wood_species}\nGrain orientation: {grain_direction}\n\nMaterial-Alive Principles:\n1. Align strength-critical features with grain\n2. Avoid cross-grain thin sections\n3. Let figure and grain enhance the design\n4. Consider seasonal movement\n5. Place joints where wood wants to flex\n\nRedesign as a luthier would - the wood is a living partner, not just stock material.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true},
+        {"name": "wood_species", "type": "string", "default": "maple", "description": "Type of wood"},
+        {"name": "grain_direction", "type": "string", "default": "vertical", "enum": ["vertical", "horizontal", "quartersawn", "flatsawn"]}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_cam_operator_trust_v1",
+      "category": "design_lens",
+      "label": "CAM Operator Trust",
+      "description": "Create geometry a CAM operator would immediately trust",
+      "template": "Reframe this design through the CAM-OPERATOR-TRUST lens.\n\nOriginal concept: {subject}\n\nCAM Trust Principles:\n1. Obvious toolpath entry/exit points\n2. Consistent depth features (no mystery Z levels)\n3. Clear inside vs outside distinction\n4. Predictable corner behaviors\n5. No ambiguous open paths\n6. Tabbing locations are obvious\n\nRedesign so any CAM operator could program it in minutes without asking questions.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "closed_paths": true
+        }
+      }
+    },
+    {
+      "prompt_id": "lens_time_compression_v1",
+      "category": "design_lens",
+      "label": "Time Compression",
+      "description": "Minimize machining time - every feature earns its cutting time",
+      "template": "Reframe this design through the TIME-COMPRESSION lens.\n\nOriginal concept: {subject}\nTarget time budget: {time_budget} minutes\n\nTime Compression Principles:\n1. Eliminate decorative features that don't add value\n2. Reduce total cut length\n3. Minimize tool changes\n4. Prefer shallow over deep cuts\n5. Use efficient toolpath geometries (no excessive contouring)\n6. Every feature must earn its machining time\n\nRedesign to achieve the same design intent in minimum cycle time.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true},
+        {"name": "time_budget", "type": "number", "default": 30, "description": "Target machining time in minutes"}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_reverse_manufacturing_v1",
+      "category": "design_lens",
+      "label": "Reverse Manufacturing",
+      "description": "Design backwards from finished part to sequence of cuts",
+      "template": "Reframe this design through the REVERSE-MANUFACTURING lens.\n\nOriginal concept: {subject}\n\nReverse Manufacturing Principles:\n1. Start with the finished part in mind\n2. Work backwards through each operation\n3. Identify fixturing requirements at each step\n4. Plan material removal sequence\n5. Consider part handling between operations\n6. Design for the full manufacturing flow\n\nRedesign with explicit consideration of the entire cutting sequence from stock to finished part.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_negative_space_product_v1",
+      "category": "design_lens",
+      "label": "Negative Space Product",
+      "description": "Focus on removed material rather than remaining solids",
+      "template": "Reframe this design through the NEGATIVE-SPACE-PRODUCT lens.\n\nOriginal concept: {subject}\n\nNegative Space Principles:\n1. The voids ARE the design\n2. Material removal creates the product\n3. What's cut away defines what remains\n4. Consider chip volume as design metric\n5. Empty space has visual weight\n\nRedesign focusing on what's removed rather than what's left. The cuts are the art.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_one_bit_art_v1",
+      "category": "design_lens",
+      "label": "One-Bit Art",
+      "description": "Binary decisions only - cut or don't cut, deep or shallow",
+      "template": "Reframe this design through the ONE-BIT-ART lens.\n\nOriginal concept: {subject}\n\nOne-Bit Principles:\n1. Binary decisions only: cut / don't cut\n2. Two depths maximum: surface / pocket depth\n3. No gradients, no transitions\n4. High contrast, bold shapes\n5. Reads clearly from distance\n6. Perfect for V-carve or simple profile\n\nRedesign as pure binary art - every point is either material or void, nothing in between.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true},
+        {"name": "pocket_depth", "type": "number", "default": 0.125, "description": "Depth of cut areas"}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "max_colors": 2
+        }
+      }
+    },
+    {
+      "prompt_id": "lens_legacy_artifact_v1",
+      "category": "design_lens",
+      "label": "Legacy Artifact",
+      "description": "Self-explaining geometry that communicates intent without documentation",
+      "template": "Reframe this design through the LEGACY-ARTIFACT lens.\n\nOriginal concept: {subject}\n\nLegacy Artifact Principles:\n1. The part explains its own purpose\n2. Assembly order is obvious from geometry\n3. Orientation is self-evident\n4. Quality requirements are implicit in the design\n5. Future maintainer understands without documentation\n6. The geometry IS the specification\n\nRedesign so the finished part communicates its intent to anyone who encounters it, even decades later.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true}
+      ],
+      "outputs": {
+        "format": "svg"
+      }
+    },
+    {
+      "prompt_id": "lens_regulatory_feasibility_gate_v1",
+      "category": "design_lens",
+      "label": "Feasibility Gate",
+      "description": "Pass automated feasibility checks for RMOS-compatible output",
+      "template": "Validate and redesign through the REGULATORY-FEASIBILITY-GATE lens.\n\nOriginal concept: {subject}\nTarget system: RMOS (Router Manufacturing Operating System)\n\nFeasibility Gate Checks:\n1. No undercuts (3-axis accessible)\n2. No unsupported islands\n3. Minimum feature size: {min_feature_size} {units}\n4. Maximum aspect ratio: {max_aspect_ratio}\n5. Closed, non-self-intersecting paths\n6. Valid nesting possible\n7. Material utilization > {min_utilization}%\n\nRedesign to pass all automated feasibility checks. Output must be directly manufacturable without manual intervention.",
+      "inputs": [
+        {"name": "subject", "type": "string", "required": true},
+        {"name": "min_feature_size", "type": "number", "default": 0.0625},
+        {"name": "max_aspect_ratio", "type": "number", "default": 10},
+        {"name": "min_utilization", "type": "number", "default": 60},
+        {"name": "units", "type": "string", "default": "in", "enum": ["in", "mm"]}
+      ],
+      "outputs": {
+        "format": "svg",
+        "constraints": {
+          "closed_paths": true,
+          "no_self_intersections": true,
+          "no_undercuts": true
+        }
+      },
+      "validation": {
+        "required_elements": ["path"],
+        "forbidden_elements": ["linearGradient", "radialGradient"],
+        "geometry_checks": ["closed_paths", "no_self_intersection", "min_feature_size"]
+      }
+    }
+  ],
+  "categories": {
+    "cnc_vector": {
+      "label": "CNC Vector",
+      "description": "Generate vector graphics optimized for CNC cutting",
+      "output_format": "svg"
+    },
+    "relief_image": {
+      "label": "Relief Image",
+      "description": "Generate grayscale heightmaps for 3D relief carving",
+      "output_format": "png"
+    },
+    "relief_conversion": {
+      "label": "Relief Conversion",
+      "description": "Convert between relief representations",
+      "output_format": "stl"
+    },
+    "design_lens": {
+      "label": "Design Lens",
+      "description": "Reframe designs through manufacturing perspectives",
+      "output_format": "svg"
+    }
+  },
+  "defaults": {
+    "units": "in",
+    "tool_diameter": 0.125,
+    "min_feature_size": 0.0625,
+    "style": "line_art"
+  }
+}

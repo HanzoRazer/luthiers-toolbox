@@ -25,7 +25,19 @@ MIGRATION NOTE (AI Realignment):
     - Cost estimation
     - Request ID propagation
 """
+from __future__ import annotations
+
+import os
 import warnings
+
+
+import time
+import logging
+import base64
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Dict, Optional, Any, Tuple
+
 
 def _deprecation_warning():
     warnings.warn(
@@ -35,15 +47,6 @@ def _deprecation_warning():
         stacklevel=3
     )
 
-from __future__ import annotations
-
-import os
-import time
-import logging
-import base64
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Dict, Optional, Any, Tuple
 
 logger = logging.getLogger(__name__)
 

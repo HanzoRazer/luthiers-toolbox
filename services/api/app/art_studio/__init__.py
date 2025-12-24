@@ -41,6 +41,7 @@ pipelines/*/*.py (legacy math implementations)
 - `vcarve_router`: SVG → toolpath → G-code conversion (Wave 1)
 - `relief_router`: Relief SVG → DXF export with feasibility (Wave 3)
 - `svg`: Prompt→SVG generation using AI Platform (AI Realignment)
+- `prompts`: CNC prompt library with modes, validators, and design lenses
 """
 
 from . import bracing_router
@@ -49,6 +50,7 @@ from . import rosette_router
 from . import inlay_router
 from . import vcarve_router
 from . import relief_router
+from . import prompts  # CNC prompt library (create, transform, optimize, validate)
 
 __all__ = [
     "bracing_router",
@@ -57,4 +59,5 @@ __all__ = [
     "vcarve_router",
     "relief_router",
     "svg",  # AI-powered Prompt→SVG generation
+    "prompts",  # CNC prompt library with modes and validators
 ]

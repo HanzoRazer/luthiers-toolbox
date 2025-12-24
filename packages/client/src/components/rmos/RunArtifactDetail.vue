@@ -12,6 +12,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
 import { useRmosRunsStore } from "@/stores/rmosRunsStore";
+import AdvisoryBlobBrowser from "@/components/rmos/AdvisoryBlobBrowser.vue";
 
 const props = defineProps<{
   artifact: RunArtifactDetail;
@@ -153,6 +154,11 @@ function formatDate(iso: string): string {
           <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
         </li>
       </ul>
+    </section>
+
+    <!-- Advisory Blobs -->
+    <section class="info-section">
+      <AdvisoryBlobBrowser :runId="artifact.run_id" apiBase="/api" />
     </section>
 
     <!-- Notes / Errors -->

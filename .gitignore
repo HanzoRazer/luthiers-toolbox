@@ -374,3 +374,5 @@ rmos_api_contracts_2\ .py
 # XML Theme Files
 # ------------------------------------------
 G-CODE_*.xml
+nul
+services/api/services/

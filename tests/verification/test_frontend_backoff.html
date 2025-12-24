@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Backoff Verification Test</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #60a5fa; margin-bottom: 5px; }
+        .subtitle { color: #888; margin-bottom: 20px; }
+        .panel {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .panel h2 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #888;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        button {
+            background: #333;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { background: #444; }
+        button.primary { background: #2563eb; border-color: #3b82f6; }
+        button.danger { background: #dc2626; border-color: #ef4444; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .status {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .stat {
+            background: #0f172a;
+            padding: 12px 16px;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+        .stat-label { font-size: 11px; color: #666; margin-bottom: 4px; }
+        .stat-value { font-size: 18px; font-weight: bold; }
+        .stat-value.success { color: #22c55e; }
+        .stat-value.error { color: #ef4444; }
+        .stat-value.warning { color: #eab308; }
+        #log {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 12px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .log-entry { margin-bottom: 4px; }
+        .log-time { color: #666; }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #60a5fa; }
+        .log-backoff { color: #eab308; }
+        .instructions {
+            background: #1e3a5f;
+            border-left: 3px solid #3b82f6;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .instructions ol { margin: 8px 0 0 0; padding-left: 20px; }
+        .instructions li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Backoff Verification Test</h1>
+    <p class="subtitle">Bundle 31.0.27 - Exponential Backoff Polling</p>
+
+    <div class="instructions">
+        <strong>Test Procedure:</strong>
+        <ol>
+            <li>Click "Start Polling" - observe 5s intervals</li>
+            <li>Stop the backend server (Ctrl+C in terminal)</li>
+            <li>Watch intervals increase: 5s → 10s → 20s → 30s (max)</li>
+            <li>Restart the backend server</li>
+            <li>Confirm next successful poll resets to 5s</li>
+        </ol>
+    </div>
+
+    <div class="panel">
+        <h2>CONTROLS</h2>
+        <div class="controls">
+            <button id="btnStart" class="primary" onclick="startPolling()">Start Polling</button>
+            <button id="btnStop" onclick="stopPolling()" disabled>Stop Polling</button>
+            <button id="btnPollNow" onclick="pollNow()" disabled>Poll Now</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        <div class="status">
+            <div class="stat">
+                <div class="stat-label">STATUS</div>
+                <div class="stat-value" id="statStatus">Stopped</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">CURRENT INTERVAL</div>
+                <div class="stat-value" id="statInterval">5000ms</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">CONSECUTIVE FAILURES</div>
+                <div class="stat-value" id="statFailures">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">TOTAL POLLS</div>
+                <div class="stat-value" id="statPolls">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>EVENT LOG</h2>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // =================================================================
+        // INLINE VERSION OF createLogsPoller (for standalone testing)
+        // =================================================================
+
+        const API_BASE = '/api/rmos/logs';
+
+        const DEFAULT_BACKOFF_CONFIG = {
+            baseIntervalMs: 5000,
+            maxIntervalMs: 30000,
+            multiplier: 2,
+            resetOnSuccess: true,
+        };
+
+        async function fetchRecentLogs(filters = {}) {
+            const params = new URLSearchParams();
+            if (filters.limit) params.set('limit', String(filters.limit));
+            const query = params.toString();
+            const url = `${API_BASE}/recent${query ? '?' + query : ''}`;
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        }
+
+        function createLogsPoller(filters, onData, onError, config = {}) {
+            const cfg = { ...DEFAULT_BACKOFF_CONFIG, ...config };
+
+            const state = {
+                currentIntervalMs: cfg.baseIntervalMs,
+                consecutiveFailures: 0,
+                lastSuccessTime: null,
+                lastFailureTime: null,
+                isRunning: false,
+            };
+
+            let timeoutId = null;
+
+            async function poll() {
+                if (!state.isRunning) return;
+
+                try {
+                    const data = await fetchRecentLogs(filters);
+
+                    if (cfg.resetOnSuccess) {
+                        state.currentIntervalMs = cfg.baseIntervalMs;
+                    }
+                    state.consecutiveFailures = 0;
+                    state.lastSuccessTime = Date.now();
+
+                    onData(data);
+                } catch (error) {
+                    state.consecutiveFailures++;
+                    state.lastFailureTime = Date.now();
+
+                    state.currentIntervalMs = Math.min(
+                        state.currentIntervalMs * cfg.multiplier,
+                        cfg.maxIntervalMs
+                    );
+
+                    if (onError) {
+                        onError(error, state);
+                    }
+                }
+
+                if (state.isRunning) {
+                    timeoutId = setTimeout(poll, state.currentIntervalMs);
+                }
+            }
+
+            return {
+                start() {
+                    if (state.isRunning) return;
+                    state.isRunning = true;
+                    state.currentIntervalMs = cfg.baseIntervalMs;
+                    poll();
+                },
+                stop() {
+                    state.isRunning = false;
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+                },
+                getState() {
+                    return { ...state };
+                },
+                pollNow() {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+                    state.currentIntervalMs = cfg.baseIntervalMs;
+                    poll();
+                },
+            };
+        }
+
+        // =================================================================
+        // TEST UI
+        // =================================================================
+
+        let poller = null;
+        let totalPolls = 0;
+
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${message}</span>`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateStats() {
+            if (!poller) return;
+            const state = poller.getState();
+
+            document.getElementById('statStatus').textContent = state.isRunning ? 'Running' : 'Stopped';
+            document.getElementById('statStatus').className = 'stat-value ' + (state.isRunning ? 'success' : '');
+
+            document.getElementById('statInterval').textContent = state.currentIntervalMs + 'ms';
+            document.getElementById('statInterval').className = 'stat-value ' +
+                (state.currentIntervalMs > 5000 ? 'warning' : 'success');
+
+            document.getElementById('statFailures').textContent = state.consecutiveFailures;
+            document.getElementById('statFailures').className = 'stat-value ' +
+                (state.consecutiveFailures > 0 ? 'error' : 'success');
+
+            document.getElementById('statPolls').textContent = totalPolls;
+        }
+
+        function startPolling() {
+            if (poller) {
+                poller.stop();
+            }
+
+            totalPolls = 0;
+
+            poller = createLogsPoller(
+                { limit: 5 },
+                (data) => {
+                    totalPolls++;
+                    log(`SUCCESS: Got ${data.entries.length} entries (interval reset to 5000ms)`, 'success');
+                    updateStats();
+                },
+                (error, state) => {
+                    totalPolls++;
+                    log(`ERROR: ${error.message}`, 'error');
+                    log(`BACKOFF: Next poll in ${state.currentIntervalMs}ms (failure #${state.consecutiveFailures})`, 'backoff');
+                    updateStats();
+                }
+            );
+
+            poller.start();
+            log('Polling STARTED with 5000ms base interval', 'info');
+            updateStats();
+
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('btnPollNow').disabled = false;
+        }
+
+        function stopPolling() {
+            if (poller) {
+                poller.stop();
+                log('Polling STOPPED', 'info');
+                updateStats();
+            }
+
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+            document.getElementById('btnPollNow').disabled = true;
+        }
+
+        function pollNow() {
+            if (poller) {
+                log('Manual poll triggered (interval reset to 5000ms)', 'info');
+                poller.pollNow();
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Initial state
+        log('Ready. Click "Start Polling" to begin test.', 'info');
+    </script>
+</body>
+</html>

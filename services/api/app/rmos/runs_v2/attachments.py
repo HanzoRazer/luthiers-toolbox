@@ -197,6 +197,25 @@ def get_attachment_path(sha256: str) -> Optional[str]:
     return None
 
 
+def get_bytes_attachment(sha256: str) -> Optional[bytes]:
+    """
+    Get the raw bytes of an attachment by its SHA256 hash.
+
+    Args:
+        sha256: The content hash
+
+    Returns:
+        Bytes content if found, None otherwise
+    """
+    path = get_attachment_path(sha256)
+    if path is None:
+        return None
+    try:
+        return Path(path).read_bytes()
+    except Exception:
+        return None
+
+
 def load_json_attachment(sha256: str) -> Optional[Dict[str, Any]]:
     """
     Load a JSON attachment by its SHA256 hash.

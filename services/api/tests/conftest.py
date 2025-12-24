@@ -147,10 +147,10 @@ def _clear_request_id_context():
     - Request-scoped DI containers
     - OpenTelemetry tracing
     """
-    from app.util.request_context import set_request_id
-    set_request_id(None)
+    from app.util.request_context import clear_request_id
+    clear_request_id()
     yield
-    set_request_id(None)
+    clear_request_id()
 
 
 # =============================================================================

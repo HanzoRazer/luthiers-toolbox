@@ -23,6 +23,54 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .schemas import RunArtifact, AdvisoryInputRef, Hashes, RunDecision, RunOutputs
+from .delete_audit import append_delete_audit, build_delete_audit_event
+
+# =============================================================================
+# H3.6.2: Delete Rate Limiting
+# =============================================================================
+
+import time
+from collections import defaultdict
+
+# In-process rate limiter: {rate_limit_key: [timestamps]}
+_DELETE_RATE_LIMIT: Dict[str, List[float]] = defaultdict(list)
+_DELETE_RATE_LIMIT_LOCK = threading.Lock()
+
+# Default: 10 deletes per minute per actor
+DELETE_RATE_LIMIT_MAX = int(os.getenv("RMOS_DELETE_RATE_LIMIT_MAX", "10"))
+DELETE_RATE_LIMIT_WINDOW_SEC = int(os.getenv("RMOS_DELETE_RATE_LIMIT_WINDOW", "60"))
+
+
+class DeleteRateLimitError(Exception):
+    """Raised when delete rate limit is exceeded."""
+    def __init__(self, key: str, limit: int, window: int):
+        self.key = key
+        self.limit = limit
+        self.window = window
+        super().__init__(f"Rate limit exceeded for '{key}': max {limit} deletes per {window}s")
+
+
+def _check_delete_rate_limit(key: str) -> None:
+    """
+    Check if a delete operation is allowed under rate limiting.
+
+    Raises DeleteRateLimitError if limit exceeded.
+    """
+    if DELETE_RATE_LIMIT_MAX <= 0:
+        return  # Rate limiting disabled
+
+    now = time.time()
+    cutoff = now - DELETE_RATE_LIMIT_WINDOW_SEC
+
+    with _DELETE_RATE_LIMIT_LOCK:
+        # Prune old entries
+        _DELETE_RATE_LIMIT[key] = [t for t in _DELETE_RATE_LIMIT[key] if t > cutoff]
+
+        if len(_DELETE_RATE_LIMIT[key]) >= DELETE_RATE_LIMIT_MAX:
+            raise DeleteRateLimitError(key, DELETE_RATE_LIMIT_MAX, DELETE_RATE_LIMIT_WINDOW_SEC)
+
+        # Record this attempt
+        _DELETE_RATE_LIMIT[key].append(now)
 
 
 # Default storage path per governance contract
@@ -556,6 +604,213 @@ class RunStoreV2:
 
         return ref
 
+    def delete_run(
+        self,
+        run_id: str,
+        *,
+        mode: str = "soft",
+        reason: str,
+        actor: Optional[str] = None,
+        request_id: Optional[str] = None,
+        rate_limit_key: Optional[str] = None,
+        cascade: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Delete a run artifact with audit logging.
+
+        H3.6.2: Append-only audit log survives index compaction.
+
+        Args:
+            run_id: The run ID to delete
+            mode: "soft" (index tombstone) or "hard" (remove files)
+            reason: Required - why this deletion is happening
+            actor: Optional actor/user performing the delete
+            request_id: Optional correlation ID
+            rate_limit_key: Key for rate limiting (defaults to actor or "anonymous")
+            cascade: If True, also delete advisory links (attachments are shared blobs)
+
+        Returns:
+            Dict with deletion outcome:
+            {
+                "run_id": str,
+                "deleted": bool,
+                "mode": str,
+                "index_updated": bool,
+                "artifact_deleted": bool,
+                "advisory_links_deleted": int,
+                "partition": str | None,
+            }
+
+        Raises:
+            ValueError: If reason is empty
+            KeyError: If run_id not found
+            DeleteRateLimitError: If rate limit exceeded
+        """
+        if not reason or not reason.strip():
+            raise ValueError("Delete reason is required for audit trail")
+
+        # Rate limiting
+        limit_key = rate_limit_key or actor or "anonymous"
+        try:
+            _check_delete_rate_limit(limit_key)
+        except DeleteRateLimitError as e:
+            # Audit the rate limit rejection
+            try:
+                event = build_delete_audit_event(
+                    run_id=run_id,
+                    mode=mode,
+                    reason=reason,
+                    actor=actor,
+                    request_id=request_id,
+                    index_updated=False,
+                    artifact_deleted=False,
+                    attachments_deleted=0,
+                    errors=f"Rate limited: {e}",
+                    meta={"rate_limit_key": limit_key},
+                )
+                append_delete_audit(store_root=self.root, event=event)
+            except Exception:
+                pass
+            raise
+
+        result: Dict[str, Any] = {
+            "run_id": run_id,
+            "deleted": False,
+            "mode": mode,
+            "index_updated": False,
+            "artifact_deleted": False,
+            "advisory_links_deleted": 0,
+            "partition": None,
+        }
+
+        error_msg: Optional[str] = None
+        safe_id = run_id.replace("/", "_").replace("\\", "_")
+        original_meta: Optional[Dict[str, Any]] = None
+
+        try:
+            # Find the artifact file
+            artifact_path: Optional[Path] = None
+            partition: Optional[str] = None
+
+            partitions = sorted(
+                [p for p in self.root.iterdir() if p.is_dir() and not p.name.startswith("_")],
+                reverse=True,
+            )
+
+            for p in partitions:
+                candidate = p / f"{safe_id}.json"
+                if candidate.exists():
+                    artifact_path = candidate
+                    partition = p.name
+                    break
+
+            result["partition"] = partition
+
+            if artifact_path is None:
+                # Run not found - audit and raise
+                error_msg = "Run not found"
+                try:
+                    event = build_delete_audit_event(
+                        run_id=run_id,
+                        mode=mode,
+                        reason=reason,
+                        actor=actor,
+                        request_id=request_id,
+                        index_updated=False,
+                        artifact_deleted=False,
+                        attachments_deleted=0,
+                        errors=error_msg,
+                        meta=None,
+                    )
+                    append_delete_audit(store_root=self.root, event=event)
+                except Exception:
+                    pass
+                raise KeyError(f"Run not found: {run_id}")
+
+            # Read original index entry for tombstone
+            with _INDEX_LOCK:
+                index = _read_json_file(self._index_path)
+                original_meta = index.get(run_id)
+
+                if mode == "soft":
+                    # Soft delete: replace with tombstone
+                    from datetime import datetime, timezone
+                    tombstone = {
+                        "run_id": run_id,
+                        "deleted": True,
+                        "deleted_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                        "deleted_reason": reason,
+                        "deleted_by": actor,
+                        "request_id": request_id,
+                        # Preserve minimal original fields
+                        "created_at_utc": original_meta.get("created_at_utc") if original_meta else None,
+                        "status": original_meta.get("status") if original_meta else None,
+                        "mode": original_meta.get("mode") if original_meta else None,
+                        "partition": partition,
+                    }
+                    index[run_id] = tombstone
+                    _write_json_file(self._index_path, index)
+                    result["index_updated"] = True
+                    result["deleted"] = True
+                else:
+                    # Hard delete: remove from index
+                    if run_id in index:
+                        del index[run_id]
+                        _write_json_file(self._index_path, index)
+                        result["index_updated"] = True
+
+            if mode == "hard":
+                # Delete advisory links if cascade
+                if cascade and partition:
+                    pattern = f"{safe_id}_advisory_*.json"
+                    partition_dir = self.root / partition
+                    for link_path in partition_dir.glob(pattern):
+                        try:
+                            link_path.unlink()
+                            result["advisory_links_deleted"] += 1
+                        except Exception:
+                            pass
+
+                # Delete the artifact file
+                try:
+                    artifact_path.unlink()
+                    result["artifact_deleted"] = True
+                    result["deleted"] = True
+                except Exception as e:
+                    error_msg = f"Failed to delete artifact: {e}"
+
+        except KeyError:
+            raise  # Re-raise KeyError for not found
+        except DeleteRateLimitError:
+            raise  # Re-raise rate limit error
+        except Exception as e:
+            error_msg = str(e)
+
+        # H3.6.2: Append to audit log (best-effort, never blocks deletion)
+        try:
+            event = build_delete_audit_event(
+                run_id=run_id,
+                mode=mode,
+                reason=reason,
+                actor=actor,
+                request_id=request_id,
+                index_updated=result["index_updated"],
+                artifact_deleted=result["artifact_deleted"],
+                attachments_deleted=result["advisory_links_deleted"],
+                errors=error_msg,
+                meta={
+                    "cascade": cascade,
+                    "partition": result["partition"],
+                    "rate_limit_key": limit_key,
+                },
+            )
+            append_delete_audit(store_root=self.root, event=event)
+        except Exception:
+            # Audit must never break delete
+            pass
+
+        return result
+
     def list_runs(
         self,
         limit: int = 50,
@@ -896,6 +1151,50 @@ def attach_advisory(
         engine_id=engine_id,
         engine_version=engine_version,
         request_id=request_id,
+    )
+
+
+def delete_run(
+    run_id: str,
+    *,
+    mode: str = "soft",
+    reason: str,
+    actor: Optional[str] = None,
+    request_id: Optional[str] = None,
+    rate_limit_key: Optional[str] = None,
+    cascade: bool = True,
+) -> Dict[str, Any]:
+    """
+    Delete a run artifact from the default store with audit logging.
+
+    H3.6.2: Append-only audit log survives index compaction.
+
+    Args:
+        run_id: The run ID to delete
+        mode: "soft" (index tombstone) or "hard" (remove files)
+        reason: Required - why this deletion is happening
+        actor: Optional actor/user performing the delete
+        request_id: Optional correlation ID
+        rate_limit_key: Key for rate limiting (defaults to actor or "anonymous")
+        cascade: If True, also delete advisory links
+
+    Returns:
+        Dict with deletion outcome
+
+    Raises:
+        ValueError: If reason is empty
+        KeyError: If run_id not found
+        DeleteRateLimitError: If rate limit exceeded
+    """
+    store = _get_default_store()
+    return store.delete_run(
+        run_id,
+        mode=mode,
+        reason=reason,
+        actor=actor,
+        request_id=request_id,
+        rate_limit_key=rate_limit_key,
+        cascade=cascade,
     )
 
 
