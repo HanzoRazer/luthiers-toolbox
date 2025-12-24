@@ -14,6 +14,7 @@ from app.saw_lab.schemas_compare import (
 from app.services.saw_lab_compare_service import compare_saw_candidates
 from app.services.saw_lab_batch_lookup_service import list_saw_compare_batches
 from app.services.saw_lab_decision_service import create_saw_compare_decision
+from app.services.saw_lab_decision_lookup_service import list_saw_compare_decisions
 
 
 router = APIRouter(prefix="/api/saw", tags=["saw"])
@@ -82,3 +83,27 @@ def approve_compare_selection(req: SawCompareDecisionRequest) -> SawCompareDecis
         ticket_id=req.ticket_id,
     )
     return SawCompareDecisionResponse(**out)
+
+
+@router.get("/compare/decisions")
+def list_compare_decisions(
+    batch_label: Optional[str] = Query(default=None, description="Filter by batch_label"),
+    session_id: Optional[str] = Query(default=None, description="Filter by session_id"),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> List[Dict[str, Any]]:
+    """
+    Convenience alias to retrieve compare decision artifacts without knowing IDs.
+
+    Returns only event_type='saw_compare_decision' artifacts, newest first.
+
+    Usage:
+        GET /api/saw/compare/decisions?batch_label=my-batch
+        GET /api/saw/compare/decisions?session_id=sess_123
+    """
+    return list_saw_compare_decisions(
+        batch_label=batch_label,
+        session_id=session_id,
+        limit=limit,
+        offset=offset,
+    )
