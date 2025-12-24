@@ -18,10 +18,81 @@ from fastapi.testclient import TestClient
 import json
 import tempfile
 import base64
+import os
 
 # Add parent directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
+# =============================================================================
+# GLOBAL TEST ISOLATION (RMOS + Saw Lab + Workflow)
+# =============================================================================
+
+def _write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+@pytest.fixture(autouse=True)
+def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """
+    Global per-test isolation for RMOS + Saw Lab + Workflow tests.
+
+    Goals:
+    - Every test gets its own artifact/attachments directory (no cross-test leakage)
+    - Learned overrides path is stable and isolated (if enabled)
+    - DB is isolated via a temp SQLite URL (for DB-backed workflow sessions)
+
+    This fixture is autouse by design: it protects the whole suite by default.
+    """
+
+    # --- 1) Run artifacts / attachments isolation ---
+    # Your repo already uses RMOS_RUN_ATTACHMENTS_DIR for deterministic tests.
+    attachments_dir = tmp_path / "run_attachments"
+    attachments_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(attachments_dir))
+
+    # Optional: if you also use a separate artifact root, isolate it too
+    # (Safe even if your code ignores it)
+    artifacts_dir = tmp_path / "run_artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(artifacts_dir))
+
+    # --- 1b) RMOS runs_v2 store isolation ---
+    # The runs_v2 store uses RMOS_RUNS_DIR (not RMOS_ARTIFACT_ROOT)
+    runs_dir = tmp_path / "rmos_runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+
+    # Seed empty index for the split-store
+    (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
+
+    # Reset the store singleton to pick up new path for this test
+    try:
+        from app.rmos.runs_v2 import store as runs_v2_store
+        runs_v2_store._default_store = None
+    except ImportError:
+        pass  # runs_v2 module not available in all test contexts
+
+    # --- 2) Learned overrides isolation (Saw Lab) ---
+    # If the overrides hook is enabled, it will read this file.
+    overrides_path = tmp_path / "learned_overrides.json"
+    _write_text(overrides_path, "{}\n")
+    monkeypatch.setenv("SAW_LAB_LEARNED_OVERRIDES_PATH", str(overrides_path))
+
+    # --- 3) Temp SQLite DB isolation (workflow_sessions, artifacts index, etc.) ---
+    # Only set DATABASE_URL if not already forced by the test runner/CI.
+    # This keeps local/CI overrides possible while defaulting to safe isolation.
+    if not os.getenv("DATABASE_URL"):
+        db_path = tmp_path / "test.sqlite"
+        monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+
+    yield
+
+
+# =============================================================================
+# CLIENT FIXTURES
+# =============================================================================
 
 @pytest.fixture(scope="session")
 def api_client():
@@ -90,7 +161,7 @@ def _clear_request_id_context():
 def sample_geometry_simple():
     """
     Simple rectangular geometry for basic tests.
-    
+
     Returns:
         dict: Canonical geometry format (mm units, closed rectangle)
     """
@@ -109,7 +180,7 @@ def sample_geometry_simple():
 def sample_geometry_with_arcs():
     """
     Geometry with arcs for testing arc interpolation.
-    
+
     Returns:
         dict: Geometry with LINE and ARC segments
     """
@@ -117,7 +188,7 @@ def sample_geometry_with_arcs():
         "units": "mm",
         "paths": [
             {"type": "line", "x1": 0.0, "y1": 0.0, "x2": 50.0, "y2": 0.0},
-            {"type": "arc", "x1": 50.0, "y1": 0.0, "x2": 50.0, "y2": 30.0, 
+            {"type": "arc", "x1": 50.0, "y1": 0.0, "x2": 50.0, "y2": 30.0,
              "cx": 50.0, "cy": 15.0, "r": 15.0, "cw": True},
             {"type": "line", "x1": 50.0, "y1": 30.0, "x2": 0.0, "y2": 30.0},
             {"type": "line", "x1": 0.0, "y1": 30.0, "x2": 0.0, "y2": 0.0}
@@ -129,7 +200,7 @@ def sample_geometry_with_arcs():
 def sample_pocket_loops():
     """
     Pocket boundary with island for adaptive pocketing tests.
-    
+
     Returns:
         list: List of loops (first=outer, rest=islands)
     """
@@ -145,7 +216,7 @@ def sample_pocket_loops():
 def sample_bridge_params():
     """
     Bridge calculator parameters for testing.
-    
+
     Returns:
         dict: Bridge calculation input parameters
     """
@@ -162,7 +233,7 @@ def sample_bridge_params():
 def sample_helical_params():
     """
     Helical ramping parameters for testing.
-    
+
     Returns:
         dict: Helical entry toolpath parameters matching HelicalReq schema
     """
@@ -184,7 +255,7 @@ def sample_helical_params():
 def temp_dxf_file():
     """
     Temporary DXF file for testing exports.
-    
+
     Yields:
         Path: Path to temporary DXF file (auto-cleaned after test)
     """
@@ -199,7 +270,7 @@ def temp_dxf_file():
 def temp_nc_file():
     """
     Temporary NC file for testing G-code exports.
-    
+
     Yields:
         Path: Path to temporary NC file (auto-cleaned after test)
     """
@@ -214,7 +285,7 @@ def temp_nc_file():
 def mock_post_config():
     """
     Mock post-processor configuration for testing.
-    
+
     Returns:
         dict: Post-processor config (GRBL format)
     """
@@ -238,7 +309,7 @@ def mock_post_config():
 def sample_gcode_simple():
     """
     Simple G-code for parsing/validation tests.
-    
+
     Returns:
         str: Basic G-code program
     """
@@ -261,7 +332,7 @@ M30
 def encode_dxf_base64():
     """
     Helper function to encode DXF content as base64.
-    
+
     Returns:
         callable: Function that takes DXF string and returns base64
     """
@@ -274,7 +345,7 @@ def encode_dxf_base64():
 def decode_dxf_base64():
     """
     Helper function to decode base64 DXF content.
-    
+
     Returns:
         callable: Function that takes base64 string and returns DXF
     """
@@ -288,7 +359,7 @@ def decode_dxf_base64():
 def test_data_dir():
     """
     Path to test data directory.
-    
+
     Returns:
         Path: services/api/tests/test_data/
     """
@@ -299,10 +370,10 @@ def test_data_dir():
 def assert_valid_geometry(geom: dict):
     """
     Assert that geometry dict is valid canonical format.
-    
+
     Args:
         geom: Geometry dictionary to validate
-        
+
     Raises:
         AssertionError: If geometry is invalid
     """
@@ -311,26 +382,26 @@ def assert_valid_geometry(geom: dict):
     assert "paths" in geom, "Geometry missing paths field"
     assert isinstance(geom["paths"], list), "Paths must be list"
     assert len(geom["paths"]) > 0, "Geometry has no paths"
-    
+
     for i, path in enumerate(geom["paths"]):
         assert "type" in path, f"Path {i} missing type"
-        assert path["type"] in ["line", "arc"], f"Path {i} invalid type: {path['type']}"
+        assert path["type"] in ["line", "arc"], f"Path {i} invalid type: {path['type']}"        
 
 
 def assert_valid_gcode(gcode: str):
     """
     Assert that G-code string is valid.
-    
+
     Args:
         gcode: G-code string to validate
-        
+
     Raises:
         AssertionError: If G-code is invalid
     """
     assert gcode, "G-code is empty"
     lines = gcode.strip().split('\n')
     assert len(lines) > 0, "G-code has no lines"
-    
+
     # Check for common G-code patterns
     has_g_commands = any(line.strip().startswith('G') for line in lines)
     assert has_g_commands, "G-code has no G commands"
@@ -339,16 +410,16 @@ def assert_valid_gcode(gcode: str):
 def assert_valid_moves(moves: list):
     """
     Assert that moves list is valid.
-    
+
     Args:
         moves: List of move dictionaries
-        
+
     Raises:
         AssertionError: If moves are invalid
     """
     assert isinstance(moves, list), "Moves must be list"
     assert len(moves) > 0, "Moves list is empty"
-    
+
     for i, move in enumerate(moves):
         assert "code" in move, f"Move {i} missing code"
         assert move["code"] in ["G0", "G1", "G2", "G3"], f"Move {i} invalid code: {move['code']}"
@@ -359,6 +430,7 @@ __all__ = [
     # Client fixtures
     "api_client",
     "client",  # NEW: Auto-injects X-Request-Id
+    "rmos_global_test_isolation",  # NEW: Global test isolation
     # Geometry fixtures
     "sample_geometry_simple",
     "sample_geometry_with_arcs",

@@ -267,6 +267,7 @@ def _extract_index_meta(artifact: RunArtifact) -> Dict[str, Any]:
         "tool_id": artifact.tool_id,
         "mode": artifact.mode,
         "partition": artifact.created_at_utc.strftime("%Y-%m-%d") if artifact.created_at_utc else None,
+        "meta": artifact.meta,  # Include meta for batch_label and session_id filtering
     }
 
 
@@ -625,6 +626,8 @@ class RunStoreV2:
         tool_id: Optional[str] = None,
         mode: Optional[str] = None,
         workflow_session_id: Optional[str] = None,
+        batch_label: Optional[str] = None,
+        session_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[RunArtifact]:
@@ -679,8 +682,23 @@ class RunStoreV2:
                 return False
             if workflow_session_id and m.get("workflow_session_id") != workflow_session_id:
                 return False
+            
+            # Filter by batch_label and session_id from meta field
+            meta = m.get("meta") or {}
+            import sys
+            print(f"DEBUG matches_meta: batch_label={batch_label}, session_id={session_id}, meta={meta}", file=sys.stderr)
+            if batch_label and meta.get("batch_label") != batch_label:
+                print(f"DEBUG: Filtered out by batch_label: {meta.get('batch_label')} != {batch_label}", file=sys.stderr)
+                return False
+            if session_id and meta.get("session_id") != session_id:
+                print(f"DEBUG: Filtered out by session_id: {meta.get('session_id')} != {session_id}", file=sys.stderr)
+                return False
+            
             return True
 
+        import sys
+        print(f'DEBUG: Index has {len(index)} entries. batch_label={batch_label}, session_id={session_id}', file=sys.stderr)
+        if index: print(f'DEBUG: First index entry: {list(index.items())[0]}', file=sys.stderr)
         # Filter using index metadata
         matching_metas = [m for m in index.values() if matches_meta(m)]
 
@@ -818,6 +836,8 @@ def list_runs_filtered(
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
     workflow_session_id: Optional[str] = None,
+    batch_label: Optional[str] = None,
+    session_id: Optional[str] = None,
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
@@ -829,6 +849,8 @@ def list_runs_filtered(
         tool_id=tool_id,
         mode=mode,
         workflow_session_id=workflow_session_id,
+        batch_label=batch_label,
+        session_id=session_id,
     )
 
 
@@ -875,3 +897,153 @@ def attach_advisory(
         engine_version=engine_version,
         request_id=request_id,
     )
+
+
+# =============================================================================
+# H2 Hardening: Cursor-based pagination + server-side filtering
+# =============================================================================
+
+def _norm(s: Any) -> str:
+    """Normalize a value to lowercase string for comparison."""
+    return str(s or "").strip().lower()
+
+
+def _get_nested(d: Dict[str, Any], path: str) -> Any:
+    """Get a nested value from a dict using dot notation."""
+    cur: Any = d
+    for part in path.split("."):
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(part)
+    return cur
+
+
+def _extract_sort_key(run: Dict[str, Any]) -> tuple:
+    """
+    Returns (created_at_utc, run_id) for stable sort.
+    """
+    ts = (
+        _get_nested(run, "created_at_utc")
+        or _get_nested(run, "meta.created_at_utc")
+        or _get_nested(run, "request_summary.created_at_utc")
+        or ""
+    )
+    # Handle datetime objects
+    if hasattr(ts, 'isoformat'):
+        ts = ts.isoformat()
+    rid = str(run.get("run_id") or "")
+    return (str(ts), rid)
+
+
+def query_recent(
+    *,
+    limit: int = 50,
+    cursor: Optional[str] = None,
+    mode: Optional[str] = None,
+    tool_id: Optional[str] = None,
+    risk_level: Optional[str] = None,
+    status: Optional[str] = None,
+    source: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Query recent runs with cursor-based pagination and server-side filtering.
+
+    H2 Hardening Bundle - scales better than offset pagination.
+
+    Args:
+        limit: Maximum results (1-500)
+        cursor: Pagination cursor in format "<created_at_utc>|<run_id>"
+        mode: Filter by mode (art_studio, saw, router, etc.)
+        tool_id: Filter by tool_id
+        risk_level: Filter by risk level (GREEN, YELLOW, RED, ERROR, UNKNOWN)
+        status: Filter by status (OK, BLOCKED, ERROR)
+        source: Filter by source in meta or request_summary
+
+    Returns:
+        {
+            "items": [run_dict, ...],
+            "next_cursor": "..." | None
+        }
+
+    Cursor semantics:
+        - newest first
+        - if cursor provided, returns items strictly *older* than cursor
+    """
+    store = _get_default_store()
+    limit = max(1, min(int(limit or 50), 500))
+
+    # Over-fetch to allow for filtering
+    fetch_n = limit * 8
+
+    # Get runs as dicts
+    runs = store.list_runs(limit=fetch_n)
+    items = [r.model_dump() for r in runs]
+
+    # Sort newest first using (ts, run_id)
+    items.sort(key=_extract_sort_key, reverse=True)
+
+    # Parse cursor
+    cursor_ts = cursor_id = None
+    if cursor:
+        try:
+            cursor_ts, cursor_id = cursor.split("|", 1)
+        except Exception:
+            cursor_ts, cursor_id = None, None
+
+    def is_older_than_cursor(r: Dict[str, Any]) -> bool:
+        if not cursor_ts:
+            return True
+        ts, rid = _extract_sort_key(r)
+        # strictly older than cursor
+        if ts < cursor_ts:
+            return True
+        if ts == cursor_ts and rid < (cursor_id or ""):
+            return True
+        return False
+
+    def match(r: Dict[str, Any]) -> bool:
+        if mode and _norm(r.get("mode")) != _norm(mode):
+            return False
+
+        if status and _norm(r.get("status")) != _norm(status):
+            return False
+
+        if tool_id:
+            v = _get_nested(r, "request_summary.tool_id") or r.get("tool_id")
+            if _norm(v) != _norm(tool_id):
+                return False
+
+        if source:
+            v = _get_nested(r, "request_summary.source") or _get_nested(r, "meta.source") or r.get("source")
+            if _norm(v) != _norm(source):
+                return False
+
+        if risk_level:
+            v = (
+                _get_nested(r, "decision.risk_level")
+                or _get_nested(r, "decision.risk_bucket")
+                or _get_nested(r, "feasibility.risk_level")
+                or _get_nested(r, "feasibility.risk_bucket")
+            )
+            if _norm(v) != _norm(risk_level):
+                return False
+
+        return True
+
+    out: List[Dict[str, Any]] = []
+    for r in items:
+        if not is_older_than_cursor(r):
+            continue
+        if not match(r):
+            continue
+        out.append(r)
+        if len(out) >= limit:
+            break
+
+    next_cursor = None
+    if out:
+        ts, rid = _extract_sort_key(out[-1])
+        if ts and rid:
+            next_cursor = f"{ts}|{rid}"
+
+    return {"items": out, "next_cursor": next_cursor}

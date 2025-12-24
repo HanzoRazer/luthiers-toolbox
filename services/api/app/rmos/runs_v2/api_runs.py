@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -260,11 +260,14 @@ def list_runs_endpoint(
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
+    batch_label: Optional[str] = Query(None, description="Filter runs by batch_label (from meta)"),
+    session_id: Optional[str] = Query(None, description="Filter runs by session_id (from meta)"),
 ):
     """
     List run artifacts with optional filtering.
 
     Results are sorted by creation date (newest first).
+    Supports filtering by batch_label and session_id from run metadata.
     """
     runs = list_runs_filtered(
         limit=limit,
@@ -272,6 +275,8 @@ def list_runs_endpoint(
         status=status,
         tool_id=tool_id,
         mode=mode,
+        batch_label=batch_label,
+        session_id=session_id,
     )
     return [_to_summary(r) for r in runs]
 
@@ -738,81 +743,72 @@ def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
     response_model=BindArtStudioCandidateResponse,
     summary="Bind Art Studio candidate to run artifact"
 )
-def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
+def bind_art_studio_candidate_route(run_id: str, req: BindArtStudioCandidateRequest, request: Request):
     """
-    Bind Art Studio candidate attachments to a run artifact with feasibility check.
-    
+    RMOS authority gate: Bind Art Studio candidate attachments into a RunArtifact
+    with ALLOW/BLOCK + risk + hashes.
+
     Creates a RunArtifact for EVERY bind attempt (ALLOW or BLOCK).
-    
+
     Returns 400 if:
     - Run not found
     - Attachments missing (when strict=true)
     - Attachment SHA verification fails
     - Invalid spec schema
-    
+
     Returns 200 with decision=ALLOW or decision=BLOCK (both persist artifacts).
     Never returns 403 or 409 (blocked artifacts are persisted with decision=BLOCK).
     """
-    from .attachments import get_attachment_path
-    from .hashing import sha256_of_obj
-    from .store import create_blocked_artifact_for_violations
-    
+    from .bind_art_studio_service import bind_art_studio_candidate, ENGINE_VERSION
+
     # Verify run exists
     run = get_run(run_id)
     if run is None:
         raise HTTPException(status_code=400, detail=f"Run {run_id} not found")
-    
-    # Verify all attachments exist and are accessible
-    attachment_sha_map = {}
-    for att_id in req.attachment_ids:
-        # Normalize: strip att- prefix if present
-        sha256 = att_id.replace("att-", "") if att_id.startswith("att-") else att_id
-        
-        # Check attachment exists
-        path = get_attachment_path(sha256)
-        if path is None:
-            if req.strict:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Attachment {att_id} not found (sha256: {sha256})"
-                )
-            else:
-                continue  # Skip missing if not strict
-        
-        attachment_sha_map[att_id] = sha256
-    
-    # TODO: Run actual feasibility check here
-    # For now, mock a simple ALLOW decision
-    # In production, this would:
-    # 1. Load geometry spec from attachments
-    # 2. Run feasibility engine
-    # 3. Compute risk level + score
-    # 4. Return ALLOW or BLOCK based on thresholds
-    
-    # Mock feasibility result (replace with real engine later)
-    feasibility_data = {
-        "decision": "ALLOW",
-        "score": 0.85,
-        "risk_level": "GREEN",
-        "attachment_ids": list(attachment_sha_map.keys()),
-        "operator_notes": req.operator_notes,
-    }
-    feasibility_sha = sha256_of_obj(feasibility_data)
-    
-    decision = feasibility_data["decision"]
-    score = feasibility_data["score"]
-    risk_level = feasibility_data["risk_level"]
-    
+
+    # Get request ID for tracing
+    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+
+    try:
+        # Run the real binding service with SVG safety checks
+        result = bind_art_studio_candidate(
+            run_id=run_id,
+            attachment_ids=req.attachment_ids,
+            operator_notes=req.operator_notes,
+            strict=req.strict,
+            request_id=req_id,
+        )
+    except ValueError as e:
+        # Invalid request / integrity / missing required components: fail closed, do not mint
+        raise HTTPException(status_code=400, detail=str(e))
+
+    decision = result["decision"]
+    risk_level = result["risk_level"]
+    score = result["feasibility_score"]
+    feasibility_sha = result["feasibility_sha256"]
+    attachment_sha_map = result["attachment_sha256_map"]
+
     # Create RunArtifact (persisted for both ALLOW and BLOCK)
     artifact_id = create_run_id()
-    
+
     if decision == "BLOCK":
-        # Use existing blocked artifact creation function
-        artifact = create_blocked_artifact_for_violations(
+        # Create blocked artifact
+        artifact = RunArtifact(
             run_id=artifact_id,
+            status="BLOCKED",
             mode="art_studio_candidate",
-            spec={"attachment_ids": list(attachment_sha_map.keys())},
-            violations=[{"code": "FEASIBILITY_BLOCKED", "reason": "Mock block for demo"}],
+            tool_id="art_studio",
+            hashes=Hashes(
+                feasibility_sha256=feasibility_sha,
+            ),
+            decision=RunDecision(
+                risk_level=risk_level,
+                score=score * 100,  # Convert 0-1 to 0-100
+                block_reason=result.get("reason"),
+                warnings=[],
+            ),
+            request_summary={"attachment_ids": list(attachment_sha_map.keys())},
+            meta={"engine_version": ENGINE_VERSION, "operator_notes": req.operator_notes},
         )
     else:
         # Create ALLOW artifact
@@ -820,6 +816,7 @@ def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
             run_id=artifact_id,
             status="OK",
             mode="art_studio_candidate",
+            tool_id="art_studio",
             hashes=Hashes(
                 feasibility_sha256=feasibility_sha,
             ),
@@ -828,10 +825,12 @@ def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
                 score=score * 100,  # Convert 0-1 to 0-100
                 warnings=[],
             ),
-            request_spec={"attachment_ids": list(attachment_sha_map.keys())},
+            request_summary={"attachment_ids": list(attachment_sha_map.keys())},
+            meta={"engine_version": ENGINE_VERSION, "operator_notes": req.operator_notes},
         )
-        persist_run(artifact)
-    
+
+    persist_run(artifact)
+
     # Return response (200 for both ALLOW and BLOCK)
     return BindArtStudioCandidateResponse(
         artifact_id=artifact_id,
@@ -841,3 +840,63 @@ def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
         feasibility_sha256=feasibility_sha,
         attachment_sha256_map=attachment_sha_map,
     )
+
+
+# =============================================================================
+# Advisory Blob Browser Endpoints (Run-Scoped)
+# =============================================================================
+
+from .advisory_blob_schemas import AdvisoryBlobListResponse, SvgPreviewStatusResponse
+from .advisory_blob_service import (
+    list_advisory_blobs,
+    download_advisory_blob,
+    preview_svg,
+    check_svg_preview_status,
+    download_all_zip,
+)
+
+
+@router.get("/{run_id}/advisory/blobs", response_model=AdvisoryBlobListResponse)
+def list_run_advisory_blobs(run_id: str):
+    """
+    List all advisory blobs linked to this run.
+    Source of truth: run.advisory_inputs[*].advisory_id
+    """
+    items = list_advisory_blobs(run_id)
+    return AdvisoryBlobListResponse(run_id=run_id, count=len(items), items=items)
+
+
+@router.get("/{run_id}/advisory/blobs/{sha256}/download")
+def download_run_advisory_blob(run_id: str, sha256: str):
+    """
+    Download an advisory blob by sha256.
+    Only allowed if sha256 is linked to this run's advisory_inputs.
+    """
+    return download_advisory_blob(run_id, sha256)
+
+
+@router.get("/{run_id}/advisory/blobs/{sha256}/preview/svg")
+def preview_run_advisory_svg(run_id: str, sha256: str):
+    """
+    Inline SVG preview (run-authorized).
+    Applies safety gate (blocks script/foreignObject/image).
+    """
+    return preview_svg(run_id, sha256)
+
+
+@router.get("/{run_id}/advisory/blobs/{sha256}/preview/status", response_model=SvgPreviewStatusResponse)
+def check_run_advisory_svg_status(run_id: str, sha256: str):
+    """
+    Check if SVG preview is available and safe.
+    Returns status response with reason if blocked, plus recommended action.
+    Useful for UI to show friendly message instead of error.
+    """
+    return check_svg_preview_status(run_id, sha256)
+
+
+@router.get("/{run_id}/advisory/blobs/download-all.zip")
+def download_all_run_advisory_blobs_zip(run_id: str, background_tasks: BackgroundTasks):
+    """
+    Download all advisory blobs linked to this run as a zip.
+    """
+    return download_all_zip(run_id, background_tasks)

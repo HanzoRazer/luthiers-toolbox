@@ -164,10 +164,11 @@ from .routers.instrument_geometry_router import router as instrument_geometry_ro
 from .routers.registry_router import router as registry_router
 
 # =============================================================================
-# SAW LAB (1 router)
+# SAW LAB (2 routers)
 # Note: saw_blade/gcode/validate/telemetry routers broken - need cam_core
 # =============================================================================
 from .saw_lab.debug_router import router as saw_debug_router
+from .saw_lab.compare_router import router as saw_compare_router
 
 # =============================================================================
 # SPECIALTY MODULES - Guitar-specific calculators (4 routers)
@@ -562,8 +563,9 @@ app.include_router(instrument_geometry_router, prefix="/api/instrument", tags=["
 # Data Registry (1)
 app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry"])
 
-# Saw Lab (1)
+# Saw Lab (2)
 app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
+app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 
 # Specialty Modules (4)
 app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
@@ -663,8 +665,9 @@ app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 app.include_router(cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CNC Production"])
 
 # Wave 14: Vision Engine + RMOS Runs + Advisory (3)
+# Note: runs_v2/api_runs.py has prefix="/runs", so mount at /api/rmos → /api/rmos/runs
 if rmos_runs_router:
-    app.include_router(rmos_runs_router, prefix="/api", tags=["RMOS", "Runs"])
+    app.include_router(rmos_runs_router, prefix="/api/rmos", tags=["RMOS", "Runs"])
 if vision_router:
     app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
 if advisory_router:
@@ -725,6 +728,37 @@ if rosette_pattern_router_v2:
 # Categories: baselines, risk, lab, automation
 if compare_router:
     app.include_router(compare_router, prefix="/api/compare", tags=["Compare Consolidated"])
+
+# =============================================================================
+# WAVE 20: ART STUDIO RUN ORCHESTRATION - Bundle 31.0.27
+# Adds run artifact persistence for Art Studio feasibility + snapshots
+# Plus enhanced RMOS logs API with runs_v2 integration
+# =============================================================================
+try:
+    from .art_studio.api.rosette_feasibility_routes import router as art_feasibility_router
+except ImportError as e:
+    print(f"Warning: Art Studio Feasibility router not available: {e}")
+    art_feasibility_router = None
+
+try:
+    from .art_studio.api.rosette_snapshot_routes import router as art_snapshot_router
+except ImportError as e:
+    print(f"Warning: Art Studio Snapshot (v2) router not available: {e}")
+    art_snapshot_router = None
+
+try:
+    from .rmos.api.logs_routes import router as rmos_logs_v2_router
+except ImportError as e:
+    print(f"Warning: RMOS Logs v2 router not available: {e}")
+    rmos_logs_v2_router = None
+
+# Wave 20: Art Studio Run Orchestration (3)
+if art_feasibility_router:
+    app.include_router(art_feasibility_router, prefix="/api/art", tags=["Art Studio", "Feasibility"])
+if art_snapshot_router:
+    app.include_router(art_snapshot_router, prefix="/api/art", tags=["Art Studio", "Snapshots v2"])
+if rmos_logs_v2_router:
+    app.include_router(rmos_logs_v2_router, prefix="/api/rmos", tags=["RMOS", "Logs v2"])
 
 # =============================================================================
 # HEALTH CHECK
