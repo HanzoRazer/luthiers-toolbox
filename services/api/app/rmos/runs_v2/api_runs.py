@@ -900,3 +900,178 @@ def download_all_run_advisory_blobs_zip(run_id: str, background_tasks: Backgroun
     Download all advisory blobs linked to this run as a zip.
     """
     return download_all_zip(run_id, background_tasks)
+
+
+# =============================================================================
+# H3.4: Cursor-based Pagination Endpoint
+# =============================================================================
+
+from .store import query_recent
+
+
+@router.get("/query/recent", summary="Query runs with cursor pagination")
+def query_runs_cursor_endpoint(
+    limit: int = Query(50, ge=1, le=500, description="Max results per page"),
+    cursor: Optional[str] = Query(None, description="Pagination cursor (format: timestamp|run_id)"),
+    mode: Optional[str] = Query(None, description="Filter by mode"),
+    tool_id: Optional[str] = Query(None, description="Filter by tool_id"),
+    status: Optional[str] = Query(None, description="Filter by status (OK, BLOCKED, ERROR)"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level"),
+    source: Optional[str] = Query(None, description="Filter by source"),
+):
+    """
+    Query runs with cursor-based pagination.
+
+    Cursor pagination is more efficient than offset for large datasets
+    and avoids page drift when new items are added.
+
+    GET /api/rmos/runs/query/recent?limit=50&mode=art_studio
+
+    Response:
+    ```json
+    {
+        "items": [...],
+        "next_cursor": "2025-12-23T10:00:00Z|run_abc123"
+    }
+    ```
+
+    Use `next_cursor` from the response as the `cursor` param for the next page.
+    When `next_cursor` is null, you've reached the end.
+    """
+    return query_recent(
+        limit=limit,
+        cursor=cursor,
+        mode=mode,
+        tool_id=tool_id,
+        status=status,
+        risk_level=risk_level,
+        source=source,
+    )
+
+
+# =============================================================================
+# H3.5/H3.6: DELETE Endpoint with Policy Enforcement
+# =============================================================================
+
+from fastapi import Header
+from .store import delete_run, DeleteRateLimitError
+from .delete_policy import (
+    get_delete_policy,
+    is_admin_request,
+    check_delete_allowed,
+    resolve_effective_mode,
+)
+from .delete_audit import append_delete_audit, build_delete_audit_event
+
+
+@router.delete("/{run_id}", summary="Delete a run artifact")
+def delete_run_endpoint(
+    request: Request,
+    run_id: str,
+    mode: Optional[str] = Query(
+        None,
+        description="Delete mode: 'soft' (tombstone, default) or 'hard' (remove files)",
+    ),
+    reason: str = Query(
+        ...,
+        min_length=6,
+        max_length=500,
+        description="Audit reason for deletion (required)",
+    ),
+    actor: Optional[str] = Query(None, description="Actor performing deletion"),
+    cascade: bool = Query(True, description="Also delete advisory links"),
+    x_rmos_admin: Optional[str] = Header(None, alias="X-RMOS-Admin"),
+):
+    """
+    Delete a run artifact with policy enforcement and audit logging.
+
+    H3.5: Supports soft (tombstone) and hard (file removal) delete modes.
+    H3.6: Policy-enforced - hard delete requires admin header + env allow.
+    H3.6.1: Rate-limited and requires audit reason.
+    H3.6.2: All attempts logged to append-only audit log.
+
+    DELETE /api/rmos/runs/{run_id}?reason=cleanup%20test%20data
+
+    Soft delete (default):
+    - Writes tombstone to index
+    - Artifact file preserved for audit
+    - Run excluded from listings
+
+    Hard delete (requires admin):
+    - Removes index entry
+    - Removes artifact file
+    - Optionally removes advisory links (cascade=true)
+
+    Returns 200 on success, 400/403/404/429 on error.
+    """
+    # Extract request context
+    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    client_ip = request.client.host if request.client else None
+    effective_actor = actor.strip() if actor else None
+
+    # Resolve policy and mode
+    policy = get_delete_policy()
+    effective_mode = resolve_effective_mode(mode, policy)
+    is_admin = is_admin_request(x_rmos_admin)
+
+    # Check policy
+    allowed, deny_reason = check_delete_allowed(effective_mode, is_admin, policy)
+
+    if not allowed:
+        # Audit the forbidden attempt
+        try:
+            from .store import _get_default_store
+            store = _get_default_store()
+            event = build_delete_audit_event(
+                run_id=run_id,
+                mode=effective_mode,
+                reason=reason,
+                actor=effective_actor,
+                request_id=req_id,
+                index_updated=False,
+                artifact_deleted=False,
+                attachments_deleted=0,
+                allowed_by_policy=False,
+                allowed_by_rate_limit=True,
+                client_ip=client_ip,
+                outcome="forbidden",
+                errors=deny_reason,
+            )
+            append_delete_audit(store_root=store.root, event=event)
+        except Exception:
+            pass  # Audit must never block
+        raise HTTPException(status_code=403, detail=deny_reason)
+
+    # Attempt delete
+    try:
+        result = delete_run(
+            run_id,
+            mode=effective_mode,
+            reason=reason,
+            actor=effective_actor,
+            request_id=req_id,
+            cascade=cascade,
+        )
+
+        return {
+            "run_id": run_id,
+            "mode": effective_mode,
+            "deleted": result["deleted"],
+            "tombstoned": result.get("index_updated") and effective_mode == "soft",
+            "artifact_deleted": result.get("artifact_deleted", False),
+            "advisory_links_deleted": result.get("advisory_links_deleted", 0),
+            "reason": reason,
+            "request_id": req_id,
+        }
+
+    except KeyError:
+        # Run not found - already audited by delete_run
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+
+    except DeleteRateLimitError as e:
+        # Rate limited - already audited by delete_run
+        raise HTTPException(status_code=429, detail=str(e))
+
+    except ValueError as e:
+        # Invalid input (e.g., empty reason) - shouldn't happen due to Query validation
+        raise HTTPException(status_code=400, detail=str(e))

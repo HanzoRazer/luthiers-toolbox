@@ -43,6 +43,12 @@ class DeleteAuditEvent:
     actor: Optional[str] = None
     request_id: Optional[str] = None
 
+    # H3.6.2: Policy and rate limit tracking
+    allowed_by_policy: bool = True
+    allowed_by_rate_limit: bool = True
+    client_ip: Optional[str] = None
+    outcome: str = "ok"  # ok|not_found|error|forbidden|rate_limited|invalid
+
     # effects
     index_updated: bool = False
     artifact_deleted: bool = False
@@ -96,6 +102,11 @@ def build_delete_audit_event(
     attachments_deleted: int,
     errors: Optional[str] = None,
     meta: Optional[Dict[str, Any]] = None,
+    # H3.6.2: New fields
+    allowed_by_policy: bool = True,
+    allowed_by_rate_limit: bool = True,
+    client_ip: Optional[str] = None,
+    outcome: str = "ok",
 ) -> DeleteAuditEvent:
     return DeleteAuditEvent(
         ts_utc=_utc_now_iso(),
@@ -104,6 +115,10 @@ def build_delete_audit_event(
         reason=reason,
         actor=actor,
         request_id=request_id,
+        allowed_by_policy=allowed_by_policy,
+        allowed_by_rate_limit=allowed_by_rate_limit,
+        client_ip=client_ip,
+        outcome=outcome,
         index_updated=index_updated,
         artifact_deleted=artifact_deleted,
         attachments_deleted=attachments_deleted,
