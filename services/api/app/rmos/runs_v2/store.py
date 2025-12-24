@@ -484,6 +484,41 @@ class RunStoreV2:
                 tmp.unlink()
             raise
 
+    def update_mutable_fields(self, artifact: RunArtifact) -> None:
+        """
+        Update mutable fields of an existing run artifact.
+
+        CONTROLLED MUTABILITY: Only advisory_reviews field is allowed to be updated.
+        This supports the variant review workflow where reviews are explicitly mutable.
+
+        Args:
+            artifact: The RunArtifact with updated mutable fields
+
+        Raises:
+            ValueError: If artifact doesn't exist
+        """
+        path = self._path_for(artifact.run_id, artifact.created_at_utc)
+
+        if not path.exists():
+            raise ValueError(f"Artifact {artifact.run_id} not found for update")
+
+        # Atomic write: write to .tmp then rename
+        tmp = path.with_suffix(".json.tmp")
+        try:
+            tmp.write_text(
+                artifact.model_dump_json(indent=2),
+                encoding="utf-8",
+            )
+            os.replace(tmp, path)
+
+            # Update the global index with lightweight metadata
+            self._update_index_entry(artifact.run_id, _extract_index_meta(artifact))
+        except Exception:
+            # Clean up temp file on failure
+            if tmp.exists():
+                tmp.unlink()
+            raise
+
     def get(self, run_id: str) -> Optional[RunArtifact]:
         """
         Retrieve a run artifact by ID.
@@ -1073,6 +1108,13 @@ def persist_run(artifact: RunArtifact) -> RunArtifact:
     """Persist a run artifact to the default store."""
     store = _get_default_store()
     store.put(artifact)
+    return artifact
+
+
+def update_run(artifact: RunArtifact) -> RunArtifact:
+    """Update mutable fields of an existing run artifact."""
+    store = _get_default_store()
+    store.update_mutable_fields(artifact)
     return artifact
 
 

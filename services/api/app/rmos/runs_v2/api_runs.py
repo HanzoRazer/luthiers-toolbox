@@ -1075,3 +1075,94 @@ def delete_run_endpoint(
     except ValueError as e:
         # Invalid input (e.g., empty reason) - shouldn't happen due to Query validation
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# =============================================================================
+# Variant Review, Rating, and Promotion (Product Bundle)
+# =============================================================================
+
+from pydantic import BaseModel, Field as PydanticField
+from .variant_review_service import (
+    list_advisory_variants,
+    save_variant_review,
+    promote_variant,
+)
+
+
+class VariantReviewRequest(BaseModel):
+    """Request to save a review for an advisory variant."""
+    rating: int = PydanticField(..., ge=1, le=5, description="Star rating 1-5")
+    notes: str = PydanticField(..., description="Review notes")
+    reviewed_by: Optional[str] = PydanticField(None, description="Reviewer identity")
+
+
+class VariantPromoteRequest(BaseModel):
+    """Request to promote an advisory variant to manufacturing."""
+    promoted_by: Optional[str] = PydanticField(None, description="Operator identity")
+
+
+@router.get("/{run_id}/advisory/variants", summary="List advisory variants for review")
+def list_run_advisory_variants(run_id: str):
+    """
+    List all advisory variants attached to a run with review status.
+
+    Returns variant info including:
+    - advisory_id (SHA256)
+    - mime type
+    - filename
+    - rating (if reviewed)
+    - notes (if reviewed)
+    - promoted status
+
+    Use this to populate the VariantReviewPanel UI.
+    """
+    return list_advisory_variants(run_id)
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/review", summary="Save variant review")
+def save_run_advisory_review(
+    run_id: str,
+    advisory_id: str,
+    req: VariantReviewRequest,
+):
+    """
+    Save rating and notes for an advisory variant.
+
+    This stores the review in RunArtifact.advisory_reviews.
+    The advisory blob itself is never mutated.
+
+    Rating: 1-5 stars
+    Notes: Free-form review text
+    """
+    return save_variant_review(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        rating=req.rating,
+        notes=req.notes,
+        reviewed_by=req.reviewed_by,
+    )
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/promote", summary="Promote variant to manufacturing")
+def promote_run_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    req: VariantPromoteRequest,
+):
+    """
+    Promote an advisory variant to a manufacturing candidate.
+
+    This creates a NEW RunArtifact with:
+    - source_advisory_id pointing to the promoted variant
+    - Re-evaluated feasibility
+    - Lineage preserved (parent_run_id, source_advisory_id)
+
+    Promotion is IRREVERSIBLE by design.
+
+    Returns 409 if already promoted.
+    """
+    return promote_variant(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        promoted_by=req.promoted_by,
+    )

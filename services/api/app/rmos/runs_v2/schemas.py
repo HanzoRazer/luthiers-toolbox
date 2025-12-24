@@ -279,6 +279,16 @@ class RunArtifact(BaseModel):
         description="Brief explanation text",
     )
 
+    # Variant Review (Product Bundle: Review, Rating, Promotion)
+    advisory_reviews: Optional[Dict[str, Dict[str, Any]]] = Field(
+        None,
+        description="Reviews per advisory_id: {advisory_id: {rating, notes, reviewed_at, reviewed_by}}",
+    )
+    source_advisory_id: Optional[str] = Field(
+        None,
+        description="Advisory ID this artifact was promoted from (promotion lineage)",
+    )
+
     # Legacy compatibility - content-addressed attachments
     attachments: Optional[List[RunAttachment]] = Field(
         None,
