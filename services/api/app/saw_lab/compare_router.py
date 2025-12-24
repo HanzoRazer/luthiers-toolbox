@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Query
 
 from app.saw_lab.schemas_compare import SawCompareRequest, SawCompareResponse, SawCompareItem
 from app.services.saw_lab_compare_service import compare_saw_candidates
+from app.services.saw_lab_batch_lookup_service import list_saw_compare_batches
 
 
 router = APIRouter(prefix="/api/saw", tags=["saw"])
@@ -26,4 +29,28 @@ def compare_candidates(req: SawCompareRequest) -> SawCompareResponse:
         session_id=req.session_id,
         parent_artifact_id=out.get("parent_artifact_id"),
         items=[SawCompareItem(**i) for i in out["items"]],
+    )
+
+
+@router.get("/compare/batches")
+def list_compare_batches(
+    batch_label: Optional[str] = Query(default=None, description="Filter by batch_label"),
+    session_id: Optional[str] = Query(default=None, description="Filter by session_id"),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> List[Dict[str, Any]]:
+    """
+    Convenience alias to retrieve compare batch parent artifacts without knowing IDs.
+
+    Returns only event_type='saw_compare_batch' artifacts, newest first.
+
+    Usage:
+        GET /api/saw/compare/batches?batch_label=my-batch
+        GET /api/saw/compare/batches?session_id=sess_123
+    """
+    return list_saw_compare_batches(
+        batch_label=batch_label,
+        session_id=session_id,
+        limit=limit,
+        offset=offset,
     )
