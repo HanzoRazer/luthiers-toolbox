@@ -32,12 +32,17 @@
     </div>
     <div v-else class="empty">No snapshots yet.</div>
   </div>
+
+  <div style="margin-top: 12px;">
+    <SnapshotComparePanel />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
+import SnapshotComparePanel from "@/components/art/SnapshotComparePanel.vue";
 
 const store = useRosetteStore();
 const toast = useToastStore();
