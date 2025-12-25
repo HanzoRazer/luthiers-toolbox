@@ -16,6 +16,7 @@ class SnapshotMetadata(BaseModel):
     """Metadata for a design snapshot."""
     name: Optional[str] = None
     description: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=4096)  # Free-form notes (32.1.0)
     tags: List[str] = Field(default_factory=list)
     created_by: Optional[str] = None
     source: Optional[str] = None  # "manual", "ai_suggestion", "import"
@@ -42,6 +43,9 @@ class RosetteDesignSnapshot(BaseModel):
 
     # Run artifact reference (if created via API)
     run_id: Optional[str] = None
+
+    # Baseline flag (32.1.0) - only one snapshot can be baseline at a time
+    baseline: bool = False
 
 
 class ExportSnapshotRequest(BaseModel):

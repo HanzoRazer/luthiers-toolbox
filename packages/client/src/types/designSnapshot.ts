@@ -20,6 +20,7 @@ export type DesignSnapshot = {
   context_refs: DesignContextRefs;
   rosette_params: RosetteParamSpec;
   feasibility?: Record<string, any> | null;
+  baseline?: boolean;  // 32.1.0 - is this the baseline snapshot?
   created_at: string;
   updated_at: string;
 };
@@ -49,6 +50,7 @@ export type SnapshotSummary = {
   name: string;
   pattern_id?: string | null;
   tags: string[];
+  baseline?: boolean;  // 32.1.0
   updated_at: string;
 };
 

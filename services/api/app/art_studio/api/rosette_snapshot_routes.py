@@ -21,6 +21,7 @@ from ..schemas.rosette_snapshot import (
     ListSnapshotsResponse,
     SnapshotMetadata,
 )
+from ..schemas.snapshot_meta import SnapshotMetaPatch, BaselineToggleRequest
 from ..services.rosette_snapshot_store import (
     save_snapshot,
     load_snapshot,
@@ -29,6 +30,8 @@ from ..services.rosette_snapshot_store import (
     count_snapshots,
     compute_design_fingerprint,
     create_snapshot_id,
+    set_baseline,
+    get_baseline,
     SnapshotIdError,
 )
 from ..services.rosette_feasibility_scorer import (
@@ -216,6 +219,69 @@ async def remove_snapshot(snapshot_id: str):
         raise HTTPException(status_code=404, detail="Snapshot not found")
 
     return {"deleted": True, "snapshot_id": snapshot_id}
+
+
+@router.put("/{snapshot_id}", response_model=RosetteDesignSnapshot)
+async def update_snapshot_meta(snapshot_id: str, patch: SnapshotMetaPatch):
+    """
+    Update snapshot metadata (name, notes, tags).
+
+    Only provided fields are updated.
+    """
+    try:
+        snapshot = load_snapshot(snapshot_id)
+    except SnapshotIdError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if snapshot is None:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
+    # Apply patch to metadata
+    meta = snapshot.metadata
+    if patch.name is not None:
+        meta.name = patch.name
+    if patch.notes is not None:
+        meta.notes = patch.notes
+    if patch.tags is not None:
+        meta.tags = patch.tags
+
+    # Save updated snapshot
+    try:
+        updated = save_snapshot(snapshot)
+    except SnapshotIdError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return updated
+
+
+@router.post("/{snapshot_id}/baseline", response_model=RosetteDesignSnapshot)
+async def toggle_baseline(snapshot_id: str, req: BaselineToggleRequest):
+    """
+    Set or clear the baseline flag for a snapshot.
+
+    Only one snapshot can be baseline at a time. Setting baseline=True
+    will clear the flag from any other snapshot.
+    """
+    try:
+        updated = set_baseline(snapshot_id, req.baseline)
+    except SnapshotIdError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
+    return updated
+
+
+@router.get("/baseline", response_model=RosetteDesignSnapshot)
+async def get_baseline_snapshot():
+    """
+    Get the current baseline snapshot.
+    """
+    baseline = get_baseline()
+    if baseline is None:
+        raise HTTPException(status_code=404, detail="No baseline set")
+    return baseline
 
 
 @router.get("/", response_model=ListSnapshotsResponse)

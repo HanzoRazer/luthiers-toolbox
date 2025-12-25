@@ -310,3 +310,64 @@ def find_by_fingerprint(fingerprint: str) -> Optional[RosetteDesignSnapshot]:
             continue
 
     return None
+
+
+def set_baseline(snapshot_id: str, baseline: bool) -> Optional[RosetteDesignSnapshot]:
+    """
+    Set or clear the baseline flag for a snapshot.
+
+    When setting baseline=True, clears baseline flag from all other snapshots first.
+
+    Args:
+        snapshot_id: The snapshot ID to modify
+        baseline: True to set as baseline, False to clear
+
+    Returns:
+        The updated snapshot, or None if not found
+
+    Raises:
+        SnapshotIdError: If snapshot_id is invalid or unsafe
+    """
+    # Validate and load target snapshot
+    target = load_snapshot(snapshot_id)
+    if target is None:
+        return None
+
+    if baseline:
+        # Clear baseline from all other snapshots
+        for path in _snapshot_dir().glob("*.json"):
+            if path.name.endswith(".tmp"):
+                continue
+
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                if data.get("baseline", False) and data.get("snapshot_id") != snapshot_id:
+                    data["baseline"] = False
+                    _atomic_write_text(path, json.dumps(data, indent=2), encoding="utf-8")
+            except Exception:
+                continue
+
+    # Update target snapshot
+    updated = target.model_copy(update={"baseline": baseline})
+    return save_snapshot(updated)
+
+
+def get_baseline() -> Optional[RosetteDesignSnapshot]:
+    """
+    Get the current baseline snapshot, if any.
+
+    Returns:
+        The baseline snapshot, or None if no baseline is set
+    """
+    for path in _snapshot_dir().glob("*.json"):
+        if path.name.endswith(".tmp"):
+            continue
+
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if data.get("baseline", False):
+                return RosetteDesignSnapshot.model_validate(data)
+        except Exception:
+            continue
+
+    return None

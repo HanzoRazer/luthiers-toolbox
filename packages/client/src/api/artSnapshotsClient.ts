@@ -64,4 +64,19 @@ export const artSnapshotsClient = {
       body: JSON.stringify(req),
     });
   },
+
+  // 32.1.0: Baseline methods
+  setBaseline(snapshot_id: string, baseline: boolean) {
+    return fetchJson<DesignSnapshot>(
+      `/api/art/snapshots/${encodeURIComponent(snapshot_id)}/baseline`,
+      {
+        method: "POST",
+        body: JSON.stringify({ baseline }),
+      }
+    );
+  },
+
+  getBaseline() {
+    return fetchJson<DesignSnapshot | null>(`/api/art/snapshots/baseline`);
+  },
 };
