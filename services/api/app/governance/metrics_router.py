@@ -21,6 +21,9 @@ def metrics():
 
     Env:
       ENDPOINT_METRICS_ENABLED=true|false
+      ENDPOINT_METRICS_MAX_SERIES=2000            # cap series
+      ENDPOINT_METRICS_OTHER_LABEL=__other__      # overflow bucket
+      ENDPOINT_OTEL_ENABLED=true|false            # optional OTEL emission elsewhere
     """
     if not _enabled():
         return PlainTextResponse("# metrics disabled\n", status_code=404)

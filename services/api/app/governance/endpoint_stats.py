@@ -6,7 +6,72 @@ import re
 import time
 from dataclasses import dataclass
 from threading import Lock
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from .otel_metrics import otel_increment_endpoint_hit
+
+
+# ---------------------------------------------------------------------
+# Prometheus series cardinality guardrails (H5.3)
+# ---------------------------------------------------------------------
+
+_OTHER_LABEL = os.getenv("ENDPOINT_METRICS_OTHER_LABEL", "__other__")
+
+
+def _get_max_series() -> int:
+    """
+    Max unique (status, method, path_pattern) series allowed in /metrics.
+    Prevents cardinality blowups. Default is conservative.
+    """
+    try:
+        return int(os.getenv("ENDPOINT_METRICS_MAX_SERIES", "2000"))
+    except Exception:
+        return 2000
+
+
+# Tracks observed label sets (in-memory, per-process).
+# This is sufficient to prevent accidental label explosions in prod.
+_SERIES_SEEN: Set[Tuple[str, str, str]] = set()
+
+# Tracks which path_patterns are allowed to appear as-is (bounded).
+_PATHPATTERNS_ALLOWED: Set[str] = set()
+
+# Counts how many times we had to collapse to __other__
+_OVERFLOW_COUNT = 0
+
+
+def _coerce_path_pattern_for_metrics(status: str, method: str, path_pattern: str) -> str:
+    """
+    Ensure path_pattern label does not explode series count.
+    Once max series would be exceeded, collapse new patterns to __other__.
+    """
+    global _OVERFLOW_COUNT
+
+    max_series = _get_max_series()
+
+    pp = (path_pattern or "").strip()
+    if not pp:
+        pp = "/(unknown)"
+
+    key = (status, method, pp)
+
+    # If already seen, keep as-is
+    if key in _SERIES_SEEN:
+        return pp
+
+    # If we're under cap, allow this new series
+    if len(_SERIES_SEEN) < max_series:
+        _SERIES_SEEN.add(key)
+        _PATHPATTERNS_ALLOWED.add(pp)
+        return pp
+
+    # Over cap: collapse to __other__
+    _OVERFLOW_COUNT += 1
+    return _OTHER_LABEL
+
+
+def get_metrics_overflow_count() -> int:
+    return int(_OVERFLOW_COUNT)
 
 
 @dataclass(frozen=True)
@@ -85,6 +150,17 @@ def record_hit(
                     "replacement": replacement,
                 },
             )
+
+        # Optional OTEL emission (no-op if OTEL not installed / not configured)
+        try:
+            otel_increment_endpoint_hit(
+                status=str(status),
+                method=str(method),
+                path_pattern=str(path_pattern),
+            )
+        except Exception:
+            pass
+
     except Exception:
         # Non-fatal by design
         return
@@ -167,6 +243,9 @@ def snapshot_prometheus_text() -> str:
     """
     Prometheus exposition format (text).
     Graphs endpoint usage without polling JSON endpoints.
+
+    H5.3: Applies cardinality guardrails - new patterns beyond max series
+    are collapsed to __other__ label.
     """
     snap = snapshot()
     counts: List[Dict[str, Any]] = snap.get("counts") or []
@@ -176,9 +255,15 @@ def snapshot_prometheus_text() -> str:
     lines.append(f"# TYPE {_METRIC_NAME} counter")
 
     for item in counts:
-        status = _prom_escape(str(item.get("status", "")))
-        method = _prom_escape(str(item.get("method", "")))
-        path_pattern = _prom_escape(str(item.get("path_pattern", "")))
+        status_raw = str(item.get("status", ""))
+        method_raw = str(item.get("method", ""))
+        path_pattern_raw = str(item.get("path_pattern", ""))
+
+        coerced_pp = _coerce_path_pattern_for_metrics(status_raw, method_raw, path_pattern_raw)
+
+        status = _prom_escape(status_raw)
+        method = _prom_escape(method_raw)
+        path_pattern = _prom_escape(coerced_pp)
         count = int(item.get("count", 0))
 
         lines.append(
@@ -190,6 +275,11 @@ def snapshot_prometheus_text() -> str:
     lines.append(f"# TYPE {_METRIC_INFO_NAME} gauge")
     log_path = _prom_escape(str(snap.get("log_path") or ""))
     lines.append(f'{_METRIC_INFO_NAME}{{log_path="{log_path}"}} 1')
+
+    # Overflow metric: how many observations were collapsed into __other__
+    lines.append("# HELP ltb_endpoint_metrics_overflow_total Count of collapsed metrics due to cardinality cap.")
+    lines.append("# TYPE ltb_endpoint_metrics_overflow_total counter")
+    lines.append(f"ltb_endpoint_metrics_overflow_total {get_metrics_overflow_count()}")
 
     return "\n".join(lines) + "\n"
 
