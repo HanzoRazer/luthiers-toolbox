@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
+import os
+import random
+import time
 from typing import Optional, Set, Tuple
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,6 +18,33 @@ logger = logging.getLogger(__name__)
 
 # one warning per (method, path_pattern, status) per process
 _WARNED: Set[Tuple[str, str, str]] = set()
+
+
+# =============================================================================
+# Per-Request Sampling (H5.2)
+# =============================================================================
+
+def _get_sample_rate() -> float:
+    """Get sampling rate from env (0.0 = off, 1.0 = all requests)."""
+    try:
+        return float(os.getenv("ENDPOINT_SAMPLE_RATE", "0.0"))
+    except Exception:
+        return 0.0
+
+
+def _get_sample_log_path() -> Optional[str]:
+    """Get optional JSONL log path for sampled requests."""
+    return os.getenv("ENDPOINT_SAMPLE_LOG_PATH") or None
+
+
+def _maybe_sample() -> bool:
+    """Decide whether to sample this request based on configured rate."""
+    rate = _get_sample_rate()
+    if rate <= 0:
+        return False
+    if rate >= 1:
+        return True
+    return random.random() < rate
 
 
 class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
@@ -30,7 +61,9 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        start = time.time()
         response = await call_next(request)
+        latency_ms = (time.time() - start) * 1000.0
 
         try:
             scope = request.scope
@@ -44,13 +77,45 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
             status = _get_status(endpoint=endpoint, method=method, path_pattern=path_pattern)
             if status:
                 # Always record governed hits if status known (canonical/legacy/shadow/internal)
+                replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)
                 record_hit(
                     status=status.value,
                     method=method,
                     path_pattern=path_pattern or (request.url.path or ""),
                     path_actual=request.url.path,
-                    replacement=_get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern),
+                    replacement=replacement,
                 )
+
+                # Per-request sampling (structured) for incident review & low-noise telemetry.
+                # Enabled via ENDPOINT_SAMPLE_RATE and ENDPOINT_SAMPLE_LOG_PATH.
+                if _maybe_sample():
+                    rid = getattr(getattr(request, "state", None), "request_id", None)
+                    payload = {
+                        "ts_utc": time.time(),
+                        "request_id": rid,
+                        "status": status.value,
+                        "method": method,
+                        "path_pattern": path_pattern or (request.url.path or ""),
+                        "path_actual": request.url.path,
+                        "replacement": replacement,
+                        "latency_ms": round(latency_ms, 3),
+                        "http_status": getattr(response, "status_code", None),
+                    }
+
+                    # Always emit to structured logs (cheap)
+                    try:
+                        logger.info("endpoint_sample=%s", json.dumps(payload, separators=(",", ":")))
+                    except Exception:
+                        pass
+
+                    # Optional JSONL file append (best-effort)
+                    log_path = _get_sample_log_path()
+                    if log_path:
+                        try:
+                            from .endpoint_stats import _append_jsonl
+                            _append_jsonl(log_path, payload)
+                        except Exception:
+                            pass
 
             if status in {EndpointStatus.LEGACY, EndpointStatus.SHADOW}:
                 replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)

@@ -46,6 +46,7 @@ from .meta.router_truth_routes import router as routing_truth_router
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
 from .governance.governance_router import router as governance_router
+from .governance.metrics_router import router as metrics_router
 
 
 # =============================================================================
@@ -782,6 +783,9 @@ app.include_router(routing_truth_router, tags=["_meta"])
 
 # Governance stats endpoint (H5.1) - measure legacy/shadow usage before deletions
 app.include_router(governance_router, prefix="/api", tags=["Governance"])
+
+# Prometheus metrics endpoint (H5.2) - no prefix, accessible at /metrics
+app.include_router(metrics_router)
 
 # =============================================================================
 # HEALTH CHECK
