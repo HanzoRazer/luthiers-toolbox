@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from .endpoint_registry import EndpointStatus, lookup_endpoint
+from .endpoint_stats import record_hit
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,16 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
             path_pattern = getattr(route, "path", None)  # e.g. "/api/rmos/runs/{run_id}"
 
             status = _get_status(endpoint=endpoint, method=method, path_pattern=path_pattern)
+            if status:
+                # Always record governed hits if status known (canonical/legacy/shadow/internal)
+                record_hit(
+                    status=status.value,
+                    method=method,
+                    path_pattern=path_pattern or (request.url.path or ""),
+                    path_actual=request.url.path,
+                    replacement=_get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern),
+                )
+
             if status in {EndpointStatus.LEGACY, EndpointStatus.SHADOW}:
                 replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)
                 _warn_once(method=method, path_pattern=path_pattern or (request.url.path or ""), status=status, replacement=replacement)

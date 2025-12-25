@@ -45,6 +45,7 @@ from .meta.router_truth_routes import router as routing_truth_router
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
+from .governance.governance_router import router as governance_router
 
 
 # =============================================================================
@@ -778,6 +779,9 @@ if rmos_logs_v2_router:
 # =============================================================================
 # Routing truth endpoint for confirming what's actually mounted after deploy
 app.include_router(routing_truth_router, tags=["_meta"])
+
+# Governance stats endpoint (H5.1) - measure legacy/shadow usage before deletions
+app.include_router(governance_router, prefix="/api", tags=["Governance"])
 
 # =============================================================================
 # HEALTH CHECK
