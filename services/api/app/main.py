@@ -39,6 +39,13 @@ from starlette.responses import Response
 from .util.request_context import set_request_id
 from .util.logging_request_id import RequestIdFilter
 
+# Deprecation guardrails
+from .middleware.deprecation import DeprecationHeadersMiddleware
+from .meta.router_truth_routes import router as routing_truth_router
+
+# Endpoint governance (H4 - canonical endpoint registry + safety rails)
+from .governance.endpoint_middleware import EndpointGovernanceMiddleware
+
 
 # =============================================================================
 # REQUEST ID MIDDLEWARE
@@ -493,6 +500,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Deprecation headers middleware - emits warnings for legacy lanes
+app.add_middleware(DeprecationHeadersMiddleware)
+
+# Endpoint governance middleware (H4) - logs warnings for legacy/shadow endpoints
+app.add_middleware(EndpointGovernanceMiddleware)
+
 # =============================================================================
 # STARTUP EVENTS
 # =============================================================================
@@ -759,6 +772,12 @@ if art_snapshot_router:
     app.include_router(art_snapshot_router, prefix="/api/art", tags=["Art Studio", "Snapshots v2"])
 if rmos_logs_v2_router:
     app.include_router(rmos_logs_v2_router, prefix="/api/rmos", tags=["RMOS", "Logs v2"])
+
+# =============================================================================
+# META / INTROSPECTION
+# =============================================================================
+# Routing truth endpoint for confirming what's actually mounted after deploy
+app.include_router(routing_truth_router, tags=["_meta"])
 
 # =============================================================================
 # HEALTH CHECK
