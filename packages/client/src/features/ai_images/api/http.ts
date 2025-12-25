@@ -56,7 +56,19 @@ export async function fetchWithTimeout(
       ...fetchOptions,
       signal: controller.signal,
     });
-    
+
+    // DEV-ONLY deprecation banner (Guardrail 3)
+    if (import.meta.env.DEV) {
+      const deprecated = response.headers.get("Deprecation");
+      if (deprecated === "true") {
+        const lane = response.headers.get("X-Deprecated-Lane") || "unknown";
+        const successor = response.headers.get("Link") || "";
+        console.warn(
+          `[DEPRECATED API HIT] ${response.url} lane=${lane} successor=${successor}`
+        );
+      }
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new ApiError(
