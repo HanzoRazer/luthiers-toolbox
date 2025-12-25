@@ -51,6 +51,11 @@ try:
         SnapshotCreateRequest,
     )
     from app.art_studio.schemas.rosette_params import RosetteParamSpec
+
+    # RMOS Integration (H5.2 - feasibility wiring)
+    from app.rmos.presets import get_preset_registry
+    from app.rmos.feasibility_fusion import evaluate_feasibility as rmos_evaluate_feasibility, RiskLevel
+    from app.rmos.context import RmosContext, MaterialProfile
 except ImportError:
     # Fallback for CLI testing or relative imports within package
     try:
@@ -83,6 +88,11 @@ except ImportError:
             SnapshotCreateRequest,
         )
         from art_studio.schemas.rosette_params import RosetteParamSpec
+
+        # RMOS Integration (H5.2 - feasibility wiring)
+        from rmos.presets import get_preset_registry
+        from rmos.feasibility_fusion import evaluate_feasibility as rmos_evaluate_feasibility, RiskLevel
+        from rmos.context import RmosContext, MaterialProfile
     except ImportError:
         # Final fallback: relative imports (when used as submodule)
         from ...workflow.state_machine import (
@@ -114,6 +124,11 @@ except ImportError:
             SnapshotCreateRequest,
         )
         from ..schemas.rosette_params import RosetteParamSpec
+
+        # RMOS Integration (H5.2 - feasibility wiring)
+        from ...rmos.presets import get_preset_registry
+        from ...rmos.feasibility_fusion import evaluate_feasibility as rmos_evaluate_feasibility, RiskLevel
+        from ...rmos.context import RmosContext, MaterialProfile
 
 logger = logging.getLogger(__name__)
 
@@ -267,32 +282,48 @@ def _get_snapshot_store() -> DesignSnapshotStore:
 def _build_context_from_refs(refs: Optional[DesignContextRefs]) -> Dict[str, Any]:
     """
     Build RMOS context dict from context refs.
-    
-    TODO: Wire to actual preset registry to load full preset data.
+
+    Loads full preset data from the preset registry for material and tool presets.
     """
     if refs is None:
         return {}
-    
+
     context: Dict[str, Any] = {}
-    
+    registry = get_preset_registry()
+
     if refs.material_preset_id:
-        # TODO: Load from preset registry
-        # from app.rmos.presets import get_preset_registry
-        # registry = get_preset_registry()
-        # material = registry.get_material(refs.material_preset_id)
-        # context["material"] = material.to_dict()
+        material = registry.get_material(refs.material_preset_id)
+        if material:
+            context["material"] = {
+                "id": material.id,
+                "name": material.name,
+                "hardness": material.hardness,
+                "density_kgm3": material.density_kgm3,
+                "burn_tendency": material.burn_tendency,
+                "tearout_tendency": material.tearout_tendency,
+                "recommended_feed_mm_min": material.recommended_feed_mm_min,
+                "recommended_rpm": material.recommended_rpm,
+            }
         context["material_id"] = refs.material_preset_id
-    
+
     if refs.tool_preset_id:
-        # TODO: Load from preset registry
+        tool = registry.get_tool(refs.tool_preset_id)
+        if tool:
+            context["tool"] = {
+                "id": tool.id,
+                "name": tool.name,
+                "diameter_mm": tool.diameter_mm,
+                "flute_count": tool.flute_count,
+                "tool_type": tool.tool_type,
+            }
         context["tool_id"] = refs.tool_preset_id
-    
+
     if refs.machine_id:
         context["machine_id"] = refs.machine_id
-    
+
     if refs.mode:
         context["workflow_mode"] = refs.mode
-    
+
     return context
 
 
@@ -514,54 +545,88 @@ def evaluate_session_feasibility(
     
     # Transition to FEASIBILITY_REQUESTED
     request_feasibility(session, actor=ActorRole.USER)
-    
-    # Compute feasibility
-    # TODO: Wire to actual RMOS feasibility engine
-    # from app.rmos.feasibility_fusion import evaluate_feasibility
-    # from app.rmos.context import RmosContext
-    # context = request.context_override if request else session.context
-    # rmos_ctx = RmosContext.from_dict(context)
-    # report = evaluate_feasibility(session.design, rmos_ctx)
-    
-    # Stub feasibility for now
+
+    # Get design and context
     design = session.design or {}
-    score = 85.0  # Stub score
-    risk_bucket = RiskBucket.GREEN
-    warnings: List[str] = []
-    
-    # Simple validation checks
-    outer_d = design.get("outer_diameter_mm", 0)
-    inner_d = design.get("inner_diameter_mm", 0)
-    
-    if outer_d <= 0:
-        warnings.append("Invalid outer diameter")
-        score -= 20
+    context_dict = session.context or {}
+
+    # Apply any request-level context override
+    if request and request.context_override:
+        context_dict = {**context_dict, **request.context_override}
+
+    # Build RMOS context for feasibility evaluation
+    try:
+        # Create MaterialProfile from context if material data available
+        material_profile = None
+        if "material" in context_dict:
+            mat = context_dict["material"]
+            material_profile = MaterialProfile(
+                density_kg_m3=mat.get("density_kgm3", 700.0),
+            )
+
+        # Build RmosContext
+        rmos_ctx = RmosContext(
+            model_id=context_dict.get("model_id", "generic"),
+            model_spec=context_dict.get("model_spec", {}),
+            materials=material_profile,
+        )
+
+        # Add design parameters to physics_inputs for calculator access
+        rmos_ctx.physics_inputs = {
+            "tool_diameter_mm": context_dict.get("tool", {}).get("diameter_mm", 6.0),
+            "feed_rate_mmpm": context_dict.get("material", {}).get("recommended_feed_mm_min", 1500),
+            "spindle_rpm": context_dict.get("material", {}).get("recommended_rpm", 18000),
+            "depth_of_cut_mm": design.get("depth_mm", 3.0),
+            **design,
+        }
+
+        # Evaluate using RMOS feasibility engine
+        report = rmos_evaluate_feasibility(design, rmos_ctx)
+
+        # Map RiskLevel to RiskBucket
+        risk_level_to_bucket = {
+            RiskLevel.GREEN: RiskBucket.GREEN,
+            RiskLevel.YELLOW: RiskBucket.YELLOW,
+            RiskLevel.RED: RiskBucket.RED,
+            RiskLevel.UNKNOWN: RiskBucket.UNKNOWN,
+        }
+
+        score = report.overall_score
+        risk_bucket = risk_level_to_bucket.get(report.overall_risk, RiskBucket.UNKNOWN)
+
+        # Collect all warnings from assessments + recommendations
+        warnings: List[str] = []
+        for assessment in report.assessments:
+            warnings.extend(assessment.warnings)
+        warnings.extend(report.recommendations)
+
+    except Exception as e:
+        # Fallback to basic validation if RMOS engine fails
+        logger.warning(f"RMOS feasibility engine failed, using fallback: {e}")
+        score = 70.0
         risk_bucket = RiskBucket.YELLOW
-    
-    if inner_d < 0:
-        warnings.append("Invalid inner diameter")
-        score -= 10
-        risk_bucket = RiskBucket.YELLOW
-    
-    if outer_d <= inner_d:
-        warnings.append("Outer diameter must be greater than inner diameter")
-        score -= 30
-        risk_bucket = RiskBucket.RED
-    
-    rings = design.get("ring_params", [])
-    if not rings:
-        warnings.append("No rings defined in design")
-        score -= 15
-        risk_bucket = RiskBucket.YELLOW
-    
-    # Clamp score
-    score = max(0.0, min(100.0, score))
-    
-    # Determine risk bucket from score
-    if score < 50:
-        risk_bucket = RiskBucket.RED
-    elif score < 70:
-        risk_bucket = RiskBucket.YELLOW
+        warnings = [f"Feasibility engine error: {str(e)}", "Using fallback validation"]
+
+        # Basic validation checks as fallback
+        outer_d = design.get("outer_diameter_mm", 0)
+        inner_d = design.get("inner_diameter_mm", 0)
+
+        if outer_d <= 0:
+            warnings.append("Invalid outer diameter")
+            score -= 20
+        if inner_d < 0:
+            warnings.append("Invalid inner diameter")
+            score -= 10
+        if outer_d > 0 and outer_d <= inner_d:
+            warnings.append("Outer diameter must be greater than inner diameter")
+            score -= 30
+            risk_bucket = RiskBucket.RED
+
+        score = max(0.0, min(100.0, score))
+        if score < 50:
+            risk_bucket = RiskBucket.RED
+        elif score < 70:
+            risk_bucket = RiskBucket.YELLOW
     
     # Create feasibility result
     result = FeasibilityResult(
@@ -569,7 +634,7 @@ def evaluate_session_feasibility(
         risk_bucket=risk_bucket,
         warnings=warnings,
         meta={
-            "source": "server_direct",  # Mark as server-computed
+            "source": "rmos_feasibility_fusion",  # Mark as RMOS engine-computed
             "design_hash": str(hash(str(design))),
         },
     )
