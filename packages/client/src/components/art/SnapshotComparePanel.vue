@@ -18,6 +18,9 @@ const error = ref<string>("");
 // Collapsed by default (32.1.0a)
 const isOpen = ref(false);
 
+// Auto-compare guard (32.1.0c)
+const autoComparedOnce = ref(false);
+
 const left = ref<AnySnap | null>(null);
 const right = ref<AnySnap | null>(null);
 
@@ -149,6 +152,33 @@ watch(
   }
 );
 
+// 32.1.0c: Auto-run Compare when panel opens with both IDs set
+watch(
+  () => [isOpen.value, leftId.value, rightId.value],
+  async ([open, l, r]) => {
+    if (!open) return;
+    if (!l || !r) return;
+    if (l === r) return;
+
+    // Run once per open session (prevents loops / spam)
+    if (autoComparedOnce.value) return;
+
+    autoComparedOnce.value = true;
+    await loadSnapshotsForCompare();
+  },
+  { immediate: true }
+);
+
+// 32.1.0c: Reset auto-compare guard when panel closes
+watch(
+  () => isOpen.value,
+  (open) => {
+    if (!open) {
+      autoComparedOnce.value = false;
+    }
+  }
+);
+
 function pickBaselineLeft() {
   const base = (store.snapshots || []).find((s: any) => s.baseline === true);
   if (!base) {
@@ -183,6 +213,7 @@ function clearCompare() {
   left.value = null;
   right.value = null;
   error.value = "";
+  autoComparedOnce.value = false; // 32.1.0c: reset guard
 }
 </script>
 
