@@ -87,6 +87,49 @@ def _safe_zip_member_name(relpath: str, sha256: str) -> str:
     return name
 
 
+def _normalize_kind_list(xs: Optional[List[str]]) -> Optional[set[str]]:
+    if not xs:
+        return None
+    out = set()
+    for x in xs:
+        if not x:
+            continue
+        s = str(x).strip()
+        if not s:
+            continue
+        if len(s) > 80:
+            continue
+        out.add(s)
+    return out if out else None
+
+
+def _normalize_prefix_list(xs: Optional[List[str]]) -> Optional[list[str]]:
+    if not xs:
+        return None
+    out: list[str] = []
+    for x in xs:
+        if not x:
+            continue
+        s = str(x).strip()
+        if not s:
+            continue
+        if len(s) > 80:
+            continue
+        out.append(s)
+    return out if out else None
+
+
+def _kind_allowed(kind: Optional[str], include: Optional[set[str]], exclude: Optional[set[str]], prefixes: Optional[list[str]]) -> bool:
+    k = (kind or "").strip()
+    if exclude and k in exclude:
+        return False
+    if include is not None:
+        return k in include
+    if prefixes:
+        return any(k.startswith(p) for p in prefixes)
+    return True
+
+
 def _ensure_blob_exists(root: Path, sha: str, ext: str) -> Path:
     """
     For zip export, we require ext be known (from relpath suffix).
@@ -141,6 +184,10 @@ class ZipExportRequest(BaseModel):
     )
     ttl_seconds: Optional[int] = Field(default=None, description="Signed URL TTL")
     include_manifest: bool = Field(default=True, description="Include a manifest.json inside the zip")
+
+    include_kinds: Optional[List[str]] = Field(default=None, description="If provided, include only attachments whose kind is in this set")
+    exclude_kinds: Optional[List[str]] = Field(default=None, description="If provided, exclude attachments whose kind is in this set")
+    kind_prefixes: Optional[List[str]] = Field(default=None, description="Optional: include attachments whose kind starts with any prefix")
 
 
 class ZipExportResponse(BaseModel):
@@ -197,12 +244,21 @@ def export_run_attachments_zip(
                    f"Set RMOS_ACOUSTICS_ZIP_MAX_ITEMS to adjust.",
         )
 
+    # Normalize kind filters
+    include_kinds = _normalize_kind_list(body.include_kinds)
+    exclude_kinds = _normalize_kind_list(body.exclude_kinds)
+    kind_prefixes = _normalize_prefix_list(body.kind_prefixes)
+
+    # If both include_kinds and kind_prefixes are provided, include_kinds wins (more explicit).
+    if include_kinds is not None:
+        kind_prefixes = None
+
     root = _attachments_root()
     max_input = _max_zip_total_input_bytes()
     max_output = _max_zip_output_bytes()
 
     # Resolve blobs and enforce total input cap
-    blobs: List[tuple[str, str, Path, int, str]] = []
+    blobs: List[tuple[str, str, Path, int, str, Optional[str]]] = []
     total_in = 0
 
     for sha in wanted:
@@ -210,6 +266,10 @@ def export_run_attachments_zip(
             continue
         a = att_by_sha.get(sha)
         if a is None:
+            continue
+
+        kind = getattr(a, "kind", None)
+        if not _kind_allowed(kind, include_kinds, exclude_kinds, kind_prefixes):
             continue
 
         relpath = getattr(a, "relpath", "") or ""
@@ -237,7 +297,7 @@ def export_run_attachments_zip(
 
         member = _safe_zip_member_name(relpath, sha)
         mime = getattr(a, "mime", "") or ""
-        blobs.append((sha, member, blob, sz, mime))
+        blobs.append((sha, member, blob, sz, mime, kind))
 
     if not blobs:
         raise HTTPException(status_code=404, detail="No eligible attachments found to zip")
@@ -255,7 +315,7 @@ def export_run_attachments_zip(
     try:
         with zipfile.ZipFile(str(tmp_zip_path), mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             # Add files
-            for sha, member, blob, sz, mime in blobs:
+            for sha, member, blob, sz, mime, kind in blobs:
                 zf.write(str(blob), arcname=member)
                 included += 1
                 manifest_entries.append({
@@ -263,6 +323,7 @@ def export_run_attachments_zip(
                     "member": member,
                     "bytes": sz,
                     "mime": mime or None,
+                    "kind": kind or None,
                 })
 
             # Optional manifest inside zip
