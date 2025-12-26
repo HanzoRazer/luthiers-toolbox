@@ -16,6 +16,7 @@
     <div class="row">
       <input class="input" type="file" accept="application/json" @change="onFile" />
       <button class="btn" @click="exportLast" :disabled="!store.lastSavedSnapshot">Export Last Saved</button>
+      <button class="btn" @click="scrollToCompare">Compare…</button>
     </div>
     <div v-if="store.snapshotsError" class="err">{{ store.snapshotsError }}</div>
     <div class="list" v-if="store.snapshots?.length">
@@ -33,7 +34,7 @@
     <div v-else class="empty">No snapshots yet.</div>
   </div>
 
-  <div style="margin-top: 12px;">
+  <div id="snapshot-compare" style="margin-top: 12px;">
     <SnapshotComparePanel />
   </div>
 </template>
@@ -82,6 +83,10 @@ function onFile(evt: Event) {
     input.value = "";
   };
   reader.readAsText(file);
+}
+
+function scrollToCompare() {
+  document.getElementById("snapshot-compare")?.scrollIntoView({ behavior: "smooth" });
 }
 </script>
 

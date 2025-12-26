@@ -15,6 +15,9 @@ const rightId = ref<string>("");
 const loading = ref(false);
 const error = ref<string>("");
 
+// Collapsed by default (32.1.0a)
+const isOpen = ref(false);
+
 const left = ref<AnySnap | null>(null);
 const right = ref<AnySnap | null>(null);
 
@@ -99,6 +102,30 @@ watch(() => [leftId.value, rightId.value], () => {
   void loadSnapshotsForCompare();
 });
 
+// Auto-select Left=baseline when snapshots list changes and Left is empty (32.1.0a)
+watch(
+  () => store.snapshots,
+  (snaps) => {
+    if (!snaps || !snaps.length) return;
+    if (leftId.value) return;
+
+    const base = snaps.find((s: any) => s.baseline === true);
+    if (base?.snapshot_id) {
+      leftId.value = base.snapshot_id;
+    }
+  },
+  { immediate: true, deep: false }
+);
+
+// When opening panel, if left is still empty, try baseline once (32.1.0a)
+watch(
+  () => isOpen.value,
+  (open) => {
+    if (!open) return;
+    if (!leftId.value) pickBaselineLeft();
+  }
+);
+
 function pickBaselineLeft() {
   const base = (store.snapshots || []).find((s: any) => s.baseline === true);
   if (!base) {
@@ -126,7 +153,12 @@ function clearCompare() {
 <template>
   <div class="card">
     <div class="row">
-      <h3>Snapshot Compare</h3>
+      <h3 style="display:flex; align-items:center; gap:8px; margin:0;">
+        <button class="btn" @click="isOpen = !isOpen" style="padding:6px 10px;">
+          {{ isOpen ? "▾" : "▸" }}
+        </button>
+        Snapshot Compare
+      </h3>
       <div class="actions">
         <button class="btn" @click="store.loadRecentSnapshots()" :disabled="store.snapshotsLoading">
           Refresh list
@@ -134,6 +166,7 @@ function clearCompare() {
       </div>
     </div>
 
+    <div v-if="isOpen">
     <div class="row">
       <select class="input" v-model="leftId">
         <option value="">Left snapshot…</option>
@@ -238,6 +271,7 @@ function clearCompare() {
       </div>
 
       <div v-else class="empty">No ring data found in one or both snapshots.</div>
+    </div>
     </div>
   </div>
 </template>
