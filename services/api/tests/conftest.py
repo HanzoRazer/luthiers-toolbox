@@ -154,6 +154,32 @@ def _clear_request_id_context():
 
 
 # =============================================================================
+# SHADOW STATS / DEPRECATION BUDGET CI GATE
+# =============================================================================
+
+@pytest.fixture(scope="session", autouse=True)
+def _shadow_stats_write_after_tests(tmp_path_factory):
+    """
+    Always writes ENDPOINT_STATS_PATH at end of test session (even if empty).
+    This enables the CI budget gate to run deterministically.
+    """
+    from app.governance.shadow_stats import reset, write_shadow_stats_json
+
+    # Respect CI-provided ENDPOINT_STATS_PATH if present
+    configured = os.environ.get("ENDPOINT_STATS_PATH")
+    if configured:
+        stats_path = configured
+    else:
+        stats_dir = tmp_path_factory.mktemp("endpoint_shadow_stats")
+        stats_path = str(stats_dir / "endpoint_shadow_stats.json")
+        os.environ["ENDPOINT_STATS_PATH"] = stats_path
+
+    reset()
+    yield
+    write_shadow_stats_json(stats_path)
+
+
+# =============================================================================
 # GEOMETRY & CAM FIXTURES
 # =============================================================================
 
@@ -431,6 +457,7 @@ __all__ = [
     "api_client",
     "client",  # NEW: Auto-injects X-Request-Id
     "rmos_global_test_isolation",  # NEW: Global test isolation
+    "_shadow_stats_write_after_tests",  # Shadow stats CI gate
     # Geometry fixtures
     "sample_geometry_simple",
     "sample_geometry_with_arcs",
