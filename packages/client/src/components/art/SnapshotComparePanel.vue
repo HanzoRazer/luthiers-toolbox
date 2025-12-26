@@ -21,6 +21,22 @@ const isOpen = ref(false);
 // Auto-compare guard (32.1.0c)
 const autoComparedOnce = ref(false);
 
+// 32.1.0d: Live compare toggle (default OFF)
+const liveCompare = ref(false);
+let liveTimer: number | null = null;
+
+function scheduleLiveCompare() {
+  if (!liveCompare.value) return;
+  if (!isOpen.value) return;
+  if (!leftId.value || !rightId.value) return;
+  if (leftId.value === rightId.value) return;
+
+  if (liveTimer) window.clearTimeout(liveTimer);
+  liveTimer = window.setTimeout(() => {
+    void loadSnapshotsForCompare();
+  }, 200);
+}
+
 const left = ref<AnySnap | null>(null);
 const right = ref<AnySnap | null>(null);
 
@@ -100,9 +116,9 @@ async function loadSnapshotsForCompare() {
   }
 }
 
-// Auto-refresh compare view when ids change
+// 32.1.0d: Live compare triggers on id change (manual mode uses Compare button)
 watch(() => [leftId.value, rightId.value], () => {
-  void loadSnapshotsForCompare();
+  scheduleLiveCompare();
 });
 
 // Auto-select Left=baseline when snapshots list changes and Left is empty (32.1.0a)
@@ -169,12 +185,16 @@ watch(
   { immediate: true }
 );
 
-// 32.1.0c: Reset auto-compare guard when panel closes
+// 32.1.0c + 32.1.0d: Reset guards and timer when panel closes
 watch(
   () => isOpen.value,
   (open) => {
     if (!open) {
       autoComparedOnce.value = false;
+      if (liveTimer) {
+        window.clearTimeout(liveTimer);
+        liveTimer = null;
+      }
     }
   }
 );
@@ -214,6 +234,11 @@ function clearCompare() {
   right.value = null;
   error.value = "";
   autoComparedOnce.value = false; // 32.1.0c: reset guard
+  // 32.1.0d: clear live timer
+  if (liveTimer) {
+    window.clearTimeout(liveTimer);
+    liveTimer = null;
+  }
 }
 
 // 32.1.0e: Keyboard shortcuts [ and ] to step Right snapshot
@@ -321,6 +346,16 @@ onBeforeUnmount(() => {
       <button class="btn" @click="clearCompare">Clear</button>
       <span class="meta" style="font-size:11px; color:#888;">
         <b>[</b>/<b>]</b> step Right
+      </span>
+    </div>
+
+    <div class="row" style="justify-content:flex-start;">
+      <label class="meta" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" v-model="liveCompare" />
+        Live compare
+      </label>
+      <span class="meta" style="font-size:11px; color:#888;">
+        (auto-runs on selection change)
       </span>
     </div>
 
