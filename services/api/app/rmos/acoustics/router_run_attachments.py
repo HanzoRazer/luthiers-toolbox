@@ -206,6 +206,8 @@ class SignedBatchResponse(BaseModel):
     requested: int
     signed: int
 
+    included_sha256s: List[str] = []
+
     skipped_filtered: int = 0
     skipped_invalid_sha: int = 0
     skipped_not_in_run: int = 0
@@ -273,6 +275,7 @@ def signed_batch(
     client_ip = _client_ip(request)
 
     items: List[SignedBatchItem] = []
+    included_sha256s: list[str] = []
     signed_count = 0
 
     skipped_filtered = 0
@@ -339,12 +342,14 @@ def signed_batch(
             item.mime = getattr(a, "mime", None)
 
         items.append(item)
+        included_sha256s.append(sha)
         signed_count += 1
 
     return SignedBatchResponse(
         run_id=run_id,
         requested=len(wanted),
         signed=signed_count,
+        included_sha256s=included_sha256s,
         skipped_filtered=skipped_filtered,
         skipped_invalid_sha=skipped_invalid_sha,
         skipped_not_in_run=skipped_not_in_run,
