@@ -56,6 +56,7 @@ jobs:
         working-directory: services/api
         env:
           RMOS_RUNS_DIR: ${{ runner.temp }}/rmos_runs
+          ENDPOINT_STATS_PATH: ${{ runner.temp }}/endpoint_shadow_stats.json
         run: |
           echo "Running runs_v2 split store verification tests..."
           python -m pytest tests/test_runs_v2_split_store.py -v --tb=short
@@ -64,3 +65,18 @@ jobs:
         working-directory: services/api
         run: |
           python ../../scripts/rmos_ci_test.py
+
+      - name: Deprecation budget gate (legacy shadow endpoints)
+        working-directory: services/api
+        env:
+          ENDPOINT_STATS_PATH: ${{ runner.temp }}/endpoint_shadow_stats.json
+          DEPRECATION_BUDGET_ENFORCE_AFTER: "2026-01-31"
+          DEPRECATION_BUDGET_LEGACY_HITS_MAX: "0"
+          DEPRECATION_BUDGET_LEGACY_RATE_MAX: "0.01"
+          DEPRECATION_BUDGET_MIN_TOTAL_HITS: "25"
+        run: |
+          # Seed empty stats if fixture didn't write (safe fallback)
+          if [ ! -f "${ENDPOINT_STATS_PATH}" ]; then
+            echo '{"total_hits":0,"legacy_hits":0,"by_legacy_route":{},"window":{"kind":"since_start"},"generated_at_utc":"2025-12-25T00:00:00Z"}' > "${ENDPOINT_STATS_PATH}"
+          fi
+          python -m app.governance.cli_deprecation_budget check
