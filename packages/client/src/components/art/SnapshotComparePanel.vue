@@ -262,6 +262,7 @@ function stepRight(delta: number) {
   // If no right selected, pick first non-baseline
   if (curIdx < 0) {
     pickMostRecentNonBaselineAsRight();
+    scheduleLiveCompare();
     return;
   }
 
@@ -277,23 +278,68 @@ function stepRight(delta: number) {
     const alt = snaps[altIdx];
     if (alt?.snapshot_id && alt.snapshot_id !== leftId.value) {
       rightId.value = alt.snapshot_id;
+      scheduleLiveCompare();
       return;
     }
   }
 
   rightId.value = next.snapshot_id;
+  scheduleLiveCompare();
+}
+
+// 32.1.0f: Step Left snapshot with Shift+[ / Shift+]
+function stepLeft(delta: number) {
+  const snaps = store.snapshots || [];
+  if (!snaps.length) return;
+
+  const curIdx = _snapshotIndexById(leftId.value);
+  // If no left selected, try baseline first
+  if (curIdx < 0) {
+    pickBaselineLeft();
+    scheduleLiveCompare();
+    return;
+  }
+
+  let nextIdx = curIdx + delta;
+  nextIdx = Math.max(0, Math.min(snaps.length - 1, nextIdx));
+
+  const next = snaps[nextIdx];
+  if (!next?.snapshot_id) return;
+
+  // Avoid left == right; try stepping one more if needed
+  if (next.snapshot_id === rightId.value) {
+    const altIdx = Math.max(0, Math.min(snaps.length - 1, nextIdx + delta));
+    const alt = snaps[altIdx];
+    if (alt?.snapshot_id && alt.snapshot_id !== rightId.value) {
+      leftId.value = alt.snapshot_id;
+      scheduleLiveCompare();
+      return;
+    }
+  }
+
+  leftId.value = next.snapshot_id;
+  scheduleLiveCompare();
 }
 
 function onKeyDown(e: KeyboardEvent) {
   if (!isOpen.value) return;
   if (_isTypingTarget(e.target)) return;
 
+  // 32.1.0f: Shift+[ / Shift+] steps Left; plain [ / ] steps Right
   if (e.key === "[") {
     e.preventDefault();
-    stepRight(-1);
+    if (e.shiftKey) {
+      stepLeft(-1);
+    } else {
+      stepRight(-1);
+    }
   } else if (e.key === "]") {
     e.preventDefault();
-    stepRight(1);
+    if (e.shiftKey) {
+      stepLeft(1);
+    } else {
+      stepRight(1);
+    }
   }
 }
 
@@ -345,7 +391,7 @@ onBeforeUnmount(() => {
       <button class="btn" @click="loadSnapshotsForCompare" :disabled="!canCompare">Compare</button>
       <button class="btn" @click="clearCompare">Clear</button>
       <span class="meta" style="font-size:11px; color:#888;">
-        <b>[</b>/<b>]</b> step Right
+        <b>[</b>/<b>]</b> Right &nbsp; <b>⇧[</b>/<b>⇧]</b> Left
       </span>
     </div>
 
