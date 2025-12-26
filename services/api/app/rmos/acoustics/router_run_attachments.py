@@ -1,213 +1,119 @@
 from __future__ import annotations
 
-import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional, List
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, HTTPException, Query, Header
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from .persist_glue import RUNS_ROOT_DEFAULT, ATTACHMENTS_ROOT_DEFAULT, INDEX_FILENAME
+from .persist_glue import (
+    ATTACHMENTS_ROOT_DEFAULT,
+    load_run_artifact,
+)
+from .signed_urls import sign_attachment
 
 router = APIRouter(prefix="/api/rmos/acoustics", tags=["rmos", "acoustics"])
 
 _SHA_RE = re.compile(r"^[a-f0-9]{64}$")
 
 
-def _runs_root() -> Path:
-    return Path(os.getenv("RMOS_RUNS_ROOT", RUNS_ROOT_DEFAULT)).expanduser().resolve()
-
-
 def _attachments_root() -> Path:
-    return Path(os.getenv("RMOS_RUN_ATTACHMENTS_DIR", ATTACHMENTS_ROOT_DEFAULT)).expanduser().resolve()
+    return Path(
+        os.getenv("RMOS_RUN_ATTACHMENTS_DIR", ATTACHMENTS_ROOT_DEFAULT)
+    ).expanduser().resolve()
 
 
-def _load_json(p: Path) -> Any:
-    return json.loads(p.read_text(encoding="utf-8"))
+def _sanitize_ext_from_relpath(relpath: str) -> str:
+    if not relpath:
+        return ""
+    suffix = Path(relpath).suffix
+    if "/" in suffix or "\\" in suffix or len(suffix) > 16:
+        return ""
+    return suffix
 
 
-def _guess_mime(ext: str) -> Optional[str]:
-    return {
-        ".wav": "audio/wav",
-        ".json": "application/json",
-        ".csv": "text/csv",
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".txt": "text/plain",
-        ".dxf": "image/vnd.dxf",
-        ".nc": "text/plain",
-        ".gcode": "text/plain",
-    }.get(ext.lower())
+def _client_ip(req: Request) -> str:
+    return (req.client.host if req.client else "") or ""
 
 
-def _safe_ext(relpath: str) -> str:
-    return Path(relpath.replace("\\", "/")).suffix if relpath else ""
-
-
-def _resolve_blob(root: Path, sha: str, ext_hint: str) -> Optional[Path]:
-    shard = root / sha[:2] / sha[2:4]
-    if not shard.exists():
-        return None
-
-    if ext_hint:
-        p = shard / f"{sha}{ext_hint}"
-        if p.exists():
-            return p
-
-    for e in [".json", ".wav", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".nc", ".gcode", ".dxf"]:
-        p = shard / f"{sha}{e}"
-        if p.exists():
-            return p
-
-    p0 = shard / sha
-    return p0 if p0.exists() else None
-
-
-def _max_attachment_bytes() -> int:
-    v = os.getenv("RMOS_MAX_ATTACHMENT_BYTES", "").strip()
-    if not v:
-        return 104857600  # 100MB default
-    try:
-        return int(v)
-    except Exception:
-        return 104857600
-
-
-def _require_stream_token(x_rmos_stream_token: Optional[str]) -> None:
-    token = os.getenv("RMOS_ACOUSTICS_STREAM_TOKEN", "").strip()
-    if not token:
-        return  # dev/default: no gate
-    if (x_rmos_stream_token or "").strip() != token:
-        raise HTTPException(status_code=401, detail="Streaming requires X-RMOS-Stream-Token")
-
-
-def _enforce_size_limit(blob: Path) -> None:
-    limit = _max_attachment_bytes()
-    try:
-        size = blob.stat().st_size
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Attachment not found")
-    if size > limit:
-        raise HTTPException(status_code=413, detail=f"Attachment exceeds size limit ({limit} bytes)")
-
-
-def _find_run_json(run_id: str) -> Path:
-    runs_root = _runs_root()
-    idx = runs_root / INDEX_FILENAME
-
-    if idx.exists():
-        try:
-            data = _load_json(idx)
-            for r in data.get("runs", []):
-                if r.get("run_id") == run_id and r.get("path"):
-                    p = (runs_root / r["path"]).resolve()
-                    if p.exists():
-                        return p
-        except Exception:
-            pass
-
-    target = f"run_{run_id}.json"
-    for d in runs_root.iterdir():
-        if d.is_dir():
-            p = d / target
-            if p.exists():
-                return p
-
-    raise HTTPException(status_code=404, detail="run not found")
-
-
-class RunAttachmentResolved(BaseModel):
+class RunAttachmentOut(BaseModel):
     sha256: str
-    relpath: Optional[str]
-    kind: Optional[str]
-    point_id: Optional[str]
-
-    exists: bool
-    bytes: Optional[int]
-    ext: Optional[str]
-    mime: Optional[str]
+    relpath: str
+    kind: Optional[str] = None
+    bytes: Optional[int] = None
+    mime: Optional[str] = None
+    signed_url: Optional[str] = None
+    signed_exp: Optional[int] = None
 
 
 class RunAttachmentsResponse(BaseModel):
     run_id: str
-    attachments: list[RunAttachmentResolved]
+    count: int
+    attachments: List[RunAttachmentOut]
 
 
 @router.get("/runs/{run_id}/attachments", response_model=RunAttachmentsResponse)
 def list_run_attachments(
+    request: Request,
     run_id: str,
-    download: int = Query(default=0),
-    sha256: Optional[str] = Query(default=None),
-    x_rmos_stream_token: Optional[str] = Header(default=None, alias="X-RMOS-Stream-Token"),
+    signed: int = Query(default=0, description="Include signed URLs"),
+    ttl: Optional[int] = Query(default=None, description="TTL for signed URLs"),
 ):
     """
-    List attachments for a run with resolved metadata (no path disclosure).
-
-    If download=1 and sha256=<...> is provided, streams that attachment.
-    Streaming is auth-gated if RMOS_ACOUSTICS_STREAM_TOKEN is set.
+    Lists attachments for a run.
+    Optionally emits signed URLs (HMAC + expiry) with no path disclosure.
     """
-    run_path = _find_run_json(run_id)
-    run = _load_json(run_path)
-    records = run.get("attachments", [])
+    run = load_run_artifact(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
 
-    blob_root = _attachments_root()
+    root = _attachments_root()
+    out: List[RunAttachmentOut] = []
 
-    if download == 1:
-        if not sha256 or not _SHA_RE.match(sha256):
-            raise HTTPException(status_code=400, detail="Valid sha256 required")
-        for r in records:
-            if r.get("sha256") == sha256:
-                ext = _safe_ext(r.get("relpath", ""))
-                blob = _resolve_blob(blob_root, sha256, ext)
-                if not blob:
-                    raise HTTPException(status_code=404, detail="blob not found")
-
-                _require_stream_token(x_rmos_stream_token)
-                _enforce_size_limit(blob)
-
-                return FileResponse(
-                    path=str(blob),
-                    media_type=_guess_mime(blob.suffix) or "application/octet-stream",
-                    filename=blob.name,
-                )
-        raise HTTPException(status_code=404, detail="attachment not in run")
-
-    out: list[RunAttachmentResolved] = []
-    for r in records:
-        sha = r.get("sha256")
-        if not sha or not _SHA_RE.match(sha):
+    for a in run.attachments:
+        sha = a.sha256.lower().strip()
+        if not _SHA_RE.match(sha):
             continue
 
-        ext = _safe_ext(r.get("relpath", ""))
-        blob = _resolve_blob(blob_root, sha, ext)
+        ext = _sanitize_ext_from_relpath(a.relpath or "")
+        blob = root / sha[:2] / sha[2:4] / f"{sha}{ext}"
 
-        if not blob:
-            out.append(RunAttachmentResolved(
-                sha256=sha,
-                relpath=r.get("relpath"),
-                kind=r.get("kind"),
-                point_id=r.get("point_id"),
-                exists=False,
-                bytes=None,
-                ext=None,
-                mime=None,
-            ))
-            continue
+        size = None
+        if blob.exists():
+            try:
+                size = blob.stat().st_size
+            except Exception:
+                pass
 
-        st = blob.stat()
-        out.append(RunAttachmentResolved(
+        entry = RunAttachmentOut(
             sha256=sha,
-            relpath=r.get("relpath"),
-            kind=r.get("kind"),
-            point_id=r.get("point_id"),
-            exists=True,
-            bytes=int(st.st_size),
-            ext=blob.suffix or None,
-            mime=_guess_mime(blob.suffix),
-        ))
+            relpath=a.relpath,
+            kind=getattr(a, "kind", None),
+            bytes=size,
+            mime=getattr(a, "mime", None),
+        )
 
-    return RunAttachmentsResponse(run_id=run_id, attachments=out)
+        if signed == 1:
+            token = sign_attachment(
+                sha256=sha,
+                ext=ext,
+                download=1,
+                ttl_seconds=ttl,
+                client_ip=_client_ip(request),
+            )
+            qs = urlencode(token.to_query())
+            entry.signed_url = (
+                f"/api/rmos/acoustics/attachments/{sha}/signed-download?{qs}"
+            )
+            entry.signed_exp = token.exp
+
+        out.append(entry)
+
+    return RunAttachmentsResponse(
+        run_id=run_id,
+        count=len(out),
+        attachments=out,
+    )

@@ -5,13 +5,36 @@ import os
 import shutil
 import uuid
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .importer import ImportPlan
 from .schemas_manifest_v1 import TapToneBundleManifestV1
+
+
+@dataclass(frozen=True)
+class RunAttachment:
+    sha256: str
+    relpath: str
+    kind: Optional[str] = None
+    mime: Optional[str] = None
+    bytes: Optional[int] = None
+    point_id: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RunArtifact:
+    run_id: str
+    created_at: str
+    status: str
+    mode: Optional[str] = None
+    event_type: Optional[str] = None
+    tool_id: Optional[str] = None
+    bundle_id: Optional[str] = None
+    attachments: List[RunAttachment] = field(default_factory=list)
+    raw: Dict[str, Any] = field(default_factory=dict)
 
 
 # Defaults align with your existing RMOS attachments env convention
@@ -257,3 +280,75 @@ def _update_index(*, runs_root: Path, run_obj: Dict[str, Any], run_json_path: Pa
     except Exception:
         # Index is best-effort; do not fail ingestion because of cache.
         return False
+
+
+def load_run_artifact(run_id: str) -> Optional[RunArtifact]:
+    """
+    Load a run by ID, returning a structured RunArtifact or None if not found.
+    Uses _index.json first, then falls back to date-partition scan.
+    """
+    runs_root = _get_runs_root()
+    idx_path = runs_root / INDEX_FILENAME
+
+    run_json_path: Optional[Path] = None
+
+    # 1) Try index lookup
+    if idx_path.exists():
+        try:
+            idx = _json_load(idx_path)
+            for r in idx.get("runs", []):
+                if isinstance(r, dict) and r.get("run_id") == run_id:
+                    rel = r.get("path")
+                    if rel:
+                        p = (runs_root / rel).resolve()
+                        if p.exists() and p.is_file():
+                            run_json_path = p
+                            break
+        except Exception:
+            pass
+
+    # 2) Fallback: scan date partitions
+    if run_json_path is None:
+        target = f"run_{run_id}.json"
+        for child in sorted(runs_root.iterdir(), reverse=True) if runs_root.exists() else []:
+            if not child.is_dir():
+                continue
+            name = child.name
+            if len(name) != 10 or name[4] != "-" or name[7] != "-":
+                continue
+            p = child / target
+            if p.exists() and p.is_file():
+                run_json_path = p
+                break
+
+    if run_json_path is None:
+        return None
+
+    try:
+        raw = _json_load(run_json_path)
+    except Exception:
+        return None
+
+    attachments = []
+    for a in raw.get("attachments", []):
+        if isinstance(a, dict) and a.get("sha256"):
+            attachments.append(RunAttachment(
+                sha256=a.get("sha256", ""),
+                relpath=a.get("relpath", ""),
+                kind=a.get("kind"),
+                mime=a.get("mime"),
+                bytes=a.get("bytes"),
+                point_id=a.get("point_id"),
+            ))
+
+    return RunArtifact(
+        run_id=raw.get("run_id", run_id),
+        created_at=raw.get("created_at", ""),
+        status=raw.get("status", ""),
+        mode=raw.get("mode"),
+        event_type=raw.get("event_type"),
+        tool_id=raw.get("tool_id"),
+        bundle_id=raw.get("bundle_id"),
+        attachments=attachments,
+        raw=raw,
+    )
