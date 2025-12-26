@@ -14,6 +14,7 @@ import pytest
 import sys
 import uuid
 from pathlib import Path
+from typing import Optional
 from fastapi.testclient import TestClient
 import json
 import tempfile
@@ -233,6 +234,50 @@ def auto_x_request_id(monkeypatch):
     yield
 
     _clear_request_id_contextvar_best_effort()
+
+
+@pytest.fixture(autouse=True)
+def require_x_request_id_in_responses(monkeypatch):
+    """
+    Autouse: fail fast if ANY TestClient request returns without X-Request-Id.
+
+    This catches middleware regressions immediately (very enterprise-safe).
+    """
+    try:
+        from starlette.testclient import TestClient
+    except Exception:
+        yield
+        return
+
+    original_request = TestClient.request
+
+    # Allowlist: docs/openapi endpoints sometimes get handled by tooling/mounts.
+    # Keep tight; expand only if you hit a legitimate case.
+    ALLOW_MISSING_PREFIXES = (
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+    )
+
+    def wrapped_request(self, method, url, **kwargs):
+        resp = original_request(self, method, url, **kwargs)
+
+        # Normalize url/path as string
+        path = str(url)
+        for pfx in ALLOW_MISSING_PREFIXES:
+            if path.startswith(pfx):
+                return resp
+
+        # If you explicitly want to test "no header" behavior, set this flag
+        if kwargs.get("_allow_missing_request_id") is True:
+            return resp
+
+        # Require for all normal requests (even error responses should have it)
+        assert_request_id_header(resp)
+        return resp
+
+    monkeypatch.setattr(TestClient, "request", wrapped_request, raising=True)
+    yield
 
 
 # =============================================================================
@@ -534,31 +579,27 @@ def assert_valid_moves(moves: list):
 
 
 
-def assert_request_id_header(response) -> str:
+def assert_request_id_header(response, *, header_name: str = "x-request-id") -> str:
     """
-    Assert that a response includes a valid X-Request-Id header.
+    Assert that a response contains a request id header.
 
-    Works with FastAPI TestClient responses and requests.Response.
-
-    Returns:
-        str: The request_id value for downstream assertions/logging.
+    Returns the request id value for convenient logging/assertions.
     """
-    # FastAPI TestClient + requests both expose headers as a dict-like object
-    headers = getattr(response, "headers", None)
-    assert headers is not None, "Response object has no headers attribute"
+    # Starlette headers are case-insensitive, but normalize anyway.
+    rid: Optional[str] = None
+    try:
+        rid = response.headers.get(header_name)
+        if rid is None:
+            # try canonical casing
+            rid = response.headers.get("X-Request-Id")
+    except Exception:
+        rid = None
 
-    request_id = headers.get("X-Request-Id")
-
-    assert request_id is not None, (
-        "Missing X-Request-Id header on response. "
-        "RequestIdMiddleware may not be installed or executed."
+    assert rid and str(rid).strip(), (
+        f"Missing required response header: {header_name}. "
+        f"Middleware regression: request_id must be set for every request."
     )
-
-    assert isinstance(request_id, str) and request_id.strip(), (
-        "X-Request-Id header is present but empty or invalid"
-    )
-
-    return request_id
+    return str(rid)
 
 
 # Export for use in tests
