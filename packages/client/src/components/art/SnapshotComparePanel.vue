@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import { artSnapshotsClient } from "@/api/artSnapshotsClient";
@@ -215,6 +215,70 @@ function clearCompare() {
   error.value = "";
   autoComparedOnce.value = false; // 32.1.0c: reset guard
 }
+
+// 32.1.0e: Keyboard shortcuts [ and ] to step Right snapshot
+function _isTypingTarget(el: EventTarget | null): boolean {
+  const node = el as HTMLElement | null;
+  if (!node) return false;
+  const tag = (node.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || node.isContentEditable;
+}
+
+function _snapshotIndexById(id: string): number {
+  const snaps = store.snapshots || [];
+  return snaps.findIndex((s: any) => s?.snapshot_id === id);
+}
+
+function stepRight(delta: number) {
+  const snaps = store.snapshots || [];
+  if (!snaps.length) return;
+
+  const curIdx = _snapshotIndexById(rightId.value);
+  // If no right selected, pick first non-baseline
+  if (curIdx < 0) {
+    pickMostRecentNonBaselineAsRight();
+    return;
+  }
+
+  let nextIdx = curIdx + delta;
+  nextIdx = Math.max(0, Math.min(snaps.length - 1, nextIdx));
+
+  const next = snaps[nextIdx];
+  if (!next?.snapshot_id) return;
+
+  // Avoid right == left; if collision, try stepping one more in same direction
+  if (next.snapshot_id === leftId.value) {
+    const altIdx = Math.max(0, Math.min(snaps.length - 1, nextIdx + delta));
+    const alt = snaps[altIdx];
+    if (alt?.snapshot_id && alt.snapshot_id !== leftId.value) {
+      rightId.value = alt.snapshot_id;
+      return;
+    }
+  }
+
+  rightId.value = next.snapshot_id;
+}
+
+function onKeyDown(e: KeyboardEvent) {
+  if (!isOpen.value) return;
+  if (_isTypingTarget(e.target)) return;
+
+  if (e.key === "[") {
+    e.preventDefault();
+    stepRight(-1);
+  } else if (e.key === "]") {
+    e.preventDefault();
+    stepRight(1);
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", onKeyDown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onKeyDown);
+});
 </script>
 
 <template>
@@ -255,6 +319,9 @@ function clearCompare() {
       <button class="btn" @click="swapSides" :disabled="!leftId || !rightId">Swap</button>
       <button class="btn" @click="loadSnapshotsForCompare" :disabled="!canCompare">Compare</button>
       <button class="btn" @click="clearCompare">Clear</button>
+      <span class="meta" style="font-size:11px; color:#888;">
+        <b>[</b>/<b>]</b> step Right
+      </span>
     </div>
 
     <div v-if="loading" class="empty">Loading snapshots…</div>
