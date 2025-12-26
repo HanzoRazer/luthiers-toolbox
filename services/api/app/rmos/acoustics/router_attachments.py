@@ -4,12 +4,14 @@ import os
 import re
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, HTTPException, Query, Header
+from fastapi import APIRouter, HTTPException, Query, Header, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 from .persist_glue import ATTACHMENTS_ROOT_DEFAULT
+from .signed_urls import sign_attachment, verify_attachment
 
 router = APIRouter(prefix="/api/rmos/acoustics", tags=["rmos", "acoustics"])
 
@@ -17,9 +19,7 @@ _SHA_RE = re.compile(r"^[a-f0-9]{64}$")
 
 
 def _attachments_root() -> Path:
-    return Path(
-        os.getenv("RMOS_RUN_ATTACHMENTS_DIR", ATTACHMENTS_ROOT_DEFAULT)
-    ).expanduser().resolve()
+    return Path(os.getenv("RMOS_RUN_ATTACHMENTS_DIR", ATTACHMENTS_ROOT_DEFAULT)).expanduser().resolve()
 
 
 def _sanitize_ext(ext: Optional[str]) -> str:
@@ -97,12 +97,24 @@ def _enforce_size_limit(blob: Path) -> None:
         raise HTTPException(status_code=413, detail=f"Attachment exceeds size limit ({limit} bytes)")
 
 
+def _client_ip(req: Request) -> str:
+    # If you're behind a reverse proxy, you can adjust this later.
+    # Keep simple and explicit for now.
+    return (req.client.host if req.client else "") or ""
+
+
 class AttachmentResolveResponse(BaseModel):
     sha256: str
     exists: bool
     bytes: Optional[int] = None
     ext: Optional[str] = None
     mime: Optional[str] = None
+
+
+class SignedUrlResponse(BaseModel):
+    sha256: str
+    exp: int
+    url: str
 
 
 @router.head("/attachments/{sha256}")
@@ -160,6 +172,7 @@ def resolve_attachment(
         return AttachmentResolveResponse(sha256=sha256, exists=False)
 
     if download == 1:
+        # Header-gated streaming (legacy mode)
         _require_stream_token(x_rmos_stream_token)
         _enforce_size_limit(blob)
         return FileResponse(
@@ -175,4 +188,96 @@ def resolve_attachment(
         bytes=int(st.st_size),
         ext=blob.suffix or None,
         mime=_guess_mime(blob.suffix),
+    )
+
+
+@router.get("/attachments/{sha256}/signed", response_model=SignedUrlResponse)
+def create_signed_url(
+    request: Request,
+    sha256: str,
+    ext: str = Query(..., description="Required extension, e.g. .wav"),
+    ttl_seconds: Optional[int] = Query(default=None, description="Optional TTL override"),
+) -> SignedUrlResponse:
+    """
+    Returns a signed URL for streaming/downloading a blob without requiring auth headers in the browser.
+    Requires RMOS_ACOUSTICS_SIGNING_SECRET to be set.
+    """
+    sha256 = sha256.lower().strip()
+    if not _SHA_RE.match(sha256):
+        raise HTTPException(status_code=400, detail="Invalid sha256")
+
+    ext_s = _sanitize_ext(ext)
+    if not ext_s:
+        raise HTTPException(status_code=400, detail="ext is required")
+
+    # Ensure it exists before issuing a signed URL
+    root = _attachments_root()
+    blob = _resolve_blob(root, sha256, ext_s)
+    if blob is None:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    token = sign_attachment(
+        sha256=sha256,
+        ext=ext_s,
+        download=1,
+        ttl_seconds=ttl_seconds,
+        client_ip=_client_ip(request),
+    )
+
+    # Build URL (relative). Frontend can prefix with API base.
+    q = urlencode(token.to_query())
+    url = f"/api/rmos/acoustics/attachments/{sha256}/signed-download?{q}"
+    return SignedUrlResponse(sha256=sha256, exp=token.exp, url=url)
+
+
+@router.get("/attachments/{sha256}/signed-download")
+def signed_download(
+    request: Request,
+    sha256: str,
+    exp: int = Query(...),
+    ext: str = Query(...),
+    dl: int = Query(default=1),
+    ip: str = Query(default=""),
+    sig: str = Query(...),
+):
+    """
+    Streams the blob if signature is valid and not expired.
+    This bypasses X-RMOS-Stream-Token (signature is the gate).
+    """
+    sha256 = sha256.lower().strip()
+    if not _SHA_RE.match(sha256):
+        raise HTTPException(status_code=400, detail="Invalid sha256")
+
+    ext_s = _sanitize_ext(ext)
+    if not ext_s:
+        raise HTTPException(status_code=400, detail="Invalid ext")
+
+    try:
+        verify_attachment(
+            sha256=sha256,
+            exp=int(exp),
+            ext=ext_s,
+            download=int(dl),
+            ip=ip or "",
+            sig=sig,
+            client_ip=_client_ip(request),
+        )
+    except ValueError as e:
+        # Avoid leaking details; give stable error codes.
+        reason = str(e)
+        if reason == "expired":
+            raise HTTPException(status_code=401, detail="Signed URL expired")
+        raise HTTPException(status_code=401, detail="Invalid signed URL")
+
+    root = _attachments_root()
+    blob = _resolve_blob(root, sha256, ext_s)
+    if blob is None:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    _enforce_size_limit(blob)
+
+    return FileResponse(
+        path=str(blob),
+        media_type=_guess_mime(blob.suffix) or "application/octet-stream",
+        filename=blob.name,
     )
