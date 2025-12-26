@@ -296,3 +296,79 @@ def _append_jsonl(path: str, obj: Dict[str, Any]) -> None:
         pass
     with open(path, "a", encoding="utf-8") as f:
         f.write(line + "\n")
+
+
+# =============================================================================
+# Shadow Stats Snapshot (H5.4 - Deprecation Budget)
+# =============================================================================
+
+def _get_endpoint_stats_path() -> str:
+    return os.getenv("ENDPOINT_STATS_PATH", "services/api/data/endpoint_shadow_stats.json")
+
+
+def write_shadow_stats_snapshot(*, total_hits: int, legacy_hits: int, by_legacy_route: Dict[str, int]) -> None:
+    """
+    Writes a stable JSON contract used by CI deprecation budget.
+    This is intentionally simple and forward-compatible.
+
+    Shape:
+    {
+      "total_hits": 1234,
+      "legacy_hits": 12,
+      "by_legacy_route": {"/api/old/x": 7, "/api/old/y": 5},
+      "window": {"kind": "since_start"},
+      "generated_at_utc": "2025-12-25T00:00:00Z"
+    }
+    """
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    payload = {
+        "total_hits": int(total_hits),
+        "legacy_hits": int(legacy_hits),
+        "by_legacy_route": dict(sorted(by_legacy_route.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "window": {"kind": "since_start"},
+        "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+    path = Path(_get_endpoint_stats_path())
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def compute_shadow_stats_from_counts() -> Dict[str, Any]:
+    """
+    Compute shadow stats from in-memory counters.
+    Returns dict with total_hits, legacy_hits, by_legacy_route.
+    """
+    with _LOCK:
+        counts = dict(_COUNTS)
+
+    total_hits = 0
+    legacy_hits = 0
+    by_legacy_route: Dict[str, int] = {}
+
+    for (status, method, path_pattern), n in counts.items():
+        total_hits += n
+        if status == "legacy":
+            legacy_hits += n
+            route_key = f"{method} {path_pattern}"
+            by_legacy_route[route_key] = by_legacy_route.get(route_key, 0) + n
+
+    return {
+        "total_hits": total_hits,
+        "legacy_hits": legacy_hits,
+        "by_legacy_route": by_legacy_route,
+    }
+
+
+def flush_shadow_stats_snapshot() -> None:
+    """
+    Compute current shadow stats from in-memory counters and write to disk.
+    Call this at test session teardown or process shutdown for CI integration.
+    """
+    stats = compute_shadow_stats_from_counts()
+    write_shadow_stats_snapshot(
+        total_hits=stats["total_hits"],
+        legacy_hits=stats["legacy_hits"],
+        by_legacy_route=stats["by_legacy_route"],
+    )
