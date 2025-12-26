@@ -237,15 +237,26 @@ def auto_x_request_id(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def require_x_request_id_in_responses(monkeypatch):
+def require_x_request_id_in_responses(monkeypatch, request):
     """
     Autouse: fail fast if ANY TestClient request returns without X-Request-Id.
 
     This catches middleware regressions immediately (very enterprise-safe).
+
+    To opt-out for intentional negative tests, use:
+        @pytest.mark.allow_missing_request_id
     """
     try:
         from starlette.testclient import TestClient
     except Exception:
+        yield
+        return
+
+    # Marker name for intentional negative tests
+    ALLOW_MARKER = "allow_missing_request_id"
+
+    # Check if current test has the marker - skip enforcement entirely
+    if request.node.get_closest_marker(ALLOW_MARKER):
         yield
         return
 
@@ -267,10 +278,6 @@ def require_x_request_id_in_responses(monkeypatch):
         for pfx in ALLOW_MISSING_PREFIXES:
             if path.startswith(pfx):
                 return resp
-
-        # If you explicitly want to test "no header" behavior, set this flag
-        if kwargs.get("_allow_missing_request_id") is True:
-            return resp
 
         # Require for all normal requests (even error responses should have it)
         assert_request_id_header(resp)
