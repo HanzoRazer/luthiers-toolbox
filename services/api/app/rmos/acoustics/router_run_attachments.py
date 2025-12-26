@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Header
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -67,6 +67,34 @@ def _resolve_blob(root: Path, sha: str, ext_hint: str) -> Optional[Path]:
     return p0 if p0.exists() else None
 
 
+def _max_attachment_bytes() -> int:
+    v = os.getenv("RMOS_MAX_ATTACHMENT_BYTES", "").strip()
+    if not v:
+        return 104857600  # 100MB default
+    try:
+        return int(v)
+    except Exception:
+        return 104857600
+
+
+def _require_stream_token(x_rmos_stream_token: Optional[str]) -> None:
+    token = os.getenv("RMOS_ACOUSTICS_STREAM_TOKEN", "").strip()
+    if not token:
+        return  # dev/default: no gate
+    if (x_rmos_stream_token or "").strip() != token:
+        raise HTTPException(status_code=401, detail="Streaming requires X-RMOS-Stream-Token")
+
+
+def _enforce_size_limit(blob: Path) -> None:
+    limit = _max_attachment_bytes()
+    try:
+        size = blob.stat().st_size
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    if size > limit:
+        raise HTTPException(status_code=413, detail=f"Attachment exceeds size limit ({limit} bytes)")
+
+
 def _find_run_json(run_id: str) -> Path:
     runs_root = _runs_root()
     idx = runs_root / INDEX_FILENAME
@@ -114,11 +142,13 @@ def list_run_attachments(
     run_id: str,
     download: int = Query(default=0),
     sha256: Optional[str] = Query(default=None),
+    x_rmos_stream_token: Optional[str] = Header(default=None, alias="X-RMOS-Stream-Token"),
 ):
     """
     List attachments for a run with resolved metadata (no path disclosure).
 
     If download=1 and sha256=<...> is provided, streams that attachment.
+    Streaming is auth-gated if RMOS_ACOUSTICS_STREAM_TOKEN is set.
     """
     run_path = _find_run_json(run_id)
     run = _load_json(run_path)
@@ -135,6 +165,10 @@ def list_run_attachments(
                 blob = _resolve_blob(blob_root, sha256, ext)
                 if not blob:
                     raise HTTPException(status_code=404, detail="blob not found")
+
+                _require_stream_token(x_rmos_stream_token)
+                _enforce_size_limit(blob)
+
                 return FileResponse(
                     path=str(blob),
                     media_type=_guess_mime(blob.suffix) or "application/octet-stream",
