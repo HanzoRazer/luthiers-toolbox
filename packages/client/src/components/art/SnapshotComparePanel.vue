@@ -117,12 +117,35 @@ watch(
   { immediate: true, deep: false }
 );
 
-// When opening panel, if left is still empty, try baseline once (32.1.0a)
+// Auto-select Right=most recent non-baseline when Left is set (32.1.0b)
+watch(
+  () => [store.snapshots, leftId.value],
+  () => {
+    const snaps = store.snapshots || [];
+    if (!snaps.length) return;
+
+    // If left is set but right is empty, pick a default right
+    if (leftId.value && !rightId.value) {
+      pickMostRecentNonBaselineAsRight();
+      return;
+    }
+
+    // If right equals left, re-pick
+    if (leftId.value && rightId.value && leftId.value === rightId.value) {
+      rightId.value = "";
+      pickMostRecentNonBaselineAsRight();
+    }
+  },
+  { immediate: true }
+);
+
+// When opening panel, ensure both defaults are set (32.1.0a + 32.1.0b)
 watch(
   () => isOpen.value,
   (open) => {
     if (!open) return;
     if (!leftId.value) pickBaselineLeft();
+    if (leftId.value && !rightId.value) pickMostRecentNonBaselineAsRight();
   }
 );
 
@@ -133,6 +156,19 @@ function pickBaselineLeft() {
     return;
   }
   leftId.value = base.snapshot_id;
+}
+
+// 32.1.0b: Pick the most recent non-baseline snapshot as Right
+function pickMostRecentNonBaselineAsRight() {
+  const snaps = store.snapshots || [];
+  if (!snaps.length) return;
+
+  // Prefer a snapshot that is NOT baseline and NOT the left snapshot
+  const candidate = snaps.find((s: any) => s?.baseline !== true && s?.snapshot_id && s.snapshot_id !== leftId.value);
+
+  if (candidate?.snapshot_id) {
+    rightId.value = candidate.snapshot_id;
+  }
 }
 
 function swapSides() {
