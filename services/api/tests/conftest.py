@@ -451,6 +451,34 @@ def assert_valid_moves(moves: list):
         assert move["code"] in ["G0", "G1", "G2", "G3"], f"Move {i} invalid code: {move['code']}"
 
 
+
+def assert_request_id_header(response) -> str:
+    """
+    Assert that a response includes a valid X-Request-Id header.
+
+    Works with FastAPI TestClient responses and requests.Response.
+
+    Returns:
+        str: The request_id value for downstream assertions/logging.
+    """
+    # FastAPI TestClient + requests both expose headers as a dict-like object
+    headers = getattr(response, "headers", None)
+    assert headers is not None, "Response object has no headers attribute"
+
+    request_id = headers.get("X-Request-Id")
+
+    assert request_id is not None, (
+        "Missing X-Request-Id header on response. "
+        "RequestIdMiddleware may not be installed or executed."
+    )
+
+    assert isinstance(request_id, str) and request_id.strip(), (
+        "X-Request-Id header is present but empty or invalid"
+    )
+
+    return request_id
+
+
 # Export for use in tests
 __all__ = [
     # Client fixtures
@@ -475,4 +503,5 @@ __all__ = [
     "assert_valid_geometry",
     "assert_valid_gcode",
     "assert_valid_moves",
+    "assert_request_id_header",
 ]
