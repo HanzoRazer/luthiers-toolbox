@@ -153,6 +153,88 @@ def _clear_request_id_context():
     clear_request_id()
 
 
+
+def _clear_request_id_contextvar_best_effort() -> None:
+    """
+    Best-effort cleanup: clears any request-id ContextVar between tests.
+    This avoids rare cross-test leakage when code uses ContextVar-based request IDs.
+    """
+    try:
+        # Preferred: explicit API if present
+        from app.ai.observability.request_id import set_request_id  # type: ignore
+
+        try:
+            set_request_id(None)  # type: ignore[arg-type]
+            return
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    try:
+        # Fallback: direct ContextVar name (if implementation exposes it)
+        import app.ai.observability.request_id as ridmod  # type: ignore
+
+        for attr in ("_REQUEST_ID", "REQUEST_ID"):
+            cv = getattr(ridmod, attr, None)
+            if cv is not None and hasattr(cv, "set"):
+                try:
+                    cv.set(None)
+                    return
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+
+@pytest.fixture(autouse=True)
+def auto_x_request_id(monkeypatch):
+    """
+    Autouse: inject X-Request-Id into every httpx request (FastAPI TestClient uses httpx).
+
+    - If a test supplies X-Request-Id explicitly, we do not override it.
+    - Ensures middleware sees a stable request_id for correlation.
+    - Clears any request-id ContextVar after each test for determinism.
+    """
+    try:
+        import httpx
+    except Exception:
+        # If httpx isn't available for some reason, just no-op.
+        yield
+        _clear_request_id_contextvar_best_effort()
+        return
+
+    test_request_id = f"test_{uuid.uuid4().hex[:12]}"
+    original_request = httpx.Client.request
+
+    def wrapped_request(self, method, url, **kwargs):
+        headers = kwargs.get("headers")
+
+        # Normalize into a mutable dict without destroying caller intent
+        if headers is None:
+            hdrs = {}
+        else:
+            # headers may be a Headers object, list of tuples, dict, etc.
+            try:
+                hdrs = dict(headers)
+            except Exception:
+                hdrs = {}
+
+        # Only inject if not already set (case-insensitive)
+        lower_keys = {str(k).lower() for k in hdrs.keys()}
+        if "x-request-id" not in lower_keys:
+            hdrs["X-Request-Id"] = test_request_id
+
+        kwargs["headers"] = hdrs
+        return original_request(self, method, url, **kwargs)
+
+    monkeypatch.setattr(httpx.Client, "request", wrapped_request, raising=True)
+
+    yield
+
+    _clear_request_id_contextvar_best_effort()
+
+
 # =============================================================================
 # SHADOW STATS / DEPRECATION BUDGET CI GATE
 # =============================================================================
