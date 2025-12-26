@@ -47,6 +47,7 @@ def _guess_mime(ext: str) -> Optional[str]:
         ".dxf": "image/vnd.dxf",
         ".nc": "text/plain",
         ".gcode": "text/plain",
+        ".zip": "application/zip",
     }.get(ext.lower())
 
 
@@ -60,7 +61,7 @@ def _resolve_blob(root: Path, sha: str, ext_hint: str) -> Optional[Path]:
         if p.exists():
             return p
 
-    for e in [".json", ".wav", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".nc", ".gcode", ".dxf"]:
+    for e in [".json", ".wav", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".nc", ".gcode", ".dxf", ".zip"]:
         p = shard / f"{sha}{e}"
         if p.exists():
             return p
