@@ -205,6 +205,13 @@ class SignedBatchResponse(BaseModel):
     run_id: str
     requested: int
     signed: int
+
+    skipped_filtered: int = 0
+    skipped_invalid_sha: int = 0
+    skipped_not_in_run: int = 0
+    skipped_missing_ext: int = 0
+    skipped_blob_missing: int = 0
+
     items: List[SignedBatchItem]
 
 
@@ -268,31 +275,37 @@ def signed_batch(
     items: List[SignedBatchItem] = []
     signed_count = 0
 
+    skipped_filtered = 0
+    skipped_invalid_sha = 0
+    skipped_not_in_run = 0
+    skipped_missing_ext = 0
+    skipped_blob_missing = 0
+
     for sha in wanted:
         if not _SHA_RE.match(sha):
-            items.append(SignedBatchItem(sha256=sha, ok=False, error="invalid_sha256"))
+            skipped_invalid_sha += 1
             continue
 
         a = att_by_sha.get(sha)
         if a is None:
-            items.append(SignedBatchItem(sha256=sha, ok=False, error="not_in_run"))
+            skipped_not_in_run += 1
             continue
 
         kind = getattr(a, "kind", None)
         if not _kind_allowed(kind, include_kinds, exclude_kinds, kind_prefixes):
-            items.append(SignedBatchItem(sha256=sha, ok=False, error="filtered_out"))
+            skipped_filtered += 1
             continue
 
         relpath = getattr(a, "relpath", None) or ""
         ext = _sanitize_ext_from_relpath(relpath)
         if not ext:
-            items.append(SignedBatchItem(sha256=sha, ok=False, error="missing_ext"))
+            skipped_missing_ext += 1
             continue
 
         # Ensure blob exists before signing (avoid issuing dead links)
         blob = root / sha[:2] / sha[2:4] / f"{sha}{ext}"
         if not blob.exists():
-            items.append(SignedBatchItem(sha256=sha, ok=False, error="blob_missing"))
+            skipped_blob_missing += 1
             continue
 
         token = sign_attachment(
@@ -332,5 +345,10 @@ def signed_batch(
         run_id=run_id,
         requested=len(wanted),
         signed=signed_count,
+        skipped_filtered=skipped_filtered,
+        skipped_invalid_sha=skipped_invalid_sha,
+        skipped_not_in_run=skipped_not_in_run,
+        skipped_missing_ext=skipped_missing_ext,
+        skipped_blob_missing=skipped_blob_missing,
         items=items,
     )
