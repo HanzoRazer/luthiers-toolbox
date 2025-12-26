@@ -52,6 +52,49 @@ def _max_batch_items() -> int:
         return 200
 
 
+def _normalize_kind_list(xs: Optional[List[str]]) -> Optional[set[str]]:
+    if not xs:
+        return None
+    out = set()
+    for x in xs:
+        if not x:
+            continue
+        s = str(x).strip()
+        if not s:
+            continue
+        if len(s) > 80:
+            continue
+        out.add(s)
+    return out if out else None
+
+
+def _normalize_prefix_list(xs: Optional[List[str]]) -> Optional[list[str]]:
+    if not xs:
+        return None
+    out: list[str] = []
+    for x in xs:
+        if not x:
+            continue
+        s = str(x).strip()
+        if not s:
+            continue
+        if len(s) > 80:
+            continue
+        out.append(s)
+    return out if out else None
+
+
+def _kind_allowed(kind: Optional[str], include: Optional[set[str]], exclude: Optional[set[str]], prefixes: Optional[list[str]]) -> bool:
+    k = (kind or "").strip()
+    if exclude and k in exclude:
+        return False
+    if include is not None:
+        return k in include
+    if prefixes:
+        return any(k.startswith(p) for p in prefixes)
+    return True
+
+
 class RunAttachmentOut(BaseModel):
     sha256: str
     relpath: str
@@ -132,11 +175,16 @@ def list_run_attachments(
 
 class SignedBatchRequest(BaseModel):
     """
-    If sha256s is omitted or empty, signs ALL attachments in the run (up to max items).
+    If sha256s is omitted or empty, signs ALL attachments in the run (up to max items),
+    after applying kind filters (if provided).
     """
     sha256s: Optional[List[str]] = Field(default=None, description="Subset of attachment sha256s to sign")
     ttl_seconds: Optional[int] = Field(default=None, description="TTL for signed URLs (seconds)")
     include_metadata: bool = Field(default=True, description="Include relpath/kind/bytes/mime in response")
+
+    include_kinds: Optional[List[str]] = Field(default=None, description="If provided, include only attachments whose kind is in this set")
+    exclude_kinds: Optional[List[str]] = Field(default=None, description="If provided, exclude attachments whose kind is in this set")
+    kind_prefixes: Optional[List[str]] = Field(default=None, description="Optional: include attachments whose kind starts with any prefix")
 
 
 class SignedBatchItem(BaseModel):
@@ -186,6 +234,15 @@ def signed_batch(
     if not att_by_sha:
         return SignedBatchResponse(run_id=run_id, requested=0, signed=0, items=[])
 
+    # Normalize kind filters
+    include_kinds = _normalize_kind_list(body.include_kinds)
+    exclude_kinds = _normalize_kind_list(body.exclude_kinds)
+    kind_prefixes = _normalize_prefix_list(body.kind_prefixes)
+
+    # If both include_kinds and kind_prefixes are provided, include_kinds wins.
+    if include_kinds is not None:
+        kind_prefixes = None
+
     # Determine target set
     wanted: List[str]
     if body.sha256s:
@@ -219,6 +276,11 @@ def signed_batch(
         a = att_by_sha.get(sha)
         if a is None:
             items.append(SignedBatchItem(sha256=sha, ok=False, error="not_in_run"))
+            continue
+
+        kind = getattr(a, "kind", None)
+        if not _kind_allowed(kind, include_kinds, exclude_kinds, kind_prefixes):
+            items.append(SignedBatchItem(sha256=sha, ok=False, error="filtered_out"))
             continue
 
         relpath = getattr(a, "relpath", None) or ""
@@ -259,7 +321,7 @@ def signed_batch(
 
         if body.include_metadata:
             item.relpath = relpath
-            item.kind = getattr(a, "kind", None)
+            item.kind = kind
             item.bytes = st_size
             item.mime = getattr(a, "mime", None)
 
