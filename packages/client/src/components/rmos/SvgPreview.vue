@@ -2,128 +2,108 @@
 /**
  * SvgPreview.vue
  *
- * Safe inline SVG preview with script/foreign element stripping.
- * Prevents XSS by removing dangerous elements before rendering.
+ * Safe inline SVG preview with XSS protection.
+ * Uses the blob download endpoint and sanitizes content.
  */
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
-  /** Raw SVG content string */
-  svg: string;
-  /** Maximum height in pixels (default: 300) */
-  maxHeight?: number;
-  /** Show expand/collapse toggle */
-  expandable?: boolean;
+  runId: string;
+  advisoryId: string;
+  apiBase?: string;
 }>();
 
-const emit = defineEmits<{
-  (e: "error", msg: string): void;
-}>();
+const apiBase = computed(() => props.apiBase ?? "/api");
+const loading = ref(false);
+const error = ref<string | null>(null);
+const svg = ref<string | null>(null);
+const blocked = ref<string | null>(null);
 
-const expanded = ref(false);
-
-/**
- * Sanitize SVG by removing dangerous elements.
- * Strips: <script>, <foreignObject>, <image> (external references)
- */
-function sanitizeSvg(svg: string): string {
-  if (!svg) return "";
-
-  return svg
-    // Remove script tags and their contents
+function sanitize(svgText: string): string {
+  // Preview-only safety: remove scripts / foreignObject / image
+  return svgText
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    // Remove foreignObject (can embed arbitrary HTML)
     .replace(/<foreignObject[\s\S]*?>[\s\S]*?<\/foreignObject>/gi, "")
-    // Remove image tags (external references)
     .replace(/<image[\s\S]*?(?:\/>|>[\s\S]*?<\/image>)/gi, "")
-    // Remove event handlers (onclick, onload, etc.)
-    .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, "")
-    // Remove javascript: URLs
-    .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, "");
+    .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, "");
 }
 
-const sanitizedSvg = computed(() => {
+async function load() {
+  if (!props.runId || !props.advisoryId) return;
+  loading.value = true;
+  error.value = null;
+  svg.value = null;
+  blocked.value = null;
+
   try {
-    return sanitizeSvg(props.svg);
-  } catch (err) {
-    emit("error", String(err));
-    return "";
+    // Use the authoritative blob download endpoint
+    const url = `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(props.advisoryId)}/download`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+
+    const text = await res.text();
+    const lower = text.toLowerCase();
+
+    // Mirror server preview flags (defense-in-depth)
+    if (lower.includes("<script")) { blocked.value = "script"; return; }
+    if (lower.includes("foreignobject")) { blocked.value = "foreignObject"; return; }
+    if (lower.includes("<image")) { blocked.value = "image"; return; }
+    if (lower.includes("<text")) { blocked.value = "text"; return; }
+
+    svg.value = sanitize(text);
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
+  } finally {
+    loading.value = false;
   }
-});
-
-const containerStyle = computed(() => ({
-  maxHeight: expanded.value ? "none" : `${props.maxHeight || 300}px`,
-}));
-
-function toggleExpand() {
-  expanded.value = !expanded.value;
 }
+
+watch(() => [props.runId, props.advisoryId], () => load(), { immediate: true });
 </script>
 
 <template>
   <div class="svg-preview">
-    <div
-      v-if="sanitizedSvg"
-      class="svg-container"
-      :style="containerStyle"
-      v-html="sanitizedSvg"
-    />
-    <div v-else class="svg-empty">
-      No SVG content
+    <div v-if="loading" class="subtle">Loading preview...</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="blocked" class="warn">
+      Preview blocked ({{ blocked }}). Download is still available.
     </div>
-
-    <button
-      v-if="expandable && sanitizedSvg"
-      class="expand-toggle"
-      @click="toggleExpand"
-    >
-      {{ expanded ? "Collapse" : "Expand" }}
-    </button>
+    <div v-else-if="svg" class="svg-container" v-html="svg"></div>
+    <div v-else class="subtle">No preview.</div>
   </div>
 </template>
 
 <style scoped>
 .svg-preview {
-  position: relative;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  background: #fafafa;
-  overflow: hidden;
-}
-
-.svg-container {
-  overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.01);
+  min-height: 100px;
 }
 
 .svg-container :deep(svg) {
-  max-width: 100%;
+  width: 100%;
   height: auto;
+  display: block;
+  max-height: 300px;
 }
 
-.svg-empty {
-  padding: 2rem;
+.subtle {
+  opacity: 0.7;
   text-align: center;
-  color: #6c757d;
-  font-size: 0.9rem;
+  padding: 1rem;
 }
 
-.expand-toggle {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #dee2e6;
+.error {
+  color: #b00020;
+  padding: 0.5rem;
+}
+
+.warn {
+  color: #8a5a00;
+  padding: 0.5rem;
+  background: #fff3cd;
   border-radius: 4px;
-  cursor: pointer;
-}
-
-.expand-toggle:hover {
-  background: #e9ecef;
 }
 </style>

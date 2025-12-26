@@ -20,9 +20,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+
+from app.auth import Principal, require_roles
 
 from .schemas import (
     RunArtifact,
@@ -1081,28 +1083,22 @@ def delete_run_endpoint(
 # Variant Review, Rating, and Promotion (Product Bundle)
 # =============================================================================
 
-from pydantic import BaseModel, Field as PydanticField
+from .schemas_variant_review import (
+    AdvisoryVariantListResponse,
+    AdvisoryVariantReviewRequest,
+    AdvisoryVariantReviewRecord,
+    PromoteVariantRequest,
+    PromoteVariantResponse,
+)
 from .variant_review_service import (
-    list_advisory_variants,
-    save_variant_review,
+    list_variants,
+    save_review,
     promote_variant,
 )
 
 
-class VariantReviewRequest(BaseModel):
-    """Request to save a review for an advisory variant."""
-    rating: int = PydanticField(..., ge=1, le=5, description="Star rating 1-5")
-    notes: str = PydanticField(..., description="Review notes")
-    reviewed_by: Optional[str] = PydanticField(None, description="Reviewer identity")
-
-
-class VariantPromoteRequest(BaseModel):
-    """Request to promote an advisory variant to manufacturing."""
-    promoted_by: Optional[str] = PydanticField(None, description="Operator identity")
-
-
-@router.get("/{run_id}/advisory/variants", summary="List advisory variants for review")
-def list_run_advisory_variants(run_id: str):
+@router.get("/{run_id}/advisory/variants", response_model=AdvisoryVariantListResponse)
+def get_advisory_variants(run_id: str):
     """
     List all advisory variants attached to a run with review status.
 
@@ -1110,20 +1106,23 @@ def list_run_advisory_variants(run_id: str):
     - advisory_id (SHA256)
     - mime type
     - filename
+    - size_bytes
+    - preview_blocked (true if SVG has unsafe content)
     - rating (if reviewed)
     - notes (if reviewed)
     - promoted status
 
     Use this to populate the VariantReviewPanel UI.
     """
-    return list_advisory_variants(run_id)
+    return list_variants(run_id)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/review", summary="Save variant review")
-def save_run_advisory_review(
+@router.post("/{run_id}/advisory/{advisory_id}/review", response_model=AdvisoryVariantReviewRecord)
+def post_advisory_variant_review(
     run_id: str,
     advisory_id: str,
-    req: VariantReviewRequest,
+    payload: AdvisoryVariantReviewRequest,
+    request: Request,
 ):
     """
     Save rating and notes for an advisory variant.
@@ -1131,38 +1130,113 @@ def save_run_advisory_review(
     This stores the review in RunArtifact.advisory_reviews.
     The advisory blob itself is never mutated.
 
-    Rating: 1-5 stars
-    Notes: Free-form review text
+    Rating: 1-5 stars (optional)
+    Notes: Free-form review text (optional, max 4000 chars)
+
+    User identity extracted from x-user-id header.
     """
-    return save_variant_review(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        rating=req.rating,
-        notes=req.notes,
-        reviewed_by=req.reviewed_by,
-    )
+    return save_review(run_id, advisory_id, payload, request)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/promote", summary="Promote variant to manufacturing")
-def promote_run_advisory_variant(
+@router.post("/{run_id}/advisory/{advisory_id}/promote", response_model=PromoteVariantResponse)
+def post_promote_advisory_variant(
     run_id: str,
     advisory_id: str,
-    req: VariantPromoteRequest,
+    payload: PromoteVariantRequest,
+    principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
 ):
     """
     Promote an advisory variant to a manufacturing candidate.
 
-    This creates a NEW RunArtifact with:
-    - source_advisory_id pointing to the promoted variant
-    - Re-evaluated feasibility
-    - Lineage preserved (parent_run_id, source_advisory_id)
+    Requires authenticated user with role: admin, operator, or engineer.
+    Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
 
-    Promotion is IRREVERSIBLE by design.
+    SVG bind-time policy:
+    - BLOCK: script, foreignObject, image elements
+    - ALLOW + YELLOW: text elements (requires outline conversion)
+    - ALLOW + GREEN: path/geometry only
 
+    Non-SVG files get ALLOW + YELLOW with lower score.
+
+    Promotion is recorded in manufacturing_candidates list on the run.
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient.
     Returns 409 if already promoted.
     """
-    return promote_variant(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        promoted_by=req.promoted_by,
-    )
+    return promote_variant(run_id, advisory_id, payload, principal)
+
+
+# =============================================================================
+# Manufacturing Candidate Queue (Product Bundle)
+# =============================================================================
+
+from .schemas_manufacturing_ops import (
+    CandidateListResponse,
+    CandidateDecisionRequest,
+    CandidateDecisionResponse,
+)
+from .manufacturing_candidate_service import (
+    list_candidates,
+    decide_candidate,
+    download_candidate_zip,
+)
+
+
+@router.get("/{run_id}/manufacturing/candidates", response_model=CandidateListResponse)
+def get_manufacturing_candidates(run_id: str):
+    """
+    List all manufacturing candidates for a run.
+
+    Returns candidates with their status (PROPOSED, ACCEPTED, REJECTED).
+    Candidates are sorted newest-first by updated_at_utc.
+    """
+    return list_candidates(run_id)
+
+
+@router.post(
+    "/{run_id}/manufacturing/candidates/{candidate_id}/decision",
+    response_model=CandidateDecisionResponse,
+)
+def post_candidate_decision(
+    run_id: str,
+    candidate_id: str,
+    payload: CandidateDecisionRequest,
+    principal: Principal = Depends(require_roles("admin", "operator")),
+):
+    """
+    Approve or reject a manufacturing candidate.
+
+    Requires authenticated user with role: admin or operator.
+
+    Decision: ACCEPT or REJECT
+    Note: Optional decision note (max 2000 chars)
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient (requires admin/operator).
+    Returns 404 if run or candidate not found.
+    """
+    return decide_candidate(run_id, candidate_id, payload, principal)
+
+
+@router.get("/{run_id}/manufacturing/candidates/{candidate_id}/download-zip")
+def get_candidate_zip(
+    run_id: str,
+    candidate_id: str,
+    principal: Principal = Depends(require_roles("admin", "operator", "engineer", "viewer")),
+):
+    """
+    Download a ZIP containing the candidate's advisory blob and manifest.
+
+    Product-facing export for manufacturing workflow.
+
+    ZIP contents:
+    - manifest.json: candidate metadata
+    - blob/<advisory_id>.<ext>: the advisory blob
+
+    Requires any authenticated role (admin/operator/engineer/viewer).
+
+    Returns 401 if not authenticated.
+    Returns 404 if run, candidate, or blob not found.
+    """
+    return download_candidate_zip(run_id, candidate_id)

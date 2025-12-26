@@ -10,286 +10,323 @@ Capabilities:
 
 Governance rules:
 - Reviews are stored in RunArtifact.advisory_reviews (does not mutate advisory blob)
-- Promotion creates a NEW RunArtifact with source_advisory_id lineage
+- Promotion adds to manufacturing_candidates list (in-place on run)
+- RBAC: promotion requires admin/operator/engineer role
 - All actions are auditable
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import uuid4
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 
-from .store import get_run, persist_run, update_run, create_run_id
-from .schemas import RunArtifact, RunDecision, Hashes, AdvisoryInputRef
+from app.auth import Principal
+from .store import get_run, update_run
 from .attachments import get_attachment_path, get_bytes_attachment
-from .advisory_blob_service import _run_or_404, _authorized_advisory_ids, _find_ref
+from .schemas_variant_review import (
+    AdvisoryVariantListResponse,
+    AdvisoryVariantSummary,
+    AdvisoryVariantReviewRequest,
+    AdvisoryVariantReviewRecord,
+    PromoteVariantRequest,
+    PromoteVariantResponse,
+)
+from .schemas_manufacturing import ManufacturingCandidate
 
 
-def _utc_now_iso() -> str:
+def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _infer_mime(sha256: str) -> str:
-    """Infer MIME type from blob content."""
-    try:
-        data = get_bytes_attachment(sha256)
-        if data:
-            if data[:5] == b"<?xml" or data[:4] == b"<svg":
-                return "image/svg+xml"
-            if data[:8] == b"\x89PNG\r\n\x1a\n":
-                return "image/png"
-            if data[:2] == b"\xff\xd8":
-                return "image/jpeg"
-    except Exception:
-        pass
+def _authorized_advisory_ids(run: Any) -> List[str]:
+    """Get list of advisory IDs linked to a run."""
+    refs = getattr(run, "advisory_inputs", None) or []
+    out: List[str] = []
+    for r in refs:
+        adv = getattr(r, "advisory_id", None)
+        if isinstance(adv, str) and adv:
+            out.append(adv)
+    return out
+
+
+def _mime_from_bytes(data: bytes) -> str:
+    """High-signal MIME sniffing from first bytes."""
+    if data.startswith(b"<svg") or b"<svg" in data[:4096]:
+        return "image/svg+xml"
+    if data.startswith(b"{") or data.startswith(b"["):
+        return "application/json"
+    if data.startswith(b"%PDF"):
+        return "application/pdf"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
     return "application/octet-stream"
 
 
-def _infer_filename(ref: Any, sha256: str, mime: str) -> str:
-    """Infer filename from ref or generate from sha256."""
-    # Check ref for filename hint
-    if ref:
-        filename = getattr(ref, "filename", None)
-        if filename:
-            return filename
-        kind = getattr(ref, "kind", None)
-        if kind:
-            ext = ".svg" if mime == "image/svg+xml" else ".bin"
-            return f"{kind}_{sha256[:12]}{ext}"
-
-    # Generate from sha256
+def _infer_filename(advisory_id: str, mime: str) -> str:
+    """Generate filename from advisory ID and MIME type."""
     ext = {
         "image/svg+xml": ".svg",
+        "application/json": ".json",
+        "text/plain": ".txt",
         "image/png": ".png",
         "image/jpeg": ".jpg",
+        "application/pdf": ".pdf",
+        "application/octet-stream": ".bin",
     }.get(mime, ".bin")
-    return f"variant_{sha256[:12]}{ext}"
+    return f"{advisory_id[:16]}{ext}"
 
 
-def list_advisory_variants(run_id: str) -> List[Dict[str, Any]]:
+def _preview_safety(svg_text: str) -> Tuple[bool, Optional[str]]:
+    """Check if SVG is safe for inline preview."""
+    lower = (svg_text or "").lower()
+    if "<script" in lower:
+        return False, "script"
+    if "foreignobject" in lower:
+        return False, "foreignObject"
+    if "<image" in lower:
+        return False, "image"
+    if "<text" in lower:
+        # Product choice: block preview only, allow download + bind
+        return False, "text"
+    return True, None
+
+
+def _risk_from_svg_for_binding(svg_text: str) -> Tuple[str, str, float, str]:
     """
-    List all advisory variants for a run with their review status.
-
-    Returns:
-        List of variant dicts with advisory_id, mime, filename, rating, notes, promoted
+    Bind-time policy for SVG promotion:
+      - BLOCK: script, foreignObject, image
+      - ALLOW: path, geometry
+      - WARN: text => ALLOW + YELLOW
     """
-    run = _run_or_404(run_id)
-    advisory_ids = _authorized_advisory_ids(run)
-    reviews = getattr(run, "advisory_reviews", None) or {}
-
-    variants = []
-    for adv_id in advisory_ids:
-        ref = _find_ref(run, adv_id)
-        mime = _infer_mime(adv_id)
-        filename = _infer_filename(ref, adv_id, mime)
-
-        review = reviews.get(adv_id, {})
-        variants.append({
-            "advisory_id": adv_id,
-            "mime": mime,
-            "filename": filename,
-            "kind": getattr(ref, "kind", "unknown") if ref else "unknown",
-            "rating": review.get("rating"),
-            "notes": review.get("notes"),
-            "reviewed_at": review.get("reviewed_at"),
-            "reviewed_by": review.get("reviewed_by"),
-            "promoted": review.get("promoted", False),
-            "promoted_run_id": review.get("promoted_run_id"),
-        })
-
-    return variants
+    lower = (svg_text or "").lower()
+    if "<script" in lower:
+        return ("BLOCK", "RED", 0.0, "svg_script")
+    if "foreignobject" in lower:
+        return ("BLOCK", "RED", 0.0, "svg_foreignobject")
+    if "<image" in lower:
+        return ("BLOCK", "RED", 0.10, "svg_image_embed")
+    if "<text" in lower:
+        return ("ALLOW", "YELLOW", 0.75, "svg_text_requires_outline")
+    return ("ALLOW", "GREEN", 1.0, "ok")
 
 
-def save_variant_review(
+def _get_user_id(req: Request) -> Optional[str]:
+    """Extract user ID from request headers (legacy, for save_review)."""
+    uid = (req.headers.get("x-user-id") or "").strip()
+    return uid or None
+
+
+def list_variants(run_id: str) -> AdvisoryVariantListResponse:
+    """List all advisory variants for a run with their review status."""
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+
+    # Review records stored on run (dict keyed by advisory_id)
+    review_map: Dict[str, Any] = getattr(run, "advisory_reviews", None) or {}
+
+    # Manufacturing candidates (list) - may be dicts or objects depending on storage
+    candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
+    promoted_ids: set[str] = set()
+    for c in candidates:
+        if isinstance(c, dict):
+            adv = c.get("advisory_id")
+        else:
+            adv = getattr(c, "advisory_id", None)
+        if adv:
+            promoted_ids.add(adv)
+
+    items: list[AdvisoryVariantSummary] = []
+    for adv_id in allowed:
+        p = get_attachment_path(adv_id)
+        if not p:
+            # Still list, but mark missing
+            items.append(
+                AdvisoryVariantSummary(
+                    advisory_id=adv_id,
+                    mime="application/octet-stream",
+                    filename=_infer_filename(adv_id, "application/octet-stream"),
+                    size_bytes=0,
+                    preview_blocked=True,
+                    preview_block_reason="missing",
+                    rating=None,
+                    notes=None,
+                    promoted=adv_id in promoted_ids,
+                )
+            )
+            continue
+
+        size = Path(p).stat().st_size
+        data = get_bytes_attachment(adv_id) or b""
+        mime = _mime_from_bytes(data[:4096] if data else b"")
+        filename = _infer_filename(adv_id, mime)
+
+        preview_blocked = False
+        preview_reason = None
+        if mime == "image/svg+xml":
+            try:
+                svg_text = data.decode("utf-8", errors="ignore")
+                ok, reason = _preview_safety(svg_text)
+                preview_blocked = not ok
+                preview_reason = reason
+            except Exception:
+                preview_blocked = True
+                preview_reason = "decode"
+
+        rec = review_map.get(adv_id) or {}
+        rating = rec.get("rating")
+        notes = rec.get("notes")
+
+        items.append(
+            AdvisoryVariantSummary(
+                advisory_id=adv_id,
+                mime=mime,
+                filename=filename,
+                size_bytes=size,
+                preview_blocked=preview_blocked,
+                preview_block_reason=preview_reason,
+                rating=rating,
+                notes=notes,
+                promoted=adv_id in promoted_ids,
+            )
+        )
+
+    # Stable ordering by advisory_id for determinism
+    items.sort(key=lambda x: x.advisory_id)
+    return AdvisoryVariantListResponse(run_id=run_id, count=len(items), items=items)
+
+
+def save_review(
     run_id: str,
     advisory_id: str,
-    rating: int,
-    notes: str,
-    reviewed_by: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Save rating + notes for an advisory variant.
+    payload: AdvisoryVariantReviewRequest,
+    req: Request,
+) -> AdvisoryVariantReviewRecord:
+    """Save rating + notes for an advisory variant."""
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
 
-    Args:
-        run_id: Run artifact ID
-        advisory_id: Advisory blob SHA256
-        rating: 1-5 stars
-        notes: Review notes
-        reviewed_by: Operator identity
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
 
-    Returns:
-        Updated review dict
+    review_map: Dict[str, Any] = dict(getattr(run, "advisory_reviews", None) or {})
+    now = _utc_now()
+    user_id = _get_user_id(req)
 
-    Note: This modifies the RunArtifact.advisory_reviews field.
-          The advisory blob itself is never mutated.
-    """
-    # Validate rating
-    if not 1 <= rating <= 5:
-        raise HTTPException(status_code=400, detail="Rating must be 1-5")
-
-    run = _run_or_404(run_id)
-
-    # Verify advisory exists on this run
-    if advisory_id not in _authorized_advisory_ids(run):
-        raise HTTPException(status_code=404, detail="Advisory not linked to this run")
-
-    # Build review entry
-    review = {
-        "rating": rating,
-        "notes": notes,
-        "reviewed_at": _utc_now_iso(),
-        "reviewed_by": reviewed_by,
+    review_map[advisory_id] = {
+        "rating": payload.rating,
+        "notes": payload.notes,
+        "updated_at_utc": now,
+        "updated_by": user_id,
     }
-
-    # Update advisory_reviews (copy to avoid mutation issues)
-    reviews = dict(getattr(run, "advisory_reviews", None) or {})
-
-    # Preserve existing promoted status if any
-    existing = reviews.get(advisory_id, {})
-    if existing.get("promoted"):
-        review["promoted"] = True
-        review["promoted_run_id"] = existing.get("promoted_run_id")
-
-    reviews[advisory_id] = review
-
-    # Update run with new reviews (controlled mutation of advisory_reviews only)
-    run.advisory_reviews = reviews
+    run.advisory_reviews = review_map
     update_run(run)
 
-    return review
+    return AdvisoryVariantReviewRecord(
+        advisory_id=advisory_id,
+        rating=payload.rating,
+        notes=payload.notes,
+        updated_at_utc=now,
+        updated_by=user_id,
+    )
 
 
 def promote_variant(
     run_id: str,
     advisory_id: str,
-    promoted_by: Optional[str] = None,
-) -> Dict[str, Any]:
+    payload: PromoteVariantRequest,
+    principal: Principal,
+) -> PromoteVariantResponse:
+    """Promote an advisory variant to manufacturing candidate.
+
+    RBAC is enforced at the API layer via Depends(require_roles(...)).
+    Principal is already validated to have admin/operator/engineer role.
     """
-    Promote an advisory variant to a manufacturing candidate.
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
 
-    This creates a NEW RunArtifact with:
-    - source_advisory_id pointing to the promoted variant
-    - Re-evaluated feasibility
-    - Lineage preserved
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
 
-    Args:
-        run_id: Source run artifact ID
-        advisory_id: Advisory blob SHA256 to promote
-        promoted_by: Operator identity
+    # Prevent double-promotion (handle both dict and object forms)
+    candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
+    for c in candidates:
+        c_adv_id = c.get("advisory_id") if isinstance(c, dict) else getattr(c, "advisory_id", None)
+        if c_adv_id == advisory_id:
+            raise HTTPException(status_code=409, detail="Variant already promoted")
 
-    Returns:
-        Dict with new manufacturing artifact details
+    # Resolve blob
+    path = get_attachment_path(advisory_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Advisory blob not found (CAS missing)")
 
-    Raises:
-        HTTPException 404: Run or advisory not found
-        HTTPException 409: Already promoted
-    """
-    run = _run_or_404(run_id)
+    data = Path(path).read_bytes()
+    mime = _mime_from_bytes(data[:4096])
 
-    # Verify advisory exists
-    if advisory_id not in _authorized_advisory_ids(run):
-        raise HTTPException(status_code=404, detail="Advisory not linked to this run")
+    decision = "ALLOW"
+    risk = "GREEN"
+    score = 1.0
+    reason = "ok"
 
-    # Check if already promoted
-    reviews = getattr(run, "advisory_reviews", None) or {}
-    existing = reviews.get(advisory_id, {})
-    if existing.get("promoted"):
-        raise HTTPException(
-            status_code=409,
-            detail=f"Already promoted to run {existing.get('promoted_run_id')}"
+    if mime == "image/svg+xml":
+        svg_text = data.decode("utf-8", errors="ignore")
+        decision, risk, score, reason = _risk_from_svg_for_binding(svg_text)
+    else:
+        # Non-SVG candidates can exist but are not ideal for manufacturing
+        decision, risk, score, reason = ("ALLOW", "YELLOW", 0.60, f"non_svg:{mime}")
+
+    if decision == "BLOCK":
+        # Do NOT persist a candidate
+        return PromoteVariantResponse(
+            run_id=run_id,
+            advisory_id=advisory_id,
+            decision="BLOCK",
+            risk_level="RED",
+            score=score,
+            reason=reason,
+            manufactured_candidate_id=None,
+            message="Promotion blocked by bind-time policy",
         )
 
-    # Get advisory blob for feasibility re-check
-    blob_path = get_attachment_path(advisory_id)
-    if not blob_path:
-        raise HTTPException(status_code=404, detail="Advisory blob not found in CAS")
-
-    # Create new manufacturing candidate artifact
-    new_run_id = create_run_id()
-
-    # Inherit context from parent run
-    parent_mode = getattr(run, "mode", "promoted")
-    parent_tool_id = getattr(run, "tool_id", "unknown")
-    parent_material_id = getattr(run, "material_id", "unknown")
-    parent_machine_id = getattr(run, "machine_id", "unknown")
-
-    # Re-evaluate feasibility (simplified - in production would call actual feasibility service)
-    # For now, inherit parent's decision with promotion context
-    parent_decision = getattr(run, "decision", None)
-    if parent_decision:
-        risk_level = parent_decision.risk_level
-        score = parent_decision.score
-    else:
-        risk_level = "YELLOW"  # Promoted variants get YELLOW by default
-        score = 0.8
-
-    import hashlib
-    import json
-
-    promotion_payload = {
-        "source_run_id": run_id,
-        "source_advisory_id": advisory_id,
-        "promoted_by": promoted_by,
-        "promoted_at": _utc_now_iso(),
-    }
-    payload_hash = hashlib.sha256(json.dumps(promotion_payload, sort_keys=True).encode()).hexdigest()
-
-    manufacturing_artifact = RunArtifact(
-        run_id=new_run_id,
-        created_at_utc=datetime.now(timezone.utc),
-        event_type="manufacturing_candidate",
-        mode=parent_mode,
-        tool_id=parent_tool_id,
-        material_id=parent_material_id,
-        machine_id=parent_machine_id,
-        status="OK" if risk_level != "RED" else "BLOCKED",
-        request_summary=promotion_payload,
-        feasibility={
-            "promotion": True,
-            "source_run_id": run_id,
-            "source_advisory_id": advisory_id,
-        },
-        decision=RunDecision(
-            risk_level=risk_level,
-            score=score,
-            warnings=["Promoted from advisory variant"],
-            details={"promotion_source": advisory_id},
-        ),
-        hashes=Hashes(feasibility_sha256=payload_hash),
-        advisory_inputs=[
-            AdvisoryInputRef(
-                advisory_id=advisory_id,
-                kind="advisory",
-            )
-        ],
-        source_advisory_id=advisory_id,
-        parent_run_id=run_id,
-        meta={
-            "promoted_from_run": run_id,
-            "promoted_from_advisory": advisory_id,
-            "promoted_by": promoted_by,
-        },
+    user_id = principal.user_id
+    now = _utc_now()
+    cand = ManufacturingCandidate(
+        candidate_id=f"mc_{uuid4().hex[:12]}",
+        advisory_id=advisory_id,
+        status="PROPOSED",
+        label=payload.label,
+        note=payload.note,
+        created_at_utc=now,
+        created_by=user_id,
+        updated_at_utc=now,
+        updated_by=user_id,
     )
+    candidates.append(cand)
+    run.manufacturing_candidates = candidates
 
-    persist_run(manufacturing_artifact)
+    # Stamp minimal provenance for product UI
+    run.source_advisory_id = advisory_id
 
-    # Mark as promoted in source run (controlled mutation of advisory_reviews only)
-    reviews = dict(getattr(run, "advisory_reviews", None) or {})
-    review = dict(reviews.get(advisory_id, {}))
-    review["promoted"] = True
-    review["promoted_run_id"] = new_run_id
-    review["promoted_at"] = _utc_now_iso()
-    review["promoted_by"] = promoted_by
-    reviews[advisory_id] = review
-    run.advisory_reviews = reviews
     update_run(run)
 
-    return {
-        "manufacturing_run_id": new_run_id,
-        "source_run_id": run_id,
-        "source_advisory_id": advisory_id,
-        "status": manufacturing_artifact.status,
-        "risk_level": risk_level,
-        "promoted_by": promoted_by,
-    }
+    return PromoteVariantResponse(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        decision="ALLOW",
+        risk_level=risk,  # type: ignore
+        score=score,
+        reason=reason,
+        manufactured_candidate_id=cand.candidate_id,
+        message=None,
+    )

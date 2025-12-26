@@ -5,11 +5,21 @@ Tests the following endpoints:
 - GET /api/rmos/runs/{run_id}/advisory/variants
 - POST /api/rmos/runs/{run_id}/advisory/{advisory_id}/review
 - POST /api/rmos/runs/{run_id}/advisory/{advisory_id}/promote
+
+RBAC:
+- Promotion requires x-user-role header: admin|operator|engineer
+- User identity via x-user-id header
 """
 from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+
+
+# Role headers for RBAC testing
+OPERATOR_HEADERS = {"x-user-role": "operator", "x-user-id": "test_operator"}
+VIEWER_HEADERS = {"x-user-role": "viewer", "x-user-id": "test_viewer"}
+NO_ROLE_HEADERS = {"x-user-id": "anonymous"}
 
 
 @pytest.fixture
@@ -75,14 +85,17 @@ def run_with_advisory(client: TestClient, tmp_path):
 
 
 def test_list_advisory_variants_returns_list(client: TestClient, run_with_advisory):
-    """Test that the variants endpoint returns a list."""
+    """Test that the variants endpoint returns a structured response with items."""
     run_id = run_with_advisory["run_id"]
 
     res = client.get(f"/api/rmos/runs/{run_id}/advisory/variants")
     assert res.status_code == 200, res.text
 
     data = res.json()
-    assert isinstance(data, list)
+    assert "items" in data
+    assert "count" in data
+    assert "run_id" in data
+    assert isinstance(data["items"], list)
 
 
 def test_list_advisory_variants_404_for_missing_run(client: TestClient):
@@ -118,16 +131,17 @@ def test_save_review_succeeds_with_valid_data(client: TestClient, run_with_advis
 
     res = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
+        headers=OPERATOR_HEADERS,
         json={
             "rating": 4,
             "notes": "Good variant, slight edge roughness",
-            "reviewed_by": "test_operator",
         },
     )
     assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
     data = res.json()
     assert data["rating"] == 4
-    assert "reviewed_at" in data
+    assert "updated_at_utc" in data
+    assert data.get("updated_by") == "test_operator"
 
 
 def test_save_review_404_for_missing_run(client: TestClient):
@@ -139,21 +153,27 @@ def test_save_review_404_for_missing_run(client: TestClient):
     assert res.status_code == 404
 
 
-def test_promote_creates_manufacturing_artifact(client: TestClient, run_with_advisory):
-    """Test that promotion creates a new manufacturing candidate artifact."""
+def test_promote_creates_manufacturing_candidate(client: TestClient, run_with_advisory):
+    """Test that promotion creates a new manufacturing candidate on the run."""
     run_id = run_with_advisory["run_id"]
     advisory_id = run_with_advisory["advisory_id"]
 
     res = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
-        json={"promoted_by": "test_operator"},
+        headers=OPERATOR_HEADERS,
+        json={"label": "test_candidate", "note": "promotion test"},
     )
     assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
     data = res.json()
-    assert "manufacturing_run_id" in data
-    assert data["source_run_id"] == run_id
-    assert data["source_advisory_id"] == advisory_id
-    assert "risk_level" in data
+    assert data["run_id"] == run_id
+    assert data["advisory_id"] == advisory_id
+    assert data["decision"] in ("ALLOW", "BLOCK")
+    assert data["risk_level"] in ("GREEN", "YELLOW", "RED")
+    assert "score" in data
+    assert "reason" in data
+    # For ALLOW decision, we should have a candidate ID
+    if data["decision"] == "ALLOW":
+        assert data.get("manufactured_candidate_id") is not None
 
 
 def test_promote_returns_409_if_already_promoted(client: TestClient, run_with_advisory):
@@ -164,14 +184,16 @@ def test_promote_returns_409_if_already_promoted(client: TestClient, run_with_ad
     # First promotion
     res1 = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
-        json={"promoted_by": "test_operator"},
+        headers=OPERATOR_HEADERS,
+        json={"label": None, "note": None},
     )
     assert res1.status_code == 200, f"First promotion failed: {res1.status_code}: {res1.text}"
 
     # Second promotion should fail with 409
     res2 = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
-        json={"promoted_by": "test_operator"},
+        headers=OPERATOR_HEADERS,
+        json={"label": None, "note": None},
     )
     assert res2.status_code == 409, f"Expected 409, got {res2.status_code}: {res2.text}"
 
@@ -180,9 +202,36 @@ def test_promote_404_for_missing_run(client: TestClient):
     """Test that promote endpoint returns 404 for non-existent run."""
     res = client.post(
         "/api/rmos/runs/nonexistent_run_id/advisory/some_advisory/promote",
-        json={"promoted_by": "test"},
+        headers=OPERATOR_HEADERS,
+        json={"label": None, "note": None},
     )
     assert res.status_code == 404
+
+
+def test_promote_401_without_auth(client: TestClient, run_with_advisory):
+    """Test that promote endpoint returns 401 without authentication."""
+    run_id = run_with_advisory["run_id"]
+    advisory_id = run_with_advisory["advisory_id"]
+
+    # No auth headers at all - should get 401 Not Authenticated
+    res = client.post(
+        f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
+        json={"label": None, "note": None},
+    )
+    assert res.status_code == 401, f"Expected 401, got {res.status_code}: {res.text}"
+
+
+def test_promote_403_with_viewer_role(client: TestClient, run_with_advisory):
+    """Test that viewer role cannot promote variants."""
+    run_id = run_with_advisory["run_id"]
+    advisory_id = run_with_advisory["advisory_id"]
+
+    res = client.post(
+        f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
+        headers=VIEWER_HEADERS,
+        json={"label": None, "note": None},
+    )
+    assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
 
 
 def test_review_preserves_promoted_status(client: TestClient, run_with_advisory):
@@ -193,21 +242,24 @@ def test_review_preserves_promoted_status(client: TestClient, run_with_advisory)
     # First, promote
     promote_res = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
-        json={"promoted_by": "test_operator"},
+        headers=OPERATOR_HEADERS,
+        json={"label": None, "note": None},
     )
     assert promote_res.status_code == 200, f"Promotion failed: {promote_res.text}"
 
     # Now update the review
     review_res = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
-        json={"rating": 5, "notes": "Updated after promotion", "reviewed_by": "tester"},
+        headers={"x-user-role": "viewer", "x-user-id": "tester"},
+        json={"rating": 5, "notes": "Updated after promotion"},
     )
     assert review_res.status_code == 200, f"Review update failed: {review_res.text}"
 
     # Verify promoted status is preserved
     variants_res = client.get(f"/api/rmos/runs/{run_id}/advisory/variants")
     assert variants_res.status_code == 200
-    variants = variants_res.json()
+    data = variants_res.json()
+    variants = data.get("items", [])
     promoted_variant = next(
         (v for v in variants if v.get("advisory_id") == advisory_id),
         None,
@@ -224,14 +276,16 @@ def test_variants_include_review_data(client: TestClient, run_with_advisory):
     # Save a review
     review_res = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
-        json={"rating": 3, "notes": "Test notes", "reviewed_by": "tester"},
+        headers={"x-user-role": "viewer", "x-user-id": "tester"},
+        json={"rating": 3, "notes": "Test notes"},
     )
     assert review_res.status_code == 200, f"Review save failed: {review_res.text}"
 
     # Get variants and check review data is present
     variants_res = client.get(f"/api/rmos/runs/{run_id}/advisory/variants")
     assert variants_res.status_code == 200
-    variants = variants_res.json()
+    data = variants_res.json()
+    variants = data.get("items", [])
     reviewed_variant = next(
         (v for v in variants if v.get("advisory_id") == advisory_id),
         None,
@@ -239,3 +293,30 @@ def test_variants_include_review_data(client: TestClient, run_with_advisory):
     assert reviewed_variant is not None, f"Variant not found: {advisory_id}"
     assert reviewed_variant.get("rating") == 3
     assert reviewed_variant.get("notes") == "Test notes"
+
+
+def test_save_review_allows_optional_rating_and_notes(client: TestClient, run_with_advisory):
+    """Test that review can be saved with optional fields."""
+    run_id = run_with_advisory["run_id"]
+    advisory_id = run_with_advisory["advisory_id"]
+
+    # Notes only, no rating
+    res = client.post(
+        f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
+        headers=OPERATOR_HEADERS,
+        json={"notes": "Just notes, no rating"},
+    )
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
+    data = res.json()
+    assert data.get("rating") is None
+    assert data.get("notes") == "Just notes, no rating"
+
+    # Rating only, no notes
+    res = client.post(
+        f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
+        headers=OPERATOR_HEADERS,
+        json={"rating": 4},
+    )
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
+    data = res.json()
+    assert data.get("rating") == 4

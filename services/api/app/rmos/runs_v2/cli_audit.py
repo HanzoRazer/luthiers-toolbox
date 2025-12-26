@@ -1,94 +1,164 @@
 """
-RMOS Audit CLI - Tail and inspect delete audit logs.
+RMOS Delete Audit CLI - Inspect and tail the delete audit log.
 
 H3.6.3: Incident response utility.
 
 Usage:
-    python -m app.rmos.runs_v2.cli_audit tail --lines 50
-    python -m app.rmos.runs_v2.cli_audit tail --follow --lines 100
+    cd services/api
+    python -m app.rmos.runs_v2.cli_audit tail -n 50
+    python -m app.rmos.runs_v2.cli_audit tail -n 50 -f
+    python -m app.rmos.runs_v2.cli_audit count --mode soft
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from .store import _get_store_root
-from .delete_audit import _get_audit_path
+from .delete_audit import read_audit_lines, _get_audit_path
 
 
-def _tail_lines(path: Path, n: int) -> str:
-    if not path.exists():
-        return ""
-
-    # Simple, safe tail for JSONL (file sizes should be reasonable; if not, we can optimize later)
-    data = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    return "\n".join(data[-n:]) + ("\n" if data else "")
+def _get_runs_dir() -> Path:
+    return Path(_get_store_root()).resolve()
 
 
 def cmd_tail(args: argparse.Namespace) -> int:
-    store_root = Path(_get_store_root())
+    """Print last N delete audit events, optionally follow for new events."""
+    store_root = _get_runs_dir()
+
+    # Print last N events
+    last = read_audit_lines(store_root=store_root, tail=args.lines)
+    for e in last:
+        if args.json:
+            print(json.dumps(e, ensure_ascii=False))
+        else:
+            # Human-readable format
+            ts = e.get("ts_utc", "?")
+            run_id = e.get("run_id", "?")
+            mode = e.get("mode", "?")
+            outcome = e.get("outcome", "ok")
+            actor = e.get("actor") or "anonymous"
+            reason = e.get("reason", "")[:50]
+            print(f"[{ts}] {mode:5} {outcome:12} {run_id} by {actor} - {reason}")
+
+    if not args.follow:
+        return 0
+
+    # Follow mode: poll file for new lines
     audit_path = _get_audit_path(store_root)
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    audit_path.touch(exist_ok=True)
 
-    if args.follow:
-        # print last N, then follow
-        out = _tail_lines(audit_path, args.lines)
-        if out:
-            sys.stdout.write(out)
-            sys.stdout.flush()
+    print(f"\n-- Following {audit_path} (Ctrl+C to stop) --\n", file=sys.stderr)
 
-        last_size = audit_path.stat().st_size if audit_path.exists() else 0
+    last_size = audit_path.stat().st_size if audit_path.exists() else 0
 
-        try:
-            while True:
-                time.sleep(args.poll_ms / 1000.0)
-                if not audit_path.exists():
-                    continue
-                size = audit_path.stat().st_size
-                if size < last_size:
-                    # log rotated or truncated; reprint last N
-                    sys.stdout.write(_tail_lines(audit_path, args.lines))
-                    sys.stdout.flush()
-                    last_size = size
-                    continue
-                if size == last_size:
-                    continue
-
-                # read newly appended bytes
-                with open(audit_path, "r", encoding="utf-8", errors="replace") as f:
-                    f.seek(last_size)
-                    chunk = f.read()
-                    if chunk:
-                        sys.stdout.write(chunk)
-                        sys.stdout.flush()
+    try:
+        while True:
+            time.sleep(args.interval)
+            if not audit_path.exists():
+                continue
+            size = audit_path.stat().st_size
+            if size < last_size:
+                # log rotated or truncated; reprint last N
+                for e in read_audit_lines(store_root=store_root, tail=args.lines):
+                    if args.json:
+                        print(json.dumps(e, ensure_ascii=False))
+                    else:
+                        ts = e.get("ts_utc", "?")
+                        run_id = e.get("run_id", "?")
+                        mode = e.get("mode", "?")
+                        outcome = e.get("outcome", "ok")
+                        actor = e.get("actor") or "anonymous"
+                        reason = e.get("reason", "")[:50]
+                        print(f"[{ts}] {mode:5} {outcome:12} {run_id} by {actor} - {reason}")
                 last_size = size
-        except KeyboardInterrupt:
-            return 0
+                continue
+            if size == last_size:
+                continue
 
-    # non-follow: just last N
-    out = _tail_lines(audit_path, args.lines)
-    sys.stdout.write(out)
-    sys.stdout.flush()
+            # read newly appended bytes
+            with open(audit_path, "r", encoding="utf-8", errors="replace") as f:
+                f.seek(last_size)
+                chunk = f.read()
+                for ln in chunk.splitlines():
+                    if not ln.strip():
+                        continue
+                    if args.json:
+                        print(ln)
+                    else:
+                        try:
+                            e = json.loads(ln)
+                            ts = e.get("ts_utc", "?")
+                            run_id = e.get("run_id", "?")
+                            mode = e.get("mode", "?")
+                            outcome = e.get("outcome", "ok")
+                            actor = e.get("actor") or "anonymous"
+                            reason = e.get("reason", "")[:50]
+                            print(f"[{ts}] {mode:5} {outcome:12} {run_id} by {actor} - {reason}")
+                        except Exception:
+                            print(ln)
+            last_size = size
+    except KeyboardInterrupt:
+        return 0
+
     return 0
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def cmd_count(args: argparse.Namespace) -> int:
+    """Count audit events, optionally filtered."""
+    store_root = _get_runs_dir()
+    events = read_audit_lines(store_root=store_root, tail=100000)
+
+    # Apply filters
+    if args.mode:
+        events = [e for e in events if e.get("mode") == args.mode]
+    if args.outcome:
+        events = [e for e in events if e.get("outcome") == args.outcome]
+    if args.actor:
+        events = [e for e in events if e.get("actor") == args.actor]
+
+    print(len(events))
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="python -m app.rmos.runs_v2.cli_audit",
-        description="RMOS runs_v2 audit utilities",
+        description="Inspect RMOS runs_v2 delete audit log",
     )
-    sp = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd", required=True)
 
-    t = sp.add_parser("tail", help="Tail the delete audit log")
-    t.add_argument("--lines", type=int, default=50, help="Number of lines to show")
-    t.add_argument("--follow", action="store_true", help="Follow (like tail -f)")
-    t.add_argument("--poll-ms", type=int, default=500, help="Polling interval in ms (follow mode)")
+    # tail command
+    t = sub.add_parser("tail", help="Print last N delete audit events")
+    t.add_argument("-n", "--lines", type=int, default=50, help="Number of lines to show")
+    t.add_argument("-f", "--follow", action="store_true", help="Follow for new events")
+    t.add_argument("--interval", type=float, default=0.5, help="Follow poll interval (seconds)")
+    t.add_argument("--json", action="store_true", help="Output raw JSON lines")
     t.set_defaults(fn=cmd_tail)
 
-    args = p.parse_args(argv)
-    return int(args.fn(args))
+    # count command
+    c = sub.add_parser("count", help="Count audit events")
+    c.add_argument("--mode", choices=["soft", "hard"], help="Filter by mode")
+    c.add_argument("--outcome", help="Filter by outcome (ok, not_found, error, forbidden, rate_limited)")
+    c.add_argument("--actor", help="Filter by actor")
+    c.set_defaults(fn=cmd_count)
+
+    return p
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        rc = args.fn(args)
+    except KeyboardInterrupt:
+        print("\nInterrupted", file=sys.stderr)
+        rc = 130
+    return rc
 
 
 if __name__ == "__main__":

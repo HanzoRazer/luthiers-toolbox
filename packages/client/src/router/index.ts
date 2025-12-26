@@ -141,6 +141,13 @@ const routes: RouteRecordRaw[] = [
     name: "RmosRunsDiff",
     component: () => import("@/views/RmosRunsDiffView.vue"),
   },
+
+  // Run Variants Review Page (H3 Product Bundle)
+  {
+    path: "/rmos/runs/:run_id/variants",
+    name: "RunVariantsReview",
+    component: () => import("@/views/Runs/RunVariantsReviewPage.vue"),
+  },
 ];
 
 const router = createRouter({

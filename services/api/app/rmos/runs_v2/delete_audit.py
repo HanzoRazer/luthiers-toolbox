@@ -125,3 +125,45 @@ def build_delete_audit_event(
         errors=errors,
         meta=meta,
     )
+
+
+def read_audit_lines(
+    *,
+    store_root: Optional[Path] = None,
+    tail: int = 50,
+) -> list[dict]:
+    """
+    Read last N audit events (best-effort).
+
+    Args:
+        store_root: Store root path. If None, uses RMOS_RUNS_DIR env var.
+        tail: Number of recent events to return.
+
+    Returns:
+        List of audit event dicts, oldest to newest within the tail window.
+    """
+    if store_root is None:
+        root = os.getenv("RMOS_RUNS_DIR", "services/api/data/runs/rmos")
+        store_root = Path(root).expanduser().resolve()
+
+    path = _get_audit_path(store_root)
+    if not path.exists():
+        return []
+
+    # Small file expected. If it grows, we can implement a true tail later.
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return []
+
+    lines = lines[-max(1, tail):]
+    out: list[dict] = []
+    for ln in lines:
+        if not ln.strip():
+            continue
+        try:
+            out.append(json.loads(ln))
+        except Exception:
+            # keep going; audit file should be append-only and resilient
+            continue
+    return out

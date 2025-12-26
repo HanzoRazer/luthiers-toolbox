@@ -284,9 +284,13 @@ class RunArtifact(BaseModel):
         None,
         description="Reviews per advisory_id: {advisory_id: {rating, notes, reviewed_at, reviewed_by}}",
     )
+    manufacturing_candidates: Optional[List[Any]] = Field(
+        None,
+        description="Promoted advisory variants intended for manufacturing review/approval",
+    )
     source_advisory_id: Optional[str] = Field(
         None,
-        description="Advisory ID this artifact was promoted from (promotion lineage)",
+        description="Last promoted advisory_id source for this run (convenience for product UI)",
     )
 
     # Legacy compatibility - content-addressed attachments

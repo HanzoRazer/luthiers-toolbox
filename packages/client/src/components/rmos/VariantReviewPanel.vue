@@ -5,349 +5,208 @@
  * Panel for reviewing, rating, and promoting advisory variants.
  * Integrates with the /api/rmos/runs/{run_id}/advisory/variants API.
  */
-import { ref, computed, onMounted, watch } from "vue";
-import SvgPreview from "./SvgPreview.vue";
-import StarRating from "./StarRating.vue";
+import { computed, onMounted, ref, watch } from "vue";
+import StarRating from "@/components/rmos/StarRating.vue";
+import SvgPreview from "@/components/rmos/SvgPreview.vue";
 
-interface AdvisoryVariant {
+type Variant = {
   advisory_id: string;
   mime: string;
   filename: string;
-  kind: string;
-  rating: number | null;
-  notes: string | null;
-  reviewed_at: string | null;
-  reviewed_by: string | null;
+  size_bytes: number;
+  preview_blocked: boolean;
+  preview_block_reason?: string | null;
+  rating?: number | null;
+  notes?: string | null;
   promoted: boolean;
-  promoted_run_id: string | null;
-}
+};
 
 const props = defineProps<{
-  /** Run artifact ID */
   runId: string;
-  /** API base URL (default: "") */
   apiBase?: string;
-  /** Current operator identity */
-  operatorId?: string;
 }>();
 
-const emit = defineEmits<{
-  (e: "variant-reviewed", advisoryId: string): void;
-  (e: "variant-promoted", advisoryId: string, newRunId: string): void;
-  (e: "error", msg: string): void;
-}>();
+const apiBase = computed(() => props.apiBase ?? "/api");
 
-const variants = ref<AdvisoryVariant[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
-const selectedVariant = ref<AdvisoryVariant | null>(null);
-const svgContent = ref<string>("");
-const loadingSvg = ref(false);
+const items = ref<Variant[]>([]);
+const saving = ref<Record<string, boolean>>({});
+const promoting = ref<Record<string, boolean>>({});
 
-// Review form state
-const reviewRating = ref<number | null>(null);
-const reviewNotes = ref("");
-const saving = ref(false);
-const promoting = ref(false);
+function roleHeaders(): Record<string, string> {
+  // Minimal RBAC wiring: send role if stored in localStorage
+  const role = localStorage.getItem("LTB_USER_ROLE") || "";
+  const uid = localStorage.getItem("LTB_USER_ID") || "";
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (role) h["x-user-role"] = role;
+  if (uid) h["x-user-id"] = uid;
+  return h;
+}
 
-const apiUrl = computed(() => props.apiBase || "");
-
-async function fetchVariants() {
+async function refresh() {
+  if (!props.runId) return;
   loading.value = true;
   error.value = null;
   try {
-    const res = await fetch(
-      `${apiUrl.value}/api/rmos/runs/${props.runId}/advisory/variants`
-    );
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Failed to load variants: ${res.status} ${text}`);
-    }
-    variants.value = await res.json();
-  } catch (err) {
-    error.value = String(err);
-    emit("error", String(err));
+    const res = await fetch(`${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/variants`);
+    if (!res.ok) throw new Error(`Load variants failed (${res.status})`);
+    const data = await res.json();
+    items.value = Array.isArray(data?.items) ? data.items : [];
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
+    items.value = [];
   } finally {
     loading.value = false;
   }
 }
 
-async function fetchSvgContent(advisoryId: string) {
-  loadingSvg.value = true;
-  svgContent.value = "";
+async function saveReview(v: Variant) {
+  saving.value[v.advisory_id] = true;
+  error.value = null;
   try {
     const res = await fetch(
-      `${apiUrl.value}/api/rmos/runs/${props.runId}/advisory/${advisoryId}/blob`
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to load SVG: ${res.status}`);
-    }
-    const text = await res.text();
-    svgContent.value = text;
-  } catch (err) {
-    console.warn("Could not load SVG:", err);
-  } finally {
-    loadingSvg.value = false;
-  }
-}
-
-function selectVariant(variant: AdvisoryVariant) {
-  selectedVariant.value = variant;
-  reviewRating.value = variant.rating;
-  reviewNotes.value = variant.notes || "";
-
-  // Load SVG if it's an SVG type
-  if (variant.mime === "image/svg+xml") {
-    fetchSvgContent(variant.advisory_id);
-  } else {
-    svgContent.value = "";
-  }
-}
-
-async function saveReview() {
-  if (!selectedVariant.value || reviewRating.value === null) return;
-
-  saving.value = true;
-  try {
-    const res = await fetch(
-      `${apiUrl.value}/api/rmos/runs/${props.runId}/advisory/${selectedVariant.value.advisory_id}/review`,
+      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/review`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating: reviewRating.value,
-          notes: reviewNotes.value,
-          reviewed_by: props.operatorId || null,
-        }),
+        headers: roleHeaders(),
+        body: JSON.stringify({ rating: v.rating ?? null, notes: v.notes ?? null }),
       }
     );
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Failed to save review: ${res.status} ${text}`);
-    }
-
-    // Update local state
-    const idx = variants.value.findIndex(
-      (v) => v.advisory_id === selectedVariant.value!.advisory_id
-    );
-    if (idx >= 0) {
-      variants.value[idx] = {
-        ...variants.value[idx],
-        rating: reviewRating.value,
-        notes: reviewNotes.value,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: props.operatorId || null,
-      };
-    }
-
-    emit("variant-reviewed", selectedVariant.value.advisory_id);
-  } catch (err) {
-    error.value = String(err);
-    emit("error", String(err));
+    if (!res.ok) throw new Error(`Save failed (${res.status})`);
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
   } finally {
-    saving.value = false;
+    saving.value[v.advisory_id] = false;
   }
 }
 
-async function promoteVariant() {
-  if (!selectedVariant.value) return;
-  if (selectedVariant.value.promoted) return;
-
-  promoting.value = true;
+async function promote(v: Variant) {
+  promoting.value[v.advisory_id] = true;
+  error.value = null;
   try {
     const res = await fetch(
-      `${apiUrl.value}/api/rmos/runs/${props.runId}/advisory/${selectedVariant.value.advisory_id}/promote`,
+      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/promote`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          promoted_by: props.operatorId || null,
-        }),
+        headers: roleHeaders(),
+        body: JSON.stringify({ label: null, note: v.notes ?? null }),
       }
     );
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Failed to promote: ${res.status} ${text}`);
+    if (res.status === 403) throw new Error("Promotion forbidden (role required: admin/operator/engineer)");
+    if (res.status === 409) throw new Error("Already promoted");
+    if (!res.ok) throw new Error(`Promote failed (${res.status})`);
+    const out = await res.json();
+    if (out?.decision === "BLOCK") {
+      throw new Error(`Promotion blocked: ${out?.reason ?? "policy"}`);
     }
-
-    const result = await res.json();
-
-    // Update local state
-    const idx = variants.value.findIndex(
-      (v) => v.advisory_id === selectedVariant.value!.advisory_id
-    );
-    if (idx >= 0) {
-      variants.value[idx] = {
-        ...variants.value[idx],
-        promoted: true,
-        promoted_run_id: result.manufacturing_run_id,
-      };
-      selectedVariant.value = variants.value[idx];
-    }
-
-    emit("variant-promoted", selectedVariant.value!.advisory_id, result.manufacturing_run_id);
-  } catch (err) {
-    error.value = String(err);
-    emit("error", String(err));
+    await refresh();
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
   } finally {
-    promoting.value = false;
+    promoting.value[v.advisory_id] = false;
   }
 }
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${Math.round(bytes / 1024)} KB`;
 }
 
-function kindLabel(kind: string): string {
-  const labels: Record<string, string> = {
-    explanation: "Explanation",
-    advisory: "Advisory",
-    note: "Note",
-    unknown: "Unknown",
-  };
-  return labels[kind] || kind;
-}
-
-onMounted(fetchVariants);
-
-watch(() => props.runId, fetchVariants);
+onMounted(refresh);
+watch(() => props.runId, () => refresh());
 </script>
 
 <template>
   <div class="variant-review-panel">
     <div class="panel-header">
-      <h3>Variant Review</h3>
-      <button class="btn btn-sm" @click="fetchVariants" :disabled="loading">
-        Refresh
+      <div>
+        <h3 class="title">Variant Review</h3>
+        <p class="subtitle">Rate, note, and promote advisory variants for this run.</p>
+      </div>
+      <button class="btn btn-secondary" @click="refresh" :disabled="loading">
+        {{ loading ? "Loading..." : "Refresh" }}
       </button>
     </div>
 
-    <!-- Error -->
     <div v-if="error" class="error-banner">
       {{ error }}
       <button @click="error = null">&times;</button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="loading">Loading variants...</div>
+    <div v-if="loading && !items.length" class="loading">Loading variants...</div>
+    <div v-else-if="!items.length" class="empty">No advisory variants found for this run.</div>
 
-    <!-- Empty -->
-    <div v-else-if="variants.length === 0" class="empty">
-      No advisory variants found for this run.
-    </div>
-
-    <!-- Content -->
-    <div v-else class="panel-content">
-      <!-- Variant List -->
-      <div class="variant-list">
-        <div
-          v-for="v in variants"
-          :key="v.advisory_id"
-          class="variant-item"
-          :class="{
-            selected: selectedVariant?.advisory_id === v.advisory_id,
-            promoted: v.promoted,
-          }"
-          @click="selectVariant(v)"
-        >
-          <div class="variant-header">
-            <span class="kind-badge">{{ kindLabel(v.kind) }}</span>
-            <span class="filename">{{ v.filename }}</span>
-          </div>
-          <div class="variant-meta">
-            <StarRating
-              :modelValue="v.rating"
-              :disabled="true"
-              :size="14"
-            />
-            <span v-if="v.promoted" class="promoted-badge">Promoted</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detail Panel -->
-      <div v-if="selectedVariant" class="variant-detail">
-        <div class="detail-header">
-          <h4>{{ selectedVariant.filename }}</h4>
-          <span class="advisory-id">{{ selectedVariant.advisory_id.slice(0, 16) }}...</span>
+    <div v-else class="variant-grid">
+      <div v-for="v in items" :key="v.advisory_id" class="variant-card">
+        <div class="card-header">
+          <code class="advisory-id">{{ v.advisory_id.slice(0, 12) }}...</code>
+          <span class="file-info">{{ v.filename }} - {{ formatSize(v.size_bytes) }}</span>
         </div>
 
         <!-- SVG Preview -->
-        <div v-if="selectedVariant.mime === 'image/svg+xml'" class="preview-section">
-          <div v-if="loadingSvg" class="loading-svg">Loading preview...</div>
-          <SvgPreview
-            v-else-if="svgContent"
-            :svg="svgContent"
-            :maxHeight="250"
-            :expandable="true"
-          />
+        <SvgPreview
+          v-if="v.mime === 'image/svg+xml'"
+          :runId="runId"
+          :advisoryId="v.advisory_id"
+          :apiBase="apiBase"
+        />
+        <div v-else class="non-svg-blob">
+          <span class="subtle">Non-SVG blob: {{ v.mime }}</span>
         </div>
 
-        <!-- Review Form -->
-        <div class="review-form">
-          <div class="form-group">
-            <label>Rating</label>
-            <StarRating
-              v-model="reviewRating"
-              :disabled="saving"
-              :size="28"
-            />
+        <!-- Review Controls -->
+        <div class="review-controls">
+          <div class="rating-row">
+            <label>Rating:</label>
+            <StarRating v-model="v.rating" />
           </div>
 
-          <div class="form-group">
-            <label>Notes</label>
-            <textarea
-              v-model="reviewNotes"
-              rows="3"
-              placeholder="Add review notes..."
-              :disabled="saving"
-            />
-          </div>
+          <textarea
+            class="notes-input"
+            v-model="v.notes"
+            placeholder="Review notes..."
+            rows="3"
+          ></textarea>
 
-          <!-- Previous Review Info -->
-          <div v-if="selectedVariant.reviewed_at" class="previous-review">
-            <span>Last reviewed: {{ formatDate(selectedVariant.reviewed_at) }}</span>
-            <span v-if="selectedVariant.reviewed_by">
-              by {{ selectedVariant.reviewed_by }}
-            </span>
-          </div>
+          <div class="action-row">
+            <button
+              class="btn"
+              :disabled="!!saving[v.advisory_id]"
+              @click="saveReview(v)"
+            >
+              {{ saving[v.advisory_id] ? "Saving..." : "Save Review" }}
+            </button>
 
-          <div class="form-actions">
             <button
               class="btn btn-primary"
-              @click="saveReview"
-              :disabled="saving || reviewRating === null"
+              :disabled="v.promoted || !!promoting[v.advisory_id]"
+              @click="promote(v)"
             >
-              {{ saving ? "Saving..." : "Save Review" }}
+              {{ v.promoted ? "Promoted" : (promoting[v.advisory_id] ? "Promoting..." : "Promote") }}
             </button>
+          </div>
 
-            <button
-              v-if="!selectedVariant.promoted"
-              class="btn btn-success"
-              @click="promoteVariant"
-              :disabled="promoting || reviewRating === null"
-              title="Promote to manufacturing candidate"
-            >
-              {{ promoting ? "Promoting..." : "Promote" }}
-            </button>
+          <div v-if="v.preview_blocked" class="preview-warning">
+            Preview blocked: {{ v.preview_block_reason }}
+          </div>
 
-            <div v-else class="promoted-info">
-              <span class="promoted-label">Promoted to:</span>
-              <code>{{ selectedVariant.promoted_run_id?.slice(0, 16) }}...</code>
-            </div>
+          <div class="download-link">
+            <a
+              :href="`${apiBase}/rmos/runs/${encodeURIComponent(runId)}/advisory/blobs/${encodeURIComponent(v.advisory_id)}/download`"
+              target="_blank"
+              rel="noreferrer"
+            >Download</a>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- No Selection -->
-      <div v-else class="no-selection">
-        Select a variant to review
-      </div>
+    <div class="panel-footer">
+      <small class="subtle">
+        Promotion requires role header: <code>x-user-role</code> = admin/operator/engineer.
+        Set <code>LTB_USER_ROLE</code> in localStorage for testing.
+      </small>
     </div>
   </div>
 </template>
@@ -355,7 +214,7 @@ watch(() => props.runId, fetchVariants);
 <style scoped>
 .variant-review-panel {
   border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff;
   overflow: hidden;
 }
@@ -363,33 +222,40 @@ watch(() => props.runId, fetchVariants);
 .panel-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
+  align-items: flex-start;
+  padding: 1rem;
   background: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
 }
 
-.panel-header h3 {
+.title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.subtitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  color: #6c757d;
 }
 
 .error-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: #f8d7da;
   color: #721c24;
-  font-size: 0.85rem;
+  border-bottom: 1px solid #f5c6cb;
 }
 
 .error-banner button {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   cursor: pointer;
-  color: #721c24;
+  color: inherit;
 }
 
 .loading,
@@ -399,163 +265,92 @@ watch(() => props.runId, fetchVariants);
   color: #6c757d;
 }
 
-.panel-content {
+.variant-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  min-height: 400px;
-}
-
-.variant-list {
-  border-right: 1px solid #dee2e6;
-  overflow-y: auto;
-  max-height: 500px;
-}
-
-.variant-item {
-  padding: 0.75rem;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.variant-item:hover {
-  background: #f8f9fa;
-}
-
-.variant-item.selected {
-  background: #e7f1ff;
-  border-left: 3px solid #0066cc;
-}
-
-.variant-item.promoted {
-  background: #d4edda;
-}
-
-.variant-item.promoted.selected {
-  background: #c3e6cb;
-  border-left-color: #28a745;
-}
-
-.variant-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.kind-badge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.35rem;
-  background: #e9ecef;
-  border-radius: 3px;
-  text-transform: uppercase;
-}
-
-.filename {
-  font-size: 0.85rem;
-  font-family: monospace;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.variant-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.promoted-badge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.35rem;
-  background: #28a745;
-  color: #fff;
-  border-radius: 3px;
-}
-
-.variant-detail {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
   padding: 1rem;
-  overflow-y: auto;
 }
 
-.detail-header {
-  margin-bottom: 1rem;
+.variant-card {
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.detail-header h4 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1rem;
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .advisory-id {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  background: #e9ecef;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.file-info {
+  font-size: 0.8rem;
   color: #6c757d;
-  font-family: monospace;
 }
 
-.preview-section {
-  margin-bottom: 1rem;
-}
-
-.loading-svg {
-  padding: 2rem;
-  text-align: center;
-  color: #6c757d;
-  background: #f8f9fa;
-  border-radius: 6px;
-}
-
-.review-form {
-  background: #f8f9fa;
+.non-svg-blob {
+  border: 1px dashed #dee2e6;
+  border-radius: 8px;
   padding: 1rem;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.02);
+  text-align: center;
 }
 
-.form-group {
-  margin-bottom: 0.75rem;
+.review-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.25rem;
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-row label {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #495057;
 }
 
-.form-group textarea {
+.notes-input {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ced4da;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.9rem;
   resize: vertical;
 }
 
-.form-group textarea:focus {
+.notes-input:focus {
   outline: none;
   border-color: #0066cc;
   box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
 }
 
-.previous-review {
-  margin-bottom: 0.75rem;
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.form-actions {
+.action-row {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .btn {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
   border: 1px solid #dee2e6;
-  border-radius: 4px;
+  border-radius: 6px;
   background: #fff;
   cursor: pointer;
 }
@@ -569,55 +364,58 @@ watch(() => props.runId, fetchVariants);
   cursor: not-allowed;
 }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
+.btn-secondary {
+  opacity: 0.85;
 }
 
 .btn-primary {
   background: #0066cc;
   border-color: #0066cc;
   color: #fff;
+  font-weight: 500;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: #0052a3;
 }
 
-.btn-success {
+.btn-primary:disabled {
   background: #28a745;
   border-color: #28a745;
-  color: #fff;
 }
 
-.btn-success:hover:not(:disabled) {
-  background: #218838;
-}
-
-.promoted-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: #155724;
-}
-
-.promoted-label {
-  font-weight: 500;
-}
-
-.promoted-info code {
-  background: #d4edda;
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
+.preview-warning {
   font-size: 0.8rem;
+  color: #8a5a00;
+  padding: 0.25rem 0.5rem;
+  background: #fff3cd;
+  border-radius: 4px;
 }
 
-.no-selection {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6c757d;
-  font-size: 0.9rem;
+.download-link {
+  text-align: right;
+}
+
+.download-link a {
+  font-size: 0.8rem;
+  color: #0066cc;
+}
+
+.panel-footer {
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.subtle {
+  opacity: 0.7;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  background: #f4f4f4;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
 }
 </style>

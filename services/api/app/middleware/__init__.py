@@ -12,6 +12,7 @@ from .edition_middleware import (
     EDITION_FEATURES,
     FEATURE_REQUIREMENTS,
 )
+from .deprecation import DeprecationHeadersMiddleware
 
 __all__ = [
     "Edition",
@@ -22,4 +23,5 @@ __all__ = [
     "require_feature",
     "EDITION_FEATURES",
     "FEATURE_REQUIREMENTS",
+    "DeprecationHeadersMiddleware",
 ]

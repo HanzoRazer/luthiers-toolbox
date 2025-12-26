@@ -22,6 +22,11 @@ from .store import RunStoreV2, _get_store_root
 from .schemas import RunArtifact
 
 
+def _is_tombstone(meta: dict) -> bool:
+    """Check if an index entry is a soft-deleted tombstone."""
+    return bool(meta.get("deleted") or meta.get("_deleted"))
+
+
 def verify(
     *,
     store_root: Optional[str] = None,
@@ -52,8 +57,14 @@ def verify(
     missing_artifacts: List[str] = []
     deserialize_failures: List[Dict[str, str]] = []
     partition_mismatches: List[Dict[str, str]] = []
+    tombstone_count: int = 0
 
     for run_id, meta in index.items():
+        # H3.6.2: Skip tombstones - soft-deleted runs don't require artifact files
+        if _is_tombstone(meta):
+            tombstone_count += 1
+            continue
+
         partition = meta.get("partition")
         if not partition:
             partition_mismatches.append({
@@ -90,6 +101,8 @@ def verify(
         "store_root": str(store.root),
         "index_exists": index_exists,
         "indexed_runs": len(run_ids),
+        "tombstones": tombstone_count,
+        "active_runs": len(run_ids) - tombstone_count,
         "missing_artifacts": missing_artifacts,
         "deserialize_failures": deserialize_failures,
         "partition_mismatches": partition_mismatches,
@@ -114,6 +127,8 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     print(f"Index exists: {'Yes' if report['index_exists'] else 'No'}")
     print(f"Runs indexed: {report['indexed_runs']}")
+    print(f"  - Active runs: {report['active_runs']}")
+    print(f"  - Tombstones (soft-deleted): {report['tombstones']}")
     print()
 
     if report["missing_artifacts"]:
