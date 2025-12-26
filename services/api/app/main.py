@@ -767,6 +767,16 @@ except ImportError as e:
     print(f"Warning: RMOS Logs v2 router not available: {e}")
     rmos_logs_v2_router = None
 
+# =============================================================================
+# WAVE 21: ACOUSTICS BUNDLE IMPORT
+# Tap tone measurement bundle ingestion from workstation/field captures
+# =============================================================================
+try:
+    from .rmos.acoustics.router import router as rmos_acoustics_router
+except ImportError as e:
+    print(f"Warning: RMOS Acoustics router not available: {e}")
+    rmos_acoustics_router = None
+
 # Wave 20: Art Studio Run Orchestration (3)
 if art_feasibility_router:
     app.include_router(art_feasibility_router, prefix="/api/art", tags=["Art Studio", "Feasibility"])
@@ -774,6 +784,11 @@ if art_snapshot_router:
     app.include_router(art_snapshot_router, prefix="/api/art", tags=["Art Studio", "Snapshots v2"])
 if rmos_logs_v2_router:
     app.include_router(rmos_logs_v2_router, prefix="/api/rmos", tags=["RMOS", "Logs v2"])
+
+# Wave 21: Acoustics Bundle Import (1)
+# Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path
+if rmos_acoustics_router:
+    app.include_router(rmos_acoustics_router, tags=["RMOS", "Acoustics"])
 
 # =============================================================================
 # META / INTROSPECTION
