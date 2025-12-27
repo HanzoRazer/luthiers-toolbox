@@ -132,6 +132,9 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
     # Review records stored on run (dict keyed by advisory_id)
     review_map: Dict[str, Any] = getattr(run, "advisory_reviews", None) or {}
 
+    # Rejection records (dict keyed by advisory_id)
+    rejection_map: Dict[str, Any] = getattr(run, "advisory_rejections", None) or {}
+
     # Manufacturing candidates (list) - may be dicts or objects depending on storage
     candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
     promoted_ids: set[str] = set()
@@ -142,6 +145,9 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
             adv = getattr(c, "advisory_id", None)
         if adv:
             promoted_ids.add(adv)
+
+    # Advisory timestamps (if available)
+    advisory_meta: Dict[str, Any] = getattr(run, "advisory_meta", None) or {}
 
     items: list[AdvisoryVariantSummary] = []
     for adv_id in allowed:
@@ -159,6 +165,12 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                     rating=None,
                     notes=None,
                     promoted=adv_id in promoted_ids,
+                    status="NEW",
+                    risk_level="RED",
+                    created_at_utc=None,
+                    updated_at_utc=None,
+                    rejected=False,
+                    rejection_reason=None,
                 )
             )
             continue
@@ -170,19 +182,49 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
 
         preview_blocked = False
         preview_reason = None
+        risk_level = "GREEN"
         if mime == "image/svg+xml":
             try:
                 svg_text = data.decode("utf-8", errors="ignore")
                 ok, reason = _preview_safety(svg_text)
                 preview_blocked = not ok
                 preview_reason = reason
+                # Compute risk based on SVG content
+                _, risk_level, _, _ = _risk_from_svg_for_binding(svg_text)
             except Exception:
                 preview_blocked = True
                 preview_reason = "decode"
+                risk_level = "YELLOW"
+        else:
+            # Non-SVG files get YELLOW risk
+            risk_level = "YELLOW"
 
         rec = review_map.get(adv_id) or {}
         rating = rec.get("rating")
         notes = rec.get("notes")
+        updated_at_utc = rec.get("updated_at_utc")
+
+        # Rejection state
+        rejection_rec = rejection_map.get(adv_id) or {}
+        is_rejected = bool(rejection_rec.get("rejected", False))
+        rejection_reason = rejection_rec.get("reason")
+
+        # Metadata timestamps
+        meta = advisory_meta.get(adv_id) or {}
+        created_at_utc = meta.get("created_at_utc")
+
+        # Compute status: PROMOTED > REJECTED > REVIEWED > NEW
+        is_promoted = adv_id in promoted_ids
+        has_review = rating is not None or (notes and notes.strip())
+
+        if is_promoted:
+            status = "PROMOTED"
+        elif is_rejected:
+            status = "REJECTED"
+        elif has_review:
+            status = "REVIEWED"
+        else:
+            status = "NEW"
 
         items.append(
             AdvisoryVariantSummary(
@@ -194,7 +236,13 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 preview_block_reason=preview_reason,
                 rating=rating,
                 notes=notes,
-                promoted=adv_id in promoted_ids,
+                promoted=is_promoted,
+                status=status,  # type: ignore
+                risk_level=risk_level,  # type: ignore
+                created_at_utc=created_at_utc,
+                updated_at_utc=updated_at_utc,
+                rejected=is_rejected,
+                rejection_reason=rejection_reason,
             )
         )
 

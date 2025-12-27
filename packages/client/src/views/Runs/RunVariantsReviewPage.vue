@@ -4,6 +4,11 @@
  *
  * Product surface for variant review workflow.
  * Provides: variant browser, review/rating, promotion, comparison, and manufacturing queue.
+ *
+ * === Variant Status & Filters UX Bundle ===
+ * - Status badges (NEW/REVIEWED/PROMOTED/REJECTED)
+ * - Risk badges (GREEN/YELLOW/RED)
+ * - Filter bar with status filter, needs-attention toggle, and sorting
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
@@ -14,6 +19,9 @@ import ManufacturingCandidatesPanel from "@/components/rmos/ManufacturingCandida
 import PromptLineageViewer from "@/components/rmos/PromptLineageViewer.vue";
 import SvgPathDiffViewer from "@/components/rmos/SvgPathDiffViewer.vue";
 import SvgPreview from "@/components/rmos/SvgPreview.vue";
+import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
+import VariantRiskBadge from "@/components/rmos/VariantRiskBadge.vue";
+import VariantFilters, { type VariantFilters as VariantFiltersType } from "@/components/rmos/VariantFilters.vue";
 
 const route = useRoute();
 const apiBase = "/api";
@@ -21,7 +29,10 @@ const apiBase = "/api";
 // Run ID from route params
 const runId = computed(() => String(route.params.run_id ?? route.params.id ?? ""));
 
-// Variant list
+// Variant list with extended fields
+type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
+type RiskLevel = "GREEN" | "YELLOW" | "RED";
+
 type VariantRow = {
   advisory_id: string;
   mime?: string | null;
@@ -29,6 +40,13 @@ type VariantRow = {
   rating?: number | null;
   notes?: string | null;
   promoted?: boolean;
+  // === NEW: Status & Filters fields ===
+  status: VariantStatus;
+  risk_level: RiskLevel;
+  created_at_utc?: string | null;
+  updated_at_utc?: string | null;
+  rejected?: boolean;
+  rejection_reason?: string | null;
 };
 
 const variants = ref<VariantRow[]>([]);
@@ -39,6 +57,67 @@ const error = ref<string | null>(null);
 const selected = ref<string | null>(null);
 const compareLeft = ref<string | null>(null);
 const compareRight = ref<string | null>(null);
+
+// === NEW: Filter state ===
+const currentFilters = ref<VariantFiltersType>({
+  status: "ALL",
+  riskNeedsAttention: false,
+  sort: "created",
+});
+
+function handleFilterChange(filters: VariantFiltersType) {
+  currentFilters.value = filters;
+}
+
+// Computed counts for filter bar
+const totalCount = computed(() => variants.value.length);
+const newCount = computed(() => variants.value.filter((v) => v.status === "NEW").length);
+const attentionCount = computed(
+  () => variants.value.filter((v) => v.risk_level === "YELLOW" || v.risk_level === "RED").length
+);
+
+// Filtered and sorted variants
+const filteredVariants = computed(() => {
+  let result = [...variants.value];
+
+  // Apply status filter
+  if (currentFilters.value.status !== "ALL") {
+    result = result.filter((v) => v.status === currentFilters.value.status);
+  }
+
+  // Apply needs attention filter
+  if (currentFilters.value.riskNeedsAttention) {
+    result = result.filter((v) => v.risk_level === "YELLOW" || v.risk_level === "RED");
+  }
+
+  // Apply sorting
+  const sortFn = getSortFunction(currentFilters.value.sort);
+  result.sort(sortFn);
+
+  return result;
+});
+
+function getSortFunction(sort: VariantFiltersType["sort"]) {
+  switch (sort) {
+    case "rating":
+      return (a: VariantRow, b: VariantRow) => (b.rating ?? 0) - (a.rating ?? 0);
+    case "risk":
+      const riskOrder: Record<RiskLevel, number> = { RED: 0, YELLOW: 1, GREEN: 2 };
+      return (a: VariantRow, b: VariantRow) =>
+        riskOrder[a.risk_level] - riskOrder[b.risk_level];
+    case "status":
+      const statusOrder: Record<VariantStatus, number> = { NEW: 0, REVIEWED: 1, PROMOTED: 2, REJECTED: 3 };
+      return (a: VariantRow, b: VariantRow) =>
+        statusOrder[a.status] - statusOrder[b.status];
+    case "created":
+    default:
+      return (a: VariantRow, b: VariantRow) => {
+        const aDate = a.created_at_utc ?? "";
+        const bDate = b.created_at_utc ?? "";
+        return bDate.localeCompare(aDate); // Newest first
+      };
+  }
+}
 
 async function loadVariants() {
   if (!runId.value) return;
@@ -68,6 +147,13 @@ async function loadVariants() {
         rating: x.rating ?? null,
         notes: x.notes ?? null,
         promoted: x.promoted ?? false,
+        // === NEW: Status & Filters fields ===
+        status: x.status ?? "NEW",
+        risk_level: x.risk_level ?? "GREEN",
+        created_at_utc: x.created_at_utc ?? null,
+        updated_at_utc: x.updated_at_utc ?? null,
+        rejected: x.rejected ?? false,
+        rejection_reason: x.rejection_reason ?? null,
       }))
       .filter((x: VariantRow) => !!x.advisory_id);
 
@@ -153,6 +239,16 @@ watch(runId, () => {
       <button @click="error = null">&times;</button>
     </div>
 
+    <!-- === NEW: Filter Bar === -->
+    <VariantFilters
+      v-if="variants.length > 0"
+      :totalCount="totalCount"
+      :filteredCount="filteredVariants.length"
+      :newCount="newCount"
+      :attentionCount="attentionCount"
+      @filter-change="handleFilterChange"
+    />
+
     <div v-if="loading && !variants.length" class="loading">Loading variants...</div>
 
     <div v-else class="grid">
@@ -160,24 +256,33 @@ watch(runId, () => {
       <div class="panel">
         <div class="panel-title">Variants</div>
 
-        <div v-if="!variants.length" class="empty">
+        <div v-if="!filteredVariants.length && variants.length" class="empty">
+          No variants match current filters.
+        </div>
+
+        <div v-else-if="!variants.length" class="empty">
           No advisory variants linked to this run.
         </div>
 
         <div v-else class="variant-list">
           <button
-            v-for="v in variants"
+            v-for="v in filteredVariants"
             :key="v.advisory_id"
             class="variant-row"
             :class="{ selected: selected === v.advisory_id }"
             @click="selectVariant(v.advisory_id)"
           >
             <div class="variant-main">
-              <code class="variant-id">{{ v.advisory_id.slice(0, 12) }}...</code>
+              <div class="variant-header">
+                <code class="variant-id">{{ v.advisory_id.slice(0, 12) }}...</code>
+                <!-- === NEW: Risk Badge === -->
+                <VariantRiskBadge :risk="v.risk_level" small />
+              </div>
               <div class="variant-meta">
                 <span v-if="v.mime" class="mime">{{ v.mime }}</span>
-                <span v-if="v.rating" class="rating">{{ v.rating }}/5</span>
-                <span v-if="v.promoted" class="promoted-badge">Promoted</span>
+                <span v-if="v.rating" class="rating">★ {{ v.rating }}/5</span>
+                <!-- === UPDATED: Status Badge replaces promoted-badge === -->
+                <VariantStatusBadge :status="v.status" small />
               </div>
             </div>
             <div class="variant-actions">
@@ -311,6 +416,11 @@ watch(runId, () => {
   color: #6c757d;
 }
 
+/* === NEW: Filter bar spacing === */
+.variant-filters {
+  margin-bottom: 16px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 380px 1fr;
@@ -380,23 +490,22 @@ watch(runId, () => {
   min-width: 0;
 }
 
+.variant-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .variant-id {
   font-size: 0.85rem;
 }
 
 .variant-meta {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 0.75rem;
   color: #6c757d;
-}
-
-.promoted-badge {
-  background: #d4edda;
-  color: #155724;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
 }
 
 .variant-actions {

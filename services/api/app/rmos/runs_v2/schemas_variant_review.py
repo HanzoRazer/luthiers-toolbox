@@ -11,6 +11,12 @@ from pydantic import BaseModel, Field, field_validator
 
 RoleName = Literal["admin", "operator", "engineer", "viewer", "anonymous"]
 
+# Variant triage status (computed server-side)
+VariantStatus = Literal["NEW", "REVIEWED", "PROMOTED", "REJECTED"]
+
+# Risk levels for quick triage (GREEN = safe, YELLOW = caution, RED = blocked)
+RiskLevel = Literal["GREEN", "YELLOW", "RED"]
+
 
 class AdvisoryVariantSummary(BaseModel):
     """Summary of an advisory variant for listing."""
@@ -21,9 +27,18 @@ class AdvisoryVariantSummary(BaseModel):
     preview_blocked: bool = False
     preview_block_reason: Optional[str] = None
 
+    # Review state
     rating: Optional[int] = None
     notes: Optional[str] = None
     promoted: bool = False
+
+    # === NEW: Status & Risk (Variant Status & Filters bundle) ===
+    status: VariantStatus = "NEW"
+    risk_level: RiskLevel = "GREEN"
+    created_at_utc: Optional[str] = None
+    updated_at_utc: Optional[str] = None
+    rejected: bool = False
+    rejection_reason: Optional[str] = None
 
 
 class AdvisoryVariantListResponse(BaseModel):
