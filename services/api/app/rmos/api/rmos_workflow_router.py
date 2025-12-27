@@ -50,6 +50,35 @@ router = APIRouter(prefix="/api/rmos/workflow", tags=["RMOS", "Workflow"])
 # Request/Response Models
 # ---------------------------------------------------------------------------
 
+class GeneratorInfo(BaseModel):
+    """Workflow generator metadata."""
+    key: str = Field(..., description="Unique generator identifier")
+    name: str = Field(..., description="Human-readable name")
+    description: str = Field(default="", description="Generator description")
+    category: str = Field(default="general", description="Generator category")
+    version: str = Field(default="1.0.0", description="Generator version")
+
+
+class GeneratorsListResponse(BaseModel):
+    """Response for listing available generators."""
+    generators: list[GeneratorInfo]
+    count: int
+
+
+class SaveSnapshotRequest(BaseModel):
+    """Request to save a session snapshot."""
+    name: Optional[str] = Field(default=None, description="Optional snapshot name")
+    tags: list[str] = Field(default_factory=list, description="Optional tags")
+
+
+class SaveSnapshotResponse(BaseModel):
+    """Response from saving a session snapshot."""
+    session_id: str
+    snapshot_id: str
+    name: str
+    created_at: str
+
+
 class CreateSessionRequest(BaseModel):
     mode: WorkflowMode = Field(default=WorkflowMode.DESIGN_FIRST)
     tool_id: Optional[str] = None
@@ -607,14 +636,14 @@ def list_sessions(
     List all workflow sessions.
     """
     sessions = STORE.list_all()
-    
+
     if state:
         try:
             state_enum = WorkflowState(state)
             sessions = [s for s in sessions if s.state == state_enum]
         except ValueError:
             pass
-    
+
     return {
         "sessions": [
             {
@@ -635,4 +664,114 @@ def list_sessions(
         ],
         "total": len(sessions),
     }
+
+
+# ---------------------------------------------------------------------------
+# Generators Endpoint
+# ---------------------------------------------------------------------------
+
+# Registry of available workflow generators
+_WORKFLOW_GENERATORS: list[GeneratorInfo] = [
+    GeneratorInfo(
+        key="rosette-traditional",
+        name="Traditional Rosette",
+        description="Classic rosette pattern generator with historical templates",
+        category="rosette",
+        version="1.0.0",
+    ),
+    GeneratorInfo(
+        key="rosette-modern",
+        name="Modern Rosette",
+        description="Contemporary rosette designs with parametric variations",
+        category="rosette",
+        version="1.0.0",
+    ),
+    GeneratorInfo(
+        key="strip-banding",
+        name="Strip Banding",
+        description="Decorative strip and banding pattern generator",
+        category="strip",
+        version="1.0.0",
+    ),
+    GeneratorInfo(
+        key="purfling",
+        name="Purfling Lines",
+        description="Edge purfling and binding pattern generator",
+        category="purfling",
+        version="1.0.0",
+    ),
+]
+
+
+@router.get("/generators", response_model=GeneratorsListResponse)
+def list_generators() -> GeneratorsListResponse:
+    """
+    List available workflow generators.
+
+    Returns metadata for all registered generators that can be used
+    to create workflow sessions.
+    """
+    return GeneratorsListResponse(
+        generators=_WORKFLOW_GENERATORS,
+        count=len(_WORKFLOW_GENERATORS),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Snapshot Save Endpoint
+# ---------------------------------------------------------------------------
+
+@router.post("/sessions/{session_id}/save-snapshot", response_model=SaveSnapshotResponse)
+def save_session_snapshot(
+    session_id: str,
+    req: SaveSnapshotRequest,
+    x_request_id: Optional[str] = Header(default=None, alias="X-Request-ID"),
+) -> SaveSnapshotResponse:
+    """
+    Save the current session state as a named snapshot.
+
+    Creates a persistent, immutable snapshot that can be referenced later
+    for comparison, rollback, or export.
+    """
+    from datetime import datetime, timezone
+    import uuid
+
+    session = STORE.get(session_id)
+    if session is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "SESSION_NOT_FOUND", "session_id": session_id}
+        )
+
+    # Generate snapshot ID and timestamp
+    snapshot_id = f"snap_{uuid.uuid4().hex[:12]}"
+    created_at = datetime.now(timezone.utc)
+
+    # Build snapshot name
+    snapshot_name = req.name or f"Snapshot {created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    # Get comparable snapshot data
+    snapshot_data = to_comparable_snapshot(session)
+
+    # Create RunArtifact via bridge to persist the snapshot
+    bridge = get_workflow_runs_bridge()
+    artifact_ref = bridge.on_snapshot_saved(
+        session,
+        snapshot_id=snapshot_id,
+        snapshot_name=snapshot_name,
+        snapshot_data=snapshot_data.model_dump(),
+        tags=req.tags,
+        request_id=x_request_id,
+    )
+
+    # Use artifact ID as snapshot ID if bridge returned one
+    if artifact_ref:
+        snapshot_id = artifact_ref.artifact_id
+
+    return SaveSnapshotResponse(
+        session_id=session.session_id,
+        snapshot_id=snapshot_id,
+        name=snapshot_name,
+        created_at=created_at.isoformat().replace("+00:00", "Z"),
+    )
 

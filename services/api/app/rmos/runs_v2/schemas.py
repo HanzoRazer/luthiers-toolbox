@@ -60,6 +60,10 @@ class Hashes(BaseModel):
         None,
         description="SHA256 of operation plan (present if generated)",
     )
+    snapshot_sha256: Optional[str] = Field(
+        None,
+        description="SHA256 of session snapshot (present for snapshot events)",
+    )
 
 
 class RunDecision(BaseModel):

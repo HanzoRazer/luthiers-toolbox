@@ -102,11 +102,18 @@
 | GET | `/api/rmos/workflow/sessions` |
 | POST | `/api/rmos/workflow/sessions` |
 | GET | `/api/rmos/workflow/sessions/{session_id}` |
-| PUT | `/api/rmos/workflow/sessions/{session_id}/design` |
-| POST | `/api/rmos/workflow/sessions/{session_id}/feasibility` |
-| POST | `/api/rmos/workflow/sessions/{session_id}/approve` |
-| POST | `/api/rmos/workflow/sessions/{session_id}/reject` |
-| POST | `/api/rmos/workflow/sessions/{session_id}/request-revision` |
+| GET | `/api/rmos/workflow/sessions/{session_id}/snapshot` |
+| GET | `/api/rmos/workflow/sessions/{session_id}/events` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/design` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/context` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/feasibility/request` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/feasibility/store` |
+| POST | `/api/rmos/workflow/approve` |
+| POST | `/api/rmos/workflow/reject` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/toolpaths/request` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/toolpaths/store` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/revision` |
+| POST | `/api/rmos/workflow/sessions/{session_id}/archive` |
 | POST | `/api/rmos/workflow/sessions/{session_id}/save-snapshot` |
 | GET | `/api/rmos/workflow/generators` |
 
@@ -218,20 +225,18 @@
 
 ### Legacy Workflow Lane (`/api/art-studio/workflow`)
 
-| Method | Endpoint |
-|--------|----------|
-| POST | `/api/art-studio/workflow/from-pattern` |
-| POST | `/api/art-studio/workflow/from-generator` |
-| POST | `/api/art-studio/workflow/from-snapshot` |
-| GET | `/api/art-studio/workflow/sessions` |
-| GET | `/api/art-studio/workflow/sessions/{session_id}` |
-| PUT | `/api/art-studio/workflow/sessions/{session_id}/design` |
-| POST | `/api/art-studio/workflow/sessions/{session_id}/feasibility` |
-| POST | `/api/art-studio/workflow/sessions/{session_id}/approve` |
-| POST | `/api/art-studio/workflow/sessions/{session_id}/reject` |
-| POST | `/api/art-studio/workflow/sessions/{session_id}/request-revision` |
-| POST | `/api/art-studio/workflow/sessions/{session_id}/save-snapshot` |
-| GET | `/api/art-studio/workflow/generators` |
+> **Note:** This lane is deprecated. Use `/api/rmos/workflow/*` instead.
+
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| POST | `/api/art-studio/workflow/from-pattern` | Legacy |
+| POST | `/api/art-studio/workflow/from-generator` | Legacy |
+| POST | `/api/art-studio/workflow/from-snapshot` | Legacy |
+| GET | `/api/art-studio/workflow/sessions` | Legacy |
+| GET | `/api/art-studio/workflow/sessions/{session_id}` | Legacy |
+| PUT | `/api/art-studio/workflow/sessions/{session_id}/design` | Legacy |
+| POST | `/api/art-studio/workflow/sessions/{session_id}/save-snapshot` | Legacy |
+| GET | `/api/art-studio/workflow/generators` | Legacy |
 
 ### Other
 
@@ -249,16 +254,17 @@
 
 **DUPLICATE:** Same functionality at two prefixes.
 
-| Surface A (RMOS) | Surface B (Art Studio) |
-|------------------|------------------------|
+| Surface A (RMOS - Canonical) | Surface B (Art Studio - Legacy) |
+|------------------------------|--------------------------------|
 | `GET /api/rmos/workflow/sessions` | `GET /api/art-studio/workflow/sessions` |
-| `GET /api/rmos/workflow/sessions/{id}` | `GET /api/art-studio/workflow/sessions/{id}` |
-| `PUT /api/rmos/workflow/sessions/{id}/design` | `PUT /api/art-studio/workflow/sessions/{id}/design` |
-| `POST /api/rmos/workflow/sessions/{id}/feasibility` | `POST /api/art-studio/workflow/sessions/{id}/feasibility` |
-| `POST /api/rmos/workflow/sessions/{id}/approve` | `POST /api/art-studio/workflow/sessions/{id}/approve` |
-| `POST /api/rmos/workflow/sessions/{id}/reject` | `POST /api/art-studio/workflow/sessions/{id}/reject` |
-| `POST /api/rmos/workflow/sessions/{id}/request-revision` | `POST /api/art-studio/workflow/sessions/{id}/request-revision` |
-| `POST /api/rmos/workflow/sessions/{id}/save-snapshot` | `POST /api/art-studio/workflow/sessions/{id}/save-snapshot` |
+| `GET /api/rmos/workflow/sessions/{session_id}` | `GET /api/art-studio/workflow/sessions/{session_id}` |
+| `POST /api/rmos/workflow/sessions/{session_id}/design` | `PUT /api/art-studio/workflow/sessions/{session_id}/design` |
+| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/request` | (not implemented) |
+| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/store` | (not implemented) |
+| `POST /api/rmos/workflow/approve` | (not implemented) |
+| `POST /api/rmos/workflow/reject` | (not implemented) |
+| `POST /api/rmos/workflow/sessions/{session_id}/revision` | (not implemented) |
+| `POST /api/rmos/workflow/sessions/{session_id}/save-snapshot` | `POST /api/art-studio/workflow/sessions/{session_id}/save-snapshot` |
 | `GET /api/rmos/workflow/generators` | `GET /api/art-studio/workflow/generators` |
 
 **Risk:** UI component hits one, backend fix deployed to the other.
@@ -306,12 +312,12 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 |----------|-------|
 | `POST /feasibility` | Root-mounted, no `/api` prefix |
 | `POST /api/art/rosette/feasibility/batch` | Art Studio lane |
-| `POST /api/rmos/workflow/sessions/{id}/feasibility` | Session-scoped |
-| `POST /api/art-studio/workflow/sessions/{id}/feasibility` | Legacy lane |
+| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/request` | Session-scoped (request) |
+| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/store` | Session-scoped (store) |
 
 **Risk:** Different implementations, different response shapes.
 
-**Recommendation:** Audit which UI components use which endpoint.
+**Recommendation:** Use RMOS workflow endpoints for new development.
 
 ---
 
@@ -327,7 +333,7 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 | RMOS Patterns | `/api/rmos/patterns` | 5 |
 | RMOS Saw Ops | `/api/rmos/saw-ops` | 2 |
 | RMOS Runs | `/api/rmos/runs` | 17 |
-| RMOS Workflow | `/api/rmos/workflow` | 10 |
+| RMOS Workflow | `/api/rmos/workflow` | 17 |
 | Root-mounted | `/` | 2 |
 | Art Patterns | `/api/art/patterns` | 5 |
 | Art Generators | `/api/art/generators` | 1 |
@@ -339,7 +345,7 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 | Art Rosette Compare | `/api/art/rosette/compare` | 3 |
 | Art Rosette Pattern | `/api/art/rosette/pattern` | 6 |
 | Legacy Rosette | `/api/art-studio/rosette` | 5 |
-| Legacy Workflow | `/api/art-studio/workflow` | 12 |
+| Legacy Workflow | `/api/art-studio/workflow` | 8 |
 | Other | `/api` | 1 |
 | **Total** | | **~115** |
 
@@ -356,3 +362,131 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 4. **Preferred Lanes:**
    - **RMOS:** Use `/api/rmos/*` for all RMOS functionality
    - **Art Studio:** Use `/api/art/*` (Core Completion lane), treat `/api/art-studio/*` as legacy
+
+---
+
+## Implementation Drift Analysis
+
+> Generated 2025-12-26. Documents discrepancies between truth map and actual implementation.
+
+### RMOS Workflow: Truth Map vs Implementation
+
+The truth map specifies certain endpoint structures that differ from the actual implementation:
+
+| Truth Map | Actual Implementation | Status |
+|-----------|----------------------|--------|
+| `POST .../sessions/{session_id}/approve` | `POST /api/rmos/workflow/approve` (body: `session_id`) | Design difference |
+| `POST .../sessions/{session_id}/reject` | `POST /api/rmos/workflow/reject` (body: `session_id`) | Design difference |
+| `POST .../sessions/{session_id}/feasibility` | Split: `.../feasibility/request` + `.../feasibility/store` | Design difference |
+| `POST .../sessions/{session_id}/request-revision` | `POST .../sessions/{session_id}/revision` | Path difference |
+| `PUT .../sessions/{session_id}/design` | `POST .../sessions/{session_id}/design` | Method difference |
+
+### Root Cause
+
+The implementation follows a different API design philosophy:
+- **Approve/Reject**: Uses root-level endpoints with `session_id` in body for simpler RBAC
+- **Feasibility**: Split into request/store for async workflow support
+- **Design**: Uses POST for idempotent state transitions (not true PUT semantics)
+
+---
+
+## Mitigation Plan
+
+### Phase 1: Align Truth Map with Implementation (Low Risk)
+
+Update the truth map to reflect actual implementation. This is documentation-only.
+
+**Tasks:**
+1. Update RMOS Workflow section to match actual endpoints:
+   - Change `POST .../approve` to root-level
+   - Change `POST .../reject` to root-level
+   - Split feasibility into request/store
+   - Change `PUT` to `POST` for design endpoint
+   - Change `request-revision` to `revision`
+
+2. Add "Actual Implementation" column to duplicate warnings
+
+### Phase 2: Deprecation Aliases (Medium Risk)
+
+Add thin alias routes that redirect old paths to new implementation.
+
+**Tasks:**
+1. Create `workflow_compat_router.py` with aliases:
+   ```python
+   @router.post("/sessions/{session_id}/approve")
+   def approve_compat(session_id: str):
+       return approve_session(ApproveRequest(session_id=session_id))
+   ```
+
+2. Add deprecation headers to alias responses:
+   ```
+   Deprecation: true
+   Sunset: 2025-06-01
+   Link: </api/rmos/workflow/approve>; rel="successor-version"
+   ```
+
+3. Log usage of deprecated aliases for migration tracking
+
+### Phase 3: Frontend Migration (Higher Risk)
+
+Migrate frontend to use canonical endpoints.
+
+**Tasks:**
+1. Audit `packages/client/src` for workflow API usage
+2. Update SDK wrapper functions in `packages/sdk/src`
+3. Update any direct fetch calls to use new paths
+4. Remove compat aliases after migration complete
+
+### Phase 4: Legacy Lane Deprecation
+
+Deprecate `/api/art-studio/workflow/*` entirely.
+
+**Tasks:**
+1. Add deprecation middleware to art-studio workflow router
+2. Update frontend to use `/api/rmos/workflow/*` exclusively
+3. Set sunset date and communicate to any API consumers
+4. Remove art-studio workflow router after sunset
+
+---
+
+## CI Gate Recommendations
+
+### Feature Hunt Improvements
+
+1. **Normalize path parameters**: Treat `{id}`, `{session_id}`, `{run_id}` as equivalent for matching
+2. **Method flexibility**: Allow POST/PUT interchangeability with warning
+3. **Split endpoint detection**: Recognize `foo/request` + `foo/store` as implementing `foo`
+
+### Proposed Exit Code Changes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| 0 | Perfect match | Pass |
+| 1 | Warnings only (aliases, method diff) | Pass with warning |
+| 2 | Missing required endpoints | Fail |
+| 3 | Extra undocumented endpoints | Pass with warning |
+| 4 | Frontend calls missing endpoints | Fail |
+
+---
+
+## Quick Reference: Canonical RMOS Workflow Endpoints
+
+| Operation | Canonical Endpoint | Method |
+|-----------|-------------------|--------|
+| Create session | `/api/rmos/workflow/sessions` | POST |
+| Get session | `/api/rmos/workflow/sessions/{session_id}` | GET |
+| List sessions | `/api/rmos/workflow/sessions` | GET |
+| Set design | `/api/rmos/workflow/sessions/{session_id}/design` | POST |
+| Set context | `/api/rmos/workflow/sessions/{session_id}/context` | POST |
+| Request feasibility | `/api/rmos/workflow/sessions/{session_id}/feasibility/request` | POST |
+| Store feasibility | `/api/rmos/workflow/sessions/{session_id}/feasibility/store` | POST |
+| Approve | `/api/rmos/workflow/approve` | POST |
+| Reject | `/api/rmos/workflow/reject` | POST |
+| Request toolpaths | `/api/rmos/workflow/sessions/{session_id}/toolpaths/request` | POST |
+| Store toolpaths | `/api/rmos/workflow/sessions/{session_id}/toolpaths/store` | POST |
+| Require revision | `/api/rmos/workflow/sessions/{session_id}/revision` | POST |
+| Archive | `/api/rmos/workflow/sessions/{session_id}/archive` | POST |
+| Save snapshot | `/api/rmos/workflow/sessions/{session_id}/save-snapshot` | POST |
+| Get snapshot | `/api/rmos/workflow/sessions/{session_id}/snapshot` | GET |
+| Get events | `/api/rmos/workflow/sessions/{session_id}/events` | GET |
+| List generators | `/api/rmos/workflow/generators` | GET |

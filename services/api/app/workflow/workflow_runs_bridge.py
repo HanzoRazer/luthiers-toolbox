@@ -495,6 +495,104 @@ class WorkflowRunsBridge:
             meta={"reason": reason},
         )
 
+    def on_snapshot_saved(
+        self,
+        session: WorkflowSession,
+        *,
+        snapshot_id: str,
+        snapshot_name: str,
+        snapshot_data: Dict[str, Any],
+        tags: Optional[list[str]] = None,
+        request_id: Optional[str] = None,
+    ) -> Optional[RunArtifactRef]:
+        """
+        Create RunArtifact when a session snapshot is saved.
+
+        Called from save-snapshot endpoint.
+        """
+        # Hash the snapshot data
+        snapshot_hash = _sha256(snapshot_data)
+
+        # Build feasibility info if available
+        feas_dict: Dict[str, Any] = {}
+        feas_hash = "0" * 64
+        risk_level = "UNKNOWN"
+        score = None
+
+        if session.feasibility:
+            feas = session.feasibility
+            feas_dict = self._build_feasibility_dict(feas)
+            feas_hash = _sha256(feas_dict)
+            risk_level = _risk_bucket_to_level(feas.risk_bucket)
+            score = feas.score
+
+        # Build decision
+        decision = RunDecision(
+            risk_level=risk_level,
+            score=score,
+            warnings=[],
+            details={
+                "snapshot_id": snapshot_id,
+                "snapshot_name": snapshot_name,
+                "tags": tags or [],
+            },
+        )
+
+        # Create artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            mode=session.mode.value,
+            tool_id=session.index_meta.get("tool_id", "unknown"),
+            status="OK",
+            request_summary=self._build_request_summary(session),
+            feasibility=feas_dict,
+            decision=decision,
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                snapshot_sha256=snapshot_hash,
+            ),
+            event_type="snapshot",
+            workflow_session_id=session.session_id,
+            material_id=session.index_meta.get("material_id"),
+            machine_id=session.index_meta.get("machine_id"),
+            workflow_mode=session.mode.value,
+            meta={
+                "request_id": request_id,
+                "workflow_state": session.state.value,
+                "snapshot_id": snapshot_id,
+                "snapshot_name": snapshot_name,
+                "tags": tags or [],
+            },
+        )
+
+        # Persist
+        try:
+            self.store.put(artifact)
+            logger.info(
+                "workflow_runs_bridge.snapshot_persisted",
+                extra={
+                    "run_id": run_id,
+                    "session_id": session.session_id,
+                    "snapshot_id": snapshot_id,
+                    "snapshot_name": snapshot_name,
+                }
+            )
+        except ValueError as e:
+            logger.error(f"Failed to persist snapshot artifact: {e}")
+            return None
+
+        return RunArtifactRef(
+            artifact_id=run_id,
+            kind="snapshot",
+            status=RunStatus.OK,
+            meta={
+                "snapshot_id": snapshot_id,
+                "snapshot_name": snapshot_name,
+                "snapshot_hash": snapshot_hash,
+            },
+        )
+
 
 # Module singleton
 _bridge: Optional[WorkflowRunsBridge] = None

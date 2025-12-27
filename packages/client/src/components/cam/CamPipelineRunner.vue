@@ -173,6 +173,43 @@ FUTURE ENHANCEMENTS:
       </span>
     </div>
 
+    <!-- H7.2: optional strict mode -->
+    <div class="flex items-center gap-3 text-xs mt-1">
+      <label class="inline-flex items-center gap-2">
+        <input type="checkbox" v-model="strictNormalize" />
+        <span>Strict CAM intent normalize</span>
+      </label>
+      <span v-if="normalizationIssues.length" class="text-[11px] text-amber-600">
+        Normalize issues: {{ normalizationIssues.length }}
+      </span>
+    </div>
+
+    <!-- H7.2: show issues (non-breaking) -->
+    <details v-if="normalizationIssues.length" class="mt-2 text-xs">
+      <summary class="cursor-pointer text-amber-700 hover:underline">
+        CAM intent normalization issues ({{ normalizationIssues.length }})
+      </summary>
+      <div class="mt-2 space-y-2">
+        <div
+          v-for="(entry, idx) in normalizationIssues.slice(0, 50)"
+          :key="idx"
+          class="p-2 border border-amber-200 rounded-lg bg-amber-50"
+        >
+          <div class="font-semibold text-[11px] text-amber-800">{{ entry.path }}</div>
+          <ul class="mt-1 ml-4 list-disc text-[11px] text-amber-700">
+            <li v-for="(iss, j) in entry.issues" :key="j">
+              <span v-if="iss.code" class="font-mono">[{{ iss.code }}]</span>
+              {{ iss.message }}
+              <span v-if="iss.path" class="opacity-70"> ({{ iss.path }})</span>
+            </li>
+          </ul>
+        </div>
+        <div v-if="normalizationIssues.length > 50" class="text-[11px] text-gray-500">
+          Showing first 50 issue groups...
+        </div>
+      </div>
+    </details>
+
     <!-- Presets row -->
     <div class="flex flex-wrap items-center gap-2 text-[11px] mt-1">
       <div class="flex items-center gap-1">
@@ -306,6 +343,81 @@ FUTURE ENHANCEMENTS:
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import CamPipelineGraph from '@/components/cam/CamPipelineGraph.vue'
+import { normalizeCamIntent } from '@/services/rmosCamIntentApi'
+
+// H7.2: normalize-first adoption controls / visibility
+const strictNormalize = ref(false)
+const normalizationIssues = ref<
+  { path: string; issues: Array<{ code?: string; message: string; severity?: string; path?: string }> }[]
+>([])
+
+function _isPlainObject(v: unknown): v is Record<string, any> {
+  return !!v && typeof v === "object" && !Array.isArray(v)
+}
+
+// Heuristic: identify "intent-like" objects without importing CamIntent types here.
+function _looksLikeCamIntent(obj: Record<string, any>): boolean {
+  if ("operation" in obj) return true
+  if ("operation_type" in obj) return true
+  if ("op" in obj) return true
+  if ("tool_id" in obj && ("material_id" in obj || "stock" in obj)) return true
+  if ("mode" in obj && (obj.mode === "router_3axis" || obj.mode === "saw")) return true
+  return false
+}
+
+async function _normalizePipelineSpecDeep(spec: any): Promise<{
+  normalized: any
+  issues: { path: string; issues: Array<{ code?: string; message: string; severity?: string; path?: string }> }[]
+}> {
+  const collected: {
+    path: string
+    issues: Array<{ code?: string; message: string; severity?: string; path?: string }>
+  }[] = []
+
+  async function walk(node: any, path: string): Promise<any> {
+    if (node == null) return node
+
+    if (Array.isArray(node)) {
+      const out: any[] = []
+      for (let i = 0; i < node.length; i++) {
+        out.push(await walk(node[i], `${path}[${i}]`))
+      }
+      return out
+    }
+
+    if (_isPlainObject(node)) {
+      // Normalize directly if it looks like a CamIntent
+      if (_looksLikeCamIntent(node)) {
+        try {
+          const resp = await normalizeCamIntent(
+            { intent: node as any, strict: false },
+            { requestId: `CamPipelineRunner.normalizePipelineSpec.${Date.now()}` }
+          )
+          if (resp.issues?.length) {
+            collected.push({ path, issues: resp.issues })
+          }
+          return resp.intent
+        } catch {
+          // If normalization fails, keep original
+          return node
+        }
+      }
+
+      // Otherwise deep-walk properties (and normalize nested intents)
+      const out: Record<string, any> = { ...node }
+      for (const key of Object.keys(out)) {
+        out[key] = await walk(out[key], path ? `${path}.${key}` : key)
+      }
+      return out
+    }
+
+    // primitives
+    return node
+  }
+
+  const normalized = await walk(spec, "pipeline")
+  return { normalized, issues: collected }
+}
 
 type PipelineOpKind =
   | 'dxf_preflight'
@@ -473,11 +585,28 @@ async function runPipeline () {
   results.value = null
   summary.value = null
   openPayloadIndex.value = null
+  normalizationIssues.value = []
 
   try {
     const form = new FormData()
     form.append('file', file.value)
-    form.append('pipeline', JSON.stringify(buildPipelineSpec()))
+
+    // H7.2: normalize CamIntent(s) inside the pipeline before submit
+    const pipelineDraft = buildPipelineSpec()
+    const { normalized: pipelineNormalized, issues } = await _normalizePipelineSpecDeep(pipelineDraft)
+    normalizationIssues.value = issues
+
+    if (strictNormalize.value && issues.length > 0) {
+      // strict mode: fail early (non-breaking because default strict=false)
+      const msg =
+        issues
+          .slice(0, 10)
+          .map((x) => `${x.path}: ${x.issues.map((i) => i.message).join("; ")}`)
+          .join(" | ") + (issues.length > 10 ? " | ..." : "")
+      throw new Error(`CAM intent normalization failed (strict): ${msg}`)
+    }
+
+    form.append('pipeline', JSON.stringify(pipelineNormalized))
 
     const resp = await fetch('/cam/pipeline/run', {
       method: 'POST',

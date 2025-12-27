@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 
 from app.saw_lab.schemas_compare import (
     SawCompareRequest,
@@ -10,11 +10,15 @@ from app.saw_lab.schemas_compare import (
     SawCompareItem,
     SawCompareDecisionRequest,
     SawCompareDecisionResponse,
+    SawDecisionToolpathsRequest,
+    SawDecisionToolpathsResponse,
 )
 from app.services.saw_lab_compare_service import compare_saw_candidates
 from app.services.saw_lab_batch_lookup_service import list_saw_compare_batches
 from app.services.saw_lab_decision_service import create_saw_compare_decision
 from app.services.saw_lab_decision_lookup_service import list_saw_compare_decisions
+from app.services.saw_lab_toolpaths_from_decision_service import generate_toolpaths_from_decision
+from app.services.saw_lab_toolpaths_lookup_service import latest_toolpaths_for_decision
 
 
 router = APIRouter(prefix="/api/saw", tags=["saw"])
@@ -107,3 +111,28 @@ def list_compare_decisions(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post("/compare/toolpaths", response_model=SawDecisionToolpathsResponse)
+def toolpaths_from_decision(req: SawDecisionToolpathsRequest) -> SawDecisionToolpathsResponse:
+    """
+    Generates toolpaths from a selected decision.
+    Toolpaths artifact inherits the decision artifact as its parent.
+    Always persists a RunArtifact: OK / BLOCKED / ERROR.
+    """
+    out = generate_toolpaths_from_decision(decision_artifact_id=req.decision_artifact_id)
+    return SawDecisionToolpathsResponse(**out)
+
+
+@router.get("/compare/toolpaths")
+def get_latest_toolpaths_for_decision(
+    decision_artifact_id: str = Query(..., description="Decision artifact id (kind='saw_compare_decision')"),
+):
+    """
+    Convenience alias: fetch the latest toolpaths artifact produced from a given decision.
+    Returns the run artifact index row (including artifact_id and index_meta).
+    """
+    it = latest_toolpaths_for_decision(decision_artifact_id)
+    if not it:
+        raise HTTPException(status_code=404, detail="No toolpaths artifact found for decision_artifact_id")
+    return it

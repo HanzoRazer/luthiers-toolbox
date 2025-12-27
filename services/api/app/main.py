@@ -21,7 +21,14 @@ PREVIOUSLY BROKEN ROUTERS (NOW FIXED):
 - routers.saw_blade_router     → FIXED
 - routers.saw_gcode_router     → FIXED
 - routers.saw_validate_router  → FIXED
-- routers.saw_telemetry_router → FIXED (import path corrected)
+- routers.saw_telemetry_router -> FIXED (import path corrected)
+
+NOTE (H7.1): CAM Intent Schema Freeze
+The canonical CAM request envelope is `app.rmos.cam.CamIntentV1`.
+Callers should not invent alternative envelopes; they should embed mode-specific
+shapes under `design` while keeping the envelope stable.
+
+CI guard: python -m app.ci.check_cam_intent_schema_hash
 """
 
 # Load environment variables from .env file FIRST (before any imports that need them)
@@ -224,6 +231,7 @@ from .routers.unified_presets_router import router as unified_presets_router
 from .routers.strip_family_router import router as strip_family_router
 from .routers.rmos_patterns_router import router as rmos_patterns_router
 from .routers.rmos_saw_ops_router import router as rmos_saw_ops_router
+from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # H7.1.2
 from .routers.sim_metrics_router import router as sim_metrics_router
 from .routers.retract_router import router as retract_router
 from .routers.rosette_photo_router import router as rosette_photo_router
@@ -613,6 +621,7 @@ app.include_router(unified_presets_router, prefix="/api", tags=["Presets", "Unif
 app.include_router(strip_family_router, prefix="/api/rmos", tags=["RMOS", "Strip Families"])
 app.include_router(rmos_patterns_router, prefix="/api/rmos", tags=["RMOS", "Patterns"])
 app.include_router(rmos_saw_ops_router, prefix="/api/rmos", tags=["RMOS", "Saw Operations"])
+app.include_router(rmos_cam_intent_router, prefix="/api", tags=["RMOS", "CAM"])  # H7.1.2
 app.include_router(sim_metrics_router, prefix="/api", tags=["CAM", "Simulation"])
 app.include_router(retract_router, prefix="/api/cam/retract", tags=["CAM", "Retract Patterns"])
 app.include_router(rosette_photo_router, prefix="/api", tags=["Rosette", "Photo Import"])
@@ -789,6 +798,16 @@ if rmos_logs_v2_router:
 # Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path
 if rmos_acoustics_router:
     app.include_router(rmos_acoustics_router, tags=["RMOS", "Acoustics"])
+
+# Wave 22: Runs v2 Acoustics Advisory Surface
+# Endpoints: GET /api/rmos/acoustics/runs/{run_id}/advisories,
+#            GET /api/rmos/acoustics/advisories/{advisory_id},
+#            GET /api/rmos/acoustics/attachments/{sha256}
+try:
+    from .rmos.runs_v2.acoustics_router import router as runs_v2_acoustics_router
+    app.include_router(runs_v2_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
+except ImportError:
+    pass
 
 # =============================================================================
 # META / INTROSPECTION

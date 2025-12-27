@@ -272,3 +272,45 @@ def verify_attachment(sha256: str) -> Dict[str, Any]:
             "ok": False,
             "error": str(e),
         }
+
+
+# =============================================================================
+# INTERNAL RESOLVER HELPERS (no path disclosure in responses)
+# =============================================================================
+
+
+def resolve_attachment_path(sha256: str) -> Path:
+    """
+    Resolve the on-disk shard path for a given sha256 in the attachments store.
+
+    INTERNAL USE ONLY.
+    Do not return this path directly to untrusted clients.
+    """
+    root = Path(_get_attachments_dir()).expanduser().resolve()
+    s = sha256.lower()
+    # shard: {hash[0:2]}/{hash[2:4]}/{full_hash}
+    # Try common extensions
+    for ext in ["", ".json", ".gcode", ".txt", ".svg", ".dxf"]:
+        candidate = root / s[0:2] / s[2:4] / f"{s}{ext}"
+        if candidate.exists():
+            return candidate
+    # Return base path even if not found (caller should check existence)
+    return root / s[0:2] / s[2:4] / s
+
+
+def attachment_exists(sha256: str) -> bool:
+    """Internal check for attachment existence by sha256."""
+    return resolve_attachment_path(sha256).exists()
+
+
+def attachment_stat(sha256: str) -> Optional[Dict[str, Any]]:
+    """Internal stat metadata for an attachment blob (no path disclosure)."""
+    p = resolve_attachment_path(sha256)
+    if not p.exists():
+        return None
+    st = p.stat()
+    return {
+        "sha256": sha256.lower(),
+        "size_bytes": int(st.st_size),
+        "modified_at_utc": None,  # keep None unless you have an utc formatter util here
+    }

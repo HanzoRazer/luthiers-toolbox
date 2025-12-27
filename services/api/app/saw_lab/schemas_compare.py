@@ -60,3 +60,15 @@ class SawCompareDecisionResponse(BaseModel):
     approved_by: str
     reason: str
     ticket_id: Optional[str] = None
+
+
+class SawDecisionToolpathsRequest(BaseModel):
+    decision_artifact_id: str = Field(..., description="Artifact ID for kind='saw_compare_decision'")
+
+
+class SawDecisionToolpathsResponse(BaseModel):
+    toolpaths_artifact_id: str
+    decision_artifact_id: str
+    parent_batch_artifact_id: Optional[str] = None
+    selected_child_artifact_id: Optional[str] = None
+    status: str

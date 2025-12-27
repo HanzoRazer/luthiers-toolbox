@@ -2,11 +2,21 @@
 """
 CAM Roughing Router (N10 CAM Essentials)
 Simple rectangular roughing G-code generator with post-processor support.
-"""
-from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Response
-from pydantic import BaseModel
+H7.2.2: Added roughing_gcode_intent endpoint with Prometheus-style metrics.
+"""
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Header, Response
+from pydantic import BaseModel, Field
+
+from app.observability.metrics import (
+    cam_roughing_intent_requests_total,
+    cam_roughing_intent_issues_total,
+    cam_roughing_intent_latency_ms,
+    now_ms,
+    should_sample_request_id,
+)
 
 # Import post injection utilities (already in codebase from Phase 2)
 try:
@@ -106,3 +116,192 @@ def roughing_info() -> Dict[str, Any]:
         },
         "post_params": ["post", "post_mode", "machine_id", "rpm", "program_no", "work_offset", "tool"]
     }
+
+
+# =============================================================================
+# H7.2.2: Roughing G-Code Intent Endpoint (with Prometheus metrics)
+# =============================================================================
+
+class RoughingIntentDesign(BaseModel):
+    """Design parameters for roughing intent."""
+    width_mm: float = Field(..., description="Pocket width in mm")
+    height_mm: float = Field(..., description="Pocket height in mm")
+    depth_mm: float = Field(..., description="Total depth in mm")
+    stepdown_mm: float = Field(..., description="Depth per pass in mm")
+    stepover_mm: float = Field(..., description="Lateral stepover in mm")
+
+
+class RoughingIntentContext(BaseModel):
+    """Tool/machine context for roughing."""
+    tool_id: Optional[str] = None
+    machine_id: Optional[str] = None
+    feed_rate: float = Field(default=1000.0, description="Feed rate in mm/min")
+    spindle_rpm: Optional[int] = None
+
+
+class RoughingIntentRequest(BaseModel):
+    """H7.2.2: Roughing G-code intent request."""
+    design: RoughingIntentDesign
+    context: RoughingIntentContext = Field(default_factory=RoughingIntentContext)
+    units: str = Field(default="mm", description="Input units: mm or inch")
+
+
+class RoughingIntentIssue(BaseModel):
+    """Normalization issue (non-fatal warning)."""
+    code: str
+    message: str
+    path: str = ""
+
+
+class RoughingIntentResponse(BaseModel):
+    """H7.2.2: Roughing G-code intent response."""
+    gcode: str = Field(..., description="Generated G-code")
+    issues: List[RoughingIntentIssue] = Field(default_factory=list)
+    normalized_design: RoughingIntentDesign
+    status: str = Field(default="OK")
+
+
+def _normalize_roughing_intent(
+    req: RoughingIntentRequest,
+) -> tuple[RoughingIntentDesign, List[RoughingIntentIssue]]:
+    """
+    Normalize roughing intent to mm and validate parameters.
+    Returns (normalized_design, issues).
+    """
+    issues: List[RoughingIntentIssue] = []
+    design = req.design
+
+    # Unit conversion if needed
+    scale = 25.4 if req.units.lower() == "inch" else 1.0
+    if scale != 1.0:
+        design = RoughingIntentDesign(
+            width_mm=design.width_mm * scale,
+            height_mm=design.height_mm * scale,
+            depth_mm=design.depth_mm * scale,
+            stepdown_mm=design.stepdown_mm * scale,
+            stepover_mm=design.stepover_mm * scale,
+        )
+        issues.append(RoughingIntentIssue(
+            code="UNITS_CONVERTED",
+            message=f"Converted from {req.units} to mm (scale={scale})",
+            path="units",
+        ))
+
+    # Validation warnings
+    if design.stepdown_mm > design.depth_mm:
+        issues.append(RoughingIntentIssue(
+            code="STEPDOWN_EXCEEDS_DEPTH",
+            message="stepdown_mm exceeds depth_mm; clamped to depth_mm",
+            path="design.stepdown_mm",
+        ))
+        design = RoughingIntentDesign(
+            width_mm=design.width_mm,
+            height_mm=design.height_mm,
+            depth_mm=design.depth_mm,
+            stepdown_mm=design.depth_mm,
+            stepover_mm=design.stepover_mm,
+        )
+
+    if design.stepover_mm <= 0:
+        issues.append(RoughingIntentIssue(
+            code="INVALID_STEPOVER",
+            message="stepover_mm must be positive; defaulted to 5.0",
+            path="design.stepover_mm",
+        ))
+        design = RoughingIntentDesign(
+            width_mm=design.width_mm,
+            height_mm=design.height_mm,
+            depth_mm=design.depth_mm,
+            stepdown_mm=design.stepdown_mm,
+            stepover_mm=5.0,
+        )
+
+    return design, issues
+
+
+def _generate_roughing_gcode(
+    design: RoughingIntentDesign,
+    context: RoughingIntentContext,
+) -> str:
+    """Generate roughing G-code from normalized design."""
+    lines = [
+        "; Roughing G-code (H7.2.2)",
+        "G90 G21",  # Absolute, mm
+        f"G0 Z5.0",  # Safe height
+    ]
+
+    if context.spindle_rpm:
+        lines.append(f"S{context.spindle_rpm} M3")
+
+    # Multi-pass roughing
+    current_z = 0.0
+    while current_z > -design.depth_mm:
+        current_z = max(current_z - design.stepdown_mm, -design.depth_mm)
+        lines.append(f"G0 X0 Y0")
+        lines.append(f"G1 Z{current_z:.3f} F{context.feed_rate / 2:.0f}")
+
+        # Simple rectangular pass
+        y = 0.0
+        direction = 1
+        while y <= design.height_mm:
+            if direction > 0:
+                lines.append(f"G1 X{design.width_mm:.3f} F{context.feed_rate:.0f}")
+            else:
+                lines.append(f"G1 X0 F{context.feed_rate:.0f}")
+            y += design.stepover_mm
+            if y <= design.height_mm:
+                lines.append(f"G1 Y{y:.3f}")
+            direction *= -1
+
+    lines.append("G0 Z5.0")
+    lines.append("M5")
+    lines.append("M30")
+
+    return "\n".join(lines) + "\n"
+
+
+@router.post("/gcode_intent", response_model=RoughingIntentResponse)
+def roughing_gcode_intent(
+    req: RoughingIntentRequest,
+    x_request_id: Optional[str] = Header(default=None),
+) -> RoughingIntentResponse:
+    """
+    H7.2.2: Intent-native roughing G-code generation with normalization and metrics.
+
+    Accepts high-level roughing parameters, normalizes to mm, validates,
+    and produces G-code. Metrics are recorded for monitoring.
+
+    Request IDs are sampled for structured logging (default 1%).
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    start_ms = now_ms()
+
+    # Increment request counter
+    cam_roughing_intent_requests_total.inc()
+
+    # Normalize and validate
+    normalized_design, issues = _normalize_roughing_intent(req)
+
+    # Track issues metric
+    if issues:
+        cam_roughing_intent_issues_total.inc()
+        if should_sample_request_id() and x_request_id:
+            logger.info(
+                f"roughing_gcode_intent issues request_id={x_request_id} count={len(issues)}"
+            )
+
+    # Generate G-code
+    gcode = _generate_roughing_gcode(normalized_design, req.context)
+
+    # Record latency
+    latency = now_ms() - start_ms
+    cam_roughing_intent_latency_ms.observe(latency)
+
+    return RoughingIntentResponse(
+        gcode=gcode,
+        issues=[RoughingIntentIssue(code=i.code, message=i.message, path=i.path) for i in issues],
+        normalized_design=normalized_design,
+        status="OK" if not issues else "OK_WITH_ISSUES",
+    )

@@ -23,7 +23,13 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .schemas import RunArtifact, AdvisoryInputRef, Hashes, RunDecision, RunOutputs
+from .schemas_advisories import (
+    RunAdvisoryLinkV1,
+    IndexRunAdvisorySummaryV1,
+    IndexAdvisoryLookupV1,
+)
 from .delete_audit import append_delete_audit, build_delete_audit_event
+from .attachment_meta import AttachmentMetaIndex
 
 # =============================================================================
 # H3.6.2: Delete Rate Limiting
@@ -370,6 +376,8 @@ class RunStoreV2:
         self.root = Path(root_dir or _get_store_root()).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self._index_path = self.root / "_index.json"
+        self._advisory_lookup_path = self.root / "_advisory_lookup.json"
+        self._attachment_meta = AttachmentMetaIndex(self.root)
 
     def _read_index(self) -> Dict[str, Dict[str, Any]]:
         """Read the global index file."""
@@ -417,6 +425,138 @@ class RunStoreV2:
 
         self._write_index(index)
         return len(index)
+
+    # =========================================================================
+    # Advisory Link + Index Glue Methods
+    # =========================================================================
+
+    def _read_advisory_lookup(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Read global advisory lookup mapping advisory_id -> entry dict.
+
+        Stored separately because _index.json is Dict[run_id -> meta].
+        """
+        if not self._advisory_lookup_path.exists():
+            return {}
+        try:
+            txt = self._advisory_lookup_path.read_text(encoding="utf-8")
+            obj = json.loads(txt) if txt.strip() else {}
+            if isinstance(obj, dict):
+                return obj
+            return {}
+        except Exception:
+            return {}
+
+    def _write_advisory_lookup(self, lookup: Dict[str, Dict[str, Any]]) -> None:
+        """Write advisory lookup atomically."""
+        tmp = self._advisory_lookup_path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(lookup, indent=2, sort_keys=True), encoding="utf-8")
+        os.replace(str(tmp), str(self._advisory_lookup_path))
+
+    def _upsert_advisory_lookup(self, entry: IndexAdvisoryLookupV1) -> None:
+        lookup = self._read_advisory_lookup()
+        lookup[entry.advisory_id] = entry.dict()
+        self._write_advisory_lookup(lookup)
+
+    def _append_run_advisory_rollup(self, run_id: str, summary: IndexRunAdvisorySummaryV1) -> None:
+        """
+        Store run-local advisory summaries inside _index.json meta for fast listing:
+          index[run_id]["advisories"] = [ ... ]
+        """
+        index = self._read_index()
+        meta = index.get(run_id) or {}
+        advs = meta.get("advisories") or []
+        # De-dupe by advisory_id
+        existing_ids = {a.get("advisory_id") for a in advs if isinstance(a, dict)}
+        if summary.advisory_id not in existing_ids:
+            advs.append(summary.dict())
+            meta["advisories"] = advs
+            index[run_id] = meta
+            self._write_index(index)
+
+    def put_advisory_link(self, link: RunAdvisoryLinkV1) -> None:
+        """
+        Append-only: write a run_<run_id>_advisory_<advisory_id>.json link file,
+        then update indices (_index.json rollup + _advisory_lookup.json).
+
+        This DOES NOT modify the advisory blob (stored as attachment by sha256),
+        and DOES NOT require modifying the run artifact JSON.
+        """
+        # Determine partition directory from the run artifact location
+        artifact = self.get(link.run_id)
+        if artifact is None:
+            raise FileNotFoundError(f"run_id not found: {link.run_id}")
+
+        # Compute the date partition dir
+        created = getattr(artifact, "created_at_utc", None)
+        if created is None:
+            raise ValueError("run artifact missing created_at_utc")
+
+        # created may be datetime; normalize:
+        try:
+            date_part = created.date().isoformat()
+        except Exception:
+            # fallback: assume ISO string with date prefix
+            date_part = str(created)[:10]
+
+        part_dir = self.root / date_part
+        part_dir.mkdir(parents=True, exist_ok=True)
+
+        link_path = part_dir / f"run_{link.run_id}_advisory_{link.advisory_id}.json"
+        tmp = link_path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(link.dict(), indent=2, sort_keys=True), encoding="utf-8")
+        os.replace(str(tmp), str(link_path))
+
+        # Update run-local rollup in _index.json
+        summary = IndexRunAdvisorySummaryV1(
+            advisory_id=link.advisory_id,
+            sha256=link.advisory_sha256,
+            kind=link.kind,
+            mime=link.mime,
+            size_bytes=link.size_bytes,
+            created_at_utc=link.created_at_utc,
+            status=link.status,
+            tags=link.tags,
+            confidence_max=link.confidence_max,
+        )
+        self._append_run_advisory_rollup(link.run_id, summary)
+
+        # Update global advisory lookup
+        lookup_entry = IndexAdvisoryLookupV1(
+            advisory_id=link.advisory_id,
+            run_id=link.run_id,
+            sha256=link.advisory_sha256,
+            kind=link.kind,
+            mime=link.mime,
+            size_bytes=link.size_bytes,
+            created_at_utc=link.created_at_utc,
+            status=link.status,
+            tags=link.tags,
+            confidence_max=link.confidence_max,
+            bundle_sha256=link.bundle_sha256,
+            manifest_sha256=link.manifest_sha256,
+        )
+        self._upsert_advisory_lookup(lookup_entry)
+
+    def list_run_advisories(self, run_id: str) -> List[Dict[str, Any]]:
+        """
+        Fast path: read from _index.json rollup. Returns list of summary dicts.
+        """
+        index = self._read_index()
+        meta = index.get(run_id) or {}
+        advs = meta.get("advisories") or []
+        if isinstance(advs, list):
+            return [a for a in advs if isinstance(a, dict)]
+        return []
+
+    def resolve_advisory(self, advisory_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Resolve advisory_id -> lookup entry dict (contains sha256, run_id, etc).
+        Blob retrieval should be done via attachments store using sha256.
+        """
+        lookup = self._read_advisory_lookup()
+        entry = lookup.get(advisory_id)
+        return entry if isinstance(entry, dict) else None
 
     def _date_partition(self, dt: datetime) -> str:
         """Get date partition string from datetime."""
@@ -478,6 +618,13 @@ class RunStoreV2:
 
             # Update the global index with lightweight metadata
             self._update_index_entry(artifact.run_id, _extract_index_meta(artifact))
+
+            # Update global attachment meta index (best-effort)
+            try:
+                self._attachment_meta.update_from_artifact(artifact)
+            except Exception:
+                # Best-effort: do not fail run persistence if meta index update fails
+                pass
         except Exception:
             # Clean up temp file on failure
             if tmp.exists():

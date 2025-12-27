@@ -1,5 +1,33 @@
 <template>
   <div class="p-3 space-y-2">
+    <!-- H7.2: optional strict normalize toggle + visible issue count -->
+    <div class="flex items-center gap-3 text-xs">
+      <label class="inline-flex items-center gap-2">
+        <input type="checkbox" v-model="strictNormalize" />
+        <span>Strict CAM intent normalize</span>
+      </label>
+      <span v-if="normalizationIssues.length" class="text-amber-600">
+        Normalize issues: {{ normalizationIssues.length }}
+      </span>
+    </div>
+
+    <!-- H7.2: show issues (non-breaking) -->
+    <details v-if="normalizationIssues.length" class="text-xs mb-2">
+      <summary class="cursor-pointer text-amber-700 hover:underline">
+        CAM intent normalization issues ({{ normalizationIssues.length }})
+      </summary>
+      <ul class="mt-2 ml-4 list-disc text-amber-700">
+        <li v-for="(iss, idx) in normalizationIssues.slice(0, 50)" :key="idx">
+          <span v-if="iss.code" class="font-mono">[{{ iss.code }}]</span>
+          {{ iss.message }}
+          <span v-if="iss.path" class="opacity-70"> ({{ iss.path }})</span>
+        </li>
+      </ul>
+      <div v-if="normalizationIssues.length > 50" class="text-gray-500 mt-1">
+        Showing first 50...
+      </div>
+    </details>
+
     <div class="flex gap-3 flex-wrap items-center">
       <label>Tool ⌀ (mm) <input type="number" v-model.number="tool" style="width:90px"></label>
       <label>Depth/Pass (mm) <input type="number" v-model.number="dpp" style="width:90px"></label>
@@ -30,6 +58,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { normalizeCamIntent } from '@/services/rmosCamIntentApi'
+
+// H7.2: normalize-first adoption controls / visibility
+const strictNormalize = ref(false)
+const normalizationIssues = ref<
+  Array<{ code?: string; message: string; severity?: string; path?: string }>
+>([])
+
+function _summarizeIssues(issues: Array<{ message: string }>, max = 10): string {
+  const head = issues.slice(0, max).map((i) => i.message).join("; ")
+  return issues.length > max ? `${head}; ...` : head
+}
 
 const cv = ref<HTMLCanvasElement|null>(null)
 let ctx:CanvasRenderingContext2D, W=0, H=0, dpr=1
@@ -97,6 +137,8 @@ function draw(passes: Array<Array<[number,number]>>){
 }
 
 async function simulate(){
+  normalizationIssues.value = []
+
   const payload = {
     entities: sampleEntities.value,
     tool_diameter: tool.value,
@@ -110,11 +152,31 @@ async function simulate(){
     tab_height: 1.5,
     post: post.value
   }
-  
-  const res = await fetch('/cam/roughing_gcode', {
+
+  // H7.2.1: Normalize intent and call the intent-native endpoint
+  const intentDraft: any = {
+    operation: "roughing_gcode",
+    mode: "router_3axis",
+    params: payload,
+  }
+
+  const norm = await normalizeCamIntent(
+    { intent: intentDraft, strict: false },
+    { requestId: `CAMPreview.simulate.${Date.now()}` }
+  )
+  normalizationIssues.value = norm.issues ?? []
+
+  if (strictNormalize.value && normalizationIssues.value.length > 0) {
+    throw new Error(
+      `CAM intent normalization failed (strict): ${_summarizeIssues(normalizationIssues.value)}`
+    )
+  }
+
+  // H7.2.1: Call the intent-native endpoint with the normalized intent
+  const res = await fetch('/cam/roughing_gcode_intent', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
+    body: JSON.stringify(norm.intent)
   })
   
   gcode.value = await res.text()
