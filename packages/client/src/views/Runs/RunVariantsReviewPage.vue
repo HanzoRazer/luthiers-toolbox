@@ -17,6 +17,7 @@ import { useRoute } from "vue-router";
 
 import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
 import RejectVariantButton from "@/components/rmos/RejectVariantButton.vue";
+import UndoRejectButton from "@/components/rmos/UndoRejectButton.vue";
 import {
   listAdvisoryVariants,
   type AdvisoryVariantSummary,
@@ -137,6 +138,26 @@ const filteredSorted = computed(() => {
   return list;
 });
 
+function variantHoverTitle(v: AdvisoryVariantSummary): string {
+  const status = deriveStatus(v);
+  if (status !== "REJECTED") return v.advisory_id;
+
+  const parts: string[] = [];
+  parts.push(`REJECTED: ${v.rejection_reason_code ?? "—"}`);
+  if (v.rejection_reason_detail) parts.push(`Detail: ${v.rejection_reason_detail}`);
+  if (v.rejection_operator_note) parts.push(`Note: ${v.rejection_operator_note}`);
+  if (v.rejected_at_utc) parts.push(`At: ${v.rejected_at_utc}`);
+  return parts.join("\n");
+}
+
+const selectedVariant = computed(() =>
+  variants.value.find((v) => v.advisory_id === selected.value) ?? null
+);
+
+const selectedIsRejected = computed(() =>
+  selectedVariant.value ? deriveStatus(selectedVariant.value) === "REJECTED" : false
+);
+
 onMounted(load);
 watch(runId, () => {
   selected.value = null;
@@ -208,6 +229,7 @@ watch(runId, () => {
             :key="v.advisory_id"
             class="row"
             :class="{ on: selected === v.advisory_id }"
+            :title="variantHoverTitle(v)"
             @click="selected = v.advisory_id"
           >
             <div class="rowMain">
@@ -246,6 +268,12 @@ watch(runId, () => {
         <div class="rowActionsInline">
           <PromoteToManufacturingButton :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
           <RejectVariantButton :runId="runId" :advisoryId="selected" @rejected="load" />
+          <UndoRejectButton
+            v-if="selectedIsRejected"
+            :runId="runId"
+            :advisoryId="selected"
+            @cleared="load"
+          />
         </div>
 
         <div class="spacer" />
