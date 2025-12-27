@@ -28,7 +28,7 @@ export * as art from "./art";
 export * from "./endpoints";
 
 // Core utilities
-export { ApiError } from "./core/errors";
+export { ApiError, formatApiErrorForUi } from "./core/errors";
 export { setDeprecationHandler, generateRequestId } from "./core/headers";
 export { assertRequestIdHeader, isRequestIdStrict } from "./core/assertRequestId";
 export { apiFetch, get, post, patch, put, del } from "./core/apiFetch";

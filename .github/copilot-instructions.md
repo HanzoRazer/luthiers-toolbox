@@ -1,5 +1,8 @@
 # Luthier's Tool Box – AI Agent Instructions
 
+**Last Updated**: 2025-12-27  
+**Build**: A_N.1 (Priority 1 Complete)
+
 ## Project Overview
 This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 - **Vue 3 + Vite** frontend (TypeScript) in `packages/client/` for guitar design visualization
@@ -8,14 +11,16 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 - **Unit conversion**: Bidirectional mm ↔ inch geometry scaling (client + server)
 - **RMOS (Rosette Manufacturing OS)**: Complete factory subsystem for rosette inlay design, CAM, and production tracking
 - **Blueprint Import** pipeline in `services/blueprint-import/` for image-based guitar template extraction
+- **SDK Architecture (H8.3)**: Typed endpoint helpers replacing raw fetch() calls (migration in progress)
 
 **Core Mission**: Enable luthiers to design guitar components, export CAM-ready files (DXF R12 + SVG + G-code), and support multiple CNC platforms through a unified web interface.
 
 **Repository Structure**: 
 - **Active Development**: `services/api/`, `packages/client/`, `packages/shared/`, `projects/rmos/`
-- **Reference Only (DO NOT MODIFY)**: `Luthiers Tool Box/`, `Guitar Design HTML app/`, `Lutherier Project/`, `Smart Guitar Build/`
+- **Reference Only (DO NOT MODIFY)**: `Luthiers Tool Box/`, `Guitar Design HTML app/`, `Lutherier Project/`, `Smart Guitar Build/`, `__REFERENCE__/`
 - **Testing**: PowerShell-first smoke tests in `scripts/*.ps1` with bash mirrors for CI
 - **Documentation**: Comprehensive guides in `docs/` with patch notes, quickrefs, and architecture diagrams
+- **CI/CD**: 24 GitHub Actions workflows covering API, client, RMOS, CAM, and integration tests
 
 ---
 
@@ -33,11 +38,15 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
   from .routers.adaptive_router import router as adaptive_router
   app.include_router(adaptive_router, prefix="/cam/pocket/adaptive", tags=["CAM"])
   
-  # Optional routers with graceful degradation (no more silent try/except)
-  from .routers.cam_helical_v161_router import router as cam_helical_router
-  app.include_router(cam_helical_router, prefix="/cam/toolpath", tags=["CAM"])
+  # Optional routers with graceful degradation
+  try:
+      from .routers.cam_helical_v161_router import router as cam_helical_router
+      app.include_router(cam_helical_router, prefix="/cam/toolpath", tags=["CAM"])
+  except ImportError as e:
+      print(f"Warning: Helical router not available: {e}")
   ```
 - **Clean import policy** (enforced 2024-12-13): No phantom imports, all dependencies explicit
+- **Endpoint governance (H4-H5)**: `/api/governance/stats` tracks legacy API usage for frontend migration planning
 
 ### 2. **RMOS (Rosette Manufacturing OS)**
 - **5 interconnected domains**:
@@ -126,7 +135,7 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
   - `services/api/app/routers/adaptive_router.py` – FastAPI endpoints
   - `packages/client/src/components/AdaptivePocketLab.vue` – Interactive UI
 - **Testing**: `test_adaptive_l1.ps1`, `test_adaptive_l2.ps1` for validation
-- **Documentation**: See [ADAPTIVE_POCKETING_MODULE_L.md](../ADAPTIVE_POCKETING_MODULE_L.md), [PATCH_L1_ROBUST_OFFSETTING.md](../PATCH_L1_ROBUST_OFFSETTING.md), [PATCH_L2_MERGED_SUMMARY.md](../PATCH_L2_MERGED_SUMMARY.md), and [PATCH_L3_SUMMARY.md](../PATCH_L3_SUMMARY.md)
+- **Documentation**: See [docs/ARCHIVE/2025-12/misc/ADAPTIVE_POCKETING_MODULE_L.md](../docs/ARCHIVE/2025-12/misc/ADAPTIVE_POCKETING_MODULE_L.md) and patch notes in `docs/ARCHIVE/2025-12/patches/`
 
 **Example**: Pocket with island
 ```json
@@ -387,7 +396,13 @@ const response = await fetch("/api/cam/roughing_gcode", {
 - `cam.roughingGcodeIntent(intent, strict?)` – Intent-native with optional strict mode
 - `cam.runPipeline(formData)` – FormData pipeline submission
 
-See [packages/client/src/sdk/endpoints/README.md](../../packages/client/src/sdk/endpoints/README.md) for full documentation.
+**Migration Status (H8.3):**
+- Foundation: ✅ Complete (6/6 tests passing)
+- Component Migration: 🚧 In Progress (6 legacy usages identified)
+- CI Gate: ✅ Integrated (`legacy_usage_gate.py` in rmos_ci.yml)
+- Budget: 10 during transition, target 0 when complete
+
+See [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) for full documentation.
 
 ### **Post Processor JSON Format**
 Located in `services/api/app/data/posts/*.json`:
@@ -543,6 +558,66 @@ npm run build
 ### **Issue**: Import errors after adding routers
 **Solution**: Verify all dependencies exist (2024-12-13 clean import policy). No phantom imports allowed. Add graceful degradation with try/except only for truly optional features, never to hide missing files.
 
+### **Issue**: Frontend uses legacy API endpoints
+**Solution**: Check governance stats at `/api/governance/stats` to see usage counts. Migrate components to use canonical endpoints (e.g., `/api/cam/toolpath/*` instead of `/api/cam/vcarve`). CI gate in `rmos_ci.yml` tracks frontend legacy usage via `legacy_usage_gate.py` - budget currently set to 10, target 0.
+
+---
+
+## H7.2: CAM Intent Implementation
+
+> **Added 2025-12-27**: Intent-native CAM endpoints with strict mode validation.
+
+### Overview
+
+H7.2 introduces intent-native CAM endpoints that use the canonical `CamIntentV1` envelope. These endpoints normalize input, validate constraints, and emit Prometheus metrics.
+
+### New Router
+
+- `cam_roughing_intent_router` — Intent-native roughing G-code generation
+
+**Prefix:** `/api/cam`
+**Tags:** `CAM`, `Intent`
+
+### Endpoints
+
+| Method | Endpoint | Query Params | Description |
+|--------|----------|--------------|-------------|
+| POST | `/api/cam/roughing_gcode_intent` | `strict=bool` | Generate roughing G-code from `CamIntentV1` |
+
+### Strict Mode (H7.2.3)
+
+The `strict` query parameter controls validation behavior:
+
+- `?strict=false` (default): Returns 200 with issues in response body
+- `?strict=true`: Returns 422 if normalization produces any issues
+
+```bash
+# Non-strict (default) - tolerates issues
+curl -X POST http://localhost:8000/api/cam/roughing_gcode_intent \
+  -H "Content-Type: application/json" \
+  -d '{"design": {...}}'
+
+# Strict - rejects on issues
+curl -X POST "http://localhost:8000/api/cam/roughing_gcode_intent?strict=true" \
+  -H "Content-Type: application/json" \
+  -d '{"design": {...}}'
+```
+
+### Prometheus Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `cam_roughing_intent_requests_total` | Counter | Total requests |
+| `cam_roughing_intent_issues_total` | Counter | Requests with normalization issues |
+| `cam_roughing_intent_strict_rejects_total` | Counter | Strict mode rejections |
+| `cam_roughing_intent_latency_ms` | Histogram | Request latency |
+
+### Test Coverage
+
+- `test_cam_roughing_intent_strict.py` — Strict mode behavior tests
+- `test_roughing_gcode_intent_metrics.py` — Metrics emission tests
+- `test_cam_intent_strict_reject_logs_request_id.py` — Request ID logging tests
+
 ---
 
 ## Design Philosophy
@@ -579,4 +654,49 @@ cd services/api && docker build -f ../../docker/api/Dockerfile -t ltb-api .
 
 # Run full stack with Docker
 docker compose up --build
+```
+
+---
+
+## Frontend Legacy Usage CI Gate
+
+> **Added 2025-12-27**: Automated detection of legacy API usage in frontend code.
+
+### How It Works
+
+The `legacy_usage_gate.py` CI script:
+1. Scans `packages/client/src` and `packages/sdk/src` for API paths
+2. Matches paths against known legacy patterns
+3. Reports usage and fails if over budget
+
+### Configuration
+
+In `.github/workflows/rmos_ci.yml`:
+
+```yaml
+- name: Frontend legacy usage gate
+  env:
+    LEGACY_USAGE_BUDGET: "10"  # Adjust as migration progresses
+  run: |
+    python -m app.ci.legacy_usage_gate \
+      --roots "../../packages/client/src" "../../packages/sdk/src" \
+      --budget ${LEGACY_USAGE_BUDGET}
+```
+
+### Reducing the Budget
+
+As frontend migration progresses:
+1. Fix legacy usages in frontend code
+2. Reduce `LEGACY_USAGE_BUDGET` in CI workflow
+3. Goal: Set to `0` when migration complete
+
+### Adding New Legacy Patterns
+
+Edit `services/api/app/ci/legacy_usage_gate.py`:
+
+```python
+LEGACY_ROUTES: List[Tuple[str, str, str]] = [
+    # (regex_pattern, canonical_replacement, notes)
+    (r"^/api/old/path", "/api/new/path", "Migration notes"),
+]
 ```

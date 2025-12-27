@@ -68,10 +68,12 @@ export async function apiFetchRaw<T>(
   // Error handling
   if (!res.ok) {
     const details = await readMaybeJson(res);
+    const requestId = res.headers.get("x-request-id") || undefined;
     throw new ApiError(`API ${res.status} for ${init.method} ${path}`, {
       status: res.status,
       url,
       details,
+      requestId,
     });
   }
 

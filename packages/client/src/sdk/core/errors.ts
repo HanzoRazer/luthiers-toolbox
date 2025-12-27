@@ -8,16 +8,18 @@ export class ApiError extends Error {
   status: number;
   url: string;
   details?: unknown;
+  requestId?: string;
 
   constructor(
     message: string,
-    opts: { status: number; url: string; details?: unknown }
+    opts: { status: number; url: string; details?: unknown; requestId?: string }
   ) {
     super(message);
     this.name = "ApiError";
     this.status = opts.status;
     this.url = opts.url;
     this.details = opts.details;
+    this.requestId = opts.requestId;
   }
 
   /** Check if error is a specific HTTP status */
@@ -45,5 +47,33 @@ export class ApiError extends Error {
       return String((this.details as Record<string, unknown>).error);
     }
     return undefined;
+  }
+}
+
+/**
+ * Frontend-safe error string normalizer (H8.3.2).
+ * - Always returns a string suitable for UI display
+ * - Includes request-id when available for correlation
+ * - Handles ApiError, Error, and unknown types gracefully
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await sdk.cam.roughingGcode(payload);
+ * } catch (e) {
+ *   errorMessage.value = formatApiErrorForUi(e);
+ * }
+ * ```
+ */
+export function formatApiErrorForUi(err: unknown): string {
+  if (err instanceof ApiError) {
+    const rid = err.requestId ? ` (request-id: ${err.requestId})` : "";
+    return `${err.message}${rid}`;
+  }
+  if (err instanceof Error) return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
   }
 }
