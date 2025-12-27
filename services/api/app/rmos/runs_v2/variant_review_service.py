@@ -33,9 +33,6 @@ from .schemas_variant_review import (
     AdvisoryVariantReviewRecord,
     PromoteVariantRequest,
     PromoteVariantResponse,
-    RejectVariantRequest,
-    RejectVariantResponse,
-    UnrejectVariantResponse,
 )
 from .schemas_manufacturing import ManufacturingCandidate
 
@@ -135,7 +132,7 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
     # Review records stored on run (dict keyed by advisory_id)
     review_map: Dict[str, Any] = getattr(run, "advisory_reviews", None) or {}
 
-    # Rejection records stored on run (dict keyed by advisory_id)
+    # Rejection records (dict keyed by advisory_id)
     rejection_map: Dict[str, Any] = getattr(run, "advisory_rejections", None) or {}
 
     # Manufacturing candidates (list) - may be dicts or objects depending on storage
@@ -148,6 +145,9 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
             adv = getattr(c, "advisory_id", None)
         if adv:
             promoted_ids.add(adv)
+
+    # Advisory timestamps (if available)
+    advisory_meta: Dict[str, Any] = getattr(run, "advisory_meta", None) or {}
 
     items: list[AdvisoryVariantSummary] = []
     for adv_id in allowed:
@@ -165,6 +165,12 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                     rating=None,
                     notes=None,
                     promoted=adv_id in promoted_ids,
+                    status="NEW",
+                    risk_level="RED",
+                    created_at_utc=None,
+                    updated_at_utc=None,
+                    rejected=False,
+                    rejection_reason=None,
                 )
             )
             continue
@@ -176,23 +182,49 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
 
         preview_blocked = False
         preview_reason = None
+        risk_level = "GREEN"
         if mime == "image/svg+xml":
             try:
                 svg_text = data.decode("utf-8", errors="ignore")
                 ok, reason = _preview_safety(svg_text)
                 preview_blocked = not ok
                 preview_reason = reason
+                # Compute risk based on SVG content
+                _, risk_level, _, _ = _risk_from_svg_for_binding(svg_text)
             except Exception:
                 preview_blocked = True
                 preview_reason = "decode"
+                risk_level = "YELLOW"
+        else:
+            # Non-SVG files get YELLOW risk
+            risk_level = "YELLOW"
 
         rec = review_map.get(adv_id) or {}
         rating = rec.get("rating")
         notes = rec.get("notes")
+        updated_at_utc = rec.get("updated_at_utc")
 
-        # Get rejection info
-        rej = rejection_map.get(adv_id) or {}
-        is_rejected = rej.get("rejected", False)
+        # Rejection state
+        rejection_rec = rejection_map.get(adv_id) or {}
+        is_rejected = bool(rejection_rec.get("rejected", False))
+        rejection_reason = rejection_rec.get("reason")
+
+        # Metadata timestamps
+        meta = advisory_meta.get(adv_id) or {}
+        created_at_utc = meta.get("created_at_utc")
+
+        # Compute status: PROMOTED > REJECTED > REVIEWED > NEW
+        is_promoted = adv_id in promoted_ids
+        has_review = rating is not None or (notes and notes.strip())
+
+        if is_promoted:
+            status = "PROMOTED"
+        elif is_rejected:
+            status = "REJECTED"
+        elif has_review:
+            status = "REVIEWED"
+        else:
+            status = "NEW"
 
         items.append(
             AdvisoryVariantSummary(
@@ -204,12 +236,13 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 preview_block_reason=preview_reason,
                 rating=rating,
                 notes=notes,
-                promoted=adv_id in promoted_ids,
+                promoted=is_promoted,
+                status=status,  # type: ignore
+                risk_level=risk_level,  # type: ignore
+                created_at_utc=created_at_utc,
+                updated_at_utc=updated_at_utc,
                 rejected=is_rejected,
-                rejection_reason_code=rej.get("rejection_reason_code") if is_rejected else None,
-                rejection_reason_detail=rej.get("rejection_reason_detail") if is_rejected else None,
-                rejection_operator_note=rej.get("rejection_operator_note") if is_rejected else None,
-                rejected_at_utc=rej.get("rejected_at_utc") if is_rejected else None,
+                rejection_reason=rejection_reason,
             )
         )
 
@@ -344,84 +377,4 @@ def promote_variant(
         reason=reason,
         manufactured_candidate_id=cand.candidate_id,
         message=None,
-    )
-
-
-def reject_variant(
-    run_id: str,
-    advisory_id: str,
-    payload: RejectVariantRequest,
-    principal: Principal,
-) -> RejectVariantResponse:
-    """Reject an advisory variant.
-
-    Stores rejection metadata on the run artifact (does not delete advisory blob).
-    RBAC: requires admin/operator role (enforced at API layer).
-    """
-    run = get_run(run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
-
-    allowed = set(_authorized_advisory_ids(run))
-    if advisory_id not in allowed:
-        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
-
-    # Get or create rejections map
-    rejections: Dict[str, Any] = dict(getattr(run, "advisory_rejections", None) or {})
-    now = _utc_now()
-    user_id = principal.user_id
-
-    rejections[advisory_id] = {
-        "rejected": True,
-        "rejection_reason_code": payload.reason_code,
-        "rejection_reason_detail": payload.reason_detail,
-        "rejection_operator_note": payload.operator_note,
-        "rejected_at_utc": now,
-        "rejected_by": user_id,
-    }
-    run.advisory_rejections = rejections
-    update_run(run)
-
-    return RejectVariantResponse(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        rejected=True,
-        rejection_reason_code=payload.reason_code,
-        rejection_reason_detail=payload.reason_detail,
-        rejection_operator_note=payload.operator_note,
-        rejected_at_utc=now,
-        rejected_by=user_id,
-    )
-
-
-def unreject_variant(
-    run_id: str,
-    advisory_id: str,
-    principal: Principal,
-) -> UnrejectVariantResponse:
-    """Clear rejection status for an advisory variant.
-
-    Removes rejection metadata from the run artifact.
-    RBAC: requires admin/operator role (enforced at API layer).
-    """
-    run = get_run(run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
-
-    allowed = set(_authorized_advisory_ids(run))
-    if advisory_id not in allowed:
-        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
-
-    rejections: Dict[str, Any] = dict(getattr(run, "advisory_rejections", None) or {})
-    cleared = advisory_id in rejections
-
-    if cleared:
-        del rejections[advisory_id]
-        run.advisory_rejections = rejections
-        update_run(run)
-
-    return UnrejectVariantResponse(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        cleared=cleared,
     )

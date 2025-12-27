@@ -11,6 +11,12 @@ from pydantic import BaseModel, Field, field_validator
 
 RoleName = Literal["admin", "operator", "engineer", "viewer", "anonymous"]
 
+# Variant triage status (computed server-side)
+VariantStatus = Literal["NEW", "REVIEWED", "PROMOTED", "REJECTED"]
+
+# Risk levels for quick triage (GREEN = safe, YELLOW = caution, RED = blocked)
+RiskLevel = Literal["GREEN", "YELLOW", "RED"]
+
 
 class AdvisoryVariantSummary(BaseModel):
     """Summary of an advisory variant for listing."""
@@ -21,16 +27,18 @@ class AdvisoryVariantSummary(BaseModel):
     preview_blocked: bool = False
     preview_block_reason: Optional[str] = None
 
+    # Review state
     rating: Optional[int] = None
     notes: Optional[str] = None
     promoted: bool = False
 
-    # Rejection fields
+    # === NEW: Status & Risk (Variant Status & Filters bundle) ===
+    status: VariantStatus = "NEW"
+    risk_level: RiskLevel = "GREEN"
+    created_at_utc: Optional[str] = None
+    updated_at_utc: Optional[str] = None
     rejected: bool = False
-    rejection_reason_code: Optional[str] = None
-    rejection_reason_detail: Optional[str] = None
-    rejection_operator_note: Optional[str] = None
-    rejected_at_utc: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
 
 class AdvisoryVariantListResponse(BaseModel):
@@ -76,47 +84,3 @@ class PromoteVariantResponse(BaseModel):
     reason: str
     manufactured_candidate_id: Optional[str] = None
     message: Optional[str] = None
-
-
-# =============================================================================
-# Reject Variant Schemas
-# =============================================================================
-
-RejectReasonCode = Literal[
-    "GEOMETRY_UNSAFE",
-    "TEXT_REQUIRES_OUTLINE",
-    "AESTHETIC",
-    "DUPLICATE",
-    "OTHER",
-]
-
-
-class RejectVariantRequest(BaseModel):
-    """Request to reject an advisory variant."""
-    reason_code: RejectReasonCode
-    reason_detail: Optional[str] = Field(None, max_length=500)
-    operator_note: Optional[str] = Field(None, max_length=2000)
-
-    @field_validator("reason_detail", "operator_note")
-    @classmethod
-    def _trim(cls, v: Optional[str]) -> Optional[str]:
-        return v.strip() if isinstance(v, str) else v
-
-
-class RejectVariantResponse(BaseModel):
-    """Response from rejecting an advisory variant."""
-    run_id: str
-    advisory_id: str
-    rejected: bool
-    rejection_reason_code: Optional[str] = None
-    rejection_reason_detail: Optional[str] = None
-    rejection_operator_note: Optional[str] = None
-    rejected_at_utc: Optional[str] = None
-    rejected_by: Optional[str] = None
-
-
-class UnrejectVariantResponse(BaseModel):
-    """Response from unrejecting (clearing rejection) an advisory variant."""
-    run_id: str
-    advisory_id: str
-    cleared: bool
