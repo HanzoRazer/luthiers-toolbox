@@ -231,3 +231,51 @@ export async function listAdvisoryVariants(runId: string): Promise<AdvisoryVaria
     has_preview: v.has_preview ?? v.hasPreview ?? null,
   })).filter((x: AdvisoryVariantSummary) => !!x.advisory_id);
 }
+
+// =============================================================================
+// Variant Rejection (Product Surface)
+// =============================================================================
+
+export type RejectReasonCode =
+  | "GEOMETRY_UNSAFE"
+  | "TEXT_REQUIRES_OUTLINE"
+  | "AESTHETIC"
+  | "DUPLICATE"
+  | "OTHER";
+
+export interface RejectVariantRequest {
+  reason_code: RejectReasonCode;
+  reason_detail?: string | null;
+  operator_note?: string | null;
+}
+
+export interface AdvisoryVariantRejectionRecord {
+  run_id: string;
+  advisory_id: string;
+  rejected_at_utc: string;
+  reason_code: RejectReasonCode;
+  reason_detail?: string | null;
+  operator_note?: string | null;
+}
+
+/**
+ * Reject an advisory variant with a reason code.
+ * Returns the persisted rejection record.
+ */
+export async function rejectAdvisoryVariant(
+  runId: string,
+  advisoryId: string,
+  payload: RejectVariantRequest
+): Promise<AdvisoryVariantRejectionRecord> {
+  const res = await fetch(
+    `${BASE_URL}/${encodeURIComponent(runId)}/advisory/${encodeURIComponent(advisoryId)}/reject`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) throw new Error(`Reject failed (${res.status})`);
+  return (await res.json()) as AdvisoryVariantRejectionRecord;
+}
+

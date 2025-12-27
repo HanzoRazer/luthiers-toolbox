@@ -16,6 +16,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
+import RejectVariantButton from "@/components/rmos/RejectVariantButton.vue";
 import {
   listAdvisoryVariants,
   type AdvisoryVariantSummary,
@@ -242,7 +243,10 @@ watch(runId, () => {
       <div class="panel" v-if="selected">
         <div class="panelTitle">Selected Variant</div>
 
-        <PromoteToManufacturingButton :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
+        <div class="rowActionsInline">
+          <PromoteToManufacturingButton :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
+          <RejectVariantButton :runId="runId" :advisoryId="selected" @rejected="load" />
+        </div>
 
         <div class="spacer" />
         <VariantNotes :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
@@ -302,6 +306,7 @@ watch(runId, () => {
 .empty { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 12px; }
 .spacer { height: 10px; }
 .compareHint { margin-top: 10px; }
+.rowActionsInline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 @media (max-width: 1100px) {
   .grid { grid-template-columns: 1fr; }
