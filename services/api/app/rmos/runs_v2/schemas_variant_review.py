@@ -40,6 +40,12 @@ class AdvisoryVariantSummary(BaseModel):
     rejected: bool = False
     rejection_reason: Optional[str] = None
 
+    # === NEW: Rejection details (Undo Reject bundle) ===
+    rejection_reason_code: Optional[str] = None
+    rejection_reason_detail: Optional[str] = None
+    rejection_operator_note: Optional[str] = None
+    rejected_at_utc: Optional[str] = None
+
 
 class AdvisoryVariantListResponse(BaseModel):
     """Response for listing advisory variants."""

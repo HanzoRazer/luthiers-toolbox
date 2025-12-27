@@ -1230,7 +1230,7 @@ from .schemas_advisory_reject import (
     RejectVariantRequest,
     AdvisoryVariantRejectionRecord,
 )
-from .advisory_variant_state import write_rejection
+from .advisory_variant_state import write_rejection, clear_rejection
 
 
 @router.post(
@@ -1264,6 +1264,27 @@ def post_reject_advisory_variant(
     Rejecting an already-rejected variant overwrites the previous rejection.
     """
     return write_rejection(run_id=run_id, advisory_id=advisory_id, req=payload)
+
+
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/unreject",
+    response_model=dict,
+    summary="Undo rejection of an advisory variant (clear rejection record).",
+)
+def post_unreject_advisory_variant(run_id: str, advisory_id: str):
+    """
+    Clear/undo a rejection for an advisory variant.
+
+    This removes the rejection record, returning the variant to its
+    previous status (NEW or REVIEWED depending on whether it has ratings/notes).
+
+    Returns:
+    - run_id: The run ID
+    - advisory_id: The advisory ID
+    - cleared: True if a rejection was cleared, False if none existed
+    """
+    existed = clear_rejection(run_id=run_id, advisory_id=advisory_id)
+    return {"run_id": run_id, "advisory_id": advisory_id, "cleared": existed}
 
 
 # =============================================================================

@@ -35,6 +35,7 @@ from .schemas_variant_review import (
     PromoteVariantResponse,
 )
 from .schemas_manufacturing import ManufacturingCandidate
+from .advisory_variant_state import read_rejection
 
 
 def _utc_now() -> str:
@@ -132,8 +133,8 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
     # Review records stored on run (dict keyed by advisory_id)
     review_map: Dict[str, Any] = getattr(run, "advisory_reviews", None) or {}
 
-    # Rejection records (dict keyed by advisory_id)
-    rejection_map: Dict[str, Any] = getattr(run, "advisory_rejections", None) or {}
+    # Rejection records: prefer file-based state, fallback to legacy run.advisory_rejections
+    legacy_rejection_map: Dict[str, Any] = getattr(run, "advisory_rejections", None) or {}
 
     # Manufacturing candidates (list) - may be dicts or objects depending on storage
     candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
@@ -204,10 +205,15 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
         notes = rec.get("notes")
         updated_at_utc = rec.get("updated_at_utc")
 
-        # Rejection state
-        rejection_rec = rejection_map.get(adv_id) or {}
-        is_rejected = bool(rejection_rec.get("rejected", False))
-        rejection_reason = rejection_rec.get("reason")
+        # Rejection state: prefer file-based, fallback to legacy
+        file_rej = read_rejection(run_id, adv_id)
+        legacy_rej = legacy_rejection_map.get(adv_id) or {}
+        is_rejected = file_rej is not None or bool(legacy_rej.get("rejected", False))
+        rejection_reason = file_rej.reason_code if file_rej else legacy_rej.get("reason")
+        rejection_reason_code = file_rej.reason_code if file_rej else None
+        rejection_reason_detail = file_rej.reason_detail if file_rej else None
+        rejection_operator_note = file_rej.operator_note if file_rej else None
+        rejected_at_utc = file_rej.rejected_at_utc if file_rej else None
 
         # Metadata timestamps
         meta = advisory_meta.get(adv_id) or {}
@@ -243,6 +249,10 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 updated_at_utc=updated_at_utc,
                 rejected=is_rejected,
                 rejection_reason=rejection_reason,
+                rejection_reason_code=rejection_reason_code,
+                rejection_reason_detail=rejection_reason_detail,
+                rejection_operator_note=rejection_operator_note,
+                rejected_at_utc=rejected_at_utc,
             )
         )
 

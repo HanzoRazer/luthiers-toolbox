@@ -199,6 +199,12 @@ export interface AdvisoryVariantSummary {
   promoted_candidate_id?: string | null; // optional
   rejected?: boolean | null;         // optional
   has_preview?: boolean | null;      // optional
+
+  // Rejection details (Undo Reject bundle)
+  rejection_reason_code?: string | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+  rejected_at_utc?: string | null;
 }
 
 export interface AdvisoryVariantListResponse {
@@ -229,6 +235,10 @@ export async function listAdvisoryVariants(runId: string): Promise<AdvisoryVaria
     promoted_candidate_id: v.promoted_candidate_id ?? v.promotedCandidateId ?? null,
     rejected: v.rejected ?? null,
     has_preview: v.has_preview ?? v.hasPreview ?? null,
+    rejection_reason_code: v.rejection_reason_code ?? null,
+    rejection_reason_detail: v.rejection_reason_detail ?? null,
+    rejection_operator_note: v.rejection_operator_note ?? null,
+    rejected_at_utc: v.rejected_at_utc ?? null,
   })).filter((x: AdvisoryVariantSummary) => !!x.advisory_id);
 }
 
@@ -279,3 +289,18 @@ export async function rejectAdvisoryVariant(
   return (await res.json()) as AdvisoryVariantRejectionRecord;
 }
 
+/**
+ * Undo/clear a rejection for an advisory variant.
+ * Returns whether a rejection was cleared.
+ */
+export async function unrejectAdvisoryVariant(
+  runId: string,
+  advisoryId: string
+): Promise<{ run_id: string; advisory_id: string; cleared: boolean }> {
+  const res = await fetch(
+    `${BASE_URL}/${encodeURIComponent(runId)}/advisory/${encodeURIComponent(advisoryId)}/unreject`,
+    { method: "POST", headers: { Accept: "application/json" } }
+  );
+  if (!res.ok) throw new Error(`Unreject failed (${res.status})`);
+  return (await res.json()) as { run_id: string; advisory_id: string; cleared: boolean };
+}
