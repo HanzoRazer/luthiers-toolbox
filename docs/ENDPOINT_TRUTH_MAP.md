@@ -627,3 +627,62 @@ curl http://localhost:8000/api/governance/stats
 2. Monitor `/api/governance/stats` for 1-2 weeks
 3. Routes with zero hits → safe to remove
 4. Routes with hits → migrate frontend first, then remove
+
+---
+
+## Frontend Legacy Usage Audit
+
+> **Added 2025-12-27**: CI gate scans frontend for legacy API endpoint usage.
+
+### CI Gate
+
+The `legacy_usage_gate.py` script scans frontend code and fails CI if legacy usage exceeds budget.
+
+```bash
+# Run manually
+cd services/api
+python -m app.ci.legacy_usage_gate \
+  --roots "../../packages/client/src" "../../packages/sdk/src" \
+  --budget 10
+
+# Exit codes:
+# 0 = No legacy endpoints used
+# 1 = Legacy usage within budget (warning)
+# 2 = Legacy usage exceeds budget (fail)
+```
+
+### Current Frontend Legacy Usage (2025-12-27)
+
+**8 legacy usages in 4 files** (budget: 10)
+
+| File | Line | Legacy Path | Canonical Replacement |
+|------|------|-------------|----------------------|
+| `DrillingLab.vue` | 637 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
+| `DrillingLab.vue` | 674 | `/api/cam/drill/gcode/download` | `/api/cam/drilling/gcode/download` |
+| `CAMEssentialsLab.vue` | 364 | `/api/cam/roughing/gcode` | `/api/cam/toolpath/roughing/gcode` |
+| `CAMEssentialsLab.vue` | 388 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
+| `CAMEssentialsLab.vue` | 451 | `/api/cam/biarc/gcode` | `/api/cam/toolpath/biarc/gcode` |
+| `useRosettePatternStore.ts` | 21 | `/api/rosette-patterns` | `/api/art/rosette/pattern/patterns` |
+| `useRosettePatternStore.ts` | 35 | `/api/rosette-patterns` | `/api/art/rosette/pattern/patterns` |
+| `BridgeLabView.vue` | 517 | `/api/cam/roughing_gcode` | `/api/cam/toolpath/roughing/gcode` |
+
+### Legacy Path Patterns Detected
+
+| Pattern | Canonical Replacement | Notes |
+|---------|----------------------|-------|
+| `/api/cam/vcarve/*` | `/api/cam/toolpath/vcarve/*` | Wave 18 |
+| `/api/cam/helical/*` | `/api/cam/toolpath/helical/*` | Wave 18 |
+| `/api/cam/biarc/*` | `/api/cam/toolpath/biarc/*` | Wave 18 |
+| `/api/cam/roughing/*` | `/api/cam/toolpath/roughing/*` | Wave 18 (or use H7.2 intent) |
+| `/api/cam/drill/*` | `/api/cam/drilling/*` | Wave 18 |
+| `/api/cam/svg/*` | `/api/cam/export/*` | Wave 18 |
+| `/api/rosette-patterns` | `/api/art/rosette/pattern/*` | Art Studio v2 |
+| `/api/art-studio/workflow/*` | `/api/rmos/workflow/*` | RMOS canonical |
+| `/api/art-studio/rosette/*` | `/api/art/rosette/*` | Art Studio v2 |
+
+### Migration Priority
+
+1. **High**: `useRosettePatternStore.ts` - Used by rosette pattern UI
+2. **Medium**: `CAMEssentialsLab.vue` - CAM operations lab
+3. **Medium**: `DrillingLab.vue` - Drilling operations
+4. **Low**: `BridgeLabView.vue` - Bridge lab view

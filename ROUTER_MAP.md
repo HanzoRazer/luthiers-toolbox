@@ -685,8 +685,63 @@ curl -X POST "http://localhost:8000/api/cam/roughing_gcode_intent?strict=true" \
 - Updated ENDPOINT_TRUTH_MAP.md with CAM consolidated and intent endpoints
 - Documented governance integration for legacy route tracking
 
+**CI Gate:**
+- Added `legacy_usage_gate.py` for frontend legacy usage detection
+- Integrated into `.github/workflows/rmos_ci.yml`
+- Budget set to 10 during transition period
+
+**Frontend Audit Results:**
+- 8 legacy usages found in 4 files
+- Files: DrillingLab.vue, CAMEssentialsLab.vue, useRosettePatternStore.ts, BridgeLabView.vue
+- See ENDPOINT_TRUTH_MAP.md for full migration list
+
 ### 2025-12-20
 
 - Wave 18-19 consolidation (CAM + Compare routers)
 - Fixed 9 previously broken routers
 - Removed 84 phantom imports
+
+---
+
+## Frontend Legacy Usage CI Gate
+
+> **Added 2025-12-27**: Automated detection of legacy API usage in frontend code.
+
+### How It Works
+
+The `legacy_usage_gate.py` CI script:
+1. Scans `packages/client/src` and `packages/sdk/src` for API paths
+2. Matches paths against known legacy patterns
+3. Reports usage and fails if over budget
+
+### Configuration
+
+In `.github/workflows/rmos_ci.yml`:
+
+```yaml
+- name: Frontend legacy usage gate
+  env:
+    LEGACY_USAGE_BUDGET: "10"  # Adjust as migration progresses
+  run: |
+    python -m app.ci.legacy_usage_gate \
+      --roots "../../packages/client/src" "../../packages/sdk/src" \
+      --budget ${LEGACY_USAGE_BUDGET}
+```
+
+### Reducing the Budget
+
+As frontend migration progresses:
+1. Fix legacy usages in frontend code
+2. Reduce `LEGACY_USAGE_BUDGET` in CI workflow
+3. Goal: Set to `0` when migration complete
+
+### Adding New Legacy Patterns
+
+Edit `services/api/app/ci/legacy_usage_gate.py`:
+
+```python
+LEGACY_ROUTES: List[Tuple[str, str, str]] = [
+    # (regex_pattern, canonical_replacement, notes)
+    (r"^/api/old/path", "/api/new/path", "Migration notes"),
+]
+```
