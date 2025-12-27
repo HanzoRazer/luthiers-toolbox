@@ -1223,6 +1223,50 @@ def post_unreject_advisory_variant(
 
 
 # =============================================================================
+# Variant Rejection (Product Bundle)
+# =============================================================================
+
+from .schemas_advisory_reject import (
+    RejectVariantRequest,
+    AdvisoryVariantRejectionRecord,
+)
+from .advisory_variant_state import write_rejection
+
+
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/reject",
+    response_model=AdvisoryVariantRejectionRecord,
+    summary="Reject an advisory variant with a reason code.",
+)
+def post_reject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+):
+    """
+    Reject an advisory variant with a structured reason code.
+
+    This creates an explicit rejection record separate from the immutable
+    RunArtifact. Rejection records are stored in a simple per-run directory
+    structure for easy debugging and audit.
+
+    Reason codes (tight vocabulary):
+    - GEOMETRY_UNSAFE: Contains unsafe geometry for CNC
+    - TEXT_REQUIRES_OUTLINE: Text elements need outline conversion
+    - AESTHETIC: Rejected for aesthetic reasons
+    - DUPLICATE: Duplicate of another variant
+    - OTHER: Other reason (use reason_detail for specifics)
+
+    Optional fields:
+    - reason_detail: Short clarification (max 500 chars)
+    - operator_note: Longer note for audit trail (max 2000 chars)
+
+    Rejecting an already-rejected variant overwrites the previous rejection.
+    """
+    return write_rejection(run_id=run_id, advisory_id=advisory_id, req=payload)
+
+
+# =============================================================================
 # Manufacturing Candidate Queue (Product Bundle)
 # =============================================================================
 
