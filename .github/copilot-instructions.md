@@ -6,18 +6,55 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 - **FastAPI** backend (Python 3.11+) in `services/api/` for DXF/SVG export, geometry processing, and multi-post CNC workflows
 - **Multi-post processor support**: GRBL, Mach4, LinuxCNC, PathPilot, MASSO, Haas, Marlin with JSON configuration files
 - **Unit conversion**: Bidirectional mm ↔ inch geometry scaling (client + server)
+- **RMOS (Rosette Manufacturing OS)**: Complete factory subsystem for rosette inlay design, CAM, and production tracking
 - **Blueprint Import** pipeline in `services/blueprint-import/` for image-based guitar template extraction
-- **Smart Guitar Project** (separate) for IoT/embedded lutherie with Raspberry Pi 5
 
 **Core Mission**: Enable luthiers to design guitar components, export CAM-ready files (DXF R12 + SVG + G-code), and support multiple CNC platforms through a unified web interface.
 
-**Repository Structure**: Mono-repo with active development in `services/api/`, `packages/client/`, and `packages/shared/`. Legacy MVP builds and CAD archives in `Luthiers Tool Box/`, `Guitar Design HTML app/`, and `Lutherier Project/` are **reference implementations only - DO NOT modify these directories**.
+**Repository Structure**: 
+- **Active Development**: `services/api/`, `packages/client/`, `packages/shared/`, `projects/rmos/`
+- **Reference Only (DO NOT MODIFY)**: `Luthiers Tool Box/`, `Guitar Design HTML app/`, `Lutherier Project/`, `Smart Guitar Build/`
+- **Testing**: PowerShell-first smoke tests in `scripts/*.ps1` with bash mirrors for CI
+- **Documentation**: Comprehensive guides in `docs/` with patch notes, quickrefs, and architecture diagrams
 
 ---
 
 ## Architecture & Key Patterns
 
-### 1. **Multi-Post CAM Export System**
+### 1. **Router Organization & Wave-Based Development**
+- **116 working routers** organized across 22 deployment waves (see [ROUTER_MAP.md](../ROUTER_MAP.md))
+- **Legacy vs Canonical lanes**: Legacy routes remain mounted for backwards compatibility with `"Legacy"` tag
+  - CAM consolidated in Wave 18: `/api/cam/toolpath/*` (canonical), `/api/cam/vcarve` (legacy)
+  - Compare consolidated in Wave 19: `/api/compare/*` (canonical)
+  - Governance middleware tracks legacy usage via `/api/governance/stats`
+- **Router registration pattern** in `services/api/app/main.py`:
+  ```python
+  # Core routers (always available)
+  from .routers.adaptive_router import router as adaptive_router
+  app.include_router(adaptive_router, prefix="/cam/pocket/adaptive", tags=["CAM"])
+  
+  # Optional routers with graceful degradation (no more silent try/except)
+  from .routers.cam_helical_v161_router import router as cam_helical_router
+  app.include_router(cam_helical_router, prefix="/cam/toolpath", tags=["CAM"])
+  ```
+- **Clean import policy** (enforced 2024-12-13): No phantom imports, all dependencies explicit
+
+### 2. **RMOS (Rosette Manufacturing OS)**
+- **5 interconnected domains**:
+  1. **Creative Layer**: Rosette pattern design (multi-ring editor, per-ring configuration)
+  2. **CAM Layer**: CNC operations (circular saw, line slicing, G-code generation)
+  3. **Manufacturing Planning**: Material requirements (strip-family grouping, tile counts)
+  4. **Production/Logging**: Job tracking (`saw_slice_batch`, `rosette_plan`) with yield analysis
+  5. **Future Engineering**: Physics modeling (kerf, deflection), AI suggestions
+- **Key endpoints**:
+  - `/api/rmos/ai/*` - AI constraint search and workflow management
+  - `/api/rmos/profiles/*` - Constraint profile CRUD with history/rollback
+  - `/api/rmos/runs/*` - Run artifacts, attachments, metadata, diff comparison
+  - `/api/rmos/saw-ops/*` - Slice preview and pipeline handoff
+- **Testing**: `scripts/Test-RMOS-*.ps1` suite (Sandbox, SlicePreview, PipelineHandoff, ArtStudio)
+- **Documentation**: `projects/rmos/README.md`, implementation guide, API reference, technical audit
+
+### 3. **Multi-Post CAM Export System**
 - **7+ CNC post-processors** with JSON configs in `services/api/app/data/posts/`:
   - Core: `grbl.json`, `mach4.json`, `linuxcnc.json`, `pathpilot.json`, `masso.json`
   - Industrial: `haas.json` (R-mode arcs, G4 S dwell in seconds)
@@ -42,7 +79,7 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 }
 ```
 
-### 2. **Unit Conversion System**
+### 4. **Unit Conversion System**
 - **Server-side**: `scale_geom_units(geom, target_units)` in `services/api/app/util/units.py`
   - Scales `x1`, `y1`, `x2`, `y2`, `cx`, `cy`, `r` fields in paths
   - Conversion factors: `IN_PER_MM = 0.03937007874015748`, `MM_PER_IN = 25.4`
@@ -51,19 +88,21 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
   - Updates geometry values, not just labels
 - **G-code units**: `G21` for mm, `G20` for inches (auto-injected in post headers)
 
-### 3. **Client-Server Communication**
+### 5. **Client-Server Communication**
 - **API Base**: Vite dev proxy `/api` → `http://localhost:8000` (FastAPI server)
-- **Production**: Nginx proxy in `docker/proxy/` routes `/api` to backend container
+- **Production**: Nginx proxy in `docker/nginx/` routes `/api` to backend container
 - **Client stack**: Vue 3 Composition API (`<script setup>`) + TypeScript in `packages/client/src/`
 - **Geometry component**: `GeometryOverlay.vue` – parity checking, export buttons, canvas rendering
+- **Request ID Tracking**: All requests include `X-Request-Id` header for correlation (see `RequestIdMiddleware` in `main.py`)
 
-### 4. **DXF/SVG Export Rules**
+### 6. **DXF/SVG Export Rules**
+### 6. **DXF/SVG Export Rules**
 - **DXF format**: Always R12 (AC1009) for maximum CAM compatibility
 - **SVG format**: Inline paths with metadata comments
 - **Metadata injection**: `(POST=<post_id>;UNITS=<units>;DATE=<timestamp>)` in all exports
 - **Closed paths**: CNC operations require closed LWPolylines (use cleaning scripts for legacy files)
 
-### 5. **Adaptive Pocketing Engine (Module L)**
+### 7. **Adaptive Pocketing Engine (Module L)**
 - **Current Version**: L.3 (Trochoidal Insertion + Jerk-Aware Time)
 - **Core Algorithm**: Pyclipper-based polygon offsetting with integer-safe operations
 - **Island Handling**: Automatic keepout zones around holes/islands (L.1)
@@ -105,16 +144,30 @@ This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
 }
 ```
 
+### 8. **Endpoint Governance & Migration Tracking**
+- **Purpose**: Track legacy endpoint usage during Wave 18-19 consolidation
+- **Implementation**: `EndpointGovernanceMiddleware` in `services/api/app/governance/endpoint_middleware.py`
+- **Router tagging**: Legacy routes include `"Legacy"` in their tags array
+- **Metrics endpoint**: `/api/governance/stats` returns usage counts per legacy endpoint
+- **Migration workflow**:
+  1. Consolidate endpoints into canonical routes (e.g., `/api/cam/toolpath/*`)
+  2. Keep legacy routes mounted with `"Legacy"` tag
+  3. Monitor usage via governance stats
+  4. Update frontend to use canonical routes
+  5. Remove legacy mounts when usage drops to zero
+- **Truth map**: `docs/ENDPOINT_TRUTH_MAP.md` documents complete API surface
+- **Router map**: `ROUTER_MAP.md` tracks 116 routers across 22 deployment waves
+
 ---
 
 ## Critical Developer Workflows
 
 ### **Running the Full Stack**
-```powershell
-# Server (PowerShell)
+```bash
+# Server (Linux/macOS/WSL)
 cd services/api
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 
@@ -125,16 +178,25 @@ npm run dev  # Runs on http://localhost:5173 with /api proxy
 
 # Docker Compose (production-like)
 docker compose up --build  # Runs API:8000, Client:8080, Proxy:8088
+
+# Using Makefile (shortcuts)
+make start-api     # Start FastAPI dev server
+make start-client  # Start Vue dev client
+make test-api      # Run pytest suite
+make smoke-helix-posts  # Test all post-processor presets
 ```
 
 ### **Testing Strategy**
 The project uses **PowerShell test scripts** for Windows-first development:
 ```powershell
-# Test patterns: test_<feature>.ps1
-.\test_adaptive_l1.ps1      # L.1 island handling
-.\test_adaptive_l2.ps1      # L.2 spiralizer + HUD overlays
-.\test_api.ps1              # Core API smoke tests
-.\smoke_v161_helical.ps1    # Helical ramping smoke tests
+# Test patterns: test_<feature>.ps1 or Test-<Feature>.ps1
+.\test_adaptive_l1.ps1           # L.1 island handling
+.\test_adaptive_l2.ps1           # L.2 spiralizer + HUD overlays
+.\test_api.ps1                   # Core API smoke tests
+.\smoke_v161_helical.ps1         # Helical ramping smoke tests
+.\scripts\Test-RMOS-Sandbox.ps1  # RMOS pattern creation
+.\scripts\Test-RMOS-SlicePreview.ps1  # RMOS slice preview
+.\scripts\Test-RMOS-PipelineHandoff.ps1  # RMOS pipeline integration
 ```
 
 **Key testing conventions:**
@@ -144,7 +206,30 @@ The project uses **PowerShell test scripts** for Windows-first development:
 - Check for specific patterns: `G21` (mm), `G20` (inch), `(POST=<id>` metadata comments
 - Each test script is self-contained and reports ✓/✗ with colored output
 
-**CI/CD equivalents**: `.github/workflows/*.yml` files run same tests in GitHub Actions
+**Python tests**:
+```bash
+# Backend unit tests
+cd services/api
+pytest tests/ -v
+
+# Test coverage (P3.1 goal: 80%)
+pytest --cov=app --cov-report=html tests/
+
+# Frontend tests (Vitest)
+cd packages/client
+npm run test              # Run all tests
+npm run test:watch        # Watch mode
+npm run test:request-id   # Test request ID tracking
+```
+
+**CI/CD workflows** (`.github/workflows/*.yml`):
+- `api_health_check.yml` - API health and smoke tests
+- `proxy_parity.yml` - Multi-post export and parity validation
+- `adaptive_pocket.yml` - Module L adaptive pocketing tests
+- `helical_badges.yml` - Helical ramping with post presets
+- `rmos_ci.yml` - RMOS subsystem integration tests
+- `comparelab-tests.yml` - Compare Lab golden file validation
+- `client_lint_build.yml` - Vue build and TypeScript checks
 
 ### **Testing Multi-Post Exports**
 ```powershell
@@ -269,6 +354,41 @@ async function exportMultiPostBundle(){
 }
 ```
 
+### **SDK Endpoint Helpers (H8.3)**
+Use **typed, per-endpoint helpers** instead of ad-hoc `fetch()` calls:
+
+```typescript
+// ✅ DO: Use typed helpers from sdk/endpoints
+import { cam } from "@/sdk/endpoints";
+
+const { gcode, summary, requestId } = await cam.roughingGcode({
+  entities: [/* boundary */],
+  tool_diameter: 6.0,
+  depth_per_pass: 2.0,
+  // ... typed payload
+});
+
+// ❌ DON'T: Raw fetch() in components
+const response = await fetch("/api/cam/roughing_gcode", {
+  method: "POST",
+  body: JSON.stringify(payload),
+});
+```
+
+**Key Benefits:**
+- Type-safe payloads and responses
+- Automatic header parsing (e.g., `X-CAM-Summary`)
+- Request-id propagation for tracing
+- Consistent error handling with `ApiError`
+- All helpers return `{...result, requestId}` shape
+
+**Available Helpers:**
+- `cam.roughingGcode(payload)` – Legacy entity-based roughing
+- `cam.roughingGcodeIntent(intent, strict?)` – Intent-native with optional strict mode
+- `cam.runPipeline(formData)` – FormData pipeline submission
+
+See [packages/client/src/sdk/endpoints/README.md](../../packages/client/src/sdk/endpoints/README.md) for full documentation.
+
 ### **Post Processor JSON Format**
 Located in `services/api/app/data/posts/*.json`:
 ```json
@@ -309,11 +429,38 @@ The toolbox supports **5 CAM platforms** (current placeholders):
 - **pyclipper** – Production-grade polygon offsetting (L.1 adaptive pocketing)
 - **fastapi + pydantic** – API and validation
 - **uvicorn** – ASGI server
+- **anthropic** – Blueprint Import AI analysis (Claude API)
+- **reportlab** – PDF design sheet generation
+- **weasyprint** – HTML to PDF conversion for operator reports
+- **sqlalchemy + alembic** – Database ORM and migrations
+- **pytest + pytest-cov** – Testing framework with coverage (80% target)
 
 ### **Vue Stack**
 - **Vue 3.4+** with `<script setup>` syntax
 - **Vite 5.0+** for dev/build
 - **TypeScript** for type safety (`.ts` in utils, `.vue` with `<script setup lang="ts">`)
+- **Pinia** for state management
+- **Vue Router** for navigation
+- **Zod** for runtime validation
+- **Chart.js** for data visualization
+- **Vitest + JSDOM** for component testing
+
+### **Docker Architecture**
+The project uses **multi-stage Docker builds** for each service:
+- **API Container**: Python 3.11+ with FastAPI, exposes port 8000
+  - Health check: `curl -fsS http://127.0.0.1:8000/health`
+  - Volume mount: `./services/api/app/data` (SQLite DB + JSON configs)
+- **Client Container**: Node 20+ with Vite, exposes port 8080
+  - Nginx serves static build in production
+- **Proxy Container**: Nginx reverse proxy, exposes port 8088
+  - Routes `/api` → API:8000, `/` → Client:8080
+
+**Critical Docker rules** (from `docker-compose.yml`):
+1. API healthcheck MUST succeed before client starts (prevents race conditions)
+2. Port mappings MUST match .env defaults (8000=API, 8080=Client, 8088=Proxy)
+3. Volume mounts MUST preserve data directory (SQLite DB, posts, templates)
+4. CORS_ORIGINS MUST include client URL to prevent API access errors
+5. All services MUST have `restart:unless-stopped` for production stability
 
 ---
 
@@ -389,6 +536,12 @@ npm run build
 
 ### **Issue**: Post-processor not found in exports
 **Solution**: Verify post config exists in `services/api/app/data/posts/<name>.json`. Post IDs are case-sensitive (e.g., "GRBL" not "grbl").
+
+### **Issue**: Debugging request flow across components
+**Solution**: Use `X-Request-Id` header for correlation. Client includes ID in all API calls, server echoes it back, and logs include it via `RequestIdMiddleware`. Check logs with `grep <request-id>` or frontend console for end-to-end tracing.
+
+### **Issue**: Import errors after adding routers
+**Solution**: Verify all dependencies exist (2024-12-13 clean import policy). No phantom imports allowed. Add graceful degradation with try/except only for truly optional features, never to hide missing files.
 
 ---
 
