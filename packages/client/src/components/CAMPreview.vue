@@ -47,6 +47,9 @@
       <button :disabled="!gcode" @click="download">Download G-code</button>
     </div>
     <canvas ref="cv" style="width:100%;height:240px;border:1px solid #e5e7eb;border-radius:8px;background:#fff"></canvas>
+    <div v-if="errorMessage" class="text-sm p-2 bg-red-50 border border-red-200 rounded text-red-800">
+      <b>Error:</b> {{ errorMessage }}
+    </div>
     <div v-if="summary" class="text-sm grid grid-cols-2 gap-2">
       <div><b>Post:</b> {{ summary.post }}</div>
       <div><b>Passes:</b> {{ summary.passes }}</div>
@@ -59,12 +62,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { normalizeCamIntent } from '@/services/rmosCamIntentApi'
+import { cam } from '@/sdk/endpoints'
+import { formatApiErrorForUi } from '@/sdk/core/errors'
 
 // H7.2: normalize-first adoption controls / visibility
 const strictNormalize = ref(false)
 const normalizationIssues = ref<
   Array<{ code?: string; message: string; severity?: string; path?: string }>
 >([])
+const errorMessage = ref<string | null>(null)
 
 function _summarizeIssues(issues: Array<{ message: string }>, max = 10): string {
   const head = issues.slice(0, max).map((i) => i.message).join("; ")
@@ -138,6 +144,7 @@ function draw(passes: Array<Array<[number,number]>>){
 
 async function simulate(){
   normalizationIssues.value = []
+  errorMessage.value = null
 
   const payload = {
     entities: sampleEntities.value,
@@ -153,60 +160,58 @@ async function simulate(){
     post: post.value
   }
 
-  // H7.2.1: Normalize intent and call the intent-native endpoint
-  const intentDraft: any = {
-    operation: "roughing_gcode",
-    mode: "router_3axis",
-    params: payload,
-  }
-
-  const norm = await normalizeCamIntent(
-    { intent: intentDraft, strict: false },
-    { requestId: `CAMPreview.simulate.${Date.now()}` }
-  )
-  normalizationIssues.value = norm.issues ?? []
-
-  if (strictNormalize.value && normalizationIssues.value.length > 0) {
-    throw new Error(
-      `CAM intent normalization failed (strict): ${_summarizeIssues(normalizationIssues.value)}`
-    )
-  }
-
-  // H7.2.1: Call the intent-native endpoint with the normalized intent
-  const res = await fetch('/cam/roughing_gcode_intent', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(norm.intent)
-  })
-  
-  gcode.value = await res.text()
-  
   try {
-    summary.value = JSON.parse(res.headers.get('X-CAM-Summary') || '{}')
-  } catch {
-    summary.value = null
-  }
-  
-  // Parse passes from G-code
-  const passPolys: Array<Array<[number,number]>> = []
-  const lines = gcode.value.split('\n')
-  let current: Array<[number,number]> = []
-  
-  for (const ln of lines){
-    if (ln.includes('(Pass ')){
-      if (current.length) passPolys.push(current)
-      current = []
+    // H7.2.1: Normalize intent and call the intent-native endpoint
+    const intentDraft: any = {
+      operation: "roughing_gcode",
+      mode: "router_3axis",
+      params: payload,
     }
-    if (ln.startsWith('G1 X')){
-      const m = ln.match(/X([\d\.-]+) Y([\d\.-]+)/)
-      if (m){
-        current.push([parseFloat(m[1]), parseFloat(m[2])])
+
+    const norm = await normalizeCamIntent(
+      { intent: intentDraft, strict: false },
+      { requestId: `CAMPreview.simulate.${Date.now()}` }
+    )
+    normalizationIssues.value = norm.issues ?? []
+
+    if (strictNormalize.value && normalizationIssues.value.length > 0) {
+      throw new Error(
+        `CAM intent normalization failed (strict): ${_summarizeIssues(normalizationIssues.value)}`
+      )
+    }
+
+    // H8.3.2: Use SDK helper with typed response and automatic header parsing
+    const result = await cam.roughingGcodeIntent(norm.intent, strictNormalize.value)
+    
+    gcode.value = result.gcode
+    summary.value = result.summary
+  
+    // Parse passes from G-code
+    const passPolys: Array<Array<[number,number]>> = []
+    const lines = result.gcode.split('\n')
+    let current: Array<[number,number]> = []
+    
+    for (const ln of lines){
+      if (ln.includes('(Pass ')){
+        if (current.length) passPolys.push(current)
+        current = []
+      }
+      if (ln.startsWith('G1 X')){
+        const m = ln.match(/X([\d\.-]+) Y([\d\.-]+)/)
+        if (m){
+          current.push([parseFloat(m[1]), parseFloat(m[2])])
+        }
       }
     }
+    
+    if (current.length) passPolys.push(current)
+    draw(passPolys)
+  } catch (e) {
+    // H8.3.2: Consistent UI error normalization with request-id visibility
+    errorMessage.value = formatApiErrorForUi(e)
+    gcode.value = ''
+    summary.value = null
   }
-  
-  if (current.length) passPolys.push(current)
-  draw(passPolys)
 }
 
 function download(){
