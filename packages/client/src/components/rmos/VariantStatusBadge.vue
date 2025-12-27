@@ -2,83 +2,86 @@
 /**
  * VariantStatusBadge.vue
  *
- * Visual badge for variant triage status (NEW/REVIEWED/PROMOTED/REJECTED).
- * Part of the Variant Status & Filters UX bundle.
+ * Visual badge for variant triage status (NEW/REVIEWED/PROMOTED/REJECTED)
+ * with integrated risk dot indicator.
  */
-
 type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
 
 const props = defineProps<{
   status: VariantStatus;
-  small?: boolean;
+  risk?: "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "ERROR" | null;
 }>();
 
-const statusConfig: Record<VariantStatus, { label: string; cssClass: string }> = {
-  NEW: { label: "New", cssClass: "status-new" },
-  REVIEWED: { label: "Reviewed", cssClass: "status-reviewed" },
-  PROMOTED: { label: "Promoted", cssClass: "status-promoted" },
-  REJECTED: { label: "Rejected", cssClass: "status-rejected" },
-};
+function label() {
+  return props.status;
+}
 
-const config = computed(() => statusConfig[props.status] ?? statusConfig.NEW);
+function cls() {
+  const s = props.status;
+  if (s === "PROMOTED") return "badge promoted";
+  if (s === "REJECTED") return "badge rejected";
+  if (s === "REVIEWED") return "badge reviewed";
+  return "badge new";
+}
 
-import { computed } from "vue";
+function riskDotCls() {
+  const r = props.risk ?? "UNKNOWN";
+  if (r === "RED") return "dot red";
+  if (r === "YELLOW") return "dot yellow";
+  if (r === "GREEN") return "dot green";
+  return "dot unknown";
+}
 </script>
 
 <template>
-  <span
-    class="variant-status-badge"
-    :class="[config.cssClass, { small }]"
-    :title="`Status: ${config.label}`"
-  >
-    {{ config.label }}
+  <span :class="cls()">
+    <span :class="riskDotCls()" aria-hidden="true"></span>
+    {{ label() }}
   </span>
 </template>
 
 <style scoped>
-.variant-status-badge {
+.badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
-
-.variant-status-badge.small {
-  padding: 1px 6px;
-  font-size: 0.65rem;
+.badge.new {
+  background: rgba(0, 0, 0, 0.02);
+}
+.badge.reviewed {
+  background: rgba(66, 133, 244, 0.1);
+}
+.badge.promoted {
+  background: rgba(52, 168, 83, 0.12);
+}
+.badge.rejected {
+  background: rgba(0, 0, 0, 0.06);
+  opacity: 0.85;
 }
 
-/* NEW: Outline style (unreviewed) */
-.status-new {
-  background: transparent;
-  border: 1.5px solid #6c757d;
-  color: #6c757d;
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
-
-/* REVIEWED: Blue solid (has rating/notes) */
-.status-reviewed {
-  background: #cfe2ff;
-  border: 1px solid #9ec5fe;
-  color: #084298;
+.dot.green {
+  background: rgba(52, 168, 83, 0.9);
 }
-
-/* PROMOTED: Green solid (manufacturing candidate) */
-.status-promoted {
-  background: #d1e7dd;
-  border: 1px solid #a3cfbb;
-  color: #0f5132;
+.dot.yellow {
+  background: rgba(251, 188, 5, 0.9);
 }
-
-/* REJECTED: Gray solid (explicitly rejected) */
-.status-rejected {
-  background: #e9ecef;
-  border: 1px solid #ced4da;
-  color: #6c757d;
-  text-decoration: line-through;
+.dot.red {
+  background: rgba(234, 67, 53, 0.9);
+}
+.dot.unknown {
+  background: rgba(0, 0, 0, 0.25);
 }
 </style>

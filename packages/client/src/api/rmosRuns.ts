@@ -182,77 +182,52 @@ export async function fetchRunAttachments(runId: string): Promise<{
 }
 
 // =============================================================================
-// Advisory Variant Reject/Unreject APIs
+// Advisory Variants (Product Surface)
 // =============================================================================
 
-export type RejectReasonCode =
-  | "GEOMETRY_UNSAFE"
-  | "TEXT_REQUIRES_OUTLINE"
-  | "AESTHETIC"
-  | "DUPLICATE"
-  | "OTHER";
+export type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
 
-export interface RejectVariantRequest {
-  reason_code: RejectReasonCode;
-  reason_detail?: string | null;
-  operator_note?: string | null;
+export type RiskLevel = "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "ERROR";
+
+export interface AdvisoryVariantSummary {
+  advisory_id: string;               // sha256 (CAS key)
+  created_at_utc?: string | null;    // optional; if backend provides
+  risk_level?: RiskLevel | null;     // optional
+  rating?: number | null;            // optional (1-5)
+  notes?: string | null;             // optional (if included)
+  status?: VariantStatus | null;     // preferred (server-derived), optional
+  promoted_candidate_id?: string | null; // optional
+  rejected?: boolean | null;         // optional
+  has_preview?: boolean | null;      // optional
 }
 
-export interface RejectVariantResponse {
-  run_id: string;
-  advisory_id: string;
-  rejected: boolean;
-  rejection_reason_code?: string | null;
-  rejection_reason_detail?: string | null;
-  rejection_operator_note?: string | null;
-  rejected_at_utc?: string | null;
-  rejected_by?: string | null;
-}
-
-export interface UnrejectVariantResponse {
-  run_id: string;
-  advisory_id: string;
-  cleared: boolean;
+export interface AdvisoryVariantListResponse {
+  items: AdvisoryVariantSummary[];
 }
 
 /**
- * Reject an advisory variant.
+ * List advisory variants for a run.
+ * Tolerates both {items:[...]} and [...] response shapes.
  */
-export async function rejectAdvisoryVariant(
-  apiBase: string,
-  runId: string,
-  advisoryId: string,
-  payload: RejectVariantRequest
-): Promise<RejectVariantResponse> {
-  const url =
-    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
-    `/advisory/${encodeURIComponent(advisoryId)}/reject`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`Reject failed (${res.status})`);
-  return await res.json();
-}
-
-/**
- * Clear rejection status for an advisory variant.
- */
-export async function unrejectAdvisoryVariant(
-  apiBase: string,
-  runId: string,
-  advisoryId: string
-): Promise<UnrejectVariantResponse> {
-  const url =
-    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
-    `/advisory/${encodeURIComponent(advisoryId)}/unreject`;
-
-  const res = await fetch(url, {
-    method: "POST",
+export async function listAdvisoryVariants(runId: string): Promise<AdvisoryVariantSummary[]> {
+  const res = await fetch(`${BASE_URL}/${encodeURIComponent(runId)}/advisory/variants`, {
+    method: "GET",
     headers: { "Accept": "application/json" },
   });
-  if (!res.ok) throw new Error(`Unreject failed (${res.status})`);
-  return await res.json();
+  if (!res.ok) throw new Error(`Failed to load variants (${res.status})`);
+  const data = (await res.json()) as any;
+
+  // tolerate both shapes: {items:[...]} or [...]
+  const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+  return items.map((v: any) => ({
+    advisory_id: String(v.advisory_id ?? v.advisoryId ?? v.sha256 ?? ""),
+    created_at_utc: v.created_at_utc ?? v.createdAt ?? null,
+    risk_level: (v.risk_level ?? v.riskLevel ?? null) as RiskLevel | null,
+    rating: v.rating ?? null,
+    notes: v.notes ?? v.note ?? null,
+    status: (v.status ?? null) as VariantStatus | null,
+    promoted_candidate_id: v.promoted_candidate_id ?? v.promotedCandidateId ?? null,
+    rejected: v.rejected ?? null,
+    has_preview: v.has_preview ?? v.hasPreview ?? null,
+  })).filter((x: AdvisoryVariantSummary) => !!x.advisory_id);
 }
