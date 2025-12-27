@@ -1,7 +1,7 @@
 // Frontend-safe SDK transport wrapper
-// H8.2.1: SDK skeleton + request wrapper + strict request-id check
+// H8.2.1: SDK skeleton + request wrapper + strict request-id check + error normalization
 
-export type SdkStrictMode = "off" | "warn" | "error";
+import { SdkHttpError, type StrictRequestIdMode } from "./errors";
 
 export type SdkRequestOptions = {
   /**
@@ -25,7 +25,7 @@ export type SdkRequestOptions = {
    *
    * Default: "warn"
    */
-  strictRequestId?: SdkStrictMode;
+  strictRequestId?: StrictRequestIdMode;
 
   /**
    * Optional observer hook for telemetry / debugging.
@@ -71,98 +71,131 @@ export function generateRequestId(prefix = "sdk_req_"): string {
 }
 
 /**
- * Enforce presence of X-Request-Id on responses.
- */
-export function assertRequestIdHeader(
-  response: Response,
-  opts: {
-    strict: SdkStrictMode;
-    requestId: string;
-    url: string;
-    method: string;
-  }
-): void {
-  const headerVal =
-    response.headers.get("x-request-id") ||
-    response.headers.get("X-Request-Id");
-
-  if (headerVal) return;
-
-  const msg = `[SDK] Missing X-Request-Id response header (${opts.method} ${opts.url}) for requestId=${opts.requestId}`;
-
-  if (opts.strict === "off") return;
-  if (opts.strict === "warn") {
-    // eslint-disable-next-line no-console
-    console.warn(msg);
-    return;
-  }
-  throw new Error(msg);
-}
-
-/**
  * Core SDK request wrapper.
  *
  * This is the ONLY place fetch() should be called by SDK consumers.
+ * Throws SdkHttpError on failures with consistent request-id correlation.
  */
 export async function sdkRequest(
   path: string,
-  init: RequestInit,
+  init: RequestInit = {},
   opts: SdkRequestOptions = {}
 ): Promise<Response> {
   const baseUrl = opts.baseUrl ?? "";
   const url = `${baseUrl}${path}`;
 
   const method = (init.method || "GET").toUpperCase();
-  const requestId = opts.requestId ?? generateRequestId();
   const strict = opts.strictRequestId ?? "warn";
 
+  // Ensure we have a Headers object we can mutate
   const headers = new Headers(init.headers || {});
-  headers.set("X-Request-Id", requestId);
+  let outgoingReqId = headers.get("x-request-id") || headers.get("X-Request-Id");
+  if (!outgoingReqId) {
+    outgoingReqId = opts.requestId ?? generateRequestId();
+    headers.set("X-Request-Id", outgoingReqId);
+  }
 
   opts.onEvent?.({
     kind: "request",
-    requestId,
+    requestId: outgoingReqId,
     url,
     method,
   });
 
-  let response: Response;
+  let resp: Response;
   try {
-    response = await fetch(url, {
-      ...init,
-      headers,
-    });
-  } catch (err: any) {
+    resp = await fetch(url, { ...init, headers });
+  } catch (e) {
+    // Network failure: no response, but we still have outgoing request id
     opts.onEvent?.({
       kind: "error",
-      requestId,
+      requestId: outgoingReqId,
       url,
       method,
-      message: String(err),
+      message: String(e),
     });
-    throw err;
+    throw new SdkHttpError({
+      kind: "network",
+      message: `Network error calling ${method} ${url}.`,
+      url,
+      method,
+      requestId: outgoingReqId,
+      details: e instanceof Error ? e.message : e,
+    });
   }
 
-  const hasRequestIdHeader = Boolean(
-    response.headers.get("x-request-id") ||
-      response.headers.get("X-Request-Id")
-  );
+  // Request-id echo enforcement (enterprise-safe)
+  const echoedReqId = resp.headers.get("x-request-id") || resp.headers.get("X-Request-Id") || undefined;
+
+  const hasRequestIdHeader = Boolean(echoedReqId);
 
   opts.onEvent?.({
     kind: "response",
-    requestId,
+    requestId: echoedReqId || outgoingReqId,
     url,
     method,
-    status: response.status,
+    status: resp.status,
     hasRequestIdHeader,
   });
 
-  assertRequestIdHeader(response, {
-    strict,
-    requestId,
-    url,
-    method,
-  });
+  if (!echoedReqId) {
+    const msg = `Missing X-Request-Id in response for ${method} ${url}.`;
+    if (strict === "error") {
+      throw new SdkHttpError({
+        kind: "http",
+        message: msg,
+        status: resp.status,
+        url,
+        method,
+        requestId: outgoingReqId,
+      });
+    } else if (strict === "warn") {
+      // eslint-disable-next-line no-console
+      console.warn(msg, { url, method, requestId: outgoingReqId });
+    }
+  }
 
-  return response;
+  if (!resp.ok) {
+    // Best-effort parse for details; keep UI-safe message
+    const contentType = resp.headers.get("content-type") || "";
+    let bodyText: string | undefined;
+    let bodyJson: any = undefined;
+
+    try {
+      if (contentType.includes("application/json")) {
+        bodyJson = await resp.clone().json();
+      } else {
+        bodyText = await resp.clone().text();
+      }
+    } catch {
+      // ignore parse errors, keep minimal
+    }
+
+    const requestId = echoedReqId ?? outgoingReqId;
+
+    // UI-safe message with incident correlation
+    const base = `Request failed (${resp.status}) for ${method} ${url}.`;
+    const hint =
+      bodyJson?.detail
+        ? String(bodyJson.detail)
+        : bodyJson?.message
+          ? String(bodyJson.message)
+          : bodyText && bodyText.trim()
+            ? bodyText.trim().slice(0, 240)
+            : undefined;
+
+    const message = hint ? `${base} ${hint}` : base;
+
+    throw new SdkHttpError({
+      kind: "http",
+      message,
+      status: resp.status,
+      url,
+      method,
+      requestId,
+      details: bodyJson ?? bodyText,
+    });
+  }
+
+  return resp;
 }
