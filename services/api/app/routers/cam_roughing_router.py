@@ -7,12 +7,13 @@ H7.2.2: Added roughing_gcode_intent endpoint with Prometheus-style metrics.
 """
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Header, Response
+from fastapi import APIRouter, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
 from app.observability.metrics import (
     cam_roughing_intent_requests_total,
     cam_roughing_intent_issues_total,
+    cam_roughing_intent_strict_rejects_total,
     cam_roughing_intent_latency_ms,
     now_ms,
     should_sample_request_id,
@@ -264,9 +265,14 @@ def _generate_roughing_gcode(
 def roughing_gcode_intent(
     req: RoughingIntentRequest,
     x_request_id: Optional[str] = Header(default=None),
+    strict: bool = Query(
+        default=False,
+        description="If true, reject (422) when intent normalization emits any issues.",
+    ),
 ) -> RoughingIntentResponse:
     """
     H7.2.2: Intent-native roughing G-code generation with normalization and metrics.
+    H7.2.3: Added strict mode (opt-in via ?strict=1).
 
     Accepts high-level roughing parameters, normalizes to mm, validates,
     and produces G-code. Metrics are recorded for monitoring.
@@ -284,12 +290,25 @@ def roughing_gcode_intent(
     # Normalize and validate
     normalized_design, issues = _normalize_roughing_intent(req)
 
-    # Track issues metric
+    # H7.2.3: strict mode - reject if any issues were emitted
+    if strict and issues:
+        cam_roughing_intent_strict_rejects_total.inc()
+        latency = now_ms() - start_ms
+        cam_roughing_intent_latency_ms.observe(latency)
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "CAM_INTENT_NORMALIZATION_ISSUES",
+                "issues": [{"code": i.code, "message": i.message, "path": i.path} for i in issues],
+            },
+        )
+
+    # Track issues metric (non-strict path)
     if issues:
         cam_roughing_intent_issues_total.inc()
         if should_sample_request_id() and x_request_id:
             logger.info(
-                f"roughing_gcode_intent issues request_id={x_request_id} count={len(issues)}"
+                f"roughing_gcode_intent issues request_id={x_request_id} count={len(issues)} strict={strict}"
             )
 
     # Generate G-code

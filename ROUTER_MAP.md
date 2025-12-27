@@ -1,8 +1,9 @@
 # Luthier's ToolBox Router Roadmap
 
-**Last Updated:** 2025-12-20  
-**Total Routers:** ~116 working routers organized across 22 waves  
-**Status:** All previously-broken routers (9) fixed; 84 phantom imports removed  
+**Last Updated:** 2025-12-27
+**Total Routers:** ~116 working routers organized across 22 waves
+**Status:** All previously-broken routers (9) fixed; 84 phantom imports removed
+**Governance:** Legacy routes tagged for deprecation tracking (see Canonical vs Legacy section)  
 
 This document maps all FastAPI routers in the Luthier's ToolBox API, organized by deployment waves. Each wave represents a feature rollout with related routers grouped for easier navigation and understanding.
 
@@ -19,6 +20,60 @@ This document maps all FastAPI routers in the Luthier's ToolBox API, organized b
 | 16–17 | Governance & Workflow | 8 | ✅ |
 | 18–19 | Consolidation (CAM, Compare) | 5 | ✅ |
 | 20–22 | Art Studio Runs & Acoustics | 4 | ✅ |
+
+---
+
+## Canonical vs Legacy Lanes
+
+> **Updated 2025-12-27**: All legacy routes now have `"Legacy"` tag for governance tracking.
+
+The API has evolved through consolidation phases. Legacy routes remain mounted for backwards compatibility but are marked for eventual deprecation. The governance middleware tracks usage of Legacy-tagged routes.
+
+### CAM Routes
+
+| Legacy Route | Prefix | Canonical Replacement | Notes |
+|--------------|--------|----------------------|-------|
+| `cam_vcarve_router` | `/api/cam/vcarve` | `/api/cam/toolpath/vcarve` | Wave 18 consolidated |
+| `cam_relief_router` | `/api/cam/relief` | `/api/cam/relief` | Proxy (same code) |
+| `cam_helical_router` | `/api/cam/helical` | `/api/cam/toolpath/helical` | Wave 18 consolidated |
+| `cam_svg_router` | `/api/cam/svg` | `/api/cam/export` | Wave 18 consolidated |
+| `cam_fret_slots_router` | `/api/cam/fret_slots` | `/api/cam/fret_slots` | Proxy (same code) |
+| `cam_fret_slots_export_router` | `/api/cam/fret_slots` | `/api/cam/fret_slots` | Proxy (same code) |
+| `cam_drill_pattern_router` | `/api/cam/drilling/pattern` | `/api/cam/drilling/pattern` | Wave 18 consolidated |
+| `cam_roughing_router` | `/api/cam/roughing` | `/api/cam/toolpath/roughing` | Wave 18 consolidated |
+| `drilling_router` | `/api/cam/drilling` | `/api/cam/drilling` | Wave 18 consolidated |
+| `cam_risk_router` | `/api/cam/risk` | `/api/cam/risk` | Wave 18 consolidated |
+| `cam_risk_aggregate_router` | `/api/cam/jobs` | `/api/cam/risk` | Wave 18 consolidated |
+| `cam_biarc_router` | `/api/cam/biarc` | `/api/cam/toolpath/biarc` | Wave 18 consolidated |
+
+### Compare Routes
+
+| Legacy Route | Prefix | Canonical Replacement | Notes |
+|--------------|--------|----------------------|-------|
+| `legacy_compare_router` | `/api/compare` | `/api/compare` | Wave 19 consolidated |
+| `compare_lab_router` | `/api/compare/lab` | `/api/compare/lab` | Wave 19 consolidated |
+| `compare_risk_aggregate_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
+| `compare_risk_bucket_detail_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
+| `compare_risk_bucket_export_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
+
+### Rosette Routes
+
+| Legacy Route | Prefix | Canonical Replacement | Notes |
+|--------------|--------|----------------------|-------|
+| `rosette_pattern_router` | `/api/rosette` | `/api/cam/rosette` or `/api/art/rosette` | Multi-lane |
+| `art_studio_rosette_router` | `/api/art-studio/rosette` | `/api/art/rosette` | Art Studio v2 |
+
+### Governance Integration
+
+Legacy routes are tracked by:
+1. **FastAPI Tags**: All legacy routes have `"Legacy"` in their tags array
+2. **Endpoint Middleware**: `EndpointGovernanceMiddleware` detects `"Legacy"` tag and records hits
+3. **Metrics**: Usage stats available at `/api/governance/stats`
+
+To migrate off legacy routes:
+1. Check governance stats for zero/low usage
+2. Update frontend to use canonical endpoints
+3. Remove legacy mount from `main.py`
 
 ---
 

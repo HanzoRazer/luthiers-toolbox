@@ -437,3 +437,41 @@ def rebuild_attachment_meta_index(
     idx = AttachmentMetaIndex(store.root)
     stats = idx.rebuild_from_run_artifacts()
     return {"ok": True, **stats}
+
+
+@router.get("/index/attachment_meta/{sha256}/exists")
+def attachment_meta_exists(
+    sha256: str,
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> Dict[str, Any]:
+    """
+    H7.2.2.1: Check both index presence and blob presence for an attachment.
+
+    Returns:
+      - in_index: true if sha256 exists in _attachment_meta.json
+      - in_store: true if blob exists in content-addressed attachments store
+      - size_bytes: file size if in_store is true
+
+    No shard path disclosure.
+    """
+    idx = AttachmentMetaIndex(store.root)
+    meta = idx.get(sha256)
+    in_index = meta is not None
+
+    p = resolve_attachment_path(sha256)
+    in_store = p.exists()
+
+    size_bytes = None
+    if in_store:
+        try:
+            size_bytes = int(p.stat().st_size)
+        except Exception:
+            size_bytes = None
+
+    return {
+        "sha256": sha256.lower().strip(),
+        "in_index": in_index,
+        "in_store": in_store,
+        "size_bytes": size_bytes,
+    }

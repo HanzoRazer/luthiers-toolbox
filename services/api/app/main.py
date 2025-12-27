@@ -246,7 +246,8 @@ except ImportError as e:
     ai_cam_router = None
 from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
 from .routers.cam_roughing_router import router as cam_roughing_router
-from .routers.compare_router import router as compare_router
+from .routers.cam_roughing_intent_router import router as cam_roughing_intent_router  # H7.2.2.1
+from .routers.compare_router import router as legacy_compare_router
 from .routers.dxf_preflight_router import router as dxf_preflight_router
 try:
     from ._experimental.joblog_router import router as joblog_router
@@ -520,7 +521,7 @@ app.add_middleware(EndpointGovernanceMiddleware)
 # STARTUP EVENTS
 # =============================================================================
 
-from app.db.startup import run_migrations_on_startup
+from .db.startup import run_migrations_on_startup
 
 
 @app.on_event("startup")
@@ -558,15 +559,15 @@ app.include_router(rmos_ai_router, prefix="/api/rmos", tags=["RMOS AI"])
 app.include_router(rmos_profiles_router, prefix="/api/rmos", tags=["RMOS Profiles"])
 app.include_router(rmos_history_router, prefix="/api/rmos", tags=["RMOS History"])
 
-# CAM Subsystem (8)
-app.include_router(cam_vcarve_router, prefix="/api/cam/vcarve", tags=["V-Carve"])
-app.include_router(cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"])
-app.include_router(cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"])
-app.include_router(cam_relief_router, prefix="/api/cam/relief", tags=["Relief Carving"])
-app.include_router(cam_svg_router, prefix="/api/cam/svg", tags=["SVG Export"])
-app.include_router(cam_helical_router, prefix="/api/cam/helical", tags=["Helical Ramping"])
-app.include_router(gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"])
-app.include_router(adaptive_preview_router, prefix="/api/cam/adaptive-preview", tags=["Adaptive Preview"])
+# CAM Subsystem (8) - Legacy routes, consolidated equivalents in Wave 18
+app.include_router(cam_vcarve_router, prefix="/api/cam/vcarve", tags=["V-Carve", "Legacy"])  # → /api/cam/toolpath/vcarve
+app.include_router(cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"])  # No consolidated equivalent
+app.include_router(cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"])  # No consolidated equivalent
+app.include_router(cam_relief_router, prefix="/api/cam/relief", tags=["Relief Carving", "Legacy"])  # → /api/cam/relief (proxy)
+app.include_router(cam_svg_router, prefix="/api/cam/svg", tags=["SVG Export", "Legacy"])  # → /api/cam/export
+app.include_router(cam_helical_router, prefix="/api/cam/helical", tags=["Helical Ramping", "Legacy"])  # → /api/cam/toolpath/helical
+app.include_router(gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"])  # No consolidated equivalent
+app.include_router(adaptive_preview_router, prefix="/api/cam/adaptive-preview", tags=["Adaptive Preview"])  # No consolidated equivalent
 
 # Pipeline (2)
 app.include_router(pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"])
@@ -603,16 +604,16 @@ app.include_router(neck_generator_router, prefix="/api/cam/neck", tags=["G-Code 
 # CAD Engine (1) - Wave 4
 app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 
-# Rosette System (2) - Wave 5
-app.include_router(rosette_pattern_router, prefix="/api/rosette", tags=["Rosette", "Patterns"])
-app.include_router(art_studio_rosette_router, prefix="/api", tags=["Rosette", "Art Studio"])
+# Rosette System (2) - Wave 5 - Legacy, see Wave 18 consolidated + Art Studio routes
+app.include_router(rosette_pattern_router, prefix="/api/rosette", tags=["Rosette", "Patterns", "Legacy"])  # → /api/cam/rosette or /api/art/rosette
+app.include_router(art_studio_rosette_router, prefix="/api", tags=["Rosette", "Art Studio", "Legacy"])  # → /api/art/rosette (v2)
 
 # Smart Guitar Temperaments (1) - Wave 6
 app.include_router(temperament_router, prefix="/api/smart-guitar", tags=["Smart Guitar", "Temperaments"])
 
 # Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
 app.include_router(calculators_router, prefix="/api", tags=["Calculators"])
-app.include_router(cam_fret_slots_router, prefix="/api/cam/fret_slots", tags=["CAM", "Fret Slots"])
+app.include_router(cam_fret_slots_router, prefix="/api/cam/fret_slots", tags=["CAM", "Fret Slots", "Legacy"])  # → /api/cam/fret_slots (proxy)
 app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
 app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
 
@@ -629,9 +630,10 @@ app.include_router(rosette_photo_router, prefix="/api", tags=["Rosette", "Photo 
 # Wave 9: AI-CAM + Drill/Roughing + Compare + DXF Preflight + JobLog + Neck (8)
 if ai_cam_router:
     app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
-app.include_router(cam_drill_pattern_router, prefix="/api", tags=["CAM", "Drill Patterns"])
-app.include_router(cam_roughing_router, prefix="/api", tags=["CAM", "Roughing"])
-app.include_router(compare_router, prefix="", tags=["Compare", "Baselines"])  # Router has /api/compare prefix
+app.include_router(cam_drill_pattern_router, prefix="/api", tags=["CAM", "Drill Patterns", "Legacy"])  # → /api/cam/drilling/pattern
+app.include_router(cam_roughing_router, prefix="/api", tags=["CAM", "Roughing", "Legacy"])  # → /api/cam/toolpath/roughing
+app.include_router(cam_roughing_intent_router, prefix="/api", tags=["CAM", "Intent"])  # H7.2.2.1
+app.include_router(legacy_compare_router, prefix="", tags=["Compare", "Baselines", "Legacy"])  # Router has /api/compare prefix (LEGACY - use consolidated at Wave 19)
 app.include_router(dxf_preflight_router, prefix="/api", tags=["DXF", "Preflight"])
 if joblog_router:
     app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
@@ -640,9 +642,9 @@ app.include_router(parametric_guitar_router, prefix="/api", tags=["Guitar", "Par
 
 # Wave 10: Instrument + Compare Lab + Drilling + Risk + Learn + Backup (8)
 app.include_router(instrument_router, prefix="", tags=["Instrument"])  # Router has /api/instrument prefix
-app.include_router(compare_lab_router, prefix="", tags=["Compare", "Lab"])  # Router has /api/compare/lab prefix
-app.include_router(drilling_router, prefix="/api/cam/drilling", tags=["CAM", "Drilling"])
-app.include_router(cam_risk_router, prefix="", tags=["CAM", "Risk"])  # Router has /api/cam/risk prefix
+app.include_router(compare_lab_router, prefix="", tags=["Compare", "Lab", "Legacy"])  # Router has /api/compare/lab prefix → consolidated /api/compare/lab
+app.include_router(drilling_router, prefix="/api/cam/drilling", tags=["CAM", "Drilling", "Legacy"])  # → /api/cam/drilling (consolidated)
+app.include_router(cam_risk_router, prefix="", tags=["CAM", "Risk", "Legacy"])  # Router has /api/cam/risk prefix → /api/cam/risk (consolidated)
 app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
 if learn_router:
     app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
@@ -660,15 +662,15 @@ app.include_router(ltb_calculator_router, prefix="", tags=["Calculator", "LTB"])
 if dashboard_router:
     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
-app.include_router(cam_biarc_router, prefix="/api", tags=["CAM", "Biarc"])
+app.include_router(cam_biarc_router, prefix="/api", tags=["CAM", "Biarc", "Legacy"])  # → /api/cam/toolpath/biarc
 app.include_router(job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"])
 
 # Wave 12: CAM Extensions + Compare Risk + Fret Export + Polygon (8)
 app.include_router(cam_adaptive_benchmark_router, prefix="/api", tags=["CAM", "Benchmark"])
-app.include_router(cam_fret_slots_export_router, prefix="", tags=["CAM", "Fret Export"])  # Router has /api/cam/fret_slots prefix
-app.include_router(cam_risk_aggregate_router, prefix="", tags=["CAM", "Risk"])  # Router has /api/cam/jobs prefix
-app.include_router(compare_risk_aggregate_router, prefix="", tags=["Compare", "Risk"])  # Router has /api/compare prefix
-app.include_router(compare_risk_bucket_detail_router, prefix="", tags=["Compare", "Risk"])  # Router has /api/compare prefix
+app.include_router(cam_fret_slots_export_router, prefix="", tags=["CAM", "Fret Export", "Legacy"])  # Router has /api/cam/fret_slots prefix → proxy
+app.include_router(cam_risk_aggregate_router, prefix="", tags=["CAM", "Risk", "Legacy"])  # Router has /api/cam/jobs prefix → /api/cam/risk
+app.include_router(compare_risk_aggregate_router, prefix="", tags=["Compare", "Risk", "Legacy"])  # Router has /api/compare prefix → consolidated
+app.include_router(compare_risk_bucket_detail_router, prefix="", tags=["Compare", "Risk", "Legacy"])  # Router has /api/compare prefix → consolidated
 app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 app.include_router(job_insights_router, prefix="", tags=["Jobs", "Insights"])  # Router has /api/cam/job_log prefix
 app.include_router(pipeline_preset_router, prefix="/api", tags=["Pipeline", "Presets"])
@@ -681,7 +683,7 @@ app.include_router(cam_pipeline_preset_run_router, prefix="/api", tags=["CAM", "
 app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
 app.include_router(compare_automation_router, prefix="/api", tags=["Compare", "Automation"])
-app.include_router(compare_risk_bucket_export_router, prefix="", tags=["Compare", "Export"])  # Router has /api/compare prefix
+app.include_router(compare_risk_bucket_export_router, prefix="", tags=["Compare", "Export", "Legacy"])  # Router has /api/compare prefix → consolidated
 app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
 app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 

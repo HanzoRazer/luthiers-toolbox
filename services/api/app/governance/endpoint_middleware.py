@@ -74,7 +74,7 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
             route = scope.get("route")
             path_pattern = getattr(route, "path", None)  # e.g. "/api/rmos/runs/{run_id}"
 
-            status = _get_status(endpoint=endpoint, method=method, path_pattern=path_pattern)
+            status = _get_status(endpoint=endpoint, method=method, path_pattern=path_pattern, route=route)
             if status:
                 # Always record governed hits if status known (canonical/legacy/shadow/internal)
                 replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)
@@ -127,7 +127,7 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
         return response
 
 
-def _get_status(*, endpoint, method: str, path_pattern: Optional[str]) -> Optional[EndpointStatus]:
+def _get_status(*, endpoint, method: str, path_pattern: Optional[str], route=None) -> Optional[EndpointStatus]:
     # 1) From decorator annotation
     raw = getattr(endpoint, "__endpoint_status__", None) if endpoint else None
     if raw:
@@ -141,6 +141,13 @@ def _get_status(*, endpoint, method: str, path_pattern: Optional[str]) -> Option
         info = lookup_endpoint(method, path_pattern)
         if info:
             return info.status
+
+    # 3) From FastAPI route tags (check for "Legacy" tag)
+    # This allows tagging routes in main.py without modifying individual routers
+    if route:
+        tags = getattr(route, "tags", None) or []
+        if "Legacy" in tags:
+            return EndpointStatus.LEGACY
 
     return None
 

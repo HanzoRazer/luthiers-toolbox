@@ -154,6 +154,11 @@ cam_roughing_intent_issues_total = Counter(
     "Total /cam/roughing_gcode_intent requests that produced >=1 normalization issue",
 )
 
+cam_roughing_intent_strict_rejects_total = Counter(
+    "cam_roughing_intent_strict_rejects_total",
+    "Total /cam/roughing_gcode_intent requests rejected in strict mode due to normalization issues",
+)
+
 cam_roughing_intent_latency_ms = HistogramMs(
     "cam_roughing_intent_latency_ms",
     "Latency (ms) for /cam/roughing_gcode_intent",
@@ -167,6 +172,7 @@ def render_prometheus() -> str:
     parts = [
         cam_roughing_intent_requests_total.render(),
         cam_roughing_intent_issues_total.render(),
+        cam_roughing_intent_strict_rejects_total.render(),
         cam_roughing_intent_latency_ms.render(),
     ]
     return "".join(parts)
