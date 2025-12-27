@@ -180,3 +180,54 @@ export async function fetchRunAttachments(runId: string): Promise<{
   }
   return response.json();
 }
+
+// =============================================================================
+// Advisory Variants (Product Surface)
+// =============================================================================
+
+export type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
+
+export type RiskLevel = "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "ERROR";
+
+export interface AdvisoryVariantSummary {
+  advisory_id: string;               // sha256 (CAS key)
+  created_at_utc?: string | null;    // optional; if backend provides
+  risk_level?: RiskLevel | null;     // optional
+  rating?: number | null;            // optional (1-5)
+  notes?: string | null;             // optional (if included)
+  status?: VariantStatus | null;     // preferred (server-derived), optional
+  promoted_candidate_id?: string | null; // optional
+  rejected?: boolean | null;         // optional
+  has_preview?: boolean | null;      // optional
+}
+
+export interface AdvisoryVariantListResponse {
+  items: AdvisoryVariantSummary[];
+}
+
+/**
+ * List advisory variants for a run.
+ * Tolerates both {items:[...]} and [...] response shapes.
+ */
+export async function listAdvisoryVariants(runId: string): Promise<AdvisoryVariantSummary[]> {
+  const res = await fetch(`${BASE_URL}/${encodeURIComponent(runId)}/advisory/variants`, {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to load variants (${res.status})`);
+  const data = (await res.json()) as any;
+
+  // tolerate both shapes: {items:[...]} or [...]
+  const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+  return items.map((v: any) => ({
+    advisory_id: String(v.advisory_id ?? v.advisoryId ?? v.sha256 ?? ""),
+    created_at_utc: v.created_at_utc ?? v.createdAt ?? null,
+    risk_level: (v.risk_level ?? v.riskLevel ?? null) as RiskLevel | null,
+    rating: v.rating ?? null,
+    notes: v.notes ?? v.note ?? null,
+    status: (v.status ?? null) as VariantStatus | null,
+    promoted_candidate_id: v.promoted_candidate_id ?? v.promotedCandidateId ?? null,
+    rejected: v.rejected ?? null,
+    has_preview: v.has_preview ?? v.hasPreview ?? null,
+  })).filter((x: AdvisoryVariantSummary) => !!x.advisory_id);
+}

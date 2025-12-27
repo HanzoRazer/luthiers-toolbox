@@ -3,161 +3,84 @@
  * RunVariantsReviewPage.vue
  *
  * Product surface for variant review workflow.
- * Provides: variant browser, review/rating, promotion, comparison, and manufacturing queue.
+ * Uses /api/rmos/runs/{run_id}/advisory/variants endpoint.
  *
- * === Variant Status & Filters UX Bundle ===
- * - Status badges (NEW/REVIEWED/PROMOTED/REJECTED)
- * - Risk badges (GREEN/YELLOW/RED)
- * - Filter bar with status filter, needs-attention toggle, and sorting
+ * Features:
+ * - Status badges (NEW/REVIEWED/PROMOTED/REJECTED) with risk dot
+ * - Filter bar (status, needs-attention, sort)
+ * - Variant list with selection
+ * - Compare mode for SVG diffs
+ * - Promotion + notes + lineage panels
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
+import {
+  listAdvisoryVariants,
+  type AdvisoryVariantSummary,
+  type VariantStatus,
+  type RiskLevel,
+} from "@/api/rmosRuns";
+
+// Optional: keep your existing components if present
 import VariantNotes from "@/components/rmos/VariantNotes.vue";
 import PromoteToManufacturingButton from "@/components/rmos/PromoteToManufacturingButton.vue";
-import ManufacturingCandidatesPanel from "@/components/rmos/ManufacturingCandidatesPanel.vue";
 import PromptLineageViewer from "@/components/rmos/PromptLineageViewer.vue";
 import SvgPathDiffViewer from "@/components/rmos/SvgPathDiffViewer.vue";
-import SvgPreview from "@/components/rmos/SvgPreview.vue";
-import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
-import VariantRiskBadge from "@/components/rmos/VariantRiskBadge.vue";
-import VariantFilters, { type VariantFilters as VariantFiltersType } from "@/components/rmos/VariantFilters.vue";
+import ManufacturingCandidateList from "@/components/rmos/ManufacturingCandidateList.vue";
 
 const route = useRoute();
-const apiBase = "/api";
 
-// Run ID from route params
 const runId = computed(() => String(route.params.run_id ?? route.params.id ?? ""));
 
-// Variant list with extended fields
-type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
-type RiskLevel = "GREEN" | "YELLOW" | "RED";
+// Filters
+const statusFilter = ref<"ALL" | VariantStatus>("ALL");
+const riskFilter = ref<"ALL" | "NEEDS_ATTENTION">("ALL");
+const sortBy = ref<"CREATED_DESC" | "RATING_DESC" | "RISK_DESC">("CREATED_DESC");
 
-type VariantRow = {
-  advisory_id: string;
-  mime?: string | null;
-  filename?: string | null;
-  rating?: number | null;
-  notes?: string | null;
-  promoted?: boolean;
-  // === NEW: Status & Filters fields ===
-  status: VariantStatus;
-  risk_level: RiskLevel;
-  created_at_utc?: string | null;
-  updated_at_utc?: string | null;
-  rejected?: boolean;
-  rejection_reason?: string | null;
-};
-
-const variants = ref<VariantRow[]>([]);
+// Data
 const loading = ref(false);
 const error = ref<string | null>(null);
+const variants = ref<AdvisoryVariantSummary[]>([]);
 
-// Selection and comparison state
 const selected = ref<string | null>(null);
 const compareLeft = ref<string | null>(null);
 const compareRight = ref<string | null>(null);
 
-// === NEW: Filter state ===
-const currentFilters = ref<VariantFiltersType>({
-  status: "ALL",
-  riskNeedsAttention: false,
-  sort: "created",
-});
+function deriveStatus(v: AdvisoryVariantSummary): VariantStatus {
+  // Prefer server-derived
+  if (v.status) return v.status;
 
-function handleFilterChange(filters: VariantFiltersType) {
-  currentFilters.value = filters;
+  // Derive from known fields if backend does not provide status yet
+  if (v.promoted_candidate_id) return "PROMOTED";
+  if (v.rejected) return "REJECTED";
+  if ((v.rating ?? null) !== null || (v.notes ?? null)) return "REVIEWED";
+  return "NEW";
 }
 
-// Computed counts for filter bar
-const totalCount = computed(() => variants.value.length);
-const newCount = computed(() => variants.value.filter((v) => v.status === "NEW").length);
-const attentionCount = computed(
-  () => variants.value.filter((v) => v.risk_level === "YELLOW" || v.risk_level === "RED").length
-);
-
-// Filtered and sorted variants
-const filteredVariants = computed(() => {
-  let result = [...variants.value];
-
-  // Apply status filter
-  if (currentFilters.value.status !== "ALL") {
-    result = result.filter((v) => v.status === currentFilters.value.status);
-  }
-
-  // Apply needs attention filter
-  if (currentFilters.value.riskNeedsAttention) {
-    result = result.filter((v) => v.risk_level === "YELLOW" || v.risk_level === "RED");
-  }
-
-  // Apply sorting
-  const sortFn = getSortFunction(currentFilters.value.sort);
-  result.sort(sortFn);
-
-  return result;
-});
-
-function getSortFunction(sort: VariantFiltersType["sort"]) {
-  switch (sort) {
-    case "rating":
-      return (a: VariantRow, b: VariantRow) => (b.rating ?? 0) - (a.rating ?? 0);
-    case "risk":
-      const riskOrder: Record<RiskLevel, number> = { RED: 0, YELLOW: 1, GREEN: 2 };
-      return (a: VariantRow, b: VariantRow) =>
-        riskOrder[a.risk_level] - riskOrder[b.risk_level];
-    case "status":
-      const statusOrder: Record<VariantStatus, number> = { NEW: 0, REVIEWED: 1, PROMOTED: 2, REJECTED: 3 };
-      return (a: VariantRow, b: VariantRow) =>
-        statusOrder[a.status] - statusOrder[b.status];
-    case "created":
-    default:
-      return (a: VariantRow, b: VariantRow) => {
-        const aDate = a.created_at_utc ?? "";
-        const bDate = b.created_at_utc ?? "";
-        return bDate.localeCompare(aDate); // Newest first
-      };
-  }
+function riskRank(r: RiskLevel | null | undefined): number {
+  const x = (r ?? "UNKNOWN").toUpperCase() as RiskLevel;
+  if (x === "RED") return 3;
+  if (x === "YELLOW") return 2;
+  if (x === "GREEN") return 1;
+  return 0; // UNKNOWN/ERROR etc
 }
 
-async function loadVariants() {
+function parseCreatedAt(v: AdvisoryVariantSummary): number {
+  const s = v.created_at_utc ?? "";
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? t : 0;
+}
+
+async function load() {
   if (!runId.value) return;
   loading.value = true;
   error.value = null;
-
   try {
-    const res = await fetch(
-      `${apiBase}/rmos/runs/${encodeURIComponent(runId.value)}/advisory/variants`,
-      { credentials: "include" }
-    );
-    if (!res.ok) throw new Error(`Load variants failed (${res.status})`);
-    const data = await res.json();
+    const items = await listAdvisoryVariants(runId.value);
+    variants.value = items;
 
-    // Handle both { items: [...] } and raw array responses
-    const items = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.items)
-        ? data.items
-        : [];
-
-    variants.value = items
-      .map((x: any) => ({
-        advisory_id: String(x.advisory_id ?? x.advisoryId ?? x.sha256 ?? ""),
-        mime: x.mime ?? null,
-        filename: x.filename ?? null,
-        rating: x.rating ?? null,
-        notes: x.notes ?? null,
-        promoted: x.promoted ?? false,
-        // === NEW: Status & Filters fields ===
-        status: x.status ?? "NEW",
-        risk_level: x.risk_level ?? "GREEN",
-        created_at_utc: x.created_at_utc ?? null,
-        updated_at_utc: x.updated_at_utc ?? null,
-        rejected: x.rejected ?? false,
-        rejection_reason: x.rejection_reason ?? null,
-      }))
-      .filter((x: VariantRow) => !!x.advisory_id);
-
-    // Auto-select first if nothing selected
     if (!selected.value && variants.value.length) {
       selected.value = variants.value[0].advisory_id;
     }
@@ -170,10 +93,6 @@ async function loadVariants() {
   }
 }
 
-function selectVariant(id: string) {
-  selected.value = id;
-}
-
 function pickCompare(id: string) {
   if (!compareLeft.value) {
     compareLeft.value = id;
@@ -183,399 +102,209 @@ function pickCompare(id: string) {
     compareRight.value = id;
     return;
   }
-  // Toggle off if clicked again
-  if (compareLeft.value === id) {
-    compareLeft.value = null;
-    return;
-  }
-  if (compareRight.value === id) {
-    compareRight.value = null;
-    return;
-  }
-}
-
-function clearCompare() {
-  compareLeft.value = null;
-  compareRight.value = null;
+  if (compareLeft.value === id) compareLeft.value = null;
+  if (compareRight.value === id) compareRight.value = null;
 }
 
 const compareReady = computed(() => !!compareLeft.value && !!compareRight.value);
 
-const selectedVariant = computed(() =>
-  variants.value.find((v) => v.advisory_id === selected.value)
-);
+const filteredSorted = computed(() => {
+  let list = variants.value.slice();
 
-onMounted(loadVariants);
+  // Status filter
+  if (statusFilter.value !== "ALL") {
+    list = list.filter((v) => deriveStatus(v) === statusFilter.value);
+  }
 
+  // Risk filter
+  if (riskFilter.value === "NEEDS_ATTENTION") {
+    list = list.filter((v) => {
+      const r = (v.risk_level ?? "UNKNOWN").toUpperCase() as RiskLevel;
+      return r === "YELLOW" || r === "RED";
+    });
+  }
+
+  // Sort
+  if (sortBy.value === "RATING_DESC") {
+    list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+  } else if (sortBy.value === "RISK_DESC") {
+    list.sort((a, b) => riskRank(b.risk_level) - riskRank(a.risk_level));
+  } else {
+    list.sort((a, b) => parseCreatedAt(b) - parseCreatedAt(a));
+  }
+
+  return list;
+});
+
+onMounted(load);
 watch(runId, () => {
   selected.value = null;
   compareLeft.value = null;
   compareRight.value = null;
-  loadVariants();
+  load();
 });
 </script>
 
 <template>
   <div class="page">
-    <div class="header">
+    <div class="hdr">
       <div>
-        <h1 class="title">Variants & Review</h1>
-        <div class="subtitle">
-          Run: <code>{{ runId }}</code>
-        </div>
+        <div class="title">Variants & Review</div>
+        <div class="subtle">Run: <code>{{ runId }}</code></div>
       </div>
-      <div class="actions">
-        <button class="btn secondary" @click="loadVariants" :disabled="loading">
-          {{ loading ? "Loading..." : "Refresh" }}
-        </button>
-        <router-link class="btn secondary" :to="`/rmos/runs`">
-          Back to Runs
-        </router-link>
+
+      <div class="toolbar">
+        <label class="ctl">
+          <span>Status</span>
+          <select v-model="statusFilter">
+            <option value="ALL">All</option>
+            <option value="NEW">New</option>
+            <option value="REVIEWED">Reviewed</option>
+            <option value="PROMOTED">Promoted</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </label>
+
+        <label class="ctl">
+          <span>Risk</span>
+          <select v-model="riskFilter">
+            <option value="ALL">All</option>
+            <option value="NEEDS_ATTENTION">Needs Attention (YELLOW/RED)</option>
+          </select>
+        </label>
+
+        <label class="ctl">
+          <span>Sort</span>
+          <select v-model="sortBy">
+            <option value="CREATED_DESC">Newest</option>
+            <option value="RATING_DESC">Rating (High→Low)</option>
+            <option value="RISK_DESC">Risk (RED→GREEN)</option>
+          </select>
+        </label>
+
+        <button class="btn tiny secondary" @click="load">Refresh</button>
       </div>
     </div>
 
-    <div v-if="error" class="error-banner">
-      {{ error }}
-      <button @click="error = null">&times;</button>
-    </div>
-
-    <!-- === NEW: Filter Bar === -->
-    <VariantFilters
-      v-if="variants.length > 0"
-      :totalCount="totalCount"
-      :filteredCount="filteredVariants.length"
-      :newCount="newCount"
-      :attentionCount="attentionCount"
-      @filter-change="handleFilterChange"
-    />
-
-    <div v-if="loading && !variants.length" class="loading">Loading variants...</div>
+    <div v-if="loading" class="subtle">Loading variants…</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="grid">
       <!-- LEFT: Variant list -->
       <div class="panel">
-        <div class="panel-title">Variants</div>
+        <div class="panelTitle">Variants ({{ filteredSorted.length }})</div>
 
-        <div v-if="!filteredVariants.length && variants.length" class="empty">
-          No variants match current filters.
+        <div v-if="!filteredSorted.length" class="empty">
+          <div class="subtle">No variants match current filters.</div>
+          <button class="btn tiny" @click="statusFilter = 'ALL'; riskFilter = 'ALL'; sortBy = 'CREATED_DESC'">
+            Reset filters
+          </button>
         </div>
 
-        <div v-else-if="!variants.length" class="empty">
-          No advisory variants linked to this run.
-        </div>
-
-        <div v-else class="variant-list">
+        <div v-else class="list">
           <button
-            v-for="v in filteredVariants"
+            v-for="v in filteredSorted"
             :key="v.advisory_id"
-            class="variant-row"
-            :class="{ selected: selected === v.advisory_id }"
-            @click="selectVariant(v.advisory_id)"
+            class="row"
+            :class="{ on: selected === v.advisory_id }"
+            @click="selected = v.advisory_id"
           >
-            <div class="variant-main">
-              <div class="variant-header">
-                <code class="variant-id">{{ v.advisory_id.slice(0, 12) }}...</code>
-                <!-- === NEW: Risk Badge === -->
-                <VariantRiskBadge :risk="v.risk_level" small />
+            <div class="rowMain">
+              <div class="rowTop">
+                <div class="mono">{{ v.advisory_id.slice(0, 12) }}…</div>
+                <VariantStatusBadge :status="deriveStatus(v)" :risk="(v.risk_level ?? 'UNKNOWN') as any" />
               </div>
-              <div class="variant-meta">
-                <span v-if="v.mime" class="mime">{{ v.mime }}</span>
-                <span v-if="v.rating" class="rating">★ {{ v.rating }}/5</span>
-                <!-- === UPDATED: Status Badge replaces promoted-badge === -->
-                <VariantStatusBadge :status="v.status" small />
+
+              <div class="rowMeta">
+                <span class="subtle small">Rating: {{ v.rating ?? "—" }}</span>
+                <span class="sep">•</span>
+                <span class="subtle small">Risk: {{ (v.risk_level ?? "UNKNOWN") }}</span>
+                <span class="sep">•</span>
+                <span class="subtle small">Preview: {{ v.has_preview === false ? "No" : "Yes" }}</span>
               </div>
             </div>
-            <div class="variant-actions">
-              <button
-                class="btn tiny"
-                :class="{ active: compareLeft === v.advisory_id || compareRight === v.advisory_id }"
-                @click.stop="pickCompare(v.advisory_id)"
-              >
-                {{ compareLeft === v.advisory_id || compareRight === v.advisory_id ? "Picked" : "Compare" }}
-              </button>
+
+            <div class="rowActions">
+              <button class="btn tiny secondary" @click.stop="pickCompare(v.advisory_id)">Pick</button>
             </div>
           </button>
         </div>
 
-        <div class="compare-hint">
-          <span class="label">Compare:</span>
-          <code>{{ compareLeft ? compareLeft.slice(0, 8) + "..." : "—" }}</code>
-          <span>vs</span>
-          <code>{{ compareRight ? compareRight.slice(0, 8) + "..." : "—" }}</code>
-          <button v-if="compareLeft || compareRight" class="btn tiny" @click="clearCompare">
-            Clear
-          </button>
+        <div class="compareHint subtle small">
+          Compare picks:
+          <span class="mono">{{ compareLeft ? compareLeft.slice(0, 8) + "…" : "—" }}</span>
+          vs
+          <span class="mono">{{ compareRight ? compareRight.slice(0, 8) + "…" : "—" }}</span>
         </div>
       </div>
 
-      <!-- RIGHT: Selected variant details -->
+      <!-- RIGHT: Selected variant actions -->
       <div class="panel" v-if="selected">
-        <div class="panel-title">Selected Variant</div>
+        <div class="panelTitle">Selected Variant</div>
 
-        <!-- SVG Preview -->
-        <SvgPreview :runId="runId" :advisoryId="selected" :apiBase="apiBase" />
+        <PromoteToManufacturingButton :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
 
-        <!-- Promote Button -->
-        <div class="section">
-          <PromoteToManufacturingButton
-            :runId="runId"
-            :advisoryId="selected"
-            :apiBase="apiBase"
-          />
-        </div>
+        <div class="spacer" />
+        <VariantNotes :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
 
-        <!-- Rating + Notes -->
-        <div class="section">
-          <VariantNotes :runId="runId" :advisoryId="selected" :apiBase="apiBase" />
-        </div>
-
-        <!-- Prompt Lineage -->
-        <div class="section">
-          <PromptLineageViewer :runId="runId" :advisoryId="selected" :apiBase="apiBase" />
-        </div>
+        <div class="spacer" />
+        <PromptLineageViewer :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
       </div>
 
-      <div v-else class="panel empty-state">
-        <p>Select a variant from the list to view details.</p>
-      </div>
-
-      <!-- BOTTOM: SVG Comparison -->
+      <!-- Compare -->
       <div class="panel wide" v-if="compareReady">
         <SvgPathDiffViewer
           :runId="runId"
           :leftAdvisoryId="compareLeft!"
           :rightAdvisoryId="compareRight!"
-          :apiBase="apiBase"
+          apiBase="/api/rmos"
         />
       </div>
 
-      <!-- Manufacturing Candidates -->
+      <!-- Manufacturing candidates -->
       <div class="panel wide">
-        <ManufacturingCandidatesPanel :runId="runId" :apiBase="apiBase" />
+        <ManufacturingCandidateList :runId="runId" apiBase="/api/rmos" />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.page {
-  padding: 16px;
-  max-width: 1600px;
-  margin: 0 auto;
-}
+.page { padding: 12px; }
+.hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.title { font-weight: 800; font-size: 18px; }
+.toolbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.ctl { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.ctl select { border: 1px solid rgba(0, 0, 0, 0.18); border-radius: 10px; padding: 6px 8px; background: #fff; }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+.grid { display: grid; grid-template-columns: 380px 1fr; gap: 12px; align-items: start; }
+.panel { border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 12px; padding: 10px; background: white; }
+.panel.wide { grid-column: 1 / -1; }
+.panelTitle { font-weight: 800; margin-bottom: 8px; }
 
-.title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
+.list { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; justify-content: space-between; gap: 8px; text-align: left; padding: 10px; border: 1px solid rgba(0, 0, 0, 0.10); border-radius: 12px; background: white; cursor: pointer; }
+.row.on { border-color: rgba(0, 0, 0, 0.35); }
+.rowMain { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.rowTop { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.rowMeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sep { opacity: 0.35; }
 
-.subtitle {
-  font-size: 0.9rem;
-  color: #6c757d;
-  margin-top: 4px;
-}
+.rowActions { display: flex; gap: 6px; align-items: center; }
+.btn { padding: 8px 10px; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 10px; background: white; cursor: pointer; }
+.btn.tiny { padding: 4px 8px; font-size: 0.9em; }
+.btn.secondary { opacity: 0.85; }
 
-.actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.error-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.error-banner button {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  color: inherit;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: #6c757d;
-}
-
-/* === NEW: Filter bar spacing === */
-.variant-filters {
-  margin-bottom: 16px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-.panel {
-  border: 1px solid #dee2e6;
-  border-radius: 12px;
-  padding: 16px;
-  background: #fff;
-}
-
-.panel.wide {
-  grid-column: 1 / -1;
-}
-
-.panel-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-}
-
-.empty,
-.empty-state {
-  color: #6c757d;
-  text-align: center;
-  padding: 20px;
-}
-
-.variant-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.variant-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
-
-.variant-row:hover {
-  border-color: #adb5bd;
-}
-
-.variant-row.selected {
-  border-color: #0066cc;
-  background: #f0f7ff;
-}
-
-.variant-main {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.variant-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.variant-id {
-  font-size: 0.85rem;
-}
-
-.variant-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
-.variant-actions {
-  flex-shrink: 0;
-}
-
-.compare-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e9ecef;
-  font-size: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.compare-hint .label {
-  font-weight: 500;
-}
-
-.section {
-  margin-top: 16px;
-}
-
-.btn {
-  padding: 8px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  font-size: 0.9rem;
-}
-
-.btn:hover:not(:disabled) {
-  background: #f0f0f0;
-}
-
-.btn.secondary {
-  opacity: 0.9;
-}
-
-.btn.tiny {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-}
-
-.btn.active {
-  background: #0066cc;
-  color: #fff;
-  border-color: #0066cc;
-}
-
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85em;
-  background: #f4f4f4;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-}
+.mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.subtle { opacity: 0.75; }
+.small { font-size: 12px; }
+.error { color: #b00020; }
+.empty { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 12px; }
+.spacer { height: 10px; }
+.compareHint { margin-top: 10px; }
 
 @media (max-width: 1100px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
-  .panel.wide {
-    grid-column: auto;
-  }
+  .grid { grid-template-columns: 1fr; }
+  .panel.wide { grid-column: auto; }
 }
 </style>
