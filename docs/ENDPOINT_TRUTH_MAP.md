@@ -490,3 +490,140 @@ Deprecate `/api/art-studio/workflow/*` entirely.
 | Get snapshot | `/api/rmos/workflow/sessions/{session_id}/snapshot` | GET |
 | Get events | `/api/rmos/workflow/sessions/{session_id}/events` | GET |
 | List generators | `/api/rmos/workflow/generators` | GET |
+
+---
+
+## CAM Consolidated Endpoints (Wave 18)
+
+> **Added 2025-12-27**: Consolidated CAM router provides organized endpoints under `/api/cam/<category>`.
+
+### Drilling (`/api/cam/drilling`)
+
+| Method | Endpoint | Notes |
+|--------|----------|-------|
+| POST | `/api/cam/drilling/gcode` | Generate drilling G-code |
+| GET | `/api/cam/drilling/info` | Get drilling operation info |
+| POST | `/api/cam/drilling/pattern/gcode` | Generate pattern drilling G-code |
+| GET | `/api/cam/drilling/pattern/info` | Get pattern info |
+
+### Toolpath (`/api/cam/toolpath`)
+
+| Method | Endpoint | Notes |
+|--------|----------|-------|
+| POST | `/api/cam/toolpath/roughing/gcode` | Generate roughing G-code |
+| GET | `/api/cam/toolpath/roughing/info` | Get roughing operation info |
+| POST | `/api/cam/toolpath/biarc/gcode` | Generate contour-following G-code |
+| GET | `/api/cam/toolpath/biarc/info` | Get biarc operation info |
+| POST | `/api/cam/toolpath/helical_entry` | Generate helical plunge G-code |
+| GET | `/api/cam/toolpath/helical_health` | Health check |
+| POST | `/api/cam/toolpath/vcarve/preview_infill` | Generate V-carve infill preview |
+
+### Other Consolidated Categories
+
+| Category | Prefix | Description |
+|----------|--------|-------------|
+| Fret Slots | `/api/cam/fret_slots` | Fret slot CAM preview and export |
+| Relief | `/api/cam/relief` | Relief carving operations |
+| Risk | `/api/cam/risk` | CAM risk reports and aggregation |
+| Rosette | `/api/cam/rosette` | Rosette toolpath generation |
+| Simulation | `/api/cam/simulation` | G-code parsing and simulation |
+| Export | `/api/cam/export` | SVG, post-processor, DXF export |
+| Monitoring | `/api/cam/monitoring` | CAM metrics and logs |
+| Pipeline | `/api/cam/pipeline` | Pipeline execution and presets |
+| Utility | `/api/cam/utility` | Settings, backup, optimization |
+
+---
+
+## CAM Intent Endpoints (H7.2)
+
+> **Added 2025-12-27**: Intent-native CAM endpoints using `CamIntentV1` envelope.
+
+### Roughing G-code Intent (`/api/cam/roughing`)
+
+| Method | Endpoint | Query Params | Notes |
+|--------|----------|--------------|-------|
+| POST | `/api/cam/roughing/gcode_intent` | `strict=bool` | H7.2.2: Intent-native roughing |
+
+**Request Body:** `CamIntentV1` envelope with roughing-specific `design` fields.
+
+**Query Parameters:**
+- `strict=false` (default): Returns 200 with issues in response body
+- `strict=true`: Returns 422 if normalization issues exist (H7.2.3)
+
+**Response (200):**
+```json
+{
+  "gcode": "G21\nG90\n...",
+  "status": "OK" | "OK_WITH_ISSUES",
+  "issues": [
+    {"code": "STEPDOWN_EXCEEDS_DEPTH", "message": "...", "path": "design.stepdown_mm"}
+  ]
+}
+```
+
+**Response (422 - strict mode only):**
+```json
+{
+  "detail": {
+    "error": "CAM_INTENT_NORMALIZATION_ISSUES",
+    "issues": [...]
+  }
+}
+```
+
+**Metrics:**
+- `cam_roughing_intent_requests_total` — Total requests
+- `cam_roughing_intent_issues_total` — Requests with normalization issues
+- `cam_roughing_intent_strict_rejects_total` — Strict mode rejections
+- `cam_roughing_intent_latency_ms` — Request latency histogram
+
+---
+
+## Compare Consolidated Endpoints (Wave 19)
+
+> **Added 2025-12-27**: Consolidated Compare router at `/api/compare`.
+
+### Categories
+
+| Category | Prefix | Description |
+|----------|--------|-------------|
+| Baselines | `/api/compare/baselines` | Baseline CRUD and geometry diff |
+| Risk | `/api/compare/risk` | Risk aggregation, bucket detail, export |
+| Lab | `/api/compare/lab` | Compare Lab UI endpoints |
+| Automation | `/api/compare/automation` | SVG compare automation |
+
+---
+
+## Legacy Route Governance
+
+> **Added 2025-12-27**: All legacy routes now tracked via governance middleware.
+
+### Tagged Routes
+
+Legacy routes have `"Legacy"` in their FastAPI tags array. The `EndpointGovernanceMiddleware` detects this and:
+1. Records hits to `/api/governance/stats`
+2. Logs warnings (once per process) for legacy endpoint access
+3. Enables usage-based deprecation decisions
+
+### Checking Usage
+
+```bash
+# Get governance stats
+curl http://localhost:8000/api/governance/stats
+
+# Response includes legacy route hit counts
+{
+  "legacy_hits": {
+    "GET /api/cam/vcarve/preview": 142,
+    "POST /api/compare/baseline": 0,
+    ...
+  }
+}
+```
+
+### Deprecation Workflow
+
+1. Deploy with legacy routes tagged
+2. Monitor `/api/governance/stats` for 1-2 weeks
+3. Routes with zero hits → safe to remove
+4. Routes with hits → migrate frontend first, then remove

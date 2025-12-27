@@ -604,3 +604,89 @@ Phantom Imports (Removed):         84 routers
 - [services/api/app/main.py](services/api/app/main.py) — Full router registration code with inline comments
 - [services/api/app/governance/](services/api/app/governance/) — Endpoint governance policies
 - [services/api/app/meta/](services/api/app/meta/) — Router truth and self-awareness endpoints
+- [docs/ENDPOINT_TRUTH_MAP.md](docs/ENDPOINT_TRUTH_MAP.md) — Complete API surface documentation
+
+---
+
+## H7.2: CAM Intent Implementation
+
+> **Added 2025-12-27**: Intent-native CAM endpoints with strict mode validation.
+
+### Overview
+
+H7.2 introduces intent-native CAM endpoints that use the canonical `CamIntentV1` envelope. These endpoints normalize input, validate constraints, and emit Prometheus metrics.
+
+### New Router
+
+- `cam_roughing_intent_router` — Intent-native roughing G-code generation
+
+**Prefix:** `/api/cam`
+**Tags:** `CAM`, `Intent`
+
+### Endpoints
+
+| Method | Endpoint | Query Params | Description |
+|--------|----------|--------------|-------------|
+| POST | `/api/cam/roughing_gcode_intent` | `strict=bool` | Generate roughing G-code from `CamIntentV1` |
+
+### Strict Mode (H7.2.3)
+
+The `strict` query parameter controls validation behavior:
+
+- `?strict=false` (default): Returns 200 with issues in response body
+- `?strict=true`: Returns 422 if normalization produces any issues
+
+```bash
+# Non-strict (default) - tolerates issues
+curl -X POST http://localhost:8000/api/cam/roughing_gcode_intent \
+  -H "Content-Type: application/json" \
+  -d '{"design": {...}}'
+
+# Strict - rejects on issues
+curl -X POST "http://localhost:8000/api/cam/roughing_gcode_intent?strict=true" \
+  -H "Content-Type: application/json" \
+  -d '{"design": {...}}'
+```
+
+### Prometheus Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `cam_roughing_intent_requests_total` | Counter | Total requests |
+| `cam_roughing_intent_issues_total` | Counter | Requests with normalization issues |
+| `cam_roughing_intent_strict_rejects_total` | Counter | Strict mode rejections |
+| `cam_roughing_intent_latency_ms` | Histogram | Request latency |
+
+### Test Coverage
+
+- `test_cam_roughing_intent_strict.py` — Strict mode behavior tests
+- `test_roughing_gcode_intent_metrics.py` — Metrics emission tests
+- `test_cam_intent_strict_reject_logs_request_id.py` — Request ID logging tests
+
+---
+
+## Change Log
+
+### 2025-12-27
+
+**Routing Fixes:**
+- Fixed Compare router variable collision (`legacy_compare_router` vs `compare_router`)
+- Added "Legacy" tags to 19 overlapping routes (CAM, Compare, Rosette)
+- Enhanced `EndpointGovernanceMiddleware` to auto-detect "Legacy" FastAPI tags
+
+**H7.2 CAM Intent:**
+- H7.2.2: Added `roughing_gcode_intent` endpoint with normalization and metrics
+- H7.2.3: Added strict mode (`?strict=true`) for validation enforcement
+- Added `cam_roughing_intent_strict_rejects_total` Prometheus counter
+- Added test coverage for strict mode behavior
+
+**Documentation:**
+- Added "Canonical vs Legacy Lanes" section to ROUTER_MAP.md
+- Updated ENDPOINT_TRUTH_MAP.md with CAM consolidated and intent endpoints
+- Documented governance integration for legacy route tracking
+
+### 2025-12-20
+
+- Wave 18-19 consolidation (CAM + Compare routers)
+- Fixed 9 previously broken routers
+- Removed 84 phantom imports
