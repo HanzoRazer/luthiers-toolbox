@@ -75,6 +75,28 @@ jobs:
         run: |
           python ../../scripts/rmos_ci_test.py
 
+      - name: Frontend legacy usage gate
+        working-directory: services/api
+        env:
+          # Budget: allow up to 10 legacy usages during transition period
+          # Set to 0 after frontend migration is complete
+          LEGACY_USAGE_BUDGET: "10"
+        run: |
+          echo "Checking frontend for legacy API endpoint usage..."
+          python -m app.ci.legacy_usage_gate \
+            --roots "../../packages/client/src" "../../packages/sdk/src" \
+            --budget ${LEGACY_USAGE_BUDGET}
+          exit_code=$?
+          if [ $exit_code -eq 2 ]; then
+            echo "❌ Frontend legacy usage exceeds budget (${LEGACY_USAGE_BUDGET})"
+            echo "Please migrate to canonical endpoints (see ROUTER_MAP.md)"
+            exit 1
+          elif [ $exit_code -eq 1 ]; then
+            echo "⚠️ Frontend using legacy endpoints (within budget)"
+          else
+            echo "✅ No legacy endpoint usage detected"
+          fi
+
       - name: Deprecation budget gate (legacy shadow endpoints)
         working-directory: services/api
         env:
