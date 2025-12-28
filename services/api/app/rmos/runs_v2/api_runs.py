@@ -1168,6 +1168,47 @@ def post_promote_advisory_variant(
 
 
 # =============================================================================
+# Bulk Promote (Product Bundle)
+# =============================================================================
+
+from .schemas_variant_review import (
+    BulkPromoteRequest,
+    BulkPromoteResponse,
+)
+from .variant_review_service import bulk_promote_variants
+
+
+@router.post("/{run_id}/advisory/bulk-promote", response_model=BulkPromoteResponse)
+def post_bulk_promote_advisory_variants(
+    run_id: str,
+    payload: BulkPromoteRequest,
+    principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
+):
+    """
+    Bulk-promote multiple advisory variants to manufacturing candidates.
+
+    Requires authenticated user with role: admin, operator, or engineer.
+    Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
+
+    Each variant is evaluated against the SVG bind-time policy:
+    - BLOCK: script, foreignObject, image elements
+    - ALLOW + YELLOW: text elements (requires outline conversion)
+    - ALLOW + GREEN: path/geometry only
+
+    Processing continues on individual failures to maximize throughput.
+
+    Returns aggregate statistics:
+    - total: Number of advisory IDs submitted
+    - succeeded: Number successfully promoted
+    - failed: Number that failed (not found, already promoted, etc.)
+    - blocked: Number blocked by bind-time policy
+
+    Also returns per-item results with decision, risk_level, and any error.
+    """
+    return bulk_promote_variants(run_id, payload, principal)
+
+
+# =============================================================================
 # Variant Rejection (Product Bundle)
 # =============================================================================
 

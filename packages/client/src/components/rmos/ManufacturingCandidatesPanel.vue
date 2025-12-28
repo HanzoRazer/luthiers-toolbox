@@ -3,22 +3,18 @@
  * ManufacturingCandidatesPanel.vue
  *
  * Panel for managing manufacturing candidates.
- * Allows operators to approve/reject promoted variants and export ZIPs.
+ * Features: triage UX, filters, search, bulk decisions, zip downloads.
  */
-import { computed, onMounted, ref, watch } from "vue";
-import SvgPreview from "@/components/rmos/SvgPreview.vue";
-
-type Candidate = {
-  candidate_id: string;
-  advisory_id: string;
-  status: "PROPOSED" | "ACCEPTED" | "REJECTED";
-  label?: string | null;
-  note?: string | null;
-  created_at_utc: string;
-  created_by?: string | null;
-  updated_at_utc: string;
-  updated_by?: string | null;
-};
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import BulkDecisionModal from "@/components/rmos/BulkDecisionModal.vue";
+import {
+  fetchManufacturingCandidates,
+  setManufacturingCandidateDecision,
+  downloadManufacturingCandidateZip,
+  saveBlobToDisk,
+  type ManufacturingCandidate,
+  type CandidateDecision,
+} from "@/api/rmosRuns";
 
 const props = defineProps<{
   runId: string;
@@ -26,90 +22,278 @@ const props = defineProps<{
 }>();
 
 const apiBase = computed(() => props.apiBase ?? "/api");
+
+// Data state
+const candidates = ref<ManufacturingCandidate[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
-const items = ref<Candidate[]>([]);
-const acting = ref<Record<string, boolean>>({});
 
-function authHeaders(): Record<string, string> {
-  // Support JWT Bearer from localStorage, or rely on cookies/session
-  const token = localStorage.getItem("LTB_JWT") || "";
-  // Legacy header support for dev mode
-  const role = localStorage.getItem("LTB_USER_ROLE") || "";
-  const uid = localStorage.getItem("LTB_USER_ID") || "";
+// Filters
+const q = ref("");
+const filter = ref<"ALL" | "NEEDS_DECISION" | "APPROVED" | "REJECTED">("ALL");
+const sort = ref<"SCORE_DESC" | "NEWEST">("SCORE_DESC");
 
-  const h: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) {
-    h["Authorization"] = `Bearer ${token}`;
-  } else {
-    // Fallback to header-based auth for dev
-    if (role) h["x-user-role"] = role;
-    if (uid) h["x-user-id"] = uid;
-  }
-  return h;
+// Multi-select state
+const selectedCandidateIds = ref<Set<string>>(new Set());
+const bulkBusy = ref(false);
+const bulkError = ref<string | null>(null);
+const bulkDecisionOpen = ref(false);
+
+// Per-row busy state
+const rowBusy = ref<Record<string, boolean>>({});
+
+// Inline note editor state
+const noteEditFor = ref<string | null>(null);
+const noteDraft = ref("");
+const noteBusy = ref<Record<string, boolean>>({});
+const noteError = ref<Record<string, string | null>>({});
+
+function idOf(c: ManufacturingCandidate): string {
+  return String(c.candidate_id ?? (c as any).id ?? "");
 }
 
-async function refresh() {
+function decisionOf(c: ManufacturingCandidate): CandidateDecision | null {
+  // Handle different backend field names
+  const d = c.decision ?? null;
+  if (d) return d;
+  // Map legacy status to decision
+  const status = c.status;
+  if (status === "ACCEPTED") return "GREEN";
+  if (status === "REJECTED") return "RED";
+  return null;
+}
+
+function isSelectedCandidate(id: string) {
+  return selectedCandidateIds.value.has(id);
+}
+
+function toggleSelectedCandidate(id: string) {
+  const s = new Set(selectedCandidateIds.value);
+  if (s.has(id)) s.delete(id);
+  else s.add(id);
+  selectedCandidateIds.value = s;
+}
+
+function clearCandidateSelection() {
+  selectedCandidateIds.value = new Set();
+}
+
+const selectedCount = computed(() => selectedCandidateIds.value.size);
+const selectedIds = computed(() => Array.from(selectedCandidateIds.value));
+
+// Filtering + sorting
+const filteredSorted = computed(() => {
+  const needle = q.value.trim().toLowerCase();
+  let rows = candidates.value.slice();
+
+  // Search filter
+  if (needle) {
+    rows = rows.filter((c) => idOf(c).toLowerCase().includes(needle));
+  }
+
+  // Status filter
+  if (filter.value === "NEEDS_DECISION") {
+    rows = rows.filter((c) => !decisionOf(c));
+  } else if (filter.value === "APPROVED") {
+    rows = rows.filter((c) => decisionOf(c) === "GREEN");
+  } else if (filter.value === "REJECTED") {
+    rows = rows.filter((c) => decisionOf(c) === "RED");
+  }
+
+  // Sort
+  if (sort.value === "SCORE_DESC") {
+    rows.sort((a, b) => (Number(b.score ?? -1) - Number(a.score ?? -1)));
+  } else {
+    rows.sort((a, b) => String(b.created_at_utc ?? "").localeCompare(String(a.created_at_utc ?? "")));
+  }
+
+  return rows;
+});
+
+function selectAllVisible() {
+  const s = new Set(selectedCandidateIds.value);
+  for (const c of filteredSorted.value) s.add(idOf(c));
+  selectedCandidateIds.value = s;
+}
+
+async function load() {
   if (!props.runId) return;
   loading.value = true;
   error.value = null;
   try {
-    const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/manufacturing/candidates`,
-      {
-        headers: authHeaders(),
-        credentials: "include",
-      }
-    );
-    if (!res.ok) throw new Error(`Load candidates failed (${res.status})`);
-    const data = await res.json();
-    items.value = Array.isArray(data?.items) ? data.items : [];
+    const rows = await fetchManufacturingCandidates(apiBase.value, props.runId);
+    candidates.value = rows ?? [];
+    // Prune selection to only known IDs
+    const known = new Set(candidates.value.map((c) => idOf(c)));
+    const next = new Set<string>();
+    for (const id of selectedCandidateIds.value) {
+      if (known.has(id)) next.add(id);
+    }
+    selectedCandidateIds.value = next;
   } catch (e: any) {
     error.value = e?.message ?? String(e);
-    items.value = [];
+    candidates.value = [];
+    clearCandidateSelection();
   } finally {
     loading.value = false;
   }
 }
 
-async function decide(c: Candidate, decision: "ACCEPT" | "REJECT") {
-  acting.value[c.candidate_id] = true;
+// Per-row quick decision
+async function setDecision(id: string, decision: CandidateDecision) {
+  rowBusy.value = { ...rowBusy.value, [id]: true };
   error.value = null;
   try {
-    const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/manufacturing/candidates/${encodeURIComponent(
-        c.candidate_id
-      )}/decision`,
-      {
-        method: "POST",
-        headers: authHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ decision, note: c.note ?? null }),
-      }
-    );
-    if (res.status === 401) throw new Error("Not authenticated");
-    if (res.status === 403) throw new Error("Forbidden: requires role admin/operator");
-    if (!res.ok) throw new Error(`Decision failed (${res.status})`);
-    await refresh();
+    await setManufacturingCandidateDecision(apiBase.value, props.runId, id, { decision, note: null });
+    await load();
   } catch (e: any) {
     error.value = e?.message ?? String(e);
   } finally {
-    acting.value[c.candidate_id] = false;
+    rowBusy.value = { ...rowBusy.value, [id]: false };
   }
 }
 
-function downloadUrl(c: Candidate): string {
-  return `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/manufacturing/candidates/${encodeURIComponent(
-    c.candidate_id
-  )}/download-zip`;
+// Download single zip
+async function downloadZip(id: string) {
+  try {
+    const blob = await downloadManufacturingCandidateZip(apiBase.value, props.runId, id);
+    saveBlobToDisk(blob, `run_${props.runId}__candidate_${id}.zip`);
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
+  }
 }
 
-function statusClass(status: string): string {
-  return status.toLowerCase();
+// Bulk download zips
+async function downloadSelectedCandidateZips() {
+  bulkError.value = null;
+  const ids = Array.from(selectedCandidateIds.value);
+  if (!ids.length) return;
+
+  bulkBusy.value = true;
+  try {
+    for (const candidateId of ids) {
+      const blob = await downloadManufacturingCandidateZip(apiBase.value, props.runId, candidateId);
+      saveBlobToDisk(blob, `run_${props.runId}__candidate_${candidateId}.zip`);
+    }
+  } catch (e: any) {
+    bulkError.value = e?.message ?? String(e);
+  } finally {
+    bulkBusy.value = false;
+  }
 }
 
-onMounted(refresh);
-watch(() => props.runId, () => refresh());
+function statusClass(decision: CandidateDecision | null): string {
+  if (decision === "GREEN") return "green";
+  if (decision === "YELLOW") return "yellow";
+  if (decision === "RED") return "red";
+  return "none";
+}
+
+// --- Audit hover helpers ---
+function fmtUtc(s?: string | null): string {
+  if (!s) return "—";
+  return s;
+}
+
+function lastDecisionRecord(c: ManufacturingCandidate) {
+  const hist = (c as any).decision_history as any[] | null | undefined;
+  if (hist && hist.length) {
+    return hist[hist.length - 1];
+  }
+  if (c.decision || c.decision_note || c.decided_at_utc || (c as any).decided_by) {
+    return {
+      decision: c.decision,
+      note: c.decision_note,
+      decided_at_utc: c.decided_at_utc,
+      decided_by: (c as any).decided_by,
+    };
+  }
+  return null;
+}
+
+function auditHoverText(c: ManufacturingCandidate): string {
+  const rec = lastDecisionRecord(c);
+  if (!rec) return "No decision yet";
+
+  const lines: string[] = [];
+  lines.push(`Decision: ${rec.decision ?? "—"}`);
+  if (rec.decided_by) lines.push(`By: ${rec.decided_by}`);
+  if (rec.decided_at_utc) lines.push(`At: ${rec.decided_at_utc}`);
+  if (rec.note) lines.push(`Note: ${rec.note}`);
+  return lines.join("\n");
+}
+
+function compactDecisionLine(c: ManufacturingCandidate): string | null {
+  const rec = lastDecisionRecord(c);
+  if (!rec || (!rec.decision && !rec.decided_at_utc && !rec.decided_by && !rec.note)) return null;
+
+  const bits: string[] = [];
+  if (rec.decision) bits.push(String(rec.decision));
+  if (rec.decided_by) bits.push(String(rec.decided_by));
+  if (rec.decided_at_utc) bits.push(String(rec.decided_at_utc));
+  if (rec.note) bits.push(`"${String(rec.note)}"`);
+  return bits.join(" • ");
+}
+
+// --- Inline note editor helpers ---
+function openNoteEditor(c: ManufacturingCandidate) {
+  const id = idOf(c);
+  noteEditFor.value = id;
+
+  // Seed draft from last decision record (history-aware)
+  const rec = lastDecisionRecord(c) as any;
+  noteDraft.value = String(rec?.note ?? c.decision_note ?? "").trim();
+
+  noteError.value = { ...noteError.value, [id]: null };
+
+  // Focus textarea next tick
+  nextTick(() => {
+    const el = document.getElementById(`note-editor-${id}`) as HTMLTextAreaElement | null;
+    el?.focus();
+    el?.setSelectionRange(el.value.length, el.value.length);
+  });
+}
+
+function closeNoteEditor() {
+  noteEditFor.value = null;
+  noteDraft.value = "";
+}
+
+function currentDecisionFor(c: ManufacturingCandidate): "GREEN" | "YELLOW" | "RED" {
+  // We must send a decision with the note update.
+  // If no decision exists yet, default to YELLOW (caution) rather than GREEN.
+  const d = (decisionOf(c) ?? c.decision ?? null) as any;
+  if (d === "GREEN" || d === "YELLOW" || d === "RED") return d;
+  return "YELLOW";
+}
+
+async function saveNote(c: ManufacturingCandidate) {
+  const id = idOf(c);
+  const decision = currentDecisionFor(c);
+  const note = noteDraft.value.trim();
+  const payloadNote = note.length ? note : null;
+
+  noteBusy.value = { ...noteBusy.value, [id]: true };
+  noteError.value = { ...noteError.value, [id]: null };
+
+  try {
+    await setManufacturingCandidateDecision(apiBase.value, props.runId, id, {
+      decision,
+      note: payloadNote,
+    });
+
+    // Reload to reflect decided_at_utc / decided_by / history
+    await load();
+    closeNoteEditor();
+  } catch (e: any) {
+    noteError.value = { ...noteError.value, [id]: e?.message ?? String(e) };
+  } finally {
+    noteBusy.value = { ...noteBusy.value, [id]: false };
+  }
+}
+
+onMounted(load);
+watch(() => props.runId, () => { clearCandidateSelection(); load(); });
 </script>
 
 <template>
@@ -117,11 +301,33 @@ watch(() => props.runId, () => refresh());
     <div class="panel-header">
       <div>
         <h3 class="title">Manufacturing Candidates</h3>
-        <p class="subtitle">Approve or reject promoted variants. Export ZIP for manufacturing.</p>
+        <p class="subtitle">Review candidates: quick Green/Yellow/Red decisions or bulk actions.</p>
       </div>
-      <button class="btn btn-secondary" @click="refresh" :disabled="loading">
+      <button class="btn btn-secondary" @click="load" :disabled="loading">
         {{ loading ? "Loading..." : "Refresh" }}
       </button>
+    </div>
+
+    <!-- Toolbar: search + filter + sort -->
+    <div class="toolbar">
+      <input
+        v-model="q"
+        type="text"
+        class="search-input"
+        placeholder="🔍 Search by candidate ID..."
+      />
+
+      <select v-model="filter" class="filter-select">
+        <option value="ALL">All</option>
+        <option value="NEEDS_DECISION">Needs decision</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+
+      <select v-model="sort" class="sort-select">
+        <option value="SCORE_DESC">Score ↓</option>
+        <option value="NEWEST">Newest first</option>
+      </select>
     </div>
 
     <div v-if="error" class="error-banner">
@@ -129,74 +335,159 @@ watch(() => props.runId, () => refresh());
       <button @click="error = null">&times;</button>
     </div>
 
-    <div v-if="loading && !items.length" class="loading">Loading candidates...</div>
-    <div v-else-if="!items.length" class="empty">No manufacturing candidates yet.</div>
+    <div v-if="loading && !candidates.length" class="loading">Loading candidates...</div>
+    <div v-else-if="!candidates.length" class="empty">No manufacturing candidates yet.</div>
 
-    <div v-else class="candidate-grid">
-      <div v-for="c in items" :key="c.candidate_id" class="candidate-card">
-        <div class="card-header">
-          <code class="candidate-id">{{ c.candidate_id }}</code>
-          <span class="status-pill" :class="statusClass(c.status)">{{ c.status }}</span>
+    <!-- Bulk action bar -->
+    <div class="bulk-bar" v-if="candidates.length > 0">
+      <div class="bulk-left">
+        <strong>{{ selectedCount }}</strong> selected
+        <span class="subtle" v-if="filteredSorted.length !== candidates.length">
+          ({{ filteredSorted.length }} visible)
+        </span>
+      </div>
+      <div class="bulk-right">
+        <button class="btn btn-secondary btn-sm" :disabled="bulkBusy" @click="selectAllVisible">
+          Select visible
+        </button>
+        <button class="btn btn-secondary btn-sm" :disabled="bulkBusy || !selectedCount" @click="clearCandidateSelection">
+          Clear
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          :disabled="bulkBusy || !selectedCount"
+          @click="bulkDecisionOpen = true"
+        >
+          Bulk decision…
+        </button>
+        <button class="btn btn-secondary btn-sm" :disabled="bulkBusy || !selectedCount" @click="downloadSelectedCandidateZips">
+          {{ bulkBusy ? "Downloading…" : "Download zips" }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="bulkError" class="error-banner">
+      {{ bulkError }}
+      <button @click="bulkError = null">&times;</button>
+    </div>
+
+    <!-- Candidate list -->
+    <div class="candidate-list" v-if="filteredSorted.length > 0">
+      <div
+        v-for="c in filteredSorted"
+        :key="idOf(c)"
+        class="candidate-row"
+        :class="{ selected: isSelectedCandidate(idOf(c)) }"
+        :title="auditHoverText(c)"
+      >
+        <div class="row-select" @click.stop="toggleSelectedCandidate(idOf(c))">
+          <input type="checkbox" :checked="isSelectedCandidate(idOf(c))" />
         </div>
 
-        <!-- SVG Preview -->
-        <SvgPreview
-          v-if="c.advisory_id"
-          :runId="runId"
-          :advisoryId="c.advisory_id"
-          :apiBase="apiBase"
-        />
+        <div class="row-main">
+          <div class="row-identity">
+            <div class="id-block">
+              <code class="candidate-id">{{ idOf(c) }}</code>
+              <!-- Audit / Note line (click to edit) -->
+              <div
+                v-if="compactDecisionLine(c) && noteEditFor !== idOf(c)"
+                class="audit-line clickable"
+                @click.stop="openNoteEditor(c)"
+                title="Click to edit decision note"
+              >
+                {{ compactDecisionLine(c) }}
+              </div>
+              <!-- No decision line yet: show placeholder -->
+              <div
+                v-else-if="noteEditFor !== idOf(c)"
+                class="audit-line clickable subtle"
+                @click.stop="openNoteEditor(c)"
+                title="Click to add a decision note"
+              >
+                + Add decision note…
+              </div>
 
-        <div class="form-group">
-          <input
-            class="label-input"
-            v-model="c.label"
-            placeholder="Label (optional)"
-            :disabled="c.status !== 'PROPOSED'"
-          />
+              <!-- Inline note editor -->
+              <div v-if="noteEditFor === idOf(c)" class="note-editor" @click.stop>
+                <div class="note-title">Edit decision note</div>
+
+                <textarea
+                  class="note-textarea"
+                  :id="`note-editor-${idOf(c)}`"
+                  v-model="noteDraft"
+                  placeholder="Add a note… (e.g., 'tool clearance concern near inner ring')"
+                  @keydown.esc="closeNoteEditor"
+                ></textarea>
+
+                <div v-if="noteError[idOf(c)]" class="note-error">{{ noteError[idOf(c)] }}</div>
+
+                <div class="note-actions">
+                  <button class="btn btn-sm btn-secondary" :disabled="noteBusy[idOf(c)]" @click="closeNoteEditor">
+                    Cancel
+                  </button>
+                  <button class="btn btn-sm btn-primary" :disabled="noteBusy[idOf(c)]" @click="saveNote(c)">
+                    {{ noteBusy[idOf(c)] ? "Saving…" : "Save note" }}
+                  </button>
+                </div>
+
+                <div class="note-hint subtle">
+                  Decision is preserved as <strong>{{ currentDecisionFor(c) }}</strong>.
+                  <span v-if="!decisionOf(c)">If no decision existed, note-save will set decision to <strong>YELLOW</strong> (caution).</span>
+                </div>
+              </div>
+            </div>
+            <span class="decision-badge" :class="statusClass(decisionOf(c))">
+              {{ decisionOf(c) ?? "—" }}
+            </span>
+            <span class="score-label" v-if="c.score != null">Score: {{ c.score }}</span>
+          </div>
+          <div class="row-meta subtle">
+            <span v-if="c.advisory_id">advisory: {{ String(c.advisory_id).slice(0, 10) }}…</span>
+            <span v-if="c.created_at_utc">created: {{ fmtUtc(c.created_at_utc) }}</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <textarea
-            class="note-input"
-            v-model="c.note"
-            placeholder="Decision note (optional)"
-            rows="2"
-          ></textarea>
-        </div>
-
-        <div class="action-row">
+        <!-- Quick decision buttons -->
+        <div class="row-actions">
           <button
-            class="btn btn-accept"
-            :disabled="acting[c.candidate_id] || c.status !== 'PROPOSED'"
-            @click="decide(c, 'ACCEPT')"
-          >
-            {{ acting[c.candidate_id] ? "Working..." : "Accept" }}
-          </button>
+            class="quick-btn green"
+            :disabled="rowBusy[idOf(c)]"
+            title="Approve (GREEN)"
+            @click="setDecision(idOf(c), 'GREEN')"
+          >✓</button>
           <button
-            class="btn btn-reject"
-            :disabled="acting[c.candidate_id] || c.status !== 'PROPOSED'"
-            @click="decide(c, 'REJECT')"
-          >
-            {{ acting[c.candidate_id] ? "Working..." : "Reject" }}
-          </button>
-          <a
-            class="btn btn-link"
-            :href="downloadUrl(c)"
-            target="_blank"
-            rel="noreferrer"
-          >Download ZIP</a>
-        </div>
-
-        <div class="meta">
-          <span class="subtle">advisory: </span>
-          <code>{{ c.advisory_id.slice(0, 12) }}...</code>
-          <br />
-          <span class="subtle">updated: {{ c.updated_at_utc }}</span>
-          <span v-if="c.updated_by" class="subtle"> by {{ c.updated_by }}</span>
+            class="quick-btn yellow"
+            :disabled="rowBusy[idOf(c)]"
+            title="Caution (YELLOW)"
+            @click="setDecision(idOf(c), 'YELLOW')"
+          >⚠</button>
+          <button
+            class="quick-btn red"
+            :disabled="rowBusy[idOf(c)]"
+            title="Reject (RED)"
+            @click="setDecision(idOf(c), 'RED')"
+          >✗</button>
+          <button
+            class="btn btn-sm btn-secondary"
+            title="Download ZIP"
+            @click="downloadZip(idOf(c))"
+          >📦</button>
         </div>
       </div>
     </div>
+    <div v-else-if="candidates.length > 0 && filteredSorted.length === 0" class="empty">
+      No candidates match current filters.
+    </div>
+
+    <!-- Bulk decision modal -->
+    <BulkDecisionModal
+      :open="bulkDecisionOpen"
+      :candidateIds="selectedIds"
+      :runId="runId"
+      :apiBase="apiBase"
+      @close="bulkDecisionOpen = false"
+      @done="bulkDecisionOpen = false; load()"
+    />
   </div>
 </template>
 
@@ -229,6 +520,40 @@ watch(() => props.runId, () => refresh());
   color: #6c757d;
 }
 
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fafbfc;
+  border-bottom: 1px solid #dee2e6;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.filter-select,
+.sort-select {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
 .error-banner {
   display: flex;
   justify-content: space-between;
@@ -254,27 +579,79 @@ watch(() => props.runId, () => refresh());
   color: #6c757d;
 }
 
-.candidate-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.candidate-card {
-  border: 1px solid #dee2e6;
-  border-radius: 10px;
-  padding: 1rem;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card-header {
+/* Bulk bar */
+.bulk-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.bulk-left {
+  font-size: 0.9rem;
+}
+
+.bulk-right {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* List view */
+.candidate-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.candidate-row:hover {
+  background: #fafbfc;
+}
+
+.candidate-row.selected {
+  background: rgba(0, 102, 204, 0.05);
+}
+
+.row-select {
+  cursor: pointer;
+}
+
+.row-select input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.row-meta {
+  font-size: 0.75rem;
+  margin-top: 0.2rem;
+}
+
+.row-meta span {
+  margin-right: 0.75rem;
 }
 
 .candidate-id {
@@ -282,65 +659,84 @@ watch(() => props.runId, () => refresh());
   background: #e9ecef;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.status-pill {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+.decision-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
   text-transform: uppercase;
-  font-weight: 500;
 }
 
-.status-pill.proposed {
+.decision-badge.green {
+  background: #d4edda;
+  color: #155724;
+}
+
+.decision-badge.yellow {
   background: #fff3cd;
   color: #856404;
 }
 
-.status-pill.accepted {
-  background: #d4edda;
-  color: #155724;
-  font-weight: 700;
-}
-
-.status-pill.rejected {
+.decision-badge.red {
   background: #f8d7da;
   color: #721c24;
 }
 
-.form-group {
-  width: 100%;
+.decision-badge.none {
+  background: #e9ecef;
+  color: #6c757d;
 }
 
-.label-input,
-.note-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.9rem;
+.score-label {
+  font-size: 0.75rem;
+  color: #6c757d;
 }
 
-.label-input:focus,
-.note-input:focus {
-  outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
-}
-
-.label-input:disabled,
-.note-input:disabled {
-  background: #f8f9fa;
-  opacity: 0.7;
-}
-
-.action-row {
+/* Row actions */
+.row-actions {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
+.quick-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  transition: background 0.15s;
+}
+
+.quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-btn.green:hover:not(:disabled) {
+  background: #d4edda;
+  border-color: #28a745;
+}
+
+.quick-btn.yellow:hover:not(:disabled) {
+  background: #fff3cd;
+  border-color: #ffc107;
+}
+
+.quick-btn.red:hover:not(:disabled) {
+  background: #f8d7da;
+  border-color: #dc3545;
+}
+
+/* Buttons */
 .btn {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
@@ -362,49 +758,118 @@ watch(() => props.runId, () => refresh());
   cursor: not-allowed;
 }
 
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .btn-secondary {
   opacity: 0.85;
 }
 
-.btn-accept {
-  background: #28a745;
-  border-color: #28a745;
-  color: #fff;
-  font-weight: 600;
-}
-
-.btn-accept:hover:not(:disabled) {
-  background: #218838;
-}
-
-.btn-reject {
-  background: #dc3545;
-  border-color: #dc3545;
+.btn-primary {
+  background: #0066cc;
+  border-color: #0066cc;
   color: #fff;
 }
 
-.btn-reject:hover:not(:disabled) {
-  background: #c82333;
-}
-
-.btn-link {
-  color: #0066cc;
-}
-
-.meta {
-  font-size: 0.75rem;
-  color: #6c757d;
+.btn-primary:hover:not(:disabled) {
+  background: #0056b3;
 }
 
 .subtle {
-  opacity: 0.7;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+/* Audit line (decision history) */
+.id-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.audit-line {
+  font-size: 0.7rem;
+  color: #6c757d;
+  opacity: 0.85;
+  line-height: 1.2;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audit-line.clickable {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: -4px;
+}
+
+.audit-line.clickable:hover {
+  background: rgba(0, 102, 204, 0.08);
+  color: #0056b3;
+}
+
+.audit-line.placeholder {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Inline note editor */
+.note-editor {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.note-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-bottom: 6px;
+}
+
+.note-textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: #fff;
+  resize: vertical;
+}
+
+.note-textarea:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.note-error {
+  color: #b00020;
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+.note-hint {
+  margin-top: 6px;
+  font-size: 0.7rem;
 }
 
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.85em;
-  background: #f4f4f4;
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
 }
 </style>

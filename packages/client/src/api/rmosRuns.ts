@@ -304,3 +304,169 @@ export async function unrejectAdvisoryVariant(
   if (!res.ok) throw new Error(`Unreject failed (${res.status})`);
   return (await res.json()) as { run_id: string; advisory_id: string; cleared: boolean };
 }
+
+// =============================================================================
+// Bulk Promote (Product Surface)
+// =============================================================================
+
+export interface BulkPromoteRequest {
+  advisory_ids: string[];
+  label?: string | null;
+  note?: string | null;
+}
+
+export interface BulkPromoteItemResult {
+  advisory_id: string;
+  success: boolean;
+  decision?: "ALLOW" | "BLOCK" | null;
+  risk_level?: "GREEN" | "YELLOW" | "RED" | null;
+  score?: number | null;
+  reason?: string | null;
+  manufactured_candidate_id?: string | null;
+  error?: string | null;
+}
+
+export interface BulkPromoteResponse {
+  run_id: string;
+  total: number;
+  succeeded: number;
+  failed: number;
+  blocked: number;
+  results: BulkPromoteItemResult[];
+}
+
+/**
+ * Bulk-promote multiple advisory variants to manufacturing candidates.
+ * Returns aggregate statistics and per-item results.
+ */
+export async function bulkPromoteAdvisoryVariants(
+  runId: string,
+  payload: BulkPromoteRequest
+): Promise<BulkPromoteResponse> {
+  const res = await fetch(
+    `${BASE_URL}/${encodeURIComponent(runId)}/advisory/bulk-promote`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) throw new Error(`Bulk promote failed (${res.status})`);
+  return (await res.json()) as BulkPromoteResponse;
+}
+
+// -----------------------------------------------------------------------------
+// Advisory Variant Promote API (single-item, product surface)
+// -----------------------------------------------------------------------------
+
+export async function promoteAdvisoryVariant(
+  apiBase: string,
+  runId: string,
+  advisoryId: string
+): Promise<any> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/advisory/${encodeURIComponent(advisoryId)}/promote`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Accept": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Promote failed (${res.status})`);
+  return await res.json();
+}
+
+// -----------------------------------------------------------------------------
+// Manufacturing candidate downloads
+// -----------------------------------------------------------------------------
+
+export async function downloadManufacturingCandidateZip(
+  apiBase: string,
+  runId: string,
+  candidateId: string
+): Promise<Blob> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/manufacturing/candidates/${encodeURIComponent(candidateId)}/download-zip`;
+
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) throw new Error(`Candidate zip download failed (${res.status})`);
+  return await res.blob();
+}
+
+// Utility: trigger browser save dialog
+export function saveBlobToDisk(blob: Blob, filename: string) {
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// -----------------------------------------------------------------------------
+// Manufacturing candidates (list + decision)
+// -----------------------------------------------------------------------------
+
+export type CandidateDecision = "GREEN" | "YELLOW" | "RED";
+
+export type ManufacturingCandidate = {
+  candidate_id: string;
+  advisory_id?: string | null;
+
+  // optional fields (backend may include some/all)
+  score?: number | null;
+  risk_level?: "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "ERROR" | null;
+  created_at_utc?: string | null;
+
+  // decision state
+  decision?: CandidateDecision | null;  // if backend uses decision
+  status?: "PROPOSED" | "ACCEPTED" | "REJECTED" | null; // legacy field
+  decision_note?: string | null;
+  decided_at_utc?: string | null;
+
+  // audit fields (optional - used for decision history hover)
+  decided_by?: string | null;
+  decision_history?: Array<{
+    decision: CandidateDecision;
+    note?: string | null;
+    decided_at_utc?: string | null;
+    decided_by?: string | null;
+  }> | null;
+};
+
+export async function fetchManufacturingCandidates(
+  apiBase: string,
+  runId: string
+): Promise<ManufacturingCandidate[]> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/manufacturing/candidates`;
+
+  const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error(`Fetch candidates failed (${res.status})`);
+  const data = await res.json();
+  // Handle { items: [...] } wrapper or raw array
+  return Array.isArray(data) ? data : (data?.items ?? []);
+}
+
+export async function setManufacturingCandidateDecision(
+  apiBase: string,
+  runId: string,
+  candidateId: string,
+  payload: { decision: CandidateDecision; note?: string | null }
+): Promise<any> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/manufacturing/candidates/${encodeURIComponent(candidateId)}/decision`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Set decision failed (${res.status})`);
+  return await res.json();
+}

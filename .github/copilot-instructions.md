@@ -1,28 +1,116 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-**Last Updated**: 2025-12-27  
-**Build**: A_N.1 (Priority 1 Complete)
+> CNC guitar lutherie platform: Vue 3 + FastAPI. All geometry in mm. DXF R12 format.
 
-## Project Overview
-This is a **CNC guitar lutherie CAD/CAM toolbox** combining:
-- **Vue 3 + Vite** frontend (TypeScript) in `packages/client/` for guitar design visualization
-- **FastAPI** backend (Python 3.11+) in `services/api/` for DXF/SVG export, geometry processing, and multi-post CNC workflows
-- **Multi-post processor support**: GRBL, Mach4, LinuxCNC, PathPilot, MASSO, Haas, Marlin with JSON configuration files
-- **Unit conversion**: Bidirectional mm ↔ inch geometry scaling (client + server)
-- **RMOS (Rosette Manufacturing OS)**: Complete factory subsystem for rosette inlay design, CAM, and production tracking
-- **Blueprint Import** pipeline in `services/blueprint-import/` for image-based guitar template extraction
-- **SDK Architecture (H8.3)**: Typed endpoint helpers replacing raw fetch() calls (migration in progress)
+## ⚡ Quick Start (bash – canonical for CI + dev container)
 
-**Core Mission**: Enable luthiers to design guitar components, export CAM-ready files (DXF R12 + SVG + G-code), and support multiple CNC platforms through a unified web interface.
+```bash
+# Backend (FastAPI on :8000)
+cd services/api
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 
-**Repository Structure**: 
-- **Active Development**: `services/api/`, `packages/client/`, `packages/shared/`, `projects/rmos/`
-- **Reference Only (DO NOT MODIFY)**: `Luthiers Tool Box/`, `Guitar Design HTML app/`, `Lutherier Project/`, `Smart Guitar Build/`, `__REFERENCE__/`
-- **Testing**: PowerShell-first smoke tests in `scripts/*.ps1` with bash mirrors for CI
-- **Documentation**: Comprehensive guides in `docs/` with patch notes, quickrefs, and architecture diagrams
-- **CI/CD**: 24 GitHub Actions workflows covering API, client, RMOS, CAM, and integration tests
+# Frontend (Vue on :5173, proxies /api → :8000)
+cd packages/client && npm install && npm run dev
+
+# Tests (server must be running)
+bash scripts/test_adaptive_l1.sh      # CAM pocketing
+bash scripts/test_rmos_sandbox.sh     # RMOS subsystem
+cd services/api && pytest tests/ -v   # Backend unit tests
+cd packages/client && npm run test    # Frontend (Vitest)
+```
+
+> **Windows users**: See [PowerShell Commands](#powershell-commands-windows) appendix.
+
+## 🔑 Critical Rules
+
+1. **Units**: Always mm internally. Convert at API boundary via `util/units.py`
+2. **DXF**: Always R12 format (AC1009) with closed LWPolylines for CAM compatibility
+3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
+4. **DO NOT MODIFY**: `__REFERENCE__/`, `Luthiers Tool Box/`, `Guitar Design HTML app/`
+5. **CAM Intent**: Use canonical `CamIntentV1` envelope (`app.rmos.cam`) – don't create alternative schemas
+
+## 📁 Key Locations
+
+| Area | Path | Notes |
+|------|------|-------|
+| Backend API | `services/api/app/` | `main.py`, `routers/`, `cam/`, `rmos/` |
+| Frontend | `packages/client/src/` | Vue 3 `<script setup>`, Pinia stores |
+| SDK Helpers | `packages/client/src/sdk/endpoints/` | Typed API wrappers (H8.3) |
+| Post Configs | `services/api/app/data/posts/*.json` | GRBL, Mach4, LinuxCNC, etc. |
+| Tests | `scripts/*.ps1`, `services/api/tests/` | PowerShell-first, pytest |
+| Docs | `docs/`, `ROUTER_MAP.md` | Architecture, 116 routers across 22 waves |
+
+## 🏗️ Architecture
+
+```
+Vue SPA (:5173) → Vite proxy → FastAPI (:8000) → Post Processors → G-code
+                                    ↓
+                     Multi-format: DXF R12, SVG, G-code bundles
+```
+
+**Key Subsystems**:
+- **CAM Core** (`cam/adaptive_core_l*.py`): Pocketing, helical ramping, drilling, roughing
+- **RMOS** (`rmos/`): Rosette Manufacturing OS at `/api/rmos/*`
+- **Multi-Post**: 5 CNC platforms with JSON configs in `data/posts/`
+- **Art Studio**: Rosette pattern design at `/api/art/*`
+
+## 🧪 Essential Patterns
+
+### Backend (Python/FastAPI)
+```python
+# Router registration pattern in main.py
+from .routers.my_router import router as my_router
+app.include_router(my_router, prefix="/api/my-feature", tags=["MyFeature"])
+
+# Optional features with graceful degradation
+try:
+    from ._experimental.feature_router import router
+except ImportError:
+    router = None
+```
+
+### Frontend (Vue 3/TypeScript)
+```typescript
+// Always use SDK helpers, not raw fetch
+import { cam } from "@/sdk/endpoints";
+const { gcode, summary, requestId } = await cam.roughingGcode(payload);
+
+// ApiError handling with request-id correlation
+import { ApiError, formatApiErrorForUi } from "@/sdk/core/errors";
+catch (err) {
+  if (err instanceof ApiError) console.error(`[${err.requestId}]`, err.message);
+}
+```
+
+### Testing
+- **PowerShell-first**: `test_*.ps1` scripts make HTTP calls to running server
+- **pytest**: `services/api/tests/` for unit tests
+- **Vitest**: `packages/client` for frontend (`npm run test`)
+- **CI**: 24 workflows in `.github/workflows/`
+
+## 📐 Geometry & Export Patterns
+
+```python
+# Unit conversion at API boundary
+from app.util.units import scale_geom_units
+geom = scale_geom_units(geom_src, target_units="mm")
+
+# DXF export always R12 for CAM compatibility
+from app.util.exporters import export_dxf_r12
+dxf_bytes = export_dxf_r12(geometry, closed=True)
+```
+
+## 📚 Key References
+
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – All 116 routers organized by deployment waves
+- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – Complete API surface with duplicates noted
+- [SDK endpoints README](../packages/client/src/sdk/endpoints/README.md) – Typed helpers (H8.3)
+- [docs/ARCHIVE/2025-12/misc/AGENTS.md](../docs/ARCHIVE/2025-12/misc/AGENTS.md) – Extended agent guidance
 
 ---
+<!-- DETAILED DOCUMENTATION BELOW -->
 
 ## Architecture & Key Patterns
 
@@ -398,9 +486,13 @@ const response = await fetch("/api/cam/roughing_gcode", {
 
 **Migration Status (H8.3):**
 - Foundation: ✅ Complete (6/6 tests passing)
-- Component Migration: 🚧 In Progress (6 legacy usages identified)
+- Component Migration: 🚧 In Progress
 - CI Gate: ✅ Integrated (`legacy_usage_gate.py` in rmos_ci.yml)
-- Budget: 10 during transition, target 0 when complete
+
+**CI Rules (dynamic budget):**
+1. **Now**: Legacy fetch count must not increase (no regression)
+2. **Later**: Hard cap enforced after target date
+3. **Measurement**: `legacy_usage_gate.py` counts `fetch(` calls in `packages/client/src` excluding SDK transport
 
 See [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) for full documentation.
 
@@ -559,7 +651,23 @@ npm run build
 **Solution**: Verify all dependencies exist (2024-12-13 clean import policy). No phantom imports allowed. Add graceful degradation with try/except only for truly optional features, never to hide missing files.
 
 ### **Issue**: Frontend uses legacy API endpoints
-**Solution**: Check governance stats at `/api/governance/stats` to see usage counts. Migrate components to use canonical endpoints (e.g., `/api/cam/toolpath/*` instead of `/api/cam/vcarve`). CI gate in `rmos_ci.yml` tracks frontend legacy usage via `legacy_usage_gate.py` - budget currently set to 10, target 0.
+**Solution**: Check governance stats at `/api/governance/stats` to see usage counts. Migrate components to use canonical endpoints. CI gate in `rmos_ci.yml` tracks frontend legacy usage via `legacy_usage_gate.py`.
+
+### **Canonical vs Legacy Endpoint Labels**
+
+`ENDPOINT_TRUTH_MAP.md` must label each duplicate as:
+
+| Label | Meaning | SDK/Frontend Action |
+|-------|---------|--------------------|
+| `CANONICAL` | Source of truth | ✅ Use this |
+| `LEGACY_ALIAS` | Old path, still works | ❌ Migrate away |
+| `SHADOW` | Duplicate impl (dangerous) | ❌ Do not call |
+
+**Canonical endpoints by domain:**
+- **CAM Intent**: `CamIntentV1` + `/api/cam/roughing_gcode_intent` (canonical)
+- **Workflow**: `/api/rmos/workflow/*` (canonical for manufacturing orchestration)
+- **Art Studio Workflow**: `/api/art-studio/workflow/*` → LEGACY_ALIAS (shim to RMOS if same codepath)
+- **Rosette Patterns**: `/api/art/rosette/pattern/*` (canonical), `/api/rosette-patterns` → LEGACY_ALIAS
 
 ---
 
@@ -635,6 +743,40 @@ When adding features, always consider:
 
 ---
 
+## 🚨 Subsystem Boundaries (Read Before Editing)
+
+| Module | Prefix | Owner Files | Do NOT |
+|--------|--------|-------------|--------|
+| **CAM Core** | `/api/cam/*` | `cam/*.py`, `routers/cam_*.py` | Create alternative CAM envelopes |
+| **RMOS** | `/api/rmos/*` | `rmos/`, `projects/rmos/` | Modify workflow state machine |
+| **Art Studio** | `/api/art/*` | `art_studio/`, `routers/art_*.py` | Duplicate rosette endpoints |
+| **Governance** | `/api/governance/*` | `governance/` | Bypass legacy tracking |
+| **Legacy** | Various | Tagged `"Legacy"` | Add new legacy routes |
+| **_experimental/** | Various | `_experimental/*.py` | Add new features (see below) |
+
+### `_experimental/` Rules (No New Features)
+
+| ✅ Safe | ❌ Not Safe |
+|---------|-------------|
+| Bug fixes, dependency fixes | Adding new routes/features |
+| "Make it load", logging, tests | Creating production dependencies |
+| CI guards, stabilization | Extending without promotion plan |
+
+**Promotion workflow** for _experimental modules:
+1. Create canonical landing zone (e.g., `app/ai_cam/`, `app/joblog/`)
+2. Move core logic to canonical path
+3. Convert `_experimental/*` to shim that imports from canonical
+4. Any time you touch `_experimental/`, ask: "Promote path exists?"
+
+**Warning signs of drift:**
+- Creating new `/api/cam/<something>` that duplicates existing
+- Adding `fetch()` in components instead of SDK helpers
+- Storing geometry in inches instead of mm
+- Creating Pydantic models that duplicate `CamIntentV1` shape
+- Adding features in `_experimental/` without promotion path
+
+---
+
 ## Quick Reference Commands
 
 ```powershell
@@ -699,4 +841,36 @@ LEGACY_ROUTES: List[Tuple[str, str, str]] = [
     # (regex_pattern, canonical_replacement, notes)
     (r"^/api/old/path", "/api/new/path", "Migration notes"),
 ]
+```
+
+---
+
+## PowerShell Commands (Windows)
+
+> For Windows local development. CI and dev container use bash (see Quick Start).
+
+```powershell
+# Backend
+cd services/api
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd packages/client
+npm install
+npm run dev
+
+# Tests (PowerShell scripts)
+.\test_adaptive_l1.ps1
+.\test_adaptive_l2.ps1
+.\scripts\Test-RMOS-Sandbox.ps1
+.\scripts\Test-RMOS-SlicePreview.ps1
+
+# Multi-post export test
+curl -X POST http://localhost:8000/geometry/export_bundle_multi `
+  -H 'Content-Type: application/json' `
+  -d '{"geometry":{"units":"mm","paths":[{"type":"line","x1":0,"y1":0,"x2":60,"y2":0}]}, "gcode":"G90\nM30\n", "post_ids":["GRBL","Mach4","LinuxCNC"]}' `
+  -o multi_bundle.zip
 ```
