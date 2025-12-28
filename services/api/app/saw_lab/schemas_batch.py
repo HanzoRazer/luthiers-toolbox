@@ -142,3 +142,11 @@ class SawBatchToolpathsResponse(BaseModel):
     error_count: int
 
     results: List[SawBatchOpToolpathsResult]
+
+
+class SawBatchOpToolpathsLookupResponse(BaseModel):
+    """
+    Optional typed response if you later want strict models on the alias endpoints.
+    (Router currently returns raw artifacts for maximum compatibility.)
+    """
+    artifacts: List[dict]
