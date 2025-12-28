@@ -11,6 +11,7 @@
  * - Variant list with selection
  * - Compare mode for SVG diffs
  * - Promotion + notes + lineage panels
+ * - Bulk selection + bulk reject
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
@@ -18,6 +19,8 @@ import { useRoute } from "vue-router";
 import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
 import RejectVariantButton from "@/components/rmos/RejectVariantButton.vue";
 import UndoRejectButton from "@/components/rmos/UndoRejectButton.vue";
+import BulkRejectModal from "@/components/rmos/BulkRejectModal.vue";
+import BulkPromoteModal from "@/components/rmos/BulkPromoteModal.vue";
 import {
   listAdvisoryVariants,
   type AdvisoryVariantSummary,
@@ -49,6 +52,56 @@ const variants = ref<AdvisoryVariantSummary[]>([]);
 const selected = ref<string | null>(null);
 const compareLeft = ref<string | null>(null);
 const compareRight = ref<string | null>(null);
+
+// Bulk selection state
+const selectedIds = ref<Set<string>>(new Set());
+const bulkBusy = ref(false);
+const bulkRejectOpen = ref(false);
+const bulkPromoteOpen = ref(false);
+
+function toggleSelected(id: string) {
+  const s = new Set(selectedIds.value);
+  if (s.has(id)) s.delete(id);
+  else s.add(id);
+  selectedIds.value = s;
+}
+
+function clearSelection() {
+  selectedIds.value = new Set();
+}
+
+function selectAll() {
+  selectedIds.value = new Set(filteredSorted.value.map((v) => v.advisory_id));
+}
+
+const selectedNonRejectedIds = computed(() => {
+  const s = selectedIds.value;
+  return filteredSorted.value
+    .filter((v) => s.has(v.advisory_id) && deriveStatus(v) !== "REJECTED")
+    .map((v) => v.advisory_id);
+});
+
+const selectedPromotableIds = computed(() => {
+  const s = selectedIds.value;
+  return filteredSorted.value
+    .filter((v) => {
+      const status = deriveStatus(v);
+      return s.has(v.advisory_id) && status !== "REJECTED" && status !== "PROMOTED";
+    })
+    .map((v) => v.advisory_id);
+});
+
+// Risk level map for bulk promote modal
+type Risk = "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "ERROR";
+const riskById = computed<Record<string, Risk>>(() => {
+  const out: Record<string, Risk> = {};
+  for (const v of variants.value) {
+    out[v.advisory_id] = ((v.risk_level ?? "UNKNOWN").toUpperCase() as Risk);
+  }
+  return out;
+});
+
+const apiBase = "/api";
 
 function deriveStatus(v: AdvisoryVariantSummary): VariantStatus {
   // Prefer server-derived
@@ -224,14 +277,60 @@ watch(runId, () => {
         </div>
 
         <div v-else class="list">
+          <!-- Bulk action bar -->
+          <div v-if="selectedIds.size > 0" class="bulkBar">
+            <div class="bulkInfo">
+              <strong>{{ selectedIds.size }}</strong> selected
+              <button class="btn tiny secondary" @click="clearSelection">Clear</button>
+            </div>
+            <div class="bulkActions">
+              <button
+                class="btn tiny primary"
+                :disabled="bulkBusy || !selectedPromotableIds.length"
+                @click="bulkPromoteOpen = true"
+                title="Promote selected variants to manufacturing candidates"
+              >
+                Promote Selected ({{ selectedPromotableIds.length }})
+              </button>
+              <button
+                class="btn tiny danger"
+                :disabled="bulkBusy || !selectedNonRejectedIds.length"
+                @click="bulkRejectOpen = true"
+                title="Rejects selected variants (applies one reason code to all)"
+              >
+                Reject Selected ({{ selectedNonRejectedIds.length }})
+              </button>
+            </div>
+          </div>
+
+          <!-- Select all toggle -->
+          <div class="selectAllRow">
+            <label class="checkLabel">
+              <input
+                type="checkbox"
+                :checked="selectedIds.size === filteredSorted.length && filteredSorted.length > 0"
+                :indeterminate="selectedIds.size > 0 && selectedIds.size < filteredSorted.length"
+                @change="selectedIds.size === filteredSorted.length ? clearSelection() : selectAll()"
+              />
+              <span class="small subtle">Select all ({{ filteredSorted.length }})</span>
+            </label>
+          </div>
+
           <button
             v-for="v in filteredSorted"
             :key="v.advisory_id"
             class="row"
-            :class="{ on: selected === v.advisory_id }"
+            :class="{ on: selected === v.advisory_id, checked: selectedIds.has(v.advisory_id) }"
             :title="variantHoverTitle(v)"
             @click="selected = v.advisory_id"
           >
+            <div class="rowCheck" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(v.advisory_id)"
+                @change="toggleSelected(v.advisory_id)"
+              />
+            </div>
             <div class="rowMain">
               <div class="rowTop">
                 <div class="mono">{{ v.advisory_id.slice(0, 12) }}…</div>
@@ -298,6 +397,26 @@ watch(runId, () => {
         <ManufacturingCandidateList :runId="runId" apiBase="/api/rmos" />
       </div>
     </div>
+
+    <!-- Bulk Reject Modal -->
+    <BulkRejectModal
+      :open="bulkRejectOpen"
+      :runId="runId"
+      :advisoryIds="selectedNonRejectedIds"
+      @close="bulkRejectOpen = false"
+      @done="bulkRejectOpen = false; load(); clearSelection();"
+    />
+
+    <!-- Bulk Promote Modal -->
+    <BulkPromoteModal
+      :open="bulkPromoteOpen"
+      :runId="runId"
+      :advisoryIds="selectedPromotableIds"
+      :riskById="riskById"
+      :apiBase="apiBase"
+      @close="bulkPromoteOpen = false"
+      @done="bulkPromoteOpen = false; load(); clearSelection();"
+    />
   </div>
 </template>
 
@@ -326,6 +445,16 @@ watch(runId, () => {
 .btn { padding: 8px 10px; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 10px; background: white; cursor: pointer; }
 .btn.tiny { padding: 4px 8px; font-size: 0.9em; }
 .btn.secondary { opacity: 0.85; }
+.btn.danger { border-color: rgba(176,0,32,0.35); background: rgba(176,0,32,0.06); }
+
+/* Bulk selection */
+.bulkBar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 10px; margin-bottom: 8px; }
+.bulkInfo { display: flex; align-items: center; gap: 8px; }
+.bulkActions { display: flex; gap: 8px; }
+.selectAllRow { margin-bottom: 8px; }
+.checkLabel { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.rowCheck { display: flex; align-items: center; padding-right: 8px; }
+.row.checked { background: rgba(0,0,0,0.03); }
 
 .mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 .subtle { opacity: 0.75; }

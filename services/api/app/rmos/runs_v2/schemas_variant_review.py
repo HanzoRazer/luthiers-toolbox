@@ -90,3 +90,36 @@ class PromoteVariantResponse(BaseModel):
     reason: str
     manufactured_candidate_id: Optional[str] = None
     message: Optional[str] = None
+
+
+# =============================================================================
+# Bulk Promote (Product Bundle)
+# =============================================================================
+
+class BulkPromoteRequest(BaseModel):
+    """Request body for bulk-promoting multiple advisory variants."""
+    advisory_ids: List[str] = Field(..., min_length=1, max_length=100)
+    label: Optional[str] = Field(None, max_length=120)
+    note: Optional[str] = Field(None, max_length=2000)
+
+
+class BulkPromoteItemResult(BaseModel):
+    """Result of promoting a single advisory variant."""
+    advisory_id: str
+    success: bool
+    decision: Optional[Literal["ALLOW", "BLOCK"]] = None
+    risk_level: Optional[Literal["GREEN", "YELLOW", "RED"]] = None
+    score: Optional[float] = None
+    reason: Optional[str] = None
+    manufactured_candidate_id: Optional[str] = None
+    error: Optional[str] = None
+
+
+class BulkPromoteResponse(BaseModel):
+    """Response from bulk-promoting advisory variants."""
+    run_id: str
+    total: int
+    succeeded: int
+    failed: int
+    blocked: int
+    results: List[BulkPromoteItemResult]

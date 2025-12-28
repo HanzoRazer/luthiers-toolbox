@@ -505,27 +505,32 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 ## Duplicate Surface Warnings
 
 > Endpoints that exist in multiple places. UI must target the correct one.
+> 
+> **Label Key:**
+> - `CANONICAL` – Source of truth, SDK/frontend should use this
+> - `LEGACY_ALIAS` – Old path, works but migrate away
+> - `SHADOW` – Duplicate impl, do not call
 
 ### Workflow Sessions
 
 **DUPLICATE:** Same functionality at two prefixes.
 
-| Surface A (RMOS - Canonical) | Surface B (Art Studio - Legacy) |
-|------------------------------|--------------------------------|
-| `GET /api/rmos/workflow/sessions` | `GET /api/art-studio/workflow/sessions` |
-| `GET /api/rmos/workflow/sessions/{session_id}` | `GET /api/art-studio/workflow/sessions/{session_id}` |
-| `POST /api/rmos/workflow/sessions/{session_id}/design` | `PUT /api/art-studio/workflow/sessions/{session_id}/design` |
-| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/request` | (not implemented) |
-| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/store` | (not implemented) |
-| `POST /api/rmos/workflow/approve` | (not implemented) |
-| `POST /api/rmos/workflow/reject` | (not implemented) |
-| `POST /api/rmos/workflow/sessions/{session_id}/revision` | (not implemented) |
-| `POST /api/rmos/workflow/sessions/{session_id}/save-snapshot` | `POST /api/art-studio/workflow/sessions/{session_id}/save-snapshot` |
-| `GET /api/rmos/workflow/generators` | `GET /api/art-studio/workflow/generators` |
+| Endpoint | Label | Notes |
+|----------|-------|-------|
+| `/api/rmos/workflow/sessions` | **CANONICAL** | Manufacturing orchestration |
+| `/api/rmos/workflow/sessions/{session_id}` | **CANONICAL** | |
+| `/api/rmos/workflow/sessions/{session_id}/design` | **CANONICAL** | POST method |
+| `/api/rmos/workflow/approve` | **CANONICAL** | |
+| `/api/rmos/workflow/reject` | **CANONICAL** | |
+| `/api/rmos/workflow/sessions/{session_id}/save-snapshot` | **CANONICAL** | |
+| `/api/rmos/workflow/generators` | **CANONICAL** | |
+| `/api/art-studio/workflow/sessions` | `LEGACY_ALIAS` | Shim to RMOS |
+| `/api/art-studio/workflow/sessions/{session_id}` | `LEGACY_ALIAS` | Shim to RMOS |
+| `/api/art-studio/workflow/sessions/{session_id}/design` | `LEGACY_ALIAS` | PUT method (differs) |
+| `/api/art-studio/workflow/sessions/{session_id}/save-snapshot` | `LEGACY_ALIAS` | Shim to RMOS |
+| `/api/art-studio/workflow/generators` | `LEGACY_ALIAS` | Shim to RMOS |
 
-**Risk:** UI component hits one, backend fix deployed to the other.
-
-**Recommendation:** Consolidate to `/api/rmos/workflow/*` and deprecate `/api/art-studio/workflow/*`.
+**Action:** Migrate frontend to `/api/rmos/workflow/*`. Add deprecation headers to art-studio lane.
 
 ---
 
@@ -533,15 +538,14 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 
 **DUPLICATE:** Three separate snapshot APIs.
 
-| Surface A | Surface B | Surface C |
-|-----------|-----------|-----------|
-| `/api/art/snapshots/*` | `/api/art/rosette/snapshots/*` | — |
+| Surface | Label | Notes |
+|---------|-------|-------|
+| `/api/art/snapshots/*` | **CANONICAL** | Generic art snapshots |
+| `/api/art/rosette/snapshots/*` | **CANONICAL** | Rosette-specific snapshots |
 
 Both have `recent`, `{id}`, `export`, `import` endpoints.
 
-**Risk:** Snapshot created via one API invisible to the other.
-
-**Recommendation:** Determine canonical surface and redirect/deprecate others.
+**Clarification:** These are different snapshot types (generic vs rosette). Both are canonical for their domain.
 
 ---
 
@@ -549,14 +553,12 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 
 **DUPLICATE:** Two pattern CRUD APIs.
 
-| RMOS | Art Studio |
-|------|------------|
-| `/api/rmos/patterns` | `/api/art/patterns` |
-| `/api/rmos/patterns/{id}` | `/api/art/patterns/{id}` |
+| Endpoint | Label | Notes |
+|----------|-------|-------|
+| `/api/rmos/patterns` | **CANONICAL** | Manufacturing patterns (strip families) |
+| `/api/art/patterns` | **CANONICAL** | Art design patterns (rosettes, etc.) |
 
-**Risk:** Pattern created in one store not visible in the other.
-
-**Recommendation:** Clarify if these are different pattern types or consolidate.
+**Clarification:** Different pattern types. RMOS = manufacturing, Art = design. Both canonical for their domain.
 
 ---
 
@@ -564,16 +566,14 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 
 **DUPLICATE:** Multiple feasibility endpoints.
 
-| Endpoint | Notes |
-|----------|-------|
-| `POST /feasibility` | Root-mounted, no `/api` prefix |
-| `POST /api/art/rosette/feasibility/batch` | Art Studio lane |
-| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/request` | Session-scoped (request) |
-| `POST /api/rmos/workflow/sessions/{session_id}/feasibility/store` | Session-scoped (store) |
+| Endpoint | Label | Notes |
+|----------|-------|-------|
+| `/api/rmos/workflow/sessions/{session_id}/feasibility/request` | **CANONICAL** | Session-scoped async request |
+| `/api/rmos/workflow/sessions/{session_id}/feasibility/store` | **CANONICAL** | Session-scoped store result |
+| `/api/art/rosette/feasibility/batch` | **CANONICAL** | Batch feasibility for art studio |
+| `POST /feasibility` | `SHADOW` | Root-mounted legacy, avoid |
 
-**Risk:** Different implementations, different response shapes.
-
-**Recommendation:** Use RMOS workflow endpoints for new development.
+**Action:** New development uses RMOS workflow endpoints. Root `/feasibility` should not be called directly.
 
 ---
 

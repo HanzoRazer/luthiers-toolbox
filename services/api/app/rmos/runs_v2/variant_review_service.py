@@ -388,3 +388,156 @@ def promote_variant(
         manufactured_candidate_id=cand.candidate_id,
         message=None,
     )
+
+
+# =============================================================================
+# Bulk Promote (Product Bundle)
+# =============================================================================
+
+from .schemas_variant_review import (
+    BulkPromoteRequest,
+    BulkPromoteItemResult,
+    BulkPromoteResponse,
+)
+
+
+def bulk_promote_variants(
+    run_id: str,
+    payload: BulkPromoteRequest,
+    principal: Principal,
+) -> BulkPromoteResponse:
+    """Bulk-promote multiple advisory variants to manufacturing candidates.
+
+    Processes each variant individually, collecting results.
+    Continues on individual failures to maximize throughput.
+
+    Returns aggregate statistics and per-item results.
+    """
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+
+    # Get current candidates to detect duplicates
+    candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
+    already_promoted: set[str] = set()
+    for c in candidates:
+        c_adv_id = c.get("advisory_id") if isinstance(c, dict) else getattr(c, "advisory_id", None)
+        if c_adv_id:
+            already_promoted.add(c_adv_id)
+
+    user_id = principal.user_id
+    now = _utc_now()
+
+    results: List[BulkPromoteItemResult] = []
+    succeeded = 0
+    failed = 0
+    blocked = 0
+
+    for advisory_id in payload.advisory_ids:
+        # Check if advisory is linked to run
+        if advisory_id not in allowed:
+            results.append(BulkPromoteItemResult(
+                advisory_id=advisory_id,
+                success=False,
+                error="Advisory blob not linked to this run",
+            ))
+            failed += 1
+            continue
+
+        # Check if already promoted
+        if advisory_id in already_promoted:
+            results.append(BulkPromoteItemResult(
+                advisory_id=advisory_id,
+                success=False,
+                error="Variant already promoted",
+            ))
+            failed += 1
+            continue
+
+        # Resolve blob
+        path = get_attachment_path(advisory_id)
+        if not path:
+            results.append(BulkPromoteItemResult(
+                advisory_id=advisory_id,
+                success=False,
+                error="Advisory blob not found (CAS missing)",
+            ))
+            failed += 1
+            continue
+
+        try:
+            data = Path(path).read_bytes()
+            mime = _mime_from_bytes(data[:4096])
+
+            decision = "ALLOW"
+            risk = "GREEN"
+            score = 1.0
+            reason = "ok"
+
+            if mime == "image/svg+xml":
+                svg_text = data.decode("utf-8", errors="ignore")
+                decision, risk, score, reason = _risk_from_svg_for_binding(svg_text)
+            else:
+                decision, risk, score, reason = ("ALLOW", "YELLOW", 0.60, f"non_svg:{mime}")
+
+            if decision == "BLOCK":
+                results.append(BulkPromoteItemResult(
+                    advisory_id=advisory_id,
+                    success=False,
+                    decision="BLOCK",
+                    risk_level="RED",
+                    score=score,
+                    reason=reason,
+                    error="Promotion blocked by bind-time policy",
+                ))
+                blocked += 1
+                continue
+
+            # Create manufacturing candidate
+            cand = ManufacturingCandidate(
+                candidate_id=f"mc_{uuid4().hex[:12]}",
+                advisory_id=advisory_id,
+                status="PROPOSED",
+                label=payload.label,
+                note=payload.note,
+                created_at_utc=now,
+                created_by=user_id,
+                updated_at_utc=now,
+                updated_by=user_id,
+            )
+            candidates.append(cand)
+            already_promoted.add(advisory_id)  # Track to prevent duplicates in same batch
+
+            results.append(BulkPromoteItemResult(
+                advisory_id=advisory_id,
+                success=True,
+                decision="ALLOW",
+                risk_level=risk,  # type: ignore
+                score=score,
+                reason=reason,
+                manufactured_candidate_id=cand.candidate_id,
+            ))
+            succeeded += 1
+
+        except Exception as e:
+            results.append(BulkPromoteItemResult(
+                advisory_id=advisory_id,
+                success=False,
+                error=str(e),
+            ))
+            failed += 1
+
+    # Persist all changes at once
+    run.manufacturing_candidates = candidates
+    update_run(run)
+
+    return BulkPromoteResponse(
+        run_id=run_id,
+        total=len(payload.advisory_ids),
+        succeeded=succeeded,
+        failed=failed,
+        blocked=blocked,
+        results=results,
+    )

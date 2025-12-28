@@ -5,8 +5,7 @@ import { rejectAdvisoryVariant, type RejectReasonCode } from "@/api/rmosRuns";
 const props = defineProps<{
   open: boolean;
   runId: string;
-  advisoryIds: string[];
-  apiBase?: string; // default "/api"
+  advisoryIds: string[]; // ids to reject
 }>();
 
 const emit = defineEmits<{
@@ -14,15 +13,13 @@ const emit = defineEmits<{
   (e: "done"): void;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
-
 const reasonCode = ref<RejectReasonCode>("GEOMETRY_UNSAFE");
 const reasonDetail = ref("");
 const operatorNote = ref("");
 
 const busy = ref(false);
 const error = ref<string | null>(null);
-const doneCount = ref(0);
+const progress = ref<{ done: number; total: number }>({ done: 0, total: 0 });
 
 const total = computed(() => props.advisoryIds.length);
 const canSubmit = computed(() => !busy.value && total.value > 0);
@@ -31,12 +28,13 @@ watch(
   () => props.open,
   (v) => {
     if (v) {
+      // reset each time modal opens
       reasonCode.value = "GEOMETRY_UNSAFE";
       reasonDetail.value = "";
       operatorNote.value = "";
       busy.value = false;
       error.value = null;
-      doneCount.value = 0;
+      progress.value = { done: 0, total: props.advisoryIds.length };
     }
   }
 );
@@ -45,16 +43,17 @@ async function submit() {
   if (!canSubmit.value) return;
   busy.value = true;
   error.value = null;
-  doneCount.value = 0;
+  progress.value = { done: 0, total: props.advisoryIds.length };
 
   try {
+    // Sequential = predictable, easy to diagnose, gentle on backend
     for (const advisoryId of props.advisoryIds) {
-      await rejectAdvisoryVariant(apiBase.value, props.runId, advisoryId, {
+      await rejectAdvisoryVariant(props.runId, advisoryId, {
         reason_code: reasonCode.value,
         reason_detail: reasonDetail.value.trim() || null,
         operator_note: operatorNote.value.trim() || null,
       });
-      doneCount.value += 1;
+      progress.value = { done: progress.value.done + 1, total: progress.value.total };
     }
     emit("done");
   } catch (e: any) {
@@ -70,7 +69,7 @@ async function submit() {
     <div class="card">
       <div class="title">Reject Selected Variants</div>
       <div class="subtle">
-        This will reject <strong>{{ total }}</strong> variant(s).
+        This will mark <strong>{{ total }}</strong> variant(s) as <strong>REJECTED</strong>.
       </div>
 
       <label class="ctl">
@@ -86,21 +85,24 @@ async function submit() {
 
       <label class="ctl">
         <span>Reason detail (optional)</span>
-        <input v-model="reasonDetail" placeholder="Short detail applied to all..." />
+        <input v-model="reasonDetail" placeholder="Short detail to apply to all…" />
       </label>
 
       <label class="ctl">
         <span>Operator note (optional)</span>
-        <textarea v-model="operatorNote" placeholder="Longer note applied to all..." />
+        <textarea v-model="operatorNote" placeholder="Longer note (applies to all)…" />
       </label>
 
-      <div v-if="busy" class="subtle">Rejecting... {{ doneCount }} / {{ total }}</div>
+      <div v-if="busy" class="subtle">
+        Rejecting… {{ progress.done }} / {{ progress.total }}
+      </div>
+
       <div v-if="error" class="error">{{ error }}</div>
 
       <div class="row">
         <button class="btn tiny secondary" :disabled="busy" @click="emit('close')">Cancel</button>
         <button class="btn tiny danger" :disabled="!canSubmit" @click="submit">
-          {{ busy ? "Rejecting..." : "Reject Selected" }}
+          {{ busy ? "Rejecting…" : "Reject Selected" }}
         </button>
       </div>
     </div>
