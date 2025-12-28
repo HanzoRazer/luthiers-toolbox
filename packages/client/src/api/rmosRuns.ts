@@ -180,3 +180,79 @@ export async function fetchRunAttachments(runId: string): Promise<{
   }
   return response.json();
 }
+
+// =============================================================================
+// Advisory Variant Reject/Unreject APIs
+// =============================================================================
+
+export type RejectReasonCode =
+  | "GEOMETRY_UNSAFE"
+  | "TEXT_REQUIRES_OUTLINE"
+  | "AESTHETIC"
+  | "DUPLICATE"
+  | "OTHER";
+
+export interface RejectVariantRequest {
+  reason_code: RejectReasonCode;
+  reason_detail?: string | null;
+  operator_note?: string | null;
+}
+
+export interface RejectVariantResponse {
+  run_id: string;
+  advisory_id: string;
+  rejected: boolean;
+  rejection_reason_code?: string | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+  rejected_at_utc?: string | null;
+  rejected_by?: string | null;
+}
+
+export interface UnrejectVariantResponse {
+  run_id: string;
+  advisory_id: string;
+  cleared: boolean;
+}
+
+/**
+ * Reject an advisory variant.
+ */
+export async function rejectAdvisoryVariant(
+  apiBase: string,
+  runId: string,
+  advisoryId: string,
+  payload: RejectVariantRequest
+): Promise<RejectVariantResponse> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/advisory/${encodeURIComponent(advisoryId)}/reject`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Reject failed (${res.status})`);
+  return await res.json();
+}
+
+/**
+ * Clear rejection status for an advisory variant.
+ */
+export async function unrejectAdvisoryVariant(
+  apiBase: string,
+  runId: string,
+  advisoryId: string
+): Promise<UnrejectVariantResponse> {
+  const url =
+    `${apiBase}/rmos/runs/${encodeURIComponent(runId)}` +
+    `/advisory/${encodeURIComponent(advisoryId)}/unreject`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Accept": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Unreject failed (${res.status})`);
+  return await res.json();
+}

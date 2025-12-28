@@ -33,6 +33,9 @@ from .schemas_variant_review import (
     AdvisoryVariantReviewRecord,
     PromoteVariantRequest,
     PromoteVariantResponse,
+    RejectVariantRequest,
+    RejectVariantResponse,
+    UnrejectVariantResponse,
 )
 from .schemas_manufacturing import ManufacturingCandidate
 
@@ -132,6 +135,9 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
     # Review records stored on run (dict keyed by advisory_id)
     review_map: Dict[str, Any] = getattr(run, "advisory_reviews", None) or {}
 
+    # Rejection records stored on run (dict keyed by advisory_id)
+    rejection_map: Dict[str, Any] = getattr(run, "advisory_rejections", None) or {}
+
     # Manufacturing candidates (list) - may be dicts or objects depending on storage
     candidates: list[Any] = list(getattr(run, "manufacturing_candidates", []) or [])
     promoted_ids: set[str] = set()
@@ -184,6 +190,10 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
         rating = rec.get("rating")
         notes = rec.get("notes")
 
+        # Get rejection info
+        rej = rejection_map.get(adv_id) or {}
+        is_rejected = rej.get("rejected", False)
+
         items.append(
             AdvisoryVariantSummary(
                 advisory_id=adv_id,
@@ -195,6 +205,11 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 rating=rating,
                 notes=notes,
                 promoted=adv_id in promoted_ids,
+                rejected=is_rejected,
+                rejection_reason_code=rej.get("rejection_reason_code") if is_rejected else None,
+                rejection_reason_detail=rej.get("rejection_reason_detail") if is_rejected else None,
+                rejection_operator_note=rej.get("rejection_operator_note") if is_rejected else None,
+                rejected_at_utc=rej.get("rejected_at_utc") if is_rejected else None,
             )
         )
 
@@ -329,4 +344,84 @@ def promote_variant(
         reason=reason,
         manufactured_candidate_id=cand.candidate_id,
         message=None,
+    )
+
+
+def reject_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+    principal: Principal,
+) -> RejectVariantResponse:
+    """Reject an advisory variant.
+
+    Stores rejection metadata on the run artifact (does not delete advisory blob).
+    RBAC: requires admin/operator role (enforced at API layer).
+    """
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
+
+    # Get or create rejections map
+    rejections: Dict[str, Any] = dict(getattr(run, "advisory_rejections", None) or {})
+    now = _utc_now()
+    user_id = principal.user_id
+
+    rejections[advisory_id] = {
+        "rejected": True,
+        "rejection_reason_code": payload.reason_code,
+        "rejection_reason_detail": payload.reason_detail,
+        "rejection_operator_note": payload.operator_note,
+        "rejected_at_utc": now,
+        "rejected_by": user_id,
+    }
+    run.advisory_rejections = rejections
+    update_run(run)
+
+    return RejectVariantResponse(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        rejected=True,
+        rejection_reason_code=payload.reason_code,
+        rejection_reason_detail=payload.reason_detail,
+        rejection_operator_note=payload.operator_note,
+        rejected_at_utc=now,
+        rejected_by=user_id,
+    )
+
+
+def unreject_variant(
+    run_id: str,
+    advisory_id: str,
+    principal: Principal,
+) -> UnrejectVariantResponse:
+    """Clear rejection status for an advisory variant.
+
+    Removes rejection metadata from the run artifact.
+    RBAC: requires admin/operator role (enforced at API layer).
+    """
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
+
+    rejections: Dict[str, Any] = dict(getattr(run, "advisory_rejections", None) or {})
+    cleared = advisory_id in rejections
+
+    if cleared:
+        del rejections[advisory_id]
+        run.advisory_rejections = rejections
+        update_run(run)
+
+    return UnrejectVariantResponse(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        cleared=cleared,
     )

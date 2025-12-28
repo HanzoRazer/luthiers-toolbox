@@ -1089,11 +1089,16 @@ from .schemas_variant_review import (
     AdvisoryVariantReviewRecord,
     PromoteVariantRequest,
     PromoteVariantResponse,
+    RejectVariantRequest,
+    RejectVariantResponse,
+    UnrejectVariantResponse,
 )
 from .variant_review_service import (
     list_variants,
     save_review,
     promote_variant,
+    reject_variant,
+    unreject_variant,
 )
 
 
@@ -1165,6 +1170,56 @@ def post_promote_advisory_variant(
     Returns 409 if already promoted.
     """
     return promote_variant(run_id, advisory_id, payload, principal)
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/reject", response_model=RejectVariantResponse)
+def post_reject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+    principal: Principal = Depends(require_roles("admin", "operator")),
+):
+    """
+    Reject an advisory variant.
+
+    Requires authenticated user with role: admin or operator.
+
+    Rejection stores metadata on the run (does not delete the advisory blob).
+    Use unreject to clear rejection status.
+
+    Reason codes:
+    - GEOMETRY_UNSAFE: Geometry has safety concerns
+    - TEXT_REQUIRES_OUTLINE: Contains text that needs outline conversion
+    - AESTHETIC: Aesthetic/design concerns
+    - DUPLICATE: Duplicate of another variant
+    - OTHER: Other reason (use reason_detail)
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient.
+    Returns 404 if run or advisory not found.
+    """
+    return reject_variant(run_id, advisory_id, payload, principal)
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/unreject", response_model=UnrejectVariantResponse)
+def post_unreject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    principal: Principal = Depends(require_roles("admin", "operator")),
+):
+    """
+    Clear rejection status for an advisory variant.
+
+    Requires authenticated user with role: admin or operator.
+
+    Removes rejection metadata from the run artifact.
+    Returns cleared=true if rejection was removed, false if not rejected.
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient.
+    Returns 404 if run or advisory not found.
+    """
+    return unreject_variant(run_id, advisory_id, principal)
 
 
 # =============================================================================

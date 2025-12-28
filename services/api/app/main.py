@@ -175,11 +175,12 @@ from .routers.instrument_geometry_router import router as instrument_geometry_ro
 from .routers.registry_router import router as registry_router
 
 # =============================================================================
-# SAW LAB (2 routers)
+# SAW LAB (3 routers)
 # Note: saw_blade/gcode/validate/telemetry routers broken - need cam_core
 # =============================================================================
 from .saw_lab.debug_router import router as saw_debug_router
 from .saw_lab.compare_router import router as saw_compare_router
+from .saw_lab.batch_router import router as saw_batch_router
 
 # =============================================================================
 # SPECIALTY MODULES - Guitar-specific calculators
@@ -628,9 +629,10 @@ app.include_router(instrument_geometry_router, prefix="/api/instrument", tags=["
 # Data Registry (1)
 app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry"])
 
-# Saw Lab (2)
+# Saw Lab (3)
 app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
+app.include_router(saw_batch_router)  # Saw Lab Batch (includes /api/saw/batch prefix)
 
 # =============================================================================
 # WAVE 20: OPTION C - CANONICAL API AXES (December 2025)
