@@ -43,6 +43,7 @@ from app.services.saw_lab_batch_metrics_rollup_service import (
     compute_execution_rollup,
     persist_execution_rollup,
 )
+from app.services.saw_lab_learning_hook_config import is_saw_lab_learning_hook_enabled
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -436,3 +437,32 @@ def get_latest_rollup_artifact_for_execution(
     )
     items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
     return items
+
+
+@router.get("/learning-events/by-execution")
+def list_learning_events_by_execution(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """
+    Convenience alias:
+      GET /api/saw/batch/learning-events/by-execution?batch_execution_artifact_id=...&limit=&offset=
+    Returns newest-first learning events emitted from job logs (or otherwise) for a given execution.
+    """
+    items = query_run_artifacts(
+        kind="saw_lab_learning_event",
+        parent_batch_execution_artifact_id=batch_execution_artifact_id,
+        limit=max(limit, 100),
+        offset=0,
+    )
+    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
+    return items[offset : offset + limit]
+
+
+@router.get("/learning-hook/status")
+def get_learning_hook_status():
+    """
+    Simple status endpoint so UI/dev can confirm if the feature is enabled.
+    """
+    return {"SAW_LAB_LEARNING_HOOK_ENABLED": is_saw_lab_learning_hook_enabled()}
