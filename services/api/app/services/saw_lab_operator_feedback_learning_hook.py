@@ -148,6 +148,15 @@ def record_operator_feedback_event(
         },
     }
 
+    # Optional: include tool/material hints if the execution payload carries them later.
+    # This is forward-compatible and safe to ignore.
+    try:
+        event_payload["refs"]["tool_id"] = (ex_payload.get("tool_id") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("tool_id")
+        event_payload["refs"]["material_id"] = (ex_payload.get("material_id") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("material_id")
+        event_payload["refs"]["thickness_mm"] = (ex_payload.get("thickness_mm") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("thickness_mm")
+    except Exception:
+        pass
+
     art = write_run_artifact(
         kind="saw_lab_learning_event",
         status="OK",

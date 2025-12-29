@@ -82,6 +82,8 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SAW_LAB_LEARNED_OVERRIDES_PATH", str(overrides_path))
     # Keep learning hook OFF by default in tests unless explicitly enabled per-test.
     monkeypatch.setenv("SAW_LAB_LEARNING_HOOK_ENABLED", "false")
+    # Keep learning apply OFF by default in tests unless explicitly enabled per-test.
+    monkeypatch.setenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "false")
 
     # --- 3) Temp SQLite DB isolation (workflow_sessions, artifacts index, etc.) ---
     # Only set DATABASE_URL if not already forced by the test runner/CI.

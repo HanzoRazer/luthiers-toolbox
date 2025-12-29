@@ -46,6 +46,14 @@ from app.services.saw_lab_batch_metrics_rollup_service import (
 from app.services.saw_lab_learning_hook_config import is_saw_lab_learning_hook_enabled
 from app.services.saw_lab_learning_decision_service import create_learning_decision
 from app.services.saw_lab_learned_overrides_resolver import resolve_learned_multipliers
+from app.services.saw_lab_learning_apply_service import (
+    is_apply_accepted_overrides_enabled,
+    tune_context_from_accepted_learning,
+)
+from app.services.saw_lab_execution_lookup_service import (
+    list_executions_by_decision as lookup_executions_by_decision,
+    list_executions_with_learning_applied,
+)
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -528,4 +536,63 @@ def resolve_learning_overrides_preview(
         material_id=material_id,
         thickness_mm=thickness_mm,
         limit_events=limit_events,
+    )
+
+
+@router.get("/learning-overrides/apply/status")
+def get_learning_overrides_apply_status():
+    """
+    Simple status endpoint so UI/dev can confirm if the apply feature is enabled.
+    """
+    return {"SAW_LAB_APPLY_ACCEPTED_OVERRIDES": is_apply_accepted_overrides_enabled()}
+
+
+@router.post("/learning-overrides/apply")
+def apply_learning_overrides_to_context(
+    context: dict,
+    tool_id: Optional[str] = Query(default=None),
+    material_id: Optional[str] = Query(default=None),
+    thickness_mm: Optional[float] = Query(default=None),
+    limit_events: int = Query(default=200, ge=1, le=2000),
+):
+    """
+    Safe apply preview:
+      POST /api/saw/batch/learning-overrides/apply?tool_id=...&material_id=...
+      Body: { "spindle_rpm": 8000, "feed_rate": 1200, "doc_mm": 3.0 }
+
+    Returns:
+      - resolved multipliers (from ACCEPTed events)
+      - tuned_context (copy with multipliers applied)
+      - tuning_stamp (before/after, applied flag)
+      - apply_enabled (current flag state)
+
+    Does NOT persist anything. Pure read+compute.
+    """
+    return tune_context_from_accepted_learning(
+        context=context,
+        tool_id=tool_id,
+        material_id=material_id,
+        thickness_mm=thickness_mm,
+        limit_events=limit_events,
+    )
+
+
+@router.get("/executions/with-learning")
+def get_executions_with_learning_applied(
+    batch_label: Optional[str] = Query(default=None),
+    session_id: Optional[str] = Query(default=None),
+    only_applied: bool = Query(default=True),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """
+    Alias:
+      GET /api/saw/batch/executions/with-learning?only_applied=true&batch_label=...&session_id=...
+    """
+    return list_executions_with_learning_applied(
+        batch_label=batch_label,
+        session_id=session_id,
+        only_applied=only_applied,
+        limit=limit,
+        offset=offset,
     )

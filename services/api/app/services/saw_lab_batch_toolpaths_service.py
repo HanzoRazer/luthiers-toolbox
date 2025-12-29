@@ -12,6 +12,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.services.saw_lab_learning_apply_service import (
+    is_apply_accepted_overrides_enabled,
+    tune_context_from_accepted_learning,
+)
+
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -177,6 +182,51 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                     if isinstance(op, dict) and op.get("op_id"):
                         op_by_id[str(op["op_id"])] = op
 
+        # Optional: apply ACCEPTed learned multipliers (feature-flagged)
+        learning_tuning_stamp = None
+        learning_resolved = None
+        learning_base_context: Dict[str, Any] = {}
+
+        if is_apply_accepted_overrides_enabled():
+            # Try to infer tool/material/thickness from spec payload when available
+            spec_payload: Dict[str, Any] = {}
+            if spec_id:
+                try:
+                    spec_art = _read_artifact(spec_id)
+                    spec_payload = spec_art.get("payload") or {}
+                    if not isinstance(spec_payload, dict):
+                        spec_payload = {}
+                except Exception:
+                    spec_payload = {}
+
+            infer_tool_id = d_payload.get("tool_id") or spec_payload.get("tool_id")
+            infer_material_id = None
+            infer_thickness_mm = None
+            try:
+                items = spec_payload.get("items")
+                if isinstance(items, list) and items:
+                    infer_material_id = items[0].get("material_id")
+                    infer_thickness_mm = items[0].get("thickness_mm")
+            except Exception:
+                pass
+
+            # Build a base context with defaults to tune
+            base_context = {
+                "spindle_rpm": 18000,
+                "feed_rate": 800,
+                "doc_mm": 3.0,
+            }
+            tuned = tune_context_from_accepted_learning(
+                context=base_context,
+                tool_id=infer_tool_id,
+                material_id=infer_material_id,
+                thickness_mm=infer_thickness_mm,
+                limit_events=200,
+            )
+            learning_resolved = tuned.get("resolved")
+            learning_tuning_stamp = tuned.get("tuning_stamp")
+            learning_base_context = tuned.get("tuned_context") or base_context
+
         # Execute in explicit operator order
         for op_id in op_order:
             op_id_s = str(op_id)
@@ -247,9 +297,9 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                 "machine_id": machine_id,
                 "material_id": material_id,
                 "stock_thickness_mm": thickness_mm,
-                # conservative defaults; preset service can override later
-                "spindle_rpm": 18000,
-                "feed_rate": 800,
+                # Use learning-tuned defaults if available, else conservative defaults
+                "spindle_rpm": learning_base_context.get("spindle_rpm", 18000),
+                "feed_rate": learning_base_context.get("feed_rate", 800),
                 "kerf_width": 1.0,
             }
 
@@ -378,7 +428,17 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
             },
             "children": [{"artifact_id": cid, "kind": "saw_batch_op_toolpaths"} for cid in child_ids],
             "results": child_results,
+            "learning": {
+                "apply_enabled": bool(is_apply_accepted_overrides_enabled()),
+                "resolved": learning_resolved,
+                "tuning_stamp": learning_tuning_stamp,
+            },
         }
+
+        # Extract source_count for index_meta (safe access)
+        learning_source_count = None
+        if isinstance(learning_resolved, dict):
+            learning_source_count = learning_resolved.get("source_count")
 
         parent_id = _write_artifact(
             kind="saw_batch_execution",
@@ -395,6 +455,9 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                 "ok_count": ok_count,
                 "blocked_count": blocked_count,
                 "error_count": error_count,
+                "learning_apply_enabled": bool(is_apply_accepted_overrides_enabled()),
+                "learning_source_count": learning_source_count,
+                "learning_applied": (learning_tuning_stamp or {}).get("applied") if isinstance(learning_tuning_stamp, dict) else False,
             },
             payload=parent_payload,
         )
@@ -412,6 +475,11 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
             "blocked_count": blocked_count,
             "error_count": error_count,
             "results": child_results,
+            "learning": {
+                "apply_enabled": bool(is_apply_accepted_overrides_enabled()),
+                "resolved": learning_resolved,
+                "tuning_stamp": learning_tuning_stamp,
+            },
         }
 
     except Exception as e:
