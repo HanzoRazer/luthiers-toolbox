@@ -75,6 +75,7 @@ from app.services.saw_lab_rollup_history_service import (
 )
 from app.services.saw_lab_rollup_diff_service import diff_rollups
 from app.services.saw_lab_export_service import export_job_logs_csv, export_execution_rollups_csv
+from app.services.saw_lab_gcode_emit_service import export_op_toolpaths_gcode, export_execution_gcode
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -827,4 +828,36 @@ def download_execution_rollups_csv(
         content=csv_text,
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id}.csv"'},
+    )
+
+
+@router.get("/op-toolpaths/{artifact_id}/gcode")
+def download_op_gcode(artifact_id: str):
+    """
+    Download G-code for a single operation:
+      GET /api/saw/batch/op-toolpaths/{artifact_id}/gcode
+    """
+    from fastapi.responses import Response
+
+    result = export_op_toolpaths_gcode(op_toolpaths_artifact_id=artifact_id)
+    return Response(
+        content=result["gcode"],
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'},
+    )
+
+
+@router.get("/executions/{artifact_id}/gcode")
+def download_execution_gcode(artifact_id: str):
+    """
+    Download combined G-code for entire execution (all OK ops):
+      GET /api/saw/batch/executions/{artifact_id}/gcode
+    """
+    from fastapi.responses import Response
+
+    result = export_execution_gcode(batch_execution_artifact_id=artifact_id)
+    return Response(
+        content=result["gcode"],
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'},
     )
