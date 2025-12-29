@@ -54,6 +54,10 @@ from app.services.saw_lab_execution_lookup_service import (
     list_executions_by_decision as lookup_executions_by_decision,
     list_executions_with_learning_applied,
 )
+from app.services.saw_lab_execution_metrics_rollup_service import (
+    compute_execution_metrics_rollup,
+    persist_execution_metrics_rollup,
+)
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -595,4 +599,34 @@ def get_executions_with_learning_applied(
         only_applied=only_applied,
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get("/executions/metrics-rollup/by-execution")
+def get_execution_metrics_rollup_preview(
+    batch_execution_artifact_id: str = Query(...),
+    limit_job_logs: int = Query(default=500, ge=1, le=2000),
+):
+    """
+    Preview rollup without persisting:
+      GET /api/saw/batch/executions/metrics-rollup/by-execution?batch_execution_artifact_id=...
+    """
+    return compute_execution_metrics_rollup(
+        batch_execution_artifact_id=batch_execution_artifact_id,
+        limit_job_logs=limit_job_logs,
+    )
+
+
+@router.post("/executions/metrics-rollup/by-execution")
+def persist_execution_metrics_rollup_endpoint(
+    batch_execution_artifact_id: str = Query(...),
+    limit_job_logs: int = Query(default=500, ge=1, le=2000),
+):
+    """
+    Persist governed rollup artifact:
+      POST /api/saw/batch/executions/metrics-rollup/by-execution?batch_execution_artifact_id=...
+    """
+    return persist_execution_metrics_rollup(
+        batch_execution_artifact_id=batch_execution_artifact_id,
+        limit_job_logs=limit_job_logs,
     )
