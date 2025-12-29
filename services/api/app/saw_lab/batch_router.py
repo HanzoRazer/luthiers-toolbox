@@ -67,6 +67,7 @@ from app.services.saw_lab_rollup_lookup_service import (
     get_latest_decision_rollup_artifact,
 )
 from app.services.saw_lab_metrics_rollup_hook_config import is_saw_lab_metrics_rollup_hook_enabled
+from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -705,3 +706,20 @@ def get_latest_decision_rollup(
     """
     it = get_latest_decision_rollup_artifact(batch_decision_artifact_id=batch_decision_artifact_id)
     return it or {"found": False}
+
+
+@router.get("/decisions/trends")
+def get_decision_trends(
+    batch_decision_artifact_id: str = Query(...),
+    window: int = Query(default=20, ge=2, le=200),
+    limit_rollups: int = Query(default=500, ge=2, le=5000),
+):
+    """
+    UI-friendly trends endpoint:
+      GET /api/saw/batch/decisions/trends?batch_decision_artifact_id=...&window=20
+    """
+    return compute_decision_trends(
+        batch_decision_artifact_id=batch_decision_artifact_id,
+        window=window,
+        limit_rollups=limit_rollups,
+    )
