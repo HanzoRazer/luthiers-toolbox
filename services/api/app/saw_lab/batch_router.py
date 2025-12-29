@@ -74,6 +74,7 @@ from app.services.saw_lab_rollup_history_service import (
     latest_vs_previous_decision_rollup,
 )
 from app.services.saw_lab_rollup_diff_service import diff_rollups
+from app.services.saw_lab_export_service import export_job_logs_csv, export_execution_rollups_csv
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -788,4 +789,42 @@ def get_rollup_diff(
     return diff_rollups(
         left_rollup_artifact_id=left_rollup_artifact_id,
         right_rollup_artifact_id=right_rollup_artifact_id,
+    )
+
+
+@router.get("/executions/job-logs.csv")
+def download_job_logs_csv(
+    batch_execution_artifact_id: str = Query(...),
+    limit: int = Query(default=2000, ge=1, le=20000),
+):
+    """
+    CSV export:
+      GET /api/saw/batch/executions/job-logs.csv?batch_execution_artifact_id=...
+    """
+    from fastapi.responses import Response
+
+    csv_text = export_job_logs_csv(batch_execution_artifact_id=batch_execution_artifact_id, limit=limit)
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="job_logs_{batch_execution_artifact_id}.csv"'},
+    )
+
+
+@router.get("/decisions/execution-rollups.csv")
+def download_execution_rollups_csv(
+    batch_decision_artifact_id: str = Query(...),
+    limit: int = Query(default=5000, ge=1, le=50000),
+):
+    """
+    CSV export:
+      GET /api/saw/batch/decisions/execution-rollups.csv?batch_decision_artifact_id=...
+    """
+    from fastapi.responses import Response
+
+    csv_text = export_execution_rollups_csv(batch_decision_artifact_id=batch_decision_artifact_id, limit=limit)
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id}.csv"'},
     )
