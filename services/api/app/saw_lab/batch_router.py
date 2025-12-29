@@ -62,6 +62,11 @@ from app.services.saw_lab_decision_metrics_rollup_service import (
     compute_decision_metrics_rollup,
     persist_decision_metrics_rollup,
 )
+from app.services.saw_lab_rollup_lookup_service import (
+    get_latest_execution_rollup_artifact,
+    get_latest_decision_rollup_artifact,
+)
+from app.services.saw_lab_metrics_rollup_hook_config import is_saw_lab_metrics_rollup_hook_enabled
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -668,3 +673,35 @@ def persist_decision_metrics_rollup_endpoint(
         limit_executions=limit_executions,
         limit_job_logs_per_execution=limit_job_logs_per_execution,
     )
+
+
+@router.get("/rollups/hook/status")
+def get_metrics_rollup_hook_status():
+    """
+    Whether the job-log hook will auto-persist rollup artifacts.
+    """
+    return {"SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED": is_saw_lab_metrics_rollup_hook_enabled()}
+
+
+@router.get("/executions/metrics-rollup/latest")
+def get_latest_execution_rollup(
+    batch_execution_artifact_id: str = Query(...),
+):
+    """
+    Alias:
+      GET /api/saw/batch/executions/metrics-rollup/latest?batch_execution_artifact_id=...
+    """
+    it = get_latest_execution_rollup_artifact(batch_execution_artifact_id=batch_execution_artifact_id)
+    return it or {"found": False}
+
+
+@router.get("/decisions/metrics-rollup/latest")
+def get_latest_decision_rollup(
+    batch_decision_artifact_id: str = Query(...),
+):
+    """
+    Alias:
+      GET /api/saw/batch/decisions/metrics-rollup/latest?batch_decision_artifact_id=...
+    """
+    it = get_latest_decision_rollup_artifact(batch_decision_artifact_id=batch_decision_artifact_id)
+    return it or {"found": False}

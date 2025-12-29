@@ -17,6 +17,9 @@ def write_job_log(
     from app.rmos.run_artifacts.store import read_run_artifact, write_run_artifact
     from app.services.saw_lab_learning_hook_config import is_saw_lab_learning_hook_enabled
     from app.services.saw_lab_operator_feedback_learning_hook import record_operator_feedback_event
+    from app.services.saw_lab_metrics_rollup_hook_config import is_saw_lab_metrics_rollup_hook_enabled
+    from app.services.saw_lab_execution_metrics_rollup_service import persist_execution_metrics_rollup
+    from app.services.saw_lab_decision_metrics_rollup_service import persist_decision_metrics_rollup
 
     parent = read_run_artifact(batch_execution_artifact_id)
     if str(getattr(parent, "kind", parent.get("kind", ""))) != "saw_batch_execution":
@@ -72,6 +75,27 @@ def write_job_log(
             # Never fail the job log write if the learning hook fails.
             learning_event_error = f"{type(e).__name__}: {e}"
 
+    # Optional: auto-persist rollup artifacts (feature-flagged)
+    rollups = None
+    if is_saw_lab_metrics_rollup_hook_enabled():
+        try:
+            ex_roll = persist_execution_metrics_rollup(batch_execution_artifact_id=batch_execution_artifact_id)
+            # If we can discover a decision parent from execution meta/payload, also persist decision rollup
+            dec_id = meta.get("parent_batch_decision_artifact_id")
+            dec_roll = None
+            if dec_id:
+                try:
+                    dec_roll = persist_decision_metrics_rollup(batch_decision_artifact_id=dec_id)
+                except Exception:
+                    dec_roll = None
+
+            rollups = {
+                "execution_rollup_artifact": ex_roll,
+                "decision_rollup_artifact": dec_roll,
+            }
+        except Exception:
+            rollups = None
+
     # Keep response backward-compatible but include hook outputs when present.
     if isinstance(job_log_art, dict):
         if learning_event_art is not None:
@@ -79,6 +103,7 @@ def write_job_log(
         if learning_event_error is not None:
             job_log_art["learning_event_error"] = learning_event_error
         job_log_art["learning_hook_enabled"] = is_saw_lab_learning_hook_enabled()
+        job_log_art["rollups"] = rollups
         return job_log_art
 
     return {
@@ -86,4 +111,5 @@ def write_job_log(
         "learning_event": learning_event_art,
         "learning_event_error": learning_event_error,
         "learning_hook_enabled": is_saw_lab_learning_hook_enabled(),
+        "rollups": rollups,
     }
