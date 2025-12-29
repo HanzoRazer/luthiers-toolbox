@@ -1,27 +1,22 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. All geometry in mm. DXF R12 format.
+> CNC guitar lutherie platform: Vue 3 + FastAPI. All geometry in **mm**. DXF R12 format.
 
-## ⚡ Quick Start (bash – canonical for CI + dev container)
+## ⚡ Quick Start
 
 ```bash
 # Backend (FastAPI on :8000)
-cd services/api
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+cd services/api && python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && uvicorn app.main:app --reload --port 8000
 
 # Frontend (Vue on :5173, proxies /api → :8000)
 cd packages/client && npm install && npm run dev
 
 # Tests (server must be running)
-bash scripts/test_adaptive_l1.sh      # CAM pocketing
-bash scripts/test_rmos_sandbox.sh     # RMOS subsystem
-cd services/api && pytest tests/ -v   # Backend unit tests
-cd packages/client && npm run test    # Frontend (Vitest)
+cd services/api && pytest tests/ -v          # Backend
+cd packages/client && npm run test           # Frontend (Vitest)
+bash scripts/test_adaptive_l1.sh             # CAM smoke tests
 ```
-
-> **Windows users**: See [PowerShell Commands](#powershell-commands-windows) appendix.
 
 ## 🔑 Critical Rules
 
@@ -39,75 +34,41 @@ cd packages/client && npm run test    # Frontend (Vitest)
 | Frontend | `packages/client/src/` | Vue 3 `<script setup>`, Pinia stores |
 | SDK Helpers | `packages/client/src/sdk/endpoints/` | Typed API wrappers (H8.3) |
 | Post Configs | `services/api/app/data/posts/*.json` | GRBL, Mach4, LinuxCNC, etc. |
-| Tests | `scripts/*.ps1`, `services/api/tests/` | PowerShell-first, pytest |
-| Docs | `docs/`, `ROUTER_MAP.md` | Architecture, 116 routers across 22 waves |
+| Router Map | `ROUTER_MAP.md` | 116 routers across 22 waves |
 
 ## 🏗️ Architecture
 
 ```
 Vue SPA (:5173) → Vite proxy → FastAPI (:8000) → Post Processors → G-code
-                                    ↓
-                     Multi-format: DXF R12, SVG, G-code bundles
 ```
 
-**Key Subsystems**:
-- **CAM Core** (`cam/adaptive_core_l*.py`): Pocketing, helical ramping, drilling, roughing
-- **RMOS** (`rmos/`): Rosette Manufacturing OS at `/api/rmos/*`
-- **Multi-Post**: 5 CNC platforms with JSON configs in `data/posts/`
-- **Art Studio**: Rosette pattern design at `/api/art/*`
+**Key Subsystems**: CAM Core (`cam/`), RMOS (`rmos/`), Art Studio (`art_studio/`), Multi-Post (`data/posts/`)
 
-## 🧪 Essential Patterns
+## 🧪 Patterns
 
-### Backend (Python/FastAPI)
+### Backend – Router Registration (`main.py`)
 ```python
-# Router registration pattern in main.py
 from .routers.my_router import router as my_router
 app.include_router(my_router, prefix="/api/my-feature", tags=["MyFeature"])
-
-# Optional features with graceful degradation
-try:
-    from ._experimental.feature_router import router
-except ImportError:
-    router = None
 ```
 
-### Frontend (Vue 3/TypeScript)
+### Frontend – SDK Usage (never raw fetch)
 ```typescript
-// Always use SDK helpers, not raw fetch
 import { cam } from "@/sdk/endpoints";
 const { gcode, summary, requestId } = await cam.roughingGcode(payload);
-
-// ApiError handling with request-id correlation
-import { ApiError, formatApiErrorForUi } from "@/sdk/core/errors";
-catch (err) {
-  if (err instanceof ApiError) console.error(`[${err.requestId}]`, err.message);
-}
 ```
 
-### Testing
-- **PowerShell-first**: `test_*.ps1` scripts make HTTP calls to running server
-- **pytest**: `services/api/tests/` for unit tests
-- **Vitest**: `packages/client` for frontend (`npm run test`)
-- **CI**: 24 workflows in `.github/workflows/`
-
-## 📐 Geometry & Export Patterns
-
-```python
-# Unit conversion at API boundary
-from app.util.units import scale_geom_units
-geom = scale_geom_units(geom_src, target_units="mm")
-
-# DXF export always R12 for CAM compatibility
-from app.util.exporters import export_dxf_r12
-dxf_bytes = export_dxf_r12(geometry, closed=True)
+### Error Handling
+```typescript
+import { ApiError, formatApiErrorForUi } from "@/sdk/core/errors";
+catch (err) { if (err instanceof ApiError) console.error(`[${err.requestId}]`, err.message); }
 ```
 
 ## 📚 Key References
 
-- [ROUTER_MAP.md](../ROUTER_MAP.md) – All 116 routers organized by deployment waves
-- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – Complete API surface with duplicates noted
-- [SDK endpoints README](../packages/client/src/sdk/endpoints/README.md) – Typed helpers (H8.3)
-- [docs/ARCHIVE/2025-12/misc/AGENTS.md](../docs/ARCHIVE/2025-12/misc/AGENTS.md) – Extended agent guidance
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization and legacy vs canonical lanes
+- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface with migration notes
+- [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK helpers
 
 ---
 <!-- DETAILED DOCUMENTATION BELOW -->
