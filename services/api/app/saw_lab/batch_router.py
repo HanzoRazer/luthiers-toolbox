@@ -68,6 +68,12 @@ from app.services.saw_lab_rollup_lookup_service import (
 )
 from app.services.saw_lab_metrics_rollup_hook_config import is_saw_lab_metrics_rollup_hook_enabled
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
+from app.services.saw_lab_rollup_history_service import (
+    list_execution_rollups,
+    list_decision_rollups,
+    latest_vs_previous_decision_rollup,
+)
+from app.services.saw_lab_rollup_diff_service import diff_rollups
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -722,4 +728,64 @@ def get_decision_trends(
         batch_decision_artifact_id=batch_decision_artifact_id,
         window=window,
         limit_rollups=limit_rollups,
+    )
+
+
+@router.get("/executions/metrics-rollup/history")
+def get_execution_rollup_history(
+    batch_execution_artifact_id: str = Query(...),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """
+    History of execution rollup artifacts:
+      GET /api/saw/batch/executions/metrics-rollup/history?batch_execution_artifact_id=...
+    """
+    return list_execution_rollups(
+        batch_execution_artifact_id=batch_execution_artifact_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get("/decisions/metrics-rollup/history")
+def get_decision_rollup_history(
+    batch_decision_artifact_id: str = Query(...),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """
+    History of decision rollup artifacts:
+      GET /api/saw/batch/decisions/metrics-rollup/history?batch_decision_artifact_id=...
+    """
+    return list_decision_rollups(
+        batch_decision_artifact_id=batch_decision_artifact_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get("/decisions/metrics-rollup/latest-vs-prev")
+def get_latest_vs_prev_decision_rollup(
+    batch_decision_artifact_id: str = Query(...),
+):
+    """
+    Convenience:
+      GET /api/saw/batch/decisions/metrics-rollup/latest-vs-prev?batch_decision_artifact_id=...
+    """
+    return latest_vs_previous_decision_rollup(batch_decision_artifact_id=batch_decision_artifact_id)
+
+
+@router.get("/rollups/diff")
+def get_rollup_diff(
+    left_rollup_artifact_id: str = Query(...),
+    right_rollup_artifact_id: str = Query(...),
+):
+    """
+    Lightweight diff for rollup artifacts (execution/decision):
+      GET /api/saw/batch/rollups/diff?left_rollup_artifact_id=...&right_rollup_artifact_id=...
+    """
+    return diff_rollups(
+        left_rollup_artifact_id=left_rollup_artifact_id,
+        right_rollup_artifact_id=right_rollup_artifact_id,
     )
