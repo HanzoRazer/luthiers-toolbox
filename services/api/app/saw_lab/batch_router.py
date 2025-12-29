@@ -44,6 +44,8 @@ from app.services.saw_lab_batch_metrics_rollup_service import (
     persist_execution_rollup,
 )
 from app.services.saw_lab_learning_hook_config import is_saw_lab_learning_hook_enabled
+from app.services.saw_lab_learning_decision_service import create_learning_decision
+from app.services.saw_lab_learned_overrides_resolver import resolve_learned_multipliers
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
@@ -466,3 +468,64 @@ def get_learning_hook_status():
     Simple status endpoint so UI/dev can confirm if the feature is enabled.
     """
     return {"SAW_LAB_LEARNING_HOOK_ENABLED": is_saw_lab_learning_hook_enabled()}
+
+
+@router.post("/learning-events/approve")
+def approve_learning_event(
+    learning_event_artifact_id: str = Query(..., description="Artifact id for kind='saw_lab_learning_event'"),
+    policy_decision: str = Query(..., description="PROPOSE|ACCEPT|REJECT"),
+    approved_by: str = Query(...),
+    reason: str = Query(default=""),
+):
+    """
+    Governance-safe approval: creates a new decision artifact.
+      POST /api/saw/batch/learning-events/approve?learning_event_artifact_id=...&policy_decision=ACCEPT&approved_by=...&reason=...
+    """
+    return create_learning_decision(
+        learning_event_artifact_id=learning_event_artifact_id,
+        policy_decision=policy_decision,
+        approved_by=approved_by,
+        reason=reason,
+    )
+
+
+@router.get("/learning-events/decisions/by-event")
+def list_learning_decisions_by_event(
+    learning_event_artifact_id: str = Query(...),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """
+    Alias:
+      GET /api/saw/batch/learning-events/decisions/by-event?learning_event_artifact_id=...
+    """
+    items = query_run_artifacts(
+        kind="saw_lab_learning_decision",
+        parent_learning_event_artifact_id=learning_event_artifact_id,
+        limit=max(limit, 100),
+        offset=0,
+    )
+    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
+    return items[offset : offset + limit]
+
+
+@router.get("/learning-overrides/resolve")
+def resolve_learning_overrides_preview(
+    tool_id: Optional[str] = Query(default=None),
+    material_id: Optional[str] = Query(default=None),
+    thickness_mm: Optional[float] = Query(default=None),
+    limit_events: int = Query(default=200, ge=1, le=2000),
+):
+    """
+    Read-path preview:
+      GET /api/saw/batch/learning-overrides/resolve?tool_id=...&material_id=...
+
+    Returns averaged multipliers ONLY from ACCEPTed learning events.
+    Does not apply them anywhere automatically.
+    """
+    return resolve_learned_multipliers(
+        tool_id=tool_id,
+        material_id=material_id,
+        thickness_mm=thickness_mm,
+        limit_events=limit_events,
+    )
