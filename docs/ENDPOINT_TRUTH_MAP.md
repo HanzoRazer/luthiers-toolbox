@@ -35,6 +35,7 @@
 | `POST /api/rmos/toolpaths` | rmos | EXECUTE | Promoted Wave 9 |
 | `POST /api/cam/rosette/plan-toolpath` | rosette | PLAN | Promoted Wave 9 |
 | `POST /api/cam/rosette/post-gcode` | rosette | EXECUTE | Promoted Wave 9 |
+| `POST /api/art-studio/vcarve/gcode` | vcarve | EXECUTE | Promoted Wave 9 |
 
 #### UTILITY Lane (Legacy/Preview)
 
@@ -65,7 +66,7 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 |----------|-------------|-------------|--------|
 | ✅ Done | `/api/saw/batch/*` | OPERATION | Reference impl |
 | Done | `/api/cam/rosette/*` | OPERATION | Promoted Wave 9 |
-| 3 | `/api/cam/toolpath/vcarve/*` | OPERATION | 2-3 days |
+| Done | `/api/art-studio/vcarve/gcode` | OPERATION | Promoted Wave 9 |
 | 4 | `/api/cam/drilling/*` | OPERATION | 2-3 days |
 | 5 | `/api/cam/toolpath/roughing/*` | OPERATION | 3-5 days |
 

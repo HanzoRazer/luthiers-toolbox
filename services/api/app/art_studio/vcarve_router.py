@@ -3,16 +3,30 @@
 """
 Art Studio VCarve Router
 
+LANE: OPERATION (for /gcode endpoint)
+LANE: UTILITY (for /preview endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates G-code from SVG geometry
+
 FastAPI endpoints for SVG → toolpath → G-code conversion.
 
+GOVERNANCE INVARIANTS:
+1. /gcode endpoint creates a run artifact (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+3. Artifacts enable deterministic replay
+
+ARTIFACT KINDS:
+- vcarve_gcode_execution (OK/ERROR) - from /gcode
+
 Endpoints:
-- POST /preview: Parse SVG and return stats
-- POST /gcode: Generate G-code from SVG
+- POST /preview: Parse SVG and return stats (UTILITY - no artifacts)
+- POST /gcode: Generate G-code from SVG (OPERATION - creates artifacts)
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -26,6 +40,15 @@ from ..toolpath.vcarve_toolpath import (
     VCarveToolpathParams,
     build_vcarve_mlpaths_from_svg,
     svg_to_naive_gcode,
+)
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
 )
 
 router = APIRouter()
@@ -87,6 +110,8 @@ class VCarveGCodeResponse(BaseModel):
     """Response model for VCarve G-code generation."""
 
     gcode: str = Field(..., description="Generated G-code")
+    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 # --------------------------------------------------------------------- #
@@ -98,6 +123,8 @@ class VCarveGCodeResponse(BaseModel):
 async def preview_vcarve(req: VCarvePreviewRequest) -> VCarvePreviewResponse:
     """
     Parse SVG and return geometry statistics.
+
+    LANE: UTILITY - Preview only, no artifacts.
 
     Use this endpoint to preview SVG geometry before generating G-code.
     """
@@ -115,24 +142,99 @@ async def preview_vcarve(req: VCarvePreviewRequest) -> VCarvePreviewResponse:
 
 
 @router.post("/gcode", response_model=VCarveGCodeResponse)
-async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> VCarveGCodeResponse:
+async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
     """
     Generate G-code from SVG for VCarve operations.
+
+    LANE: OPERATION - Creates vcarve_gcode_execution artifact.
 
     Note: This is a naive G-code emitter for smoke testing and preview.
     It does not handle advanced CAM features like chipload, stepdown, etc.
     """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump())
+
     if not req.svg.strip():
-        raise HTTPException(status_code=400, detail="SVG text is empty.")
+        # Create ERROR artifact for empty SVG
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="vcarve_gcode",
+            workflow_mode="vcarve",
+            event_type="vcarve_gcode_execution",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=["SVG text is empty"],
+        )
+        persist_run(artifact)
 
-    params = VCarveToolpathParams(
-        bit_angle_deg=req.bit_angle_deg,
-        depth_mm=req.depth_mm,
-        safe_z_mm=req.safe_z_mm,
-        feed_rate_mm_min=req.feed_rate_mm_min,
-        plunge_rate_mm_min=req.plunge_rate_mm_min,
-    )
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "EMPTY_SVG",
+                "run_id": run_id,
+                "message": "SVG text is empty.",
+            },
+        )
 
-    gcode = svg_to_naive_gcode(req.svg, params)
+    try:
+        params = VCarveToolpathParams(
+            bit_angle_deg=req.bit_angle_deg,
+            depth_mm=req.depth_mm,
+            safe_z_mm=req.safe_z_mm,
+            feed_rate_mm_min=req.feed_rate_mm_min,
+            plunge_rate_mm_min=req.plunge_rate_mm_min,
+        )
 
-    return VCarveGCodeResponse(gcode=gcode)
+        gcode = svg_to_naive_gcode(req.svg, params)
+
+        # Hash outputs for provenance
+        gcode_hash = sha256_of_text(gcode)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="vcarve_gcode",
+            workflow_mode="vcarve",
+            event_type="vcarve_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        return {
+            "gcode": gcode,
+            "_run_id": run_id,
+            "_hashes": {
+                "request_sha256": request_hash,
+                "gcode_sha256": gcode_hash,
+            },
+        }
+
+    except Exception as e:
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="vcarve_gcode",
+            workflow_mode="vcarve",
+            event_type="vcarve_gcode_execution",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "GCODE_GENERATION_ERROR",
+                "run_id": run_id,
+                "message": f"G-code generation failed: {str(e)}",
+            },
+        )
