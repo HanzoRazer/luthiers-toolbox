@@ -1,7 +1,12 @@
 """
 RMOS Toolpaths Router - Canonical Toolpath Generation Endpoint
 
+LANE: OPERATION
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) for saw/rosette modes
+
 Implements:
+- OPERATION_EXECUTION_GOVERNANCE_v1.md (Appendix D: Execution Classes)
 - SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md
 - RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md
 
@@ -10,6 +15,10 @@ GOVERNANCE INVARIANTS:
 2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
 3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
 4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- rmos_toolpaths_execution (OK/ERROR)
+- rmos_toolpaths_blocked (BLOCKED)
 """
 
 from __future__ import annotations
@@ -74,7 +83,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_blocked",  # OPERATION lane artifact kind
             status="BLOCKED",
             feasibility=feasibility,
             request_hash=feas_hash,
@@ -111,7 +120,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="OK",
             feasibility=feasibility,
             request_hash=feas_hash,
@@ -139,7 +148,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="ERROR",
             feasibility=feasibility,
             request_hash=feas_hash,

@@ -23,15 +23,16 @@
 
 > Reference implementation: CNC Saw Lab Batch
 
-| Endpoint | Tool Type | Stage |
-|----------|-----------|-------|
-| `POST /api/saw/batch/spec` | saw | SPEC |
-| `POST /api/saw/batch/plan` | saw | PLAN |
-| `POST /api/saw/batch/approve` | saw | DECISION |
-| `POST /api/saw/batch/toolpaths` | saw | EXECUTE |
-| `GET /api/saw/batch/op-toolpaths/{id}/gcode` | saw | EXPORT |
-| `GET /api/saw/batch/executions/{id}/gcode` | saw | EXPORT |
-| `POST /api/saw/batch/job-log` | saw | FEEDBACK |
+| Endpoint | Tool Type | Stage | Notes |
+|----------|-----------|-------|-------|
+| `POST /api/saw/batch/spec` | saw | SPEC | Reference impl |
+| `POST /api/saw/batch/plan` | saw | PLAN | Reference impl |
+| `POST /api/saw/batch/approve` | saw | DECISION | Reference impl |
+| `POST /api/saw/batch/toolpaths` | saw | EXECUTE | Reference impl |
+| `GET /api/saw/batch/op-toolpaths/{id}/gcode` | saw | EXPORT | Reference impl |
+| `GET /api/saw/batch/executions/{id}/gcode` | saw | EXPORT | Reference impl |
+| `POST /api/saw/batch/job-log` | saw | FEEDBACK | Reference impl |
+| `POST /api/rmos/toolpaths` | rmos | EXECUTE | Promoted Wave 9 |
 
 #### UTILITY Lane (Legacy/Preview)
 
