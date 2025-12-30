@@ -3,12 +3,24 @@
 """
 Art Studio Relief Router
 
+LANE: OPERATION (for /export-dxf endpoint)
+LANE: UTILITY (for /preview, /preview-feasibility endpoints)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates DXF from SVG geometry
+
 FastAPI endpoints for relief SVG → DXF export.
 
+GOVERNANCE INVARIANTS:
+1. /export-dxf creates a run artifact (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- relief_dxf_export (OK/ERROR) - from /export-dxf
+
 Endpoints:
-- POST /preview: Parse SVG and return relief stats
-- POST /preview-feasibility: Preview with RMOS feasibility calculation
-- POST /export-dxf: Export relief geometry to DXF
+- POST /preview: Parse SVG and return relief stats (UTILITY)
+- POST /preview-feasibility: Preview with RMOS feasibility calculation (UTILITY)
+- POST /export-dxf: Export relief geometry to DXF (OPERATION)
 
 For Wave 3, relief is: SVG → polylines → MLPaths → DXF.
 Z/height mapping will be added later when we bring in full relief CAM.
@@ -38,6 +50,16 @@ from ..toolpath.dxf_exporter import (
     DXFExportOptions,
     DXFVersion,
     export_mlpaths_to_dxf,
+)
+
+# Import run artifact persistence (OPERATION lane requirement)
+from datetime import datetime, timezone
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
 )
 
 router = APIRouter()
@@ -202,10 +224,27 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     """
     Export relief geometry to DXF format.
 
+    LANE: OPERATION - Creates relief_dxf_export artifact.
+
     Optionally includes feasibility calculation if compute_feasibility=True.
     """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump())
+
     if not req.svg.strip():
-        raise HTTPException(status_code=400, detail="SVG text is empty.")
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="relief_dxf",
+            workflow_mode="relief",
+            event_type="relief_dxf_export",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=["SVG text is empty"],
+        )
+        persist_run(artifact)
+        raise HTTPException(status_code=400, detail={"error": "EMPTY_SVG", "run_id": run_id, "message": "SVG text is empty."})
 
     polys = parse_svg_to_polylines(req.svg)
 
@@ -231,6 +270,22 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     }
 
     if not req.compute_feasibility:
+        # Create OK artifact
+        dxf_hash = sha256_of_text(dxf_text)
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="relief_dxf",
+            workflow_mode="relief",
+            event_type="relief_dxf_export",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=dxf_hash,  # Using gcode_hash for DXF output
+        )
+        persist_run(artifact)
+        headers["X-Run-ID"] = run_id
+        headers["X-DXF-SHA256"] = dxf_hash
         return Response(
             content=dxf_text,
             media_type="application/dxf",
@@ -272,11 +327,31 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     except ImportError:
         feasibility = {"error": "Saw bridge not available"}
 
+    # Create OK artifact with feasibility
+    dxf_hash = sha256_of_text(dxf_text)
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="relief_dxf",
+        workflow_mode="relief",
+        event_type="relief_dxf_export",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=dxf_hash,
+        feasibility=feasibility,
+    )
+    persist_run(artifact)
+    headers["X-Run-ID"] = run_id
+    headers["X-DXF-SHA256"] = dxf_hash
+
     # Return JSON with DXF + feasibility
     return JSONResponse(
         content={
             "dxf": dxf_text,
             "feasibility": feasibility,
+            "_run_id": run_id,
+            "_hashes": {"dxf_sha256": dxf_hash},
         },
         headers=headers,
     )

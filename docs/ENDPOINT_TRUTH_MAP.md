@@ -40,6 +40,11 @@
 | `POST /api/cam/drilling/gcode` | drilling | EXECUTE | Promoted Wave 10 |
 | `POST /api/cam/drilling/pattern/gcode` | drilling | EXECUTE | Promoted Wave 10 |
 | `POST /api/cam/toolpath/biarc/gcode` | biarc | EXECUTE | Promoted Wave 10 |
+| `POST /api/art-studio/relief/export-dxf` | relief | EXPORT | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/plan` | adaptive | PLAN | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/gcode` | adaptive | EXECUTE | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/batch_export` | adaptive | EXECUTE | Promoted Wave 11 |
+| `POST /api/cam/toolpath/helical_entry` | helical | EXECUTE | Promoted Wave 11 |
 
 #### UTILITY Lane (Legacy/Preview)
 
@@ -73,6 +78,9 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 | Done | `/api/art-studio/vcarve/gcode` | OPERATION | Promoted Wave 9 |
 | Done | `/api/cam/drilling/*` | OPERATION | Promoted Wave 10 |
 | Done | `/api/cam/toolpath/roughing/*` | OPERATION | Promoted Wave 10 |
+| Done | `/api/art-studio/relief/export-dxf` | OPERATION | Promoted Wave 11 |
+| Done | `/api/cam/pocket/adaptive/*` | OPERATION | Promoted Wave 11 |
+| Done | `/api/cam/toolpath/helical_entry` | OPERATION | Promoted Wave 11 |
 
 ---
 

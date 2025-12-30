@@ -1,14 +1,28 @@
 """
 Adaptive Pocketing Router
 
+LANE: OPERATION (for /plan, /gcode, /batch_export, /plan_from_dxf endpoints)
+LANE: UTILITY (for /sim endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates toolpaths from geometry
+
 FastAPI endpoints for adaptive pocket toolpath generation with L.1, L.2, and L.3 features.
 
+GOVERNANCE INVARIANTS:
+1. G-code generating endpoints create run artifacts (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- adaptive_plan_execution (OK/ERROR) - from /plan
+- adaptive_gcode_execution (OK/ERROR) - from /gcode
+- adaptive_batch_execution (OK/ERROR) - from /batch_export
+
 Endpoints:
-- POST /plan: Generate toolpath from boundary loops
-- POST /gcode: Export G-code with post-processor headers
-- POST /batch_export: Multi-post ZIP bundle (DXF + SVG + G-code)
-- POST /sim: Simulate toolpath without full G-code generation
-- POST /plan_from_dxf: Upload DXF file and generate toolpath (Phase 27.0)
+- POST /plan: Generate toolpath from boundary loops (OPERATION)
+- POST /gcode: Export G-code with post-processor headers (OPERATION)
+- POST /batch_export: Multi-post ZIP bundle (DXF + SVG + G-code) (OPERATION)
+- POST /sim: Simulate toolpath without full G-code generation (UTILITY)
+- POST /plan_from_dxf: Upload DXF file and generate toolpath (Phase 27.0) (OPERATION)
 
 Features:
 - Robust polygon offsetting with island handling (L.1)
@@ -69,6 +83,15 @@ from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 from .geometry_router import GcodeExportIn, export_gcode
 from .machine_router import get_profile
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 router = APIRouter(prefix="/cam/pocket/adaptive", tags=["cam-adaptive"])
 
@@ -714,6 +737,31 @@ def plan(body: PlanIn) -> PlanOut:
     if job_payload:
         response["job_int"] = job_payload
 
+    # Create artifact for OPERATION lane compliance
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(plan_request_dict)
+    moves_hash = sha256_of_obj(moves)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="adaptive_plan",
+        workflow_mode="adaptive",
+        event_type="adaptive_plan_execution",
+        status="OK",
+        request_hash=request_hash,
+        toolpaths_hash=moves_hash,
+    )
+    persist_run(artifact)
+
+    response["_run_id"] = run_id
+    response["_hashes"] = {
+        "request_sha256": request_hash,
+        "moves_sha256": moves_hash,
+    }
+
     return response
 
 class GcodeIn(PlanIn):
@@ -837,7 +885,29 @@ def gcode(body: GcodeIn) -> StreamingResponse:
     # Assemble full program
     program = "\n".join(hdr + [meta] + body_lines + ftr) + "\n"
     
-    return export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
+    # Create artifact for OPERATION lane compliance
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(program)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="adaptive_gcode",
+        workflow_mode="adaptive",
+        event_type="adaptive_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+
+    response = export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
+    response.headers["X-Run-ID"] = run_id
+    response.headers["X-GCode-SHA256"] = gcode_hash
+    return response
 
 # Allowed adaptive feed modes (validated against in batch export)
 ALLOWED_MODES = ("comment", "inline_f", "mcode")

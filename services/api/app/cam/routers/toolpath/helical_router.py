@@ -1,12 +1,24 @@
 """
 CAM Helical Router
 
+LANE: OPERATION (for /helical_entry endpoint)
+LANE: UTILITY (for /helical_health endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) - generates G-code from explicit parameters
+
 Helical Z-ramping for plunge entry.
 
 Migrated from: routers/cam_helical_v161_router.py
 
 Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
+
+GOVERNANCE INVARIANTS:
+1. /helical_entry creates a run artifact (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- helical_gcode_execution (OK/ERROR) - from /helical_entry
 
 Features:
 - Helical plunge entry (prevents tool breakage in hardwood)
@@ -37,6 +49,16 @@ from ...helical_core import (
     helical_validate,
 )
 from ....utils.post_presets import get_dwell_command, get_post_preset
+
+# Import run artifact persistence (OPERATION lane requirement)
+from datetime import datetime, timezone
+from ....rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 router = APIRouter()
 
@@ -247,16 +269,86 @@ def helical_gcode(req: HelicalReq) -> Dict[str, Any]:
 
 @router.post("/helical_entry")
 def helical_entry(req: HelicalReq) -> Dict[str, Any]:
-    # Basic sanity checks
+    """
+    Generate helical plunge G-code.
+
+    LANE: OPERATION - Creates helical_gcode_execution artifact.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump())
+
+    # Basic sanity checks with artifact persistence
+    def error_artifact(msg: str):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="helical_gcode",
+            workflow_mode="helical",
+            event_type="helical_gcode_execution",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[msg],
+        )
+        persist_run(artifact)
+        raise HTTPException(status_code=400, detail={"error": "VALIDATION_ERROR", "run_id": run_id, "message": msg})
+
     if req.radius_mm <= 0:
-        raise HTTPException(status_code=400, detail="radius_mm must be > 0")
+        error_artifact("radius_mm must be > 0")
     if req.max_arc_degrees <= 0 or req.max_arc_degrees > 360:
-        raise HTTPException(status_code=400, detail="max_arc_degrees must be (0,360]")
+        error_artifact("max_arc_degrees must be (0,360]")
     if req.pitch_mm_per_rev <= 0:
-        raise HTTPException(status_code=400, detail="pitch must be > 0")
+        error_artifact("pitch must be > 0")
     if req.start_z_mm == req.z_target_mm:
-        raise HTTPException(status_code=400, detail="start_z_mm equals z_target_mm; nothing to do")
-    return helical_gcode(req)
+        error_artifact("start_z_mm equals z_target_mm; nothing to do")
+
+    try:
+        result = helical_gcode(req)
+
+        # Hash G-code for provenance
+        gcode_hash = sha256_of_text(result.get("gcode", ""))
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="helical_gcode",
+            workflow_mode="helical",
+            event_type="helical_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        # Add audit linkage to response
+        result["_run_id"] = run_id
+        result["_hashes"] = {
+            "request_sha256": request_hash,
+            "gcode_sha256": gcode_hash,
+        }
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="helical_gcode",
+            workflow_mode="helical",
+            event_type="helical_gcode_execution",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=500,
+            detail={"error": "HELICAL_GCODE_ERROR", "run_id": run_id, "message": str(e)},
+        )
 
 
 @router.get("/helical_health")
