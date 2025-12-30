@@ -33,6 +33,8 @@
 | `GET /api/saw/batch/executions/{id}/gcode` | saw | EXPORT | Reference impl |
 | `POST /api/saw/batch/job-log` | saw | FEEDBACK | Reference impl |
 | `POST /api/rmos/toolpaths` | rmos | EXECUTE | Promoted Wave 9 |
+| `POST /api/cam/rosette/plan-toolpath` | rosette | PLAN | Promoted Wave 9 |
+| `POST /api/cam/rosette/post-gcode` | rosette | EXECUTE | Promoted Wave 9 |
 
 #### UTILITY Lane (Legacy/Preview)
 
@@ -62,7 +64,7 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 | Priority | Endpoint(s) | Target Lane | Effort |
 |----------|-------------|-------------|--------|
 | ✅ Done | `/api/saw/batch/*` | OPERATION | Reference impl |
-| 2 | `/api/cam/rosette/*` | OPERATION | 3-5 days |
+| Done | `/api/cam/rosette/*` | OPERATION | Promoted Wave 9 |
 | 3 | `/api/cam/toolpath/vcarve/*` | OPERATION | 2-3 days |
 | 4 | `/api/cam/drilling/*` | OPERATION | 2-3 days |
 | 5 | `/api/cam/toolpath/roughing/*` | OPERATION | 3-5 days |

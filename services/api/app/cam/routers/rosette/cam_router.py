@@ -1,12 +1,25 @@
 """
 Rosette CAM Router
 
+LANE: OPERATION
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates toolpaths from geometry
+
 Toolpath planning, G-code generation, and job management for rosette designs.
 
 Extracted from: routers/art_studio_rosette_router.py (lines 679-807)
 
 Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
+
+GOVERNANCE INVARIANTS:
+1. Every request creates a run artifact (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+3. Artifacts enable deterministic replay
+
+ARTIFACT KINDS:
+- rosette_toolpath_plan (OK/ERROR) - from /plan-toolpath
+- rosette_gcode_post (OK/ERROR) - from /post-gcode
 
 Endpoints:
     POST /plan-toolpath     - Generate toolpath moves from rosette geometry
@@ -17,7 +30,8 @@ Endpoints:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -30,6 +44,15 @@ from ....services.rosette_cam_bridge import (
     CamParams,
 )
 from ....services.art_jobs_store import create_art_job, get_art_job
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ....rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 
 router = APIRouter()
@@ -61,6 +84,8 @@ class RosetteToolpathPlanResponse(BaseModel):
     """Response with planned toolpath moves and stats."""
     moves: List[Dict[str, Any]] = Field(..., description="Neutral toolpath moves")
     stats: Dict[str, Any] = Field(..., description="Toolpath statistics")
+    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 class RosettePostGcodeRequest(BaseModel):
@@ -74,6 +99,8 @@ class RosettePostGcodeResponse(BaseModel):
     """Response with generated G-code and stats."""
     gcode: str = Field(..., description="Generated G-code text")
     stats: Dict[str, Any] = Field(..., description="G-code statistics")
+    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 class RosetteCamJobCreateRequest(BaseModel):
@@ -111,16 +138,21 @@ class RosetteCamJobResponse(BaseModel):
 # =============================================================================
 
 @router.post("/plan-toolpath", response_model=RosetteToolpathPlanResponse)
-def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> RosetteToolpathPlanResponse:
+def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any]:
     """
     Generate toolpath moves for a rosette design.
+
+    LANE: OPERATION - Creates rosette_toolpath_plan artifact
 
     Uses concentric ring strategy with:
     - Radial passes based on tool diameter + stepover
     - Z passes based on cut depth + stepdown
 
-    Returns neutral move list (code, x, y, z, f) + stats.
+    Returns neutral move list (code, x, y, z, f) + stats + audit linkage.
     """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump())
+
     try:
         geom = RosetteGeometry(
             center_x=body.center_x,
@@ -142,24 +174,77 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> RosetteToolpa
 
         moves, stats = plan_rosette_toolpath(geom, params, circle_segments=body.circle_segments)
 
-        return RosetteToolpathPlanResponse(moves=moves, stats=stats)
+        # Hash outputs for provenance
+        moves_hash = sha256_of_obj(moves)
+        stats_hash = sha256_of_obj(stats)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="rosette_toolpath",
+            workflow_mode="rosette",
+            event_type="rosette_toolpath_plan",
+            status="OK",
+            request_hash=request_hash,
+            toolpaths_hash=moves_hash,
+        )
+        persist_run(artifact)
+
+        return {
+            "moves": moves,
+            "stats": stats,
+            "_run_id": run_id,
+            "_hashes": {
+                "request_sha256": request_hash,
+                "moves_sha256": moves_hash,
+                "stats_sha256": stats_hash,
+            },
+        }
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Toolpath planning failed: {str(e)}")
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="rosette_toolpath",
+            workflow_mode="rosette",
+            event_type="rosette_toolpath_plan",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "TOOLPATH_PLAN_ERROR",
+                "run_id": run_id,
+                "message": f"Toolpath planning failed: {str(e)}",
+            },
+        )
 
 
 @router.post("/post-gcode", response_model=RosettePostGcodeResponse)
-def post_rosette_gcode(body: RosettePostGcodeRequest) -> RosettePostGcodeResponse:
+def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
     """
     Generate G-code from toolpath moves.
+
+    LANE: OPERATION - Creates rosette_gcode_post artifact
 
     Uses GRBL-compatible post-processor with:
     - Header: G21/G20, G90, G17, M3 spindle on
     - Body: G0/G1 moves with coordinates
     - Footer: M5 spindle off, safe retract, M30
 
-    Returns G-code text + stats (lines, bytes).
+    Returns G-code text + stats (lines, bytes) + audit linkage.
     """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump())
+
     try:
         gcode, stats = postprocess_toolpath_grbl(
             body.moves,
@@ -167,10 +252,58 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> RosettePostGcodeRespons
             spindle_rpm=body.spindle_rpm,
         )
 
-        return RosettePostGcodeResponse(gcode=gcode, stats=stats)
+        # Hash outputs for provenance
+        gcode_hash = sha256_of_text(gcode)
+        stats_hash = sha256_of_obj(stats)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="rosette_gcode",
+            workflow_mode="rosette",
+            event_type="rosette_gcode_post",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        return {
+            "gcode": gcode,
+            "stats": stats,
+            "_run_id": run_id,
+            "_hashes": {
+                "request_sha256": request_hash,
+                "gcode_sha256": gcode_hash,
+                "stats_sha256": stats_hash,
+            },
+        }
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"G-code post-processing failed: {str(e)}")
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="rosette_gcode",
+            workflow_mode="rosette",
+            event_type="rosette_gcode_post",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "GCODE_POST_ERROR",
+                "run_id": run_id,
+                "message": f"G-code post-processing failed: {str(e)}",
+            },
+        )
 
 
 @router.post("/jobs", response_model=RosetteCamJobIdResponse)
