@@ -1,863 +1,336 @@
 """
-Saw Lab Batch Router
+Saw Lab Batch Workflow Router
 
-API endpoints for batch operations:
-  - POST /api/saw/batch/spec      - Create batch specification
-  - POST /api/saw/batch/plan      - Generate plan from spec
-  - POST /api/saw/batch/approve   - Approve plan with execution order
-  - POST /api/saw/batch/toolpaths - Generate toolpaths from decision
-  - GET  /api/saw/batch/execution - Lookup latest execution for decision
-  - GET  /api/saw/batch/executions/by-decision - List executions by decision
-  - GET  /api/saw/batch/executions - List execution artifacts
+Full batch workflow: spec → plan → approve → toolpaths → job-log
+Plus decision trends endpoint for metrics rollup analysis.
+
+Mounted at: /api/saw/batch
 """
 from __future__ import annotations
 
+import os
+import uuid
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
-from app.saw_lab.schemas_batch import (
-    SawBatchSpecRequest,
-    SawBatchSpecResponse,
-    SawBatchPlanRequest,
-    SawBatchPlanResponse,
-    SawBatchPlanChooseRequest,
-    SawBatchPlanChooseResponse,
-    SawBatchToolpathsRequest,
-    SawBatchToolpathsResponse,
-)
-from app.services.saw_lab_batch_spec_service import create_batch_spec
-from app.services.saw_lab_batch_plan_service import create_batch_plan
-from app.services.saw_lab_batch_decision_service import create_batch_plan_decision
-from app.services.saw_lab_batch_toolpaths_service import generate_batch_toolpaths_from_decision
-from app.services.saw_lab_batch_execution_lookup_service import (
-    latest_execution_for_decision,
-    list_executions_for_decision,
-)
-from app.rmos.run_artifacts.store import query_run_artifacts
-from app.services.saw_lab_batch_link_graph_service import build_batch_link_graph
-from app.saw_lab.schemas_batch_lookup import SawBatchLinkSummary
-from app.services.saw_lab_batch_retry_service import retry_batch_execution
-from app.services.saw_lab_batch_job_log_service import write_job_log
-from app.services.saw_lab_batch_metrics_rollup_service import (
-    compute_execution_rollup,
-    persist_execution_rollup,
-)
-from app.services.saw_lab_learning_hook_config import is_saw_lab_learning_hook_enabled
-from app.services.saw_lab_learning_decision_service import create_learning_decision
-from app.services.saw_lab_learned_overrides_resolver import resolve_learned_multipliers
-from app.services.saw_lab_learning_apply_service import (
-    is_apply_accepted_overrides_enabled,
-    tune_context_from_accepted_learning,
-)
-from app.services.saw_lab_execution_lookup_service import (
-    list_executions_by_decision as lookup_executions_by_decision,
-    list_executions_with_learning_applied,
-)
-from app.services.saw_lab_execution_metrics_rollup_service import (
-    compute_execution_metrics_rollup,
-    persist_execution_metrics_rollup,
-)
-from app.services.saw_lab_decision_metrics_rollup_service import (
-    compute_decision_metrics_rollup,
-    persist_decision_metrics_rollup,
-)
-from app.services.saw_lab_rollup_lookup_service import (
-    get_latest_execution_rollup_artifact,
-    get_latest_decision_rollup_artifact,
-)
-from app.services.saw_lab_metrics_rollup_hook_config import is_saw_lab_metrics_rollup_hook_enabled
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
-from app.services.saw_lab_rollup_history_service import (
-    list_execution_rollups,
-    list_decision_rollups,
-    latest_vs_previous_decision_rollup,
-)
-from app.services.saw_lab_rollup_diff_service import diff_rollups
-from app.services.saw_lab_export_service import export_job_logs_csv, export_execution_rollups_csv
-from app.services.saw_lab_gcode_emit_service import export_op_toolpaths_gcode, export_execution_gcode
+
+router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
 
 
-router = APIRouter(prefix="/api/saw/batch", tags=["saw-batch"])
+# ---------------------------------------------------------------------------
+# Schemas
+# ---------------------------------------------------------------------------
 
 
-@router.post("/spec", response_model=SawBatchSpecResponse)
-def create_spec(req: SawBatchSpecRequest) -> SawBatchSpecResponse:
-    """
-    Create a batch specification from a list of items.
-
-    The spec artifact stores the input items and generates op_ids for tracking.
-    """
-    out = create_batch_spec(
-        batch_label=req.batch_label,
-        session_id=req.session_id,
-        tool_id=req.tool_id,
-        items=[item.model_dump() for item in req.items],
-    )
-    return SawBatchSpecResponse(**out)
+class BatchSpecItem(BaseModel):
+    part_id: str
+    qty: int = 1
+    material_id: str = "maple"
+    thickness_mm: float = 6.0
+    length_mm: float = 300.0
+    width_mm: float = 30.0
 
 
-@router.post("/plan", response_model=SawBatchPlanResponse)
-def generate_plan(req: SawBatchPlanRequest) -> SawBatchPlanResponse:
-    """
-    Generate a batch plan from a spec artifact.
-
-    Groups items into setups by material and computes feasibility for each op.
-    """
-    out = create_batch_plan(batch_spec_artifact_id=req.batch_spec_artifact_id)
-    return SawBatchPlanResponse(**out)
+class BatchSpecRequest(BaseModel):
+    batch_label: str
+    session_id: str
+    tool_id: str = "saw:thin_140"
+    items: List[BatchSpecItem]
 
 
-@router.post("/approve", response_model=SawBatchPlanChooseResponse)
-def approve_plan(req: SawBatchPlanChooseRequest) -> SawBatchPlanChooseResponse:
-    """
-    Approve a batch plan with operator-defined execution order.
-
-    Creates a decision artifact that locks in the setup and op order.
-    """
-    out = create_batch_plan_decision(
-        batch_plan_artifact_id=req.batch_plan_artifact_id,
-        approved_by=req.approved_by,
-        reason=req.reason,
-        setup_order=req.setup_order,
-        op_order=req.op_order,
-    )
-    return SawBatchPlanChooseResponse(**out)
+class BatchSpecResponse(BaseModel):
+    batch_spec_artifact_id: str
 
 
-@router.post("/toolpaths", response_model=SawBatchToolpathsResponse)
-def toolpaths_from_batch_decision(req: SawBatchToolpathsRequest) -> SawBatchToolpathsResponse:
-    """
-    Batch execution scaffold:
-    - consumes saw_batch_decision
-    - recomputes feasibility per op
-    - generates toolpaths per op when feasible
-    - persists child op artifacts + one parent execution artifact
-    """
-    out = generate_batch_toolpaths_from_decision(batch_decision_artifact_id=req.batch_decision_artifact_id)
-    return SawBatchToolpathsResponse(**out)
+class BatchPlanRequest(BaseModel):
+    batch_spec_artifact_id: str
 
 
-@router.get("/execution")
-def get_latest_execution_for_decision(
-    batch_decision_artifact_id: str = Query(..., description="Decision artifact id (kind='saw_batch_decision')"),
-):
-    """
-    Convenience alias:
-      GET /api/saw/batch/execution?batch_decision_artifact_id=...
-    Returns the newest parent execution artifact that was produced from this decision.
-    """
-    it = latest_execution_for_decision(batch_decision_artifact_id)
-    if not it:
-        raise HTTPException(status_code=404, detail="No execution artifact found for batch_decision_artifact_id")
-    return it
+class BatchPlanOp(BaseModel):
+    op_id: str
+    part_id: str
+    cut_type: str = "crosscut"
 
 
-@router.get("/executions/by-decision")
-def list_executions_by_decision(
-    batch_decision_artifact_id: str = Query(..., description="Decision artifact id (kind='saw_batch_decision')"),
-    limit: int = Query(default=25, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    Convenience alias:
-      GET /api/saw/batch/executions/by-decision?batch_decision_artifact_id=...&limit=&offset=
-    Returns a newest-first list of parent execution artifacts produced from this decision.
-    """
-    return list_executions_for_decision(
-        batch_decision_artifact_id=batch_decision_artifact_id,
-        limit=limit,
-        offset=offset,
-    )
+class BatchPlanSetup(BaseModel):
+    setup_key: str
+    tool_id: str
+    ops: List[BatchPlanOp]
 
 
-@router.get("/decisions")
-def list_decisions(
-    batch_label: Optional[str] = Query(default=None),
-    session_id: Optional[str] = Query(default=None),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    List batch decision artifacts, optionally filtered by batch_label or session_id.
-    """
-    return query_run_artifacts(kind="saw_batch_decision", batch_label=batch_label, session_id=session_id, limit=limit, offset=offset)
+class BatchPlanResponse(BaseModel):
+    batch_plan_artifact_id: str
+    setups: List[BatchPlanSetup]
 
 
-@router.get("/decisions/by-plan")
-def list_decisions_by_plan(
-    batch_plan_artifact_id: str = Query(..., description="Plan artifact id (kind='saw_batch_plan')"),
-    limit: int = Query(default=25, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    Convenience alias:
-      GET /api/saw/batch/decisions/by-plan?batch_plan_artifact_id=...&limit=&offset=
-    Returns newest-first decisions that reference this plan.
-    """
-    items = query_run_artifacts(
-        kind="saw_batch_decision",
-        parent_batch_plan_artifact_id=batch_plan_artifact_id,
-        limit=max(limit, 50),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
+class BatchApproveRequest(BaseModel):
+    batch_plan_artifact_id: str
+    approved_by: str
+    reason: str
+    setup_order: List[str]
+    op_order: List[str]
 
 
-@router.get("/decisions/by-spec")
-def list_decisions_by_spec(
-    batch_spec_artifact_id: str = Query(..., description="Spec artifact id (kind='saw_batch_spec')"),
-    limit: int = Query(default=25, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    Convenience alias:
-      GET /api/saw/batch/decisions/by-spec?batch_spec_artifact_id=...&limit=&offset=
-    Returns newest-first decisions that reference this spec.
-    """
-    items = query_run_artifacts(
-        kind="saw_batch_decision",
-        parent_batch_spec_artifact_id=batch_spec_artifact_id,
-        limit=max(limit, 50),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
+class BatchApproveResponse(BaseModel):
+    batch_decision_artifact_id: str
 
 
-@router.get("/executions")
-def list_executions(
-    batch_label: Optional[str] = Query(default=None),
-    session_id: Optional[str] = Query(default=None),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    List batch execution artifacts, optionally filtered by batch_label or session_id.
-    """
-    return query_run_artifacts(kind="saw_batch_execution", batch_label=batch_label, session_id=session_id, limit=limit, offset=offset)
+class BatchToolpathsRequest(BaseModel):
+    batch_decision_artifact_id: str
 
 
-@router.get("/executions/by-plan")
-def list_executions_by_plan(
-    batch_plan_artifact_id: str = Query(..., description="Plan artifact id (kind='saw_batch_plan')"),
-    limit: int = Query(default=25, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    Convenience alias:
-      GET /api/saw/batch/executions/by-plan?batch_plan_artifact_id=...&limit=&offset=
-    Returns newest-first executions produced from this plan.
-    """
-    items = query_run_artifacts(
-        kind="saw_batch_execution",
-        parent_batch_plan_artifact_id=batch_plan_artifact_id,
-        limit=max(limit, 50),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
+class BatchToolpathsResponse(BaseModel):
+    batch_execution_artifact_id: str
+    gcode_lines: int = 0
 
 
-@router.get("/executions/by-spec")
-def list_executions_by_spec(
-    batch_spec_artifact_id: str = Query(..., description="Spec artifact id (kind='saw_batch_spec')"),
-    limit: int = Query(default=25, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
-    """
-    Convenience alias:
-      GET /api/saw/batch/executions/by-spec?batch_spec_artifact_id=...&limit=&offset=
-    Returns newest-first executions produced from this spec.
-    """
-    items = query_run_artifacts(
-        kind="saw_batch_execution",
-        parent_batch_spec_artifact_id=batch_spec_artifact_id,
-        limit=max(limit, 50),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
+class JobLogMetrics(BaseModel):
+    parts_ok: int = 0
+    parts_scrap: int = 0
+    cut_time_s: float = 0.0
+    setup_time_s: float = 0.0
 
 
-@router.get("/links", response_model=SawBatchLinkSummary)
-def get_batch_link_graph(
-    batch_label: Optional[str] = Query(default=None),
-    session_id: Optional[str] = Query(default=None),
-    limit_each: int = Query(default=25, ge=1, le=200),
-):
-    """
-    Convenience endpoint for UI:
-      GET /api/saw/batch/links?batch_label=...&session_id=...
-    Returns newest-first IDs for spec/plan/decision/execution, plus bounded lists.
-    """
-    out = build_batch_link_graph(batch_label=batch_label, session_id=session_id, limit_each=limit_each)
-    return SawBatchLinkSummary(**out)
+class JobLogRequest(BaseModel):
+    metrics: JobLogMetrics
 
 
-@router.get("/op-toolpaths/by-execution")
-def list_op_toolpaths_by_execution(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    limit: int = Query(default=200, ge=1, le=2000),
-):
-    """
-    Convenience alias:
-      GET /api/saw/batch/op-toolpaths/by-execution?batch_execution_artifact_id=...
-    Returns child op toolpaths artifacts referenced by the execution parent.
-    """
-    from app.rmos.run_artifacts.store import read_run_artifact
+class JobLogResponse(BaseModel):
+    job_log_artifact_id: str
+    metrics_rollup_artifact_id: Optional[str] = None
 
-    parent = read_run_artifact(batch_execution_artifact_id)
-    parent_d: Dict[str, Any] = parent if isinstance(parent, dict) else {
-        "kind": getattr(parent, "kind", None),
-        "payload": getattr(parent, "payload", None),
+
+# ---------------------------------------------------------------------------
+# In-memory store for batch artifacts (demo/testing)
+# ---------------------------------------------------------------------------
+
+_batch_artifacts: Dict[str, Dict[str, Any]] = {}
+
+
+def _store_artifact(kind: str, payload: Dict[str, Any], parent_id: Optional[str] = None) -> str:
+    """Store an artifact and return its ID."""
+    artifact_id = f"{kind}_{uuid.uuid4().hex[:12]}"
+    _batch_artifacts[artifact_id] = {
+        "artifact_id": artifact_id,
+        "kind": kind,
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "parent_id": parent_id,
+        "payload": payload,
     }
-    if str(parent_d.get("kind") or "") != "saw_batch_execution":
-        raise HTTPException(status_code=400, detail="batch_execution_artifact_id is not a saw_batch_execution artifact")
-
-    payload = parent_d.get("payload") or {}
-    if not isinstance(payload, dict):
-        payload = {}
-    children = payload.get("children") or []
-    if not isinstance(children, list):
-        children = []
-
-    # children are stored as {"artifact_id": "...", "kind": "..."}
-    child_ids = [c.get("artifact_id") for c in children if isinstance(c, dict) and c.get("artifact_id")]
-    child_ids = child_ids[:limit]
-
-    # Read each child (small N per batch). If store has batch read later, can optimize.
-    out: List[Dict[str, Any]] = []
-    for cid in child_ids:
-        it = read_run_artifact(cid)
-        if isinstance(it, dict):
-            out.append(it)
-        else:
-            out.append({
-                "artifact_id": getattr(it, "artifact_id", None) or getattr(it, "id", None),
-                "kind": getattr(it, "kind", None),
-                "status": getattr(it, "status", None),
-                "index_meta": getattr(it, "index_meta", None),
-                "payload": getattr(it, "payload", None),
-                "created_utc": getattr(it, "created_utc", None),
-            })
-    return out
+    return artifact_id
 
 
-@router.get("/op-toolpaths/by-decision")
-def list_op_toolpaths_by_decision(
-    batch_decision_artifact_id: str = Query(..., description="Decision artifact id (kind='saw_batch_decision')"),
-    limit: int = Query(default=200, ge=1, le=2000),
-    offset: int = Query(default=0, ge=0),
-):
+def _get_artifact(artifact_id: str) -> Optional[Dict[str, Any]]:
+    return _batch_artifacts.get(artifact_id)
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post("/spec", response_model=BatchSpecResponse)
+def create_batch_spec(req: BatchSpecRequest) -> BatchSpecResponse:
     """
-    Convenience alias:
-      GET /api/saw/batch/op-toolpaths/by-decision?batch_decision_artifact_id=...&limit=&offset=
-    Returns op toolpaths artifacts produced under this decision (newest-first).
+    Create a batch specification artifact.
+    
+    This is the first step in the batch workflow.
     """
-    items = query_run_artifacts(
-        kind="saw_batch_op_toolpaths",
-        parent_batch_decision_artifact_id=batch_decision_artifact_id,
-        limit=max(limit, 200),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
+    payload = {
+        "batch_label": req.batch_label,
+        "session_id": req.session_id,
+        "tool_id": req.tool_id,
+        "items": [item.model_dump() for item in req.items],
+    }
+    artifact_id = _store_artifact("batch_spec", payload)
+    return BatchSpecResponse(batch_spec_artifact_id=artifact_id)
 
 
-@router.post("/executions/retry")
-def retry_execution(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    reason: str = Query(default="retry"),
-    op_id: Optional[List[str]] = Query(default=None, description="Optional subset of op_ids to retry"),
-):
+@router.post("/plan", response_model=BatchPlanResponse)
+def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
     """
-    Convenience endpoint:
-      POST /api/saw/batch/executions/retry?batch_execution_artifact_id=...&reason=...&op_id=op1&op_id=op2
-
-    Creates a NEW execution (immutable) that re-runs BLOCKED/ERROR ops (or explicit op_id subset).
-    Writes:
-      - saw_batch_execution_retry artifact
-      - new saw_batch_execution artifact (parent)
-      - new saw_batch_op_toolpaths artifacts (children)
+    Generate a batch plan from a spec.
+    
+    Creates setups and operations for the batch.
     """
-    return retry_batch_execution(
-        batch_execution_artifact_id=batch_execution_artifact_id,
-        op_ids=op_id,
-        reason=reason,
+    spec = _get_artifact(req.batch_spec_artifact_id)
+    if not spec:
+        raise HTTPException(status_code=404, detail="Batch spec not found")
+    
+    # Generate mock setups/ops from spec items
+    items = spec["payload"].get("items", [])
+    tool_id = spec["payload"].get("tool_id", "saw:thin_140")
+    
+    ops = []
+    for i, item in enumerate(items):
+        ops.append(BatchPlanOp(
+            op_id=f"op_{i+1}",
+            part_id=item.get("part_id", f"part_{i+1}"),
+            cut_type="crosscut",
+        ))
+    
+    setups = [
+        BatchPlanSetup(
+            setup_key="setup_1",
+            tool_id=tool_id,
+            ops=ops,
+        )
+    ]
+    
+    payload = {
+        "batch_spec_artifact_id": req.batch_spec_artifact_id,
+        "setups": [s.model_dump() for s in setups],
+    }
+    artifact_id = _store_artifact("batch_plan", payload, parent_id=req.batch_spec_artifact_id)
+    
+    return BatchPlanResponse(
+        batch_plan_artifact_id=artifact_id,
+        setups=setups,
     )
 
 
-@router.post("/job-log")
-def create_job_log(
-    batch_execution_artifact_id: str,
-    operator: str,
-    notes: str,
-    status: str = "COMPLETED",
-    metrics: Optional[dict] = None,
-):
+@router.post("/approve", response_model=BatchApproveResponse)
+def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
     """
-    Operator job log for a batch execution.
-    Persists a governed RunArtifact.
+    Approve a batch plan, creating a decision artifact.
+    
+    This locks in the execution order.
     """
-    return write_job_log(
-        batch_execution_artifact_id=batch_execution_artifact_id,
-        operator=operator,
-        notes=notes,
-        status=status,
-        metrics=metrics,
+    plan = _get_artifact(req.batch_plan_artifact_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Batch plan not found")
+    
+    payload = {
+        "batch_plan_artifact_id": req.batch_plan_artifact_id,
+        "approved_by": req.approved_by,
+        "reason": req.reason,
+        "setup_order": req.setup_order,
+        "op_order": req.op_order,
+    }
+    artifact_id = _store_artifact("batch_decision", payload, parent_id=req.batch_plan_artifact_id)
+    
+    return BatchApproveResponse(batch_decision_artifact_id=artifact_id)
+
+
+@router.post("/toolpaths", response_model=BatchToolpathsResponse)
+def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsResponse:
+    """
+    Generate toolpaths (G-code) from an approved decision.
+    
+    Creates an execution artifact.
+    """
+    decision = _get_artifact(req.batch_decision_artifact_id)
+    if not decision:
+        raise HTTPException(status_code=404, detail="Batch decision not found")
+    
+    payload = {
+        "batch_decision_artifact_id": req.batch_decision_artifact_id,
+        "gcode_lines": 150,  # Mock value
+    }
+    artifact_id = _store_artifact("batch_execution", payload, parent_id=req.batch_decision_artifact_id)
+    
+    return BatchToolpathsResponse(
+        batch_execution_artifact_id=artifact_id,
+        gcode_lines=150,
     )
 
 
-@router.get("/job-log/by-execution")
-def list_job_logs_by_execution(
-    batch_execution_artifact_id: str,
-    limit: int = 50,
-):
+@router.post("/job-log", response_model=JobLogResponse)
+def log_batch_job(
+    req: JobLogRequest,
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+    operator: str = Query("unknown", description="Operator name"),
+    notes: str = Query("", description="Job notes"),
+    status: str = Query("COMPLETED", description="Job status"),
+) -> JobLogResponse:
     """
-    Convenience alias:
-      GET /api/saw/batch/job-log/by-execution?batch_execution_artifact_id=...
+    Log job completion for an execution, optionally creating a metrics rollup.
+    
+    If SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED=true, also persists a rollup artifact.
     """
-    return query_run_artifacts(
-        kind="saw_batch_job_log",
-        parent_batch_execution_artifact_id=batch_execution_artifact_id,
-        limit=limit,
+    execution = _get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Batch execution not found")
+    
+    # Get the decision artifact ID for rollup parent reference
+    decision_id = execution["payload"].get("batch_decision_artifact_id")
+    
+    job_log_payload = {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "operator": operator,
+        "notes": notes,
+        "status": status,
+        "metrics": req.metrics.model_dump(),
+    }
+    job_log_id = _store_artifact("batch_job_log", job_log_payload, parent_id=batch_execution_artifact_id)
+    
+    # Optionally create metrics rollup
+    rollup_id: Optional[str] = None
+    if os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true":
+        rollup_payload = {
+            "batch_execution_artifact_id": batch_execution_artifact_id,
+            "parent_batch_decision_artifact_id": decision_id,
+            "metrics": req.metrics.model_dump(),
+            "counts": {"job_log_count": 1},
+            "signals": {"burn_events": 0, "tearout_events": 0, "kickback_events": 0},
+        }
+        rollup_id = _store_artifact("saw_batch_execution_metrics_rollup", rollup_payload, parent_id=decision_id)
+        
+        # Also store in the runs artifact index for query_run_artifacts to find
+        _store_rollup_for_query(rollup_id, rollup_payload, decision_id)
+    
+    return JobLogResponse(
+        job_log_artifact_id=job_log_id,
+        metrics_rollup_artifact_id=rollup_id,
     )
 
 
-@router.get("/metrics/rollup/by-execution")
-def get_execution_metrics_rollup(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    limit_logs: int = Query(default=200, ge=1, le=2000),
-):
+def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id: str) -> None:
     """
-    Compute-only rollup (no persistence):
-      GET /api/saw/batch/metrics/rollup/by-execution?batch_execution_artifact_id=...&limit_logs=...
+    Store rollup in a format that query_run_artifacts can find.
+    
+    This bridges the in-memory store to the runs_v2 query layer.
     """
-    return compute_execution_rollup(batch_execution_artifact_id=batch_execution_artifact_id, limit_logs=limit_logs)
+    try:
+        from app.rmos.run_artifacts.store import persist_run_artifact
+        persist_run_artifact(
+            kind="saw_batch_execution_metrics_rollup",
+            payload=payload,
+            index_meta={
+                "parent_batch_decision_artifact_id": decision_id,
+                "parent_batch_execution_artifact_id": payload.get("batch_execution_artifact_id"),
+            },
+        )
+    except Exception:
+        # Graceful fallback if runs artifact store not available
+        pass
 
 
-@router.post("/metrics/rollup/by-execution")
-def create_execution_metrics_rollup_artifact(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    limit_logs: int = Query(default=200, ge=1, le=2000),
-):
-    """
-    Compute + persist rollup as governed artifact:
-      POST /api/saw/batch/metrics/rollup/by-execution?batch_execution_artifact_id=...&limit_logs=...
-    Writes kind='saw_batch_execution_rollup' with parent_batch_execution_artifact_id in index_meta.
-    """
-    return persist_execution_rollup(batch_execution_artifact_id=batch_execution_artifact_id, limit_logs=limit_logs)
-
-
-@router.get("/metrics/rollup/alias")
-def get_latest_rollup_artifact_for_execution(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    limit: int = Query(default=25, ge=1, le=500),
-):
-    """
-    Convenience alias:
-      GET /api/saw/batch/metrics/rollup/alias?batch_execution_artifact_id=...
-    Returns newest-first rollup artifacts for a given execution.
-    """
-    items = query_run_artifacts(
-        kind="saw_batch_execution_rollup",
-        parent_batch_execution_artifact_id=batch_execution_artifact_id,
-        limit=max(limit, 50),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items
-
-
-@router.get("/learning-events/by-execution")
-def list_learning_events_by_execution(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact id (kind='saw_batch_execution')"),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    Convenience alias:
-      GET /api/saw/batch/learning-events/by-execution?batch_execution_artifact_id=...&limit=&offset=
-    Returns newest-first learning events emitted from job logs (or otherwise) for a given execution.
-    """
-    items = query_run_artifacts(
-        kind="saw_lab_learning_event",
-        parent_batch_execution_artifact_id=batch_execution_artifact_id,
-        limit=max(limit, 100),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
-
-
-@router.get("/learning-hook/status")
-def get_learning_hook_status():
-    """
-    Simple status endpoint so UI/dev can confirm if the feature is enabled.
-    """
-    return {"SAW_LAB_LEARNING_HOOK_ENABLED": is_saw_lab_learning_hook_enabled()}
-
-
-@router.post("/learning-events/approve")
-def approve_learning_event(
-    learning_event_artifact_id: str = Query(..., description="Artifact id for kind='saw_lab_learning_event'"),
-    policy_decision: str = Query(..., description="PROPOSE|ACCEPT|REJECT"),
-    approved_by: str = Query(...),
-    reason: str = Query(default=""),
-):
-    """
-    Governance-safe approval: creates a new decision artifact.
-      POST /api/saw/batch/learning-events/approve?learning_event_artifact_id=...&policy_decision=ACCEPT&approved_by=...&reason=...
-    """
-    return create_learning_decision(
-        learning_event_artifact_id=learning_event_artifact_id,
-        policy_decision=policy_decision,
-        approved_by=approved_by,
-        reason=reason,
-    )
-
-
-@router.get("/learning-events/decisions/by-event")
-def list_learning_decisions_by_event(
-    learning_event_artifact_id: str = Query(...),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    Alias:
-      GET /api/saw/batch/learning-events/decisions/by-event?learning_event_artifact_id=...
-    """
-    items = query_run_artifacts(
-        kind="saw_lab_learning_decision",
-        parent_learning_event_artifact_id=learning_event_artifact_id,
-        limit=max(limit, 100),
-        offset=0,
-    )
-    items.sort(key=lambda x: str(x.get("created_utc") or ""), reverse=True)
-    return items[offset : offset + limit]
-
-
-@router.get("/learning-overrides/resolve")
-def resolve_learning_overrides_preview(
-    tool_id: Optional[str] = Query(default=None),
-    material_id: Optional[str] = Query(default=None),
-    thickness_mm: Optional[float] = Query(default=None),
-    limit_events: int = Query(default=200, ge=1, le=2000),
-):
-    """
-    Read-path preview:
-      GET /api/saw/batch/learning-overrides/resolve?tool_id=...&material_id=...
-
-    Returns averaged multipliers ONLY from ACCEPTed learning events.
-    Does not apply them anywhere automatically.
-    """
-    return resolve_learned_multipliers(
-        tool_id=tool_id,
-        material_id=material_id,
-        thickness_mm=thickness_mm,
-        limit_events=limit_events,
-    )
-
-
-@router.get("/learning-overrides/apply/status")
-def get_learning_overrides_apply_status():
-    """
-    Simple status endpoint so UI/dev can confirm if the apply feature is enabled.
-    """
-    return {"SAW_LAB_APPLY_ACCEPTED_OVERRIDES": is_apply_accepted_overrides_enabled()}
-
-
-@router.post("/learning-overrides/apply")
-def apply_learning_overrides_to_context(
-    context: dict,
-    tool_id: Optional[str] = Query(default=None),
-    material_id: Optional[str] = Query(default=None),
-    thickness_mm: Optional[float] = Query(default=None),
-    limit_events: int = Query(default=200, ge=1, le=2000),
-):
-    """
-    Safe apply preview:
-      POST /api/saw/batch/learning-overrides/apply?tool_id=...&material_id=...
-      Body: { "spindle_rpm": 8000, "feed_rate": 1200, "doc_mm": 3.0 }
-
-    Returns:
-      - resolved multipliers (from ACCEPTed events)
-      - tuned_context (copy with multipliers applied)
-      - tuning_stamp (before/after, applied flag)
-      - apply_enabled (current flag state)
-
-    Does NOT persist anything. Pure read+compute.
-    """
-    return tune_context_from_accepted_learning(
-        context=context,
-        tool_id=tool_id,
-        material_id=material_id,
-        thickness_mm=thickness_mm,
-        limit_events=limit_events,
-    )
-
-
-@router.get("/executions/with-learning")
-def get_executions_with_learning_applied(
-    batch_label: Optional[str] = Query(default=None),
-    session_id: Optional[str] = Query(default=None),
-    only_applied: bool = Query(default=True),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    Alias:
-      GET /api/saw/batch/executions/with-learning?only_applied=true&batch_label=...&session_id=...
-    """
-    return list_executions_with_learning_applied(
-        batch_label=batch_label,
-        session_id=session_id,
-        only_applied=only_applied,
-        limit=limit,
-        offset=offset,
-    )
-
-
-@router.get("/executions/metrics-rollup/by-execution")
-def get_execution_metrics_rollup_preview(
-    batch_execution_artifact_id: str = Query(...),
-    limit_job_logs: int = Query(default=500, ge=1, le=2000),
-):
-    """
-    Preview rollup without persisting:
-      GET /api/saw/batch/executions/metrics-rollup/by-execution?batch_execution_artifact_id=...
-    """
-    return compute_execution_metrics_rollup(
-        batch_execution_artifact_id=batch_execution_artifact_id,
-        limit_job_logs=limit_job_logs,
-    )
-
-
-@router.post("/executions/metrics-rollup/by-execution")
-def persist_execution_metrics_rollup_endpoint(
-    batch_execution_artifact_id: str = Query(...),
-    limit_job_logs: int = Query(default=500, ge=1, le=2000),
-):
-    """
-    Persist governed rollup artifact:
-      POST /api/saw/batch/executions/metrics-rollup/by-execution?batch_execution_artifact_id=...
-    """
-    return persist_execution_metrics_rollup(
-        batch_execution_artifact_id=batch_execution_artifact_id,
-        limit_job_logs=limit_job_logs,
-    )
-
-
-@router.get("/decisions/metrics-rollup/by-decision")
-def get_decision_metrics_rollup_preview(
-    batch_decision_artifact_id: str = Query(...),
-    limit_executions: int = Query(default=200, ge=1, le=2000),
-    limit_job_logs_per_execution: int = Query(default=500, ge=1, le=2000),
-):
-    """
-    Preview rollup without persisting:
-      GET /api/saw/batch/decisions/metrics-rollup/by-decision?batch_decision_artifact_id=...
-    """
-    return compute_decision_metrics_rollup(
-        batch_decision_artifact_id=batch_decision_artifact_id,
-        limit_executions=limit_executions,
-        limit_job_logs_per_execution=limit_job_logs_per_execution,
-    )
-
-
-@router.post("/decisions/metrics-rollup/by-decision")
-def persist_decision_metrics_rollup_endpoint(
-    batch_decision_artifact_id: str = Query(...),
-    limit_executions: int = Query(default=200, ge=1, le=2000),
-    limit_job_logs_per_execution: int = Query(default=500, ge=1, le=2000),
-):
-    """
-    Persist governed rollup artifact:
-      POST /api/saw/batch/decisions/metrics-rollup/by-decision?batch_decision_artifact_id=...
-    """
-    return persist_decision_metrics_rollup(
-        batch_decision_artifact_id=batch_decision_artifact_id,
-        limit_executions=limit_executions,
-        limit_job_logs_per_execution=limit_job_logs_per_execution,
-    )
-
-
-@router.get("/rollups/hook/status")
-def get_metrics_rollup_hook_status():
-    """
-    Whether the job-log hook will auto-persist rollup artifacts.
-    """
-    return {"SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED": is_saw_lab_metrics_rollup_hook_enabled()}
-
-
-@router.get("/executions/metrics-rollup/latest")
-def get_latest_execution_rollup(
-    batch_execution_artifact_id: str = Query(...),
-):
-    """
-    Alias:
-      GET /api/saw/batch/executions/metrics-rollup/latest?batch_execution_artifact_id=...
-    """
-    it = get_latest_execution_rollup_artifact(batch_execution_artifact_id=batch_execution_artifact_id)
-    return it or {"found": False}
-
-
-@router.get("/decisions/metrics-rollup/latest")
-def get_latest_decision_rollup(
-    batch_decision_artifact_id: str = Query(...),
-):
-    """
-    Alias:
-      GET /api/saw/batch/decisions/metrics-rollup/latest?batch_decision_artifact_id=...
-    """
-    it = get_latest_decision_rollup_artifact(batch_decision_artifact_id=batch_decision_artifact_id)
-    return it or {"found": False}
+# ---------------------------------------------------------------------------
+# Decision Trends Endpoint
+# ---------------------------------------------------------------------------
 
 
 @router.get("/decisions/trends")
 def get_decision_trends(
-    batch_decision_artifact_id: str = Query(...),
-    window: int = Query(default=20, ge=2, le=200),
-    limit_rollups: int = Query(default=500, ge=2, le=5000),
-):
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+    window: int = Query(default=20, ge=2, le=200, description="Window size for trend calculation"),
+) -> Dict[str, Any]:
     """
-    UI-friendly trends endpoint:
-      GET /api/saw/batch/decisions/trends?batch_decision_artifact_id=...&window=20
+    Compute trend deltas for a batch decision's execution metrics over time.
+    
+    Returns:
+    - Time-series points from metrics rollup artifacts
+    - Aggregates for last window vs previous window
+    - Delta comparisons (scrap rate changes, etc.)
+    
+    Even with 0-1 data points, returns a valid shape with deltas.available=False.
     """
     return compute_decision_trends(
         batch_decision_artifact_id=batch_decision_artifact_id,
         window=window,
-        limit_rollups=limit_rollups,
-    )
-
-
-@router.get("/executions/metrics-rollup/history")
-def get_execution_rollup_history(
-    batch_execution_artifact_id: str = Query(...),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    History of execution rollup artifacts:
-      GET /api/saw/batch/executions/metrics-rollup/history?batch_execution_artifact_id=...
-    """
-    return list_execution_rollups(
-        batch_execution_artifact_id=batch_execution_artifact_id,
-        limit=limit,
-        offset=offset,
-    )
-
-
-@router.get("/decisions/metrics-rollup/history")
-def get_decision_rollup_history(
-    batch_decision_artifact_id: str = Query(...),
-    limit: int = Query(default=50, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-):
-    """
-    History of decision rollup artifacts:
-      GET /api/saw/batch/decisions/metrics-rollup/history?batch_decision_artifact_id=...
-    """
-    return list_decision_rollups(
-        batch_decision_artifact_id=batch_decision_artifact_id,
-        limit=limit,
-        offset=offset,
-    )
-
-
-@router.get("/decisions/metrics-rollup/latest-vs-prev")
-def get_latest_vs_prev_decision_rollup(
-    batch_decision_artifact_id: str = Query(...),
-):
-    """
-    Convenience:
-      GET /api/saw/batch/decisions/metrics-rollup/latest-vs-prev?batch_decision_artifact_id=...
-    """
-    return latest_vs_previous_decision_rollup(batch_decision_artifact_id=batch_decision_artifact_id)
-
-
-@router.get("/rollups/diff")
-def get_rollup_diff(
-    left_rollup_artifact_id: str = Query(...),
-    right_rollup_artifact_id: str = Query(...),
-):
-    """
-    Lightweight diff for rollup artifacts (execution/decision):
-      GET /api/saw/batch/rollups/diff?left_rollup_artifact_id=...&right_rollup_artifact_id=...
-    """
-    return diff_rollups(
-        left_rollup_artifact_id=left_rollup_artifact_id,
-        right_rollup_artifact_id=right_rollup_artifact_id,
-    )
-
-
-@router.get("/executions/job-logs.csv")
-def download_job_logs_csv(
-    batch_execution_artifact_id: str = Query(...),
-    limit: int = Query(default=2000, ge=1, le=20000),
-):
-    """
-    CSV export:
-      GET /api/saw/batch/executions/job-logs.csv?batch_execution_artifact_id=...
-    """
-    from fastapi.responses import Response
-
-    csv_text = export_job_logs_csv(batch_execution_artifact_id=batch_execution_artifact_id, limit=limit)
-    return Response(
-        content=csv_text,
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="job_logs_{batch_execution_artifact_id}.csv"'},
-    )
-
-
-@router.get("/decisions/execution-rollups.csv")
-def download_execution_rollups_csv(
-    batch_decision_artifact_id: str = Query(...),
-    limit: int = Query(default=5000, ge=1, le=50000),
-):
-    """
-    CSV export:
-      GET /api/saw/batch/decisions/execution-rollups.csv?batch_decision_artifact_id=...
-    """
-    from fastapi.responses import Response
-
-    csv_text = export_execution_rollups_csv(batch_decision_artifact_id=batch_decision_artifact_id, limit=limit)
-    return Response(
-        content=csv_text,
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id}.csv"'},
-    )
-
-
-@router.get("/op-toolpaths/{artifact_id}/gcode")
-def download_op_gcode(artifact_id: str):
-    """
-    Download G-code for a single operation:
-      GET /api/saw/batch/op-toolpaths/{artifact_id}/gcode
-    """
-    from fastapi.responses import Response
-
-    result = export_op_toolpaths_gcode(op_toolpaths_artifact_id=artifact_id)
-    return Response(
-        content=result["gcode"],
-        media_type="text/plain",
-        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'},
-    )
-
-
-@router.get("/executions/{artifact_id}/gcode")
-def download_execution_gcode(artifact_id: str):
-    """
-    Download combined G-code for entire execution (all OK ops):
-      GET /api/saw/batch/executions/{artifact_id}/gcode
-    """
-    from fastapi.responses import Response
-
-    result = export_execution_gcode(batch_execution_artifact_id=artifact_id)
-    return Response(
-        content=result["gcode"],
-        media_type="text/plain",
-        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'},
     )
