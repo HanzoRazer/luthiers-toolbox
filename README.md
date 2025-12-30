@@ -81,6 +81,24 @@ All critical CNC toolpath generation features are production-ready:
 
 ---
 
+<a id="boundary-rules"></a>
+
+## 🔒 Boundary Rules (Enforced by CI)
+
+This repository enforces a hard architectural boundary.
+
+❌ Cross-repo imports are not allowed.  
+✅ Integration must happen via artifacts, schemas, or HTTP APIs.
+
+If CI fails with a boundary violation:
+- Do NOT add an exception.
+- Do NOT "just import it".
+- Instead, define or extend a contract between systems.
+
+See [`docs/BOUNDARY_RULES.md`](./docs/BOUNDARY_RULES.md) for details and [`docs/ARCH/BoundarySpec.md`](./docs/ARCH/BoundarySpec.md) for rationale.
+
+---
+
 ## 📁 Repository Structure
 
 This is a **mono-repo** containing multiple related projects:
