@@ -1,6 +1,11 @@
 """
 CAM Drill Pattern Router
 
+LANE: OPERATION (for /gcode endpoint)
+LANE: UTILITY (for /info endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) - generates G-code from explicit parameters
+
 Generate drilling patterns (grid, circle, line) with modal cycles.
 
 Migrated from: routers/cam_drill_pattern_router.py
@@ -8,17 +13,25 @@ Migrated from: routers/cam_drill_pattern_router.py
 Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
+GOVERNANCE INVARIANTS:
+1. /gcode endpoint creates a run artifact (OK or ERROR)
+2. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- drill_pattern_gcode_execution (OK/ERROR) - from /gcode
+
 Endpoints:
-    POST /gcode    - Generate pattern drilling G-code
-    GET  /info     - Get pattern info
+    POST /gcode    - Generate pattern drilling G-code (OPERATION)
+    GET  /info     - Get pattern info (UTILITY)
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from math import cos, pi, sin
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 try:
@@ -26,6 +39,15 @@ try:
     HAS_POST_HELPERS = True
 except ImportError:
     HAS_POST_HELPERS = False
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ....rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 router = APIRouter()
 
@@ -102,53 +124,109 @@ def _generate_points(p: Pattern) -> List[tuple]:
 
 @router.post("/gcode", response_class=Response)
 def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
-    """Generate drilling G-code from pattern specification."""
-    points = _generate_points(pat)
+    """
+    Generate drilling G-code from pattern specification.
 
-    if HAS_POST_HELPERS:
-        ctx = build_post_context_v2(
-            post=prm.post,
-            post_mode=prm.post_mode,
-            units=prm.units,
-            machine_id=prm.machine_id,
-            RPM=prm.rpm,
-            PROGRAM_NO=prm.program_no,
-            WORK_OFFSET=prm.work_offset,
-            TOOL=prm.tool,
-            SAFE_Z=prm.safe_z,
+    LANE: OPERATION - Creates drill_pattern_gcode_execution artifact.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj({"pattern": pat.model_dump(), "params": prm.model_dump()})
+
+    try:
+        points = _generate_points(pat)
+
+        if HAS_POST_HELPERS:
+            ctx = build_post_context_v2(
+                post=prm.post,
+                post_mode=prm.post_mode,
+                units=prm.units,
+                machine_id=prm.machine_id,
+                RPM=prm.rpm,
+                PROGRAM_NO=prm.program_no,
+                WORK_OFFSET=prm.work_offset,
+                TOOL=prm.tool,
+                SAFE_Z=prm.safe_z,
+            )
+
+        r_clear = _f(prm.r_clear if prm.r_clear is not None else 5.0)
+
+        lines = [
+            "G90",
+            f"G0 Z{_f(prm.safe_z)}",
+        ]
+
+        cyc = prm.cycle.upper()
+
+        for (x, y) in points:
+            if cyc == "G81":
+                dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
+                lines.append(f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}")
+            else:
+                peck = _f(prm.peck_q if prm.peck_q is not None else 1.0)
+                dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
+                lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
+
+        lines.append("G80")
+        body = "\n".join(lines) + "\n"
+
+        # Hash G-code for provenance
+        gcode_hash = sha256_of_text(body)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drill_pattern_gcode",
+            workflow_mode="drill_pattern",
+            event_type="drill_pattern_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
         )
+        persist_run(artifact)
 
-    r_clear = _f(prm.r_clear if prm.r_clear is not None else 5.0)
+        resp = Response(content=body, media_type="text/plain; charset=utf-8")
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
 
-    lines = [
-        "G90",
-        f"G0 Z{_f(prm.safe_z)}",
-    ]
+        if HAS_POST_HELPERS:
+            resp = wrap_with_post_v2(resp, ctx)
 
-    cyc = prm.cycle.upper()
+        return resp
 
-    for (x, y) in points:
-        if cyc == "G81":
-            dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}")
-        else:
-            peck = _f(prm.peck_q if prm.peck_q is not None else 1.0)
-            dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
+    except Exception as e:
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drill_pattern_gcode",
+            workflow_mode="drill_pattern",
+            event_type="drill_pattern_gcode_execution",
+            status="ERROR",
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
 
-    lines.append("G80")
-    body = "\n".join(lines) + "\n"
-    resp = Response(content=body, media_type="text/plain; charset=utf-8")
-
-    if HAS_POST_HELPERS:
-        resp = wrap_with_post_v2(resp, ctx)
-
-    return resp
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "DRILL_PATTERN_GCODE_ERROR",
+                "run_id": run_id,
+                "message": str(e),
+            },
+        )
 
 
 @router.get("/info")
 def pattern_info() -> Dict[str, Any]:
-    """Get drill pattern information"""
+    """
+    Get drill pattern information.
+
+    LANE: UTILITY - Info only, no artifacts.
+    """
     return {
         "operation": "drill_pattern",
         "description": "Generate drilling patterns (grid, circle, line) with modal cycles",
