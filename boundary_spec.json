@@ -1,0 +1,10 @@
+{
+  "repo_name": "luthiers-toolbox",
+  "scan_roots": ["services/api/app"],
+  "forbidden_prefixes": [
+    "tap_tone.",
+    "modes."
+  ],
+  "allow_files": [],
+  "readme_anchor": "docs/BOUNDARY_RULES.md#boundary-rules"
+}
