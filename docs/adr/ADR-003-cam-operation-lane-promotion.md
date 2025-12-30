@@ -282,12 +282,17 @@ Future CI checks (per governance Section 7):
 
 | Milestone | Target | Status |
 |-----------|--------|--------|
-| Saw Lab reference complete | Wave 8 | Done |
-| Rosette CNC promoted | Wave 9 | Pending |
-| RMOS Toolpaths promoted | Wave 9 | Pending |
-| V-Carve promoted | Wave 9 | Pending |
-| Tier 2 endpoints | Wave 10 | Planned |
-| CI enforcement | Wave 10 | Planned |
+| Saw Lab reference complete | Wave 8 | ✅ Done |
+| RMOS Toolpaths promoted (Phase 1) | Wave 9 | ✅ Done |
+| Rosette CNC promoted (Phase 1) | Wave 9 | ✅ Done |
+| V-Carve promoted (Phase 1) | Wave 9 | ✅ Done |
+| Tier 2 endpoints (Phase 1) | Wave 10 | ✅ Done |
+| Tier 3 endpoints (Phase 1) | Wave 11 | ✅ Done |
+| CI enforcement | Wave 12 | Planned |
+| Phase 2: Feasibility gates | Wave 12+ | Planned |
+| Phase 3: Move standardization | Wave 13+ | Planned |
+| Phase 4: Full pipeline | Wave 14+ | Planned |
+| Phase 5: Feedback loops | Wave 15+ | Planned |
 
 ## Related
 
