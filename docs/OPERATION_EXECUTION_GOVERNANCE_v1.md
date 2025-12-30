@@ -602,3 +602,76 @@ docs/CNC_SAW_LAB_DEVELOPER_GUIDE.md               # Developer guide
 | `CNC_SAW_LAB_DEVELOPER_GUIDE.md` | Detailed implementation guide for Saw Lab |
 | `ENDPOINT_TRUTH_MAP.md` | Lane annotations for all endpoints (TODO) |
 | `RMOS_GOVERNANCE_CONTRACT.md` | Parent RMOS governance (if exists) |
+| `WHY_SAW_LAB_IS_DIFFERENT.md` | Contributor explainer for execution classes |
+
+---
+
+## Appendix D: Execution Classes (Binding)
+
+All executable operations within Luthier's ToolBox MUST declare an execution class.
+This classification governs orchestration, feasibility, advisory generation, and CI enforcement.
+
+### Execution Class A - Planning Operations
+
+#### Definition
+
+Multi-stage operations that require interpretation, feasibility analysis, or optimization before producing machine instructions.
+
+#### Characteristics
+
+- Requires CamIntentV1 normalization
+- May generate advisories, risk scores, or feasibility outcomes
+- May span multiple planning phases
+- Output is derived, not mechanically deterministic
+
+#### Examples
+
+- Router-based CAM toolpaths (adaptive, pocketing, profiling)
+- Rosette pattern generation
+- Multi-axis simulation pipelines
+- Any operation that answers "should we do this?"
+
+#### Governance Rules
+
+- MUST normalize through normalize_cam_intent_v1
+- MUST be eligible for RMOS feasibility and advisory layers
+- MUST persist run artifacts via runs_v2
+
+---
+
+### Execution Class B - Deterministic Machine Operations
+
+#### Definition
+
+Single-pass, mechanically deterministic operations that transform validated inputs directly into machine instructions.
+
+#### Characteristics
+
+- Accepts CamIntentV1 for envelope consistency
+- No heuristic planning or optimization
+- No advisory inference
+- Execution is fully constrained by inputs
+
+#### Examples
+
+- CNC Saw Lab G-code generation
+- Fixed-pattern drilling
+- Probe calibration routines
+- Machine test cuts
+
+#### Governance Rules
+
+- MUST accept CamIntentV1
+- MUST normalize intent once
+- MAY execute end-to-end in a single pass
+- MUST NOT emit advisories or feasibility outcomes
+- MUST persist artifacts via runs_v2
+
+---
+
+### Enforcement Principle
+
+> **All operations normalize intent.**
+> **Only Planning Operations interpret intent.**
+
+This distinction is intentional and non-negotiable.
