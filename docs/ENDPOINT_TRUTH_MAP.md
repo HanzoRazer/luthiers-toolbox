@@ -46,6 +46,49 @@
 | `POST /api/cam/pocket/adaptive/batch_export` | adaptive | EXECUTE | Promoted Wave 11 |
 | `POST /api/cam/toolpath/helical_entry` | helical | EXECUTE | Promoted Wave 11 |
 
+### Phase 5: Feedback Loop Infrastructure (2025-12-31)
+
+> Reference: ADR-003 Phase 5, `rmos/pipeline/feedback/`
+
+The feedback loop infrastructure enables operator feedback capture, learning event generation, and metrics aggregation. All hooks default to OFF for safety.
+
+#### Feature Flags
+
+| Environment Variable | Description | Default |
+|---------------------|-------------|---------|
+| `{TOOL}_LEARNING_HOOK_ENABLED` | Auto-emit learning events from job logs | `false` |
+| `{TOOL}_METRICS_ROLLUP_HOOK_ENABLED` | Auto-persist metrics rollups | `false` |
+| `{TOOL}_APPLY_ACCEPTED_OVERRIDES` | Apply learned multipliers to contexts | `false` |
+
+#### Feedback Artifacts
+
+| Kind Pattern | Stage | Description |
+|--------------|-------|-------------|
+| `{tool}_job_log` | FEEDBACK | Operator job completion feedback |
+| `{tool}_learning_event` | FEEDBACK | Auto-generated parameter suggestions |
+| `{tool}_learning_decision` | FEEDBACK | Accept/reject gate for learning |
+| `{tool}_execution_metrics_rollup` | FEEDBACK | Aggregated execution statistics |
+
+#### Quality Signals Detected
+
+| Signal | Description | Suggested Adjustment |
+|--------|-------------|---------------------|
+| `burn` | Burn marks detected | Reduce feed or increase RPM |
+| `tearout` | Tearout detected | Adjust feed direction or reduce DOC |
+| `kickback` | Kickback event | Reduce feed rate |
+| `chatter` | Chatter detected | Adjust RPM or reduce DOC |
+| `tool_wear` | Excessive tool wear | Schedule tool change |
+| `excellent` | Excellent finish | Current params are good |
+
+#### Learning Multipliers
+
+| Multiplier | Range | Description |
+|------------|-------|-------------|
+| `spindle_rpm_mult` | 0.5–2.0 | Spindle RPM adjustment factor |
+| `feed_rate_mult` | 0.5–2.0 | Feed rate adjustment factor |
+| `doc_mult` | 0.5–2.0 | Depth of cut adjustment factor |
+| `woc_mult` | 0.5–2.0 | Width of cut adjustment factor |
+
 #### UTILITY Lane (Legacy/Preview)
 
 > These endpoints produce G-code but bypass governance. Suitable for development, simulation, preview.
