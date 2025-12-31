@@ -16,6 +16,7 @@
 | **Incomplete Features (P2)** | 5 | Reduced functionality |
 | **Enhancement TODOs (P3)** | 3 | Nice-to-have improvements |
 | **ADR Phases Complete** | 5/5 | ADR-003 fully implemented |
+| **RMOS Operations Bundles** | 17/17 | E2E bundle implementation complete |
 
 ---
 
@@ -28,6 +29,7 @@ All promoted endpoints have full governance: artifacts, feasibility gates, audit
 | Tool Type | Endpoints | Phase | Status |
 |-----------|-----------|-------|--------|
 | saw | `/api/saw/batch/*` | Reference | Done |
+| **operations** | `/api/rmos/operations/*` | **Bundles 01-17** | **Done** |
 | rmos | `/api/rmos/toolpaths` | Wave 9 | Done |
 | rosette | `/api/cam/rosette/*` | Wave 9 | Done |
 | vcarve | `/api/art-studio/vcarve/gcode` | Wave 9 | Done |
@@ -258,6 +260,17 @@ curl http://localhost:8000/api/governance/stats
 ---
 
 ## 9. Change Log
+
+### 2025-12-31 (Bundles 01-17)
+
+- **Implemented** all 17 RMOS E2E bundles with governance compliance
+- **Added** `rmos/operations/` module (adapter, router, saw_adapter, cam_adapter, export)
+- **Added** `rmos/services/lineage.py` for Plan → Execute tracking
+- **Updated** `runs_v2/schemas.py` with `RunLineage`, `RunAttachmentRowV1`
+- **Updated** `runs_v2/store.py` with `parent_plan_run_id` filtering
+- **Added** frontend SDK: `sdk/rmos/operations.ts`, `sdk/rmos/runs_attachments.ts`
+- **Added** Vue components: `RmosOperationE2EPanel.vue`, `PlanAttachmentsInspector.vue`
+- **Mounted** operations router at `/api/rmos/operations`
 
 ### 2025-12-31
 

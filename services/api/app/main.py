@@ -352,6 +352,14 @@ else:
         print(f"Warning: RMOS Runs router not available: {e}")
         rmos_runs_router = None
 
+# RMOS Operations (Bundle 01-04, 07) - Operation Lane endpoints
+try:
+    from .rmos.operations.router import router as rmos_operations_router
+    print("RMOS Operations: Loaded (governance-compliant, Operation Lane)")
+except ImportError as e:
+    print(f"Warning: RMOS Operations router not available: {e}")
+    rmos_operations_router = None
+
 try:
     from ._experimental.ai_graphics.api.vision_routes import router as vision_router
 except ImportError as e:
@@ -793,6 +801,12 @@ app.include_router(cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CN
 # Note: runs_v2/api_runs.py has prefix="/runs", so mount at /api/rmos → /api/rmos/runs
 if rmos_runs_router:
     app.include_router(rmos_runs_router, prefix="/api/rmos", tags=["RMOS", "Runs"])
+
+# RMOS Operations Lane (Bundles 01-04, 07) - governance-compliant execution/planning
+# Note: operations/router.py has prefix="/api/rmos/operations", so mount directly
+if rmos_operations_router:
+    app.include_router(rmos_operations_router, tags=["RMOS", "Operations", "OPERATION Lane"])
+
 if vision_router:
     app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
 if advisory_router:

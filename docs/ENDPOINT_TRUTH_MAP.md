@@ -46,6 +46,41 @@
 | `POST /api/cam/pocket/adaptive/batch_export` | adaptive | EXECUTE | Promoted Wave 11 |
 | `POST /api/cam/toolpath/helical_entry` | helical | EXECUTE | Promoted Wave 11 |
 
+### RMOS Operations Lane (Bundles 01-17) - 2025-12-31
+
+> Reference: `RMOS_E2E_BUNDLE.txt`, `rmos/operations/`
+>
+> Governance-compliant Operation Lane endpoints with canonical artifact patterns.
+
+| Endpoint | Tool Type | Stage | Notes |
+|----------|-----------|-------|-------|
+| `POST /api/rmos/operations/{tool_id}/execute` | generic | EXECUTE | Bundle 01 - Generic execution |
+| `POST /api/rmos/operations/{tool_id}/plan` | generic | PLAN | Bundle 07 - Generic planning |
+| `GET /api/rmos/operations/{run_id}/export.zip` | generic | EXPORT | Bundle 04 - ZIP export |
+| `POST /api/rmos/operations/saw_v1/execute` | saw | EXECUTE | Bundle 02 - Saw execution |
+| `POST /api/rmos/operations/saw_v1/plan` | saw | PLAN | Bundle 02 - Saw planning |
+| `POST /api/rmos/operations/cam_roughing_v1/execute` | roughing | EXECUTE | Bundle 03 - CAM roughing |
+| `POST /api/rmos/operations/cam_roughing_v1/plan` | roughing | PLAN | Bundle 03 - CAM roughing plan |
+| `GET /api/rmos/operations/health` | — | HEALTH | Operations health check |
+
+#### Bundle Implementation Summary
+
+| Bundle | Description | Status |
+|--------|-------------|--------|
+| 01 | Operation Execution Spine | Done |
+| 02 | Saw Execution Adapter | Done |
+| 03 | CAM Promotion Bridge | Done |
+| 04 | ZIP Export | Done |
+| 05 | Frontend SDK (operations.ts) | Done |
+| 06 | Minimal UI Panel (RmosOperationE2EPanel.vue) | Done |
+| 07 | Backend Plan Endpoints | Done |
+| 08 | UI Plan Wiring | Done |
+| 09 | Backend Lineage Service | Done |
+| 10-11 | Run Query + Pagination | Done |
+| 12-15 | UI Components | Done |
+| 16 | Plan Attachments Inspector | Done |
+| 17 | Attachment Path Normalization | Done |
+
 ### Phase 5: Feedback Loop Infrastructure (2025-12-31)
 
 > Reference: ADR-003 Phase 5, `rmos/pipeline/feedback/`
@@ -282,6 +317,17 @@ All other endpoints (CRUD, validation, query, analytics) are **not in scope** fo
 |--------|----------|
 | POST | `/api/rmos/saw-ops/slice/preview` |
 | POST | `/api/rmos/saw-ops/pipeline/handoff` |
+
+### Operations (`/api/rmos/operations`) - Bundle 01-17
+
+> **Added 2025-12-31**: Governance-compliant Operation Lane endpoints.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/rmos/operations/{tool_id}/execute` | Execute operation with feasibility gate |
+| POST | `/api/rmos/operations/{tool_id}/plan` | Create operation plan |
+| GET | `/api/rmos/operations/{run_id}/export.zip` | Export run as auditable ZIP |
+| GET | `/api/rmos/operations/health` | Health check |
 
 ### Runs (`/api/rmos/runs`)
 
@@ -536,6 +582,7 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 | Domain | Prefix | Count | Lane |
 |--------|--------|-------|------|
 | **CNC Saw Lab Batch** | `/api/saw/batch` | 27 | **OPERATION** |
+| **RMOS Operations** | `/api/rmos/operations` | 4 | **OPERATION** |
 | RMOS AI | `/api/rmos/ai` | 5 | N/A |
 | RMOS Profiles | `/api/rmos/profiles` | 7 | N/A |
 | RMOS Profile History | `/api/rmos/profiles/history` | 5 | N/A |
