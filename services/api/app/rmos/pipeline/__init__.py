@@ -68,6 +68,55 @@ from .services import (
     create_execution_artifact,
 )
 
+# Feedback Loop (Phase 5 - ADR-003)
+from .feedback import (
+    # Schemas
+    JobLogStatus,
+    JobLogMetrics,
+    JobLog,
+    JobLogRequest,
+    JobLogResponse,
+    QualitySignal,
+    LearningMultipliers,
+    LearningSuggestion,
+    LearningEvent,
+    LearningEventResponse,
+    LearningDecisionPolicy,
+    LearningDecision,
+    LearningDecisionRequest,
+    LearningDecisionResponse,
+    TimeMetrics,
+    YieldMetrics,
+    EventCounts,
+    MetricsRollup,
+    MetricsRollupResponse,
+    # Config
+    FeedbackConfig,
+    get_feedback_config,
+    is_learning_hook_enabled,
+    is_metrics_rollup_hook_enabled,
+    is_apply_overrides_enabled,
+    get_learned_overrides_path,
+    # Job Log Service
+    JobLogService,
+    write_job_log,
+    list_job_logs_for_execution,
+    # Learning Service
+    LearningService,
+    detect_signals,
+    generate_suggestions,
+    emit_learning_event,
+    create_learning_decision,
+    resolve_learned_multipliers,
+    apply_multipliers_to_context,
+    # Rollup Service
+    RollupService,
+    compute_execution_rollup,
+    persist_execution_rollup,
+    get_latest_rollup,
+    list_rollup_history,
+)
+
 __all__ = [
     # Enums
     "PipelineStage",
@@ -108,4 +157,49 @@ __all__ = [
     "create_plan_artifact",
     "create_decision_artifact",
     "create_execution_artifact",
+    # Feedback Schemas (Phase 5)
+    "JobLogStatus",
+    "JobLogMetrics",
+    "JobLog",
+    "JobLogRequest",
+    "JobLogResponse",
+    "QualitySignal",
+    "LearningMultipliers",
+    "LearningSuggestion",
+    "LearningEvent",
+    "LearningEventResponse",
+    "LearningDecisionPolicy",
+    "LearningDecision",
+    "LearningDecisionRequest",
+    "LearningDecisionResponse",
+    "TimeMetrics",
+    "YieldMetrics",
+    "EventCounts",
+    "MetricsRollup",
+    "MetricsRollupResponse",
+    # Feedback Config (Phase 5)
+    "FeedbackConfig",
+    "get_feedback_config",
+    "is_learning_hook_enabled",
+    "is_metrics_rollup_hook_enabled",
+    "is_apply_overrides_enabled",
+    "get_learned_overrides_path",
+    # Job Log Service (Phase 5)
+    "JobLogService",
+    "write_job_log",
+    "list_job_logs_for_execution",
+    # Learning Service (Phase 5)
+    "LearningService",
+    "detect_signals",
+    "generate_suggestions",
+    "emit_learning_event",
+    "create_learning_decision",
+    "resolve_learned_multipliers",
+    "apply_multipliers_to_context",
+    # Rollup Service (Phase 5)
+    "RollupService",
+    "compute_execution_rollup",
+    "persist_execution_rollup",
+    "get_latest_rollup",
+    "list_rollup_history",
 ]

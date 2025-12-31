@@ -292,7 +292,7 @@ Future CI checks (per governance Section 7):
 | Phase 2: Feasibility gates | Wave 12 | ✅ Done (2025-12-30) |
 | Phase 3: Move standardization | Wave 13+ | ✅ Done (2025-12-31) |
 | Phase 4: Full pipeline | Wave 14+ | ✅ Done (2025-12-31) |
-| Phase 5: Feedback loops | Wave 15+ | Planned |
+| Phase 5: Feedback loops | Wave 15+ | ✅ Done (2025-12-31) |
 
 ### Phase 3 Progress (Move Standardization) ✅ Complete
 
@@ -339,6 +339,53 @@ Future CI checks (per governance Section 7):
 - Server-side feasibility recompute on every execution
 - Immutable retry pattern (creates new artifacts, preserves originals)
 - Parent-child linking for lineage tracking
+
+### Phase 5 Progress (Feedback Loops) ✅ Complete
+
+**Infrastructure Complete:**
+- ✅ `rmos/pipeline/feedback/__init__.py` - Package exports
+- ✅ `rmos/pipeline/feedback/schemas.py` - Full Pydantic models:
+  - `JobLogStatus` enum (OK, PARTIAL, SCRAP, ABORTED)
+  - `JobLogMetrics` - Time, yield, quality signals (burn, tearout, kickback, chatter)
+  - `QualitySignal` enum - Signal types for learning detection
+  - `LearningMultipliers` - Parameter adjustment factors (rpm, feed, doc, woc)
+  - `LearningSuggestion` - Signal-based suggestion with confidence
+  - `LearningEvent`, `LearningDecision` - Learning artifacts
+  - `TimeMetrics`, `YieldMetrics`, `EventCounts` - Rollup aggregates
+  - `MetricsRollup` - Aggregated execution statistics
+- ✅ `rmos/pipeline/feedback/config.py` - Feature flag configuration:
+  - `{TOOL}_LEARNING_HOOK_ENABLED` - Auto-emit learning events
+  - `{TOOL}_METRICS_ROLLUP_HOOK_ENABLED` - Auto-persist rollups
+  - `{TOOL}_APPLY_ACCEPTED_OVERRIDES` - Apply learned multipliers
+  - All hooks default to OFF for safety
+- ✅ `rmos/pipeline/feedback/job_log.py` - Job log service:
+  - `JobLogService.write_log()` - Persist job log with auto-hooks
+  - Auto-triggers learning event emission if enabled
+  - Auto-triggers metrics rollup if enabled
+- ✅ `rmos/pipeline/feedback/learning.py` - Learning service:
+  - `detect_signals()` - Detect quality signals from metrics/notes
+  - `generate_suggestions()` - Generate parameter adjustments per signal
+  - `LearningService.emit_event()` - Create learning event artifact
+  - `LearningService.create_decision()` - Accept/reject gate
+  - `resolve_learned_multipliers()` - Query accepted overrides
+  - `apply_multipliers_to_context()` - Apply to machining context
+  - JSONL persistence for learned overrides
+- ✅ `rmos/pipeline/feedback/rollups.py` - Metrics rollup service:
+  - `RollupService.compute_execution_rollup()` - Aggregate metrics
+  - Time metrics (setup, cut, total)
+  - Yield metrics (parts_ok, parts_scrap, yield_rate)
+  - Event counts (burn, tearout, kickback, chatter, tool_wear)
+  - Operator and status breakdowns
+- ✅ Updated `rmos/pipeline/__init__.py` - Exports feedback module
+- ✅ Updated `rmos/__init__.py` - Exports feedback infrastructure
+
+**Key Features:**
+- Feature flags for opt-in learning and rollups (default OFF)
+- Quality signal detection from metrics and operator notes
+- Confidence-weighted suggestions per signal type
+- Accept/reject gate before applying learned multipliers
+- JSONL persistence for learned overrides (tool/material/operation key)
+- Metrics rollups aggregate time, yield, and event counts
 
 ## Related
 

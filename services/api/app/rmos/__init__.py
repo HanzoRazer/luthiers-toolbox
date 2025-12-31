@@ -232,6 +232,58 @@ try:
 except ImportError:
     pass
 
+# Feedback Loop Infrastructure (Phase 5 - ADR-003)
+try:
+    from .pipeline import (
+        # Feedback schemas
+        JobLogStatus,
+        JobLogMetrics,
+        JobLog,
+        JobLogRequest,
+        JobLogResponse,
+        QualitySignal,
+        LearningMultipliers,
+        LearningSuggestion,
+        LearningEvent,
+        LearningEventResponse,
+        LearningDecisionPolicy,
+        LearningDecision,
+        LearningDecisionRequest,
+        LearningDecisionResponse,
+        TimeMetrics,
+        YieldMetrics,
+        EventCounts,
+        MetricsRollup,
+        MetricsRollupResponse,
+        # Feedback config
+        FeedbackConfig,
+        get_feedback_config,
+        is_learning_hook_enabled,
+        is_metrics_rollup_hook_enabled,
+        is_apply_overrides_enabled,
+        get_learned_overrides_path,
+        # Job log service
+        JobLogService,
+        write_job_log,
+        list_job_logs_for_execution,
+        # Learning service
+        LearningService,
+        detect_signals,
+        generate_suggestions,
+        emit_learning_event,
+        create_learning_decision,
+        resolve_learned_multipliers,
+        apply_multipliers_to_context,
+        # Rollup service
+        RollupService,
+        compute_execution_rollup,
+        persist_execution_rollup,
+        get_latest_rollup,
+        list_rollup_history,
+    )
+except ImportError:
+    pass
+
 # Re-export from existing modules for convenience
 try:
     from .logging_ai import (
@@ -396,4 +448,45 @@ __all__ = [
     "create_plan_artifact",
     "create_decision_artifact",
     "create_execution_artifact",
+    # Feedback Loop Infrastructure (Phase 5 - ADR-003)
+    "JobLogStatus",
+    "JobLogMetrics",
+    "JobLog",
+    "JobLogRequest",
+    "JobLogResponse",
+    "QualitySignal",
+    "LearningMultipliers",
+    "LearningSuggestion",
+    "LearningEvent",
+    "LearningEventResponse",
+    "LearningDecisionPolicy",
+    "LearningDecision",
+    "LearningDecisionRequest",
+    "LearningDecisionResponse",
+    "TimeMetrics",
+    "YieldMetrics",
+    "EventCounts",
+    "MetricsRollup",
+    "MetricsRollupResponse",
+    "FeedbackConfig",
+    "get_feedback_config",
+    "is_learning_hook_enabled",
+    "is_metrics_rollup_hook_enabled",
+    "is_apply_overrides_enabled",
+    "get_learned_overrides_path",
+    "JobLogService",
+    "write_job_log",
+    "list_job_logs_for_execution",
+    "LearningService",
+    "detect_signals",
+    "generate_suggestions",
+    "emit_learning_event",
+    "create_learning_decision",
+    "resolve_learned_multipliers",
+    "apply_multipliers_to_context",
+    "RollupService",
+    "compute_execution_rollup",
+    "persist_execution_rollup",
+    "get_latest_rollup",
+    "list_rollup_history",
 ]
