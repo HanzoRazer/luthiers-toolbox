@@ -289,10 +289,24 @@ Future CI checks (per governance Section 7):
 | Tier 2 endpoints (Phase 1) | Wave 10 | ✅ Done |
 | Tier 3 endpoints (Phase 1) | Wave 11 | ✅ Done |
 | CI enforcement | Wave 12 | Planned |
-| Phase 2: Feasibility gates | Wave 12+ | Planned |
-| Phase 3: Move standardization | Wave 13+ | Planned |
+| Phase 2: Feasibility gates | Wave 12 | ✅ Done (2025-12-30) |
+| Phase 3: Move standardization | Wave 13+ | 🔄 In Progress (2025-12-31) |
 | Phase 4: Full pipeline | Wave 14+ | Planned |
 | Phase 5: Feedback loops | Wave 15+ | Planned |
+
+### Phase 3 Progress (Move Standardization)
+
+**Infrastructure Complete:**
+- ✅ `rmos/moves.py` - Canonical GCodeMove model (TypedDict + Pydantic)
+- ✅ `rmos/posts/base.py` - PostProcessor protocol and DialectConfig
+- ✅ `rmos/posts/linuxcnc.py` - LinuxCNC post-processor (G64 path blending)
+- ✅ Updated `rmos/posts/__init__.py` - Unified exports
+
+**Router Migration Pending:**
+- [ ] helical_router.py - Convert to canonical moves
+- [ ] drilling_router.py - Convert to canonical moves
+- [ ] biarc_router.py - Convert to canonical moves
+- [ ] roughing_router.py - Convert to canonical moves
 
 ## Related
 

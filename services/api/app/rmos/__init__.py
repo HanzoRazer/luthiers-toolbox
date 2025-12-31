@@ -156,6 +156,39 @@ try:
 except ImportError:
     pass
 
+# Canonical Moves (Phase 3 - ADR-003)
+try:
+    from .moves import (
+        MoveType,
+        GCodeMove,
+        GCodeMoveModel,
+        move_to_gcode,
+        moves_to_gcode,
+        legacy_move_to_canonical,
+        canonical_to_legacy_move,
+        rapid,
+        linear,
+        cw_arc,
+        ccw_arc,
+        dwell,
+    )
+except ImportError:
+    pass
+
+# Post-Processors (Phase 3 - ADR-003)
+try:
+    from .posts import (
+        Dialect,
+        DialectConfig,
+        get_dialect_config,
+        render_gcode,
+        render_grbl,
+        render_fanuc,
+        render_linuxcnc,
+    )
+except ImportError:
+    pass
+
 # Re-export from existing modules for convenience
 try:
     from .logging_ai import (
@@ -268,4 +301,25 @@ __all__ = [
     "apply_global_policy_to_constraints",
     "validate_request_against_policy",
     "clamp_budget_to_policy",
+    # Canonical Moves (Phase 3 - ADR-003)
+    "MoveType",
+    "GCodeMove",
+    "GCodeMoveModel",
+    "move_to_gcode",
+    "moves_to_gcode",
+    "legacy_move_to_canonical",
+    "canonical_to_legacy_move",
+    "rapid",
+    "linear",
+    "cw_arc",
+    "ccw_arc",
+    "dwell",
+    # Post-Processors (Phase 3 - ADR-003)
+    "Dialect",
+    "DialectConfig",
+    "get_dialect_config",
+    "render_gcode",
+    "render_grbl",
+    "render_fanuc",
+    "render_linuxcnc",
 ]
