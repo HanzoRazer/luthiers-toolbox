@@ -14,11 +14,14 @@ Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
 GOVERNANCE INVARIANTS:
-1. /helical_entry creates a run artifact (OK or ERROR)
-2. All outputs are SHA256 hashed for provenance
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
 
 ARTIFACT KINDS:
 - helical_gcode_execution (OK/ERROR) - from /helical_entry
+- helical_gcode_blocked (BLOCKED) - from /helical_entry when safety policy blocks
 
 Features:
 - Helical plunge entry (prevents tool breakage in hardwood)
@@ -59,6 +62,10 @@ from ....rmos.runs import (
     sha256_of_obj,
     sha256_of_text,
 )
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ....rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -277,6 +284,41 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(req.model_dump())
 
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    feasibility = compute_feasibility_internal(
+        tool_id="helical_gcode",
+        req=req,
+        context="helical_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="helical_gcode",
+            workflow_mode="helical",
+            event_type="helical_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Helical G-code generation blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
+
     # Basic sanity checks with artifact persistence
     def error_artifact(msg: str):
         run_id = create_run_id()
@@ -287,6 +329,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[msg],
         )
@@ -317,6 +360,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="OK",
+            feasibility=feasibility,
             request_hash=request_hash,
             gcode_hash=gcode_hash,
         )
@@ -341,6 +385,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[f"{type(e).__name__}: {str(e)}"],
         )

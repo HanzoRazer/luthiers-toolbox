@@ -9,11 +9,14 @@ Execution Class: A (Planning) - generates toolpaths from geometry
 FastAPI endpoints for adaptive pocket toolpath generation with L.1, L.2, and L.3 features.
 
 GOVERNANCE INVARIANTS:
-1. G-code generating endpoints create run artifacts (OK or ERROR)
-2. All outputs are SHA256 hashed for provenance
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
 
 ARTIFACT KINDS:
 - adaptive_plan_execution (OK/ERROR) - from /plan
+- adaptive_plan_blocked (BLOCKED) - from /plan when safety policy blocks
 - adaptive_gcode_execution (OK/ERROR) - from /gcode
 - adaptive_batch_execution (OK/ERROR) - from /batch_export
 
@@ -92,6 +95,10 @@ from ..rmos.runs import (
     sha256_of_obj,
     sha256_of_text,
 )
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ..rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ..rmos.policies import SafetyPolicy
 
 router = APIRouter(prefix="/cam/pocket/adaptive", tags=["cam-adaptive"])
 
@@ -551,8 +558,48 @@ def plan(body: PlanIn) -> PlanOut:
         raise HTTPException(400, f"Invalid strategy '{body.strategy}'. Must be 'Spiral' or 'Lanes'")
     
     plan_request_dict = body.model_dump(mode="json")
+    request_hash = sha256_of_obj(plan_request_dict)
+
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+
+    feasibility = compute_feasibility_internal(
+        tool_id="adaptive_plan",
+        req=plan_request_dict,
+        context="adaptive_plan",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="adaptive_plan",
+            workflow_mode="adaptive",
+            event_type="adaptive_plan_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Adaptive pocket planning blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
+
     loops = [l.pts for l in body.loops]
-    
+
     # Generate path using L.2: true spiral + adaptive stepover + fillets + HUD
     plan2 = plan_adaptive_l2(
         loops=loops,
@@ -738,9 +785,6 @@ def plan(body: PlanIn) -> PlanOut:
         response["job_int"] = job_payload
 
     # Create artifact for OPERATION lane compliance
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).isoformat()
-    request_hash = sha256_of_obj(plan_request_dict)
     moves_hash = sha256_of_obj(moves)
 
     run_id = create_run_id()
@@ -751,6 +795,7 @@ def plan(body: PlanIn) -> PlanOut:
         workflow_mode="adaptive",
         event_type="adaptive_plan_execution",
         status="OK",
+        feasibility=feasibility,
         request_hash=request_hash,
         toolpaths_hash=moves_hash,
     )

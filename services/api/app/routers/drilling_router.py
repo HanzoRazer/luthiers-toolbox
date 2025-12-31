@@ -10,11 +10,14 @@ Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
 Phase 5 Part 3: N.06 Modal Cycles
 
 GOVERNANCE INVARIANTS:
-1. /drill/gcode endpoint creates a run artifact (OK or ERROR)
-2. All outputs are SHA256 hashed for provenance
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
 
 ARTIFACT KINDS:
 - drilling_gcode_execution (OK/ERROR) - from /drill/gcode
+- drilling_gcode_blocked (BLOCKED) - from /drill/gcode when safety policy blocks
 """
 
 from datetime import datetime, timezone
@@ -34,6 +37,10 @@ from ..rmos.runs import (
     sha256_of_obj,
     sha256_of_text,
 )
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ..rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ..rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -91,6 +98,41 @@ async def generate_drill_gcode(body: DrillingIn) -> Dict[str, Any]:
     """
     now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(body.model_dump())
+
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    feasibility = compute_feasibility_internal(
+        tool_id="drilling_gcode",
+        req=body,
+        context="drilling_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drilling_gcode",
+            workflow_mode="drilling",
+            event_type="drilling_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Drilling G-code generation blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
 
     # Validate holes
     if not body.holes or len(body.holes) == 0:
@@ -209,6 +251,7 @@ async def generate_drill_gcode(body: DrillingIn) -> Dict[str, Any]:
             workflow_mode="drilling",
             event_type="drilling_gcode_execution",
             status="OK",
+            feasibility=feasibility,
             request_hash=request_hash,
             gcode_hash=gcode_hash,
         )
@@ -234,6 +277,7 @@ async def generate_drill_gcode(body: DrillingIn) -> Dict[str, Any]:
             workflow_mode="drilling",
             event_type="drilling_gcode_execution",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[str(e)],
         )
@@ -248,6 +292,7 @@ async def generate_drill_gcode(body: DrillingIn) -> Dict[str, Any]:
             workflow_mode="drilling",
             event_type="drilling_gcode_execution",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
