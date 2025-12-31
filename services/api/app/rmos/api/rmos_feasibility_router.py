@@ -60,6 +60,12 @@ def compute_feasibility_internal(
     if mode == "rosette":
         return compute_rosette_feasibility(req=clean_req, context=context)
 
+    # CAM tool modes with stub feasibility (Phase 2 infrastructure)
+    # These return GREEN by default, allowing pass-through with audit trail
+    # Future: Wire to real feasibility engines as they're developed
+    if mode in ("vcarve", "roughing", "drilling", "drill_pattern", "biarc", "relief", "adaptive", "helical"):
+        return compute_cam_stub_feasibility(mode=mode, tool_id=tool_id, req=clean_req, context=context)
+
     # Unknown tool mode
     return {
         "mode": mode,
@@ -83,6 +89,22 @@ def resolve_mode(tool_id: str) -> str:
         return "saw"
     if tool_id.startswith("rosette:"):
         return "rosette"
+    if tool_id.startswith("vcarve:"):
+        return "vcarve"
+    if tool_id.startswith("roughing:"):
+        return "roughing"
+    if tool_id.startswith("drilling:"):
+        return "drilling"
+    if tool_id.startswith("drill_pattern:"):
+        return "drill_pattern"
+    if tool_id.startswith("biarc:"):
+        return "biarc"
+    if tool_id.startswith("relief:"):
+        return "relief"
+    if tool_id.startswith("adaptive:"):
+        return "adaptive"
+    if tool_id.startswith("helical:"):
+        return "helical"
     return "unknown"
 
 
@@ -292,3 +314,60 @@ def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) 
                 "details": {"context": context, "error": str(e)},
             },
         }
+
+
+# -----------------------------
+# CAM Stub feasibility (Phase 2)
+# -----------------------------
+
+def compute_cam_stub_feasibility(
+    *,
+    mode: str,
+    tool_id: str,
+    req: Dict[str, Any],
+    context: Optional[str]
+) -> Dict[str, Any]:
+    """
+    Stub feasibility engine for CAM tools without dedicated engines.
+
+    Phase 2 infrastructure: Returns GREEN by default to allow operations
+    to proceed with audit trail. As real feasibility engines are developed
+    for each tool type, they will replace this stub.
+
+    Supports test hook: pass {"safety": {...}} in request to override.
+
+    Future enhancement paths:
+    - vcarve: Check depth vs bit angle, material hardness
+    - roughing: Check stepdown vs tool diameter, chipload
+    - drilling: Check drill depth vs diameter ratio, peck cycle
+    - biarc: Check radius vs tool diameter, contour accuracy
+    - relief: Check 3D heightfield complexity, tool accessibility
+    - adaptive: Check chipload, tool engagement angle
+    - helical: Check helix angle vs tool diameter, entry clearance
+    """
+    # Test hook: allow caller to provide pre-computed safety for testing
+    safety = req.get("safety")
+    if isinstance(safety, dict):
+        return {
+            "mode": mode,
+            "tool_id": tool_id,
+            "safety": safety,
+            "meta": {"context": context, "note": "echoed safety from request (test hook)"},
+        }
+
+    # Default: GREEN with advisory warning about stub engine
+    return {
+        "mode": mode,
+        "tool_id": tool_id,
+        "safety": {
+            "risk_level": "GREEN",
+            "score": 75.0,
+            "block_reason": None,
+            "warnings": [f"Using stub feasibility for {mode} - real engine not yet implemented"],
+            "details": {
+                "context": context,
+                "engine": "cam_stub_v1",
+                "note": "Phase 2 pass-through with audit trail",
+            },
+        },
+    }

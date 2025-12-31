@@ -13,13 +13,16 @@ Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
 GOVERNANCE INVARIANTS:
-1. Every request creates a run artifact (OK or ERROR)
-2. All outputs are SHA256 hashed for provenance
-3. Artifacts enable deterministic replay
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
 
 ARTIFACT KINDS:
 - rosette_toolpath_plan (OK/ERROR) - from /plan-toolpath
+- rosette_toolpath_blocked (BLOCKED) - from /plan-toolpath when safety policy blocks
 - rosette_gcode_post (OK/ERROR) - from /post-gcode
+- rosette_gcode_blocked (BLOCKED) - from /post-gcode when safety policy blocks
 
 Endpoints:
     POST /plan-toolpath     - Generate toolpath moves from rosette geometry
@@ -54,6 +57,9 @@ from ....rmos.runs import (
     sha256_of_text,
 )
 
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ....rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -79,6 +85,10 @@ class RosetteToolpathPlanRequest(BaseModel):
     cut_depth: float = Field(3.0, gt=0, description="Total cut depth (mm)")
     circle_segments: int = Field(64, ge=16, le=256, description="Circle approximation segments")
 
+    # Feasibility context (Phase 2)
+    tool_id: Optional[str] = Field(default="rosette:default", description="Tool identifier for feasibility lookup")
+    material_id: Optional[str] = Field(default=None, description="Material identifier for feasibility assessment")
+
 
 class RosetteToolpathPlanResponse(BaseModel):
     """Response with planned toolpath moves and stats."""
@@ -93,6 +103,10 @@ class RosettePostGcodeRequest(BaseModel):
     moves: List[Dict[str, Any]] = Field(..., description="Toolpath moves to convert")
     units: str = Field("mm", description="Units (mm or inch)")
     spindle_rpm: int = Field(18000, ge=0, description="Spindle RPM")
+
+    # Feasibility context (Phase 2)
+    tool_id: Optional[str] = Field(default="rosette:default", description="Tool identifier for feasibility lookup")
+    material_id: Optional[str] = Field(default=None, description="Material identifier for feasibility assessment")
 
 
 class RosettePostGcodeResponse(BaseModel):
@@ -142,16 +156,61 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
     """
     Generate toolpath moves for a rosette design.
 
-    LANE: OPERATION - Creates rosette_toolpath_plan artifact
+    LANE: OPERATION - Creates rosette_toolpath_plan or rosette_toolpath_blocked artifact
 
-    Uses concentric ring strategy with:
-    - Radial passes based on tool diameter + stepover
-    - Z passes based on cut depth + stepdown
-
-    Returns neutral move list (code, x, y, z, f) + stats + audit linkage.
+    Flow:
+    1. Recompute feasibility server-side (NEVER trust client)
+    2. Block if RED/UNKNOWN (HTTP 409)
+    3. Generate toolpath if safe
+    4. Persist run artifact for audit trail
     """
     now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(body.model_dump())
+    tool_id = body.tool_id or "rosette:default"
+
+    # Phase 2: Server-side feasibility enforcement
+    feasibility = compute_feasibility_internal(
+        tool_id=tool_id,
+        req={
+            "tool_id": tool_id,
+            "material_id": body.material_id,
+            "outer_diameter_mm": body.outer_radius * 2,
+            "inner_diameter_mm": body.inner_radius * 2,
+            "depth_mm": body.cut_depth,
+            "feed_rate_mm_min": body.feed_xy,
+        },
+        context="rosette_toolpath",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    # Block if policy requires (BLOCKED artifact)
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id=tool_id,
+            workflow_mode="rosette",
+            event_type="rosette_toolpath_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Rosette toolpath planning blocked by server-side safety policy.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
 
     try:
         geom = RosetteGeometry(
@@ -183,10 +242,11 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="rosette_toolpath",
+            tool_id=tool_id,
             workflow_mode="rosette",
             event_type="rosette_toolpath_plan",
             status="OK",
+            feasibility=feasibility,
             request_hash=request_hash,
             toolpaths_hash=moves_hash,
         )
@@ -198,6 +258,7 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
             "_run_id": run_id,
             "_hashes": {
                 "request_sha256": request_hash,
+                "feasibility_sha256": feas_hash,
                 "moves_sha256": moves_hash,
                 "stats_sha256": stats_hash,
             },
@@ -209,10 +270,11 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="rosette_toolpath",
+            tool_id=tool_id,
             workflow_mode="rosette",
             event_type="rosette_toolpath_plan",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
@@ -233,17 +295,58 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
     """
     Generate G-code from toolpath moves.
 
-    LANE: OPERATION - Creates rosette_gcode_post artifact
+    LANE: OPERATION - Creates rosette_gcode_post or rosette_gcode_blocked artifact
 
-    Uses GRBL-compatible post-processor with:
-    - Header: G21/G20, G90, G17, M3 spindle on
-    - Body: G0/G1 moves with coordinates
-    - Footer: M5 spindle off, safe retract, M30
-
-    Returns G-code text + stats (lines, bytes) + audit linkage.
+    Flow:
+    1. Recompute feasibility server-side (NEVER trust client)
+    2. Block if RED/UNKNOWN (HTTP 409)
+    3. Generate G-code if safe
+    4. Persist run artifact for audit trail
     """
     now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(body.model_dump())
+    tool_id = body.tool_id or "rosette:default"
+
+    # Phase 2: Server-side feasibility enforcement
+    feasibility = compute_feasibility_internal(
+        tool_id=tool_id,
+        req={
+            "tool_id": tool_id,
+            "material_id": body.material_id,
+            "rpm": body.spindle_rpm,
+        },
+        context="rosette_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    # Block if policy requires (BLOCKED artifact)
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id=tool_id,
+            workflow_mode="rosette",
+            event_type="rosette_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Rosette G-code generation blocked by server-side safety policy.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
 
     try:
         gcode, stats = postprocess_toolpath_grbl(
@@ -261,10 +364,11 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="rosette_gcode",
+            tool_id=tool_id,
             workflow_mode="rosette",
             event_type="rosette_gcode_post",
             status="OK",
+            feasibility=feasibility,
             request_hash=request_hash,
             gcode_hash=gcode_hash,
         )
@@ -276,6 +380,7 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
             "_run_id": run_id,
             "_hashes": {
                 "request_sha256": request_hash,
+                "feasibility_sha256": feas_hash,
                 "gcode_sha256": gcode_hash,
                 "stats_sha256": stats_hash,
             },
@@ -287,10 +392,11 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="rosette_gcode",
+            tool_id=tool_id,
             workflow_mode="rosette",
             event_type="rosette_gcode_post",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[f"{type(e).__name__}: {str(e)}"],
         )

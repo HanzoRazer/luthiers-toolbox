@@ -11,12 +11,14 @@ Execution Class: A (Planning) - generates G-code from SVG geometry
 FastAPI endpoints for SVG → toolpath → G-code conversion.
 
 GOVERNANCE INVARIANTS:
-1. /gcode endpoint creates a run artifact (OK or ERROR)
-2. All outputs are SHA256 hashed for provenance
-3. Artifacts enable deterministic replay
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
 
 ARTIFACT KINDS:
 - vcarve_gcode_execution (OK/ERROR) - from /gcode
+- vcarve_gcode_blocked (BLOCKED) - from /gcode when safety policy blocks
 
 Endpoints:
 - POST /preview: Parse SVG and return stats (UTILITY - no artifacts)
@@ -50,6 +52,10 @@ from ..rmos.runs import (
     sha256_of_obj,
     sha256_of_text,
 )
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ..rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ..rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -104,6 +110,15 @@ class VCarveGCodeRequest(BaseModel):
         default=300.0, ge=50.0, le=2000.0,
         description="Plunge feed rate in mm/min"
     )
+    # Feasibility context (Phase 2)
+    tool_id: Optional[str] = Field(
+        default="vcarve:default",
+        description="Tool identifier for feasibility lookup"
+    )
+    material_id: Optional[str] = Field(
+        default=None,
+        description="Material identifier for feasibility assessment"
+    )
 
 
 class VCarveGCodeResponse(BaseModel):
@@ -146,13 +161,18 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
     """
     Generate G-code from SVG for VCarve operations.
 
-    LANE: OPERATION - Creates vcarve_gcode_execution artifact.
+    LANE: OPERATION - Creates vcarve_gcode_execution or vcarve_gcode_blocked artifact.
 
-    Note: This is a naive G-code emitter for smoke testing and preview.
-    It does not handle advanced CAM features like chipload, stepdown, etc.
+    Flow:
+    1. Validate SVG input
+    2. Recompute feasibility server-side (NEVER trust client)
+    3. Block if RED/UNKNOWN (HTTP 409)
+    4. Generate G-code if safe
+    5. Persist run artifact for audit trail
     """
     now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(req.model_dump())
+    tool_id = req.tool_id or "vcarve:default"
 
     if not req.svg.strip():
         # Create ERROR artifact for empty SVG
@@ -160,7 +180,7 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="vcarve_gcode",
+            tool_id=tool_id,
             workflow_mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="ERROR",
@@ -175,6 +195,49 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
                 "error": "EMPTY_SVG",
                 "run_id": run_id,
                 "message": "SVG text is empty.",
+            },
+        )
+
+    # Phase 2: Server-side feasibility enforcement
+    feasibility = compute_feasibility_internal(
+        tool_id=tool_id,
+        req={
+            "tool_id": tool_id,
+            "material_id": req.material_id,
+            "depth_mm": req.depth_mm,
+            "bit_angle_deg": req.bit_angle_deg,
+            "feed_rate_mm_min": req.feed_rate_mm_min,
+        },
+        context="vcarve_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    # Block if policy requires (BLOCKED artifact)
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id=tool_id,
+            workflow_mode="vcarve",
+            event_type="vcarve_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "V-Carve G-code generation blocked by server-side safety policy.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
             },
         )
 
@@ -197,10 +260,11 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="vcarve_gcode",
+            tool_id=tool_id,
             workflow_mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="OK",
+            feasibility=feasibility,
             request_hash=request_hash,
             gcode_hash=gcode_hash,
         )
@@ -211,6 +275,7 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
             "_run_id": run_id,
             "_hashes": {
                 "request_sha256": request_hash,
+                "feasibility_sha256": feas_hash,
                 "gcode_sha256": gcode_hash,
             },
         }
@@ -221,10 +286,11 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="vcarve_gcode",
+            tool_id=tool_id,
             workflow_mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="ERROR",
+            feasibility=feasibility,
             request_hash=request_hash,
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
