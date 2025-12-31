@@ -189,6 +189,49 @@ try:
 except ImportError:
     pass
 
+# Pipeline Infrastructure (Phase 4 - ADR-003)
+try:
+    from .pipeline import (
+        # Enums
+        PipelineStage,
+        PipelineStatus,
+        ArtifactKind,
+        # Artifact types
+        PipelineArtifactBase,
+        SpecArtifact,
+        PlanArtifact,
+        DecisionArtifact,
+        ExecutionArtifact,
+        # Request/Response types
+        SpecRequest,
+        SpecResponse,
+        PlanRequest,
+        PlanResponse,
+        ApproveRequest,
+        ApproveResponse,
+        ExecuteRequest,
+        ExecuteResponse,
+        # Operation types
+        PlanOperation,
+        ExecutionResult,
+        # Store functions
+        PipelineStore,
+        get_pipeline_store,
+        write_artifact,
+        read_artifact,
+        query_artifacts,
+        list_executions_for_decision,
+        latest_execution_for_decision,
+        # Service class
+        PipelineService,
+        create_spec_artifact,
+        create_plan_artifact,
+        create_decision_artifact,
+        create_execution_artifact,
+    )
+except ImportError:
+    pass
+
 # Re-export from existing modules for convenience
 try:
     from .logging_ai import (
@@ -322,4 +365,35 @@ __all__ = [
     "render_grbl",
     "render_fanuc",
     "render_linuxcnc",
+    # Pipeline Infrastructure (Phase 4 - ADR-003)
+    "PipelineStage",
+    "PipelineStatus",
+    "ArtifactKind",
+    "PipelineArtifactBase",
+    "SpecArtifact",
+    "PlanArtifact",
+    "DecisionArtifact",
+    "ExecutionArtifact",
+    "SpecRequest",
+    "SpecResponse",
+    "PlanRequest",
+    "PlanResponse",
+    "ApproveRequest",
+    "ApproveResponse",
+    "ExecuteRequest",
+    "ExecuteResponse",
+    "PlanOperation",
+    "ExecutionResult",
+    "PipelineStore",
+    "get_pipeline_store",
+    "write_artifact",
+    "read_artifact",
+    "query_artifacts",
+    "list_executions_for_decision",
+    "latest_execution_for_decision",
+    "PipelineService",
+    "create_spec_artifact",
+    "create_plan_artifact",
+    "create_decision_artifact",
+    "create_execution_artifact",
 ]
