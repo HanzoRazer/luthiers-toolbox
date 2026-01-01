@@ -499,3 +499,20 @@ def attachment_meta_exists(
         index_filename=index_filename,
         index_size_bytes=index_size_bytes,
     )
+
+
+@router.get("/index/attachment_meta/{sha256}")
+def get_attachment_meta_from_index(
+    sha256: str,
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> Dict[str, Any]:
+    """Query the global sha256→meta index directly (no paths).
+
+    Returns the index row for the given sha256 if present.
+    """
+    idx = AttachmentMetaIndex(store.root)
+    meta = idx.get(sha256)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="sha256 not found in attachment meta index")
+    return {"sha256": sha256.lower().strip(), **meta}
