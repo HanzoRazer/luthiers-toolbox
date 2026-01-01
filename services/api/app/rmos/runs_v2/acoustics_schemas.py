@@ -162,6 +162,24 @@ class AdvisoryResolveOut(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
+class AttachmentMetaBrowseOut(BaseModel):
+    """
+    Response for GET /index/attachment_meta (browse) endpoint.
+
+    Returns filtered list from _attachment_meta.json without run_id.
+    No path disclosure.
+    """
+    count: int = Field(..., description="Number of entries returned")
+    total_in_index: int = Field(..., description="Total entries in index (before filtering)")
+    limit: int = Field(..., description="Limit applied")
+    kind_filter: Optional[str] = Field(None, description="Kind filter applied (exact match)")
+    mime_prefix_filter: Optional[str] = Field(None, description="MIME prefix filter applied")
+    entries: List[AttachmentMetaIndexEntry] = Field(
+        default_factory=list,
+        description="Matching attachment meta entries"
+    )
+
+
 class IndexRebuildOut(BaseModel):
     """
     Response for POST /index/rebuild_attachment_meta endpoint.

@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import base64
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 
 from .store import RunStoreV2
@@ -27,6 +27,8 @@ from .signed_urls import make_signed_query, verify_attachment_request, Scope
 from .attachment_meta import AttachmentMetaIndex
 from .acoustics_schemas import (
     AttachmentMetaPublic,
+    AttachmentMetaIndexEntry,
+    AttachmentMetaBrowseOut,
     RunAttachmentsListOut,
     AttachmentExistsOut,
     SignedUrlMintOut,
@@ -516,3 +518,82 @@ def get_attachment_meta_from_index(
     if meta is None:
         raise HTTPException(status_code=404, detail="sha256 not found in attachment meta index")
     return {"sha256": sha256.lower().strip(), **meta}
+
+
+@router.get("/index/attachment_meta", response_model=AttachmentMetaBrowseOut)
+def list_attachment_meta_from_index(
+    *,
+    kind: Optional[str] = Query(
+        default=None,
+        description="Exact match on attachment kind (e.g., spectrum_csv, audio_raw, manifest)"
+    ),
+    mime_prefix: Optional[str] = Query(
+        default=None,
+        description="Prefix match on MIME (e.g., image/, audio/, application/json)"
+    ),
+    limit: int = Query(
+        default=200,
+        ge=1,
+        le=1000,
+        description="Max rows to return (1..1000)"
+    ),
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> AttachmentMetaBrowseOut:
+    """Browse the global sha256->meta index (no run_id required, no path disclosure).
+
+    This endpoint is intentionally *index-only*; it does not resolve filesystem paths.
+    Use /attachments/{sha256} (optionally signed) for download/streaming.
+
+    Filters:
+      - kind: exact match on attachment kind
+      - mime_prefix: prefix match on MIME type (e.g., "audio/" matches "audio/wav")
+
+    Results are sorted by last_seen_at_utc descending (newest first).
+    """
+    idx = AttachmentMetaIndex(store.root)
+    data = idx.read()  # Dict[sha256, meta_dict]
+
+    total_in_index = len(data)
+
+    # Normalize filters
+    want_kind = kind.strip() if isinstance(kind, str) and kind.strip() else None
+    want_mime_prefix = mime_prefix.strip() if isinstance(mime_prefix, str) and mime_prefix.strip() else None
+
+    # Filter entries
+    filtered: List[Dict[str, Any]] = []
+    for sha, meta in data.items():
+        # Kind filter (exact match)
+        if want_kind is not None:
+            entry_kind = (meta.get("kind") or "").strip()
+            if entry_kind != want_kind:
+                continue
+
+        # MIME prefix filter
+        if want_mime_prefix is not None:
+            entry_mime = (meta.get("mime") or "").strip()
+            if not entry_mime.startswith(want_mime_prefix):
+                continue
+
+        filtered.append(meta)
+
+    # Sort by last_seen_at_utc descending (newest first)
+    def sort_key(m: Dict[str, Any]) -> str:
+        return m.get("last_seen_at_utc") or m.get("created_at_utc") or ""
+
+    filtered.sort(key=sort_key, reverse=True)
+
+    # Apply limit
+    page = filtered[:limit]
+
+    # Convert to typed entries
+    entries = [AttachmentMetaIndexEntry(**m) for m in page]
+
+    return AttachmentMetaBrowseOut(
+        count=len(entries),
+        total_in_index=total_in_index,
+        limit=limit,
+        kind_filter=want_kind,
+        mime_prefix_filter=want_mime_prefix,
+        entries=entries,
+    )
