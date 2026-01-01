@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from .persist_glue import ATTACHMENTS_ROOT_DEFAULT, load_run_artifact
 from .signed_urls import sign_attachment
 
-router = APIRouter(prefix="/api/rmos/acoustics", tags=["rmos", "acoustics"])
+router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
 _SHA_RE = re.compile(r"^[a-f0-9]{64}$")
 

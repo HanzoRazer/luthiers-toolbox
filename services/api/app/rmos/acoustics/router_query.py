@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from .persist_glue import RUNS_ROOT_DEFAULT, INDEX_FILENAME
 
 
-router = APIRouter(prefix="/api/rmos/acoustics", tags=["rmos", "acoustics"])
+router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
 
 def _get_runs_root() -> Path:

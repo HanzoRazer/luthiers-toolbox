@@ -798,15 +798,18 @@ if art_snapshot_router:
 if rmos_logs_v2_router:
     app.include_router(rmos_logs_v2_router, prefix="/api/rmos", tags=["RMOS", "Logs v2"])
 
-# Wave 21: Acoustics Bundle Import (1)
-# Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path
+# Wave 21: Acoustics Bundle Import (import, query, zip_export only)
+# Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path, etc.
+# NOTE: Prefix set once here; sub-routers must NOT set their own prefix (Issue B fix).
+# NOTE: router_attachments.py removed from composite - superseded by Wave 22 (Issue A fix).
 if rmos_acoustics_router:
-    app.include_router(rmos_acoustics_router, tags=["RMOS", "Acoustics"])
+    app.include_router(rmos_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
 
-# Wave 22: Runs v2 Acoustics Advisory Surface
-# Endpoints: GET /api/rmos/acoustics/runs/{run_id}/advisories,
-#            GET /api/rmos/acoustics/advisories/{advisory_id},
-#            GET /api/rmos/acoustics/attachments/{sha256}
+# Wave 22: Runs v2 Acoustics Advisory Surface (H7.2.2.1 features)
+# Endpoints: GET /runs/{run_id}/advisories, GET /advisories/{advisory_id},
+#            GET/HEAD /attachments/{sha256}, POST /attachments/{sha256}/signed_url,
+#            GET /runs/{run_id}/attachments, GET /index/attachment_meta/{sha256}/exists
+# This is the authoritative attachment router with no-path disclosure + signed URLs.
 try:
     from .rmos.runs_v2.acoustics_router import router as runs_v2_acoustics_router
     app.include_router(runs_v2_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
