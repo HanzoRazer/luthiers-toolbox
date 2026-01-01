@@ -23,8 +23,17 @@ from fastapi.responses import FileResponse
 
 from .store import RunStoreV2
 from .attachments import resolve_attachment_path
-from .signed_urls import make_signed_query, verify_attachment_request
+from .signed_urls import make_signed_query, verify_attachment_request, Scope
 from .attachment_meta import AttachmentMetaIndex
+from .acoustics_schemas import (
+    AttachmentMetaPublic,
+    RunAttachmentsListOut,
+    AttachmentExistsOut,
+    SignedUrlMintOut,
+    RunAdvisoriesListOut,
+    AdvisorySummary,
+    IndexRebuildOut,
+)
 
 
 router = APIRouter()
@@ -101,12 +110,12 @@ def require_auth_or_signed(
 # -------------------------
 
 
-@router.get("/runs/{run_id}/advisories")
+@router.get("/runs/{run_id}/advisories", response_model=RunAdvisoriesListOut)
 def list_run_advisories(
     run_id: str,
     _auth: None = Depends(require_auth),
     store: RunStoreV2 = Depends(get_store),
-) -> Dict[str, Any]:
+) -> RunAdvisoriesListOut:
     """
     List advisory summaries for a run.
 
@@ -114,11 +123,11 @@ def list_run_advisories(
     Does NOT read advisory blobs.
     """
     advisories = store.list_run_advisories(run_id)
-    return {
-        "run_id": run_id,
-        "count": len(advisories),
-        "advisories": advisories,
-    }
+    return RunAdvisoriesListOut(
+        run_id=run_id,
+        count=len(advisories),
+        advisories=[AdvisorySummary(**a) if isinstance(a, dict) else a for a in advisories],
+    )
 
 
 @router.get("/advisories/{advisory_id}")
@@ -266,7 +275,7 @@ def head_attachment_metadata(
     return Response(status_code=200, headers=headers)
 
 
-@router.post("/attachments/{sha256}/signed_url")
+@router.post("/attachments/{sha256}/signed_url", response_model=SignedUrlMintOut)
 def mint_signed_attachment_url(
     sha256: str,
     request: Request,
@@ -276,7 +285,8 @@ def mint_signed_attachment_url(
     download: bool = False,
     filename: Optional[str] = None,
     method: str = "GET",  # "GET" or "HEAD"
-) -> Dict[str, Any]:
+    scope: Scope = "download",
+) -> SignedUrlMintOut:
     """
     Mint a temporary signed URL for downloading/streaming an attachment.
 
@@ -287,6 +297,7 @@ def mint_signed_attachment_url(
       - download: include Content-Disposition attachment header
       - filename: override filename for browser download
       - method: HTTP method to sign ("GET" or "HEAD")
+      - scope: Token scope ("download" or "head"). Download tokens work for HEAD too.
     """
     if not _signed_urls_enabled():
         raise HTTPException(status_code=503, detail="signed URLs not enabled")
@@ -304,26 +315,28 @@ def mint_signed_attachment_url(
         path=attachment_path,
         sha256=sha256,
         ttl_seconds=int(ttl_seconds),
+        scope=scope,
         download=download,
         filename=filename,
     )
 
     # Build query string
-    q = f"expires={params.expires}&sig={params.sig}"
+    q = f"expires={params.expires}&sig={params.sig}&scope={params.scope}"
     if download:
         q += "&download=true"
     if filename:
         q += f"&filename={filename}"
 
-    return {
-        "sha256": sha256,
-        "method": method_u,
-        "expires": params.expires,
-        "signed_url": f"{attachment_path}?{q}",
-    }
+    return SignedUrlMintOut(
+        sha256=sha256,
+        method=method_u,
+        scope=scope,
+        expires=params.expires,
+        signed_url=f"{attachment_path}?{q}",
+    )
 
 
-@router.get("/runs/{run_id}/attachments")
+@router.get("/runs/{run_id}/attachments", response_model=RunAttachmentsListOut)
 def list_run_attachments_with_bytes(
     run_id: str,
     _auth: None = Depends(require_auth),
@@ -335,7 +348,7 @@ def list_run_attachments_with_bytes(
     include_bytes: bool = True,
     max_inline_bytes: int = 2_000_000,  # 2 MB default (override per call if needed)
     include_urls: bool = True,
-) -> Dict[str, Any]:
+) -> RunAttachmentsListOut:
     """
     Return attachments for a run with inline bytes (base64), plus mime/kind.
 
@@ -407,22 +420,22 @@ def list_run_attachments_with_bytes(
                     except Exception:
                         item["omitted_reason"] = "read_failed"
 
-        out_items.append(item)
+        out_items.append(AttachmentMetaPublic(**item))
 
-    return {
-        "run_id": run_id,
-        "count": len(out_items),
-        "include_bytes": include_bytes,
-        "max_inline_bytes": int(max_inline_bytes),
-        "attachments": out_items,
-    }
+    return RunAttachmentsListOut(
+        run_id=run_id,
+        count=len(out_items),
+        include_bytes=include_bytes,
+        max_inline_bytes=int(max_inline_bytes),
+        attachments=out_items,
+    )
 
 
-@router.post("/index/rebuild_attachment_meta")
+@router.post("/index/rebuild_attachment_meta", response_model=IndexRebuildOut)
 def rebuild_attachment_meta_index(
     _auth: None = Depends(require_auth),
     store: RunStoreV2 = Depends(get_store),
-) -> Dict[str, Any]:
+) -> IndexRebuildOut:
     """
     Rebuild global sha256->meta index by scanning authoritative run artifacts on disk.
 
@@ -436,15 +449,15 @@ def rebuild_attachment_meta_index(
     """
     idx = AttachmentMetaIndex(store.root)
     stats = idx.rebuild_from_run_artifacts()
-    return {"ok": True, **stats}
+    return IndexRebuildOut(ok=True, **stats)
 
 
-@router.get("/index/attachment_meta/{sha256}/exists")
+@router.get("/index/attachment_meta/{sha256}/exists", response_model=AttachmentExistsOut)
 def attachment_meta_exists(
     sha256: str,
     _auth: None = Depends(require_auth),
     store: RunStoreV2 = Depends(get_store),
-) -> Dict[str, Any]:
+) -> AttachmentExistsOut:
     """
     H7.2.2.1: Check both index presence and blob presence for an attachment.
 
@@ -452,6 +465,7 @@ def attachment_meta_exists(
       - in_index: true if sha256 exists in _attachment_meta.json
       - in_store: true if blob exists in content-addressed attachments store
       - size_bytes: file size if in_store is true
+      - index_* fields: metadata from index when in_index=True
 
     No shard path disclosure.
     """
@@ -469,9 +483,19 @@ def attachment_meta_exists(
         except Exception:
             size_bytes = None
 
-    return {
-        "sha256": sha256.lower().strip(),
-        "in_index": in_index,
-        "in_store": in_store,
-        "size_bytes": size_bytes,
-    }
+    # Extended fields when in_index
+    index_kind = meta.get("kind") if meta else None
+    index_mime = meta.get("mime") if meta else None
+    index_filename = meta.get("filename") if meta else None
+    index_size_bytes = meta.get("size_bytes") if meta else None
+
+    return AttachmentExistsOut(
+        sha256=sha256.lower().strip(),
+        in_index=in_index,
+        in_store=in_store,
+        size_bytes=size_bytes,
+        index_kind=index_kind,
+        index_mime=index_mime,
+        index_filename=index_filename,
+        index_size_bytes=index_size_bytes,
+    )
