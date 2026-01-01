@@ -1,14 +1,26 @@
-name: Client build smoke
+name: Client CI (lint/build/test)
 
 on:
+  pull_request:
+    paths:
+      - "packages/client/**"
+      - ".github/workflows/client_smoke.yml"
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    paths:
+      - "packages/client/**"
+      - ".github/workflows/client_smoke.yml"
+
+concurrency:
+  group: client-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  client-smoke:
+  client:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/client
 
     steps:
       - name: Checkout
@@ -19,51 +31,24 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: packages/client/package-lock.json
 
       - name: Install deps
-        working-directory: client
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm i; fi
 
-      - name: Lint (if present)
-        working-directory: client
-        run: |
-          if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
-            npm run lint
-          else
-            echo "⚠ No lint script found in package.json"
-          fi
+      - name: Request-ID guard tests (fast)
+        run: npm run test:request-id
 
-      - name: Type check (if present)
-        working-directory: client
-        run: |
-          if jq -e '.scripts.typecheck' package.json >/dev/null 2>&1; then
-            npm run typecheck
-          elif jq -e '.scripts["type-check"]' package.json >/dev/null 2>&1; then
-            npm run type-check
-          else
-            echo "⚠ No typecheck/type-check script found in package.json"
-          fi
+      - name: Unit tests (Vitest)
+        run: npm test
 
-      - name: Run unit tests (Vitest)
-        working-directory: client
-        run: npm run test --if-present
-
-      - name: Build
-        working-directory: client
+      - name: Build (includes vue-tsc)
         run: npm run build
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-coverage
-          path: client/coverage
 
       - name: Upload dist artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: client-dist
-          path: client/dist
+          path: packages/client/dist

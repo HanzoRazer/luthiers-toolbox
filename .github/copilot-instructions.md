@@ -14,7 +14,7 @@ cd packages/client && npm run dev
 # Key Tests
 cd services/api && pytest tests/ -v                    # Backend unit tests
 cd packages/client && npm run test                     # Frontend (Vitest)
-cd services/api && python -m app.ci.check_boundary_imports --profile toolbox  # Boundary guard (CI-enforced)
+cd services/api && python -m app.ci.endpoint_truth_gate check  # Endpoint drift guard (CI)
 make smoke-helix-posts                                 # Integration smoke test
 
 # Start Both (for full stack dev)
@@ -42,7 +42,7 @@ make start-client # Terminal 2
 | CAM Intent Schema | `services/api/app/rmos/cam/schemas_intent.py` |
 | Frontend SDK | `packages/client/src/sdk/endpoints/` – typed helpers |
 | Post Configs | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
-| CI Guards | `services/api/app/ci/` – boundary checks, schema drift |
+| CI Guards | `services/api/app/ci/` – endpoint drift, schema freeze, import bans |
 
 ## 🧪 Essential Patterns
 
@@ -70,16 +70,26 @@ const { gcode, summary, requestId } = await cam.roughingGcode(payload);
 
 ### CAM Intent (H7.1)
 ```python
-from app.rmos.cam import CamIntentV1, normalize_cam_intent_v1
-intent = CamIntentV1(mode="roughing", units="mm", design={...})
-normalized, issues = normalize_cam_intent_v1(intent)
+from app.rmos.cam import CamIntentV1
+intent = CamIntentV1(mode="router_3axis", units="mm", design={...})
+# CI guard prevents schema drift: python -m app.ci.check_cam_intent_schema_hash
 ```
 
 ## 🗺️ API Surface
 
 - **Canonical**: `/api/cam/toolpath/*`, `/api/cam/drilling/*`, `/api/rmos/*`, `/api/art/*`
 - **Legacy**: Tagged `"Legacy"` – check `/api/governance/stats` before removal
+- **Governance**: `/api/governance/stats` tracks legacy route hit counts
 - See [ROUTER_MAP.md](../ROUTER_MAP.md) for 116-router organization
+
+## 🛡️ CI Gates (must pass before merge)
+
+| Gate | Command | What it checks |
+|------|---------|----------------|
+| Endpoint Truth | `python -m app.ci.endpoint_truth_gate check` | Routes match ENDPOINT_TRUTH_MAP.md |
+| CAM Schema | `python -m app.ci.check_cam_intent_schema_hash` | CamIntentV1 hasn't drifted |
+| AI Sandbox | `python -m app.ci.ban_experimental_ai_core_imports` | No deprecated ai_core imports |
+| Legacy Usage | `python -m app.ci.legacy_usage_gate` | Frontend not calling legacy APIs |
 
 ## ⚠️ Common Pitfalls
 
@@ -89,10 +99,11 @@ normalized, issues = normalize_cam_intent_v1(intent)
 | Missing request headers | Use SDK helpers, not raw fetch |
 | Post config not found | Check `app/data/posts/<name>.json` (lowercase) |
 | Schema drift | Run `python -m app.ci.check_cam_intent_schema_hash` |
+| Legacy API in frontend | Check ENDPOINT_TRUTH_MAP.md for canonical path |
 
 ## 📚 References
 
-- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization
-- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (Waves 0-22)
+- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + legacy mapping
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
