@@ -888,7 +888,7 @@ if ENABLE_COMPAT_LEGACY_ROUTES:
     # Core routers used by CI workflows
     _include_compat_router(app, geometry_router, "/geometry", name="geometry_router")
     _include_compat_router(app, tooling_router, "/tooling", name="tooling_router")
-    _include_compat_router(app, adaptive_router, "/adaptive", name="adaptive_router")
+    _include_compat_router(app, adaptive_router, "", name="adaptive_router")  # Router has /cam/pocket/adaptive prefix internally
     _include_compat_router(app, material_router, "/material", name="material_router")
     _include_compat_router(app, machine_router, "/machine", name="machine_router")
     _include_compat_router(app, feeds_router, "/feeds", name="feeds_router")
