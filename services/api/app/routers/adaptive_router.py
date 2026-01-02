@@ -565,7 +565,7 @@ def plan(body: PlanIn) -> PlanOut:
     now = datetime.now(timezone.utc).isoformat()
 
     feasibility = compute_feasibility_internal(
-        tool_id="adaptive_plan",
+        tool_id="adaptive:plan",
         req=plan_request_dict,
         context="adaptive_plan",
     )
@@ -578,7 +578,7 @@ def plan(body: PlanIn) -> PlanOut:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="adaptive_plan",
+            tool_id="adaptive:plan",
             workflow_mode="adaptive",
             event_type="adaptive_plan_blocked",
             status="BLOCKED",
@@ -791,7 +791,7 @@ def plan(body: PlanIn) -> PlanOut:
     artifact = RunArtifact(
         run_id=run_id,
         created_at_utc=now,
-        tool_id="adaptive_plan",
+        tool_id="adaptive:plan",
         workflow_mode="adaptive",
         event_type="adaptive_plan_execution",
         status="OK",
