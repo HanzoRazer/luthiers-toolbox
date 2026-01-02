@@ -12,6 +12,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from typing import Optional, List
 
+# AI availability gate (H8.4)
+from app.ai.availability import require_anthropic_available, get_ai_status
+
 from .schemas_ai import (
     AiSearchRequest,
     AiSearchResponse,
@@ -84,6 +87,9 @@ async def constraint_search(
     
     Run constraint-first AI search for manufacturable designs.
     """
+    # AI availability gate (returns 503 if not configured)
+    require_anthropic_available(feature="RMOS AI Search")
+    
     # Validate against global policy
     try:
         validate_request_against_policy(request)
@@ -147,6 +153,9 @@ async def quick_check(
     Run abbreviated search (max 5 attempts, 5 second limit).
     Returns lightweight summary for UI feedback.
     """
+    # AI availability gate (returns 503 if not configured)
+    require_anthropic_available(feature="RMOS AI Quick Check")
+    
     from .schemas_ai import SearchBudget, SearchContext
     
     # Override budget for quick check
@@ -221,7 +230,12 @@ async def ai_health() -> dict:
     GET /api/rmos/ai/health
     
     Check if AI search subsystem is operational.
+    Returns 200 even when AI is disabled (for monitoring).
     """
+    # Get centralized AI status
+    ai_status = get_ai_status()
+    
+    # Check internal components
     try:
         from ..ai_core.generators import make_candidate_generator_for_request
         generator_available = make_candidate_generator_for_request is not None
@@ -246,11 +260,20 @@ async def ai_health() -> dict:
     except (ImportError, AttributeError, ModuleNotFoundError):
         policy_available = False
     
-    all_core = generator_available and scorer_available
-    status = "healthy" if all_core else "degraded"
+    # Determine overall status
+    api_key_configured = ai_status["providers"].get("anthropic", False)
+    all_core = generator_available and scorer_available and api_key_configured
+    
+    if not api_key_configured:
+        status = "disabled"  # AI explicitly not available
+    elif all_core:
+        status = "healthy"
+    else:
+        status = "degraded"
     
     return {
         "status": status,
+        "ai": ai_status,
         "components": {
             "generator": "available" if generator_available else "unavailable",
             "scorer": "available" if scorer_available else "unavailable",
