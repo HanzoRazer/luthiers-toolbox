@@ -1,0 +1,58 @@
+name: Client Lint & Build
+
+on:
+  pull_request:
+    paths:
+      - "packages/client/**"
+      - ".github/workflows/client_lint_build.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/client/**"
+      - ".github/workflows/client_lint_build.yml"
+
+concurrency:
+  group: client-lint-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: packages/client/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Type check (vue-tsc)
+        run: npm run type-check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+        continue-on-error: true  # Allow warnings during initial adoption
+
+      - name: Run tests (Vitest)
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: packages/client/dist
+          retention-days: 7
