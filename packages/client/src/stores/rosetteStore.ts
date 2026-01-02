@@ -94,6 +94,35 @@ export const useRosetteStore = defineStore("rosette", {
       if (this.focusedRingIndex == null) return null;
       return (this.currentParams?.ring_params ?? [])[this.focusedRingIndex] ?? null;
     },
+
+    /** Selected snapshot object (Bundle 32.3.2) */
+    selectedSnapshot(): SnapshotSummary | null {
+      if (!this.selectedSnapshotId) return null;
+      return this.snapshots.find((s) => s.snapshot_id === this.selectedSnapshotId) ?? null;
+    },
+
+    /** Problematic ring indices sorted by severity RED > YELLOW (Bundle 32.3.3) */
+    problematicRingIndices(): number[] {
+      const snap = this.selectedSnapshot;
+      if (!snap) return [];
+
+      const diags: any[] =
+        (snap as any).ring_diagnostics ??
+        (snap as any).feasibility?.ring_diagnostics ??
+        [];
+
+      const severityRank = (r: string) =>
+        r === "RED" ? 2 : r === "YELLOW" ? 1 : 0;
+
+      return diags
+        .map((d: any) => ({
+          idx: d.ring_index ?? d.ringIndex,
+          risk: d.risk_bucket ?? d.riskBucket ?? "UNKNOWN",
+        }))
+        .filter((x: any) => typeof x.idx === "number" && severityRank(x.risk) > 0)
+        .sort((a: any, b: any) => severityRank(b.risk) - severityRank(a.risk))
+        .map((x: any) => x.idx);
+    },
   },
 
   actions: {
@@ -265,6 +294,18 @@ export const useRosetteStore = defineStore("rosette", {
 
     clearRingFocus() {
       this.focusedRingIndex = null;
+    },
+
+    /** Jump to next problematic ring, cycling through RED then YELLOW (Bundle 32.3.3) */
+    jumpToNextProblemRing() {
+      const rings = this.problematicRingIndices;
+      if (!rings.length) return;
+
+      const current = this.focusedRingIndex;
+      const pos = current == null ? -1 : rings.indexOf(current);
+
+      const nextIdx = rings[(pos + 1) % rings.length];
+      this.focusRing(nextIdx);
     },
 
     // -------------------------
