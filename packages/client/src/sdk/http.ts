@@ -2,6 +2,7 @@
 // H8.2.1: SDK skeleton + request wrapper + strict request-id check + error normalization
 
 import { SdkHttpError, type StrictRequestIdMode } from "./errors";
+import { noteDeprecationFromResponse } from "./core/deprecationBanner";
 
 export type SdkRequestOptions = {
   /**
@@ -154,6 +155,9 @@ export async function sdkRequest(
       console.warn(msg, { url, method, requestId: outgoingReqId });
     }
   }
+
+  // H8.5: Deprecation banner (one-time console warning per session)
+  noteDeprecationFromResponse(resp);
 
   if (!resp.ok) {
     // Best-effort parse for details; keep UI-safe message
