@@ -3,6 +3,12 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import { artSnapshotsClient } from "@/api/artSnapshotsClient";
+import {
+  computeConfidence,
+  computeConfidenceTrend,
+  getConfidenceTooltipText,
+  type ConfLevel,
+} from "@/utils/rmosConfidence";
 
 type AnySnap = any;
 
@@ -97,8 +103,8 @@ const warningDelta = computed(() => {
   return b - a;
 });
 
-// Bundle 05: Confidence badge — deterministic mapping from compare deltas
-const confidenceLevel = computed<"HIGH" | "MED" | "LOW">(() => {
+// Bundle 08: Use centralized confidence heuristic from rmosConfidence util
+const confidenceLevel = computed<ConfLevel>(() => {
   // No compare result yet → safe default
   if (!left.value || !right.value) return "LOW";
 
@@ -110,58 +116,17 @@ const confidenceLevel = computed<"HIGH" | "MED" | "LOW">(() => {
     (r) => r.aPattern !== r.bPattern && (r.aPattern || r.bPattern)
   ).length;
 
-  // HIGH: No hot rings, no pattern changes, warnings not worse
-  if (hotRings === 0 && patternChanges === 0 && warningDelta.value <= 0) {
-    return "HIGH";
-  }
-
-  // MED: Minor deltas (≤2 hot rings, ≤1 pattern change, warnings +2 max)
-  if (hotRings <= 2 && patternChanges <= 1 && warningDelta.value <= 2) {
-    return "MED";
-  }
-
-  // LOW: Significant differences
-  return "LOW";
+  return computeConfidence({ hotRings, patternChanges, warningDelta: warningDelta.value });
 });
 
-// Bundle 06: Confidence trend arrows
-type ConfidenceLevel = "HIGH" | "MED" | "LOW";
+const previousConfidence = ref<ConfLevel | null>(null);
 
-function confidenceRank(level: ConfidenceLevel): number {
-  if (level === "HIGH") return 3;
-  if (level === "MED") return 2;
-  return 1; // LOW
-}
+const confidenceTrend = computed(() =>
+  computeConfidenceTrend(confidenceLevel.value, previousConfidence.value)
+);
 
-const previousConfidence = ref<ConfidenceLevel | null>(null);
-
-const confidenceTrend = computed<"UP" | "FLAT" | "DOWN" | "NONE">(() => {
-  const current = confidenceLevel.value;
-  const prev = previousConfidence.value;
-  if (!prev) return "NONE";
-
-  const d = confidenceRank(current) - confidenceRank(prev);
-  if (d > 0) return "UP";
-  if (d < 0) return "DOWN";
-  return "FLAT";
-});
-
-// Bundle 07: Tooltip explaining confidence and trend
-const confidenceTooltip = computed(() => {
-  // Keep this string in sync with Bundle 05 heuristic
-  return [
-    "Confidence indicates how reliable the comparison is at a glance.",
-    "",
-    "HIGH: No hot rings (|Δ| < 0.15mm), no pattern changes, warnings not worse.",
-    "MED: Minor diffs (≤2 hot rings, ≤1 pattern change, warnings +2 max).",
-    "LOW: Significant differences, or no compare result yet.",
-    "",
-    "Trend (vs previous compare):",
-    "↑ Confidence improved",
-    "→ Confidence unchanged",
-    "↓ Confidence decreased",
-  ].join("\n");
-});
+// Bundle 07: Tooltip explaining confidence and trend (now from centralized util)
+const confidenceTooltip = computed(() => getConfidenceTooltipText());
 
 async function loadSnapshotsForCompare() {
   error.value = "";
