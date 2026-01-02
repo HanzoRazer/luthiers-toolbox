@@ -308,6 +308,18 @@ export const useRosetteStore = defineStore("rosette", {
       this.focusRing(nextIdx);
     },
 
+    /** Jump to previous problematic ring (Bundle 32.3.4) */
+    jumpToPreviousProblemRing() {
+      const rings = this.problematicRingIndices;
+      if (!rings.length) return;
+
+      const current = this.focusedRingIndex;
+      const pos = current == null ? rings.length : rings.indexOf(current);
+
+      const prevIdx = rings[(pos - 1 + rings.length) % rings.length];
+      this.focusRing(prevIdx);
+    },
+
     // -------------------------
     // Snapshots
     // -------------------------

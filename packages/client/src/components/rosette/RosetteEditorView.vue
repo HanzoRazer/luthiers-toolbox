@@ -6,11 +6,20 @@
         <button
           class="jump-btn"
           type="button"
+          title="Jump to previous problematic ring ([)"
+          @click="jumpPrev"
+        >
+          Prev
+        </button>
+        <button
+          class="jump-btn"
+          type="button"
           title="Jump to next problematic ring (])"
           @click="jumpNext"
         >
-          Next problem ({{ store.problematicRingIndices.length }})
+          Next
         </button>
+        <span class="problem-count">{{ store.problematicRingIndices.length }} problems</span>
       </div>
       <GeneratorPicker />
       <FeasibilityBanner />
@@ -51,10 +60,20 @@ function onKeyDown(e: KeyboardEvent) {
     e.preventDefault();
     store.jumpToNextProblemRing();
   }
+
+  // [ key -> jump to previous problematic ring (Bundle 32.3.4)
+  if (e.key === "[" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    store.jumpToPreviousProblemRing();
+  }
 }
 
 function jumpNext() {
   store.jumpToNextProblemRing();
+}
+
+function jumpPrev() {
+  store.jumpToPreviousProblemRing();
 }
 
 // Auto refresh: debounce on any param change
@@ -96,6 +115,11 @@ watch(
 }
 .jump-btn:hover {
   background: #fbd5d5;
+}
+.problem-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a00;
 }
 @media (max-width: 1100px) {
   .wrap {
