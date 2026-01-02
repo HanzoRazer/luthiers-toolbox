@@ -123,31 +123,3 @@ class BulkPromoteResponse(BaseModel):
     failed: int
     blocked: int
     results: List[BulkPromoteItemResult]
-
-
-# =============================================================================
-# Re-exports from schemas_advisory_reject for API compatibility
-# =============================================================================
-
-from .schemas_advisory_reject import (
-    RejectVariantRequest,
-    AdvisoryVariantRejectionRecord,
-    RejectReasonCode,
-)
-
-
-class RejectVariantResponse(BaseModel):
-    """Response from rejecting an advisory variant."""
-    run_id: str
-    advisory_id: str
-    rejected: bool = True
-    reason_code: str
-    reason_detail: Optional[str] = None
-    rejected_at_utc: str
-
-
-class UnrejectVariantResponse(BaseModel):
-    """Response from unrejecting (clearing rejection) an advisory variant."""
-    run_id: str
-    advisory_id: str
-    cleared: bool  # True if rejection was cleared, False if wasn't rejected
