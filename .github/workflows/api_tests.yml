@@ -23,7 +23,7 @@ jobs:
           python - <<'PY'
           import urllib.request, json
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG2 X60 Y40 I0 J20\nG0 Z5\n"
-          req = urllib.request.Request("http://127.0.0.1:8000/api/cam/simulate_gcode", data=json.dumps({"gcode":gcode}).encode(), headers={"Content-Type":"application/json"})
+          req = urllib.request.Request("http://127.0.0.1:8000/api/sim/cam/simulate_gcode", data=json.dumps({"gcode":gcode}).encode(), headers={"Content-Type":"application/json"})
           resp = urllib.request.urlopen(req)
           print(resp.read().decode())
           modal = resp.headers.get("X-CAM-Modal")
