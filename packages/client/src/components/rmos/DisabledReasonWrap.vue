@@ -22,4 +22,7 @@ defineProps<{
   display: inline-flex;
   align-items: center;
 }
+.disabled-reason-wrap > * {
+  pointer-events: none;
+}
 </style>

@@ -53,15 +53,27 @@
     </div>
 
     <div class="actions">
-      <!-- Bundle 10: Wrap Export button with DisabledReasonWrap for hover tooltip -->
-      <DisabledReasonWrap :reason="exportBlockedReason">
+      <!-- Bundle 10 fix: only wrap when disabled so tooltip is meaningful -->
+      <DisabledReasonWrap
+        v-if="!canExport || loading"
+        :reason="exportBlockedReason"
+      >
         <button
-          :disabled="!canExport || loading"
-          @click="onExport"
+          :disabled="true"
+          type="button"
         >
           Export CNC for Selected Ring
         </button>
       </DisabledReasonWrap>
+
+      <button
+        v-else
+        type="button"
+        @click="onExport"
+      >
+        Export CNC for Selected Ring
+      </button>
+
       <span v-if="loading">Exporting...</span>
 
       <!-- Bundle #12: Download Operator PDF button -->
@@ -167,11 +179,12 @@ const jigRotation = computed({
 
 const canExport = computed(() => !!store.sliceBatch && store.rings.length > 0)
 
-// Bundle 10: Disabled reason tooltip
+// Bundle 10: Disabled reason tooltip (includes loading state)
 const exportBlockedReason = computed(() => {
+  if (loading.value) return "Export in progress…"
   if (!store.sliceBatch) return "Generate slices before exporting."
   if (store.rings.length === 0) return "No rings available to export."
-  return ""
+  return "Export is available."
 })
 
 function onExport() {
