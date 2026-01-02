@@ -82,7 +82,8 @@ services:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
       interval: 10s   # Check every 10 seconds
       timeout: 3s     # Fail if response takes >3 seconds
-      retries: 10     # Allow 100 seconds for startup (Python imports)
+      start_period: 30s  # Grace period for app startup (Python imports)
+      retries: 10     # Allow 100 seconds for startup after start_period
     restart: unless-stopped  # CRITICAL: Auto-restart on crash (production stability)
 
   # ============================================================================
