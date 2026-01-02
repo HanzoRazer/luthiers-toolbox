@@ -4,12 +4,42 @@ import { useRosetteStore } from "@/stores/rosetteStore";
 
 const store = useRosetteStore();
 
-// Bundle 32.4.4: HistoryItem with action label + params summary
+// Bundle 32.4.4 + 32.4.5: HistoryItem with action label, params summary, and timestamp
 type HistoryItem = {
   label: string;       // action name (e.g., "Ring 3 +0.10mm")
   paramsLabel: string; // summary (e.g., "4 rings • Σ width 12.80mm")
   idxFromTop: number;  // 0 = newest
+  ts: number;          // timestamp (ms since epoch)
+  age: string;         // relative age (e.g., "12s ago")
+  abs: string;         // absolute time (locale string)
 };
+
+// Bundle 32.4.5: Format timestamp as locale string
+function fmtAbsolute(ts: number): string {
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return String(ts);
+  }
+}
+
+// Bundle 32.4.5: Format relative age
+function fmtAge(ts: number): string {
+  const now = Date.now();
+  const diff = Math.max(0, now - ts);
+
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
 
 function describeParams(p: any): string {
   try {
@@ -31,18 +61,24 @@ function describeParams(p: any): string {
   }
 }
 
-// Bundle 32.4.4: Pull action labels from HistoryEntry objects
+// Bundle 32.4.4 + 32.4.5: Pull action labels and timestamps from HistoryEntry objects
 const recent = computed<HistoryItem[]>(() => {
   const stack = store.historyStack ?? [];
   const take = stack.slice(Math.max(0, stack.length - 5)); // last 5
   // newest first
   const newestFirst = [...take].reverse();
 
-  return newestFirst.map((entry: any, i: number) => ({
-    label: entry?.label || "Edit",
-    paramsLabel: describeParams(entry?.params),
-    idxFromTop: i,
-  }));
+  return newestFirst.map((entry: any, i: number) => {
+    const ts = Number(entry?.ts ?? Date.now());
+    return {
+      label: entry?.label || "Edit",
+      paramsLabel: describeParams(entry?.params),
+      idxFromTop: i,
+      ts,
+      age: fmtAge(ts),
+      abs: fmtAbsolute(ts),
+    };
+  });
 });
 
 function revertTo(idxFromTop: number) {
@@ -82,6 +118,7 @@ function clearAll() {
         <span class="txt">
           <span class="k">{{ it.label }}</span>
           <span class="v">{{ it.paramsLabel }}</span>
+          <span class="t" :title="it.abs">{{ it.age }}</span>
         </span>
       </button>
     </div>
@@ -179,5 +216,12 @@ function clearAll() {
 .v {
   font-size: 11px;
   color: #222;
+}
+
+/* Bundle 32.4.5: Timestamp line */
+.t {
+  font-size: 10px;
+  color: #777;
+  margin-top: 2px;
 }
 </style>

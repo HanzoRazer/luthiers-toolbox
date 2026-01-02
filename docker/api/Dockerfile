@@ -21,6 +21,7 @@ RUN useradd -m app
 USER app
 
 ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
+ENV PYTHONPATH=/app/services/api
 EXPOSE 8000
 
 # health endpoint baked in app
