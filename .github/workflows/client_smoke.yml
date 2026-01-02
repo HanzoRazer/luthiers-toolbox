@@ -52,3 +52,10 @@ jobs:
         with:
           name: client-dist
           path: packages/client/dist
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-coverage
+          path: packages/client/coverage
