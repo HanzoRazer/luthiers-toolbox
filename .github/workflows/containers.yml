@@ -82,20 +82,16 @@ jobs:
           echo "Testing post-processors..."
           curl -fsS http://127.0.0.1:${SERVER_PORT}/api/tooling/posts | jq .
           
-          echo "Adding test tool..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/tools \
-            -H 'Content-Type: application/json' \
-            -d '{"name":"Test Endmill","type":"flat","diameter_mm":6.0,"flute_count":2}' | jq .
+          echo "Testing tool library..."
+          curl -fsS http://127.0.0.1:${SERVER_PORT}/api/tooling/library/tools | jq '.[0:3]'
           
-          echo "Adding test material..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/materials \
-            -H 'Content-Type: application/json' \
-            -d '{"name":"Test Wood","chipload_mm":0.15,"max_rpm":18000}' | jq .
+          echo "Testing material library..."
+          curl -fsS http://127.0.0.1:${SERVER_PORT}/api/tooling/library/materials | jq '.[0:3]'
           
-          echo "Calculating feeds/speeds..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/feedspeeds \
+          echo "Testing feeds/speeds calculation..."
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/feeds/calculate \
             -H 'Content-Type: application/json' \
-            -d '{"tool_name":"Test Endmill","material_name":"Test Wood","rpm":15000}' | jq .
+            -d '{"tool_d":6.0,"chipload":0.15,"flutes":2,"rpm":15000}' | jq .
 
       - name: Smoke - Client container
         run: |
