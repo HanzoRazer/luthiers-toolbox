@@ -50,7 +50,22 @@ jobs:
           tags: toolbox/proxy:ci
 
       - name: Up stack (with proxy profile)
+        id: up_stack
         run: docker compose --profile proxy up -d
+        continue-on-error: true
+
+      - name: Debug - Container status and logs on failure
+        if: steps.up_stack.outcome == 'failure'
+        run: |
+          echo "=== Container Status ==="
+          docker compose ps -a
+          echo ""
+          echo "=== API Container Logs ==="
+          docker compose logs api --tail=200
+          echo ""
+          echo "=== Proxy Container Logs ==="
+          docker compose logs proxy --tail=100 || true
+          exit 1
 
       - name: Wait for API via proxy
         run: |
