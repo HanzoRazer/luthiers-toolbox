@@ -498,7 +498,7 @@ def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
         bins=int(body.bins),
     )
 
-    use = energy["usage"]
+    use = energy["totals"]["heat"]
     bj = body.budgets
 
     # Compute budget states
