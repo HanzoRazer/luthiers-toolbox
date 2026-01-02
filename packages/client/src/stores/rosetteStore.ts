@@ -479,9 +479,12 @@ export const useRosetteStore = defineStore("rosette", {
     // -------------------------
 
     /** Push a snapshot to history stack before edits */
-    _pushHistorySnapshot() {
+    _pushHistorySnapshot(params?: any) {
+      const src = params ?? this.currentParams;
+      if (!src) return;
+
       try {
-        const snap = JSON.parse(JSON.stringify(this.currentParams));
+        const snap = JSON.parse(JSON.stringify(src));
         this.historyStack.push(snap);
         if (this.historyStack.length > this.historyMax) this.historyStack.shift();
       } catch {
@@ -603,6 +606,37 @@ export const useRosetteStore = defineStore("rosette", {
       }
 
       this.currentParams = next;
+    },
+
+    // -------------------------
+    // Bundle 32.4.2: History revert + clear
+    // -------------------------
+
+    /** Revert to a specific history index */
+    revertToHistoryIndex(absIndex: number) {
+      const stack = this.historyStack ?? [];
+      if (!stack.length) return;
+      if (absIndex < 0 || absIndex >= stack.length) return;
+
+      // Save current state into history before reverting
+      try {
+        this._pushHistorySnapshot(this.currentParams);
+      } catch {
+        // ignore
+      }
+
+      const target = stack[absIndex];
+      if (!target) return;
+
+      // Drop everything newer than target (so revert is deterministic)
+      this.historyStack = stack.slice(0, absIndex);
+
+      this.currentParams = target;
+    },
+
+    /** Clear all history */
+    clearHistory() {
+      this.historyStack = [];
     },
   },
 });

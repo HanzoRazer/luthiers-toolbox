@@ -113,6 +113,9 @@
         </div>
       </div>
 
+      <!-- Bundle 32.4.2: History mini-stack panel -->
+      <HistoryStackPanel />
+
       <GeneratorPicker />
       <FeasibilityBanner />
       <SnapshotPanel />
@@ -132,6 +135,7 @@ import RosettePreviewPanel from "./RosettePreviewPanel.vue";
 import SnapshotPanel from "./SnapshotPanel.vue";
 import FeasibilityBanner from "./FeasibilityBanner.vue";
 import ToastHost from "@/components/ui/ToastHost.vue";
+import HistoryStackPanel from "./HistoryStackPanel.vue";
 
 const store = useRosetteStore();
 

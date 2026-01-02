@@ -63,7 +63,7 @@ jobs:
           python - <<'PY'
           import urllib.request, json
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG2 X60 Y40 I0 J20\nG0 Z5\n"
-          req = urllib.request.Request("http://127.0.0.1:8000/cam/simulate_gcode",
+          req = urllib.request.Request("http://127.0.0.1:8000/api/cam/simulate_gcode",
                                        data=json.dumps({"gcode":gcode}).encode(),
                                        headers={"Content-Type":"application/json"})
           resp = urllib.request.urlopen(req)
@@ -79,20 +79,20 @@ jobs:
       - name: Smoke - Tooling endpoints
         run: |
           echo "Testing post-processors..."
-          curl -fsS http://127.0.0.1:${SERVER_PORT}/tooling/posts | jq .
+          curl -fsS http://127.0.0.1:${SERVER_PORT}/api/tooling/posts | jq .
           
           echo "Adding test tool..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/tools \
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/tools \
             -H 'Content-Type: application/json' \
             -d '{"name":"Test Endmill","type":"flat","diameter_mm":6.0,"flute_count":2}' | jq .
           
           echo "Adding test material..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/materials \
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/materials \
             -H 'Content-Type: application/json' \
             -d '{"name":"Test Wood","chipload_mm":0.15,"max_rpm":18000}' | jq .
           
           echo "Calculating feeds/speeds..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/tooling/feedspeeds \
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/feedspeeds \
             -H 'Content-Type: application/json' \
             -d '{"tool_name":"Test Endmill","material_name":"Test Wood","rpm":15000}' | jq .
 
