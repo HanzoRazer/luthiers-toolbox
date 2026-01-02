@@ -91,6 +91,10 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # Disabled by default in tests; individual tests can enable via monkeypatch.
     monkeypatch.setenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "false")
 
+    # --- 2b) Metrics rollup hook (Saw Lab batch workflow) ---
+    # Disabled by default in tests; individual tests can enable via monkeypatch.
+    monkeypatch.setenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "false")
+
     # --- 3) Temp SQLite DB isolation (workflow_sessions, artifacts index, etc.) ---
     # Only set DATABASE_URL if not already forced by the test runner/CI.
     # This keeps local/CI overrides possible while defaulting to safe isolation.

@@ -7,7 +7,6 @@
  */
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import BulkDecisionModal from "@/components/rmos/BulkDecisionModal.vue";
-import DisabledReasonWrap from "@/components/rmos/DisabledReasonWrap.vue";
 import {
   fetchManufacturingCandidates,
   setManufacturingCandidateDecision,
@@ -79,95 +78,8 @@ function clearCandidateSelection() {
   selectedCandidateIds.value = new Set();
 }
 
-// Bundle 13: Auto-prune selection to GREEN after decision changes
-function pruneSelectionToGreen() {
-  if (selectedCandidateIds.value.size === 0) return;
-
-  const keep = new Set<string>();
-  for (const c of candidates.value) {
-    const id = idOf(c);
-    if (!selectedCandidateIds.value.has(id)) continue;
-    if (decisionOf(c) === "GREEN") keep.add(id);
-  }
-  selectedCandidateIds.value = keep;
-}
-
 const selectedCount = computed(() => selectedCandidateIds.value.size);
 const selectedIds = computed(() => Array.from(selectedCandidateIds.value));
-
-// Bundle 11: Bulk download eligibility (GREEN-only gate)
-const selectedCandidates = computed(() => {
-  const selected = new Set(selectedCandidateIds.value);
-  return candidates.value.filter((c) => selected.has(idOf(c)));
-});
-
-const bulkDownloadEligibility = computed(() => {
-  const items = selectedCandidates.value;
-
-  if (bulkBusy.value) {
-    return { allowed: false, reason: "Download in progress…" };
-  }
-
-  if (!items.length) {
-    return { allowed: false, reason: "Select one or more candidates to download." };
-  }
-
-  let undecided = 0;
-  let yellow = 0;
-  let red = 0;
-  let green = 0;
-
-  for (const c of items) {
-    const d = decisionOf(c);
-    if (d === null) undecided++;
-    else if (d === "GREEN") green++;
-    else if (d === "YELLOW") yellow++;
-    else if (d === "RED") red++;
-  }
-
-  // Policy: bulk download only when ALL selected are GREEN
-  const allowed = undecided === 0 && yellow === 0 && red === 0 && green === items.length;
-
-  if (allowed) {
-    return { allowed: true, reason: "Ready: all selected candidates are GREEN." };
-  }
-
-  const parts: string[] = ["Bulk download blocked: only GREEN candidates can be downloaded in bulk."];
-  if (undecided) parts.push(`${undecided} undecided`);
-  if (yellow) parts.push(`${yellow} YELLOW`);
-  if (red) parts.push(`${red} RED`);
-  parts.push("Fix: mark remaining selections GREEN (or deselect them).");
-
-  return { allowed: false, reason: parts.join(" • ") };
-});
-
-const canBulkDownload = computed(() => bulkDownloadEligibility.value.allowed);
-const bulkDownloadBlockedReason = computed(() => bulkDownloadEligibility.value.reason);
-
-// Bundle 12: GREEN-only selection helpers
-const allGreenCandidateIds = computed(() => {
-  return candidates.value
-    .filter((c) => decisionOf(c) === "GREEN")
-    .map((c) => idOf(c));
-});
-
-const selectedGreenCandidateIds = computed(() => {
-  const selected = selectedCandidateIds.value; // Set<string>
-  return candidates.value
-    .filter((c) => selected.has(idOf(c)) && decisionOf(c) === "GREEN")
-    .map((c) => idOf(c));
-});
-
-function selectGreenOnly() {
-  // If there is an active selection, keep only GREEN within it.
-  // If nothing selected, select ALL GREEN candidates.
-  const nextIds =
-    selectedCandidateIds.value.size > 0
-      ? selectedGreenCandidateIds.value
-      : allGreenCandidateIds.value;
-
-  selectedCandidateIds.value = new Set(nextIds);
-}
 
 // Filtering + sorting
 const filteredSorted = computed(() => {
@@ -211,10 +123,13 @@ async function load() {
   try {
     const rows = await fetchManufacturingCandidates(apiBase.value, props.runId);
     candidates.value = rows ?? [];
-    // Bundle 13: Prune selection to GREEN + known IDs
-    if (selectedCandidateIds.value.size > 0) {
-      pruneSelectionToGreen();
+    // Prune selection to only known IDs
+    const known = new Set(candidates.value.map((c) => idOf(c)));
+    const next = new Set<string>();
+    for (const id of selectedCandidateIds.value) {
+      if (known.has(id)) next.add(id);
     }
+    selectedCandidateIds.value = next;
   } catch (e: any) {
     error.value = e?.message ?? String(e);
     candidates.value = [];
@@ -250,7 +165,6 @@ async function downloadZip(id: string) {
 
 // Bulk download zips
 async function downloadSelectedCandidateZips() {
-  if (!canBulkDownload.value) return; // Bundle 11: safety guard
   bulkError.value = null;
   const ids = Array.from(selectedCandidateIds.value);
   if (!ids.length) return;
@@ -266,12 +180,6 @@ async function downloadSelectedCandidateZips() {
   } finally {
     bulkBusy.value = false;
   }
-}
-
-// Bundle 13: Clean handler for BulkDecisionModal @done
-async function onBulkDecisionDone() {
-  bulkDecisionOpen.value = false;
-  await load(); // load() prunes to GREEN-only
 }
 
 function statusClass(decision: CandidateDecision | null): string {
@@ -452,32 +360,7 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
         >
           Bulk decision…
         </button>
-        <!-- Bundle 12: Select GREEN only quick action -->
-        <button
-          class="btn btn-secondary btn-sm"
-          type="button"
-          :disabled="bulkBusy || candidates.length === 0"
-          title="Keep only GREEN candidates selected (or select all GREEN if none selected)"
-          @click="selectGreenOnly"
-        >
-          Select GREEN only
-        </button>
-        <!-- Bundle 11: Bulk download gated to GREEN-only with hover reason -->
-        <DisabledReasonWrap
-          v-if="!canBulkDownload"
-          :reason="bulkDownloadBlockedReason"
-        >
-          <button class="btn btn-secondary btn-sm" type="button" disabled>
-            {{ bulkBusy ? "Downloading…" : "Download zips" }}
-          </button>
-        </DisabledReasonWrap>
-        <button
-          v-else
-          class="btn btn-secondary btn-sm"
-          type="button"
-          :disabled="bulkBusy"
-          @click="downloadSelectedCandidateZips"
-        >
+        <button class="btn btn-secondary btn-sm" :disabled="bulkBusy || !selectedCount" @click="downloadSelectedCandidateZips">
           {{ bulkBusy ? "Downloading…" : "Download zips" }}
         </button>
       </div>
@@ -603,7 +486,7 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
       :runId="runId"
       :apiBase="apiBase"
       @close="bulkDecisionOpen = false"
-      @done="onBulkDecisionDone"
+      @done="bulkDecisionOpen = false; load()"
     />
   </div>
 </template>
