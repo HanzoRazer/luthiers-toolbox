@@ -42,6 +42,7 @@
       v-if="selectedSnapshot"
       :current="selectedSnapshot"
       :previous="previousSnapshot"
+      :onFocusWorstRing="focusWorstRing"
     />
     <div v-if="!store.snapshots?.length" class="empty">No snapshots yet.</div>
   </div>
@@ -52,11 +53,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import SnapshotComparePanel from "@/components/art/SnapshotComparePanel.vue";
 import ConfidenceDetails from "@/components/art/ConfidenceDetails.vue";
+import { getRingIndex } from "@/utils/ringFocus";
 
 const store = useRosetteStore();
 const toast = useToastStore();
@@ -116,6 +118,43 @@ function onFile(evt: Event) {
 function scrollToCompare() {
   document.getElementById("snapshot-compare")?.scrollIntoView({ behavior: "smooth" });
 }
+
+// -------------------------
+// Ring Focus (Bundle 32.3.1)
+// -------------------------
+function focusWorstRing(diag: any) {
+  const idx = getRingIndex(diag);
+  if (idx == null) return;
+  store.focusRing(idx);
+}
+
+// Scroll + highlight ring when focusedRingIndex changes
+watch(
+  () => store.focusedRingIndex,
+  async (idx) => {
+    if (idx == null) return;
+
+    await nextTick();
+
+    const el = document.querySelector(
+      `[data-ring-index="${idx}"]`
+    ) as HTMLElement | null;
+
+    if (!el) {
+      // If no DOM element yet, just log for debugging; future ring editor will have this
+      console.debug(`[ringFocus] No element found for data-ring-index="${idx}"`);
+      return;
+    }
+
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    el.classList.add("ring-focus");
+    setTimeout(() => el.classList.remove("ring-focus"), 1200);
+  }
+);
 </script>
 
 <style scoped>
@@ -210,5 +249,13 @@ function scrollToCompare() {
 .snap.selected {
   border-color: #111;
   background: #f0f0f0;
+}
+
+/* Ring focus highlight (Bundle 32.3.1) */
+:global(.ring-focus) {
+  outline: 2px solid #ff9800;
+  outline-offset: 2px;
+  background: rgba(255, 152, 0, 0.08);
+  transition: background 0.3s ease;
 }
 </style>

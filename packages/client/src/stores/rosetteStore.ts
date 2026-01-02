@@ -69,6 +69,9 @@ export const useRosetteStore = defineStore("rosette", {
     autoRefreshDebounceMs: 350,
     _lastAutoRefreshToken: 0,
     _debouncedAutoRefresh: null as (() => void) | null,
+
+    // Ring focus (Bundle 32.3.1)
+    focusedRingIndex: null as number | null,
   }),
 
   getters: {
@@ -84,6 +87,12 @@ export const useRosetteStore = defineStore("rosette", {
       const f = this.lastFeasibility;
       if (!f) return "No feasibility yet";
       return `${f.risk_bucket} - Score ${Math.round(f.overall_score)} - ${f.estimated_cut_time_min.toFixed(1)} min`;
+    },
+
+    /** Ring at focusedRingIndex, or null (Bundle 32.3.1) */
+    focusedRing(): any | null {
+      if (this.focusedRingIndex == null) return null;
+      return (this.currentParams?.ring_params ?? [])[this.focusedRingIndex] ?? null;
     },
   },
 
@@ -245,6 +254,17 @@ export const useRosetteStore = defineStore("rosette", {
         }, this.autoRefreshDebounceMs);
       }
       this._debouncedAutoRefresh();
+    },
+
+    // -------------------------
+    // Ring Focus (Bundle 32.3.1)
+    // -------------------------
+    focusRing(index: number) {
+      this.focusedRingIndex = index;
+    },
+
+    clearRingFocus() {
+      this.focusedRingIndex = null;
     },
 
     // -------------------------
