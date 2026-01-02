@@ -80,6 +80,9 @@ export const useRosetteStore = defineStore("rosette", {
     // Bundle 32.4.0: Undo history stack
     historyStack: [] as any[],
     historyMax: 20,
+    // Bundle 32.4.3: Redo stack
+    redoStack: [] as any[],
+    redoMax: 20,
   }),
 
   getters: {
@@ -476,15 +479,25 @@ export const useRosetteStore = defineStore("rosette", {
 
     // -------------------------
     // Bundle 32.4.0: History + Nudge
+    // Bundle 32.4.3: Redo stack support
     // -------------------------
+
+    /** Clone helper (structuredClone with JSON fallback) */
+    _clone(v: any): any {
+      const sc = (globalThis as any).structuredClone;
+      return sc ? sc(v) : JSON.parse(JSON.stringify(v));
+    },
 
     /** Push a snapshot to history stack before edits */
     _pushHistorySnapshot(params?: any) {
+      // Any new edit invalidates redo history (canonical behavior)
+      this.redoStack = [];
+
       const src = params ?? this.currentParams;
       if (!src) return;
 
       try {
-        const snap = JSON.parse(JSON.stringify(src));
+        const snap = this._clone(src);
         this.historyStack.push(snap);
         if (this.historyStack.length > this.historyMax) this.historyStack.shift();
       } catch {
@@ -506,12 +519,42 @@ export const useRosetteStore = defineStore("rosette", {
       }
     },
 
-    /** Undo last edit */
+    /** Undo last edit (pushes current → redo before reverting) */
     undoLastEdit() {
       if (!this.historyStack.length) return;
+
       const prev = this.historyStack.pop();
       if (!prev) return;
+
+      // Push current into redo before reverting
+      try {
+        const curSnap = this._clone(this.currentParams);
+        this.redoStack.push(curSnap);
+        if (this.redoStack.length > this.redoMax) this.redoStack.shift();
+      } catch {
+        // ignore
+      }
+
       this.currentParams = prev;
+    },
+
+    /** Redo last undone edit (pushes current → undo before applying redo) */
+    redoLastEdit() {
+      if (!this.redoStack.length) return;
+
+      const next = this.redoStack.pop();
+      if (!next) return;
+
+      // Push current into undo history before applying redo
+      try {
+        const curSnap = this._clone(this.currentParams);
+        this.historyStack.push(curSnap);
+        if (this.historyStack.length > this.historyMax) this.historyStack.shift();
+      } catch {
+        // ignore
+      }
+
+      this.currentParams = next;
     },
 
     /**
@@ -612,11 +655,14 @@ export const useRosetteStore = defineStore("rosette", {
     // Bundle 32.4.2: History revert + clear
     // -------------------------
 
-    /** Revert to a specific history index */
+    /** Revert to a specific history index (clears redo - new branch) */
     revertToHistoryIndex(absIndex: number) {
       const stack = this.historyStack ?? [];
       if (!stack.length) return;
       if (absIndex < 0 || absIndex >= stack.length) return;
+
+      // Revert = new branch, clears redo
+      this.redoStack = [];
 
       // Save current state into history before reverting
       try {
@@ -634,9 +680,10 @@ export const useRosetteStore = defineStore("rosette", {
       this.currentParams = target;
     },
 
-    /** Clear all history */
+    /** Clear all history (undo + redo) */
     clearHistory() {
       this.historyStack = [];
+      this.redoStack = [];
     },
   },
 });

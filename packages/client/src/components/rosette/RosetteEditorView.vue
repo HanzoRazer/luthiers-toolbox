@@ -189,10 +189,22 @@ function onKeyDown(e: KeyboardEvent) {
     store.jumpToWorstProblemRing();
   }
 
-  // Bundle 32.4.0: Ctrl+Z / Cmd+Z → undo last edit
-  if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+  // Bundle 32.4.0 + 32.4.3: Undo/Redo keyboard shortcuts
+  const cmd = e.ctrlKey || e.metaKey;
+  const undo = cmd && !e.shiftKey && (e.key === "z" || e.key === "Z");
+  const redo = cmd && e.shiftKey && (e.key === "z" || e.key === "Z");
+  const redoAlt = cmd && !e.shiftKey && (e.key === "y" || e.key === "Y"); // Win-style
+
+  if (undo) {
     e.preventDefault();
     store.undoLastEdit();
+    return;
+  }
+
+  if (redo || redoAlt) {
+    e.preventDefault();
+    store.redoLastEdit();
+    return;
   }
 }
 
