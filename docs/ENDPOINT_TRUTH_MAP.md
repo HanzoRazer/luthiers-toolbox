@@ -1,6 +1,8 @@
 # Endpoint Truth Map
 
 > Complete API surface area for Luthier's Toolbox (if all optional imports succeed).
+>
+> **Last Updated:** 2026-01-02
 
 ---
 
@@ -948,3 +950,39 @@ python -m app.ci.legacy_usage_gate \
 2. **Medium**: `CAMEssentialsLab.vue` - CAM operations lab
 3. **Medium**: `DrillingLab.vue` - Drilling operations
 4. **Low**: `BridgeLabView.vue` - Bridge lab view
+
+---
+
+## 2026-01-02: PR #3 CI Fixes
+
+### Endpoint Path Corrections
+
+| Incorrect Path | Correct Path | Notes |
+|----------------|--------------|-------|
+| `/api/sim/simulate_gcode` | `/api/sim/cam/simulate_gcode` | `cam_sim_router` has internal `/cam` prefix |
+| `/api/tooling/tooling/*` | `/api/tooling/*` | Double prefix bug fixed |
+
+### Router Mounting Clarifications
+
+The `cam_sim_router` is mounted at `/api/sim` in `main.py`, but the router itself has an internal `prefix="/cam"`. This results in the full path being `/api/sim/cam/simulate_gcode`.
+
+**Pattern:** Always check router internal prefix + main.py mount prefix = full path.
+
+### New Utility Function
+
+`safe_stem(filename, prefix=None)` in `util/names.py` now accepts optional prefix:
+
+```python
+# Usage examples
+safe_stem("job_name.nc")                    # Returns: "job_name"
+safe_stem("job_name.nc", prefix="energy")   # Returns: "energy_job_name"
+safe_stem(None, prefix="export")            # Returns: "export"
+```
+
+### Environment Variables for Docker CI
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `ART_STUDIO_DB_PATH` | SQLite database path for Art Studio | `/app/services/api/app/data/art_studio.db` |
+
+Set to `/tmp/art_studio.db` in CI workflows to avoid volume mount permission issues.
