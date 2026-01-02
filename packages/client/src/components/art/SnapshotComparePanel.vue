@@ -9,6 +9,7 @@ import {
   getConfidenceTooltipText,
   type ConfLevel,
 } from "@/utils/rmosConfidence";
+import ConfidenceLegendModal from "@/components/rmos/ConfidenceLegendModal.vue";
 
 type AnySnap = any;
 
@@ -551,6 +552,8 @@ onBeforeUnmount(() => {
                 <span v-else-if="confidenceTrend === 'FLAT'">→</span>
               </span>
             </span>
+            <!-- Bundle 09: Confidence Legend Modal -->
+            <ConfidenceLegendModal />
           </div>
           <div class="meta">
             Score Δ:

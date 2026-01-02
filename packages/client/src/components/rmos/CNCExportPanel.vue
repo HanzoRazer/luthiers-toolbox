@@ -53,12 +53,15 @@
     </div>
 
     <div class="actions">
-      <button
-        :disabled="!canExport || loading"
-        @click="onExport"
-      >
-        Export CNC for Selected Ring
-      </button>
+      <!-- Bundle 10: Wrap Export button with DisabledReasonWrap for hover tooltip -->
+      <DisabledReasonWrap :reason="exportBlockedReason">
+        <button
+          :disabled="!canExport || loading"
+          @click="onExport"
+        >
+          Export CNC for Selected Ring
+        </button>
+      </DisabledReasonWrap>
       <span v-if="loading">Exporting...</span>
 
       <!-- Bundle #12: Download Operator PDF button -->
@@ -128,6 +131,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRosetteDesignerStore } from '@/stores/useRosetteDesignerStore'
+import DisabledReasonWrap from './DisabledReasonWrap.vue'
 
 const store = useRosetteDesignerStore()
 
@@ -162,6 +166,13 @@ const jigRotation = computed({
 })
 
 const canExport = computed(() => !!store.sliceBatch && store.rings.length > 0)
+
+// Bundle 10: Disabled reason tooltip
+const exportBlockedReason = computed(() => {
+  if (!store.sliceBatch) return "Generate slices before exporting."
+  if (store.rings.length === 0) return "No rings available to export."
+  return ""
+})
 
 function onExport() {
   store.exportCncForSelectedRing()
