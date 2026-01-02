@@ -6,7 +6,7 @@ from pathlib import Path
 # Get the app directory and construct absolute path to database
 APP_DIR = Path(__file__).parent.parent
 DATA_DIR = APP_DIR.parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
+# Note: Directory created lazily on first DB access (Docker compatibility)
 DB_PATH = DATA_DIR / "tool_library.sqlite"
 DB_URL = f"sqlite:///{DB_PATH}"
 

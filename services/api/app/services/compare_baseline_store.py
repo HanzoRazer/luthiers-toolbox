@@ -10,7 +10,11 @@ from ..models.compare_baseline import Baseline, BaselineGeometry, BaselineToolpa
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data" / "compare" / "baselines"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_data_dir() -> None:
+    """Create data directory on first write (not at import time for Docker compatibility)."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _baseline_path(baseline_id: str) -> Path:
@@ -64,5 +68,6 @@ def save_baseline(payload: Dict[str, Any]) -> Baseline:
         toolpath=BaselineToolpath(**toolpath) if toolpath else None,
     )
 
+    _ensure_data_dir()  # Create directory on first write
     _baseline_path(baseline_id).write_text(baseline.model_dump_json(indent=2), encoding="utf-8")
     return baseline
