@@ -48,6 +48,9 @@ from .util.logging_request_id import RequestIdFilter
 
 # Deprecation guardrails
 from .middleware.deprecation import DeprecationHeadersMiddleware
+
+# AI availability (for health endpoint)
+from .ai.availability import get_ai_status
 from .meta.router_truth_routes import router as routing_truth_router
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
@@ -871,10 +874,12 @@ async def health_check():
 
 @app.get("/api/health", tags=["Health"])
 async def api_health_check():
-    """API health check with router summary"""
+    """API health check with router summary and AI status"""
+    ai_status = get_ai_status()
     return {
-        "status": "healthy",
+        "status": "healthy" if ai_status["status"] == "available" else "degraded",
         "version": "2.0.0-clean",
+        "ai": ai_status,
         "routers": {
             "core_cam": 11,
             "rmos": 1,
