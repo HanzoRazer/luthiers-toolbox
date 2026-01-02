@@ -49,8 +49,8 @@ jobs:
           load: true
           tags: toolbox/proxy:ci
 
-      - name: Up stack
-        run: docker compose up -d
+      - name: Up stack (with proxy profile)
+        run: docker compose --profile proxy up -d
 
       - name: Wait for API via proxy
         run: |
@@ -202,4 +202,4 @@ jobs:
 
       - name: Down stack
         if: always()
-        run: docker compose down -v
+        run: docker compose --profile proxy down -v
