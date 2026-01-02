@@ -124,6 +124,28 @@ const confidenceLevel = computed<"HIGH" | "MED" | "LOW">(() => {
   return "LOW";
 });
 
+// Bundle 06: Confidence trend arrows
+type ConfidenceLevel = "HIGH" | "MED" | "LOW";
+
+function confidenceRank(level: ConfidenceLevel): number {
+  if (level === "HIGH") return 3;
+  if (level === "MED") return 2;
+  return 1; // LOW
+}
+
+const previousConfidence = ref<ConfidenceLevel | null>(null);
+
+const confidenceTrend = computed<"UP" | "FLAT" | "DOWN" | "NONE">(() => {
+  const current = confidenceLevel.value;
+  const prev = previousConfidence.value;
+  if (!prev) return "NONE";
+
+  const d = confidenceRank(current) - confidenceRank(prev);
+  if (d > 0) return "UP";
+  if (d < 0) return "DOWN";
+  return "FLAT";
+});
+
 async function loadSnapshotsForCompare() {
   error.value = "";
   left.value = null;
@@ -151,6 +173,27 @@ async function loadSnapshotsForCompare() {
 watch(() => [leftId.value, rightId.value], () => {
   scheduleLiveCompare();
 });
+
+// Bundle 06: Track previous confidence when compare results change
+watch(
+  () => [left.value, right.value] as const,
+  ([newLeft, newRight], [oldLeft, oldRight]) => {
+    // Only update trend baseline when compare results actually change
+    if (!newLeft || !newRight) return;
+
+    // If we had a previous valid compare, record its confidence as baseline
+    if (oldLeft && oldRight) {
+      // Compute what the previous confidence was (before reactivity updates it)
+      const oldHotRings = deltaRows.value.filter((r) => Math.abs(r.delta) >= 0.15).length;
+      // Use current confidenceLevel as the "previous" since it will update after this
+      previousConfidence.value = confidenceLevel.value;
+      return;
+    }
+
+    // First result in session: no arrow yet
+    previousConfidence.value = null;
+  }
+);
 
 // Auto-select Left=baseline when snapshots list changes and Left is empty (32.1.0a)
 watch(
@@ -517,6 +560,12 @@ onBeforeUnmount(() => {
             >
               {{ confidenceLevel }}
             </span>
+            <!-- Bundle 06: Confidence trend arrow -->
+            <span class="confidence-trend" :data-trend="confidenceTrend">
+              <span v-if="confidenceTrend === 'UP'">↑</span>
+              <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
+              <span v-else-if="confidenceTrend === 'FLAT'">→</span>
+            </span>
           </div>
           <div class="meta">
             Score Δ:
@@ -722,5 +771,29 @@ onBeforeUnmount(() => {
 .confidence-badge[data-level="LOW"] {
   background: #fdecea;
   color: #b42318;
+}
+
+/* Bundle 06: Confidence trend arrow styling */
+.confidence-trend {
+  margin-left: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.confidence-trend[data-trend="NONE"] {
+  display: none;
+}
+
+.confidence-trend[data-trend="UP"] {
+  color: #18794e;
+}
+
+.confidence-trend[data-trend="DOWN"] {
+  color: #b42318;
+}
+
+.confidence-trend[data-trend="FLAT"] {
+  color: #8a5a00;
 }
 </style>
