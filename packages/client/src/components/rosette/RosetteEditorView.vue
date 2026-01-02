@@ -20,6 +20,27 @@
           Next
         </button>
         <span class="problem-count">{{ store.problematicRingIndices.length }} problems</span>
+        <button
+          class="jump-btn"
+          type="button"
+          :title="store.jumpSeverity === 'RED_ONLY'
+            ? 'Jump filter: RED only (click to include YELLOW)'
+            : 'Jump filter: RED + YELLOW (click for RED only)'"
+          @click="store.toggleJumpSeverity()"
+        >
+          {{ store.jumpSeverity === "RED_ONLY" ? "RED only" : "RED+YELLOW" }}
+        </button>
+        <div class="jump-hud" v-if="store.totalRingCount > 0">
+          <span class="pill">
+            {{ store.jumpSeverity === "RED_ONLY" ? "Filter: RED only" : "Filter: RED+YELLOW" }}
+          </span>
+          <span class="pill">
+            RED rings: {{ store.redRingCount }} / {{ store.totalRingCount }}
+          </span>
+          <span class="pill" v-if="store.jumpRingPosition.total > 0">
+            Focus: {{ store.jumpRingPosition.pos || "—" }} / {{ store.jumpRingPosition.total }}
+          </span>
+        </div>
       </div>
       <GeneratorPicker />
       <FeasibilityBanner />
@@ -65,6 +86,12 @@ function onKeyDown(e: KeyboardEvent) {
   if (e.key === "[" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
     e.preventDefault();
     store.jumpToPreviousProblemRing();
+  }
+
+  // Shift+R toggles severity filter (Bundle 32.3.5)
+  if ((e.key === "R" || e.key === "r") && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    store.toggleJumpSeverity();
   }
 }
 
@@ -120,6 +147,22 @@ watch(
   font-size: 11px;
   font-weight: 600;
   color: #a00;
+}
+.jump-hud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  flex-wrap: wrap;
+}
+.pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #e6e6e6;
+  background: #fafafa;
+  color: #444;
 }
 @media (max-width: 1100px) {
   .wrap {

@@ -72,6 +72,9 @@ export const useRosetteStore = defineStore("rosette", {
 
     // Ring focus (Bundle 32.3.1)
     focusedRingIndex: null as number | null,
+
+    // Jump severity filter (Bundle 32.3.5)
+    jumpSeverity: "RED_ONLY" as "RED_ONLY" | "RED_YELLOW",
   }),
 
   getters: {
@@ -101,7 +104,7 @@ export const useRosetteStore = defineStore("rosette", {
       return this.snapshots.find((s) => s.snapshot_id === this.selectedSnapshotId) ?? null;
     },
 
-    /** Problematic ring indices sorted by severity RED > YELLOW (Bundle 32.3.3) */
+    /** Problematic ring indices sorted by severity RED > YELLOW, filtered by jumpSeverity (Bundle 32.3.3, 32.3.5) */
     problematicRingIndices(): number[] {
       const snap = this.selectedSnapshot;
       if (!snap) return [];
@@ -114,14 +117,52 @@ export const useRosetteStore = defineStore("rosette", {
       const severityRank = (r: string) =>
         r === "RED" ? 2 : r === "YELLOW" ? 1 : 0;
 
+      const allow = (risk: string) => {
+        if (this.jumpSeverity === "RED_ONLY") return risk === "RED";
+        return risk === "RED" || risk === "YELLOW";
+      };
+
       return diags
         .map((d: any) => ({
           idx: d.ring_index ?? d.ringIndex,
-          risk: d.risk_bucket ?? d.riskBucket ?? "UNKNOWN",
+          risk: String(d.risk_bucket ?? d.riskBucket ?? "UNKNOWN"),
         }))
-        .filter((x: any) => typeof x.idx === "number" && severityRank(x.risk) > 0)
+        .filter((x: any) => typeof x.idx === "number" && allow(x.risk))
         .sort((a: any, b: any) => severityRank(b.risk) - severityRank(a.risk))
         .map((x: any) => x.idx);
+    },
+
+    /** Total ring count from currentParams (Bundle 32.3.6) */
+    totalRingCount(): number {
+      return this.currentParams?.ring_params?.length ?? 0;
+    },
+
+    /** Count of RED-only rings from diagnostics (Bundle 32.3.6) */
+    redRingCount(): number {
+      const snap = this.selectedSnapshot;
+      if (!snap) return 0;
+
+      const diags: any[] =
+        (snap as any).ring_diagnostics ??
+        (snap as any).feasibility?.ring_diagnostics ??
+        [];
+
+      return diags.filter(
+        (d: any) => String(d.risk_bucket ?? d.riskBucket) === "RED"
+      ).length;
+    },
+
+    /** Current position in jump list { pos, total } (Bundle 32.3.6) */
+    jumpRingPosition(): { pos: number; total: number } {
+      const rings = this.problematicRingIndices;
+      if (!rings.length) return { pos: 0, total: 0 };
+
+      const current = this.focusedRingIndex;
+      if (current == null) return { pos: 0, total: rings.length };
+
+      const idx = rings.indexOf(current);
+      // 1-based display; 0 if current ring not in list
+      return { pos: idx >= 0 ? idx + 1 : 0, total: rings.length };
     },
   },
 
@@ -294,6 +335,11 @@ export const useRosetteStore = defineStore("rosette", {
 
     clearRingFocus() {
       this.focusedRingIndex = null;
+    },
+
+    /** Toggle jump severity filter between RED_ONLY and RED_YELLOW (Bundle 32.3.5) */
+    toggleJumpSeverity() {
+      this.jumpSeverity = this.jumpSeverity === "RED_ONLY" ? "RED_YELLOW" : "RED_ONLY";
     },
 
     /** Jump to next problematic ring, cycling through RED then YELLOW (Bundle 32.3.3) */
