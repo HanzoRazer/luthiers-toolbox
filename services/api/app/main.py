@@ -157,9 +157,10 @@ from .routers.pipeline_presets_router import router as pipeline_presets_router
 from .routers.dxf_plan_router import router as dxf_plan_router
 
 # =============================================================================
-# BLUEPRINT IMPORT (1 router)
-# Note: blueprint_router broken - needs analyzer module
+# BLUEPRINT IMPORT (2 routers)
+# Note: blueprint_router now gracefully degrades if analyzer deps missing
 # =============================================================================
+from .routers.blueprint_router import router as blueprint_router
 from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
 
 # =============================================================================
@@ -189,11 +190,36 @@ from .saw_lab.batch_router import router as saw_batch_router
 
 # =============================================================================
 # SPECIALTY MODULES - Guitar-specific calculators (4 routers)
+# Optional: these may be missing in minimal deployments
 # =============================================================================
-from .routers.archtop_router import router as archtop_router
-from .routers.stratocaster_router import router as stratocaster_router
-from .routers.smart_guitar_router import router as smart_guitar_router
-from .routers.om_router import router as om_router
+# SPECIALTY MODULES (4 routers) - OPTIONAL
+# These routers are optional - endpoints won't mount if modules are missing
+# =============================================================================
+_log = logging.getLogger(__name__)
+
+try:
+    from .routers.archtop_router import router as archtop_router
+except ImportError as e:
+    archtop_router = None
+    _log.warning("Optional router archtop_router not available: %s", e)
+
+try:
+    from .routers.stratocaster_router import router as stratocaster_router
+except ImportError as e:
+    stratocaster_router = None
+    _log.warning("Optional router stratocaster_router not available: %s", e)
+
+try:
+    from .routers.smart_guitar_router import router as smart_guitar_router
+except ImportError as e:
+    smart_guitar_router = None
+    _log.warning("Optional router smart_guitar_router not available: %s", e)
+
+try:
+    from .routers.om_router import router as om_router
+except ImportError as e:
+    om_router = None
+    _log.warning("Optional router om_router not available: %s", e)
 
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
@@ -574,7 +600,8 @@ app.include_router(adaptive_preview_router, prefix="/api/cam/adaptive-preview", 
 app.include_router(pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"])
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
-# Blueprint (1)
+# Blueprint (2)
+app.include_router(blueprint_router, prefix="/api")  # Router has /blueprint prefix internally
 app.include_router(blueprint_cam_bridge_router, prefix="/api/blueprint/cam", tags=["Blueprint CAM Bridge"])
 
 # Machine & Post Configuration (3)
@@ -593,11 +620,15 @@ app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 app.include_router(saw_batch_router)  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
 
-# Specialty Modules (4)
-app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
-app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster"])
-app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"])
-app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
+# Specialty Modules (4) - optional
+if archtop_router:
+    app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
+if stratocaster_router:
+    app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster"])
+if smart_guitar_router:
+    app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"])
+if om_router:
+    app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
 
 # G-Code Generators (2)
 app.include_router(body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"])
