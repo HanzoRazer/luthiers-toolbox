@@ -125,8 +125,8 @@ class VCarveGCodeResponse(BaseModel):
     """Response model for VCarve G-code generation."""
 
     gcode: str = Field(..., description="Generated G-code")
-    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
-    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
+    run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 # --------------------------------------------------------------------- #

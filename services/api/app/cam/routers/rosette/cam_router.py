@@ -94,8 +94,8 @@ class RosetteToolpathPlanResponse(BaseModel):
     """Response with planned toolpath moves and stats."""
     moves: List[Dict[str, Any]] = Field(..., description="Neutral toolpath moves")
     stats: Dict[str, Any] = Field(..., description="Toolpath statistics")
-    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
-    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
+    run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 class RosettePostGcodeRequest(BaseModel):
@@ -113,8 +113,8 @@ class RosettePostGcodeResponse(BaseModel):
     """Response with generated G-code and stats."""
     gcode: str = Field(..., description="Generated G-code text")
     stats: Dict[str, Any] = Field(..., description="G-code statistics")
-    _run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
-    _hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
+    run_id: Optional[str] = Field(None, description="Run artifact ID for audit trail")
+    hashes: Optional[Dict[str, str]] = Field(None, description="SHA256 hashes for provenance")
 
 
 class RosetteCamJobCreateRequest(BaseModel):
