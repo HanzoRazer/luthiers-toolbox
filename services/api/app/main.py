@@ -60,6 +60,17 @@ from .governance.metrics_router import router as metrics_router
 
 
 # =============================================================================
+# COMPAT LEGACY ROUTES FLAG
+# Canonical API paths are /api/*. Legacy/compat routes (/cam/*, /geometry/*, etc.)
+# are mounted for CI backwards compatibility but hidden from OpenAPI.
+# Set ENABLE_COMPAT_LEGACY_ROUTES=false once CI workflows are migrated.
+# =============================================================================
+import os
+_log = logging.getLogger(__name__)
+ENABLE_COMPAT_LEGACY_ROUTES = os.getenv("ENABLE_COMPAT_LEGACY_ROUTES", "true").lower() in ("1", "true", "yes")
+
+
+# =============================================================================
 # REQUEST ID MIDDLEWARE
 # =============================================================================
 
@@ -567,6 +578,24 @@ def _startup_db_migrations() -> None:
     run_migrations_on_startup()
 
 # =============================================================================
+# COMPAT ROUTE HELPER
+# =============================================================================
+
+def _include_compat_router(app, router, prefix: str, *, name: str) -> None:
+    """
+    Mount legacy/compat routes to keep CI + older callers working.
+    These are intentionally hidden from OpenAPI to prevent new usage.
+    """
+    if not router:
+        return
+    try:
+        app.include_router(router, prefix=prefix, include_in_schema=False)
+        _log.warning("Compat routes enabled: %s mounted at %s (hidden from OpenAPI)", name, prefix)
+    except Exception as e:
+        _log.warning("Compat route mount failed: %s at %s (%s)", name, prefix, e)
+
+
+# =============================================================================
 # ROUTER REGISTRATION
 # =============================================================================
 
@@ -849,6 +878,38 @@ try:
     app.include_router(runs_v2_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
 except ImportError:
     pass
+
+# =============================================================================
+# COMPAT LEGACY ROUTES (CI + legacy callers)
+# Canonical remains /api/*; compat mounts are hidden from OpenAPI.
+# Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.
+# =============================================================================
+if ENABLE_COMPAT_LEGACY_ROUTES:
+    # Core routers used by CI workflows
+    _include_compat_router(app, geometry_router, "/geometry", name="geometry_router")
+    _include_compat_router(app, tooling_router, "/tooling", name="tooling_router")
+    _include_compat_router(app, adaptive_router, "/adaptive", name="adaptive_router")
+    _include_compat_router(app, material_router, "/material", name="material_router")
+    _include_compat_router(app, machine_router, "/machine", name="machine_router")
+    _include_compat_router(app, feeds_router, "/feeds", name="feeds_router")
+    _include_compat_router(app, sim_router, "/sim", name="sim_router")
+
+    # Consolidated CAM (Wave 18) - covers /cam/pocket/adaptive/*, /cam/polygon_offset.nc, etc.
+    if cam_router:
+        _include_compat_router(app, cam_router, "/cam", name="cam_router")
+
+    # Individual CAM subsystem routers (if CI hits them directly)
+    _include_compat_router(app, cam_opt_router, "/cam/opt", name="cam_opt_router")
+    _include_compat_router(app, cam_metrics_router, "/cam/metrics", name="cam_metrics_router")
+    _include_compat_router(app, cam_logs_router, "/cam/logs", name="cam_logs_router")
+    _include_compat_router(app, cam_learn_router, "/cam/learn", name="cam_learn_router")
+    _include_compat_router(app, cam_vcarve_router, "/cam/vcarve", name="cam_vcarve_router")
+    _include_compat_router(app, cam_relief_router, "/cam/relief", name="cam_relief_router")
+    _include_compat_router(app, cam_helical_router, "/cam/helical", name="cam_helical_router")
+    _include_compat_router(app, cam_simulate_router, "/cam/simulate", name="cam_simulate_router")
+    _include_compat_router(app, gcode_backplot_router, "/cam/backplot", name="gcode_backplot_router")
+else:
+    _log.info("Compat legacy routes disabled (ENABLE_COMPAT_LEGACY_ROUTES=false)")
 
 # =============================================================================
 # META / INTROSPECTION
