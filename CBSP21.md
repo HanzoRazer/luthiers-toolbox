@@ -636,6 +636,479 @@ jobs:
 | Rev | Date | Notes |
 |-----|------|-------|
 | 1.0 | 2026-01-01 | Initial release. Establishes ≥95% coverage rule, STOP CONDITIONS, structured input preference, immutability rules, audit declaration requirement, and implementation scripts. |
+| 1.1 | 2026-01-02 | Added repo-enforced CI gates, patch packet format validation, enhanced scripts with improved error handling, and operational rules. |
+
+---
+
+## 19. Repo Layout for CI Enforcement
+
+Create these directories at repo root (or customize paths in workflows):
+
+```
+cbsp21/
+  full_source/        # immutable ground truth (human controlled)
+  scanned_source/     # scanned / captured representation used for coverage
+  patch_packets/      # optional: structured FILE: packets (for patch-format rule)
+logs/                 # optional: audit logs output
+scripts/cbsp21/       # the gate scripts
+```
+
+---
+
+## 20. Enhanced Implementation Scripts
+
+### 20.1 Coverage Check (Enhanced)
+
+**Path:** `scripts/cbsp21/cbsp21_coverage_check.py`
+
+```python
+#!/usr/bin/env python
+"""
+CBSP21 Coverage Check
+
+Calculates how much of the original content has been scanned/captured
+and enforces a minimum coverage threshold (default: 95%).
+
+- If both paths are files -> compare file sizes.
+- If both paths are directories -> compare total bytes of all files.
+- If one is a file and the other is a directory -> fail with an error.
+
+Usage examples:
+
+    # Directories
+    python scripts/cbsp21/cbsp21_coverage_check.py \
+        --full-path cbsp21/full_source \
+        --scanned-path cbsp21/scanned_source \
+        --threshold 0.95
+"""
+
+import argparse
+from pathlib import Path
+
+
+def total_bytes_in_dir(root: Path) -> int:
+    """Sum bytes of all regular files under a directory (recursive)."""
+    return sum(
+        f.stat().st_size
+        for f in root.rglob("*")
+        if f.is_file()
+    )
+
+
+def compute_bytes(path: Path) -> int:
+    """Return total bytes for a file or a directory."""
+    if path.is_file():
+        return path.stat().st_size
+    if path.is_dir():
+        return total_bytes_in_dir(path)
+    raise ValueError(f"Path not found: {path}")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--full-path", required=True)
+    ap.add_argument("--scanned-path", required=True)
+    ap.add_argument("--threshold", type=float, default=0.95)
+    args = ap.parse_args()
+
+    full = Path(args.full_path)
+    scanned = Path(args.scanned_path)
+
+    if not full.exists():
+        raise SystemExit(f"Full path does not exist: {full}")
+    if not scanned.exists():
+        raise SystemExit(f"Scanned path does not exist: {scanned}")
+
+    # Guard: file vs dir mismatch
+    if full.is_file() != scanned.is_file():
+        raise SystemExit("CBSP21 ERROR: full-path and scanned-path must both be files or both be directories.")
+
+    full_bytes = compute_bytes(full)
+    scanned_bytes = compute_bytes(scanned)
+
+    if not full_bytes:
+        raise SystemExit("CBSP21 ERROR: full source appears empty - cannot compute coverage.")
+
+    coverage = scanned_bytes / full_bytes
+    percent = coverage * 100
+
+    print(f"CBSP21 Coverage: {percent:.2f}%")
+    print(f"  full_bytes   = {full_bytes}")
+    print(f"  scanned_bytes= {scanned_bytes}")
+    print(f"  threshold    = {args.threshold * 100:.2f}%")
+
+    if coverage < args.threshold:
+        print("CBSP21 FAIL: Coverage below policy threshold. Output prohibited.")
+        return 1
+
+    print("CBSP21 PASS: Coverage requirement satisfied.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+### 20.2 Coverage + Audit Logger (Enhanced)
+
+**Path:** `scripts/cbsp21/cbsp21_coverage_with_audit.py`
+
+```python
+#!/usr/bin/env python
+"""
+CBSP21 Coverage & Audit Logger
+
+Usage:
+    python scripts/cbsp21/cbsp21_coverage_with_audit.py \
+        --full cbsp21/full_source \
+        --scanned cbsp21/scanned_source \
+        --threshold 0.95 \
+        --log logs/cbsp21_audit.jsonl
+"""
+
+import argparse
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict
+
+
+def total_bytes_in_dir(root: Path) -> int:
+    return sum(f.stat().st_size for f in root.rglob("*") if f.is_file())
+
+
+def compute_bytes(path: Path) -> int:
+    if path.is_file():
+        return path.stat().st_size
+    if path.is_dir():
+        return total_bytes_in_dir(path)
+    raise ValueError(f"Path not found: {path}")
+
+
+def audit_record(
+    *,
+    full: Path,
+    scanned: Path,
+    full_bytes: int,
+    scanned_bytes: int,
+    coverage: float,
+    threshold: float,
+    status: str,
+) -> Dict[str, Any]:
+    return {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "policy": "CBSP21",
+        "full_path": str(full),
+        "scanned_path": str(scanned),
+        "full_bytes": full_bytes,
+        "scanned_bytes": scanned_bytes,
+        "coverage_ratio": coverage,
+        "coverage_percent": round(coverage * 100, 2),
+        "threshold": threshold,
+        "status": status,  # "pass" | "fail"
+        # Optional CI metadata (GitHub Actions)
+        "ci": {
+            "github_run_id": os.getenv("GITHUB_RUN_ID"),
+            "github_sha": os.getenv("GITHUB_SHA"),
+            "github_ref": os.getenv("GITHUB_REF"),
+            "github_actor": os.getenv("GITHUB_ACTOR"),
+            "github_repo": os.getenv("GITHUB_REPOSITORY"),
+        },
+    }
+
+
+def append_jsonl(path: Path, rec: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--full", required=True)
+    ap.add_argument("--scanned", required=True)
+    ap.add_argument("--threshold", type=float, default=0.95)
+    ap.add_argument("--log", required=True)
+    args = ap.parse_args()
+
+    full = Path(args.full)
+    scanned = Path(args.scanned)
+    log = Path(args.log)
+
+    if not full.exists():
+        print(f"CBSP21 FAIL: full path missing: {full}")
+        rec = audit_record(full=full, scanned=scanned, full_bytes=0, scanned_bytes=0,
+                           coverage=0.0, threshold=args.threshold, status="fail")
+        append_jsonl(log, rec)
+        return 1
+
+    if not scanned.exists():
+        print(f"CBSP21 FAIL: scanned path missing: {scanned}")
+        rec = audit_record(full=full, scanned=scanned, full_bytes=compute_bytes(full), scanned_bytes=0,
+                           coverage=0.0, threshold=args.threshold, status="fail")
+        append_jsonl(log, rec)
+        return 1
+
+    # Guard: mismatch
+    if full.is_file() != scanned.is_file():
+        print("CBSP21 FAIL: full and scanned must both be files or both be directories.")
+        rec = audit_record(full=full, scanned=scanned, full_bytes=compute_bytes(full), scanned_bytes=compute_bytes(scanned),
+                           coverage=0.0, threshold=args.threshold, status="fail")
+        append_jsonl(log, rec)
+        return 1
+
+    full_bytes = compute_bytes(full)
+    scanned_bytes = compute_bytes(scanned)
+
+    if not full_bytes:
+        print("CBSP21 FAIL: full source empty.")
+        rec = audit_record(full=full, scanned=scanned, full_bytes=0, scanned_bytes=scanned_bytes,
+                           coverage=0.0, threshold=args.threshold, status="fail")
+        append_jsonl(log, rec)
+        return 1
+
+    coverage = scanned_bytes / full_bytes
+    percent = coverage * 100
+
+    print(f"CBSP21 Coverage: {percent:.2f}% (threshold {args.threshold * 100:.2f}%)")
+
+    status = "pass" if coverage >= args.threshold else "fail"
+    rec = audit_record(
+        full=full,
+        scanned=scanned,
+        full_bytes=full_bytes,
+        scanned_bytes=scanned_bytes,
+        coverage=coverage,
+        threshold=args.threshold,
+        status=status,
+    )
+    append_jsonl(log, rec)
+
+    if status == "fail":
+        print("CBSP21 FAIL: Coverage below policy threshold. Output prohibited.")
+        return 1
+
+    print("CBSP21 PASS: Coverage requirement satisfied.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+### 20.3 Patch Packet Format Validator
+
+This enforces structured input rules:
+- Must contain at least one `FILE: path/to/file.ext`
+- Must have balanced triple-backtick fences
+- Optional: blocks "..." placeholder lines inside code fences
+
+**Path:** `scripts/cbsp21/check_patch_packet_format.py`
+
+```python
+#!/usr/bin/env python
+"""
+CBSP21 Patch Packet Format Rule
+
+Validates that patch packets are structured and safe to scan:
+- Must include at least one line starting with "FILE: "
+- Code fences (```) must be balanced
+- Optional: disallow "..." placeholder inside code fences (common truncation)
+
+Usage:
+    python scripts/cbsp21/check_patch_packet_format.py --glob "cbsp21/patch_packets/**/*.*"
+"""
+
+import argparse
+import glob
+from pathlib import Path
+
+
+def balanced_fences(text: str) -> bool:
+    return text.count("```") % 2 == 0
+
+
+def has_file_headers(text: str) -> bool:
+    return any(line.startswith("FILE: ") for line in text.splitlines())
+
+
+def has_ellipsis_inside_code_fence(text: str) -> bool:
+    in_fence = False
+    for line in text.splitlines():
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence and line.strip() == "...":
+            return True
+    return False
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--glob", required=True, help="Glob of packet files to validate.")
+    ap.add_argument("--disallow-ellipsis-in-code", action="store_true")
+    args = ap.parse_args()
+
+    files = [Path(p) for p in glob.glob(args.glob, recursive=True)]
+    files = [p for p in files if p.is_file()]
+
+    if not files:
+        print("CBSP21 Patch Packet: no files matched; skipping.")
+        return 0
+
+    failed = False
+
+    for path in files:
+        txt = path.read_text(encoding="utf-8", errors="ignore")
+
+        if not has_file_headers(txt):
+            print(f"CBSP21 PATCH FAIL: Missing FILE headers in {path}")
+            failed = True
+
+        if not balanced_fences(txt):
+            print(f"CBSP21 PATCH FAIL: Unbalanced ``` fences in {path}")
+            failed = True
+
+        if args.disallow_ellipsis_in_code and has_ellipsis_inside_code_fence(txt):
+            print(f"CBSP21 PATCH FAIL: Found '...' placeholder inside code fence in {path}")
+            failed = True
+
+    if failed:
+        return 1
+
+    print("CBSP21 Patch Packet: PASS")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+### 20.4 CI Workflow: Coverage Gate
+
+Runs only when CBSP21 material changes, so normal PRs are not blocked.
+
+**Path:** `.github/workflows/cbsp21_coverage_gate.yml`
+
+```yaml
+name: CBSP21 Coverage Gate
+
+on:
+  pull_request:
+    paths:
+      - "cbsp21/**"
+      - "scripts/cbsp21/**"
+  push:
+    branches: [ main, master ]
+    paths:
+      - "cbsp21/**"
+      - "scripts/cbsp21/**"
+
+jobs:
+  cbsp21-coverage:
+    runs-on: ubuntu-latest
+
+    env:
+      CBSP21_THRESHOLD: "0.95"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: CBSP21 Coverage + Audit
+        run: |
+          python scripts/cbsp21/cbsp21_coverage_with_audit.py \
+            --full cbsp21/full_source \
+            --scanned cbsp21/scanned_source \
+            --threshold $CBSP21_THRESHOLD \
+            --log logs/cbsp21_audit.jsonl
+
+      - name: Upload CBSP21 audit log
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbsp21_audit
+          path: logs/cbsp21_audit.jsonl
+```
+
+### 20.5 CI Workflow: Patch Packet Format
+
+Enforces structured `FILE:` packet format when patch packets change.
+
+**Path:** `.github/workflows/cbsp21_patch_packet_format.yml`
+
+```yaml
+name: CBSP21 Patch Packet Format
+
+on:
+  pull_request:
+    paths:
+      - "cbsp21/patch_packets/**"
+      - "scripts/cbsp21/**"
+
+jobs:
+  cbsp21-patch-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate CBSP21 patch packets
+        run: |
+          python scripts/cbsp21/check_patch_packet_format.py \
+            --glob "cbsp21/patch_packets/**/*.*" \
+            --disallow-ellipsis-in-code
+```
+
+---
+
+## 21. Operational Rules
+
+### 21.1 Reconstituting a Chat / Ensuring Completeness
+
+1. Put the authoritative material into:
+   - `cbsp21/full_source/` (read-only by convention)
+
+2. Put the scanned/captured material into:
+   - `cbsp21/scanned_source/`
+
+3. CI enforces **≥95% coverage**.
+
+### 21.2 Submitting Patch Packets Safely
+
+Put them in `cbsp21/patch_packets/` using:
+
+```text
+FILE: services/api/app/whatever.py
+<full content or a full diff>
+```
+
+CI enforces:
+- At least one `FILE:` header
+- Balanced code fences
+- No "..." truncation inside code fences
+
+---
+
+## 22. Optional Hardening
+
+If you decide you want CBSP21 enforced for *all PRs touching governed areas* (RMOS/CAM/etc.), add another workflow trigger:
+
+- If PR touches `services/api/app/rmos/**` or `packages/client/src/components/rmos/**`
+- Then require `cbsp21/full_source` + `cbsp21/scanned_source` exist and pass
+
+This is not enabled by default because it can block everyday development unless the team is ready for that discipline.
 
 ---
 
