@@ -1,0 +1,26 @@
+name: Workflow API_BASE Gate
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "scripts/ci/check_workflow_api_base.py"
+      - ".github/workflows/.api_base_ignore.txt"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/ci/check_workflow_api_base.py"
+      - ".github/workflows/.api_base_ignore.txt"
+
+jobs:
+  workflow_api_base_gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Gate hardcoded API base URLs in workflows
+        run: |
+          python scripts/ci/check_workflow_api_base.py
