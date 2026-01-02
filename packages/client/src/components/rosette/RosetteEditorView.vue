@@ -60,11 +60,21 @@
         <button
           class="jump-btn undo-btn"
           type="button"
-          title="Undo last edit (Ctrl+Z)"
+          :title="store.historyStack.length ? 'Undo last edit (Ctrl+Z)' : 'Undo is unavailable (no edits to undo)'"
           :disabled="store.historyStack.length === 0"
           @click="store.undoLastEdit()"
         >
           Undo
+        </button>
+        <!-- Bundle 32.4.3.1: Redo button -->
+        <button
+          class="jump-btn redo-btn"
+          type="button"
+          :title="store.redoStack.length ? 'Redo last undone edit (Ctrl+Shift+Z)' : 'Redo is unavailable (nothing to redo)'"
+          :disabled="store.redoStack.length === 0"
+          @click="store.redoLastEdit()"
+        >
+          Redo
         </button>
       </div>
 
@@ -365,6 +375,15 @@ kbd {
   margin-left: auto;
 }
 .undo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bundle 32.4.3.1: Redo button styles */
+.redo-btn {
+  margin-left: 4px;
+}
+.redo-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
