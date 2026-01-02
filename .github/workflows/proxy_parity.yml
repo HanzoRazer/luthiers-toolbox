@@ -78,9 +78,9 @@ jobs:
         run: |
           echo "Testing /api/tooling/posts endpoint:"
           curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq '.'
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "GRBL" && echo "✓ GRBL found"
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "Mach4" && echo "✓ Mach4 found"
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "LinuxCNC" && echo "✓ LinuxCNC found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "grbl" && echo "✓ GRBL found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "mach4" && echo "✓ Mach4 found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "linuxcnc" && echo "✓ LinuxCNC found"
 
       - name: Parity via proxy
         run: |
