@@ -79,6 +79,19 @@ function clearCandidateSelection() {
   selectedCandidateIds.value = new Set();
 }
 
+// Bundle 13: Auto-prune selection to GREEN after decision changes
+function pruneSelectionToGreen() {
+  if (selectedCandidateIds.value.size === 0) return;
+
+  const keep = new Set<string>();
+  for (const c of candidates.value) {
+    const id = idOf(c);
+    if (!selectedCandidateIds.value.has(id)) continue;
+    if (decisionOf(c) === "GREEN") keep.add(id);
+  }
+  selectedCandidateIds.value = keep;
+}
+
 const selectedCount = computed(() => selectedCandidateIds.value.size);
 const selectedIds = computed(() => Array.from(selectedCandidateIds.value));
 
@@ -198,13 +211,10 @@ async function load() {
   try {
     const rows = await fetchManufacturingCandidates(apiBase.value, props.runId);
     candidates.value = rows ?? [];
-    // Prune selection to only known IDs
-    const known = new Set(candidates.value.map((c) => idOf(c)));
-    const next = new Set<string>();
-    for (const id of selectedCandidateIds.value) {
-      if (known.has(id)) next.add(id);
+    // Bundle 13: Prune selection to GREEN + known IDs
+    if (selectedCandidateIds.value.size > 0) {
+      pruneSelectionToGreen();
     }
-    selectedCandidateIds.value = next;
   } catch (e: any) {
     error.value = e?.message ?? String(e);
     candidates.value = [];
@@ -256,6 +266,12 @@ async function downloadSelectedCandidateZips() {
   } finally {
     bulkBusy.value = false;
   }
+}
+
+// Bundle 13: Clean handler for BulkDecisionModal @done
+async function onBulkDecisionDone() {
+  bulkDecisionOpen.value = false;
+  await load(); // load() prunes to GREEN-only
 }
 
 function statusClass(decision: CandidateDecision | null): string {
@@ -587,7 +603,7 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
       :runId="runId"
       :apiBase="apiBase"
       @close="bulkDecisionOpen = false"
-      @done="bulkDecisionOpen = false; load()"
+      @done="onBulkDecisionDone"
     />
   </div>
 </template>
