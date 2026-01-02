@@ -15,6 +15,9 @@ export type DeprecationEvent = {
 
 let onDeprecation: ((e: DeprecationEvent) => void) | null = null;
 
+// H8.5: warn-once fallback when no handler registered
+let _warnedOnce = false;
+
 /**
  * Set a global handler for deprecation warnings.
  * Called whenever a response includes Deprecation headers.
@@ -27,6 +30,7 @@ export function setDeprecationHandler(
 
 /**
  * Check response headers for deprecation signals and invoke handler.
+ * If no handler is registered, logs a one-time console warning.
  */
 export function handleDeprecationHeaders(
   res: Response,
@@ -37,16 +41,42 @@ export function handleDeprecationHeaders(
   const link = res.headers.get("Link");
   const lane = res.headers.get("X-Deprecated-Lane");
 
-  if (deprecation || sunset || link) {
-    onDeprecation?.({
-      url: info.url,
-      method: info.method,
-      deprecation,
-      sunset,
-      link,
-      lane,
-    });
+  // Only trigger on actual deprecation signal
+  if (!deprecation || deprecation.toLowerCase() !== "true") return;
+
+  const event: DeprecationEvent = {
+    url: info.url,
+    method: info.method,
+    deprecation,
+    sunset,
+    link,
+    lane,
+  };
+
+  // Use registered handler if available
+  if (onDeprecation) {
+    onDeprecation(event);
+    return;
   }
+
+  // H8.5: one-line console banner (fallback, once per session)
+  if (!_warnedOnce) {
+    _warnedOnce = true;
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[DEPRECATION] ${event.method} ${event.url}` +
+        (event.lane ? ` lane=${event.lane}` : "") +
+        (event.sunset ? ` sunset=${event.sunset}` : "") +
+        (event.link ? ` ${event.link}` : "")
+    );
+  }
+}
+
+/**
+ * Reset warn-once state (for testing).
+ */
+export function resetDeprecationWarning(): void {
+  _warnedOnce = false;
 }
 
 /**
