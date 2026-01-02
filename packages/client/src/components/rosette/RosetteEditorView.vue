@@ -118,6 +118,8 @@
       <SnapshotPanel />
     </div>
     <RosettePreviewPanel />
+    <!-- Bundle 32.4.1: Toast host for inline notifications -->
+    <ToastHost />
   </div>
 </template>
 
@@ -129,6 +131,7 @@ import GeneratorPicker from "./GeneratorPicker.vue";
 import RosettePreviewPanel from "./RosettePreviewPanel.vue";
 import SnapshotPanel from "./SnapshotPanel.vue";
 import FeasibilityBanner from "./FeasibilityBanner.vue";
+import ToastHost from "@/components/ui/ToastHost.vue";
 
 const store = useRosetteStore();
 

@@ -18,6 +18,7 @@ import { artPreviewClient } from "../api/artPreviewClient";
 import { artSnapshotsClient } from "../api/artSnapshotsClient";
 import { artFeasibilityClient } from "../api/artFeasibilityClient";
 import { useToastStore } from "./toastStore";
+import { useUiToastStore } from "./uiToastStore";
 import { debounce } from "../utils/debounce";
 
 function defaultSpec(): RosetteParamSpec {
@@ -521,8 +522,13 @@ export const useRosetteStore = defineStore("rosette", {
       if (ringIndex < 0 || ringIndex >= this.currentParams.ring_params.length) return;
 
       if (!this._canEditNow()) {
-        const toast = useToastStore();
-        toast.push("warning", "Blocked: Feasibility is RED. Adjust design first.");
+        const toast = useUiToastStore();
+        toast.push({
+          level: "warn",
+          message: "Edit blocked (RED risk)",
+          detail: "Resolve feasibility warnings or reduce risk before using fix-it actions.",
+          durationMs: 3200,
+        });
         return;
       }
 
@@ -551,8 +557,13 @@ export const useRosetteStore = defineStore("rosette", {
       if (ringIndex < 0 || ringIndex >= this.currentParams.ring_params.length) return;
 
       if (!this._canEditNow()) {
-        const toast = useToastStore();
-        toast.push("warning", "Blocked: Feasibility is RED. Adjust design first.");
+        const toast = useUiToastStore();
+        toast.push({
+          level: "warn",
+          message: "Edit blocked (RED risk)",
+          detail: "Resolve feasibility warnings or reduce risk before using fix-it actions.",
+          durationMs: 3200,
+        });
         return;
       }
 
