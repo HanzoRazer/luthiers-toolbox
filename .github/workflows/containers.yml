@@ -46,6 +46,7 @@ jobs:
           API_IMAGE=${API_IMAGE}
           CLIENT_IMAGE=${CLIENT_IMAGE}
           COMPOSE_PROJECT_NAME=toolbox
+          ART_STUDIO_DB_PATH=/tmp/art_studio.db
           EOF
           docker compose up -d
           # wait for health
