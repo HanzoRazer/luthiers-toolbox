@@ -23,6 +23,7 @@ jobs:
           API_IMAGE=toolbox/api:ci
           CLIENT_IMAGE=toolbox/client:ci
           PROXY_IMAGE=toolbox/proxy:ci
+          ART_STUDIO_DB_PATH=/tmp/art_studio.db
           EOF
 
       - name: Build API

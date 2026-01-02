@@ -70,6 +70,8 @@ services:
       SERVER_PORT: ${SERVER_PORT:-8000}
       # CORS origins MUST include client URL (prevent API access errors)
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      # SQLite DB path (use /tmp in CI for ephemeral storage)
+      ART_STUDIO_DB_PATH: ${ART_STUDIO_DB_PATH:-/app/services/api/app/data/art_studio.db}
     volumes:
       # CRITICAL: Persist data directory for SQLite DB and JSON configs
       # Without this, database and post-processor configs are lost on rebuild
