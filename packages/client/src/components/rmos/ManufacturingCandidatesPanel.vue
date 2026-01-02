@@ -7,6 +7,7 @@
  */
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import BulkDecisionModal from "@/components/rmos/BulkDecisionModal.vue";
+import DisabledReasonWrap from "@/components/rmos/DisabledReasonWrap.vue";
 import {
   fetchManufacturingCandidates,
   setManufacturingCandidateDecision,
@@ -80,6 +81,55 @@ function clearCandidateSelection() {
 
 const selectedCount = computed(() => selectedCandidateIds.value.size);
 const selectedIds = computed(() => Array.from(selectedCandidateIds.value));
+
+// Bundle 11: Bulk download eligibility (GREEN-only gate)
+const selectedCandidates = computed(() => {
+  const selected = new Set(selectedCandidateIds.value);
+  return candidates.value.filter((c) => selected.has(idOf(c)));
+});
+
+const bulkDownloadEligibility = computed(() => {
+  const items = selectedCandidates.value;
+
+  if (bulkBusy.value) {
+    return { allowed: false, reason: "Download in progress…" };
+  }
+
+  if (!items.length) {
+    return { allowed: false, reason: "Select one or more candidates to download." };
+  }
+
+  let undecided = 0;
+  let yellow = 0;
+  let red = 0;
+  let green = 0;
+
+  for (const c of items) {
+    const d = decisionOf(c);
+    if (d === null) undecided++;
+    else if (d === "GREEN") green++;
+    else if (d === "YELLOW") yellow++;
+    else if (d === "RED") red++;
+  }
+
+  // Policy: bulk download only when ALL selected are GREEN
+  const allowed = undecided === 0 && yellow === 0 && red === 0 && green === items.length;
+
+  if (allowed) {
+    return { allowed: true, reason: "Ready: all selected candidates are GREEN." };
+  }
+
+  const parts: string[] = ["Bulk download blocked: only GREEN candidates can be downloaded in bulk."];
+  if (undecided) parts.push(`${undecided} undecided`);
+  if (yellow) parts.push(`${yellow} YELLOW`);
+  if (red) parts.push(`${red} RED`);
+  parts.push("Fix: mark remaining selections GREEN (or deselect them).");
+
+  return { allowed: false, reason: parts.join(" • ") };
+});
+
+const canBulkDownload = computed(() => bulkDownloadEligibility.value.allowed);
+const bulkDownloadBlockedReason = computed(() => bulkDownloadEligibility.value.reason);
 
 // Filtering + sorting
 const filteredSorted = computed(() => {
@@ -165,6 +215,7 @@ async function downloadZip(id: string) {
 
 // Bulk download zips
 async function downloadSelectedCandidateZips() {
+  if (!canBulkDownload.value) return; // Bundle 11: safety guard
   bulkError.value = null;
   const ids = Array.from(selectedCandidateIds.value);
   if (!ids.length) return;
@@ -360,7 +411,22 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
         >
           Bulk decision…
         </button>
-        <button class="btn btn-secondary btn-sm" :disabled="bulkBusy || !selectedCount" @click="downloadSelectedCandidateZips">
+        <!-- Bundle 11: Bulk download gated to GREEN-only with hover reason -->
+        <DisabledReasonWrap
+          v-if="!canBulkDownload"
+          :reason="bulkDownloadBlockedReason"
+        >
+          <button class="btn btn-secondary btn-sm" type="button" disabled>
+            {{ bulkBusy ? "Downloading…" : "Download zips" }}
+          </button>
+        </DisabledReasonWrap>
+        <button
+          v-else
+          class="btn btn-secondary btn-sm"
+          type="button"
+          :disabled="bulkBusy"
+          @click="downloadSelectedCandidateZips"
+        >
           {{ bulkBusy ? "Downloading…" : "Download zips" }}
         </button>
       </div>

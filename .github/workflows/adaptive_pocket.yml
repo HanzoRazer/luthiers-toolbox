@@ -39,7 +39,7 @@ jobs:
             units     = "mm"
           } | ConvertTo-Json
 
-          $resp = Invoke-RestMethod -Uri "$ApiBase/cam/polygon_offset.nc" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 60
+          $resp = Invoke-RestMethod -Uri "$ApiBase/api/cam/polygon_offset.nc" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 60
           if ([string]::IsNullOrWhiteSpace($resp)) { throw "Empty G-code" }
 
           if ($resp -notmatch "\bG21\b") { throw "Missing G21" }
