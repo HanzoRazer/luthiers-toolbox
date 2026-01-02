@@ -59,6 +59,12 @@ class AttachmentMetaIndexEntry(BaseModel):
     last_seen_at_utc: Optional[str] = None
     ref_count: Optional[int] = None
 
+    # URL enrichment (optional, populated when include_urls=True)
+    attachment_url: Optional[str] = Field(
+        None,
+        description="Relative URL to /api/rmos/acoustics/attachments/{sha256} (when include_urls=True)"
+    )
+
 
 # =============================================================================
 # Endpoint Response Schemas
@@ -167,13 +173,17 @@ class AttachmentMetaBrowseOut(BaseModel):
     Response for GET /index/attachment_meta (browse) endpoint.
 
     Returns filtered list from _attachment_meta.json without run_id.
-    No path disclosure.
+    No path disclosure. Supports cursor-based pagination.
     """
     count: int = Field(..., description="Number of entries returned")
     total_in_index: int = Field(..., description="Total entries in index (before filtering)")
     limit: int = Field(..., description="Limit applied")
     kind_filter: Optional[str] = Field(None, description="Kind filter applied (exact match)")
     mime_prefix_filter: Optional[str] = Field(None, description="MIME prefix filter applied")
+    next_cursor: Optional[str] = Field(
+        None,
+        description="Pagination cursor: pass as ?cursor= to get next page. Null when no more results."
+    )
     entries: List[AttachmentMetaIndexEntry] = Field(
         default_factory=list,
         description="Matching attachment meta entries"
@@ -188,3 +198,94 @@ class IndexRebuildOut(BaseModel):
     runs_scanned: int = Field(0, description="Number of run artifacts scanned")
     attachments_indexed: int = Field(0, description="Total attachment references processed")
     unique_sha256: int = Field(0, description="Number of unique SHA256 entries in index")
+
+
+# =============================================================================
+# Facet Schemas (H7.2.2.2)
+# =============================================================================
+
+
+class FacetCountKind(BaseModel):
+    """Count of attachments by kind."""
+    kind: str = Field(..., description="Attachment kind (e.g., audio_raw, plot_png)")
+    count: int = Field(..., ge=0, description="Number of attachments with this kind")
+
+
+class FacetCountMimePrefix(BaseModel):
+    """Count of attachments by MIME prefix group."""
+    mime_prefix: str = Field(..., description="MIME prefix (e.g., audio/, image/)")
+    count: int = Field(..., ge=0, description="Number of attachments matching this prefix")
+
+
+class FacetCountMimeExact(BaseModel):
+    """Count of attachments by exact MIME type."""
+    mime: str = Field(..., description="Exact MIME type (e.g., application/json)")
+    count: int = Field(..., ge=0, description="Number of attachments with this MIME type")
+
+
+class FacetCountSizeBucket(BaseModel):
+    """Count of attachments by size bucket."""
+    bucket: str = Field(..., description="Size bucket (lt_100kb, 100kb_1mb, 1mb_20mb, ge_20mb)")
+    count: int = Field(..., ge=0, description="Number of attachments in this bucket")
+
+
+class AttachmentMetaFacetsOut(BaseModel):
+    """
+    Response for GET /index/attachment_meta/facets endpoint.
+
+    Provides counts by kind, MIME, and size for UI filtering without
+    downloading all entries. No path disclosure.
+    """
+    schema_version: str = Field(
+        default="acoustics_attachment_meta_facets_v1",
+        description="Schema version for forward compatibility"
+    )
+    total: int = Field(..., ge=0, description="Total entries matching filters")
+    kinds: List[FacetCountKind] = Field(
+        default_factory=list,
+        description="Counts by attachment kind (sorted by count descending)"
+    )
+    mime_prefixes: List[FacetCountMimePrefix] = Field(
+        default_factory=list,
+        description="Counts by MIME prefix group (sorted by count descending)"
+    )
+    mime_exact: List[FacetCountMimeExact] = Field(
+        default_factory=list,
+        description="Counts by exact MIME type (sorted by count descending)"
+    )
+    size_buckets: List[FacetCountSizeBucket] = Field(
+        default_factory=list,
+        description="Counts by size bucket (when size_buckets=True)"
+    )
+    note: Optional[str] = Field(
+        None,
+        description="Additional context (e.g., filter applied)"
+    )
+
+
+class AttachmentMetaRecentOut(BaseModel):
+    """
+    Response for GET /index/attachment_meta/recent endpoint.
+
+    Returns recent attachments from precomputed recency index.
+    Fast O(K) where K is max_recent_entries, not O(total attachments).
+    """
+    schema_version: str = Field(
+        default="acoustics_attachment_meta_recent_out_v1",
+        description="Schema version for forward compatibility"
+    )
+    count: int = Field(..., ge=0, description="Number of entries returned")
+    limit: int = Field(..., description="Limit applied")
+    kind_filter: Optional[str] = Field(None, description="Kind filter applied (exact match)")
+    next_cursor: Optional[str] = Field(
+        None,
+        description="Pagination cursor: pass as ?cursor= to get next page. Null when no more results."
+    )
+    source: str = Field(
+        default="attachment_recent_index",
+        description="Data source (attachment_recent_index)"
+    )
+    entries: List[AttachmentMetaIndexEntry] = Field(
+        default_factory=list,
+        description="Recent attachment meta entries (sorted by created_at_utc DESC)"
+    )

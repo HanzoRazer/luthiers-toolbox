@@ -640,6 +640,15 @@ class RunStoreV2:
             except Exception:
                 # Best-effort: do not fail run persistence if meta index update fails
                 pass
+
+            # Update recency index to keep /recent endpoint fresh (best-effort)
+            try:
+                from .attachment_meta import AttachmentRecentIndex
+                recent_idx = AttachmentRecentIndex(self.root)
+                recent_idx.rebuild_from_meta_index(self._attachment_meta)
+            except Exception:
+                # Best-effort: do not fail run persistence if recency index update fails
+                pass
         except Exception:
             # Clean up temp file on failure
             if tmp.exists():
