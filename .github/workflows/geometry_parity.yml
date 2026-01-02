@@ -37,7 +37,7 @@ jobs:
               {"type": "arc", "cx": 30, "cy": 20, "r": 20, "start": 180, "end": 0, "cw": False}
             ]
           }
-          url = "http://127.0.0.1:8000/geometry/import"
+          url = "http://127.0.0.1:8000/api/geometry/import"
           req = urllib.request.Request(
             url, 
             data=json.dumps({"geometry": geometry}).encode(),
@@ -62,7 +62,7 @@ jobs:
             ]
           }
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
-          url = "http://127.0.0.1:8000/geometry/parity"
+          url = "http://127.0.0.1:8000/api/geometry/parity"
           payload = {"geometry": geometry, "gcode": gcode, "tolerance_mm": 0.1}
           req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
           response = urllib.request.urlopen(req).read().decode()
