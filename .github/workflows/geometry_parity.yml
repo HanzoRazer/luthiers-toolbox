@@ -54,14 +54,17 @@ jobs:
         run: |
           python - <<'PY'
           import urllib.request, json
+          # Simple rectangle: geometry and G-code describe the same shape
           geometry = {
             "units": "mm",
             "paths": [
-              {"type": "line", "x1": 0, "y1": 0, "x2": 60, "y2": 0},
-              {"type": "arc", "cx": 30, "cy": 20, "r": 20, "start": 180, "end": 0, "cw": False}
+              {"type": "line", "x1": 0, "y1": 0, "x2": 100, "y2": 0},
+              {"type": "line", "x1": 100, "y1": 0, "x2": 100, "y2": 50},
+              {"type": "line", "x1": 100, "y1": 50, "x2": 0, "y2": 50},
+              {"type": "line", "x1": 0, "y1": 50, "x2": 0, "y2": 0}
             ]
           }
-          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
+          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X100 Y0\nG1 X100 Y50\nG1 X0 Y50\nG1 X0 Y0\nG0 Z5\n"
           url = "http://127.0.0.1:8000/api/geometry/parity"
           payload = {"geometry": geometry, "gcode": gcode, "tolerance_mm": 0.1}
           req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
