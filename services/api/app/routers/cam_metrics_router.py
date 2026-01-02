@@ -23,7 +23,7 @@ from ..routers.machine_router import get_profile
 from ..routers.material_router import get_material
 from ..util.names import safe_stem
 
-router = APIRouter(prefix="/cam/metrics", tags=["cam-metrics"])
+router = APIRouter(tags=["cam-metrics"])
 
 
 class EnergyIn(BaseModel):
