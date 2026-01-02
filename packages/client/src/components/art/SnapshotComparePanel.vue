@@ -146,6 +146,23 @@ const confidenceTrend = computed<"UP" | "FLAT" | "DOWN" | "NONE">(() => {
   return "FLAT";
 });
 
+// Bundle 07: Tooltip explaining confidence and trend
+const confidenceTooltip = computed(() => {
+  // Keep this string in sync with Bundle 05 heuristic
+  return [
+    "Confidence indicates how reliable the comparison is at a glance.",
+    "",
+    "HIGH: No hot rings (|Δ| < 0.15mm), no pattern changes, warnings not worse.",
+    "MED: Minor diffs (≤2 hot rings, ≤1 pattern change, warnings +2 max).",
+    "LOW: Significant differences, or no compare result yet.",
+    "",
+    "Trend (vs previous compare):",
+    "↑ Confidence improved",
+    "→ Confidence unchanged",
+    "↓ Confidence decreased",
+  ].join("\n");
+});
+
 async function loadSnapshotsForCompare() {
   error.value = "";
   left.value = null;
@@ -553,18 +570,21 @@ onBeforeUnmount(() => {
         <div class="left">
           <div class="nm">
             Summary
-            <!-- Bundle 05: Confidence badge -->
-            <span
-              class="confidence-badge"
-              :data-level="confidenceLevel"
-            >
-              {{ confidenceLevel }}
-            </span>
-            <!-- Bundle 06: Confidence trend arrow -->
-            <span class="confidence-trend" :data-trend="confidenceTrend">
-              <span v-if="confidenceTrend === 'UP'">↑</span>
-              <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
-              <span v-else-if="confidenceTrend === 'FLAT'">→</span>
+            <!-- Bundle 07: Tooltip wrapper for confidence badge + trend -->
+            <span class="confidence-tooltip-wrap" :title="confidenceTooltip">
+              <!-- Bundle 05: Confidence badge -->
+              <span
+                class="confidence-badge"
+                :data-level="confidenceLevel"
+              >
+                {{ confidenceLevel }}
+              </span>
+              <!-- Bundle 06: Confidence trend arrow -->
+              <span class="confidence-trend" :data-trend="confidenceTrend">
+                <span v-if="confidenceTrend === 'UP'">↑</span>
+                <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
+                <span v-else-if="confidenceTrend === 'FLAT'">→</span>
+              </span>
             </span>
           </div>
           <div class="meta">
@@ -756,6 +776,14 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
   font-weight: 600;
   margin-left: 0.5rem;
+}
+
+/* Bundle 07: Tooltip wrapper for badge + trend */
+.confidence-tooltip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: help;
 }
 
 .confidence-badge[data-level="HIGH"] {
