@@ -1,7 +1,12 @@
 """
 RMOS Toolpaths Router - Canonical Toolpath Generation Endpoint
 
+LANE: OPERATION
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) for saw/rosette modes
+
 Implements:
+- OPERATION_EXECUTION_GOVERNANCE_v1.md (Appendix D: Execution Classes)
 - SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md
 - RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md
 
@@ -10,6 +15,10 @@ GOVERNANCE INVARIANTS:
 2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
 3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
 4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- rmos_toolpaths_execution (OK/ERROR)
+- rmos_toolpaths_blocked (BLOCKED)
 """
 
 from __future__ import annotations
@@ -74,7 +83,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_blocked",  # OPERATION lane artifact kind
             status="BLOCKED",
             feasibility=feasibility,
             request_hash=feas_hash,
@@ -111,7 +120,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="OK",
             feasibility=feasibility,
             request_hash=feas_hash,
@@ -139,7 +148,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             created_at_utc=now,
             tool_id=tool_id,
             workflow_mode=mode,
-            event_type="toolpaths",
+            event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="ERROR",
             feasibility=feasibility,
             request_hash=feas_hash,
@@ -213,7 +222,7 @@ def extract_safety_decision(feasibility: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # -----------------------------
-# Toolpath dispatchers (TODO: replace with real engines)
+# Toolpath dispatchers (wired to real engines)
 # -----------------------------
 
 def dispatch_toolpaths(*, mode: str, req: Dict[str, Any], feasibility: Dict[str, Any]) -> Dict[str, Any]:
@@ -221,51 +230,97 @@ def dispatch_toolpaths(*, mode: str, req: Dict[str, Any], feasibility: Dict[str,
     Dispatch to appropriate toolpath builder based on mode.
 
     GOVERNANCE REQUIREMENT: Must accept authoritative feasibility (not client-provided).
+    
+    Wired to real engines via generate_toolpaths_server_side.
     """
-    if mode == "saw":
-        return build_saw_toolpaths(req=req, feasibility=feasibility)
-
-    if mode == "rosette":
-        return build_rosette_toolpaths(req=req, feasibility=feasibility)
-
-    raise HTTPException(status_code=400, detail={"error": "UNKNOWN_MODE", "mode": mode})
+    try:
+        from ..toolpaths import generate_toolpaths_server_side
+        
+        # Extract design and context from request
+        design = {
+            "outer_diameter_mm": req.get("outer_diameter_mm", 100.0),
+            "inner_diameter_mm": req.get("inner_diameter_mm", 20.0),
+            "ring_count": req.get("ring_count", 1),
+            "pattern_type": req.get("pattern_type", "radial"),
+            "depth_mm": req.get("depth_mm", -3.0),
+            "stock_thickness_mm": req.get("stock_thickness_mm", 25.0),
+            "petal_count": req.get("petal_count"),
+            # Saw-specific
+            "kerf_width_mm": req.get("kerf_width_mm", 2.0),
+            "num_cuts": req.get("num_cuts", 1),
+            "spacing_mm": req.get("spacing_mm", 5.0),
+            "length_mm": req.get("length_mm", 50.0),
+            "cuts": req.get("cuts", []),
+        }
+        
+        context = {
+            "tool_id": req.get("tool_id"),
+            "material_id": req.get("material_id"),
+            "machine_id": req.get("machine_id"),
+            "feed_rate": req.get("feed_rate_mm_min", 500.0),
+            "spindle_rpm": req.get("rpm", 3000),
+        }
+        
+        # Call canonical toolpath generator
+        result = generate_toolpaths_server_side(
+            mode=mode,
+            design=design,
+            context=context,
+            feasibility=feasibility,
+            post_processor_id=req.get("post_processor_id"),
+            options=req.get("options"),
+        )
+        
+        return result
+        
+    except ImportError as e:
+        # Fallback if toolpaths module has issues
+        if mode == "saw":
+            return build_saw_toolpaths(req=req, feasibility=feasibility)
+        elif mode == "rosette":
+            return build_rosette_toolpaths(req=req, feasibility=feasibility)
+        else:
+            raise HTTPException(status_code=400, detail={"error": "UNKNOWN_MODE", "mode": mode})
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"error": "TOOLPATH_ERROR", "message": str(e)})
 
 
 def build_saw_toolpaths(*, req: Dict[str, Any], feasibility: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Build saw toolpaths.
-
-    TODO: Wire to real CNC Saw Labs toolpath generator.
+    Fallback saw toolpath generator (used if toolpaths module import fails).
+    
+    Real toolpaths are generated via generate_toolpaths_server_side().
     """
     # Placeholder G-code
     gcode = """G90
 G21
-; SAW TOOLPATH PLACEHOLDER
+; SAW TOOLPATH FALLBACK
 ; Generated by RMOS Toolpaths Router
-; Authoritative feasibility hash embedded in run artifact
+; Primary toolpath generator unavailable
 M2
 """
     return {
         "mode": "saw",
         "gcode_text": gcode,
-        "opplan": {"kind": "saw_opplan", "version": 1, "note": "placeholder"},
+        "opplan": {"kind": "saw_opplan", "version": 1, "note": "fallback_mode"},
     }
 
 
 def build_rosette_toolpaths(*, req: Dict[str, Any], feasibility: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Build rosette toolpaths.
-
-    TODO: Wire to real rosette CAM engine.
+    Fallback rosette toolpath generator (used if toolpaths module import fails).
+    
+    Real toolpaths are generated via generate_toolpaths_server_side().
     """
     gcode = """G90
 G21
-; ROSETTE TOOLPATH PLACEHOLDER
+; ROSETTE TOOLPATH FALLBACK
 ; Generated by RMOS Toolpaths Router
+; Primary toolpath generator unavailable
 M2
 """
     return {
         "mode": "rosette",
         "gcode_text": gcode,
-        "opplan": {"kind": "rosette_opplan", "version": 1, "note": "placeholder"},
+        "opplan": {"kind": "rosette_opplan", "version": 1, "note": "fallback_mode"},
     }

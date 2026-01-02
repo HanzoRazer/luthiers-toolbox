@@ -23,7 +23,11 @@ from ..services.pipeline_spec_validator import (
 router = APIRouter(prefix="/cam/pipeline", tags=["cam", "pipeline", "presets"])
 
 PRESETS_PATH = Path(__file__).resolve().parent.parent / "data" / "pipeline_presets.json"
-PRESETS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_presets_dir() -> None:
+    """Create presets directory on first write (Docker compatibility)."""
+    PRESETS_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
 class PipelinePreset(BaseModel):
@@ -71,6 +75,7 @@ def _load_presets() -> List[PipelinePreset]:
 
 def _save_presets(presets: List[PipelinePreset]) -> None:
     """Save presets to JSON file."""
+    _ensure_presets_dir()  # Create directory on first write
     data = [p.model_dump() for p in presets]
     PRESETS_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
 

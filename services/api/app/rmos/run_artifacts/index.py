@@ -117,7 +117,9 @@ def _match_filters(row: RunIndexRow, filters: Dict[str, Any]) -> bool:
     """
     Check if a row matches the given filters.
 
-    Supported filters: kind, status, tool_id, material_id, machine_id, session_id
+    Supported filters: kind, status, tool_id, material_id, machine_id, session_id,
+                      parent_batch_decision_artifact_id, parent_batch_plan_artifact_id,
+                      parent_batch_spec_artifact_id
     """
     kind = filters.get("kind")
     if kind and row.kind != kind:
@@ -141,6 +143,19 @@ def _match_filters(row: RunIndexRow, filters: Dict[str, Any]) -> bool:
 
     machine_id = filters.get("machine_id")
     if machine_id and (row.index_meta.get("machine_id") != machine_id):
+        return False
+
+    # Parent batch artifact filters
+    parent_decision = filters.get("parent_batch_decision_artifact_id")
+    if parent_decision and (row.index_meta.get("parent_batch_decision_artifact_id") != parent_decision):
+        return False
+
+    parent_plan = filters.get("parent_batch_plan_artifact_id")
+    if parent_plan and (row.index_meta.get("parent_batch_plan_artifact_id") != parent_plan):
+        return False
+
+    parent_spec = filters.get("parent_batch_spec_artifact_id")
+    if parent_spec and (row.index_meta.get("parent_batch_spec_artifact_id") != parent_spec):
         return False
 
     return True

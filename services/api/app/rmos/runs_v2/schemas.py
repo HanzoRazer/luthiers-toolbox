@@ -131,6 +131,19 @@ class RunOutputs(BaseModel):
     )
 
 
+class RunLineage(BaseModel):
+    """
+    Lineage tracking for Plan → Execute relationships.
+
+    Bundle 09: Backend lineage support.
+    Stable key: parent_plan_run_id
+    """
+    parent_plan_run_id: Optional[str] = Field(
+        None,
+        description="Run ID of the parent plan artifact (for lineage tracking)",
+    )
+
+
 class RunAttachment(BaseModel):
     """Metadata for content-addressed attachment."""
     sha256: str = Field(
@@ -265,6 +278,12 @@ class RunArtifact(BaseModel):
     outputs: RunOutputs = Field(
         default_factory=RunOutputs,
         description="Generated artifacts",
+    )
+
+    # Lineage (Bundle 09: Plan → Execute tracking)
+    lineage: Optional[RunLineage] = Field(
+        None,
+        description="Lineage envelope for parent_plan_run_id tracking",
     )
 
     # Advisory/explanation (append-only references)
@@ -499,4 +518,72 @@ class BindArtStudioCandidateResponse(BaseModel):
     attachment_sha256_map: Dict[str, str] = Field(
         default_factory=dict,
         description="Map of attachment_id -> verified sha256",
+    )
+
+
+# =============================================================================
+# Bundle 17: Attachment Path Normalization + Contract
+# =============================================================================
+
+def normalize_attachment_path(p: str) -> str:
+    """
+    Normalize an attachment path to forward slashes.
+
+    Removes leading "./" and collapses double slashes.
+    """
+    s = (p or "").strip().replace("\\", "/")
+    while s.startswith("./"):
+        s = s[2:]
+    # Collapse accidental double slashes
+    while "//" in s:
+        s = s.replace("//", "/")
+    return s
+
+
+class RunAttachmentRowV1(BaseModel):
+    """
+    Normalized attachment row for list responses.
+
+    Bundle 17: Consistent keys for all attachment rows:
+    - att_id: Always present (stable identifier)
+    - path: Always present (normalized to forward slashes)
+    - signed_url: Optional (only when requested)
+
+    Contract: RMOS_RUNS_V2_ATTACHMENTS_CONTRACT_v1.md
+    """
+    att_id: str = Field(
+        ...,
+        description="Attachment ID (stable identifier)",
+    )
+    path: str = Field(
+        ...,
+        description="Normalized attachment path (forward slashes)",
+    )
+    sha256: Optional[str] = Field(
+        None,
+        description="Content hash",
+    )
+    size_bytes: Optional[int] = Field(
+        None,
+        description="File size in bytes",
+    )
+    content_type: Optional[str] = Field(
+        None,
+        description="MIME type",
+    )
+    signed_url: Optional[str] = Field(
+        None,
+        description="Signed URL for direct download (only when requested)",
+    )
+
+
+class RunAttachmentsListResponseV1(BaseModel):
+    """
+    Normalized response for attachment list endpoint.
+
+    Bundle 17: All rows have consistent att_id + path fields.
+    """
+    attachments: List[RunAttachmentRowV1] = Field(
+        default_factory=list,
+        description="List of attachment rows (normalized)",
     )

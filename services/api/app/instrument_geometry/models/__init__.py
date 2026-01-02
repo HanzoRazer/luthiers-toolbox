@@ -29,6 +29,7 @@ from __future__ import annotations
 from .specs import (
     GuitarModelSpec,
     ScaleSpec,
+    ScaleProfile,  # Wave 17 - Added for GuitarModelSpec integration
     MultiScaleSpec,
     NeckJointSpec,
     BridgeSpec,
@@ -56,6 +57,7 @@ try:
         ScaleLengthSpec,
         FretPosition,
         NeckProfileSpec,
+        # Note: ScaleProfile is now exported from specs.py (Wave 17)
     )
 except ImportError:
     # If models.py is missing, define placeholders to prevent import errors

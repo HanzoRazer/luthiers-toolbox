@@ -26,8 +26,16 @@ This rule prevents endpoint sprawl across multiple routers, which creates:
 | Neck | `neck_router.py` | `/api/neck` | Compliant |
 | Bridge | `bridge_router.py` | `/api/bridge` | Compliant |
 | Fret Design | `fret_router.py` | `/api/fret` | Compliant |
-| Archtop | `archtop_router.py` | `/api/guitar/archtop` | Compliant |
-| Stratocaster | `stratocaster_router.py` | `/api/guitar/stratocaster` | Compliant |
+| Archtop (Instrument) | `instruments/guitar/archtop_instrument_router.py` | `/api/instruments/guitar/archtop` | Canonical (Wave 20) |
+| Archtop (CAM) | `cam/guitar/archtop_cam_router.py` | `/api/cam/guitar/archtop` | Canonical (Wave 20) |
+| Stratocaster (Instrument) | `instruments/guitar/stratocaster_instrument_router.py` | `/api/instruments/guitar/stratocaster` | Canonical (Wave 20) |
+| Stratocaster (CAM) | `cam/guitar/stratocaster_cam_router.py` | `/api/cam/guitar/stratocaster` | Canonical (Wave 20) |
+| OM (Instrument) | `instruments/guitar/om_instrument_router.py` | `/api/instruments/guitar/om` | Canonical (Wave 20) |
+| OM (CAM) | `cam/guitar/om_cam_router.py` | `/api/cam/guitar/om` | Canonical (Wave 20) |
+| Smart Guitar | `instruments/guitar/smart_instrument_router.py` | `/api/instruments/guitar/smart` | Canonical (Wave 20) |
+| Smart Guitar (CAM) | `cam/guitar/smart_cam_router.py` | `/api/cam/guitar/smart` | Canonical (Wave 20) |
+
+> **Note (Dec 2025):** Legacy standalone routers removed. 308 redirects via `legacy/guitar_model_redirects.py`.
 
 ---
 

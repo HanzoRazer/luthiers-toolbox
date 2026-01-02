@@ -428,6 +428,7 @@ def thermal_report_md(body: ThermalReportIn) -> StreamingResponse:
 
         w("\n---\n\n")
         w("## CSV Downloads\n")
+        w("Set `$API` to your canonical base URL, e.g. `http://127.0.0.1:8000/api`.\n\n")
         w("The following commands will download CSVs generated with the same inputs as this report.\n\n")
         w("**Energy per segment** → `")
         w(f"{energy_stem}.csv")

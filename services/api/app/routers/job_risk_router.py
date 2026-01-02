@@ -19,8 +19,12 @@ router = APIRouter(prefix="/cam/jobs", tags=["cam", "jobs", "risk"])
 
 # Phase 26.29: Job attachment storage
 JOB_RECORDS_DIR = Path("data/job_records")
-JOB_RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 JOB_RECORDS_FILE = JOB_RECORDS_DIR / "jobs.json"
+
+
+def _ensure_job_records_dir() -> None:
+    """Create job records directory on first write (Docker compatibility)."""
+    JOB_RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class PipelineJobAttachIn(BaseModel):
@@ -56,6 +60,7 @@ def _load_job_records() -> dict:
 
 def _save_job_records(jobs: dict) -> None:
     """Save job records to JSON file"""
+    _ensure_job_records_dir()  # Create directory on first write
     with open(JOB_RECORDS_FILE, 'w', encoding='utf-8') as f:
         json.dump(jobs, f, indent=2)
 

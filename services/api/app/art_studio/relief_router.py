@@ -3,12 +3,27 @@
 """
 Art Studio Relief Router
 
+LANE: OPERATION (for /export-dxf endpoint)
+LANE: UTILITY (for /preview, /preview-feasibility endpoints)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates DXF from SVG geometry
+
 FastAPI endpoints for relief SVG → DXF export.
 
+GOVERNANCE INVARIANTS:
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- relief_dxf_export (OK/ERROR) - from /export-dxf
+- relief_dxf_blocked (BLOCKED) - from /export-dxf when safety policy blocks
+
 Endpoints:
-- POST /preview: Parse SVG and return relief stats
-- POST /preview-feasibility: Preview with RMOS feasibility calculation
-- POST /export-dxf: Export relief geometry to DXF
+- POST /preview: Parse SVG and return relief stats (UTILITY)
+- POST /preview-feasibility: Preview with RMOS feasibility calculation (UTILITY)
+- POST /export-dxf: Export relief geometry to DXF (OPERATION)
 
 For Wave 3, relief is: SVG → polylines → MLPaths → DXF.
 Z/height mapping will be added later when we bring in full relief CAM.
@@ -39,6 +54,20 @@ from ..toolpath.dxf_exporter import (
     DXFVersion,
     export_mlpaths_to_dxf,
 )
+
+# Import run artifact persistence (OPERATION lane requirement)
+from datetime import datetime, timezone
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ..rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ..rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -202,10 +231,63 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     """
     Export relief geometry to DXF format.
 
+    LANE: OPERATION - Creates relief_dxf_export artifact.
+
     Optionally includes feasibility calculation if compute_feasibility=True.
     """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump())
+
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    feasibility = compute_feasibility_internal(
+        tool_id="relief_dxf",
+        req=req,
+        context="relief_dxf",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="relief_dxf",
+            workflow_mode="relief",
+            event_type="relief_dxf_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Relief DXF export blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
+
     if not req.svg.strip():
-        raise HTTPException(status_code=400, detail="SVG text is empty.")
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="relief_dxf",
+            workflow_mode="relief",
+            event_type="relief_dxf_export",
+            status="ERROR",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            errors=["SVG text is empty"],
+        )
+        persist_run(artifact)
+        raise HTTPException(status_code=400, detail={"error": "EMPTY_SVG", "run_id": run_id, "message": "SVG text is empty."})
 
     polys = parse_svg_to_polylines(req.svg)
 
@@ -231,6 +313,23 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     }
 
     if not req.compute_feasibility:
+        # Create OK artifact
+        dxf_hash = sha256_of_text(dxf_text)
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="relief_dxf",
+            workflow_mode="relief",
+            event_type="relief_dxf_export",
+            status="OK",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            gcode_hash=dxf_hash,  # Using gcode_hash for DXF output
+        )
+        persist_run(artifact)
+        headers["X-Run-ID"] = run_id
+        headers["X-DXF-SHA256"] = dxf_hash
         return Response(
             content=dxf_text,
             media_type="application/dxf",
@@ -272,11 +371,31 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     except ImportError:
         feasibility = {"error": "Saw bridge not available"}
 
+    # Create OK artifact with feasibility
+    dxf_hash = sha256_of_text(dxf_text)
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="relief_dxf",
+        workflow_mode="relief",
+        event_type="relief_dxf_export",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=dxf_hash,
+        feasibility=feasibility,
+    )
+    persist_run(artifact)
+    headers["X-Run-ID"] = run_id
+    headers["X-DXF-SHA256"] = dxf_hash
+
     # Return JSON with DXF + feasibility
     return JSONResponse(
         content={
             "dxf": dxf_text,
             "feasibility": feasibility,
+            "_run_id": run_id,
+            "_hashes": {"dxf_sha256": dxf_hash},
         },
         headers=headers,
     )

@@ -475,8 +475,24 @@ from pydantic import BaseModel, Field
 BLUEPRINT_SERVICE_PATH = Path(__file__).parent.parent.parent.parent / "blueprint-import"
 sys.path.insert(0, str(BLUEPRINT_SERVICE_PATH))
 
-from analyzer import create_analyzer
-from vectorizer import create_vectorizer
+# Phase 1 AI Analyzer - Optional (graceful degradation if deps missing or no API key)
+ANALYZER_AVAILABLE = True
+ANALYZER_IMPORT_ERROR: Optional[str] = None
+
+try:
+    from analyzer import create_analyzer
+except Exception as e:
+    ANALYZER_AVAILABLE = False
+    ANALYZER_IMPORT_ERROR = f"{type(e).__name__}: {e}"
+    create_analyzer = None  # type: ignore
+
+# Phase 1 SVG Vectorizer - Optional (not in Docker image)
+try:
+    from vectorizer import create_vectorizer
+    VECTORIZER_AVAILABLE = True
+except ImportError:
+    VECTORIZER_AVAILABLE = False
+    create_vectorizer = None  # type: ignore
 
 try:
     from vectorizer_phase2 import create_phase2_vectorizer
@@ -710,6 +726,26 @@ async def analyze_blueprint(file: UploadFile = File(...)):
         - Logs analysis start/completion at INFO level
         - Logs errors at ERROR level
     """
+    # --- AI availability gate (H1 optional AI dependency) ---
+    api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "AI_DISABLED",
+                "message": "Blueprint AI is disabled: no API key configured (set EMERGENT_LLM_KEY or ANTHROPIC_API_KEY).",
+            },
+        )
+    if not ANALYZER_AVAILABLE or not create_analyzer:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "AI_DISABLED",
+                "message": "Blueprint AI is disabled: analyzer dependencies not installed.",
+                "detail": ANALYZER_IMPORT_ERROR,
+            },
+        )
+
     try:
         # Validate file type
         file_ext = Path(file.filename).suffix.lower()
@@ -752,8 +788,12 @@ async def analyze_blueprint(file: UploadFile = File(...)):
         )
     
     except ValueError as e:
-        logger.error(f"Validation error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        # ValueError from analyzer = missing API key or config issue → 503
+        logger.error(f"AI configuration error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "AI_DISABLED", "message": str(e)},
+        )
     
     except Exception as e:
         logger.error(f"Error analyzing blueprint: {e}")
@@ -834,6 +874,13 @@ async def export_to_svg(request: ExportRequest) -> FileResponse:
             raise HTTPException(
                 status_code=400,
                 detail="Only SVG format supported in Phase 1. DXF coming in Phase 2."
+            )
+        
+        # Check if vectorizer is available (not in Docker)
+        if not VECTORIZER_AVAILABLE:
+            raise HTTPException(
+                status_code=501,
+                detail="Blueprint vectorizer not available in this deployment. Use local development environment."
             )
         
         # Validate scale correction bounds

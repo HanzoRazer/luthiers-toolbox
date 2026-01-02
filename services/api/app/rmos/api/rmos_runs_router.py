@@ -69,6 +69,9 @@ def list_runs(
     material_id: Optional[str] = Query(default=None, description="Filter by material_id"),
     machine_id: Optional[str] = Query(default=None, description="Filter by machine_id"),
     session_id: Optional[str] = Query(default=None, description="Filter by session_id"),
+    parent_batch_decision_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch decision artifact"),
+    parent_batch_plan_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch plan artifact"),
+    parent_batch_spec_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch spec artifact"),
 ) -> RunIndexPageOut:
     """
     List run artifacts with filtering and pagination.
@@ -85,6 +88,9 @@ def list_runs(
             "material_id": material_id,
             "machine_id": machine_id,
             "session_id": session_id,
+            "parent_batch_decision_artifact_id": parent_batch_decision_artifact_id,
+            "parent_batch_plan_artifact_id": parent_batch_plan_artifact_id,
+            "parent_batch_spec_artifact_id": parent_batch_spec_artifact_id,
         },
     )
     return RunIndexPageOut(

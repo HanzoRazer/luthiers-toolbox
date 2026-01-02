@@ -1,5 +1,5 @@
 /**
- * Wave 7: Art Studio Engine Composable
+ * Wave 7: Art Studio Engine Composable (updated Wave 20)
  *
  * Central facade for all Art Studio operations:
  * - Tools & materials loading
@@ -8,8 +8,33 @@
  * - Toolpath planning
  * - Instrument geometry calculations
  * - Calculator debug integration
+ *
+ * Wave 20 Migration:
+ * - Uses centralized apiBase for URL construction
+ * - Rosette uses canonical /api/art/rosette/* paths via artStudioApi
+ * - Fallback to legacy paths on 404
  */
 import { ref, computed, reactive } from "vue";
+import { API_BASE, apiFetchWithFallback, buildUrl } from "@/services/apiBase";
+import {
+  buildRosetteUrl,
+  buildLegacyRosetteUrl,
+  generateRosetteGeometry as apiGenerateRosetteGeometry,
+  exportRosette as apiExportRosette,
+  renderRosettePreview as apiRenderRosettePreview,
+  fetchRosettePatterns,
+  fetchPatternInfo,
+  generateRosetteCam,
+  PATTERN_DEFAULTS,
+  type RosetteParams,
+  type RosetteGeometry,
+  type RosetteExportResult,
+  type RosettePreviewResult,
+  type PatternInfo,
+  type PatternType,
+  type RosetteCamParams,
+  type RosetteCamResult,
+} from "@/services/artStudioApi";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -154,7 +179,7 @@ export interface CutOperationSpec {
 // State
 // ---------------------------------------------------------------------------
 
-const API_BASE = "/api";
+// Note: API_BASE now imported from @/services/apiBase
 
 // Geometry state
 const currentPaths = ref<MLPath[]>([]);
@@ -345,19 +370,108 @@ async function generateReliefGeometry(requestBody: unknown) {
   }
 }
 
-async function generateRosetteGeometry(requestBody: unknown) {
+/**
+ * Generate rosette geometry.
+ * Wave 20: Uses canonical /api/art/rosette/geometry via artStudioApi service.
+ */
+async function generateRosetteGeometry(params: RosetteParams) {
   loading.geometry = true;
+  lastError.value = null;
+
   try {
-    const data = await fetchJSON<{ paths: MLPath[] }>(
-      `${API_BASE}/artstudio/geometry/rosette`,
-      {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-      }
-    );
-    currentPaths.value = data.paths;
+    const data = await apiGenerateRosetteGeometry(params);
+    // Convert RosetteGeometry paths to MLPath format
+    currentPaths.value = data.paths.map((p) => ({
+      id: p.id,
+      points: p.points.map(([x, y]) => ({ x, y })),
+      closed: p.closed,
+      layer: p.layer,
+    }));
+    return data;
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to generate rosette geometry";
+    throw err;
   } finally {
     loading.geometry = false;
+  }
+}
+
+/**
+ * Export rosette to DXF/SVG/NC format.
+ * Wave 20: Uses canonical /api/art/rosette/export via artStudioApi service.
+ */
+async function exportRosette(
+  params: RosetteParams & { format: "dxf" | "svg" | "nc" }
+): Promise<RosetteExportResult> {
+  loading.geometry = true;
+  lastError.value = null;
+
+  try {
+    return await apiExportRosette(params);
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to export rosette";
+    throw err;
+  } finally {
+    loading.geometry = false;
+  }
+}
+
+/**
+ * Render rosette preview as inline SVG.
+ * Wave 20: Uses canonical /api/art/rosette/render via artStudioApi service.
+ */
+async function renderRosettePreview(
+  params: RosetteParams
+): Promise<RosettePreviewResult> {
+  loading.geometry = true;
+  lastError.value = null;
+
+  try {
+    return await apiRenderRosettePreview(params);
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to render rosette preview";
+    throw err;
+  } finally {
+    loading.geometry = false;
+  }
+}
+
+/**
+ * Load available rosette patterns.
+ * Wave 20: Uses canonical /api/art/rosette/patterns via artStudioApi service.
+ */
+async function loadRosettePatterns(): Promise<PatternInfo[]> {
+  loading.geometry = true;
+  lastError.value = null;
+
+  try {
+    const result = await fetchRosettePatterns();
+    return result.patterns;
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to load rosette patterns";
+    throw err;
+  } finally {
+    loading.geometry = false;
+  }
+}
+
+/**
+ * Generate CAM toolpath for rosette.
+ * Wave 20: Uses canonical /api/cam/art/rosette/toolpath via artStudioApi service.
+ */
+async function generateRosetteCamToolpath(
+  params: RosetteCamParams
+): Promise<RosetteCamResult> {
+  loading.toolpaths = true;
+  lastError.value = null;
+
+  try {
+    return await generateRosetteCam(params);
+  } catch (err: any) {
+    lastError.value = err.message || "Failed to generate rosette CAM toolpath";
+    throw err;
+  } finally {
+    loading.toolpaths = false;
   }
 }
 
@@ -615,6 +729,14 @@ export function useArtStudioEngine() {
     generateVCarveGeometry,
     generateReliefGeometry,
     generateRosetteGeometry,
+    exportRosette,
+    renderRosettePreview,
+    loadRosettePatterns,
+    generateRosetteCamToolpath,
+
+    // Rosette Utilities (re-exported from artStudioApi)
+    PATTERN_DEFAULTS,
+    fetchPatternInfo,
 
     // RMOS
     evaluateFeasibility,

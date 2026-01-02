@@ -48,7 +48,8 @@ from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/tooling", tags=["tooling"])
+# Note: prefix and tags are set in main.py when registering
+router = APIRouter()
 
 # =============================================================================
 # VALIDATION CONSTANTS

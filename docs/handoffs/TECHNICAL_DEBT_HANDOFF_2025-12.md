@@ -188,9 +188,9 @@ The following "broken router" comments (lines 114-168) are **stale** and should 
 
 ### Files to Delete
 
-| File | Reason |
-|------|--------|
-| `Based on my analysis, heres the TODO.txt` | Outdated TODO list (this handoff supersedes it) |
+| File | Reason | Status |
+|------|--------|--------|
+| `Based on my analysis, heres the TODO.txt` | Outdated TODO list (this handoff supersedes it) | ✅ Not found / already deleted |
 
 ---
 

@@ -23,6 +23,7 @@ jobs:
           API_IMAGE=toolbox/api:ci
           CLIENT_IMAGE=toolbox/client:ci
           PROXY_IMAGE=toolbox/proxy:ci
+          ART_STUDIO_DB_PATH=/tmp/art_studio.db
           EOF
 
       - name: Build API
@@ -41,16 +42,31 @@ jobs:
           load: true
           tags: toolbox/client:ci
 
-      - name: Build Proxy
+      - name: Build Proxy (nginx)
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/proxy/Dockerfile
+          file: docker/nginx/Dockerfile
           load: true
           tags: toolbox/proxy:ci
 
-      - name: Up stack
-        run: docker compose up -d
+      - name: Up stack (with proxy profile)
+        id: up_stack
+        run: docker compose --profile proxy up -d
+        continue-on-error: true
+
+      - name: Debug - Container status and logs on failure
+        if: steps.up_stack.outcome == 'failure'
+        run: |
+          echo "=== Container Status ==="
+          docker compose ps -a
+          echo ""
+          echo "=== API Container Logs ==="
+          docker compose logs api --tail=200
+          echo ""
+          echo "=== Proxy Container Logs ==="
+          docker compose logs proxy --tail=100 || true
+          exit 1
 
       - name: Wait for API via proxy
         run: |
@@ -153,4 +169,4 @@ jobs:
 
       - name: Down stack
         if: always()
-        run: docker compose down -v
+        run: docker compose --profile proxy down -v

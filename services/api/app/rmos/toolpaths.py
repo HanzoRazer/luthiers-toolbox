@@ -157,7 +157,7 @@ def _generate_saw_toolpaths(
         return {
             "mode": "saw",
             "toolpaths": {
-                "moves": [asdict(m) for m in plan.moves],
+                "moves": [m.model_dump() if hasattr(m, 'model_dump') else asdict(m) for m in plan.moves],
                 "total_length_mm": plan.total_length_mm,
                 "cut_count": plan.cut_count,
             },

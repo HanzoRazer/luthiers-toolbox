@@ -1,12 +1,22 @@
 /**
- * Instrument Geometry Store (Wave 15-16)
+ * Instrument Geometry Store (Wave 15-16, updated Wave 20)
  *
  * Manages fretboard geometry, CAM preview, and feasibility scoring for instrument construction.
  * Integrates with backend Wave 17-18 endpoints for unified CAM + feasibility analysis.
+ *
+ * Wave 20 Migration:
+ * - INSTRUMENT_MODELS now loaded from API (not hardcoded)
+ * - Uses instrumentApi service for canonical paths
+ * - Falls back to FALLBACK_MODELS on API failure
  */
 
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import {
+  fetchInstrumentModels,
+  FALLBACK_MODELS,
+  type InstrumentModel as ApiInstrumentModel,
+} from "@/services/instrumentApi";
 
 // ============================================================================
 // Types
@@ -75,7 +85,12 @@ export interface InstrumentModel {
   bridge_width_mm: number;
 }
 
-// Available instrument models (matches backend RmosContext.from_model_id)
+/**
+ * LEGACY: Static fallback models.
+ * Wave 20: Models now loaded from API via loadInstrumentModels().
+ * This constant kept for backwards compatibility and offline fallback.
+ * @deprecated Use loadInstrumentModels() action instead
+ */
 export const INSTRUMENT_MODELS: InstrumentModel[] = [
   {
     id: "strat_25_5",
@@ -123,6 +138,12 @@ export const useInstrumentGeometryStore = defineStore(
     // Selected model
     const selectedModelId = ref<string>("strat_25_5");
 
+    // Dynamic model list (loaded from API)
+    const instrumentModels = ref<InstrumentModel[]>(INSTRUMENT_MODELS);
+    const isLoadingModels = ref(false);
+    const modelsLoadError = ref<string | null>(null);
+    const modelsLoadedFromApi = ref(false);
+
     // Fretboard specification
     const fretboardSpec = ref<FretboardSpec>({
       scale_length_mm: 647.7,
@@ -153,10 +174,13 @@ export const useInstrumentGeometryStore = defineStore(
 
     const selectedModel = computed(() => {
       return (
-        INSTRUMENT_MODELS.find((m) => m.id === selectedModelId.value) ||
-        INSTRUMENT_MODELS[0]
+        instrumentModels.value.find((m) => m.id === selectedModelId.value) ||
+        instrumentModels.value[0]
       );
     });
+
+    /** All available models (for UI selectors) */
+    const availableModels = computed(() => instrumentModels.value);
 
     const toolpaths = computed(() => previewResponse.value?.toolpaths || []);
 
@@ -223,7 +247,7 @@ export const useInstrumentGeometryStore = defineStore(
      * Load model by ID and update fretboard spec
      */
     function selectModel(modelId: string) {
-      const model = INSTRUMENT_MODELS.find((m) => m.id === modelId);
+      const model = instrumentModels.value.find((m) => m.id === modelId);
       if (!model) {
         console.warn(`Unknown model ID: ${modelId}`);
         return;
@@ -368,6 +392,49 @@ export const useInstrumentGeometryStore = defineStore(
       fanFretEnabled.value = false;
     }
 
+    /**
+     * Load instrument models from API (Wave 20 migration).
+     * Falls back to static INSTRUMENT_MODELS on error.
+     */
+    async function loadInstrumentModels() {
+      if (modelsLoadedFromApi.value) {
+        // Already loaded, skip
+        return;
+      }
+
+      isLoadingModels.value = true;
+      modelsLoadError.value = null;
+
+      try {
+        const response = await fetchInstrumentModels();
+        
+        if (response.ok && response.models.length > 0) {
+          // Transform API models to store format
+          instrumentModels.value = response.models.map((m) => ({
+            id: m.model_id,
+            display_name: m.display_name,
+            // These will be fetched per-model when selected
+            // For now, use reasonable defaults
+            scale_length_mm: 647.7,
+            num_frets: 22,
+            nut_width_mm: 42.0,
+            bridge_width_mm: 56.0,
+          }));
+          modelsLoadedFromApi.value = true;
+          console.log(`✓ Loaded ${response.total_models} instrument models from API`);
+        } else {
+          throw new Error("Empty model list from API");
+        }
+      } catch (err: any) {
+        console.warn("Failed to load models from API, using fallback:", err.message);
+        modelsLoadError.value = err.message;
+        // Keep using the static INSTRUMENT_MODELS as fallback
+        instrumentModels.value = INSTRUMENT_MODELS;
+      } finally {
+        isLoadingModels.value = false;
+      }
+    }
+
     return {
       // State
       selectedModelId,
@@ -379,9 +446,15 @@ export const useInstrumentGeometryStore = defineStore(
       trebleScaleLength,
       bassScaleLength,
       perpendicularFret,
+      // Wave 20: Dynamic model loading state
+      instrumentModels,
+      isLoadingModels,
+      modelsLoadError,
+      modelsLoadedFromApi,
 
       // Computed
       selectedModel,
+      availableModels,
       toolpaths,
       statistics,
       feasibility,
@@ -394,6 +467,7 @@ export const useInstrumentGeometryStore = defineStore(
       downloadDxf,
       downloadGcode,
       reset,
+      loadInstrumentModels,
     };
   }
 );

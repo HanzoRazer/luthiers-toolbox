@@ -23,7 +23,7 @@ from ..routers.machine_router import get_profile
 from ..routers.material_router import get_material
 from ..util.names import safe_stem
 
-router = APIRouter(prefix="/cam/metrics", tags=["cam-metrics"])
+router = APIRouter(tags=["cam-metrics"])
 
 
 class EnergyIn(BaseModel):
@@ -92,47 +92,56 @@ def energy_csv(body: EnergyIn) -> StreamingResponse:
     Returns:
         CSV file with columns: idx, code, len_mm, vol_mm3, energy_j, cum_energy_j
     """
-    # Get material properties
-    mat = get_material(body.material_id)
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # Calculate energy breakdown
-    out = energy_breakdown(
-        moves=body.moves,
-        sce_j_per_mm3=float(mat["sce_j_per_mm3"]),
-        tool_d_mm=float(body.tool_d),
-        stepover=float(body.stepover),
-        stepdown=float(body.stepdown),
-        heat_partition=mat.get("heat_partition", {"chip": 0.7, "tool": 0.2, "work": 0.1})
-    )
-    
-    # Generate safe filename stem
-    stem = safe_stem(body.job_name, prefix="energy")
-    
-    # Build CSV in memory
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["idx", "code", "len_mm", "vol_mm3", "energy_j", "cum_energy_j"])
-    
-    cumulative = 0.0
-    for seg in out["segments"]:
-        cumulative += float(seg["energy_j"])
-        w.writerow([
-            seg["idx"],
-            seg.get("code", ""),
-            f'{seg.get("len_mm", 0):.4f}',
-            f'{seg["vol_mm3"]:.4f}',
-            f'{seg["energy_j"]:.4f}',
-            f'{cumulative:.4f}'
-        ])
-    
-    # Convert to bytes for streaming
-    data = io.BytesIO(buf.getvalue().encode("utf-8"))
-    
-    return StreamingResponse(
-        iter([data.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{stem}.csv"'}
-    )
+    try:
+        # Get material properties
+        mat = get_material(body.material_id)
+        logger.info(f"energy_csv: material={body.material_id}, moves={len(body.moves)}")
+        
+        # Calculate energy breakdown
+        out = energy_breakdown(
+            moves=body.moves,
+            sce_j_per_mm3=float(mat["sce_j_per_mm3"]),
+            tool_d_mm=float(body.tool_d),
+            stepover=float(body.stepover),
+            stepdown=float(body.stepdown),
+            heat_partition=mat.get("heat_partition", {"chip": 0.7, "tool": 0.2, "work": 0.1})
+        )
+        logger.info(f"energy_csv: segments={len(out.get('segments', []))}")
+        
+        # Generate safe filename stem
+        stem = safe_stem(body.job_name, prefix="energy")
+        
+        # Build CSV in memory
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["idx", "code", "len_mm", "vol_mm3", "energy_j", "cum_energy_j"])
+        
+        cumulative = 0.0
+        for seg in out["segments"]:
+            cumulative += float(seg["energy_j"])
+            w.writerow([
+                seg["idx"],
+                seg.get("code", ""),
+                f'{seg.get("len_mm", 0):.4f}',
+                f'{seg["vol_mm3"]:.4f}',
+                f'{seg["energy_j"]:.4f}',
+                f'{cumulative:.4f}'
+            ])
+        
+        # Convert to bytes for streaming
+        data = io.BytesIO(buf.getvalue().encode("utf-8"))
+        
+        return StreamingResponse(
+            iter([data.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{stem}.csv"'}
+        )
+    except Exception as e:
+        logger.exception(f"energy_csv failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Energy CSV generation failed: {str(e)}")
 
 # ========== Heat Timeseries ==========
 
@@ -404,6 +413,7 @@ def thermal_report_md(body: ThermalReportIn) -> StreamingResponse:
 
         w("\n---\n\n")
         w("## CSV Downloads\n")
+        w("Set `$API` to your canonical base URL, e.g. `http://127.0.0.1:8000/api`.\n\n")
         w("The following commands will download CSVs generated with the same inputs as this report.\n\n")
         w("**Energy per segment** → `")
         w(f"{energy_stem}.csv")
@@ -488,7 +498,7 @@ def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
         bins=int(body.bins),
     )
 
-    use = energy["usage"]
+    use = energy["totals"]["heat"]
     bj = body.budgets
 
     # Compute budget states
@@ -572,6 +582,7 @@ def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
 
         w("\n---\n\n")
         w("## CSV Downloads\n")
+        w("Set `$API` to your canonical base URL, e.g. `http://127.0.0.1:8000/api`.\n\n")
         w(
             "The following commands will download CSVs generated with the same inputs as this report.\n\n"
         )

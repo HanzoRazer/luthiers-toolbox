@@ -1,0 +1,3 @@
+# CBSP21 Patch Packets
+# Structured patch files using FILE: header format.
+# CI validates: balanced fences, FILE: headers, no ellipsis truncation.

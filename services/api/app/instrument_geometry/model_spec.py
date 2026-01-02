@@ -25,7 +25,35 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from .models import StringSpec, ScaleProfile
+from .models import ScaleProfile
+
+
+# ---------------------------------------------------------------------------
+# Local StringSpec for this module (full-featured version with tuning info)
+# Note: models/specs.py has a simpler StringSpec for JSON loading
+# ---------------------------------------------------------------------------
+
+@dataclass
+class StringSpec:
+    """
+    Specification for a single guitar string with tuning info.
+    
+    This is the full-featured version used in preset models.
+    
+    Attributes:
+        name: String designation (e.g. "E4", "B3", "G3")
+        gauge_in: String gauge in inches (e.g. 0.009, 0.046)
+        is_wound: True for wound strings, False for plain
+        frequency_hz: Open string fundamental frequency in Hz
+        open_note: Musical note name (e.g. "E4", "A3")
+        material: String material (default "steel")
+    """
+    name: str
+    gauge_in: float
+    is_wound: bool
+    frequency_hz: float
+    open_note: str = ""
+    material: str = "steel"
 
 
 # ---------------------------------------------------------------------------

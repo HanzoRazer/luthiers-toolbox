@@ -214,7 +214,6 @@ DB: str = os.getenv(
     os.path.join(os.path.dirname(__file__), "..", "telemetry", "cam_logs.db"),
 )
 OUT_DIR: str = os.path.join(os.path.dirname(__file__), "models")
-os.makedirs(OUT_DIR, exist_ok=True)
 
 
 # =============================================================================
@@ -313,7 +312,8 @@ def train_overrides(
         "meta": {"samples": len(rows), "r_min": r_min_mm},
     }
 
-    # Save to disk
+    # Save to disk (lazy create output directory)
+    os.makedirs(OUT_DIR, exist_ok=True)
     path = os.path.join(OUT_DIR, f"overrides_{mid}.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)

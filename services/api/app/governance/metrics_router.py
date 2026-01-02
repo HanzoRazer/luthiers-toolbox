@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from .endpoint_stats import snapshot_prometheus_text
-from app.observability.metrics import render_prometheus as render_rmos_cam_metrics
+from ..observability.metrics import render_prometheus as render_rmos_cam_metrics
 
 router = APIRouter(tags=["Governance", "Metrics"])
 

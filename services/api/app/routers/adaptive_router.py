@@ -1,14 +1,31 @@
 """
 Adaptive Pocketing Router
 
+LANE: OPERATION (for /plan, /gcode, /batch_export, /plan_from_dxf endpoints)
+LANE: UTILITY (for /sim endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: A (Planning) - generates toolpaths from geometry
+
 FastAPI endpoints for adaptive pocket toolpath generation with L.1, L.2, and L.3 features.
 
+GOVERNANCE INVARIANTS:
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- adaptive_plan_execution (OK/ERROR) - from /plan
+- adaptive_plan_blocked (BLOCKED) - from /plan when safety policy blocks
+- adaptive_gcode_execution (OK/ERROR) - from /gcode
+- adaptive_batch_execution (OK/ERROR) - from /batch_export
+
 Endpoints:
-- POST /plan: Generate toolpath from boundary loops
-- POST /gcode: Export G-code with post-processor headers
-- POST /batch_export: Multi-post ZIP bundle (DXF + SVG + G-code)
-- POST /sim: Simulate toolpath without full G-code generation
-- POST /plan_from_dxf: Upload DXF file and generate toolpath (Phase 27.0)
+- POST /plan: Generate toolpath from boundary loops (OPERATION)
+- POST /gcode: Export G-code with post-processor headers (OPERATION)
+- POST /batch_export: Multi-post ZIP bundle (DXF + SVG + G-code) (OPERATION)
+- POST /sim: Simulate toolpath without full G-code generation (UTILITY)
+- POST /plan_from_dxf: Upload DXF file and generate toolpath (Phase 27.0) (OPERATION)
 
 Features:
 - Robust polygon offsetting with island handling (L.1)
@@ -69,6 +86,19 @@ from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 from .geometry_router import GcodeExportIn, export_gcode
 from .machine_router import get_profile
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ..rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ..rmos.policies import SafetyPolicy
 
 router = APIRouter(prefix="/cam/pocket/adaptive", tags=["cam-adaptive"])
 
@@ -528,8 +558,48 @@ def plan(body: PlanIn) -> PlanOut:
         raise HTTPException(400, f"Invalid strategy '{body.strategy}'. Must be 'Spiral' or 'Lanes'")
     
     plan_request_dict = body.model_dump(mode="json")
+    request_hash = sha256_of_obj(plan_request_dict)
+
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+
+    feasibility = compute_feasibility_internal(
+        tool_id="adaptive:plan",
+        req=plan_request_dict,
+        context="adaptive_plan",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="adaptive:plan",
+            workflow_mode="adaptive",
+            event_type="adaptive_plan_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Adaptive pocket planning blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
+
     loops = [l.pts for l in body.loops]
-    
+
     # Generate path using L.2: true spiral + adaptive stepover + fillets + HUD
     plan2 = plan_adaptive_l2(
         loops=loops,
@@ -714,6 +784,29 @@ def plan(body: PlanIn) -> PlanOut:
     if job_payload:
         response["job_int"] = job_payload
 
+    # Create artifact for OPERATION lane compliance
+    moves_hash = sha256_of_obj(moves)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="adaptive:plan",
+        workflow_mode="adaptive",
+        event_type="adaptive_plan_execution",
+        status="OK",
+        feasibility=feasibility,
+        request_hash=request_hash,
+        toolpaths_hash=moves_hash,
+    )
+    persist_run(artifact)
+
+    response["_run_id"] = run_id
+    response["_hashes"] = {
+        "request_sha256": request_hash,
+        "moves_sha256": moves_hash,
+    }
+
     return response
 
 class GcodeIn(PlanIn):
@@ -837,7 +930,29 @@ def gcode(body: GcodeIn) -> StreamingResponse:
     # Assemble full program
     program = "\n".join(hdr + [meta] + body_lines + ftr) + "\n"
     
-    return export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
+    # Create artifact for OPERATION lane compliance
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(program)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="adaptive_gcode",
+        workflow_mode="adaptive",
+        event_type="adaptive_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+
+    response = export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
+    response.headers["X-Run-ID"] = run_id
+    response.headers["X-GCode-SHA256"] = gcode_hash
+    return response
 
 # Allowed adaptive feed modes (validated against in batch export)
 ALLOWED_MODES = ("comment", "inline_f", "mcode")
@@ -932,17 +1047,18 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
     without re-running toolpath planning.
     
     Request Flow:
-        1. Normalize modes list (filter to allowed values, default to all)
-        2. Resolve job name stem (sanitize or fallback to timestamp)
-        3. For each mode:
+        1. Validate loops (must be non-empty with valid geometry)
+        2. Normalize modes list (filter to allowed values, default to all)
+        3. Resolve job name stem (sanitize or fallback to timestamp)
+        4. For each mode:
            a. Clone request body and set adaptive_feed_override.mode
            b. Call /plan to generate toolpath
            c. Load post profile and apply override
            d. Apply adaptive feed translation (_apply_adaptive_feed)
            e. Assemble G-code with headers/footers/metadata
            f. Write to ZIP as <stem>_<mode>.nc
-        4. Generate manifest JSON with run metadata
-        5. Return ZIP as streaming response
+        5. Generate manifest JSON with run metadata
+        6. Return ZIP as streaming response
     
     Args:
         body: BatchExportIn with geometry, machining params, and mode filter
@@ -959,8 +1075,9 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         - <stem>_manifest.json: Run metadata
     
     Raises:
-        HTTPException 400: If loops invalid (see /plan endpoint)
-        HTTPException 500: If planning or export fails
+        HTTPException 400: If loops missing, empty, or invalid geometry
+        HTTPException 409: If safety/governance blocks export
+        HTTPException 500: If unexpected error during planning or export
     
     Example:
         >>> response = client.post("/batch_export", json={
@@ -977,6 +1094,43 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         - Manifest includes timestamp, tool params, strategy, L.3/M.4 flags
         - See BATCH_EXPORT_SUMMARY.md for complete feature documentation
     """
+    # -------------------------------------------------------------------------
+    # Bundle 17: Input validation guards (convert 500 → governed 4xx)
+    # -------------------------------------------------------------------------
+    
+    # Guard: loops must be present
+    if not body.loops:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_GEOMETRY",
+                "reason": "loops is required and cannot be empty",
+            }
+        )
+    
+    # Guard: each loop must have valid pts
+    for i, loop in enumerate(body.loops):
+        pts = getattr(loop, "pts", None)
+        if not pts or len(pts) < 3:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "INVALID_GEOMETRY",
+                    "reason": f"Loop {i} must have at least 3 points",
+                    "loop_index": i,
+                }
+            )
+    
+    # Guard: tool_d must be positive
+    if body.tool_d <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_TOOL",
+                "reason": "tool_d must be positive",
+            }
+        )
+    
     # Normalize modes - filter to allowed values
     modes = [m for m in (body.modes or []) if m in ALLOWED_MODES]
     if not modes:
@@ -1030,7 +1184,7 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         
         # Apply adaptive feed translation
         body_lines = _apply_adaptive_feed(
-            moves=plan_out.moves,
+            moves=plan_out["moves"],
             post=post,
             base_units=body_copy.units
         )
@@ -1043,34 +1197,64 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         program = "\n".join(hdr + [meta] + body_lines + ftr) + "\n"
         return program
     
-    # Build ZIP with requested modes only
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        for m in modes:
-            z.writestr(f"{stem}_{m}.nc", render_with_mode(m))
+    # -------------------------------------------------------------------------
+    # Bundle 17: Wrap ZIP generation with exception handling
+    # -------------------------------------------------------------------------
+    try:
+        # Build ZIP with requested modes only
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for m in modes:
+                z.writestr(f"{stem}_{m}.nc", render_with_mode(m))
+            
+            # Add manifest with modes list and run metadata
+            manifest = {
+                "modes": modes,
+                "post": post_id,
+                "units": body.units,
+                "tool_d": body.tool_d,
+                "stepover": body.stepover,
+                "stepdown": body.stepdown,
+                "strategy": body.strategy,
+                "trochoids": bool(getattr(body, "use_trochoids", False)),
+                "jerk_aware": bool(getattr(body, "jerk_aware", False)),
+                "job_name": stem,
+                "timestamp": int(time.time())
+            }
+            z.writestr(f"{stem}_manifest.json", json.dumps(manifest, indent=2))
         
-        # Add manifest with modes list and run metadata
-        manifest = {
-            "modes": modes,
-            "post": post_id,
-            "units": body.units,
-            "tool_d": body.tool_d,
-            "stepover": body.stepover,
-            "stepdown": body.stepdown,
-            "strategy": body.strategy,
-            "trochoids": bool(getattr(body, "use_trochoids", False)),
-            "jerk_aware": bool(getattr(body, "jerk_aware", False)),
-            "job_name": stem,
-            "timestamp": int(time.time())
-        }
-        z.writestr(f"{stem}_manifest.json", json.dumps(manifest, indent=2))
+        buf.seek(0)
+        return StreamingResponse(
+            buf,
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{stem}_multi_mode.zip"'}
+        )
     
-    buf.seek(0)
-    return StreamingResponse(
-        buf,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{stem}_multi_mode.zip"'}
-    )
+    except HTTPException:
+        # Re-raise HTTP exceptions (already governed)
+        raise
+    
+    except ValueError as e:
+        # Known geometry/value errors → 400
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "GEOMETRY_ERROR",
+                "reason": str(e),
+            }
+        )
+    
+    except Exception as e:
+        # Unexpected errors → 500 with logging
+        import logging
+        logging.exception(f"batch_export unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "EXPORT_FAILED",
+                "reason": "Unexpected error during batch export",
+            }
+        )
 
 
 @router.post("/sim")
