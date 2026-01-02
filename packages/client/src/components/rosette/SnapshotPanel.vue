@@ -22,10 +22,10 @@
     <div class="list" v-if="store.snapshots?.length">
       <div
         class="snap"
-        :class="{ selected: selectedSnapshotId === s.snapshot_id }"
+        :class="{ selected: store.selectedSnapshotId === s.snapshot_id }"
         v-for="s in store.snapshots"
         :key="s.snapshot_id"
-        @click="toggleSnapshotSelection(s.snapshot_id)"
+        @click="store.selectSnapshot(s.snapshot_id)"
       >
         <div class="left">
           <div class="nm">{{ s.name }}</div>
@@ -38,9 +38,11 @@
       </div>
     </div>
 
-    <div v-if="selectedConfidenceReason" class="confidence-panel">
-      <ConfidenceDetails :reason="selectedConfidenceReason" />
-    </div>
+    <ConfidenceDetails
+      v-if="selectedSnapshot"
+      :current="selectedSnapshot"
+      :previous="previousSnapshot"
+    />
     <div v-if="!store.snapshots?.length" class="empty">No snapshots yet.</div>
   </div>
 
@@ -55,35 +57,27 @@ import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import SnapshotComparePanel from "@/components/art/SnapshotComparePanel.vue";
 import ConfidenceDetails from "@/components/art/ConfidenceDetails.vue";
-import { getConfidenceReason } from "@/utils/confidenceReasons";
 
 const store = useRosetteStore();
 const toast = useToastStore();
 const name = ref("");
 const notes = ref("");
 const tags = ref("");
-const selectedSnapshotId = ref<string | null>(null);
 
+// Per Bundle 32.3.0 spec S2.3: use store.selectedSnapshotId
 const selectedSnapshot = computed(() => {
-  if (!selectedSnapshotId.value) return null;
-  return store.snapshots.find((s) => s.snapshot_id === selectedSnapshotId.value) ?? null;
+  const id = store.selectedSnapshotId;
+  return (store.snapshots || []).find((s: any) => s.snapshot_id === id) || null;
 });
 
-const selectedConfidenceReason = computed(() => {
-  const snap = selectedSnapshot.value;
-  if (!snap) return null;
-  // Access feasibility from snapshot if available
-  const feasibility = (snap as any).feasibility ?? null;
-  return getConfidenceReason(feasibility);
+const previousSnapshot = computed(() => {
+  if (!selectedSnapshot.value) return null;
+  const snaps = store.snapshots || [];
+  const idx = snaps.findIndex((s: any) => s.snapshot_id === selectedSnapshot.value!.snapshot_id);
+  // previous in time = next index (because newest-first)
+  if (idx < 0) return null;
+  return snaps[idx + 1] || null;
 });
-
-function toggleSnapshotSelection(snapshotId: string) {
-  if (selectedSnapshotId.value === snapshotId) {
-    selectedSnapshotId.value = null;
-  } else {
-    selectedSnapshotId.value = snapshotId;
-  }
-}
 
 function parseTags(s: string) {
   return (s || "")
@@ -216,8 +210,5 @@ function scrollToCompare() {
 .snap.selected {
   border-color: #111;
   background: #f0f0f0;
-}
-.confidence-panel {
-  margin-top: 12px;
 }
 </style>

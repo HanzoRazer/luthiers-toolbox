@@ -12,18 +12,25 @@
 import { computed } from "vue";
 import {
   type ConfidenceLevel,
+  computeDesignConfidence,
   confidenceColor,
   confidenceLabel,
 } from "@/utils/designConfidence";
 
 const props = defineProps<{
-  level: ConfidenceLevel;
+  feasibility?: any;
+  level?: ConfidenceLevel;
   tooltip?: string;
 }>();
 
-const bgColor = computed(() => confidenceColor(props.level));
-const label = computed(() => confidenceLabel(props.level));
-const textColor = computed(() => (props.level === "medium" ? "#000" : "#fff"));
+const effectiveLevel = computed<ConfidenceLevel>(() => {
+  if (props.level) return props.level;
+  return computeDesignConfidence(props.feasibility ?? null);
+});
+
+const bgColor = computed(() => confidenceColor(effectiveLevel.value));
+const label = computed(() => confidenceLabel(effectiveLevel.value));
+const textColor = computed(() => (effectiveLevel.value === "medium" ? "#000" : "#fff"));
 </script>
 
 <style scoped>

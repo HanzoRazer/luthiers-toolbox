@@ -57,6 +57,7 @@ export const useRosetteStore = defineStore("rosette", {
     snapshotsLoading: false,
     snapshotsError: "" as string,
     lastSavedSnapshot: null as DesignSnapshot | null,
+    selectedSnapshotId: null as string | null,
 
     // Feasibility
     lastFeasibility: null as RosetteFeasibilitySummary | null,
@@ -249,6 +250,14 @@ export const useRosetteStore = defineStore("rosette", {
     // -------------------------
     // Snapshots
     // -------------------------
+    selectSnapshot(snapshotId: string | null) {
+      if (this.selectedSnapshotId === snapshotId) {
+        this.selectedSnapshotId = null;
+      } else {
+        this.selectedSnapshotId = snapshotId;
+      }
+    },
+
     async loadRecentSnapshots(filters?: { q?: string; tag?: string; pattern_id?: string }) {
       this.snapshotsLoading = true;
       this.snapshotsError = "";
