@@ -78,10 +78,11 @@ export const useRosetteStore = defineStore("rosette", {
     jumpSeverity: "RED_ONLY" as "RED_ONLY" | "RED_YELLOW",
 
     // Bundle 32.4.0: Undo history stack
-    historyStack: [] as any[],
+    // Bundle 32.4.4: Typed HistoryEntry with labels
+    historyStack: [] as HistoryEntry[],
     historyMax: 20,
     // Bundle 32.4.3: Redo stack
-    redoStack: [] as any[],
+    redoStack: [] as HistoryEntry[],
     redoMax: 20,
   }),
 
@@ -488,8 +489,8 @@ export const useRosetteStore = defineStore("rosette", {
       return sc ? sc(v) : JSON.parse(JSON.stringify(v));
     },
 
-    /** Push a snapshot to history stack before edits */
-    _pushHistorySnapshot(params?: any) {
+    /** Push a snapshot to history stack before edits (Bundle 32.4.4: with label) */
+    _pushHistorySnapshot(label = "Edit", params?: any) {
       // Any new edit invalidates redo history (canonical behavior)
       this.redoStack = [];
 
@@ -498,7 +499,7 @@ export const useRosetteStore = defineStore("rosette", {
 
       try {
         const snap = this._clone(src);
-        this.historyStack.push(snap);
+        this.historyStack.push({ params: snap, label, ts: Date.now() });
         if (this.historyStack.length > this.historyMax) this.historyStack.shift();
       } catch {
         // fail gracefully
@@ -526,16 +527,16 @@ export const useRosetteStore = defineStore("rosette", {
       const prev = this.historyStack.pop();
       if (!prev) return;
 
-      // Push current into redo before reverting
+      // Push current into redo before reverting (Bundle 32.4.4: preserve label)
       try {
         const curSnap = this._clone(this.currentParams);
-        this.redoStack.push(curSnap);
+        this.redoStack.push({ params: curSnap, label: prev.label, ts: Date.now() });
         if (this.redoStack.length > this.redoMax) this.redoStack.shift();
       } catch {
         // ignore
       }
 
-      this.currentParams = prev;
+      this.currentParams = prev.params;
     },
 
     /** Redo last undone edit (pushes current → undo before applying redo) */
@@ -545,16 +546,16 @@ export const useRosetteStore = defineStore("rosette", {
       const next = this.redoStack.pop();
       if (!next) return;
 
-      // Push current into undo history before applying redo
+      // Push current into undo history before applying redo (Bundle 32.4.4: preserve label)
       try {
         const curSnap = this._clone(this.currentParams);
-        this.historyStack.push(curSnap);
+        this.historyStack.push({ params: curSnap, label: next.label, ts: Date.now() });
         if (this.historyStack.length > this.historyMax) this.historyStack.shift();
       } catch {
         // ignore
       }
 
-      this.currentParams = next;
+      this.currentParams = next.params;
     },
 
     /**
@@ -580,8 +581,10 @@ export const useRosetteStore = defineStore("rosette", {
 
       const minWidthMm = opts?.minWidthMm ?? 0.2;
 
-      // History snapshot BEFORE change
-      this._pushHistorySnapshot();
+      // History snapshot BEFORE change (Bundle 32.4.4: with label)
+      this._pushHistorySnapshot(
+        `Ring ${ringIndex + 1} ${deltaMm > 0 ? "+" : ""}${deltaMm.toFixed(2)}mm`
+      );
 
       // Clone current params
       const next = JSON.parse(JSON.stringify(this.currentParams));
@@ -621,7 +624,10 @@ export const useRosetteStore = defineStore("rosette", {
       // need at least one neighbor to distribute
       if (left < 0 && right >= rings.length) return;
 
-      this._pushHistorySnapshot();
+      // Bundle 32.4.4: with distribute label
+      this._pushHistorySnapshot(
+        `Ring ${ringIndex + 1} ${deltaMm > 0 ? "+" : ""}${deltaMm.toFixed(2)}↔ (distribute)`
+      );
 
       const next = JSON.parse(JSON.stringify(this.currentParams));
 
@@ -664,9 +670,9 @@ export const useRosetteStore = defineStore("rosette", {
       // Revert = new branch, clears redo
       this.redoStack = [];
 
-      // Save current state into history before reverting
+      // Save current state into history before reverting (Bundle 32.4.4: with label)
       try {
-        this._pushHistorySnapshot(this.currentParams);
+        this._pushHistorySnapshot("Revert (before)");
       } catch {
         // ignore
       }
@@ -677,7 +683,7 @@ export const useRosetteStore = defineStore("rosette", {
       // Drop everything newer than target (so revert is deterministic)
       this.historyStack = stack.slice(0, absIndex);
 
-      this.currentParams = target;
+      this.currentParams = target.params;
     },
 
     /** Clear all history (undo + redo) */

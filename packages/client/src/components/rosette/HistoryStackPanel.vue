@@ -4,9 +4,11 @@ import { useRosetteStore } from "@/stores/rosetteStore";
 
 const store = useRosetteStore();
 
+// Bundle 32.4.4: HistoryItem with action label + params summary
 type HistoryItem = {
-  label: string;
-  idxFromTop: number; // 0 = newest
+  label: string;       // action name (e.g., "Ring 3 +0.10mm")
+  paramsLabel: string; // summary (e.g., "4 rings • Σ width 12.80mm")
+  idxFromTop: number;  // 0 = newest
 };
 
 function describeParams(p: any): string {
@@ -29,14 +31,16 @@ function describeParams(p: any): string {
   }
 }
 
+// Bundle 32.4.4: Pull action labels from HistoryEntry objects
 const recent = computed<HistoryItem[]>(() => {
   const stack = store.historyStack ?? [];
   const take = stack.slice(Math.max(0, stack.length - 5)); // last 5
   // newest first
   const newestFirst = [...take].reverse();
 
-  return newestFirst.map((p, i) => ({
-    label: describeParams(p),
+  return newestFirst.map((entry: any, i: number) => ({
+    label: entry?.label || "Edit",
+    paramsLabel: describeParams(entry?.params),
     idxFromTop: i,
   }));
 });
@@ -72,12 +76,12 @@ function clearAll() {
         class="row"
         type="button"
         @click="revertTo(it.idxFromTop)"
-        :title="'Revert to: ' + it.label"
+        :title="'Revert to: ' + it.label + ' (' + it.paramsLabel + ')'"
       >
         <span class="dot" />
         <span class="txt">
-          <span class="k">Revert</span>
-          <span class="v">{{ it.label }}</span>
+          <span class="k">{{ it.label }}</span>
+          <span class="v">{{ it.paramsLabel }}</span>
         </span>
       </button>
     </div>
