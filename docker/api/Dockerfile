@@ -25,7 +25,7 @@ ENV PYTHONPATH=/app/services/api
 EXPOSE 8000
 
 # health endpoint baked in app
-HEALTHCHECK --interval=10s --timeout=3s --retries=10 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=10 \
   CMD curl -fsS http://127.0.0.1:${UVICORN_PORT}/health || exit 1
 
 CMD ["python","-m","uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]

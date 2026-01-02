@@ -1184,7 +1184,7 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         
         # Apply adaptive feed translation
         body_lines = _apply_adaptive_feed(
-            moves=plan_out.moves,
+            moves=plan_out["moves"],
             post=post,
             base_units=body_copy.units
         )
