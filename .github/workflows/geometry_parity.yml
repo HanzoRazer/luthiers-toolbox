@@ -19,8 +19,8 @@ jobs:
       
       - name: Boot API server
         run: |
-          uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 &
-          for i in $(seq 1 30); do 
+          cd services/api && uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do
             curl -sSf http://127.0.0.1:8000/health >/dev/null && exit 0 || sleep 1
           done
           echo "API server failed to start"

@@ -131,6 +131,31 @@ const bulkDownloadEligibility = computed(() => {
 const canBulkDownload = computed(() => bulkDownloadEligibility.value.allowed);
 const bulkDownloadBlockedReason = computed(() => bulkDownloadEligibility.value.reason);
 
+// Bundle 12: GREEN-only selection helpers
+const allGreenCandidateIds = computed(() => {
+  return candidates.value
+    .filter((c) => decisionOf(c) === "GREEN")
+    .map((c) => idOf(c));
+});
+
+const selectedGreenCandidateIds = computed(() => {
+  const selected = selectedCandidateIds.value; // Set<string>
+  return candidates.value
+    .filter((c) => selected.has(idOf(c)) && decisionOf(c) === "GREEN")
+    .map((c) => idOf(c));
+});
+
+function selectGreenOnly() {
+  // If there is an active selection, keep only GREEN within it.
+  // If nothing selected, select ALL GREEN candidates.
+  const nextIds =
+    selectedCandidateIds.value.size > 0
+      ? selectedGreenCandidateIds.value
+      : allGreenCandidateIds.value;
+
+  selectedCandidateIds.value = new Set(nextIds);
+}
+
 // Filtering + sorting
 const filteredSorted = computed(() => {
   const needle = q.value.trim().toLowerCase();
@@ -410,6 +435,16 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
           @click="bulkDecisionOpen = true"
         >
           Bulk decision…
+        </button>
+        <!-- Bundle 12: Select GREEN only quick action -->
+        <button
+          class="btn btn-secondary btn-sm"
+          type="button"
+          :disabled="bulkBusy || candidates.length === 0"
+          title="Keep only GREEN candidates selected (or select all GREEN if none selected)"
+          @click="selectGreenOnly"
+        >
+          Select GREEN only
         </button>
         <!-- Bundle 11: Bulk download gated to GREEN-only with hover reason -->
         <DisabledReasonWrap
