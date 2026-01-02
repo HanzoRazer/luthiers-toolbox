@@ -136,31 +136,43 @@ from pathlib import Path
 # FILENAME SANITIZATION
 # =============================================================================
 
-def safe_stem(filename: str) -> str:
+def safe_stem(filename: str, prefix: str = None) -> str:
     """
     Extract a safe stem (filename without extension) from a path or filename
-    
+
     Args:
-        filename: Full path or filename
-    
+        filename: Full path or filename (can be None)
+        prefix: Optional prefix to prepend to the stem
+
     Returns:
         Sanitized filename stem without extension
     """
-    # Get stem (filename without extension)
-    stem = Path(filename).stem
-    
+    # Handle None/empty filename
+    if not filename:
+        stem = ""
+    else:
+        # Get stem (filename without extension)
+        stem = Path(filename).stem
+
     # Remove any non-alphanumeric characters except underscores and hyphens
     safe = re.sub(r'[^a-zA-Z0-9_-]', '_', stem)
-    
+
     # Remove leading/trailing underscores
     safe = safe.strip('_')
-    
+
     # Limit length
     if len(safe) > 50:
         safe = safe[:50]
-    
+
+    # Add prefix if provided
+    if prefix:
+        if safe:
+            safe = f"{prefix}_{safe}"
+        else:
+            safe = prefix
+
     # Ensure it's not empty
     if not safe:
         safe = "file"
-    
+
     return safe
