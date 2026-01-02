@@ -1,6 +1,6 @@
 # Legacy Code Status
 
-> **Last Updated:** 2025-12-31
+> **Last Updated:** 2026-01-02
 > **Purpose:** Single source of truth for legacy code, technical debt, and migration status.
 
 ---
@@ -260,6 +260,46 @@ curl http://localhost:8000/api/governance/stats
 ---
 
 ## 9. Change Log
+
+### 2026-01-02: PR #3 CI Fixes (feature/cnc-saw-labs merge)
+
+**Critical CI Fixes:**
+
+| Issue | File(s) | Resolution |
+|-------|---------|------------|
+| Docker container crashes | Multiple routers | Moved module-level `os.makedirs()` to lazy initialization |
+| `safe_stem` TypeError | `util/names.py` | Added `prefix` parameter to function signature |
+| 500 on `/api/cam/metrics/energy_csv` | `cam_metrics_router.py` | Fixed by `safe_stem` prefix support |
+| 404 on simulate endpoint | `containers.yml` | Changed to `/api/sim/cam/simulate_gcode` |
+| SQLite OperationalError | `art_studio_rosette_store.py` | Added `_ensure_db_dir()` helper, use absolute paths |
+| Double prefix bugs | `tooling_router.py` | Removed internal prefix (was creating `/api/tooling/tooling/`) |
+
+**Files Modified:**
+
+| File | Change |
+|------|--------|
+| `services/api/app/util/names.py` | Added `prefix` parameter to `safe_stem()` |
+| `services/api/app/art_studio_rosette_store.py` | SQLite path handling with `_ensure_db_dir()` |
+| `services/api/app/learn/overrides_learner.py` | Moved `makedirs()` from module-level to function |
+| `services/api/app/routers/tooling_router.py` | Removed internal prefix |
+| `.github/workflows/containers.yml` | Fixed simulate endpoint path |
+| `.github/workflows/proxy_parity.yml` | Added debug logging, case-insensitive grep |
+| `.github/workflows/proxy_adaptive.yml` | Added debug logging for container failures |
+| `docker-compose.yml` | Added `ART_STUDIO_DB_PATH` env var |
+
+**CI Status After Merge:**
+
+| Workflow | Status |
+|----------|--------|
+| Containers (Build + Smoke) | ✅ Pass |
+| Proxy Parity | ✅ Pass |
+| API Tests | ✅ Pass |
+| Geometry Parity | ✅ Pass |
+| SDK Codegen | ✅ Pass |
+| Adaptive Pocket (API/Proxy) | ❌ Pre-existing failure |
+| RTL CI | ❌ Pre-existing Pydantic issues |
+
+---
 
 ### 2025-12-31 (Bundles 01-17)
 

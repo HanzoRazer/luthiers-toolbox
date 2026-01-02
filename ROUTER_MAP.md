@@ -1,6 +1,6 @@
 # Luthier's ToolBox Router Roadmap
 
-**Last Updated:** 2025-12-31
+**Last Updated:** 2026-01-02
 **Total Routers:** ~116 working routers organized across 22 waves
 **Status:** All previously-broken routers (9) fixed; 84 phantom imports removed
 **Governance:** Legacy routes tagged for deprecation tracking (see Canonical vs Legacy section)  
@@ -747,6 +747,45 @@ from rmos.pipeline import (
 ---
 
 ## Change Log
+
+### 2026-01-02: PR #3 CI Fixes (feature/cnc-saw-labs merge)
+
+**Router Fixes:**
+
+| Router | Issue | Fix |
+|--------|-------|-----|
+| `tooling_router` | Double prefix (`/api/tooling/tooling/*`) | Removed internal `prefix="/tooling"` |
+| `cam_sim_router` | Path confusion | Documented: internal `/cam` prefix means full path is `/api/sim/cam/*` |
+
+**Module-Level Directory Creation Pattern:**
+
+Fixed Docker container crashes caused by module-level `os.makedirs()` calls. Affected files:
+
+- `art_studio_rosette_store.py` - Added `_ensure_db_dir()` helper
+- `learn/overrides_learner.py` - Moved mkdir to function scope
+- `compare_baseline_store.py` - Lazy directory creation
+- `tool_db.py` - Lazy directory creation
+- Various routers - Lazy directory creation pattern
+
+**Utility Function Update:**
+
+`util/names.py:safe_stem()` now accepts optional `prefix` parameter:
+
+```python
+def safe_stem(filename: str, prefix: str = None) -> str:
+    # Returns sanitized stem, optionally prefixed
+    # safe_stem("job.nc", prefix="energy") -> "energy_job"
+```
+
+**CI Workflow Fixes:**
+
+| Workflow | Fix |
+|----------|-----|
+| `containers.yml` | Changed simulate endpoint to `/api/sim/cam/simulate_gcode` |
+| `proxy_parity.yml` | Added debug logging, case-insensitive grep for post-processor checks |
+| `proxy_adaptive.yml` | Added debug logging for container failures |
+
+---
 
 ### 2025-12-31
 

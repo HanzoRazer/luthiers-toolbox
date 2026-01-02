@@ -512,3 +512,60 @@ pytest tests/test_runs_filter_by_batch_label.py -v
 **ALL 3 CRITICAL BLOCKERS NOW RESOLVED**
 
 ---
+
+### 2026-01-02: PR #3 CI Pipeline Fixes (feature/cnc-saw-labs)
+
+**PR #3 Merged Successfully**
+
+Fixed critical CI pipeline issues blocking the feature/cnc-saw-labs branch merge:
+
+**Issues Fixed:**
+
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| Docker container crashes | Module-level `os.makedirs()` in routers | Lazy initialization with `_ensure_*_dir()` helpers |
+| `safe_stem` 500 errors | Function missing `prefix` parameter | Added `prefix: str = None` to signature |
+| Containers workflow 404 | Wrong simulate endpoint path | Changed to `/api/sim/cam/simulate_gcode` |
+| SQLite OperationalError | Relative DB path in Docker | Absolute path + `ART_STUDIO_DB_PATH` env var |
+| Double prefix bugs | Router internal prefix + main.py prefix | Removed internal prefix from `tooling_router` |
+
+**CI Status After Merge:**
+
+| Workflow | Status | Notes |
+|----------|--------|-------|
+| Containers (Build + Smoke) | ✅ Pass | Core Docker workflow fixed |
+| Proxy Parity | ✅ Pass | DXF/SVG exports working |
+| API Tests | ✅ Pass | Core API tests pass |
+| Geometry Parity | ✅ Pass | Geometry tests pass |
+| SDK Codegen | ✅ Pass | SDK generation works |
+| Adaptive Pocket | ❌ Fail | Pre-existing (was failing on main) |
+| RTL CI | ❌ Fail | Pre-existing Pydantic issues |
+
+**Key Pattern Established:**
+
+Module-level `os.makedirs()` calls in Docker containers cause `PermissionError` on import. Solution pattern:
+
+```python
+# BAD: Module-level
+DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)  # Crashes in Docker
+
+# GOOD: Lazy initialization
+DATA_DIR = Path(__file__).parent / "data"
+
+def _ensure_data_dir():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def write_data(content):
+    _ensure_data_dir()  # Only create when needed
+    ...
+```
+
+**Metrics Update:**
+
+| Component | Previous | Current | Change |
+|-----------|----------|---------|--------|
+| CI/CD Workflows | 60% | 70% | +10% |
+| **Overall Readiness** | 85-88% | **88-90%** | +2% |
+
+---
