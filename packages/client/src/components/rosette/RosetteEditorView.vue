@@ -30,7 +30,11 @@
         >
           {{ store.jumpSeverity === "RED_ONLY" ? "RED only" : "RED+YELLOW" }}
         </button>
-        <div class="jump-hud" v-if="store.totalRingCount > 0">
+        <div
+          class="jump-hud"
+          :class="{ pulse: hudPulse }"
+          v-if="store.totalRingCount > 0"
+        >
           <span class="pill">
             {{ store.jumpSeverity === "RED_ONLY" ? "Filter: RED only" : "Filter: RED+YELLOW" }}
           </span>
@@ -51,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import PatternLibraryPanel from "./PatternLibraryPanel.vue";
 import GeneratorPicker from "./GeneratorPicker.vue";
@@ -60,6 +64,17 @@ import SnapshotPanel from "./SnapshotPanel.vue";
 import FeasibilityBanner from "./FeasibilityBanner.vue";
 
 const store = useRosetteStore();
+
+// Bundle 32.3.7: HUD pulse on filter toggle
+const hudPulse = ref(false);
+
+watch(
+  () => store.jumpSeverity,
+  () => {
+    hudPulse.value = true;
+    window.setTimeout(() => (hudPulse.value = false), 260);
+  }
+);
 
 onMounted(async () => {
   await store.loadPatterns();
@@ -92,6 +107,12 @@ function onKeyDown(e: KeyboardEvent) {
   if ((e.key === "R" || e.key === "r") && e.shiftKey && !e.ctrlKey && !e.metaKey) {
     e.preventDefault();
     store.toggleJumpSeverity();
+  }
+
+  // w → jump to worst problematic ring (Bundle 32.3.7)
+  if ((e.key === "w" || e.key === "W") && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    store.jumpToWorstProblemRing();
   }
 }
 
@@ -163,6 +184,23 @@ watch(
   border: 1px solid #e6e6e6;
   background: #fafafa;
   color: #444;
+}
+.jump-hud.pulse {
+  animation: hudPulse 260ms ease-out;
+}
+@keyframes hudPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.02);
+    filter: brightness(1.06);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 @media (max-width: 1100px) {
   .wrap {

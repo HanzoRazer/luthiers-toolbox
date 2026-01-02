@@ -366,6 +366,13 @@ export const useRosetteStore = defineStore("rosette", {
       this.focusRing(prevIdx);
     },
 
+    /** Jump to worst (first) problematic ring (Bundle 32.3.7) */
+    jumpToWorstProblemRing() {
+      const rings = this.problematicRingIndices; // already sorted worst-first
+      if (!rings.length) return;
+      this.focusRing(rings[0]);
+    },
+
     // -------------------------
     // Snapshots
     // -------------------------
