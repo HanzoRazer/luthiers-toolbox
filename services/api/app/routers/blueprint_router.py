@@ -486,8 +486,13 @@ except Exception as e:
     ANALYZER_IMPORT_ERROR = f"{type(e).__name__}: {e}"
     create_analyzer = None  # type: ignore
 
-# Phase 1 SVG Vectorizer - Always available (no AI required)
-from vectorizer import create_vectorizer
+# Phase 1 SVG Vectorizer - Optional (not in Docker image)
+try:
+    from vectorizer import create_vectorizer
+    VECTORIZER_AVAILABLE = True
+except ImportError:
+    VECTORIZER_AVAILABLE = False
+    create_vectorizer = None  # type: ignore
 
 try:
     from vectorizer_phase2 import create_phase2_vectorizer
@@ -869,6 +874,13 @@ async def export_to_svg(request: ExportRequest) -> FileResponse:
             raise HTTPException(
                 status_code=400,
                 detail="Only SVG format supported in Phase 1. DXF coming in Phase 2."
+            )
+        
+        # Check if vectorizer is available (not in Docker)
+        if not VECTORIZER_AVAILABLE:
+            raise HTTPException(
+                status_code=501,
+                detail="Blueprint vectorizer not available in this deployment. Use local development environment."
             )
         
         # Validate scale correction bounds
