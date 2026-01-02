@@ -1047,17 +1047,18 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
     without re-running toolpath planning.
     
     Request Flow:
-        1. Normalize modes list (filter to allowed values, default to all)
-        2. Resolve job name stem (sanitize or fallback to timestamp)
-        3. For each mode:
+        1. Validate loops (must be non-empty with valid geometry)
+        2. Normalize modes list (filter to allowed values, default to all)
+        3. Resolve job name stem (sanitize or fallback to timestamp)
+        4. For each mode:
            a. Clone request body and set adaptive_feed_override.mode
            b. Call /plan to generate toolpath
            c. Load post profile and apply override
            d. Apply adaptive feed translation (_apply_adaptive_feed)
            e. Assemble G-code with headers/footers/metadata
            f. Write to ZIP as <stem>_<mode>.nc
-        4. Generate manifest JSON with run metadata
-        5. Return ZIP as streaming response
+        5. Generate manifest JSON with run metadata
+        6. Return ZIP as streaming response
     
     Args:
         body: BatchExportIn with geometry, machining params, and mode filter
@@ -1074,8 +1075,9 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         - <stem>_manifest.json: Run metadata
     
     Raises:
-        HTTPException 400: If loops invalid (see /plan endpoint)
-        HTTPException 500: If planning or export fails
+        HTTPException 400: If loops missing, empty, or invalid geometry
+        HTTPException 409: If safety/governance blocks export
+        HTTPException 500: If unexpected error during planning or export
     
     Example:
         >>> response = client.post("/batch_export", json={
@@ -1092,6 +1094,43 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         - Manifest includes timestamp, tool params, strategy, L.3/M.4 flags
         - See BATCH_EXPORT_SUMMARY.md for complete feature documentation
     """
+    # -------------------------------------------------------------------------
+    # Bundle 17: Input validation guards (convert 500 → governed 4xx)
+    # -------------------------------------------------------------------------
+    
+    # Guard: loops must be present
+    if not body.loops:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_GEOMETRY",
+                "reason": "loops is required and cannot be empty",
+            }
+        )
+    
+    # Guard: each loop must have valid pts
+    for i, loop in enumerate(body.loops):
+        pts = getattr(loop, "pts", None)
+        if not pts or len(pts) < 3:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "INVALID_GEOMETRY",
+                    "reason": f"Loop {i} must have at least 3 points",
+                    "loop_index": i,
+                }
+            )
+    
+    # Guard: tool_d must be positive
+    if body.tool_d <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_TOOL",
+                "reason": "tool_d must be positive",
+            }
+        )
+    
     # Normalize modes - filter to allowed values
     modes = [m for m in (body.modes or []) if m in ALLOWED_MODES]
     if not modes:
@@ -1158,34 +1197,64 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
         program = "\n".join(hdr + [meta] + body_lines + ftr) + "\n"
         return program
     
-    # Build ZIP with requested modes only
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        for m in modes:
-            z.writestr(f"{stem}_{m}.nc", render_with_mode(m))
+    # -------------------------------------------------------------------------
+    # Bundle 17: Wrap ZIP generation with exception handling
+    # -------------------------------------------------------------------------
+    try:
+        # Build ZIP with requested modes only
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for m in modes:
+                z.writestr(f"{stem}_{m}.nc", render_with_mode(m))
+            
+            # Add manifest with modes list and run metadata
+            manifest = {
+                "modes": modes,
+                "post": post_id,
+                "units": body.units,
+                "tool_d": body.tool_d,
+                "stepover": body.stepover,
+                "stepdown": body.stepdown,
+                "strategy": body.strategy,
+                "trochoids": bool(getattr(body, "use_trochoids", False)),
+                "jerk_aware": bool(getattr(body, "jerk_aware", False)),
+                "job_name": stem,
+                "timestamp": int(time.time())
+            }
+            z.writestr(f"{stem}_manifest.json", json.dumps(manifest, indent=2))
         
-        # Add manifest with modes list and run metadata
-        manifest = {
-            "modes": modes,
-            "post": post_id,
-            "units": body.units,
-            "tool_d": body.tool_d,
-            "stepover": body.stepover,
-            "stepdown": body.stepdown,
-            "strategy": body.strategy,
-            "trochoids": bool(getattr(body, "use_trochoids", False)),
-            "jerk_aware": bool(getattr(body, "jerk_aware", False)),
-            "job_name": stem,
-            "timestamp": int(time.time())
-        }
-        z.writestr(f"{stem}_manifest.json", json.dumps(manifest, indent=2))
+        buf.seek(0)
+        return StreamingResponse(
+            buf,
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{stem}_multi_mode.zip"'}
+        )
     
-    buf.seek(0)
-    return StreamingResponse(
-        buf,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{stem}_multi_mode.zip"'}
-    )
+    except HTTPException:
+        # Re-raise HTTP exceptions (already governed)
+        raise
+    
+    except ValueError as e:
+        # Known geometry/value errors → 400
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "GEOMETRY_ERROR",
+                "reason": str(e),
+            }
+        )
+    
+    except Exception as e:
+        # Unexpected errors → 500 with logging
+        import logging
+        logging.exception(f"batch_export unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "EXPORT_FAILED",
+                "reason": "Unexpected error during batch export",
+            }
+        )
 
 
 @router.post("/sim")
