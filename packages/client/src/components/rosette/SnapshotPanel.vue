@@ -20,18 +20,28 @@
     </div>
     <div v-if="store.snapshotsError" class="err">{{ store.snapshotsError }}</div>
     <div class="list" v-if="store.snapshots?.length">
-      <div class="snap" v-for="s in store.snapshots" :key="s.snapshot_id">
+      <div
+        class="snap"
+        :class="{ selected: selectedSnapshotId === s.snapshot_id }"
+        v-for="s in store.snapshots"
+        :key="s.snapshot_id"
+        @click="toggleSnapshotSelection(s.snapshot_id)"
+      >
         <div class="left">
           <div class="nm">{{ s.name }}</div>
           <div class="meta">{{ s.snapshot_id }} - {{ new Date(s.updated_at).toLocaleString() }}</div>
         </div>
-        <div class="actions">
+        <div class="actions" @click.stop>
           <button class="btn" @click="store.loadSnapshot(s.snapshot_id)">Load</button>
           <button class="btn" @click="store.exportSnapshot(s.snapshot_id)">Export</button>
         </div>
       </div>
     </div>
-    <div v-else class="empty">No snapshots yet.</div>
+
+    <div v-if="selectedConfidenceReason" class="confidence-panel">
+      <ConfidenceDetails :reason="selectedConfidenceReason" />
+    </div>
+    <div v-if="!store.snapshots?.length" class="empty">No snapshots yet.</div>
   </div>
 
   <div id="snapshot-compare" style="margin-top: 12px;">
@@ -40,16 +50,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import SnapshotComparePanel from "@/components/art/SnapshotComparePanel.vue";
+import ConfidenceDetails from "@/components/art/ConfidenceDetails.vue";
+import { getConfidenceReason } from "@/utils/confidenceReasons";
 
 const store = useRosetteStore();
 const toast = useToastStore();
 const name = ref("");
 const notes = ref("");
 const tags = ref("");
+const selectedSnapshotId = ref<string | null>(null);
+
+const selectedSnapshot = computed(() => {
+  if (!selectedSnapshotId.value) return null;
+  return store.snapshots.find((s) => s.snapshot_id === selectedSnapshotId.value) ?? null;
+});
+
+const selectedConfidenceReason = computed(() => {
+  const snap = selectedSnapshot.value;
+  if (!snap) return null;
+  // Access feasibility from snapshot if available
+  const feasibility = (snap as any).feasibility ?? null;
+  return getConfidenceReason(feasibility);
+});
+
+function toggleSnapshotSelection(snapshotId: string) {
+  if (selectedSnapshotId.value === snapshotId) {
+    selectedSnapshotId.value = null;
+  } else {
+    selectedSnapshotId.value = snapshotId;
+  }
+}
 
 function parseTags(s: string) {
   return (s || "")
@@ -171,5 +205,19 @@ function scrollToCompare() {
   font-size: 12px;
   color: #a00;
   margin: 4px 0;
+}
+.snap {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.snap:hover {
+  border-color: #ccc;
+}
+.snap.selected {
+  border-color: #111;
+  background: #f0f0f0;
+}
+.confidence-panel {
+  margin-top: 12px;
 }
 </style>
