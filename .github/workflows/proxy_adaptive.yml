@@ -41,11 +41,11 @@ jobs:
           load: true
           tags: toolbox/client:ci
 
-      - name: Build Proxy
+      - name: Build Proxy (nginx)
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: docker/proxy/Dockerfile
+          context: docker/nginx
+          file: docker/nginx/Dockerfile
           load: true
           tags: toolbox/proxy:ci
 
