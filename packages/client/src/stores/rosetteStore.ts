@@ -75,6 +75,10 @@ export const useRosetteStore = defineStore("rosette", {
 
     // Jump severity filter (Bundle 32.3.5)
     jumpSeverity: "RED_ONLY" as "RED_ONLY" | "RED_YELLOW",
+
+    // Bundle 32.4.0: Undo history stack
+    historyStack: [] as any[],
+    historyMax: 20,
   }),
 
   getters: {
@@ -467,6 +471,127 @@ export const useRosetteStore = defineStore("rosette", {
       } catch (e: any) {
         toast.push("error", e?.message || "Failed to import snapshot");
       }
+    },
+
+    // -------------------------
+    // Bundle 32.4.0: History + Nudge
+    // -------------------------
+
+    /** Push a snapshot to history stack before edits */
+    _pushHistorySnapshot() {
+      try {
+        const snap = JSON.parse(JSON.stringify(this.currentParams));
+        this.historyStack.push(snap);
+        if (this.historyStack.length > this.historyMax) this.historyStack.shift();
+      } catch {
+        // fail gracefully
+      }
+    },
+
+    /** Check if edits are allowed (blocked when RED) */
+    _canEditNow(): boolean {
+      return !this.isRedBlocked;
+    },
+
+    /** Set max history size */
+    setHistoryMax(n: number) {
+      const v = Math.max(5, Math.min(50, n));
+      this.historyMax = v;
+      if (this.historyStack.length > v) {
+        this.historyStack = this.historyStack.slice(this.historyStack.length - v);
+      }
+    },
+
+    /** Undo last edit */
+    undoLastEdit() {
+      if (!this.historyStack.length) return;
+      const prev = this.historyStack.pop();
+      if (!prev) return;
+      this.currentParams = prev;
+    },
+
+    /**
+     * Safe single-ring width nudge.
+     * - Captures history before change
+     * - Blocks when risk is RED
+     * - Clamps widths to a minimum
+     */
+    nudgeRingWidth(ringIndex: number, deltaMm: number, opts?: { minWidthMm?: number }) {
+      if (!this.currentParams?.ring_params?.length) return;
+      if (ringIndex < 0 || ringIndex >= this.currentParams.ring_params.length) return;
+
+      if (!this._canEditNow()) {
+        const toast = useToastStore();
+        toast.push("warning", "Blocked: Feasibility is RED. Adjust design first.");
+        return;
+      }
+
+      const minWidthMm = opts?.minWidthMm ?? 0.2;
+
+      // History snapshot BEFORE change
+      this._pushHistorySnapshot();
+
+      // Clone current params
+      const next = JSON.parse(JSON.stringify(this.currentParams));
+      const ring = next.ring_params[ringIndex];
+      const cur = Number(ring.width_mm ?? 0);
+      const nextW = Math.max(minWidthMm, cur + deltaMm);
+      ring.width_mm = nextW;
+
+      this.currentParams = next;
+    },
+
+    /**
+     * Safe "distribute" nudge:
+     * widen/shrink target ring by delta, and compensate neighbors equally
+     * so total ring-width sum stays ~constant (local conservation).
+     */
+    nudgeRingWidthDistribute(ringIndex: number, deltaMm: number, opts?: { minWidthMm?: number }) {
+      if (!this.currentParams?.ring_params?.length) return;
+      if (ringIndex < 0 || ringIndex >= this.currentParams.ring_params.length) return;
+
+      if (!this._canEditNow()) {
+        const toast = useToastStore();
+        toast.push("warning", "Blocked: Feasibility is RED. Adjust design first.");
+        return;
+      }
+
+      const minWidthMm = opts?.minWidthMm ?? 0.2;
+      const rings = this.currentParams.ring_params;
+      const left = ringIndex - 1;
+      const right = ringIndex + 1;
+
+      // need at least one neighbor to distribute
+      if (left < 0 && right >= rings.length) return;
+
+      this._pushHistorySnapshot();
+
+      const next = JSON.parse(JSON.stringify(this.currentParams));
+
+      const getW = (r: any) => Number(r.width_mm ?? 0);
+      const setW = (r: any, w: number) => { r.width_mm = w; };
+
+      const t = next.ring_params[ringIndex];
+      const tW = getW(t);
+      const tNext = Math.max(minWidthMm, tW + deltaMm);
+
+      const neighbors: number[] = [];
+      if (left >= 0) neighbors.push(left);
+      if (right < next.ring_params.length) neighbors.push(right);
+
+      const compTotal = tNext - tW;
+      const per = neighbors.length ? compTotal / neighbors.length : 0;
+
+      setW(t, tNext);
+
+      for (const ni of neighbors) {
+        const r = next.ring_params[ni];
+        const w = getW(r);
+        const wNext = Math.max(minWidthMm, w - per);
+        setW(r, wNext);
+      }
+
+      this.currentParams = next;
     },
   },
 });

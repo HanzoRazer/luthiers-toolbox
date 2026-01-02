@@ -56,7 +56,63 @@
             </span>
           </span>
         </div>
+        <!-- Bundle 32.4.0: Undo button -->
+        <button
+          class="jump-btn undo-btn"
+          type="button"
+          title="Undo last edit (Ctrl+Z)"
+          :disabled="store.historyStack.length === 0"
+          @click="store.undoLastEdit()"
+        >
+          Undo
+        </button>
       </div>
+
+      <!-- Bundle 32.4.0: Ring Nudge Section -->
+      <div class="ring-nudge-section" v-if="store.currentParams?.ring_params?.length">
+        <div class="nudge-title">Ring Widths</div>
+        <div
+          class="ring-row"
+          v-for="(ring, idx) in store.currentParams.ring_params"
+          :key="idx"
+          :data-ring-index="idx"
+          :class="{ focused: store.focusedRingIndex === idx }"
+        >
+          <span class="ring-label">Ring {{ idx + 1 }}</span>
+          <span class="ring-width">{{ Number(ring.width_mm || 0).toFixed(2) }} mm</span>
+          <div class="ring-actions">
+            <button
+              class="mini"
+              type="button"
+              title="Shrink width by 0.10 mm"
+              :disabled="store.isRedBlocked"
+              @click="store.nudgeRingWidth(idx, -0.1)"
+            >−0.10</button>
+            <button
+              class="mini"
+              type="button"
+              title="Grow width by 0.10 mm"
+              :disabled="store.isRedBlocked"
+              @click="store.nudgeRingWidth(idx, 0.1)"
+            >+0.10</button>
+            <button
+              class="mini dist"
+              type="button"
+              title="Shrink width, distribute to neighbors"
+              :disabled="store.isRedBlocked"
+              @click="store.nudgeRingWidthDistribute(idx, -0.1)"
+            >−0.10↔</button>
+            <button
+              class="mini dist"
+              type="button"
+              title="Grow width, distribute to neighbors"
+              :disabled="store.isRedBlocked"
+              @click="store.nudgeRingWidthDistribute(idx, 0.1)"
+            >+0.10↔</button>
+          </div>
+        </div>
+      </div>
+
       <GeneratorPicker />
       <FeasibilityBanner />
       <SnapshotPanel />
@@ -124,6 +180,12 @@ function onKeyDown(e: KeyboardEvent) {
   if ((e.key === "w" || e.key === "W") && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
     e.preventDefault();
     store.jumpToWorstProblemRing();
+  }
+
+  // Bundle 32.4.0: Ctrl+Z / Cmd+Z → undo last edit
+  if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+    e.preventDefault();
+    store.undoLastEdit();
   }
 }
 
@@ -277,5 +339,85 @@ kbd {
   .wrap {
     grid-template-columns: 1fr;
   }
+}
+
+/* Bundle 32.4.0: Undo button styles */
+.undo-btn {
+  margin-left: auto;
+}
+.undo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bundle 32.4.0: Ring nudge section styles */
+.ring-nudge-section {
+  background: #fafafa;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.nudge-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 8px;
+}
+.ring-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.ring-row.focused {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+}
+.ring-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  min-width: 50px;
+}
+.ring-width {
+  font-size: 11px;
+  font-weight: 700;
+  color: #222;
+  min-width: 55px;
+  text-align: right;
+}
+.ring-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.ring-actions .mini {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+.ring-actions .mini:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+.ring-actions .mini:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ring-actions .mini.dist {
+  border-color: #a8d4f0;
+  background: #e8f4fc;
+  color: #0066aa;
+}
+.ring-actions .mini.dist:hover:not(:disabled) {
+  background: #cce8f7;
 }
 </style>
