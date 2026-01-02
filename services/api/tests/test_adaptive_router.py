@@ -16,7 +16,7 @@ Focus: adaptive_router.py (Module L - production CAM feature)
 
 import pytest
 import json
-from conftest import assert_valid_gcode, assert_valid_moves
+from tests.helpers import assert_valid_gcode, assert_valid_moves
 
 
 # =============================================================================

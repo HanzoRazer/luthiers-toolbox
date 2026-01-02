@@ -1,6 +1,6 @@
 # Luthier's ToolBox Router Roadmap
 
-**Last Updated:** 2025-12-27
+**Last Updated:** 2025-12-31
 **Total Routers:** ~116 working routers organized across 22 waves
 **Status:** All previously-broken routers (9) fixed; 84 phantom imports removed
 **Governance:** Legacy routes tagged for deprecation tracking (see Canonical vs Legacy section)  
@@ -665,7 +665,108 @@ curl -X POST "http://localhost:8000/api/cam/roughing_gcode_intent?strict=true" \
 
 ---
 
+## ADR-003 Phase 5: Feedback Loop Infrastructure
+
+> **Added 2025-12-31**: Complete feedback loop infrastructure for OPERATION lane.
+
+### Overview
+
+Phase 5 completes the ADR-003 CAM OPERATION Lane Promotion by adding feedback loops for job logging, learning events, and metrics rollups. This enables closed-loop optimization of machining parameters.
+
+### Module Location
+
+```
+services/api/app/rmos/pipeline/feedback/
+├── __init__.py      # Package exports
+├── schemas.py       # Pydantic models for feedback artifacts
+├── config.py        # Feature flag configuration
+├── job_log.py       # Job logging service
+├── learning.py      # Learning event and decision service
+└── rollups.py       # Metrics rollup service
+```
+
+### Key Components
+
+| Component | Description |
+|-----------|-------------|
+| `JobLogService` | Records operator feedback, auto-triggers hooks |
+| `LearningService` | Emits learning events, manages accept/reject decisions |
+| `RollupService` | Aggregates time, yield, and event metrics |
+| `FeedbackConfig` | Environment-based feature flag configuration |
+
+### Feature Flags
+
+All hooks default to OFF for safety. Enable per-tool via environment:
+
+```bash
+# Enable for roughing tool type
+ROUGHING_LEARNING_HOOK_ENABLED=true
+ROUGHING_METRICS_ROLLUP_HOOK_ENABLED=true
+ROUGHING_APPLY_ACCEPTED_OVERRIDES=false  # Careful: affects future executions
+```
+
+### Signal Detection
+
+The learning service detects quality signals from metrics and notes:
+
+| Signal | Detection | Suggested Action |
+|--------|-----------|------------------|
+| `burn` | `metrics.burn=true` or "burn" in notes | Reduce feed, increase RPM |
+| `tearout` | `metrics.tearout=true` or "tear" in notes | Reduce DOC, adjust feed direction |
+| `kickback` | `metrics.kickback=true` or "kickback" in notes | Reduce feed rate |
+| `chatter` | `metrics.chatter=true` or "chatter" in notes | Adjust RPM, reduce DOC |
+| `tool_wear` | `metrics.tool_wear=true` or "wear" in notes | Schedule tool change |
+| `excellent` | "excellent" or "perfect" in notes | Mark current params as good |
+
+### Learning Workflow
+
+1. Operator submits job log with status and metrics
+2. If `LEARNING_HOOK_ENABLED`, learning event auto-emitted
+3. Learning event contains suggested multipliers per signal
+4. Operator reviews and accepts/rejects via decision endpoint
+5. Accepted decisions stored in JSONL for future context resolution
+6. If `APPLY_ACCEPTED_OVERRIDES`, multipliers applied to matching contexts
+
+### Exports
+
+Available from `rmos.pipeline` or `rmos`:
+
+```python
+from rmos.pipeline import (
+    # Schemas
+    JobLogStatus, JobLogMetrics, QualitySignal, LearningMultipliers,
+    LearningSuggestion, LearningEvent, LearningDecision, MetricsRollup,
+    # Services
+    JobLogService, LearningService, RollupService,
+    # Convenience functions
+    write_job_log, emit_learning_event, create_learning_decision,
+    compute_execution_rollup, persist_execution_rollup,
+)
+```
+
+---
+
 ## Change Log
+
+### 2025-12-31
+
+**ADR-003 Phase 5: Feedback Loop Infrastructure**
+- Added `rmos/pipeline/feedback/` module with complete feedback loop infrastructure
+- New schemas: `JobLogStatus`, `JobLogMetrics`, `QualitySignal`, `LearningMultipliers`, `LearningSuggestion`, `LearningEvent`, `LearningDecision`, `MetricsRollup`
+- Feature flag configuration: `{TOOL}_LEARNING_HOOK_ENABLED`, `{TOOL}_METRICS_ROLLUP_HOOK_ENABLED`, `{TOOL}_APPLY_ACCEPTED_OVERRIDES`
+- Job log service with auto-triggered hooks for learning and rollups
+- Learning service with signal detection, suggestion generation, and accept/reject gate
+- Metrics rollup service for time, yield, and event count aggregation
+- All hooks default to OFF for safety
+
+**ADR-003 Complete:**
+- Phase 1: Artifact Wrapper ✅
+- Phase 2: Feasibility Gate ✅
+- Phase 3: Move Standardization ✅
+- Phase 4: Full Pipeline ✅
+- Phase 5: Feedback Loops ✅
+
+See `docs/adr/ADR-003-cam-operation-lane-promotion.md` for full implementation details.
 
 ### 2025-12-27
 

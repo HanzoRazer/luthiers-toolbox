@@ -156,6 +156,134 @@ try:
 except ImportError:
     pass
 
+# Canonical Moves (Phase 3 - ADR-003)
+try:
+    from .moves import (
+        MoveType,
+        GCodeMove,
+        GCodeMoveModel,
+        move_to_gcode,
+        moves_to_gcode,
+        legacy_move_to_canonical,
+        canonical_to_legacy_move,
+        rapid,
+        linear,
+        cw_arc,
+        ccw_arc,
+        dwell,
+    )
+except ImportError:
+    pass
+
+# Post-Processors (Phase 3 - ADR-003)
+try:
+    from .posts import (
+        Dialect,
+        DialectConfig,
+        get_dialect_config,
+        render_gcode,
+        render_grbl,
+        render_fanuc,
+        render_linuxcnc,
+    )
+except ImportError:
+    pass
+
+# Pipeline Infrastructure (Phase 4 - ADR-003)
+try:
+    from .pipeline import (
+        # Enums
+        PipelineStage,
+        PipelineStatus,
+        ArtifactKind,
+        # Artifact types
+        PipelineArtifactBase,
+        SpecArtifact,
+        PlanArtifact,
+        DecisionArtifact,
+        ExecutionArtifact,
+        # Request/Response types
+        SpecRequest,
+        SpecResponse,
+        PlanRequest,
+        PlanResponse,
+        ApproveRequest,
+        ApproveResponse,
+        ExecuteRequest,
+        ExecuteResponse,
+        # Operation types
+        PlanOperation,
+        ExecutionResult,
+        # Store functions
+        PipelineStore,
+        get_pipeline_store,
+        write_artifact,
+        read_artifact,
+        query_artifacts,
+        list_executions_for_decision,
+        latest_execution_for_decision,
+        # Service class
+        PipelineService,
+        create_spec_artifact,
+        create_plan_artifact,
+        create_decision_artifact,
+        create_execution_artifact,
+    )
+except ImportError:
+    pass
+
+# Feedback Loop Infrastructure (Phase 5 - ADR-003)
+try:
+    from .pipeline import (
+        # Feedback schemas
+        JobLogStatus,
+        JobLogMetrics,
+        JobLog,
+        JobLogRequest,
+        JobLogResponse,
+        QualitySignal,
+        LearningMultipliers,
+        LearningSuggestion,
+        LearningEvent,
+        LearningEventResponse,
+        LearningDecisionPolicy,
+        LearningDecision,
+        LearningDecisionRequest,
+        LearningDecisionResponse,
+        TimeMetrics,
+        YieldMetrics,
+        EventCounts,
+        MetricsRollup,
+        MetricsRollupResponse,
+        # Feedback config
+        FeedbackConfig,
+        get_feedback_config,
+        is_learning_hook_enabled,
+        is_metrics_rollup_hook_enabled,
+        is_apply_overrides_enabled,
+        get_learned_overrides_path,
+        # Job log service
+        JobLogService,
+        write_job_log,
+        list_job_logs_for_execution,
+        # Learning service
+        LearningService,
+        detect_signals,
+        generate_suggestions,
+        emit_learning_event,
+        create_learning_decision,
+        resolve_learned_multipliers,
+        apply_multipliers_to_context,
+        # Rollup service
+        RollupService,
+        compute_execution_rollup,
+        persist_execution_rollup,
+        get_latest_rollup,
+        list_rollup_history,
+    )
+except ImportError:
+    pass
+
 # Re-export from existing modules for convenience
 try:
     from .logging_ai import (
@@ -268,4 +396,97 @@ __all__ = [
     "apply_global_policy_to_constraints",
     "validate_request_against_policy",
     "clamp_budget_to_policy",
+    # Canonical Moves (Phase 3 - ADR-003)
+    "MoveType",
+    "GCodeMove",
+    "GCodeMoveModel",
+    "move_to_gcode",
+    "moves_to_gcode",
+    "legacy_move_to_canonical",
+    "canonical_to_legacy_move",
+    "rapid",
+    "linear",
+    "cw_arc",
+    "ccw_arc",
+    "dwell",
+    # Post-Processors (Phase 3 - ADR-003)
+    "Dialect",
+    "DialectConfig",
+    "get_dialect_config",
+    "render_gcode",
+    "render_grbl",
+    "render_fanuc",
+    "render_linuxcnc",
+    # Pipeline Infrastructure (Phase 4 - ADR-003)
+    "PipelineStage",
+    "PipelineStatus",
+    "ArtifactKind",
+    "PipelineArtifactBase",
+    "SpecArtifact",
+    "PlanArtifact",
+    "DecisionArtifact",
+    "ExecutionArtifact",
+    "SpecRequest",
+    "SpecResponse",
+    "PlanRequest",
+    "PlanResponse",
+    "ApproveRequest",
+    "ApproveResponse",
+    "ExecuteRequest",
+    "ExecuteResponse",
+    "PlanOperation",
+    "ExecutionResult",
+    "PipelineStore",
+    "get_pipeline_store",
+    "write_artifact",
+    "read_artifact",
+    "query_artifacts",
+    "list_executions_for_decision",
+    "latest_execution_for_decision",
+    "PipelineService",
+    "create_spec_artifact",
+    "create_plan_artifact",
+    "create_decision_artifact",
+    "create_execution_artifact",
+    # Feedback Loop Infrastructure (Phase 5 - ADR-003)
+    "JobLogStatus",
+    "JobLogMetrics",
+    "JobLog",
+    "JobLogRequest",
+    "JobLogResponse",
+    "QualitySignal",
+    "LearningMultipliers",
+    "LearningSuggestion",
+    "LearningEvent",
+    "LearningEventResponse",
+    "LearningDecisionPolicy",
+    "LearningDecision",
+    "LearningDecisionRequest",
+    "LearningDecisionResponse",
+    "TimeMetrics",
+    "YieldMetrics",
+    "EventCounts",
+    "MetricsRollup",
+    "MetricsRollupResponse",
+    "FeedbackConfig",
+    "get_feedback_config",
+    "is_learning_hook_enabled",
+    "is_metrics_rollup_hook_enabled",
+    "is_apply_overrides_enabled",
+    "get_learned_overrides_path",
+    "JobLogService",
+    "write_job_log",
+    "list_job_logs_for_execution",
+    "LearningService",
+    "detect_signals",
+    "generate_suggestions",
+    "emit_learning_event",
+    "create_learning_decision",
+    "resolve_learned_multipliers",
+    "apply_multipliers_to_context",
+    "RollupService",
+    "compute_execution_rollup",
+    "persist_execution_rollup",
+    "get_latest_rollup",
+    "list_rollup_history",
 ]

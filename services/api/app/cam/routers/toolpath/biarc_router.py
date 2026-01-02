@@ -1,6 +1,11 @@
 """
 CAM Bi-Arc Router
 
+LANE: OPERATION (for /gcode endpoint)
+LANE: UTILITY (for /info endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) - generates G-code from explicit parameters
+
 Simple contour following from point array with post-processor support.
 
 Migrated from: routers/cam_biarc_router.py
@@ -8,16 +13,27 @@ Migrated from: routers/cam_biarc_router.py
 Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
+GOVERNANCE INVARIANTS:
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- biarc_gcode_execution (OK/ERROR) - from /gcode
+- biarc_gcode_blocked (BLOCKED) - from /gcode when safety policy blocks
+
 Endpoints:
-    POST /gcode    - Generate contour-following G-code
-    GET  /info     - Get operation information
+    POST /gcode    - Generate contour-following G-code (OPERATION)
+    GET  /info     - Get operation information (UTILITY)
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 # Import post injection utilities
@@ -26,6 +42,19 @@ try:
     HAS_POST_HELPERS = True
 except ImportError:
     HAS_POST_HELPERS = False
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ....rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ....rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -64,6 +93,8 @@ def biarc_gcode(req: BiarcReq) -> Response:
     """
     Generate contour-following G-code from point array.
 
+    LANE: OPERATION - Creates biarc_gcode_execution artifact.
+
     Process:
     1. Rapid to safe height
     2. Rapid to first point (XY)
@@ -74,48 +105,136 @@ def biarc_gcode(req: BiarcReq) -> Response:
     Note: "Bi-arc" name is historical; currently generates linear moves (G1).
     Future enhancement: Fit bi-arc splines for smoother paths.
     """
-    lines = [
-        "G90",  # Absolute positioning
-        f"G0 Z{_f(req.safe_z)}",  # Rapid to safe height
-    ]
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump())
 
-    if req.path:
-        # Rapid to first point
-        lines.append(f"G0 X{_f(req.path[0].x)} Y{_f(req.path[0].y)}")
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    feasibility = compute_feasibility_internal(
+        tool_id="biarc_gcode",
+        req=req,
+        context="biarc_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
 
-        # Plunge to cutting depth
-        lines.append(f"G1 Z{_f(req.z)} F{_f(req.feed)}")
-
-        # Follow path (linear interpolation)
-        for p in req.path[1:]:
-            lines.append(f"G1 X{_f(p.x)} Y{_f(p.y)} F{_f(req.feed)}")
-
-    body = "\n".join(lines) + "\n"
-
-    # Create response
-    resp = Response(content=body, media_type="text/plain; charset=utf-8")
-
-    # Apply post-processor wrapping if available
-    if HAS_POST_HELPERS:
-        ctx = build_post_context_v2(
-            post=req.post,
-            post_mode=req.post_mode,
-            units=req.units,
-            machine_id=req.machine_id,
-            RPM=req.rpm,
-            PROGRAM_NO=req.program_no,
-            WORK_OFFSET=req.work_offset,
-            TOOL=req.tool,
-            SAFE_Z=req.safe_z
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="biarc_gcode",
+            workflow_mode="biarc",
+            event_type="biarc_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
         )
-        resp = wrap_with_post_v2(resp, ctx)
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Bi-arc G-code generation blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+        )
 
-    return resp
+    try:
+        lines = [
+            "G90",  # Absolute positioning
+            f"G0 Z{_f(req.safe_z)}",  # Rapid to safe height
+        ]
+
+        if req.path:
+            # Rapid to first point
+            lines.append(f"G0 X{_f(req.path[0].x)} Y{_f(req.path[0].y)}")
+
+            # Plunge to cutting depth
+            lines.append(f"G1 Z{_f(req.z)} F{_f(req.feed)}")
+
+            # Follow path (linear interpolation)
+            for p in req.path[1:]:
+                lines.append(f"G1 X{_f(p.x)} Y{_f(p.y)} F{_f(req.feed)}")
+
+        body = "\n".join(lines) + "\n"
+
+        # Hash G-code for provenance
+        gcode_hash = sha256_of_text(body)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="biarc_gcode",
+            workflow_mode="biarc",
+            event_type="biarc_gcode_execution",
+            status="OK",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        # Create response
+        resp = Response(content=body, media_type="text/plain; charset=utf-8")
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+
+        # Apply post-processor wrapping if available
+        if HAS_POST_HELPERS:
+            ctx = build_post_context_v2(
+                post=req.post,
+                post_mode=req.post_mode,
+                units=req.units,
+                machine_id=req.machine_id,
+                RPM=req.rpm,
+                PROGRAM_NO=req.program_no,
+                WORK_OFFSET=req.work_offset,
+                TOOL=req.tool,
+                SAFE_Z=req.safe_z
+            )
+            resp = wrap_with_post_v2(resp, ctx)
+
+        return resp
+
+    except Exception as e:
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="biarc_gcode",
+            workflow_mode="biarc",
+            event_type="biarc_gcode_execution",
+            status="ERROR",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "BIARC_GCODE_ERROR",
+                "run_id": run_id,
+                "message": str(e),
+            },
+        )
 
 
 @router.get("/info")
 def biarc_info() -> Dict[str, Any]:
-    """Get bi-arc operation information"""
+    """
+    Get bi-arc operation information.
+
+    LANE: UTILITY - Info only, no artifacts.
+    """
     return {
         "operation": "biarc_contour",
         "description": "Simple contour following from point array (linear interpolation)",

@@ -49,6 +49,32 @@ class MultiScaleSpec:
 
 
 @dataclass
+class ScaleProfile:
+    """
+    Complete scale length profile with multiscale support.
+    
+    Wave 17: Added for GuitarModelSpec integration.
+    This is the canonical ScaleProfile definition (consolidates from models.py).
+    
+    Attributes:
+        id: Profile identifier (e.g. "fender_25_5", "gibson_24_75")
+        scale_length_mm: Primary scale length in mm
+        num_frets: Number of frets (typically 20-24)
+        description: Human-readable description
+        treble_scale_mm: Treble-side scale for multiscale (fanned fret)
+        bass_scale_mm: Bass-side scale for multiscale
+        perpendicular_fret: Fret number where strings are perpendicular (multiscale pivot)
+    """
+    id: str
+    scale_length_mm: float
+    num_frets: int
+    description: str = ""
+    treble_scale_mm: Optional[float] = None
+    bass_scale_mm: Optional[float] = None
+    perpendicular_fret: Optional[int] = None
+
+
+@dataclass
 class ScaleSpec:
     """
     Single-scale specification for a fretted instrument.

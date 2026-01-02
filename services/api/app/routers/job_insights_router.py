@@ -27,7 +27,11 @@ router = APIRouter(prefix="/api/cam/job_log", tags=["CAM Job Intelligence"])
 
 # Mock job log storage (replace with real DB in production)
 JOB_LOG_DIR = Path("data/cam_jobs")
-JOB_LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_job_log_dir() -> None:
+    """Create job log directory on first write (Docker compatibility)."""
+    JOB_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def infer_wood_type(job_name: str, job_note: str) -> Optional[str]:

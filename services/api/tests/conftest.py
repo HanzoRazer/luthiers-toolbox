@@ -80,6 +80,16 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     overrides_path = tmp_path / "learned_overrides.json"
     _write_text(overrides_path, "{}\n")
     monkeypatch.setenv("SAW_LAB_LEARNED_OVERRIDES_PATH", str(overrides_path))
+    # Keep learning hook OFF by default in tests unless explicitly enabled per-test.
+    monkeypatch.setenv("SAW_LAB_LEARNING_HOOK_ENABLED", "false")
+    # Keep learning apply OFF by default in tests unless explicitly enabled per-test.
+    monkeypatch.setenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "false")
+    # Keep rollup hook OFF by default.
+    monkeypatch.setenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "false")
+
+    # --- 2b) Metrics rollup hook (Saw Lab batch workflow) ---
+    # Disabled by default in tests; individual tests can enable via monkeypatch.
+    monkeypatch.setenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "false")
 
     # --- 2b) Metrics rollup hook (Saw Lab batch workflow) ---
     # Disabled by default in tests; individual tests can enable via monkeypatch.

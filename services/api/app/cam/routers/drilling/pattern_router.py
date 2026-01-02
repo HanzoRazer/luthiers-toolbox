@@ -1,6 +1,11 @@
 """
 CAM Drill Pattern Router
 
+LANE: OPERATION (for /gcode endpoint)
+LANE: UTILITY (for /info endpoint)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+Execution Class: B (Deterministic) - generates G-code from explicit parameters
+
 Generate drilling patterns (grid, circle, line) with modal cycles.
 
 Migrated from: routers/cam_drill_pattern_router.py
@@ -8,17 +13,28 @@ Migrated from: routers/cam_drill_pattern_router.py
 Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
+GOVERNANCE INVARIANTS:
+1. Client feasibility is ALWAYS ignored and recomputed server-side
+2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
+3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
+4. All outputs are SHA256 hashed for provenance
+
+ARTIFACT KINDS:
+- drill_pattern_gcode_execution (OK/ERROR) - from /gcode
+- drill_pattern_gcode_blocked (BLOCKED) - from /gcode when safety policy blocks
+
 Endpoints:
-    POST /gcode    - Generate pattern drilling G-code
-    GET  /info     - Get pattern info
+    POST /gcode    - Generate pattern drilling G-code (OPERATION)
+    GET  /info     - Get pattern info (UTILITY)
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from math import cos, pi, sin
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 try:
@@ -26,6 +42,19 @@ try:
     HAS_POST_HELPERS = True
 except ImportError:
     HAS_POST_HELPERS = False
+
+# Import run artifact persistence (OPERATION lane requirement)
+from ....rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
+# Import feasibility functions (Phase 2: server-side enforcement)
+from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from ....rmos.policies import SafetyPolicy
 
 router = APIRouter()
 
@@ -102,53 +131,146 @@ def _generate_points(p: Pattern) -> List[tuple]:
 
 @router.post("/gcode", response_class=Response)
 def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
-    """Generate drilling G-code from pattern specification."""
-    points = _generate_points(pat)
+    """
+    Generate drilling G-code from pattern specification.
 
-    if HAS_POST_HELPERS:
-        ctx = build_post_context_v2(
-            post=prm.post,
-            post_mode=prm.post_mode,
-            units=prm.units,
-            machine_id=prm.machine_id,
-            RPM=prm.rpm,
-            PROGRAM_NO=prm.program_no,
-            WORK_OFFSET=prm.work_offset,
-            TOOL=prm.tool,
-            SAFE_Z=prm.safe_z,
+    LANE: OPERATION - Creates drill_pattern_gcode_execution artifact.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj({"pattern": pat.model_dump(), "params": prm.model_dump()})
+
+    # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
+    feasibility = compute_feasibility_internal(
+        tool_id="drill_pattern_gcode",
+        req={"pattern": pat.model_dump(), "params": prm.model_dump()},
+        context="drill_pattern_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+
+    if SafetyPolicy.should_block(decision.risk_level):
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drill_pattern_gcode",
+            workflow_mode="drill_pattern",
+            event_type="drill_pattern_gcode_blocked",
+            status="BLOCKED",
+            feasibility=feasibility,
+            request_hash=feas_hash,
+            notes=f"Blocked by safety policy: {risk_level}",
+        )
+        persist_run(artifact)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Drill pattern G-code generation blocked due to unresolved feasibility concerns.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
         )
 
-    r_clear = _f(prm.r_clear if prm.r_clear is not None else 5.0)
+    try:
+        points = _generate_points(pat)
 
-    lines = [
-        "G90",
-        f"G0 Z{_f(prm.safe_z)}",
-    ]
+        if HAS_POST_HELPERS:
+            ctx = build_post_context_v2(
+                post=prm.post,
+                post_mode=prm.post_mode,
+                units=prm.units,
+                machine_id=prm.machine_id,
+                RPM=prm.rpm,
+                PROGRAM_NO=prm.program_no,
+                WORK_OFFSET=prm.work_offset,
+                TOOL=prm.tool,
+                SAFE_Z=prm.safe_z,
+            )
 
-    cyc = prm.cycle.upper()
+        r_clear = _f(prm.r_clear if prm.r_clear is not None else 5.0)
 
-    for (x, y) in points:
-        if cyc == "G81":
-            dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}")
-        else:
-            peck = _f(prm.peck_q if prm.peck_q is not None else 1.0)
-            dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
+        lines = [
+            "G90",
+            f"G0 Z{_f(prm.safe_z)}",
+        ]
 
-    lines.append("G80")
-    body = "\n".join(lines) + "\n"
-    resp = Response(content=body, media_type="text/plain; charset=utf-8")
+        cyc = prm.cycle.upper()
 
-    if HAS_POST_HELPERS:
-        resp = wrap_with_post_v2(resp, ctx)
+        for (x, y) in points:
+            if cyc == "G81":
+                dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
+                lines.append(f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}")
+            else:
+                peck = _f(prm.peck_q if prm.peck_q is not None else 1.0)
+                dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
+                lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
 
-    return resp
+        lines.append("G80")
+        body = "\n".join(lines) + "\n"
+
+        # Hash G-code for provenance
+        gcode_hash = sha256_of_text(body)
+
+        # Create OK artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drill_pattern_gcode",
+            workflow_mode="drill_pattern",
+            event_type="drill_pattern_gcode_execution",
+            status="OK",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        resp = Response(content=body, media_type="text/plain; charset=utf-8")
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+
+        if HAS_POST_HELPERS:
+            resp = wrap_with_post_v2(resp, ctx)
+
+        return resp
+
+    except Exception as e:
+        # Create ERROR artifact
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="drill_pattern_gcode",
+            workflow_mode="drill_pattern",
+            event_type="drill_pattern_gcode_execution",
+            status="ERROR",
+            feasibility=feasibility,
+            request_hash=request_hash,
+            errors=[f"{type(e).__name__}: {str(e)}"],
+        )
+        persist_run(artifact)
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "DRILL_PATTERN_GCODE_ERROR",
+                "run_id": run_id,
+                "message": str(e),
+            },
+        )
 
 
 @router.get("/info")
 def pattern_info() -> Dict[str, Any]:
-    """Get drill pattern information"""
+    """
+    Get drill pattern information.
+
+    LANE: UTILITY - Info only, no artifacts.
+    """
     return {
         "operation": "drill_pattern",
         "description": "Generate drilling patterns (grid, circle, line) with modal cycles",

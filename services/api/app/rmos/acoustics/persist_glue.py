@@ -13,6 +13,14 @@ from typing import Any, Dict, List, Optional
 from .importer import ImportPlan
 from .schemas_manifest_v1 import TapToneBundleManifestV1
 
+# Import meta index for incremental updates on import
+try:
+    from ..runs_v2.attachment_meta import AttachmentMetaIndex
+    _HAS_META_INDEX = True
+except ImportError:
+    _HAS_META_INDEX = False
+    AttachmentMetaIndex = None
+
 
 @dataclass(frozen=True)
 class RunAttachment:
@@ -213,6 +221,9 @@ def persist_import_plan(
         run_json_path=run_json_path,
     )
 
+    # Update _attachment_meta.json (Decision B: incremental on every import)
+    _update_attachment_meta_index(runs_root=runs_root, run_obj=run_obj)
+
     return PersistResult(
         run_id=run_id,
         run_json_path=run_json_path,
@@ -221,6 +232,91 @@ def persist_import_plan(
         attachments_deduped=deduped,
         index_updated=index_updated,
     )
+
+
+def _update_attachment_meta_index(*, runs_root: Path, run_obj: Dict[str, Any]) -> bool:
+    """
+    Update _attachment_meta.json with attachments from this run.
+
+    Decision B: Incremental update on every import.
+    Maps acoustics schema fields to runs_v2 expected fields.
+    """
+    if not _HAS_META_INDEX or AttachmentMetaIndex is None:
+        return False
+
+    try:
+        idx = AttachmentMetaIndex(runs_root)
+
+        # Build a minimal dict that the meta index can consume
+        # Map acoustics field names to runs_v2 field names
+        attachments = run_obj.get("attachments", [])
+        created_at_utc = run_obj.get("created_at", "")
+        run_id = run_obj.get("run_id", "")
+
+        # Create normalized attachment dicts
+        normalized_atts = []
+        for a in attachments:
+            if not isinstance(a, dict):
+                continue
+            sha = a.get("sha256", "")
+            if not sha:
+                continue
+            normalized_atts.append({
+                "sha256": sha,
+                "kind": a.get("kind") or "unknown",
+                "mime": a.get("mime") or "application/octet-stream",
+                "filename": a.get("relpath", "").split("/")[-1] or "attachment",
+                "size_bytes": a.get("bytes") or 0,
+                "created_at_utc": created_at_utc,
+            })
+
+        if not normalized_atts:
+            return True  # Nothing to update, but not an error
+
+        # Read existing index
+        data = idx.read()
+
+        for att in normalized_atts:
+            sha = att["sha256"].lower().strip()
+            existing = data.get(sha)
+
+            if existing is None:
+                data[sha] = {
+                    "sha256": sha,
+                    "kind": att["kind"],
+                    "mime": att["mime"],
+                    "filename": att["filename"],
+                    "size_bytes": att["size_bytes"],
+                    "created_at_utc": att["created_at_utc"],
+                    "first_seen_run_id": run_id,
+                    "last_seen_run_id": run_id,
+                    "first_seen_at_utc": created_at_utc,
+                    "last_seen_at_utc": created_at_utc,
+                    "ref_count": 1,
+                }
+            else:
+                # Update last seen and ref count
+                existing["last_seen_run_id"] = run_id
+                existing["last_seen_at_utc"] = created_at_utc
+                existing["ref_count"] = int(existing.get("ref_count", 0) or 0) + 1
+
+                # Fill missing/unknown values if improved metadata exists
+                if existing.get("kind") in (None, "", "unknown") and att["kind"]:
+                    existing["kind"] = att["kind"]
+                if existing.get("mime") in (None, "", "application/octet-stream") and att["mime"]:
+                    existing["mime"] = att["mime"]
+                if existing.get("filename") in (None, "", "attachment") and att["filename"]:
+                    existing["filename"] = att["filename"]
+                if int(existing.get("size_bytes", 0) or 0) <= 0 and att["size_bytes"] > 0:
+                    existing["size_bytes"] = att["size_bytes"]
+
+                data[sha] = existing
+
+        idx.write(data)
+        return True
+    except Exception:
+        # Meta index is best-effort; do not fail ingestion
+        return False
 
 
 def _update_index(*, runs_root: Path, run_obj: Dict[str, Any], run_json_path: Path) -> bool:

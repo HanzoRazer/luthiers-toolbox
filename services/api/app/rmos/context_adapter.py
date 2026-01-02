@@ -267,20 +267,20 @@ def build_rmos_context_with_toolpath(
         material_thickness_mm=material_thickness_mm,
     )
     
-    # Import toolpath (stub - full implementation requires DXF parser)
+    # Import toolpath from DXF file
     from .context import ToolpathData
+    from ..instrument_geometry.dxf_loader import load_dxf_geometry_by_path
     
-    # TODO: Replace with actual DXF parsing
-    # from ..instrument_geometry.dxf_loader import load_dxf_geometry_stub
-    # geometry = load_dxf_geometry_stub(dxf_file)
+    # Load DXF geometry
+    geometry = load_dxf_geometry_by_path(dxf_file)
     
     context.toolpaths = ToolpathData(
         source_file=dxf_file,
         format="dxf_r12",
-        path_count=1,  # Stub
-        total_length_mm=1000.0,  # Stub
-        bounds_mm=[0.0, 0.0, 648.0, 42.0],  # Stub: neck dimensions
-        metadata={"imported": True},
+        path_count=geometry.get("path_count", 0),
+        total_length_mm=geometry.get("total_length_mm", 0.0),
+        bounds_mm=geometry.get("bounds", [0.0, 0.0, 0.0, 0.0]),
+        metadata={"imported": True, "placeholder": geometry.get("placeholder", True)},
     )
     
     return context

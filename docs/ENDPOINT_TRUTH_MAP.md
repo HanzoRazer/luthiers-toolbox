@@ -4,6 +4,251 @@
 
 ---
 
+## Operation Execution Governance - Lane Classifications
+
+> **Added 2025-12-29**: Lane annotations per `OPERATION_EXECUTION_GOVERNANCE_v1.md`.
+>
+> Machine-executing endpoints must declare: `LANE=OPERATION` (governed) or `LANE=UTILITY` (legacy).
+
+### Lane Definitions
+
+| Lane | Description | Requirements |
+|------|-------------|--------------|
+| **OPERATION** | Governed execution pipeline | Artifacts, feasibility gate, audit trail |
+| **UTILITY** | Stateless/legacy | No governance guarantees, preview/dev use |
+
+### Machine-Output Endpoints by Lane
+
+#### OPERATION Lane (Governed)
+
+> Reference implementation: CNC Saw Lab Batch
+
+| Endpoint | Tool Type | Stage | Notes |
+|----------|-----------|-------|-------|
+| `POST /api/saw/batch/spec` | saw | SPEC | Reference impl |
+| `POST /api/saw/batch/plan` | saw | PLAN | Reference impl |
+| `POST /api/saw/batch/approve` | saw | DECISION | Reference impl |
+| `POST /api/saw/batch/toolpaths` | saw | EXECUTE | Reference impl |
+| `GET /api/saw/batch/op-toolpaths/{id}/gcode` | saw | EXPORT | Reference impl |
+| `GET /api/saw/batch/executions/{id}/gcode` | saw | EXPORT | Reference impl |
+| `POST /api/saw/batch/job-log` | saw | FEEDBACK | Reference impl |
+| `POST /api/rmos/toolpaths` | rmos | EXECUTE | Promoted Wave 9 |
+| `POST /api/cam/rosette/plan-toolpath` | rosette | PLAN | Promoted Wave 9 |
+| `POST /api/cam/rosette/post-gcode` | rosette | EXECUTE | Promoted Wave 9 |
+| `POST /api/art-studio/vcarve/gcode` | vcarve | EXECUTE | Promoted Wave 9 |
+| `POST /api/cam/toolpath/roughing/gcode` | roughing | EXECUTE | Promoted Wave 10 |
+| `POST /api/cam/drilling/gcode` | drilling | EXECUTE | Promoted Wave 10 |
+| `POST /api/cam/drilling/pattern/gcode` | drilling | EXECUTE | Promoted Wave 10 |
+| `POST /api/cam/toolpath/biarc/gcode` | biarc | EXECUTE | Promoted Wave 10 |
+| `POST /api/art-studio/relief/export-dxf` | relief | EXPORT | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/plan` | adaptive | PLAN | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/gcode` | adaptive | EXECUTE | Promoted Wave 11 |
+| `POST /api/cam/pocket/adaptive/batch_export` | adaptive | EXECUTE | Promoted Wave 11 |
+| `POST /api/cam/toolpath/helical_entry` | helical | EXECUTE | Promoted Wave 11 |
+
+### RMOS Operations Lane (Bundles 01-17) - 2025-12-31
+
+> Reference: `RMOS_E2E_BUNDLE.txt`, `rmos/operations/`
+>
+> Governance-compliant Operation Lane endpoints with canonical artifact patterns.
+
+| Endpoint | Tool Type | Stage | Notes |
+|----------|-----------|-------|-------|
+| `POST /api/rmos/operations/{tool_id}/execute` | generic | EXECUTE | Bundle 01 - Generic execution |
+| `POST /api/rmos/operations/{tool_id}/plan` | generic | PLAN | Bundle 07 - Generic planning |
+| `GET /api/rmos/operations/{run_id}/export.zip` | generic | EXPORT | Bundle 04 - ZIP export |
+| `POST /api/rmos/operations/saw_v1/execute` | saw | EXECUTE | Bundle 02 - Saw execution |
+| `POST /api/rmos/operations/saw_v1/plan` | saw | PLAN | Bundle 02 - Saw planning |
+| `POST /api/rmos/operations/cam_roughing_v1/execute` | roughing | EXECUTE | Bundle 03 - CAM roughing |
+| `POST /api/rmos/operations/cam_roughing_v1/plan` | roughing | PLAN | Bundle 03 - CAM roughing plan |
+| `GET /api/rmos/operations/health` | — | HEALTH | Operations health check |
+
+#### Bundle Implementation Summary
+
+| Bundle | Description | Status |
+|--------|-------------|--------|
+| 01 | Operation Execution Spine | Done |
+| 02 | Saw Execution Adapter | Done |
+| 03 | CAM Promotion Bridge | Done |
+| 04 | ZIP Export | Done |
+| 05 | Frontend SDK (operations.ts) | Done |
+| 06 | Minimal UI Panel (RmosOperationE2EPanel.vue) | Done |
+| 07 | Backend Plan Endpoints | Done |
+| 08 | UI Plan Wiring | Done |
+| 09 | Backend Lineage Service | Done |
+| 10-11 | Run Query + Pagination | Done |
+| 12-15 | UI Components | Done |
+| 16 | Plan Attachments Inspector | Done |
+| 17 | Attachment Path Normalization | Done |
+
+### Phase 5: Feedback Loop Infrastructure (2025-12-31)
+
+> Reference: ADR-003 Phase 5, `rmos/pipeline/feedback/`
+
+The feedback loop infrastructure enables operator feedback capture, learning event generation, and metrics aggregation. All hooks default to OFF for safety.
+
+#### Feature Flags
+
+| Environment Variable | Description | Default |
+|---------------------|-------------|---------|
+| `{TOOL}_LEARNING_HOOK_ENABLED` | Auto-emit learning events from job logs | `false` |
+| `{TOOL}_METRICS_ROLLUP_HOOK_ENABLED` | Auto-persist metrics rollups | `false` |
+| `{TOOL}_APPLY_ACCEPTED_OVERRIDES` | Apply learned multipliers to contexts | `false` |
+
+#### Feedback Artifacts
+
+| Kind Pattern | Stage | Description |
+|--------------|-------|-------------|
+| `{tool}_job_log` | FEEDBACK | Operator job completion feedback |
+| `{tool}_learning_event` | FEEDBACK | Auto-generated parameter suggestions |
+| `{tool}_learning_decision` | FEEDBACK | Accept/reject gate for learning |
+| `{tool}_execution_metrics_rollup` | FEEDBACK | Aggregated execution statistics |
+
+#### Quality Signals Detected
+
+| Signal | Description | Suggested Adjustment |
+|--------|-------------|---------------------|
+| `burn` | Burn marks detected | Reduce feed or increase RPM |
+| `tearout` | Tearout detected | Adjust feed direction or reduce DOC |
+| `kickback` | Kickback event | Reduce feed rate |
+| `chatter` | Chatter detected | Adjust RPM or reduce DOC |
+| `tool_wear` | Excessive tool wear | Schedule tool change |
+| `excellent` | Excellent finish | Current params are good |
+
+#### Learning Multipliers
+
+| Multiplier | Range | Description |
+|------------|-------|-------------|
+| `spindle_rpm_mult` | 0.5–2.0 | Spindle RPM adjustment factor |
+| `feed_rate_mult` | 0.5–2.0 | Feed rate adjustment factor |
+| `doc_mult` | 0.5–2.0 | Depth of cut adjustment factor |
+| `woc_mult` | 0.5–2.0 | Width of cut adjustment factor |
+
+#### UTILITY Lane (Legacy/Preview)
+
+> These endpoints produce G-code but bypass governance. Suitable for development, simulation, preview.
+
+| Endpoint | Tool Type | Notes |
+|----------|-----------|-------|
+| `POST /api/cam/drilling/gcode` | drill | Legacy generator |
+| `POST /api/cam/drilling/pattern/gcode` | drill | Legacy generator |
+| `POST /api/cam/toolpath/roughing/gcode` | roughing | Legacy generator |
+| `POST /api/cam/toolpath/biarc/gcode` | contour | Legacy generator |
+| `POST /api/cam/toolpath/helical_entry` | plunge | Legacy generator |
+| `POST /api/cam/roughing/gcode_intent` | roughing | Intent-native, no artifacts |
+| `POST /feasibility` | — | Root-mounted, stateless |
+| `POST /toolpaths` | — | Root-mounted, stateless |
+| `POST /api/rmos/workflow/sessions/{id}/toolpaths/request` | rosette | Session-scoped, legacy |
+| `POST /api/rmos/workflow/sessions/{id}/toolpaths/store` | rosette | Session-scoped, legacy |
+| `POST /api/art-studio/rosette/export-dxf` | rosette | DXF export, no artifacts |
+| `POST /api/art/rosette/preview/svg` | rosette | Preview only |
+
+#### N/A (Non-Machine Endpoints)
+
+All other endpoints (CRUD, validation, query, analytics) are **not in scope** for lane governance.
+
+### Migration Priority
+
+| Priority | Endpoint(s) | Target Lane | Effort |
+|----------|-------------|-------------|--------|
+| ✅ Done | `/api/saw/batch/*` | OPERATION | Reference impl |
+| Done | `/api/cam/rosette/*` | OPERATION | Promoted Wave 9 |
+| Done | `/api/art-studio/vcarve/gcode` | OPERATION | Promoted Wave 9 |
+| Done | `/api/cam/drilling/*` | OPERATION | Promoted Wave 10 |
+| Done | `/api/cam/toolpath/roughing/*` | OPERATION | Promoted Wave 10 |
+| Done | `/api/art-studio/relief/export-dxf` | OPERATION | Promoted Wave 11 |
+| Done | `/api/cam/pocket/adaptive/*` | OPERATION | Promoted Wave 11 |
+| Done | `/api/cam/toolpath/helical_entry` | OPERATION | Promoted Wave 11 |
+
+---
+
+## CNC Saw Lab Batch Endpoints
+
+> **Added 2025-12-29**: Reference implementation for governed operation execution.
+>
+> **Lane:** OPERATION (full governance)
+> **Feature Branch:** `feature/cnc-saw-labs`
+> **Developer Guide:** `docs/CNC_SAW_LAB_DEVELOPER_GUIDE.md`
+
+### Core Workflow (`/api/saw/batch`)
+
+| Method | Endpoint | Stage | Description |
+|--------|----------|-------|-------------|
+| POST | `/api/saw/batch/spec` | SPEC | Create batch specification |
+| POST | `/api/saw/batch/plan` | PLAN | Generate execution plan with feasibility |
+| POST | `/api/saw/batch/approve` | DECISION | Approve plan, create decision artifact |
+| POST | `/api/saw/batch/toolpaths` | EXECUTE | Generate toolpaths (server-side feasibility) |
+
+### G-Code Export
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/saw/batch/op-toolpaths/{artifact_id}/gcode` | Single op G-code (.ngc) |
+| GET | `/api/saw/batch/executions/{artifact_id}/gcode` | Combined G-code for all OK ops |
+
+### Operator Feedback
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/saw/batch/job-log` | Record job completion, metrics, signals |
+
+### Learning System
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/saw/batch/learning-events/by-execution` | Get learning events for execution |
+| POST | `/api/saw/batch/learning-events/approve` | Accept/reject learning event |
+| GET | `/api/saw/batch/learning-overrides/resolve` | Resolve active overrides |
+| POST | `/api/saw/batch/learning-overrides/apply` | Preview tuned context |
+| GET | `/api/saw/batch/executions/with-learning` | List executions with learning applied |
+
+### Metrics & Rollups
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/saw/batch/executions/metrics-rollup/by-execution` | Get execution rollup |
+| POST | `/api/saw/batch/executions/metrics-rollup/by-execution` | Persist execution rollup |
+| GET | `/api/saw/batch/decisions/metrics-rollup/by-decision` | Get decision rollup |
+| GET | `/api/saw/batch/decisions/trends` | Trend analysis |
+| GET | `/api/saw/batch/executions/metrics-rollup/history` | Rollup history |
+| GET | `/api/saw/batch/decisions/metrics-rollup/latest-vs-prev` | Compare rollups |
+| GET | `/api/saw/batch/rollups/diff` | Diff two rollups |
+
+### CSV Exports
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/saw/batch/executions/job-logs.csv` | Export job logs as CSV |
+| GET | `/api/saw/batch/decisions/execution-rollups.csv` | Export rollups as CSV |
+
+### Status & Lookups
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/saw/batch/learning-hook/status` | Learning hook enabled? |
+| GET | `/api/saw/batch/rollups/hook/status` | Rollup hook enabled? |
+| GET | `/api/saw/batch/learning-overrides/apply/status` | Apply overrides enabled? |
+| GET | `/api/saw/batch/execution` | Get execution by decision |
+| GET | `/api/saw/batch/executions/by-decision` | List executions for decision |
+| GET | `/api/saw/batch/links` | Get artifact links by label/session |
+
+### Artifact Kinds
+
+| Kind | Description |
+|------|-------------|
+| `saw_batch_spec` | Input specification |
+| `saw_batch_plan` | Plan with feasibility scores |
+| `saw_batch_decision` | Approved execution order |
+| `saw_batch_execution` | Parent execution artifact |
+| `saw_batch_op_toolpaths` | Individual op toolpaths |
+| `saw_batch_job_log` | Operator feedback |
+| `saw_lab_learning_event` | Proposed adjustments |
+| `saw_lab_learning_decision` | Accept/reject decision |
+| `saw_batch_execution_metrics_rollup` | Aggregated execution metrics |
+| `saw_batch_decision_metrics_rollup` | Aggregated decision metrics |
+
+---
+
 ## RMOS Endpoints
 
 ### AI Routes (`/api/rmos/ai`)
@@ -72,6 +317,17 @@
 |--------|----------|
 | POST | `/api/rmos/saw-ops/slice/preview` |
 | POST | `/api/rmos/saw-ops/pipeline/handoff` |
+
+### Operations (`/api/rmos/operations`) - Bundle 01-17
+
+> **Added 2025-12-31**: Governance-compliant Operation Lane endpoints.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/rmos/operations/{tool_id}/execute` | Execute operation with feasibility gate |
+| POST | `/api/rmos/operations/{tool_id}/plan` | Create operation plan |
+| GET | `/api/rmos/operations/{run_id}/export.zip` | Export run as auditable ZIP |
+| GET | `/api/rmos/operations/health` | Health check |
 
 ### Runs (`/api/rmos/runs`)
 
@@ -323,31 +579,37 @@ Both have `recent`, `{id}`, `export`, `import` endpoints.
 
 ## Summary
 
-| Domain | Prefix | Count |
-|--------|--------|-------|
-| RMOS AI | `/api/rmos/ai` | 5 |
-| RMOS Profiles | `/api/rmos/profiles` | 7 |
-| RMOS Profile History | `/api/rmos/profiles/history` | 5 |
-| RMOS Logs | `/api/rmos/logs` | 3 |
-| RMOS Strip Families | `/api/rmos/strip-families` | 5 |
-| RMOS Patterns | `/api/rmos/patterns` | 5 |
-| RMOS Saw Ops | `/api/rmos/saw-ops` | 2 |
-| RMOS Runs | `/api/rmos/runs` | 17 |
-| RMOS Workflow | `/api/rmos/workflow` | 17 |
-| Root-mounted | `/` | 2 |
-| Art Patterns | `/api/art/patterns` | 5 |
-| Art Generators | `/api/art/generators` | 1 |
-| Art Preview | `/api/art/rosette/preview` | 1 |
-| Art Snapshots | `/api/art/snapshots` | 7 |
-| Art Rosette Snapshots | `/api/art/rosette/snapshots` | 7 |
-| Art Rosette Feasibility | `/api/art/rosette/feasibility` | 1 |
-| Art Rosette Jobs | `/api/art/rosette/jobs` | 5 |
-| Art Rosette Compare | `/api/art/rosette/compare` | 3 |
-| Art Rosette Pattern | `/api/art/rosette/pattern` | 6 |
-| Legacy Rosette | `/api/art-studio/rosette` | 5 |
-| Legacy Workflow | `/api/art-studio/workflow` | 8 |
-| Other | `/api` | 1 |
-| **Total** | | **~115** |
+| Domain | Prefix | Count | Lane |
+|--------|--------|-------|------|
+| **CNC Saw Lab Batch** | `/api/saw/batch` | 27 | **OPERATION** |
+| **RMOS Operations** | `/api/rmos/operations` | 4 | **OPERATION** |
+| RMOS AI | `/api/rmos/ai` | 5 | N/A |
+| RMOS Profiles | `/api/rmos/profiles` | 7 | N/A |
+| RMOS Profile History | `/api/rmos/profiles/history` | 5 | N/A |
+| RMOS Logs | `/api/rmos/logs` | 3 | N/A |
+| RMOS Strip Families | `/api/rmos/strip-families` | 5 | N/A |
+| RMOS Patterns | `/api/rmos/patterns` | 5 | N/A |
+| RMOS Saw Ops | `/api/rmos/saw-ops` | 2 | UTILITY |
+| RMOS Runs | `/api/rmos/runs` | 17 | N/A |
+| RMOS Workflow | `/api/rmos/workflow` | 17 | UTILITY* |
+| Root-mounted | `/` | 2 | UTILITY |
+| Art Patterns | `/api/art/patterns` | 5 | N/A |
+| Art Generators | `/api/art/generators` | 1 | N/A |
+| Art Preview | `/api/art/rosette/preview` | 1 | UTILITY |
+| Art Snapshots | `/api/art/snapshots` | 7 | N/A |
+| Art Rosette Snapshots | `/api/art/rosette/snapshots` | 7 | N/A |
+| Art Rosette Feasibility | `/api/art/rosette/feasibility` | 1 | UTILITY |
+| Art Rosette Jobs | `/api/art/rosette/jobs` | 5 | N/A |
+| Art Rosette Compare | `/api/art/rosette/compare` | 3 | N/A |
+| Art Rosette Pattern | `/api/art/rosette/pattern` | 6 | N/A |
+| Legacy Rosette | `/api/art-studio/rosette` | 5 | UTILITY |
+| Legacy Workflow | `/api/art-studio/workflow` | 8 | UTILITY |
+| CAM Consolidated | `/api/cam/*` | ~30 | UTILITY |
+| Other | `/api` | 1 | N/A |
+| **Total** | | **~175** | |
+
+> *UTILITY = Only toolpath-producing endpoints; CRUD/query endpoints are N/A
+> *RMOS Workflow toolpath endpoints are UTILITY; session CRUD is N/A
 
 ---
 

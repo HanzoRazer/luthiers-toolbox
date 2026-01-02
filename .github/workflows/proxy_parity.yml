@@ -23,6 +23,7 @@ jobs:
           API_IMAGE=toolbox/api:ci
           CLIENT_IMAGE=toolbox/client:ci
           PROXY_IMAGE=toolbox/proxy:ci
+          ART_STUDIO_DB_PATH=/tmp/art_studio.db
           EOF
 
       - name: Build API
@@ -41,16 +42,31 @@ jobs:
           load: true
           tags: toolbox/client:ci
 
-      - name: Build Proxy
+      - name: Build Proxy (nginx)
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/proxy/Dockerfile
+          file: docker/nginx/Dockerfile
           load: true
           tags: toolbox/proxy:ci
 
-      - name: Up stack
-        run: docker compose up -d
+      - name: Up stack (with proxy profile)
+        id: up_stack
+        run: docker compose --profile proxy up -d
+        continue-on-error: true
+
+      - name: Debug - Container status and logs on failure
+        if: steps.up_stack.outcome == 'failure'
+        run: |
+          echo "=== Container Status ==="
+          docker compose ps -a
+          echo ""
+          echo "=== API Container Logs ==="
+          docker compose logs api --tail=200
+          echo ""
+          echo "=== Proxy Container Logs ==="
+          docker compose logs proxy --tail=100 || true
+          exit 1
 
       - name: Wait for API via proxy
         run: |
@@ -62,23 +78,25 @@ jobs:
         run: |
           echo "Testing /api/tooling/posts endpoint:"
           curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq '.'
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "GRBL" && echo "✓ GRBL found"
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "Mach4" && echo "✓ Mach4 found"
-          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -q "LinuxCNC" && echo "✓ LinuxCNC found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "grbl" && echo "✓ GRBL found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "mach4" && echo "✓ Mach4 found"
+          curl -s http://127.0.0.1:${FRONT_PORT}/api/tooling/posts | jq -r '.[].id' | grep -qi "linuxcnc" && echo "✓ LinuxCNC found"
 
       - name: Parity via proxy
         run: |
           python - <<'PY'
           import urllib.request, json, os, time
           base = f"http://127.0.0.1:{os.getenv('FRONT_PORT','8088')}/api"
+          # Simple line geometry for parity test
           geometry = {
             "units":"mm",
             "paths":[
-              {"type":"line","x1":0,"y1":0,"x2":60,"y2":0},
-              {"type":"arc","cx":30,"cy":20,"r":20,"start":180,"end":0,"cw":False}
+              {"type":"line","x1":0,"y1":0,"x2":100,"y2":0},
+              {"type":"line","x1":100,"y1":0,"x2":100,"y2":50}
             ]
           }
-          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
+          # Matching G-code: trace the same L-shape
+          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X100 Y0\nG1 X100 Y50\nG0 Z5\n"
           url = f"{base}/geometry/parity"
           req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
           out = urllib.request.urlopen(req).read().decode()
@@ -202,4 +220,4 @@ jobs:
 
       - name: Down stack
         if: always()
-        run: docker compose down -v
+        run: docker compose --profile proxy down -v

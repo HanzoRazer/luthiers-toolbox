@@ -125,10 +125,58 @@ def _write_footer(stream: TextIO) -> None:
 
 def _write_entities_lwpolyline(paths: Iterable[MLPath], stream: TextIO) -> None:
     """
-    R14/R18 enhanced writer: may emit LWPOLYLINE.
-
-    For now this just delegates to the POLYLINE writer; we can expand
-    once the legacy code is fully mined.
+    R14/R18 enhanced writer: emit LWPOLYLINE entities.
+    
+    LWPOLYLINE is more compact than the old POLYLINE+VERTEX+SEQEND format
+    and is the preferred entity type for R14+ DXF files.
+    
+    Format structure:
+    - Group 0: LWPOLYLINE
+    - Group 8: Layer name (0 = default)
+    - Group 90: Number of vertices
+    - Group 70: Polyline flag (1 = closed, 0 = open)
+    - Group 10/20: X/Y coordinates for each vertex
     """
-    # TODO: Implement true LWPOLYLINE for R14/R18
-    write_mlpaths_to_dxf_r12(paths, stream)
+    for path in paths:
+        pts = path.points
+        if not pts:
+            continue
+        
+        if len(pts) >= 2:
+            _write_lwpolyline(pts, path.is_closed, stream)
+
+
+def _write_lwpolyline(
+    points: list,
+    is_closed: bool,
+    stream: TextIO,
+) -> None:
+    """
+    Write a path as a single LWPOLYLINE entity.
+    
+    LWPOLYLINE format (R14+):
+    - 0: LWPOLYLINE
+    - 8: Layer (0)
+    - 90: Vertex count
+    - 70: Flags (1=closed, 0=open)
+    - 10/20: X/Y for each vertex
+    
+    Args:
+        points: List of (x, y) coordinate tuples
+        is_closed: Whether to close the polyline
+        stream: Output text stream
+    """
+    # Start LWPOLYLINE entity
+    stream.write("0\nLWPOLYLINE\n")
+    # Layer 0
+    stream.write("8\n0\n")
+    # Vertex count
+    stream.write(f"90\n{len(points)}\n")
+    # Flags: 1 = closed, 0 = open
+    flags = 1 if is_closed else 0
+    stream.write(f"70\n{flags}\n")
+    
+    # Write each vertex
+    for (x, y) in points:
+        stream.write(f"10\n{x:.6f}\n")
+        stream.write(f"20\n{y:.6f}\n")

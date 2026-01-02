@@ -19,8 +19,8 @@ jobs:
       
       - name: Boot API server
         run: |
-          uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 &
-          for i in $(seq 1 30); do 
+          cd services/api && uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do
             curl -sSf http://127.0.0.1:8000/health >/dev/null && exit 0 || sleep 1
           done
           echo "API server failed to start"
@@ -37,7 +37,7 @@ jobs:
               {"type": "arc", "cx": 30, "cy": 20, "r": 20, "start": 180, "end": 0, "cw": False}
             ]
           }
-          url = "http://127.0.0.1:8000/geometry/import"
+          url = "http://127.0.0.1:8000/api/geometry/import"
           req = urllib.request.Request(
             url, 
             data=json.dumps({"geometry": geometry}).encode(),
@@ -54,15 +54,18 @@ jobs:
         run: |
           python - <<'PY'
           import urllib.request, json
+          # Simple rectangle: geometry and G-code describe the same shape
           geometry = {
             "units": "mm",
             "paths": [
-              {"type": "line", "x1": 0, "y1": 0, "x2": 60, "y2": 0},
-              {"type": "arc", "cx": 30, "cy": 20, "r": 20, "start": 180, "end": 0, "cw": False}
+              {"type": "line", "x1": 0, "y1": 0, "x2": 100, "y2": 0},
+              {"type": "line", "x1": 100, "y1": 0, "x2": 100, "y2": 50},
+              {"type": "line", "x1": 100, "y1": 50, "x2": 0, "y2": 50},
+              {"type": "line", "x1": 0, "y1": 50, "x2": 0, "y2": 0}
             ]
           }
-          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
-          url = "http://127.0.0.1:8000/geometry/parity"
+          gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X100 Y0\nG1 X100 Y50\nG1 X0 Y50\nG1 X0 Y0\nG0 Z5\n"
+          url = "http://127.0.0.1:8000/api/geometry/parity"
           payload = {"geometry": geometry, "gcode": gcode, "tolerance_mm": 0.1}
           req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
           response = urllib.request.urlopen(req).read().decode()

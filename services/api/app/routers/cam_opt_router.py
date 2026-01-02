@@ -12,7 +12,7 @@ from ..cam.time_estimator_v2 import estimate_cycle_time_v2
 from ..cam.whatif_opt import optimize_feed_stepover
 from ..routers.machine_router import get_profile
 
-router = APIRouter(prefix="/cam/opt", tags=["cam-opt"])
+router = APIRouter(tags=["cam-opt"])
 
 
 class LoopIn(BaseModel):

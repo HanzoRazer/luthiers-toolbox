@@ -15,7 +15,7 @@ from .schemas_manifest_v1 import TapToneBundleManifestV1
 from .importer import import_acoustics_bundle
 from .persist_glue import persist_import_plan
 
-router = APIRouter(prefix="/api/rmos/acoustics", tags=["rmos", "acoustics"])
+router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
 
 class ImportByPathRequest(BaseModel):

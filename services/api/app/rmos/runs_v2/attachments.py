@@ -288,14 +288,38 @@ def resolve_attachment_path(sha256: str) -> Path:
     """
     root = Path(_get_attachments_dir()).expanduser().resolve()
     s = sha256.lower()
-    # shard: {hash[0:2]}/{hash[2:4]}/{full_hash}
-    # Try common extensions
-    for ext in ["", ".json", ".gcode", ".txt", ".svg", ".dxf"]:
-        candidate = root / s[0:2] / s[2:4] / f"{s}{ext}"
+    shard = root / s[0:2] / s[2:4]
+
+    # Try common extensions (fast-path).
+    # NOTE: sha256 is authoritative; ext is only a convenience.
+    for ext in [
+        "",
+        ".json",
+        ".txt",
+        ".csv",
+        ".npz",
+        ".wav",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".svg",
+        ".dxf",
+        ".gcode",
+        ".nc",
+    ]:
+        candidate = shard / f"{s}{ext}"
         if candidate.exists():
             return candidate
-    # Return base path even if not found (caller should check existence)
-    return root / s[0:2] / s[2:4] / s
+
+    # Fallback: accept any extension (no extension knowledge required).
+    # This supports files like {sha256}.bin or uncommon artifacts while still
+    # keeping sha256 as the primary key.
+    matches = sorted(shard.glob(f"{s}.*"))
+    if matches:
+        return matches[0]
+
+    # Not found: return the no-extension canonical path (callers can .exists()).
+    return shard / s
 
 
 def attachment_exists(sha256: str) -> bool:

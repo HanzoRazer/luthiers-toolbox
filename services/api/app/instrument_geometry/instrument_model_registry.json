@@ -148,7 +148,44 @@
       "description": "Carved-top jazz guitar with floating bridge",
       "manufacturer": "Various",
       "year_introduced": 1922,
-      "assets": []
+      "assets": [],
+      "variants": {
+        "benedetto_17": {
+          "id": "benedetto_17",
+          "display_name": "Benedetto 17\"",
+          "status": "COMPLETE",
+          "description": "17-inch carved archtop jazz guitar designed by Robert Benedetto - the gold standard for handcrafted archtops",
+          "manufacturer": "Benedetto",
+          "year_introduced": 1968,
+          "body_width_mm": 431.8,
+          "body_depth_mm": 76.2,
+          "assets": [
+            "benedetto_17/body_outline.dxf",
+            "benedetto_17/f_holes.dxf",
+            "benedetto_17/graduation_map.json"
+          ]
+        },
+        "l5": {
+          "id": "l5",
+          "display_name": "Gibson L-5",
+          "status": "STUB",
+          "description": "16-inch Gibson archtop - the original f-hole guitar",
+          "manufacturer": "Gibson",
+          "year_introduced": 1922,
+          "body_width_mm": 406.4,
+          "assets": []
+        },
+        "super_400": {
+          "id": "super_400",
+          "display_name": "Gibson Super 400",
+          "status": "STUB",
+          "description": "18-inch Gibson flagship archtop",
+          "manufacturer": "Gibson",
+          "year_introduced": 1934,
+          "body_width_mm": 457.2,
+          "assets": []
+        }
+      }
     },
     "dreadnought": {
       "id": "dreadnought",
@@ -260,6 +297,86 @@
         "Soprano Ukuele/Body_Outline.dxf",
         "Soprano Ukuele/Fret_Slots.dxf",
         "Soprano Ukuele/Headstock_Outline.dxf"
+      ]
+    },
+    "smart_guitar": {
+      "id": "smart_guitar",
+      "display_name": "Smart Guitar",
+      "status": "COMPLETE",
+      "category": "electric_guitar",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "string_count": 6,
+      "description": "IoT-enabled electric guitar with embedded computing, real-time DSP, and DAW integration",
+      "manufacturer": "Luthier's ToolBox",
+      "year_introduced": 2025,
+      "body_style": "stratocaster_derivative",
+      "iot": {
+        "processor": "Raspberry Pi 5",
+        "memory_gb": 8,
+        "storage_gb": 64,
+        "os": "Linux (custom Buildroot)"
+      },
+      "connectivity": {
+        "bluetooth": "BLE 5.0",
+        "wifi": "Wi-Fi 6 (802.11ax)",
+        "usb": "USB-C 3.1",
+        "midi": ["USB MIDI", "BLE MIDI", "DIN MIDI (optional)"]
+      },
+      "audio": {
+        "adc_bits": 24,
+        "sample_rate_khz": 96,
+        "latency_ms": 3,
+        "dsp": "Real-time pitch detection, effects processing",
+        "outputs": ["1/4\" TRS", "USB Audio", "Bluetooth A2DP"]
+      },
+      "sensors": {
+        "piezo_pickups": 6,
+        "accelerometer": true,
+        "gyroscope": true,
+        "capacitive_touch_frets": true,
+        "pressure_sensitive_strings": false
+      },
+      "power": {
+        "battery_type": "Li-ion 18650",
+        "capacity_mah": 6000,
+        "runtime_hours": 8,
+        "charging": "USB-C PD 20W"
+      },
+      "features": [
+        "Real-time pitch detection",
+        "Alternative temperament support (19+ systems)",
+        "LED fret markers (RGB addressable)",
+        "Onboard effects processing",
+        "DAW integration (Giglad, Band-in-a-Box)",
+        "Chord recognition",
+        "Looper (60s stereo)",
+        "Metronome with tap tempo",
+        "Tuner (chromatic + temperament-aware)",
+        "Wireless audio streaming",
+        "MIDI controller mode",
+        "Firmware OTA updates"
+      ],
+      "daw_integration": {
+        "giglad": {
+          "status": "OEM partnership",
+          "features": ["Live backing tracks", "AI accompaniment"]
+        },
+        "pgmusic": {
+          "status": "OEM partnership",
+          "features": ["Band-in-a-Box integration", "Chord recognition"]
+        }
+      },
+      "cam_features": {
+        "electronics_cavity": "Custom routed for Pi 5 + battery",
+        "control_panel": "3D printed or CNC aluminum",
+        "pcb_mounting": "M2.5 standoffs, vibration dampened"
+      },
+      "assets": [
+        "smart_guitar/body_outline.dxf",
+        "smart_guitar/electronics_cavity.dxf",
+        "smart_guitar/control_panel.dxf",
+        "smart_guitar/pcb_mounting.dxf"
       ]
     }
   }

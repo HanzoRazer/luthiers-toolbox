@@ -471,9 +471,13 @@ const staggered = await api.post('/fret/staggered', data);
 |-----------|--------|--------|--------|
 | Neck | `neck_router.py` | `/api/neck` | ✅ Complete |
 | Bridge | `bridge_router.py` | `/api/bridge` | ✅ Complete |
-| Archtop | `archtop_router.py` | `/api/guitar/archtop` | ✅ Complete |
-| Stratocaster | `stratocaster_router.py` | `/api/guitar/stratocaster` | ✅ Complete |
+| Archtop | `instruments/guitar/archtop_instrument_router.py` | `/api/instruments/guitar/archtop` | ✅ Canonical (Wave 20) |
+| Archtop CAM | `cam/guitar/archtop_cam_router.py` | `/api/cam/guitar/archtop` | ✅ Canonical (Wave 20) |
+| Stratocaster | `instruments/guitar/stratocaster_instrument_router.py` | `/api/instruments/guitar/stratocaster` | ✅ Canonical (Wave 20) |
+| Stratocaster CAM | `cam/guitar/stratocaster_cam_router.py` | `/api/cam/guitar/stratocaster` | ✅ Canonical (Wave 20) |
 | **Fret** | **`fret_router.py`** | **`/api/fret`** | **✅ NEW** |
+
+> **Note:** Legacy guitar model routers (`archtop_router.py`, `stratocaster_router.py`, `om_router.py`, `smart_guitar_router.py`) were removed Dec 2025. 308 redirects preserve backward compatibility via `legacy/guitar_model_redirects.py`.
 
 ### CAM vs Design Separation
 

@@ -43,12 +43,16 @@ from .models import SawRunRecord, SawTelemetryRecord, TelemetrySample
 # FILE PATHS
 # ============================================================================
 
-# Storage directory (auto-created)
+# Storage directory (created on first write, not at import time)
 DATA_DIR = Path("app/data/cnc_production")
-DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 RUNS_PATH = DATA_DIR / "saw_runs.json"
 TELEMETRY_PATH = DATA_DIR / "saw_telemetry.json"
+
+
+def _ensure_data_dir() -> None:
+    """Create data directory if it doesn't exist. Called on write operations."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ============================================================================
@@ -68,6 +72,7 @@ def _load_json(path: Path) -> Dict[str, Any]:
 
 def _save_json(path: Path, data: Dict[str, Any]) -> None:
     """Save data to JSON file with formatting."""
+    _ensure_data_dir()  # Create directory on first write
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, default=str)
 

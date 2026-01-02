@@ -48,12 +48,26 @@ from .util.logging_request_id import RequestIdFilter
 
 # Deprecation guardrails
 from .middleware.deprecation import DeprecationHeadersMiddleware
+
+# AI availability (for health endpoint)
+from .ai.availability import get_ai_status
 from .meta.router_truth_routes import router as routing_truth_router
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
 from .governance.governance_router import router as governance_router
 from .governance.metrics_router import router as metrics_router
+
+
+# =============================================================================
+# COMPAT LEGACY ROUTES FLAG
+# Canonical API paths are /api/*. Legacy/compat routes (/cam/*, /geometry/*, etc.)
+# are mounted for CI backwards compatibility but hidden from OpenAPI.
+# Set ENABLE_COMPAT_LEGACY_ROUTES=false once CI workflows are migrated.
+# =============================================================================
+import os
+_log = logging.getLogger(__name__)
+ENABLE_COMPAT_LEGACY_ROUTES = os.getenv("ENABLE_COMPAT_LEGACY_ROUTES", "true").lower() in ("1", "true", "yes")
 
 
 # =============================================================================
@@ -157,9 +171,10 @@ from .routers.pipeline_presets_router import router as pipeline_presets_router
 from .routers.dxf_plan_router import router as dxf_plan_router
 
 # =============================================================================
-# BLUEPRINT IMPORT (1 router)
-# Note: blueprint_router broken - needs analyzer module
+# BLUEPRINT IMPORT (2 routers)
+# Note: blueprint_router now gracefully degrades if analyzer deps missing
 # =============================================================================
+from .routers.blueprint_router import router as blueprint_router
 from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
 
 # =============================================================================
@@ -189,11 +204,36 @@ from .saw_lab.batch_router import router as saw_batch_router
 
 # =============================================================================
 # SPECIALTY MODULES - Guitar-specific calculators (4 routers)
+# Optional: these may be missing in minimal deployments
 # =============================================================================
-from .routers.archtop_router import router as archtop_router
-from .routers.stratocaster_router import router as stratocaster_router
-from .routers.smart_guitar_router import router as smart_guitar_router
-from .routers.om_router import router as om_router
+# SPECIALTY MODULES (4 routers) - OPTIONAL
+# These routers are optional - endpoints won't mount if modules are missing
+# =============================================================================
+_log = logging.getLogger(__name__)
+
+try:
+    from .routers.archtop_router import router as archtop_router
+except ImportError as e:
+    archtop_router = None
+    _log.warning("Optional router archtop_router not available: %s", e)
+
+try:
+    from .routers.stratocaster_router import router as stratocaster_router
+except ImportError as e:
+    stratocaster_router = None
+    _log.warning("Optional router stratocaster_router not available: %s", e)
+
+try:
+    from .routers.smart_guitar_router import router as smart_guitar_router
+except ImportError as e:
+    smart_guitar_router = None
+    _log.warning("Optional router smart_guitar_router not available: %s", e)
+
+try:
+    from .routers.om_router import router as om_router
+except ImportError as e:
+    om_router = None
+    _log.warning("Optional router om_router not available: %s", e)
 
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
@@ -538,6 +578,24 @@ def _startup_db_migrations() -> None:
     run_migrations_on_startup()
 
 # =============================================================================
+# COMPAT ROUTE HELPER
+# =============================================================================
+
+def _include_compat_router(app, router, prefix: str, *, name: str) -> None:
+    """
+    Mount legacy/compat routes to keep CI + older callers working.
+    These are intentionally hidden from OpenAPI to prevent new usage.
+    """
+    if not router:
+        return
+    try:
+        app.include_router(router, prefix=prefix, include_in_schema=False)
+        _log.warning("Compat routes enabled: %s mounted at %s (hidden from OpenAPI)", name, prefix)
+    except Exception as e:
+        _log.warning("Compat route mount failed: %s at %s (%s)", name, prefix, e)
+
+
+# =============================================================================
 # ROUTER REGISTRATION
 # =============================================================================
 
@@ -546,7 +604,7 @@ app.include_router(sim_router, prefix="/api/sim", tags=["Simulation"])
 app.include_router(feeds_router, prefix="/api/feeds", tags=["Feeds & Speeds"])
 app.include_router(geometry_router, prefix="/api/geometry", tags=["Geometry"])
 app.include_router(tooling_router, prefix="/api/tooling", tags=["Tooling"])
-app.include_router(adaptive_router, prefix="/api/adaptive", tags=["Adaptive Pocketing"])
+app.include_router(adaptive_router, prefix="/api", tags=["Adaptive Pocketing"])
 app.include_router(machine_router, prefix="/api/machine", tags=["Machine"])
 app.include_router(cam_opt_router, prefix="/api/cam/opt", tags=["CAM Optimization"])
 app.include_router(material_router, prefix="/api/material", tags=["Materials"])
@@ -574,7 +632,8 @@ app.include_router(adaptive_preview_router, prefix="/api/cam/adaptive-preview", 
 app.include_router(pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"])
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
-# Blueprint (1)
+# Blueprint (2)
+app.include_router(blueprint_router, prefix="/api")  # Router has /blueprint prefix internally
 app.include_router(blueprint_cam_bridge_router, prefix="/api/blueprint/cam", tags=["Blueprint CAM Bridge"])
 
 # Machine & Post Configuration (3)
@@ -593,11 +652,15 @@ app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 app.include_router(saw_batch_router)  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
 
-# Specialty Modules (4)
-app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
-app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster"])
-app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"])
-app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
+# Specialty Modules (4) - optional
+if archtop_router:
+    app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])
+if stratocaster_router:
+    app.include_router(stratocaster_router, prefix="/api/guitar/stratocaster", tags=["Guitar", "Stratocaster"])
+if smart_guitar_router:
+    app.include_router(smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"])
+if om_router:
+    app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
 
 # G-Code Generators (2)
 app.include_router(body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"])
@@ -798,20 +861,55 @@ if art_snapshot_router:
 if rmos_logs_v2_router:
     app.include_router(rmos_logs_v2_router, prefix="/api/rmos", tags=["RMOS", "Logs v2"])
 
-# Wave 21: Acoustics Bundle Import (1)
-# Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path
+# Wave 21: Acoustics Bundle Import (import, query, zip_export only)
+# Endpoints: POST /api/rmos/acoustics/import-zip, POST /api/rmos/acoustics/import-path, etc.
+# NOTE: Prefix set once here; sub-routers must NOT set their own prefix (Issue B fix).
+# NOTE: router_attachments.py removed from composite - superseded by Wave 22 (Issue A fix).
 if rmos_acoustics_router:
-    app.include_router(rmos_acoustics_router, tags=["RMOS", "Acoustics"])
+    app.include_router(rmos_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
 
-# Wave 22: Runs v2 Acoustics Advisory Surface
-# Endpoints: GET /api/rmos/acoustics/runs/{run_id}/advisories,
-#            GET /api/rmos/acoustics/advisories/{advisory_id},
-#            GET /api/rmos/acoustics/attachments/{sha256}
+# Wave 22: Runs v2 Acoustics Advisory Surface (H7.2.2.1 features)
+# Endpoints: GET /runs/{run_id}/advisories, GET /advisories/{advisory_id},
+#            GET/HEAD /attachments/{sha256}, POST /attachments/{sha256}/signed_url,
+#            GET /runs/{run_id}/attachments, GET /index/attachment_meta/{sha256}/exists
+# This is the authoritative attachment router with no-path disclosure + signed URLs.
 try:
     from .rmos.runs_v2.acoustics_router import router as runs_v2_acoustics_router
     app.include_router(runs_v2_acoustics_router, prefix="/api/rmos/acoustics", tags=["RMOS", "Acoustics"])
 except ImportError:
     pass
+
+# =============================================================================
+# COMPAT LEGACY ROUTES (CI + legacy callers)
+# Canonical remains /api/*; compat mounts are hidden from OpenAPI.
+# Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.
+# =============================================================================
+if ENABLE_COMPAT_LEGACY_ROUTES:
+    # Core routers used by CI workflows
+    _include_compat_router(app, geometry_router, "/geometry", name="geometry_router")
+    _include_compat_router(app, tooling_router, "/tooling", name="tooling_router")
+    _include_compat_router(app, adaptive_router, "", name="adaptive_router")  # Router has /cam/pocket/adaptive prefix internally
+    _include_compat_router(app, material_router, "/material", name="material_router")
+    _include_compat_router(app, machine_router, "/machine", name="machine_router")
+    _include_compat_router(app, feeds_router, "/feeds", name="feeds_router")
+    _include_compat_router(app, sim_router, "/sim", name="sim_router")
+
+    # Consolidated CAM (Wave 18) - covers /cam/pocket/adaptive/*, /cam/polygon_offset.nc, etc.
+    if cam_router:
+        _include_compat_router(app, cam_router, "/cam", name="cam_router")
+
+    # Individual CAM subsystem routers (if CI hits them directly)
+    _include_compat_router(app, cam_opt_router, "/cam/opt", name="cam_opt_router")
+    _include_compat_router(app, cam_metrics_router, "/cam/metrics", name="cam_metrics_router")
+    _include_compat_router(app, cam_logs_router, "/cam/logs", name="cam_logs_router")
+    _include_compat_router(app, cam_learn_router, "/cam/learn", name="cam_learn_router")
+    _include_compat_router(app, cam_vcarve_router, "/cam/vcarve", name="cam_vcarve_router")
+    _include_compat_router(app, cam_relief_router, "/cam/relief", name="cam_relief_router")
+    _include_compat_router(app, cam_helical_router, "/cam/helical", name="cam_helical_router")
+    _include_compat_router(app, cam_simulate_router, "/cam/simulate", name="cam_simulate_router")
+    _include_compat_router(app, gcode_backplot_router, "/cam/backplot", name="gcode_backplot_router")
+else:
+    _log.info("Compat legacy routes disabled (ENABLE_COMPAT_LEGACY_ROUTES=false)")
 
 # =============================================================================
 # META / INTROSPECTION
@@ -837,10 +935,12 @@ async def health_check():
 
 @app.get("/api/health", tags=["Health"])
 async def api_health_check():
-    """API health check with router summary"""
+    """API health check with router summary and AI status"""
+    ai_status = get_ai_status()
     return {
-        "status": "healthy",
+        "status": "healthy" if ai_status["status"] == "available" else "degraded",
         "version": "2.0.0-clean",
+        "ai": ai_status,
         "routers": {
             "core_cam": 11,
             "rmos": 1,

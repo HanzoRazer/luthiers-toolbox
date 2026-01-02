@@ -1,3 +1,15 @@
+"""
+LEGACY: Signed URL utilities for RMOS acoustics ZIP export.
+
+NOTE: This module is maintained for backward compatibility with router_zip_export.py.
+New code should use runs_v2/signed_urls.py which provides:
+- Hierarchical scopes (download ⊇ head)
+- Unified secret handling
+- Path-bound signatures
+
+The token format here is different from runs_v2 (includes ext, ip binding).
+Both modules now share secret lookup (RMOS_SIGNED_URL_SECRET or RMOS_ACOUSTICS_SIGNING_SECRET).
+"""
 from __future__ import annotations
 
 import base64
@@ -10,9 +22,15 @@ from typing import Optional
 
 
 def _secret() -> bytes:
-    s = os.getenv("RMOS_ACOUSTICS_SIGNING_SECRET", "").strip()
+    """
+    Get signing secret. Checks both env vars for compatibility.
+    """
+    # Try primary first (runs_v2 convention), then legacy
+    s = os.getenv("RMOS_SIGNED_URL_SECRET", "").strip()
     if not s:
-        raise RuntimeError("RMOS_ACOUSTICS_SIGNING_SECRET is not set")
+        s = os.getenv("RMOS_ACOUSTICS_SIGNING_SECRET", "").strip()
+    if not s:
+        raise RuntimeError("RMOS_SIGNED_URL_SECRET (or RMOS_ACOUSTICS_SIGNING_SECRET) is not set")
     return s.encode("utf-8")
 
 

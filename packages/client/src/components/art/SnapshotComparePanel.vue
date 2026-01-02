@@ -3,6 +3,13 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import { artSnapshotsClient } from "@/api/artSnapshotsClient";
+import {
+  computeConfidence,
+  computeConfidenceTrend,
+  getConfidenceTooltipText,
+  type ConfLevel,
+} from "@/utils/rmosConfidence";
+import ConfidenceLegendModal from "@/components/rmos/ConfidenceLegendModal.vue";
 
 type AnySnap = any;
 
@@ -24,6 +31,10 @@ const autoComparedOnce = ref(false);
 // 32.1.0d: Live compare toggle (default OFF)
 const liveCompare = ref(false);
 let liveTimer: number | null = null;
+
+// Bundle 03: Keyboard hints toggle with localStorage persistence
+const KEYBOARD_HINTS_KEY = "compare.showKeyboardHints";
+const showKeyboardHints = ref(true);
 
 function scheduleLiveCompare() {
   if (!liveCompare.value) return;
@@ -93,6 +104,31 @@ const warningDelta = computed(() => {
   return b - a;
 });
 
+// Bundle 08: Use centralized confidence heuristic from rmosConfidence util
+const confidenceLevel = computed<ConfLevel>(() => {
+  // No compare result yet → safe default
+  if (!left.value || !right.value) return "LOW";
+
+  // Count "hot" rings (|Δ| >= 0.15mm)
+  const hotRings = deltaRows.value.filter((r) => Math.abs(r.delta) >= 0.15).length;
+
+  // Pattern changes count as structural
+  const patternChanges = deltaRows.value.filter(
+    (r) => r.aPattern !== r.bPattern && (r.aPattern || r.bPattern)
+  ).length;
+
+  return computeConfidence({ hotRings, patternChanges, warningDelta: warningDelta.value });
+});
+
+const previousConfidence = ref<ConfLevel | null>(null);
+
+const confidenceTrend = computed(() =>
+  computeConfidenceTrend(confidenceLevel.value, previousConfidence.value)
+);
+
+// Bundle 07: Tooltip explaining confidence and trend (now from centralized util)
+const confidenceTooltip = computed(() => getConfidenceTooltipText());
+
 async function loadSnapshotsForCompare() {
   error.value = "";
   left.value = null;
@@ -120,6 +156,27 @@ async function loadSnapshotsForCompare() {
 watch(() => [leftId.value, rightId.value], () => {
   scheduleLiveCompare();
 });
+
+// Bundle 06: Track previous confidence when compare results change
+watch(
+  () => [left.value, right.value] as const,
+  ([newLeft, newRight], [oldLeft, oldRight]) => {
+    // Only update trend baseline when compare results actually change
+    if (!newLeft || !newRight) return;
+
+    // If we had a previous valid compare, record its confidence as baseline
+    if (oldLeft && oldRight) {
+      // Compute what the previous confidence was (before reactivity updates it)
+      const oldHotRings = deltaRows.value.filter((r) => Math.abs(r.delta) >= 0.15).length;
+      // Use current confidenceLevel as the "previous" since it will update after this
+      previousConfidence.value = confidenceLevel.value;
+      return;
+    }
+
+    // First result in session: no arrow yet
+    previousConfidence.value = null;
+  }
+);
 
 // Auto-select Left=baseline when snapshots list changes and Left is empty (32.1.0a)
 watch(
@@ -213,11 +270,22 @@ function pickMostRecentNonBaselineAsRight() {
   const snaps = store.snapshots || [];
   if (!snaps.length) return;
 
-  // Prefer a snapshot that is NOT baseline and NOT the left snapshot
-  const candidate = snaps.find((s: any) => s?.baseline !== true && s?.snapshot_id && s.snapshot_id !== leftId.value);
+  // Filter to non-baseline snapshots that are not the left snapshot
+  const candidates = snaps.filter(
+    (s: any) => s?.baseline !== true && s?.snapshot_id && s.snapshot_id !== leftId.value
+  );
 
-  if (candidate?.snapshot_id) {
-    rightId.value = candidate.snapshot_id;
+  if (!candidates.length) return;
+
+  // Sort by created_at/updated_at descending (most recent first) — Bundle 04 nuance fix
+  const sorted = [...candidates].sort((a: any, b: any) => {
+    const aDate = a.updated_at || a.created_at || "";
+    const bDate = b.updated_at || b.created_at || "";
+    return String(bDate).localeCompare(String(aDate));
+  });
+
+  if (sorted[0]?.snapshot_id) {
+    rightId.value = sorted[0].snapshot_id;
   }
 }
 
@@ -345,6 +413,17 @@ function onKeyDown(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeyDown);
+
+  // Bundle 03: Restore keyboard hints preference from localStorage
+  const savedHints = localStorage.getItem(KEYBOARD_HINTS_KEY);
+  if (savedHints !== null) {
+    showKeyboardHints.value = savedHints === "true";
+  }
+});
+
+// Bundle 03: Persist keyboard hints preference
+watch(showKeyboardHints, (val) => {
+  localStorage.setItem(KEYBOARD_HINTS_KEY, String(val));
 });
 
 onBeforeUnmount(() => {
@@ -390,9 +469,19 @@ onBeforeUnmount(() => {
       <button class="btn" @click="swapSides" :disabled="!leftId || !rightId">Swap</button>
       <button class="btn" @click="loadSnapshotsForCompare" :disabled="!canCompare">Compare</button>
       <button class="btn" @click="clearCompare">Clear</button>
-      <span class="meta" style="font-size:11px; color:#888;">
-        <b>[</b>/<b>]</b> Right &nbsp; <b>⇧[</b>/<b>⇧]</b> Left
-      </span>
+    </div>
+
+    <!-- Bundle 03: Keyboard hints with user toggle -->
+    <div class="keyboard-hints-row">
+      <label class="hint-toggle">
+        <input type="checkbox" v-model="showKeyboardHints" />
+        Show keyboard hints
+      </label>
+      <div v-if="showKeyboardHints" class="hint-text">
+        <kbd>[</kbd> / <kbd>]</kbd> step <strong>Right</strong>
+        <span class="hint-sep">·</span>
+        <kbd>Shift</kbd>+<kbd>[</kbd> / <kbd>]</kbd> step <strong>Left</strong>
+      </div>
     </div>
 
     <div class="row" style="justify-content:flex-start;">
@@ -445,7 +534,27 @@ onBeforeUnmount(() => {
       <!-- Compare summary -->
       <div class="snap" style="margin-top: 10px;">
         <div class="left">
-          <div class="nm">Summary</div>
+          <div class="nm">
+            Summary
+            <!-- Bundle 07: Tooltip wrapper for confidence badge + trend -->
+            <span class="confidence-tooltip-wrap" :title="confidenceTooltip">
+              <!-- Bundle 05: Confidence badge -->
+              <span
+                class="confidence-badge"
+                :data-level="confidenceLevel"
+              >
+                {{ confidenceLevel }}
+              </span>
+              <!-- Bundle 06: Confidence trend arrow -->
+              <span class="confidence-trend" :data-trend="confidenceTrend">
+                <span v-if="confidenceTrend === 'UP'">↑</span>
+                <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
+                <span v-else-if="confidenceTrend === 'FLAT'">→</span>
+              </span>
+            </span>
+            <!-- Bundle 09: Confidence Legend Modal -->
+            <ConfidenceLegendModal />
+          </div>
           <div class="meta">
             Score Δ:
             <b v-if="scoreDelta !== null">{{ scoreDelta.toFixed(1) }}</b>
@@ -573,5 +682,114 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #a00;
   margin: 4px 0;
+}
+
+/* Bundle 03: Keyboard hints styling */
+.keyboard-hints-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+.hint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hint-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.hint-text kbd {
+  background: #f3f3f3;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #333;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+}
+
+.hint-text strong {
+  font-weight: 600;
+}
+
+.hint-sep {
+  color: #999;
+  margin: 0 4px;
+}
+
+/* Bundle 05: Confidence badge styling */
+.confidence-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* Bundle 07: Tooltip wrapper for badge + trend */
+.confidence-tooltip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: help;
+}
+
+.confidence-badge[data-level="HIGH"] {
+  background: #e6f7ee;
+  color: #18794e;
+}
+
+.confidence-badge[data-level="MED"] {
+  background: #fff4e5;
+  color: #8a5a00;
+}
+
+.confidence-badge[data-level="LOW"] {
+  background: #fdecea;
+  color: #b42318;
+}
+
+/* Bundle 06: Confidence trend arrow styling */
+.confidence-trend {
+  margin-left: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.confidence-trend[data-trend="NONE"] {
+  display: none;
+}
+
+.confidence-trend[data-trend="UP"] {
+  color: #18794e;
+}
+
+.confidence-trend[data-trend="DOWN"] {
+  color: #b42318;
+}
+
+.confidence-trend[data-trend="FLAT"] {
+  color: #8a5a00;
 }
 </style>

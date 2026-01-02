@@ -1089,11 +1089,16 @@ from .schemas_variant_review import (
     AdvisoryVariantReviewRecord,
     PromoteVariantRequest,
     PromoteVariantResponse,
+    RejectVariantRequest,
+    RejectVariantResponse,
+    UnrejectVariantResponse,
 )
 from .variant_review_service import (
     list_variants,
     save_review,
     promote_variant,
+    reject_variant,
+    unreject_variant,
 )
 
 
@@ -1165,6 +1170,162 @@ def post_promote_advisory_variant(
     Returns 409 if already promoted.
     """
     return promote_variant(run_id, advisory_id, payload, principal)
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/reject", response_model=RejectVariantResponse)
+def post_reject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+    principal: Principal = Depends(require_roles("admin", "operator")),
+):
+    """
+    Reject an advisory variant.
+
+    Requires authenticated user with role: admin or operator.
+
+    Rejection stores metadata on the run (does not delete the advisory blob).
+    Use unreject to clear rejection status.
+
+    Reason codes:
+    - GEOMETRY_UNSAFE: Geometry has safety concerns
+    - TEXT_REQUIRES_OUTLINE: Contains text that needs outline conversion
+    - AESTHETIC: Aesthetic/design concerns
+    - DUPLICATE: Duplicate of another variant
+    - OTHER: Other reason (use reason_detail)
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient.
+    Returns 404 if run or advisory not found.
+    """
+    return reject_variant(run_id, advisory_id, payload, principal)
+
+
+@router.post("/{run_id}/advisory/{advisory_id}/unreject", response_model=UnrejectVariantResponse)
+def post_unreject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    principal: Principal = Depends(require_roles("admin", "operator")),
+):
+    """
+    Clear rejection status for an advisory variant.
+
+    Requires authenticated user with role: admin or operator.
+
+    Removes rejection metadata from the run artifact.
+    Returns cleared=true if rejection was removed, false if not rejected.
+
+    Returns 401 if not authenticated.
+    Returns 403 if role insufficient.
+    Returns 404 if run or advisory not found.
+    """
+    return unreject_variant(run_id, advisory_id, principal)
+
+
+# =============================================================================
+# Bulk Promote (Product Bundle)
+# =============================================================================
+
+from .schemas_variant_review import (
+    BulkPromoteRequest,
+    BulkPromoteResponse,
+)
+from .variant_review_service import bulk_promote_variants
+
+
+@router.post("/{run_id}/advisory/bulk-promote", response_model=BulkPromoteResponse)
+def post_bulk_promote_advisory_variants(
+    run_id: str,
+    payload: BulkPromoteRequest,
+    principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
+):
+    """
+    Bulk-promote multiple advisory variants to manufacturing candidates.
+
+    Requires authenticated user with role: admin, operator, or engineer.
+    Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
+
+    Each variant is evaluated against the SVG bind-time policy:
+    - BLOCK: script, foreignObject, image elements
+    - ALLOW + YELLOW: text elements (requires outline conversion)
+    - ALLOW + GREEN: path/geometry only
+
+    Processing continues on individual failures to maximize throughput.
+
+    Returns aggregate statistics:
+    - total: Number of advisory IDs submitted
+    - succeeded: Number successfully promoted
+    - failed: Number that failed (not found, already promoted, etc.)
+    - blocked: Number blocked by bind-time policy
+
+    Also returns per-item results with decision, risk_level, and any error.
+    """
+    return bulk_promote_variants(run_id, payload, principal)
+
+
+# =============================================================================
+# Variant Rejection (Product Bundle)
+# =============================================================================
+
+from .schemas_advisory_reject import (
+    RejectVariantRequest,
+    AdvisoryVariantRejectionRecord,
+)
+from .advisory_variant_state import write_rejection, clear_rejection
+
+
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/reject",
+    response_model=AdvisoryVariantRejectionRecord,
+    summary="Reject an advisory variant with a reason code.",
+)
+def post_reject_advisory_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+):
+    """
+    Reject an advisory variant with a structured reason code.
+
+    This creates an explicit rejection record separate from the immutable
+    RunArtifact. Rejection records are stored in a simple per-run directory
+    structure for easy debugging and audit.
+
+    Reason codes (tight vocabulary):
+    - GEOMETRY_UNSAFE: Contains unsafe geometry for CNC
+    - TEXT_REQUIRES_OUTLINE: Text elements need outline conversion
+    - AESTHETIC: Rejected for aesthetic reasons
+    - DUPLICATE: Duplicate of another variant
+    - OTHER: Other reason (use reason_detail for specifics)
+
+    Optional fields:
+    - reason_detail: Short clarification (max 500 chars)
+    - operator_note: Longer note for audit trail (max 2000 chars)
+
+    Rejecting an already-rejected variant overwrites the previous rejection.
+    """
+    return write_rejection(run_id=run_id, advisory_id=advisory_id, req=payload)
+
+
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/unreject",
+    response_model=dict,
+    summary="Undo rejection of an advisory variant (clear rejection record).",
+)
+def post_unreject_advisory_variant(run_id: str, advisory_id: str):
+    """
+    Clear/undo a rejection for an advisory variant.
+
+    This removes the rejection record, returning the variant to its
+    previous status (NEW or REVIEWED depending on whether it has ratings/notes).
+
+    Returns:
+    - run_id: The run ID
+    - advisory_id: The advisory ID
+    - cleared: True if a rejection was cleared, False if none existed
+    """
+    existed = clear_rejection(run_id=run_id, advisory_id=advisory_id)
+    return {"run_id": run_id, "advisory_id": advisory_id, "cleared": existed}
 
 
 # =============================================================================

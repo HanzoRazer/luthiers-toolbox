@@ -6,6 +6,8 @@
 
 export * as runs from "./runs";
 export * as workflow from "./workflow";
+export * as operations from "./operations";
+export * as runsAttachments from "./runs_attachments";
 
 // Re-export common types for convenience
 export type {
@@ -16,6 +18,20 @@ export type {
   ListRunsParams,
   ListRunsResponse,
 } from "./runs";
+
+export type {
+  CamIntentV1,
+  FeasibilityResult,
+  ExecuteOperationRequest,
+  ExecuteOperationResponse,
+  PlanOperationRequest,
+  PlanOperationResponse,
+} from "./operations";
+
+export type {
+  RunAttachmentRow,
+  RunAttachmentsListResponse,
+} from "./runs_attachments";
 
 export type {
   WorkflowSessionLite,

@@ -70,6 +70,8 @@ services:
       SERVER_PORT: ${SERVER_PORT:-8000}
       # CORS origins MUST include client URL (prevent API access errors)
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      # SQLite DB path (use /tmp in CI for ephemeral storage)
+      ART_STUDIO_DB_PATH: ${ART_STUDIO_DB_PATH:-/app/services/api/app/data/art_studio.db}
     volumes:
       # CRITICAL: Persist data directory for SQLite DB and JSON configs
       # Without this, database and post-processor configs are lost on rebuild
@@ -82,7 +84,8 @@ services:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
       interval: 10s   # Check every 10 seconds
       timeout: 3s     # Fail if response takes >3 seconds
-      retries: 10     # Allow 100 seconds for startup (Python imports)
+      start_period: 30s  # Grace period for app startup (Python imports)
+      retries: 10     # Allow 100 seconds for startup after start_period
     restart: unless-stopped  # CRITICAL: Auto-restart on crash (production stability)
 
   # ============================================================================
@@ -131,3 +134,43 @@ services:
       # Expose web UI on host:container (default: 8080:8080)
       - "${CLIENT_PORT:-8080}:8080"
     restart: unless-stopped  # CRITICAL: Auto-restart on crash (production stability)
+
+  # ============================================================================
+  # PROXY SERVICE - Nginx Reverse Proxy (Optional)
+  # ============================================================================
+  #
+  # Unified endpoint for API + Client:
+  # - /api/* → FastAPI backend (api:8000)
+  # - /* → Vue SPA from client container
+  # - /health → Health check passthrough
+  #
+  # Ports:
+  #   ${FRONT_PORT}:80 - Unified endpoint (default: 8088:80)
+  #
+  # Dependencies:
+  #   api:service_healthy - Wait for API before accepting traffic
+  #
+  # Use Case:
+  #   Production deployments where single endpoint is preferred
+  #   CI testing of proxy configuration
+  # ============================================================================
+  proxy:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: ${PROXY_IMAGE:-toolbox/proxy:local}
+    container_name: ${COMPOSE_PROJECT_NAME:-toolbox}_proxy
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${FRONT_PORT:-8088}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - proxy  # Only start with: docker compose --profile proxy up

@@ -1,0 +1,2608 @@
+Absolutely. “Create the spine” means: lock the governed execution path first so anything you implement later (Prompt→SVG, Vision, RMOS asset generation) simply plugs into it.
+Below is the compliant spine that will “launch the AI pipeline” without committing you to any one feature yet. It’s structured so:
+•	only app/ai/transport/** touches vendor SDKs
+•	all calls produce a provenance envelope (metadata-by-default)
+•	request_id is consistent across FastAPI requests
+•	domain modules can safely call one entrypoint (app.ai.runtime.ai_call(...)) and never worry about logging/safety/audit drift
+________________________________________
+Spine Bundle: AI Runtime + Provenance Envelope + Request ID Middleware
+0) What this spine gives you
+A single, safe pattern:
+from app.ai.runtime import ai_call
+from app.ai.safety import SafetyCategory
+
+result = ai_call.text(
+    operation="prompt_to_svg_spec",
+    category=SafetyCategory.ROSETTE_DESIGN,
+    provider="openai",
+    prompt=user_prompt,
+    system_prompt="You are a luthier assistant.",
+)
+# result.content (text)
+# result.envelope (metadata-by-default provenance)
+No domain code imports SDKs, reads env keys, writes its own retries, or invents logging formats.
+________________________________________
+1) File layout (minimal, canonical)
+services/api/app/ai/
+├── __init__.py
+├── runtime.py                    # NEW: canonical "AI pipeline launcher"
+├── schemas.py                    # NEW: AICallEnvelope + AIResult models
+├── transport/
+│   ├── __init__.py
+│   ├── llm_client.py
+│   └── image_client.py
+├── safety/
+│   ├── __init__.py
+│   ├── policy.py
+│   └── enforcement.py
+└── observability/
+    ├── __init__.py
+    ├── request_id.py
+    └── audit_log.py
+
+services/api/app/middleware/
+└── request_id_middleware.py      # NEW: sets request_id on every request
+
+services/api/app/main.py          # include middleware
+________________________________________
+2) The canonical provenance schema (metadata-by-default)
+Create services/api/app/ai/schemas.py:
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+from typing import Any, Dict, Optional, Literal
+from datetime import datetime, timezone
+
+
+class AICallEnvelope(BaseModel):
+    # Correlation
+    request_id: str = Field(..., description="Correlation ID for this request chain")
+    operation: str = Field(..., description="Stable operation name: e.g., prompt_to_svg_spec")
+    category: str = Field(..., description="Safety category name")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    # Provider/model
+    provider: str
+    model: Optional[str] = None
+
+    # Safety
+    allowed: bool
+    safety_reason: Optional[str] = None
+
+    # Hashes (metadata-by-default)
+    prompt_sha256: str
+    response_sha256: Optional[str] = None
+
+    # Performance/cost/usage
+    latency_ms: Optional[float] = None
+    usage: Optional[Dict[str, Any]] = None
+    cost_estimate_usd: Optional[float] = None
+
+    # Optional variant/replay hints
+    variant_seed: Optional[str] = None
+    engine_version: Optional[str] = None
+
+
+class AITextResult(BaseModel):
+    content: str
+    envelope: AICallEnvelope
+
+
+class AIImageResult(BaseModel):
+    # Store hash here as well; bytes handling is domain-specific
+    image_sha256: str
+    revised_prompt_sha256: Optional[str] = None
+    envelope: AICallEnvelope
+________________________________________
+3) Request ID middleware (so everything correlates)
+Create services/api/app/middleware/request_id_middleware.py:
+from __future__ import annotations
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+from app.ai.observability.request_id import set_request_id, request_id_context
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        incoming = request.headers.get("x-request-id")
+        if incoming:
+            set_request_id(incoming)
+            response: Response = await call_next(request)
+            response.headers["x-request-id"] = incoming
+            return response
+
+        # auto-generate per request
+        with request_id_context() as rid:
+            response: Response = await call_next(request)
+            response.headers["x-request-id"] = rid
+            return response
+Then in services/api/app/main.py register it once:
+from app.middleware.request_id_middleware import RequestIdMiddleware
+
+app.add_middleware(RequestIdMiddleware)
+________________________________________
+4) Audit log should be metadata-by-default (hashes + metrics)
+In services/api/app/ai/observability/audit_log.py, make the default logging omit raw prompt/response.
+Example policy:
+•	always log prompt_sha256, response_sha256, usage, latency
+•	only log raw prompt/response when AI_AUDIT_VERBOSE=true
+(You already decided metadata-by-default, so this locks it.)
+________________________________________
+5) The AI pipeline launcher: app/ai/runtime.py
+This is the “spine” function domain code calls.
+from __future__ import annotations
+
+import time
+from typing import Optional
+
+from app.ai.transport import get_llm_client, get_image_client
+from app.ai.safety import assert_allowed, SafetyCategory
+from app.ai.observability import get_request_id, audit_ai_call
+from app.ai.schemas import AICallEnvelope, AITextResult
+from app.util.hashing import sha256_text  # recommend a neutral util
+
+
+class AIRuntime:
+    def text(
+        self,
+        *,
+        operation: str,
+        category: SafetyCategory,
+        provider: str,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1000,
+        model: Optional[str] = None,
+        variant_seed: Optional[str] = None,
+    ) -> AITextResult:
+        rid = get_request_id() or "unknown"
+        prompt_hash = sha256_text(prompt)
+
+        # Safety first (fail closed for user-facing)
+        try:
+            assert_allowed(prompt, category=category)
+            allowed = True
+            safety_reason = None
+        except Exception as e:
+            allowed = False
+            safety_reason = str(e)
+
+            env = AICallEnvelope(
+                request_id=rid,
+                operation=operation,
+                category=category.value,
+                provider=provider,
+                model=model,
+                allowed=False,
+                safety_reason=safety_reason,
+                prompt_sha256=prompt_hash,
+                variant_seed=variant_seed,
+            )
+            audit_ai_call(envelope=env)
+            raise  # propagate as proper error at router/service layer
+
+        client = get_llm_client(provider=provider)
+        if not client.is_configured:
+            env = AICallEnvelope(
+                request_id=rid,
+                operation=operation,
+                category=category.value,
+                provider=provider,
+                model=model,
+                allowed=True,
+                prompt_sha256=prompt_hash,
+                variant_seed=variant_seed,
+            )
+            audit_ai_call(envelope=env, error="LLM client not configured")
+            raise RuntimeError(f"{provider} LLM client not configured")
+
+        t0 = time.perf_counter()
+        resp = client.request_text(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            model=model,
+        )
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+
+        content_hash = sha256_text(resp.content)
+
+        env = AICallEnvelope(
+            request_id=rid,
+            operation=operation,
+            category=category.value,
+            provider=provider,
+            model=resp.model,
+            allowed=True,
+            prompt_sha256=prompt_hash,
+            response_sha256=content_hash,
+            latency_ms=latency_ms,
+            usage=resp.usage,
+            variant_seed=variant_seed,
+        )
+
+        audit_ai_call(envelope=env)
+        return AITextResult(content=resp.content, envelope=env)
+
+
+ai_call = AIRuntime()
+Key point: This makes “launching the AI pipeline” a single consistent action, with safety + provenance guaranteed.
+________________________________________
+6) Hard CI gates to add now (before any feature code)
+Add a CI script (or extend your governance CI) to enforce:
+1.	Vendor SDK imports only in app/ai/transport/**
+o	scan for import openai, from openai, import anthropic, etc.
+2.	Env var reads for API keys only in transport
+o	scan for OPENAI_API_KEY, ANTHROPIC_API_KEY, etc. outside transport
+3.	No domain code constructs vendor payloads
+o	scan for chat.completions.create(, images.generate( outside transport
+4.	app/ai/** must not import domain
+o	block imports from app.rmos, app.workflow, app._experimental, app.art_studio
+This is how you prevent “two AI stacks” from reappearing.
+________________________________________
+What you can safely build next on top of this spine
+Once the spine exists, you can implement Prompt→SVG feeding RMOS as:
+•	art_studio/svg/generator.py calls ai_call.text(...) to get a spec (text/json)
+•	then deterministic SVG builder compiles it
+•	then store SVG as attachment (hash-addressed)
+•	RMOS stamps it through RunArtifacts + approval gates
+But the important part is: you can start implementing any of that without debating safety/logging/SDK usage ever again.
+________________________________________
+If you want, I can turn this into a single “Spine Patch” bundle spec (file list + exact code blocks + where to wire in main.py + the CI rule file skeleton).
+
+
+
+Below is the single “Spine Patch” bundle spec you asked for: file list + exact code blocks + main.py wiring + CI rule skeleton.
+This patch creates the governed AI runtime spine that “launches the AI pipeline” in a compliant way:
+•	✅ Transport-only vendor SDK imports
+•	✅ Metadata-by-default provenance envelope
+•	✅ Request ID middleware
+•	✅ One canonical entrypoint: from app.ai.runtime import ai_call
+•	✅ CI skeleton to enforce boundaries
+________________________________________
+Spine Patch Bundle Spec — AI Runtime Spine + Governance Gates
+Bundle name
+SPINE_PATCH_AI_RUNTIME_V1
+Files added / modified
+Add (NEW)
+1.	services/api/app/util/hashing.py
+2.	services/api/app/ai/schemas.py
+3.	services/api/app/ai/runtime.py
+4.	services/api/app/ai/observability/audit_log.py (if you already have one, replace content carefully)
+5.	services/api/app/middleware/request_id_middleware.py
+6.	ci/ai_platform/check_ai_transport_boundary.py
+7.	.github/workflows/ai_platform_enforcement.yml (skeleton)
+Modify
+8.	services/api/app/ai/observability/request_id.py (only if needed; otherwise skip)
+9.	services/api/app/ai/observability/__init__.py (exports)
+10.	services/api/app/ai/__init__.py (exports)
+11.	services/api/app/main.py (wire middleware once)
+________________________________________
+1) NEW: Neutral hashing utility
+services/api/app/util/hashing.py
+from __future__ import annotations
+
+import hashlib
+
+
+def sha256_text(text: str) -> str:
+    """
+    Canonical sha256 hashing for text. Stable across the repo.
+
+    Do NOT duplicate hashing helpers in domain modules. Use this function.
+    """
+    if text is None:
+        text = ""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sha256_bytes(data: bytes) -> str:
+    """
+    Canonical sha256 hashing for bytes. Stable across the repo.
+    """
+    if data is None:
+        data = b""
+    return hashlib.sha256(data).hexdigest()
+________________________________________
+2) NEW: Provenance envelope + result models
+services/api/app/ai/schemas.py
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
+
+
+class AICallEnvelope(BaseModel):
+    """
+    Canonical metadata-by-default provenance record for *every* AI call.
+
+    Stores hashes + metrics by default.
+    Full prompt/response capture is controlled by observability settings.
+    """
+
+    # Correlation
+    request_id: str = Field(..., description="Correlation ID for this request chain")
+    operation: str = Field(..., description="Stable operation name (e.g. prompt_to_svg_spec)")
+    category: str = Field(..., description="Safety category name")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    # Provider/model
+    provider: str = Field(..., description="Provider name (openai/anthropic/local/stub)")
+    model: Optional[str] = Field(None, description="Model used (if known)")
+
+    # Safety
+    allowed: bool = Field(..., description="Whether safety policy allowed the call")
+    safety_reason: Optional[str] = Field(None, description="Reason code/message if blocked")
+
+    # Hashes (metadata-by-default)
+    prompt_sha256: str = Field(..., description="sha256(prompt)")
+    response_sha256: Optional[str] = Field(None, description="sha256(response content)")
+
+    # Performance/cost/usage
+    latency_ms: Optional[float] = Field(None, description="Latency in milliseconds")
+    usage: Optional[Dict[str, Any]] = Field(None, description="Provider usage metadata (tokens, etc.)")
+    cost_estimate_usd: Optional[float] = Field(None, description="Estimated cost in USD")
+
+    # Replay hints
+    variant_seed: Optional[str] = Field(None, description="Optional variant seed if caller supplies one")
+    engine_version: Optional[str] = Field(None, description="Platform/engine version if available")
+
+
+class AITextResult(BaseModel):
+    content: str
+    envelope: AICallEnvelope
+
+
+class AIImageResult(BaseModel):
+    """
+    Image result is intentionally metadata-first. Domain code owns blob persistence.
+    """
+    image_sha256: str
+    revised_prompt_sha256: Optional[str] = None
+    envelope: AICallEnvelope
+________________________________________
+3) Request ID context (ensure exports are stable)
+If you already have this and it matches, keep yours. If not, use this canonical implementation.
+services/api/app/ai/observability/request_id.py
+from __future__ import annotations
+
+from contextlib import contextmanager
+from contextvars import ContextVar
+from uuid import uuid4
+
+_request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
+
+
+def get_request_id() -> str | None:
+    return _request_id.get()
+
+
+def set_request_id(request_id: str) -> None:
+    _request_id.set(request_id)
+
+
+@contextmanager
+def request_id_context(request_id: str | None = None):
+    rid = request_id or f"req-{uuid4().hex}"
+    token = _request_id.set(rid)
+    try:
+        yield rid
+    finally:
+        _request_id.reset(token)
+services/api/app/ai/observability/__init__.py
+from .request_id import get_request_id, set_request_id, request_id_context
+from .audit_log import audit_ai_call
+
+__all__ = ["get_request_id", "set_request_id", "request_id_context", "audit_ai_call"]
+________________________________________
+4) NEW: Metadata-by-default audit logging
+services/api/app/ai/observability/audit_log.py
+from __future__ import annotations
+
+import json
+import os
+import logging
+from typing import Optional
+
+from app.ai.schemas import AICallEnvelope
+
+log = logging.getLogger("ai.audit")
+
+
+def _is_audit_enabled() -> bool:
+    return os.environ.get("AI_AUDIT_ENABLED", "true").lower() in ("1", "true", "yes", "y", "on")
+
+
+def _is_verbose_enabled() -> bool:
+    # Verbose logging MUST be opt-in.
+    return os.environ.get("AI_AUDIT_VERBOSE", "false").lower() in ("1", "true", "yes", "y", "on")
+
+
+def audit_ai_call(
+    *,
+    envelope: AICallEnvelope,
+    error: Optional[str] = None,
+    prompt_raw: Optional[str] = None,
+    response_raw: Optional[str] = None,
+) -> None:
+    """
+    Canonical audit logging for AI calls.
+
+    Metadata-by-default:
+      - Always logs envelope (hashes + metrics).
+      - Only logs raw prompt/response if AI_AUDIT_VERBOSE=true.
+    """
+    if not _is_audit_enabled():
+        return
+
+    payload = {
+        "kind": "ai_call",
+        "error": error,
+        "envelope": envelope.model_dump(),
+    }
+
+    if _is_verbose_enabled():
+        # NOTE: If enabled, consider adding redaction in the future.
+        payload["prompt_raw"] = prompt_raw
+        payload["response_raw"] = response_raw
+
+    log.info(json.dumps(payload, ensure_ascii=False))
+________________________________________
+5) NEW: Request ID middleware (wire once in main.py)
+services/api/app/middleware/request_id_middleware.py
+from __future__ import annotations
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+from app.ai.observability.request_id import set_request_id, request_id_context
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    """
+    Assigns a request_id for correlation across logs, run artifacts, and AI audit envelopes.
+
+    - Respects X-Request-Id header if provided
+    - Otherwise generates one and returns it in response header
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        incoming = request.headers.get("x-request-id")
+        if incoming:
+            set_request_id(incoming)
+            response: Response = await call_next(request)
+            response.headers["x-request-id"] = incoming
+            return response
+
+        with request_id_context() as rid:
+            response: Response = await call_next(request)
+            response.headers["x-request-id"] = rid
+            return response
+________________________________________
+6) NEW: AI Runtime spine (canonical launcher)
+services/api/app/ai/runtime.py
+from __future__ import annotations
+
+import time
+from typing import Optional
+
+from app.ai.schemas import AICallEnvelope, AITextResult
+from app.ai.transport import get_llm_client
+from app.ai.safety import assert_allowed, SafetyCategory
+from app.ai.observability import get_request_id, audit_ai_call
+from app.util.hashing import sha256_text
+
+
+class AIRuntime:
+    """
+    Canonical AI pipeline launcher.
+
+    Domain modules call this.
+    Domain modules do NOT:
+      - import vendor SDKs
+      - read API keys
+      - implement retries/timeouts
+      - invent their own provenance record shapes
+    """
+
+    def text(
+        self,
+        *,
+        operation: str,
+        category: SafetyCategory,
+        provider: str,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1000,
+        model: Optional[str] = None,
+        variant_seed: Optional[str] = None,
+    ) -> AITextResult:
+        request_id = get_request_id() or "unknown"
+        prompt_hash = sha256_text(prompt)
+
+        # Safety must fail closed for user-facing prompts.
+        try:
+            assert_allowed(prompt, category=category)
+            allowed = True
+            safety_reason = None
+        except Exception as e:
+            allowed = False
+            safety_reason = str(e)
+
+            env = AICallEnvelope(
+                request_id=request_id,
+                operation=operation,
+                category=category.value,
+                provider=provider,
+                model=model,
+                allowed=allowed,
+                safety_reason=safety_reason,
+                prompt_sha256=prompt_hash,
+                variant_seed=variant_seed,
+                engine_version="ai-runtime-v1",
+            )
+            audit_ai_call(envelope=env, error="safety_block", prompt_raw=prompt)
+            raise
+
+        client = get_llm_client(provider=provider)
+        if not client.is_configured:
+            env = AICallEnvelope(
+                request_id=request_id,
+                operation=operation,
+                category=category.value,
+                provider=provider,
+                model=model,
+                allowed=True,
+                prompt_sha256=prompt_hash,
+                variant_seed=variant_seed,
+                engine_version="ai-runtime-v1",
+            )
+            audit_ai_call(envelope=env, error="not_configured", prompt_raw=prompt)
+            raise RuntimeError(f"{provider} LLM client not configured")
+
+        t0 = time.perf_counter()
+        resp = client.request_text(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            model=model,
+        )
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+
+        response_hash = sha256_text(resp.content)
+
+        env = AICallEnvelope(
+            request_id=request_id,
+            operation=operation,
+            category=category.value,
+            provider=provider,
+            model=resp.model,
+            allowed=True,
+            prompt_sha256=prompt_hash,
+            response_sha256=response_hash,
+            latency_ms=latency_ms,
+            usage=resp.usage,
+            variant_seed=variant_seed,
+            engine_version="ai-runtime-v1",
+        )
+
+        # Metadata-by-default audit (raw prompt/response only if verbose enabled)
+        audit_ai_call(envelope=env, prompt_raw=prompt, response_raw=resp.content)
+
+        return AITextResult(content=resp.content, envelope=env)
+
+
+ai_call = AIRuntime()
+________________________________________
+7) Exports (stable import paths)
+services/api/app/ai/__init__.py
+from app.ai.runtime import ai_call
+from app.ai.schemas import AICallEnvelope, AITextResult, AIImageResult
+
+__all__ = ["ai_call", "AICallEnvelope", "AITextResult", "AIImageResult"]
+________________________________________
+8) Wire middleware into main.py (single insertion)
+services/api/app/main.py
+Add the middleware import and registration near app initialization (after app = FastAPI(...)):
+from app.middleware.request_id_middleware import RequestIdMiddleware
+
+# After app creation:
+app.add_middleware(RequestIdMiddleware)
+Rule: do this once. Don’t duplicate in routers.
+________________________________________
+CI Rule File Skeleton (AI Platform Enforcement)
+This is the “hard import boundary” for the AI Platform (the platform equivalent of your sandbox enforcement CI).
+9) NEW: CI script skeleton
+ci/ai_platform/check_ai_transport_boundary.py
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import pathlib
+import re
+import sys
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+# Adjust if your repo root differs when running CI.
+SEARCH_ROOTS = [
+    REPO_ROOT / "services" / "api" / "app",
+]
+
+TRANSPORT_ALLOW_PREFIX = str(REPO_ROOT / "services" / "api" / "app" / "ai" / "transport")
+
+FORBIDDEN_IMPORT_PATTERNS = [
+    re.compile(r"^\s*import\s+openai\b", re.M),
+    re.compile(r"^\s*from\s+openai\b", re.M),
+    re.compile(r"^\s*import\s+anthropic\b", re.M),
+    re.compile(r"^\s*from\s+anthropic\b", re.M),
+]
+
+FORBIDDEN_DYNAMIC_PATTERNS = [
+    re.compile(r"importlib\.import_module\(\s*[\"']openai[\"']\s*\)"),
+    re.compile(r"importlib\.import_module\(\s*[\"']anthropic[\"']\s*\)"),
+]
+
+FORBIDDEN_ENV_KEY_PATTERNS = [
+    re.compile(r"OPENAI_API_KEY"),
+    re.compile(r"ANTHROPIC_API_KEY"),
+    re.compile(r"SDXL_API_URL"),
+    re.compile(r"LOCAL_LLM_URL"),
+]
+
+# env var reads should only happen in transport
+ENV_ALLOW_PREFIX = TRANSPORT_ALLOW_PREFIX
+
+
+def iter_py_files():
+    for root in SEARCH_ROOTS:
+        if not root.exists():
+            continue
+        for p in root.rglob("*.py"):
+            yield p
+
+
+def main() -> int:
+    violations: list[str] = []
+
+    for path in iter_py_files():
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        pstr = str(path)
+
+        in_transport = pstr.startswith(TRANSPORT_ALLOW_PREFIX)
+
+        # 1) vendor SDK imports only in transport
+        for rx in FORBIDDEN_IMPORT_PATTERNS:
+            if rx.search(text) and not in_transport:
+                violations.append(f"[SDK_IMPORT] {path} contains forbidden vendor import outside ai/transport")
+
+        # 2) dynamic vendor imports also only in transport
+        for rx in FORBIDDEN_DYNAMIC_PATTERNS:
+            if rx.search(text) and not in_transport:
+                violations.append(f"[SDK_DYNAMIC_IMPORT] {path} contains forbidden dynamic vendor import outside ai/transport")
+
+        # 3) provider key env var reads only in transport (strict)
+        # This is intentionally strict; loosen later only if needed.
+        if any(rx.search(text) for rx in FORBIDDEN_ENV_KEY_PATTERNS):
+            if not pstr.startswith(ENV_ALLOW_PREFIX):
+                violations.append(f"[ENV_READ] {path} references provider env vars outside ai/transport")
+
+    if violations:
+        print("AI Platform Enforcement FAILED:")
+        for v in violations:
+            print(" -", v)
+        return 2
+
+    print("AI Platform Enforcement OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+________________________________________
+10) NEW: GitHub Actions workflow skeleton
+.github/workflows/ai_platform_enforcement.yml
+name: AI Platform Enforcement
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  ai-platform-enforcement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run AI platform enforcement checks
+        run: |
+          python ci/ai_platform/check_ai_transport_boundary.py
+________________________________________
+Notes on how this “spine patch” stays compliant
+•	Domain code calls only: app.ai.runtime.ai_call
+•	Raw prompt/response never get logged unless AI_AUDIT_VERBOSE=true
+•	Request correlation always exists (middleware)
+•	Vendor SDK imports are enforced by CI
+________________________________________
+Quick sanity check (after applying patch)
+From services/api/ (or your normal run location):
+•	App boots without errors
+•	Any request returns an x-request-id
+•	CI script passes locally:
+•	python ci/ai_platform/check_ai_transport_boundary.py
+________________________________________
+If you want the next patch after this, the clean follow-on is:
+“Art Studio Prompt→SVG Spec Generation uses ai_call.text() + emits svg_sha256 + attaches to RMOS” — but this spine patch is the correct “platform first” move.
+Absolutely — let’s ship it.
+
+
+
+Below is a single bundle spec for:
+“Art Studio Prompt→SVG Spec Generation uses ai_call.text() + emits svg_sha256 + attaches to RMOS”
+This is designed to sit cleanly on top of the Spine Patch you just locked in.
+It follows your governance intent:
+•	Art Studio does not import vendor SDKs (ever)
+•	Art Studio does call ai_call.text() (platform spine)
+•	Art Studio generates SVG deterministically from a spec JSON returned by the LLM
+•	Art Studio computes svg_sha256 (metadata)
+•	Art Studio attaches SVG + spec JSON + provenance envelope to RMOS via a public RMOS attachment API
+•	RMOS remains authoritative: attachments are stored + hashed and become inputs for runs/workflow
+________________________________________
+Bundle: ART_STUDIO_PROMPT_TO_SVG_RMOS_ATTACHMENT_V1
+Adds / Modifies
+NEW files
+1.	services/api/app/art_studio/svg/schemas.py
+2.	services/api/app/art_studio/svg/spec_llm.py
+3.	services/api/app/art_studio/svg/svg_compiler.py
+4.	services/api/app/art_studio/svg/service.py
+5.	services/api/app/art_studio/api/svg_routes.py
+6.	services/api/app/rmos/api/runs_attachments_router.py (if you don’t already have a runs attachments router)
+7.	services/api/app/rmos/runs_v2/attachments_store.py (minimal canonical blob store adapter; safe default)
+8.	services/api/app/rmos/runs_v2/attachments_schemas.py
+MODIFIED files
+9.	services/api/app/main.py (include router)
+10.	services/api/app/art_studio/__init__.py (exports / router import convenience)
+11.	services/api/app/rmos/api/__init__.py (router export convenience, if you use this pattern)
+If you already have a runs attachments system in runs_v2, you can skip (6)(7)(8) and map the Art Studio service to your existing attach endpoint. I’m giving you a complete, self-contained minimal implementation so it ships without ambiguity.
+________________________________________
+0) Contract: What the LLM returns (strict JSON)
+We will force a JSON spec with a simple shape that compiles deterministically.
+services/api/app/art_studio/svg/schemas.py
+from __future__ import annotations
+
+from typing import Dict, List, Literal, Optional
+from pydantic import BaseModel, Field, conint, confloat
+
+
+class SvgShapeCircle(BaseModel):
+    kind: Literal["circle"] = "circle"
+    cx: confloat(ge=0)
+    cy: confloat(ge=0)
+    r: confloat(gt=0)
+
+
+class SvgShapeRing(BaseModel):
+    kind: Literal["ring"] = "ring"
+    cx: confloat(ge=0)
+    cy: confloat(ge=0)
+    r_inner: confloat(gt=0)
+    r_outer: confloat(gt=0)
+
+
+class SvgShapeRadialPetals(BaseModel):
+    kind: Literal["radial_petals"] = "radial_petals"
+    cx: confloat(ge=0)
+    cy: confloat(ge=0)
+    petals: conint(ge=3, le=64)
+    r_inner: confloat(gt=0)
+    r_outer: confloat(gt=0)
+
+
+SvgShape = SvgShapeCircle | SvgShapeRing | SvgShapeRadialPetals
+
+
+class PromptToSvgRequest(BaseModel):
+    prompt: str = Field(..., min_length=3, max_length=2000)
+    diameter_mm: confloat(gt=1, le=1000) = 100
+    count: conint(ge=1, le=10) = 1
+    provider: str = "openai"
+
+    # Optional: if provided, Art Studio will attach artifacts to RMOS run
+    run_id: Optional[str] = None
+
+    # Optional: replay hint
+    variant_seed: Optional[str] = None
+
+
+class PromptToSvgSpec(BaseModel):
+    """
+    Strict intermediate spec produced by LLM.
+    Deterministic compiler turns this into an SVG string.
+    """
+    version: str = "v1"
+    canvas_mm: confnote = Field(default=100, description="Canvas size in mm (square)")
+    stroke_mm: confloat(gt=0, le=5) = 0.25
+    fill_mode: Literal["none", "solid"] = "none"
+    shapes: List[SvgShape] = Field(default_factory=list)
+    meta: Dict[str, str] = Field(default_factory=dict)
+
+
+class PromptToSvgVariant(BaseModel):
+    variant_index: int
+    spec_json: str
+    svg_content: str
+    spec_sha256: str
+    svg_sha256: str
+
+
+class PromptToSvgResponse(BaseModel):
+    request_id: str
+    run_id: Optional[str] = None
+
+    # provenance (metadata-by-default)
+    llm_envelope: Dict[str, object]
+
+    variants: List[PromptToSvgVariant]
+    attached: bool = False
+    attachment_ids: List[str] = Field(default_factory=list)
+Note: I kept llm_envelope as a dict for compatibility—this should be your AICallEnvelope.model_dump().
+________________________________________
+1) LLM spec generation via the spine: ai_call.text()
+services/api/app/art_studio/svg/spec_llm.py
+from __future__ import annotations
+
+import json
+from typing import Tuple
+
+from app.ai.runtime import ai_call
+from app.ai.safety import SafetyCategory
+from app.util.hashing import sha256_text
+from app.art_studio.svg.schemas import PromptToSvgSpec
+
+
+SYSTEM_PROMPT = """You generate STRICT JSON for a CNC-safe SVG rosette spec.
+
+Rules:
+- Output JSON only. No markdown. No commentary.
+- Use schema:
+  {
+    "version":"v1",
+    "canvas_mm": <number>,
+    "stroke_mm": <number>,
+    "fill_mode": "none"|"solid",
+    "shapes": [ ... ],
+    "meta": { ... }
+  }
+- Prefer simple primitives: ring, radial_petals, circle.
+- Keep shapes centered at canvas/2.
+- Do not output paths. No Beziers. No text.
+"""
+
+
+def generate_spec_json(*, prompt: str, diameter_mm: float, provider: str, variant_seed: str | None) -> Tuple[str, dict, str]:
+    """
+    Returns (spec_json, envelope_dict, spec_sha256).
+    """
+    # Hint the LLM with explicit diameter + safety constraints.
+    user_prompt = (
+        f"Design a rosette spec for CNC.\n"
+        f"Diameter_mm={diameter_mm}\n"
+        f"User_prompt={prompt}\n"
+        f"Constraints: centered geometry, symmetric if possible.\n"
+    )
+
+    res = ai_call.text(
+        operation="prompt_to_svg_spec",
+        category=SafetyCategory.ROSETTE_DESIGN,
+        provider=provider,
+        prompt=user_prompt,
+        system_prompt=SYSTEM_PROMPT,
+        temperature=0.4,
+        max_tokens=800,
+        variant_seed=variant_seed,
+    )
+
+    # Validate JSON parse + spec schema strictness
+    try:
+        parsed = json.loads(res.content)
+        spec = PromptToSvgSpec.model_validate(parsed)
+        spec_json = spec.model_dump_json()
+    except Exception as e:
+        # keep error handling at service layer; raise here
+        raise ValueError(f"LLM spec JSON invalid: {e}")
+
+    spec_sha = sha256_text(spec_json)
+    return spec_json, res.envelope.model_dump(), spec_sha
+________________________________________
+2) Deterministic compiler: Spec → SVG
+services/api/app/art_studio/svg/svg_compiler.py
+from __future__ import annotations
+
+import json
+from math import cos, sin, pi
+from typing import Tuple
+
+from app.art_studio.svg.schemas import PromptToSvgSpec, SvgShapeCircle, SvgShapeRing, SvgShapeRadialPetals
+from app.util.hashing import sha256_text
+
+
+def _svg_header(canvas_mm: float) -> str:
+    # SVG units: treat mm as user units (CNC pipeline can interpret)
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{canvas_mm}mm" height="{canvas_mm}mm" viewBox="0 0 {canvas_mm} {canvas_mm}">'
+
+
+def _svg_footer() -> str:
+    return "</svg>"
+
+
+def _stroke_fill(stroke_mm: float, fill_mode: str) -> Tuple[str, str]:
+    stroke = f'stroke="black" stroke-width="{stroke_mm}"'
+    fill = 'fill="none"' if fill_mode == "none" else 'fill="black"'
+    return stroke, fill
+
+
+def compile_svg_from_spec_json(spec_json: str) -> Tuple[str, str]:
+    """
+    Returns (svg_content, svg_sha256).
+    Deterministic: same spec_json -> same svg output string.
+    """
+    spec = PromptToSvgSpec.model_validate(json.loads(spec_json))
+    canvas = float(spec.canvas_mm)
+    cx = cy = canvas / 2.0
+    stroke, fill = _stroke_fill(spec.stroke_mm, spec.fill_mode)
+
+    parts = [_svg_header(canvas)]
+
+    for shape in spec.shapes:
+        if isinstance(shape, SvgShapeCircle):
+            parts.append(f'<circle cx="{shape.cx}" cy="{shape.cy}" r="{shape.r}" {stroke} {fill} />')
+
+        elif isinstance(shape, SvgShapeRing):
+            # ring = two circles (outer stroke, inner stroke) in outline mode
+            # keep CNC-safe: outlines only
+            parts.append(f'<circle cx="{shape.cx}" cy="{shape.cy}" r="{shape.r_outer}" {stroke} fill="none" />')
+            parts.append(f'<circle cx="{shape.cx}" cy="{shape.cy}" r="{shape.r_inner}" {stroke} fill="none" />')
+
+        elif isinstance(shape, SvgShapeRadialPetals):
+            # petals = repeated circles at angles (simple)
+            # radius is mid between inner and outer
+            r_mid = (shape.r_inner + shape.r_outer) / 2.0
+            petal_r = max(0.1, (shape.r_outer - shape.r_inner) / 3.0)
+            for i in range(shape.petals):
+                a = 2 * pi * (i / shape.petals)
+                x = shape.cx + r_mid * cos(a)
+                y = shape.cy + r_mid * sin(a)
+                parts.append(f'<circle cx="{x:.6f}" cy="{y:.6f}" r="{petal_r:.6f}" {stroke} {fill} />')
+
+        else:
+            # Future-safe: ignore unknown shapes (or raise; policy choice)
+            raise ValueError(f"Unsupported shape: {shape}")
+
+    parts.append(_svg_footer())
+    svg = "".join(parts)
+    return svg, sha256_text(svg)
+________________________________________
+3) RMOS attachment contract (minimal)
+services/api/app/rmos/runs_v2/attachments_schemas.py
+from __future__ import annotations
+
+from typing import Dict, Optional
+from pydantic import BaseModel, Field
+
+
+class RunAttachmentCreateRequest(BaseModel):
+    kind: str = Field(..., description="attachment kind: geometry_svg, geometry_spec_json, ai_provenance_json")
+    filename: str
+    content_type: str
+    sha256: str
+    # base64 payload keeps this self-contained; if you already have a blob store, adapt this.
+    b64: str
+    metadata: Dict[str, object] = Field(default_factory=dict)
+
+
+class RunAttachmentCreateResponse(BaseModel):
+    attachment_id: str
+    sha256: str
+    kind: str
+________________________________________
+4) Minimal attachments store (hash-verified, local FS default)
+If you already have an attachments blob store, map to it instead. This is a safe, deterministic baseline.
+services/api/app/rmos/runs_v2/attachments_store.py
+from __future__ import annotations
+
+import base64
+from pathlib import Path
+from typing import Tuple
+from uuid import uuid4
+
+from app.util.hashing import sha256_bytes
+from app.rmos.runs_v2.attachments_schemas import RunAttachmentCreateRequest
+
+ATTACHMENTS_ROOT = Path("data/run_attachments")  # adjust if you have a canonical data dir
+
+
+def persist_attachment(*, run_id: str, req: RunAttachmentCreateRequest) -> Tuple[str, str]:
+    """
+    Persist attachment after integrity verification.
+    Returns (attachment_id, sha256).
+    """
+    raw = base64.b64decode(req.b64.encode("utf-8"))
+    actual = sha256_bytes(raw)
+    if actual != req.sha256:
+        raise ValueError(f"Attachment sha256 mismatch: expected={req.sha256} actual={actual}")
+
+    attachment_id = f"att-{uuid4().hex}"
+    path = ATTACHMENTS_ROOT / run_id / attachment_id
+    path.mkdir(parents=True, exist_ok=True)
+
+    # Store bytes
+    (path / "blob.bin").write_bytes(raw)
+    (path / "meta.txt").write_text(
+        f"kind={req.kind}\nfilename={req.filename}\ncontent_type={req.content_type}\nsha256={req.sha256}\n",
+        encoding="utf-8",
+    )
+    return attachment_id, actual
+________________________________________
+5) RMOS router: attach to run (authoritative API)
+services/api/app/rmos/api/runs_attachments_router.py
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from app.rmos.runs_v2.attachments_schemas import RunAttachmentCreateRequest, RunAttachmentCreateResponse
+from app.rmos.runs_v2.attachments_store import persist_attachment
+
+router = APIRouter(prefix="/api/runs", tags=["Runs", "Attachments"])
+
+
+@router.post("/{run_id}/attachments", response_model=RunAttachmentCreateResponse)
+def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
+    try:
+        attachment_id, sha = persist_attachment(run_id=run_id, req=req)
+        return RunAttachmentCreateResponse(attachment_id=attachment_id, sha256=sha, kind=req.kind)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+This keeps the write authoritative and centralized in RMOS space.
+Art Studio calls the API endpoint (router-to-router through the service layer), rather than importing RMOS internals.
+________________________________________
+6) Art Studio service: generate spec → compile SVG → hash → attach to RMOS
+services/api/app/art_studio/svg/service.py
+from __future__ import annotations
+
+import base64
+from typing import List
+
+import requests  # If you prefer internal calls without HTTP, replace with direct service injection later.
+
+from app.art_studio.svg.schemas import PromptToSvgRequest, PromptToSvgResponse, PromptToSvgVariant
+from app.art_studio.svg.spec_llm import generate_spec_json
+from app.art_studio.svg.svg_compiler import compile_svg_from_spec_json
+from app.util.hashing import sha256_text
+from app.ai.observability import get_request_id
+
+
+def _b64(s: str) -> str:
+    return base64.b64encode(s.encode("utf-8")).decode("utf-8")
+
+
+def generate_prompt_to_svg(req: PromptToSvgRequest) -> PromptToSvgResponse:
+    request_id = get_request_id() or "unknown"
+
+    variants: List[PromptToSvgVariant] = []
+    attachment_ids: List[str] = []
+
+    # Generate N variants by changing variant_seed deterministically (if provided)
+    for i in range(req.count):
+        seed = req.variant_seed or None
+        if seed:
+            seed = f"{seed}:{i}"
+
+        spec_json, envelope_dict, spec_sha = generate_spec_json(
+            prompt=req.prompt,
+            diameter_mm=req.diameter_mm,
+            provider=req.provider,
+            variant_seed=seed,
+        )
+
+        svg, svg_sha = compile_svg_from_spec_json(spec_json)
+
+        variants.append(
+            PromptToSvgVariant(
+                variant_index=i,
+                spec_json=spec_json,
+                svg_content=svg,
+                spec_sha256=spec_sha,
+                svg_sha256=svg_sha,
+            )
+        )
+
+    attached = False
+
+    # Attach to RMOS if run_id provided
+    if req.run_id:
+        # Attach: SVG + Spec JSON + Provenance envelope (metadata-by-default)
+        # NOTE: This uses HTTP to avoid Art Studio importing RMOS internals.
+        # If you prefer internal calls, we can replace with a thin "AuthorityClient" later.
+        base_url = "http://127.0.0.1:8000"  # adjust to your server config or inject via env
+
+        # attach first variant only by default (policy choice)
+        v0 = variants[0]
+        payloads = [
+            {
+                "kind": "geometry_svg",
+                "filename": "rosette.svg",
+                "content_type": "image/svg+xml",
+                "sha256": v0.svg_sha256,
+                "b64": _b64(v0.svg_content),
+                "metadata": {"request_id": request_id, "variant_index": 0},
+            },
+            {
+                "kind": "geometry_spec_json",
+                "filename": "rosette_spec.json",
+                "content_type": "application/json",
+                "sha256": v0.spec_sha256,
+                "b64": _b64(v0.spec_json),
+                "metadata": {"request_id": request_id, "variant_index": 0},
+            },
+            {
+                "kind": "ai_provenance_json",
+                "filename": "ai_envelope.json",
+                "content_type": "application/json",
+                "sha256": sha256_text(str(envelope_dict)),
+                "b64": _b64(str(envelope_dict)),
+                "metadata": {"request_id": request_id, "operation": "prompt_to_svg_spec"},
+            },
+        ]
+
+        for p in payloads:
+            r = requests.post(f"{base_url}/api/runs/{req.run_id}/attachments", json=p, timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"Failed to attach to RMOS: {r.status_code} {r.text}")
+            attachment_ids.append(r.json()["attachment_id"])
+
+        attached = True
+
+    return PromptToSvgResponse(
+        request_id=request_id,
+        run_id=req.run_id,
+        llm_envelope=variants and envelope_dict or {},
+        variants=variants,
+        attached=attached,
+        attachment_ids=attachment_ids,
+    )
+Why the HTTP call?
+Because it enforces your boundary: Art Studio doesn’t import RMOS persistence internals. It treats RMOS like the authoritative API.
+Later, you can replace the requests.post(...) with an internal service injection that still respects the boundary. But this ships right now, cleanly.
+________________________________________
+7) Art Studio router: endpoint surface
+services/api/app/art_studio/api/svg_routes.py
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from app.art_studio.svg.schemas import PromptToSvgRequest, PromptToSvgResponse
+from app.art_studio.svg.service import generate_prompt_to_svg
+
+router = APIRouter(prefix="/api/art-studio/svg", tags=["Art Studio", "SVG"])
+
+
+@router.post("/generate", response_model=PromptToSvgResponse)
+def generate_svg(req: PromptToSvgRequest):
+    try:
+        return generate_prompt_to_svg(req)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+________________________________________
+8) Wire routers in main.py
+services/api/app/main.py additions
+from app.art_studio.api.svg_routes import router as art_studio_svg_router
+from app.rmos.api.runs_attachments_router import router as runs_attachments_router
+
+app.include_router(art_studio_svg_router)
+app.include_router(runs_attachments_router)
+________________________________________
+Compliance notes (aligned to your Role Contract)
+✅ Vendor SDK imports: still only in app/ai/transport/** (unchanged)
+✅ Art Studio: calls ai_call.text() and compiles deterministically
+✅ Metadata-by-default: envelope stored as metadata (hash + payload optional)
+✅ RMOS is authoritative: attachments are stored by RMOS endpoint and sha-verified
+✅ Art Studio doesn’t create RunArtifacts: it only generates + attaches candidates
+________________________________________
+Quick test (manual)
+1.	Start server
+2.	Create a run in RMOS (or use an existing run_id)
+3.	Call:
+POST /api/art-studio/svg/generate
+{
+  "prompt": "Gothic cathedral rosette with 12 petals",
+  "diameter_mm": 100,
+  "count": 1,
+  "provider": "openai",
+  "run_id": "run-123",
+  "variant_seed": "seedA"
+}
+Expected:
+•	response includes:
+o	variants[0].svg_sha256
+o	attached=true
+o	attachment_ids length 3
+________________________________________
+One important follow-up (non-blocking, but recommended)
+Right now I used requests with a fixed base_url. To fully productionize, change to:
+•	RMOS_BASE_URL env var, OR
+•	internal FastAPI dependency injection “authority client” that calls the RMOS attachment service directly without HTTP (still respecting boundaries)
+But this ships the correct semantics today.
+________________________________________
+If you want, the next natural bundle after this is:
+“Art Studio Candidate → RMOS RunArtifact (BLOCKED/ALLOW) binding”
+so RMOS stamps the attached candidate into a reviewable artifact with feasibility + risk + hashes.
+
+
+
+Below is a shippable bundle spec for:
+“Art Studio Candidate → RMOS RunArtifact (BLOCKED/ALLOW) binding”
+RMOS stamps the attached candidate into a reviewable artifact with feasibility + risk + hashes.
+This is designed to sit cleanly on top of the two bundles we just defined:
+•	Spine Patch (ai_call, envelope, request_id)
+•	Art Studio Prompt→SVG attaches to RMOS (attachments created under /api/runs/{run_id}/attachments)
+It also respects your hard invariant:
+•	✅ All RunArtifact creation must go through validate_and_persist()
+•	✅ Art Studio does not persist artifacts; RMOS does.
+________________________________________
+Bundle: RMOS_ART_STUDIO_CANDIDATE_BINDING_V1
+What this adds
+A new RMOS endpoint:
+POST /api/runs/{run_id}/artifacts/bind-art-studio-candidate
+Input:
+•	attachment_ids OR (optional) let RMOS resolve by kind
+•	optional operator notes
+Output:
+•	A new RunArtifact record:
+o	decision: ALLOW / BLOCK
+o	feasibility_score
+o	risk_level
+o	feasibility_sha256
+o	attachment references + hashes
+o	engine/version stamp
+o	ready for UI review gate
+________________________________________
+Files Added / Modified
+NEW files
+1.	services/api/app/rmos/runs_v2/candidate_binding_schemas.py
+2.	services/api/app/rmos/runs_v2/candidate_binding_service.py
+3.	services/api/app/rmos/runs_v2/feasibility_engine_stub.py
+4.	services/api/app/rmos/api/run_artifacts_binding_router.py
+MODIFIED files
+5.	services/api/app/rmos/runs_v2/attachments_store.py (add read helpers)
+6.	services/api/app/main.py (include router)
+If you already have richer attachments storage and/or feasibility engines, these files become adapters—this bundle still holds: binding happens in RMOS, and artifact persistence goes through validate_and_persist().
+________________________________________
+1) Candidate Binding Schemas
+services/api/app/rmos/runs_v2/candidate_binding_schemas.py
+from __future__ import annotations
+
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class BindArtStudioCandidateRequest(BaseModel):
+    """
+    Bind an Art Studio candidate (already attached to run) into a RunArtifact.
+
+    Provide attachment_ids explicitly OR let RMOS resolve by kind.
+    """
+    attachment_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Explicit list of attachment IDs to bind (recommended).",
+    )
+
+    # Optional: if attachment_ids omitted, resolve by these kinds
+    required_kinds: List[str] = Field(
+        default_factory=lambda: ["geometry_svg", "geometry_spec_json", "ai_provenance_json"],
+        description="Attachment kinds required for binding if IDs are not provided.",
+    )
+
+    operator_notes: Optional[str] = Field(default=None, max_length=4000)
+    strict: bool = Field(
+        default=True,
+        description="If true, fail if any required kind missing; if false, best-effort.",
+    )
+
+
+class BindArtStudioCandidateResponse(BaseModel):
+    run_id: str
+    artifact_id: str
+    decision: str  # "ALLOW" | "BLOCK"
+    feasibility_score: float
+    risk_level: str  # "low" | "medium" | "high"
+    feasibility_sha256: str
+    attachment_ids: List[str]
+    attachment_sha256: Dict[str, str] = Field(default_factory=dict)
+    engine_version: str
+________________________________________
+2) Feasibility Engine Stub (Replaceable)
+This gives you a deterministic baseline. Swap later for your real feasibility engines (Darcy-Weisbach equivalent for geometry).
+services/api/app/rmos/runs_v2/feasibility_engine_stub.py
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass(frozen=True)
+class FeasibilityResult:
+    score: float           # 0..1
+    risk_level: str        # low/medium/high
+    decision: str          # ALLOW/BLOCK
+    reason: Optional[str] = None
+
+
+def evaluate_svg_cnc_feasibility(svg_text: str, spec_json: str) -> FeasibilityResult:
+    """
+    Deterministic baseline feasibility scoring for SVG candidates.
+    This is intentionally conservative and replaceable.
+
+    Heuristics:
+    - Disallow embedded images / foreignObjects
+    - Disallow <script>
+    - Flag too many primitives as high risk
+    - Prefer 'simple' geometry
+    """
+    lower = svg_text.lower()
+
+    # Hard blocks
+    if "<script" in lower:
+        return FeasibilityResult(score=0.0, risk_level="high", decision="BLOCK", reason="script_tag")
+    if "foreignobject" in lower:
+        return FeasibilityResult(score=0.0, risk_level="high", decision="BLOCK", reason="foreignobject")
+    if "<image" in lower:
+        return FeasibilityResult(score=0.1, risk_level="high", decision="BLOCK", reason="embedded_image")
+
+    # Count primitives
+    circles = len(re.findall(r"<circle\b", lower))
+    paths = len(re.findall(r"<path\b", lower))
+    texts = len(re.findall(r"<text\b", lower))
+
+    # Strongly discourage paths/text in CNC-safe mode
+    if paths > 0:
+        return FeasibilityResult(score=0.25, risk_level="high", decision="BLOCK", reason="path_elements")
+    if texts > 0:
+        return FeasibilityResult(score=0.3, risk_level="high", decision="BLOCK", reason="text_elements")
+
+    # Risk by complexity
+    total = circles + paths + texts
+    if total <= 40:
+        return FeasibilityResult(score=0.9, risk_level="low", decision="ALLOW")
+    if total <= 120:
+        return FeasibilityResult(score=0.7, risk_level="medium", decision="ALLOW")
+    return FeasibilityResult(score=0.45, risk_level="high", decision="BLOCK", reason="too_complex")
+________________________________________
+3) Attachments Store: Add read helpers + sha verify
+You already have persist_attachment. We add read utilities that:
+•	load bytes
+•	compute sha
+•	ensure integrity
+•	return decoded text when needed
+services/api/app/rmos/runs_v2/attachments_store.py (append)
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional, Tuple
+
+from app.util.hashing import sha256_bytes
+
+# existing:
+# ATTACHMENTS_ROOT = Path(...)
+# persist_attachment(...)
+
+def load_attachment_bytes(*, run_id: str, attachment_id: str) -> bytes:
+    path = ATTACHMENTS_ROOT / run_id / attachment_id / "blob.bin"
+    if not path.exists():
+        raise FileNotFoundError(f"Attachment not found: {attachment_id}")
+    return path.read_bytes()
+
+
+def load_attachment_meta_text(*, run_id: str, attachment_id: str) -> str:
+    path = ATTACHMENTS_ROOT / run_id / attachment_id / "meta.txt"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def parse_meta_sha256(meta_text: str) -> Optional[str]:
+    for line in meta_text.splitlines():
+        if line.startswith("sha256="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
+def verify_attachment_integrity(*, run_id: str, attachment_id: str) -> str:
+    raw = load_attachment_bytes(run_id=run_id, attachment_id=attachment_id)
+    actual = sha256_bytes(raw)
+    meta = load_attachment_meta_text(run_id=run_id, attachment_id=attachment_id)
+    expected = parse_meta_sha256(meta)
+    if expected and expected != actual:
+        raise ValueError(f"Attachment sha256 mismatch: expected={expected} actual={actual}")
+    return actual
+
+
+def load_attachment_text_utf8(*, run_id: str, attachment_id: str) -> Tuple[str, str]:
+    sha = verify_attachment_integrity(run_id=run_id, attachment_id=attachment_id)
+    raw = load_attachment_bytes(run_id=run_id, attachment_id=attachment_id)
+    try:
+        return raw.decode("utf-8"), sha
+    except Exception as e:
+        raise ValueError(f"Attachment not utf-8 decodable: {attachment_id}: {e}")
+________________________________________
+4) Candidate Binding Service: resolves attachments + computes feasibility + stamps RunArtifact
+This is where we:
+•	resolve the candidate attachments
+•	compute feasibility + risk
+•	compute feasibility_sha256
+•	call only validate_and_persist() for artifact creation
+services/api/app/rmos/runs_v2/candidate_binding_service.py
+from __future__ import annotations
+
+import json
+from typing import Dict, List, Tuple
+
+from app.util.hashing import sha256_text
+from app.rmos.runs_v2.attachments_store import load_attachment_text_utf8, load_attachment_meta_text
+from app.rmos.runs_v2.feasibility_engine_stub import evaluate_svg_cnc_feasibility
+from app.rmos.runs_v2.candidate_binding_schemas import BindArtStudioCandidateRequest
+from app.ai.observability import get_request_id
+
+# IMPORTANT: We do NOT create RunArtifact directly. We go through validate_and_persist().
+# Adjust import path to your actual runs_v2 store module:
+from app.rmos.runs_v2.store import validate_and_persist  # allowlisted by your completeness guard
+
+
+ENGINE_VERSION = "rmos-bind-artstudio-v1"
+
+
+def _resolve_attachment_ids_by_kind(run_id: str, required_kinds: List[str]) -> List[str]:
+    """
+    Minimal resolver: if you already have an attachment index DB, replace this.
+    For now, we require explicit attachment_ids OR you later add an index.
+    """
+    # This bundle ships deterministic behavior: require explicit IDs.
+    raise NotImplementedError("Attachment kind resolution requires attachment index; provide attachment_ids explicitly.")
+
+
+def bind_art_studio_candidate_to_run_artifact(*, run_id: str, req: BindArtStudioCandidateRequest) -> Tuple[str, str, float, str, str, Dict[str, str]]:
+    """
+    Returns:
+      artifact_id, decision, feasibility_score, risk_level, feasibility_sha256, attachment_sha_map
+    """
+    request_id = get_request_id() or "unknown"
+
+    if not req.attachment_ids:
+        # If you have attachment indexing, implement resolver and remove this.
+        if req.strict:
+            raise ValueError("attachment_ids required (no attachment kind index available)")
+        attachment_ids = []
+    else:
+        attachment_ids = list(req.attachment_ids)
+
+    # Load candidate files
+    # We assume the Art Studio bundle attached these three kinds.
+    # This service expects at least SVG + spec JSON.
+    svg_text = None
+    spec_json = None
+
+    attachment_sha: Dict[str, str] = {}
+
+    for att_id in attachment_ids:
+        meta = load_attachment_meta_text(run_id=run_id, attachment_id=att_id)
+        text, sha = load_attachment_text_utf8(run_id=run_id, attachment_id=att_id)
+        attachment_sha[att_id] = sha
+
+        if "kind=geometry_svg" in meta:
+            svg_text = text
+        elif "kind=geometry_spec_json" in meta:
+            spec_json = text
+        else:
+            # ignore other kinds (ai_provenance_json etc.) for feasibility inputs
+            pass
+
+    if svg_text is None:
+        raise ValueError("Missing geometry_svg attachment in attachment_ids")
+    if spec_json is None:
+        raise ValueError("Missing geometry_spec_json attachment in attachment_ids")
+
+    # Compute feasibility
+    feas = evaluate_svg_cnc_feasibility(svg_text=svg_text, spec_json=spec_json)
+
+    # Compute feasibility hash (authoritative drift-detection key)
+    feasibility_payload = {
+        "engine_version": ENGINE_VERSION,
+        "request_id": request_id,
+        "inputs": {
+            "svg_sha256": sha256_text(svg_text),
+            "spec_sha256": sha256_text(spec_json),
+        },
+        "result": {
+            "decision": feas.decision,
+            "score": feas.score,
+            "risk_level": feas.risk_level,
+            "reason": feas.reason,
+        },
+    }
+    feasibility_sha256 = sha256_text(json.dumps(feasibility_payload, sort_keys=True))
+
+    # Persist RunArtifact via validate_and_persist (the invariant)
+    # NOTE: The exact payload shape must match your runs_v2 schemas.
+    # Use a generic dict to avoid breaking if your schema differs slightly.
+    artifact_payload = {
+        "run_id": run_id,
+        "artifact_type": "art_studio_candidate",
+        "source": "art_studio_prompt_to_svg",
+        "engine_version": ENGINE_VERSION,
+        "decision": feas.decision,               # ALLOW/BLOCK
+        "feasibility_score": feas.score,
+        "risk_level": feas.risk_level,
+        "feasibility_sha256": feasibility_sha256,
+        "attachments": [{"attachment_id": a, "sha256": attachment_sha.get(a)} for a in attachment_ids],
+        "operator_notes": req.operator_notes,
+        "request_id": request_id,
+    }
+
+    created = validate_and_persist(artifact_payload)  # returns created object or id depending on your implementation
+
+    # Normalize artifact_id
+    artifact_id = getattr(created, "id", None) or getattr(created, "artifact_id", None) or str(created)
+
+    return artifact_id, feas.decision, feas.score, feas.risk_level, feasibility_sha256, attachment_sha
+The only repo-specific assumption here is:
+validate_and_persist() exists and accepts a dict-like payload.
+If your store uses a Pydantic model, change artifact_payload to that model—but keep the invariant: only store persists.
+________________________________________
+5) RMOS Router: Bind endpoint
+services/api/app/rmos/api/run_artifacts_binding_router.py
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from app.rmos.runs_v2.candidate_binding_schemas import BindArtStudioCandidateRequest, BindArtStudioCandidateResponse
+from app.rmos.runs_v2.candidate_binding_service import bind_art_studio_candidate_to_run_artifact, ENGINE_VERSION
+
+router = APIRouter(prefix="/api/runs", tags=["Runs", "Artifacts"])
+
+
+@router.post("/{run_id}/artifacts/bind-art-studio-candidate", response_model=BindArtStudioCandidateResponse)
+def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
+    try:
+        artifact_id, decision, score, risk, feas_sha, att_sha_map = bind_art_studio_candidate_to_run_artifact(
+            run_id=run_id,
+            req=req,
+        )
+        return BindArtStudioCandidateResponse(
+            run_id=run_id,
+            artifact_id=artifact_id,
+            decision=decision,
+            feasibility_score=score,
+            risk_level=risk,
+            feasibility_sha256=feas_sha,
+            attachment_ids=req.attachment_ids or [],
+            attachment_sha256=att_sha_map,
+            engine_version=ENGINE_VERSION,
+        )
+    except NotImplementedError as e:
+        raise HTTPException(status_code=501, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+________________________________________
+6) Wire router into main.py
+services/api/app/main.py (add)
+from app.rmos.api.run_artifacts_binding_router import router as run_artifacts_binding_router
+
+app.include_router(run_artifacts_binding_router)
+________________________________________
+Decision semantics (BLOCK/ALLOW) and Reviewability
+This bundle enforces:
+•	RMOS computes feasibility itself from the stored attachments
+•	RMOS decides ALLOW or BLOCK (deterministic stub here; replace with real engines)
+•	RMOS stamps the artifact with:
+o	feasibility_sha256 (drift detection)
+o	risk_level + feasibility_score
+o	attachment IDs + verified sha256
+That makes the artifact immediately reviewable by:
+•	your existing Run List + Run Detail UI
+•	your drift gate controls (override/accept flows)
+•	your diff viewer (attachments are authoritative inputs)
+________________________________________
+Manual test sequence
+1.	Generate + attach (from prior bundle):
+•	POST /api/art-studio/svg/generate with run_id → returns attachment_ids
+2.	Bind candidate into a RunArtifact:
+POST /api/runs/{run_id}/artifacts/bind-art-studio-candidate
+{
+  "attachment_ids": ["att-...svg", "att-...spec", "att-...env"],
+  "operator_notes": "Initial candidate from prompt-to-svg",
+  "strict": true
+}
+Expected:
+•	decision: ALLOW or BLOCK
+•	risk_level
+•	feasibility_sha256 present
+•	artifact_id created (and persisted via validate_and_persist)
+________________________________________
+Two hardening follow-ups (next bundles, but not required for this ship)
+1.	Attachment indexing
+o	so RMOS can resolve “latest geometry_svg/spec_json” by kind without explicit IDs
+2.	Replace feasibility stub
+o	wire in your real geometry feasibility engine(s)
+o	keep the same output contract and feasibility_sha256 format
+________________________________________
+If you want, I can also add the matching CI guard rule:
+•	fail if any file outside runs_v2/store.py calls RunArtifact(...) directly
+(which complements your check_rmos_completeness_guard.py story and prevents bypassing this new binding endpoint).
+
+
+
+Below is a shippable bundle spec for:
+“Art Studio Candidate → RMOS RunArtifact (BLOCKED/ALLOW) binding”
+RMOS stamps the attached candidate into a reviewable artifact with feasibility + risk + hashes.
+This is designed to sit cleanly on top of the two bundles we just defined:
+•	Spine Patch (ai_call, envelope, request_id)
+•	Art Studio Prompt→SVG attaches to RMOS (attachments created under /api/runs/{run_id}/attachments)
+It also respects your hard invariant:
+•	✅ All RunArtifact creation must go through validate_and_persist()
+•	✅ Art Studio does not persist artifacts; RMOS does.
+________________________________________
+Bundle: RMOS_ART_STUDIO_CANDIDATE_BINDING_V1
+What this adds
+A new RMOS endpoint:
+POST /api/runs/{run_id}/artifacts/bind-art-studio-candidate
+Input:
+•	attachment_ids OR (optional) let RMOS resolve by kind
+•	optional operator notes
+Output:
+•	A new RunArtifact record:
+o	decision: ALLOW / BLOCK
+o	feasibility_score
+o	risk_level
+o	feasibility_sha256
+o	attachment references + hashes
+o	engine/version stamp
+o	ready for UI review gate
+________________________________________
+Files Added / Modified
+NEW files
+1.	services/api/app/rmos/runs_v2/candidate_binding_schemas.py
+2.	services/api/app/rmos/runs_v2/candidate_binding_service.py
+3.	services/api/app/rmos/runs_v2/feasibility_engine_stub.py
+4.	services/api/app/rmos/api/run_artifacts_binding_router.py
+MODIFIED files
+5.	services/api/app/rmos/runs_v2/attachments_store.py (add read helpers)
+6.	services/api/app/main.py (include router)
+If you already have richer attachments storage and/or feasibility engines, these files become adapters—this bundle still holds: binding happens in RMOS, and artifact persistence goes through validate_and_persist().
+________________________________________
+1) Candidate Binding Schemas
+services/api/app/rmos/runs_v2/candidate_binding_schemas.py
+from __future__ import annotations
+
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class BindArtStudioCandidateRequest(BaseModel):
+    """
+    Bind an Art Studio candidate (already attached to run) into a RunArtifact.
+
+    Provide attachment_ids explicitly OR let RMOS resolve by kind.
+    """
+    attachment_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Explicit list of attachment IDs to bind (recommended).",
+    )
+
+    # Optional: if attachment_ids omitted, resolve by these kinds
+    required_kinds: List[str] = Field(
+        default_factory=lambda: ["geometry_svg", "geometry_spec_json", "ai_provenance_json"],
+        description="Attachment kinds required for binding if IDs are not provided.",
+    )
+
+    operator_notes: Optional[str] = Field(default=None, max_length=4000)
+    strict: bool = Field(
+        default=True,
+        description="If true, fail if any required kind missing; if false, best-effort.",
+    )
+
+
+class BindArtStudioCandidateResponse(BaseModel):
+    run_id: str
+    artifact_id: str
+    decision: str  # "ALLOW" | "BLOCK"
+    feasibility_score: float
+    risk_level: str  # "low" | "medium" | "high"
+    feasibility_sha256: str
+    attachment_ids: List[str]
+    attachment_sha256: Dict[str, str] = Field(default_factory=dict)
+    engine_version: str
+________________________________________
+2) Feasibility Engine Stub (Replaceable)
+This gives you a deterministic baseline. Swap later for your real feasibility engines (Darcy-Weisbach equivalent for geometry).
+services/api/app/rmos/runs_v2/feasibility_engine_stub.py
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass(frozen=True)
+class FeasibilityResult:
+    score: float           # 0..1
+    risk_level: str        # low/medium/high
+    decision: str          # ALLOW/BLOCK
+    reason: Optional[str] = None
+
+
+def evaluate_svg_cnc_feasibility(svg_text: str, spec_json: str) -> FeasibilityResult:
+    """
+    Deterministic baseline feasibility scoring for SVG candidates.
+    This is intentionally conservative and replaceable.
+
+    Heuristics:
+    - Disallow embedded images / foreignObjects
+    - Disallow <script>
+    - Flag too many primitives as high risk
+    - Prefer 'simple' geometry
+    """
+    lower = svg_text.lower()
+
+    # Hard blocks
+    if "<script" in lower:
+        return FeasibilityResult(score=0.0, risk_level="high", decision="BLOCK", reason="script_tag")
+    if "foreignobject" in lower:
+        return FeasibilityResult(score=0.0, risk_level="high", decision="BLOCK", reason="foreignobject")
+    if "<image" in lower:
+        return FeasibilityResult(score=0.1, risk_level="high", decision="BLOCK", reason="embedded_image")
+
+    # Count primitives
+    circles = len(re.findall(r"<circle\b", lower))
+    paths = len(re.findall(r"<path\b", lower))
+    texts = len(re.findall(r"<text\b", lower))
+
+    # Strongly discourage paths/text in CNC-safe mode
+    if paths > 0:
+        return FeasibilityResult(score=0.25, risk_level="high", decision="BLOCK", reason="path_elements")
+    if texts > 0:
+        return FeasibilityResult(score=0.3, risk_level="high", decision="BLOCK", reason="text_elements")
+
+    # Risk by complexity
+    total = circles + paths + texts
+    if total <= 40:
+        return FeasibilityResult(score=0.9, risk_level="low", decision="ALLOW")
+    if total <= 120:
+        return FeasibilityResult(score=0.7, risk_level="medium", decision="ALLOW")
+    return FeasibilityResult(score=0.45, risk_level="high", decision="BLOCK", reason="too_complex")
+________________________________________
+3) Attachments Store: Add read helpers + sha verify
+You already have persist_attachment. We add read utilities that:
+•	load bytes
+•	compute sha
+•	ensure integrity
+•	return decoded text when needed
+services/api/app/rmos/runs_v2/attachments_store.py (append)
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional, Tuple
+
+from app.util.hashing import sha256_bytes
+
+# existing:
+# ATTACHMENTS_ROOT = Path(...)
+# persist_attachment(...)
+
+def load_attachment_bytes(*, run_id: str, attachment_id: str) -> bytes:
+    path = ATTACHMENTS_ROOT / run_id / attachment_id / "blob.bin"
+    if not path.exists():
+        raise FileNotFoundError(f"Attachment not found: {attachment_id}")
+    return path.read_bytes()
+
+
+def load_attachment_meta_text(*, run_id: str, attachment_id: str) -> str:
+    path = ATTACHMENTS_ROOT / run_id / attachment_id / "meta.txt"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def parse_meta_sha256(meta_text: str) -> Optional[str]:
+    for line in meta_text.splitlines():
+        if line.startswith("sha256="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
+def verify_attachment_integrity(*, run_id: str, attachment_id: str) -> str:
+    raw = load_attachment_bytes(run_id=run_id, attachment_id=attachment_id)
+    actual = sha256_bytes(raw)
+    meta = load_attachment_meta_text(run_id=run_id, attachment_id=attachment_id)
+    expected = parse_meta_sha256(meta)
+    if expected and expected != actual:
+        raise ValueError(f"Attachment sha256 mismatch: expected={expected} actual={actual}")
+    return actual
+
+
+def load_attachment_text_utf8(*, run_id: str, attachment_id: str) -> Tuple[str, str]:
+    sha = verify_attachment_integrity(run_id=run_id, attachment_id=attachment_id)
+    raw = load_attachment_bytes(run_id=run_id, attachment_id=attachment_id)
+    try:
+        return raw.decode("utf-8"), sha
+    except Exception as e:
+        raise ValueError(f"Attachment not utf-8 decodable: {attachment_id}: {e}")
+________________________________________
+4) Candidate Binding Service: resolves attachments + computes feasibility + stamps RunArtifact
+This is where we:
+•	resolve the candidate attachments
+•	compute feasibility + risk
+•	compute feasibility_sha256
+•	call only validate_and_persist() for artifact creation
+services/api/app/rmos/runs_v2/candidate_binding_service.py
+from __future__ import annotations
+
+import json
+from typing import Dict, List, Tuple
+
+from app.util.hashing import sha256_text
+from app.rmos.runs_v2.attachments_store import load_attachment_text_utf8, load_attachment_meta_text
+from app.rmos.runs_v2.feasibility_engine_stub import evaluate_svg_cnc_feasibility
+from app.rmos.runs_v2.candidate_binding_schemas import BindArtStudioCandidateRequest
+from app.ai.observability import get_request_id
+
+# IMPORTANT: We do NOT create RunArtifact directly. We go through validate_and_persist().
+# Adjust import path to your actual runs_v2 store module:
+from app.rmos.runs_v2.store import validate_and_persist  # allowlisted by your completeness guard
+
+
+ENGINE_VERSION = "rmos-bind-artstudio-v1"
+
+
+def _resolve_attachment_ids_by_kind(run_id: str, required_kinds: List[str]) -> List[str]:
+    """
+    Minimal resolver: if you already have an attachment index DB, replace this.
+    For now, we require explicit attachment_ids OR you later add an index.
+    """
+    # This bundle ships deterministic behavior: require explicit IDs.
+    raise NotImplementedError("Attachment kind resolution requires attachment index; provide attachment_ids explicitly.")
+
+
+def bind_art_studio_candidate_to_run_artifact(*, run_id: str, req: BindArtStudioCandidateRequest) -> Tuple[str, str, float, str, str, Dict[str, str]]:
+    """
+    Returns:
+      artifact_id, decision, feasibility_score, risk_level, feasibility_sha256, attachment_sha_map
+    """
+    request_id = get_request_id() or "unknown"
+
+    if not req.attachment_ids:
+        # If you have attachment indexing, implement resolver and remove this.
+        if req.strict:
+            raise ValueError("attachment_ids required (no attachment kind index available)")
+        attachment_ids = []
+    else:
+        attachment_ids = list(req.attachment_ids)
+
+    # Load candidate files
+    # We assume the Art Studio bundle attached these three kinds.
+    # This service expects at least SVG + spec JSON.
+    svg_text = None
+    spec_json = None
+
+    attachment_sha: Dict[str, str] = {}
+
+    for att_id in attachment_ids:
+        meta = load_attachment_meta_text(run_id=run_id, attachment_id=att_id)
+        text, sha = load_attachment_text_utf8(run_id=run_id, attachment_id=att_id)
+        attachment_sha[att_id] = sha
+
+        if "kind=geometry_svg" in meta:
+            svg_text = text
+        elif "kind=geometry_spec_json" in meta:
+            spec_json = text
+        else:
+            # ignore other kinds (ai_provenance_json etc.) for feasibility inputs
+            pass
+
+    if svg_text is None:
+        raise ValueError("Missing geometry_svg attachment in attachment_ids")
+    if spec_json is None:
+        raise ValueError("Missing geometry_spec_json attachment in attachment_ids")
+
+    # Compute feasibility
+    feas = evaluate_svg_cnc_feasibility(svg_text=svg_text, spec_json=spec_json)
+
+    # Compute feasibility hash (authoritative drift-detection key)
+    feasibility_payload = {
+        "engine_version": ENGINE_VERSION,
+        "request_id": request_id,
+        "inputs": {
+            "svg_sha256": sha256_text(svg_text),
+            "spec_sha256": sha256_text(spec_json),
+        },
+        "result": {
+            "decision": feas.decision,
+            "score": feas.score,
+            "risk_level": feas.risk_level,
+            "reason": feas.reason,
+        },
+    }
+    feasibility_sha256 = sha256_text(json.dumps(feasibility_payload, sort_keys=True))
+
+    # Persist RunArtifact via validate_and_persist (the invariant)
+    # NOTE: The exact payload shape must match your runs_v2 schemas.
+    # Use a generic dict to avoid breaking if your schema differs slightly.
+    artifact_payload = {
+        "run_id": run_id,
+        "artifact_type": "art_studio_candidate",
+        "source": "art_studio_prompt_to_svg",
+        "engine_version": ENGINE_VERSION,
+        "decision": feas.decision,               # ALLOW/BLOCK
+        "feasibility_score": feas.score,
+        "risk_level": feas.risk_level,
+        "feasibility_sha256": feasibility_sha256,
+        "attachments": [{"attachment_id": a, "sha256": attachment_sha.get(a)} for a in attachment_ids],
+        "operator_notes": req.operator_notes,
+        "request_id": request_id,
+    }
+
+    created = validate_and_persist(artifact_payload)  # returns created object or id depending on your implementation
+
+    # Normalize artifact_id
+    artifact_id = getattr(created, "id", None) or getattr(created, "artifact_id", None) or str(created)
+
+    return artifact_id, feas.decision, feas.score, feas.risk_level, feasibility_sha256, attachment_sha
+The only repo-specific assumption here is:
+validate_and_persist() exists and accepts a dict-like payload.
+If your store uses a Pydantic model, change artifact_payload to that model—but keep the invariant: only store persists.
+________________________________________
+5) RMOS Router: Bind endpoint
+services/api/app/rmos/api/run_artifacts_binding_router.py
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from app.rmos.runs_v2.candidate_binding_schemas import BindArtStudioCandidateRequest, BindArtStudioCandidateResponse
+from app.rmos.runs_v2.candidate_binding_service import bind_art_studio_candidate_to_run_artifact, ENGINE_VERSION
+
+router = APIRouter(prefix="/api/runs", tags=["Runs", "Artifacts"])
+
+
+@router.post("/{run_id}/artifacts/bind-art-studio-candidate", response_model=BindArtStudioCandidateResponse)
+def bind_art_studio_candidate(run_id: str, req: BindArtStudioCandidateRequest):
+    try:
+        artifact_id, decision, score, risk, feas_sha, att_sha_map = bind_art_studio_candidate_to_run_artifact(
+            run_id=run_id,
+            req=req,
+        )
+        return BindArtStudioCandidateResponse(
+            run_id=run_id,
+            artifact_id=artifact_id,
+            decision=decision,
+            feasibility_score=score,
+            risk_level=risk,
+            feasibility_sha256=feas_sha,
+            attachment_ids=req.attachment_ids or [],
+            attachment_sha256=att_sha_map,
+            engine_version=ENGINE_VERSION,
+        )
+    except NotImplementedError as e:
+        raise HTTPException(status_code=501, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+________________________________________
+6) Wire router into main.py
+services/api/app/main.py (add)
+from app.rmos.api.run_artifacts_binding_router import router as run_artifacts_binding_router
+
+app.include_router(run_artifacts_binding_router)
+________________________________________
+Decision semantics (BLOCK/ALLOW) and Reviewability
+This bundle enforces:
+•	RMOS computes feasibility itself from the stored attachments
+•	RMOS decides ALLOW or BLOCK (deterministic stub here; replace with real engines)
+•	RMOS stamps the artifact with:
+o	feasibility_sha256 (drift detection)
+o	risk_level + feasibility_score
+o	attachment IDs + verified sha256
+That makes the artifact immediately reviewable by:
+•	your existing Run List + Run Detail UI
+•	your drift gate controls (override/accept flows)
+•	your diff viewer (attachments are authoritative inputs)
+________________________________________
+Manual test sequence
+1.	Generate + attach (from prior bundle):
+•	POST /api/art-studio/svg/generate with run_id → returns attachment_ids
+2.	Bind candidate into a RunArtifact:
+POST /api/runs/{run_id}/artifacts/bind-art-studio-candidate
+{
+  "attachment_ids": ["att-...svg", "att-...spec", "att-...env"],
+  "operator_notes": "Initial candidate from prompt-to-svg",
+  "strict": true
+}
+Expected:
+•	decision: ALLOW or BLOCK
+•	risk_level
+•	feasibility_sha256 present
+•	artifact_id created (and persisted via validate_and_persist)
+________________________________________
+Two hardening follow-ups (next bundles, but not required for this ship)
+1.	Attachment indexing
+o	so RMOS can resolve “latest geometry_svg/spec_json” by kind without explicit IDs
+2.	Replace feasibility stub
+o	wire in your real geometry feasibility engine(s)
+o	keep the same output contract and feasibility_sha256 format
+________________________________________
+If you want, I can also add the matching CI guard rule:
+•	fail if any file outside runs_v2/store.py calls RunArtifact(...) directly
+(which complements your check_rmos_completeness_guard.py story and prevents bypassing this new binding endpoint).
+
+
+Here’s the matching CI guard rule (AST-based) that fails if any file outside runs_v2/store.py constructs RunArtifact(...) (or calls create_run_artifact(...)) directly.
+It complements your existing “all artifact creation goes through validate_and_persist()” invariant and prevents future bypass.
+________________________________________
+CI Guard Rule: Block direct RunArtifact() construction outside store.py
+1) Add this file
+ci/rmos/check_no_direct_runartifact.py
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import ast
+import pathlib
+import sys
+from typing import Iterable
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+APP_ROOT = REPO_ROOT / "services" / "api" / "app"
+
+# Canonical allowlist:
+# - store.py is the *only* place allowed to construct/persist RunArtifact directly.
+# - schemas.py may reference RunArtifact as a type (not as a constructor call), but we still allow it just in case.
+ALLOWLIST = {
+    str(APP_ROOT / "rmos" / "runs_v2" / "store.py"),
+    str(APP_ROOT / "rmos" / "runs_v2" / "schemas.py"),
+}
+
+FORBIDDEN_CALL_NAMES = {
+    "RunArtifact",
+    "create_run_artifact",
+    "persist_run_artifact",
+    "upsert_run_artifact",
+}
+
+# Optional: if you want to allow a legacy exception file, add it here.
+LEGACY_ALLOWLIST_PREFIXES: list[str] = []
+
+
+def iter_py_files() -> Iterable[pathlib.Path]:
+    if not APP_ROOT.exists():
+        return
+    for p in APP_ROOT.rglob("*.py"):
+        yield p
+
+
+def _is_allowed(path: pathlib.Path) -> bool:
+    p = str(path)
+    if p in ALLOWLIST:
+        return True
+    return any(p.startswith(prefix) for prefix in LEGACY_ALLOWLIST_PREFIXES)
+
+
+def _get_call_name(node: ast.Call) -> str | None:
+    """
+    Returns best-effort function name for a Call node.
+    Examples:
+      RunArtifact(...) -> "RunArtifact"
+      foo.RunArtifact(...) -> "RunArtifact"
+      create_run_artifact(...) -> "create_run_artifact"
+      store.create_run_artifact(...) -> "create_run_artifact"
+    """
+    fn = node.func
+    if isinstance(fn, ast.Name):
+        return fn.id
+    if isinstance(fn, ast.Attribute):
+        return fn.attr
+    return None
+
+
+def main() -> int:
+    violations: list[str] = []
+
+    for path in iter_py_files():
+        if _is_allowed(path):
+            continue
+
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            tree = ast.parse(text, filename=str(path))
+        except Exception:
+            # If a file can't parse, fail loud (keeps CI honest)
+            violations.append(f"[PARSE_ERROR] Could not parse {path}")
+            continue
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+
+            name = _get_call_name(node)
+            if not name:
+                continue
+
+            if name in FORBIDDEN_CALL_NAMES:
+                line = getattr(node, "lineno", "?")
+                col = getattr(node, "col_offset", "?")
+                violations.append(
+                    f"[DIRECT_RUNARTIFACT_CALL] {path}:{line}:{col} calls {name}(...) outside runs_v2/store.py"
+                )
+
+    if violations:
+        print("RMOS RunArtifact guard FAILED:")
+        for v in violations:
+            print(" -", v)
+        return 2
+
+    print("RMOS RunArtifact guard OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+________________________________________
+2) Add it to GitHub Actions
+If you already have a governance workflow, just add a step. Otherwise, here’s a minimal skeleton you can append into your existing CI job.
+.github/workflows/rmos_runartifact_guard.yml
+name: RMOS RunArtifact Guard
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  rmos-runartifact-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run RunArtifact construction guard
+        run: |
+          python ci/rmos/check_no_direct_runartifact.py
+________________________________________
+3) Local dev command
+From repo root:
+python ci/rmos/check_no_direct_runartifact.py
+________________________________________
+What this guard enforces (in plain English)
+•	✅ You can reference RunArtifact schemas/types anywhere
+•	❌ You cannot construct RunArtifact(...) (or call create_run_artifact(...)) anywhere except runs_v2/store.py
+•	✅ Binding services (like the Art Studio binding bundle) must call validate_and_persist(), not create artifacts directly
+If you want, I can also extend this guard to detect imports of RunArtifact outside store.py (stricter), but the constructor-call guard is the highest-signal, lowest-false-positive rule.
+
+
+
+
+Got it. Here’s the stricter guard that adds import detection for RunArtifact outside runs_v2/store.py (and optional schemas.py), while keeping the original constructor-call rule.
+This will fail CI if any file (outside allowlist) does either:
+•	from ... import RunArtifact
+•	import ... as ... then later uses .RunArtifact (we’ll flag the import, and also the call rule catches construction)
+•	from app.rmos...schemas import RunArtifact etc.
+It’s intentionally strict, but still tries to avoid false positives by:
+•	allowing schemas.py (type definitions)
+•	allowing store.py (the only constructor/persist authority)
+•	optionally allowing type-only imports (Python 3.11 doesn’t have runtime guard for that, but we can treat if TYPE_CHECKING: imports differently if you want)
+________________________________________
+Updated CI Guard: Calls + Imports of RunArtifact
+Replace your existing file with this version.
+ci/rmos/check_no_direct_runartifact.py
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import ast
+import pathlib
+from typing import Iterable
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+APP_ROOT = REPO_ROOT / "services" / "api" / "app"
+
+# Canonical allowlist:
+# - store.py is the *only* place allowed to construct/persist RunArtifact.
+# - schemas.py may define types and export RunArtifact.
+ALLOWLIST = {
+    str(APP_ROOT / "rmos" / "runs_v2" / "store.py"),
+    str(APP_ROOT / "rmos" / "runs_v2" / "schemas.py"),
+}
+
+# If you want to allow specific legacy modules temporarily, add prefixes:
+LEGACY_ALLOWLIST_PREFIXES: list[str] = []
+
+FORBIDDEN_CALL_NAMES = {
+    "RunArtifact",
+    "create_run_artifact",
+    "persist_run_artifact",
+    "upsert_run_artifact",
+}
+
+# Strict import rule:
+# Outside allowlist, no importing RunArtifact symbol at all.
+FORBIDDEN_IMPORTED_SYMBOLS = {"RunArtifact"}
+
+
+def iter_py_files() -> Iterable[pathlib.Path]:
+    if not APP_ROOT.exists():
+        return
+    yield from APP_ROOT.rglob("*.py")
+
+
+def _is_allowed(path: pathlib.Path) -> bool:
+    p = str(path)
+    if p in ALLOWLIST:
+        return True
+    return any(p.startswith(prefix) for prefix in LEGACY_ALLOWLIST_PREFIXES)
+
+
+def _get_call_name(node: ast.Call) -> str | None:
+    """
+    Best-effort function name for a Call node.
+    Examples:
+      RunArtifact(...) -> "RunArtifact"
+      foo.RunArtifact(...) -> "RunArtifact"
+      create_run_artifact(...) -> "create_run_artifact"
+      store.create_run_artifact(...) -> "create_run_artifact"
+    """
+    fn = node.func
+    if isinstance(fn, ast.Name):
+        return fn.id
+    if isinstance(fn, ast.Attribute):
+        return fn.attr
+    return None
+
+
+def _is_within_type_checking(node: ast.AST, parents: dict[int, ast.AST]) -> bool:
+    """
+    Detect whether a node is nested under:
+      if TYPE_CHECKING:
+    This is a best-effort heuristic using parent pointers.
+    """
+    cur = node
+    while True:
+        parent = parents.get(id(cur))
+        if parent is None:
+            return False
+        # Stop at module
+        if isinstance(parent, ast.Module):
+            return False
+        if isinstance(parent, ast.If):
+            test = parent.test
+            # if TYPE_CHECKING:
+            if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+                return True
+        cur = parent
+
+
+def _build_parent_map(tree: ast.AST) -> dict[int, ast.AST]:
+    parents: dict[int, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[id(child)] = parent
+    return parents
+
+
+def main() -> int:
+    violations: list[str] = []
+
+    for path in iter_py_files():
+        if _is_allowed(path):
+            continue
+
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            tree = ast.parse(text, filename=str(path))
+        except Exception:
+            violations.append(f"[PARSE_ERROR] Could not parse {path}")
+            continue
+
+        parents = _build_parent_map(tree)
+
+        # 1) Strict import detection
+        for node in ast.walk(tree):
+            # from X import RunArtifact, Y
+            if isinstance(node, ast.ImportFrom):
+                if node.names:
+                    for alias in node.names:
+                        imported_name = alias.name
+                        if imported_name in FORBIDDEN_IMPORTED_SYMBOLS:
+                            line = getattr(node, "lineno", "?")
+                            col = getattr(node, "col_offset", "?")
+
+                            # Optional: allow TYPE_CHECKING imports to reduce false positives
+                            if _is_within_type_checking(node, parents):
+                                # Comment out this block if you want "zero imports anywhere, even TYPE_CHECKING"
+                                continue
+
+                            mod = node.module or ""
+                            violations.append(
+                                f"[FORBIDDEN_IMPORT] {path}:{line}:{col} imports {imported_name} from {mod} "
+                                f"outside runs_v2/store.py"
+                            )
+
+            # import X (not directly importing symbol, but can still alias schemas module)
+            # We do NOT flag generic module imports, only direct symbol imports, because:
+            # - module imports are common and less risky
+            # - the constructor-call guard still blocks actual construction
+            # But if you want extreme strictness, we can also flag importing runs_v2.schemas module.
+
+        # 2) Constructor / persist call detection
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = _get_call_name(node)
+            if not name:
+                continue
+            if name in FORBIDDEN_CALL_NAMES:
+                line = getattr(node, "lineno", "?")
+                col = getattr(node, "col_offset", "?")
+                violations.append(
+                    f"[DIRECT_RUNARTIFACT_CALL] {path}:{line}:{col} calls {name}(...) outside runs_v2/store.py"
+                )
+
+    if violations:
+        print("RMOS RunArtifact guard FAILED:")
+        for v in violations:
+            print(" -", v)
+        return 2
+
+    print("RMOS RunArtifact guard OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+________________________________________
+Notes / knobs you can choose (without changing semantics)
+1) TYPE_CHECKING imports
+Right now this script does NOT fail imports under:
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.rmos.runs_v2.schemas import RunArtifact
+This helps reduce false positives when devs want types for IDE/mypy.
+If you want absolute zero import anywhere, delete this block:
+if _is_within_type_checking(node, parents):
+    continue
+2) Extreme strictness (module import ban)
+If you want to also ban importing the module that defines RunArtifact (e.g. import app.rmos.runs_v2.schemas as s), we can add a rule:
+•	flag any Import or ImportFrom whose module path matches app.rmos.runs_v2.schemas
+I didn’t include it because it tends to create more friction than value; the call guard already blocks construction.
+________________________________________
+Add to workflow
+No workflow changes needed if you already call:
+python ci/rmos/check_no_direct_runartifact.py
+________________________________________
+If you want, I can add one more high-signal rule: ban validate_and_persist() outside RMOS namespaces (so only RMOS orchestrators can mint artifacts), but that’s optional depending on how wide you want the authority boundary to be.
+
+
+
+Below is the high-signal, low-noise extension: ban validate_and_persist() calls outside RMOS namespaces, so only RMOS orchestrators can mint artifacts.
+I’m keeping it pragmatic:
+•	✅ Allows validate_and_persist(...) only in:
+o	services/api/app/rmos/**
+•	✅ Still allows importing it for TYPE_CHECKING if you want (same logic as before)
+•	✅ Does not ban the symbol name being used as a local function (it checks the call expression name; this is “high-signal” but not perfect—good enough for CI enforcement)
+•	✅ Does not require fragile module-path inference
+________________________________________
+Update CI Guard: Ban validate_and_persist() outside app/rmos/**
+Replace the file with this updated version (only changes are marked in comments).
+ci/rmos/check_no_direct_runartifact.py
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import ast
+import pathlib
+from typing import Iterable
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+APP_ROOT = REPO_ROOT / "services" / "api" / "app"
+
+# Canonical allowlist for RunArtifact construction/import
+ALLOWLIST = {
+    str(APP_ROOT / "rmos" / "runs_v2" / "store.py"),
+    str(APP_ROOT / "rmos" / "runs_v2" / "schemas.py"),
+}
+
+# If you want to allow specific legacy modules temporarily, add prefixes:
+LEGACY_ALLOWLIST_PREFIXES: list[str] = []
+
+FORBIDDEN_CALL_NAMES = {
+    "RunArtifact",
+    "create_run_artifact",
+    "persist_run_artifact",
+    "upsert_run_artifact",
+}
+
+# Strict import rule:
+FORBIDDEN_IMPORTED_SYMBOLS = {"RunArtifact"}
+
+# NEW: validate_and_persist authority boundary
+FORBIDDEN_PERSIST_CALL = "validate_and_persist"
+
+
+def iter_py_files() -> Iterable[pathlib.Path]:
+    if not APP_ROOT.exists():
+        return
+    yield from APP_ROOT.rglob("*.py")
+
+
+def _is_allowed(path: pathlib.Path) -> bool:
+    p = str(path)
+    if p in ALLOWLIST:
+        return True
+    return any(p.startswith(prefix) for prefix in LEGACY_ALLOWLIST_PREFIXES)
+
+
+def _is_rmos_namespace(path: pathlib.Path) -> bool:
+    """
+    Only RMOS code is allowed to mint artifacts via validate_and_persist().
+    """
+    return str(path).startswith(str(APP_ROOT / "rmos"))
+
+
+def _get_call_name(node: ast.Call) -> str | None:
+    """
+    Best-effort function name for a Call node.
+    Examples:
+      RunArtifact(...) -> "RunArtifact"
+      foo.RunArtifact(...) -> "RunArtifact"
+      validate_and_persist(...) -> "validate_and_persist"
+      store.validate_and_persist(...) -> "validate_and_persist"
+    """
+    fn = node.func
+    if isinstance(fn, ast.Name):
+        return fn.id
+    if isinstance(fn, ast.Attribute):
+        return fn.attr
+    return None
+
+
+def _is_within_type_checking(node: ast.AST, parents: dict[int, ast.AST]) -> bool:
+    """
+    Detect whether a node is nested under:
+      if TYPE_CHECKING:
+    """
+    cur = node
+    while True:
+        parent = parents.get(id(cur))
+        if parent is None:
+            return False
+        if isinstance(parent, ast.Module):
+            return False
+        if isinstance(parent, ast.If):
+            test = parent.test
+            if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+                return True
+        cur = parent
+
+
+def _build_parent_map(tree: ast.AST) -> dict[int, ast.AST]:
+    parents: dict[int, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[id(child)] = parent
+    return parents
+
+
+def main() -> int:
+    violations: list[str] = []
+
+    for path in iter_py_files():
+        # RunArtifact allowlist applies only to RunArtifact construction/import checks
+        # (validate_and_persist rule has its own namespace check below)
+
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            tree = ast.parse(text, filename=str(path))
+        except Exception:
+            violations.append(f"[PARSE_ERROR] Could not parse {path}")
+            continue
+
+        parents = _build_parent_map(tree)
+
+        # 1) Strict import detection: RunArtifact imported outside allowlist
+        if not _is_allowed(path):
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom):
+                    for alias in (node.names or []):
+                        if alias.name in FORBIDDEN_IMPORTED_SYMBOLS:
+                            line = getattr(node, "lineno", "?")
+                            col = getattr(node, "col_offset", "?")
+
+                            # Optional: allow TYPE_CHECKING imports
+                            if _is_within_type_checking(node, parents):
+                                continue
+
+                            mod = node.module or ""
+                            violations.append(
+                                f"[FORBIDDEN_IMPORT] {path}:{line}:{col} imports {alias.name} from {mod} "
+                                f"outside runs_v2/store.py"
+                            )
+
+        # 2) Call detection: RunArtifact constructor / create_* calls outside allowlist
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = _get_call_name(node)
+            if not name:
+                continue
+
+            # 2a) RunArtifact construction/persist calls
+            if name in FORBIDDEN_CALL_NAMES and not _is_allowed(path):
+                line = getattr(node, "lineno", "?")
+                col = getattr(node, "col_offset", "?")
+                violations.append(
+                    f"[DIRECT_RUNARTIFACT_CALL] {path}:{line}:{col} calls {name}(...) outside runs_v2/store.py"
+                )
+
+            # 2b) NEW: validate_and_persist authority boundary
+            # Only RMOS namespace may call validate_and_persist, regardless of allowlist.
+            if name == FORBIDDEN_PERSIST_CALL and not _is_rmos_namespace(path):
+                line = getattr(node, "lineno", "?")
+                col = getattr(node, "col_offset", "?")
+                violations.append(
+                    f"[FORBIDDEN_PERSIST_CALL] {path}:{line}:{col} calls validate_and_persist(...) "
+                    f"outside app/rmos/**"
+                )
+
+    if violations:
+        print("RMOS Artifact Authority guard FAILED:")
+        for v in violations:
+            print(" -", v)
+        return 2
+
+    print("RMOS Artifact Authority guard OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+________________________________________
+Why this is “high-signal”
+•	If a non-RMOS module calls validate_and_persist(...), that’s almost always an authority leak.
+•	This rule is simple, stable, and prevents the most damaging bypass: domain modules minting artifacts directly.
+________________________________________
+Optional tightening (only if you want it later)
+If you want to be even stricter:
+•	also ban imports of validate_and_persist outside RMOS (like we did for RunArtifact), except under TYPE_CHECKING.
+I didn’t add that yet because:
+•	it can create churn during refactors
+•	call-site detection is usually enough
+If you want it, say: “also ban imports of validate_and_persist outside RMOS.”
+
+
+
+
+

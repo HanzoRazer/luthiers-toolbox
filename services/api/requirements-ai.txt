@@ -1,0 +1,8 @@
+# Optional AI dependencies for Blueprint Import Service (Phase 1)
+# Install with: pip install -r requirements-ai.txt
+#
+# These are NOT required for server boot or Phase 2 (OpenCV) features.
+# Without these, /api/blueprint/analyze returns HTTP 503 AI_DISABLED.
+
+anthropic>=0.70.0
+emergentintegrations  # Alternate LLM transport (optional)

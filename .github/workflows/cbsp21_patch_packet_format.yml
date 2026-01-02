@@ -1,0 +1,26 @@
+name: CBSP21 Patch Packet Format
+
+on:
+  pull_request:
+    paths:
+      - "cbsp21/patch_packets/**"
+      - "scripts/cbsp21/**"
+
+jobs:
+  cbsp21-patch-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate CBSP21 patch packets
+        run: |
+          python scripts/cbsp21/check_patch_packet_format.py \
+            --glob "cbsp21/patch_packets/**/*.*" \
+            --disallow-ellipsis-in-code

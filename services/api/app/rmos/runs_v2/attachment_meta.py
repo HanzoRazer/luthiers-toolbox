@@ -89,6 +89,15 @@ class AttachmentMetaIndex:
         data = self.read()
         return data.get(sha)
 
+    def list_all(self) -> list:
+        """
+        Return all index entries as a list of dicts.
+
+        Useful for browse endpoints that need to filter/sort/paginate.
+        """
+        data = self.read()
+        return list(data.values())
+
     def update_from_artifact(self, artifact: RunArtifact) -> None:
         """
         Update global meta index using attachments referenced by this artifact.
@@ -273,4 +282,115 @@ class AttachmentMetaIndex:
             "runs_scanned": runs_scanned,
             "attachments_indexed": attachments_indexed,
             "unique_sha256": len(idx),
+        }
+
+
+# =============================================================================
+# Recency Index (H7.2.2.3)
+# =============================================================================
+
+
+MAX_RECENT_ENTRIES = 5000  # configurable cap
+
+
+class AttachmentRecentIndex:
+    """
+    Precomputed recency index for fast "recent" browsing.
+
+    Stored at:
+      {runs_root}/_attachment_recent.json
+
+    Shape:
+      {
+        "schema_version": "acoustics_attachment_recent_index_v1",
+        "max_entries": 5000,
+        "built_at_utc": "2026-01-01T01:23:45Z",
+        "entries": [ ... ]  # sorted by created_at_utc DESC
+      }
+    """
+
+    def __init__(self, root_dir: Path, max_entries: int = MAX_RECENT_ENTRIES):
+        self.root = root_dir
+        self.max_entries = max_entries
+        self.path = self.root / "_attachment_recent.json"
+
+    def read(self) -> Dict[str, Any]:
+        if not self.path.exists():
+            return {
+                "schema_version": "acoustics_attachment_recent_index_v1",
+                "max_entries": self.max_entries,
+                "built_at_utc": None,
+                "entries": [],
+            }
+        try:
+            return json.loads(self.path.read_text(encoding="utf-8"))
+        except Exception:
+            return {
+                "schema_version": "acoustics_attachment_recent_index_v1",
+                "max_entries": self.max_entries,
+                "built_at_utc": None,
+                "entries": [],
+            }
+
+    def write(self, data: Dict[str, Any]) -> None:
+        _atomic_write_json(self.path, data)
+
+    def list_entries(self) -> list:
+        """Return entries from the recent index (already sorted by recency)."""
+        data = self.read()
+        return data.get("entries", [])
+
+    def rebuild_from_meta_index(self, meta_idx: AttachmentMetaIndex) -> Dict[str, int]:
+        """
+        Rebuild _attachment_recent.json from _attachment_meta.json.
+
+        Sorts all entries by created_at_utc DESC and keeps top max_entries.
+
+        Returns stats:
+          {
+            "total_in_meta": int,
+            "recent_indexed": int
+          }
+        """
+        from datetime import datetime
+
+        all_entries = meta_idx.list_all()
+        total_in_meta = len(all_entries)
+
+        # Sort by created_at_utc descending (most recent first)
+        # Handle missing/invalid timestamps gracefully
+        def _sort_key(e: Dict[str, Any]) -> str:
+            ts = e.get("created_at_utc") or ""
+            # Fallback for missing timestamps: use empty string (sorts last)
+            return ts if ts else ""
+
+        sorted_entries = sorted(all_entries, key=_sort_key, reverse=True)
+
+        # Keep only top max_entries
+        recent_entries = sorted_entries[: self.max_entries]
+
+        # Build output shape (strip tracking fields for compactness)
+        compact_entries = []
+        for e in recent_entries:
+            compact_entries.append({
+                "sha256": e.get("sha256"),
+                "kind": e.get("kind"),
+                "mime": e.get("mime"),
+                "filename": e.get("filename"),
+                "size_bytes": e.get("size_bytes"),
+                "created_at_utc": e.get("created_at_utc"),
+            })
+
+        data = {
+            "schema_version": "acoustics_attachment_recent_index_v1",
+            "max_entries": self.max_entries,
+            "built_at_utc": datetime.utcnow().isoformat() + "Z",
+            "entries": compact_entries,
+        }
+
+        self.write(data)
+
+        return {
+            "total_in_meta": total_in_meta,
+            "recent_indexed": len(compact_entries),
         }

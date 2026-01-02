@@ -261,6 +261,10 @@ class RmosContext:
         """
         # Import here to avoid circular dependencies
         from ..instrument_geometry.model_spec import PRESET_MODELS, guitar_model_to_instrument_spec
+        from ..instrument_geometry.spacing import (
+            compute_edge_margin_spacing_mm,
+            compute_bridge_spacing_from_e_to_e_mm,
+        )
         
         # Load model spec
         if model_id not in PRESET_MODELS:
@@ -268,6 +272,33 @@ class RmosContext:
         
         guitar_model = PRESET_MODELS[model_id]
         instrument_spec = guitar_model_to_instrument_spec(guitar_model)
+        
+        # Compute string spacings from model's nut_spacing and bridge_spacing
+        nut_spacing = guitar_model.nut_spacing
+        bridge_spacing = guitar_model.bridge_spacing
+        
+        # Nut spacing: use edge margin spacing if margins are specified
+        if nut_spacing.bass_edge_margin_mm > 0 or nut_spacing.treble_edge_margin_mm > 0:
+            nut_result = compute_edge_margin_spacing_mm(
+                num_strings=nut_spacing.num_strings,
+                nut_width_mm=guitar_model.neck_taper.nut_width_mm,
+                bass_edge_margin_mm=nut_spacing.bass_edge_margin_mm,
+                treble_edge_margin_mm=nut_spacing.treble_edge_margin_mm,
+            )
+        else:
+            # Default: centered spacing based on E-to-E
+            nut_result = compute_bridge_spacing_from_e_to_e_mm(
+                num_strings=nut_spacing.num_strings,
+                e_to_e_mm=nut_spacing.e_to_e_mm,
+                center_at_zero=False,  # Nut uses edge-based coordinates
+            )
+        
+        # Bridge spacing: centered at zero (standard bridge coordinate system)
+        bridge_result = compute_bridge_spacing_from_e_to_e_mm(
+            num_strings=bridge_spacing.num_strings,
+            e_to_e_mm=bridge_spacing.e_to_e_mm,
+            center_at_zero=True,
+        )
         
         # Convert to dict for storage (using GuitarModelSpec and InstrumentSpec fields)
         model_spec_dict = {
@@ -279,8 +310,8 @@ class RmosContext:
             "nut_width_mm": guitar_model.neck_taper.nut_width_mm,
             "heel_width_mm": guitar_model.neck_taper.heel_width_mm,
             "neck_length_mm": instrument_spec.scale_length_mm * 0.75,  # Approx: ~75% of scale
-            "string_spacings_at_nut_mm": [],  # TODO: compute from nut_spacing
-            "string_spacings_at_bridge_mm": [],  # TODO: compute from bridge_spacing
+            "string_spacings_at_nut_mm": nut_result.positions_mm,
+            "string_spacings_at_bridge_mm": bridge_result.positions_mm,
         }
         
         return cls(

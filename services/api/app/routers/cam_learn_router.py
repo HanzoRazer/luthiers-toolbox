@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from ..learn.overrides_learner import train_overrides
 
-router = APIRouter(prefix="/cam/learn", tags=["cam-learn"])
+router = APIRouter(tags=["cam-learn"])
 
 
 class TrainIn(BaseModel):

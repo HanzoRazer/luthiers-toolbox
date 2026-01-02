@@ -311,7 +311,21 @@ def _extract_index_meta(artifact: RunArtifact) -> Dict[str, Any]:
     Extract lightweight metadata for the index.
 
     Only includes fields needed for list/filter/count operations.
+
+    Bundle 09/10: Now includes lineage for parent_plan_run_id filtering.
     """
+    # Extract lineage if present
+    lineage_dict = None
+    if artifact.lineage:
+        lineage_dict = {
+            "parent_plan_run_id": artifact.lineage.parent_plan_run_id,
+        }
+    elif artifact.meta and artifact.meta.get("parent_plan_run_id"):
+        # Fallback: check meta for backwards compatibility
+        lineage_dict = {
+            "parent_plan_run_id": artifact.meta.get("parent_plan_run_id"),
+        }
+
     return {
         "run_id": artifact.run_id,
         "created_at_utc": artifact.created_at_utc.isoformat() if artifact.created_at_utc else None,
@@ -322,6 +336,7 @@ def _extract_index_meta(artifact: RunArtifact) -> Dict[str, Any]:
         "mode": artifact.mode,
         "partition": artifact.created_at_utc.strftime("%Y-%m-%d") if artifact.created_at_utc else None,
         "meta": artifact.meta,  # Include meta for batch_label and session_id filtering
+        "lineage": lineage_dict,  # Bundle 09: Include lineage for parent_plan_run_id filtering
     }
 
 
@@ -624,6 +639,15 @@ class RunStoreV2:
                 self._attachment_meta.update_from_artifact(artifact)
             except Exception:
                 # Best-effort: do not fail run persistence if meta index update fails
+                pass
+
+            # Update recency index to keep /recent endpoint fresh (best-effort)
+            try:
+                from .attachment_meta import AttachmentRecentIndex
+                recent_idx = AttachmentRecentIndex(self.root)
+                recent_idx.rebuild_from_meta_index(self._attachment_meta)
+            except Exception:
+                # Best-effort: do not fail run persistence if recency index update fails
                 pass
         except Exception:
             # Clean up temp file on failure
@@ -1065,6 +1089,7 @@ class RunStoreV2:
         workflow_session_id: Optional[str] = None,
         batch_label: Optional[str] = None,
         session_id: Optional[str] = None,
+        parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[RunArtifact]:
@@ -1122,20 +1147,21 @@ class RunStoreV2:
             
             # Filter by batch_label and session_id from meta field
             meta = m.get("meta") or {}
-            import sys
-            print(f"DEBUG matches_meta: batch_label={batch_label}, session_id={session_id}, meta={meta}", file=sys.stderr)
             if batch_label and meta.get("batch_label") != batch_label:
-                print(f"DEBUG: Filtered out by batch_label: {meta.get('batch_label')} != {batch_label}", file=sys.stderr)
                 return False
             if session_id and meta.get("session_id") != session_id:
-                print(f"DEBUG: Filtered out by session_id: {meta.get('session_id')} != {session_id}", file=sys.stderr)
                 return False
-            
+
+            # Bundle 10: Filter by parent_plan_run_id from lineage
+            if parent_plan_run_id:
+                lineage = m.get("lineage") or {}
+                if lineage.get("parent_plan_run_id") != parent_plan_run_id:
+                    # Fallback: check meta for backwards compat
+                    if meta.get("parent_plan_run_id") != parent_plan_run_id:
+                        return False
+
             return True
 
-        import sys
-        print(f'DEBUG: Index has {len(index)} entries. batch_label={batch_label}, session_id={session_id}', file=sys.stderr)
-        if index: print(f'DEBUG: First index entry: {list(index.items())[0]}', file=sys.stderr)
         # Filter using index metadata
         matching_metas = [m for m in index.values() if matches_meta(m)]
 
@@ -1282,6 +1308,7 @@ def list_runs_filtered(
     workflow_session_id: Optional[str] = None,
     batch_label: Optional[str] = None,
     session_id: Optional[str] = None,
+    parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
@@ -1295,6 +1322,7 @@ def list_runs_filtered(
         workflow_session_id=workflow_session_id,
         batch_label=batch_label,
         session_id=session_id,
+        parent_plan_run_id=parent_plan_run_id,
     )
 
 

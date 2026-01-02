@@ -18,8 +18,10 @@ DATA_DIR = Path(__file__).parent.parent / "data" / "posts"
 CUSTOM_POSTS_FILE = DATA_DIR / "custom_posts.json"
 BUILTIN_POST_IDS = ["GRBL", "Mach4", "LinuxCNC", "PathPilot", "MASSO"]
 
-# Ensure data directory exists
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def _ensure_posts_dir() -> None:
+    """Create posts directory on first write (Docker compatibility)."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ============================================================================
@@ -152,7 +154,7 @@ def load_custom_posts() -> List[PostConfig]:
 
 def save_custom_posts(posts: List[PostConfig]):
     """Save custom posts to custom_posts.json"""
-    CUSTOM_POSTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_posts_dir()  # Create directory on first write
     
     data = {
         'version': '1.0',

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/toolbox/cam_policy.schema.json",
+  "title": "CAM Policy Constraints",
+  "description": "Per-region manufacturing constraints derived from grain/brace/thickness coupling.",
+  "type": "object",
+  "required": ["version", "timestamp_utc", "model_id", "regions"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "model_id": {
+      "type": "string",
+      "description": "Unique identifier for the instrument model/part"
+    },
+    "source_qa_id": {
+      "type": "string",
+      "description": "Reference to qa_core assessment that generated this policy"
+    },
+    "global_defaults": {
+      "type": "object",
+      "properties": {
+        "stepdown_max_mm": { "type": "number", "minimum": 0 },
+        "stepover_max_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "feed_rate_max_mm_min": { "type": "number", "minimum": 0 },
+        "spindle_rpm_range": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "integer" },
+            "max": { "type": "integer" }
+          }
+        },
+        "min_tool_diameter_mm": { "type": "number", "minimum": 0 },
+        "default_cut_direction": {
+          "type": "string",
+          "enum": ["climb", "conventional", "adaptive"]
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["region_id", "type"],
+        "properties": {
+          "region_id": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "grain_sensitive",
+              "brace_zone",
+              "thickness_critical",
+              "no_cut",
+              "finish_only",
+              "roughing_allowed"
+            ]
+          },
+          "geometry": {
+            "type": "object",
+            "description": "Region boundary definition",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["polygon", "circle", "bbox", "mesh_faces"]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": { "type": "number" }
+              },
+              "face_ids": {
+                "type": "array",
+                "items": { "type": "integer" }
+              }
+            }
+          },
+          "constraints": {
+            "type": "object",
+            "properties": {
+              "stepdown_max_mm": { "type": "number" },
+              "stepover_max_pct": { "type": "number" },
+              "feed_rate_max_mm_min": { "type": "number" },
+              "feed_rate_min_mm_min": { "type": "number" },
+              "spindle_rpm_max": { "type": "integer" },
+              "spindle_rpm_min": { "type": "integer" },
+              "min_tool_diameter_mm": { "type": "number" },
+              "max_tool_diameter_mm": { "type": "number" },
+              "cut_direction": {
+                "type": "string",
+                "enum": ["climb", "conventional", "adaptive"]
+              },
+              "dwell_ms": {
+                "type": "integer",
+                "description": "Dwell time for chip clearing"
+              },
+              "coolant": {
+                "type": "string",
+                "enum": ["none", "mist", "flood", "air"]
+              }
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this constraint exists (grain runout, brace proximity, etc.)"
+          },
+          "source_field": {
+            "type": "string",
+            "enum": ["grain_field", "brace_graph", "thickness_map", "manual", "inherited"]
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Higher priority overrides lower when regions overlap"
+          }
+        }
+      }
+    },
+    "no_cut_zones": {
+      "type": "array",
+      "description": "Absolute no-machining regions",
+      "items": {
+        "type": "object",
+        "required": ["zone_id", "reason"],
+        "properties": {
+          "zone_id": { "type": "string" },
+          "geometry": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "coordinates": { "type": "array" }
+            }
+          },
+          "reason": { "type": "string" },
+          "override_allowed": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "advisory_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "region_id": { "type": "string" },
+          "note": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "caution", "warning"]
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "generated_by": { "type": "string" },
+        "coupling_sources": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "machine_profile": { "type": "string" },
+        "material": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

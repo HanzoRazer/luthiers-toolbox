@@ -49,7 +49,7 @@ from ..geometry.arc_utils import tessellate_arc_radians, nearest_point_distance
 from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 
-router = APIRouter(prefix="/geometry", tags=["geometry"])
+router = APIRouter(tags=["geometry"])
 
 # =============================================================================
 # VALIDATION CONSTANTS

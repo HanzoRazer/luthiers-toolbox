@@ -27,7 +27,7 @@ All GitHub Actions workflows are now in the correct location:
 - ✅ Run linter (if `npm run lint` exists)
 - ✅ Run type check (if `npm run type-check` exists)
 - ✅ Build production bundle (`npm run build`)
-- ✅ Upload `client/dist` as artifact
+- ✅ Upload `packages/client/dist` as artifact
 
 **Catches:**
 - Missing dependencies
@@ -168,10 +168,9 @@ Before pushing, you can test locally:
 
 ### Test Client Build
 ```powershell
-cd client
-npm install
-npm run lint
-npm run type-check
+cd packages/client
+npm ci
+npm test
 npm run build
 ```
 
@@ -233,7 +232,7 @@ docker compose down
 
 **Check:**
 ```powershell
-cd client
+cd packages/client
 npm run build
 # Look for errors in output
 ```
@@ -279,7 +278,7 @@ app.add_middleware(
 
 ```powershell
 # 1. Test client locally
-cd client && npm run build
+cd packages/client && npm run build
 
 # 2. Test server locally
 docker compose up --build server
@@ -362,7 +361,7 @@ Create `.github/dependabot.yml`:
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/client"
+    directory: "/packages/client"
     schedule:
       interval: "weekly"
   

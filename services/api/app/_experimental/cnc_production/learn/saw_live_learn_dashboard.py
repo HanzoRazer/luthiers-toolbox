@@ -179,9 +179,9 @@ def list_run_summaries(limit: int = 50) -> List[RunSummary]:
         # Classify into risk bucket
         bucket = classify_risk(risk, has_data=has_data)
         
-        # Optionally fetch lane-scale history for context
-        # (requires tool_id, which may not be in current SawRunMeta)
-        tool_id = None  # TODO: extract from run.meta if available
+        # Fetch lane-scale history for context if blade_id available
+        # blade_id serves as the tool identifier for saw operations
+        tool_id = run.meta.blade_id
         material = run.meta.material_family
         mode = run.meta.op_type
         machine_profile = run.meta.machine_profile

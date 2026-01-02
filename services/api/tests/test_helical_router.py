@@ -15,7 +15,7 @@ Focus: cam_helical_v161_router.py (Art Studio v16.1 feature)
 
 import pytest
 import math
-from conftest import assert_valid_gcode
+from tests.helpers import assert_valid_gcode
 
 
 # =============================================================================

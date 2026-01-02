@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from ..telemetry.cam_logs import fetch_caps_by_machine, insert_run, insert_segments
 
-router = APIRouter(prefix="/cam/logs", tags=["cam-logs"])
+router = APIRouter(tags=["cam-logs"])
 
 
 class RunIn(BaseModel):

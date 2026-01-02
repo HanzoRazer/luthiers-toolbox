@@ -16,15 +16,21 @@ RUN pip install --no-cache-dir -r services/api/requirements.txt
 # app
 COPY services/api /app/services/api
 
-# non-root
+# Create non-root user first (needed for chown below)
 RUN useradd -m app
+
+# Ensure data directory exists and is writable by app user
+RUN mkdir -p /app/services/api/app/data && chown -R app:app /app/services/api/app/data
+
+# Switch to non-root user
 USER app
 
 ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
+ENV PYTHONPATH=/app/services/api
 EXPOSE 8000
 
 # health endpoint baked in app
-HEALTHCHECK --interval=10s --timeout=3s --retries=10 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=10 \
   CMD curl -fsS http://127.0.0.1:${UVICORN_PORT}/health || exit 1
 
-CMD ["python","-m","uvicorn","services.api.app.main:app","--host","0.0.0.0","--port","8000"]
+CMD ["python","-m","uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]
