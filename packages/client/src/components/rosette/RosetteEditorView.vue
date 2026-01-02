@@ -44,6 +44,17 @@
           <span class="pill" v-if="store.jumpRingPosition.total > 0">
             Focus: {{ store.jumpRingPosition.pos || "—" }} / {{ store.jumpRingPosition.total }}
           </span>
+          <!-- Bundle 32.3.8: HUD help tooltip -->
+          <span class="hud-help" tabindex="0" aria-label="Jump hotkeys help">
+            ?
+            <span class="hud-tooltip" role="tooltip">
+              <div class="tt-title">Jump hotkeys</div>
+              <div class="tt-row"><kbd>[</kbd> Prev problem</div>
+              <div class="tt-row"><kbd>]</kbd> Next problem</div>
+              <div class="tt-row"><kbd>w</kbd> Jump to worst</div>
+              <div class="tt-row"><kbd>Shift</kbd> + <kbd>R</kbd> Toggle filter</div>
+            </span>
+          </span>
         </div>
       </div>
       <GeneratorPicker />
@@ -188,6 +199,66 @@ watch(
 .jump-hud.pulse {
   animation: hudPulse 260ms ease-out;
 }
+
+/* Bundle 32.3.8: HUD help tooltip styles */
+.hud-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: help;
+  user-select: none;
+}
+.hud-tooltip {
+  position: absolute;
+  right: 0;
+  top: 24px;
+  min-width: 170px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  font-size: 11px;
+  color: #333;
+  z-index: 20;
+  display: none;
+}
+.hud-help:hover .hud-tooltip,
+.hud-help:focus .hud-tooltip,
+.hud-help:focus-within .hud-tooltip {
+  display: block;
+}
+.tt-title {
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #111;
+}
+.tt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid #ddd;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #222;
+}
+
 @keyframes hudPulse {
   0% {
     transform: scale(1);
