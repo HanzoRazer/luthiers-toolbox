@@ -8,14 +8,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-DB_PATH = os.getenv("ART_STUDIO_DB_PATH", "art_studio.db")
+# Default to app/data/art_studio.db (writable in Docker via volume mount)
+_DEFAULT_DB_PATH = str(Path(__file__).parent / "data" / "art_studio.db")
+DB_PATH = os.getenv("ART_STUDIO_DB_PATH", _DEFAULT_DB_PATH)
 
 
 def _ensure_db_dir() -> None:
     """Ensure parent directory exists for SQLite database file."""
     db_dir = Path(DB_PATH).parent
-    if db_dir and str(db_dir) != ".":
-        db_dir.mkdir(parents=True, exist_ok=True)
+    db_dir.mkdir(parents=True, exist_ok=True)
 
 
 @contextmanager
