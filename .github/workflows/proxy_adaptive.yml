@@ -92,19 +92,37 @@ jobs:
             "z_rough": -1.5
           }
           JSON
-          
+
           echo "Testing /api/cam/pocket/adaptive/plan via proxy..."
-          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
+          echo "Request payload:"
+          cat pocket_plan.json
+          echo ""
+          echo "Raw response from proxy (port ${FRONT_PORT}):"
+          curl -s -i -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
             -H 'Content-Type: application/json' \
-            --data-binary @pocket_plan.json | jq '.'
-          
-          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
-            -H 'Content-Type: application/json' \
-            --data-binary @pocket_plan.json | jq -r '.stats.length_mm' | grep -q '[0-9]' && echo "✓ Plan returned length"
-          
-          curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/plan" \
-            -H 'Content-Type: application/json' \
-            --data-binary @pocket_plan.json | jq -r '.stats.time_s' | grep -q '[0-9]' && echo "✓ Plan returned time"
+            --data-binary @pocket_plan.json -o response.txt
+          cat response.txt
+          echo ""
+
+          # Check if we got valid JSON - extract body after headers
+          BODY=$(sed -n '/^\r$/,$p' response.txt | tail -n +2)
+          if ! echo "$BODY" | jq -e . > /dev/null 2>&1; then
+            echo "ERROR: Response is not valid JSON"
+            echo "Body was: $BODY"
+            echo ""
+            echo "Trying direct API access (port ${SERVER_PORT})..."
+            curl -s -i -X POST "http://127.0.0.1:${SERVER_PORT}/api/cam/pocket/adaptive/plan" \
+              -H 'Content-Type: application/json' \
+              --data-binary @pocket_plan.json
+            echo ""
+            echo "Checking nginx logs..."
+            docker compose logs proxy --tail=50 || true
+            exit 1
+          fi
+
+          echo "$BODY" | jq '.'
+          echo "$BODY" | jq -r '.stats.length_mm' | grep -q '[0-9]' && echo "Plan returned length"
+          echo "$BODY" | jq -r '.stats.time_s' | grep -q '[0-9]' && echo "Plan returned time"
 
       - name: Test adaptive pocket G-code via proxy
         run: |
@@ -125,19 +143,19 @@ jobs:
             "post_id": "GRBL"
           }
           JSON
-          
+
           echo "Testing /api/cam/pocket/adaptive/gcode via proxy..."
           curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/gcode" \
             -H 'Content-Type: application/json' \
             --data-binary @pocket_gcode.json \
             -o pocket_adaptive.nc
-          
+
           echo "G-code content (first 10 lines):"
           head -n 10 pocket_adaptive.nc | cat
-          
-          grep -q "G21" pocket_adaptive.nc && echo "✓ G21 (mm units) found"
-          grep -q "G90" pocket_adaptive.nc && echo "✓ G90 (absolute mode) found"
-          grep -q "POST=GRBL" pocket_adaptive.nc && echo "✓ GRBL metadata found"
+
+          grep -q "G21" pocket_adaptive.nc && echo "G21 (mm units) found"
+          grep -q "G90" pocket_adaptive.nc && echo "G90 (absolute mode) found"
+          grep -q "POST=GRBL" pocket_adaptive.nc && echo "GRBL metadata found"
 
       - name: Test adaptive pocket simulation via proxy
         run: |
@@ -157,15 +175,15 @@ jobs:
             "z_rough": -2.0
           }
           JSON
-          
+
           echo "Testing /api/cam/pocket/adaptive/sim via proxy..."
           curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/sim" \
             -H 'Content-Type: application/json' \
             --data-binary @pocket_sim.json | jq '.'
-          
+
           curl -s -X POST "http://127.0.0.1:${FRONT_PORT}/api/cam/pocket/adaptive/sim" \
             -H 'Content-Type: application/json' \
-            --data-binary @pocket_sim.json | jq -r '.success' | grep -q 'true' && echo "✓ Simulation successful"
+            --data-binary @pocket_sim.json | jq -r '.success' | grep -q 'true' && echo "Simulation successful"
 
       - name: Down stack
         if: always()
