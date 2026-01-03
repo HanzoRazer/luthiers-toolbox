@@ -287,6 +287,42 @@ curl http://localhost:8000/api/governance/stats
 
 ---
 
+### 2026-01-03: Adaptive Pocket (Proxy) CI Fixes
+
+**Fixed Adaptive Pocket (Proxy) workflow - now passing:**
+
+| Issue | File(s) | Resolution |
+|-------|---------|------------|
+| PermissionError on `runs.json` | `proxy_adaptive.yml` | Docker volume mount permissions - added step to create writable data directory |
+| TypeError: list indices | `proxy_adaptive.yml` | Initialized `runs.json` with `{}` (dict) instead of `[]` (list) |
+
+**Files Modified:**
+
+| File | Change |
+|------|--------|
+| `.github/workflows/proxy_adaptive.yml` | Added data directory setup step, debug logging for API errors |
+
+**Key Pattern - Docker Volume Permissions in CI:**
+
+When Docker mounts a host directory as a volume, the container may not have write permissions. Solution:
+```yaml
+- name: Ensure data directory is writable
+  run: |
+    mkdir -p services/api/app/data
+    chmod 777 services/api/app/data
+    echo "{}" > services/api/app/data/runs.json
+    chmod 666 services/api/app/data/runs.json
+```
+
+**CI Status After Fix:**
+
+| Workflow | Status |
+|----------|--------|
+| Adaptive Pocket (Proxy) | ✅ Pass |
+| Adaptive Pocket (API) | ✅ Pass |
+
+---
+
 ### 2026-01-02: PR #3 CI Fixes (feature/cnc-saw-labs merge)
 
 **Critical CI Fixes:**

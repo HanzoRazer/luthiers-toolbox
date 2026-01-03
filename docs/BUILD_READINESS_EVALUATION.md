@@ -536,7 +536,8 @@ pytest tests/test_runs_filter_by_batch_label.py -v
 **Key Patterns Established:**
 
 1. **SQL Reserved Keywords**: Always quote column names that are SQL reserved words (`limit`, `order`, `group`, etc.)
-2. **CSV Line Endings**: Python's `csv.writer` uses CRLF (`
+2. **CSV Line Endings**: Python's `csv.writer` uses CRLF (`
+
 `) by default - use `splitlines()` for cross-platform parsing
 3. **Idempotent DDL**: Always run `CREATE TABLE IF NOT EXISTS` on database open, not just for new files
 
@@ -580,7 +581,7 @@ Fixed critical CI pipeline issues blocking the feature/cnc-saw-labs branch merge
 | API Tests | ✅ Pass | Core API tests pass |
 | Geometry Parity | ✅ Pass | Geometry tests pass |
 | SDK Codegen | ✅ Pass | SDK generation works |
-| Adaptive Pocket | ❌ Fail | Pre-existing (was failing on main) |
+| Adaptive Pocket (API) | ✅ Pass | Fixed machine_profile_id, CRLF handling |
 | RTL CI | ❌ Fail | Pre-existing Pydantic issues |
 
 **Key Pattern Established:**
@@ -609,5 +610,50 @@ def write_data(content):
 |-----------|----------|---------|--------|
 | CI/CD Workflows | 60% | 70% | +10% |
 | **Overall Readiness** | 85-88% | **88-90%** | +2% |
+
+---
+
+### 2026-01-03: Adaptive Pocket (Proxy) Fix
+
+**Issue:** Docker container returning 500 Internal Server Error on `/api/cam/pocket/adaptive/plan`
+
+**Root Cause:** Docker volume mount permissions prevented writes to `services/api/app/data/runs.json`
+
+**Resolution:** Added workflow step to pre-create data directory with correct permissions
+
+| CI Status Before | After |
+|-----------------|-------|
+| Adaptive Pocket (Proxy) | ❌ Fail → ✅ Pass |
+
+**Key Pattern - Docker Volume Permissions in CI:**
+
+When Docker mounts a host directory as a volume, the container user may lack write permissions. Pre-create directories before `docker compose up`:
+
+```yaml
+- name: Ensure data directory is writable
+  run: |
+    mkdir -p services/api/app/data
+    chmod 777 services/api/app/data
+    echo "{}" > services/api/app/data/runs.json  # Empty dict, not list!
+    chmod 666 services/api/app/data/runs.json
+```
+
+**Additional Pattern - JSON Store Initialization:**
+
+When pre-creating JSON files for dict-based stores, initialize with `{}` not `[]`:
+
+```python
+# Store expects dict
+def _read_all() -> Dict[str, Any]:
+    with open(path) as f:
+        return json.load(f)  # Must be {} not []
+```
+
+**Metrics Update:**
+
+| Component | Previous | Current | Change |
+|-----------|----------|---------|--------|
+| CI/CD Workflows | 70% | 75% | +5% |
+| **Overall Readiness** | 88-90% | **90-92%** | +2% |
 
 ---
