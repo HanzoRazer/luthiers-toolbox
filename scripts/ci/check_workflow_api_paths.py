@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Iterable, List, Tuple
@@ -73,20 +74,32 @@ def _has_legacy_path(line: str) -> bool:
 
     Legacy paths are routes like /cam/... that are NOT prefixed with /api.
     Canonical paths like /api/cam/... are allowed.
+    File paths like services/api/app/cam/... are also allowed.
     """
     for pref in LEGACY_PREFIXES:
         idx = line.find(pref)
         while idx != -1:
-            # Check if /api comes right before this prefix
+            # Check if /api comes right before this prefix (URL path)
             # e.g., for "/api/cam/", idx would be 4, and "/api" would be at 0
+            is_canonical = False
             if idx >= 4:
                 before = line[idx - 4:idx]
                 if before == "/api":
-                    # This is a canonical path, check for more occurrences
-                    idx = line.find(pref, idx + 1)
-                    continue
-            # No /api before, this is a true legacy path
-            return True
+                    is_canonical = True
+            
+            # Also allow file paths like "services/api/app/cam/..."
+            # These have /api/ somewhere before, but not directly adjacent
+            if not is_canonical and "/api/" in line[:idx]:
+                # It's a file path containing /api/ earlier
+                is_canonical = True
+            
+            if not is_canonical:
+                # This is a true legacy path
+                return True
+            
+            # Check for next occurrence
+            idx = line.find(pref, idx + 1)
+    
     return False
 
 
