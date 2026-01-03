@@ -93,7 +93,7 @@ def test_preflight_html():
         return False
     
     html = r.text
-    required_strings = ["DXF Preflight Report", "test.dxf", "Summary", "Issues"]
+    required_strings = ["DXF Preflight Report", "test.dxf", "Issues", "ERRORS"]
     missing = [s for s in required_strings if s not in html]
     
     if missing:
