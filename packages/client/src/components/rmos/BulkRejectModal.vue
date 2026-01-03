@@ -1,6 +1,12 @@
 <script setup lang="ts">
+/**
+ * BulkRejectModal.vue
+ *
+ * Modal for bulk-rejecting advisory variants with a shared reason code.
+ * H8.3 Migration: Uses canonical SDK reviewAdvisoryVariant with requestId.
+ */
 import { computed, ref, watch } from "vue";
-import { rejectAdvisoryVariant, type RejectReasonCode } from "@/api/rmosRuns";
+import { reviewAdvisoryVariant, type RejectReasonCode } from "@/sdk/rmos/runs";
 
 const props = defineProps<{
   open: boolean;
@@ -48,10 +54,13 @@ async function submit() {
   try {
     // Sequential = predictable, easy to diagnose, gentle on backend
     for (const advisoryId of props.advisoryIds) {
-      await rejectAdvisoryVariant(props.runId, advisoryId, {
-        reason_code: reasonCode.value,
-        reason_detail: reasonDetail.value.trim() || null,
-        operator_note: operatorNote.value.trim() || null,
+      // Use reviewAdvisoryVariant with rejection fields (H8.3 SDK)
+      await reviewAdvisoryVariant(props.runId, advisoryId, {
+        rejected: true,
+        status: "REJECTED",
+        rejection_reason_code: reasonCode.value,
+        rejection_reason_detail: reasonDetail.value.trim() || null,
+        rejection_operator_note: operatorNote.value.trim() || null,
       });
       progress.value = { done: progress.value.done + 1, total: progress.value.total };
     }

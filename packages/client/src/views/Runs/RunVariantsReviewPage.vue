@@ -12,6 +12,8 @@
  * - Compare mode for SVG diffs
  * - Promotion + notes + lineage panels
  * - Bulk selection + bulk reject
+ *
+ * H8.3 Migration: Uses canonical SDK with requestId correlation.
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
@@ -26,7 +28,7 @@ import {
   type AdvisoryVariantSummary,
   type VariantStatus,
   type RiskLevel,
-} from "@/api/rmosRuns";
+} from "@/sdk/rmos/runs";
 
 // Optional: keep your existing components if present
 import VariantNotes from "@/components/rmos/VariantNotes.vue";
@@ -133,8 +135,9 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    const items = await listAdvisoryVariants(runId.value);
-    variants.value = items;
+    // H8.3 SDK returns { items, count, requestId }
+    const { items } = await listAdvisoryVariants(runId.value);
+    variants.value = items ?? [];
 
     if (!selected.value && variants.value.length) {
       selected.value = variants.value[0].advisory_id;
