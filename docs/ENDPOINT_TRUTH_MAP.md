@@ -953,6 +953,45 @@ python -m app.ci.legacy_usage_gate \
 
 ---
 
+## 2026-01-03: Adaptive Pocket CI Fixes
+
+### CAM Logs Endpoint Fix
+
+The `/api/cam/logs/write` endpoint was returning 500 due to SQLite issues:
+
+| Issue | Resolution |
+|-------|------------|
+| `limit` column name | Quoted as `"limit"` - SQL reserved keyword |
+| Tables not created | `open_db()` now always runs DDL (idempotent) |
+
+### Machine Profile Validation
+
+Tests must use valid machine profile IDs from `machine_profiles.json`:
+
+| Valid Profile IDs |
+|-------------------|
+| `GRBL_3018_Default` |
+| `Mach4_Router_4x8` |
+| `LinuxCNC_KneeMill` |
+
+**Note:** `"default"` is NOT a valid profile ID.
+
+### CSV Line Ending Handling
+
+Python's `csv.writer` uses CRLF (`
+`) by default. When parsing CSV in tests:
+
+```python
+# BAD: Leaves  on values
+lines = csv_data.strip().split('
+')
+
+# GOOD: Handles both LF and CRLF
+lines = [ln.rstrip() for ln in csv_data.strip().splitlines()]
+```
+
+---
+
 ## 2026-01-02: PR #3 CI Fixes
 
 ### Endpoint Path Corrections
