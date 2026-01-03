@@ -4,24 +4,39 @@
  *
  * Panel for managing manufacturing candidates.
  * Features: triage UX, filters, search, bulk decisions, zip downloads.
+ *
+ * H8.3 Migration: Uses canonical SDK functions with requestId correlation.
  */
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import BulkDecisionModal from "@/components/rmos/BulkDecisionModal.vue";
 import {
-  fetchManufacturingCandidates,
-  setManufacturingCandidateDecision,
+  listManufacturingCandidates,
+  decideManufacturingCandidate,
   downloadManufacturingCandidateZip,
-  saveBlobToDisk,
   type ManufacturingCandidate,
-  type CandidateDecision,
-} from "@/api/rmosRuns";
+  type RiskLevel,
+} from "@/sdk/rmos/runs";
+
+// Alias for backwards compat with existing code
+type CandidateDecision = RiskLevel;
+
+// Utility: download a Blob with a filename
+function saveBlobToDisk(blob: Blob, filename: string) {
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 const props = defineProps<{
   runId: string;
+  /** @deprecated No longer used - SDK handles base URL */
   apiBase?: string;
 }>();
-
-const apiBase = computed(() => props.apiBase ?? "/api");
 
 // Data state
 const candidates = ref<ManufacturingCandidate[]>([]);
@@ -121,8 +136,8 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    const rows = await fetchManufacturingCandidates(apiBase.value, props.runId);
-    candidates.value = rows ?? [];
+    const { items } = await listManufacturingCandidates(props.runId);
+    candidates.value = items ?? [];
     // Prune selection to only known IDs
     const known = new Set(candidates.value.map((c) => idOf(c)));
     const next = new Set<string>();
@@ -144,7 +159,7 @@ async function setDecision(id: string, decision: CandidateDecision) {
   rowBusy.value = { ...rowBusy.value, [id]: true };
   error.value = null;
   try {
-    await setManufacturingCandidateDecision(apiBase.value, props.runId, id, { decision, note: null });
+    await decideManufacturingCandidate(props.runId, id, { decision, note: null });
     await load();
   } catch (e: any) {
     error.value = e?.message ?? String(e);
@@ -156,7 +171,7 @@ async function setDecision(id: string, decision: CandidateDecision) {
 // Download single zip
 async function downloadZip(id: string) {
   try {
-    const blob = await downloadManufacturingCandidateZip(apiBase.value, props.runId, id);
+    const { blob } = await downloadManufacturingCandidateZip(props.runId, id);
     saveBlobToDisk(blob, `run_${props.runId}__candidate_${id}.zip`);
   } catch (e: any) {
     error.value = e?.message ?? String(e);
@@ -172,7 +187,7 @@ async function downloadSelectedCandidateZips() {
   bulkBusy.value = true;
   try {
     for (const candidateId of ids) {
-      const blob = await downloadManufacturingCandidateZip(apiBase.value, props.runId, candidateId);
+      const { blob } = await downloadManufacturingCandidateZip(props.runId, candidateId);
       saveBlobToDisk(blob, `run_${props.runId}__candidate_${candidateId}.zip`);
     }
   } catch (e: any) {
@@ -277,7 +292,7 @@ async function saveNote(c: ManufacturingCandidate) {
   noteError.value = { ...noteError.value, [id]: null };
 
   try {
-    await setManufacturingCandidateDecision(apiBase.value, props.runId, id, {
+    await decideManufacturingCandidate(props.runId, id, {
       decision,
       note: payloadNote,
     });
