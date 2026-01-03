@@ -67,6 +67,29 @@ def _is_ignored(file_rel: str, lineno: int, ignores: List[str]) -> bool:
     return False
 
 
+def _has_legacy_path(line: str) -> bool:
+    """
+    Check if a line contains a legacy API path.
+
+    Legacy paths are routes like /cam/... that are NOT prefixed with /api.
+    Canonical paths like /api/cam/... are allowed.
+    """
+    for pref in LEGACY_PREFIXES:
+        idx = line.find(pref)
+        while idx != -1:
+            # Check if /api comes right before this prefix
+            # e.g., for "/api/cam/", idx would be 4, and "/api" would be at 0
+            if idx >= 4:
+                before = line[idx - 4:idx]
+                if before == "/api":
+                    # This is a canonical path, check for more occurrences
+                    idx = line.find(pref, idx + 1)
+                    continue
+            # No /api before, this is a true legacy path
+            return True
+    return False
+
+
 def _scan_file(path: Path, ignores: List[str]) -> List[Tuple[str, int, str]]:
     rel = str(path.as_posix())
     findings: List[Tuple[str, int, str]] = []
@@ -80,15 +103,18 @@ def _scan_file(path: Path, ignores: List[str]) -> List[Tuple[str, int, str]]:
             continue
 
         # Flag legacy prefixes if they appear as URL path segments
-        for pref in LEGACY_PREFIXES:
-            if pref in line:
-                findings.append((rel, i, line.strip()))
-                break
+        # BUT allow canonical paths like /api/cam/...
+        if _has_legacy_path(line):
+            findings.append((rel, i, line.strip()))
 
     return findings
 
 
 def main() -> int:
+    # Ensure UTF-8 output on Windows
+    if sys.platform == "win32":
+        sys.stdout.reconfigure(encoding="utf-8")
+
     ap = argparse.ArgumentParser(
         description="CI gate: prevent legacy API paths in workflow files"
     )
