@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SERVER_PORT: 8000
+      API_BASE: http://127.0.0.1:8000
       CLIENT_PORT: 8080
       API_IMAGE: toolbox/api:ci
       CLIENT_IMAGE: toolbox/client:ci
@@ -64,7 +65,8 @@ jobs:
           python - <<'PY'
           import urllib.request, json
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG2 X60 Y40 I0 J20\nG0 Z5\n"
-          req = urllib.request.Request("http://127.0.0.1:8000/api/sim/cam/simulate_gcode",
+          import os
+          req = urllib.request.Request(f"{os.environ['API_BASE']}/api/sim/cam/simulate_gcode",
                                        data=json.dumps({"gcode":gcode}).encode(),
                                        headers={"Content-Type":"application/json"})
           resp = urllib.request.urlopen(req)
