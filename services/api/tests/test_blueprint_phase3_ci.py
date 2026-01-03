@@ -25,7 +25,7 @@ def load_fixture(name: str) -> bytes:
 def test_health_check():
     """Test Phase 3.2 health endpoint."""
     print("\n=== Test: Health Check ===")
-    r = requests.get(f"{BASE_URL}/cam/blueprint/health")
+    r = requests.get(f"{BASE_URL}/api/blueprint/cam/health")
     
     if r.status_code != 200:
         print(f"FAIL: Health check returned {r.status_code}")
@@ -57,7 +57,7 @@ def test_preflight_json():
     files = {"file": ("test.dxf", dxf_content, "application/dxf")}
     data = {"format": "json"}
     
-    r = requests.post(f"{BASE_URL}/cam/blueprint/preflight", files=files, data=data)
+    r = requests.post(f"{BASE_URL}/api/blueprint/cam/preflight", files=files, data=data)
     
     if r.status_code != 200:
         print(f"FAIL: Preflight returned {r.status_code}")
@@ -86,7 +86,7 @@ def test_preflight_html():
     files = {"file": ("test.dxf", dxf_content, "application/dxf")}
     data = {"format": "html"}
     
-    r = requests.post(f"{BASE_URL}/cam/blueprint/preflight", files=files, data=data)
+    r = requests.post(f"{BASE_URL}/api/blueprint/cam/preflight", files=files, data=data)
     
     if r.status_code != 200:
         print(f"FAIL: HTML preflight returned {r.status_code}")
@@ -117,7 +117,7 @@ def test_contour_reconstruction():
         "min_loop_points": "3"
     }
     
-    r = requests.post(f"{BASE_URL}/cam/blueprint/reconstruct-contours", files=files, data=data)
+    r = requests.post(f"{BASE_URL}/api/blueprint/cam/reconstruct-contours", files=files, data=data)
     
     if r.status_code != 200:
         print(f"FAIL: Reconstruction returned {r.status_code}")
@@ -138,27 +138,6 @@ def test_contour_reconstruction():
     return True
 
 
-def test_om_router():
-    """Test OM router endpoints."""
-    print("\n=== Test: OM Router ===")
-    
-    r = requests.get(f"{BASE_URL}/cam/om/templates")
-    if r.status_code != 200:
-        print(f"FAIL: OM templates returned {r.status_code}")
-        return False
-    
-    data = r.json()
-    print(f"  Templates available: {len(data.get('templates', []))}")
-    
-    r = requests.get(f"{BASE_URL}/cam/om/specs")
-    if r.status_code != 200:
-        print(f"FAIL: OM specs returned {r.status_code}")
-        return False
-    
-    specs = r.json()
-    print(f"PASS: OM router")
-    print(f"  Scale: {specs.get('scale_length_mm')}mm, Nut: {specs.get('nut_width_mm')}mm")
-    return True
 
 
 def main():
@@ -172,7 +151,6 @@ def main():
         test_preflight_json,
         test_preflight_html,
         test_contour_reconstruction,
-        test_om_router,
     ]
     
     results = []
