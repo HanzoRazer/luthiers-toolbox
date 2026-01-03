@@ -1,0 +1,325 @@
+{
+  "$schema": "./endpoint_truth.schema.json",
+  "_comment": "Machine-readable endpoint truth for CI gates. Generated from ENDPOINT_TRUTH_MAP.md",
+  "_version": "1.0.0",
+  "_updated": "2026-01-02",
+  "routes": [
+    {
+      "path": "/health",
+      "methods": ["GET"],
+      "name": "health_check",
+      "lane": "CORE",
+      "deprecated": false
+    },
+    {
+      "path": "/api/health",
+      "methods": ["GET"],
+      "name": "api_health",
+      "lane": "CORE",
+      "deprecated": false
+    },
+    {
+      "path": "/api/_meta/routing-truth",
+      "methods": ["GET"],
+      "name": "routing_truth",
+      "lane": "META",
+      "deprecated": false
+    },
+    {
+      "path": "/api/governance/stats",
+      "methods": ["GET"],
+      "name": "governance_stats",
+      "lane": "META",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/saw/batch/spec",
+      "methods": ["POST"],
+      "name": "saw_batch_spec",
+      "lane": "OPERATION",
+      "deprecated": false
+    },
+    {
+      "path": "/api/saw/batch/plan",
+      "methods": ["POST"],
+      "name": "saw_batch_plan",
+      "lane": "OPERATION",
+      "deprecated": false
+    },
+    {
+      "path": "/api/saw/batch/approve",
+      "methods": ["POST"],
+      "name": "saw_batch_approve",
+      "lane": "OPERATION",
+      "deprecated": false
+    },
+    {
+      "path": "/api/saw/batch/toolpaths",
+      "methods": ["POST"],
+      "name": "saw_batch_toolpaths",
+      "lane": "OPERATION",
+      "deprecated": false
+    },
+    {
+      "path": "/api/saw/batch/job-log",
+      "methods": ["POST"],
+      "name": "saw_batch_job_log",
+      "lane": "OPERATION",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/rmos/ai/constraint-search",
+      "methods": ["POST"],
+      "name": "rmos_ai_constraint_search",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/ai/quick-check",
+      "methods": ["POST"],
+      "name": "rmos_ai_quick_check",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/profiles",
+      "methods": ["GET", "POST"],
+      "name": "rmos_profiles",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/runs/recent",
+      "methods": ["GET"],
+      "name": "rmos_runs_recent",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/workflow/sessions",
+      "methods": ["GET", "POST"],
+      "name": "rmos_workflow_sessions",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/workflow/approve",
+      "methods": ["POST"],
+      "name": "rmos_workflow_approve",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+    {
+      "path": "/api/rmos/workflow/reject",
+      "methods": ["POST"],
+      "name": "rmos_workflow_reject",
+      "lane": "RMOS",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/cam/toolpath/roughing/gcode",
+      "methods": ["POST"],
+      "name": "cam_roughing_gcode",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/toolpath/biarc/gcode",
+      "methods": ["POST"],
+      "name": "cam_biarc_gcode",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/toolpath/helical_entry",
+      "methods": ["POST"],
+      "name": "cam_helical_entry",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/drilling/gcode",
+      "methods": ["POST"],
+      "name": "cam_drilling_gcode",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/drilling/pattern/gcode",
+      "methods": ["POST"],
+      "name": "cam_drilling_pattern_gcode",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/rosette/plan-toolpath",
+      "methods": ["POST"],
+      "name": "cam_rosette_plan_toolpath",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/rosette/post-gcode",
+      "methods": ["POST"],
+      "name": "cam_rosette_post_gcode",
+      "lane": "CAM",
+      "deprecated": false
+    },
+    {
+      "path": "/api/cam/roughing/gcode_intent",
+      "methods": ["POST"],
+      "name": "cam_roughing_gcode_intent",
+      "lane": "CAM",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/tooling/library/tools",
+      "methods": ["GET"],
+      "name": "tooling_library_tools",
+      "lane": "TOOLING",
+      "deprecated": false
+    },
+    {
+      "path": "/api/tooling/library/materials",
+      "methods": ["GET"],
+      "name": "tooling_library_materials",
+      "lane": "TOOLING",
+      "deprecated": false
+    },
+    {
+      "path": "/api/tooling/feeds/calculate",
+      "methods": ["POST"],
+      "name": "tooling_feeds_calculate",
+      "lane": "TOOLING",
+      "deprecated": false
+    },
+    {
+      "path": "/api/tooling/posts",
+      "methods": ["GET"],
+      "name": "tooling_posts",
+      "lane": "TOOLING",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/art/patterns",
+      "methods": ["GET", "POST"],
+      "name": "art_patterns",
+      "lane": "ART",
+      "deprecated": false
+    },
+    {
+      "path": "/api/art/rosette/preview/svg",
+      "methods": ["POST"],
+      "name": "art_rosette_preview_svg",
+      "lane": "ART",
+      "deprecated": false
+    },
+    {
+      "path": "/api/art/rosette/feasibility/batch",
+      "methods": ["POST"],
+      "name": "art_rosette_feasibility_batch",
+      "lane": "ART",
+      "deprecated": false
+    },
+    {
+      "path": "/api/art/snapshots/recent",
+      "methods": ["GET"],
+      "name": "art_snapshots_recent",
+      "lane": "ART",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/compare/baselines",
+      "methods": ["GET", "POST"],
+      "name": "compare_baselines",
+      "lane": "COMPARE",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/sim/cam/simulate_gcode",
+      "methods": ["POST"],
+      "name": "sim_simulate_gcode",
+      "lane": "SIMULATION",
+      "deprecated": false
+    },
+
+    {
+      "path": "/api/art-studio/rosette/preview",
+      "methods": ["POST"],
+      "name": "art_studio_rosette_preview",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "legacy_art_studio_lane",
+      "successor": "/api/art/rosette/preview/svg",
+      "sunset": "2026-06-30"
+    },
+    {
+      "path": "/api/art-studio/rosette/export-dxf",
+      "methods": ["POST"],
+      "name": "art_studio_rosette_export_dxf",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "legacy_art_studio_lane",
+      "successor": "/api/art/rosette/export-dxf",
+      "sunset": "2026-06-30"
+    },
+    {
+      "path": "/api/art-studio/workflow/sessions",
+      "methods": ["GET", "POST"],
+      "name": "art_studio_workflow_sessions",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "legacy_art_studio_lane",
+      "successor": "/api/rmos/workflow/sessions",
+      "sunset": "2026-06-30"
+    },
+
+    {
+      "path": "/api/cam/vcarve/preview",
+      "methods": ["POST"],
+      "name": "cam_vcarve_preview_legacy",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "wave18_consolidation",
+      "successor": "/api/cam/toolpath/vcarve/preview",
+      "sunset": "2026-06-30"
+    },
+    {
+      "path": "/api/cam/roughing/gcode",
+      "methods": ["POST"],
+      "name": "cam_roughing_gcode_legacy",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "wave18_consolidation",
+      "successor": "/api/cam/toolpath/roughing/gcode",
+      "sunset": "2026-06-30"
+    },
+    {
+      "path": "/api/cam/biarc/gcode",
+      "methods": ["POST"],
+      "name": "cam_biarc_gcode_legacy",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "wave18_consolidation",
+      "successor": "/api/cam/toolpath/biarc/gcode",
+      "sunset": "2026-06-30"
+    },
+    {
+      "path": "/api/cam/drill/gcode",
+      "methods": ["POST"],
+      "name": "cam_drill_gcode_legacy",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "wave18_consolidation",
+      "successor": "/api/cam/drilling/gcode",
+      "sunset": "2026-06-30"
+    }
+  ]
+}

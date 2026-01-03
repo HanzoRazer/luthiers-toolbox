@@ -250,8 +250,140 @@ export type DeprecationEvent = {
 
 ---
 
-## H. Related Documents
+## H. Machine-Readable Truth File
+
+### Location
+
+```
+services/api/app/data/endpoint_truth.json
+```
+
+### Purpose
+
+Provides a static, version-controlled source of truth for CI gates to detect:
+- Missing endpoints (documented but not mounted)
+- Undocumented endpoints (mounted but not in truth file)
+- Deprecated endpoint usage in frontend code
+
+### Schema
+
+```typescript
+interface EndpointTruthFile {
+  $schema: string;           // JSON Schema reference
+  _comment: string;          // Human description
+  _version: string;          // Semver version
+  _updated: string;          // ISO date of last update
+  routes: EndpointTruthEntry[];
+}
+
+interface EndpointTruthEntry {
+  path: string;              // Full path including /api prefix
+  methods: string[];         // HTTP methods
+  name: string;              // Canonical endpoint name
+  lane: Lane;                // Classification for governance
+  deprecated: boolean;       // Is this deprecated?
+  deprecated_reason?: string;// Why deprecated (if applicable)
+  successor?: string;        // Canonical replacement path
+  sunset?: string;           // ISO date when removal planned
+}
+
+type Lane = 
+  | "CORE"       // Health, meta endpoints
+  | "META"       // Introspection, governance
+  | "OPERATION"  // Governed machine-output endpoints
+  | "RMOS"       // RMOS orchestration
+  | "CAM"        // CAM toolpath generation
+  | "TOOLING"    // Tool/material library
+  | "ART"        // Art Studio (canonical)
+  | "COMPARE"    // Compare workflows
+  | "SIMULATION" // G-code simulation
+  | "LEGACY"     // Deprecated endpoints
+  | "UTILITY";   // Stateless utility endpoints
+```
+
+### CI Gate Script
+
+```bash
+#!/bin/bash
+# .github/scripts/check_routing_truth_drift.sh
+
+set -e
+
+API_URL="${API_URL:-http://localhost:8000}"
+TRUTH_FILE="services/api/app/data/endpoint_truth.json"
+
+# Extract expected paths from truth file
+jq -r '.routes[].path' "$TRUTH_FILE" | sort > /tmp/expected.txt
+
+# Extract runtime paths from running API
+curl -s "$API_URL/api/_meta/routing-truth" | \
+  jq -r '.routes[].path' | sort > /tmp/runtime.txt
+
+# Check for missing (expected but not mounted)
+MISSING=$(comm -23 /tmp/expected.txt /tmp/runtime.txt)
+if [ -n "$MISSING" ]; then
+  echo "❌ MISSING ENDPOINTS (documented but not mounted):"
+  echo "$MISSING"
+  EXIT_CODE=1
+fi
+
+# Check for undocumented (mounted but not in truth file)
+UNDOCUMENTED=$(comm -13 /tmp/expected.txt /tmp/runtime.txt)
+if [ -n "$UNDOCUMENTED" ]; then
+  echo "⚠️  UNDOCUMENTED ENDPOINTS (mounted but not in truth file):"
+  echo "$UNDOCUMENTED"
+  # Warning only - don't fail CI for new endpoints
+fi
+
+exit ${EXIT_CODE:-0}
+```
+
+---
+
+## I. Artifact Linkage Invariants (OPERATION Lane)
+
+For OPERATION lane endpoints that produce run artifacts, the following linkage rules apply.
+
+### Reference Implementation: Saw Lab Batch
+
+**Artifact Chain:**
+```
+saw_batch_spec → saw_batch_plan → saw_batch_decision → saw_batch_execution
+                                                           ↓
+                                               saw_batch_job_log
+                                               saw_batch_execution_metrics_rollup
+```
+
+### Required `index_meta` Keys by Kind
+
+| Kind | Required Keys | Parent Link Field |
+|------|---------------|-------------------|
+| `saw_batch_spec` | `tool_kind`, `batch_label`, `session_id` | — (root) |
+| `saw_batch_plan` | `tool_kind`, `batch_label`, `session_id` | `parent_batch_spec_artifact_id` |
+| `saw_batch_decision` | `tool_kind`, `batch_label`, `session_id`, `approved_by` | `parent_batch_plan_artifact_id`, `parent_batch_spec_artifact_id` |
+| `saw_batch_execution` | `tool_kind`, `batch_label`, `session_id` | `parent_batch_decision_artifact_id` |
+| `saw_batch_job_log` | — | `parent_batch_execution_artifact_id`, `parent_batch_decision_artifact_id` |
+| `saw_batch_execution_metrics_rollup` | — | `parent_batch_execution_artifact_id`, `parent_batch_decision_artifact_id` |
+
+### Query Filter Support
+
+The `store.py:query_run_artifacts()` function supports filtering by:
+- `parent_batch_decision_artifact_id`
+- `parent_batch_plan_artifact_id`
+- `parent_batch_spec_artifact_id`
+
+### Invariants
+
+1. Every artifact except `spec` **MUST** have at least one `parent_*_artifact_id` in `index_meta`
+2. `batch_label` and `session_id` **MUST** propagate to all descendants
+3. Skip-level links (e.g., job_log → decision) are **ALLOWED** for UI navigation convenience
+4. `tool_kind` **SHOULD** be set to enable cross-tool queries
+
+---
+
+## J. Related Documents
 
 - [SCAFFOLDING_TRUTH_v1.md](./SCAFFOLDING_TRUTH_v1.md) — Repo topology and service structure
 - [ENDPOINT_TRUTH_MAP.md](./ENDPOINT_TRUTH_MAP.md) — Complete API surface documentation
 - [ROUTER_MAP.md](../ROUTER_MAP.md) — Router organization by wave
+- [OPERATION_EXECUTION_GOVERNANCE_v1.md](./OPERATION_EXECUTION_GOVERNANCE_v1.md) — Lane classification rules
