@@ -45,7 +45,7 @@ jobs:
 
       - name: N1 - Adaptive pocket plan endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/pocket/adaptive/plan             -H 'Content-Type: application/json'             -d '{"loops":[{"pts":[[0,0],[100,0],[100,60],[0,60]]}],"units":"mm","tool_d":6.0,"stepover":0.45,"stepdown":1.5,"margin":0.5,"strategy":"Spiral","smoothing":0.8,"climb":true,"feed_xy":1200,"safe_z":5,"z_rough":-1.5}' > plan.json
+          curl -s -X POST http://127.0.0.1:8000/api/cam/pocket/adaptive/plan -H 'Content-Type: application/json' -d '{"loops":[{"pts":[[0,0],[100,0],[100,60],[0,60]]}],"units":"mm","tool_d":6.0,"stepover":0.45,"stepdown":1.5,"margin":0.5,"strategy":"Spiral","smoothing":0.8,"climb":true,"feed_xy":1200,"safe_z":5,"z_rough":-1.5}' > plan.json
           if jq -e '.stats.length_mm > 50' plan.json > /dev/null; then
             echo "N1 Adaptive pocket plan passed"
           else
@@ -56,20 +56,20 @@ jobs:
 
       - name: N2 - Adaptive pocket G-code export
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/pocket/adaptive/gcode             -H 'Content-Type: application/json'             -d '{"loops":[{"pts":[[0,0],[50,0],[50,30],[0,30]]}],"units":"mm","tool_d":6.0,"stepover":0.45,"stepdown":1.5,"margin":0.5,"strategy":"Spiral","smoothing":0.8,"climb":true,"feed_xy":1200,"safe_z":5,"z_rough":-1.5,"post_id":"GRBL"}' > gcode.nc
+          curl -s -X POST http://127.0.0.1:8000/api/cam/pocket/adaptive/gcode -H 'Content-Type: application/json' -d '{"loops":[{"pts":[[0,0],[50,0],[50,30],[0,30]]}],"units":"mm","tool_d":6.0,"stepover":0.45,"stepdown":1.5,"margin":0.5,"strategy":"Spiral","smoothing":0.8,"climb":true,"feed_xy":1200,"safe_z":5,"z_rough":-1.5,"post_id":"GRBL"}' > gcode.nc
           grep -q "G21" gcode.nc && echo "N2 G21 found"
           grep -q "G90" gcode.nc && echo "N2 G90 found"
           echo "N2 Adaptive pocket G-code passed"
 
       - name: N3 - Drilling endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/drilling/gcode             -H 'Content-Type: application/json'             -d '{"holes":[{"x":10,"y":10,"diameter":3.0,"depth":5.0},{"x":30,"y":10,"diameter":3.0,"depth":5.0}],"units":"mm","peck_depth":1.0,"retract_height":5.0,"feed_z":100,"post_id":"GRBL"}' > drill.nc
+          curl -s -X POST http://127.0.0.1:8000/api/cam/drilling/gcode -H 'Content-Type: application/json' -d '{"holes":[{"x":10,"y":10,"diameter":3.0,"depth":5.0},{"x":30,"y":10,"diameter":3.0,"depth":5.0}],"units":"mm","peck_depth":1.0,"retract_height":5.0,"feed_z":100,"post_id":"GRBL"}' > drill.nc
           grep -q "G21" drill.nc && echo "N3 G21 found"
           echo "N3 Drilling endpoint passed"
 
       - name: N4 - Roughing toolpath endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/roughing/gcode             -H 'Content-Type: application/json'             -d '{"contour":[[0,0],[80,0],[80,40],[0,40],[0,0]],"tool_d":6.0,"stepover":0.4,"depth":3.0,"stepdown":1.0,"feed_xy":1200,"feed_z":300,"units":"mm","post_id":"GRBL"}' > roughing.nc
+          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/roughing/gcode -H 'Content-Type: application/json' -d '{"contour":[[0,0],[80,0],[80,40],[0,40],[0,0]],"tool_d":6.0,"stepover":0.4,"depth":3.0,"stepdown":1.0,"feed_xy":1200,"feed_z":300,"units":"mm","post_id":"GRBL"}' > roughing.nc
           grep -q "G21" roughing.nc && echo "N4 G21 found"
           grep -q "G1" roughing.nc && echo "N4 Linear moves found"
           echo "N4 Roughing toolpath passed"
@@ -96,13 +96,8 @@ jobs:
 
       - name: N7 - Simulation endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/sim/cam/simulate_gcode             -H 'Content-Type: application/json'             -d '{"gcode":"G21 G90 G17 F1200
-G0 Z5
-G0 X0 Y0
-G1 Z-1 F300
-G1 X50 Y0
-G0 Z5
-"}' > sim.json
+          printf '{"gcode":"G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X50 Y0\nG0 Z5\n"}' > sim_request.json
+          curl -s -X POST http://127.0.0.1:8000/api/sim/cam/simulate_gcode -H 'Content-Type: application/json' --data-binary @sim_request.json > sim.json
           if jq -e '.moves | length >= 3' sim.json > /dev/null; then
             echo "N7 Simulation passed"
           else
@@ -113,19 +108,19 @@ G0 Z5
 
       - name: N8 - Biarc toolpath endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/biarc/gcode             -H 'Content-Type: application/json'             -d '{"points":[[0,0],[25,15],[50,0],[75,15],[100,0]],"tool_d":3.0,"tolerance":0.1,"feed_xy":1000,"units":"mm","post_id":"GRBL"}' > biarc.nc
+          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/biarc/gcode -H 'Content-Type: application/json' -d '{"points":[[0,0],[25,15],[50,0],[75,15],[100,0]],"tool_d":3.0,"tolerance":0.1,"feed_xy":1000,"units":"mm","post_id":"GRBL"}' > biarc.nc
           grep -q "G21" biarc.nc && echo "N8 G21 found"
           echo "N8 Biarc toolpath passed"
 
       - name: N9 - Helical entry endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/helical_entry             -H 'Content-Type: application/json'             -d '{"x":50,"y":50,"z_start":0,"z_end":-10,"radius":5,"pitch":1.0,"feed_xy":800,"feed_z":200,"units":"mm","post_id":"GRBL"}' > helical.nc
+          curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/helical_entry -H 'Content-Type: application/json' -d '{"x":50,"y":50,"z_start":0,"z_end":-10,"radius":5,"pitch":1.0,"feed_xy":800,"feed_z":200,"units":"mm","post_id":"GRBL"}' > helical.nc
           grep -q "G21" helical.nc && echo "N9 G21 found"
           echo "N9 Helical entry passed"
 
       - name: N10 - V-carve endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/art-studio/vcarve/gcode             -H 'Content-Type: application/json'             -d '{"contours":[[[0,0],[100,0],[100,50],[0,50],[0,0]]],"v_angle":60,"max_depth":3.0,"flat_depth":0.5,"feed_xy":1000,"feed_z":300,"units":"mm","post_id":"GRBL"}' > vcarve.nc
+          curl -s -X POST http://127.0.0.1:8000/api/art-studio/vcarve/gcode -H 'Content-Type: application/json' -d '{"contours":[[[0,0],[100,0],[100,50],[0,50],[0,0]]],"v_angle":60,"max_depth":3.0,"flat_depth":0.5,"feed_xy":1000,"feed_z":300,"units":"mm","post_id":"GRBL"}' > vcarve.nc
           grep -q "G21" vcarve.nc && echo "N10 G21 found"
           grep -q "G1" vcarve.nc && echo "N10 Linear moves found"
           echo "N10 V-carve passed"
