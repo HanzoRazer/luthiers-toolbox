@@ -1002,7 +1002,7 @@ jobs:
           csv_data = resp.read().decode()
           assert "idx,code,len_mm,vol_mm3,energy_j,cum_energy_j" in csv_data, "Missing CSV header"
           
-          lines = csv_data.strip().split('\n')
+          lines = [ln.rstrip() for ln in csv_data.strip().splitlines()]
           assert len(lines) > 1, "CSV has no data rows"
           
           # Step 5: Validate data row format
@@ -1194,7 +1194,7 @@ jobs:
           
           # Step 4: Validate CSV structure
           csv_data = r.read().decode('utf-8')
-          lines = csv_data.strip().split('\n')
+          lines = [ln.rstrip() for ln in csv_data.strip().splitlines()]
           assert len(lines) >= 2, f"CSV too short: {len(lines)} lines"
           
           header = lines[0]
