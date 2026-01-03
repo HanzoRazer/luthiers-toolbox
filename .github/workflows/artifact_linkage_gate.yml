@@ -1,0 +1,91 @@
+name: artifact-linkage-gate
+
+on:
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "scripts/governance/**"
+      - ".github/workflows/artifact_linkage_gate.yml"
+
+jobs:
+  artifact-linkage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    env:
+      PYTHONUNBUFFERED: "1"
+      ARTIFACT_GATE_API_URL: "http://127.0.0.1:8000"
+      ARTIFACT_GATE_SESSION_ID: "sess_ci_artifact_linkage"
+      ARTIFACT_GATE_BATCH_LABEL: "ci_artifact_linkage_batch"
+      ARTIFACT_GATE_FAIL_FAST: "true"
+      ARTIFACT_GATE_VERBOSE: "true"
+      # Deterministic isolation
+      RMOS_RUN_ATTACHMENTS_DIR: "${{ runner.temp }}/rmos_test_attachments"
+      RMOS_ARTIFACT_ROOT: "${{ runner.temp }}/rmos_artifacts"
+      SAW_LAB_LEARNED_OVERRIDES_PATH: "${{ runner.temp }}/saw_overrides.jsonl"
+      DATABASE_URL: "sqlite:///${{ runner.temp }}/artifact_linkage_ci.sqlite"
+      # Optional hooks (safe to enable in CI)
+      SAW_LAB_LEARNING_HOOK_ENABLED: "true"
+      SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install API dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${PIP_INSTALL_CMD:-}" ]; then
+            echo "Using PIP_INSTALL_CMD override: $PIP_INSTALL_CMD"
+            eval "$PIP_INSTALL_CMD"
+          elif [ -f pyproject.toml ]; then
+            pip install -e .
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
+            exit 1
+          fi
+          pip install uvicorn
+
+      - name: Start API (background)
+        run: |
+          mkdir -p "$RMOS_RUN_ATTACHMENTS_DIR" "$RMOS_ARTIFACT_ROOT"
+          (uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level warning) &
+          echo $! > /tmp/uvicorn_pid
+
+      - name: Wait for API ready
+        run: |
+          python - <<'PY'
+          import time, urllib.request
+          base="http://127.0.0.1:8000"
+          paths=["/api/health","/health","/api/_meta/routing-truth"]
+          for i in range(80):
+            for p in paths:
+              try:
+                with urllib.request.urlopen(base+p, timeout=1.5) as r:
+                  if r.status == 200:
+                    print("OK:", base+p)
+                    raise SystemExit(0)
+              except Exception:
+                pass
+            time.sleep(0.4)
+          raise SystemExit("API did not become ready")
+          PY
+
+      - name: Run artifact linkage invariants gate
+        run: |
+          python ../../scripts/governance/check_artifact_linkage_invariants.py
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/uvicorn_pid ]; then
+            kill "$(cat /tmp/uvicorn_pid)" || true
+          fi
