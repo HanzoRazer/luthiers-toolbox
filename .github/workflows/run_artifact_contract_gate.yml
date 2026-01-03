@@ -1,0 +1,83 @@
+name: run-artifact-contract-gate
+
+on:
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "scripts/governance/**"
+      - ".github/workflows/run_artifact_contract_gate.yml"
+
+jobs:
+  contract-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    env:
+      PYTHONUNBUFFERED: "1"
+      CONTRACT_API_URL: "http://127.0.0.1:8000"
+      CONTRACT_LIMIT: "200"
+      CONTRACT_FAIL_FAST: "false"
+      CONTRACT_VERBOSE: "true"
+
+      RMOS_RUN_ATTACHMENTS_DIR: "${{ runner.temp }}/rmos_test_attachments"
+      RMOS_ARTIFACT_ROOT: "${{ runner.temp }}/rmos_artifacts"
+      SAW_LAB_LEARNED_OVERRIDES_PATH: "${{ runner.temp }}/saw_overrides.jsonl"
+      DATABASE_URL: "sqlite:///${{ runner.temp }}/run_artifact_contract_gate.sqlite"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install API deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${PIP_INSTALL_CMD:-}" ]; then
+            eval "$PIP_INSTALL_CMD"
+          elif [ -f pyproject.toml ]; then
+            pip install -e .
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
+            exit 1
+          fi
+          pip install uvicorn
+
+      - name: Start API (background)
+        run: |
+          mkdir -p "$RMOS_RUN_ATTACHMENTS_DIR" "$RMOS_ARTIFACT_ROOT"
+          (uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level warning) &
+          echo $! > /tmp/uvicorn_pid
+
+      - name: Wait for API ready
+        run: |
+          python - <<'PY'
+          import time, urllib.request
+          base="http://127.0.0.1:8000"
+          for i in range(80):
+            try:
+              with urllib.request.urlopen(base+"/api/rmos/runs?limit=1", timeout=1.5) as r:
+                if r.status == 200:
+                  print("OK:", base+"/api/rmos/runs")
+                  raise SystemExit(0)
+            except Exception:
+              time.sleep(0.4)
+          raise SystemExit("API did not become ready")
+          PY
+
+      - name: Run contract validator (latest artifacts)
+        run: |
+          python ../../scripts/governance/validate_run_artifact_contract.py
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/uvicorn_pid ]; then
+            kill "$(cat /tmp/uvicorn_pid)" || true
+          fi
