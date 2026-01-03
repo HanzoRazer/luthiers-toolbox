@@ -637,6 +637,7 @@ jobs:
 |-----|------|-------|
 | 1.0 | 2026-01-01 | Initial release. Establishes ≥95% coverage rule, STOP CONDITIONS, structured input preference, immutability rules, audit declaration requirement, and implementation scripts. |
 | 1.1 | 2026-01-02 | Added repo-enforced CI gates, patch packet format validation, enhanced scripts with improved error handling, and operational rules. |
+| 1.2 | 2026-01-03 | Added Section 23: PR-Level Enforcement (CBSP21 as real repo gate with manifest validation, `check_cbsp21_gate.py` script, and `cbsp21_gate.yml` workflow). |
 
 ---
 
@@ -1112,4 +1113,252 @@ This is not enabled by default because it can block everyday development unless 
 
 ---
 
+## 23. PR-Level Enforcement: CBSP21 as a Real Repo Gate
+
+CBSP21 serves **two complementary functions**:
+
+1. **Prevents under-scanning** — ensures AI systems don't reason from partial inputs
+2. **Catches redundant/regressive patches** — detects when sandbox patches duplicate or conflict with existing code
+
+To make this enforceable at the PR level (not just a reminder), the following components are provided:
+
+### 23.1 PR Manifest: `.cbsp21/patch_input.json`
+
+Every PR that modifies code/config must include a manifest declaring:
+- Which files were changed
+- What source files were scanned to produce the changes
+- Coverage metrics per changed file
+
+**Template:** `.cbsp21/patch_input.json.example`
+
+```json
+{
+  "$schema": "cbsp21_patch_input_v1",
+  "pr_title": "ci(governance): add artifact contract validator",
+  "changed_files": [
+    {
+      "path": "scripts/governance/validate_run_artifact_contract.py",
+      "action": "add",
+      "scanned_sources": ["docs/ENDPOINT_TRUTH_MAP.md", "services/api/app/rmos/runs_router.py"],
+      "coverage_percent": 97.2
+    },
+    {
+      "path": ".github/workflows/run_artifact_contract_gate.yml",
+      "action": "add",
+      "scanned_sources": [".github/workflows/artifact_linkage.yml"],
+      "coverage_percent": 100.0
+    }
+  ],
+  "overall_coverage": 98.6,
+  "notes": "Validator reads existing artifacts; does not create them."
+}
+```
+
+### 23.2 Gate Script: `scripts/ci/check_cbsp21_gate.py`
+
+This script:
+- Detects code/config changes in the PR (via `git diff`)
+- Requires `.cbsp21/patch_input.json` manifest
+- Enforces **file-level coverage** (default min `0.95`) for every changed "code" file
+- Exits non-zero if coverage requirements not met
+
+```python
+#!/usr/bin/env python3
+"""
+CBSP21 PR Gate
+
+Validates that PRs touching code/config have a valid patch_input.json manifest
+with sufficient coverage declarations.
+
+Env:
+  CBSP21_MIN_COVERAGE     default 0.95
+  CBSP21_MANIFEST_PATH    default .cbsp21/patch_input.json
+  CBSP21_SKIP_EXTENSIONS  default .md,.txt,.json (non-code files)
+
+Usage:
+  python scripts/ci/check_cbsp21_gate.py
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Set
+
+
+def get_changed_files() -> List[str]:
+    """Get files changed in this PR (vs origin/main)."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "origin/main...HEAD"],
+            capture_output=True, text=True, check=True
+        )
+        return [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
+    except subprocess.CalledProcessError:
+        # Fallback: compare to HEAD~1
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD~1"],
+            capture_output=True, text=True, check=True
+        )
+        return [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
+
+
+def is_code_file(path: str, skip_exts: Set[str]) -> bool:
+    """Check if file is a code file (not docs, not config-only)."""
+    ext = Path(path).suffix.lower()
+    if ext in skip_exts:
+        return False
+    # Code file extensions
+    code_exts = {".py", ".ts", ".tsx", ".js", ".jsx", ".vue", ".yaml", ".yml", ".sh", ".ps1"}
+    return ext in code_exts
+
+
+def main() -> int:
+    min_coverage = float(os.getenv("CBSP21_MIN_COVERAGE", "0.95"))
+    manifest_path = Path(os.getenv("CBSP21_MANIFEST_PATH", ".cbsp21/patch_input.json"))
+    skip_exts_raw = os.getenv("CBSP21_SKIP_EXTENSIONS", ".md,.txt")
+    skip_exts = {s.strip().lower() for s in skip_exts_raw.split(",") if s.strip()}
+
+    changed_files = get_changed_files()
+    code_files = [f for f in changed_files if is_code_file(f, skip_exts)]
+
+    if not code_files:
+        print("CBSP21 GATE: No code files changed - skipping manifest check.")
+        return 0
+
+    print(f"CBSP21 GATE: {len(code_files)} code file(s) changed:")
+    for f in code_files:
+        print(f"  - {f}")
+
+    if not manifest_path.exists():
+        print(f"\n❌ CBSP21 GATE FAIL: Missing manifest at {manifest_path}")
+        print("   PRs changing code must include a patch_input.json manifest.")
+        print("   See .cbsp21/patch_input.json.example for template.")
+        return 1
+
+    try:
+        manifest: Dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"❌ CBSP21 GATE FAIL: Invalid manifest: {e}")
+        return 1
+
+    # Check that all code files are declared in manifest
+    declared_paths = {cf["path"] for cf in manifest.get("changed_files", [])}
+    missing = [f for f in code_files if f not in declared_paths]
+
+    if missing:
+        print(f"\n❌ CBSP21 GATE FAIL: Changed files not declared in manifest:")
+        for m in missing:
+            print(f"  - {m}")
+        return 1
+
+    # Check coverage per file
+    violations: List[str] = []
+    for cf in manifest.get("changed_files", []):
+        path = cf.get("path", "")
+        cov = cf.get("coverage_percent", 0)
+        if cov is None:
+            cov = 0
+        cov_ratio = cov / 100.0 if cov > 1 else cov
+
+        if path in code_files and cov_ratio < min_coverage:
+            violations.append(f"{path}: {cov_ratio*100:.1f}% < {min_coverage*100:.1f}%")
+
+    if violations:
+        print(f"\n❌ CBSP21 GATE FAIL: Coverage below threshold ({min_coverage*100:.0f}%):")
+        for v in violations:
+            print(f"  - {v}")
+        return 1
+
+    overall = manifest.get("overall_coverage", 100)
+    print(f"\n✅ CBSP21 GATE PASS: All code files declared with sufficient coverage.")
+    print(f"   Overall coverage: {overall}%")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+### 23.3 CI Workflow: `cbsp21_gate.yml`
+
+**Path:** `.github/workflows/cbsp21_gate.yml`
+
+```yaml
+name: CBSP21 PR Gate
+
+on:
+  pull_request:
+    paths:
+      - "services/**"
+      - "packages/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+
+jobs:
+  cbsp21-pr-gate:
+    runs-on: ubuntu-latest
+
+    env:
+      CBSP21_MIN_COVERAGE: "0.95"
+      CBSP21_MANIFEST_PATH: ".cbsp21/patch_input.json"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for git diff
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: CBSP21 PR Gate Check
+        run: python scripts/ci/check_cbsp21_gate.py
+```
+
+### 23.4 Workflow Integration
+
+When contributing code changes:
+
+1. **Before PR:** Create `.cbsp21/patch_input.json` declaring:
+   - Changed files
+   - Sources scanned (context gathered)
+   - Coverage percentages
+
+2. **On PR:** CI runs `check_cbsp21_gate.py`:
+   - Validates manifest exists
+   - Confirms all changed code files are declared
+   - Enforces coverage threshold per file
+
+3. **On Failure:** Either:
+   - Add missing context scans and update manifest
+   - Or request exemption via documented exception process (Section 14)
+
+### 23.5 Exemptions
+
+Some PRs legitimately don't need full coverage validation:
+- Pure documentation changes (`.md`, `.txt`)
+- Auto-generated files (declared in `.cbsp21/exemptions.json`)
+- Emergency hotfixes (require post-merge audit)
+
+To exempt specific paths, add to `.cbsp21/exemptions.json`:
+
+```json
+{
+  "exempt_patterns": [
+    "**/*.generated.ts",
+    "**/migrations/**",
+    "docs/**"
+  ]
+}
+```
+
+---
+
 **End of CBSP21**
+
