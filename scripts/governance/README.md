@@ -44,3 +44,31 @@ Run locally (API must be running on 127.0.0.1:8000):
 ```bash
 python scripts/governance/check_artifact_linkage_invariants.py
 ```
+
+---
+
+## RunArtifact Contract Validator
+
+Script:
+- `scripts/governance/validate_run_artifact_contract.py`
+
+What it does:
+- Fetches artifacts from GET /api/rmos/runs
+- Validates required index_meta keys:
+  - tool_kind, batch_label, session_id
+- Validates parent linkage invariants based on artifact kind:
+  - plans link to spec
+  - decisions link to plan
+  - executions/toolpaths link to decision
+
+Examples:
+
+Validate latest N artifacts:
+```bash
+CONTRACT_LIMIT=200 python scripts/governance/validate_run_artifact_contract.py
+```
+
+Validate a specific session/batch:
+```bash
+CONTRACT_SESSION_ID=sess123 CONTRACT_BATCH_LABEL=mybatch python scripts/governance/validate_run_artifact_contract.py
+```
