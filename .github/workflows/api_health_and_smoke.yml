@@ -43,6 +43,7 @@ jobs:
           else
             echo "No requirements file found. Installing minimal deps."
             pip install fastapi uvicorn "pydantic>=2" requests
+          fi
 
       # (Optional) Reuse your existing health target; doesn't fail the build if missing
       - name: Run API health (best-effort)
