@@ -393,6 +393,36 @@ export async function promoteAdvisoryVariant(
   return { ...data, requestId: reqId(response) };
 }
 
+/** Bulk review advisory variants with shared reason (e.g., bulk reject) */
+export type BulkReviewAdvisoryVariantsRequest = {
+  advisory_ids: string[];
+  rejected?: boolean | null;
+  rejection_reason_code?: RejectReasonCode | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+  status?: VariantStatus | null;
+  rating?: number | null;
+  notes?: string | null;
+};
+
+export type BulkReviewAdvisoryVariantsResponse = {
+  updated_count: number;
+  advisory_ids: string[];
+};
+
+export async function bulkReviewAdvisoryVariants(
+  runId: string,
+  payload: BulkReviewAdvisoryVariantsRequest,
+  opts?: ApiFetchOptions
+): Promise<BulkReviewAdvisoryVariantsResponse & { requestId: string }> {
+  const { data, response } = await postRaw<BulkReviewAdvisoryVariantsResponse>(
+    `/rmos/runs/${enc(runId)}/advisory/bulk-review`,
+    payload,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
 // ---------------------------------------------------------------------------
 // Advisory Blobs (CAS)
 // ---------------------------------------------------------------------------
