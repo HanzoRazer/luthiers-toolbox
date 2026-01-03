@@ -205,7 +205,7 @@ PY
 
       # ---------- Notifications (optional) ----------
       - name: Slack notify on failure
-        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -218,7 +218,7 @@ PY
             Branch: ${{ github.ref_name }}
 
       - name: Email notify on failure
-        if: failure() && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.MAIL_TO != ''
+        if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
