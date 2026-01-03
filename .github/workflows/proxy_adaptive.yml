@@ -55,7 +55,7 @@ jobs:
           mkdir -p services/api/app/data
           chmod 777 services/api/app/data
           touch services/api/app/data/runs.json
-          echo "[]" > services/api/app/data/runs.json
+          echo "{}" > services/api/app/data/runs.json
           chmod 666 services/api/app/data/runs.json
 
       - name: Up stack (with proxy profile)
