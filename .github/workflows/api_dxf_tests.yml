@@ -20,6 +20,8 @@ jobs:
   dxf-smoke-tests:
     name: DXF Export Smoke Tests
     runs-on: ubuntu-latest
+    env:
+      API_BASE: $API_BASE
     
     steps:
       - name: Checkout repository
@@ -47,17 +49,17 @@ jobs:
       
       - name: Test server health
         run: |
-          curl -f http://localhost:8000/health || exit 1
+          curl -f $API_BASE/health || exit 1
           echo "✅ Server health check passed"
       
       - name: Test DXF health endpoint
         run: |
-          curl -f http://localhost:8000/exports/dxf/health || exit 1
+          curl -f $API_BASE/exports/dxf/health || exit 1
           echo "✅ DXF health check passed"
       
       - name: Test polyline DXF export
         run: |
-          curl -X POST http://localhost:8000/exports/polyline_dxf \
+          curl -X POST $API_BASE/exports/polyline_dxf \
             -H "Content-Type: application/json" \
             -d '{
               "polyline": {
@@ -103,7 +105,7 @@ jobs:
       
       - name: Test bi-arc DXF export
         run: |
-          curl -X POST http://localhost:8000/exports/biarc_dxf \
+          curl -X POST $API_BASE/exports/biarc_dxf \
             -H "Content-Type: application/json" \
             -d '{
               "p0": [0, 0],
@@ -160,7 +162,7 @@ jobs:
       - name: Test error handling (invalid data)
         run: |
           # Should return 422 for validation error
-          STATUS=$(curl -X POST http://localhost:8000/exports/polyline_dxf \
+          STATUS=$(curl -X POST $API_BASE/exports/polyline_dxf \
             -H "Content-Type: application/json" \
             -d '{"polyline": {"points": "invalid"}, "layer": "BAD"}' \
             -o /dev/null \
@@ -177,7 +179,7 @@ jobs:
       - name: Test export history (Patch A)
         run: |
           # Test history list endpoint
-          curl -f http://localhost:8000/exports/history?limit=5 \
+          curl -f $API_BASE/exports/history?limit=5 \
             -H "Accept: application/json" \
             -o history.json \
             --silent \
@@ -195,7 +197,7 @@ jobs:
           FIRST_ID=$(cat history.json | jq -r '.items[0].id // empty')
           if [ ! -z "$FIRST_ID" ]; then
             echo "Testing retrieval of export $FIRST_ID"
-            curl -f "http://localhost:8000/exports/history/$FIRST_ID" \
+            curl -f "$API_BASE/exports/history/$FIRST_ID" \
               -H "Accept: application/json" || true
           fi
       
@@ -268,14 +270,14 @@ jobs:
       - name: Test DXF exports through Docker
         run: |
           # Polyline export
-          docker compose exec -T api curl -X POST http://localhost:8000/exports/polyline_dxf \
+          docker compose exec -T api curl -X POST $API_BASE/exports/polyline_dxf \
             -H "Content-Type: application/json" \
             -d '{"polyline": {"points": [[0,0], [200,0], [200,100]]}, "layer": "DOCKER_TEST"}' \
             --output /tmp/docker_poly.dxf \
             --fail
           
           # Bi-arc export
-          docker compose exec -T api curl -X POST http://localhost:8000/exports/biarc_dxf \
+          docker compose exec -T api curl -X POST $API_BASE/exports/biarc_dxf \
             -H "Content-Type: application/json" \
             -d '{"p0": [0,0], "t0": [1,0], "p1": [150,75], "t1": [0,1], "layer": "DOCKER_ARC"}' \
             --output /tmp/docker_biarc.dxf \

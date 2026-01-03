@@ -1,0 +1,18 @@
+# Temporary ignore list for API base URL migration
+# These files use local variables (e.g., $ApiBase in PowerShell) instead of env vars
+# TODO: Refactor to use job-level API_BASE env var
+
+adaptive_pocket.yml
+api_pytest.yml
+artifact_linkage_gate.yml
+blueprint_phase3.yml
+cam_gcode_smoke.yml
+comparelab-golden.yml
+core_ci.yml
+geometry_parity.yml
+helical_badges.yml
+rmos_ci.yml
+routing_truth.yml
+run_artifact_contract_gate.yml
+sdk_codegen.yml
+server-env-check.yml

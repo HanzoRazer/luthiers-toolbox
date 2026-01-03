@@ -3,6 +3,8 @@ on: [push, pull_request]
 jobs:
   api-smoke:
     runs-on: ubuntu-latest
+    env:
+      API_BASE: http://127.0.0.1:8000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -16,14 +18,15 @@ jobs:
         run: |
           cd services/api
           uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          for i in $(seq 1 30); do curl -sSf http://127.0.0.1:8000/health >/dev/null && exit 0 || sleep 1; done
+          for i in $(seq 1 30); do curl -sSf $API_BASE/health >/dev/null && exit 0 || sleep 1; done
           echo "server not up"; exit 1
       - name: Simulate sample
         run: |
           python - <<'PY'
           import urllib.request, json
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG2 X60 Y40 I0 J20\nG0 Z5\n"
-          req = urllib.request.Request("http://127.0.0.1:8000/api/sim/cam/simulate_gcode", data=json.dumps({"gcode":gcode}).encode(), headers={"Content-Type":"application/json"})
+          import os
+          req = urllib.request.Request(f"{os.environ['API_BASE']}/api/sim/cam/simulate_gcode", data=json.dumps({"gcode":gcode}).encode(), headers={"Content-Type":"application/json"})
           resp = urllib.request.urlopen(req)
           print(resp.read().decode())
           modal = resp.headers.get("X-CAM-Modal")
@@ -31,4 +34,4 @@ jobs:
           PY
       - name: Tooling endpoints
         run: |
-          curl -sSf http://127.0.0.1:8000/api/tooling/posts | jq '.'
+          curl -sSf $API_BASE/api/tooling/posts | jq '.'
