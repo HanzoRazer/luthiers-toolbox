@@ -119,6 +119,7 @@ _log_handler.setFormatter(logging.Formatter(LOG_FORMAT))
 _log_handler.addFilter(RequestIdFilter())
 
 _root_logger = logging.getLogger()
+_log = logging.getLogger(__name__)  # Module-level logger for import warnings
 # Avoid duplicating handlers on reload
 if not any(isinstance(h, logging.StreamHandler) for h in _root_logger.handlers):
     _root_logger.addHandler(_log_handler)
@@ -173,8 +174,14 @@ from .routers.dxf_plan_router import router as dxf_plan_router
 # =============================================================================
 # BLUEPRINT IMPORT (2 routers)
 # Note: blueprint_router now gracefully degrades if analyzer deps missing
+# Optional: AI deps may not be installed in minimal deployments
 # =============================================================================
-from .routers.blueprint_router import router as blueprint_router
+try:
+    from .routers.blueprint_router import router as blueprint_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: blueprint_router (%s)", e)
+    blueprint_router = None
+
 from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
 
 # =============================================================================
@@ -206,34 +213,29 @@ from .saw_lab.batch_router import router as saw_batch_router
 # SPECIALTY MODULES - Guitar-specific calculators (4 routers)
 # Optional: these may be missing in minimal deployments
 # =============================================================================
-# SPECIALTY MODULES (4 routers) - OPTIONAL
-# These routers are optional - endpoints won't mount if modules are missing
-# =============================================================================
-_log = logging.getLogger(__name__)
-
 try:
     from .routers.archtop_router import router as archtop_router
 except ImportError as e:
+    _log.warning("Optional router unavailable: archtop_router (%s)", e)
     archtop_router = None
-    _log.warning("Optional router archtop_router not available: %s", e)
 
 try:
     from .routers.stratocaster_router import router as stratocaster_router
 except ImportError as e:
+    _log.warning("Optional router unavailable: stratocaster_router (%s)", e)
     stratocaster_router = None
-    _log.warning("Optional router stratocaster_router not available: %s", e)
 
 try:
     from .routers.smart_guitar_router import router as smart_guitar_router
 except ImportError as e:
+    _log.warning("Optional router unavailable: smart_guitar_router (%s)", e)
     smart_guitar_router = None
-    _log.warning("Optional router smart_guitar_router not available: %s", e)
 
 try:
     from .routers.om_router import router as om_router
 except ImportError as e:
+    _log.warning("Optional router unavailable: om_router (%s)", e)
     om_router = None
-    _log.warning("Optional router om_router not available: %s", e)
 
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
@@ -283,7 +285,7 @@ from .routers.rosette_photo_router import router as rosette_photo_router
 try:
     from ._experimental.ai_cam_router import router as ai_cam_router
 except ImportError as e:
-    print(f"Warning: AI-CAM router not available: {e}")
+    _log.warning("Optional router unavailable: ai_cam_router (%s)", e)
     ai_cam_router = None
 from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
 from .routers.cam_roughing_router import router as cam_roughing_router
@@ -293,7 +295,7 @@ from .routers.dxf_preflight_router import router as dxf_preflight_router
 try:
     from ._experimental.joblog_router import router as joblog_router
 except ImportError as e:
-    print(f"Warning: JobLog router not available: {e}")
+    _log.warning("Optional router unavailable: joblog_router (%s)", e)
     joblog_router = None
 from .routers.neck_router import router as neck_router
 from .routers.parametric_guitar_router import router as parametric_guitar_router
@@ -309,12 +311,12 @@ from .routers.job_risk_router import router as job_risk_router
 try:
     from .routers.learn_router import router as learn_router
 except ImportError as e:
-    print(f"Warning: Learn router not available (cnc_production in _experimental): {e}")
+    _log.warning("Optional router unavailable: learn_router (%s)", e)
     learn_router = None
 try:
     from .routers.learned_overrides_router import router as learned_overrides_router
 except ImportError as e:
-    print(f"Warning: Learned overrides router not available (cnc_production in _experimental): {e}")
+    _log.warning("Optional router unavailable: learned_overrides_router (%s)", e)
     learned_overrides_router = None
 from .routers.cam_backup_router import router as cam_backup_router
 
@@ -324,19 +326,19 @@ from .routers.cam_backup_router import router as cam_backup_router
 try:
     from .routers.analytics_router import router as analytics_router
 except ImportError as e:
-    print(f"Warning: Analytics router not available (analytics module missing): {e}")
+    _log.warning("Optional router unavailable: analytics_router (%s)", e)
     analytics_router = None
 try:
     from .routers.advanced_analytics_router import router as advanced_analytics_router
 except ImportError as e:
-    print(f"Warning: Advanced analytics router not available (analytics module missing): {e}")
+    _log.warning("Optional router unavailable: advanced_analytics_router (%s)", e)
     advanced_analytics_router = None
 from .routers.probe_router import router as probe_router
 from .routers.ltb_calculator_router import router as ltb_calculator_router
 try:
     from .routers.dashboard_router import router as dashboard_router
 except ImportError as e:
-    print(f"Warning: Dashboard router not available (cnc_production in _experimental): {e}")
+    _log.warning("Optional router unavailable: dashboard_router (%s)", e)
     dashboard_router = None
 from .routers.cam_settings_router import router as cam_settings_router
 from .routers.cam_biarc_router import router as cam_biarc_router
@@ -385,34 +387,34 @@ _RMOS_RUNS_V2_ENABLED = os.getenv("RMOS_RUNS_V2_ENABLED", "true").lower() == "tr
 if _RMOS_RUNS_V2_ENABLED:
     try:
         from .rmos.runs_v2.api_runs import router as rmos_runs_router
-        print("RMOS Runs: Using v2 (governance-compliant, date-partitioned)")
+        _log.info("RMOS Runs: Using v2 (governance-compliant, date-partitioned)")
     except ImportError as e:
-        print(f"Warning: RMOS Runs v2 router not available: {e}")
+        _log.warning("Optional router unavailable: rmos_runs_router v2 (%s)", e)
         rmos_runs_router = None
 else:
     try:
         from .rmos.runs.api_runs import router as rmos_runs_router
-        print("RMOS Runs: Using v1 (legacy single-file)")
+        _log.info("RMOS Runs: Using v1 (legacy single-file)")
     except ImportError as e:
-        print(f"Warning: RMOS Runs router not available: {e}")
+        _log.warning("Optional router unavailable: rmos_runs_router v1 (%s)", e)
         rmos_runs_router = None
 
 try:
     from ._experimental.ai_graphics.api.vision_routes import router as vision_router
 except ImportError as e:
-    print(f"Warning: Vision Engine router not available: {e}")
+    _log.warning("Optional router unavailable: vision_router (%s)", e)
     vision_router = None
 
 try:
     from ._experimental.ai_graphics.api.advisory_routes import router as advisory_router
 except ImportError as e:
-    print(f"Warning: Advisory router not available: {e}")
+    _log.warning("Optional router unavailable: advisory_router (%s)", e)
     advisory_router = None
 
 try:
     from ._experimental.ai_graphics.api.teaching_routes import router as teaching_router
 except ImportError as e:
-    print(f"Warning: Teaching Loop router not available: {e}")
+    _log.warning("Optional router unavailable: teaching_router (%s)", e)
     teaching_router = None
 
 # =============================================================================
@@ -422,31 +424,31 @@ except ImportError as e:
 try:
     from .art_studio.api.pattern_routes import router as art_patterns_router
 except ImportError as e:
-    print(f"Warning: Art Studio Pattern router not available: {e}")
+    _log.warning("Optional router unavailable: art_patterns_router (%s)", e)
     art_patterns_router = None
 
 try:
     from .art_studio.api.generator_routes import router as art_generators_router
 except ImportError as e:
-    print(f"Warning: Art Studio Generator router not available: {e}")
+    _log.warning("Optional router unavailable: art_generators_router (%s)", e)
     art_generators_router = None
 
 try:
     from .art_studio.api.preview_routes import router as art_preview_router
 except ImportError as e:
-    print(f"Warning: Art Studio Preview router not available: {e}")
+    _log.warning("Optional router unavailable: art_preview_router (%s)", e)
     art_preview_router = None
 
 try:
     from .art_studio.api.snapshot_routes import router as art_snapshots_router
 except ImportError as e:
-    print(f"Warning: Art Studio Snapshot router not available: {e}")
+    _log.warning("Optional router unavailable: art_snapshots_router (%s)", e)
     art_snapshots_router = None
 
 try:
     from .art_studio.api.workflow_routes import router as art_workflow_router
 except ImportError as e:
-    print(f"Warning: Art Studio Workflow router not available: {e}")
+    _log.warning("Optional router unavailable: art_workflow_router (%s)", e)
     art_workflow_router = None
 
 # =============================================================================
@@ -456,25 +458,25 @@ except ImportError as e:
 try:
     from .rmos.api.rmos_feasibility_router import router as rmos_feasibility_router
 except ImportError as e:
-    print(f"Warning: RMOS Feasibility router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_feasibility_router (%s)", e)
     rmos_feasibility_router = None
 
 try:
     from .rmos.api.rmos_toolpaths_router import router as rmos_toolpaths_router
 except ImportError as e:
-    print(f"Warning: RMOS Toolpaths router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_toolpaths_router (%s)", e)
     rmos_toolpaths_router = None
 
 try:
     from .rmos.api.rmos_runs_router import router as rmos_runs_api_router
 except ImportError as e:
-    print(f"Warning: RMOS Runs API router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_runs_api_router (%s)", e)
     rmos_runs_api_router = None
 
 try:
     from .rmos.api.rmos_workflow_router import router as rmos_workflow_router
 except ImportError as e:
-    print(f"Warning: RMOS Workflow router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_workflow_router (%s)", e)
     rmos_workflow_router = None
 
 # =============================================================================
@@ -483,7 +485,7 @@ except ImportError as e:
 try:
     from .workflow.sessions.routes import router as workflow_sessions_router
 except ImportError as e:
-    print(f"Warning: Workflow Sessions router not available: {e}")
+    _log.warning("Optional router unavailable: workflow_sessions_router (%s)", e)
     workflow_sessions_router = None
 
 # =============================================================================
@@ -492,28 +494,28 @@ except ImportError as e:
 # =============================================================================
 try:
     from .cam.routers import cam_router
-    print("CAM Router: Using consolidated aggregator (Phase 5+6)")
+    _log.info("CAM Router: Using consolidated aggregator (Phase 5+6)")
 except ImportError as e:
-    print(f"Warning: Consolidated CAM router not available: {e}")
+    _log.warning("Optional router unavailable: cam_router (%s)", e)
     cam_router = None
 
 # Phase 5: Consolidated Art Studio rosette routes
 try:
     from .art_studio.api.rosette_jobs_routes import router as rosette_jobs_router
 except ImportError as e:
-    print(f"Warning: Rosette Jobs router not available: {e}")
+    _log.warning("Optional router unavailable: rosette_jobs_router (%s)", e)
     rosette_jobs_router = None
 
 try:
     from .art_studio.api.rosette_compare_routes import router as rosette_compare_router
 except ImportError as e:
-    print(f"Warning: Rosette Compare router not available: {e}")
+    _log.warning("Optional router unavailable: rosette_compare_router (%s)", e)
     rosette_compare_router = None
 
 try:
     from .art_studio.api.rosette_pattern_routes import router as rosette_pattern_router_v2
 except ImportError as e:
-    print(f"Warning: Rosette Pattern v2 router not available: {e}")
+    _log.warning("Optional router unavailable: rosette_pattern_router_v2 (%s)", e)
     rosette_pattern_router_v2 = None
 
 # =============================================================================
@@ -522,9 +524,9 @@ except ImportError as e:
 # =============================================================================
 try:
     from .compare.routers import compare_router
-    print("Compare Router: Using consolidated aggregator (Wave 19)")
+    _log.info("Compare Router: Using consolidated aggregator (Wave 19)")
 except ImportError as e:
-    print(f"Warning: Consolidated Compare router not available: {e}")
+    _log.warning("Optional router unavailable: compare_router (%s)", e)
     compare_router = None
 
 # =============================================================================
@@ -632,8 +634,9 @@ app.include_router(adaptive_preview_router, prefix="/api/cam/adaptive-preview", 
 app.include_router(pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"])
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
-# Blueprint (2)
-app.include_router(blueprint_router, prefix="/api")  # Router has /blueprint prefix internally
+# Blueprint (2) - blueprint_router is optional (AI deps may be missing)
+if blueprint_router:
+    app.include_router(blueprint_router, prefix="/api")  # Router has /blueprint prefix internally
 app.include_router(blueprint_cam_bridge_router, prefix="/api/blueprint/cam", tags=["Blueprint CAM Bridge"])
 
 # Machine & Post Configuration (3)
@@ -828,19 +831,19 @@ if compare_router:
 try:
     from .art_studio.api.rosette_feasibility_routes import router as art_feasibility_router
 except ImportError as e:
-    print(f"Warning: Art Studio Feasibility router not available: {e}")
+    _log.warning("Optional router unavailable: art_feasibility_router (%s)", e)
     art_feasibility_router = None
 
 try:
     from .art_studio.api.rosette_snapshot_routes import router as art_snapshot_router
 except ImportError as e:
-    print(f"Warning: Art Studio Snapshot (v2) router not available: {e}")
+    _log.warning("Optional router unavailable: art_snapshot_router (%s)", e)
     art_snapshot_router = None
 
 try:
     from .rmos.api.logs_routes import router as rmos_logs_v2_router
 except ImportError as e:
-    print(f"Warning: RMOS Logs v2 router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_logs_v2_router (%s)", e)
     rmos_logs_v2_router = None
 
 # =============================================================================
@@ -850,7 +853,7 @@ except ImportError as e:
 try:
     from .rmos.acoustics.router import router as rmos_acoustics_router
 except ImportError as e:
-    print(f"Warning: RMOS Acoustics router not available: {e}")
+    _log.warning("Optional router unavailable: rmos_acoustics_router (%s)", e)
     rmos_acoustics_router = None
 
 # Wave 20: Art Studio Run Orchestration (3)
