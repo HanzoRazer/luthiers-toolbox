@@ -82,6 +82,16 @@ export async function apiFetchRaw<T>(
 }
 
 /**
+ * GET request helper (raw variant)
+ */
+export function getRaw<T>(
+  path: string,
+  opts?: ApiFetchOptions
+): Promise<{ data: T; response: Response }> {
+  return apiFetchRaw<T>(path, { method: "GET" }, opts);
+}
+
+/**
  * POST request helper (raw variant)
  */
 export function postRaw<T>(
