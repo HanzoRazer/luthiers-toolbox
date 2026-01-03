@@ -18,7 +18,7 @@ jobs:
       ROUTING_TRUTH_WARN_ON_UNDOC: "true"
       ROUTING_TRUTH_FAIL_ON_UNDOC: "false"
       ROUTING_TRUTH_API_URL: "http://127.0.0.1:8000"
-      ROUTING_TRUTH_TRUTH_FILE: "services/api/app/data/endpoint_truth.json"
+      ROUTING_TRUTH_TRUTH_FILE: "app/data/endpoint_truth.json"
       # Optional override if your endpoint differs:
       # ROUTING_TRUTH_ENDPOINT_PATH: "/api/_meta/routing-truth"
 
