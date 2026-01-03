@@ -115,7 +115,10 @@ jobs:
               -H 'Content-Type: application/json' \
               --data-binary @pocket_plan.json
             echo ""
-            echo "Checking nginx logs..."
+            echo "=== API Container Logs ==="
+            docker compose logs api --tail=100 || true
+            echo ""
+            echo "=== Nginx Proxy Logs ==="
             docker compose logs proxy --tail=50 || true
             exit 1
           fi
