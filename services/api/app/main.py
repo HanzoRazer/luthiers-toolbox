@@ -541,6 +541,19 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+
+def create_app() -> FastAPI:
+    """
+    Factory function for creating the FastAPI application.
+
+    Returns the module-level app singleton. This is used by tests that
+    expect a factory pattern (e.g., TestClient(create_app())).
+
+    Note: The app is configured at module load time, so this function
+    simply returns the already-configured app instance.
+    """
+    return app
+
 # Request ID middleware - MUST be registered FIRST (before CORS)
 # Provides request correlation for logging, auditing, and debugging
 app.add_middleware(RequestIdMiddleware)
