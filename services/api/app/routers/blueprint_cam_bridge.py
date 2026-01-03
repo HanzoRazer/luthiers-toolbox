@@ -501,7 +501,7 @@ from ..cam.contour_reconstructor import reconstruct_contours_from_dxf
 from ..cam.dxf_preflight import DXFPreflight, PreflightReport, generate_html_report
 from ..util.units import scale_geom_units
 
-router = APIRouter(prefix="/cam/blueprint", tags=["blueprint-cam-bridge"])
+router = APIRouter(tags=["blueprint-cam-bridge"])
 
 # =============================================================================
 # REQUEST/RESPONSE MODELS (PYDANTIC SCHEMAS)
