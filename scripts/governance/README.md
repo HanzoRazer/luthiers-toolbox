@@ -20,3 +20,27 @@ Tune:
 - `LEGACY_USAGE_BUDGET=0` to require **zero** legacy usage
 - `LEGACY_SCAN_PATHS=packages/client/src,packages/sdk` to narrow scope
 - `LEGACY_IGNORE_GLOBS=**/generated/**,**/fixtures/**` to silence known safe areas
+
+---
+
+## Artifact Linkage Invariants Gate (OPERATION lane)
+
+Script:
+- `scripts/governance/check_artifact_linkage_invariants.py`
+
+What it does:
+- Creates a minimal Saw batch flow via HTTP:
+  - spec → plan → approve → toolpaths → job-log
+- Queries `/api/rmos/runs?session_id=...&batch_label=...`
+- Validates:
+  - required `index_meta`: `tool_kind`, `batch_label`, `session_id`
+  - parent linkage invariants:
+    - plan.parent == spec
+    - decision.parent == plan
+    - execution.parent == decision
+
+Run locally (API must be running on 127.0.0.1:8000):
+
+```bash
+python scripts/governance/check_artifact_linkage_invariants.py
+```
