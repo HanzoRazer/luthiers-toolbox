@@ -513,6 +513,48 @@ pytest tests/test_runs_filter_by_batch_label.py -v
 
 ---
 
+### 2026-01-03: Adaptive Pocket CI Pipeline Fixed
+
+**Adaptive Pocket (API) workflow now passing after three fixes:**
+
+**Issues Fixed:**
+
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| heat_timeseries 404 | Test used `machine_profile_id: "default"` which doesn't exist | Changed to `"GRBL_3018_Default"` |
+| Bottleneck CSV validation | `split('
+')` doesn't handle CRLF from Python csv module | Changed to `splitlines()` with `rstrip()` |
+| Logs write 500 | `limit` is SQL reserved keyword + DDL not run if DB exists | Quoted `"limit"` column, always run DDL |
+
+**Files Modified:**
+
+| File | Change |
+|------|--------|
+| `.github/workflows/adaptive_pocket.yml` | Fixed machine_profile_id, CRLF handling |
+| `services/api/app/telemetry/cam_logs.py` | Quoted `"limit"` column, idempotent schema creation |
+
+**Key Patterns Established:**
+
+1. **SQL Reserved Keywords**: Always quote column names that are SQL reserved words (`limit`, `order`, `group`, etc.)
+2. **CSV Line Endings**: Python's `csv.writer` uses CRLF (`
+`) by default - use `splitlines()` for cross-platform parsing
+3. **Idempotent DDL**: Always run `CREATE TABLE IF NOT EXISTS` on database open, not just for new files
+
+**CI Status After Fix:**
+
+| Workflow | Status | Notes |
+|----------|--------|-------|
+| Adaptive Pocket (API) | ✅ Pass | All M.3/M.4 tests passing |
+
+**Metrics Update:**
+
+| Component | Previous | Current | Change |
+|-----------|----------|---------|--------|
+| CI/CD Workflows | 70% | 75% | +5% |
+| **Overall Readiness** | 88-90% | **90-92%** | +2% |
+
+---
+
 ### 2026-01-02: PR #3 CI Pipeline Fixes (feature/cnc-saw-labs)
 
 **PR #3 Merged Successfully**

@@ -1,6 +1,6 @@
 # Luthier's ToolBox Router Roadmap
 
-**Last Updated:** 2026-01-02
+**Last Updated:** 2026-01-03
 **Total Routers:** ~116 working routers organized across 22 waves
 **Status:** All previously-broken routers (9) fixed; 84 phantom imports removed
 **Governance:** Legacy routes tagged for deprecation tracking (see Canonical vs Legacy section)  
@@ -747,6 +747,34 @@ from rmos.pipeline import (
 ---
 
 ## Change Log
+
+### 2026-01-03: Adaptive Pocket CI Fixes
+
+**Telemetry Router Fix (`cam_logs_router`):**
+
+| Issue | Resolution |
+|-------|------------|
+| `/api/cam/logs/write` returning 500 | Fixed SQLite schema issues in `cam_logs.py` |
+| `limit` column causing SQL errors | Quoted as `"limit"` (SQL reserved keyword) |
+| Tables missing if DB file exists | `open_db()` now always runs DDL |
+
+**CI Workflow Fixes (`adaptive_pocket.yml`):**
+
+| Test | Issue | Fix |
+|------|-------|-----|
+| M.3 heat_timeseries | 404 "profile not found" | Changed `machine_profile_id` from `"default"` to `"GRBL_3018_Default"` |
+| M.3 bottleneck CSV | CRLF line endings | Changed `split('
+')` to `splitlines()` |
+| M.4 logs write | 500 error | Fixed SQLite issues (see above) |
+
+**Valid Machine Profile IDs:**
+
+Tests must use profiles from `assets/machine_profiles.json`:
+- `GRBL_3018_Default`
+- `Mach4_Router_4x8`
+- `LinuxCNC_KneeMill`
+
+---
 
 ### 2026-01-02: PR #3 CI Fixes (feature/cnc-saw-labs merge)
 

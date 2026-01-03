@@ -261,6 +261,32 @@ curl http://localhost:8000/api/governance/stats
 
 ## 9. Change Log
 
+### 2026-01-03: Adaptive Pocket CI Fixes
+
+**Fixed Adaptive Pocket (API) workflow - now passing:**
+
+| Issue | File(s) | Resolution |
+|-------|---------|------------|
+| heat_timeseries 404 | `adaptive_pocket.yml` | Changed `machine_profile_id: "default"` → `"GRBL_3018_Default"` (profile didn't exist) |
+| Bottleneck CSV CRLF | `adaptive_pocket.yml` | Changed `split('
+')` → `splitlines()` to handle CRLF line endings |
+| Logs write 500 error | `cam_logs.py` | Quoted `limit` column (SQL reserved keyword), always run DDL on db open |
+
+**Files Modified:**
+
+| File | Change |
+|------|--------|
+| `.github/workflows/adaptive_pocket.yml` | Fixed machine_profile_id, CRLF handling |
+| `services/api/app/telemetry/cam_logs.py` | Quoted `"limit"` column, idempotent DDL |
+
+**CI Status After Fix:**
+
+| Workflow | Status |
+|----------|--------|
+| Adaptive Pocket (API) | ✅ Pass |
+
+---
+
 ### 2026-01-02: PR #3 CI Fixes (feature/cnc-saw-labs merge)
 
 **Critical CI Fixes:**
