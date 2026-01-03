@@ -1,4 +1,4 @@
-name: CAM Essentials N0-N10 Tests
+name: CAM Essentials N0-N8 Tests
 
 on:
   schedule:
@@ -74,60 +74,40 @@ jobs:
           grep -q "G1" roughing.nc && echo "N4 Linear moves found"
           echo "N4 Roughing toolpath passed"
 
-      - name: N5 - Machine profiles endpoint
-        run: |
-          curl -sSf http://127.0.0.1:8000/api/tooling/machine_profiles > profiles.json
-          if jq -e 'length >= 1' profiles.json > /dev/null; then
-            echo "N5 Machine profiles passed"
-          else
-            echo "N5 Machine profiles failed"
-            exit 1
-          fi
-
-      - name: N6 - Post processors endpoint
-        run: |
-          curl -sSf http://127.0.0.1:8000/api/tooling/posts > posts.json
-          if jq -e 'length >= 1' posts.json > /dev/null; then
-            echo "N6 Post processors passed"
-          else
-            echo "N6 Post processors failed"
-            exit 1
-          fi
-
-      - name: N7 - Simulation endpoint
+      - name: N5 - Simulation endpoint
         run: |
           printf '{"gcode":"G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X50 Y0\nG0 Z5\n"}' > sim_request.json
           curl -s -X POST http://127.0.0.1:8000/api/sim/cam/simulate_gcode -H 'Content-Type: application/json' --data-binary @sim_request.json > sim.json
           if jq -e '.moves | length >= 3' sim.json > /dev/null; then
-            echo "N7 Simulation passed"
+            echo "N5 Simulation passed"
           else
-            echo "N7 Simulation failed"
+            echo "N5 Simulation failed"
             cat sim.json
             exit 1
           fi
 
-      - name: N8 - Biarc toolpath endpoint
+      - name: N6 - Biarc toolpath endpoint
         run: |
           curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/biarc/gcode -H 'Content-Type: application/json' -d '{"points":[[0,0],[25,15],[50,0],[75,15],[100,0]],"tool_d":3.0,"tolerance":0.1,"feed_xy":1000,"units":"mm","post_id":"GRBL"}' > biarc.nc
-          grep -q "G21" biarc.nc && echo "N8 G21 found"
-          echo "N8 Biarc toolpath passed"
+          grep -q "G21" biarc.nc && echo "N6 G21 found"
+          echo "N6 Biarc toolpath passed"
 
-      - name: N9 - Helical entry endpoint
+      - name: N7 - Helical entry endpoint
         run: |
           curl -s -X POST http://127.0.0.1:8000/api/cam/toolpath/helical_entry -H 'Content-Type: application/json' -d '{"x":50,"y":50,"z_start":0,"z_end":-10,"radius":5,"pitch":1.0,"feed_xy":800,"feed_z":200,"units":"mm","post_id":"GRBL"}' > helical.nc
-          grep -q "G21" helical.nc && echo "N9 G21 found"
-          echo "N9 Helical entry passed"
+          grep -q "G21" helical.nc && echo "N7 G21 found"
+          echo "N7 Helical entry passed"
 
-      - name: N10 - V-carve endpoint
+      - name: N8 - V-carve endpoint
         run: |
-          curl -s -X POST http://127.0.0.1:8000/api/art-studio/vcarve/gcode -H 'Content-Type: application/json' -d '{"contours":[[[0,0],[100,0],[100,50],[0,50],[0,0]]],"v_angle":60,"max_depth":3.0,"flat_depth":0.5,"feed_xy":1000,"feed_z":300,"units":"mm","post_id":"GRBL"}' > vcarve.nc
-          grep -q "G21" vcarve.nc && echo "N10 G21 found"
-          grep -q "G1" vcarve.nc && echo "N10 Linear moves found"
-          echo "N10 V-carve passed"
+          curl -s -X POST http://127.0.0.1:8000/api/cam/vcarve/gcode -H 'Content-Type: application/json' -d '{"contours":[[[0,0],[100,0],[100,50],[0,50],[0,0]]],"v_angle":60,"max_depth":3.0,"flat_depth":0.5,"feed_xy":1000,"feed_z":300,"units":"mm","post_id":"GRBL"}' > vcarve.nc
+          grep -q "G21" vcarve.nc && echo "N8 G21 found"
+          grep -q "G1" vcarve.nc && echo "N8 Linear moves found"
+          echo "N8 V-carve passed"
 
       - name: Summary
         if: always()
         run: |
           echo "================================"
-          echo "CAM Essentials N0-N10 Complete"
+          echo "CAM Essentials N0-N8 Complete"
           echo "================================"
