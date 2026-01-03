@@ -79,7 +79,7 @@ jobs:
 
       # -------- Slack notification on failure (optional) --------
       - name: Slack notify on failure
-        if: ${{ failure() && secrets.SLACK_WEBHOOK_URL != '' }}
+        if: failure()
         env:
           WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
@@ -102,7 +102,7 @@ jobs:
 
       # -------- Email notification on failure (optional) --------
       - name: Email notify on failure
-        if: ${{ failure() && secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.ALERT_TO != '' && secrets.ALERT_FROM != '' }}
+        if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
