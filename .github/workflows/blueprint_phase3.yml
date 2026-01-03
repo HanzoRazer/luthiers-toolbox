@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - services/api/app/routers/blueprint_cam_bridge.py
-      - services/api/app/cam/dxf_preflight.py
-      - services/api/app/cam/contour_reconstructor.py
-      - services/api/app/routers/om_router.py
-      - services/api/tests/fixtures/dxf/**
-      - .github/workflows/blueprint_phase3.yml
+      - 'services/api/app/routers/blueprint_cam_bridge.py'
+      - 'services/api/app/cam/dxf_preflight.py'
+      - 'services/api/app/cam/contour_reconstructor.py'
+      - 'services/api/app/routers/om_router.py'
+      - 'services/api/tests/fixtures/dxf/**'
+      - '.github/workflows/blueprint_phase3.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -25,14 +25,13 @@ jobs:
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: '3.11'
       
       - name: Install dependencies
         run: |
-          cd services/api
           pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install python-multipart
+          pip install -r services/api/requirements.txt
+          pip install python-multipart requests
       
       - name: Start API server
         run: |
@@ -49,4 +48,8 @@ jobs:
       - name: Generate test summary
         if: always()
         run: |
-          echo "## Phase 3.2 Test Summary" >>           echo "" >>           echo "### DXF Fixtures Used:" >>           echo "- minimal.dxf" >>           echo "- contours_rectangle.dxf" >> 
+          echo "## Phase 3.2 Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### DXF Fixtures Used:" >> $GITHUB_STEP_SUMMARY
+          echo "- minimal.dxf" >> $GITHUB_STEP_SUMMARY
+          echo "- contours_rectangle.dxf" >> $GITHUB_STEP_SUMMARY
