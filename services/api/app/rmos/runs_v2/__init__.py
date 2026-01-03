@@ -48,6 +48,13 @@ from .schemas import (
     utc_now,
 )
 
+# Advisory variant rejection schemas
+from .schemas_advisory_reject import (
+    RejectReasonCode,
+    RejectVariantRequest,
+    AdvisoryVariantRejectionRecord,
+)
+
 # =============================================================================
 # Store Operations
 # =============================================================================
@@ -153,6 +160,10 @@ from .api_runs import router
 __all__ = [
     # Schemas
     "RunArtifact",
+    # Advisory Rejection
+    "RejectReasonCode",
+    "RejectVariantRequest",
+    "AdvisoryVariantRejectionRecord",
     "RunDecision",
     "Hashes",
     "RunOutputs",
