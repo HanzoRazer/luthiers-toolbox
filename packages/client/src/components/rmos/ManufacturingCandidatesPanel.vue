@@ -235,7 +235,30 @@ function auditHoverText(c: ManufacturingCandidate): string {
   if (rec.decided_by) lines.push(`By: ${rec.decided_by}`);
   if (rec.decided_at_utc) lines.push(`At: ${rec.decided_at_utc}`);
   if (rec.note) lines.push(`Note: ${rec.note}`);
+
+  // Full decision history (if present)
+  const hist = (c as any).decision_history as any[] | null | undefined;
+  if (hist && hist.length > 0) {
+    lines.push("");
+    lines.push("History:");
+    hist.forEach((h: any, idx: number) => {
+      const d = h?.decision ?? "";
+      const by = h?.decided_by ?? "";
+      const at = fmtUtc(h?.decided_at_utc ?? null);
+      const note = (h?.note ?? "").toString().trim();
+      const noteShort = note.length > 80 ? note.slice(0, 80) + "…" : note;
+      const entry = `${idx + 1}. ${d}${by ? ` (${by})` : ""}${at !== "—" ? ` @ ${at}` : ""}${noteShort ? ` — ${noteShort}` : ""}`;
+      lines.push(entry.trim());
+    });
+  }
+
   return lines.join("\n");
+}
+
+// Migration lock: only allow note edits AFTER a decision exists
+function canEditNote(c: ManufacturingCandidate): boolean {
+  const d = decisionOf(c);
+  return d !== null && d !== undefined && idOf(c).length > 0;
 }
 
 function compactDecisionLine(c: ManufacturingCandidate): string | null {
@@ -407,8 +430,9 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
               <div
                 v-if="compactDecisionLine(c) && noteEditFor !== idOf(c)"
                 class="audit-line clickable"
-                @click.stop="openNoteEditor(c)"
-                title="Click to edit decision note"
+                :class="{ disabled: !canEditNote(c) }"
+                @click.stop="canEditNote(c) && openNoteEditor(c)"
+                :title="canEditNote(c) ? 'Click to edit decision note' : 'Decide first (decision is null)'"
               >
                 {{ compactDecisionLine(c) }}
               </div>
@@ -416,8 +440,9 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
               <div
                 v-else-if="noteEditFor !== idOf(c)"
                 class="audit-line clickable subtle"
-                @click.stop="openNoteEditor(c)"
-                title="Click to add a decision note"
+                :class="{ disabled: !canEditNote(c) }"
+                @click.stop="canEditNote(c) && openNoteEditor(c)"
+                :title="canEditNote(c) ? 'Click to add a decision note' : 'Decide first (decision is null)'"
               >
                 + Add decision note…
               </div>
@@ -454,6 +479,8 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
             <span class="decision-badge" :class="statusClass(decisionOf(c))">
               {{ decisionOf(c) ?? "—" }}
             </span>
+            <!-- Audit hover icon (ⓘ) for decision history -->
+            <span class="audit-icon" :title="auditHoverText(c)">ⓘ</span>
             <span class="score-label" v-if="c.score != null">Score: {{ c.score }}</span>
           </div>
           <div class="row-meta subtle">
@@ -703,6 +730,24 @@ watch(() => props.runId, () => { clearCandidateSelection(); load(); });
 .decision-badge.none {
   background: #e9ecef;
   color: #6c757d;
+}
+
+/* Audit icon for decision history hover */
+.audit-icon {
+  margin-left: 0.35rem;
+  opacity: 0.6;
+  cursor: help;
+  user-select: none;
+  font-size: 0.85rem;
+}
+.audit-icon:hover {
+  opacity: 1;
+}
+
+/* Disabled state for edit when decision is null */
+.audit-line.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .score-label {
