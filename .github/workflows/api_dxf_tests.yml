@@ -262,20 +262,20 @@ jobs:
       
       - name: Build and start services
         run: |
-          docker compose up -d --build server
+          docker compose up -d --build api
           sleep 10  # Wait for server
       
       - name: Test DXF exports through Docker
         run: |
           # Polyline export
-          docker compose exec -T server curl -X POST http://localhost:8000/exports/polyline_dxf \
+          docker compose exec -T api curl -X POST http://localhost:8000/exports/polyline_dxf \
             -H "Content-Type: application/json" \
             -d '{"polyline": {"points": [[0,0], [200,0], [200,100]]}, "layer": "DOCKER_TEST"}' \
             --output /tmp/docker_poly.dxf \
             --fail
           
           # Bi-arc export
-          docker compose exec -T server curl -X POST http://localhost:8000/exports/biarc_dxf \
+          docker compose exec -T api curl -X POST http://localhost:8000/exports/biarc_dxf \
             -H "Content-Type: application/json" \
             -d '{"p0": [0,0], "t0": [1,0], "p1": [150,75], "t1": [0,1], "layer": "DOCKER_ARC"}' \
             --output /tmp/docker_biarc.dxf \
