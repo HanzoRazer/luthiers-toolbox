@@ -1,10 +1,8 @@
 name: API pytest
 
+# Deprecated: redundant with "API Tests" workflow. Manual only.
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   api-pytest:
