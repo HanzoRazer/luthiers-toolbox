@@ -20,11 +20,6 @@ jobs:
       ARTIFACT_GATE_BATCH_LABEL: "ci_artifact_linkage_batch"
       ARTIFACT_GATE_FAIL_FAST: "true"
       ARTIFACT_GATE_VERBOSE: "true"
-      # Deterministic isolation
-      RMOS_RUN_ATTACHMENTS_DIR: "${{ runner.temp }}/rmos_test_attachments"
-      RMOS_ARTIFACT_ROOT: "${{ runner.temp }}/rmos_artifacts"
-      SAW_LAB_LEARNED_OVERRIDES_PATH: "${{ runner.temp }}/saw_overrides.jsonl"
-      DATABASE_URL: "sqlite:///${{ runner.temp }}/artifact_linkage_ci.sqlite"
       # Optional hooks (safe to enable in CI)
       SAW_LAB_LEARNING_HOOK_ENABLED: "true"
       SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED: "true"
@@ -32,6 +27,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup temp directories
+        run: |
+          echo "RMOS_RUN_ATTACHMENTS_DIR=$RUNNER_TEMP/rmos_test_attachments" >> $GITHUB_ENV
+          echo "RMOS_ARTIFACT_ROOT=$RUNNER_TEMP/rmos_artifacts" >> $GITHUB_ENV
+          echo "SAW_LAB_LEARNED_OVERRIDES_PATH=$RUNNER_TEMP/saw_overrides.jsonl" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite:///$RUNNER_TEMP/artifact_linkage_ci.sqlite" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
