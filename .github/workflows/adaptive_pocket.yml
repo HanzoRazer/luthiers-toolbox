@@ -1086,7 +1086,7 @@ jobs:
             "feed_xy": 1200,
             "safe_z": 5,
             "z_rough": -1.5,
-            "machine_profile_id": "default"
+            "machine_profile_id": "GRBL_3018_Default"
           }
           req1 = urllib.request.Request(
             'http://localhost:8000/api/cam/pocket/adaptive/plan',
@@ -1099,7 +1099,7 @@ jobs:
           # Step 2: Call heat_timeseries
           body2 = {
             "moves": moves,
-            "machine_profile_id": "default",
+            "machine_profile_id": "GRBL_3018_Default",
             "material_id": "maple_hard",
             "tool_d": 6.0,
             "stepover": 0.45,
@@ -1159,7 +1159,7 @@ jobs:
             "feed_xy": 1200,
             "safe_z": 5,
             "z_rough": -1.5,
-            "machine_profile_id": "default"
+            "machine_profile_id": "GRBL_3018_Default"
           }
           req1 = urllib.request.Request(
             'http://localhost:8000/api/cam/pocket/adaptive/plan',
@@ -1172,7 +1172,7 @@ jobs:
           # Step 2: Call bottleneck_csv
           body2 = {
             "moves": moves,
-            "machine_profile_id": "default",
+            "machine_profile_id": "GRBL_3018_Default",
             "job_name": "test_pocket"
           }
           req2 = urllib.request.Request(
