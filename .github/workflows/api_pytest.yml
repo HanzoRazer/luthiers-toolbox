@@ -24,7 +24,7 @@ jobs:
 
       - name: Build & start server only
         run: |
-          docker compose up -d --build server
+          docker compose up -d --build api
           docker compose ps
 
       - name: Wait for /docs
@@ -81,7 +81,7 @@ jobs:
 
       - name: Show server logs on failure
         if: ${{ failure() }}
-        run: docker compose logs --no-color server
+        run: docker compose logs --no-color api
 
       - name: Tear down
         if: always()
