@@ -1,0 +1,20 @@
+{
+  "version": "1",
+  "routes": [
+    {
+      "path": "/api/art-studio/legacy-endpoint",
+      "methods": ["GET"],
+      "name": "legacy_example",
+      "lane": "LEGACY",
+      "deprecated": true,
+      "successor": "/api/rmos/workflow/sessions"
+    },
+    {
+      "path": "/api/rmos/workflow/sessions",
+      "methods": ["POST"],
+      "name": "create_session",
+      "lane": "RMOS",
+      "deprecated": false
+    }
+  ]
+}
