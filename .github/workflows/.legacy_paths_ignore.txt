@@ -1,0 +1,20 @@
+# Bundle 14: Temporary allowlist while migrating workflow URLs to /api/*
+# 
+# Formats allowed:
+#   - .github/workflows/file.yml           (ignore entire file)
+#   - .github/workflows/file.yml:123       (ignore specific line)
+#
+# Remove entries as workflows are migrated to canonical /api/... paths.
+# Goal: reduce this list to zero.
+
+# --- Initial migration allowlist (2026-01-02) ---
+
+.github/workflows/adaptive_pocket.yml
+.github/workflows/api_tests.yml
+.github/workflows/blueprint_phase3.yml
+.github/workflows/cam_essentials.yml
+.github/workflows/cam_gcode_smoke.yml
+.github/workflows/containers.yml
+.github/workflows/geometry_parity.yml
+.github/workflows/proxy_adaptive.yml
+.github/workflows/proxy_parity.yml
