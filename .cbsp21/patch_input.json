@@ -1,0 +1,49 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "files": [
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Add a Core CI umbrella workflow that runs only the core set (API Tests, Geometry Parity, Containers, Proxy Parity, SDK Codegen) and reports a single consolidated status.",
+      "scan_targets": [
+        ".github/workflows/core_ci.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only; no runtime changes.",
+      "verification": [
+        "GitHub Actions: Core CI workflow appears and runs on PR/push",
+        "Core CI status is green when the core workflows are green"
+      ]
+    },
+    {
+      "path": ".github/workflows/cbsp21_gate.yml",
+      "intent": "Repo-enforced CBSP21 gate that blocks underscanned/regressive patches by requiring a patch input manifest + coverage rules.",
+      "scan_targets": [
+        "CBSP21.md",
+        ".github/workflows/cbsp21_gate.yml",
+        "scripts/ci/check_cbsp21_gate.py",
+        ".cbsp21/patch_input.json",
+        ".cbsp21/patch_input.json.example"
+      ],
+      "risk": "medium",
+      "behavior_change": "CI behavior change: PRs can fail if manifest/coverage rules are not met.",
+      "verification": [
+        "CI: CBSP21 Gate job runs and fails when patch_input.json is missing/empty (as intended)",
+        "CI: passes when patch_input.json includes the changed files and meets coverage_min rules"
+      ]
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_gate.py",
+      "intent": "Implements the CBSP21 enforcement logic used by the workflow gate (manifest presence + file coverage validation + anti-regression checks).",
+      "scan_targets": [
+        "scripts/ci/check_cbsp21_gate.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "CI-only; affects pass/fail logic for PRs.",
+      "verification": [
+        "python scripts/ci/check_cbsp21_gate.py --help",
+        "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json"
+      ]
+    }
+  ]
+}

@@ -638,6 +638,7 @@ jobs:
 | 1.0 | 2026-01-01 | Initial release. Establishes ≥95% coverage rule, STOP CONDITIONS, structured input preference, immutability rules, audit declaration requirement, and implementation scripts. |
 | 1.1 | 2026-01-02 | Added repo-enforced CI gates, patch packet format validation, enhanced scripts with improved error handling, and operational rules. |
 | 1.2 | 2026-01-03 | Added Section 23: PR-Level Enforcement (CBSP21 as real repo gate with manifest validation, `check_cbsp21_gate.py` script, and `cbsp21_gate.yml` workflow). |
+| 1.3 | 2026-01-03 | Added Section 24: Diff Review Gate (pre-commit behavior change review, redundancy check protocol, recovery procedure). |
 
 ---
 
@@ -1357,6 +1358,78 @@ To exempt specific paths, add to `.cbsp21/exemptions.json`:
   ]
 }
 ```
+
+---
+
+## 24. Diff Review Gate: Pre-Commit Behavior Change Review
+
+### 24.1 Purpose
+
+This section addresses a critical failure mode: **AI agents declaring patches "redundant" based on keyword matches, then applying changes that silently alter or restrict existing functionality**.
+
+The Diff Review Gate requires:
+1. **Explicit diff presentation** before commits with behavior changes
+2. **User confirmation** for any changes that add guards, restrictions, or alter control flow
+3. **Functional coverage verification** — not just keyword presence
+
+### 24.2 When Diff Review is Required
+
+| Risk Level | Trigger | Requirement |
+|------------|---------|-------------|
+| **Low** | Pure additions (new files, new functions) | No diff review required |
+| **Medium** | Modifications to existing functions | Show diff, await confirmation |
+| **High** | Changes that add guards, disable features, alter control flow | Show diff + explain impact, await explicit approval |
+
+### 24.3 Redundancy Check Protocol
+
+Before declaring a patch "REDUNDANT", the AI agent MUST:
+
+1. **Keyword scan**: Search for function/variable names from patch
+2. **Functional equivalence check**: Verify the *behavior* matches, not just the *presence*
+3. **Coverage analysis**: For each feature in the patch, confirm:
+   - Feature exists AND
+   - Feature is complete AND
+   - No gaps in implementation
+
+Example of **incomplete implementation** (incorrectly flagged as redundant):
+```
+Patch requests: Full decision_history list in hover
+Codebase has: auditHoverText() exists — but only shows LAST record
+Result: NOT redundant — patch adds missing functionality
+```
+
+### 24.4 Pre-Commit Checklist for Behavior Changes
+
+Before committing changes with `behavior_change: "medium"` or `"high"`:
+
+```markdown
+## Pre-Commit Review
+
+- [ ] Diff shown to user (not just described)
+- [ ] Behavior change clearly explained
+- [ ] Impact on existing workflows documented
+- [ ] User explicitly approved (not just silence)
+
+If any guard/restriction is added:
+- [ ] Existing functionality preserved OR explicitly deprecated
+- [ ] Fallback behavior documented
+- [ ] Migration path provided if breaking
+```
+
+### 24.5 Recovery Procedure
+
+If a behavior-changing commit was pushed without review:
+
+1. **Identify**: `git diff HEAD~1 HEAD -- <file>`
+2. **Assess impact**: What functionality was altered?
+3. **Decide**: Revert, amend, or accept with documentation
+4. **Document**: Add to `.cbsp21/incident_log.json` if functionality was lost
+
+### 24.6 Revision Notes Update
+
+| Rev | Date | Notes |
+|-----|------|-------|
+| 1.3 | 2026-01-03 | Added Section 24: Diff Review Gate (pre-commit behavior change review, redundancy check protocol, recovery procedure). |
 
 ---
 

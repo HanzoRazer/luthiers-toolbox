@@ -1,0 +1,62 @@
+name: CBSP21 Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  cbsp21-gate:
+    name: CBSP21 Patch Manifest Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for diff
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Get changed files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="HEAD~1"
+            HEAD="HEAD"
+          fi
+          
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" | tr '\n' ' ')
+          echo "files=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Changed files: $CHANGED"
+
+      - name: Run CBSP21 Gate Check
+        env:
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          python scripts/ci/check_cbsp21_gate.py \
+            --manifest .cbsp21/patch_input.json \
+            --changed-files $CHANGED_FILES
+
+      - name: CBSP21 Gate Summary
+        if: always()
+        run: |
+          echo "## CBSP21 Gate Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f .cbsp21/patch_input.json ]; then
+            echo "✅ Manifest found: \`.cbsp21/patch_input.json\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Files declared in manifest:" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            python -c "import json; m=json.load(open('.cbsp21/patch_input.json')); print('\n'.join(f['path'] for f in m.get('files',[])))" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Manifest missing: \`.cbsp21/patch_input.json\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Create a manifest using \`.cbsp21/patch_input.json.example\` as a template." >> $GITHUB_STEP_SUMMARY
+          fi
