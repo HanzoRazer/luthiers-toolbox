@@ -492,7 +492,7 @@ from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
 
 import ezdxf
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 # Import existing CAM systems
@@ -723,7 +723,7 @@ async def reconstruct_contours(
 @router.post("/preflight")
 async def dxf_preflight(
     file: UploadFile = File(..., description="DXF file to validate"),
-    format: str = "json"  # "json" or "html"
+    format: str = Form(default="json")  # "json" or "html"
 ) -> Dict[str, Any]:
     """
     **Phase 3.2: DXF Preflight Validation**
