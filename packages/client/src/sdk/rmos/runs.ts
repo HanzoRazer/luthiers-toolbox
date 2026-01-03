@@ -234,3 +234,322 @@ export function getAttachmentDownloadUrl(
 ): string {
   return `${baseUrl}/rmos/runs/${encodeURIComponent(runId)}/attachments/${encodeURIComponent(attachmentId)}/download`;
 }
+
+// ---------------------------------------------------------------------------
+// Advisory Variants (H8.3-compliant: co-located types + requestId returns)
+// ---------------------------------------------------------------------------
+
+import { getRaw, postRaw } from "../core/apiFetchRaw";
+
+/** Variant triage status */
+export type VariantStatus = "NEW" | "REVIEWED" | "PROMOTED" | "REJECTED";
+
+/** Risk levels for quick triage */
+export type RiskLevel = "GREEN" | "YELLOW" | "RED";
+
+/** Rejection reason vocabulary */
+export type RejectReasonCode =
+  | "GEOMETRY_UNSAFE"
+  | "TEXT_REQUIRES_OUTLINE"
+  | "AESTHETIC"
+  | "DUPLICATE"
+  | "OTHER";
+
+/** Advisory variant summary for listing */
+export type AdvisoryVariantSummary = {
+  advisory_id: string;
+
+  // blob-ish fields (present when variant is tied to a blob)
+  mime?: string | null;
+  filename?: string | null;
+  size_bytes?: number | null;
+
+  // preview policy fields (if present)
+  has_preview?: boolean | null;
+  preview_blocked?: boolean | null;
+  preview_block_reason?: string | null;
+
+  // review fields
+  rating?: number | null;
+  notes?: string | null;
+
+  // state
+  promoted?: boolean | null;
+  promoted_candidate_id?: string | null;
+  status?: VariantStatus | null;
+  risk_level?: RiskLevel | "UNKNOWN" | "ERROR" | null;
+
+  // rejection fields
+  rejected?: boolean | null;
+  rejection_reason_code?: RejectReasonCode | string | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+  rejected_at_utc?: string | null;
+
+  // timestamps
+  created_at_utc?: string | null;
+  updated_at_utc?: string | null;
+};
+
+export type AdvisoryVariantListResponse = {
+  items: AdvisoryVariantSummary[];
+  count: number;
+  run_id?: string;
+};
+
+export type AdvisoryVariantReviewRecord = {
+  advisory_id: string;
+  status?: VariantStatus | null;
+  rating?: number | null;
+  notes?: string | null;
+
+  rejected?: boolean | null;
+  rejection_reason_code?: RejectReasonCode | string | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+  rejected_at_utc?: string | null;
+
+  updated_at_utc?: string | null;
+  updated_by?: string | null;
+};
+
+export type AdvisoryVariantReviewRequest = {
+  // Core review
+  rating?: number | null;
+  notes?: string | null;
+
+  // Status transitions (server may set status automatically; keep optional)
+  status?: VariantStatus | null;
+
+  // Rejection controls (pairs with reason codes)
+  rejected?: boolean | null;
+  rejection_reason_code?: RejectReasonCode | null;
+  rejection_reason_detail?: string | null;
+  rejection_operator_note?: string | null;
+
+  // Optional: explicit risk_level update if your backend allows it
+  risk_level?: RiskLevel | null;
+};
+
+export type PromoteVariantResponse = {
+  run_id: string;
+  advisory_id: string;
+  candidate_id?: string | null;
+  promoted_candidate_id?: string | null;
+  // backend may include updated summary
+  variant?: AdvisoryVariantSummary | null;
+};
+
+// ---------------------------------------------------------------------------
+// Advisory Variant Helpers (with requestId)
+// ---------------------------------------------------------------------------
+
+function reqId(response: Response): string {
+  return response.headers.get("x-request-id") || "";
+}
+
+function enc(s: string): string {
+  return encodeURIComponent(s);
+}
+
+/** List reviewable advisory variants for a run */
+export async function listAdvisoryVariants(
+  runId: string,
+  opts?: ApiFetchOptions
+): Promise<AdvisoryVariantListResponse & { requestId: string }> {
+  const { data, response } = await getRaw<AdvisoryVariantListResponse>(
+    `/rmos/runs/${enc(runId)}/advisory/variants`,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+/** Review / update a variant (rating/notes/reject fields) */
+export async function reviewAdvisoryVariant(
+  runId: string,
+  advisoryId: string,
+  payload: AdvisoryVariantReviewRequest,
+  opts?: ApiFetchOptions
+): Promise<AdvisoryVariantReviewRecord & { requestId: string }> {
+  const { data, response } = await postRaw<AdvisoryVariantReviewRecord>(
+    `/rmos/runs/${enc(runId)}/advisory/${enc(advisoryId)}/review`,
+    payload,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+/** Promote a variant to a manufacturing candidate */
+export async function promoteAdvisoryVariant(
+  runId: string,
+  advisoryId: string,
+  opts?: ApiFetchOptions
+): Promise<PromoteVariantResponse & { requestId: string }> {
+  const { data, response } = await postRaw<PromoteVariantResponse>(
+    `/rmos/runs/${enc(runId)}/advisory/${enc(advisoryId)}/promote`,
+    {},
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Advisory Blobs (CAS)
+// ---------------------------------------------------------------------------
+
+export type AdvisoryBlobSummary = {
+  sha256: string;
+  mime?: string | null;
+  filename?: string | null;
+  size_bytes?: number | null;
+  // optional preview policy
+  preview_blocked?: boolean | null;
+  preview_block_reason?: string | null;
+};
+
+export type AdvisoryBlobListResponse = {
+  items: AdvisoryBlobSummary[];
+  count: number;
+  run_id?: string;
+};
+
+export async function listAdvisoryBlobs(
+  runId: string,
+  opts?: ApiFetchOptions
+): Promise<AdvisoryBlobListResponse & { requestId: string }> {
+  const { data, response } = await getRaw<AdvisoryBlobListResponse>(
+    `/rmos/runs/${enc(runId)}/advisory/blobs`,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+/**
+ * Download a single advisory blob (raw bytes)
+ */
+export async function downloadAdvisoryBlob(
+  runId: string,
+  sha256: string,
+  opts?: ApiFetchOptions
+): Promise<{ blob: Blob; requestId: string }> {
+  const { response } = await getRaw<unknown>(
+    `/rmos/runs/${enc(runId)}/advisory/blobs/${enc(sha256)}/download`,
+    opts
+  );
+  const b = await response.blob();
+  return { blob: b, requestId: reqId(response) };
+}
+
+/** Download-all ZIP (server-produced) */
+export async function downloadAllAdvisoryBlobsZip(
+  runId: string,
+  opts?: ApiFetchOptions
+): Promise<{ blob: Blob; requestId: string }> {
+  const { response } = await getRaw<unknown>(
+    `/rmos/runs/${enc(runId)}/advisory/blobs/download-all.zip`,
+    opts
+  );
+  const b = await response.blob();
+  return { blob: b, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Manufacturing Candidates
+// ---------------------------------------------------------------------------
+
+export type ManufacturingCandidateDecision = RiskLevel | null;
+
+export type ManufacturingCandidateStatus = "PROPOSED" | "ACCEPTED" | "REJECTED";
+
+export type ManufacturingCandidateDecisionHistoryItem = {
+  decision: RiskLevel;
+  note?: string | null;
+  decided_at_utc?: string | null;
+  decided_by?: string | null;
+};
+
+export type ManufacturingCandidate = {
+  candidate_id: string;
+
+  advisory_id?: string | null;
+  score?: number | null;
+  risk_level?: RiskLevel | "UNKNOWN" | "ERROR" | null;
+
+  created_at_utc?: string | null;
+
+  // Decision protocol (canonical): null until operator decides
+  decision?: ManufacturingCandidateDecision; // "GREEN" | "YELLOW" | "RED" | null
+  status?: ManufacturingCandidateStatus | null;
+
+  decision_note?: string | null;
+  decided_at_utc?: string | null;
+  decided_by?: string | null;
+
+  decision_history?: ManufacturingCandidateDecisionHistoryItem[] | null;
+};
+
+export type CandidateListResponse = {
+  items: ManufacturingCandidate[];
+  count: number;
+  run_id?: string;
+};
+
+export type DecideManufacturingCandidateRequest = {
+  decision: RiskLevel | null; // allow explicit null if you support "clear decision"
+  note?: string | null;
+  decided_by?: string | null; // optional; backend may derive from auth/session
+};
+
+export type DecideManufacturingCandidateResponse = {
+  run_id?: string;
+  candidate_id: string;
+  decision?: RiskLevel | null;
+  status?: ManufacturingCandidateStatus | null;
+  decision_note?: string | null;
+  decided_at_utc?: string | null;
+  decided_by?: string | null;
+  decision_history?: ManufacturingCandidateDecisionHistoryItem[] | null;
+};
+
+// ---------------------------------------------------------------------------
+// Manufacturing Candidate Functions (with requestId)
+// ---------------------------------------------------------------------------
+
+export async function listManufacturingCandidates(
+  runId: string,
+  opts?: ApiFetchOptions
+): Promise<CandidateListResponse & { requestId: string }> {
+  const { data, response } = await getRaw<CandidateListResponse>(
+    `/rmos/runs/${enc(runId)}/manufacturing/candidates`,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+export async function decideManufacturingCandidate(
+  runId: string,
+  candidateId: string,
+  payload: DecideManufacturingCandidateRequest,
+  opts?: ApiFetchOptions
+): Promise<DecideManufacturingCandidateResponse & { requestId: string }> {
+  const { data, response } = await postRaw<DecideManufacturingCandidateResponse>(
+    `/rmos/runs/${enc(runId)}/manufacturing/candidates/${enc(candidateId)}/decision`,
+    payload,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+/** Download a single candidate zip */
+export async function downloadManufacturingCandidateZip(
+  runId: string,
+  candidateId: string,
+  opts?: ApiFetchOptions
+): Promise<{ blob: Blob; requestId: string }> {
+  const { response } = await getRaw<unknown>(
+    `/rmos/runs/${enc(runId)}/manufacturing/candidates/${enc(candidateId)}/download-zip`,
+    opts
+  );
+  const b = await response.blob();
+  return { blob: b, requestId: reqId(response) };
+}
