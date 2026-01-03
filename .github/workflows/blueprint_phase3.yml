@@ -8,6 +8,7 @@ on:
       - 'services/api/app/cam/dxf_preflight.py'
       - 'services/api/app/cam/contour_reconstructor.py'
       - 'services/api/app/routers/om_router.py'
+      - 'services/api/tests/fixtures/dxf/**'
       - '.github/workflows/blueprint_phase3.yml'
   pull_request:
     branches: [main]
@@ -46,7 +47,7 @@ jobs:
       
       - name: Test Phase 3.2 - Health Check
         run: |
-          python - <<'EOF'
+          python - <<'PYEOF'
           import requests
           import sys
           
@@ -77,49 +78,26 @@ jobs:
           except Exception as e:
               print(f"✗ Health check error: {e}")
               sys.exit(1)
-          EOF
+          PYEOF
       
       - name: Test Phase 3.2 - DXF Preflight (Mock)
         run: |
-          python - <<'EOF'
+          python - <<'PYEOF'
           import requests
           import io
           import sys
+          from pathlib import Path
           
           try:
-              # Create minimal DXF file for testing
-              dxf_content = b"""0
-SECTION
-2
-HEADER
-9
-$ACADVER
-1
-AC1009
-0
-ENDSEC
-0
-SECTION
-2
-ENTITIES
-0
-LINE
-8
-0
-10
-0.0
-20
-0.0
-11
-100.0
-21
-0.0
-0
-ENDSEC
-0
-EOF"""
+              # Load DXF from fixture file (not inline)
+              FIXTURES_DIR = Path("services/api/tests/fixtures/dxf")
+              dxf_path = FIXTURES_DIR / "minimal.dxf"
+              if not dxf_path.exists():
+                  print(f"✗ Fixture not found: {dxf_path}")
+                  sys.exit(1)
+              dxf_content = dxf_path.read_bytes()
               
-              # Test preflight with mock DXF
+              # Test preflight with fixture DXF
               files = {'file': ('test.dxf', io.BytesIO(dxf_content), 'application/dxf')}
               data = {'format': 'json'}
               
@@ -161,47 +139,24 @@ EOF"""
               import traceback
               traceback.print_exc()
               sys.exit(1)
-          EOF
+          PYEOF
       
       - name: Test Phase 3.2 - DXF Preflight (HTML)
         run: |
-          python - <<'EOF'
+          python - <<'PYEOF'
           import requests
           import io
           import sys
+          from pathlib import Path
           
           try:
-              # Create minimal DXF file
-              dxf_content = b"""0
-SECTION
-2
-HEADER
-9
-$ACADVER
-1
-AC1009
-0
-ENDSEC
-0
-SECTION
-2
-ENTITIES
-0
-LINE
-8
-0
-10
-0.0
-20
-0.0
-11
-100.0
-21
-0.0
-0
-ENDSEC
-0
-EOF"""
+              # Load DXF from fixture file (not inline)
+              FIXTURES_DIR = Path("services/api/tests/fixtures/dxf")
+              dxf_path = FIXTURES_DIR / "minimal.dxf"
+              if not dxf_path.exists():
+                  print(f"✗ Fixture not found: {dxf_path}")
+                  sys.exit(1)
+              dxf_content = dxf_path.read_bytes()
               
               # Test HTML format
               files = {'file': ('test.dxf', io.BytesIO(dxf_content), 'application/dxf')}
@@ -238,83 +193,24 @@ EOF"""
           except Exception as e:
               print(f"✗ HTML preflight test error: {e}")
               sys.exit(1)
-          EOF
+          PYEOF
       
       - name: Test Phase 3.2 - Contour Reconstruction (Mock)
         run: |
-          python - <<'EOF'
+          python - <<'PYEOF'
           import requests
           import io
           import sys
+          from pathlib import Path
           
           try:
-              # Create DXF with disconnected lines
-              dxf_content = b"""0
-SECTION
-2
-HEADER
-9
-$ACADVER
-1
-AC1009
-0
-ENDSEC
-0
-SECTION
-2
-ENTITIES
-0
-LINE
-8
-Contours
-10
-0.0
-20
-0.0
-11
-50.0
-21
-0.0
-0
-LINE
-8
-Contours
-10
-50.0
-20
-0.0
-11
-50.0
-21
-30.0
-0
-LINE
-8
-Contours
-10
-50.0
-20
-30.0
-11
-0.0
-21
-30.0
-0
-LINE
-8
-Contours
-10
-0.0
-20
-30.0
-11
-0.0
-21
-0.0
-0
-ENDSEC
-0
-EOF"""
+              # Load DXF from fixture file (rectangle with 4 LINE entities on 'Contours' layer)
+              FIXTURES_DIR = Path("services/api/tests/fixtures/dxf")
+              dxf_path = FIXTURES_DIR / "contours_rectangle.dxf"
+              if not dxf_path.exists():
+                  print(f"✗ Fixture not found: {dxf_path}")
+                  sys.exit(1)
+              dxf_content = dxf_path.read_bytes()
               
               # Test reconstruction
               files = {'file': ('test_lines.dxf', io.BytesIO(dxf_content), 'application/dxf')}
@@ -357,11 +253,11 @@ EOF"""
               import traceback
               traceback.print_exc()
               sys.exit(1)
-          EOF
+          PYEOF
       
       - name: Test OM Router
         run: |
-          python - <<'EOF'
+          python - <<'PYEOF'
           import requests
           import sys
           
@@ -391,7 +287,7 @@ EOF"""
           except Exception as e:
               print(f"✗ OM router test error: {e}")
               sys.exit(1)
-          EOF
+          PYEOF
       
       - name: Generate test summary
         if: always()
