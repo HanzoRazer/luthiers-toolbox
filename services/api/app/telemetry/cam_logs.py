@@ -202,7 +202,7 @@ GROUP BY machine_id;
 
 **2. Bottleneck Analysis:**
 ```sql
-SELECT limit, COUNT(*) AS count, AVG(slowdown) AS avg_slowdown
+SELECT "limit", COUNT(*) AS count, AVG(slowdown) AS avg_slowdown
 FROM segments WHERE run_id IN (
   SELECT id FROM runs WHERE machine_id='Mach4_Router_4x8'
 )
@@ -268,7 +268,7 @@ CREATE TABLE IF NOT EXISTS segments (
   code TEXT,
   x REAL, y REAL,             -- end point
   len_mm REAL,
-  limit TEXT,                 -- feed_cap|accel|jerk|none
+  "limit" TEXT,               -- feed_cap|accel|jerk|none (quoted)
   slowdown REAL,              -- meta.slowdown (if any)
   trochoid INTEGER,           -- 0/1
   radius_mm REAL,             -- if arc
@@ -283,13 +283,12 @@ CREATE TABLE IF NOT EXISTS segments (
 # =============================================================================
 
 def open_db():
-    """Open SQLite connection with Row factory, auto-migrate schema if new."""
-    new = not os.path.exists(DB)
+    """Open SQLite connection with Row factory, ensure schema exists."""
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
-    if new:
-        con.executescript(DDL)
-        con.commit()
+    # Always run DDL - CREATE TABLE IF NOT EXISTS is idempotent
+    con.executescript(DDL)
+    con.commit()
     return con
 
 
@@ -337,7 +336,7 @@ def insert_segments(run_id: int, segs: Iterable[Dict[str, Any]]):
     cur = con.cursor()
     cur.executemany(
         """INSERT OR REPLACE INTO segments
-      (run_id, idx, code, x, y, len_mm, limit, slowdown, trochoid, radius_mm, feed_f)
+      (run_id, idx, code, x, y, len_mm, "limit", slowdown, trochoid, radius_mm, feed_f)
       VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
         [
             (
@@ -364,10 +363,10 @@ def fetch_caps_by_machine(machine_id: str) -> List[sqlite3.Row]:
     """Aggregate bottleneck counts (feed_cap/accel/jerk/none) for a machine."""
     con = open_db()
     rows = con.execute(
-        """SELECT limit, COUNT(*) c FROM segments
+        """SELECT "limit", COUNT(*) c FROM segments
                           JOIN runs ON segments.run_id=runs.id
                           WHERE runs.machine_id=?
-                          GROUP BY limit""",
+                          GROUP BY "limit""",
         (machine_id,),
     ).fetchall()
     con.close()
