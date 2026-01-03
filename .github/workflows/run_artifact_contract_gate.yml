@@ -20,14 +20,16 @@ jobs:
       CONTRACT_FAIL_FAST: "false"
       CONTRACT_VERBOSE: "true"
 
-      RMOS_RUN_ATTACHMENTS_DIR: "${{ runner.temp }}/rmos_test_attachments"
-      RMOS_ARTIFACT_ROOT: "${{ runner.temp }}/rmos_artifacts"
-      SAW_LAB_LEARNED_OVERRIDES_PATH: "${{ runner.temp }}/saw_overrides.jsonl"
-      DATABASE_URL: "sqlite:///${{ runner.temp }}/run_artifact_contract_gate.sqlite"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup temp directories
+        run: |
+          echo "RMOS_RUN_ATTACHMENTS_DIR=$RUNNER_TEMP/rmos_test_attachments" >> $GITHUB_ENV
+          echo "RMOS_ARTIFACT_ROOT=$RUNNER_TEMP/rmos_artifacts" >> $GITHUB_ENV
+          echo "SAW_LAB_LEARNED_OVERRIDES_PATH=$RUNNER_TEMP/saw_overrides.jsonl" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite:///$RUNNER_TEMP/run_artifact_contract_gate.sqlite" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
