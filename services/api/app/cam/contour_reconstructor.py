@@ -287,9 +287,10 @@ class Point:
         dy = self.y - other.y
         return math.sqrt(dx*dx + dy*dy)
     
-    def is_close(self, other: 'Point') -> bool:
+    def is_close(self, other: 'Point', tolerance: float = None) -> bool:
         """Check if points are within tolerance"""
-        return self.distance_to(other) < self.tolerance
+        tol = tolerance if tolerance is not None else self.tolerance
+        return self.distance_to(other) < tol
     
     def to_tuple(self) -> Tuple[float, float]:
         """Convert to (x, y) tuple"""
