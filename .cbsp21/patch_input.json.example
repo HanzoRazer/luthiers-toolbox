@@ -1,0 +1,19 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "files": [
+    {
+      "path": "path/to/file.py",
+      "intent": "Brief description of what this file change does.",
+      "scan_targets": [
+        "path/to/file.py",
+        "path/to/related_file.py"
+      ],
+      "risk": "low|medium|high",
+      "behavior_change": "Description of runtime/CI behavior changes, or 'none' if purely additive.",
+      "verification": [
+        "How to verify this change works (command, test, manual check)"
+      ]
+    }
+  ]
+}
