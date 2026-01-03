@@ -37,7 +37,7 @@
         "GET"
       ],
       "name": "governance_stats",
-      "lane": "META",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "not_yet_implemented",
       "sunset": "2026-06-30"
@@ -121,7 +121,7 @@
         "GET"
       ],
       "name": "rmos_runs_recent",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "not_yet_implemented",
       "sunset": "2026-06-30"
