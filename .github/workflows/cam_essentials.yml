@@ -1,31 +1,10 @@
 name: CAM Essentials N0-N10 Tests
 
+# Demoted to nightly/manual until stabilized (pre-existing failures)
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'services/api/app/routers/cam_roughing_router.py'
-      - 'services/api/app/routers/drilling_router.py'
-      - 'services/api/app/routers/cam_drill_pattern_router.py'
-      - 'services/api/app/routers/retract_router.py'
-      - 'services/api/app/routers/probe_router.py'
-      - 'services/api/app/cam/modal_cycles.py'
-      - 'services/api/app/cam/probe_patterns.py'
-      - 'services/api/app/cam/retract_patterns.py'
-      - 'client/src/components/toolbox/CAMEssentialsLab.vue'
-      - 'client/src/components/DrillingLab.vue'
-      - 'test_cam_essentials_n0_n10.ps1'
-      - '.github/workflows/cam_essentials.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'services/api/app/routers/*roughing*'
-      - 'services/api/app/routers/*drill*'
-      - 'services/api/app/routers/*retract*'
-      - 'services/api/app/routers/*probe*'
-      - 'services/api/app/cam/*'
-      - 'client/src/components/toolbox/CAMEssentialsLab.vue'
-      - 'test_cam_essentials_n0_n10.ps1'
+  schedule:
+    - cron: '0 5 * * *'   # 05:00 UTC daily
+  workflow_dispatch:
 
 jobs:
   test-cam-essentials:

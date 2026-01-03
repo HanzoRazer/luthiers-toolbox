@@ -1,9 +1,8 @@
 name: Publish Docker Images
 
+# Only run on version tags or manual dispatch (not on every PR)
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
