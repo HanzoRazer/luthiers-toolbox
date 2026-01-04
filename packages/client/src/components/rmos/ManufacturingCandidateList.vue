@@ -22,6 +22,17 @@ const requestId = ref<string>("");
 
 const candidates = ref<CandidateRow[]>([]);
 
+// -------------------------
+// Filters (product-only)
+// -------------------------
+type DecisionFilter = "ALL" | "UNDECIDED" | "GREEN" | "YELLOW" | "RED";
+type StatusFilter = "ALL" | "PROPOSED" | "ACCEPTED" | "REJECTED";
+
+const decisionFilter = ref<DecisionFilter>("ALL");
+const statusFilter = ref<StatusFilter>("ALL");
+const showSelectedOnly = ref(false);
+const searchText = ref("");
+
 // Save / decision state
 const saving = ref(false);
 const saveError = ref<string | null>(null);
@@ -61,6 +72,22 @@ const undoError = ref<string | null>(null);
 function decisionBadge(decision: RiskLevel | null | undefined) {
   if (decision == null) return "NEEDS_DECISION";
   return decision;
+}
+
+function normalize(s: unknown) {
+  return String(s ?? "").trim().toLowerCase();
+}
+
+function matchesSearch(c: CandidateRow, q: string) {
+  if (!q) return true;
+  const hay = [
+    c.candidate_id,
+    c.advisory_id ?? "",
+    c.decision_note ?? "",
+    c.decided_by ?? "",
+    c.created_by ?? "",
+  ].map(normalize).join(" | ");
+  return hay.includes(q);
 }
 
 function statusText(c: CandidateRow) {
@@ -116,6 +143,8 @@ async function load() {
     const next = new Set<string>();
     for (const id of selectedIds.value) if (existing.has(id)) next.add(id);
     selectedIds.value = next;
+    // If you were in "selected only" mode and selection got emptied, auto-disable it.
+    if (showSelectedOnly.value && selectedIds.value.size === 0) showSelectedOnly.value = false;
   } catch (e: any) {
     error.value = e?.message ?? String(e);
   } finally {
@@ -211,6 +240,50 @@ const selectedRows = computed(() => {
   const s = selectedIds.value;
   return candidates.value.filter((c) => s.has(c.candidate_id));
 });
+
+// -------------------------
+// Filtered view (product-only)
+// -------------------------
+const filteredCandidates = computed(() => {
+  const df = decisionFilter.value;
+  const sf = statusFilter.value;
+  const onlySel = showSelectedOnly.value;
+  const sel = selectedIds.value;
+  const q = normalize(searchText.value);
+
+  return candidates.value.filter((c) => {
+    if (onlySel && !sel.has(c.candidate_id)) return false;
+
+    // decision filter
+    if (df === "UNDECIDED") {
+      if (c.decision != null) return false;
+    } else if (df === "GREEN" || df === "YELLOW" || df === "RED") {
+      if (c.decision !== df) return false;
+    }
+
+    // status filter
+    if (sf !== "ALL") {
+      if ((c.status ?? null) !== sf) return false;
+    }
+
+    // search
+    if (!matchesSearch(c, q)) return false;
+    return true;
+  });
+});
+
+const filteredCount = computed(() => filteredCandidates.value.length);
+
+function quickUndecided() {
+  decisionFilter.value = "UNDECIDED";
+}
+
+function clearFilters() {
+  decisionFilter.value = "ALL";
+  statusFilter.value = "ALL";
+  showSelectedOnly.value = false;
+  searchText.value = "";
+}
 
 function toggleOne(id: string) {
   const next = new Set(selectedIds.value);
@@ -442,6 +515,60 @@ async function exportGreenOnlyZips() {
     <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
 
     <div v-else class="table">
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filters-left">
+          <div class="field">
+            <label class="muted">Decision</label>
+            <select v-model="decisionFilter" :disabled="saving || exporting || undoBusy">
+              <option value="ALL">All</option>
+              <option value="UNDECIDED">Undecided</option>
+              <option value="GREEN">GREEN</option>
+              <option value="YELLOW">YELLOW</option>
+              <option value="RED">RED</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="muted">Status</label>
+            <select v-model="statusFilter" :disabled="saving || exporting || undoBusy">
+              <option value="ALL">All</option>
+              <option value="PROPOSED">PROPOSED</option>
+              <option value="ACCEPTED">ACCEPTED</option>
+              <option value="REJECTED">REJECTED</option>
+            </select>
+          </div>
+
+          <div class="field grow">
+            <label class="muted">Search</label>
+            <input
+              v-model="searchText"
+              type="text"
+              placeholder="candidate id, advisory id, note, decided_by…"
+              :disabled="saving || exporting || undoBusy"
+            />
+          </div>
+        </div>
+
+        <div class="filters-right">
+          <label class="check">
+            <input type="checkbox" v-model="showSelectedOnly" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
+            <span class="muted">Selected only</span>
+          </label>
+
+          <button class="btn ghost" @click="quickUndecided" :disabled="saving || exporting || undoBusy" title="Jump to undecided candidates">
+            Undecided-only
+          </button>
+          <button class="btn ghost" @click="clearFilters" :disabled="saving || exporting || undoBusy" title="Clear all filters">
+            Clear filters
+          </button>
+
+          <div class="muted small">
+            Showing <strong>{{ filteredCount }}</strong> / {{ candidates.length }}
+          </div>
+        </div>
+      </div>
+
       <div class="row head">
         <div class="sel">
           <input
@@ -500,7 +627,7 @@ async function exportGreenOnlyZips() {
       </div>
 
       <div
-        v-for="c in candidates"
+        v-for="c in filteredCandidates"
         :key="c.candidate_id"
         class="row"
         :title="auditHover(c)"
@@ -577,12 +704,22 @@ async function exportGreenOnlyZips() {
 .reqid { font-size: 12px; opacity: 0.75; }
 .error { color: #b00020; }
 .muted { opacity: 0.75; }
+.small { font-size: 12px; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
 
 .table { display: grid; gap: 6px; }
 .row { display: grid; grid-template-columns: 34px 140px 1fr 140px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
 .sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
+
+.filters { display: flex; gap: 10px; align-items: end; justify-content: space-between; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
+.filters-left { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; flex: 1; }
+.filters-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.grow { min-width: 280px; flex: 1; }
+.field label { font-size: 12px; }
+.field select, .field input { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; }
+.check { display: inline-flex; gap: 6px; align-items: center; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; cursor: pointer; }
