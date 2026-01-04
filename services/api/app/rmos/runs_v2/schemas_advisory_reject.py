@@ -49,6 +49,29 @@ class AdvisoryVariantRejectionRecord(BaseModel):
     operator_note: Optional[str] = None
 
 
+
+class RejectVariantResponse(BaseModel):
+    """Response from rejecting an advisory variant."""
+
+    run_id: str
+    advisory_id: str
+    rejected: bool = True
+    reason_code: RejectReasonCode
+    reason_detail: Optional[str] = None
+    rejected_at_utc: str
+    message: str = "Variant rejected successfully."
+
+
+class UnrejectVariantResponse(BaseModel):
+    """Response from unreject (clearing rejection) of an advisory variant."""
+
+    run_id: str
+    advisory_id: str
+    rejected: bool = False
+    cleared_at_utc: str
+    message: str = "Rejection cleared successfully."
+
+
 def utc_now_iso() -> str:
     """Return current UTC time as ISO string."""
     return datetime.now(timezone.utc).isoformat()
