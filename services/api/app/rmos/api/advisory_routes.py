@@ -20,7 +20,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import Response
 
-from ..schemas.advisory_schemas import (
+from app._experimental.ai_graphics.schemas.advisory_schemas import (
     AdvisoryAsset,
     AdvisoryAssetType,
     AdvisoryAssetOut,
@@ -56,7 +56,7 @@ from ..schemas.advisory_schemas import (
     DuplicateCheckResponse,
     RequestRecord,
 )
-from ..advisory_store import (
+from app._experimental.ai_graphics.advisory_store import (
     get_advisory_store,
     get_prompt_history_store,
     get_budget_tracker,
@@ -64,7 +64,7 @@ from ..advisory_store import (
     compute_content_hash,
     compute_prompt_hash,
 )
-from ..image_providers import (
+from app._experimental.ai_graphics.image_providers import (
     GuitarVisionEngine,
     ImageSize,
     ImageQuality,
@@ -656,7 +656,7 @@ def review_asset(
     attached_to_run = None
     if req.approved and req.run_id:
         try:
-            from ...rmos.runs_v2.store import attach_advisory as runs_attach_advisory
+            from app.rmos.runs_v2.store import attach_advisory as runs_attach_advisory
             ref = runs_attach_advisory(
                 run_id=req.run_id,
                 advisory_id=asset_id,
@@ -776,7 +776,7 @@ def attach_asset_to_run(
     
     # Attach to run
     try:
-        from ....rmos.runs_v2.store import attach_advisory as runs_attach_advisory, get_run
+        from app.rmos.runs_v2.store import attach_advisory as runs_attach_advisory, get_run
         
         # Verify run exists
         run = get_run(req.run_id)
@@ -862,7 +862,7 @@ def get_asset_runs(asset_id: str):
     
     # Search runs for this advisory
     try:
-        from ....rmos.runs_v2.store import RunStoreV2
+        from app.rmos.runs_v2.store import RunStoreV2
         run_store = RunStoreV2()
         
         # Get recent runs and filter for those containing this advisory
@@ -911,7 +911,7 @@ def get_run_advisories(run_id: str):
     where available.
     """
     try:
-        from ....rmos.runs_v2.store import get_run
+        from app.rmos.runs_v2.store import get_run
         
         run = get_run(run_id)
         if run is None:
