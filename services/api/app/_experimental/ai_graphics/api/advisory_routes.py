@@ -20,7 +20,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import Response
 
-from app._experimental.ai_graphics.schemas.advisory_schemas import (
+from app.advisory import (
     AdvisoryAsset,
     AdvisoryAssetType,
     AdvisoryAssetOut,
@@ -56,7 +56,7 @@ from app._experimental.ai_graphics.schemas.advisory_schemas import (
     DuplicateCheckResponse,
     RequestRecord,
 )
-from app._experimental.ai_graphics.advisory_store import (
+from app.advisory import (
     get_advisory_store,
     get_prompt_history_store,
     get_budget_tracker,
@@ -656,7 +656,7 @@ def review_asset(
     attached_to_run = None
     if req.approved and req.run_id:
         try:
-            from app.rmos.runs_v2.store import attach_advisory as runs_attach_advisory
+            from app.rmos.handoff import attach_advisory as runs_attach_advisory
             ref = runs_attach_advisory(
                 run_id=req.run_id,
                 advisory_id=asset_id,
@@ -776,7 +776,7 @@ def attach_asset_to_run(
     
     # Attach to run
     try:
-        from app.rmos.runs_v2.store import attach_advisory as runs_attach_advisory, get_run
+        from app.rmos.handoff import attach_advisory as runs_attach_advisory, get_run
         
         # Verify run exists
         run = get_run(req.run_id)
@@ -862,27 +862,10 @@ def get_asset_runs(asset_id: str):
     
     # Search runs for this advisory
     try:
-        from app.rmos.runs_v2.store import RunStoreV2
-        run_store = RunStoreV2()
+        from app.rmos.handoff import find_runs_with_advisory
         
-        # Get recent runs and filter for those containing this advisory
-        all_runs = run_store.list_runs(limit=500)  # Reasonable limit
-        
-        matching_runs = []
-        for run in all_runs:
-            if run.advisory_inputs:
-                for ref in run.advisory_inputs:
-                    if ref.advisory_id == asset_id:
-                        matching_runs.append({
-                            "run_id": run.run_id,
-                            "created_at_utc": run.created_at_utc.isoformat(),
-                            "mode": run.mode,
-                            "status": run.status,
-                            "event_type": run.event_type,
-                            "advisory_kind": ref.kind,
-                            "attached_at_utc": ref.created_at_utc.isoformat(),
-                        })
-                        break
+        # Use handoff interface to find runs containing this advisory
+        matching_runs = find_runs_with_advisory(asset_id, limit=500)
         
         return {
             "asset_id": asset_id,
@@ -911,7 +894,7 @@ def get_run_advisories(run_id: str):
     where available.
     """
     try:
-        from app.rmos.runs_v2.store import get_run
+        from app.rmos.handoff import get_run
         
         run = get_run(run_id)
         if run is None:
