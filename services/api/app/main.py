@@ -406,7 +406,7 @@ except ImportError as e:
     vision_router = None
 
 try:
-    from ._experimental.ai_graphics.api.advisory_routes import router as advisory_router
+    from .rmos.api.advisory_routes import router as advisory_router
 except ImportError as e:
     _log.warning("Optional router unavailable: advisory_router (%s)", e)
     advisory_router = None
