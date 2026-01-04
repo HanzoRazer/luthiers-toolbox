@@ -262,7 +262,12 @@ async def generate_boss_probe(body: BossProbeIn) -> ProbeOut:
 
 @router.post("/boss/gcode/download")
 async def download_boss_probe(body: BossProbeIn) -> Response:
-    """Download boss/hole probe G-code as .nc file."""
+    """
+    Download boss/hole probe G-code as .nc file (DRAFT lane).
+    
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /boss/gcode/download_governed.
+    """
     try:
         gcode = probe_patterns.generate_boss_probe(
             pattern=body.pattern,
@@ -279,13 +284,72 @@ async def download_boss_probe(body: BossProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"boss_{body.pattern}_{wcs}.nc"
         
-        return Response(
+        resp = Response(
             content=gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename={filename}"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/boss/gcode/download_governed")
+async def download_boss_probe_governed(body: BossProbeIn) -> Response:
+    """
+    Download boss/hole probe G-code as .nc file (GOVERNED lane).
+    
+    Same toolpath as /boss/gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        gcode = probe_patterns.generate_boss_probe(
+            pattern=body.pattern,
+            estimated_diameter=body.estimated_diameter,
+            estimated_center=(body.estimated_center_x, body.estimated_center_y),
+            probe_count=body.probe_count,
+            approach_distance=body.approach_distance,
+            retract_distance=body.retract_distance,
+            feed_probe=body.feed_probe,
+            safe_z=body.safe_z,
+            work_offset=body.work_offset
+        )
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(body.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(gcode)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="boss_probe_gcode",
+            workflow_mode="probing",
+            event_type="boss_probe_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        wcs = f"g{54 + body.work_offset - 1}"
+        filename = f"boss_{body.pattern}_{wcs}.nc"
+        
+        resp = Response(
+            content=gcode,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -315,7 +379,12 @@ async def generate_surface_z_probe(body: SurfaceZProbeIn) -> ProbeOut:
 
 @router.post("/surface_z/gcode/download")
 async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
-    """Download surface Z probe G-code as .nc file."""
+    """
+    Download surface Z probe G-code as .nc file (DRAFT lane).
+    
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /surface_z/gcode/download_governed.
+    """
     try:
         gcode = probe_patterns.generate_surface_z_probe(
             approach_z=body.approach_z,
@@ -328,13 +397,68 @@ async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"surface_z_{wcs}.nc"
         
-        return Response(
+        resp = Response(
             content=gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename={filename}"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/surface_z/gcode/download_governed")
+async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
+    """
+    Download surface Z probe G-code as .nc file (GOVERNED lane).
+    
+    Same toolpath as /surface_z/gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        gcode = probe_patterns.generate_surface_z_probe(
+            approach_z=body.approach_z,
+            probe_depth=body.probe_depth,
+            feed_probe=body.feed_probe,
+            retract_distance=body.retract_distance,
+            work_offset=body.work_offset
+        )
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(body.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(gcode)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="surface_z_probe_gcode",
+            workflow_mode="probing",
+            event_type="surface_z_probe_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        wcs = f"g{54 + body.work_offset - 1}"
+        filename = f"surface_z_{wcs}.nc"
+        
+        resp = Response(
+            content=gcode,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
