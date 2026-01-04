@@ -3,11 +3,21 @@
 CAM Drill Pattern Router (N10 CAM Essentials)
 Generate drilling patterns (grid, circle, line) with modal cycles.
 """
+from datetime import datetime, timezone
 from math import cos, pi, sin
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 # Import post injection utilities
 try:
@@ -108,73 +118,113 @@ def _generate_points(p: Pattern) -> List[tuple]:
     return pts
 
 
-@router.post("/gcode", response_class=Response)
-def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
+
+def generate_drill_pattern_program(pat: Pattern, prm: DrillParams) -> str:
     """
-    Generate drilling G-code from pattern specification.
-    
-    Patterns:
-    - grid: Rectangular array (rows × cols)
-    - circle: Circular array (count holes evenly spaced)
-    - line: Linear array (count holes with dx, dy increments)
+    Pure generator: returns G-code text for the requested drill pattern.
+    Single source of truth for drill pattern toolpath - used by both draft and governed endpoints.
     """
-    # Generate hole positions from pattern
     points = _generate_points(pat)
-    
-    # Build post context
-    if HAS_POST_HELPERS:
-        ctx = build_post_context_v2(
-            post=prm.post,
-            post_mode=prm.post_mode,
-            units=prm.units,
-            machine_id=prm.machine_id,
-            RPM=prm.rpm,
-            PROGRAM_NO=prm.program_no,
-            WORK_OFFSET=prm.work_offset,
-            TOOL=prm.tool,
-            SAFE_Z=prm.safe_z,
-            DWELL_P=prm.dwell_p,
-            PECK_Q=prm.peck_q,
-            R_CLEAR=prm.r_clear
-        )
-    
     r_clear = _f(prm.r_clear if prm.r_clear is not None else 5.0)
-    
-    # Generate G-code
+
     lines = [
-        "G90",  # Absolute positioning
-        f"G0 Z{_f(prm.safe_z)}",  # Rapid to safe height
-        "{RETRACT_MODE}"  # Token for post-specific retract mode
+        "G90",
+        f"G0 Z{_f(prm.safe_z)}",
     ]
-    
+
     cyc = prm.cycle.upper()
-    
-    # Generate cycle for each point
+
     for (x, y) in points:
         if cyc == "G81":
             dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(
-                f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}"
-            )
+            lines.append(f"G81 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} F{_f(prm.feed)}{dwell}")
         else:
             peck = _f(prm.peck_q if prm.peck_q is not None else 1.0)
             dwell = f" P{_f(prm.dwell_p)}" if prm.dwell_p is not None else ""
-            lines.append(
-                f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}"
-            )
-    
-    # Cancel cycle
+            lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
+
     lines.append("G80")
-    
-    body = "\n".join(lines) + "\n"
-    
-    # Create response
-    resp = Response(content=body, media_type="text/plain; charset=utf-8")
-    
-    # Apply post-processor wrapping
+    return "
+".join(lines) + "
+"
+
+
+# =============================================================================
+# Draft Lane: Fast preview, no RMOS tracking
+# =============================================================================
+
+@router.post("/gcode", response_class=Response)
+def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
+    """
+    Generate drilling G-code from pattern specification (DRAFT lane).
+
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /gcode_governed.
+    """
+    program = generate_drill_pattern_program(pat, prm)
+    resp = Response(content=program, media_type="text/plain; charset=utf-8")
+
     if HAS_POST_HELPERS:
+        ctx = build_post_context_v2(
+            post=prm.post, post_mode=prm.post_mode, units=prm.units,
+            machine_id=prm.machine_id, RPM=prm.rpm, PROGRAM_NO=prm.program_no,
+            WORK_OFFSET=prm.work_offset, TOOL=prm.tool, SAFE_Z=prm.safe_z,
+            DWELL_P=prm.dwell_p, PECK_Q=prm.peck_q, R_CLEAR=prm.r_clear
+        )
         resp = wrap_with_post_v2(resp, ctx)
-    
+
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/gcode_governed", response_class=Response)
+def drill_pattern_gcode_governed(pat: Pattern, prm: DrillParams) -> Response:
+    """
+    Generate drilling G-code from pattern specification (GOVERNED lane).
+
+    Same toolpath as /gcode but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    program = generate_drill_pattern_program(pat, prm)
+    resp = Response(content=program, media_type="text/plain; charset=utf-8")
+
+    if HAS_POST_HELPERS:
+        ctx = build_post_context_v2(
+            post=prm.post, post_mode=prm.post_mode, units=prm.units,
+            machine_id=prm.machine_id, RPM=prm.rpm, PROGRAM_NO=prm.program_no,
+            WORK_OFFSET=prm.work_offset, TOOL=prm.tool, SAFE_Z=prm.safe_z,
+            DWELL_P=prm.dwell_p, PECK_Q=prm.peck_q, R_CLEAR=prm.r_clear
+        )
+        resp = wrap_with_post_v2(resp, ctx)
+        try:
+            program = resp.body.decode("utf-8") if isinstance(resp.body, (bytes, bytearray)) else program
+        except Exception:
+            pass
+
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj({"pattern": pat.model_dump(mode="json"), "params": prm.model_dump(mode="json")})
+    gcode_hash = sha256_of_text(program)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="drill_pattern_gcode",
+        workflow_mode="drill_pattern",
+        event_type="drill_pattern_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
     return resp
 
 
