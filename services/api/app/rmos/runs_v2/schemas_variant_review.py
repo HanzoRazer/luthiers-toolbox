@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field, field_validator
 from .schemas_advisory_reject import (
     RejectReasonCode,
     RejectVariantRequest,
+    RejectVariantResponse,
+    UnrejectVariantResponse,
     AdvisoryVariantRejectionRecord,
 )
 

@@ -33,9 +33,12 @@ from .schemas_variant_review import (
     AdvisoryVariantReviewRecord,
     PromoteVariantRequest,
     PromoteVariantResponse,
+    RejectVariantRequest,
+    RejectVariantResponse,
+    UnrejectVariantResponse,
 )
 from .schemas_manufacturing import ManufacturingCandidate
-from .advisory_variant_state import read_rejection
+from .advisory_variant_state import read_rejection, write_rejection, clear_rejection
 
 
 def _utc_now() -> str:
@@ -540,4 +543,69 @@ def bulk_promote_variants(
         failed=failed,
         blocked=blocked,
         results=results,
+    )
+
+
+def reject_variant(
+    run_id: str,
+    advisory_id: str,
+    payload: RejectVariantRequest,
+    principal: Principal,
+) -> RejectVariantResponse:
+    """Reject an advisory variant.
+
+    RBAC is enforced at the API layer via Depends(require_roles(...)).
+    """
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
+
+    now = _utc_now()
+    write_rejection(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        reason_code=payload.reason_code,
+        reason_detail=payload.reason_detail,
+        operator_note=payload.operator_note,
+    )
+
+    return RejectVariantResponse(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        rejected=True,
+        reason_code=payload.reason_code,
+        reason_detail=payload.reason_detail,
+        rejected_at_utc=now,
+    )
+
+
+def unreject_variant(
+    run_id: str,
+    advisory_id: str,
+    principal: Principal,
+) -> UnrejectVariantResponse:
+    """Clear rejection status for an advisory variant.
+
+    RBAC is enforced at the API layer via Depends(require_roles(...)).
+    """
+    run = get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    allowed = set(_authorized_advisory_ids(run))
+    if advisory_id not in allowed:
+        raise HTTPException(status_code=404, detail="Advisory blob not linked to this run")
+
+    now = _utc_now()
+    clear_rejection(run_id=run_id, advisory_id=advisory_id)
+
+    return UnrejectVariantResponse(
+        run_id=run_id,
+        advisory_id=advisory_id,
+        rejected=False,
+        cleared_at_utc=now,
     )
