@@ -11,9 +11,19 @@ Endpoints:
 - GET  /api/cam/fret_slots/post_processors - List available post-processors
 """
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from typing import List
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 from ..schemas.cam_fret_slots import (
     PostProcessor,
@@ -111,23 +121,81 @@ async def export_fret_slot_gcode_multi(request: MultiExportRequest):
         raise HTTPException(status_code=500, detail=f"Multi-export failed: {str(e)}")
 
 
+# =============================================================================
+# Draft Lane: Fast preview, no RMOS tracking
+# =============================================================================
+
 @router.post("/export/raw", response_class=PlainTextResponse)
 async def export_fret_slot_gcode_raw(request: FretSlotExportRequest):
     """
-    Export raw G-code text (no JSON wrapper).
+    Export raw G-code text (no JSON wrapper) - DRAFT lane.
     
     POST /api/cam/fret_slots/export/raw
     
     Returns plain text G-code suitable for direct file download.
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution, use /export/raw_governed.
     """
     try:
         response = export_fret_slots(request)
-        return PlainTextResponse(
+        resp = PlainTextResponse(
             content=response.gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename=fret_slots_{request.post_processor.value}.nc"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/export/raw_governed", response_class=Response)
+async def export_fret_slot_gcode_raw_governed(request: FretSlotExportRequest):
+    """
+    Export raw G-code text with RMOS governance - GOVERNED lane.
+    
+    POST /api/cam/fret_slots/export/raw_governed
+    
+    Same toolpath as /export/raw but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        response = export_fret_slots(request)
+        program = response.gcode
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(request.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(program)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="fret_slots_export",
+            workflow_mode="fret_slots",
+            event_type="fret_slots_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        resp = Response(
+            content=program,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename=fret_slots_{request.post_processor.value}.nc"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

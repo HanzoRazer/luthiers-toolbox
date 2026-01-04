@@ -4,6 +4,7 @@ Probing pattern generation and SVG setup sheets.
 REST API for CNC work offset establishment using touch probes.
 """
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,15 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from ..cam import probe_patterns, probe_svg
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 router = APIRouter()
 
@@ -125,9 +135,18 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# =============================================================================
+# Draft Lane: Fast preview, no RMOS tracking
+# =============================================================================
+
 @router.post("/corner/gcode/download")
 async def download_corner_probe(body: CornerProbeIn) -> Response:
-    """Download corner probe G-code as .nc file."""
+    """
+    Download corner probe G-code as .nc file (DRAFT lane).
+    
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution, use /corner/gcode/download_governed.
+    """
     try:
         gcode = probe_patterns.generate_corner_probe(
             pattern=body.pattern,
@@ -141,13 +160,73 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"corner_{body.pattern}_{wcs}.nc"
         
-        return Response(
+        resp = Response(
             content=gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename={filename}"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/corner/gcode/download_governed")
+async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
+    """
+    Download corner probe G-code as .nc file (GOVERNED lane).
+    
+    Same toolpath as /corner/gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        gcode = probe_patterns.generate_corner_probe(
+            pattern=body.pattern,
+            approach_distance=body.approach_distance,
+            retract_distance=body.retract_distance,
+            feed_probe=body.feed_probe,
+            safe_z=body.safe_z,
+            work_offset=body.work_offset
+        )
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(body.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(gcode)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="corner_probe_gcode",
+            workflow_mode="probing",
+            event_type="corner_probe_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        wcs = f"g{54 + body.work_offset - 1}"
+        filename = f"corner_{body.pattern}_{wcs}.nc"
+        
+        resp = Response(
+            content=gcode,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
