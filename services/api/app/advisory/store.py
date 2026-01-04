@@ -774,6 +774,10 @@ def get_budget_tracker() -> BudgetTracker:
     return _budget_tracker
 
 
+# Alias for backwards compatibility
+RequestStore = RequestRecordStore
+
+
 def get_request_store() -> RequestRecordStore:
     """Get or create the request record store singleton."""
     global _request_store
