@@ -25,6 +25,16 @@ from ..cam.retract_patterns import (
 
 router = APIRouter()
 
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from datetime import datetime, timezone
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
 
 class Point3DModel(BaseModel):
     """3D point model."""
@@ -325,11 +335,103 @@ def generate_simple_retract_gcode(
     
     gcode_text = "\n".join(gcode_lines)
     
-    return Response(
+    resp = Response(
         content=gcode_text,
         media_type="text/plain",
         headers={"Content-Type": "text/plain"}
     )
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail  
+# =============================================================================
+
+@router.post("/gcode_governed", response_class=Response)
+def generate_simple_retract_gcode_governed(
+    strategy: str = "direct",
+    current_z: float = -10.0,
+    safe_z: float = 5.0,
+    ramp_feed: float = 600.0,
+    helix_radius: float = 5.0,
+    helix_pitch: float = 1.0
+) -> Response:
+    """
+    Generate simple retract G-code (GOVERNED lane).
+    
+    Same toolpath as /gcode but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    gcode_lines = [
+        "G21 G90",
+        f"(Retract Strategy: {strategy})",
+        f"(Current Z: {current_z}mm -> Safe Z: {safe_z}mm)",
+        ""
+    ]
+    
+    z_travel = safe_z - current_z
+    
+    if strategy == "direct":
+        gcode_lines.append(f"G0 Z{safe_z:.4f}")
+        gcode_lines.append("(Direct rapid retract)")
+        
+    elif strategy == "ramped":
+        gcode_lines.append(f"G1 Z{safe_z:.4f} F{ramp_feed:.0f}")
+        gcode_lines.append("(Ramped retract for delicate parts)")
+        
+    elif strategy == "helical":
+        revolutions = int(z_travel / helix_pitch) + 1
+        for i in range(revolutions):
+            z_step = current_z + (i + 1) * helix_pitch
+            if z_step > safe_z:
+                z_step = safe_z
+            gcode_lines.append(f"G2 X0 Y0 I{helix_radius:.4f} J0 Z{z_step:.4f} F{ramp_feed:.0f}")
+            if z_step >= safe_z:
+                break
+        gcode_lines.append("(Helical retract - safest for finished surfaces)")
+    
+    gcode_lines.append("")
+    gcode_lines.append("M30")
+    gcode_lines.append("(End of retract sequence)")
+    
+    gcode_text = "
+".join(gcode_lines)
+    
+    # Create RMOS artifact
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj({
+        "strategy": strategy,
+        "current_z": current_z,
+        "safe_z": safe_z,
+        "ramp_feed": ramp_feed,
+        "helix_radius": helix_radius,
+        "helix_pitch": helix_pitch
+    })
+    gcode_hash = sha256_of_text(gcode_text)
+    
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="retract_gcode",
+        workflow_mode="retract",
+        event_type="retract_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+    
+    resp = Response(
+        content=gcode_text,
+        media_type="text/plain",
+        headers={"Content-Type": "text/plain"}
+    )
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
 
 
 @router.post("/gcode/download")
@@ -357,10 +459,70 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
     gcode_text = "\n".join(gcode_lines)
     
     # Return as downloadable file
-    return Response(
+    resp = Response(
         content=gcode_text,
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f"attachment; filename=retract_{body.strategy}.nc"
         }
     )
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+@router.post("/gcode/download_governed")
+def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
+    """
+    Generate and download G-code with retract optimization (GOVERNED lane).
+    
+    Same toolpath as /gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    # Apply strategy (reuse apply endpoint logic)
+    result = apply_retract_strategy(body)
+    
+    # Build complete G-code
+    gcode_lines = [
+        "G21 G90",
+        f"(Strategy: {body.strategy})",
+        f"(Features: {len(body.features)})",
+        ""
+    ]
+    gcode_lines.extend(result["gcode"])
+    gcode_lines.append("")
+    gcode_lines.append("M30")
+    gcode_lines.append("(End of program)")
+    
+    gcode_text = "
+".join(gcode_lines)
+    
+    # Create RMOS artifact
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(gcode_text)
+    
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="retract_download_gcode",
+        workflow_mode="retract",
+        event_type="retract_download_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+    
+    # Return as downloadable file
+    resp = Response(
+        content=gcode_text,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename=retract_{body.strategy}.nc"
+        }
+    )
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
