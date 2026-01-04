@@ -303,9 +303,10 @@ async def generate_drill_gcode(body: DrillingIn) -> Dict[str, Any]:
 @router.post("/drill/gcode/download")
 async def download_drill_gcode(body: DrillingIn) -> Response:
     """
-    Generate and download G-code as .nc file.
+    Generate and download G-code as .nc file (GOVERNED lane).
 
     LANE: OPERATION - Uses same artifact as /drill/gcode.
+    Full RMOS artifact persistence with SHA256 hashes.
 
     Returns G-code with appropriate Content-Disposition header.
     """
@@ -316,7 +317,7 @@ async def download_drill_gcode(body: DrillingIn) -> Response:
     cycle_name = body.cycle.lower()
     filename = f"drilling_{cycle_name}_{len(body.holes)}holes.nc"
 
-    return Response(
+    resp = Response(
         content=result["gcode"],
         media_type="text/plain",
         headers={
@@ -324,6 +325,8 @@ async def download_drill_gcode(body: DrillingIn) -> Response:
             "X-Run-ID": result.get("_run_id", ""),
         }
     )
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
 
 
 @router.get("/drill/cycles")

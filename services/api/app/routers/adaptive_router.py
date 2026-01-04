@@ -844,7 +844,9 @@ class GcodeIn(PlanIn):
 @router.post("/gcode")
 def gcode(body: GcodeIn) -> StreamingResponse:
     """
-    Generate post-processor aware G-code for adaptive pocket.
+    Generate post-processor aware G-code for adaptive pocket (GOVERNED lane).
+    
+    This endpoint has full RMOS artifact persistence with SHA256 hashes.
     
     Transforms toolpath moves into machine-specific G-code with headers,
     footers, unit commands, metadata comments, and adaptive feed translation.
@@ -952,6 +954,7 @@ def gcode(body: GcodeIn) -> StreamingResponse:
     response = export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
     response.headers["X-Run-ID"] = run_id
     response.headers["X-GCode-SHA256"] = gcode_hash
+    response.headers["X-ToolBox-Lane"] = "governed"
     return response
 
 # Allowed adaptive feed modes (validated against in batch export)
