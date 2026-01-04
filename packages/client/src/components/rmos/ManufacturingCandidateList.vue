@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import {
   decideManufacturingCandidate,
+  downloadManufacturingCandidateZip,
   listManufacturingCandidates,
   type ManufacturingCandidate,
   type RiskLevel,
@@ -12,7 +13,6 @@ const props = defineProps<{
 }>();
 
 type CandidateRow = ManufacturingCandidate & {
-  // normalize optional fields for UI convenience
   candidate_id: string;
 };
 
@@ -22,11 +22,17 @@ const requestId = ref<string>("");
 
 const candidates = ref<CandidateRow[]>([]);
 
-// Inline editor state
-const editingId = ref<string | null>(null);
-const editValue = ref<string>("");
+// Save / decision state
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+
+// Inline note editor state
+const editingId = ref<string | null>(null);
+const editValue = ref<string>("");
+
+// Bulk export state
+const exporting = ref(false);
+const exportError = ref<string | null>(null);
 
 function decisionBadge(decision: RiskLevel | null | undefined) {
   if (decision == null) return "NEEDS_DECISION";
@@ -34,7 +40,6 @@ function decisionBadge(decision: RiskLevel | null | undefined) {
 }
 
 function statusText(c: CandidateRow) {
-  // backend may provide status, but decision is authoritative for gating UX
   if (c.decision == null) return "Needs decision";
   if (c.decision === "GREEN") return "Accepted";
   if (c.decision === "YELLOW") return "Caution";
@@ -42,19 +47,25 @@ function statusText(c: CandidateRow) {
   return "—";
 }
 
+function notePreview(note?: string | null) {
+  const n = note ?? "";
+  if (!n) return "—";
+  return n.length > 120 ? n.slice(0, 120) + "…" : n;
+}
+
 function auditHover(c: CandidateRow) {
   const who = c.decided_by ?? "—";
   const when = c.decided_at_utc ?? "—";
   const note = c.decision_note ?? "";
-  const notePreview = note.length > 80 ? note.slice(0, 80) + "…" : note;
+  const preview = note ? (note.length > 80 ? note.slice(0, 80) + "…" : note) : "—";
+
   const lines = [
     `Decision: ${decisionBadge(c.decision)}`,
     `By: ${who}`,
     `At: ${when}`,
-    note ? `Note: ${notePreview}` : `Note: —`,
+    `Note: ${preview}`,
   ];
 
-  // Include history if present (compact)
   if (c.decision_history && c.decision_history.length > 0) {
     const tail = c.decision_history
       .slice(-3)
@@ -62,6 +73,7 @@ function auditHover(c: CandidateRow) {
       .join(" | ");
     lines.push(`History (last): ${tail}`);
   }
+
   return lines.join("\n");
 }
 
@@ -69,6 +81,7 @@ async function load() {
   if (!props.runId) return;
   loading.value = true;
   error.value = null;
+  exportError.value = null;
   try {
     const res = await listManufacturingCandidates(props.runId);
     candidates.value = (res.items ?? []) as CandidateRow[];
@@ -84,7 +97,7 @@ onMounted(load);
 watch(() => props.runId, load);
 
 function startEdit(c: CandidateRow) {
-  // Only allow note editing if a decision exists.
+  // Spine-locked: don't allow note editing until a decision exists
   if (c.decision == null) return;
   editingId.value = c.candidate_id;
   editValue.value = c.decision_note ?? "";
@@ -99,31 +112,29 @@ function cancelEdit() {
 
 async function saveEdit(c: CandidateRow) {
   if (!props.runId) return;
-  if (c.decision == null) return; // spine-locked: cannot save note without decision
+  if (c.decision == null) return;
   saving.value = true;
   saveError.value = null;
   try {
     const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-      decision: c.decision, // keep decision stable; only update note
+      decision: c.decision, // keep decision stable; update note only
       note: editValue.value,
       decided_by: null,
     });
     requestId.value = res.requestId ?? requestId.value;
 
-    // Update row in-place
     const idx = candidates.value.findIndex((x) => x.candidate_id === c.candidate_id);
     if (idx >= 0) {
       candidates.value[idx] = {
         ...candidates.value[idx],
-        decision: res.decision ?? candidates.value[idx].decision ?? null,
-        status: res.status ?? candidates.value[idx].status ?? null,
+        decision: (res.decision ?? candidates.value[idx].decision ?? null) as any,
+        status: (res.status ?? candidates.value[idx].status ?? null) as any,
         decision_note: res.decision_note ?? editValue.value,
         decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
         decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
         decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
       };
     }
-
     cancelEdit();
   } catch (e: any) {
     saveError.value = e?.message ?? String(e);
@@ -148,8 +159,8 @@ async function decide(c: CandidateRow, decision: RiskLevel) {
     if (idx >= 0) {
       candidates.value[idx] = {
         ...candidates.value[idx],
-        decision: res.decision ?? decision,
-        status: res.status ?? candidates.value[idx].status ?? null,
+        decision: (res.decision ?? decision) as any,
+        status: (res.status ?? candidates.value[idx].status ?? null) as any,
         decision_note: res.decision_note ?? candidates.value[idx].decision_note ?? null,
         decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
         decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
@@ -163,23 +174,97 @@ async function decide(c: CandidateRow, decision: RiskLevel) {
   }
 }
 
-const hasAny = computed(() => candidates.value.length > 0);
+// -------------------------
+// Bulk export (GREEN-only)
+// -------------------------
+const undecidedCount = computed(() => candidates.value.filter((c) => c.decision == null).length);
+const greenCandidates = computed(() => candidates.value.filter((c) => c.decision === "GREEN"));
+
+const exportBlockedReason = computed(() => {
+  if (candidates.value.length === 0) return "No candidates to export.";
+  if (undecidedCount.value > 0) {
+    return `Export blocked: ${undecidedCount.value} candidate(s) still NEED DECISION. Decide all candidates before exporting.`;
+  }
+  if (greenCandidates.value.length === 0) {
+    return "Export blocked: there are no GREEN candidates to export.";
+  }
+  return null;
+});
+
+const canExportGreenOnly = computed(() => exportBlockedReason.value == null && !exporting.value);
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // give the browser a beat before revoking
+  setTimeout(() => URL.revokeObjectURL(url), 2500);
+}
+
+async function exportGreenOnlyZips() {
+  if (!props.runId) return;
+  exportError.value = null;
+
+  const reason = exportBlockedReason.value;
+  if (reason) {
+    exportError.value = reason;
+    return;
+  }
+
+  exporting.value = true;
+  try {
+    // Download each GREEN candidate zip. (Product-only: no server-side bundling.)
+    for (const c of greenCandidates.value) {
+      const res = await downloadManufacturingCandidateZip(props.runId, c.candidate_id);
+      requestId.value = res.requestId ?? requestId.value;
+      const fname = `rmos_${props.runId}_candidate_${c.candidate_id}_GREEN.zip`;
+      downloadBlob(res.blob, fname);
+      // small delay to avoid browser throttling
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  } catch (e: any) {
+    exportError.value = e?.message ?? String(e);
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 
 <template>
   <section class="rmos-candidates">
     <div class="header">
-      <h3>Manufacturing Candidates</h3>
+      <div class="title">
+        <h3>Manufacturing Candidates</h3>
+        <div class="subtitle muted">
+          Decision is <span class="mono">null</span> until operator decides (spine-locked).
+        </div>
+      </div>
       <div class="meta">
         <span v-if="requestId" class="reqid" title="X-Request-Id">req: {{ requestId }}</span>
-        <button class="btn" @click="load" :disabled="loading">Refresh</button>
+        <button class="btn" @click="load" :disabled="loading || exporting">Refresh</button>
+
+        <!-- Bulk export (GREEN-only), blocked if any undecided -->
+        <button
+          class="btn"
+          @click="exportGreenOnlyZips"
+          :disabled="!canExportGreenOnly"
+          :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'"
+        >
+          {{ exporting ? "Exporting…" : "Export GREEN zips" }}
+        </button>
       </div>
     </div>
 
     <p v-if="error" class="error">Error: {{ error }}</p>
     <p v-if="saveError" class="error">Save error: {{ saveError }}</p>
+    <p v-if="exportError" class="error">Export: {{ exportError }}</p>
+
     <p v-if="loading" class="muted">Loading candidates…</p>
-    <p v-else-if="!hasAny" class="muted">No candidates yet.</p>
+    <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
 
     <div v-else class="table">
       <div class="row head">
@@ -199,37 +284,38 @@ const hasAny = computed(() => candidates.value.length > 0);
       >
         <div class="mono">{{ c.candidate_id }}</div>
         <div class="mono">{{ c.advisory_id ?? "—" }}</div>
+
         <div>
           <span class="badge" :data-badge="decisionBadge(c.decision)">
             {{ decisionBadge(c.decision) }}
           </span>
         </div>
+
         <div class="muted">{{ statusText(c) }}</div>
 
         <div class="note">
-          <!-- Inline note editor -->
           <div v-if="editingId === c.candidate_id" class="editor">
             <textarea v-model="editValue" rows="2" />
             <div class="editor-actions">
-              <button class="btn" @click="saveEdit(c)" :disabled="saving">Save</button>
-              <button class="btn ghost" @click="cancelEdit" :disabled="saving">Cancel</button>
+              <button class="btn" @click="saveEdit(c)" :disabled="saving || exporting">Save</button>
+              <button class="btn ghost" @click="cancelEdit" :disabled="saving || exporting">Cancel</button>
             </div>
           </div>
           <div v-else class="note-display">
             <span class="muted" v-if="!c.decision_note">—</span>
-            <span v-else>{{ c.decision_note }}</span>
+            <span v-else>{{ notePreview(c.decision_note) }}</span>
           </div>
         </div>
 
         <div class="actions">
-          <button class="btn" @click="decide(c, 'GREEN')" :disabled="saving">GREEN</button>
-          <button class="btn" @click="decide(c, 'YELLOW')" :disabled="saving">YELLOW</button>
-          <button class="btn danger" @click="decide(c, 'RED')" :disabled="saving">RED</button>
+          <button class="btn" @click="decide(c, 'GREEN')" :disabled="saving || exporting">GREEN</button>
+          <button class="btn" @click="decide(c, 'YELLOW')" :disabled="saving || exporting">YELLOW</button>
+          <button class="btn danger" @click="decide(c, 'RED')" :disabled="saving || exporting">RED</button>
 
           <button
             class="btn ghost"
             @click="startEdit(c)"
-            :disabled="saving || c.decision == null"
+            :disabled="saving || exporting || c.decision == null"
             :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'"
           >
             Edit Note
@@ -237,30 +323,45 @@ const hasAny = computed(() => candidates.value.length > 0);
         </div>
       </div>
     </div>
+
+    <!-- Export policy explainers (visible, not just hover) -->
+    <div class="policy muted" v-if="candidates.length > 0">
+      <div><strong>Export policy:</strong></div>
+      <ul>
+        <li>Export is blocked while any candidate is <span class="mono">NEEDS_DECISION</span>.</li>
+        <li>Export downloads zips for <strong>GREEN</strong> candidates only.</li>
+        <li>Hover the export button to see the exact block reason.</li>
+      </ul>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .rmos-candidates { display: flex; flex-direction: column; gap: 10px; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.meta { display: flex; align-items: center; gap: 10px; }
+.title { display: flex; flex-direction: column; gap: 4px; }
+.subtitle { font-size: 12px; }
+.meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .reqid { font-size: 12px; opacity: 0.75; }
 .error { color: #b00020; }
 .muted { opacity: 0.75; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+
 .table { display: grid; gap: 6px; }
-.row { display: grid; grid-template-columns: 140px 1fr 120px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
+.row { display: grid; grid-template-columns: 140px 1fr 140px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
+
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; cursor: pointer; }
 .btn.ghost { background: transparent; }
 .btn.danger { border-color: rgba(176,0,32,0.35); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,0.14); }
 .badge[data-badge="NEEDS_DECISION"] { opacity: 0.75; }
-.badge[data-badge="GREEN"] { }
-.badge[data-badge="YELLOW"] { }
-.badge[data-badge="RED"] { }
+
 .note textarea { width: 100%; resize: vertical; padding: 6px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.16); }
 .editor-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+.policy ul { margin: 6px 0 0 18px; }
 </style>
