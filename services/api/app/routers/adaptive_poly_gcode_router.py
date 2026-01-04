@@ -1,8 +1,18 @@
 
+from datetime import datetime, timezone
 from typing import List, Tuple
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 from ..util.poly_offset_spiral import build_spiral_poly
 
@@ -55,8 +65,11 @@ def _emit_simple_gcode(pts: List[Tuple[float, float]], z: float=-1.0, safe_z: fl
     return "\n".join(lines)
 
 
-@router.post("/offset_spiral.nc")
-def offset_spiral_nc(req: PolyNCReq) -> Response:
+def generate_offset_spiral_program(req: PolyNCReq) -> str:
+    """
+    Pure generator: returns G-code text for the requested offset spiral.
+    Single source of truth for adaptive spiral toolpath - used by both draft and governed endpoints.
+    """
     poly = [(p[0], p[1]) for p in req.polygon]
     if poly[0] != poly[-1]: 
         poly.append(poly[0])
@@ -74,11 +87,65 @@ def offset_spiral_nc(req: PolyNCReq) -> Response:
     )
     
     # Emit G-code
-    nc = _emit_simple_gcode(
+    return _emit_simple_gcode(
         pts, 
         z=req.z, 
         safe_z=req.safe_z, 
         feed=req.base_feed
     )
+
+
+# =============================================================================
+# Draft Lane: Fast preview, no RMOS tracking
+# =============================================================================
+
+@router.post("/offset_spiral.nc")
+def offset_spiral_nc(req: PolyNCReq) -> Response:
+    """
+    Generate offset spiral G-code (DRAFT lane).
     
-    return Response(content=nc, media_type="text/plain")
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /offset_spiral_governed.nc.
+    """
+    program = generate_offset_spiral_program(req)
+    resp = Response(content=program, media_type="text/plain")
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/offset_spiral_governed.nc")
+def offset_spiral_nc_governed(req: PolyNCReq) -> Response:
+    """
+    Generate offset spiral G-code (GOVERNED lane).
+    
+    Same toolpath as /offset_spiral.nc but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    program = generate_offset_spiral_program(req)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(program)
+    
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="adaptive_offset_spiral",
+        workflow_mode="adaptive_spiral",
+        event_type="adaptive_spiral_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+    
+    resp = Response(content=program, media_type="text/plain")
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
