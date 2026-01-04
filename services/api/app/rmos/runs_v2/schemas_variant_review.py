@@ -9,6 +9,14 @@ from __future__ import annotations
 from typing import Optional, Dict, Any, Literal, List
 from pydantic import BaseModel, Field, field_validator
 
+# Re-export rejection schemas for backwards compatibility
+from .schemas_advisory_reject import (
+    RejectReasonCode,
+    RejectVariantRequest,
+    AdvisoryVariantRejectionRecord,
+)
+
+
 RoleName = Literal["admin", "operator", "engineer", "viewer", "anonymous"]
 
 # Variant triage status (computed server-side)
