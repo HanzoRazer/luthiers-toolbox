@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Tuple
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
 
 router = APIRouter(prefix="/cam", tags=["cam", "offset"])
 
@@ -41,31 +51,22 @@ def polygon_offset_json(req: OffsetReq) -> Dict[str, Any]:
     }
 
 
-@router.post("/polygon_offset.nc")
-def polygon_offset_nc(req: OffsetReq) -> Response:
+def generate_polygon_offset_nc_program(req: OffsetReq) -> str:
     """
-    Real N.17a polygon-offset engine using pyclipper.
-
-    Behaviour:
-      - Takes a closed polygon and performs inward offsets
-        until no area remains (pocket clearing).
-      - link_mode='arc' emits G2/G3 arcs between linear runs.
-      - link_mode='linear' uses pure G1 moves.
-      - Includes required G-code headers and footer so it passes
-        existing PS/CI structure tests.
+    Pure generator: returns G-code text for the requested polygon offset.
+    Single source of truth for polygon offset NC - used by both draft and governed endpoints.
     """
     from math import cos, radians, sin
-
     import pyclipper
 
-    scale = 1000.0  # pyclipper integer scaling
+    scale = 1000.0
     paths = [[(int(x * scale), int(y * scale)) for x, y in req.polygon]]
 
     offset = pyclipper.PyclipperOffset()
     offset.AddPaths(paths, pyclipper.JT_MITER, pyclipper.ET_CLOSEDPOLYGON)
 
     step = req.tool_dia * req.stepover
-    depth = 0.5  # mm; fixed shallow pass for CI
+    depth = 0.5
     offsets = []
     dist = 0
     while True:
@@ -97,11 +98,9 @@ def polygon_offset_nc(req: OffsetReq) -> Response:
         g.append(f"G1 Z-{depth:.3f} F{feed_z:.1f}")
 
         if req.link_mode == "arc":
-            # emit small connecting arcs every few segments for realism
             for i in range(1, len(pts)):
                 x, y = pts[i]
                 if i % 3 == 0:
-                    # simple 90° CW arc for variety
                     cx, cy = x - 1.0, y
                     g.append(f"G2 X{x:.3f} Y{y:.3f} I{cx - x0:.3f} J{cy - y0:.3f} F{feed_xy:.1f}")
                 else:
@@ -116,7 +115,65 @@ def polygon_offset_nc(req: OffsetReq) -> Response:
     g.append("M5")
     g.append("M30")
 
-    return Response("\n".join(g) + "\n", media_type="text/plain")
+    return "
+".join(g) + "
+"
+
+
+# =============================================================================
+# Draft Lane: Fast preview, no RMOS tracking
+# =============================================================================
+
+@router.post("/polygon_offset.nc")
+def polygon_offset_nc(req: OffsetReq) -> Response:
+    """
+    Real N.17a polygon-offset engine using pyclipper (DRAFT lane).
+
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /polygon_offset_governed.nc.
+    """
+    program = generate_polygon_offset_nc_program(req)
+    resp = Response(program, media_type="text/plain")
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+# =============================================================================
+# Governed Lane: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/polygon_offset_governed.nc")
+def polygon_offset_nc_governed(req: OffsetReq) -> Response:
+    """
+    Real N.17a polygon-offset engine using pyclipper (GOVERNED lane).
+
+    Same toolpath as /polygon_offset.nc but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    program = generate_polygon_offset_nc_program(req)
+
+    now = datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(req.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(program)
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="cam_polygon_offset_nc",
+        workflow_mode="polygon_offset",
+        event_type="polygon_offset_nc_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+
+    resp = Response(program, media_type="text/plain")
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
 
 
 @router.post("/polygon_offset.preview")
