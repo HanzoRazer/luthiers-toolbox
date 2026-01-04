@@ -4,22 +4,33 @@ Body Generator Router - Luthier's ToolBox
 FastAPI router for electric guitar body G-code generation.
 Integrates with existing multi-post architecture.
 
+LANE: OPERATION (for /generate, /export/multi endpoints)
+LANE: UTILITY (for /analyze, /machines, /tools, /posts endpoints)
+Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+
+Two-Lane Architecture:
+- Draft endpoints: Fast preview, no RMOS tracking
+- Governed endpoints: Full RunArtifact persistence + SHA256 hashes
+
 Endpoints:
-    POST /api/cam/body/analyze     - Analyze DXF, return layer info
-    POST /api/cam/body/generate    - Generate G-code for single post
-    POST /api/cam/body/export/multi - Multi-post ZIP bundle
+    POST /api/cam/body/analyze              - Analyze DXF (UTILITY)
+    POST /api/cam/body/generate             - Generate G-code (DRAFT)
+    POST /api/cam/body/generate_governed    - Generate G-code with RMOS (GOVERNED)
+    POST /api/cam/body/export/multi         - Multi-post ZIP (DRAFT)
+    POST /api/cam/body/export/multi_governed - Multi-post ZIP with RMOS (GOVERNED)
 """
+
+from datetime import datetime, timezone
+from io import BytesIO
+from typing import List, Dict, Optional, Tuple, Any
+import json
+import os
+import tempfile
+import zipfile
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Tuple, Any
-from datetime import datetime
-from io import BytesIO
-import zipfile
-import json
-import tempfile
-import os
 
 from ..generators.lespaul_body_generator import (
     LesPaulBodyGenerator,
@@ -29,6 +40,15 @@ from ..generators.lespaul_body_generator import (
     MACHINES,
     ToolConfig,
     MachineConfig,
+)
+
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
 )
 
 
@@ -127,6 +147,19 @@ class GenerateResponse(BaseModel):
     body_size: Dict[str, float]
 
 
+class GenerateGovernedResponse(BaseModel):
+    """Body G-code generation results with RMOS tracking."""
+    gcode: str
+    post_id: str
+    job_name: str
+    stats: Dict[str, Any]
+    body_size: Dict[str, float]
+    # RMOS fields
+    run_id: str
+    request_hash: str
+    gcode_hash: str
+
+
 class MultiExportRequest(BaseModel):
     """Request for multi-post ZIP export."""
     post_ids: List[str] = Field(
@@ -138,94 +171,136 @@ class MultiExportRequest(BaseModel):
     tab_count: int = 6
     job_name: Optional[str] = None
 
-
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 
-def inject_post_header(gcode: str, post_id: str, job_name: str) -> str:
-    """Inject post-processor specific header."""
-    config = POST_CONFIGS.get(post_id, POST_CONFIGS["Mach4"])
-    
-    header_lines = [
-        f"; Job: {job_name}",
-        f"; Generated: {datetime.now().isoformat()}",
-        f"; Post: {post_id}",
-        f"(POST={post_id};DATE={datetime.now().isoformat()})",
-    ]
-    header_lines.extend(config["header"])
-    header_lines.append("")
-    
-    return "\n".join(header_lines) + "\n" + gcode
+def inject_post_header(gcode: str, post_id: str) -> str:
+    """Inject post-processor header into G-code."""
+    cfg = POST_CONFIGS.get(post_id, POST_CONFIGS["GRBL"])
+    header_lines = cfg["header"]
+    return "
+".join(header_lines) + "
+" + gcode
 
 
 def inject_post_footer(gcode: str, post_id: str) -> str:
-    """Inject post-processor specific footer."""
-    config = POST_CONFIGS.get(post_id, POST_CONFIGS["Mach4"])
-    
-    footer_lines = ["", "(PROGRAM END)"]
-    footer_lines.extend(config["footer"])
-    
-    return gcode + "\n" + "\n".join(footer_lines)
+    """Inject post-processor footer into G-code."""
+    cfg = POST_CONFIGS.get(post_id, POST_CONFIGS["GRBL"])
+    footer_lines = cfg["footer"]
+    return gcode.rstrip() + "
+" + "
+".join(footer_lines) + "
+"
+
+
+def generate_body_gcode_from_dxf(
+    tmp_path: str,
+    machine: str,
+    stock_thickness_in: float,
+    post_id: str,
+    job_name: str,
+) -> Tuple[str, Dict[str, Any], Dict[str, float]]:
+    """
+    Pure generator function: DXF file -> G-code string.
+
+    Single source of truth for body G-code generation.
+    Used by both draft and governed endpoints.
+
+    Returns:
+        Tuple of (gcode_str, stats_dict, body_size_dict)
+    """
+    # Load machine config
+    machine_cfg = MACHINES.get(machine)
+    if not machine_cfg:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown machine: {machine}. Available: {list(MACHINES.keys())}"
+        )
+
+    # Parse DXF
+    reader = LesPaulDXFReader()
+    body_data = reader.read_dxf(tmp_path)
+
+    # Create generator
+    generator = LesPaulBodyGenerator(
+        body_data=body_data,
+        machine_config=machine_cfg,
+        stock_thickness_in=stock_thickness_in,
+    )
+
+    # Generate toolpaths
+    toolpaths = generator.generate_toolpaths()
+
+    # Convert to G-code
+    gcode_gen = LesPaulGCodeGenerator(machine_cfg)
+    raw_gcode = gcode_gen.generate(toolpaths, job_name=job_name)
+
+    # Apply post-processor
+    gcode = inject_post_header(raw_gcode, post_id)
+    gcode = inject_post_footer(gcode, post_id)
+
+    # Collect stats
+    stats = {
+        "tool_changes": len(toolpaths),
+        "operations": [tp.get("operation", "unknown") for tp in toolpaths],
+        "estimated_time_min": gcode_gen.estimate_time(toolpaths),
+        "line_count": len(gcode.splitlines()),
+    }
+
+    # Body dimensions
+    body_size = {
+        "width_in": body_data.get("width", 0),
+        "height_in": body_data.get("height", 0),
+        "thickness_in": stock_thickness_in,
+    }
+
+    return gcode, stats, body_size
 
 
 # =============================================================================
-# ENDPOINTS
+# UTILITY ENDPOINTS (No RMOS tracking)
 # =============================================================================
 
 @router.post("/analyze", response_model=AnalyzeResponse)
-async def analyze_dxf(file: UploadFile = File(...)):
+async def analyze_dxf(file: UploadFile = File(...)) -> AnalyzeResponse:
     """
-    Analyze a DXF file and return layer information.
-    
-    Upload a DXF file to extract:
-    - Body outline dimensions
-    - Layer names and path counts
-    - Recommended operations based on layers found
+    Analyze uploaded DXF file for body generation.
+
+    LANE: UTILITY - Analysis only, no artifacts.
     """
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(400, "File must be a DXF file")
-    
+    if not file.filename or not file.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=400, detail="File must be a .dxf file")
+
     # Save to temp file
-    with tempfile.NamedTemporaryFile(suffix='.dxf', delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
         content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
-    
+
     try:
-        reader = LesPaulDXFReader(tmp_path)
-        reader.load()
-        
-        summary = reader.get_summary()
-        
-        # Determine recommended operations based on layers
-        recommended = []
-        layer_ops = {
-            "Cutout": "OP50: Body perimeter contour",
-            "Neck Mortise": "OP20: Neck pocket",
-            "Pickup Cavity": "OP21: Pickup routes",
-            "Electronic Cavities": "OP22: Electronics cavity",
-            "Cover Recess": "OP25: Back cover recess",
-            "Wiring Channel": "OP40: Wiring channels",
-            "Pot Holes": "OP60: Control pot drilling",
-            "Studs": "OP61: Bridge/tailpiece studs",
-        }
-        
-        for layer, op in layer_ops.items():
-            if layer in summary['layers']:
-                recommended.append(op)
-        
+        reader = LesPaulDXFReader()
+        body_data = reader.read_dxf(tmp_path)
+
         return AnalyzeResponse(
             filepath=file.filename,
-            body_outline=summary.get('body_outline'),
-            layers=summary['layers'],
-            origin_offset=summary['origin_offset'],
-            recommended_operations=recommended,
+            body_outline=body_data.get("outline"),
+            layers=body_data.get("layers", {}),
+            origin_offset=body_data.get("origin_offset", (0, 0)),
+            recommended_operations=[
+                "rough_perimeter",
+                "finish_perimeter",
+                "pocket_cavities",
+                "drill_holes",
+            ],
         )
-        
     finally:
         os.unlink(tmp_path)
 
+
+# =============================================================================
+# DRAFT LANE: Fast preview, no RMOS tracking
+# =============================================================================
 
 @router.post("/generate", response_model=GenerateResponse)
 async def generate_body_gcode(
@@ -233,62 +308,50 @@ async def generate_body_gcode(
     post_id: str = "Mach4",
     machine: str = "txrx_router",
     stock_thickness_in: float = 1.75,
-    tab_count: int = 6,
-    job_name: Optional[str] = None
-):
+    job_name: Optional[str] = None,
+) -> GenerateResponse:
     """
-    Generate G-code for guitar body from DXF.
-    
-    Upload a layered DXF file to generate production G-code.
-    Includes all operations: pockets, channels, perimeter, drilling.
+    Generate body G-code from DXF file (DRAFT lane).
+
+    Fast preview endpoint - no RMOS artifact persistence.
+    For production/machine execution, use /generate_governed.
     """
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(400, "File must be a DXF file")
-    
+    if not file.filename or not file.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=400, detail="File must be a .dxf file")
+
+    # Validate post_id
     if post_id not in POST_CONFIGS:
-        raise HTTPException(400, f"Unknown post-processor: {post_id}")
-    
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown post_id: {post_id}. Available: {list(POST_CONFIGS.keys())}"
+        )
+
     # Save to temp file
-    with tempfile.NamedTemporaryFile(suffix='.dxf', delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
         content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
-    
+
     try:
-        # Use job name from filename if not provided
-        if not job_name:
-            job_name = file.filename.rsplit('.', 1)[0]
-        
-        gen = LesPaulBodyGenerator(tmp_path, machine=machine)
-        
-        # Create generator with custom settings
-        gen.generator = LesPaulGCodeGenerator(
-            reader=gen.reader,
-            machine=gen.machine,
+        final_job_name = job_name or file.filename.replace(".dxf", "")
+
+        gcode, stats, body_size = generate_body_gcode_from_dxf(
+            tmp_path=tmp_path,
+            machine=machine,
             stock_thickness_in=stock_thickness_in,
+            post_id=post_id,
+            job_name=final_job_name,
         )
-        
-        gcode = gen.generator.generate_full_program(job_name)
-        
-        # Wrap with post-specific header/footer
-        gcode = inject_post_header(gcode, post_id, job_name)
-        
-        stats = gen.generator.get_stats()
-        
+
         return GenerateResponse(
             gcode=gcode,
             post_id=post_id,
-            job_name=job_name,
+            job_name=final_job_name,
             stats=stats,
-            body_size={
-                'width': gen.reader.body_outline.width if gen.reader.body_outline else 0,
-                'height': gen.reader.body_outline.height if gen.reader.body_outline else 0,
-            },
+            body_size=body_size,
         )
-        
     finally:
         os.unlink(tmp_path)
-
 
 @router.post("/export/multi")
 async def export_multi_post(
@@ -296,131 +359,307 @@ async def export_multi_post(
     post_ids: str = "GRBL,Mach4,LinuxCNC,PathPilot,MASSO",
     machine: str = "txrx_router",
     stock_thickness_in: float = 1.75,
-    job_name: Optional[str] = None
-):
+    job_name: Optional[str] = None,
+) -> StreamingResponse:
     """
-    Generate multi-post ZIP bundle.
-    
-    Creates a ZIP file containing:
-    - One .nc file per post-processor
-    - manifest.json with generation metadata
-    - DXF analysis summary
+    Generate multi-post ZIP export (DRAFT lane).
+
+    Returns ZIP file with G-code for each selected post-processor.
+    For production/machine execution, use /export/multi_governed.
     """
-    if not file.filename.lower().endswith('.dxf'):
-        raise HTTPException(400, "File must be a DXF file")
-    
-    # Parse post IDs
-    posts = [p.strip() for p in post_ids.split(',') if p.strip()]
-    invalid_posts = [p for p in posts if p not in POST_CONFIGS]
-    if invalid_posts:
-        raise HTTPException(400, f"Unknown post-processors: {invalid_posts}")
-    
+    if not file.filename or not file.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=400, detail="File must be a .dxf file")
+
+    post_list = [p.strip() for p in post_ids.split(",") if p.strip()]
+
+    # Validate all post_ids
+    for pid in post_list:
+        if pid not in POST_CONFIGS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown post_id: {pid}. Available: {list(POST_CONFIGS.keys())}"
+            )
+
     # Save to temp file
-    with tempfile.NamedTemporaryFile(suffix='.dxf', delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
         content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
-    
+
     try:
-        if not job_name:
-            job_name = file.filename.rsplit('.', 1)[0]
-        
-        gen = LesPaulBodyGenerator(tmp_path, machine=machine)
-        
+        final_job_name = job_name or file.filename.replace(".dxf", "")
+
         # Create ZIP in memory
         zip_buffer = BytesIO()
-        
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-            manifest = {
-                'job_name': job_name,
-                'generated': datetime.now().isoformat(),
-                'source_file': file.filename,
-                'machine': machine,
-                'stock_thickness_in': stock_thickness_in,
-                'posts': {},
-            }
-            
-            for post_id in posts:
-                # Generate G-code for this post
-                gen.generator = LesPaulGCodeGenerator(
-                    reader=gen.reader,
-                    machine=gen.machine,
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for pid in post_list:
+                gcode, stats, body_size = generate_body_gcode_from_dxf(
+                    tmp_path=tmp_path,
+                    machine=machine,
                     stock_thickness_in=stock_thickness_in,
+                    post_id=pid,
+                    job_name=final_job_name,
                 )
-                
-                gcode = gen.generator.generate_full_program(job_name)
-                gcode = inject_post_header(gcode, post_id, job_name)
-                
-                # Add to ZIP
-                filename = f"{job_name}_{post_id}.nc"
+
+                filename = f"{final_job_name}_{pid}.nc"
                 zf.writestr(filename, gcode)
-                
-                manifest['posts'][post_id] = {
-                    'filename': filename,
-                    'lines': len(gcode.split('\n')),
-                }
-            
-            # Add manifest
-            zf.writestr('manifest.json', json.dumps(manifest, indent=2))
-            
-            # Add DXF summary
-            summary = gen.reader.get_summary()
-            summary['stats'] = gen.generator.get_stats() if gen.generator else {}
-            zf.writestr('dxf_analysis.json', json.dumps(summary, indent=2))
-        
+
         zip_buffer.seek(0)
-        
+
         return StreamingResponse(
             zip_buffer,
-            media_type='application/zip',
+            media_type="application/zip",
             headers={
-                'Content-Disposition': f'attachment; filename="{job_name}_multi_post.zip"'
-            }
+                "Content-Disposition": f'attachment; filename="{final_job_name}_multi.zip"',
+                "X-ToolBox-Lane": "draft",
+            },
         )
-        
     finally:
         os.unlink(tmp_path)
 
 
+# =============================================================================
+# GOVERNED LANE: Full RMOS artifact persistence and audit trail
+# =============================================================================
+
+@router.post("/generate_governed", response_model=GenerateGovernedResponse)
+async def generate_body_gcode_governed(
+    file: UploadFile = File(...),
+    post_id: str = "Mach4",
+    machine: str = "txrx_router",
+    stock_thickness_in: float = 1.75,
+    job_name: Optional[str] = None,
+) -> GenerateGovernedResponse:
+    """
+    Generate body G-code from DXF file (GOVERNED lane).
+
+    Same G-code as /generate but with full RMOS artifact persistence:
+    - Creates immutable RunArtifact
+    - SHA256 hashes request and output
+    - Returns run_id for audit trail
+
+    Use this endpoint for production/machine execution.
+    """
+    if not file.filename or not file.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=400, detail="File must be a .dxf file")
+
+    # Validate post_id
+    if post_id not in POST_CONFIGS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown post_id: {post_id}. Available: {list(POST_CONFIGS.keys())}"
+        )
+
+    # Save to temp file
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        final_job_name = job_name or file.filename.replace(".dxf", "")
+
+        # Build request hash (for audit)
+        request_data = {
+            "filename": file.filename,
+            "post_id": post_id,
+            "machine": machine,
+            "stock_thickness_in": stock_thickness_in,
+            "job_name": final_job_name,
+        }
+        request_hash = sha256_of_obj(request_data)
+
+        gcode, stats, body_size = generate_body_gcode_from_dxf(
+            tmp_path=tmp_path,
+            machine=machine,
+            stock_thickness_in=stock_thickness_in,
+            post_id=post_id,
+            job_name=final_job_name,
+        )
+
+        # Hash G-code for provenance
+        gcode_hash = sha256_of_text(gcode)
+
+        # Create RMOS artifact
+        now = datetime.now(timezone.utc).isoformat()
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="body_gcode",
+            workflow_mode="body_generation",
+            event_type="body_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+
+        return GenerateGovernedResponse(
+            gcode=gcode,
+            post_id=post_id,
+            job_name=final_job_name,
+            stats=stats,
+            body_size=body_size,
+            run_id=run_id,
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+    finally:
+        os.unlink(tmp_path)
+
+@router.post("/export/multi_governed")
+async def export_multi_post_governed(
+    file: UploadFile = File(...),
+    post_ids: str = "GRBL,Mach4,LinuxCNC,PathPilot,MASSO",
+    machine: str = "txrx_router",
+    stock_thickness_in: float = 1.75,
+    job_name: Optional[str] = None,
+) -> StreamingResponse:
+    """
+    Generate multi-post ZIP export (GOVERNED lane).
+
+    Same ZIP as /export/multi but with full RMOS artifact persistence:
+    - Creates RunArtifact for each post-processor
+    - SHA256 hashes all outputs
+    - Returns run_ids in response headers
+
+    Use this endpoint for production/machine execution.
+    """
+    if not file.filename or not file.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=400, detail="File must be a .dxf file")
+
+    post_list = [p.strip() for p in post_ids.split(",") if p.strip()]
+
+    # Validate all post_ids
+    for pid in post_list:
+        if pid not in POST_CONFIGS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown post_id: {pid}. Available: {list(POST_CONFIGS.keys())}"
+            )
+
+    # Save to temp file
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        final_job_name = job_name or file.filename.replace(".dxf", "")
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Track all run_ids and hashes
+        run_ids = []
+        gcode_hashes = []
+
+        # Create ZIP in memory
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for pid in post_list:
+                # Build request hash for this post
+                request_data = {
+                    "filename": file.filename,
+                    "post_id": pid,
+                    "machine": machine,
+                    "stock_thickness_in": stock_thickness_in,
+                    "job_name": final_job_name,
+                }
+                request_hash = sha256_of_obj(request_data)
+
+                gcode, stats, body_size = generate_body_gcode_from_dxf(
+                    tmp_path=tmp_path,
+                    machine=machine,
+                    stock_thickness_in=stock_thickness_in,
+                    post_id=pid,
+                    job_name=final_job_name,
+                )
+
+                # Hash G-code
+                gcode_hash = sha256_of_text(gcode)
+                gcode_hashes.append(gcode_hash)
+
+                # Create RMOS artifact for this post
+                run_id = create_run_id()
+                run_ids.append(run_id)
+
+                artifact = RunArtifact(
+                    run_id=run_id,
+                    created_at_utc=now,
+                    tool_id="body_gcode",
+                    workflow_mode="body_generation",
+                    event_type="body_gcode_execution",
+                    status="OK",
+                    request_hash=request_hash,
+                    gcode_hash=gcode_hash,
+                    notes=f"Multi-export post: {pid}",
+                )
+                persist_run(artifact)
+
+                filename = f"{final_job_name}_{pid}.nc"
+                zf.writestr(filename, gcode)
+
+        zip_buffer.seek(0)
+
+        # Hash the entire ZIP for aggregate provenance
+        zip_content = zip_buffer.getvalue()
+        zip_hash = sha256_of_text(zip_content.decode("latin-1"))
+        zip_buffer.seek(0)
+
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{final_job_name}_multi.zip"',
+                "X-ToolBox-Lane": "governed",
+                "X-Run-IDs": ",".join(run_ids),
+                "X-GCode-SHA256s": ",".join(gcode_hashes),
+                "X-ZIP-SHA256": zip_hash,
+            },
+        )
+    finally:
+        os.unlink(tmp_path)
+
+
+# =============================================================================
+# INFO ENDPOINTS (UTILITY lane)
+# =============================================================================
+
 @router.get("/machines")
-async def list_machines():
+def list_machines() -> Dict[str, Any]:
     """List available machine configurations."""
     return {
         name: {
-            'name': m.name,
-            'max_x_in': m.max_x_in,
-            'max_y_in': m.max_y_in,
-            'max_z_in': m.max_z_in,
-            'safe_z_in': m.safe_z_in,
+            "name": cfg.name,
+            "max_x_in": cfg.max_x_in,
+            "max_y_in": cfg.max_y_in,
+            "max_z_in": cfg.max_z_in,
         }
-        for name, m in MACHINES.items()
+        for name, cfg in MACHINES.items()
     }
 
 
 @router.get("/tools")
-async def list_tools():
+def list_tools() -> Dict[str, Any]:
     """List available tool configurations."""
     return {
-        num: {
-            'number': t.number,
-            'name': t.name,
-            'diameter_in': t.diameter_in,
-            'rpm': t.rpm,
-            'feed_ipm': t.feed_ipm,
-            'stepdown_in': t.stepdown_in,
-            'stepover_pct': t.stepover_pct,
+        name: {
+            "number": cfg.number,
+            "name": cfg.name,
+            "diameter_in": cfg.diameter_in,
+            "rpm": cfg.rpm,
         }
-        for num, t in TOOLS.items()
+        for name, cfg in TOOLS.items()
     }
 
 
 @router.get("/posts")
-async def list_posts():
-    """List available post-processors."""
+def list_posts() -> Dict[str, Any]:
+    """List available post-processor configurations."""
     return {
-        post_id: {
-            'units': config['units'],
-            'arc_mode': config.get('arc_mode', 'IJK'),
+        name: {
+            "units": cfg["units"],
+            "arc_mode": cfg["arc_mode"],
         }
-        for post_id, config in POST_CONFIGS.items()
+        for name, cfg in POST_CONFIGS.items()
     }
