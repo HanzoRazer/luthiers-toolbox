@@ -34,6 +34,30 @@ const editValue = ref<string>("");
 const exporting = ref(false);
 const exportError = ref<string | null>(null);
 
+// Selection state (bulk decision)
+const selectedIds = ref<Set<string>>(new Set());
+const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
+
+// Undo stack for bulk decisions (client-side)
+type UndoItem = {
+  ts_utc: string;
+  run_id: string;
+  label: string;
+  applied_decision: RiskLevel;
+  candidate_ids: string[];
+  // snapshot needed to restore
+  prev: Record<
+    string,
+    {
+      decision: RiskLevel | null;
+      decision_note: string | null;
+    }
+  >;
+};
+const undoStack = ref<UndoItem[]>([]);
+const undoBusy = ref(false);
+const undoError = ref<string | null>(null);
+
 function decisionBadge(decision: RiskLevel | null | undefined) {
   if (decision == null) return "NEEDS_DECISION";
   return decision;
@@ -82,10 +106,16 @@ async function load() {
   loading.value = true;
   error.value = null;
   exportError.value = null;
+  undoError.value = null;
   try {
     const res = await listManufacturingCandidates(props.runId);
     candidates.value = (res.items ?? []) as CandidateRow[];
     requestId.value = res.requestId ?? "";
+    // prune selection set to only existing candidates
+    const existing = new Set(candidates.value.map((c) => c.candidate_id));
+    const next = new Set<string>();
+    for (const id of selectedIds.value) if (existing.has(id)) next.add(id);
+    selectedIds.value = next;
   } catch (e: any) {
     error.value = e?.message ?? String(e);
   } finally {
@@ -172,6 +202,150 @@ async function decide(c: CandidateRow, decision: RiskLevel) {
   } finally {
     saving.value = false;
   }
+}
+
+// -------------------------
+// Bulk decision (GREEN/YELLOW/RED) with undo
+// -------------------------
+const selectedRows = computed(() => {
+  const s = selectedIds.value;
+  return candidates.value.filter((c) => s.has(c.candidate_id));
+});
+
+function toggleOne(id: string) {
+  const next = new Set(selectedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  selectedIds.value = next;
+}
+
+function toggleAll() {
+  if (selectingAll.value) {
+    selectedIds.value = new Set();
+    return;
+  }
+  selectedIds.value = new Set(candidates.value.map((c) => c.candidate_id));
+}
+
+function utcNowIso() {
+  return new Date().toISOString();
+}
+
+async function bulkSetDecision(decision: RiskLevel) {
+  if (!props.runId) return;
+  undoError.value = null;
+  saveError.value = null;
+
+  const rows = selectedRows.value;
+  if (rows.length === 0) {
+    undoError.value = "Select at least one candidate first.";
+    return;
+  }
+
+  // Snapshot previous states (for undo)
+  const prev: UndoItem["prev"] = {};
+  for (const r of rows) {
+    prev[r.candidate_id] = {
+      decision: (r.decision ?? null) as any,
+      decision_note: (r.decision_note ?? null) as any,
+    };
+  }
+
+  saving.value = true;
+  try {
+    // Sequential, deterministic updates (keeps audit clean and avoids request bursts)
+    for (const r of rows) {
+      const res = await decideManufacturingCandidate(props.runId, r.candidate_id, {
+        decision,
+        note: r.decision_note ?? null,
+        decided_by: null,
+      });
+      requestId.value = res.requestId ?? requestId.value;
+
+      const idx = candidates.value.findIndex((x) => x.candidate_id === r.candidate_id);
+      if (idx >= 0) {
+        candidates.value[idx] = {
+          ...candidates.value[idx],
+          decision: (res.decision ?? decision) as any,
+          status: (res.status ?? candidates.value[idx].status ?? null) as any,
+          decision_note: res.decision_note ?? candidates.value[idx].decision_note ?? null,
+          decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
+          decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
+          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
+        };
+      }
+      await new Promise((rr) => setTimeout(rr, 40));
+    }
+
+    // push undo record
+    undoStack.value.unshift({
+      ts_utc: utcNowIso(),
+      run_id: props.runId,
+      label: `Bulk set ${rows.length} → ${decision}`,
+      applied_decision: decision,
+      candidate_ids: rows.map((x) => x.candidate_id),
+      prev,
+    });
+    // keep stack small/high-signal
+    if (undoStack.value.length > 20) undoStack.value = undoStack.value.slice(0, 20);
+  } catch (e: any) {
+    saveError.value = e?.message ?? String(e);
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function undoLast() {
+  if (!props.runId) return;
+  if (undoStack.value.length === 0) return;
+  undoBusy.value = true;
+  undoError.value = null;
+
+  const item = undoStack.value[0];
+  try {
+    for (const id of item.candidate_ids) {
+      const snap = item.prev[id];
+      if (!snap) continue;
+      const res = await decideManufacturingCandidate(props.runId, id, {
+        decision: snap.decision, // may be null (back to NEEDS_DECISION)
+        note: snap.decision_note,
+        decided_by: null,
+      });
+      requestId.value = res.requestId ?? requestId.value;
+
+      const idx = candidates.value.findIndex((x) => x.candidate_id === id);
+      if (idx >= 0) {
+        candidates.value[idx] = {
+          ...candidates.value[idx],
+          decision: (res.decision ?? snap.decision ?? null) as any,
+          status: (res.status ?? candidates.value[idx].status ?? null) as any,
+          decision_note: res.decision_note ?? snap.decision_note ?? null,
+          decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
+          decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
+          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
+        };
+      }
+      await new Promise((rr) => setTimeout(rr, 40));
+    }
+    // pop after successful undo
+    undoStack.value.shift();
+  } catch (e: any) {
+    undoError.value = e?.message ?? String(e);
+  } finally {
+    undoBusy.value = false;
+  }
+}
+
+function undoStackHover(item: UndoItem) {
+  const ids = item.candidate_ids.slice(0, 6).join(", ");
+  const more = item.candidate_ids.length > 6 ? ` …(+${item.candidate_ids.length - 6})` : "";
+  return [
+    `When: ${item.ts_utc}`,
+    `Run: ${item.run_id}`,
+    `Action: ${item.label}`,
+    `Candidates: ${ids}${more}`,
+    `Undo applies previous decision + note (including null).`,
+  ].join("\n");
 }
 
 // -------------------------
@@ -262,12 +436,22 @@ async function exportGreenOnlyZips() {
     <p v-if="error" class="error">Error: {{ error }}</p>
     <p v-if="saveError" class="error">Save error: {{ saveError }}</p>
     <p v-if="exportError" class="error">Export: {{ exportError }}</p>
+    <p v-if="undoError" class="error">Undo: {{ undoError }}</p>
 
     <p v-if="loading" class="muted">Loading candidates…</p>
     <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
 
     <div v-else class="table">
       <div class="row head">
+        <div class="sel">
+          <input
+            type="checkbox"
+            :checked="selectingAll"
+            @change="toggleAll"
+            :disabled="saving || exporting || undoBusy"
+            title="Select all"
+          />
+        </div>
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
@@ -276,12 +460,60 @@ async function exportGreenOnlyZips() {
         <div class="actions">Actions</div>
       </div>
 
+      <!-- Bulk decision bar -->
+      <div class="bulkbar" v-if="candidates.length > 0">
+        <div class="bulk-left">
+          <span class="muted">
+            Selected: <strong>{{ selectedIds.size }}</strong>
+          </span>
+          <span class="muted" v-if="selectedIds.size === 0"> (select rows to bulk-set decision)</span>
+        </div>
+        <div class="bulk-actions">
+          <button class="btn" @click="bulkSetDecision('GREEN')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to GREEN">
+            Bulk GREEN
+          </button>
+          <button class="btn" @click="bulkSetDecision('YELLOW')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to YELLOW">
+            Bulk YELLOW
+          </button>
+          <button class="btn danger" @click="bulkSetDecision('RED')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to RED">
+            Bulk RED
+          </button>
+          <button
+            class="btn ghost"
+            @click="undoLast"
+            :disabled="undoBusy || saving || exporting || undoStack.length === 0"
+            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'"
+          >
+            {{ undoBusy ? "Undoing…" : "Undo last" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Undo history display -->
+      <div class="undolist" v-if="undoStack.length > 0">
+        <div class="undotitle muted">Undo history (most recent first)</div>
+        <div class="undoitem" v-for="(u, idx) in undoStack.slice(0, 5)" :key="u.ts_utc + ':' + idx" :title="undoStackHover(u)">
+          <span class="mono">{{ u.ts_utc }}</span>
+          <span>—</span>
+          <span>{{ u.label }}</span>
+        </div>
+      </div>
+
       <div
         v-for="c in candidates"
         :key="c.candidate_id"
         class="row"
         :title="auditHover(c)"
       >
+        <div class="sel">
+          <input
+            type="checkbox"
+            :checked="selectedIds.has(c.candidate_id)"
+            @change="toggleOne(c.candidate_id)"
+            :disabled="saving || exporting || undoBusy"
+            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'"
+          />
+        </div>
         <div class="mono">{{ c.candidate_id }}</div>
         <div class="mono">{{ c.advisory_id ?? "—" }}</div>
 
@@ -348,8 +580,9 @@ async function exportGreenOnlyZips() {
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
 
 .table { display: grid; gap: 6px; }
-.row { display: grid; grid-template-columns: 140px 1fr 140px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
+.row { display: grid; grid-template-columns: 34px 140px 1fr 140px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
+.sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; cursor: pointer; }
@@ -362,6 +595,12 @@ async function exportGreenOnlyZips() {
 
 .note textarea { width: 100%; resize: vertical; padding: 6px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.16); }
 .editor-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+.bulkbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px; border: 1px dashed rgba(0,0,0,0.18); border-radius: 10px; }
+.bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.undolist { display: grid; gap: 4px; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
+.undotitle { font-size: 12px; }
+.undoitem { display: flex; gap: 8px; align-items: center; font-size: 12px; }
 
 .policy ul { margin: 6px 0 0 18px; }
 </style>
