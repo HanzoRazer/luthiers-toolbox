@@ -494,7 +494,12 @@ async def generate_pocket_probe(body: PocketProbeIn) -> ProbeOut:
 
 @router.post("/pocket/gcode/download")
 async def download_pocket_probe(body: PocketProbeIn) -> Response:
-    """Download pocket probe G-code as .nc file."""
+    """
+    Download pocket probe G-code as .nc file (DRAFT lane).
+    
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /pocket/gcode/download_governed.
+    """
     try:
         gcode = probe_patterns.generate_pocket_probe(
             pocket_width=body.pocket_width,
@@ -510,13 +515,71 @@ async def download_pocket_probe(body: PocketProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"pocket_inside_{wcs}.nc"
         
-        return Response(
+        resp = Response(
             content=gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename={filename}"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/pocket/gcode/download_governed")
+async def download_pocket_probe_governed(body: PocketProbeIn) -> Response:
+    """
+    Download pocket probe G-code as .nc file (GOVERNED lane).
+    
+    Same toolpath as /pocket/gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        gcode = probe_patterns.generate_pocket_probe(
+            pocket_width=body.pocket_width,
+            pocket_height=body.pocket_height,
+            approach_distance=body.approach_distance,
+            retract_distance=body.retract_distance,
+            feed_probe=body.feed_probe,
+            safe_z=body.safe_z,
+            work_offset=body.work_offset,
+            origin_corner=body.origin_corner
+        )
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(body.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(gcode)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="pocket_probe_gcode",
+            workflow_mode="probing",
+            event_type="pocket_probe_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        wcs = f"g{54 + body.work_offset - 1}"
+        filename = f"pocket_inside_{wcs}.nc"
+        
+        resp = Response(
+            content=gcode,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -547,7 +610,12 @@ async def generate_vise_square_probe(body: ViseSquareProbeIn) -> ProbeOut:
 
 @router.post("/vise_square/gcode/download")
 async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
-    """Download vise squareness check G-code as .nc file."""
+    """
+    Download vise squareness check G-code as .nc file (DRAFT lane).
+    
+    This is the draft/preview lane - no RMOS artifact persistence.
+    For governed execution with full audit trail, use /vise_square/gcode/download_governed.
+    """
     try:
         gcode = probe_patterns.generate_vise_square_probe(
             vise_jaw_height=body.vise_jaw_height,
@@ -560,13 +628,68 @@ async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
         
         filename = "vise_squareness_check.nc"
         
-        return Response(
+        resp = Response(
             content=gcode,
             media_type="text/plain",
             headers={
                 "Content-Disposition": f"attachment; filename={filename}"
             }
         )
+        resp.headers["X-ToolBox-Lane"] = "draft"
+        return resp
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/vise_square/gcode/download_governed")
+async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Response:
+    """
+    Download vise squareness check G-code as .nc file (GOVERNED lane).
+    
+    Same toolpath as /vise_square/gcode/download but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    try:
+        gcode = probe_patterns.generate_vise_square_probe(
+            vise_jaw_height=body.vise_jaw_height,
+            probe_spacing=body.probe_spacing,
+            approach_distance=body.approach_distance,
+            retract_distance=body.retract_distance,
+            feed_probe=body.feed_probe,
+            safe_z=body.safe_z
+        )
+        
+        now = datetime.now(timezone.utc).isoformat()
+        request_hash = sha256_of_obj(body.model_dump(mode="json"))
+        gcode_hash = sha256_of_text(gcode)
+        
+        run_id = create_run_id()
+        artifact = RunArtifact(
+            run_id=run_id,
+            created_at_utc=now,
+            tool_id="vise_square_probe_gcode",
+            workflow_mode="probing",
+            event_type="vise_square_probe_gcode_execution",
+            status="OK",
+            request_hash=request_hash,
+            gcode_hash=gcode_hash,
+        )
+        persist_run(artifact)
+        
+        filename = "vise_squareness_check.nc"
+        
+        resp = Response(
+            content=gcode,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        resp.headers["X-Run-ID"] = run_id
+        resp.headers["X-GCode-SHA256"] = gcode_hash
+        resp.headers["X-ToolBox-Lane"] = "governed"
+        return resp
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
