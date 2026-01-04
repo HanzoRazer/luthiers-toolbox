@@ -397,7 +397,7 @@ watch(runId, () => {
 
       <!-- Manufacturing candidates -->
       <div class="panel wide">
-        <ManufacturingCandidateList :runId="runId" apiBase="/api/rmos" />
+        <ManufacturingCandidateList :runId="runId" />
       </div>
     </div>
 
