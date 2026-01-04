@@ -67,7 +67,7 @@ jobs:
             ]
           }
           gcode = "G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X60 Y0\nG3 X60 Y40 I0 J20\nG3 X0 Y40 I-30 J0\nG3 X0 Y0 I0 J-20\nG0 Z5\n"
-          url = f"{base}/api/geometry/parity"
+          url = f"{base}/geometry/parity"
           req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
           out = urllib.request.urlopen(req).read().decode()
           result = json.loads(out)
