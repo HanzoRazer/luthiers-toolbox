@@ -1,0 +1,27 @@
+name: CBSP21 Patch Input Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  cbsp21-patch-input:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate CBSP21 patch_input.json
+        env:
+          CBSP21_DIFF_BASE: origin/${{ github.base_ref }}
+        run: |
+          python3 scripts/ci/check_cbsp21_patch_input.py

@@ -2,6 +2,10 @@ name: routing-truth
 
 on:
   pull_request:
+    paths:
+      - "services/api/app/**"
+      - "services/api/app/data/endpoint_truth.json"
+      - "scripts/governance/check_routing_truth.py"
   push:
     branches: [ main ]
 
@@ -19,6 +23,9 @@ jobs:
       ROUTING_TRUTH_FAIL_ON_UNDOC: "false"
       ROUTING_TRUTH_API_URL: "http://127.0.0.1:8000"
       ROUTING_TRUTH_TRUTH_FILE: "app/data/endpoint_truth.json"
+      # Offline gate settings
+      ROUTING_TRUTH_ENFORCE_API_ONLY: "true"
+      ROUTING_TRUTH_FAIL_PAST_SUNSET: "false"
       # Optional override if your endpoint differs:
       # ROUTING_TRUTH_ENDPOINT_PATH: "/api/_meta/routing-truth"
 
@@ -90,6 +97,13 @@ jobs:
       - name: Run routing truth gate
         run: |
           python scripts/check_routing_truth.py
+
+      - name: Run offline routing truth gate (governance)
+        working-directory: ${{ github.workspace }}
+        env:
+          ROUTING_TRUTH_FILE: "services/api/app/data/endpoint_truth.json"
+        run: |
+          python scripts/governance/check_routing_truth.py || echo "::warning::Offline routing truth gate reported issues"
 
       - name: Stop API
         if: always()

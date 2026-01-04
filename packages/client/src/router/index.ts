@@ -148,6 +148,13 @@ const routes: RouteRecordRaw[] = [
     name: "RunVariantsReview",
     component: () => import("@/views/Runs/RunVariantsReviewPage.vue"),
   },
+
+  // Tools: Audio Analyzer Evidence Viewer
+  {
+    path: "/tools/audio-analyzer",
+    name: "AudioAnalyzerViewer",
+    component: () => import("@/views/tools/AudioAnalyzerViewer.vue"),
+  },
 ];
 
 const router = createRouter({

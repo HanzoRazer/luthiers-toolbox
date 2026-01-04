@@ -15,6 +15,7 @@
   "dependencies": {
     "chart.js": "^4.5.1",
     "html2canvas": "^1.4.1",
+    "jszip": "^3.10.1",
     "marked": "^17.0.1",
     "pinia": "^2.1.7",
     "vue": "^3.4.0",
