@@ -1,0 +1,9 @@
+{
+  "machine_id": "Mach4_Router_4x8",
+  "machine_profile": "Mach4_Router_4x8",
+  "rules": {},
+  "meta": {
+    "samples": 2,
+    "r_min": 5.0
+  }
+}
