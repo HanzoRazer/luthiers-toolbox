@@ -43,6 +43,16 @@ from fastapi import APIRouter, Body, File, HTTPException, Request, Response, Upl
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+# Import RMOS run artifact persistence (OPERATION lane requirement)
+from datetime import timezone
+from ..rmos.runs import (
+    RunArtifact,
+    persist_run,
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+)
+
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ..geometry.arc_utils import tessellate_arc_radians, nearest_point_distance
 
@@ -790,11 +800,76 @@ def export_gcode(body: GcodeExportIn) -> Response:
     # Use job_name for filename if provided
     stem = _safe_stem(body.job_name, default_prefix="program")
     
-    return Response(
+    resp = Response(
         content=program,
         media_type="text/plain",
         headers={"Content-Disposition": f'attachment; filename="{stem}.nc"'},
     )
+    resp.headers["X-ToolBox-Lane"] = "draft"
+    return resp
+
+
+@router.post("/export_gcode_governed")
+def export_gcode_governed(body: GcodeExportIn) -> Response:
+    """
+    Export G-code with post-processor headers/footers and metadata (GOVERNED lane).
+    
+    Same functionality as /export_gcode but with full RMOS artifact persistence.
+    Use this endpoint for production/machine execution.
+    """
+    posts = _load_posts()
+    hdr = []
+    ftr = []
+    units_code = _units_gcode(body.units or "mm")
+    meta = _metadata_comment(body.units or "mm", body.post_id or "")
+    
+    # Case-insensitive post lookup
+    posts_lower = {k.lower(): v for k, v in posts.items()}
+    if body.post_id and body.post_id.lower() in posts_lower:
+        post = posts_lower[body.post_id.lower()]
+        hdr = (post.get("header") or [])[:]
+        ftr = (post.get("footer") or [])[:]
+    
+    # Ensure units + meta are present in header
+    if units_code not in hdr:
+        hdr = [units_code] + hdr
+    hdr = hdr + [meta]
+    
+    program = "
+".join(hdr + [body.gcode.strip()] + ftr) + ("
+" if not body.gcode.endswith("
+") else "")
+    
+    # Create RMOS artifact
+    now = datetime.datetime.now(timezone.utc).isoformat()
+    request_hash = sha256_of_obj(body.model_dump(mode="json"))
+    gcode_hash = sha256_of_text(program)
+    
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        created_at_utc=now,
+        tool_id="geometry_export_gcode",
+        workflow_mode="geometry_export",
+        event_type="geometry_export_gcode_execution",
+        status="OK",
+        request_hash=request_hash,
+        gcode_hash=gcode_hash,
+    )
+    persist_run(artifact)
+    
+    # Use job_name for filename if provided
+    stem = _safe_stem(body.job_name, default_prefix="program")
+    
+    resp = Response(
+        content=program,
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{stem}.nc"'},
+    )
+    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-GCode-SHA256"] = gcode_hash
+    resp.headers["X-ToolBox-Lane"] = "governed"
+    return resp
 
 
 class ExportBundleIn(BaseModel):
