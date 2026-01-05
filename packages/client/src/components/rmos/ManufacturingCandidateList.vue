@@ -148,6 +148,7 @@ function _hotkeyHelp(): string {
     "c = Clear shown (post-filter)",
     "i = Invert selection (shown rows)",
     "x = Clear all selection",
+    "h = Toggle bulk history panel",
     "esc = Clear selection",
   ].join("\n");
 }
@@ -180,6 +181,11 @@ function _onKeydown(ev: KeyboardEvent) {
   if (k === "x") {
     ev.preventDefault();
     _clearSelection();
+    return;
+  }
+  if (k === "h") {
+    ev.preventDefault();
+    showBulkHistory.value = !showBulkHistory.value;
     return;
   }
   if (selectedIds.value.size === 0) return; // decision hotkeys require selection
@@ -240,6 +246,63 @@ type UndoItem = {
 const undoStack = ref<UndoItem[]>([]);
 const undoBusy = ref(false);
 const undoError = ref<string | null>(null);
+
+// -----------------------------------------------------------------------------
+// micro-follow: bulk set decision v2 (dropdown + shared note + history panel)
+// + undo history display (product-only, still wired to runs.ts)
+// -----------------------------------------------------------------------------
+type RiskDecision = "GREEN" | "YELLOW" | "RED";
+type BulkUndoItem = {
+  candidate_id: string;
+  prev_decision: RiskDecision | null;
+  prev_note: string | null;
+  next_decision: RiskDecision | null;
+  next_note: string | null;
+};
+type BulkActionRecord = {
+  id: string;
+  at_utc: string;
+  decision: RiskDecision | null;
+  note: string | null;
+  selected_count: number;
+  applied_count: number;
+  failed_count: number;
+  items: BulkUndoItem[];
+};
+
+const bulkDecision = ref<RiskDecision | null>(null);
+const bulkNote = ref<string>("");
+const bulkApplying = ref(false);
+const bulkProgress = ref<{ total: number; done: number; fail: number } | null>(null);
+const bulkHistory = ref<BulkActionRecord[]>([]);
+const showBulkHistory = ref(false);
+
+function _utcNowIso(): string {
+  return new Date().toISOString();
+}
+function _mkId(prefix = "bulk"): string {
+  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+}
+function _selectedCandidates(): CandidateRow[] {
+  const ids = selectedIds.value;
+  return candidates.value.filter((c) => ids.has(c.candidate_id));
+}
+function _findCandidate(id: string): CandidateRow | null {
+  return candidates.value.find((c) => c.candidate_id === id) ?? null;
+}
+function _updateCandidateFromDecisionResponse(id: string, res: any) {
+  const idx = candidates.value.findIndex((x) => x.candidate_id === id);
+  if (idx === -1) return;
+  candidates.value[idx] = {
+    ...candidates.value[idx],
+    decision: (res.decision ?? null) as any,
+    status: (res.status ?? candidates.value[idx].status) as any,
+    decision_note: (res.decision_note ?? null) as any,
+    decided_at_utc: (res.decided_at_utc ?? null) as any,
+    decided_by: (res.decided_by ?? null) as any,
+    decision_history: (res.decision_history ?? candidates.value[idx].decision_history ?? null) as any,
+  };
+}
 
 function decisionBadge(decision: RiskLevel | null | undefined) {
   if (decision == null) return "NEEDS_DECISION";
@@ -631,6 +694,132 @@ function clearFilters() {
   statusFilter.value = "ALL";
   showSelectedOnly.value = false;
   searchText.value = "";
+}
+
+// -----------------------------------------------------------------------------
+// micro-follow: bulk decision v2 - apply + undo (with progress + history panel)
+// -----------------------------------------------------------------------------
+async function applyBulkDecision() {
+  if (bulkApplying.value) return;
+  const sel = _selectedCandidates();
+  if (!sel.length) {
+    showToast("No candidates selected", "err");
+    return;
+  }
+  if (bulkDecision.value == null) {
+    showToast("Choose GREEN/YELLOW/RED", "err");
+    return;
+  }
+
+  bulkApplying.value = true;
+  bulkProgress.value = { total: sel.length, done: 0, fail: 0 };
+
+  const record: BulkActionRecord = {
+    id: _mkId("bulk_decision"),
+    at_utc: _utcNowIso(),
+    decision: bulkDecision.value,
+    note: bulkNote.value.trim() ? bulkNote.value.trim() : null,
+    selected_count: sel.length,
+    applied_count: 0,
+    failed_count: 0,
+    items: [],
+  };
+
+  try {
+    for (const c of sel) {
+      const prev_decision = (c.decision ?? null) as RiskDecision | null;
+      const prev_note = (c.decision_note ?? null) as string | null;
+      const next_decision = bulkDecision.value;
+      const next_note = record.note;
+
+      // store undo snapshot *before* mutating
+      record.items.push({
+        candidate_id: c.candidate_id,
+        prev_decision,
+        prev_note,
+        next_decision,
+        next_note,
+      });
+
+      try {
+        const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
+          decision: next_decision,
+          note: next_note,
+        } as any);
+        _updateCandidateFromDecisionResponse(c.candidate_id, res);
+        record.applied_count += 1;
+      } catch (e) {
+        record.failed_count += 1;
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done,
+          fail: bulkProgress.value!.fail + 1,
+        };
+      } finally {
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done + 1,
+          fail: bulkProgress.value!.fail,
+        };
+      }
+    }
+
+    // push record to history (cap to 10)
+    bulkHistory.value = [record, ...bulkHistory.value].slice(0, 10);
+    showToast(
+      record.failed_count
+        ? `Bulk set done (${record.applied_count} ok, ${record.failed_count} failed)`
+        : `Bulk set decision: ${record.decision}`,
+      record.failed_count ? "err" : "ok"
+    );
+  } finally {
+    bulkApplying.value = false;
+    // keep progress visible briefly; user can also open history
+    window.setTimeout(() => (bulkProgress.value = null), 900);
+  }
+}
+
+async function undoLastBulkAction() {
+  if (bulkApplying.value) return;
+  const rec = bulkHistory.value[0];
+  if (!rec) {
+    showToast("No bulk history to undo", "err");
+    return;
+  }
+
+  bulkApplying.value = true;
+  bulkProgress.value = { total: rec.items.length, done: 0, fail: 0 };
+
+  try {
+    for (const it of rec.items) {
+      try {
+        const res = await decideManufacturingCandidate(props.runId, it.candidate_id, {
+          decision: it.prev_decision,
+          note: it.prev_note,
+        } as any);
+        _updateCandidateFromDecisionResponse(it.candidate_id, res);
+      } catch (e) {
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done,
+          fail: bulkProgress.value!.fail + 1,
+        };
+      } finally {
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done + 1,
+          fail: bulkProgress.value!.fail,
+        };
+      }
+    }
+
+    // remove the record we just undid
+    bulkHistory.value = bulkHistory.value.slice(1);
+    showToast("Undid last bulk decision");
+  } finally {
+    bulkApplying.value = false;
+    window.setTimeout(() => (bulkProgress.value = null), 900);
+  }
 }
 
 function toggleOne(id: string, ev?: MouseEvent) {
@@ -1086,7 +1275,7 @@ async function exportGreenOnlyZips() {
           </label>
           <div class="small muted" style="margin-top:4px;">
             <span class="kbdhint" :title="_hotkeyHelp()">
-              Hotkeys: g/y/r · u · e · a · c · i · x · esc
+              Hotkeys: g/y/r · u · e · a · c · i · x · h · esc
             </span>
           </div>
           <div style="margin-top:8px;">
@@ -1161,6 +1350,66 @@ async function exportGreenOnlyZips() {
           <span class="mono">{{ u.ts_utc }}</span>
           <span>—</span>
           <span>{{ u.label }}</span>
+        </div>
+      </div>
+
+      <!-- Bulk decision v2 controls -->
+      <div class="bulkbar2" v-if="selectedIds.size > 0">
+        <div class="bulk-row">
+          <label class="muted">Bulk Decision:</label>
+          <select v-model="bulkDecision" class="selectSmall" :disabled="bulkApplying || saving || exporting">
+            <option value="">— pick —</option>
+            <option value="GREEN">GREEN</option>
+            <option value="YELLOW">YELLOW</option>
+            <option value="RED">RED</option>
+          </select>
+          <input
+            v-model="bulkNote"
+            class="inputSmall"
+            placeholder="Shared note (optional)"
+            :disabled="bulkApplying || saving || exporting"
+          />
+          <button
+            class="btn small"
+            :disabled="bulkApplying || saving || exporting || !bulkDecision"
+            @click="applyBulkDecision"
+          >
+            {{ bulkApplying ? `Applying… (${bulkProgress.done}/${bulkProgress.total})` : 'Apply' }}
+          </button>
+          <button
+            class="btn ghost small"
+            :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
+            @click="undoLastBulkAction"
+            title="Undo last bulk action"
+          >
+            Undo
+          </button>
+          <button
+            class="btn ghost small"
+            @click="showBulkHistory = !showBulkHistory"
+            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'"
+          >
+            {{ showBulkHistory ? 'Hide history' : `History (${bulkHistory.length})` }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk history panel -->
+      <div class="bulkHistory" v-if="showBulkHistory && bulkHistory.length > 0">
+        <div class="bulkHistoryHeader muted">
+          Bulk history (newest first)
+        </div>
+        <div class="bulkHistoryList">
+          <div
+            v-for="rec in bulkHistory"
+            :key="rec.id"
+            class="bulkHistoryRow"
+          >
+            <span class="mono small">{{ rec.ts_utc }}</span>
+            <span class="badge" :class="'b' + rec.decision">{{ rec.decision }}</span>
+            <span>{{ rec.count }} items</span>
+            <span class="muted" v-if="rec.note">— {{ rec.note }}</span>
+          </div>
         </div>
       </div>
 
@@ -1405,4 +1654,19 @@ async function exportGreenOnlyZips() {
   cursor: pointer;
 }
 .history-count:hover { color: #374151; text-decoration: underline; }
+
+/* Bulk decision v2 */
+.bulkbar2 { padding: 10px 14px; background: #f0f7ff; border-radius: 8px; margin-bottom: 10px; }
+.bulk-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.selectSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; }
+.inputSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; min-width: 180px; }
+
+/* Bulk history panel */
+.bulkHistory { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+.bulkHistoryHeader { font-weight: 600; margin-bottom: 8px; }
+.bulkHistoryList { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+.bulkHistoryRow { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.badge.bGREEN { background: #dcfce7; color: #166534; }
+.badge.bYELLOW { background: #fef9c3; color: #854d0e; }
+.badge.bRED { background: #fee2e2; color: #991b1b; }
 </style>
