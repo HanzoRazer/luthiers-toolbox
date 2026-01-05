@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cbsp21_patch_input_v1",
+  "title": "CBSP21 Patch Input Manifest v1",
+  "type": "object",
+  "required": ["schema", "files"],
+  "properties": {
+    "schema": { "type": "string", "const": "cbsp21_patch_input_v1" },
+    "coverage_min": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.95 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string" },
+          "intent": { "type": "string" },
+          "scan_targets": { "type": "array", "items": { "type": "string" } },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+          "behavior_change": { "type": "string" },
+          "verification": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "architecture_scan": {
+      "type": "object",
+      "required": ["scan_id", "risk_summary"],
+      "properties": {
+        "scan_id": { "type": "string" },
+        "risk_summary": {
+          "type": "object",
+          "required": ["critical", "high", "medium", "low"],
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "acknowledged": { "type": "boolean" },
+        "acknowledgement_notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

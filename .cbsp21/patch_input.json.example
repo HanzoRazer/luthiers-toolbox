@@ -15,5 +15,12 @@
         "How to verify this change works (command, test, manual check)"
       ]
     }
-  ]
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-YYYY-MM-DD-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
 }
