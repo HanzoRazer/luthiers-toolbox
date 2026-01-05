@@ -344,7 +344,7 @@ async function clearBulkDecision() {
     id: _mkId("bulk_clear"),
     at_utc: _utcNowIso(),
     decision: null,
-    note: bulkClearNoteToo.value ? null : null,
+    note: null,
     selected_count: sel.length,
     applied_count: 0,
     failed_count: 0,
