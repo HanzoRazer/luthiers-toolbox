@@ -835,10 +835,7 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
         hdr = [units_code] + hdr
     hdr = hdr + [meta]
     
-    program = "
-".join(hdr + [body.gcode.strip()] + ftr) + ("
-" if not body.gcode.endswith("
-") else "")
+    program = "\n".join(hdr + [body.gcode.strip()] + ftr) + ("\n" if not body.gcode.endswith("\n") else "")
     
     # Create RMOS artifact
     now = datetime.datetime.now(timezone.utc).isoformat()

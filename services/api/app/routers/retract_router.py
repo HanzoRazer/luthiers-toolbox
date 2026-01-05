@@ -395,8 +395,7 @@ def generate_simple_retract_gcode_governed(
     gcode_lines.append("M30")
     gcode_lines.append("(End of retract sequence)")
     
-    gcode_text = "
-".join(gcode_lines)
+    gcode_text = "\n".join(gcode_lines)
     
     # Create RMOS artifact
     now = datetime.now(timezone.utc).isoformat()
@@ -493,8 +492,7 @@ def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
     gcode_lines.append("M30")
     gcode_lines.append("(End of program)")
     
-    gcode_text = "
-".join(gcode_lines)
+    gcode_text = "\n".join(gcode_lines)
     
     # Create RMOS artifact
     now = datetime.now(timezone.utc).isoformat()

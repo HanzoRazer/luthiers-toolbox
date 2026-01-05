@@ -179,19 +179,14 @@ def inject_post_header(gcode: str, post_id: str) -> str:
     """Inject post-processor header into G-code."""
     cfg = POST_CONFIGS.get(post_id, POST_CONFIGS["GRBL"])
     header_lines = cfg["header"]
-    return "
-".join(header_lines) + "
-" + gcode
+    return "\n".join(header_lines) + "\n" + gcode
 
 
 def inject_post_footer(gcode: str, post_id: str) -> str:
     """Inject post-processor footer into G-code."""
-    return gcode.rstrip() + "
-" + "
-".join(footer_lines) + "
-"
-".join(footer_lines) + "
-"
+    cfg = POST_CONFIGS.get(post_id, POST_CONFIGS["GRBL"])
+    footer_lines = cfg["footer"]
+    return gcode.rstrip() + "\n" + "\n".join(footer_lines) + "\n"
 
 
 def generate_body_gcode_from_dxf(

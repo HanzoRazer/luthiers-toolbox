@@ -45,8 +45,7 @@ Critical Safety Rules:
 
 References:
 - ADAPTIVE_POCKETING_MODULE_L.md for algorithm details
-- CODING_POLICY.md Section "Critical Safety Rules"
-"""
+- CODING_POLICY.md Section "Critical Safety Rules"\n"""
 import io
 import json
 import math
