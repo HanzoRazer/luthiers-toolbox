@@ -26,11 +26,12 @@ import sys
 from pathlib import Path
 from typing import List, Set, Tuple, Optional
 
-# Ensure UTF-8 output on Windows
-if sys.platform == "win32":
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+# Ensure UTF-8 output on Windows (only when running as main, not when imported)
+def _setup_utf8_output():
+    if sys.platform == "win32":
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
 def load_manifest(manifest_path: str) -> dict:
@@ -246,6 +247,9 @@ def check_architecture_policy_breach(
 
 
 def main():
+    # Setup UTF-8 output on Windows when running as CLI
+    _setup_utf8_output()
+
     parser = argparse.ArgumentParser(description="CBSP21 Gate Check")
     parser.add_argument("--manifest", required=True, help="Path to patch_input.json manifest")
     parser.add_argument("--changed-files", nargs="*", default=[], help="List of changed files")
