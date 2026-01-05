@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
 import {
   decideManufacturingCandidate,
   downloadManufacturingCandidateZip,
@@ -36,6 +37,10 @@ const searchText = ref("");
 // Save / decision state
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+
+// history popover (product-only)
+const openHistoryFor = ref<string | null>(null);
+function toggleHistory(id: string) { openHistoryFor.value = openHistoryFor.value === id ? null : id; }
 
 // Inline note editor state
 const editingId = ref<string | null>(null);
@@ -582,6 +587,7 @@ async function exportGreenOnlyZips() {
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
+        <div>History</div>
         <div>Status</div>
         <div class="note">Decision Note</div>
         <div class="actions">Actions</div>
@@ -650,6 +656,21 @@ async function exportGreenOnlyZips() {
           </span>
         </div>
 
+        <div class="history">
+          <button class="btn ghost smallbtn" @click="toggleHistory(c.candidate_id)" :disabled="saving || exporting || undoBusy">
+            {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
+          </button>
+          <div v-if="openHistoryFor === c.candidate_id" class="popover">
+            <CandidateDecisionHistoryPopover
+              :items="c.decision_history ?? null"
+              :currentDecision="c.decision ?? null"
+              :currentNote="c.decision_note ?? null"
+              :currentBy="c.decided_by ?? null"
+              :currentAt="c.decided_at_utc ?? null"
+            />
+          </div>
+        </div>
+
         <div class="muted">{{ statusText(c) }}</div>
 
         <div class="note">
@@ -708,7 +729,7 @@ async function exportGreenOnlyZips() {
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
 
 .table { display: grid; gap: 6px; }
-.row { display: grid; grid-template-columns: 34px 140px 1fr 140px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; }
+.row { display: grid; grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; position: relative; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
 .sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
 
@@ -725,6 +746,7 @@ async function exportGreenOnlyZips() {
 .btn { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; cursor: pointer; }
 .btn.ghost { background: transparent; }
 .btn.danger { border-color: rgba(176,0,32,0.35); }
+.smallbtn { padding: 4px 8px; font-size: 12px; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,0.14); }
@@ -740,4 +762,7 @@ async function exportGreenOnlyZips() {
 .undoitem { display: flex; gap: 8px; align-items: center; font-size: 12px; }
 
 .policy ul { margin: 6px 0 0 18px; }
+
+.history { position: relative; }
+.popover { position: absolute; z-index: 50; top: 30px; left: 0; }
 </style>
