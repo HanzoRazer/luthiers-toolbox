@@ -1,8 +1,8 @@
 {
-  "scan_id": "AS-20260105T055614Z",
+  "scan_id": "AS-20260105T101550Z",
   "scan_type": "architecture",
   "mode": "read_only",
-  "timestamp_utc": "2026-01-05T05:56:14Z",
+  "timestamp_utc": "2026-01-05T10:15:50Z",
   "targets": [
     "services/api/app",
     "client/src"
@@ -1833,5 +1833,11 @@
       "note": null
     }
   ],
-  "findings_count": 145
+  "findings_count": 145,
+  "scan_scope": "repo_subset",
+  "targets_scanned": [
+    "services/api/app",
+    "client/src"
+  ],
+  "files_scanned_count": 1188
 }

@@ -106,6 +106,10 @@ class ScanReport:
     invariants_checked: List[str]
     findings: List[Finding]
     findings_count: int
+    # Metadata for clarity
+    scan_scope: str = "repo_subset"
+    targets_scanned: List[str] = None  # type: ignore  # Actual targets that existed
+    files_scanned_count: int = 0
 
 
 def utc_now() -> str:
@@ -221,13 +225,19 @@ def main() -> int:
     # risk counts
     risk_summary = {"critical": 0, "high": 0, "medium": 0, "low": 0}
 
+    # Track metadata
+    targets_scanned: List[str] = []
+    files_scanned_count = 0
+
     fid = 1
     for target in args.targets:
         tpath = (repo_root / target).resolve()
         if not tpath.exists():
             continue
 
+        targets_scanned.append(target)
         for f in iter_files(tpath):
+            files_scanned_count += 1
             rel = str(f.relative_to(repo_root)).replace("\\", "/")
             txt = read_text(f)
             sig = detect_signals(txt)
@@ -270,6 +280,9 @@ def main() -> int:
         invariants_checked=INVARIANTS,
         findings=findings,
         findings_count=len(findings),
+        scan_scope="repo_subset",
+        targets_scanned=targets_scanned,
+        files_scanned_count=files_scanned_count,
     )
 
     out_path = Path(args.out)
@@ -288,7 +301,9 @@ def main() -> int:
     )
 
     # Console summary (non-blocking usage)
-    print(f"[architecture-scan] wrote {out_path} with {len(findings)} finding(s).")
+    print(f"[architecture-scan] wrote {out_path}")
+    print(f"[architecture-scan] targets_scanned={targets_scanned}")
+    print(f"[architecture-scan] files_scanned={files_scanned_count}, findings={len(findings)}")
     print(f"[architecture-scan] risk_summary={risk_summary}")
     return 0
 
