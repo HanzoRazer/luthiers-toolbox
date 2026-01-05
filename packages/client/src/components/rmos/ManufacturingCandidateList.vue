@@ -37,6 +37,64 @@ const searchText = ref("");
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
 
+// micro-follow: persist view prefs (filters + density) to localStorage (product-only)
+const PREF_KEY = computed(() => `rmos:candidates:prefs:${props.runId || "unknown"}`);
+type PrefsV1 = {
+  decisionFilter: string;
+  statusFilter: string;
+  searchText: string;
+  showSelectedOnly: boolean;
+  compact: boolean;
+  sortKey: string;
+};
+function _readPrefs(): PrefsV1 | null {
+  try {
+    const raw = localStorage.getItem(PREF_KEY.value);
+    if (!raw) return null;
+    const obj = JSON.parse(raw) as Partial<PrefsV1>;
+    if (!obj) return null;
+    return {
+      decisionFilter: obj.decisionFilter ?? "ALL",
+      statusFilter: obj.statusFilter ?? "ALL",
+      searchText: obj.searchText ?? "",
+      showSelectedOnly: obj.showSelectedOnly ?? false,
+      compact: obj.compact ?? false,
+      sortKey: obj.sortKey ?? "id",
+    };
+  } catch {
+    return null;
+  }
+}
+function _writePrefs(p: PrefsV1) {
+  try { localStorage.setItem(PREF_KEY.value, JSON.stringify(p)); } catch { /* ignore */ }
+}
+
+let _prefsTimer: number | null = null;
+function schedulePrefsSave() {
+  if (_prefsTimer) window.clearTimeout(_prefsTimer);
+  _prefsTimer = window.setTimeout(() => {
+    _writePrefs({
+      decisionFilter: decisionFilter.value,
+      statusFilter: statusFilter.value,
+      searchText: searchText.value,
+      showSelectedOnly: showSelectedOnly.value,
+      compact: compact.value,
+      sortKey: sortKey.value,
+    });
+  }, 250);
+}
+
+function resetViewPrefs() {
+  decisionFilter.value = "ALL";
+  statusFilter.value = "ALL";
+  searchText.value = "";
+  showSelectedOnly.value = false;
+  compact.value = false;
+  sortKey.value = "id";
+  schedulePrefsSave();
+  showToast("View reset");
+}
+
 // Copy-to-clipboard toast
 const toast = ref<string | null>(null);
 let _toastTimer: number | null = null;
@@ -256,6 +314,17 @@ async function load() {
 }
 
 onMounted(() => {
+  // restore prefs first (so first render matches user intent)
+  const p = _readPrefs();
+  if (p) {
+    decisionFilter.value = p.decisionFilter as DecisionFilter;
+    statusFilter.value = p.statusFilter as StatusFilter;
+    searchText.value = p.searchText;
+    showSelectedOnly.value = p.showSelectedOnly;
+    compact.value = p.compact;
+    sortKey.value = (p.sortKey as SortKey) || "id";
+  }
+
   load();
   window.addEventListener("keydown", _onKeydown, { capture: true });
 });
@@ -263,9 +332,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", _onKeydown, { capture: true } as any);
   if (_toastTimer) window.clearTimeout(_toastTimer);
+  if (_prefsTimer) window.clearTimeout(_prefsTimer);
 });
 
 watch(() => props.runId, load);
+
+watch([decisionFilter, statusFilter, searchText, showSelectedOnly, compact, sortKey], () => {
+  schedulePrefsSave();
+});
 
 function startEdit(c: CandidateRow) {
   // Spine-locked: don't allow note editing until a decision exists
@@ -842,6 +916,11 @@ async function exportGreenOnlyZips() {
             <span class="kbdhint" :title="_hotkeyHelp()">
               Hotkeys: g/y/r · u · e · a · c · esc
             </span>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn small" @click="resetViewPrefs" title="Reset filters, density, and sort (persisted)">
+              Reset view
+            </button>
           </div>
         </div>
       </div>

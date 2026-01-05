@@ -14,7 +14,6 @@ cd packages/client && npm run dev
 # Key Tests
 cd services/api && pytest tests/ -v                    # Backend unit tests
 cd packages/client && npm run test                     # Frontend (Vitest)
-cd services/api && python -m app.ci.check_boundary_imports --profile toolbox  # Boundary guard (CI-enforced)
 make smoke-helix-posts                                 # Integration smoke test
 
 # Start Both (for full stack dev)
@@ -31,6 +30,7 @@ make start-client # Terminal 2
 5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data)
 6. **Boundary**: Never import `tap_tone.*` or `modes.*` – ToolBox interprets, Analyzer measures
 7. **Request IDs**: All API responses MUST include `X-Request-Id` header for correlation
+8. **Machine Profiles**: Use valid IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
 
 ## 📁 Key Paths
 
@@ -39,10 +39,24 @@ make start-client # Terminal 2
 | API Entry | `services/api/app/main.py` – ~116 routers |
 | CAM Algorithms | `services/api/app/cam/` – pocketing, helical, biarc |
 | RMOS Orchestration | `services/api/app/rmos/` – workflow, CAM intent |
+| Saw Lab (Reference) | `services/api/app/saw_lab/` – governed operation pattern |
 | CAM Intent Schema | `services/api/app/rmos/cam/schemas_intent.py` |
 | Frontend SDK | `packages/client/src/sdk/endpoints/` – typed helpers |
 | Post Configs | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
-| CI Guards | `services/api/app/ci/` – boundary checks, schema drift |
+| CI Workflows | `.github/workflows/` – 38 workflow files |
+
+## 🏗️ Architecture: Operation Lanes
+
+Machine-executing endpoints follow **Operation Lane Governance**:
+
+| Lane | Description | Example |
+|------|-------------|---------|
+| **OPERATION** | Full governance: artifacts, feasibility gate, audit trail | `/api/saw/batch/*` |
+| **UTILITY** | Stateless/preview, no artifacts | `/api/cam/roughing/gcode` |
+
+**Reference Implementation**: CNC Saw Lab (`services/api/app/saw_lab/batch_router.py`)
+- Stage sequence: SPEC → PLAN → DECISION → EXECUTE → EXPORT → FEEDBACK
+- Artifacts persisted per stage for audit/replay
 
 ## 🧪 Essential Patterns
 
@@ -89,10 +103,21 @@ normalized, issues = normalize_cam_intent_v1(intent)
 | Missing request headers | Use SDK helpers, not raw fetch |
 | Post config not found | Check `app/data/posts/<name>.json` (lowercase) |
 | Schema drift | Run `python -m app.ci.check_cam_intent_schema_hash` |
+| SQLite `limit` keyword | Quote as `"limit"` in SQL statements |
+| CSV line ending issues | Use `splitlines()` not `split('\n')` |
+
+## 🔒 CBSP21 Completeness Protocol
+
+When making large changes, create `.cbsp21/patch_input.json` manifest declaring:
+- `files_expected_to_change` – explicit file list
+- `diff_articulation.what_changed` – 5-15 bullet summary
+- `behavior_change` – `none|compatible|breaking`
+
+CI enforces ≥95% coverage verification for governed areas. See [CBSP21.md](../CBSP21.md).
 
 ## 📚 References
 
-- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization
-- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~116 routers by wave)
+- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
