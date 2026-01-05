@@ -1,0 +1,36 @@
+name: Architecture Scan (Non-Blocking)
+
+on:
+  pull_request:
+    paths:
+      - "services/**"
+      - "client/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  architecture-scan:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run architecture scan
+        run: |
+          python scripts/architecture/scan_architecture.py \
+            --targets services/api/app client/src \
+            --out reports/architecture_scan.json
+
+      - name: Upload scan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture_scan
+          path: reports/architecture_scan.json

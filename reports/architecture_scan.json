@@ -1,0 +1,1837 @@
+{
+  "scan_id": "AS-20260105T055614Z",
+  "scan_type": "architecture",
+  "mode": "read_only",
+  "timestamp_utc": "2026-01-05T05:56:14Z",
+  "targets": [
+    "services/api/app",
+    "client/src"
+  ],
+  "risk_summary": {
+    "critical": 2,
+    "high": 46,
+    "medium": 97,
+    "low": 0
+  },
+  "invariants_checked": [
+    "GCODE_TRACEABLE",
+    "AI_NO_AUTHORITY",
+    "ADVISORY_ATTACHED"
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/main.py",
+      "signals": [
+        "DXF",
+        "EXPERIMENTAL",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-002",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/main_backup_20251213_080843.py",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-003",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/post_injection_helpers.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-004",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/test_dalle_advisory.py",
+      "signals": [
+        "EXPERIMENTAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-005",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/advisory/schemas.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-006",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/advisory/store.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-007",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/art_studio/bracing_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-008",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/art_studio/inlay_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-009",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/art_studio/relief_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-010",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/art_studio/rosette_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-011",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/art_studio/vcarve_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-012",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/calculators/fret_slots_export.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-013",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cam/cam_preview_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-014",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/ci/check_execution_class_compliance.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-015",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/generators/lespaul_body_generator.py",
+      "signals": [
+        "DXF",
+        "DXF_LIB",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-016",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/context.py",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-017",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/rosette_rmos_adapter.py",
+      "signals": [
+        "EXPERIMENTAL",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-018",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/__init__.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-019",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/adaptive_poly_gcode_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-020",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/adaptive_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-021",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/art_studio_rosette_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-022",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/blueprint_cam_bridge.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-023",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/blueprint_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB",
+        "ID_CREATION"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-024",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/body_generator_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-025",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/bridge_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-026",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_biarc_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-027",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_drill_pattern_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-028",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_drill_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-029",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_fret_slots_export_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-030",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam_fret_slots_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-031",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_polygon_offset_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-032",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam_roughing_intent_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-033",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/cam_roughing_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-034",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam_sim_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-035",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/drilling_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-036",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/dxf_preflight_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-037",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/gcode_backplot_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-038",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/geometry_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-039",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/job_intelligence_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-040",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/neck_generator_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-041",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/neck_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-042",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/parametric_guitar_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-043",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/pipeline_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-044",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/polygon_offset_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-045",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/probe_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-046",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/retract_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-047",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/rosette_pattern_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-048",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/rosette_photo_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-049",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/routers/unified_presets_router.py",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-050",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/vision_router.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-051",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/saw_lab/batch_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "PERSISTENCE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-052",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/saw_lab/store.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-053",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/schemas/cam_fret_slots.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-054",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/schemas/smart_guitar.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-055",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_batch_plan_service.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-056",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_batch_retry_service.py",
+      "signals": [
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-057",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_batch_toolpaths_service.py",
+      "signals": [
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-058",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_compare_service.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-059",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_decision_service.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-060",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_gcode_emit_service.py",
+      "signals": [
+        "GCODE",
+        "GCODE_EMIT",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-061",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/services/saw_lab_toolpaths_from_decision_service.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-062",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/services/vision_service.py",
+      "signals": [
+        "EXPERIMENTAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-063",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/tests/test_e2e_workflow_integration.py",
+      "signals": [
+        "EXPERIMENTAL",
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-064",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/util/exporters.py",
+      "signals": [
+        "DXF",
+        "DXF_LIB",
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-065",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/workflow/workflow_runs_bridge.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-066",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_cam_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-067",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_cam/advisor.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-068",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_cam/models.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-069",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_cam/__init__.py",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-070",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/advisory_store.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-071",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/__init__.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-072",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/api/teaching_routes.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-073",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/api/vision_routes.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-074",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/_experimental/ai_graphics/db/store.py",
+      "signals": [
+        "EXPERIMENTAL",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-075",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/schemas/advisory_schemas.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-076",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/schemas/ai_schemas.py",
+      "signals": [
+        "ID_CREATION",
+        "RISK_EVAL"
+      ],
+      "risk": "critical",
+      "invariant_violated": "AI_NO_AUTHORITY",
+      "note": "Experimental area appears to create authority (ids/artifacts/safety decisions)."
+    },
+    {
+      "id": "F-077",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/services/ai_parameter_suggester.py",
+      "signals": [
+        "ID_CREATION",
+        "RISK_EVAL",
+        "SAFETY_GATE"
+      ],
+      "risk": "critical",
+      "invariant_violated": "AI_NO_AUTHORITY",
+      "note": "Experimental area appears to create authority (ids/artifacts/safety decisions)."
+    },
+    {
+      "id": "F-078",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/_experimental/ai_graphics/services/teaching_loop.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-079",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/workflow/sessions/routes.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-080",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/sandboxes/smart_guitar/validators.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-081",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/instruments/guitar/assets_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-082",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam/guitar/om_cam_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-083",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam/guitar/registry_cam_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-084",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/routers/cam/guitar/stratocaster_cam_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-085",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/acoustics/router.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-086",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/acoustics/router_attachments.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-087",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "signals": [
+        "RISK_EVAL",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-088",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/api/rmos_runs_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-089",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/api/rmos_toolpaths_router.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-090",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/api/rmos_workflow_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "RISK_EVAL"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-091",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/operations/adapter.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-092",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/operations/router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-093",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/operations/test_operations_adapter.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-094",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/pipeline/schemas.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-095",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/pipeline/services.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-096",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/pipeline/store.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-097",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs/api_runs.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-098",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs/schemas.py",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-099",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs/store.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-100",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs/__init__.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-101",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/acoustics_router.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-102",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/acoustics_schemas.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-103",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/advisory_blob_schemas.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-104",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/advisory_blob_service.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-105",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/advisory_variant_state.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-106",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/api_runs.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-107",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/attachments.py",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-108",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/attachment_meta.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-109",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/cli_delete.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-110",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/compat.py",
+      "signals": [
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-111",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/diff.py",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-112",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/manufacturing_candidate_service.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-113",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/migration_utils.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-114",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/runs_v2/schemas.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-115",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/schemas_advisories.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-116",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/schemas_advisory_reject.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-117",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/rmos/runs_v2/schemas_manufacturing.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-118",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/schemas_manufacturing_ops.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-119",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/schemas_variant_review.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-120",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/store.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-121",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/variant_review_service.py",
+      "signals": [
+        "DIRECT_RESPONSE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-122",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/__init__.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-123",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/run_artifacts/store.py",
+      "signals": [
+        "ID_CREATION",
+        "PERSISTENCE",
+        "RMOS_READ"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-124",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/rmos/runs_v2/db/models.py",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-125",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/instrument_geometry/neck_taper/api_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-126",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/fields/grain_field/__init__.py",
+      "signals": [],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-127",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/db/migrations/versions/a1b2c3d4e5f6_add_ai_graphics_and_runs_v2_tables.py",
+      "signals": [
+        "GCODE",
+        "RISK_EVAL"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-128",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cam/routers/drilling/drill_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-129",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/cam/routers/drilling/pattern_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-130",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/cam/routers/rosette/cam_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-131",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cam/routers/simulation/gcode_sim_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-132",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/cam/routers/toolpath/biarc_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-133",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/cam/routers/toolpath/helical_router.py",
+      "signals": [
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-134",
+      "type": "ARCH_SIGNAL",
+      "file": "services/api/app/cam/routers/toolpath/roughing_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "ID_CREATION",
+        "PERSISTENCE",
+        "SAFETY_GATE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-135",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cam/routers/utility/polygon_router.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-136",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cad/api/dxf_routes.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-137",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/cad/schemas/dxf_export.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-138",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/art_studio/api/rosette_pattern_routes.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-139",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/api/routes/exports.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-140",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/api/routes/presets_router.py",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": "ADVISORY_ATTACHED",
+      "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
+    },
+    {
+      "id": "F-141",
+      "type": "INVARIANT_VIOLATION",
+      "file": "services/api/app/api/routes/rmos_rosette_api.py",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "GCODE"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-142",
+      "type": "ARCH_SIGNAL",
+      "file": "client/src/api/rmosRuns.ts",
+      "signals": [
+        "GCODE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-143",
+      "type": "INVARIANT_VIOLATION",
+      "file": "client/src/utils/curvemath_dxf.ts",
+      "signals": [
+        "DIRECT_RESPONSE",
+        "DXF",
+        "DXF_LIB"
+      ],
+      "risk": "high",
+      "invariant_violated": "GCODE_TRACEABLE",
+      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
+    },
+    {
+      "id": "F-144",
+      "type": "ARCH_SIGNAL",
+      "file": "client/src/views/labs/CompareLab.vue",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    },
+    {
+      "id": "F-145",
+      "type": "ARCH_SIGNAL",
+      "file": "client/src/components/toolbox/GuitarDimensionsForm.vue",
+      "signals": [
+        "DXF",
+        "GCODE",
+        "GCODE_FILE"
+      ],
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
+    }
+  ],
+  "findings_count": 145
+}
