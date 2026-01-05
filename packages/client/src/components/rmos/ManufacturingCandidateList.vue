@@ -446,6 +446,61 @@ function bulkClearBlockedHover(): string {
   return chk.ok ? "Clear decision → NEEDS_DECISION (decision=null). Note cleared too." : (chk.reason ?? "Blocked");
 }
 
+// micro-follow: summary chips (counts) + one-click filters (product-only)
+function _decisionKey(c: CandidateRow): "NEEDS_DECISION" | "GREEN" | "YELLOW" | "RED" | "OTHER" {
+  const d = (c.decision ?? null) as any;
+  if (d === null) return "NEEDS_DECISION";
+  if (d === "GREEN" || d === "YELLOW" || d === "RED") return d;
+  return "OTHER";
+}
+function _statusKey(c: CandidateRow): "PROPOSED" | "ACCEPTED" | "REJECTED" | "OTHER" {
+  const s = (c.status ?? null) as any;
+  if (s === "PROPOSED" || s === "ACCEPTED" || s === "REJECTED") return s;
+  return "OTHER";
+}
+
+const summary = computed(() => {
+  const decisionCounts: Record<string, number> = {
+    NEEDS_DECISION: 0,
+    GREEN: 0,
+    YELLOW: 0,
+    RED: 0,
+    OTHER: 0,
+  };
+  const statusCounts: Record<string, number> = {
+    PROPOSED: 0,
+    ACCEPTED: 0,
+    REJECTED: 0,
+    OTHER: 0,
+  };
+  for (const c of candidates.value) {
+    decisionCounts[_decisionKey(c)] = (decisionCounts[_decisionKey(c)] || 0) + 1;
+    statusCounts[_statusKey(c)] = (statusCounts[_statusKey(c)] || 0) + 1;
+  }
+  return { decisionCounts, statusCounts, total: candidates.value.length };
+});
+
+function setDecisionFilter(v: string) {
+  decisionFilter.value = v as DecisionFilter;
+  schedulePrefsSave();
+}
+function setStatusFilter(v: string) {
+  statusFilter.value = v as StatusFilter;
+  schedulePrefsSave();
+}
+
+function chipClass(active: boolean, kind: "neutral" | "good" | "warn" | "bad" | "muted" = "neutral") {
+  return {
+    chip: true,
+    active,
+    neutral: kind === "neutral",
+    good: kind === "good",
+    warn: kind === "warn",
+    bad: kind === "bad",
+    muted: kind === "muted",
+  };
+}
+
 // -------------------------
 // Filtered view (product-only)
 // -------------------------
@@ -841,6 +896,89 @@ async function exportGreenOnlyZips() {
       <!-- Filters -->
       <div class="filters">
         <div class="filters-left">
+          <!-- micro-follow: quick chips -->
+          <div class="chipsRow" v-if="summary.total > 0">
+            <div class="chipsGroup">
+              <div class="small muted">Decision:</div>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'ALL', 'neutral')"
+                @click="setDecisionFilter('ALL')"
+                title="Show all decisions"
+              >
+                All <span class="count">{{ summary.total }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
+                @click="setDecisionFilter('UNDECIDED')"
+                title="Show candidates that still need an explicit decision"
+              >
+                Needs decision <span class="count">{{ summary.decisionCounts.NEEDS_DECISION }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'GREEN', 'good')"
+                @click="setDecisionFilter('GREEN')"
+                title="Show GREEN-only"
+              >
+                GREEN <span class="count">{{ summary.decisionCounts.GREEN }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
+                @click="setDecisionFilter('YELLOW')"
+                title="Show YELLOW-only"
+              >
+                YELLOW <span class="count">{{ summary.decisionCounts.YELLOW }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'RED', 'bad')"
+                @click="setDecisionFilter('RED')"
+                title="Show RED-only"
+              >
+                RED <span class="count">{{ summary.decisionCounts.RED }}</span>
+              </button>
+            </div>
+
+            <div class="chipsGroup">
+              <div class="small muted">Status:</div>
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'ALL', 'neutral')"
+                @click="setStatusFilter('ALL')"
+                title="Show all statuses"
+              >
+                All <span class="count">{{ summary.total }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
+                @click="setStatusFilter('PROPOSED')"
+                title="Show PROPOSED-only"
+              >
+                PROPOSED <span class="count">{{ summary.statusCounts.PROPOSED }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
+                @click="setStatusFilter('ACCEPTED')"
+                title="Show ACCEPTED-only"
+              >
+                ACCEPTED <span class="count">{{ summary.statusCounts.ACCEPTED }}</span>
+              </button>
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'REJECTED', 'bad')"
+                @click="setStatusFilter('REJECTED')"
+                title="Show REJECTED-only"
+              >
+                REJECTED <span class="count">{{ summary.statusCounts.REJECTED }}</span>
+              </button>
+            </div>
+          </div>
+
           <div class="field">
             <label class="muted">Decision</label>
             <select v-model="decisionFilter" :disabled="saving || exporting || undoBusy">
@@ -1189,4 +1327,31 @@ async function exportGreenOnlyZips() {
   font-size: 14px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.25);
 }
+
+.chipsRow { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.chipsGroup { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid rgba(0,0,0,0.14);
+  background: white;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.chip .count {
+  font-variant-numeric: tabular-nums;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.03);
+}
+.chip.active { border-color: rgba(0,0,0,0.28); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
+.chip.good.active { border-color: #22c55e; }
+.chip.warn.active { border-color: #eab308; }
+.chip.bad.active { border-color: #ef4444; }
+.chip.muted.active { border-color: #6b7280; }
+.chip:hover { border-color: rgba(0,0,0,0.22); }
 </style>
