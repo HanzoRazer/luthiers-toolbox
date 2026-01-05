@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+
+# Type alias for artifact reader callable
+ArtifactReader = Callable[[str], Any]
+
+
+def _default_artifact_reader() -> ArtifactReader:
+    """Return the default RMOS artifact reader."""
+    from app.rmos.run_artifacts.store import read_run_artifact
+    return read_run_artifact
 
 
 def emit_gcode_from_moves(moves: List[Dict[str, Any]]) -> str:
@@ -33,9 +42,17 @@ def emit_gcode_from_moves(moves: List[Dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def export_op_toolpaths_gcode(*, op_toolpaths_artifact_id: str) -> Dict[str, Any]:
+def export_op_toolpaths_gcode(
+    *,
+    op_toolpaths_artifact_id: str,
+    read_artifact: Optional[ArtifactReader] = None,
+) -> Dict[str, Any]:
     """
     Export G-code for a single op toolpath artifact.
+
+    Args:
+        op_toolpaths_artifact_id: The artifact ID to export
+        read_artifact: Optional artifact reader callable (defaults to RMOS)
 
     Returns:
         {
@@ -46,9 +63,10 @@ def export_op_toolpaths_gcode(*, op_toolpaths_artifact_id: str) -> Dict[str, Any
             "has_toolpaths": bool,
         }
     """
-    from app.rmos.run_artifacts.store import read_run_artifact
+    if read_artifact is None:
+        read_artifact = _default_artifact_reader()
 
-    art = read_run_artifact(op_toolpaths_artifact_id)
+    art = read_artifact(op_toolpaths_artifact_id)
     art_d: Dict[str, Any] = art if isinstance(art, dict) else {
         "artifact_id": getattr(art, "artifact_id", None) or getattr(art, "id", None),
         "kind": getattr(art, "kind", None),
@@ -88,12 +106,20 @@ def export_op_toolpaths_gcode(*, op_toolpaths_artifact_id: str) -> Dict[str, Any
     }
 
 
-def export_execution_gcode(*, batch_execution_artifact_id: str) -> Dict[str, Any]:
+def export_execution_gcode(
+    *,
+    batch_execution_artifact_id: str,
+    read_artifact: Optional[ArtifactReader] = None,
+) -> Dict[str, Any]:
     """
     Export combined G-code for all OK ops in an execution.
 
     Each op gets full header and ends with spindle stop + retract.
     Only final op gets M30.
+
+    Args:
+        batch_execution_artifact_id: The execution artifact ID
+        read_artifact: Optional artifact reader callable (defaults to RMOS)
 
     Returns:
         {
@@ -105,9 +131,10 @@ def export_execution_gcode(*, batch_execution_artifact_id: str) -> Dict[str, Any
             "blocked_count": int,
         }
     """
-    from app.rmos.run_artifacts.store import read_run_artifact
+    if read_artifact is None:
+        read_artifact = _default_artifact_reader()
 
-    parent = read_run_artifact(batch_execution_artifact_id)
+    parent = read_artifact(batch_execution_artifact_id)
     parent_d: Dict[str, Any] = parent if isinstance(parent, dict) else {
         "artifact_id": getattr(parent, "artifact_id", None) or getattr(parent, "id", None),
         "kind": getattr(parent, "kind", None),
@@ -152,7 +179,7 @@ def export_execution_gcode(*, batch_execution_artifact_id: str) -> Dict[str, Any
             continue
 
         try:
-            result = export_op_toolpaths_gcode(op_toolpaths_artifact_id=child_id)
+            result = export_op_toolpaths_gcode(op_toolpaths_artifact_id=child_id, read_artifact=read_artifact)
         except Exception:
             continue
 
