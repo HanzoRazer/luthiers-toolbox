@@ -34,6 +34,17 @@ const statusFilter = ref<StatusFilter>("ALL");
 const showSelectedOnly = ref(false);
 const searchText = ref("");
 
+// micro-follow: decided-by filter (product-only)
+const filterDecidedBy = ref<string>("ALL");
+const decidedByOptions = computed(() => {
+  const set = new Set<string>();
+  for (const c of candidates.value) {
+    const v = (c.decided_by ?? "").trim();
+    if (v) set.add(v);
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+});
+
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
 
@@ -143,6 +154,7 @@ function _hotkeyHelp(): string {
     "Hotkeys:",
     "g/y/r = Bulk decision GREEN/YELLOW/RED",
     "u = Clear decision (NEEDS_DECISION)",
+    "b = Bulk clear decision (selected)",
     "e = Export GREEN-only (all must be decided)",
     "a = Select shown (post-filter)",
     "c = Clear shown (post-filter)",
@@ -186,6 +198,13 @@ function _onKeydown(ev: KeyboardEvent) {
   if (k === "h") {
     ev.preventDefault();
     showBulkHistory.value = !showBulkHistory.value;
+    return;
+  }
+  if (k === "b") {
+    if (selectedIds.value.size > 0) {
+      ev.preventDefault();
+      void clearBulkDecision();
+    }
     return;
   }
   if (selectedIds.value.size === 0) return; // decision hotkeys require selection
@@ -277,6 +296,8 @@ const bulkProgress = ref<{ total: number; done: number; fail: number } | null>(n
 const bulkHistory = ref<BulkActionRecord[]>([]);
 const showBulkHistory = ref(false);
 
+const bulkClearNoteToo = ref<boolean>(false);
+
 function _utcNowIso(): string {
   return new Date().toISOString();
 }
@@ -302,6 +323,83 @@ function _updateCandidateFromDecisionResponse(id: string, res: any) {
     decided_by: (res.decided_by ?? null) as any,
     decision_history: (res.decision_history ?? candidates.value[idx].decision_history ?? null) as any,
   };
+}
+
+// -----------------------------------------------------------------------------
+// micro-follow: bulk CLEAR decision (set decision=null) for selected candidates
+// (keeps UI + backend perfectly aligned to "needs explicit operator decision")
+// -----------------------------------------------------------------------------
+async function clearBulkDecision() {
+  if (bulkApplying.value) return;
+  const sel = _selectedCandidates();
+  if (!sel.length) {
+    showToast("No candidates selected", "err");
+    return;
+  }
+
+  bulkApplying.value = true;
+  bulkProgress.value = { total: sel.length, done: 0, fail: 0 };
+
+  const record: BulkActionRecord = {
+    id: _mkId("bulk_clear"),
+    at_utc: _utcNowIso(),
+    decision: null,
+    note: bulkClearNoteToo.value ? null : null,
+    selected_count: sel.length,
+    applied_count: 0,
+    failed_count: 0,
+    items: [],
+  };
+
+  try {
+    for (const c of sel) {
+      const prev_decision = (c.decision ?? null) as any;
+      const prev_note = (c.decision_note ?? null) as any;
+      const next_decision = null;
+      const next_note = bulkClearNoteToo.value ? null : prev_note;
+
+      record.items.push({
+        candidate_id: c.candidate_id,
+        prev_decision,
+        prev_note,
+        next_decision: (next_decision as any),
+        next_note,
+      });
+
+      try {
+        const res = await decideManufacturingCandidate(runId.value, c.candidate_id, {
+          decision: next_decision,
+          note: next_note,
+        } as any);
+        _updateCandidateFromDecisionResponse(c.candidate_id, res);
+        record.applied_count += 1;
+      } catch (e) {
+        record.failed_count += 1;
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done,
+          fail: bulkProgress.value!.fail + 1,
+        };
+      } finally {
+        bulkProgress.value = {
+          total: bulkProgress.value!.total,
+          done: bulkProgress.value!.done + 1,
+          fail: bulkProgress.value!.fail,
+        };
+      }
+    }
+
+    bulkHistory.value = [record, ...bulkHistory.value].slice(0, 10);
+    showToast(
+      record.failed_count
+        ? `Bulk clear done (${record.applied_count} ok, ${record.failed_count} failed)`
+        : "Cleared decision for selected candidates",
+      record.failed_count ? "err" : "ok"
+    );
+  } finally {
+    bulkApplying.value = false;
+    window.setTimeout(() => (bulkProgress.value = null), 900);
+  }
 }
 
 function decisionBadge(decision: RiskLevel | null | undefined) {
@@ -609,6 +707,11 @@ const filteredCandidates = computed(() => {
     // status filter
     if (sf !== "ALL") {
       if ((c.status ?? null) !== sf) return false;
+    }
+
+    // decided-by filter
+    if (filterDecidedBy.value !== "ALL") {
+      if ((c.decided_by ?? "") !== filterDecidedBy.value) return false;
     }
 
     // search
@@ -1220,6 +1323,14 @@ async function exportGreenOnlyZips() {
             </select>
           </div>
 
+          <div class="field">
+            <label class="muted">Decided by</label>
+            <select v-model="filterDecidedBy" :disabled="saving || exporting || undoBusy" title="Filter by operator identity">
+              <option value="ALL">All</option>
+              <option v-for="op in decidedByOptions" :key="op" :value="op">{{ op }}</option>
+            </select>
+          </div>
+
           <div class="field grow">
             <label class="muted">Search</label>
             <input
@@ -1275,7 +1386,7 @@ async function exportGreenOnlyZips() {
           </label>
           <div class="small muted" style="margin-top:4px;">
             <span class="kbdhint" :title="_hotkeyHelp()">
-              Hotkeys: g/y/r · u · e · a · c · i · x · h · esc
+              Hotkeys: g/y/r · u · b · e · a · c · i · x · h · esc
             </span>
           </div>
           <div style="margin-top:8px;">
@@ -1375,6 +1486,18 @@ async function exportGreenOnlyZips() {
             @click="applyBulkDecision"
           >
             {{ bulkApplying ? `Applying… (${bulkProgress.done}/${bulkProgress.total})` : 'Apply' }}
+          </button>
+          <label class="inlineCheck" title="When clearing decisions, also clear decision notes">
+            <input type="checkbox" v-model="bulkClearNoteToo" :disabled="bulkApplying" />
+            clear note too
+          </label>
+          <button
+            class="btn small"
+            :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
+            @click="clearBulkDecision"
+            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'"
+          >
+            Clear decision
           </button>
           <button
             class="btn ghost small"
@@ -1660,6 +1783,14 @@ async function exportGreenOnlyZips() {
 .bulk-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .selectSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; }
 .inputSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; min-width: 180px; }
+.inlineCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.66);
+  user-select: none;
+}
 
 /* Bulk history panel */
 .bulkHistory { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
