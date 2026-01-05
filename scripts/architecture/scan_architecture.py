@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -146,6 +147,53 @@ def detect_signals(text: str) -> Set[str]:
     return signals
 
 
+def strip_comments(text: str) -> str:
+    """
+    Strip comments and docstrings from code for policy signal detection.
+
+    Handles:
+    - Python: # comments, '''docstrings''', \"\"\"docstrings\"\"\"
+    - JS/TS/Vue: // comments
+
+    This reduces false positives when authority keywords appear only in
+    documentation/comments, not in executable code.
+    """
+    # Phase 1: Strip triple-quoted strings (Python docstrings)
+    # Uses non-greedy match to handle multiple docstrings correctly
+    # DOTALL flag makes . match newlines
+    text = re.sub(r'""".*?"""', '""', text, flags=re.DOTALL)
+    text = re.sub(r"'''.*?'''", "''", text, flags=re.DOTALL)
+
+    # Phase 2: Strip line comments
+    lines = text.split("\n")
+    stripped: List[str] = []
+
+    for line in lines:
+        # Skip lines that are pure comments (after stripping whitespace)
+        lstripped = line.lstrip()
+        if lstripped.startswith("#") or lstripped.startswith("//"):
+            continue
+
+        # For mixed lines, try to strip trailing comments
+        # (simple heuristic: find # or // not inside quotes)
+        result = line
+        for marker in ("#", "//"):
+            idx = line.find(marker)
+            if idx > 0:
+                # Check if marker is likely inside a string (crude check)
+                before = line[:idx]
+                # Count quotes - if odd, marker is inside string
+                single_quotes = before.count("'") - before.count("\\'")
+                double_quotes = before.count('"') - before.count('\\"')
+                if single_quotes % 2 == 0 and double_quotes % 2 == 0:
+                    result = line[:idx]
+                    break
+
+        stripped.append(result)
+
+    return "\n".join(stripped)
+
+
 def is_experimental_path(rel: str) -> bool:
     # Detect experimental sandbox areas
     return "/_experimental/" in rel.replace("\\", "/") or rel.replace("\\", "/").startswith("_experimental/")
@@ -156,16 +204,36 @@ def looks_like_advisory(text: str) -> bool:
     return any(k in t for k in ADVISORY_KEYWORDS)
 
 
-def risk_for(signals: Set[str], rel: str, text: str) -> str:
+def risk_for(signals: Set[str], rel: str, text: str, signals_no_comments: Set[str] | None = None) -> str:
     """
     Conservative risk scoring:
       - critical: experimental authority creation OR experimental persistence
       - high: GCODE/DXF direct response without persistence (traceability break)
       - medium: multi-authority signals (>=3 distinct signal categories)
       - low: everything else flagged
+
+    For critical/_experimental decisions, uses signals_no_comments to avoid
+    false positives from comments mentioning authority keywords.
     """
+    # Use comment-stripped signals for critical policy decisions
+    policy_signals = signals_no_comments if signals_no_comments is not None else signals
+
     if is_experimental_path(rel):
-        if ("PERSISTENCE" in signals) or ("ID_CREATION" in signals) or ("SAFETY_GATE" in signals):
+        # CRITICAL only for true authority creation:
+        # - persistence (store_artifact, persist_run, write_run_artifact)
+        # - RMOS run-id creation (not ephemeral suggestion UUIDs)
+        # - explicit enforcement gates (should_block, compute_feasibility)
+        if "PERSISTENCE" in policy_signals:
+            return "critical"
+
+        # ID_CREATION is critical only if it looks like RMOS authority,
+        # not advisory suggestion UUIDs (check in comment-stripped text)
+        if "ID_CREATION" in policy_signals:
+            text_to_check = strip_comments(text) if signals_no_comments is None else text
+            if ("create_run_id" in text_to_check) or ("run_id" in text_to_check.lower()):
+                return "critical"
+
+        if "SAFETY_GATE" in policy_signals:
             return "critical"
 
     # GCODE / DXF traceability break
@@ -186,21 +254,38 @@ def risk_for(signals: Set[str], rel: str, text: str) -> str:
     return "low"
 
 
-def invariant_violation(signals: Set[str], rel: str, text: str) -> Tuple[str | None, str | None]:
+def invariant_violation(signals: Set[str], rel: str, text: str, signals_no_comments: Set[str] | None = None) -> Tuple[str | None, str | None]:
     """
     Return (invariant_id, note) if violated.
+
+    For INV-002 (AI_NO_AUTHORITY), uses signals_no_comments to avoid
+    false positives from comments mentioning authority keywords.
     """
-    # INV-001: GCODE_TRACEABLE
+    # INV-001: GCODE_TRACEABLE (uses all signals - comments don't affect this)
     machine = ("GCODE" in signals) or ("GCODE_EMIT" in signals) or ("GCODE_FILE" in signals) or ("DXF" in signals) or ("DXF_LIB" in signals)
     direct = "DIRECT_RESPONSE" in signals
     persistence = "PERSISTENCE" in signals
     if machine and direct and not persistence:
         return ("GCODE_TRACEABLE", "Machine-executable output appears to be returned directly without persistence/hash trail.")
 
-    # INV-002: AI_NO_AUTHORITY
+    # INV-002: AI_NO_AUTHORITY (uses comment-stripped signals)
+    policy_signals = signals_no_comments if signals_no_comments is not None else signals
+
     if is_experimental_path(rel):
-        if ("ID_CREATION" in signals) or ("PERSISTENCE" in signals) or ("SAFETY_GATE" in signals):
-            return ("AI_NO_AUTHORITY", "Experimental area appears to create authority (ids/artifacts/safety decisions).")
+        # Persistence is always a violation
+        if "PERSISTENCE" in policy_signals:
+            return ("AI_NO_AUTHORITY", "Experimental area appears to persist artifacts (authority creation).")
+
+        # ID_CREATION is a violation only if it looks like RMOS run authority,
+        # not ephemeral suggestion/session UUIDs (check in comment-stripped text)
+        if "ID_CREATION" in policy_signals:
+            text_to_check = strip_comments(text) if signals_no_comments is None else text
+            if ("create_run_id" in text_to_check) or ("run_id" in text_to_check.lower()):
+                return ("AI_NO_AUTHORITY", "Experimental area appears to create RMOS run IDs (authority creation).")
+
+        # Safety gates are always a violation
+        if "SAFETY_GATE" in policy_signals:
+            return ("AI_NO_AUTHORITY", "Experimental area appears to make enforcement decisions (authority creation).")
 
     # INV-003: ADVISORY_ATTACHED (heuristic)
     if looks_like_advisory(text):
@@ -242,12 +327,17 @@ def main() -> int:
             txt = read_text(f)
             sig = detect_signals(txt)
 
+            # Compute comment-stripped signals for policy decisions
+            txt_nc = strip_comments(txt)
+            sig_nc = detect_signals(txt_nc)
+
             # Only record files with any interesting signals
             if not sig and not looks_like_advisory(txt):
                 continue
 
-            risk = risk_for(sig, rel, txt)
-            inv, note = invariant_violation(sig, rel, txt)
+            # Use sig_nc for critical/policy decisions, sig for reporting
+            risk = risk_for(sig, rel, txt, signals_no_comments=sig_nc)
+            inv, note = invariant_violation(sig, rel, txt, signals_no_comments=sig_nc)
 
             # Only create findings for medium+ risk OR any invariant violation
             if risk in {"medium", "high", "critical"} or inv is not None:
