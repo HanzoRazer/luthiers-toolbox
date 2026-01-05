@@ -37,6 +37,15 @@ const searchText = ref("");
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
 
+// Copy-to-clipboard toast
+const toast = ref<string | null>(null);
+let _toastTimer: number | null = null;
+function showToast(msg: string) {
+  toast.value = msg;
+  if (_toastTimer) window.clearTimeout(_toastTimer);
+  _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
+}
+
 type SortKey = "id" | "id_desc" | "created" | "created_desc" | "status" | "decision";
 const sortKey = ref<SortKey>("id");
 
@@ -110,6 +119,28 @@ function _onKeydown(ev: KeyboardEvent) {
   if (k === "r") { ev.preventDefault(); bulkSetDecision("RED"); return; }
   if (k === "u") { ev.preventDefault(); bulkClearDecision(); return; }
   if (k === "e") { ev.preventDefault(); exportGreenOnlyZips(); return; }
+}
+
+// Copy-to-clipboard helper
+async function copyText(label: string, value: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      // fallback for older browsers
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    showToast(`Copied ${label}`);
+  } catch {
+    showToast("Copy failed");
+  }
 }
 
 // Bulk export state
@@ -231,6 +262,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", _onKeydown, { capture: true } as any);
+  if (_toastTimer) window.clearTimeout(_toastTimer);
 });
 
 watch(() => props.runId, load);
@@ -830,6 +862,7 @@ async function exportGreenOnlyZips() {
         <div>History</div>
         <div>Status</div>
         <div class="note">Decision Note</div>
+        <div class="copyCol">Copy</div>
         <div class="actions">Actions</div>
       </div>
 
@@ -936,6 +969,15 @@ async function exportGreenOnlyZips() {
           </div>
         </div>
 
+        <div class="copyCol">
+          <button class="btn ghost smallbtn" @click="copyText('candidate_id', c.candidate_id)" title="Copy candidate_id">
+            📋 candidate_id
+          </button>
+          <button class="btn ghost smallbtn" @click="copyText('advisory_id', c.advisory_id)" title="Copy advisory_id">
+            📋 advisory_id
+          </button>
+        </div>
+
         <div class="actions">
           <button class="btn" @click="decide(c, 'GREEN')" :disabled="saving || exporting">GREEN</button>
           <button class="btn" @click="decide(c, 'YELLOW')" :disabled="saving || exporting">YELLOW</button>
@@ -962,6 +1004,9 @@ async function exportGreenOnlyZips() {
         <li>Hover the export button to see the exact block reason.</li>
       </ul>
     </div>
+
+    <!-- Copy toast -->
+    <div class="toast" v-if="toast">{{ toast }}</div>
   </section>
 </template>
 
@@ -980,7 +1025,7 @@ async function exportGreenOnlyZips() {
 .table { display: grid; gap: 6px; }
 .row {
   display: grid;
-  grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px;
+  grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 190px 360px;
   gap: 10px;
   align-items: start;
   padding: 8px;
@@ -1004,6 +1049,10 @@ async function exportGreenOnlyZips() {
 .table.compact .row { padding: 6px; gap: 8px; }
 .table.compact .mono { font-size: 11px; }
 .table.compact .btn { padding: 4px 8px; }
+.table.compact .copyCol { gap: 4px; }
+
+/* copyCol layout */
+.copyCol { display: flex; flex-direction: column; gap: 6px; }
 
 .kbdhint {
   cursor: help;
@@ -1046,4 +1095,19 @@ async function exportGreenOnlyZips() {
 
 .history { position: relative; }
 .popover { position: absolute; z-index: 50; top: 30px; left: 0; }
+
+/* toast (copy feedback) */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #323232;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  z-index: 100;
+  font-size: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
 </style>
