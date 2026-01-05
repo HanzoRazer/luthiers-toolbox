@@ -1410,6 +1410,7 @@ async function exportGreenOnlyZips() {
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
+        <div class="audit">Audit</div>
         <div>History</div>
         <div>Status</div>
         <div class="note">Decision Note</div>
@@ -1569,6 +1570,22 @@ async function exportGreenOnlyZips() {
           </span>
         </div>
 
+        <!-- Audit column -->
+        <div class="audit small muted"
+             :title="(c.decided_by || c.decided_at_utc)
+               ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
+               : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'">
+          <div v-if="c.decided_by">
+            <strong>{{ c.decided_by }}</strong>
+          </div>
+          <div v-else>
+            —
+          </div>
+          <div v-if="c.decided_at_utc" class="mono tiny">
+            {{ c.decided_at_utc.slice(0, 19).replace('T', ' ') }}
+          </div>
+        </div>
+
         <div class="history">
           <button class="btn ghost smallbtn" @click.stop="openDecisionHistory(c.candidate_id)" :disabled="saving || exporting || undoBusy">
             {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
@@ -1684,6 +1701,10 @@ async function exportGreenOnlyZips() {
 
 /* copyCol layout */
 .copyCol { display: flex; flex-direction: column; gap: 6px; }
+
+/* audit column */
+.audit { min-width: 140px; max-width: 180px; }
+.audit .tiny { font-size: 10px; opacity: 0.7; }
 
 .kbdhint {
   cursor: help;
