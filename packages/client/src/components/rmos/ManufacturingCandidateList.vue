@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, onBeforeUnmount } from "vue";
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
 import {
   decideManufacturingCandidate,
@@ -48,6 +48,66 @@ function toggleHistory(id: string) { openHistoryFor.value = openHistoryFor.value
 // Inline note editor state
 const editingId = ref<string | null>(null);
 const editValue = ref<string>("");
+
+// micro-follow: keyboard shortcuts (product-only)
+// - g/y/r: bulk set decision GREEN/YELLOW/RED for selected
+// - u: clear decision (NEEDS_DECISION) for selected
+// - e: export GREEN-only zips (requires all decided)
+// - a: select all shown (post-filter)
+// - c: clear shown (post-filter)
+// - esc: clear selection
+function _isTypingContext(): boolean {
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = (el.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return true;
+  if ((el as any).isContentEditable) return true;
+  return false;
+}
+
+function _clearSelection() {
+  selectedIds.value = new Set();
+}
+
+function _hotkeyHelp(): string {
+  return [
+    "Hotkeys:",
+    "g/y/r = Bulk decision GREEN/YELLOW/RED",
+    "u = Clear decision (NEEDS_DECISION)",
+    "e = Export GREEN-only (all must be decided)",
+    "a = Select shown (post-filter)",
+    "c = Clear shown (post-filter)",
+    "esc = Clear selection",
+  ].join("\n");
+}
+
+function _onKeydown(ev: KeyboardEvent) {
+  if (ev.defaultPrevented) return;
+  if (_isTypingContext()) return;
+
+  const k = (ev.key || "").toLowerCase();
+  if (k === "escape") {
+    ev.preventDefault();
+    _clearSelection();
+    return;
+  }
+  if (k === "a") {
+    ev.preventDefault();
+    selectAllFiltered();
+    return;
+  }
+  if (k === "c") {
+    ev.preventDefault();
+    clearAllFiltered();
+    return;
+  }
+  if (selectedIds.value.size === 0) return; // decision hotkeys require selection
+  if (k === "g") { ev.preventDefault(); bulkSetDecision("GREEN"); return; }
+  if (k === "y") { ev.preventDefault(); bulkSetDecision("YELLOW"); return; }
+  if (k === "r") { ev.preventDefault(); bulkSetDecision("RED"); return; }
+  if (k === "u") { ev.preventDefault(); bulkClearDecision(); return; }
+  if (k === "e") { ev.preventDefault(); exportGreenOnlyZips(); return; }
+}
 
 // Bulk export state
 const exporting = ref(false);
@@ -161,7 +221,15 @@ async function load() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  load();
+  window.addEventListener("keydown", _onKeydown, { capture: true });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", _onKeydown, { capture: true } as any);
+});
+
 watch(() => props.runId, load);
 
 function startEdit(c: CandidateRow) {
@@ -731,6 +799,11 @@ async function exportGreenOnlyZips() {
           <div class="muted small">
             Showing <strong>{{ filteredCount }}</strong> / {{ candidates.length }}
           </div>
+          <div class="small muted" style="margin-top:4px;">
+            <span class="kbdhint" :title="_hotkeyHelp()">
+              Hotkeys: g/y/r · u · e · a · c · esc
+            </span>
+          </div>
         </div>
       </div>
 
@@ -901,6 +974,13 @@ async function exportGreenOnlyZips() {
 .row { display: grid; grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; position: relative; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
 .row.clickable { cursor: pointer; }
+.kbdhint {
+  cursor: help;
+  border: 1px solid rgba(0,0,0,0.15);
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
 .sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
 
 .filters { display: flex; gap: 10px; align-items: end; justify-content: space-between; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
