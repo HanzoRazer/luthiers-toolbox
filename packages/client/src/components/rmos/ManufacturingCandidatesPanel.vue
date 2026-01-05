@@ -2,11 +2,26 @@
 /**
  * ManufacturingCandidatesPanel.vue
  *
- * Panel for managing manufacturing candidates.
- * Features: triage UX, filters, search, bulk decisions, zip downloads.
- *
- * H8.3 Migration: Uses canonical SDK functions with requestId correlation.
+ * Simplified wrapper that mounts the canonical ManufacturingCandidateList.vue.
+ * Legacy code preserved below but not active.
  */
+import { computed } from "vue";
+import ManufacturingCandidateList from "@/components/rmos/ManufacturingCandidateList.vue";
+
+const props = defineProps<{
+  runId: string;
+}>();
+</script>
+
+<template>
+  <ManufacturingCandidateList :runId="props.runId" />
+</template>
+
+<script lang="ts">
+// ============================================================================
+// LEGACY CODE BELOW - preserved for reference, no longer active
+// ============================================================================
+/*
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import BulkDecisionModal from "@/components/rmos/BulkDecisionModal.vue";
 import {
@@ -34,7 +49,6 @@ function saveBlobToDisk(blob: Blob, filename: string) {
 
 const props = defineProps<{
   runId: string;
-  /** @deprecated No longer used - SDK handles base URL */
   apiBase?: string;
 }>();
 

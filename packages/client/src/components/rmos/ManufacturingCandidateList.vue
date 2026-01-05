@@ -246,6 +246,25 @@ const selectedRows = computed(() => {
   return candidates.value.filter((c) => s.has(c.candidate_id));
 });
 
+// micro-follow: bulk clear decision (set to null) for selected
+// This aligns with migration: decision=null == NEEDS_DECISION
+// Clears decision_note as well (note is tied to decision record).
+// Uses decideManufacturingCandidate() only (runs.ts lockpoint).
+
+function canBulkClearDecision(): { ok: boolean; reason?: string } {
+  const sel = selectedRows.value;
+  if (sel.length === 0) return { ok: false, reason: "Select candidates to clear decision." };
+  // allow clearing any decided candidate; no-op if already undecided
+  const anyDecided = sel.some((c) => c.decision !== null);
+  if (!anyDecided) return { ok: false, reason: "All selected candidates are already undecided." };
+  return { ok: true };
+}
+
+function bulkClearBlockedHover(): string {
+  const chk = canBulkClearDecision();
+  return chk.ok ? "Clear decision → NEEDS_DECISION (decision=null). Note cleared too." : (chk.reason ?? "Blocked");
+}
+
 // -------------------------
 // Filtered view (product-only)
 // -------------------------
@@ -365,6 +384,68 @@ async function bulkSetDecision(decision: RiskLevel) {
       prev,
     });
     // keep stack small/high-signal
+    if (undoStack.value.length > 20) undoStack.value = undoStack.value.slice(0, 20);
+  } catch (e: any) {
+    saveError.value = e?.message ?? String(e);
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function bulkClearDecision() {
+  const chk = canBulkClearDecision();
+  if (!chk.ok) return;
+
+  saving.value = true;
+  saveError.value = null;
+
+  const sel = selectedRows.value;
+  const nowIso = utcNowIso();
+
+  // Snapshot "before" for undo per candidate that is changing
+  const changed = sel.filter((c) => c.decision !== null);
+  const prev: UndoItem["prev"] = {};
+  for (const c of changed) {
+    prev[c.candidate_id] = {
+      decision: (c.decision ?? null) as any,
+      decision_note: (c.decision_note ?? null) as any,
+    };
+  }
+
+  try {
+    for (const c of changed) {
+      const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
+        decision: null,
+        note: null,
+        decided_by: null,
+      });
+      requestId.value = res.requestId ?? requestId.value;
+
+      // optimistic local update
+      const idx = candidates.value.findIndex((x) => x.candidate_id === c.candidate_id);
+      if (idx >= 0) {
+        candidates.value[idx] = {
+          ...candidates.value[idx],
+          decision: (res.decision ?? null) as any,
+          status: (res.status ?? candidates.value[idx].status ?? null) as any,
+          decision_note: res.decision_note ?? null,
+          decided_at_utc: res.decided_at_utc ?? null,
+          decided_by: res.decided_by ?? null,
+          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
+        };
+      }
+      await new Promise((rr) => setTimeout(rr, 40));
+    }
+
+    // push undo record
+    undoStack.value.unshift({
+      ts_utc: nowIso,
+      run_id: props.runId,
+      label: `Bulk clear ${changed.length} → NEEDS_DECISION`,
+      applied_decision: null as any,
+      candidate_ids: changed.map((x) => x.candidate_id),
+      prev,
+    });
     if (undoStack.value.length > 20) undoStack.value = undoStack.value.slice(0, 20);
   } catch (e: any) {
     saveError.value = e?.message ?? String(e);
@@ -610,6 +691,14 @@ async function exportGreenOnlyZips() {
           </button>
           <button class="btn danger" @click="bulkSetDecision('RED')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to RED">
             Bulk RED
+          </button>
+          <button
+            class="btn ghost"
+            @click="bulkClearDecision"
+            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok"
+            :title="bulkClearBlockedHover()"
+          >
+            Clear decision
           </button>
           <button
             class="btn ghost"
