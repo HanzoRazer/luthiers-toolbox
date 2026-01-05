@@ -144,9 +144,7 @@ def generate_drill_pattern_program(pat: Pattern, prm: DrillParams) -> str:
             lines.append(f"G83 X{_f(x)} Y{_f(y)} Z{_f(prm.z)} R{r_clear} Q{peck} F{_f(prm.feed)}{dwell}")
 
     lines.append("G80")
-    return "
-".join(lines) + "
-"
+    return "\n".join(lines) + "\n"
 
 
 # =============================================================================

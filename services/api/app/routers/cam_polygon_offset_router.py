@@ -61,9 +61,7 @@ def generate_polygon_offset_program(req: PolyOffsetReq) -> str:
     )
     
     if not paths:
-        return "(Error: No valid offset paths generated)
-M30
-"
+        return "(Error: No valid offset paths generated)\nM30\n"
     
     # Generate G-code with selected linking mode
     if req.link_mode == "arc":

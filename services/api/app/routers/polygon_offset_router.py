@@ -115,9 +115,7 @@ def generate_polygon_offset_nc_program(req: OffsetReq) -> str:
     g.append("M5")
     g.append("M30")
 
-    return "
-".join(g) + "
-"
+    return "\n".join(g) + "\n"
 
 
 # =============================================================================

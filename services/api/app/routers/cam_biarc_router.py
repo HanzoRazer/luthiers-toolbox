@@ -78,9 +78,7 @@ def generate_biarc_program(req: "BiarcReq") -> str:
         for p in req.path[1:]:
             lines.append(f"G1 X{_f(p.x)} Y{_f(p.y)} F{_f(req.feed)}")
     
-    return "
-".join(lines) + "
-"
+    return "\n".join(lines) + "\n"
 
 
 # =============================================================================

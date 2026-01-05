@@ -98,9 +98,7 @@ def generate_drill_program(req: "DrillReq") -> str:
     # Cancel cycle
     lines.append("G80")
 
-    return "
-".join(lines) + "
-"
+    return "\n".join(lines) + "\n"
 
 
 # =============================================================================
