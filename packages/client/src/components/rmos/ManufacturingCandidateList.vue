@@ -113,7 +113,6 @@ const saveError = ref<string | null>(null);
 
 // history popover (product-only)
 const openHistoryFor = ref<string | null>(null);
-function toggleHistory(id: string) { openHistoryFor.value = openHistoryFor.value === id ? null : id; }
 
 // Inline note editor state
 const editingId = ref<string | null>(null);
@@ -147,6 +146,8 @@ function _hotkeyHelp(): string {
     "e = Export GREEN-only (all must be decided)",
     "a = Select shown (post-filter)",
     "c = Clear shown (post-filter)",
+    "i = Invert selection (shown rows)",
+    "x = Clear all selection",
     "esc = Clear selection",
   ].join("\n");
 }
@@ -169,6 +170,16 @@ function _onKeydown(ev: KeyboardEvent) {
   if (k === "c") {
     ev.preventDefault();
     clearAllFiltered();
+    return;
+  }
+  if (k === "i") {
+    ev.preventDefault();
+    invertSelectionFiltered();
+    return;
+  }
+  if (k === "x") {
+    ev.preventDefault();
+    _clearSelection();
     return;
   }
   if (selectedIds.value.size === 0) return; // decision hotkeys require selection
@@ -265,6 +276,14 @@ function notePreview(note?: string | null) {
   return n.length > 120 ? n.slice(0, 120) + "…" : n;
 }
 
+function _fmtAuditLine(h: { decision?: string | null; decided_by?: string | null; decided_at_utc?: string | null; note?: string | null }) {
+  const d = h.decision ?? "—";
+  const who = h.decided_by ?? "—";
+  const when = h.decided_at_utc ?? "—";
+  const note = h.note ? ` "${h.note.slice(0, 40)}${h.note.length > 40 ? '…' : ''}"` : "";
+  return `${d} · ${who} · ${when}${note}`;
+}
+
 function auditHover(c: CandidateRow) {
   const who = c.decided_by ?? "—";
   const when = c.decided_at_utc ?? "—";
@@ -279,14 +298,17 @@ function auditHover(c: CandidateRow) {
   ];
 
   if (c.decision_history && c.decision_history.length > 0) {
-    const tail = c.decision_history
-      .slice(-3)
-      .map((h) => `${h.decision} · ${h.decided_by ?? "—"} · ${h.decided_at_utc ?? "—"}`)
-      .join(" | ");
-    lines.push(`History (last): ${tail}`);
+    lines.push("History:");
+    for (const h of c.decision_history.slice(-5)) {
+      lines.push(`  ${_fmtAuditLine(h)}`);
+    }
   }
 
   return lines.join("\n");
+}
+
+function openDecisionHistory(id: string) {
+  openHistoryFor.value = openHistoryFor.value === id ? null : id;
 }
 
 async function load() {
@@ -588,6 +610,15 @@ function clearAllFiltered() {
   const f = filteredIds.value;
   const next = new Set(selectedIds.value);
   for (const id of f) next.delete(id);
+  selectedIds.value = next;
+}
+function invertSelectionFiltered() {
+  const f = filteredIds.value;
+  const next = new Set(selectedIds.value);
+  for (const id of f) {
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+  }
   selectedIds.value = next;
 }
 
@@ -1030,6 +1061,9 @@ async function exportGreenOnlyZips() {
           <button class="btn ghost" @click="clearAllFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Clear selection for shown rows">
             Clear shown
           </button>
+          <button class="btn ghost" @click="invertSelectionFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Invert selection (shown rows)">
+            Invert
+          </button>
 
           <label class="check">
             <input type="checkbox" v-model="showSelectedOnly" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
@@ -1052,7 +1086,7 @@ async function exportGreenOnlyZips() {
           </label>
           <div class="small muted" style="margin-top:4px;">
             <span class="kbdhint" :title="_hotkeyHelp()">
-              Hotkeys: g/y/r · u · e · a · c · esc
+              Hotkeys: g/y/r · u · e · a · c · i · x · esc
             </span>
           </div>
           <div style="margin-top:8px;">
@@ -1149,14 +1183,22 @@ async function exportGreenOnlyZips() {
         <div class="mono">{{ c.candidate_id }}</div>
         <div class="mono">{{ c.advisory_id ?? "—" }}</div>
 
-        <div>
+        <div class="decision-cell">
           <span class="badge" :data-badge="decisionBadge(c.decision)">
             {{ decisionBadge(c.decision) }}
+          </span>
+          <span
+            v-if="c.decision_history && c.decision_history.length > 0"
+            class="history-count"
+            :title="`${c.decision_history.length} history entries`"
+            @click.stop="openDecisionHistory(c.candidate_id)"
+          >
+            ({{ c.decision_history.length }})
           </span>
         </div>
 
         <div class="history">
-          <button class="btn ghost smallbtn" @click="toggleHistory(c.candidate_id)" :disabled="saving || exporting || undoBusy">
+          <button class="btn ghost smallbtn" @click.stop="openDecisionHistory(c.candidate_id)" :disabled="saving || exporting || undoBusy">
             {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
           </button>
           <div v-if="openHistoryFor === c.candidate_id" class="popover">
@@ -1354,4 +1396,13 @@ async function exportGreenOnlyZips() {
 .chip.bad.active { border-color: #ef4444; }
 .chip.muted.active { border-color: #6b7280; }
 .chip:hover { border-color: rgba(0,0,0,0.22); }
+
+/* Decision cell with history count badge */
+.decision-cell { display: flex; align-items: center; gap: 6px; }
+.history-count {
+  font-size: 11px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.history-count:hover { color: #374151; text-decoration: underline; }
 </style>
