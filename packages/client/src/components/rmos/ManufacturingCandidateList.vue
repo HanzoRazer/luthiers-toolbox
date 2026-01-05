@@ -34,6 +34,9 @@ const statusFilter = ref<StatusFilter>("ALL");
 const showSelectedOnly = ref(false);
 const searchText = ref("");
 
+// micro-follow: density toggle (compact mode) for long runs
+const compact = ref<boolean>(false);
+
 type SortKey = "id" | "id_desc" | "created" | "created_desc" | "status" | "decision";
 const sortKey = ref<SortKey>("id");
 
@@ -728,7 +731,7 @@ async function exportGreenOnlyZips() {
     <p v-if="loading" class="muted">Loading candidates…</p>
     <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
 
-    <div v-else class="table">
+    <div v-else class="table" :class="{ compact }">
       <!-- Filters -->
       <div class="filters">
         <div class="filters-left">
@@ -799,6 +802,10 @@ async function exportGreenOnlyZips() {
           <div class="muted small">
             Showing <strong>{{ filteredCount }}</strong> / {{ candidates.length }}
           </div>
+          <label class="check" :title="compact ? 'Compact rows (more visible)' : 'Comfortable rows (more spacing)'">
+            <input type="checkbox" v-model="compact" />
+            <span class="muted">{{ compact ? 'Compact' : 'Comfortable' }}</span>
+          </label>
           <div class="small muted" style="margin-top:4px;">
             <span class="kbdhint" :title="_hotkeyHelp()">
               Hotkeys: g/y/r · u · e · a · c · esc
@@ -971,9 +978,33 @@ async function exportGreenOnlyZips() {
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
 
 .table { display: grid; gap: 6px; }
-.row { display: grid; grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; position: relative; }
-.row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
+.row {
+  display: grid;
+  grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px;
+  gap: 10px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  position: relative;
+  background: white;
+}
+.row.head {
+  font-weight: 600;
+  background: rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
 .row.clickable { cursor: pointer; }
+
+/* micro-follow: compact density */
+.table.compact .row { padding: 6px; gap: 8px; }
+.table.compact .mono { font-size: 11px; }
+.table.compact .btn { padding: 4px 8px; }
+
 .kbdhint {
   cursor: help;
   border: 1px solid rgba(0,0,0,0.15);
