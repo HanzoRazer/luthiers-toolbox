@@ -195,6 +195,75 @@ class TestDetectSignals:
         assert "PERSISTENCE" in signals
 
 
+class TestStripComments:
+    """Tests for strip_comments() function (docstring and comment removal)."""
+
+    @pytest.fixture
+    def strip_comments(self):
+        """Import the strip_comments function."""
+        return get_scanner_module().strip_comments
+
+    def test_strips_python_line_comments(self, strip_comments):
+        """Python # comments are stripped."""
+        text = "code()  # this is a comment"
+        result = strip_comments(text)
+        assert "comment" not in result
+        assert "code()" in result
+
+    def test_strips_js_line_comments(self, strip_comments):
+        """JavaScript // comments are stripped."""
+        text = "function()  // this is a comment"
+        result = strip_comments(text)
+        assert "comment" not in result
+        assert "function()" in result
+
+    def test_strips_triple_double_quote_docstrings(self, strip_comments):
+        """Python \"\"\"docstrings\"\"\" are stripped."""
+        text = '''def foo():
+    """This docstring mentions compute_feasibility()."""
+    pass'''
+        result = strip_comments(text)
+        assert "compute_feasibility" not in result
+        assert "def foo():" in result
+        assert "pass" in result
+
+    def test_strips_triple_single_quote_docstrings(self, strip_comments):
+        """Python '''docstrings''' are stripped."""
+        text = """def foo():
+    '''This docstring mentions should_block().'''
+    pass"""
+        result = strip_comments(text)
+        assert "should_block" not in result
+        assert "def foo():" in result
+
+    def test_preserves_code_outside_comments(self, strip_comments):
+        """Code outside comments/docstrings is preserved."""
+        text = '''should_block()  # just a comment
+"""docstring mentioning run_id"""
+real_code_with_run_id()'''
+        result = strip_comments(text)
+        # The actual code line should be preserved
+        assert "real_code_with_run_id()" in result
+        # But the comment and docstring contents should be gone
+        assert "just a comment" not in result
+        # docstring should be stripped, so run_id in docstring gone
+        # but run_id in code should remain
+
+    def test_strips_multiline_docstrings(self, strip_comments):
+        """Multiline docstrings spanning many lines are stripped."""
+        text = '''"""
+        This is a long docstring
+        that mentions compute_feasibility()
+        and should_block()
+        across multiple lines.
+        """
+actual_code()'''
+        result = strip_comments(text)
+        assert "compute_feasibility" not in result
+        assert "should_block" not in result
+        assert "actual_code()" in result
+
+
 class TestIsExperimentalPath:
     """Tests for is_experimental_path() function."""
 
@@ -235,12 +304,21 @@ class TestRiskFor:
         risk = risk_for(signals, rel, "store_artifact()")
         assert risk == "critical"
 
-    def test_critical_experimental_id_creation(self, risk_for):
-        """Experimental + ID_CREATION = critical."""
+    def test_critical_experimental_id_creation_with_run_id(self, risk_for):
+        """Experimental + ID_CREATION + run_id = critical (RMOS authority)."""
         signals = {"ID_CREATION"}
         rel = "services/api/app/_experimental/ids.py"
-        risk = risk_for(signals, rel, "uuid.uuid4()")
+        # Only critical if creating RMOS run IDs, not ephemeral suggestion UUIDs
+        risk = risk_for(signals, rel, "run_id = uuid.uuid4()")
         assert risk == "critical"
+
+    def test_not_critical_experimental_id_creation_without_run_id(self, risk_for):
+        """Experimental + ID_CREATION without run_id = low (suggestion UUID OK)."""
+        signals = {"ID_CREATION"}
+        rel = "services/api/app/_experimental/ids.py"
+        # Ephemeral suggestion UUIDs are not authority creation
+        risk = risk_for(signals, rel, "suggestion_id = uuid.uuid4()")
+        assert risk == "low"
 
     def test_critical_experimental_safety_gate(self, risk_for):
         """Experimental + SAFETY_GATE = critical."""
@@ -317,13 +395,22 @@ class TestInvariantViolation:
         inv, note = invariant_violation(signals, rel, "store then respond")
         assert inv is None
 
-    def test_inv002_ai_no_authority_violated(self, invariant_violation):
-        """INV-002: Experimental + authority = violation."""
+    def test_inv002_ai_no_authority_violated_with_run_id(self, invariant_violation):
+        """INV-002: Experimental + RMOS run_id authority = violation."""
         signals = {"ID_CREATION"}
         rel = "app/_experimental/ai_graphics/test.py"
-        inv, note = invariant_violation(signals, rel, "uuid.uuid4()")
+        # Only violated if creating RMOS run IDs
+        inv, note = invariant_violation(signals, rel, "run_id = uuid.uuid4()")
         assert inv == "AI_NO_AUTHORITY"
         assert "Experimental" in note
+
+    def test_inv002_not_violated_with_suggestion_uuid(self, invariant_violation):
+        """INV-002: Not violated for ephemeral suggestion UUIDs."""
+        signals = {"ID_CREATION"}
+        rel = "app/_experimental/ai_graphics/test.py"
+        # Ephemeral suggestion UUIDs are not authority creation
+        inv, note = invariant_violation(signals, rel, "suggestion_id = uuid.uuid4()")
+        assert inv is None
 
     def test_inv002_not_violated_outside_experimental(self, invariant_violation):
         """INV-002: Not violated outside _experimental."""
