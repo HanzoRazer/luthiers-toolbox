@@ -34,6 +34,9 @@ const statusFilter = ref<StatusFilter>("ALL");
 const showSelectedOnly = ref(false);
 const searchText = ref("");
 
+type SortKey = "id" | "id_desc" | "created" | "created_desc" | "status" | "decision";
+const sortKey = ref<SortKey>("id");
+
 // Save / decision state
 const saving = ref(false);
 const saveError = ref<string | null>(null);
@@ -52,6 +55,7 @@ const exportError = ref<string | null>(null);
 
 // Selection state (bulk decision)
 const selectedIds = ref<Set<string>>(new Set());
+const lastClickedId = ref<string | null>(null);
 const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
 
 // Undo stack for bulk decisions (client-side)
@@ -275,7 +279,7 @@ const filteredCandidates = computed(() => {
   const sel = selectedIds.value;
   const q = normalize(searchText.value);
 
-  return candidates.value.filter((c) => {
+  let arr = candidates.value.filter((c) => {
     if (onlySel && !sel.has(c.candidate_id)) return false;
 
     // decision filter
@@ -294,9 +298,66 @@ const filteredCandidates = computed(() => {
     if (!matchesSearch(c, q)) return false;
     return true;
   });
+
+  // sort
+  const sk = sortKey.value;
+  arr = [...arr].sort((a, b) => {
+    if (sk === "id") return a.candidate_id.localeCompare(b.candidate_id);
+    if (sk === "id_desc") return b.candidate_id.localeCompare(a.candidate_id);
+    if (sk === "created") return (a.created_at_utc ?? "").localeCompare(b.created_at_utc ?? "");
+    if (sk === "created_desc") return (b.created_at_utc ?? "").localeCompare(a.created_at_utc ?? "");
+    if (sk === "status") return (a.status ?? "").localeCompare(b.status ?? "");
+    if (sk === "decision") return (a.decision ?? "ZZZ").localeCompare(b.decision ?? "ZZZ");
+    return 0;
+  });
+
+  return arr;
 });
 
 const filteredCount = computed(() => filteredCandidates.value.length);
+
+const filteredIds = computed(() => new Set(filteredCandidates.value.map((c) => c.candidate_id)));
+const allFilteredSelected = computed(() => {
+  const f = filteredIds.value;
+  if (f.size === 0) return false;
+  for (const id of f) if (!selectedIds.value.has(id)) return false;
+  return true;
+});
+
+// Selection helpers
+function idxById(id: string): number {
+  return filteredCandidates.value.findIndex((c) => c.candidate_id === id);
+}
+function setSelected(id: string, on: boolean) {
+  const next = new Set(selectedIds.value);
+  if (on) next.add(id);
+  else next.delete(id);
+  selectedIds.value = next;
+}
+function toggleSelected(id: string) {
+  setSelected(id, !selectedIds.value.has(id));
+}
+function selectRange(fromId: string, toId: string) {
+  const a = idxById(fromId);
+  const b = idxById(toId);
+  if (a < 0 || b < 0) return;
+  const lo = Math.min(a, b);
+  const hi = Math.max(a, b);
+  const next = new Set(selectedIds.value);
+  for (let i = lo; i <= hi; i++) next.add(filteredCandidates.value[i].candidate_id);
+  selectedIds.value = next;
+}
+function selectAllFiltered() {
+  const next = new Set(selectedIds.value);
+  for (const id of filteredIds.value) next.add(id);
+  selectedIds.value = next;
+}
+function clearAllFiltered() {
+  const f = filteredIds.value;
+  const next = new Set(selectedIds.value);
+  for (const id of f) next.delete(id);
+  selectedIds.value = next;
+}
 
 function quickUndecided() {
   decisionFilter.value = "UNDECIDED";
@@ -309,19 +370,18 @@ function clearFilters() {
   searchText.value = "";
 }
 
-function toggleOne(id: string) {
-  const next = new Set(selectedIds.value);
-  if (next.has(id)) next.delete(id);
-  else next.add(id);
-  selectedIds.value = next;
+function toggleOne(id: string, ev?: MouseEvent) {
+  if (ev?.shiftKey && lastClickedId.value && lastClickedId.value !== id) {
+    selectRange(lastClickedId.value, id);
+  } else {
+    toggleSelected(id);
+  }
+  lastClickedId.value = id;
 }
 
-function toggleAll() {
-  if (selectingAll.value) {
-    selectedIds.value = new Set();
-    return;
-  }
-  selectedIds.value = new Set(candidates.value.map((c) => c.candidate_id));
+function toggleAllFiltered() {
+  if (allFilteredSelected.value) clearAllFiltered();
+  else selectAllFiltered();
 }
 
 function utcNowIso() {
@@ -634,9 +694,28 @@ async function exportGreenOnlyZips() {
               :disabled="saving || exporting || undoBusy"
             />
           </div>
+
+          <div class="field">
+            <label class="muted">Sort</label>
+            <select v-model="sortKey" :disabled="saving || exporting || undoBusy">
+              <option value="id">ID ↑</option>
+              <option value="id_desc">ID ↓</option>
+              <option value="created">Created ↑</option>
+              <option value="created_desc">Created ↓</option>
+              <option value="status">Status</option>
+              <option value="decision">Decision</option>
+            </select>
+          </div>
         </div>
 
         <div class="filters-right">
+          <button class="btn ghost" @click="selectAllFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Select all shown rows">
+            Select shown
+          </button>
+          <button class="btn ghost" @click="clearAllFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Clear selection for shown rows">
+            Clear shown
+          </button>
+
           <label class="check">
             <input type="checkbox" v-model="showSelectedOnly" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
             <span class="muted">Selected only</span>
@@ -659,10 +738,10 @@ async function exportGreenOnlyZips() {
         <div class="sel">
           <input
             type="checkbox"
-            :checked="selectingAll"
-            @change="toggleAll"
-            :disabled="saving || exporting || undoBusy"
-            title="Select all"
+            :checked="allFilteredSelected"
+            @change="toggleAllFiltered"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0"
+            title="Toggle select all shown"
           />
         </div>
         <div>Candidate</div>
@@ -724,14 +803,15 @@ async function exportGreenOnlyZips() {
       <div
         v-for="c in filteredCandidates"
         :key="c.candidate_id"
-        class="row"
+        class="row clickable"
         :title="auditHover(c)"
+        @click="toggleOne(c.candidate_id, $event)"
       >
         <div class="sel">
           <input
             type="checkbox"
             :checked="selectedIds.has(c.candidate_id)"
-            @change="toggleOne(c.candidate_id)"
+            @click.stop="toggleOne(c.candidate_id, $event)"
             :disabled="saving || exporting || undoBusy"
             :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'"
           />
@@ -820,6 +900,7 @@ async function exportGreenOnlyZips() {
 .table { display: grid; gap: 6px; }
 .row { display: grid; grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 360px; gap: 10px; align-items: start; padding: 8px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; position: relative; }
 .row.head { font-weight: 600; background: rgba(0,0,0,0.04); }
+.row.clickable { cursor: pointer; }
 .sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
 
 .filters { display: flex; gap: 10px; align-items: end; justify-content: space-between; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
