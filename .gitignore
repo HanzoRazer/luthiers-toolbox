@@ -303,6 +303,7 @@ RMOS_2_0_ClassDiagram.puml
 test-viewer.html
 svg-viewer.html
 index.html
+!packages/client/index.html
 Altitude vs Modal frequencies_.html
 
 # ------------------------------------------
