@@ -124,7 +124,10 @@
       </div>
 
       <!-- Bundle 32.4.2: History mini-stack panel -->
-      <HistoryStackPanel :highlight-idx-from-top="historyHotkeyFlash" />
+      <HistoryStackPanel
+        :highlight-idx-from-top="historyHotkeyFlash"
+        @reverted="(idx) => flashHistoryIdx(idx)"
+      />
 
       <GeneratorPicker />
       <FeasibilityBanner />

@@ -7,6 +7,11 @@ const props = defineProps<{
   highlightIdxFromTop?: number | null; // 0 = newest row
 }>();
 
+// Bundle 32.4.9: Emit when row is reverted (for flash on click)
+const emit = defineEmits<{
+  (e: "reverted", idxFromTop: number): void;
+}>();
+
 const store = useRosetteStore();
 
 // Bundle 32.4.8: Helper to check if row should flash
@@ -98,6 +103,9 @@ function revertTo(idxFromTop: number) {
 
   const abs = stack.length - 1 - idxFromTop;
   store.revertToHistoryIndex(abs);
+
+  // Bundle 32.4.9: Emit for flash on click
+  emit("reverted", idxFromTop);
 }
 
 function clearAll() {
