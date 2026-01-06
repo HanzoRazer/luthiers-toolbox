@@ -353,7 +353,8 @@ describe('useCompareState - B22.8 State Machine Guardrails', () => {
       // Mode should not change
       expect(state.currentMode.value).toBe('overlay')
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot set mode while overlay disabled')
+        expect.stringContaining('Cannot set mode while overlay disabled'),
+        null  // diffDisabledReason is null when no result
       )
 
       consoleWarnSpy.mockRestore()

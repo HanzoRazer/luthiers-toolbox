@@ -2,7 +2,7 @@
 // B22.10: Unit tests for blink behavior hook
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import { useBlinkBehavior } from "./compareBlinkBehavior";
 import type { CompareMode } from "./compareModes";
 
@@ -30,7 +30,7 @@ describe("useBlinkBehavior", () => {
     expect(behavior.isBlinking.value).toBe(true);
   });
 
-  it("starts blinking automatically when mode changes to blink", () => {
+  it("starts blinking automatically when mode changes to blink", async () => {
     const compareMode = ref<CompareMode>("side-by-side");
     const behavior = useBlinkBehavior(compareMode, 100);
 
@@ -38,6 +38,9 @@ describe("useBlinkBehavior", () => {
 
     // Change to blink mode
     compareMode.value = "blink";
+
+    // Wait for Vue watcher to process the change
+    await nextTick();
 
     // Advance timer by one interval
     vi.advanceTimersByTime(100);
@@ -48,7 +51,7 @@ describe("useBlinkBehavior", () => {
     expect(behavior.blinkPhase.value).toBe("left");
   });
 
-  it("stops blinking and resets phase when mode changes away from blink", () => {
+  it("stops blinking and resets phase when mode changes away from blink", async () => {
     const compareMode = ref<CompareMode>("blink");
     const behavior = useBlinkBehavior(compareMode, 100);
 
@@ -58,6 +61,9 @@ describe("useBlinkBehavior", () => {
 
     // Change mode away from blink
     compareMode.value = "overlay";
+
+    // Wait for Vue watcher to process the change
+    await nextTick();
 
     // Phase should reset to left
     expect(behavior.blinkPhase.value).toBe("left");
