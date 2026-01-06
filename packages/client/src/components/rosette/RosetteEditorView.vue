@@ -139,6 +139,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
+import { useUiToastStore } from "@/stores/uiToastStore";
 import PatternLibraryPanel from "./PatternLibraryPanel.vue";
 import GeneratorPicker from "./GeneratorPicker.vue";
 import RosettePreviewPanel from "./RosettePreviewPanel.vue";
@@ -148,6 +149,7 @@ import ToastHost from "@/components/ui/ToastHost.vue";
 import HistoryStackPanel from "./HistoryStackPanel.vue";
 
 const store = useRosetteStore();
+const toast = useUiToastStore();
 
 // Bundle 32.3.7: HUD pulse on filter toggle
 const hudPulse = ref(false);
@@ -174,7 +176,40 @@ onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKeyDown);
 });
 
+// Bundle 32.4.6: Detect if focus is in a typing context (input, textarea, contenteditable)
+function isTypingTarget(el: EventTarget | null): boolean {
+  const n = el as HTMLElement | null;
+  if (!n) return false;
+
+  const tag = (n.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return true;
+  if ((n as any).isContentEditable) return true;
+
+  return false;
+}
+
 function onKeyDown(e: KeyboardEvent) {
+  // Bundle 32.4.6: History hotkeys 1–5 (don't hijack while typing)
+  if (!isTypingTarget(e.target)) {
+    const k = e.key;
+    if (k === "1" || k === "2" || k === "3" || k === "4" || k === "5") {
+      const idx = Number(k) - 1; // 0..4 (newest-first)
+      const labels = store.getRecentHistoryLabels(5);
+      if (idx < labels.length) {
+        e.preventDefault();
+        store.revertToRecentIndex(idx, 5);
+
+        toast.push({
+          level: "info",
+          message: `Reverted: ${labels[idx]}`,
+          detail: "Hotkey: 1–5 (1 = newest)",
+          durationMs: 2200,
+        });
+      }
+      return;
+    }
+  }
+
   // ] key -> jump to next problematic ring
   if (e.key === "]" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
     e.preventDefault();
