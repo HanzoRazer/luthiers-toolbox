@@ -260,6 +260,17 @@ export interface RunsListResponse {
   total: number;
 }
 
+export interface CreateRunRequest {
+  event_type?: string;
+  mode?: string;
+  tool_id?: string;
+  status?: string;
+}
+
+export interface CreateRunResponse {
+  run_id: string;
+}
+
 /**
  * List recent runs (for selecting a run to attach to).
  */
@@ -272,4 +283,17 @@ export async function listRecentRuns(
     offset: String(offset),
   });
   return fetchJson<RunsListResponse>(`/api/rmos/runs?${params}`);
+}
+
+/**
+ * Create a new RMOS run (canonical: POST /api/rmos/runs)
+ * Used by VisionAttachToRunWidget when no runs exist yet.
+ */
+export async function createRun(
+  request: CreateRunRequest = {}
+): Promise<CreateRunResponse> {
+  return fetchJson<CreateRunResponse>("/api/rmos/runs", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 }
