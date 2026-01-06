@@ -13,8 +13,7 @@
  * @package features/ai_images
  */
 
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   generateImages,
@@ -33,10 +32,7 @@ import {
 const router = useRouter();
 const DEFAULT_EVENT_TYPE = "vision_image_review";
 const RECENT_RUNS_PAGE_SIZE = 10;
-
-const router = useRouter();
-
-const DEFAULT_EVENT_TYPE = "vision_image_review";
+const LS_SELECTED_RUN = "tb.visionAttach.selectedRunId";
 
 // =============================================================================
 // PROPS & EMITS
@@ -47,6 +43,11 @@ const props = defineProps<{
   runId?: string;
   /** Initial prompt (optional) */
   initialPrompt?: string;
+  /**
+   * When true (default), after a successful attach the widget deep-links to the
+   * run variants review surface.
+   */
+  autoNavigateToReview?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -76,6 +77,7 @@ const selectedRunId = ref<string | null>(props.runId || null);
 const runSearch = ref<string>("");
 const runsCursor = ref<string | null>(null);
 const runsHasMore = ref<boolean>(false);
+const lastAttached = ref<{ runId: string; advisoryId: string } | null>(null);
 
 // Providers
 const providers = ref<VisionProvider[]>([]);
@@ -111,6 +113,8 @@ const selectedAsset = computed(() => {
 const configuredProviders = computed(() => {
   return providers.value.filter((p) => p.configured);
 });
+
+const autoNavigate = computed(() => props.autoNavigateToReview !== false);
 
 // =============================================================================
 // LIFECYCLE
@@ -160,9 +164,14 @@ async function loadRuns() {
       runsHasMore.value = false;
     }
 
-    // If nothing selected, auto-select newest run (first in list).
+    // Selection preference:
+    // 1) explicit prop
+    // 2) localStorage remembered selection (if present in list)
+    // 3) newest (first)
     if (!selectedRunId.value && runs.value.length > 0) {
-      selectedRunId.value = runs.value[0].run_id;
+      const remembered = window.localStorage.getItem(LS_SELECTED_RUN);
+      const inList = remembered && runs.value.some((r) => r.run_id === remembered);
+      selectedRunId.value = inList ? remembered : runs.value[0].run_id;
     }
   } catch (e: any) {
     const msg = e?.message ?? "Failed to load runs";
@@ -211,7 +220,7 @@ async function createAndSelectRun() {
     const res = await createRun({ event_type: DEFAULT_EVENT_TYPE });
     selectedRunId.value = res.run_id;
     await loadRuns();
-    successMessage.value = `Created run ${res.run_id.slice(0, 12)}... (${DEFAULT_EVENT_TYPE})`;
+    successMessage.value = `Created run ${res.run_id}`;
   } catch (e: any) {
     const msg = e?.message ?? "Failed to create run";
     error.value = msg;
@@ -272,10 +281,12 @@ async function attachToRun() {
     });
 
     if (res.attached) {
-      successMessage.value = `Attached to run ${res.run_id.slice(0, 8)}... — opening review page`;
+      lastAttached.value = { runId: res.run_id, advisoryId: res.advisory_id };
       emit("attached", { runId: res.run_id, advisoryId: res.advisory_id });
-      // Deep-link to canonical review surface (RunVariantsReviewPage)
-      router.push({ name: "RunVariantsReview", params: { run_id: res.run_id } });
+      successMessage.value = `Attached advisory ${res.advisory_id.slice(0, 10)}… to run ${res.run_id}`;
+      if (autoNavigate.value) {
+        router.push({ name: "RunVariantsReview", params: { run_id: res.run_id } });
+      }
     } else {
       successMessage.value = res.message || "Already attached";
     }
@@ -306,6 +317,14 @@ function formatDate(iso: string): string {
 function truncate(s: string, len: number): string {
   return s.length > len ? s.slice(0, len) + "..." : s;
 }
+
+function goToReview(runId: string) {
+  router.push({ name: "RunVariantsReview", params: { run_id: runId } });
+}
+
+watch(selectedRunId, (v) => {
+  if (v) window.localStorage.setItem(LS_SELECTED_RUN, v);
+});
 </script>
 
 <template>
@@ -483,6 +502,11 @@ function truncate(s: string, len: number): string {
         <span v-if="isAttaching">Attaching...</span>
         <span v-else>Attach &amp; Review</span>
       </button>
+      <div v-if="successMessage && !autoNavigate && lastAttached" class="success-actions">
+        <button class="btn" type="button" @click="goToReview(lastAttached.runId)">
+          Go to Review
+        </button>
+      </div>
     </section>
   </div>
 </template>
@@ -812,6 +836,13 @@ function truncate(s: string, len: number): string {
 .runs-count {
   font-size: 12px;
   color: #888;
+}
+
+.success-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .hint-tip {
