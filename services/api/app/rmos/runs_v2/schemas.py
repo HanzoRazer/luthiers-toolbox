@@ -31,6 +31,16 @@ RunStatus = Literal["OK", "BLOCKED", "ERROR"]
 ExplanationStatus = Literal["NONE", "PENDING", "READY", "ERROR"]
 RiskLevel = Literal["GREEN", "YELLOW", "RED", "UNKNOWN", "ERROR"]
 
+# Advisory review state (ledger-authoritative)
+VariantStatus = Literal["NEW", "REVIEWED", "PROMOTED", "REJECTED"]
+RejectReasonCode = Literal[
+    "GEOMETRY_UNSAFE",
+    "TEXT_REQUIRES_OUTLINE",
+    "AESTHETIC",
+    "DUPLICATE",
+    "OTHER",
+]
+
 
 # =============================================================================
 # Supporting Models
@@ -180,6 +190,7 @@ class AdvisoryInputRef(BaseModel):
     Reference to an attached advisory/explanation asset.
 
     Append-only: These references are added but never removed.
+    Review state is mutable (status, rejected, rating, notes, etc.).
     """
     advisory_id: str = Field(
         ...,
@@ -205,6 +216,66 @@ class AdvisoryInputRef(BaseModel):
         None,
         description="Version of the generating engine",
     )
+
+    # -------------------------------------------------------------------------
+    # Review fields (RMOS ledger-authoritative)
+    # These persist governance state for each advisory_id attached to the run.
+    # Defaults preserve backward compatibility with existing runs.
+    # -------------------------------------------------------------------------
+    status: VariantStatus = Field(
+        "NEW",
+        description="NEW|REVIEWED|PROMOTED|REJECTED",
+    )
+    rejected: bool = Field(
+        False,
+        description="True if operator rejected this variant",
+    )
+    risk_level: Optional[RiskLevel] = Field(
+        None,
+        description="Quick triage risk level",
+    )
+    rating: Optional[int] = Field(
+        None,
+        ge=1,
+        le=5,
+        description="1-5 star rating",
+    )
+    notes: Optional[str] = Field(
+        None,
+        description="Operator notes",
+    )
+
+    # Rejection details
+    rejection_reason_code: Optional[RejectReasonCode] = None
+    rejection_reason_detail: Optional[str] = None
+    rejection_operator_note: Optional[str] = None
+    rejected_at_utc: Optional[str] = None
+    updated_at_utc: Optional[str] = None
+
+    # Promotion state
+    promoted: bool = Field(
+        False,
+        description="True if promoted to manufacturing",
+    )
+    promoted_candidate_id: Optional[str] = Field(
+        None,
+        description="Candidate id if created",
+    )
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _norm_status(cls, v: str) -> str:
+        return (v or "NEW").upper()
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk(cls, v: Optional[str]) -> Optional[str]:
+        return v.upper() if isinstance(v, str) else v
+
+    @field_validator("rejection_reason_code", mode="before")
+    @classmethod
+    def _norm_reason(cls, v: Optional[str]) -> Optional[str]:
+        return v.upper() if isinstance(v, str) else v
 
 
 # =============================================================================
