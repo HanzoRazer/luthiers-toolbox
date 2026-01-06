@@ -27,6 +27,7 @@ export { default as AiImageProperties } from './AiImageProperties.vue';
 export { default as AdvisoryReviewPanel } from './AdvisoryReviewPanel.vue';
 export { default as AiImageFilterToolbar } from './AiImageFilterToolbar.vue';
 export { default as TeachingLoopPanel } from './TeachingLoopPanel.vue';
+export { default as VisionAttachToRunWidget } from './VisionAttachToRunWidget.vue';
 
 // =============================================================================
 // STORE
@@ -59,6 +60,7 @@ export * as aiApi from './api/ai';
 export * as sessionApi from './api/session';
 export * as teachingApi from './api/teaching';
 export * as advisoryApi from './api/advisory';
+export * as visionApi from './api/visionApi';
 
 // =============================================================================
 // TYPES
