@@ -39,7 +39,7 @@ export function computeFitTransform(
   const scale = Math.min(scaleX, scaleY);
 
   const worldCenterX = (bbox.minX + bbox.maxX) / 2;
-  const worldCenterY = (bbox.minY + bbox.minY) / 2;
+  const worldCenterY = (bbox.minY + bbox.maxY) / 2;
 
   const screenCenterX = paneWidth / 2;
   const screenCenterY = paneHeight / 2;

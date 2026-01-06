@@ -64,7 +64,7 @@ export function useBlinkBehavior(
         stopBlink();
       }
     },
-    { immediate: false }
+    { immediate: true }
   );
 
   // Cleanup on unmount
