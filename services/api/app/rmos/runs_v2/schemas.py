@@ -658,3 +658,25 @@ class RunAttachmentsListResponseV1(BaseModel):
         default_factory=list,
         description="List of attachment rows (normalized)",
     )
+
+
+# =============================================================================
+# Model Rebuild for Forward Reference Resolution (Pydantic V2)
+# =============================================================================
+# When using `from __future__ import annotations`, all type hints become
+# forward references (strings). Pydantic V2 needs model_rebuild() to resolve
+# these references after all types are defined.
+
+Hashes.model_rebuild()
+RunDecision.model_rebuild()
+RunOutputs.model_rebuild()
+RunLineage.model_rebuild()
+RunAttachment.model_rebuild()
+AdvisoryInputRef.model_rebuild()
+RunArtifact.model_rebuild()
+RunAttachmentCreateRequest.model_rebuild()
+RunAttachmentCreateResponse.model_rebuild()
+BindArtStudioCandidateRequest.model_rebuild()
+BindArtStudioCandidateResponse.model_rebuild()
+RunAttachmentRowV1.model_rebuild()
+RunAttachmentsListResponseV1.model_rebuild()

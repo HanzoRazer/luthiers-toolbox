@@ -89,3 +89,16 @@ class PromoteVariantResponse(BaseModel):
     advisory_id: str
     promoted: bool
     promoted_candidate_id: Optional[str] = None
+
+
+# =============================================================================
+# Model Rebuild for Forward Reference Resolution (Pydantic V2)
+# =============================================================================
+
+AdvisoryAttachRequest.model_rebuild()
+AdvisoryAttachResponse.model_rebuild()
+AdvisoryVariantReviewRequest.model_rebuild()
+AdvisoryVariantReviewRecord.model_rebuild()
+BulkReviewAdvisoryVariantsRequest.model_rebuild()
+BulkReviewAdvisoryVariantsResponse.model_rebuild()
+PromoteVariantResponse.model_rebuild()
