@@ -352,38 +352,41 @@ function truncate(s: string, len: number): string {
     <!-- Run Selection Section -->
     <section class="section" v-if="selectedAssetSha">
       <h4>3. Select Run</h4>
-      <div v-if="isLoadingRuns" class="loading">Loading runs...</div>
-      <div v-else-if="runs.length === 0" class="empty">
-        No runs available.
-        <div style="margin-top: 10px;">
-          <button
-            class="btn primary"
-            type="button"
-            :disabled="isLoadingRuns"
-            @click="createAndSelectRun"
-          >
-            + Create Run (vision_image_review)
-          </button>
-        </div>
-      </div>
-      <div v-else class="runs-list">
-        <div
-          v-for="run in runs"
-          :key="run.run_id"
-          class="run-item"
-          :class="{ selected: selectedRunId === run.run_id }"
-          @click="selectRun(run.run_id)"
+
+      <!-- Action buttons: Refresh + Create -->
+      <div class="run-actions">
+        <button
+          class="btn"
+          type="button"
+          :disabled="isLoadingRuns"
+          @click="loadRuns"
         >
-          <div class="run-id">{{ run.run_id.slice(0, 12) }}...</div>
-          <div class="run-meta">
-            <span class="run-status" :class="run.status.toLowerCase()">
-              {{ run.status }}
-            </span>
-            <span class="run-type">{{ run.event_type || run.mode || "run" }}</span>
-            <span class="run-date">{{ formatDate(run.created_at_utc) }}</span>
-          </div>
-          <div v-if="selectedRunId === run.run_id" class="check-badge">&#10003;</div>
-        </div>
+          {{ isLoadingRuns ? "Loading..." : "Refresh" }}
+        </button>
+        <button
+          class="btn primary"
+          type="button"
+          :disabled="isLoadingRuns"
+          @click="createAndSelectRun"
+        >
+          + Create Run
+        </button>
+      </div>
+
+      <!-- Run dropdown selector -->
+      <div v-if="runs.length > 0" class="run-selector">
+        <label class="form-label">Recent runs</label>
+        <select v-model="selectedRunId" class="run-select">
+          <option :value="null" disabled>Select a run...</option>
+          <option v-for="run in runs" :key="run.run_id" :value="run.run_id">
+            {{ run.run_id.slice(0, 16) }}... {{ run.event_type ? `• ${run.event_type}` : "" }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Empty state message -->
+      <div v-else-if="!isLoadingRuns" class="empty-hint">
+        No runs yet — click "Create Run" to start the RMOS review ledger.
       </div>
     </section>
 
@@ -406,7 +409,7 @@ function truncate(s: string, len: number): string {
         @click="attachToRun"
       >
         <span v-if="isAttaching">Attaching...</span>
-        <span v-else>Attach to Run</span>
+        <span v-else>Attach &amp; Review</span>
       </button>
     </section>
   </div>
@@ -689,6 +692,51 @@ function truncate(s: string, len: number): string {
   text-align: center;
   color: #888;
   font-size: 13px;
+}
+
+.run-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.run-selector {
+  margin-top: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.run-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: monospace;
+  background: #fff;
+  cursor: pointer;
+}
+.run-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.empty-hint {
+  margin-top: 12px;
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #e5e5e5;
 }
 
 .action-section {
