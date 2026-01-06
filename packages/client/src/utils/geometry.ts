@@ -90,4 +90,3 @@ export function normalizeGeometryPayload(payload: any, defaultUnits: Units = 'mm
   }
   return null
 }
-*** End of File
