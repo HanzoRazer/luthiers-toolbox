@@ -14,10 +14,12 @@
  */
 
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import {
   generateImages,
   attachAdvisoryToRun,
   listRecentRuns,
+  createRun,
   getProviders,
   type VisionAsset,
   type VisionGenerateRequest,
@@ -25,6 +27,10 @@ import {
   type VisionProvider,
   type ProviderName,
 } from "./api/visionApi";
+
+const router = useRouter();
+
+const DEFAULT_EVENT_TYPE = "vision_image_review";
 
 // =============================================================================
 // PROPS & EMITS
@@ -137,6 +143,24 @@ async function loadRuns() {
   }
 }
 
+async function createAndSelectRun() {
+  error.value = null;
+  successMessage.value = null;
+  isLoadingRuns.value = true;
+  try {
+    const res = await createRun({ event_type: DEFAULT_EVENT_TYPE });
+    selectedRunId.value = res.run_id;
+    await loadRuns();
+    successMessage.value = `Created run ${res.run_id.slice(0, 12)}...`;
+  } catch (e: any) {
+    const msg = e?.message ?? "Failed to create run";
+    error.value = msg;
+    emit("error", msg);
+  } finally {
+    isLoadingRuns.value = false;
+  }
+}
+
 async function generate() {
   if (!canGenerate.value) return;
 
@@ -190,6 +214,8 @@ async function attachToRun() {
     if (res.attached) {
       successMessage.value = `Attached to run ${res.run_id.slice(0, 8)}...`;
       emit("attached", { runId: res.run_id, advisoryId: res.advisory_id });
+      // Deep-link to canonical review surface
+      router.push({ name: "RunVariantsReview", params: { run_id: res.run_id } });
     } else {
       successMessage.value = res.message || "Already attached";
     }
@@ -327,7 +353,19 @@ function truncate(s: string, len: number): string {
     <section class="section" v-if="selectedAssetSha">
       <h4>3. Select Run</h4>
       <div v-if="isLoadingRuns" class="loading">Loading runs...</div>
-      <div v-else-if="runs.length === 0" class="empty">No runs available</div>
+      <div v-else-if="runs.length === 0" class="empty">
+        No runs available.
+        <div style="margin-top: 10px;">
+          <button
+            class="btn primary"
+            type="button"
+            :disabled="isLoadingRuns"
+            @click="createAndSelectRun"
+          >
+            + Create Run (vision_image_review)
+          </button>
+        </div>
+      </div>
       <div v-else class="runs-list">
         <div
           v-for="run in runs"
