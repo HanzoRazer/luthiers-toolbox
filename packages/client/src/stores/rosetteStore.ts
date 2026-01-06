@@ -691,5 +691,32 @@ export const useRosetteStore = defineStore("rosette", {
       this.historyStack = [];
       this.redoStack = [];
     },
+
+    // -------------------------
+    // Bundle 32.4.6: History hotkeys helpers
+    // -------------------------
+
+    /** Get labels of recent history entries (newest-first), up to `limit` */
+    getRecentHistoryLabels(limit = 5): string[] {
+      const stack = this.historyStack ?? [];
+      if (!stack.length) return [];
+      const take = stack.slice(Math.max(0, stack.length - limit));
+      // newest-first
+      return [...take].reverse().map((e: any) => String(e?.label ?? "Edit"));
+    },
+
+    /** Revert to a "recent index" (0 = newest shown entry, up to limit-1) */
+    revertToRecentIndex(idxFromTop: number, limit = 5) {
+      const stack = this.historyStack ?? [];
+      if (!stack.length) return;
+
+      const take = stack.slice(Math.max(0, stack.length - limit));
+      const newestFirst = [...take].reverse();
+      if (idxFromTop < 0 || idxFromTop >= newestFirst.length) return;
+
+      // translate back to absolute index
+      const absIndex = stack.length - 1 - idxFromTop;
+      this.revertToHistoryIndex(absIndex);
+    },
   },
 });
