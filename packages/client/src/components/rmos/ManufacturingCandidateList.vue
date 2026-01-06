@@ -132,8 +132,38 @@ function showToast(msg: string) {
   _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
 }
 
-type SortKey = "id" | "id_desc" | "created" | "created_desc" | "decided_at" | "decided_at_desc" | "decided_by" | "status" | "decision";
+type SortKey = "id" | "id_desc" | "created" | "created_desc" | "decided_at" | "decided_at_desc" | "decided_by" | "decided_by_desc" | "status" | "decision";
 const sortKey = ref<SortKey>("id");
+
+// Audit header click cycles through: decided_at_desc → decided_at → decided_by → decided_by_desc → id (reset)
+const AUDIT_SORT_CYCLE: SortKey[] = ["decided_at_desc", "decided_at", "decided_by", "decided_by_desc"];
+function cycleAuditSort() {
+  const current = sortKey.value;
+  const idx = AUDIT_SORT_CYCLE.indexOf(current);
+  if (idx === -1) {
+    // not in audit cycle, start at newest-first
+    sortKey.value = "decided_at_desc";
+  } else if (idx === AUDIT_SORT_CYCLE.length - 1) {
+    // end of cycle, reset to default
+    sortKey.value = "id";
+  } else {
+    sortKey.value = AUDIT_SORT_CYCLE[idx + 1];
+  }
+}
+const auditSortLabel = computed(() => {
+  const sk = sortKey.value;
+  if (sk === "decided_at_desc") return "Time ↓";
+  if (sk === "decided_at") return "Time ↑";
+  if (sk === "decided_by") return "Operator A→Z";
+  if (sk === "decided_by_desc") return "Operator Z→A";
+  return "none";
+});
+const auditSortArrow = computed(() => {
+  const sk = sortKey.value;
+  if (sk === "decided_at_desc" || sk === "decided_by_desc") return "↓";
+  if (sk === "decided_at" || sk === "decided_by") return "↑";
+  return "";
+});
 
 // Save / decision state
 const saving = ref(false);
@@ -752,6 +782,7 @@ const filteredCandidates = computed(() => {
     if (sk === "decided_at") return (a.decided_at_utc ?? "").localeCompare(b.decided_at_utc ?? "");
     if (sk === "decided_at_desc") return (b.decided_at_utc ?? "").localeCompare(a.decided_at_utc ?? "");
     if (sk === "decided_by") return (a.decided_by ?? "").localeCompare(b.decided_by ?? "");
+    if (sk === "decided_by_desc") return (b.decided_by ?? "").localeCompare(a.decided_by ?? "");
     if (sk === "status") return (a.status ?? "").localeCompare(b.status ?? "");
     if (sk === "decision") return (a.decision ?? "ZZZ").localeCompare(b.decision ?? "ZZZ");
     return 0;
@@ -1458,7 +1489,16 @@ async function exportGreenOnlyZips() {
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
-        <div class="audit">Audit</div>
+        <div class="audit auditHeader"
+             role="button"
+             tabindex="0"
+             @click="cycleAuditSort"
+             @keydown.enter="cycleAuditSort"
+             @keydown.space.prevent="cycleAuditSort"
+             :title="`Sort by audit fields (current: ${auditSortLabel})`">
+          Audit
+          <span class="sortHint" v-if="sortKey.startsWith('decided_')">{{ auditSortArrow }}</span>
+        </div>
         <div>History</div>
         <div>Status</div>
         <div class="note">Decision Note</div>
@@ -1762,6 +1802,20 @@ async function exportGreenOnlyZips() {
   font-size: 11px;
   line-height: 1.15;
   opacity: 0.75;
+}
+.auditHeader {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.auditHeader:hover {
+  color: var(--vscode-textLink-foreground, #3794ff);
+}
+.sortHint {
+  opacity: 0.6;
+  font-size: 12px;
 }
 
 .kbdhint {
