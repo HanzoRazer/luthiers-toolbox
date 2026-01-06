@@ -15,10 +15,12 @@
 
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import {
   generateImages,
   attachAdvisoryToRun,
   listRecentRuns,
+  queryRecentRuns,
   createRun,
   getProviders,
   type VisionAsset,
@@ -27,6 +29,10 @@ import {
   type VisionProvider,
   type ProviderName,
 } from "./api/visionApi";
+
+const router = useRouter();
+const DEFAULT_EVENT_TYPE = "vision_image_review";
+const RECENT_RUNS_PAGE_SIZE = 10;
 
 const router = useRouter();
 
@@ -67,6 +73,9 @@ const selectedAssetSha = ref<string | null>(null);
 // Runs
 const runs = ref<RunSummary[]>([]);
 const selectedRunId = ref<string | null>(props.runId || null);
+const runSearch = ref<string>("");
+const runsCursor = ref<string | null>(null);
+const runsHasMore = ref<boolean>(false);
 
 // Providers
 const providers = ref<VisionProvider[]>([]);
@@ -131,13 +140,64 @@ async function loadProviders() {
 }
 
 async function loadRuns() {
+  error.value = null;
   isLoadingRuns.value = true;
   try {
-    const res = await listRecentRuns(20);
-    runs.value = res.runs || [];
+    // Prefer cursor endpoint when available; fallback to legacy listRecentRuns().
+    try {
+      const res = await queryRecentRuns({
+        cursor: null,
+        limit: RECENT_RUNS_PAGE_SIZE,
+        q: runSearch.value.trim() || null,
+      });
+      runs.value = res.items || [];
+      runsCursor.value = res.next_cursor ?? null;
+      runsHasMore.value = !!res.next_cursor;
+    } catch {
+      const list = await listRecentRuns(20);
+      runs.value = list.runs || [];
+      runsCursor.value = null;
+      runsHasMore.value = false;
+    }
+
+    // If nothing selected, auto-select newest run (first in list).
+    if (!selectedRunId.value && runs.value.length > 0) {
+      selectedRunId.value = runs.value[0].run_id;
+    }
   } catch (e: any) {
-    console.warn("Failed to load runs:", e);
-    runs.value = [];
+    const msg = e?.message ?? "Failed to load runs";
+    error.value = msg;
+    emit("error", msg);
+  } finally {
+    isLoadingRuns.value = false;
+  }
+}
+
+async function loadMoreRuns() {
+  if (isLoadingRuns.value) return;
+  if (!runsHasMore.value) return;
+  if (!runsCursor.value) return;
+
+  error.value = null;
+  isLoadingRuns.value = true;
+  try {
+    const res = await queryRecentRuns({
+      cursor: runsCursor.value,
+      limit: RECENT_RUNS_PAGE_SIZE,
+      q: runSearch.value.trim() || null,
+    });
+    const nextItems = res.items || [];
+    // de-dupe by run_id
+    const seen = new Set(runs.value.map((r) => r.run_id));
+    for (const r of nextItems) {
+      if (!seen.has(r.run_id)) runs.value.push(r);
+    }
+    runsCursor.value = res.next_cursor ?? null;
+    runsHasMore.value = !!res.next_cursor;
+  } catch (e: any) {
+    const msg = e?.message ?? "Failed to load more runs";
+    error.value = msg;
+    emit("error", msg);
   } finally {
     isLoadingRuns.value = false;
   }
@@ -151,7 +211,7 @@ async function createAndSelectRun() {
     const res = await createRun({ event_type: DEFAULT_EVENT_TYPE });
     selectedRunId.value = res.run_id;
     await loadRuns();
-    successMessage.value = `Created run ${res.run_id.slice(0, 12)}...`;
+    successMessage.value = `Created run ${res.run_id.slice(0, 12)}... (${DEFAULT_EVENT_TYPE})`;
   } catch (e: any) {
     const msg = e?.message ?? "Failed to create run";
     error.value = msg;
@@ -212,9 +272,9 @@ async function attachToRun() {
     });
 
     if (res.attached) {
-      successMessage.value = `Attached to run ${res.run_id.slice(0, 8)}...`;
+      successMessage.value = `Attached to run ${res.run_id.slice(0, 8)}... — opening review page`;
       emit("attached", { runId: res.run_id, advisoryId: res.advisory_id });
-      // Deep-link to canonical review surface
+      // Deep-link to canonical review surface (RunVariantsReviewPage)
       router.push({ name: "RunVariantsReview", params: { run_id: res.run_id } });
     } else {
       successMessage.value = res.message || "Already attached";
@@ -351,30 +411,34 @@ function truncate(s: string, len: number): string {
 
     <!-- Run Selection Section -->
     <section class="section" v-if="selectedAssetSha">
-      <h4>3. Select Run</h4>
+      <div class="step-header">
+        <h4>3. Select Run</h4>
+        <button class="btn" type="button" :disabled="isLoadingRuns" @click="loadRuns">Refresh</button>
+      </div>
 
-      <!-- Action buttons: Refresh + Create -->
-      <div class="run-actions">
-        <button
-          class="btn"
-          type="button"
+      <!-- Search + Create row -->
+      <div class="run-tools">
+        <input
+          v-model="runSearch"
+          class="run-search-input"
+          placeholder="Search runs (id / event_type)…"
           :disabled="isLoadingRuns"
-          @click="loadRuns"
-        >
-          {{ isLoadingRuns ? "Loading..." : "Refresh" }}
-        </button>
-        <button
-          class="btn primary"
-          type="button"
-          :disabled="isLoadingRuns"
-          @click="createAndSelectRun"
-        >
+          @keydown.enter.prevent="loadRuns"
+        />
+        <button class="btn" type="button" :disabled="isLoadingRuns" @click="loadRuns">Search</button>
+        <button class="btn primary" type="button" :disabled="isLoadingRuns" @click="createAndSelectRun">
           + Create Run
         </button>
       </div>
 
+      <!-- Empty state message -->
+      <div v-if="runs.length === 0 && !isLoadingRuns" class="empty-hint">
+        No runs available.
+        <div class="hint-tip">Tip: click <strong>+ Create Run</strong> to start a <code>vision_image_review</code> run.</div>
+      </div>
+
       <!-- Run dropdown selector -->
-      <div v-if="runs.length > 0" class="run-selector">
+      <div v-else-if="runs.length > 0" class="run-selector">
         <label class="form-label">Recent runs</label>
         <select v-model="selectedRunId" class="run-select">
           <option :value="null" disabled>Select a run...</option>
@@ -382,11 +446,19 @@ function truncate(s: string, len: number): string {
             {{ run.run_id.slice(0, 16) }}... {{ run.event_type ? `• ${run.event_type}` : "" }}
           </option>
         </select>
-      </div>
 
-      <!-- Empty state message -->
-      <div v-else-if="!isLoadingRuns" class="empty-hint">
-        No runs yet — click "Create Run" to start the RMOS review ledger.
+        <div class="run-picker-footer">
+          <button
+            v-if="runsHasMore"
+            class="btn"
+            type="button"
+            :disabled="isLoadingRuns"
+            @click="loadMoreRuns"
+          >
+            Load more
+          </button>
+          <div v-else class="runs-count">Showing {{ runs.length }} run(s)</div>
+        </div>
       </div>
     </section>
 
@@ -698,6 +770,59 @@ function truncate(s: string, len: number): string {
   display: flex;
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.step-header h4 {
+  margin: 0;
+}
+
+.run-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.run-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.run-search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.run-picker-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.runs-count {
+  font-size: 12px;
+  color: #888;
+}
+
+.hint-tip {
+  margin-top: 8px;
+  font-size: 12px;
+}
+.hint-tip code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
 }
 
 .run-selector {

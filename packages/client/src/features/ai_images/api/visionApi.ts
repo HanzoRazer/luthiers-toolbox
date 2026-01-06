@@ -255,6 +255,31 @@ export interface RunSummary {
   tool_id?: string;
 }
 
+// -----------------------------------------------------------------------------
+// RMOS runs: cursor pagination (canonical: GET /api/rmos/runs/query/recent)
+// -----------------------------------------------------------------------------
+export type RecentRunsQueryResponse = {
+  items: RunSummary[];
+  next_cursor?: string | null;
+};
+
+export async function queryRecentRuns(params?: {
+  cursor?: string | null;
+  limit?: number;
+  event_type?: string | null;
+  q?: string | null;
+}): Promise<RecentRunsQueryResponse> {
+  const p = new URLSearchParams();
+  if (params?.cursor) p.set("cursor", params.cursor);
+  if (params?.limit) p.set("limit", String(params.limit));
+  if (params?.event_type) p.set("event_type", params.event_type);
+  if (params?.q) p.set("q", params.q);
+  const qs = p.toString();
+  return fetchJson<RecentRunsQueryResponse>(`/api/rmos/runs/query/recent${qs ? `?${qs}` : ""}`, {
+    method: "GET",
+  });
+}
+
 export interface RunsListResponse {
   runs: RunSummary[];
   total: number;
