@@ -2,7 +2,17 @@
 import { computed } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 
+// Bundle 32.4.8: Prop for hotkey highlight
+const props = defineProps<{
+  highlightIdxFromTop?: number | null; // 0 = newest row
+}>();
+
 const store = useRosetteStore();
+
+// Bundle 32.4.8: Helper to check if row should flash
+function isHotkeyHighlighted(i: number): boolean {
+  return props.highlightIdxFromTop === i;
+}
 
 // Bundle 32.4.4 + 32.4.5: HistoryItem with action label, params summary, and timestamp
 type HistoryItem = {
@@ -110,7 +120,7 @@ function clearAll() {
       <button
         v-for="(it, i) in recent"
         :key="i"
-        class="row"
+        :class="['row', { hotkeyFlash: isHotkeyHighlighted(i) }]"
         type="button"
         @click="revertTo(it.idxFromTop)"
         :title="'Revert to: ' + it.label + ' (' + it.paramsLabel + ')'"
@@ -235,5 +245,16 @@ function clearAll() {
   font-size: 10px;
   color: #777;
   margin-top: 2px;
+}
+
+/* Bundle 32.4.8: Hotkey flash animation */
+@keyframes hotFlash {
+  0%   { background: #fff; border-color: #f0f0f0; }
+  20%  { background: #fff7dc; border-color: #ffe3a3; }
+  100% { background: #fff; border-color: #f0f0f0; }
+}
+
+.hotkeyFlash {
+  animation: hotFlash 700ms ease-out;
 }
 </style>

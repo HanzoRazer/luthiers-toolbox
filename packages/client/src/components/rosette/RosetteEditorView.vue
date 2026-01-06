@@ -124,7 +124,7 @@
       </div>
 
       <!-- Bundle 32.4.2: History mini-stack panel -->
-      <HistoryStackPanel />
+      <HistoryStackPanel :highlight-idx-from-top="historyHotkeyFlash" />
 
       <GeneratorPicker />
       <FeasibilityBanner />
@@ -150,6 +150,19 @@ import HistoryStackPanel from "./HistoryStackPanel.vue";
 
 const store = useRosetteStore();
 const toast = useUiToastStore();
+
+// Bundle 32.4.8: Flash state for history hotkey highlight
+const historyHotkeyFlash = ref<number | null>(null);
+let flashTimer: number | null = null;
+
+function flashHistoryIdx(idx: number) {
+  historyHotkeyFlash.value = idx;
+  if (flashTimer) window.clearTimeout(flashTimer);
+  flashTimer = window.setTimeout(() => {
+    historyHotkeyFlash.value = null;
+    flashTimer = null;
+  }, 750);
+}
 
 // Bundle 32.3.7: HUD pulse on filter toggle
 const hudPulse = ref(false);
@@ -198,6 +211,7 @@ function onKeyDown(e: KeyboardEvent) {
       if (idx < labels.length) {
         e.preventDefault();
         store.revertToRecentIndex(idx, 5);
+        flashHistoryIdx(idx); // Bundle 32.4.8: trigger row highlight
 
         toast.push({
           level: "info",
