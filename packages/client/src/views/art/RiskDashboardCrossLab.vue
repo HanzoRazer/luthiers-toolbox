@@ -1945,3 +1945,4 @@ watch(
     clearBucketDetails();
     refresh();
   }
+);

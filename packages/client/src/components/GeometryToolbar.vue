@@ -257,7 +257,6 @@ function sendToCAM(tool: string): void {
     showStatus(`Sent to ${target.label}`, 'success')
   }
 }
-}
 
 /**
  * Export geometry as DXF R12 with auto-download.
