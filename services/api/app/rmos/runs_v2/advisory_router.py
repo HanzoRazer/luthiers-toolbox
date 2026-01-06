@@ -299,6 +299,7 @@ def promote(run_id: str, advisory_id: str) -> PromoteVariantResponse:
     # Mark as promoted
     ref_dict["status"] = "PROMOTED"
     ref_dict["promoted"] = True
+    ref_dict["rejected"] = False  # Defensive: ensure rejected is strictly boolean False
     ref_dict["updated_at_utc"] = _now_utc_iso()
 
     refs[idx] = AdvisoryInputRef(**{k: v for k, v in ref_dict.items() if k in AdvisoryInputRef.model_fields})

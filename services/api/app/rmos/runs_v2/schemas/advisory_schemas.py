@@ -4,6 +4,9 @@ Advisory Ledger Plane Schemas
 
 These schemas govern the review/promote lifecycle for AI-generated advisories
 attached to RMOS runs. State lives ONLY in the run ledger.
+
+IMPORTANT: Keep vocabulary aligned with runs_v2/schemas.py (UI + SDK lockpoints).
+The canonical AdvisoryInputRef model lives in schemas.py; these are API payloads.
 """
 from __future__ import annotations
 
