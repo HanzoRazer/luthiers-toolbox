@@ -45,6 +45,23 @@ const decidedByOptions = computed(() => {
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 });
 
+// -----------------------------------------------------------------------------
+// Product micro-follow: "Show only my decisions"
+// - We do not assume auth is wired yet.
+// - Operator id is user-provided and persisted locally.
+// -----------------------------------------------------------------------------
+const OPERATOR_ID_KEY = "rmos.operator_id";
+const myOperatorId = ref<string>("");
+try {
+  myOperatorId.value = String(localStorage.getItem(OPERATOR_ID_KEY) || "");
+} catch {}
+watch(myOperatorId, (v) => {
+  try {
+    localStorage.setItem(OPERATOR_ID_KEY, String(v || ""));
+  } catch {}
+});
+const filterOnlyMine = ref<boolean>(false);
+
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
 
@@ -115,7 +132,7 @@ function showToast(msg: string) {
   _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
 }
 
-type SortKey = "id" | "id_desc" | "created" | "created_desc" | "status" | "decision";
+type SortKey = "id" | "id_desc" | "created" | "created_desc" | "decided_at" | "decided_at_desc" | "decided_by" | "status" | "decision";
 const sortKey = ref<SortKey>("id");
 
 // Save / decision state
@@ -714,6 +731,12 @@ const filteredCandidates = computed(() => {
       if ((c.decided_by ?? "") !== filterDecidedBy.value) return false;
     }
 
+    // "only mine" filter
+    if (filterOnlyMine.value) {
+      const mine = (myOperatorId.value || "").trim();
+      if (!mine || (c.decided_by ?? "") !== mine) return false;
+    }
+
     // search
     if (!matchesSearch(c, q)) return false;
     return true;
@@ -726,6 +749,9 @@ const filteredCandidates = computed(() => {
     if (sk === "id_desc") return b.candidate_id.localeCompare(a.candidate_id);
     if (sk === "created") return (a.created_at_utc ?? "").localeCompare(b.created_at_utc ?? "");
     if (sk === "created_desc") return (b.created_at_utc ?? "").localeCompare(a.created_at_utc ?? "");
+    if (sk === "decided_at") return (a.decided_at_utc ?? "").localeCompare(b.decided_at_utc ?? "");
+    if (sk === "decided_at_desc") return (b.decided_at_utc ?? "").localeCompare(a.decided_at_utc ?? "");
+    if (sk === "decided_by") return (a.decided_by ?? "").localeCompare(b.decided_by ?? "");
     if (sk === "status") return (a.status ?? "").localeCompare(b.status ?? "");
     if (sk === "decision") return (a.decision ?? "ZZZ").localeCompare(b.decision ?? "ZZZ");
     return 0;
@@ -1348,9 +1374,31 @@ async function exportGreenOnlyZips() {
               <option value="id_desc">ID ↓</option>
               <option value="created">Created ↑</option>
               <option value="created_desc">Created ↓</option>
+              <option value="decided_at">Decided at ↑</option>
+              <option value="decided_at_desc">Decided at ↓</option>
+              <option value="decided_by">Decided by (A→Z)</option>
               <option value="status">Status</option>
               <option value="decision">Decision</option>
             </select>
+          </div>
+
+          <div class="field">
+            <label class="muted">My operator id</label>
+            <input
+              v-model="myOperatorId"
+              type="text"
+              placeholder="e.g., operator_jane"
+              title="Stored locally in this browser. Used by 'Only mine' filter."
+              :disabled="saving || exporting || undoBusy"
+            />
+          </div>
+
+          <div class="field">
+            <label class="muted">Only mine</label>
+            <label class="inlineCheck" title="Show only candidates decided by your operator id">
+              <input type="checkbox" v-model="filterOnlyMine" :disabled="!myOperatorId.trim() || saving || exporting || undoBusy" />
+              my decisions
+            </label>
           </div>
         </div>
 
@@ -1811,6 +1859,11 @@ async function exportGreenOnlyZips() {
   font-size: 12px;
   color: rgba(0,0,0,0.66);
   user-select: none;
+}
+.tiny {
+  font-size: 11px;
+  line-height: 1.15;
+  opacity: 0.85;
 }
 
 /* Bulk history panel */
