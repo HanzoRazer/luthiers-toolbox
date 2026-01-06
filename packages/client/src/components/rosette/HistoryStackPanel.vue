@@ -98,7 +98,8 @@ function clearAll() {
 <template>
   <div class="panel" v-if="(store.historyStack?.length ?? 0) > 0">
     <div class="hdr">
-      <div class="title">History</div>
+      <div class="title" title="Hotkeys: 1–5 (1 = newest)">History</div>
+      <div class="hint" title="Hotkeys: 1–5 (1 = newest)">1–5</div>
       <div class="meta">{{ store.historyStack.length }} saved</div>
       <button class="miniBtn" type="button" @click="clearAll" title="Clear undo history">
         Clear
@@ -159,6 +160,17 @@ function clearAll() {
   font-size: 11px;
   color: #666;
   margin-left: 4px;
+}
+
+/* Bundle 32.4.7: Hotkeys hint badge */
+.hint {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #e6e6e6;
+  background: #fafafa;
+  color: #444;
 }
 
 .miniBtn {
