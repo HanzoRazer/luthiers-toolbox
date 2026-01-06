@@ -74,8 +74,7 @@ export type {
   PhotoStyle,
   GuitarCategory,
   AssetStatus,
-  FinishType,
-  
+
   // Request/Response
   GenerationRequest,
   GenerationResponse,
@@ -113,5 +112,4 @@ export {
   PhotoStyle,
   GuitarCategory,
   AssetStatus,
-  FinishType,
 } from './types';

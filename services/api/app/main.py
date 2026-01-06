@@ -419,6 +419,13 @@ except ImportError as e:
     rmos_advisory_router = None
 
 try:
+    from .advisory.blob_router import router as advisory_blob_router
+    _log.info("Advisory Blob router: Using canonical (app.advisory)")
+except ImportError as e:
+    _log.warning("Optional router unavailable: advisory_blob_router (%s)", e)
+    advisory_blob_router = None
+
+try:
     from ._experimental.ai_graphics.api.teaching_routes import router as teaching_router
 except ImportError as e:
     _log.warning("Optional router unavailable: teaching_router (%s)", e)
@@ -787,6 +794,8 @@ if vision_router:
     app.include_router(vision_router, tags=["Vision"])  # Router has /api/vision prefix internally
 if rmos_advisory_router:
     app.include_router(rmos_advisory_router, prefix="/api/rmos", tags=["RMOS", "Advisory"])  # /api/rmos/runs/{run_id}/advisory/*
+if advisory_blob_router:
+    app.include_router(advisory_blob_router, tags=["Advisory", "Blobs"])  # Router has /api/advisory/blobs prefix internally
 if teaching_router:
     app.include_router(teaching_router, tags=["Teaching Loop", "Training"])
 

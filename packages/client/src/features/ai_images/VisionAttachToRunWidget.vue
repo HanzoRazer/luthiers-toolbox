@@ -301,7 +301,7 @@ function truncate(s: string, len: number): string {
         >
           <div class="asset-preview">
             <img
-              :src="`/api/rmos/runs/_/advisory/blobs/${asset.sha256}/download`"
+              :src="asset.url"
               :alt="asset.filename"
               loading="lazy"
               @error="($event.target as HTMLImageElement).src = '/placeholder.svg'"

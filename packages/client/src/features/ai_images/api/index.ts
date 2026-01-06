@@ -36,58 +36,58 @@ export {
   type StylePreset,
   type PromptTemplate,
   type SimilarityMatch,
-  
+
   // Asset CRUD
   generateAsset,
   listAssets,
   getAsset,
   updateAsset as updateAdvisoryAsset,
   deleteAsset as deleteAdvisoryAsset,
-  
+
   // Review Workflow
   approveAsset,
   rejectAsset,
   bulkReview,
   getPendingAssets,
-  
+
   // Run Attachment
   attachToRun,
   getRunAttachments,
   detachFromRun,
-  
+
   // Cost & Budget
   estimateCost as estimateAdvisoryCost,
   getBudgetStatus,
   compareCosts,
-  
+
   // Style Presets
   getStylePresets,
   getStylePreset,
   createStylePreset,
   updateStylePreset,
   deleteStylePreset,
-  
+
   // Duplicate Detection
   checkDuplicates,
   findSimilar,
-  
+
   // Prompt History & Templates
   getPromptHistory,
   getPromptTemplates,
   createPromptTemplate,
   deletePromptTemplate,
-  
+
   // Favorites & Queues
   addToFavorites,
   removeFromFavorites,
   getFavorites,
   getReviewQueue,
-  
+
   // Export
   exportAsJson,
   exportAsCsv,
   exportTrainingData as exportAdvisoryTrainingData,
-  
+
   // Stats
   getStats as getAdvisoryStats,
 } from './advisory';

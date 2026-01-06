@@ -1,8 +1,8 @@
 // packages/client/src/router/index.ts
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
-// Main RMOS view
-import RosettePipelineView from "@/views/RosettePipelineView.vue";
+// Lazy load RosettePipelineView to prevent it from breaking other routes if it has runtime errors
+const RosettePipelineView = () => import("@/views/RosettePipelineView.vue");
 
 const routes: RouteRecordRaw[] = [
   {
@@ -154,6 +154,13 @@ const routes: RouteRecordRaw[] = [
     path: "/tools/audio-analyzer",
     name: "AudioAnalyzerViewer",
     component: () => import("@/views/tools/AudioAnalyzerViewer.vue"),
+  },
+
+  // Dev: Vision Attach Widget Test
+  {
+    path: "/dev/vision-attach",
+    name: "VisionAttachTest",
+    component: () => import("@/views/VisionAttachTestView.vue"),
   },
 ];
 
