@@ -41,6 +41,13 @@ const route = useRoute();
 
 const runId = computed(() => String(route.params.run_id ?? route.params.id ?? ""));
 
+// -----------------------------------------------------------------------------
+// Operator identity for "My decisions" filter (passed to ManufacturingCandidateList)
+// Replace with actual auth/store identity when available, e.g.:
+//   return useAuthStore().user?.id ?? null
+// -----------------------------------------------------------------------------
+const currentOperator = computed<string | null>(() => null);
+
 // Filters
 const statusFilter = ref<"ALL" | VariantStatus>("ALL");
 const riskFilter = ref<"ALL" | "NEEDS_ATTENTION">("ALL");
@@ -397,7 +404,7 @@ watch(runId, () => {
 
       <!-- Manufacturing candidates -->
       <div class="panel wide">
-        <ManufacturingCandidateList :runId="runId" />
+        <ManufacturingCandidateList :runId="runId" :currentOperator="currentOperator" />
       </div>
     </div>
 

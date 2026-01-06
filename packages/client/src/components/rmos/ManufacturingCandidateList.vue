@@ -11,6 +11,8 @@ import {
 
 const props = defineProps<{
   runId: string;
+  /** Optional: parent-supplied operator identity (overrides localStorage) */
+  currentOperator?: string | null;
 }>();
 
 type CandidateRow = ManufacturingCandidate & {
@@ -61,6 +63,13 @@ watch(myOperatorId, (v) => {
   } catch {}
 });
 const filterOnlyMine = ref<boolean>(false);
+
+// Effective operator: prop overrides localStorage
+const effectiveOperatorId = computed(() => {
+  const fromProp = (props.currentOperator ?? "").trim();
+  if (fromProp) return fromProp;
+  return (myOperatorId.value || "").trim();
+});
 
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
@@ -763,7 +772,7 @@ const filteredCandidates = computed(() => {
 
     // "only mine" filter
     if (filterOnlyMine.value) {
-      const mine = (myOperatorId.value || "").trim();
+      const mine = effectiveOperatorId.value;
       if (!mine || (c.decided_by ?? "") !== mine) return false;
     }
 
