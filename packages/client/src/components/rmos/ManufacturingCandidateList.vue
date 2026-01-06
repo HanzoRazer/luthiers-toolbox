@@ -71,6 +71,14 @@ const effectiveOperatorId = computed(() => {
   return (myOperatorId.value || "").trim();
 });
 
+// Stamp decided_by on save/bulk
+const stampDecisionsWithOperator = ref<boolean>(true);
+function _decidedByOrNull(): string | null {
+  if (!stampDecisionsWithOperator.value) return null;
+  const v = effectiveOperatorId.value;
+  return v ? v : null;
+}
+
 // micro-follow: density toggle (compact mode) for long runs
 const compact = ref<boolean>(false);
 
@@ -423,9 +431,10 @@ async function clearBulkDecision() {
       });
 
       try {
-        const res = await decideManufacturingCandidate(runId.value, c.candidate_id, {
+        const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
           decision: next_decision,
           note: next_note,
+          decided_by: _decidedByOrNull(),
         } as any);
         _updateCandidateFromDecisionResponse(c.candidate_id, res);
         record.applied_count += 1;
@@ -603,7 +612,7 @@ async function saveEdit(c: CandidateRow) {
     const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
       decision: c.decision, // keep decision stable; update note only
       note: editValue.value,
-      decided_by: null,
+      decided_by: _decidedByOrNull(),
     });
     requestId.value = res.requestId ?? requestId.value;
 
@@ -635,7 +644,7 @@ async function decide(c: CandidateRow, decision: RiskLevel) {
     const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
       decision,
       note: c.decision_note ?? null,
-      decided_by: null,
+      decided_by: _decidedByOrNull(),
     });
     requestId.value = res.requestId ?? requestId.value;
 
@@ -914,6 +923,7 @@ async function applyBulkDecision() {
         const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
           decision: next_decision,
           note: next_note,
+          decided_by: _decidedByOrNull(),
         } as any);
         _updateCandidateFromDecisionResponse(c.candidate_id, res);
         record.applied_count += 1;
@@ -965,6 +975,7 @@ async function undoLastBulkAction() {
         const res = await decideManufacturingCandidate(props.runId, it.candidate_id, {
           decision: it.prev_decision,
           note: it.prev_note,
+          decided_by: _decidedByOrNull(),
         } as any);
         _updateCandidateFromDecisionResponse(it.candidate_id, res);
       } catch (e) {
@@ -1036,7 +1047,7 @@ async function bulkSetDecision(decision: RiskLevel) {
       const res = await decideManufacturingCandidate(props.runId, r.candidate_id, {
         decision,
         note: r.decision_note ?? null,
-        decided_by: null,
+        decided_by: _decidedByOrNull(),
       });
       requestId.value = res.requestId ?? requestId.value;
 
@@ -1098,7 +1109,7 @@ async function bulkClearDecision() {
       const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
         decision: null,
         note: null,
-        decided_by: null,
+        decided_by: _decidedByOrNull(),
       });
       requestId.value = res.requestId ?? requestId.value;
 
@@ -1149,7 +1160,7 @@ async function undoLast() {
       const res = await decideManufacturingCandidate(props.runId, id, {
         decision: snap.decision, // may be null (back to NEEDS_DECISION)
         note: snap.decision_note,
-        decided_by: null,
+        decided_by: _decidedByOrNull(),
       });
       requestId.value = res.requestId ?? requestId.value;
 
@@ -1431,6 +1442,21 @@ async function exportGreenOnlyZips() {
               title="Stored locally in this browser. Used by 'Only mine' filter."
               :disabled="saving || exporting || undoBusy"
             />
+          </div>
+
+          <div class="field">
+            <label class="muted">Stamp</label>
+            <label
+              class="inlineCheck"
+              :title="stampDecisionsWithOperator
+                ? (effectiveOperatorId
+                    ? `Will send decided_by=${effectiveOperatorId} on decisions`
+                    : 'Enable stamping, then set an operator id to actually stamp')
+                : 'Decisions will not send decided_by (backend may still set it elsewhere)'"
+            >
+              <input type="checkbox" v-model="stampDecisionsWithOperator" :disabled="saving || exporting || undoBusy" />
+              decided_by on save
+            </label>
           </div>
 
           <div class="field">
