@@ -20,6 +20,7 @@ class VisionGenerateRequest(BaseModel):
 
 class VisionAsset(BaseModel):
     sha256: str = Field(..., description="CAS sha256 of the stored image bytes")
+    url: str = Field(..., description="Browser-loadable URL for the asset bytes (proxied by API)")
     mime: str = Field(..., description="MIME type")
     filename: str = Field(..., description="Best-effort filename for UI download")
     size_bytes: int = Field(..., description="Byte size")

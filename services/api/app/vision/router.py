@@ -48,6 +48,11 @@ def _filename(provider: str, model: str, size: str, fmt: str, i: int) -> str:
     return f"vision_{provider}_{safe_model}_{size}_{i+1}{ext}"
 
 
+def _blob_download_url(sha256: str) -> str:
+    """Return browser-loadable URL for CAS blob (same-origin, no auth required)."""
+    return f"/api/advisory/blobs/{sha256}/download"
+
+
 @router.get("/providers", response_model=ProvidersResponse)
 def list_providers() -> ProvidersResponse:
     """List available AI image providers and their configuration status."""
@@ -114,6 +119,7 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
         assets.append(
             VisionAsset(
                 sha256=attachment.sha256,
+                url=_blob_download_url(attachment.sha256),
                 mime=attachment.mime,
                 filename=attachment.filename,
                 size_bytes=attachment.size_bytes,

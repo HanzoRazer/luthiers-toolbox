@@ -1,7 +1,7 @@
 /**
  * Vision API Client — Canonical Phase B Endpoints
  *
- * Calls the canonical /api/vision/* and /api/rmos/runs/*/advisory/* endpoints.
+ * Calls the canonical /api/vision/* and /api/rmos/runs/{id}/advisory/* endpoints.
  * Implements the hybrid architecture:
  * - Vision (Producer Plane): Generate assets, get sha256
  * - Advisory (Ledger Plane): Attach sha256 to runs, review, promote
@@ -27,6 +27,7 @@ export interface VisionGenerateRequest {
 
 export interface VisionAsset {
   sha256: string;
+  url: string;
   mime: string;
   filename: string;
   size_bytes: number;
