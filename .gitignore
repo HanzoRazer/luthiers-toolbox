@@ -114,8 +114,6 @@ Archtop/
 Stratocaster/
 /client/
 /server/
-!/server/rmos_router.py
-!/server/app.py
 /data/
 /migrations/
 # But allow Alembic migrations
