@@ -1,16 +1,16 @@
 {
-  "scan_id": "AS-20260105T101550Z",
+  "scan_id": "AS-20260105T110617Z",
   "scan_type": "architecture",
   "mode": "read_only",
-  "timestamp_utc": "2026-01-05T10:15:50Z",
+  "timestamp_utc": "2026-01-05T11:06:17Z",
   "targets": [
     "services/api/app",
     "client/src"
   ],
   "risk_summary": {
-    "critical": 2,
+    "critical": 0,
     "high": 46,
-    "medium": 97,
+    "medium": 98,
     "low": 0
   },
   "invariants_checked": [
@@ -988,31 +988,19 @@
     },
     {
       "id": "F-076",
-      "type": "INVARIANT_VIOLATION",
-      "file": "services/api/app/_experimental/ai_graphics/schemas/ai_schemas.py",
-      "signals": [
-        "ID_CREATION",
-        "RISK_EVAL"
-      ],
-      "risk": "critical",
-      "invariant_violated": "AI_NO_AUTHORITY",
-      "note": "Experimental area appears to create authority (ids/artifacts/safety decisions)."
-    },
-    {
-      "id": "F-077",
-      "type": "INVARIANT_VIOLATION",
+      "type": "ARCH_SIGNAL",
       "file": "services/api/app/_experimental/ai_graphics/services/ai_parameter_suggester.py",
       "signals": [
         "ID_CREATION",
         "RISK_EVAL",
         "SAFETY_GATE"
       ],
-      "risk": "critical",
-      "invariant_violated": "AI_NO_AUTHORITY",
-      "note": "Experimental area appears to create authority (ids/artifacts/safety decisions)."
+      "risk": "medium",
+      "invariant_violated": null,
+      "note": null
     },
     {
-      "id": "F-078",
+      "id": "F-077",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/_experimental/ai_graphics/services/teaching_loop.py",
       "signals": [],
@@ -1021,7 +1009,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-079",
+      "id": "F-078",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/workflow/sessions/routes.py",
       "signals": [
@@ -1032,7 +1020,7 @@
       "note": null
     },
     {
-      "id": "F-080",
+      "id": "F-079",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/sandboxes/smart_guitar/validators.py",
       "signals": [],
@@ -1041,7 +1029,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-081",
+      "id": "F-080",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/routers/instruments/guitar/assets_router.py",
       "signals": [
@@ -1055,7 +1043,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-082",
+      "id": "F-081",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/routers/cam/guitar/om_cam_router.py",
       "signals": [
@@ -1067,7 +1055,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-083",
+      "id": "F-082",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/routers/cam/guitar/registry_cam_router.py",
       "signals": [
@@ -1080,7 +1068,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-084",
+      "id": "F-083",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/routers/cam/guitar/stratocaster_cam_router.py",
       "signals": [
@@ -1092,7 +1080,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-085",
+      "id": "F-084",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/acoustics/router.py",
       "signals": [],
@@ -1101,7 +1089,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-086",
+      "id": "F-085",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/acoustics/router_attachments.py",
       "signals": [
@@ -1115,7 +1103,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-087",
+      "id": "F-086",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/api/rmos_feasibility_router.py",
       "signals": [
@@ -1127,7 +1115,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-088",
+      "id": "F-087",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/api/rmos_runs_router.py",
       "signals": [
@@ -1140,7 +1128,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-089",
+      "id": "F-088",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/api/rmos_toolpaths_router.py",
       "signals": [
@@ -1154,7 +1142,7 @@
       "note": null
     },
     {
-      "id": "F-090",
+      "id": "F-089",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/api/rmos_workflow_router.py",
       "signals": [
@@ -1168,7 +1156,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-091",
+      "id": "F-090",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/operations/adapter.py",
       "signals": [
@@ -1183,7 +1171,7 @@
       "note": null
     },
     {
-      "id": "F-092",
+      "id": "F-091",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/operations/router.py",
       "signals": [
@@ -1196,7 +1184,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-093",
+      "id": "F-092",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/operations/test_operations_adapter.py",
       "signals": [
@@ -1211,7 +1199,7 @@
       "note": null
     },
     {
-      "id": "F-094",
+      "id": "F-093",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/pipeline/schemas.py",
       "signals": [
@@ -1224,7 +1212,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-095",
+      "id": "F-094",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/pipeline/services.py",
       "signals": [
@@ -1237,7 +1225,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-096",
+      "id": "F-095",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/pipeline/store.py",
       "signals": [
@@ -1251,7 +1239,7 @@
       "note": null
     },
     {
-      "id": "F-097",
+      "id": "F-096",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs/api_runs.py",
       "signals": [
@@ -1265,7 +1253,7 @@
       "note": null
     },
     {
-      "id": "F-098",
+      "id": "F-097",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs/schemas.py",
       "signals": [
@@ -1276,7 +1264,7 @@
       "note": null
     },
     {
-      "id": "F-099",
+      "id": "F-098",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs/store.py",
       "signals": [
@@ -1288,7 +1276,7 @@
       "note": null
     },
     {
-      "id": "F-100",
+      "id": "F-099",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs/__init__.py",
       "signals": [
@@ -1300,7 +1288,7 @@
       "note": null
     },
     {
-      "id": "F-101",
+      "id": "F-100",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/acoustics_router.py",
       "signals": [
@@ -1311,7 +1299,7 @@
       "note": null
     },
     {
-      "id": "F-102",
+      "id": "F-101",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/acoustics_schemas.py",
       "signals": [],
@@ -1320,7 +1308,7 @@
       "note": null
     },
     {
-      "id": "F-103",
+      "id": "F-102",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/advisory_blob_schemas.py",
       "signals": [
@@ -1331,7 +1319,7 @@
       "note": null
     },
     {
-      "id": "F-104",
+      "id": "F-103",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/advisory_blob_service.py",
       "signals": [
@@ -1342,7 +1330,7 @@
       "note": null
     },
     {
-      "id": "F-105",
+      "id": "F-104",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/advisory_variant_state.py",
       "signals": [],
@@ -1351,7 +1339,7 @@
       "note": null
     },
     {
-      "id": "F-106",
+      "id": "F-105",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/api_runs.py",
       "signals": [
@@ -1367,7 +1355,7 @@
       "note": null
     },
     {
-      "id": "F-107",
+      "id": "F-106",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/attachments.py",
       "signals": [
@@ -1380,7 +1368,7 @@
       "note": null
     },
     {
-      "id": "F-108",
+      "id": "F-107",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/attachment_meta.py",
       "signals": [],
@@ -1389,7 +1377,7 @@
       "note": null
     },
     {
-      "id": "F-109",
+      "id": "F-108",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/cli_delete.py",
       "signals": [],
@@ -1398,7 +1386,7 @@
       "note": null
     },
     {
-      "id": "F-110",
+      "id": "F-109",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/compat.py",
       "signals": [
@@ -1410,7 +1398,7 @@
       "note": null
     },
     {
-      "id": "F-111",
+      "id": "F-110",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/diff.py",
       "signals": [
@@ -1421,7 +1409,7 @@
       "note": null
     },
     {
-      "id": "F-112",
+      "id": "F-111",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/manufacturing_candidate_service.py",
       "signals": [
@@ -1432,7 +1420,7 @@
       "note": null
     },
     {
-      "id": "F-113",
+      "id": "F-112",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/migration_utils.py",
       "signals": [],
@@ -1441,7 +1429,7 @@
       "note": null
     },
     {
-      "id": "F-114",
+      "id": "F-113",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/runs_v2/schemas.py",
       "signals": [
@@ -1453,7 +1441,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-115",
+      "id": "F-114",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/schemas_advisories.py",
       "signals": [],
@@ -1462,7 +1450,7 @@
       "note": null
     },
     {
-      "id": "F-116",
+      "id": "F-115",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/schemas_advisory_reject.py",
       "signals": [
@@ -1473,7 +1461,7 @@
       "note": null
     },
     {
-      "id": "F-117",
+      "id": "F-116",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/runs_v2/schemas_manufacturing.py",
       "signals": [],
@@ -1482,7 +1470,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-118",
+      "id": "F-117",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/schemas_manufacturing_ops.py",
       "signals": [
@@ -1493,7 +1481,7 @@
       "note": null
     },
     {
-      "id": "F-119",
+      "id": "F-118",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/schemas_variant_review.py",
       "signals": [
@@ -1504,7 +1492,7 @@
       "note": null
     },
     {
-      "id": "F-120",
+      "id": "F-119",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/store.py",
       "signals": [
@@ -1518,7 +1506,7 @@
       "note": null
     },
     {
-      "id": "F-121",
+      "id": "F-120",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/variant_review_service.py",
       "signals": [
@@ -1529,7 +1517,7 @@
       "note": null
     },
     {
-      "id": "F-122",
+      "id": "F-121",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/__init__.py",
       "signals": [
@@ -1542,7 +1530,7 @@
       "note": null
     },
     {
-      "id": "F-123",
+      "id": "F-122",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/run_artifacts/store.py",
       "signals": [
@@ -1555,7 +1543,7 @@
       "note": null
     },
     {
-      "id": "F-124",
+      "id": "F-123",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/rmos/runs_v2/db/models.py",
       "signals": [
@@ -1566,7 +1554,7 @@
       "note": null
     },
     {
-      "id": "F-125",
+      "id": "F-124",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/instrument_geometry/neck_taper/api_router.py",
       "signals": [
@@ -1578,7 +1566,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-126",
+      "id": "F-125",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/fields/grain_field/__init__.py",
       "signals": [],
@@ -1587,7 +1575,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-127",
+      "id": "F-126",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/db/migrations/versions/a1b2c3d4e5f6_add_ai_graphics_and_runs_v2_tables.py",
       "signals": [
@@ -1599,7 +1587,7 @@
       "note": null
     },
     {
-      "id": "F-128",
+      "id": "F-127",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/cam/routers/drilling/drill_router.py",
       "signals": [
@@ -1611,7 +1599,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-129",
+      "id": "F-128",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/cam/routers/drilling/pattern_router.py",
       "signals": [
@@ -1626,7 +1614,7 @@
       "note": null
     },
     {
-      "id": "F-130",
+      "id": "F-129",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/cam/routers/rosette/cam_router.py",
       "signals": [
@@ -1641,7 +1629,7 @@
       "note": null
     },
     {
-      "id": "F-131",
+      "id": "F-130",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/cam/routers/simulation/gcode_sim_router.py",
       "signals": [
@@ -1653,7 +1641,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-132",
+      "id": "F-131",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/cam/routers/toolpath/biarc_router.py",
       "signals": [
@@ -1668,7 +1656,7 @@
       "note": null
     },
     {
-      "id": "F-133",
+      "id": "F-132",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/cam/routers/toolpath/helical_router.py",
       "signals": [
@@ -1682,7 +1670,7 @@
       "note": null
     },
     {
-      "id": "F-134",
+      "id": "F-133",
       "type": "ARCH_SIGNAL",
       "file": "services/api/app/cam/routers/toolpath/roughing_router.py",
       "signals": [
@@ -1697,7 +1685,7 @@
       "note": null
     },
     {
-      "id": "F-135",
+      "id": "F-134",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/cam/routers/utility/polygon_router.py",
       "signals": [
@@ -1710,7 +1698,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-136",
+      "id": "F-135",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/cad/api/dxf_routes.py",
       "signals": [
@@ -1722,7 +1710,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-137",
+      "id": "F-136",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/cad/schemas/dxf_export.py",
       "signals": [
@@ -1734,7 +1722,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-138",
+      "id": "F-137",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/art_studio/api/rosette_pattern_routes.py",
       "signals": [
@@ -1747,7 +1735,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-139",
+      "id": "F-138",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/api/routes/exports.py",
       "signals": [
@@ -1760,7 +1748,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-140",
+      "id": "F-139",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/api/routes/presets_router.py",
       "signals": [
@@ -1771,7 +1759,7 @@
       "note": "Advisory-related code found without obvious parent run linkage (heuristic)."
     },
     {
-      "id": "F-141",
+      "id": "F-140",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/api/routes/rmos_rosette_api.py",
       "signals": [
@@ -1783,7 +1771,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-142",
+      "id": "F-141",
       "type": "ARCH_SIGNAL",
       "file": "client/src/api/rmosRuns.ts",
       "signals": [
@@ -1794,7 +1782,7 @@
       "note": null
     },
     {
-      "id": "F-143",
+      "id": "F-142",
       "type": "INVARIANT_VIOLATION",
       "file": "client/src/utils/curvemath_dxf.ts",
       "signals": [
@@ -1807,7 +1795,7 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-144",
+      "id": "F-143",
       "type": "ARCH_SIGNAL",
       "file": "client/src/views/labs/CompareLab.vue",
       "signals": [
@@ -1820,7 +1808,7 @@
       "note": null
     },
     {
-      "id": "F-145",
+      "id": "F-144",
       "type": "ARCH_SIGNAL",
       "file": "client/src/components/toolbox/GuitarDimensionsForm.vue",
       "signals": [
@@ -1833,7 +1821,7 @@
       "note": null
     }
   ],
-  "findings_count": 145,
+  "findings_count": 144,
   "scan_scope": "repo_subset",
   "targets_scanned": [
     "services/api/app",

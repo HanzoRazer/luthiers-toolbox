@@ -1619,18 +1619,13 @@ async function exportGreenOnlyZips() {
         </div>
 
         <!-- Audit column -->
-        <div class="audit small muted"
+        <div class="audit"
              :title="(c.decided_by || c.decided_at_utc)
                ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
                : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'">
-          <div v-if="c.decided_by">
-            <strong>{{ c.decided_by }}</strong>
-          </div>
-          <div v-else>
-            —
-          </div>
-          <div v-if="c.decided_at_utc" class="mono tiny">
-            {{ c.decided_at_utc.slice(0, 19).replace('T', ' ') }}
+          <div class="auditBy">{{ c.decided_by || "—" }}</div>
+          <div class="auditAt mono">
+            {{ c.decided_at_utc ? c.decided_at_utc.slice(0, 19).replace('T', ' ') : '—' }}
           </div>
         </div>
 
@@ -1750,9 +1745,24 @@ async function exportGreenOnlyZips() {
 /* copyCol layout */
 .copyCol { display: flex; flex-direction: column; gap: 6px; }
 
-/* audit column */
-.audit { min-width: 140px; max-width: 180px; }
-.audit .tiny { font-size: 10px; opacity: 0.7; }
+/* -------------------------------------------------------------------------- */
+/* Audit column layout                                                        */
+/* -------------------------------------------------------------------------- */
+.audit {
+  min-width: 140px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.auditBy {
+  font-weight: 600;
+}
+.auditAt {
+  font-size: 11px;
+  line-height: 1.15;
+  opacity: 0.75;
+}
 
 .kbdhint {
   cursor: help;
