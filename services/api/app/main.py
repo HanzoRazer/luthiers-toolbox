@@ -399,17 +399,24 @@ else:
         _log.warning("Optional router unavailable: rmos_runs_router v1 (%s)", e)
         rmos_runs_router = None
 
+# =============================================================================
+# PHASE B: CANONICAL VISION + ADVISORY ROUTERS (Hybrid Architecture)
+# Vision (Producer Plane): Generates assets, writes to CAS, returns sha256
+# Advisory (Ledger Plane): Attaches sha256 to runs, governs review/promote
+# =============================================================================
 try:
-    from ._experimental.ai_graphics.api.vision_routes import router as vision_router
+    from .vision.router import router as vision_router
+    _log.info("Vision router: Using canonical (app.vision)")
 except ImportError as e:
     _log.warning("Optional router unavailable: vision_router (%s)", e)
     vision_router = None
 
 try:
-    from ._experimental.ai_graphics.api.advisory_routes import router as advisory_router
+    from .rmos.runs_v2.advisory_router import router as rmos_advisory_router
+    _log.info("RMOS Advisory router: Using canonical (app.rmos.runs_v2)")
 except ImportError as e:
-    _log.warning("Optional router unavailable: advisory_router (%s)", e)
-    advisory_router = None
+    _log.warning("Optional router unavailable: rmos_advisory_router (%s)", e)
+    rmos_advisory_router = None
 
 try:
     from ._experimental.ai_graphics.api.teaching_routes import router as teaching_router
@@ -775,10 +782,11 @@ app.include_router(cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CN
 # Note: runs_v2/api_runs.py has prefix="/runs", so mount at /api/rmos → /api/rmos/runs
 if rmos_runs_router:
     app.include_router(rmos_runs_router, prefix="/api/rmos", tags=["RMOS", "Runs"])
+# Phase B: Canonical Vision + Advisory (Hybrid Architecture)
 if vision_router:
-    app.include_router(vision_router, prefix="/api", tags=["Vision Engine", "AI Graphics"])
-if advisory_router:
-    app.include_router(advisory_router, tags=["Advisory", "AI Graphics"])
+    app.include_router(vision_router, tags=["Vision"])  # Router has /api/vision prefix internally
+if rmos_advisory_router:
+    app.include_router(rmos_advisory_router, prefix="/api/rmos", tags=["RMOS", "Advisory"])  # /api/rmos/runs/{run_id}/advisory/*
 if teaching_router:
     app.include_router(teaching_router, tags=["Teaching Loop", "Training"])
 
