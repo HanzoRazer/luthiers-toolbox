@@ -14,6 +14,7 @@ following the Fortran Rule (all math in subroutines).
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -21,6 +22,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, validator
 import io
+
+logger = logging.getLogger(__name__)
 
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ..geometry.arc_utils import generate_circle_points
@@ -203,10 +206,23 @@ def _union_bbox(
 # ---- Routes -----------------------------------------------------------------
 
 
+# Flag to track if DB is available (set during startup)
+_db_available: bool = False
+
+
 @router.on_event("startup")
 def _on_startup() -> None:
-    # ensure DB tables & default presets exist
-    init_db()
+    """Initialize SQLite database - fail gracefully in CI/Docker environments."""
+    global _db_available
+    try:
+        init_db()
+        _db_available = True
+        logger.info("Art Studio rosette SQLite database initialized (deprecated router)")
+    except Exception as e:
+        _db_available = False
+        logger.warning(
+            f"Art Studio rosette database unavailable (non-fatal in CI): {e}"
+        )
 
 
 @router.post("/preview", response_model=RosettePreviewOut)
@@ -234,6 +250,11 @@ def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
 @router.post("/save", response_model=RosetteJobOut)
 def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
     """Persist a rosette preview payload to the database."""
+    if not _db_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Rosette job persistence unavailable (database not initialized)"
+        )
     preview = body.preview
     
     # Override name/preset if provided in save request
@@ -272,6 +293,8 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
 
 @router.get("/jobs", response_model=List[RosetteJobOut])
 def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
+    if not _db_available:
+        return []
     jobs = list_jobs(limit=limit)
     out: List[RosetteJobOut] = []
     for j in jobs:
@@ -290,6 +313,8 @@ def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
 
 @router.get("/presets", response_model=List[RosettePresetOut])
 def get_rosette_presets() -> List[RosettePresetOut]:
+    if not _db_available:
+        return []
     rows = list_presets()
     return [
         RosettePresetOut(
@@ -382,14 +407,19 @@ class CompareSnapshotOut(BaseModel):
 def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
     """
     Save a comparison snapshot to the risk timeline.
-    
+
     Risk score calculation (client-side):
     - Base score from segment delta: abs(delta) / max(seg_a, seg_b) * 50
     - Radius delta contribution: abs(inner_delta + outer_delta) / 10 * 50
     - Clamp to 0-100
-    
+
     Phase 28.1: Also syncs to compare_risk_log for cross-lab dashboard integration.
     """
+    if not _db_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Rosette snapshot persistence unavailable (database not initialized)"
+        )
     snapshot_id = save_compare_snapshot(
         job_id_a=body.job_id_a,
         job_id_b=body.job_id_b,
@@ -467,13 +497,15 @@ def list_snapshots(
 ) -> List[CompareSnapshotOut]:
     """
     Retrieve comparison snapshots from risk timeline with optional filtering.
-    
+
     Query params:
     - job_id_a: Filter by first job ID
     - job_id_b: Filter by second job ID
     - lane: Filter by lane (e.g., 'production', 'testing')
     - limit: Max results (default 50)
     """
+    if not _db_available:
+        return []
     snapshots = get_compare_snapshots(
         job_id_a=job_id_a,
         job_id_b=job_id_b,
@@ -530,6 +562,11 @@ def export_compare_csv(
     - pattern_type_b: Pattern type of variant
     - note: Optional note
     """
+    if not _db_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Rosette export unavailable (database not initialized)"
+        )
     try:
         # Fetch snapshots with same filtering as GET endpoint
         snapshots = get_compare_snapshots(
