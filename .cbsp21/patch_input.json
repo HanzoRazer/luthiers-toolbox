@@ -1,8 +1,8 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.17",
-  "title": "Bundle 32.4.17 — Hotkey Hint Cooldown (localStorage, 10 minutes)",
-  "intent": "Prevent the keyboard hint overlay from nagging users by storing dismissal timestamp in localStorage. Don't show again for 10 minutes after user dismissal. Applies to both auto-show and hover re-show.",
+  "patch_id": "BUNDLE_32.4.18",
+  "title": "Bundle 32.4.18 — Reset Tips Button (localStorage cleanup)",
+  "intent": "Add a 'Reset tips' button in the toolbar that clears the localStorage cooldown key, allowing operators to manually re-enable onboarding hints. Provides explicit user control over tip visibility.",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
@@ -24,26 +24,23 @@
   ],
   "diff_articulation": {
     "what_changed": [
-      "Added HINT_COOLDOWN_KEY constant for localStorage key ('artstudio.historyHotkeyHintDismissedAt')",
-      "Added HINT_COOLDOWN_MIN constant set to 10 minutes",
-      "Added getDismissedAt() helper to safely read timestamp from localStorage",
-      "Added setDismissedNow() helper to safely write current timestamp to localStorage",
-      "Added cooldownActive() helper to check if 10 minutes have elapsed since dismissal",
-      "Updated hideHint() to accept userDismissed parameter (default true) and call setDismissedNow() when true",
-      "Updated scheduleHint() to check cooldownActive() and return early if cooldown active",
-      "Updated scheduleHint() to call hideHint(false) to avoid marking auto-dismiss as user dismissal",
-      "Updated showHintFromHover() to check cooldownActive() and return early if cooldown active",
-      "Updated close button @click to explicitly call hideHint(true) for user dismissal",
-      "Updated typing suppression to call hideHint(false) since typing is not intentional dismissal",
-      "Updated watch(hasHistory) to call hideHint(false) for auto-hide behavior"
+      "Added 'Reset tips' button in toolbar after Redo button (lines 83-91)",
+      "Added resetTips() function implementation (lines 318-336)",
+      "resetTips() removes 'artstudio.historyHotkeyHintDismissedAt' from localStorage",
+      "resetTips() shows success toast notification ('Tips reset')",
+      "resetTips() includes future-proof comment for additional tip keys",
+      "resetTips() has try/catch error handling for localStorage failures",
+      "Added .reset-tips-btn CSS styles (lines 659-670)",
+      "Button styled as utility control: smaller font (10px), subtle colors, auto margin-left"
     ],
-    "why_not_redundant": "Before: Hint would show every time history became available or user hovered, potentially nagging. After: User dismissal triggers 10-minute cooldown preventing re-show. Implementation adds localStorage persistence layer and dismissal intent tracking (user vs auto) not present before. Distinguishes between user explicitly clicking X (triggers cooldown) vs typing/auto-hide (does not trigger cooldown)."
+    "why_not_redundant": "Previous bundles (32.4.16, 32.4.17) added hint cooldown mechanism but provided no UI to manually reset it. Users who dismiss hints cannot easily re-enable them without waiting 10 minutes or manually opening browser dev tools. This adds explicit user control via a toolbar button, completing the hint system's UX loop."
   },
   "verification": {
     "commands_run": [
-      "git diff --numstat packages/client/src/components/rosette/RosetteEditorView.vue -> +38 lines, -5 lines",
-      "Full file scan: RosetteEditorView.vue (723 lines) read completely",
-      "Coverage: 100% of file read before modification"
+      "git diff --numstat packages/client/src/components/rosette/RosetteEditorView.vue -> +43 lines, -0 lines",
+      "Full file scan: RosetteEditorView.vue (756 lines) read completely in 4 chunks",
+      "Coverage: 100% of file read before modification",
+      "git diff | head -80 -> visual confirmation of button, function, and CSS"
     ]
   },
   "file_context_coverage_percent": 100.0
