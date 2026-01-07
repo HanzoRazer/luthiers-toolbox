@@ -10,6 +10,14 @@ from typing import Any, Dict, List, Optional
 
 
 def _get_meta(it: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract index_meta from artifact dict, checking multiple locations."""
+    # Check meta.index_meta first (new format)
+    meta = it.get("meta") or {}
+    if isinstance(meta, dict):
+        index_meta = meta.get("index_meta")
+        if isinstance(index_meta, dict):
+            return index_meta
+    # Fallback to top-level index_meta (old format)
     m = it.get("index_meta")
     return m if isinstance(m, dict) else {}
 
@@ -47,4 +55,13 @@ def list_toolpaths_for_decision(
 
 def latest_toolpaths_for_decision(decision_artifact_id: str) -> Optional[Dict[str, Any]]:
     items = list_toolpaths_for_decision(decision_artifact_id=decision_artifact_id, limit=1, offset=0)
-    return items[0] if items else None
+    if not items:
+        return None
+    item = items[0]
+    # Add artifact_id for backward compatibility (some tests expect this field)
+    if "artifact_id" not in item and "run_id" in item:
+        item["artifact_id"] = item["run_id"]
+    # Add index_meta at top level for backward compatibility
+    if "index_meta" not in item:
+        item["index_meta"] = _get_meta(item)
+    return item

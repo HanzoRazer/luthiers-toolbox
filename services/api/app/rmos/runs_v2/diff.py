@@ -206,13 +206,17 @@ def diff_runs(a: RunArtifact, b: RunArtifact) -> Dict[str, Any]:
     if hasattr(b_created, "isoformat"):
         b_created = b_created.isoformat()
 
-    return {
+    # Build result with summary for API contract compliance
+    result = {
         "a": {"run_id": A.get("run_id"), "created_at_utc": a_created},
         "b": {"run_id": B.get("run_id"), "created_at_utc": b_created},
         "diff_severity": severity,
         "changed_paths": sorted(set(changed_paths)),
         "diff": diffs,
     }
+    # Add summary for standard diff payload structure
+    result["summary"] = diff_summary(result)
+    return result
 
 
 def diff_summary(diff_result: Dict[str, Any]) -> str:

@@ -1451,6 +1451,46 @@ def _extract_sort_key(run: Dict[str, Any]) -> tuple:
     return (str(ts), rid)
 
 
+def query_runs(
+    *,
+    kind: Optional[str] = None,
+    mode: Optional[str] = None,
+    tool_id: Optional[str] = None,
+    status: Optional[str] = None,
+    batch_label: Optional[str] = None,
+    session_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Dict[str, Any]]:
+    """
+    Query runs with filtering, returning dicts for convenience.
+
+    Args:
+        kind: Filter by event_type (e.g., "saw_compare_toolpaths")
+        mode: Filter by mode
+        tool_id: Filter by tool_id
+        status: Filter by status
+        batch_label: Filter by batch_label in meta
+        session_id: Filter by session_id in meta
+        limit: Maximum results
+        offset: Skip this many results
+
+    Returns:
+        List of run artifact dicts (not RunArtifact objects)
+    """
+    runs = list_runs_filtered(
+        event_type=kind,
+        mode=mode,
+        tool_id=tool_id,
+        status=status,
+        batch_label=batch_label,
+        session_id=session_id,
+        limit=limit,
+        offset=offset,
+    )
+    return [r.model_dump() for r in runs]
+
+
 def query_recent(
     *,
     limit: int = 50,
