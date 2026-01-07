@@ -28,7 +28,17 @@ def _make_minimal_artifact(RunArtifact, *, run_id: str, workflow_session_id: str
 
     Handles schema evolution by introspecting model_fields.
     """
+    from app.rmos.runs_v2.schemas import Hashes, RunDecision
+
     fields = getattr(RunArtifact, "model_fields", {})
+
+    # Create minimal required nested objects
+    minimal_hashes = Hashes(
+        feasibility_sha256="0" * 64  # Required: 64 char hex string
+    )
+    minimal_decision = RunDecision(
+        risk_level="GREEN"  # Required: risk classification
+    )
 
     def default_for(name: str):
         if name == "run_id":
@@ -56,9 +66,9 @@ def _make_minimal_artifact(RunArtifact, *, run_id: str, workflow_session_id: str
         if name == "outputs":
             return None
         if name == "hashes":
-            return None
+            return minimal_hashes
         if name == "decision":
-            return None
+            return minimal_decision
         if name == "advisory_inputs":
             return []
         if name == "explanation_status":
