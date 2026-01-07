@@ -118,15 +118,15 @@ jobs:
           load: true
           tags: toolbox/nginx:ci
       - name: Up stack
-        run: docker compose up -d
+        run: docker compose --profile proxy up -d
       - name: Wait for API via proxy
         run: |
           for i in $(seq 1 40); do
             curl -fsS http://127.0.0.1:8088/api/health && exit 0 || sleep 2
           done
           echo "API did not become healthy via proxy" >&2
-          docker compose ps
-          docker compose logs --no-color --tail=200 api || true
+          docker compose --profile proxy ps
+          docker compose --profile proxy logs --no-color --tail=200 api proxy || true
           exit 1
 
   summary:
