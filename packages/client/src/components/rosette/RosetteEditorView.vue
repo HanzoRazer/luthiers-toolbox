@@ -166,18 +166,24 @@ function toastUndoRedo(kind: "undo" | "redo", source: "keyboard" | "clicked", la
 }
 
 // Bundle 32.4.11: Undo wrapper with label-aware toast
+// Bundle 32.4.12: No-op suppression (no toast when stack empty)
 function undo(source: "keyboard" | "clicked" = "clicked") {
   const stack = store.historyStack ?? [];
-  const label = stack.length ? String(stack[stack.length - 1]?.label ?? "Edit") : undefined;
+  if (!stack.length) return; // 🔕 no-op → no toast
+
+  const label = String(stack[stack.length - 1]?.label ?? "Edit");
 
   store.undoLastEdit();
   toastUndoRedo("undo", source, label);
 }
 
 // Bundle 32.4.11: Redo wrapper with label-aware toast
+// Bundle 32.4.12: No-op suppression (no toast when stack empty)
 function redo(source: "keyboard" | "clicked" = "clicked") {
   const stack = store.redoStack ?? [];
-  const label = stack.length ? String(stack[stack.length - 1]?.label ?? "Edit") : undefined;
+  if (!stack.length) return; // 🔕 no-op → no toast
+
+  const label = String(stack[stack.length - 1]?.label ?? "Edit");
 
   store.redoLastEdit();
   toastUndoRedo("redo", source, label);
