@@ -951,6 +951,10 @@ if ENABLE_COMPAT_LEGACY_ROUTES:
     _include_compat_router(app, cam_helical_router, "/cam/helical", name="cam_helical_router")
     _include_compat_router(app, cam_simulate_router, "/cam/simulate", name="cam_simulate_router")
     _include_compat_router(app, gcode_backplot_router, "/cam/backplot", name="gcode_backplot_router")
+
+    # Bridge calculator and DXF preflight (legacy paths without /api prefix)
+    _include_compat_router(app, bridge_router, "", name="bridge_router")  # → /cam/bridge/*
+    _include_compat_router(app, dxf_preflight_router, "", name="dxf_preflight_router")  # → /dxf/preflight/*
 else:
     _log.info("Compat legacy routes disabled (ENABLE_COMPAT_LEGACY_ROUTES=false)")
 
