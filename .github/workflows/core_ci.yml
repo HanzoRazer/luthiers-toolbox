@@ -70,13 +70,7 @@ jobs:
             ]
           }
           # G-code that matches the rectangle geometry
-          gcode = "G21 G90
-G0 X0 Y0
-G1 X100 Y0 F1200
-G1 X100 Y60
-G1 X0 Y60
-G1 X0 Y0
-M30"
+          gcode = "G21 G90\nG0 X0 Y0\nG1 X100 Y0 F1200\nG1 X100 Y60\nG1 X0 Y60\nG1 X0 Y0\nM30"
           url = f"{base_url}/api/geometry/parity"
           req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
           out = urllib.request.urlopen(req).read().decode()
