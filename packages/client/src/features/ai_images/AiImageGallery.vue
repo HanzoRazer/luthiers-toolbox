@@ -120,6 +120,24 @@ function promoteDisabledReason(a: VisionAsset): string | null {
   return null;
 }
 
+function rejectionHover(v: AdvisoryVariantSummary | null | undefined): string {
+  if (!v) return "";
+  if (!v.rejected) return "Not rejected.";
+  const parts: string[] = [];
+  if ((v as any).rejection_reason_code) parts.push(`Code: ${(v as any).rejection_reason_code}`);
+  if ((v as any).rejection_reason_detail) parts.push(`Detail: ${(v as any).rejection_reason_detail}`);
+  if ((v as any).rejection_operator_note) parts.push(`Note: ${(v as any).rejection_operator_note}`);
+  if ((v as any).rejected_at_utc) parts.push(`At: ${(v as any).rejected_at_utc}`);
+  return parts.length ? parts.join("\n") : "Rejected.";
+}
+
+function canUndoReject(v: AdvisoryVariantSummary | null | undefined): string | null {
+  if (!v) return "Attach first";
+  if (!v.rejected) return "Not rejected";
+  if (v.status === "PROMOTED" || v.promoted) return "Already promoted";
+  return null;
+}
+
 async function quickReject(advisoryId: string, code: RejectReasonCode) {
   const runId = selectedRunId.value;
   if (!runId) return;
@@ -136,6 +154,31 @@ async function quickReject(advisoryId: string, code: RejectReasonCode) {
     _toastOk(`Rejected (${code}).${res.requestId ? ` req:${res.requestId}` : ""}`);
   } catch (e: any) {
     _toastErr(e?.message || "Reject failed.");
+  } finally {
+    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+  }
+}
+
+async function undoReject(advisoryId: string) {
+  const runId = selectedRunId.value;
+  if (!runId) return;
+  const busy = busyByAdvisoryId.value[advisoryId];
+  if (busy) return;
+  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "review" };
+  try {
+    // IMPORTANT: undo reject uses the same canonical review endpoint
+    const res = await reviewAdvisoryVariant(runId, advisoryId, {
+      rejected: false,
+      status: "REVIEWED",
+      // clear reason fields server-side is preferred; client sets nulls defensively
+      rejection_reason_code: null as any,
+      rejection_reason_detail: null as any,
+      rejection_operator_note: null as any,
+    });
+    await refreshVariants();
+    _toastOk(`Rejection cleared.${res.requestId ? ` req:${res.requestId}` : ""}`);
+  } catch (e: any) {
+    _toastErr(e?.message || "Undo reject failed.");
   } finally {
     busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
   }
@@ -388,8 +431,17 @@ onMounted(async () => {
           </div>
 
           <div class="badges" v-if="_variantForAsset(a)">
-            <span class="badge" :data-b="(_variantForAsset(a)?.status ?? 'NEW')">{{ _variantForAsset(a)?.status }}</span>
-            <span class="badge" v-if="_variantForAsset(a)?.rejected" data-b="REJECTED">REJECTED</span>
+            <span
+              class="badge"
+              :data-b="(_variantForAsset(a)?.status ?? 'NEW')"
+              :title="(_variantForAsset(a) as any)?.risk_level ? `Risk: ${(_variantForAsset(a) as any)?.risk_level}` : 'Risk: —'"
+            >{{ _variantForAsset(a)?.status }}</span>
+            <span
+              class="badge warn"
+              v-if="_variantForAsset(a)?.rejected"
+              data-b="REJECTED"
+              :title="rejectionHover(_variantForAsset(a))"
+            >REJECTED</span>
             <span class="badge" v-if="_variantForAsset(a)?.promoted" data-b="PROMOTED">PROMOTED</span>
           </div>
 
@@ -404,6 +456,17 @@ onMounted(async () => {
                 @click="quickPromote(_advisoryIdForAsset(a)!)"
               >
                 {{ busyByAdvisoryId[_advisoryIdForAsset(a)!] === 'promote' ? 'Promoting…' : 'Quick Promote' }}
+              </button>
+
+              <button
+                class="btn small"
+                type="button"
+                v-if="_variantForAsset(a)?.rejected"
+                :disabled="!!canUndoReject(_variantForAsset(a)) || busyByAdvisoryId[_advisoryIdForAsset(a)!]"
+                :title="canUndoReject(_variantForAsset(a)) || 'Clear rejection (Undo Reject)'"
+                @click="undoReject(_advisoryIdForAsset(a)!)"
+              >
+                {{ busyByAdvisoryId[_advisoryIdForAsset(a)!] === 'review' ? 'Clearing…' : 'Undo Reject' }}
               </button>
 
               <select
@@ -516,6 +579,9 @@ onMounted(async () => {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+}
+.badge.warn {
+  cursor: help;
 }
 .select.small {
   padding: 6px 10px;
