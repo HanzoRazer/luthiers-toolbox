@@ -61,10 +61,9 @@ class BasicSVGVectorizer:
                 .estimated { stroke: orange; }
             """))
             
-            # Add scale info as comment
+            # Add scale info as description element (svgwrite doesn't have .comment())
             scale = analysis_data.get('scale', 'Unknown')
-            dwg.add(dwg.comment(f"Scale: {scale}"))
-            dwg.add(dwg.comment(f"Generated from AI analysis with {len(analysis_data.get('dimensions', []))} dimensions"))
+            dwg.add(dwg.desc(f"Scale: {scale}. Generated from AI analysis with {len(analysis_data.get('dimensions', []))} dimensions"))
             
             # Draw border
             dwg.add(dwg.rect(

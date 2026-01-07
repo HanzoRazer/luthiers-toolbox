@@ -347,9 +347,8 @@ class Phase2Vectorizer:
             .dimension { stroke: green; stroke-width: 0.15; stroke-dasharray: 2,2; }
         """))
         
-        # Add metadata
-        dwg.add(dwg.comment(f"Phase 2 Geometry - {len(contours)} contours, {len(lines)} lines"))
-        dwg.add(dwg.comment(f"Scale: {analysis_data.get('scale', 'Unknown')}"))
+        # Add metadata as description element (svgwrite doesn't have .comment())
+        dwg.add(dwg.desc(f"Phase 2 Geometry - {len(contours)} contours, {len(lines)} lines. Scale: {analysis_data.get('scale', 'Unknown')}"))
         
         # Draw contours
         for contour in contours:
