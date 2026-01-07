@@ -148,11 +148,17 @@ class LearningEvent(BaseModel):
     suggestion_type: str = "parameter_override"
 
 
+class RollupArtifacts(BaseModel):
+    execution_rollup_artifact: Optional[Dict[str, Any]] = None
+    decision_rollup_artifact: Optional[Dict[str, Any]] = None
+
+
 class JobLogResponse(BaseModel):
     job_log_artifact_id: str
     metrics_rollup_artifact_id: Optional[str] = None
     learning_event: Optional[LearningEvent] = None
     learning_hook_enabled: Optional[bool] = None
+    rollups: Optional[RollupArtifacts] = None
 
 
 class LearningTuningStamp(BaseModel):
@@ -731,18 +737,57 @@ def log_batch_job(
 
     # Optionally create metrics rollup
     rollup_id: Optional[str] = None
-    if os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true":
+    rollups_resp: Optional[RollupArtifacts] = None
+    rollup_hook_enabled = os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true"
+
+    if rollup_hook_enabled:
+        # Compute aggregated metrics from all job logs
+        all_logs = query_job_logs_by_execution(batch_execution_artifact_id)
+        total_cut_time = 0.0
+        total_setup_time = 0.0
+        parts_ok = 0
+        parts_scrap = 0
+        burn_events = 0
+        tearout_events = 0
+        kickback_events = 0
+
+        for log in all_logs:
+            log_metrics = log.get("payload", {}).get("metrics", {})
+            total_cut_time += log_metrics.get("cut_time_s", 0.0)
+            total_setup_time += log_metrics.get("setup_time_s", 0.0)
+            parts_ok += log_metrics.get("parts_ok", 0)
+            parts_scrap += log_metrics.get("parts_scrap", 0)
+            if log_metrics.get("burn"):
+                burn_events += 1
+            if log_metrics.get("tearout"):
+                tearout_events += 1
+            if log_metrics.get("kickback"):
+                kickback_events += 1
+
         rollup_payload = {
             "batch_execution_artifact_id": batch_execution_artifact_id,
             "parent_batch_decision_artifact_id": decision_id,
-            "metrics": metrics.model_dump(),
-            "counts": {"job_log_count": 1},
-            "signals": {"burn_events": 0, "tearout_events": 0, "kickback_events": 0},
+            "metrics": {
+                "cut_time_s": total_cut_time,
+                "setup_time_s": total_setup_time,
+                "total_time_s": total_cut_time + total_setup_time,
+                "parts_ok": parts_ok,
+                "parts_scrap": parts_scrap,
+            },
+            "counts": {"job_log_count": len(all_logs)},
+            "signals": {"burn_events": burn_events, "tearout_events": tearout_events, "kickback_events": kickback_events},
         }
-        rollup_id = store_artifact(kind="saw_batch_execution_metrics_rollup", payload=rollup_payload, parent_id=decision_id)
+        rollup_id = store_artifact(kind="saw_batch_execution_metrics_rollup", payload=rollup_payload, parent_id=batch_execution_artifact_id)
 
         # Also store in the runs artifact index for query_run_artifacts to find
         _store_rollup_for_query(rollup_id, rollup_payload, decision_id)
+
+        exec_rollup_artifact = {
+            "artifact_id": rollup_id,
+            "kind": "saw_batch_execution_metrics_rollup",
+            "payload": rollup_payload,
+        }
+        rollups_resp = RollupArtifacts(execution_rollup_artifact=exec_rollup_artifact)
 
     # Optionally emit learning events for burn/tearout/kickback
     learning_event_resp: Optional[LearningEvent] = None
@@ -786,6 +831,7 @@ def log_batch_job(
         metrics_rollup_artifact_id=rollup_id,
         learning_event=learning_event_resp,
         learning_hook_enabled=learning_enabled,
+        rollups=rollups_resp,
     )
 
 
@@ -1002,6 +1048,257 @@ def get_apply_flag_status() -> Dict[str, Any]:
 
     return {
         "SAW_LAB_APPLY_ACCEPTED_OVERRIDES": is_enabled,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Execution Metrics Rollup Endpoints (new paths)
+# ---------------------------------------------------------------------------
+
+
+def _compute_execution_rollup(batch_execution_artifact_id: str) -> Dict[str, Any]:
+    """Compute metrics rollup from job logs for an execution."""
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    burn_events = 0
+    tearout_events = 0
+    kickback_events = 0
+
+    for log in logs:
+        m = log.get("payload", {}).get("metrics", {})
+        total_cut_time += m.get("cut_time_s", 0.0)
+        total_setup_time += m.get("setup_time_s", 0.0)
+        parts_ok += m.get("parts_ok", 0)
+        parts_scrap += m.get("parts_scrap", 0)
+        if m.get("burn"):
+            burn_events += 1
+        if m.get("tearout"):
+            tearout_events += 1
+        if m.get("kickback"):
+            kickback_events += 1
+
+    return {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "counts": {"job_log_count": len(logs)},
+        "metrics": {
+            "cut_time_s": total_cut_time,
+            "setup_time_s": total_setup_time,
+            "total_time_s": total_cut_time + total_setup_time,
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+        },
+        "signals": {
+            "burn_events": burn_events,
+            "tearout_events": tearout_events,
+            "kickback_events": kickback_events,
+        },
+    }
+
+
+@router.get("/executions/metrics-rollup/by-execution")
+def preview_execution_rollup(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """Preview (compute but don't persist) metrics rollup for an execution."""
+    return _compute_execution_rollup(batch_execution_artifact_id)
+
+
+@router.post("/executions/metrics-rollup/by-execution")
+def persist_execution_rollup_new(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """Compute and persist metrics rollup for an execution."""
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    decision_id = execution.get("payload", {}).get("batch_decision_artifact_id", "")
+    rollup_data = _compute_execution_rollup(batch_execution_artifact_id)
+    rollup_data["parent_batch_decision_artifact_id"] = decision_id
+
+    rollup_id = store_artifact(
+        kind="saw_batch_execution_metrics_rollup",
+        payload=rollup_data,
+        parent_id=batch_execution_artifact_id,
+    )
+
+    return {
+        "artifact_id": rollup_id,
+        "kind": "saw_batch_execution_metrics_rollup",
+        "payload": rollup_data,
+    }
+
+
+@router.get("/executions/metrics-rollup/latest")
+def get_latest_execution_rollup(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """Get the latest persisted rollup for an execution."""
+    rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
+    if not rollups:
+        return {"found": False, "batch_execution_artifact_id": batch_execution_artifact_id}
+
+    latest = rollups[0]
+    return {
+        "found": True,
+        "artifact_id": latest.get("artifact_id"),
+        "kind": latest.get("kind", "saw_batch_execution_metrics_rollup"),
+        "created_utc": latest.get("created_utc"),
+        "payload": latest.get("payload", {}),
+    }
+
+
+@router.get("/executions/metrics-rollup/history")
+def get_execution_rollup_history(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results"),
+) -> List[Dict[str, Any]]:
+    """Get rollup history for an execution."""
+    rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)[:limit]
+    return [
+        {
+            "artifact_id": r.get("artifact_id"),
+            "id": r.get("artifact_id"),
+            "kind": r.get("kind", "saw_batch_execution_metrics_rollup"),
+            "created_utc": r.get("created_utc"),
+            "payload": r.get("payload", {}),
+        }
+        for r in rollups
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Decision Metrics Rollup Endpoints
+# ---------------------------------------------------------------------------
+
+
+def _compute_decision_rollup(batch_decision_artifact_id: str) -> Dict[str, Any]:
+    """Compute aggregated metrics rollup across all executions for a decision."""
+    executions = query_executions_by_decision(batch_decision_artifact_id)
+
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    job_log_count = 0
+
+    for ex in executions:
+        ex_id = ex.get("artifact_id")
+        logs = query_job_logs_by_execution(ex_id)
+        job_log_count += len(logs)
+        for log in logs:
+            m = log.get("payload", {}).get("metrics", {})
+            total_cut_time += m.get("cut_time_s", 0.0)
+            total_setup_time += m.get("setup_time_s", 0.0)
+            parts_ok += m.get("parts_ok", 0)
+            parts_scrap += m.get("parts_scrap", 0)
+
+    return {
+        "batch_decision_artifact_id": batch_decision_artifact_id,
+        "counts": {
+            "execution_count": len(executions),
+            "job_log_count": job_log_count,
+        },
+        "metrics": {
+            "cut_time_s": total_cut_time,
+            "setup_time_s": total_setup_time,
+            "total_time_s": total_cut_time + total_setup_time,
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+        },
+    }
+
+
+@router.get("/decisions/metrics-rollup/by-decision")
+def preview_decision_rollup(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+) -> Dict[str, Any]:
+    """Preview (compute but don't persist) metrics rollup for a decision."""
+    return _compute_decision_rollup(batch_decision_artifact_id)
+
+
+@router.post("/decisions/metrics-rollup/by-decision")
+def persist_decision_rollup(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+) -> Dict[str, Any]:
+    """Compute and persist metrics rollup for a decision."""
+    rollup_data = _compute_decision_rollup(batch_decision_artifact_id)
+
+    rollup_id = store_artifact(
+        kind="saw_batch_decision_metrics_rollup",
+        payload=rollup_data,
+        parent_id=batch_decision_artifact_id,
+    )
+
+    return {
+        "artifact_id": rollup_id,
+        "kind": "saw_batch_decision_metrics_rollup",
+        "payload": rollup_data,
+    }
+
+
+@router.get("/decisions/metrics-rollup/latest")
+def get_latest_decision_rollup(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+) -> Dict[str, Any]:
+    """Get the latest persisted rollup for a decision."""
+    rollups = query_execution_rollups_by_decision(batch_decision_artifact_id)
+    if not rollups:
+        return {"found": False, "batch_decision_artifact_id": batch_decision_artifact_id}
+
+    latest = rollups[0]
+    return {
+        "found": True,
+        "artifact_id": latest.get("artifact_id"),
+        "kind": latest.get("kind", "saw_batch_decision_metrics_rollup"),
+        "created_utc": latest.get("created_utc"),
+        "payload": latest.get("payload", {}),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Rollup Diff Endpoint
+# ---------------------------------------------------------------------------
+
+
+@router.get("/rollups/diff")
+def compute_rollup_diff(
+    left_rollup_artifact_id: str = Query(..., description="Left rollup artifact ID"),
+    right_rollup_artifact_id: str = Query(..., description="Right rollup artifact ID"),
+) -> Dict[str, Any]:
+    """Compute diff between two rollup artifacts."""
+    left = get_artifact(left_rollup_artifact_id)
+    right = get_artifact(right_rollup_artifact_id)
+
+    if not left:
+        raise HTTPException(status_code=404, detail=f"Left rollup not found: {left_rollup_artifact_id}")
+    if not right:
+        raise HTTPException(status_code=404, detail=f"Right rollup not found: {right_rollup_artifact_id}")
+
+    left_metrics = left.get("payload", {}).get("metrics", {})
+    right_metrics = right.get("payload", {}).get("metrics", {})
+
+    # Compute diffs
+    metrics_diff = {}
+    all_keys = set(left_metrics.keys()) | set(right_metrics.keys())
+    for key in all_keys:
+        left_val = left_metrics.get(key, 0)
+        right_val = right_metrics.get(key, 0)
+        if isinstance(left_val, (int, float)) and isinstance(right_val, (int, float)):
+            metrics_diff[key] = {
+                "left": left_val,
+                "right": right_val,
+                "delta": right_val - left_val,
+            }
+
+    return {
+        "left_artifact_id": left_rollup_artifact_id,
+        "right_artifact_id": right_rollup_artifact_id,
+        "metrics": metrics_diff,
     }
 
 
