@@ -375,19 +375,21 @@ def get_execution_by_decision(
     latest = executions[0]
     payload = latest.get("payload", {})
 
+    # Build index_meta with setdefault fallbacks for older artifacts
+    index_meta = latest.get("index_meta") or {}
+    index_meta.setdefault("parent_batch_decision_artifact_id", payload.get("batch_decision_artifact_id") or batch_decision_artifact_id)
+    index_meta.setdefault("batch_label", payload.get("batch_label"))
+    index_meta.setdefault("session_id", payload.get("session_id"))
+    index_meta.setdefault("tool_kind", "saw_lab")
+    index_meta.setdefault("kind_group", "batch")
+
     return {
         "artifact_id": latest.get("artifact_id"),
         "id": latest.get("artifact_id"),  # Alias for compatibility
-        "kind": latest.get("kind"),
-        "status": latest.get("status"),
+        "kind": latest.get("kind", "saw_batch_execution"),
+        "status": latest.get("status", "OK"),
         "created_utc": latest.get("created_utc"),
-        "index_meta": {
-            "parent_batch_decision_artifact_id": payload.get("batch_decision_artifact_id"),
-            "batch_label": payload.get("batch_label"),
-            "session_id": payload.get("session_id"),
-            "tool_kind": "saw_lab",
-            "kind_group": "batch",
-        },
+        "index_meta": index_meta,
     }
 
 
