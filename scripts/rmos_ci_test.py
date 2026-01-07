@@ -86,25 +86,26 @@ def main() -> int:
         pattern_id = f"ci_rosette_{ts}"
         pattern_payload = {
             "pattern_id": pattern_id,
-            "name": f"CI Rosette {ts}",
-            "rosette_geometry": {
-                "rings": [
-                    {
-                        "ring_id": 0,
-                        "radius_mm": 45.0,
-                        "width_mm": 2.0,
-                        "tile_length_mm": 5.0,
-                        "slice_angle_deg": 0.0,
-                    },
-                    {
-                        "ring_id": 1,
-                        "radius_mm": 48.0,
-                        "width_mm": 2.0,
-                        "tile_length_mm": 5.0,
-                        "slice_angle_deg": 0.0,
-                    },
-                ],
-            },
+            "pattern_name": f"CI Rosette {ts}",
+            "outer_radius_mm": 50.0,
+            "inner_radius_mm": 40.0,
+            "ring_count": 2,
+            "rings": [
+                {
+                    "ring_id": "ring_0",
+                    "radius_mm": 45.0,
+                    "strip_width_mm": 2.0,
+                    "strip_thickness_mm": 1.0,
+                    "points": [],
+                },
+                {
+                    "ring_id": "ring_1",
+                    "radius_mm": 48.0,
+                    "strip_width_mm": 2.0,
+                    "strip_thickness_mm": 1.0,
+                    "points": [],
+                },
+            ],
             "metadata": {
                 "complexity": "low",
                 "ci_test": True,
@@ -112,7 +113,7 @@ def main() -> int:
         }
 
         log("Creating CI rosette pattern...")
-        created_pattern = request("POST", "/api/rmos/patterns/rosette", pattern_payload)
+        created_pattern = request("POST", "/api/rmos/rosette-patterns/", pattern_payload)
         log(f"Pattern created: id={created_pattern['pattern_id']}")
 
         # 2) Rosette segment-ring (core N12 math)
@@ -180,9 +181,9 @@ def main() -> int:
             f"overall={batch_res['overall_risk_grade']}"
         )
 
-        # 5) JobLog sanity - verify patterns endpoint accessible
+        # 5) Verify patterns list endpoint accessible
         log("Fetching rosette patterns...")
-        patterns_res = request("GET", "/api/rmos/patterns/rosette")
+        patterns_res = request("GET", "/api/rmos/rosette-patterns/")
         if isinstance(patterns_res, list):
             log(f"Rosette patterns: {len(patterns_res)} (CI expects >= 1 after create)")
             if not patterns_res:
