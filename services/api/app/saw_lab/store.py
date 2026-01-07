@@ -122,3 +122,21 @@ def query_latest_by_label_and_session(batch_label: str, session_id: str) -> Dict
             latest[key] = arts[0].get("artifact_id")
 
     return latest
+
+
+def query_job_logs_by_execution(batch_execution_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query job log artifacts by parent execution ID.
+
+    Returns list of job logs sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "batch_job_log":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_execution_artifact_id") == batch_execution_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
