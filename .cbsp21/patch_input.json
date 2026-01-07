@@ -1,8 +1,8 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.11",
-  "title": "Undo/Redo Toast Source (button vs keyboard)",
-  "intent": "Add toast notifications for undo/redo actions that display the action label and source (keyboard or clicked button). No backend or store changes required.",
+  "patch_id": "BUNDLE_32.4.12",
+  "title": "No-Op Suppression for Undo/Redo Toasts",
+  "intent": "Prevent misleading toast notifications when undo/redo is triggered on empty history stacks. Buttons already have correct disabled bindings, but keyboard shortcuts can still call these functions when stacks are empty.",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
@@ -17,18 +17,16 @@
   },
   "diff_articulation": {
     "what_changed": [
-      "Added toastUndoRedo() helper function to display info toasts with action label and source",
-      "Created new undo() wrapper function that accepts source param and retrieves label from historyStack",
-      "Created new redo() wrapper function that accepts source param and retrieves label from redoStack",
-      "Updated Undo button @click to call undo('clicked') instead of store.undoLastEdit()",
-      "Updated Redo button @click to call redo('clicked') instead of store.redoLastEdit()",
-      "Updated keyboard undo shortcut (Ctrl+Z) to call undo('keyboard') instead of store.undoLastEdit()",
-      "Updated keyboard redo shortcuts (Ctrl+Shift+Z, Ctrl+Y) to call redo('keyboard') instead of store.redoLastEdit()"
+      "Added early return guard in undo() function when historyStack is empty",
+      "Added early return guard in redo() function when redoStack is empty",
+      "Changed label retrieval from conditional (with undefined fallback) to direct string conversion (since stack.length > 0 is now guaranteed)",
+      "Added Bundle 32.4.12 comment headers to both functions",
+      "Buttons already have correct :disabled bindings, no changes needed there"
     ],
-    "why_not_redundant": "This is net-new functionality. Currently undo/redo actions are silent. This adds user feedback via toast notifications showing what action was undone/redone and how it was triggered (keyboard vs button click). The existing code directly calls store methods without wrapper functions or source tracking."
+    "why_not_redundant": "Current implementation allows toast to fire even when stack is empty (label would be undefined). New implementation adds explicit guards to prevent no-op operations from showing misleading toasts. This complements the button disabled state which prevents clicks, but keyboard shortcuts can still trigger these functions."
   },
   "diff_range": {
-    "base": "HEAD",
+    "base": "origin/main",
     "head": "HEAD"
   },
   "changed_files_count": 1,
@@ -37,32 +35,7 @@
   ],
   "overall_file_context_coverage": 100.0,
   "verification": {
-    "commands_run": "File scanned: 514/514 lines (100% coverage)"
+    "commands_run": "Manual code review - verified guard placement before store operations and toast calls. File scanned: 549/549 lines (100% coverage)."
   },
-  "notes": "Toast messages display: 'Undo: Ring 3 +0.10mm' + 'Source: clicked' or 'Source: keyboard'. Labels retrieved from most recent historyStack/redoStack entry."
-}
-        "All documented routes still validated",
-        "Non-API paths (/docs, /health) excluded from enforcement"
-      ],
-      "possible_regressions": [
-        "Routes documented in truth file but not implemented will fail CI",
-        "Undocumented routes generate warnings (not failures by default)"
-      ]
-    }
-  },
-  "verification": {
-    "commands_run": [
-      "python scripts/governance/check_routing_truth.py"
-    ],
-    "tests_added_or_updated": [],
-    "evidence": [
-      "Script imports app.main:app successfully",
-      "Gate passes when truth file matches live routes",
-      "Deprecated routes with LEGACY lane don't fail required check"
-    ]
-  },
-  "review": {
-    "reviewer_notes": "This gate runs in CI on any PR touching services/api/app/** or the truth file. It validates routing contract drift before merge.",
-    "approvals_required": []
-  }
+  "notes": "Minimal change - adds 2 early return guards. Buttons already have disabled state based on stack.length. This prevents keyboard shortcuts from triggering misleading toasts."
 }
