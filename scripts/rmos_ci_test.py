@@ -10,7 +10,7 @@ from typing import Any, Dict
 import requests
 
 
-BASE_URL = os.environ.get("RMOS_BASE_URL", "http://127.0.0.1:8000/rmos")
+BASE_URL = os.environ.get("RMOS_BASE_URL", "http://127.0.0.1:8000")
 APP_MODULE = os.environ.get("APP_MODULE", "app.main:app")
 
 
@@ -34,15 +34,15 @@ def start_server() -> subprocess.Popen:
 
 def wait_for_server(timeout: float = 20.0) -> None:
     """
-    Poll the base URL until the server responds or timeout is reached.
+    Poll the health endpoint until the server responds or timeout is reached.
     """
     deadline = time.time() + timeout
-    url = BASE_URL.rstrip("/") + "/joblog"
+    url = BASE_URL.rstrip("/") + "/api/health"
     while time.time() < deadline:
         try:
             log(f"Checking server at {url} ...")
             resp = requests.get(url, timeout=2.0)
-            if resp.status_code in (200, 404):  # joblog may be empty / not mounted yet
+            if resp.status_code in (200, 404):  # health endpoint may not exist yet
                 log("Server is up.")
                 return
         except Exception:
@@ -85,57 +85,51 @@ def main() -> int:
         ts = int(time.time())
         pattern_id = f"ci_rosette_{ts}"
         pattern_payload = {
-            "id": pattern_id,
+            "pattern_id": pattern_id,
             "name": f"CI Rosette {ts}",
-            "center_x_mm": 0,
-            "center_y_mm": 0,
-            "ring_bands": [
-                {
-                    "id": "ring0",
-                    "index": 0,
-                    "radius_mm": 45,
-                    "width_mm": 2,
-                    "color_hint": "bw_outer",
-                    "strip_family_id": "bw_checker_main",
-                    "slice_angle_deg": 0,
-                    "tile_length_override_mm": None,
-                },
-                {
-                    "id": "ring1",
-                    "index": 1,
-                    "radius_mm": 48,
-                    "width_mm": 2,
-                    "color_hint": "bw_inner",
-                    "strip_family_id": "bw_checker_main",
-                    "slice_angle_deg": 0,
-                    "tile_length_override_mm": None,
-                },
-            ],
-            "default_slice_thickness_mm": 1.0,
-            "default_passes": 1,
-            "default_workholding": "vacuum",
-            "default_tool_id": "saw_default",
+            "rosette_geometry": {
+                "rings": [
+                    {
+                        "ring_id": 0,
+                        "radius_mm": 45.0,
+                        "width_mm": 2.0,
+                        "tile_length_mm": 5.0,
+                        "slice_angle_deg": 0.0,
+                    },
+                    {
+                        "ring_id": 1,
+                        "radius_mm": 48.0,
+                        "width_mm": 2.0,
+                        "tile_length_mm": 5.0,
+                        "slice_angle_deg": 0.0,
+                    },
+                ],
+            },
+            "metadata": {
+                "complexity": "low",
+                "ci_test": True,
+            },
         }
 
         log("Creating CI rosette pattern...")
-        created_pattern = request("POST", "/rosette/patterns", pattern_payload)
-        log(f"Pattern created: id={created_pattern['id']}")
+        created_pattern = request("POST", "/api/rmos/patterns/rosette", pattern_payload)
+        log(f"Pattern created: id={created_pattern['pattern_id']}")
 
-        # 2) Manufacturing plan (also writes rosette_plan JobLog)
-        plan_req = {
-            "pattern_id": pattern_id,
-            "guitars": 4,
-            "tile_length_mm": 8.0,
-            "scrap_factor": 0.12,
-            "record_joblog": True,
+        # 2) Rosette segment-ring (core N12 math)
+        segment_req = {
+            "ring": {
+                "ring_id": 0,
+                "radius_mm": 45.0,
+                "width_mm": 3.0,
+                "tile_length_mm": 5.0,
+                "kerf_mm": 0.3,
+                "herringbone_angle_deg": 0.0,
+                "twist_angle_deg": 0.0,
+            }
         }
-        log("Requesting manufacturing plan...")
-        plan = request("POST", "/rosette/manufacturing-plan", plan_req)
-        log(
-            f"Plan ok: pattern={plan['pattern']['name']}, "
-            f"guitars={plan['guitars']}, "
-            f"families={len(plan['strip_plans'])}"
-        )
+        log("Testing rosette segment-ring...")
+        seg_result = request("POST", "/api/rmos/rosette/segment-ring", segment_req)
+        log(f"Segmentation ok: tile_count={seg_result['tile_count']}")
 
         # 3) Single-slice circle preview
         circle_op = {
@@ -156,7 +150,7 @@ def main() -> int:
             },
         }
         log("Requesting single-slice circle preview...")
-        circle_res = request("POST", "/saw-ops/slice/preview", circle_op)
+        circle_res = request("POST", "/api/rmos/saw-ops/slice/preview", circle_op)
         log(f"Circle slice risk: {circle_res['risk']['risk_grade']}")
 
         # 4) Batch preview (circle_param)
@@ -180,21 +174,21 @@ def main() -> int:
             "workholding": "vacuum",
         }
         log("Requesting batch preview...")
-        batch_res = request("POST", "/saw-ops/batch/preview", batch_op)
+        batch_res = request("POST", "/api/rmos/saw-ops/batch/preview", batch_op)
         log(
             f"Batch preview ok: slices={batch_res['num_slices']}, "
             f"overall={batch_res['overall_risk_grade']}"
         )
 
-        # 5) JobLog sanity
-        log("Fetching JobLog entries...")
-        joblog = request("GET", "/joblog") or []
-        if isinstance(joblog, list):
-            log(f"JobLog entries: {len(joblog)} (CI expects >= 1 after plan)")
-            if not joblog:
-                raise RuntimeError("JobLog is empty after CI plan run")
+        # 5) JobLog sanity - verify patterns endpoint accessible
+        log("Fetching rosette patterns...")
+        patterns_res = request("GET", "/api/rmos/patterns/rosette")
+        if isinstance(patterns_res, list):
+            log(f"Rosette patterns: {len(patterns_res)} (CI expects >= 1 after create)")
+            if not patterns_res:
+                raise RuntimeError("No patterns found after CI create")
         else:
-            raise RuntimeError("JobLog response is not a list")
+            raise RuntimeError("Patterns response is not a list")
 
         log("RMOS CI smoke test completed SUCCESSFULLY.")
         return 0
