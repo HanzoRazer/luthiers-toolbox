@@ -30,6 +30,7 @@ from app.saw_lab.store import (
     query_op_toolpaths_by_execution,
     query_metrics_rollups_by_execution,
     query_accepted_learning_events,
+    query_learning_events_by_execution,
 )
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
@@ -150,6 +151,7 @@ class JobLogResponse(BaseModel):
     job_log_artifact_id: str
     metrics_rollup_artifact_id: Optional[str] = None
     learning_event: Optional[LearningEvent] = None
+    learning_hook_enabled: Optional[bool] = None
 
 
 class LearningTuningStamp(BaseModel):
@@ -782,6 +784,7 @@ def log_batch_job(
         job_log_artifact_id=job_log_id,
         metrics_rollup_artifact_id=rollup_id,
         learning_event=learning_event_resp,
+        learning_hook_enabled=learning_enabled,
     )
 
 
@@ -868,6 +871,33 @@ def approve_learning_event(
         policy_decision=policy_decision,
         approved_by=approved_by,
     )
+
+
+@router.get("/learning-events/by-execution")
+def list_learning_events_by_execution(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List learning event artifacts for a given execution.
+    """
+    events = query_learning_events_by_execution(batch_execution_artifact_id)[:limit]
+
+    results = []
+    for ev in events:
+        payload = ev.get("payload", {})
+        results.append({
+            "artifact_id": ev.get("artifact_id"),
+            "id": ev.get("artifact_id"),
+            "kind": "saw_lab_learning_event",  # Use saw_lab_ prefix for consistency
+            "status": ev.get("status", "OK"),
+            "created_utc": ev.get("created_utc"),
+            "suggestion_type": payload.get("suggestion_type"),
+            "policy_decision": payload.get("policy_decision"),
+            "payload": payload,
+        })
+
+    return results
 
 
 def _is_truthy(value: str) -> bool:

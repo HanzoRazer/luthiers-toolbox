@@ -321,3 +321,21 @@ def query_accepted_learning_events(batch_decision_artifact_id: str) -> list[Dict
     """
     all_events = query_learning_events_by_decision(batch_decision_artifact_id)
     return [e for e in all_events if e.get("payload", {}).get("policy_decision") == "ACCEPT"]
+
+
+def query_learning_events_by_execution(batch_execution_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query learning event artifacts by execution ID.
+
+    Returns list of learning events sorted by created_utc descending.
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_learning_event":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_execution_artifact_id") == batch_execution_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
