@@ -131,6 +131,7 @@
       <div class="historyWrap">
         <HistoryStackPanel
           :highlight-idx-from-top="historyHotkeyFlash"
+          @hoverHint="showHintFromHover"
           @reverted="(idx) => {
             flashHistoryIdx(idx);
             const labels = store.getRecentHistoryLabels(5);
@@ -295,6 +296,12 @@ function scheduleHint() {
 
 // Bundle 32.4.15: Computed for checking if history exists
 const hasHistory = computed(() => (store.historyStack?.length ?? 0) > 0);
+
+// Bundle 32.4.16: Show hint from hover (reuses existing scheduleHint)
+function showHintFromHover() {
+  if (!hasHistory.value) return;
+  scheduleHint(); // uses the existing 6s timer + safe reset
+}
 
 // Bundle 32.4.15: Show hint when history becomes available
 watch(hasHistory, (v) => {

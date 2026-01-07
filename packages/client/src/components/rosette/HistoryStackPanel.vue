@@ -8,8 +8,10 @@ const props = defineProps<{
 }>();
 
 // Bundle 32.4.9: Emit when row is reverted (for flash on click)
+// Bundle 32.4.16: Emit when history header is hovered (re-show hotkey hint)
 const emit = defineEmits<{
   (e: "reverted", idxFromTop: number): void;
+  (e: "hoverHint"): void;
 }>();
 
 const store = useRosetteStore();
@@ -116,8 +118,20 @@ function clearAll() {
 <template>
   <div class="panel" v-if="(store.historyStack?.length ?? 0) > 0">
     <div class="hdr">
-      <div class="title" title="Hotkeys: 1–5 (1 = newest)">History</div>
-      <div class="hint" title="Hotkeys: 1–5 (1 = newest)">1–5</div>
+      <div
+        class="title"
+        title="Hotkeys: 1–5 (1 = newest)"
+        @mouseenter="emit('hoverHint')"
+      >
+        History
+      </div>
+      <div
+        class="hint"
+        title="Hotkeys: 1–5 (1 = newest)"
+        @mouseenter="emit('hoverHint')"
+      >
+        1–5
+      </div>
       <div class="meta">{{ store.historyStack.length }} saved</div>
       <button class="miniBtn" type="button" @click="clearAll" title="Clear undo history">
         Clear

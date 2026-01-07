@@ -1,8 +1,8 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.15",
-  "title": "Bundle 32.4.15 — Keyboard Hint Overlay (Try 1–5 to revert)",
-  "intent": "Add non-intrusive overlay hint near History panel showing keyboard shortcuts 1-5. Auto-hides after 6 seconds, can be dismissed manually, suppressed when typing in inputs.",
+  "patch_id": "BUNDLE_32.4.16",
+  "title": "Bundle 32.4.16 — Re-show Hotkey Hint on History Header Hover",
+  "intent": "When user hovers the History header or '1–5' hint chip, the keyboard hint overlay re-appears briefly using the existing scheduleHint() timer (6s auto-dismiss, non-modal).",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
@@ -11,42 +11,35 @@
       "packages/client/src/components/rosette/"
     ],
     "files_expected_to_change": [
+      "packages/client/src/components/rosette/HistoryStackPanel.vue",
       "packages/client/src/components/rosette/RosetteEditorView.vue"
     ]
   },
   "diff_range": {
-    "base": "origin/main",
-    "head": "HEAD"
+    "base": "HEAD",
+    "head": "working-tree"
   },
-  "changed_files_count": 1,
+  "changed_files_count": 2,
   "changed_files_exact": [
+    "packages/client/src/components/rosette/HistoryStackPanel.vue",
     "packages/client/src/components/rosette/RosetteEditorView.vue"
   ],
   "diff_articulation": {
     "what_changed": [
-      "Added showHistoryHotkeyHint ref for overlay visibility state",
-      "Added hintTimer module-level variable for auto-hide timeout tracking",
-      "Added hideHint() function to clear state and timer",
-      "Added scheduleHint() function to show hint with 6-second auto-hide",
-      "Added hasHistory computed property checking if historyStack has entries",
-      "Added watch(hasHistory) to show hint when history becomes available",
-      "Added onMounted logic to show hint if history already exists",
-      "Added onBeforeUnmount cleanup for hintTimer",
-      "Added typing suppression in onKeyDown to hide hint when user types in inputs",
-      "Wrapped HistoryStackPanel in .historyWrap container div",
-      "Enhanced @reverted handler to show toast with label and source tracking",
-      "Added keyboard hint overlay markup with title, body, and dismiss button",
-      "Added .historyWrap CSS for relative positioning",
-      "Added .hotkeyHint CSS for overlay appearance (absolute, white background, shadow)",
-      "Added .hotkeyHintTitle CSS for bold title styling",
-      "Added .hotkeyHintBody CSS for body text styling",
-      "Added .hotkeyHintClose CSS for dismiss button positioning and styling"
+      "Added `hoverHint` event to HistoryStackPanel.vue emits definition",
+      "Added @mouseenter handlers to History title and '1–5' hint chip that emit('hoverHint')",
+      "Added showHintFromHover() helper in RosetteEditorView.vue that calls scheduleHint() if history exists",
+      "Wired @hoverHint event from HistoryStackPanel to showHintFromHover handler",
+      "No new state variables, timers, or UI elements—reuses existing hint overlay from Bundle 32.4.15",
+      "Hover triggers same 6-second auto-dismiss timer as initial hint display"
     ],
-    "why_not_redundant": "This is new functionality. No keyboard hint overlay existed before. Previous bundles only added toast feedback and button tooltips, not a persistent visual hint reminder."
+    "why_not_redundant": "Before: Hint only showed once when history first became available (Bundle 32.4.15). After: Hint can be re-triggered by hovering History header or '1–5' chip. Implementation adds interactivity missing from previous bundles. Uses event emission pattern (hoverHint) not present in codebase before. Provides user-initiated hint recall without requiring full history actions."
   },
   "verification": {
     "commands_run": [
-      "git diff packages/client/src/components/rosette/RosetteEditorView.vue | head -150 — verified all changes present"
+      "git diff --numstat packages/client/src/components/rosette/ -> +23 lines, -2 lines",
+      "Full file scan: HistoryStackPanel.vue (269 lines) and RosetteEditorView.vue (716 lines) read completely",
+      "Coverage: 100% of files read before modification"
     ]
   },
   "file_context_coverage_percent": 100.0
