@@ -81,42 +81,9 @@ def main() -> int:
         time.sleep(2.0)
         wait_for_server()
 
-        # 1) Create a smoke-test rosette pattern
         ts = int(time.time())
-        pattern_id = f"ci_rosette_{ts}"
-        pattern_payload = {
-            "pattern_id": pattern_id,
-            "pattern_name": f"CI Rosette {ts}",
-            "outer_radius_mm": 50.0,
-            "inner_radius_mm": 40.0,
-            "ring_count": 2,
-            "rings": [
-                {
-                    "ring_id": "ring_0",
-                    "radius_mm": 45.0,
-                    "strip_width_mm": 2.0,
-                    "strip_thickness_mm": 1.0,
-                    "points": [],
-                },
-                {
-                    "ring_id": "ring_1",
-                    "radius_mm": 48.0,
-                    "strip_width_mm": 2.0,
-                    "strip_thickness_mm": 1.0,
-                    "points": [],
-                },
-            ],
-            "metadata": {
-                "complexity": "low",
-                "ci_test": True,
-            },
-        }
 
-        log("Creating CI rosette pattern...")
-        created_pattern = request("POST", "/api/rmos/rosette-patterns/", pattern_payload)
-        log(f"Pattern created: id={created_pattern['pattern_id']}")
-
-        # 2) Rosette segment-ring (core N12 math)
+        # 1) Rosette segment-ring (core N12 math - stateless)
         segment_req = {
             "ring": {
                 "ring_id": 0,
@@ -132,7 +99,7 @@ def main() -> int:
         seg_result = request("POST", "/api/rmos/rosette/segment-ring", segment_req)
         log(f"Segmentation ok: tile_count={seg_result['tile_count']}")
 
-        # 3) Single-slice circle preview
+        # 2) Single-slice circle preview
         circle_op = {
             "id": f"ci_slice_circle_{ts}",
             "op_type": "saw_slice",
@@ -154,7 +121,7 @@ def main() -> int:
         circle_res = request("POST", "/api/rmos/saw-ops/slice/preview", circle_op)
         log(f"Circle slice risk: {circle_res['risk']['risk_grade']}")
 
-        # 4) Batch preview (circle_param)
+        # 3) Batch preview (circle_param)
         batch_id = f"ci_batch_{ts}"
         batch_op = {
             "id": batch_id,
@@ -181,15 +148,33 @@ def main() -> int:
             f"overall={batch_res['overall_risk_grade']}"
         )
 
-        # 5) Verify patterns list endpoint accessible
-        log("Fetching rosette patterns...")
-        patterns_res = request("GET", "/api/rmos/rosette-patterns/")
-        if isinstance(patterns_res, list):
-            log(f"Rosette patterns: {len(patterns_res)} (CI expects >= 1 after create)")
-            if not patterns_res:
-                raise RuntimeError("No patterns found after CI create")
-        else:
-            raise RuntimeError("Patterns response is not a list")
+        # 4) Verify rosette preview endpoint (multi-ring)
+        preview_req = {
+            "pattern_id": None,
+            "rings": [
+                {
+                    "ring_id": 0,
+                    "radius_mm": 45.0,
+                    "width_mm": 3.0,
+                    "tile_length_mm": 5.0,
+                    "kerf_mm": 0.3,
+                    "herringbone_angle_deg": 0.0,
+                    "twist_angle_deg": 0.0,
+                },
+                {
+                    "ring_id": 1,
+                    "radius_mm": 48.0,
+                    "width_mm": 3.0,
+                    "tile_length_mm": 5.0,
+                    "kerf_mm": 0.3,
+                    "herringbone_angle_deg": 0.0,
+                    "twist_angle_deg": 0.0,
+                },
+            ],
+        }
+        log("Testing rosette preview (multi-ring)...")
+        preview_res = request("POST", "/api/rmos/rosette/preview", preview_req)
+        log(f"Preview ok: {len(preview_res['rings'])} rings computed")
 
         log("RMOS CI smoke test completed SUCCESSFULLY.")
         return 0
