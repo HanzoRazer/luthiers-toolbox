@@ -257,6 +257,31 @@ async function doGenerate() {
   }
 }
 
+// -----------------------------------------------------------------------------
+// micro-follow: auto-create run on first attach (extracted for reusability)
+// -----------------------------------------------------------------------------
+async function ensureRunSelected(): Promise<string | null> {
+  if (selectedRunId.value) return selectedRunId.value;
+
+  try {
+    const created = await createRun({ event_type: "vision_image_review" });
+    selectedRunId.value = created.run_id;
+
+    // keep dropdown in sync (best-effort, non-blocking)
+    try {
+      runs.value = await listRecentRuns();
+    } catch {
+      // ignore
+    }
+
+    _toastOk("Created new run.");
+    return created.run_id;
+  } catch (e: any) {
+    _toastErr(e?.message || "Create run failed.");
+    return null;
+  }
+}
+
 async function doAttach(a: VisionAsset) {
   const sha = (a as any).sha256 as string | undefined;
   if (!sha) {
@@ -269,32 +294,13 @@ async function doAttach(a: VisionAsset) {
     return;
   }
 
-  let autoCreatedRun = false;
-  // Auto-create a run on first attach (product: remove dead-end "No runs available")
-  if (!selectedRunId.value) {
-    try {
-      const created = await createRun({ event_type: "vision_image_review" });
-      selectedRunId.value = created.run_id;
-      autoCreatedRun = true;
-
-      // keep dropdown in sync (best-effort, non-blocking)
-      try {
-        runs.value = await listRecentRuns();
-      } catch {
-        // ignore
-      }
-
-      _toastOk("Created new run.");
-    } catch (e: any) {
-      _toastErr(e?.message || "Could not create a run.");
-      return;
-    }
-  }
+  const runId = await ensureRunSelected();
+  if (!runId) return;
 
   isAttaching.value = sha;
   try {
     // IMPORTANT: trust attach response for advisory_id
-    const res = await attachAdvisoryToRun(selectedRunId.value, {
+    const res = await attachAdvisoryToRun(runId, {
       advisory_id: sha, // canonical
       kind: "advisory",
     });
