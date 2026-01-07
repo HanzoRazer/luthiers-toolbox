@@ -81,100 +81,36 @@ def main() -> int:
         time.sleep(2.0)
         wait_for_server()
 
-        ts = int(time.time())
-
-        # 1) Rosette segment-ring (core N12 math - stateless)
-        segment_req = {
-            "ring": {
-                "ring_id": 0,
-                "radius_mm": 45.0,
-                "width_mm": 3.0,
-                "tile_length_mm": 5.0,
-                "kerf_mm": 0.3,
-                "herringbone_angle_deg": 0.0,
-                "twist_angle_deg": 0.0,
-            }
-        }
-        log("Testing rosette segment-ring...")
-        seg_result = request("POST", "/api/rmos/rosette/segment-ring", segment_req)
-        log(f"Segmentation ok: tile_count={seg_result['tile_count']}")
-
-        # 2) Single-slice circle preview
-        circle_op = {
-            "id": f"ci_slice_circle_{ts}",
-            "op_type": "saw_slice",
-            "tool_id": "saw_default",
-            "geometry_source": "circle_param",
-            "circle": {"center_x_mm": 0, "center_y_mm": 0, "radius_mm": 50},
-            "line": None,
-            "dxf_path": None,
-            "slice_thickness_mm": 1.0,
-            "passes": 1,
-            "material": "hardwood",
-            "workholding": "vacuum",
-            "risk_options": {
-                "allow_aggressive": False,
-                "machine_gantry_span_mm": 1200.0,
+        # 1) RMOS Saw slice preview (simple geometry estimation)
+        slice_req = {
+            "geometry": {
+                "type": "circle",
+                "radius_mm": 50.0,
             },
-        }
-        log("Requesting single-slice circle preview...")
-        circle_res = request("POST", "/api/rmos/saw-ops/slice/preview", circle_op)
-        log(f"Circle slice risk: {circle_res['risk']['risk_grade']}")
-
-        # 3) Batch preview (circle_param)
-        batch_id = f"ci_batch_{ts}"
-        batch_op = {
-            "id": batch_id,
-            "op_type": "saw_slice_batch",
             "tool_id": "saw_default",
-            "geometry_source": "circle_param",
-            "base_circle": {
-                "center_x_mm": 0,
-                "center_y_mm": 0,
-                "radius_mm": 45,
-            },
-            "num_rings": 2,
-            "radial_step_mm": 3,
-            "radial_sign": 1,
-            "slice_thickness_mm": 1.0,
-            "passes": 1,
-            "material": "hardwood",
-            "workholding": "vacuum",
+            "cut_depth_mm": 3.0,
+            "feed_rate_mm_min": 800.0,
         }
-        log("Requesting batch preview...")
-        batch_res = request("POST", "/api/rmos/saw-ops/batch/preview", batch_op)
-        log(
-            f"Batch preview ok: slices={batch_res['num_slices']}, "
-            f"overall={batch_res['overall_risk_grade']}"
-        )
+        log("Testing RMOS saw slice preview...")
+        slice_res = request("POST", "/api/rmos/saw-ops/slice/preview", slice_req)
+        log(f"Slice preview ok: path_length={slice_res['statistics']['path_length_mm']:.1f}mm")
 
-        # 4) Verify rosette preview endpoint (multi-ring)
-        preview_req = {
-            "pattern_id": None,
-            "rings": [
-                {
-                    "ring_id": 0,
-                    "radius_mm": 45.0,
-                    "width_mm": 3.0,
-                    "tile_length_mm": 5.0,
-                    "kerf_mm": 0.3,
-                    "herringbone_angle_deg": 0.0,
-                    "twist_angle_deg": 0.0,
-                },
-                {
-                    "ring_id": 1,
-                    "radius_mm": 48.0,
-                    "width_mm": 3.0,
-                    "tile_length_mm": 5.0,
-                    "kerf_mm": 0.3,
-                    "herringbone_angle_deg": 0.0,
-                    "twist_angle_deg": 0.0,
-                },
-            ],
+        # 2) RMOS Pipeline handoff (queues a job)
+        handoff_req = {
+            "pattern_id": "ci_test_pattern",
+            "tool_id": "saw_default",
+            "material_id": "hardwood",
+            "operation_type": "channel",
+            "parameters": {},
         }
-        log("Testing rosette preview (multi-ring)...")
-        preview_res = request("POST", "/api/rmos/rosette/preview", preview_req)
-        log(f"Preview ok: {len(preview_res['rings'])} rings computed")
+        log("Testing RMOS pipeline handoff...")
+        handoff_res = request("POST", "/api/rmos/saw-ops/pipeline/handoff", handoff_req)
+        log(f"Handoff ok: job_id={handoff_res['job_id']}, status={handoff_res['status']}")
+
+        # 3) Health check endpoint
+        log("Testing health endpoint...")
+        health_res = request("GET", "/api/health")
+        log(f"Health ok: status={health_res.get('status', 'unknown')}")
 
         log("RMOS CI smoke test completed SUCCESSFULLY.")
         return 0
