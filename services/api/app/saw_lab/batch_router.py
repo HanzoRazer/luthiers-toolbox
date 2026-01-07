@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision
+from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision, query_latest_by_label_and_session
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -391,6 +391,54 @@ def get_execution_by_decision(
         "created_utc": latest.get("created_utc"),
         "index_meta": index_meta,
     }
+
+
+@router.get("/executions/by-decision")
+def list_executions_by_decision(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List all execution artifacts for a given decision, newest first.
+
+    Returns list of execution artifacts with id, kind, status, index_meta.
+    """
+    executions = query_executions_by_decision(batch_decision_artifact_id)[:limit]
+
+    results = []
+    for ex in executions:
+        payload = ex.get("payload", {})
+        index_meta = ex.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_decision_artifact_id", payload.get("batch_decision_artifact_id") or batch_decision_artifact_id)
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": ex.get("artifact_id"),
+            "id": ex.get("artifact_id"),
+            "kind": ex.get("kind", "saw_batch_execution"),
+            "status": ex.get("status", "OK"),
+            "created_utc": ex.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
+@router.get("/links")
+def get_batch_links(
+    batch_label: str = Query(..., description="Batch label to look up"),
+    session_id: str = Query(..., description="Session ID to look up"),
+) -> Dict[str, Optional[str]]:
+    """
+    Get latest artifact IDs for a batch label + session.
+
+    Returns latest_spec_artifact_id, latest_plan_artifact_id,
+    latest_decision_artifact_id, latest_execution_artifact_id.
+    """
+    return query_latest_by_label_and_session(batch_label, session_id)
 
 
 @router.post("/job-log", response_model=JobLogResponse)
