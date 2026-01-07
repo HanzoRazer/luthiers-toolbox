@@ -76,3 +76,49 @@ def query_executions_by_decision(batch_decision_artifact_id: str) -> list[Dict[s
     # Sort by created_utc descending (newest first)
     results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
     return results
+
+
+def query_latest_by_label_and_session(batch_label: str, session_id: str) -> Dict[str, Optional[str]]:
+    """
+    Query latest artifact IDs for each kind by batch_label and session_id.
+
+    Returns dict with latest_spec_artifact_id, latest_plan_artifact_id,
+    latest_decision_artifact_id, latest_execution_artifact_id.
+    """
+    latest: Dict[str, Optional[str]] = {
+        "latest_spec_artifact_id": None,
+        "latest_plan_artifact_id": None,
+        "latest_decision_artifact_id": None,
+        "latest_execution_artifact_id": None,
+    }
+
+    kind_to_key = {
+        "saw_batch_spec": "latest_spec_artifact_id",
+        "saw_batch_plan": "latest_plan_artifact_id",
+        "saw_batch_decision": "latest_decision_artifact_id",
+        "saw_batch_execution": "latest_execution_artifact_id",
+    }
+
+    # Group artifacts by kind, filter by label/session
+    by_kind: Dict[str, list[Dict[str, Any]]] = {k: [] for k in kind_to_key}
+
+    for art in _batch_artifacts.values():
+        kind = art.get("kind", "")
+        if kind not in kind_to_key:
+            continue
+
+        payload = art.get("payload", {})
+        art_label = payload.get("batch_label", "")
+        art_session = payload.get("session_id", "") or art.get("session_id", "")
+
+        if art_label == batch_label and art_session == session_id:
+            by_kind[kind].append(art)
+
+    # Get latest (by created_utc) for each kind
+    for kind, key in kind_to_key.items():
+        arts = by_kind[kind]
+        if arts:
+            arts.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+            latest[key] = arts[0].get("artifact_id")
+
+    return latest
