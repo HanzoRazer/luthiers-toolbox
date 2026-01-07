@@ -8,7 +8,10 @@
  * @package features/ai_images
  */
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import VariantReviewPanel from "./components/VariantReviewPanel.vue";
+
+const router = useRouter();
 
 // Vision feature API (existing module)
 import {
@@ -24,8 +27,10 @@ import {
 // RMOS typed SDK (canonical)
 import {
   listAdvisoryVariants,
+  reviewAdvisoryVariant,
   promoteAdvisoryVariant,
   type AdvisoryVariantSummary,
+  type RejectReasonCode,
 } from "@/sdk/rmos/runs";
 
 // Local type for run summaries from visionApi
@@ -65,6 +70,9 @@ const variantById = ref<Record<string, AdvisoryVariantSummary>>({});
 // reconcile map: asset sha256 -> advisory_id (trust attach response)
 const advisoryIdByAssetSha = ref<Record<string, string>>({});
 
+// micro-follow: quick actions use per-row busy flags (prevents double clicks)
+const busyByAdvisoryId = ref<Record<string, "review" | "promote" | null>>({});
+
 // -----------------------------
 // Helpers
 // -----------------------------
@@ -76,6 +84,10 @@ function _toastOk(msg: string) {
 function _toastErr(msg: string) {
   error.value = msg;
   window.setTimeout(() => (error.value = null), 2200);
+}
+
+function goToRunReview(runId: string) {
+  router.push({ name: "RunVariantsReview", params: { run_id: runId } });
 }
 
 function _advisoryIdForAsset(a: VisionAsset): string | null {
@@ -106,6 +118,44 @@ function promoteDisabledReason(a: VisionAsset): string | null {
   if (v.promoted) return "Already promoted.";
   if (v.status !== "REVIEWED") return "Must be reviewed first (status=REVIEWED).";
   return null;
+}
+
+async function quickReject(advisoryId: string, code: RejectReasonCode) {
+  const runId = selectedRunId.value;
+  if (!runId) return;
+  const busy = busyByAdvisoryId.value[advisoryId];
+  if (busy) return;
+  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "review" };
+  try {
+    const res = await reviewAdvisoryVariant(runId, advisoryId, {
+      rejected: true,
+      rejection_reason_code: code,
+      status: "REJECTED",
+    });
+    await refreshVariants();
+    _toastOk(`Rejected (${code}).${res.requestId ? ` req:${res.requestId}` : ""}`);
+  } catch (e: any) {
+    _toastErr(e?.message || "Reject failed.");
+  } finally {
+    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+  }
+}
+
+async function quickPromote(advisoryId: string) {
+  const runId = selectedRunId.value;
+  if (!runId) return;
+  const busy = busyByAdvisoryId.value[advisoryId];
+  if (busy) return;
+  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "promote" };
+  try {
+    const res = await promoteAdvisoryVariant(runId, advisoryId);
+    await refreshVariants();
+    _toastOk(`Promoted.${res.requestId ? ` req:${res.requestId}` : ""}`);
+  } catch (e: any) {
+    _toastErr(e?.message || "Promote failed.");
+  } finally {
+    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+  }
 }
 
 async function refreshVariants() {
@@ -159,11 +209,14 @@ async function doAttach(a: VisionAsset) {
     _toastErr(deny);
     return;
   }
+
+  let autoCreatedRun = false;
   // Auto-create a run on first attach (product: remove dead-end "No runs available")
   if (!selectedRunId.value) {
     try {
       const created = await createRun({ event_type: "vision_image_review" });
       selectedRunId.value = created.run_id;
+      autoCreatedRun = true;
 
       // keep dropdown in sync (best-effort, non-blocking)
       try {
@@ -192,6 +245,11 @@ async function doAttach(a: VisionAsset) {
 
     await refreshVariants();
     _toastOk("Attached to run.");
+
+    // Only auto-navigate when we had to create the run (reduces surprise).
+    if (autoCreatedRun && selectedRunId.value) {
+      goToRunReview(selectedRunId.value);
+    }
   } catch (e: any) {
     _toastErr(e?.message || "Attach failed.");
   } finally {
@@ -281,6 +339,17 @@ onMounted(async () => {
 
       <div v-if="error" class="toast err">{{ error }}</div>
       <div v-if="success" class="toast ok">{{ success }}</div>
+
+      <!-- micro-follow: run context actions -->
+      <div class="runActions" v-if="selectedRunId">
+        <button class="btn small" type="button" @click="goToRunReview(selectedRunId)">
+          Open Review
+        </button>
+        <button class="btn small" type="button" @click="refreshVariants">
+          Refresh Variants
+        </button>
+        <span class="mono small muted">run: {{ selectedRunId }}</span>
+      </div>
     </div>
 
     <div class="grid" v-if="generatedAssets.length">
@@ -322,6 +391,35 @@ onMounted(async () => {
             <span class="badge" :data-b="(_variantForAsset(a)?.status ?? 'NEW')">{{ _variantForAsset(a)?.status }}</span>
             <span class="badge" v-if="_variantForAsset(a)?.rejected" data-b="REJECTED">REJECTED</span>
             <span class="badge" v-if="_variantForAsset(a)?.promoted" data-b="PROMOTED">PROMOTED</span>
+          </div>
+
+          <!-- micro-follow: per-asset quick reject/promote surface -->
+          <div class="assetOps" v-if="selectedRunId && _advisoryIdForAsset(a)">
+            <div class="row">
+              <button
+                class="btn small primary"
+                type="button"
+                :disabled="Boolean(promoteDisabledReason(a)) || busyByAdvisoryId[_advisoryIdForAsset(a)!]"
+                :title="promoteDisabledReason(a) || 'Promote to manufacturing candidate'"
+                @click="quickPromote(_advisoryIdForAsset(a)!)"
+              >
+                {{ busyByAdvisoryId[_advisoryIdForAsset(a)!] === 'promote' ? 'Promoting…' : 'Quick Promote' }}
+              </button>
+
+              <select
+                class="select small"
+                :disabled="!!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
+                @change="(ev:any) => { const v = ev?.target?.value as RejectReasonCode; if (v) quickReject(_advisoryIdForAsset(a)!, v); ev.target.value=''; }"
+                title="Reject this variant (records reason code)"
+              >
+                <option value="">Quick Reject…</option>
+                <option value="GEOMETRY_UNSAFE">GEOMETRY_UNSAFE</option>
+                <option value="TEXT_REQUIRES_OUTLINE">TEXT_REQUIRES_OUTLINE</option>
+                <option value="AESTHETIC">AESTHETIC</option>
+                <option value="DUPLICATE">DUPLICATE</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
           </div>
 
           <div v-if="openReviewFor === (_variantForAsset(a)?.advisory_id ?? null)" class="reviewSlot">
@@ -398,4 +496,30 @@ onMounted(async () => {
 }
 .reviewSlot { margin-top: 6px; }
 .empty { opacity: 0.7; padding: 20px; }
+
+/* micro-follow: run action strip + per-asset ops */
+.runActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+}
+.muted { opacity: 0.6; }
+.assetOps {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.assetOps .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.select.small {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
 </style>
