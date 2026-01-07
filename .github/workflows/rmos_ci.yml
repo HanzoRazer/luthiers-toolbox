@@ -97,8 +97,10 @@ jobs:
             exit 1
           elif [ $exit_code -eq 1 ]; then
             echo "⚠️ Frontend using legacy endpoints (within budget)"
+            exit 0
           else
             echo "✅ No legacy endpoint usage detected"
+            exit 0
           fi
 
       - name: Deprecation budget gate (legacy shadow endpoints)
@@ -115,3 +117,4 @@ jobs:
             echo '{"total_hits":0,"legacy_hits":0,"by_legacy_route":{},"window":{"kind":"since_start"},"generated_at_utc":"2025-12-25T00:00:00Z"}' > "${ENDPOINT_STATS_PATH}"
           fi
           python -m app.governance.cli_deprecation_budget check
+
