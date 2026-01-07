@@ -148,12 +148,20 @@ function canUndoReject(v: AdvisoryVariantSummary | null | undefined): string | n
   return null;
 }
 
+// cherry-pick: DRY helpers for busy state (from redundant diff)
+function isRowBusy(advisoryId: string, kind: "review" | "promote"): boolean {
+  return busyByAdvisoryId.value[advisoryId] === kind;
+}
+
+function _setBusy(advisoryId: string, v: "review" | "promote" | null) {
+  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: v };
+}
+
 async function quickReject(advisoryId: string, code: RejectReasonCode) {
   const runId = selectedRunId.value;
   if (!runId) return;
-  const busy = busyByAdvisoryId.value[advisoryId];
-  if (busy) return;
-  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "review" };
+  if (busyByAdvisoryId.value[advisoryId]) return;
+  _setBusy(advisoryId, "review");
   try {
     const res = await reviewAdvisoryVariant(runId, advisoryId, {
       rejected: true,
@@ -165,16 +173,15 @@ async function quickReject(advisoryId: string, code: RejectReasonCode) {
   } catch (e: any) {
     _toastErr(e?.message || "Reject failed.");
   } finally {
-    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+    _setBusy(advisoryId, null);
   }
 }
 
 async function undoReject(advisoryId: string) {
   const runId = selectedRunId.value;
   if (!runId) return;
-  const busy = busyByAdvisoryId.value[advisoryId];
-  if (busy) return;
-  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "review" };
+  if (busyByAdvisoryId.value[advisoryId]) return;
+  _setBusy(advisoryId, "review");
   try {
     // IMPORTANT: undo reject uses the same canonical review endpoint
     const res = await reviewAdvisoryVariant(runId, advisoryId, {
@@ -190,16 +197,15 @@ async function undoReject(advisoryId: string) {
   } catch (e: any) {
     _toastErr(e?.message || "Undo reject failed.");
   } finally {
-    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+    _setBusy(advisoryId, null);
   }
 }
 
 async function quickPromote(advisoryId: string) {
   const runId = selectedRunId.value;
   if (!runId) return;
-  const busy = busyByAdvisoryId.value[advisoryId];
-  if (busy) return;
-  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: "promote" };
+  if (busyByAdvisoryId.value[advisoryId]) return;
+  _setBusy(advisoryId, "promote");
   try {
     const res = await promoteAdvisoryVariant(runId, advisoryId);
     await refreshVariants();
@@ -207,7 +213,7 @@ async function quickPromote(advisoryId: string) {
   } catch (e: any) {
     _toastErr(e?.message || "Promote failed.");
   } finally {
-    busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: null };
+    _setBusy(advisoryId, null);
   }
 }
 
