@@ -77,7 +77,7 @@ G1 X100 Y60
 G1 X0 Y60
 G1 X0 Y0
 M30"
-          url = f"{base}/geometry/parity"
+          url = f"{base}/api/geometry/parity"
           req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
           out = urllib.request.urlopen(req).read().decode()
           result = json.loads(out)
