@@ -80,6 +80,15 @@
         >
           Redo
         </button>
+        <!-- Bundle 32.4.18: Reset tips button -->
+        <button
+          class="jump-btn reset-tips-btn"
+          type="button"
+          title="Reset onboarding tips (clears cooldown)"
+          @click="resetTips"
+        >
+          Reset tips
+        </button>
       </div>
 
       <!-- Bundle 32.4.0: Ring Nudge Section -->
@@ -304,6 +313,26 @@ function cooldownActive(): boolean {
   if (!dismissedAt) return false;
   const ms = HINT_COOLDOWN_MIN * 60_000;
   return Date.now() - dismissedAt < ms;
+}
+
+// Bundle 32.4.18: Reset tips (clears cooldown key)
+function resetTips() {
+  try {
+    // History hotkey hint cooldown
+    localStorage.removeItem("artstudio.historyHotkeyHintDismissedAt");
+
+    // (future-proof) if you add more tip keys later, clear them here too
+    // localStorage.removeItem("artstudio.someOtherTipKey");
+
+    toast.push({
+      level: "success",
+      message: "Tips reset",
+      detail: "Onboarding hints will reappear",
+      durationMs: 2500,
+    });
+  } catch {
+    // ignore localStorage errors
+  }
 }
 
 function hideHint(userDismissed = true) {
@@ -625,6 +654,20 @@ kbd {
 .redo-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Bundle 32.4.18: Reset tips button styles */
+.reset-tips-btn {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-color: #d4d4d4;
+  background: #f9f9f9;
+  color: #666;
+}
+.reset-tips-btn:hover {
+  background: #ececec;
+  color: #333;
 }
 
 /* Bundle 32.4.0: Ring nudge section styles */
