@@ -304,12 +304,16 @@ async function doAttach(a: VisionAsset) {
     lastAttachedRunId.value = selectedRunId.value;
 
     await refreshVariants();
-    _toastOk("Attached to run.");
 
-    // Only auto-navigate when we had to create the run (reduces surprise).
-    if (autoCreatedRun && selectedRunId.value) {
-      goToRunReview(selectedRunId.value);
+    // micro-follow: auto-deeplink to review surface immediately after attach
+    // Canonical route: /rmos/runs/:run_id/variants (name: RunVariantsReview)
+    try {
+      router.push({ name: "RunVariantsReview", params: { run_id: selectedRunId.value } });
+    } catch {
+      // non-fatal; keep UX usable even if route name differs in local forks
     }
+
+    _toastOk("Attached to run.");
   } catch (e: any) {
     _toastErr(e?.message || "Attach failed.");
   } finally {
