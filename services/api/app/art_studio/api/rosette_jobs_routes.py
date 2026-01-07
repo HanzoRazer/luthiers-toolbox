@@ -15,11 +15,14 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, validator
+
+logger = logging.getLogger(__name__)
 
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ...geometry.arc_utils import generate_circle_points
@@ -148,11 +151,26 @@ def _compute_bbox(paths: List[List[Tuple[float, float]]]) -> Tuple[float, float,
 
 # ---- Startup ----------------------------------------------------------------
 
+# Flag to track if DB is available (set during startup)
+_db_available: bool = False
+
 
 @router.on_event("startup")
 def _on_startup() -> None:
-    # ensure DB tables & default presets exist
-    init_db()
+    """Initialize SQLite database - fail gracefully in CI/Docker environments."""
+    global _db_available
+    try:
+        init_db()
+        _db_available = True
+        logger.info("Rosette jobs SQLite database initialized successfully")
+    except Exception as e:
+        # In CI/Docker, the database may not be writable due to volume mount permissions
+        # This is non-fatal - the health check and core APIs will still work
+        _db_available = False
+        logger.warning(
+            f"Rosette jobs database unavailable (non-fatal in CI): {e}. "
+            "Rosette job persistence will be disabled."
+        )
 
 
 # ---- Routes -----------------------------------------------------------------
@@ -183,6 +201,11 @@ def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
 @router.post("/save", response_model=RosetteJobOut)
 def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
     """Persist a rosette preview payload to the database."""
+    if not _db_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Rosette job persistence unavailable (database not initialized)"
+        )
     preview = body.preview
 
     # Override name/preset if provided in save request
@@ -221,6 +244,9 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
 
 @router.get("/jobs", response_model=List[RosetteJobOut])
 def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
+    if not _db_available:
+        # Return empty list when DB unavailable (graceful degradation)
+        return []
     jobs = list_jobs(limit=limit)
     out: List[RosetteJobOut] = []
     for j in jobs:
@@ -239,6 +265,9 @@ def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
 
 @router.get("/presets", response_model=List[RosettePresetOut])
 def get_rosette_presets() -> List[RosettePresetOut]:
+    if not _db_available:
+        # Return empty list when DB unavailable (graceful degradation)
+        return []
     rows = list_presets()
     return [
         RosettePresetOut(
