@@ -286,7 +286,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
 
     # --- Server-side feasibility enforcement (ADR-003 / OPERATION lane) ---
     feasibility = compute_feasibility_internal(
-        tool_id="helical_gcode",
+        tool_id="helical:gcode",
         req=req,
         context="helical_gcode",
     )
@@ -299,7 +299,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="helical_gcode",
+            tool_id="helical:gcode",
             workflow_mode="helical",
             event_type="helical_gcode_blocked",
             status="BLOCKED",
@@ -325,7 +325,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="helical_gcode",
+            tool_id="helical:gcode",
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
@@ -356,7 +356,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="helical_gcode",
+            tool_id="helical:gcode",
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="OK",
@@ -381,7 +381,7 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
         artifact = RunArtifact(
             run_id=run_id,
             created_at_utc=now,
-            tool_id="helical_gcode",
+            tool_id="helical:gcode",
             workflow_mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
