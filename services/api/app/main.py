@@ -254,6 +254,11 @@ from .cad.api import dxf_router as cad_dxf_router
 from .routers.rosette_pattern_router import router as rosette_pattern_router
 from .art_studio.rosette_router import router as art_studio_rosette_router
 
+# ART STUDIO BRACING & INLAY ROUTERS
+from .art_studio.bracing_router import router as art_studio_bracing_router
+from .art_studio.inlay_router import router as art_studio_inlay_router
+from .routers.art.root_art_router import router as root_art_router
+
 # =============================================================================
 # SMART GUITAR TEMPERAMENTS (1 router) - Wave 6
 # =============================================================================
@@ -702,6 +707,11 @@ app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 # Rosette System (2) - Wave 5 - Legacy, see Wave 18 consolidated + Art Studio routes
 app.include_router(rosette_pattern_router, prefix="/api/rosette", tags=["Rosette", "Patterns", "Legacy"])  # → /api/cam/rosette or /api/art/rosette
 app.include_router(art_studio_rosette_router, prefix="/api", tags=["Rosette", "Art Studio", "Legacy"])  # → /api/art/rosette (v2)
+
+# Art Studio Bracing & Inlay Routers
+app.include_router(art_studio_bracing_router, prefix="/api", tags=["Art Studio", "Bracing"])  # → /api/art-studio/bracing/*
+app.include_router(art_studio_inlay_router, prefix="/api", tags=["Art Studio", "Inlay"])  # → /api/art-studio/inlay/*
+app.include_router(root_art_router, tags=["Art Studio", "Root"])  # → /api/art/* (prefix built-in)
 
 # Smart Guitar Temperaments (1) - Wave 6
 app.include_router(temperament_router, prefix="/api/smart-guitar", tags=["Smart Guitar", "Temperaments"])
