@@ -1,8 +1,8 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.13",
-  "title": "Subtle Shake on Disabled Undo/Redo (button + keyboard)",
-  "intent": "Add visual feedback (subtle shake animation) when users attempt undo/redo but it's unavailable. Works for both button clicks and keyboard shortcuts. No toast spam - just a gentle shake cue.",
+  "patch_id": "BUNDLE_32.4.14",
+  "title": "Disabled Tooltip Reason + Correct Hotkeys",
+  "intent": "Improve tooltip clarity by explaining why undo/redo is disabled ('Nothing to undo yet') and always showing correct keyboard shortcuts (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z). Replaces inline ternary expressions with computed properties for better reactivity.",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
@@ -17,17 +17,16 @@
   },
   "diff_articulation": {
     "what_changed": [
-      "Added undoBtnRef and redoBtnRef template refs for button elements",
-      "Added shakeUndo and shakeRedo reactive state booleans",
-      "Created triggerShake() function that toggles shake state, uses requestAnimationFrame for restart, auto-clears after 260ms, and focuses the button",
-      "Updated undo() no-op guard to call triggerShake('undo') instead of silent return",
-      "Updated redo() no-op guard to call triggerShake('redo') instead of silent return",
-      "Attached ref='undoBtnRef' and :class='{ shake: shakeUndo }' to Undo button",
-      "Attached ref='redoBtnRef' and :class='{ shake: shakeRedo }' to Redo button",
-      "Added subtleShake keyframes animation (±2px horizontal movement, 220ms duration)",
-      "Added .shake CSS class that applies the animation"
+      "Added computed import to Vue imports",
+      "Created undoTitle computed property that returns helpful message based on historyStack state",
+      "Created redoTitle computed property that returns helpful message based on redoStack state",
+      "Updated Undo button :title from inline ternary to :title='undoTitle'",
+      "Updated Redo button :title from inline ternary to :title='redoTitle'",
+      "Disabled state now shows: 'Nothing to undo yet (Ctrl/Cmd+Z)' instead of 'Undo is unavailable (no edits to undo)'",
+      "Disabled state now shows: 'Nothing to redo yet (Ctrl/Cmd+Shift+Z)' instead of 'Redo is unavailable (nothing to redo)'",
+      "Enabled states show clearer action descriptions with consistent hotkey format"
     ],
-    "why_not_redundant": "Bundle 32.4.12 added silent no-op suppression (no toast when stacks empty). This enhances that behavior by providing visual feedback via shake animation instead of complete silence. Users now get a subtle cue that undo/redo is unavailable, improving UX without toast spam."
+    "why_not_redundant": "Previous implementation used inline ternary expressions in template with less helpful messages. New implementation uses computed properties (better reactivity) and provides clearer disabled-state messages ('Nothing to undo yet' vs 'Undo is unavailable'). Also standardizes hotkey format to 'Ctrl/Cmd+Z' pattern."
   },
   "diff_range": {
     "base": "origin/main",
@@ -39,7 +38,7 @@
   ],
   "overall_file_context_coverage": 100.0,
   "verification": {
-    "commands_run": "Manual code review - verified refs attached, shake state management correct, animation keyframes valid. File scanned: 575/575 lines (100% coverage)."
+    "commands_run": "Manual code review - verified computed properties correctly reference store state, tooltip messages are clear and consistent. File scanned: 610/610 lines (100% coverage)."
   },
-  "notes": "Shake animation is intentionally subtle (±2px, 220ms). Works for both button clicks and keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y). Button is auto-focused during shake for keyboard accessibility. No toast spam - just visual feedback."
+  "notes": "Computed properties ensure tooltips stay reactive to store changes. Messages are friendlier ('Nothing to undo yet' vs 'unavailable'). Hotkey format standardized across enabled/disabled states for consistency."
 }

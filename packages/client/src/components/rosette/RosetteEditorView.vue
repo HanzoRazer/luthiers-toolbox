@@ -62,7 +62,7 @@
           class="jump-btn undo-btn"
           :class="{ shake: shakeUndo }"
           type="button"
-          :title="store.historyStack.length ? 'Undo last edit (Ctrl+Z)' : 'Undo is unavailable (no edits to undo)'"
+          :title="undoTitle"
           :disabled="store.historyStack.length === 0"
           @click="() => undo('clicked')"
         >
@@ -74,7 +74,7 @@
           class="jump-btn redo-btn"
           :class="{ shake: shakeRedo }"
           type="button"
-          :title="store.redoStack.length ? 'Redo last undone edit (Ctrl+Shift+Z)' : 'Redo is unavailable (nothing to redo)'"
+          :title="redoTitle"
           :disabled="store.redoStack.length === 0"
           @click="() => redo('clicked')"
         >
@@ -144,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useUiToastStore } from "@/stores/uiToastStore";
 import PatternLibraryPanel from "./PatternLibraryPanel.vue";
@@ -157,6 +157,21 @@ import HistoryStackPanel from "./HistoryStackPanel.vue";
 
 const store = useRosetteStore();
 const toast = useUiToastStore();
+
+// Bundle 32.4.14: Computed tooltip strings with disabled reasons + hotkeys
+const undoTitle = computed(() => {
+  const has = !!(store.historyStack && store.historyStack.length);
+  return has
+    ? "Undo last ring edit (Ctrl/Cmd+Z)"
+    : "Nothing to undo yet (Ctrl/Cmd+Z)";
+});
+
+const redoTitle = computed(() => {
+  const has = !!(store.redoStack && store.redoStack.length);
+  return has
+    ? "Redo last undone edit (Ctrl/Cmd+Shift+Z)"
+    : "Nothing to redo yet (Ctrl/Cmd+Shift+Z)";
+});
 
 // Bundle 32.4.13: Button refs + shake state for disabled undo/redo feedback
 const undoBtnRef = ref<HTMLButtonElement | null>(null);
