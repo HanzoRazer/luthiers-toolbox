@@ -87,10 +87,12 @@ jobs:
           LEGACY_USAGE_BUDGET: "10"
         run: |
           echo "Checking frontend for legacy API endpoint usage..."
+          set +e  # Allow script to continue on non-zero exit codes
           python -m app.ci.legacy_usage_gate \
             --roots "../../packages/client/src" "../../packages/sdk/src" \
             --budget ${LEGACY_USAGE_BUDGET}
           exit_code=$?
+          set -e  # Re-enable exit on error
           if [ $exit_code -eq 2 ]; then
             echo "❌ Frontend legacy usage exceeds budget (${LEGACY_USAGE_BUDGET})"
             echo "Please migrate to canonical endpoints (see ROUTER_MAP.md)"
