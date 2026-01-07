@@ -9,6 +9,41 @@
  * @package features/ai_images/api
  */
 
+// ---------------------------------------------------------------------------
+// RMOS Runs helpers (used by AiImageGallery auto-create on attach)
+// ---------------------------------------------------------------------------
+
+export type CreateRunRequest = {
+  /** Recommended default for this flow: "vision_image_review" */
+  event_type?: string;
+  mode?: string;
+  tool_id?: string;
+  status?: string;
+};
+
+export type CreateRunResponse = {
+  run_id: string;
+};
+
+/**
+ * Create a new RMOS run (canonical backend endpoint).
+ * POST /api/rmos/runs
+ */
+export async function createRun(
+  request: CreateRunRequest = {}
+): Promise<CreateRunResponse> {
+  const r = await fetch("/api/rmos/runs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(`createRun failed (${r.status}): ${text || r.statusText}`);
+  }
+  return (await r.json()) as CreateRunResponse;
+}
+
 // =============================================================================
 // TYPES
 // =============================================================================

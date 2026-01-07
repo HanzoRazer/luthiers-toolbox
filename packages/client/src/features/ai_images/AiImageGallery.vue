@@ -14,6 +14,7 @@ import VariantReviewPanel from "./components/VariantReviewPanel.vue";
 import {
   generateImages,
   attachAdvisoryToRun,
+  createRun,
   listRecentRuns,
   getProviders,
   type VisionAsset,
@@ -158,7 +159,25 @@ async function doAttach(a: VisionAsset) {
     _toastErr(deny);
     return;
   }
-  if (!selectedRunId.value) return;
+  // Auto-create a run on first attach (product: remove dead-end "No runs available")
+  if (!selectedRunId.value) {
+    try {
+      const created = await createRun({ event_type: "vision_image_review" });
+      selectedRunId.value = created.run_id;
+
+      // keep dropdown in sync (best-effort, non-blocking)
+      try {
+        runs.value = await listRecentRuns();
+      } catch {
+        // ignore
+      }
+
+      _toastOk("Created new run.");
+    } catch (e: any) {
+      _toastErr(e?.message || "Could not create a run.");
+      return;
+    }
+  }
 
   isAttaching.value = sha;
   try {
