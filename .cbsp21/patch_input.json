@@ -1,32 +1,18 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.14",
-  "title": "Disabled Tooltip Reason + Correct Hotkeys",
-  "intent": "Improve tooltip clarity by explaining why undo/redo is disabled ('Nothing to undo yet') and always showing correct keyboard shortcuts (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z). Replaces inline ternary expressions with computed properties for better reactivity.",
+  "patch_id": "BUNDLE_32.4.15",
+  "title": "Bundle 32.4.15 — Keyboard Hint Overlay (Try 1–5 to revert)",
+  "intent": "Add non-intrusive overlay hint near History panel showing keyboard shortcuts 1-5. Auto-hides after 6 seconds, can be dismissed manually, suppressed when typing in inputs.",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
   "scope": {
-    "repo_root": ".",
     "paths_in_scope": [
       "packages/client/src/components/rosette/"
     ],
     "files_expected_to_change": [
       "packages/client/src/components/rosette/RosetteEditorView.vue"
     ]
-  },
-  "diff_articulation": {
-    "what_changed": [
-      "Added computed import to Vue imports",
-      "Created undoTitle computed property that returns helpful message based on historyStack state",
-      "Created redoTitle computed property that returns helpful message based on redoStack state",
-      "Updated Undo button :title from inline ternary to :title='undoTitle'",
-      "Updated Redo button :title from inline ternary to :title='redoTitle'",
-      "Disabled state now shows: 'Nothing to undo yet (Ctrl/Cmd+Z)' instead of 'Undo is unavailable (no edits to undo)'",
-      "Disabled state now shows: 'Nothing to redo yet (Ctrl/Cmd+Shift+Z)' instead of 'Redo is unavailable (nothing to redo)'",
-      "Enabled states show clearer action descriptions with consistent hotkey format"
-    ],
-    "why_not_redundant": "Previous implementation used inline ternary expressions in template with less helpful messages. New implementation uses computed properties (better reactivity) and provides clearer disabled-state messages ('Nothing to undo yet' vs 'Undo is unavailable'). Also standardizes hotkey format to 'Ctrl/Cmd+Z' pattern."
   },
   "diff_range": {
     "base": "origin/main",
@@ -36,9 +22,32 @@
   "changed_files_exact": [
     "packages/client/src/components/rosette/RosetteEditorView.vue"
   ],
-  "overall_file_context_coverage": 100.0,
-  "verification": {
-    "commands_run": "Manual code review - verified computed properties correctly reference store state, tooltip messages are clear and consistent. File scanned: 610/610 lines (100% coverage)."
+  "diff_articulation": {
+    "what_changed": [
+      "Added showHistoryHotkeyHint ref for overlay visibility state",
+      "Added hintTimer module-level variable for auto-hide timeout tracking",
+      "Added hideHint() function to clear state and timer",
+      "Added scheduleHint() function to show hint with 6-second auto-hide",
+      "Added hasHistory computed property checking if historyStack has entries",
+      "Added watch(hasHistory) to show hint when history becomes available",
+      "Added onMounted logic to show hint if history already exists",
+      "Added onBeforeUnmount cleanup for hintTimer",
+      "Added typing suppression in onKeyDown to hide hint when user types in inputs",
+      "Wrapped HistoryStackPanel in .historyWrap container div",
+      "Enhanced @reverted handler to show toast with label and source tracking",
+      "Added keyboard hint overlay markup with title, body, and dismiss button",
+      "Added .historyWrap CSS for relative positioning",
+      "Added .hotkeyHint CSS for overlay appearance (absolute, white background, shadow)",
+      "Added .hotkeyHintTitle CSS for bold title styling",
+      "Added .hotkeyHintBody CSS for body text styling",
+      "Added .hotkeyHintClose CSS for dismiss button positioning and styling"
+    ],
+    "why_not_redundant": "This is new functionality. No keyboard hint overlay existed before. Previous bundles only added toast feedback and button tooltips, not a persistent visual hint reminder."
   },
-  "notes": "Computed properties ensure tooltips stay reactive to store changes. Messages are friendlier ('Nothing to undo yet' vs 'unavailable'). Hotkey format standardized across enabled/disabled states for consistency."
+  "verification": {
+    "commands_run": [
+      "git diff packages/client/src/components/rosette/RosetteEditorView.vue | head -150 — verified all changes present"
+    ]
+  },
+  "file_context_coverage_percent": 100.0
 }

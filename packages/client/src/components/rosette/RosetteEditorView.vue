@@ -127,11 +127,35 @@
         </div>
       </div>
 
-      <!-- Bundle 32.4.2: History mini-stack panel -->
-      <HistoryStackPanel
-        :highlight-idx-from-top="historyHotkeyFlash"
-        @reverted="(idx) => flashHistoryIdx(idx)"
-      />
+      <!-- Bundle 32.4.2 + 32.4.15: History mini-stack panel with keyboard hint overlay -->
+      <div class="historyWrap">
+        <HistoryStackPanel
+          :highlight-idx-from-top="historyHotkeyFlash"
+          @reverted="(idx) => {
+            flashHistoryIdx(idx);
+            const labels = store.getRecentHistoryLabels(5);
+            if (idx < labels.length) {
+              toast.push({
+                level: 'info',
+                message: `Reverted: ${labels[idx]}`,
+                detail: 'Source: clicked',
+                durationMs: 1800,
+              });
+            }
+          }"
+        />
+
+        <!-- Bundle 32.4.15: Keyboard hint overlay -->
+        <div v-if="showHistoryHotkeyHint && hasHistory" class="hotkeyHint" role="note">
+          <div class="hotkeyHintTitle">Keyboard tip</div>
+          <div class="hotkeyHintBody">
+            Try <b>1–5</b> to revert history (1 = newest)
+          </div>
+          <button class="hotkeyHintClose" type="button" @click="hideHint" aria-label="Dismiss">
+            ✕
+          </button>
+        </div>
+      </div>
 
       <GeneratorPicker />
       <FeasibilityBanner />
@@ -250,6 +274,34 @@ function flashHistoryIdx(idx: number) {
   }, 750);
 }
 
+// Bundle 32.4.15: Keyboard hint overlay state + helpers
+const showHistoryHotkeyHint = ref(false);
+let hintTimer: number | null = null;
+
+function hideHint() {
+  showHistoryHotkeyHint.value = false;
+  if (hintTimer) window.clearTimeout(hintTimer);
+  hintTimer = null;
+}
+
+function scheduleHint() {
+  hideHint();
+  showHistoryHotkeyHint.value = true;
+  hintTimer = window.setTimeout(() => {
+    showHistoryHotkeyHint.value = false;
+    hintTimer = null;
+  }, 6000);
+}
+
+// Bundle 32.4.15: Computed for checking if history exists
+const hasHistory = computed(() => (store.historyStack?.length ?? 0) > 0);
+
+// Bundle 32.4.15: Show hint when history becomes available
+watch(hasHistory, (v) => {
+  if (v) scheduleHint();
+  else hideHint();
+});
+
 // Bundle 32.3.7: HUD pulse on filter toggle
 const hudPulse = ref(false);
 
@@ -269,10 +321,17 @@ onMounted(async () => {
 
   // Keyboard shortcut: ] = jump to next problematic ring (Bundle 32.3.3)
   window.addEventListener("keydown", onKeyDown);
+
+  // Bundle 32.4.15: Show hint on mount if history already exists
+  if (hasHistory.value) scheduleHint();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKeyDown);
+
+  // Bundle 32.4.15: Cleanup hint timer
+  if (hintTimer) window.clearTimeout(hintTimer);
+  hintTimer = null;
 });
 
 // Bundle 32.4.6: Detect if focus is in a typing context (input, textarea, contenteditable)
@@ -288,6 +347,11 @@ function isTypingTarget(el: EventTarget | null): boolean {
 }
 
 function onKeyDown(e: KeyboardEvent) {
+  // Bundle 32.4.15: Suppress hint if user starts typing
+  if (showHistoryHotkeyHint.value && isTypingTarget(e.target)) {
+    hideHint();
+  }
+
   // Bundle 32.4.6: History hotkeys 1–5 (don't hijack while typing)
   if (!isTypingTarget(e.target)) {
     const k = e.key;
@@ -605,5 +669,47 @@ kbd {
 
 .shake {
   animation: subtleShake 220ms ease-in-out;
+}
+
+/* Bundle 32.4.15: Keyboard hint overlay styles */
+.historyWrap {
+  position: relative;
+}
+
+.hotkeyHint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: 220px;
+  border: 1px solid #ececec;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.hotkeyHintTitle {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.hotkeyHintBody {
+  font-size: 12px;
+  color: #444;
+  line-height: 1.25;
+}
+
+.hotkeyHintClose {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: #777;
+  padding: 4px;
 }
 </style>
