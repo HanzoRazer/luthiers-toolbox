@@ -1,53 +1,46 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "ROUTING_TRUTH_GATE_V1",
-  "title": "Routing Truth CI Gate - Offline Import Version",
-  "intent": "Enforce that endpoint_truth.json matches the live FastAPI routing table via direct app import (no server startup required), supporting deprecated routes with sunset dates and LEGACY lane handling.",
-  "change_type": "ci",
+  "patch_id": "BUNDLE_32.4.11",
+  "title": "Undo/Redo Toast Source (button vs keyboard)",
+  "intent": "Add toast notifications for undo/redo actions that display the action label and source (keyboard or clicked button). No backend or store changes required.",
+  "change_type": "code",
   "behavior_change": "compatible",
-  "risk_level": "medium",
+  "risk_level": "low",
   "scope": {
     "repo_root": ".",
     "paths_in_scope": [
-      "services/api/app/data/",
-      "services/api/app/ci/",
-      "services/api/",
-      "scripts/governance/",
-      "scripts/ci/",
-      ".github/workflows/"
+      "packages/client/src/components/rosette/"
     ],
     "files_expected_to_change": [
-      ".cbsp21/patch_input.json",
-      "scripts/governance/check_routing_truth.py",
-      "services/api/app/data/endpoint_truth.json",
-      "services/api/app/ci/check_cam_intent_schema_hash.py",
-      "services/api/app/ci/endpoint_truth_gate.py",
-      "services/api/requirements.txt",
-      ".github/workflows/routing_truth.yml"
+      "packages/client/src/components/rosette/RosetteEditorView.vue"
     ]
-  },
-  "inputs": {
-    "truth_file": "services/api/app/data/endpoint_truth.json",
-    "gate_script": "scripts/governance/check_routing_truth.py",
-    "workflow": ".github/workflows/routing_truth.yml"
   },
   "diff_articulation": {
     "what_changed": [
-      "Added scripts/governance/check_routing_truth.py - offline import routing truth gate",
-      "Gate loads FastAPI app directly without server startup for faster CI",
-      "Compares (METHOD, PATH) pairs from endpoint_truth.json vs app.router.routes",
-      "Only enforces /api/* canonical paths by default (ROUTING_TRUTH_ENFORCE_API_ONLY)",
-      "Handles deprecated routes with sunset date warnings",
-      "LEGACY lane routes are warned but don't fail the gate",
-      "Updated endpoint_truth.json to mark unimplemented endpoints as deprecated",
-      "Fixed workflow ROUTING_TRUTH_TRUTH_FILE path (relative to working-directory)",
-      "Added CI helper modules for CAM intent schema hash and endpoint truth gate",
-      "Added requests dependency to requirements.txt"
+      "Added toastUndoRedo() helper function to display info toasts with action label and source",
+      "Created new undo() wrapper function that accepts source param and retrieves label from historyStack",
+      "Created new redo() wrapper function that accepts source param and retrieves label from redoStack",
+      "Updated Undo button @click to call undo('clicked') instead of store.undoLastEdit()",
+      "Updated Redo button @click to call redo('clicked') instead of store.redoLastEdit()",
+      "Updated keyboard undo shortcut (Ctrl+Z) to call undo('keyboard') instead of store.undoLastEdit()",
+      "Updated keyboard redo shortcuts (Ctrl+Shift+Z, Ctrl+Y) to call redo('keyboard') instead of store.redoLastEdit()"
     ],
-    "why_not_redundant": "This provides a second validation layer (offline import) complementing the HTTP-based check_routing_truth.py in services/api/scripts/. The offline version is faster (no server boot), runs from repo root, and supports deprecated route handling with sunset dates. The HTTP version validates against the live server. Both are needed for complete coverage.",
-    "behavior_preservation": {
-      "invariants_kept": [
-        "Existing HTTP-based routing truth check unchanged",
+    "why_not_redundant": "This is net-new functionality. Currently undo/redo actions are silent. This adds user feedback via toast notifications showing what action was undone/redone and how it was triggered (keyboard vs button click). The existing code directly calls store methods without wrapper functions or source tracking."
+  },
+  "diff_range": {
+    "base": "HEAD",
+    "head": "HEAD"
+  },
+  "changed_files_count": 1,
+  "changed_files_exact": [
+    "packages/client/src/components/rosette/RosetteEditorView.vue"
+  ],
+  "overall_file_context_coverage": 100.0,
+  "verification": {
+    "commands_run": "File scanned: 514/514 lines (100% coverage)"
+  },
+  "notes": "Toast messages display: 'Undo: Ring 3 +0.10mm' + 'Source: clicked' or 'Source: keyboard'. Labels retrieved from most recent historyStack/redoStack entry."
+}
         "All documented routes still validated",
         "Non-API paths (/docs, /health) excluded from enforcement"
       ],

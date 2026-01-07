@@ -62,7 +62,7 @@
           type="button"
           :title="store.historyStack.length ? 'Undo last edit (Ctrl+Z)' : 'Undo is unavailable (no edits to undo)'"
           :disabled="store.historyStack.length === 0"
-          @click="store.undoLastEdit()"
+          @click="() => undo('clicked')"
         >
           Undo
         </button>
@@ -72,7 +72,7 @@
           type="button"
           :title="store.redoStack.length ? 'Redo last undone edit (Ctrl+Shift+Z)' : 'Redo is unavailable (nothing to redo)'"
           :disabled="store.redoStack.length === 0"
-          @click="store.redoLastEdit()"
+          @click="() => redo('clicked')"
         >
           Redo
         </button>
@@ -153,6 +153,35 @@ import HistoryStackPanel from "./HistoryStackPanel.vue";
 
 const store = useRosetteStore();
 const toast = useUiToastStore();
+
+// Bundle 32.4.11: Toast helper for undo/redo with source tracking
+function toastUndoRedo(kind: "undo" | "redo", source: "keyboard" | "clicked", label?: string) {
+  const verb = kind === "undo" ? "Undo" : "Redo";
+  toast.push({
+    level: "info",
+    message: label ? `${verb}: ${label}` : verb,
+    detail: `Source: ${source}`,
+    durationMs: 1800,
+  });
+}
+
+// Bundle 32.4.11: Undo wrapper with label-aware toast
+function undo(source: "keyboard" | "clicked" = "clicked") {
+  const stack = store.historyStack ?? [];
+  const label = stack.length ? String(stack[stack.length - 1]?.label ?? "Edit") : undefined;
+
+  store.undoLastEdit();
+  toastUndoRedo("undo", source, label);
+}
+
+// Bundle 32.4.11: Redo wrapper with label-aware toast
+function redo(source: "keyboard" | "clicked" = "clicked") {
+  const stack = store.redoStack ?? [];
+  const label = stack.length ? String(stack[stack.length - 1]?.label ?? "Edit") : undefined;
+
+  store.redoLastEdit();
+  toastUndoRedo("redo", source, label);
+}
 
 // Bundle 32.4.8: Flash state for history hotkey highlight
 const historyHotkeyFlash = ref<number | null>(null);
@@ -251,21 +280,21 @@ function onKeyDown(e: KeyboardEvent) {
     store.jumpToWorstProblemRing();
   }
 
-  // Bundle 32.4.0 + 32.4.3: Undo/Redo keyboard shortcuts
+  // Bundle 32.4.0 + 32.4.3 + 32.4.11: Undo/Redo keyboard shortcuts with toast
   const cmd = e.ctrlKey || e.metaKey;
-  const undo = cmd && !e.shiftKey && (e.key === "z" || e.key === "Z");
-  const redo = cmd && e.shiftKey && (e.key === "z" || e.key === "Z");
+  const isUndo = cmd && !e.shiftKey && (e.key === "z" || e.key === "Z");
+  const isRedo = cmd && e.shiftKey && (e.key === "z" || e.key === "Z");
   const redoAlt = cmd && !e.shiftKey && (e.key === "y" || e.key === "Y"); // Win-style
 
-  if (undo) {
+  if (isUndo) {
     e.preventDefault();
-    store.undoLastEdit();
+    undo("keyboard");
     return;
   }
 
-  if (redo || redoAlt) {
+  if (isRedo || redoAlt) {
     e.preventDefault();
-    store.redoLastEdit();
+    redo("keyboard");
     return;
   }
 }
