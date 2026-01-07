@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision, query_latest_by_label_and_session
+from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision, query_latest_by_label_and_session, query_job_logs_by_execution
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -117,7 +117,7 @@ class JobLogMetrics(BaseModel):
 
 
 class JobLogRequest(BaseModel):
-    metrics: JobLogMetrics
+    metrics: JobLogMetrics = Field(default_factory=JobLogMetrics)
 
 
 class JobLogResponse(BaseModel):
@@ -443,30 +443,34 @@ def get_batch_links(
 
 @router.post("/job-log", response_model=JobLogResponse)
 def log_batch_job(
-    req: JobLogRequest,
     batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
     operator: str = Query("unknown", description="Operator name"),
     notes: str = Query("", description="Job notes"),
     status: str = Query("COMPLETED", description="Job status"),
+    req: Optional[JobLogRequest] = None,
 ) -> JobLogResponse:
     """
     Log job completion for an execution, optionally creating a metrics rollup.
-    
+
     If SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED=true, also persists a rollup artifact.
+    Body with metrics is optional - defaults to zero metrics if not provided.
     """
     execution = get_artifact(batch_execution_artifact_id)
     if not execution:
         raise HTTPException(status_code=404, detail="Batch execution not found")
-    
+
     # Get the decision artifact ID for rollup parent reference
     decision_id = execution["payload"].get("batch_decision_artifact_id")
-    
+
+    # Use provided metrics or default to empty
+    metrics = req.metrics if req else JobLogMetrics()
+
     job_log_payload = {
         "batch_execution_artifact_id": batch_execution_artifact_id,
         "operator": operator,
         "notes": notes,
         "status": status,
-        "metrics": req.metrics.model_dump(),
+        "metrics": metrics.model_dump(),
     }
     job_log_id = store_artifact(kind="batch_job_log", payload=job_log_payload, parent_id=batch_execution_artifact_id)
     
@@ -489,6 +493,26 @@ def log_batch_job(
         job_log_artifact_id=job_log_id,
         metrics_rollup_artifact_id=rollup_id,
     )
+
+
+@router.get("/job-log/by-execution")
+def list_job_logs_by_execution(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> List[Dict[str, Any]]:
+    """
+    List all job logs for a given execution, newest first.
+    """
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+    return [
+        {
+            "artifact_id": log.get("artifact_id"),
+            "kind": log.get("kind"),
+            "status": log.get("status"),
+            "created_utc": log.get("created_utc"),
+            "payload": log.get("payload", {}),
+        }
+        for log in logs
+    ]
 
 
 def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id: str) -> None:
