@@ -140,3 +140,184 @@ def query_job_logs_by_execution(batch_execution_artifact_id: str) -> list[Dict[s
 
     results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
     return results
+
+
+def query_executions_by_label(batch_label: str, session_id: Optional[str] = None) -> list[Dict[str, Any]]:
+    """
+    Query execution artifacts by batch_label (and optionally session_id).
+
+    Returns list of execution artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_label") != batch_label:
+            continue
+        if session_id is not None and payload.get("session_id") != session_id:
+            continue
+        results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_decisions_by_plan(batch_plan_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query decision artifacts by parent plan ID.
+
+    Returns list of decision artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_decision":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_plan_artifact_id") == batch_plan_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_decisions_by_spec(batch_spec_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query decision artifacts by spec ID (via plan -> spec chain).
+
+    Returns list of decision artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_decision":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_spec_artifact_id") == batch_spec_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_executions_by_plan(batch_plan_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query execution artifacts by plan ID (via decision -> plan chain).
+
+    Returns list of execution artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_plan_artifact_id") == batch_plan_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_executions_by_spec(batch_spec_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query execution artifacts by spec ID.
+
+    Returns list of execution artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_spec_artifact_id") == batch_spec_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_op_toolpaths_by_decision(batch_decision_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query op_toolpaths artifacts by parent decision ID.
+
+    Returns list of op_toolpaths artifacts sorted by created_utc descending.
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_op_toolpaths":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_decision_artifact_id") == batch_decision_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_op_toolpaths_by_execution(batch_execution_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query op_toolpaths artifacts by parent execution ID.
+
+    Uses execution's children list to find referenced op_toolpaths.
+    Returns list of op_toolpaths artifacts.
+    """
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        return []
+
+    payload = execution.get("payload", {})
+    children = payload.get("children", [])
+
+    results = []
+    for child_ref in children:
+        child_id = child_ref.get("artifact_id") if isinstance(child_ref, dict) else child_ref
+        art = get_artifact(child_id)
+        if art and art.get("kind") == "saw_batch_op_toolpaths":
+            results.append(art)
+
+    return results
+
+
+def query_metrics_rollups_by_execution(batch_execution_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query metrics rollup artifacts by parent execution ID.
+
+    Returns list of rollup artifacts sorted by created_utc descending.
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution_rollup":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_execution_artifact_id") == batch_execution_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_learning_events_by_decision(batch_decision_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query learning event artifacts by parent decision ID.
+
+    Returns list of learning events sorted by created_utc descending.
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_learning_event":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_decision_artifact_id") == batch_decision_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
+
+
+def query_accepted_learning_events(batch_decision_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query ACCEPTED learning events for a decision.
+
+    Returns list of learning events with policy_decision="ACCEPT".
+    """
+    all_events = query_learning_events_by_decision(batch_decision_artifact_id)
+    return [e for e in all_events if e.get("payload", {}).get("policy_decision") == "ACCEPT"]
