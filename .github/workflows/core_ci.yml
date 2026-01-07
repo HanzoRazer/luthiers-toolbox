@@ -58,7 +58,7 @@ jobs:
         run: |
           python - <<'PY'
           import urllib.request, json
-          base = "http://127.0.0.1:8000/api"
+          base_url = "http://127.0.0.1:8000"
           # Simple 100x60mm rectangle (4 line segments)
           geometry = {
             "units":"mm",
@@ -77,7 +77,7 @@ G1 X100 Y60
 G1 X0 Y60
 G1 X0 Y0
 M30"
-          url = f"{base}/api/geometry/parity"
+          url = f"{base_url}/api/geometry/parity"
           req = urllib.request.Request(url, data=json.dumps({"geometry":geometry,"gcode":gcode,"tolerance_mm":0.1}).encode(), headers={"Content-Type":"application/json"})
           out = urllib.request.urlopen(req).read().decode()
           result = json.loads(out)
