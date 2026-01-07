@@ -963,7 +963,13 @@ app.include_router(metrics_router)
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Basic health check endpoint"""
-    return {"status": "healthy", "version": "2.0.0-clean"}
+    from datetime import datetime, timezone
+    return {
+        "status": "ok",
+        "version": "2.0.0-clean",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "paths": {},  # Empty paths dict for CI compatibility
+    }
 
 
 @app.get("/api/health", tags=["Health"])
