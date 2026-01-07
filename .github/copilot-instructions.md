@@ -1,6 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
+> **Last Updated:** 2026-01-07
 
 ## ⚡ Quick Start
 
@@ -154,12 +155,16 @@ When making large changes, create `.cbsp21/patch_input.json` manifest declaring:
 - `files_expected_to_change` – explicit file list
 - `diff_articulation.what_changed` – 5-15 bullet summary
 - `behavior_change` – `none|compatible|breaking`
+- `diff_range` – base/head for changed files verification
 
 CI enforces ≥95% coverage verification for governed areas. See [CBSP21.md](../CBSP21.md).
+
+**Critical**: Never declare patches "redundant" without proving equivalence via `git diff` or validation commands.
 
 ## 📚 References
 
 - [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~116 routers by wave)
 - [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
-- [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries
+- [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
+- [docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md](../docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md) – Authoritative router prefixes
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
