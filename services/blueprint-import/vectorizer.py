@@ -53,17 +53,16 @@ class BasicSVGVectorizer:
                 viewBox=f"0 0 {width_mm} {height_mm}"
             )
             
-            # Add metadata
-            dwg.defs.add(dwg.style("""
-                .dimension-line { stroke: blue; stroke-width: 0.5; fill: none; }
-                .dimension-text { font-family: Arial; font-size: 4px; fill: black; }
-                .detected { stroke: green; }
-                .estimated { stroke: orange; }
-            """))
-            
-            # Add scale info as description element (svgwrite doesn't have .comment())
+            # Add styles with metadata as CSS comment
             scale = analysis_data.get('scale', 'Unknown')
-            dwg.add(dwg.desc(f"Scale: {scale}. Generated from AI analysis with {len(analysis_data.get('dimensions', []))} dimensions"))
+            num_dims = len(analysis_data.get('dimensions', []))
+            dwg.defs.add(dwg.style(f"""
+                /* Scale: {scale}. Generated from AI analysis with {num_dims} dimensions */
+                .dimension-line {{ stroke: blue; stroke-width: 0.5; fill: none; }}
+                .dimension-text {{ font-family: Arial; font-size: 4px; fill: black; }}
+                .detected {{ stroke: green; }}
+                .estimated {{ stroke: orange; }}
+            """))
             
             # Draw border
             dwg.add(dwg.rect(
