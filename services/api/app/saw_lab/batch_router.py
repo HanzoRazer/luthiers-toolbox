@@ -30,8 +30,10 @@ from app.saw_lab.store import (
     query_op_toolpaths_by_execution,
     query_metrics_rollups_by_execution,
     query_accepted_learning_events,
+    query_all_accepted_learning_events,
     query_learning_events_by_execution,
     query_execution_rollups_by_decision,
+    query_executions_with_learning,
 )
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
@@ -387,6 +389,39 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
             "warnings": [],
         })
     
+    # Build learning info first so we can store it with the execution
+    apply_enabled = os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "").lower() == "true"
+    learning_enabled = os.getenv("SAW_LAB_LEARNING_HOOK_ENABLED", "").lower() == "true"
+
+    # Query accepted learning events for this decision
+    accepted_events = query_accepted_learning_events(req.batch_decision_artifact_id) if learning_enabled else []
+    source_count = len(accepted_events)
+
+    tuning_stamp = None
+    tuning_stamp_dict = None
+    if apply_enabled and source_count > 0:
+        tuning_stamp = LearningTuningStamp(
+            applied=True,
+            event_ids=[e.get("artifact_id") for e in accepted_events],
+        )
+        tuning_stamp_dict = {
+            "applied": True,
+            "event_ids": [e.get("artifact_id") for e in accepted_events],
+        }
+
+    learning_info = LearningInfo(
+        apply_enabled=apply_enabled,
+        resolved=LearningResolved(source_count=source_count),
+        tuning_stamp=tuning_stamp,
+    )
+
+    # Learning payload to store with execution
+    learning_payload = {
+        "apply_enabled": apply_enabled,
+        "resolved": {"source_count": source_count},
+        "tuning_stamp": tuning_stamp_dict,
+    }
+
     # Create parent execution artifact
     exec_payload = {
         "batch_decision_artifact_id": req.batch_decision_artifact_id,
@@ -403,35 +438,15 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         "children": [{"artifact_id": cid, "kind": "saw_batch_op_toolpaths"} for cid in child_ids],
         "results": child_results,
         "gcode_lines": total_gcode_lines,
+        "learning": learning_payload,
     }
-    
+
     exec_id = store_artifact(
         kind="saw_batch_execution",
         payload=exec_payload,
         parent_id=req.batch_decision_artifact_id,
         session_id=session_id,
         status="OK",
-    )
-    
-    # Build learning info
-    apply_enabled = os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "").lower() == "true"
-    learning_enabled = os.getenv("SAW_LAB_LEARNING_HOOK_ENABLED", "").lower() == "true"
-
-    # Query accepted learning events for this decision
-    accepted_events = query_accepted_learning_events(req.batch_decision_artifact_id) if learning_enabled else []
-    source_count = len(accepted_events)
-
-    tuning_stamp = None
-    if apply_enabled and source_count > 0:
-        tuning_stamp = LearningTuningStamp(
-            applied=True,
-            event_ids=[e.get("artifact_id") for e in accepted_events],
-        )
-
-    learning_info = LearningInfo(
-        apply_enabled=apply_enabled,
-        resolved=LearningResolved(source_count=source_count),
-        tuning_stamp=tuning_stamp,
     )
 
     return BatchToolpathsResponse(
@@ -1721,3 +1736,349 @@ def get_op_toolpaths_gcode(op_toolpaths_artifact_id: str) -> PlainTextResponse:
         media_type="text/plain",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ---------------------------------------------------------------------------
+# Learning Event Approval Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post("/learning-events/approve")
+def approve_learning_event(
+    learning_event_artifact_id: str = Query(..., description="Learning event artifact ID"),
+    policy_decision: str = Query(..., description="Policy decision (ACCEPT or REJECT)"),
+    approved_by: str = Query(..., description="Approver name"),
+    reason: str = Query("", description="Reason for decision"),
+) -> Dict[str, Any]:
+    """
+    Approve or reject a learning event.
+
+    Updates the learning event's policy_decision field.
+    """
+    event = get_artifact(learning_event_artifact_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Learning event not found")
+
+    # Update the event payload with the decision
+    payload = event.get("payload", {})
+    payload["policy_decision"] = policy_decision.upper()
+    payload["approved_by"] = approved_by
+    payload["approval_reason"] = reason
+
+    # Update in store (in-memory update)
+    event["payload"] = payload
+
+    return {
+        "artifact_id": learning_event_artifact_id,
+        "policy_decision": policy_decision.upper(),
+        "approved_by": approved_by,
+    }
+
+
+@router.get("/learning-overrides/resolve")
+def resolve_learning_overrides(
+    limit_events: int = Query(200, ge=1, le=1000, description="Max events to consider"),
+) -> Dict[str, Any]:
+    """
+    Resolve accumulated learning overrides from all accepted events.
+
+    Returns multipliers for spindle_rpm, feed_rate, doc based on accepted suggestions.
+    """
+    accepted = query_all_accepted_learning_events(limit=limit_events)
+
+    # Default multipliers
+    spindle_rpm_mult = 1.0
+    feed_rate_mult = 1.0
+    doc_mult = 1.0
+
+    # Apply multipliers from accepted events
+    for event in accepted:
+        payload = event.get("payload", {})
+        suggestion_type = payload.get("suggestion_type", "")
+        trigger = payload.get("trigger", {})
+
+        if trigger.get("burn"):
+            # burn => reduce RPM, increase feed
+            spindle_rpm_mult *= 0.9
+            feed_rate_mult *= 1.05
+        elif trigger.get("tearout"):
+            # tearout => reduce DOC
+            doc_mult *= 0.85
+        elif trigger.get("kickback"):
+            # kickback => reduce RPM
+            spindle_rpm_mult *= 0.85
+
+    return {
+        "resolved": {
+            "spindle_rpm_mult": round(spindle_rpm_mult, 4),
+            "feed_rate_mult": round(feed_rate_mult, 4),
+            "doc_mult": round(doc_mult, 4),
+        },
+        "source_count": len(accepted),
+    }
+
+
+@router.post("/learning-overrides/apply")
+def apply_learning_overrides(
+    context: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Apply resolved learning overrides to a context.
+
+    Takes spindle_rpm, feed_rate, doc_mm and returns tuned values.
+    """
+    apply_enabled = _is_truthy(os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", ""))
+
+    # Get resolved multipliers
+    accepted = query_all_accepted_learning_events(limit=200)
+
+    spindle_rpm_mult = 1.0
+    feed_rate_mult = 1.0
+    doc_mult = 1.0
+
+    for event in accepted:
+        payload = event.get("payload", {})
+        trigger = payload.get("trigger", {})
+
+        if trigger.get("burn"):
+            spindle_rpm_mult *= 0.9
+            feed_rate_mult *= 1.05
+        elif trigger.get("tearout"):
+            doc_mult *= 0.85
+        elif trigger.get("kickback"):
+            spindle_rpm_mult *= 0.85
+
+    # Extract original values
+    orig_rpm = context.get("spindle_rpm", 0)
+    orig_feed = context.get("feed_rate", 0)
+    orig_doc = context.get("doc_mm", 0)
+
+    # Apply multipliers
+    tuned_rpm = round(orig_rpm * spindle_rpm_mult, 2)
+    tuned_feed = round(orig_feed * feed_rate_mult, 2)
+    tuned_doc = round(orig_doc * doc_mult, 2)
+
+    tuned_context = {
+        "spindle_rpm": tuned_rpm,
+        "feed_rate": tuned_feed,
+        "doc_mm": tuned_doc,
+    }
+
+    return {
+        "apply_enabled": apply_enabled,
+        "resolved": {
+            "spindle_rpm_mult": round(spindle_rpm_mult, 4),
+            "feed_rate_mult": round(feed_rate_mult, 4),
+            "doc_mult": round(doc_mult, 4),
+        },
+        "tuning_stamp": {
+            "applied": apply_enabled,
+            "before": {
+                "spindle_rpm": orig_rpm,
+                "feed_rate": orig_feed,
+                "doc_mm": orig_doc,
+            },
+            "after": {
+                "spindle_rpm": tuned_rpm,
+                "feed_rate": tuned_feed,
+                "doc_mm": tuned_doc,
+            },
+            "multipliers": {
+                "spindle_rpm_mult": round(spindle_rpm_mult, 4),
+                "feed_rate_mult": round(feed_rate_mult, 4),
+                "doc_mult": round(doc_mult, 4),
+            },
+        },
+        "tuned_context": tuned_context,
+    }
+
+
+@router.get("/executions/with-learning")
+def list_executions_with_learning(
+    only_applied: str = Query("false", description="Filter to only executions with learning applied"),
+    batch_label: Optional[str] = Query(None, description="Filter by batch label"),
+) -> List[Dict[str, Any]]:
+    """
+    List execution artifacts with learning info.
+
+    If only_applied=true, only returns executions where learning was actually applied.
+    """
+    only_applied_bool = only_applied.lower() in ("true", "1", "yes")
+    results = query_executions_with_learning(batch_label=batch_label, only_applied=only_applied_bool)
+
+    return [
+        {
+            "artifact_id": art.get("artifact_id"),
+            "id": art.get("artifact_id"),
+            "kind": art.get("kind"),
+            "status": art.get("status"),
+            "created_utc": art.get("created_utc"),
+            "batch_label": art.get("payload", {}).get("batch_label"),
+            "session_id": art.get("payload", {}).get("session_id"),
+            "learning": art.get("payload", {}).get("learning", {}),
+        }
+        for art in results
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Alternative Metrics Rollup Endpoints (different path format)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/metrics/rollup/by-execution")
+def get_metrics_rollup_by_execution_alt(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """
+    Compute metrics rollup preview for an execution (alternative path).
+
+    Returns aggregated metrics from all job logs.
+    """
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    # Aggregate metrics
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    burn_events = 0
+    tearout_events = 0
+    kickback_events = 0
+
+    for log in logs:
+        metrics = log.get("payload", {}).get("metrics", {})
+        total_cut_time += metrics.get("cut_time_s", 0.0)
+        total_setup_time += metrics.get("setup_time_s", 0.0)
+        parts_ok += metrics.get("parts_ok", 0)
+        parts_scrap += metrics.get("parts_scrap", 0)
+        if metrics.get("burn"):
+            burn_events += 1
+        if metrics.get("tearout"):
+            tearout_events += 1
+        if metrics.get("kickback"):
+            kickback_events += 1
+
+    parts_total = parts_ok + parts_scrap
+    yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
+
+    return {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "log_count": len(logs),
+        "times": {
+            "total_cut_time_s": total_cut_time,
+            "total_setup_time_s": total_setup_time,
+            "total_time_s": total_cut_time + total_setup_time,
+        },
+        "yield": {
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+            "parts_total": parts_total,
+            "yield_pct": round(yield_pct, 2),
+        },
+        "events": {
+            "burn_events": burn_events,
+            "tearout_events": tearout_events,
+            "kickback_events": kickback_events,
+        },
+    }
+
+
+@router.post("/metrics/rollup/by-execution")
+def persist_metrics_rollup_by_execution_alt(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """
+    Persist metrics rollup artifact for an execution (alternative path).
+
+    Creates and stores a rollup artifact with aggregated metrics.
+    """
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    # Compute metrics same as GET
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    burn_events = 0
+    tearout_events = 0
+    kickback_events = 0
+
+    for log in logs:
+        metrics = log.get("payload", {}).get("metrics", {})
+        total_cut_time += metrics.get("cut_time_s", 0.0)
+        total_setup_time += metrics.get("setup_time_s", 0.0)
+        parts_ok += metrics.get("parts_ok", 0)
+        parts_scrap += metrics.get("parts_scrap", 0)
+        if metrics.get("burn"):
+            burn_events += 1
+        if metrics.get("tearout"):
+            tearout_events += 1
+        if metrics.get("kickback"):
+            kickback_events += 1
+
+    parts_total = parts_ok + parts_scrap
+    yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
+
+    decision_id = execution.get("payload", {}).get("batch_decision_artifact_id")
+
+    rollup_payload = {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "parent_batch_decision_artifact_id": decision_id,
+        "log_count": len(logs),
+        "metrics": {
+            "cut_time_s": total_cut_time,
+            "setup_time_s": total_setup_time,
+            "total_time_s": total_cut_time + total_setup_time,
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+            "parts_total": parts_total,
+            "yield_pct": round(yield_pct, 2),
+        },
+        "events": {
+            "burn_events": burn_events,
+            "tearout_events": tearout_events,
+            "kickback_events": kickback_events,
+        },
+    }
+
+    rollup_id = store_artifact(
+        kind="saw_batch_execution_rollup",
+        payload=rollup_payload,
+        parent_id=batch_execution_artifact_id,
+    )
+
+    return {
+        "artifact_id": rollup_id,
+        "kind": "saw_batch_execution_rollup",
+        "payload": rollup_payload,
+    }
+
+
+@router.get("/metrics/rollup/alias")
+def get_metrics_rollup_alias(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> List[Dict[str, Any]]:
+    """
+    List all metrics rollup artifacts for an execution (alias lookup).
+    """
+    rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
+
+    return [
+        {
+            "artifact_id": r.get("artifact_id"),
+            "id": r.get("artifact_id"),
+            "kind": r.get("kind"),
+            "created_utc": r.get("created_utc"),
+            "payload": r.get("payload", {}),
+        }
+        for r in rollups
+    ]
