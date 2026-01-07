@@ -12,7 +12,7 @@ cd services/api && source .venv/bin/activate && uvicorn app.main:app --reload --
 cd packages/client && npm run dev
 
 # Key Tests
-cd services/api && pytest tests/ -v                    # Backend unit tests
+cd services/api && pytest tests/ -v                    # Backend unit tests (pytest markers: unit, integration, smoke, cam)
 cd packages/client && npm run test                     # Frontend (Vitest)
 make smoke-helix-posts                                 # Integration smoke test
 
@@ -28,9 +28,10 @@ make start-client # Terminal 2
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
 5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data)
-6. **Boundary**: Never import `tap_tone.*` or `modes.*` – ToolBox interprets, Analyzer measures
+6. **Boundary**: Never import `tap_tone.*` or `modes.*` – ToolBox interprets, Analyzer measures (CI-enforced)
 7. **Request IDs**: All API responses MUST include `X-Request-Id` header for correlation
 8. **Machine Profiles**: Use valid IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
+9. **Error Handling**: Use `ApiError` class with `.is()`, `.isClientError()`, `.isServerError()` – never raw status checks
 
 ## 📁 Key Paths
 
@@ -76,10 +77,22 @@ app.include_router(my_feature_router, prefix="/api/my-feature", tags=["MyFeature
 ### Frontend: SDK Usage (H8.3)
 ```typescript
 import { cam } from "@/sdk/endpoints";
-import { ApiError } from "@/sdk/core/errors";
+import { ApiError, formatApiErrorForUi } from "@/sdk/core/errors";
 
-const { gcode, summary, requestId } = await cam.roughingGcode(payload);
-// SDK handles headers, errors, request-id correlation
+try {
+  const { gcode, summary, requestId } = await cam.roughingGcode(payload);
+  // SDK handles headers, errors, request-id correlation
+} catch (err) {
+  if (err instanceof ApiError) {
+    if (err.is(422)) {
+      // Validation error - show to user
+      errorMsg.value = formatApiErrorForUi(err);
+    } else if (err.isServerError()) {
+      // 5xx error - show retry option
+      showRetryDialog(err.requestId);
+    }
+  }
+}
 ```
 
 ### CAM Intent (H7.1)
@@ -87,6 +100,35 @@ const { gcode, summary, requestId } = await cam.roughingGcode(payload);
 from app.rmos.cam import CamIntentV1, normalize_cam_intent_v1
 intent = CamIntentV1(mode="roughing", units="mm", design={...})
 normalized, issues = normalize_cam_intent_v1(intent)
+
+# CI validation: python -m app.ci.check_cam_intent_schema_hash
+```
+
+### Testing Pattern
+```python
+# Backend (pytest with markers)
+import pytest
+
+@pytest.mark.cam
+@pytest.mark.smoke
+def test_roughing_gcode_generation():
+    response = client.post("/api/cam/roughing/gcode", json=payload)
+    assert response.status_code == 200
+    assert "X-Request-Id" in response.headers  # Required for all endpoints
+```
+
+```typescript
+// Frontend (Vitest)
+import { describe, it, expect, vi } from "vitest";
+import { cam } from "@/sdk/endpoints";
+
+describe("roughingGcode", () => {
+  it("returns gcode + requestId", async () => {
+    const result = await cam.roughingGcode(mockPayload);
+    expect(result.requestId).toBeDefined();
+    expect(result.gcode).toContain("G21"); // mm mode
+  });
+});
 ```
 
 ## 🗺️ API Surface
