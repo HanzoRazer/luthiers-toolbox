@@ -9,6 +9,8 @@
  * @package features/ai_images/api
  */
 
+// NOTE: keep this file widget-scoped (ai_images); RMOS typed SDK lives in sdk/rmos/runs.ts
+
 // ---------------------------------------------------------------------------
 // RMOS Runs helpers (used by AiImageGallery auto-create on attach)
 // ---------------------------------------------------------------------------

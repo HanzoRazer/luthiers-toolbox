@@ -73,6 +73,9 @@ const advisoryIdByAssetSha = ref<Record<string, string>>({});
 // micro-follow: quick actions use per-row busy flags (prevents double clicks)
 const busyByAdvisoryId = ref<Record<string, "review" | "promote" | null>>({});
 
+// micro-follow: track last run we attached to (for fallback navigation)
+const lastAttachedRunId = ref<string | null>(null);
+
 // -----------------------------
 // Helpers
 // -----------------------------
@@ -88,6 +91,13 @@ function _toastErr(msg: string) {
 
 function goToRunReview(runId: string) {
   router.push({ name: "RunVariantsReview", params: { run_id: runId } });
+}
+
+// micro-follow: toolbar Open Review with fallback to lastAttachedRunId
+function goToReview(runId?: string | null) {
+  const id = runId ?? selectedRunId.value ?? lastAttachedRunId.value;
+  if (!id) return;
+  router.push({ name: "RunVariantsReview", params: { run_id: id } });
 }
 
 function _advisoryIdForAsset(a: VisionAsset): string | null {
@@ -285,6 +295,7 @@ async function doAttach(a: VisionAsset) {
 
     const advisoryId = (res?.advisory_id ?? sha) as string;
     advisoryIdByAssetSha.value = { ...advisoryIdByAssetSha.value, [sha]: advisoryId };
+    lastAttachedRunId.value = selectedRunId.value;
 
     await refreshVariants();
     _toastOk("Attached to run.");
@@ -370,6 +381,16 @@ onMounted(async () => {
         </select>
         <button class="btn primary" :disabled="!canGenerate" @click="doGenerate">
           {{ isGenerating ? "Generating…" : "Generate" }}
+        </button>
+
+        <button
+          class="btn"
+          type="button"
+          :disabled="!selectedRunId && !lastAttachedRunId"
+          :title="(selectedRunId || lastAttachedRunId) ? 'Open the run review surface' : 'Attach an asset first to create/select a run'"
+          @click="goToReview()"
+        >
+          Open Review
         </button>
 
         <select v-model="selectedRunId" class="select" @change="refreshVariants">
