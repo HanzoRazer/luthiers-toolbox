@@ -285,7 +285,7 @@ def query_metrics_rollups_by_execution(batch_execution_artifact_id: str) -> list
     """
     results = []
     for art in _batch_artifacts.values():
-        if art.get("kind") != "saw_batch_execution_rollup":
+        if art.get("kind") != "saw_batch_execution_metrics_rollup":
             continue
         payload = art.get("payload", {})
         if payload.get("batch_execution_artifact_id") == batch_execution_artifact_id:
