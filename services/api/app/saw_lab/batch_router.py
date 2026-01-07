@@ -870,6 +870,26 @@ def approve_learning_event(
     )
 
 
+def _is_truthy(value: str) -> bool:
+    """Check if env var value is truthy (1, true, yes, y, on)."""
+    return value.lower() in ("1", "true", "yes", "y", "on")
+
+
+@router.get("/learning-overrides/apply/status")
+def get_apply_flag_status() -> Dict[str, Any]:
+    """
+    Get the current status of the SAW_LAB_APPLY_ACCEPTED_OVERRIDES flag.
+
+    Returns the flag value as a boolean.
+    """
+    raw_value = os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "")
+    is_enabled = _is_truthy(raw_value)
+
+    return {
+        "SAW_LAB_APPLY_ACCEPTED_OVERRIDES": is_enabled,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Op-Toolpaths Alias Endpoints
 # ---------------------------------------------------------------------------
