@@ -339,3 +339,21 @@ def query_learning_events_by_execution(batch_execution_artifact_id: str) -> list
 
     results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
     return results
+
+
+def query_execution_rollups_by_decision(batch_decision_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query execution rollup artifacts by decision ID.
+
+    Returns list of rollup artifacts sorted by created_utc descending.
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution_metrics_rollup":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("parent_batch_decision_artifact_id") == batch_decision_artifact_id:
+            results.append(art)
+
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results

@@ -31,6 +31,7 @@ from app.saw_lab.store import (
     query_metrics_rollups_by_execution,
     query_accepted_learning_events,
     query_learning_events_by_execution,
+    query_execution_rollups_by_decision,
 )
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
@@ -806,6 +807,90 @@ def list_job_logs_by_execution(
         }
         for log in logs
     ]
+
+
+# ---------------------------------------------------------------------------
+# CSV Export Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/executions/job-logs.csv")
+def export_job_logs_csv(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> PlainTextResponse:
+    """
+    Export job logs for an execution as CSV.
+    """
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    # Build CSV
+    headers = ["job_log_artifact_id", "operator", "notes", "status", "parts_ok", "parts_scrap", "cut_time_s", "setup_time_s", "created_utc"]
+    lines = [",".join(headers)]
+
+    for log in logs:
+        payload = log.get("payload", {})
+        metrics = payload.get("metrics", {})
+        row = [
+            log.get("artifact_id", ""),
+            payload.get("operator", ""),
+            payload.get("notes", "").replace(",", ";").replace("\n", " "),
+            payload.get("status", ""),
+            str(metrics.get("parts_ok", 0)),
+            str(metrics.get("parts_scrap", 0)),
+            str(metrics.get("cut_time_s", 0)),
+            str(metrics.get("setup_time_s", 0)),
+            log.get("created_utc", ""),
+        ]
+        lines.append(",".join(row))
+
+    csv_content = "\n".join(lines)
+    return PlainTextResponse(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="job_logs_{batch_execution_artifact_id[:8]}.csv"'},
+    )
+
+
+@router.get("/decisions/execution-rollups.csv")
+def export_execution_rollups_csv(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+) -> PlainTextResponse:
+    """
+    Export execution rollups for a decision as CSV.
+    """
+    rollups = query_execution_rollups_by_decision(batch_decision_artifact_id)
+
+    # Build CSV
+    headers = ["rollup_artifact_id", "batch_execution_artifact_id", "log_count", "parts_ok", "parts_scrap", "scrap_rate", "cut_time_s", "setup_time_s", "created_utc"]
+    lines = [",".join(headers)]
+
+    for rollup in rollups:
+        payload = rollup.get("payload", {})
+        metrics = payload.get("metrics", {})
+        parts_ok = metrics.get("parts_ok", 0)
+        parts_scrap = metrics.get("parts_scrap", 0)
+        parts_total = parts_ok + parts_scrap
+        scrap_rate = (parts_scrap / parts_total) if parts_total > 0 else 0.0
+
+        row = [
+            rollup.get("artifact_id", ""),
+            payload.get("batch_execution_artifact_id", ""),
+            str(payload.get("log_count", payload.get("counts", {}).get("job_log_count", 0))),
+            str(parts_ok),
+            str(parts_scrap),
+            f"{scrap_rate:.4f}",
+            str(metrics.get("cut_time_s", 0)),
+            str(metrics.get("setup_time_s", 0)),
+            rollup.get("created_utc", ""),
+        ]
+        lines.append(",".join(row))
+
+    csv_content = "\n".join(lines)
+    return PlainTextResponse(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id[:8]}.csv"'},
+    )
 
 
 def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id: str) -> None:
