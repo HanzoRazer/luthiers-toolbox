@@ -152,7 +152,7 @@
           <div class="hotkeyHintBody">
             Try <b>1–5</b> to revert history (1 = newest)
           </div>
-          <button class="hotkeyHintClose" type="button" @click="hideHint" aria-label="Dismiss">
+          <button class="hotkeyHintClose" type="button" @click="() => hideHint(true)" aria-label="Dismiss">
             ✕
           </button>
         </div>
@@ -279,15 +279,47 @@ function flashHistoryIdx(idx: number) {
 const showHistoryHotkeyHint = ref(false);
 let hintTimer: number | null = null;
 
-function hideHint() {
+// Bundle 32.4.17: localStorage cooldown to prevent nagging
+const HINT_COOLDOWN_KEY = "artstudio.historyHotkeyHintDismissedAt";
+const HINT_COOLDOWN_MIN = 10;
+
+function getDismissedAt(): number {
+  try {
+    return Number(localStorage.getItem(HINT_COOLDOWN_KEY) ?? 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setDismissedNow() {
+  try {
+    localStorage.setItem(HINT_COOLDOWN_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+}
+
+function cooldownActive(): boolean {
+  const dismissedAt = getDismissedAt();
+  if (!dismissedAt) return false;
+  const ms = HINT_COOLDOWN_MIN * 60_000;
+  return Date.now() - dismissedAt < ms;
+}
+
+function hideHint(userDismissed = true) {
   showHistoryHotkeyHint.value = false;
   if (hintTimer) window.clearTimeout(hintTimer);
   hintTimer = null;
+
+  if (userDismissed) setDismissedNow();
 }
 
 function scheduleHint() {
-  hideHint();
+  if (cooldownActive()) return;
+
+  hideHint(false); // reset timer/visibility without marking dismissal
   showHistoryHotkeyHint.value = true;
+
   hintTimer = window.setTimeout(() => {
     showHistoryHotkeyHint.value = false;
     hintTimer = null;
@@ -300,13 +332,14 @@ const hasHistory = computed(() => (store.historyStack?.length ?? 0) > 0);
 // Bundle 32.4.16: Show hint from hover (reuses existing scheduleHint)
 function showHintFromHover() {
   if (!hasHistory.value) return;
+  if (cooldownActive()) return;
   scheduleHint(); // uses the existing 6s timer + safe reset
 }
 
 // Bundle 32.4.15: Show hint when history becomes available
 watch(hasHistory, (v) => {
   if (v) scheduleHint();
-  else hideHint();
+  else hideHint(false); // auto-hide, not user dismissal
 });
 
 // Bundle 32.3.7: HUD pulse on filter toggle
@@ -356,7 +389,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
 function onKeyDown(e: KeyboardEvent) {
   // Bundle 32.4.15: Suppress hint if user starts typing
   if (showHistoryHotkeyHint.value && isTypingTarget(e.target)) {
-    hideHint();
+    hideHint(false); // typing is not a dismissal
   }
 
   // Bundle 32.4.6: History hotkeys 1–5 (don't hijack while typing)
