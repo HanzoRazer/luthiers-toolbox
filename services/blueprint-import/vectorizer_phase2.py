@@ -340,15 +340,14 @@ class Phase2Vectorizer:
             viewBox=f"0 0 {width_mm} {height_mm}"
         )
         
-        # Add styles
-        dwg.defs.add(dwg.style("""
-            .contour { stroke: blue; stroke-width: 0.3; fill: none; }
-            .line { stroke: red; stroke-width: 0.2; }
-            .dimension { stroke: green; stroke-width: 0.15; stroke-dasharray: 2,2; }
+        # Add styles with metadata as CSS comment
+        scale = analysis_data.get('scale', 'Unknown')
+        dwg.defs.add(dwg.style(f"""
+            /* Phase 2 Geometry - {len(contours)} contours, {len(lines)} lines. Scale: {scale} */
+            .contour {{ stroke: blue; stroke-width: 0.3; fill: none; }}
+            .line {{ stroke: red; stroke-width: 0.2; }}
+            .dimension {{ stroke: green; stroke-width: 0.15; stroke-dasharray: 2,2; }}
         """))
-        
-        # Add metadata as description element (svgwrite doesn't have .comment())
-        dwg.add(dwg.desc(f"Phase 2 Geometry - {len(contours)} contours, {len(lines)} lines. Scale: {analysis_data.get('scale', 'Unknown')}"))
         
         # Draw contours
         for contour in contours:
