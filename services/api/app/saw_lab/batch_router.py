@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.saw_lab.store import store_artifact, get_artifact
+from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -352,6 +352,43 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         results=[BatchOpResult(**r) for r in child_results],
         gcode_lines=total_gcode_lines,
     )
+
+
+@router.get("/execution")
+def get_execution_by_decision(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID to look up execution for"),
+) -> Dict[str, Any]:
+    """
+    Look up the latest execution artifact for a given decision.
+
+    Returns the execution artifact with id, kind, status, and index_meta.
+    Returns 404 if no execution exists for the decision.
+    """
+    executions = query_executions_by_decision(batch_decision_artifact_id)
+    if not executions:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No execution artifact found for decision {batch_decision_artifact_id}",
+        )
+
+    # Return the latest execution (first in sorted list)
+    latest = executions[0]
+    payload = latest.get("payload", {})
+
+    return {
+        "artifact_id": latest.get("artifact_id"),
+        "id": latest.get("artifact_id"),  # Alias for compatibility
+        "kind": latest.get("kind"),
+        "status": latest.get("status"),
+        "created_utc": latest.get("created_utc"),
+        "index_meta": {
+            "parent_batch_decision_artifact_id": payload.get("batch_decision_artifact_id"),
+            "batch_label": payload.get("batch_label"),
+            "session_id": payload.get("session_id"),
+            "tool_kind": "saw_lab",
+            "kind_group": "batch",
+        },
+    }
 
 
 @router.post("/job-log", response_model=JobLogResponse)
