@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      RMOS_BASE_URL: "http://127.0.0.1:8000/rmos"
+      RMOS_BASE_URL: "http://127.0.0.1:8000"
       APP_MODULE: "app.main:app"
       # H6.1.1: make the truth map path explicit (no cwd guessing)
       ENDPOINT_TRUTH_MAP_PATH: ${{ github.workspace }}/docs/ENDPOINT_TRUTH_MAP.md
