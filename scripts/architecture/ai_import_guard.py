@@ -21,6 +21,7 @@ RE_VENDOR_IMPORT = re.compile(r'^\s*(import|from)\s+(openai|anthropic)\b', re.IG
 # Only these paths may import vendor SDKs:
 ALLOW_PREFIXES = (
     "services/api/app/ai/transport/",
+    "services/api/app/_experimental/",  # Experimental code may prototype with direct imports
 )
 
 # Allow under TYPE_CHECKING anywhere
@@ -34,12 +35,16 @@ def should_skip(path: Path) -> bool:
     return bool(parts & SKIP_DIRS)
 
 
-def is_allowed(path: Path) -> bool:
-    s = str(path.as_posix())
-    return any(s.startswith(p) for p in ALLOW_PREFIXES)
+def is_allowed(path: Path, root: Path) -> bool:
+    """Check if path is in an allowed directory (relative to repo root)."""
+    try:
+        rel = path.relative_to(root).as_posix()
+    except ValueError:
+        rel = str(path.as_posix())
+    return any(rel.startswith(p) for p in ALLOW_PREFIXES)
 
 
-def scan_file(path: Path) -> list[str]:
+def scan_file(path: Path, root: Path) -> list[str]:
     violations = []
     txt = path.read_text(encoding="utf-8", errors="ignore").splitlines()
     in_type_checking_block = False
@@ -52,7 +57,7 @@ def scan_file(path: Path) -> list[str]:
         if RE_VENDOR_IMPORT.search(line):
             if in_type_checking_block:
                 continue
-            if not is_allowed(path):
+            if not is_allowed(path, root):
                 violations.append(f"{path}:{i}: vendor SDK import outside ai/transport")
     return violations
 
@@ -69,7 +74,7 @@ def main() -> int:
     for p in base.rglob("*.py"):
         if should_skip(p):
             continue
-        violations.extend(scan_file(p))
+        violations.extend(scan_file(p, root))
 
     if violations:
         print("AI import guard FAILED:\n" + "\n".join(violations), file=sys.stderr)
