@@ -15,7 +15,22 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.saw_lab.store import store_artifact, get_artifact, query_executions_by_decision, query_latest_by_label_and_session, query_job_logs_by_execution
+from app.saw_lab.store import (
+    store_artifact,
+    get_artifact,
+    query_executions_by_decision,
+    query_latest_by_label_and_session,
+    query_job_logs_by_execution,
+    query_executions_by_label,
+    query_decisions_by_plan,
+    query_decisions_by_spec,
+    query_executions_by_plan,
+    query_executions_by_spec,
+    query_op_toolpaths_by_decision,
+    query_op_toolpaths_by_execution,
+    query_metrics_rollups_by_execution,
+    query_accepted_learning_events,
+)
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -107,6 +122,7 @@ class BatchToolpathsResponse(BaseModel):
     error_count: int = 0
     results: List[BatchOpResult] = []
     gcode_lines: int = 0
+    learning: Optional[LearningInfo] = None
 
 
 class JobLogMetrics(BaseModel):
@@ -114,15 +130,41 @@ class JobLogMetrics(BaseModel):
     parts_scrap: int = 0
     cut_time_s: float = 0.0
     setup_time_s: float = 0.0
+    burn: bool = False
+    tearout: bool = False
+    kickback: bool = False
 
 
 class JobLogRequest(BaseModel):
     metrics: JobLogMetrics = Field(default_factory=JobLogMetrics)
 
 
+class LearningEvent(BaseModel):
+    artifact_id: str
+    id: str
+    kind: str = "saw_batch_learning_event"
+    suggestion_type: str = "parameter_override"
+
+
 class JobLogResponse(BaseModel):
     job_log_artifact_id: str
     metrics_rollup_artifact_id: Optional[str] = None
+    learning_event: Optional[LearningEvent] = None
+
+
+class LearningTuningStamp(BaseModel):
+    applied: bool = False
+    event_ids: List[str] = []
+
+
+class LearningResolved(BaseModel):
+    source_count: int = 0
+
+
+class LearningInfo(BaseModel):
+    apply_enabled: bool = False
+    resolved: LearningResolved = Field(default_factory=LearningResolved)
+    tuning_stamp: Optional[LearningTuningStamp] = None
 
 
 # ---------------------------------------------------------------------------
@@ -229,12 +271,37 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsResponse:
     """
     Generate toolpaths (G-code) from an approved decision.
-    
+
     Creates child op_toolpaths artifacts and parent execution artifact.
+    Always returns 200 with status="ERROR" for invalid decisions (governance: always persist artifacts).
     """
     decision = get_artifact(req.batch_decision_artifact_id)
     if not decision:
-        raise HTTPException(status_code=404, detail="Batch decision not found")
+        # Governance: always persist an artifact even on failure
+        error_payload = {
+            "batch_decision_artifact_id": req.batch_decision_artifact_id,
+            "error": f"Batch decision not found: {req.batch_decision_artifact_id}",
+            "summary": {"op_count": 0, "ok_count": 0, "blocked_count": 0, "error_count": 1},
+            "children": [],
+            "results": [],
+        }
+        error_exec_id = store_artifact(
+            kind="saw_batch_execution",
+            payload=error_payload,
+            parent_id=req.batch_decision_artifact_id,
+            status="ERROR",
+        )
+        return BatchToolpathsResponse(
+            batch_execution_artifact_id=error_exec_id,
+            batch_decision_artifact_id=req.batch_decision_artifact_id,
+            status="ERROR",
+            op_count=0,
+            ok_count=0,
+            blocked_count=0,
+            error_count=1,
+            results=[],
+            gcode_lines=0,
+        )
     
     dec_payload = decision.get("payload", {})
     plan_id = dec_payload.get("batch_plan_artifact_id", "")
@@ -337,6 +404,27 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         status="OK",
     )
     
+    # Build learning info
+    apply_enabled = os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "").lower() == "true"
+    learning_enabled = os.getenv("SAW_LAB_LEARNING_HOOK_ENABLED", "").lower() == "true"
+
+    # Query accepted learning events for this decision
+    accepted_events = query_accepted_learning_events(req.batch_decision_artifact_id) if learning_enabled else []
+    source_count = len(accepted_events)
+
+    tuning_stamp = None
+    if apply_enabled and source_count > 0:
+        tuning_stamp = LearningTuningStamp(
+            applied=True,
+            event_ids=[e.get("artifact_id") for e in accepted_events],
+        )
+
+    learning_info = LearningInfo(
+        apply_enabled=apply_enabled,
+        resolved=LearningResolved(source_count=source_count),
+        tuning_stamp=tuning_stamp,
+    )
+
     return BatchToolpathsResponse(
         batch_execution_artifact_id=exec_id,
         batch_decision_artifact_id=req.batch_decision_artifact_id,
@@ -351,6 +439,7 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         error_count=0,
         results=[BatchOpResult(**r) for r in child_results],
         gcode_lines=total_gcode_lines,
+        learning=learning_info,
     )
 
 
@@ -427,6 +516,168 @@ def list_executions_by_decision(
     return results
 
 
+@router.get("/executions")
+def list_executions_by_label(
+    batch_label: str = Query(..., description="Batch label to filter by"),
+    session_id: Optional[str] = Query(None, description="Optional session ID filter"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List execution artifacts by batch_label, newest first.
+
+    Optionally filter by session_id.
+    """
+    executions = query_executions_by_label(batch_label, session_id)[:limit]
+
+    results = []
+    for ex in executions:
+        payload = ex.get("payload", {})
+        index_meta = ex.get("index_meta") or {}
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": ex.get("artifact_id"),
+            "id": ex.get("artifact_id"),
+            "kind": ex.get("kind", "saw_batch_execution"),
+            "status": ex.get("status", "OK"),
+            "created_utc": ex.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
+@router.get("/decisions/by-plan")
+def list_decisions_by_plan(
+    batch_plan_artifact_id: str = Query(..., description="Plan artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List decision artifacts for a given plan, newest first.
+    """
+    decisions = query_decisions_by_plan(batch_plan_artifact_id)[:limit]
+
+    results = []
+    for dec in decisions:
+        payload = dec.get("payload", {})
+        index_meta = dec.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_plan_artifact_id", batch_plan_artifact_id)
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": dec.get("artifact_id"),
+            "id": dec.get("artifact_id"),
+            "kind": dec.get("kind", "saw_batch_decision"),
+            "status": dec.get("status", "OK"),
+            "created_utc": dec.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
+@router.get("/decisions/by-spec")
+def list_decisions_by_spec(
+    batch_spec_artifact_id: str = Query(..., description="Spec artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List decision artifacts for a given spec, newest first.
+    """
+    decisions = query_decisions_by_spec(batch_spec_artifact_id)[:limit]
+
+    results = []
+    for dec in decisions:
+        payload = dec.get("payload", {})
+        index_meta = dec.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_spec_artifact_id", batch_spec_artifact_id)
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": dec.get("artifact_id"),
+            "id": dec.get("artifact_id"),
+            "kind": dec.get("kind", "saw_batch_decision"),
+            "status": dec.get("status", "OK"),
+            "created_utc": dec.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
+@router.get("/executions/by-plan")
+def list_executions_by_plan(
+    batch_plan_artifact_id: str = Query(..., description="Plan artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List execution artifacts for a given plan, newest first.
+    """
+    executions = query_executions_by_plan(batch_plan_artifact_id)[:limit]
+
+    results = []
+    for ex in executions:
+        payload = ex.get("payload", {})
+        index_meta = ex.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_plan_artifact_id", batch_plan_artifact_id)
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": ex.get("artifact_id"),
+            "id": ex.get("artifact_id"),
+            "kind": ex.get("kind", "saw_batch_execution"),
+            "status": ex.get("status", "OK"),
+            "created_utc": ex.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
+@router.get("/executions/by-spec")
+def list_executions_by_spec(
+    batch_spec_artifact_id: str = Query(..., description="Spec artifact ID"),
+    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List execution artifacts for a given spec, newest first.
+    """
+    executions = query_executions_by_spec(batch_spec_artifact_id)[:limit]
+
+    results = []
+    for ex in executions:
+        payload = ex.get("payload", {})
+        index_meta = ex.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_spec_artifact_id", batch_spec_artifact_id)
+        index_meta.setdefault("batch_label", payload.get("batch_label"))
+        index_meta.setdefault("session_id", payload.get("session_id"))
+        index_meta.setdefault("tool_kind", "saw_lab")
+        index_meta.setdefault("kind_group", "batch")
+
+        results.append({
+            "artifact_id": ex.get("artifact_id"),
+            "id": ex.get("artifact_id"),
+            "kind": ex.get("kind", "saw_batch_execution"),
+            "status": ex.get("status", "OK"),
+            "created_utc": ex.get("created_utc"),
+            "index_meta": index_meta,
+        })
+
+    return results
+
+
 @router.get("/links")
 def get_batch_links(
     batch_label: str = Query(..., description="Batch label to look up"),
@@ -453,6 +704,7 @@ def log_batch_job(
     Log job completion for an execution, optionally creating a metrics rollup.
 
     If SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED=true, also persists a rollup artifact.
+    If SAW_LAB_LEARNING_HOOK_ENABLED=true, emits learning events for burn/tearout/kickback.
     Body with metrics is optional - defaults to zero metrics if not provided.
     """
     execution = get_artifact(batch_execution_artifact_id)
@@ -473,25 +725,63 @@ def log_batch_job(
         "metrics": metrics.model_dump(),
     }
     job_log_id = store_artifact(kind="batch_job_log", payload=job_log_payload, parent_id=batch_execution_artifact_id)
-    
+
     # Optionally create metrics rollup
     rollup_id: Optional[str] = None
     if os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true":
         rollup_payload = {
             "batch_execution_artifact_id": batch_execution_artifact_id,
             "parent_batch_decision_artifact_id": decision_id,
-            "metrics": req.metrics.model_dump(),
+            "metrics": metrics.model_dump(),
             "counts": {"job_log_count": 1},
             "signals": {"burn_events": 0, "tearout_events": 0, "kickback_events": 0},
         }
         rollup_id = store_artifact(kind="saw_batch_execution_metrics_rollup", payload=rollup_payload, parent_id=decision_id)
-        
+
         # Also store in the runs artifact index for query_run_artifacts to find
         _store_rollup_for_query(rollup_id, rollup_payload, decision_id)
-    
+
+    # Optionally emit learning events for burn/tearout/kickback
+    learning_event_resp: Optional[LearningEvent] = None
+    learning_enabled = os.getenv("SAW_LAB_LEARNING_HOOK_ENABLED", "").lower() == "true"
+    if learning_enabled and (metrics.burn or metrics.tearout or metrics.kickback):
+        # Determine suggestion type based on event
+        suggestion_type = "parameter_override"
+        if metrics.burn:
+            suggestion_type = "reduce_feed_rate"
+        elif metrics.tearout:
+            suggestion_type = "reduce_depth_per_pass"
+        elif metrics.kickback:
+            suggestion_type = "reduce_rpm"
+
+        learning_payload = {
+            "batch_decision_artifact_id": decision_id,
+            "batch_execution_artifact_id": batch_execution_artifact_id,
+            "job_log_artifact_id": job_log_id,
+            "suggestion_type": suggestion_type,
+            "trigger": {
+                "burn": metrics.burn,
+                "tearout": metrics.tearout,
+                "kickback": metrics.kickback,
+            },
+            "policy_decision": None,  # Pending approval
+        }
+        learning_event_id = store_artifact(
+            kind="saw_batch_learning_event",
+            payload=learning_payload,
+            parent_id=decision_id,
+        )
+        learning_event_resp = LearningEvent(
+            artifact_id=learning_event_id,
+            id=learning_event_id,
+            kind="saw_batch_learning_event",
+            suggestion_type=suggestion_type,
+        )
+
     return JobLogResponse(
         job_log_artifact_id=job_log_id,
         metrics_rollup_artifact_id=rollup_id,
+        learning_event=learning_event_resp,
     )
 
 
@@ -518,7 +808,7 @@ def list_job_logs_by_execution(
 def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id: str) -> None:
     """
     Store rollup in a format that query_run_artifacts can find.
-    
+
     This bridges the in-memory store to the runs_v2 query layer.
     """
     try:
@@ -534,6 +824,383 @@ def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id
     except Exception:
         # Graceful fallback if runs artifact store not available
         pass
+
+
+# ---------------------------------------------------------------------------
+# Learning Events Endpoints
+# ---------------------------------------------------------------------------
+
+
+class LearningEventApprovalResponse(BaseModel):
+    learning_event_artifact_id: str
+    policy_decision: str
+    approved_by: str
+
+
+@router.post("/learning-events/approve", response_model=LearningEventApprovalResponse)
+def approve_learning_event(
+    learning_event_artifact_id: str = Query(..., description="Learning event to approve/reject"),
+    policy_decision: str = Query(..., description="ACCEPT or REJECT"),
+    approved_by: str = Query(..., description="Approver name"),
+    reason: str = Query("", description="Approval reason"),
+) -> LearningEventApprovalResponse:
+    """
+    Approve or reject a learning event.
+
+    Sets policy_decision field on the event artifact.
+    """
+    event = get_artifact(learning_event_artifact_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Learning event not found")
+
+    # Update the event payload with the decision
+    payload = event.get("payload", {})
+    payload["policy_decision"] = policy_decision
+    payload["approved_by"] = approved_by
+    payload["approval_reason"] = reason
+
+    # Update in place (in-memory store allows this)
+    from app.saw_lab.store import _batch_artifacts
+    _batch_artifacts[learning_event_artifact_id]["payload"] = payload
+
+    return LearningEventApprovalResponse(
+        learning_event_artifact_id=learning_event_artifact_id,
+        policy_decision=policy_decision,
+        approved_by=approved_by,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Op-Toolpaths Alias Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/op-toolpaths/by-decision")
+def list_op_toolpaths_by_decision(
+    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+    limit: int = Query(200, ge=1, le=1000, description="Max results to return"),
+) -> List[Dict[str, Any]]:
+    """
+    List op_toolpaths artifacts for a given decision.
+    """
+    items = query_op_toolpaths_by_decision(batch_decision_artifact_id)[:limit]
+
+    results = []
+    for art in items:
+        payload = art.get("payload", {})
+        index_meta = art.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_decision_artifact_id", batch_decision_artifact_id)
+        index_meta.setdefault("op_id", payload.get("op_id"))
+        index_meta.setdefault("setup_key", payload.get("setup_key"))
+
+        results.append({
+            "artifact_id": art.get("artifact_id"),
+            "id": art.get("artifact_id"),
+            "kind": art.get("kind", "saw_batch_op_toolpaths"),
+            "status": art.get("status", "OK"),
+            "created_utc": art.get("created_utc"),
+            "index_meta": index_meta,
+            "payload": payload,
+        })
+
+    return results
+
+
+@router.get("/op-toolpaths/by-execution")
+def list_op_toolpaths_by_execution(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> List[Dict[str, Any]]:
+    """
+    List op_toolpaths artifacts for a given execution (from children).
+    """
+    items = query_op_toolpaths_by_execution(batch_execution_artifact_id)
+
+    results = []
+    for art in items:
+        payload = art.get("payload", {})
+        index_meta = art.get("index_meta") or {}
+        index_meta.setdefault("parent_batch_execution_artifact_id", batch_execution_artifact_id)
+        index_meta.setdefault("op_id", payload.get("op_id"))
+        index_meta.setdefault("setup_key", payload.get("setup_key"))
+
+        results.append({
+            "artifact_id": art.get("artifact_id"),
+            "id": art.get("artifact_id"),
+            "kind": art.get("kind", "saw_batch_op_toolpaths"),
+            "status": art.get("status", "OK"),
+            "created_utc": art.get("created_utc"),
+            "index_meta": index_meta,
+            "payload": payload,
+        })
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Execution Retry Endpoint
+# ---------------------------------------------------------------------------
+
+
+class RetryResponse(BaseModel):
+    source_execution_artifact_id: str
+    new_execution_artifact_id: str
+    retry_artifact_id: str
+
+
+@router.post("/executions/retry", response_model=RetryResponse)
+def retry_execution(
+    batch_execution_artifact_id: str = Query(..., description="Source execution to retry"),
+    reason: str = Query("", description="Reason for retry"),
+) -> RetryResponse:
+    """
+    Create a retry execution from a source execution.
+
+    Retries BLOCKED or ERROR ops. If all OK, creates an empty retry.
+    """
+    source = get_artifact(batch_execution_artifact_id)
+    if not source:
+        raise HTTPException(status_code=404, detail="Source execution not found")
+
+    source_payload = source.get("payload", {})
+    decision_id = source_payload.get("batch_decision_artifact_id", "")
+    plan_id = source_payload.get("batch_plan_artifact_id", "")
+    spec_id = source_payload.get("batch_spec_artifact_id", "")
+    batch_label = source_payload.get("batch_label", "")
+    session_id = source_payload.get("session_id", "")
+
+    # Collect ops that need retry (BLOCKED/ERROR)
+    results = source_payload.get("results", [])
+    retry_ops = [r for r in results if r.get("status") in ("BLOCKED", "ERROR")]
+
+    # Create new child op_toolpaths for retry ops (or empty if all OK)
+    new_children = []
+    new_results = []
+    for op in retry_ops:
+        op_payload = {
+            "batch_decision_artifact_id": decision_id,
+            "batch_plan_artifact_id": plan_id,
+            "batch_spec_artifact_id": spec_id,
+            "op_id": op.get("op_id"),
+            "setup_key": op.get("setup_key", ""),
+            "toolpaths": {"moves": []},  # Empty retry toolpaths
+            "retry_source": batch_execution_artifact_id,
+        }
+        child_id = store_artifact(
+            kind="saw_batch_op_toolpaths",
+            payload=op_payload,
+            parent_id=decision_id,
+            session_id=session_id,
+            status="OK",
+        )
+        new_children.append({"artifact_id": child_id, "kind": "saw_batch_op_toolpaths"})
+        new_results.append({
+            "op_id": op.get("op_id"),
+            "setup_key": op.get("setup_key", ""),
+            "status": "OK",
+            "toolpaths_artifact_id": child_id,
+        })
+
+    # Create new execution artifact
+    new_exec_payload = {
+        "batch_decision_artifact_id": decision_id,
+        "batch_plan_artifact_id": plan_id,
+        "batch_spec_artifact_id": spec_id,
+        "batch_label": batch_label,
+        "session_id": session_id,
+        "summary": {
+            "op_count": len(new_results),
+            "ok_count": len(new_results),
+            "blocked_count": 0,
+            "error_count": 0,
+        },
+        "children": new_children,
+        "results": new_results,
+        "retry_source_execution_id": batch_execution_artifact_id,
+    }
+    new_exec_id = store_artifact(
+        kind="saw_batch_execution",
+        payload=new_exec_payload,
+        parent_id=decision_id,
+        session_id=session_id,
+        status="OK",
+    )
+
+    # Create retry artifact
+    retry_payload = {
+        "source_execution_artifact_id": batch_execution_artifact_id,
+        "new_execution_artifact_id": new_exec_id,
+        "reason": reason,
+        "retry_op_count": len(retry_ops),
+    }
+    retry_id = store_artifact(
+        kind="saw_batch_execution_retry",
+        payload=retry_payload,
+        parent_id=batch_execution_artifact_id,
+        session_id=session_id,
+    )
+
+    return RetryResponse(
+        source_execution_artifact_id=batch_execution_artifact_id,
+        new_execution_artifact_id=new_exec_id,
+        retry_artifact_id=retry_id,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Metrics Rollup Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/metrics/rollup/by-execution")
+def compute_execution_rollup(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """
+    Compute metrics rollup for an execution from its job logs (read-only).
+    """
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    # Aggregate metrics
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    burn_events = 0
+    tearout_events = 0
+    kickback_events = 0
+
+    for log in logs:
+        metrics = log.get("payload", {}).get("metrics", {})
+        total_cut_time += metrics.get("cut_time_s", 0.0)
+        total_setup_time += metrics.get("setup_time_s", 0.0)
+        parts_ok += metrics.get("parts_ok", 0)
+        parts_scrap += metrics.get("parts_scrap", 0)
+        if metrics.get("burn"):
+            burn_events += 1
+        if metrics.get("tearout"):
+            tearout_events += 1
+        if metrics.get("kickback"):
+            kickback_events += 1
+
+    parts_total = parts_ok + parts_scrap
+    scrap_rate = (parts_scrap / parts_total) if parts_total > 0 else 0.0
+
+    return {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "log_count": len(logs),
+        "times": {
+            "cut_time_s": total_cut_time,
+            "setup_time_s": total_setup_time,
+        },
+        "yield": {
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+            "parts_total": parts_total,
+            "scrap_rate": scrap_rate,
+        },
+        "events": {
+            "burn_events": burn_events,
+            "tearout_events": tearout_events,
+            "kickback_events": kickback_events,
+        },
+    }
+
+
+@router.post("/metrics/rollup/by-execution")
+def persist_execution_rollup(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> Dict[str, Any]:
+    """
+    Compute and persist metrics rollup artifact for an execution.
+    """
+    execution = get_artifact(batch_execution_artifact_id)
+    if not execution:
+        raise HTTPException(status_code=404, detail="Execution not found")
+
+    exec_payload = execution.get("payload", {})
+    decision_id = exec_payload.get("batch_decision_artifact_id", "")
+
+    # Compute rollup
+    logs = query_job_logs_by_execution(batch_execution_artifact_id)
+
+    total_cut_time = 0.0
+    total_setup_time = 0.0
+    parts_ok = 0
+    parts_scrap = 0
+    burn_events = 0
+    tearout_events = 0
+    kickback_events = 0
+
+    for log in logs:
+        metrics = log.get("payload", {}).get("metrics", {})
+        total_cut_time += metrics.get("cut_time_s", 0.0)
+        total_setup_time += metrics.get("setup_time_s", 0.0)
+        parts_ok += metrics.get("parts_ok", 0)
+        parts_scrap += metrics.get("parts_scrap", 0)
+        if metrics.get("burn"):
+            burn_events += 1
+        if metrics.get("tearout"):
+            tearout_events += 1
+        if metrics.get("kickback"):
+            kickback_events += 1
+
+    parts_total = parts_ok + parts_scrap
+
+    rollup_payload = {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "parent_batch_decision_artifact_id": decision_id,
+        "log_count": len(logs),
+        "metrics": {
+            "cut_time_s": total_cut_time,
+            "setup_time_s": total_setup_time,
+            "parts_ok": parts_ok,
+            "parts_scrap": parts_scrap,
+        },
+        "counts": {"job_log_count": len(logs)},
+        "signals": {
+            "burn_events": burn_events,
+            "tearout_events": tearout_events,
+            "kickback_events": kickback_events,
+        },
+    }
+
+    rollup_id = store_artifact(
+        kind="saw_batch_execution_rollup",
+        payload=rollup_payload,
+        parent_id=batch_execution_artifact_id,
+    )
+
+    return {
+        "artifact_id": rollup_id,
+        "kind": "saw_batch_execution_rollup",
+        "payload": rollup_payload,
+    }
+
+
+@router.get("/metrics/rollup/alias")
+def list_metrics_rollups(
+    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+) -> List[Dict[str, Any]]:
+    """
+    List metrics rollup artifacts for a given execution.
+    """
+    rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
+
+    results = []
+    for art in rollups:
+        results.append({
+            "artifact_id": art.get("artifact_id"),
+            "kind": art.get("kind", "saw_batch_execution_rollup"),
+            "status": art.get("status", "OK"),
+            "created_utc": art.get("created_utc"),
+            "payload": art.get("payload", {}),
+        })
+
+    return results
 
 
 # ---------------------------------------------------------------------------
