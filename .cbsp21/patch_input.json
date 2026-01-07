@@ -1,8 +1,8 @@
 {
   "schema_version": "cbsp21_patch_input_v1",
-  "patch_id": "BUNDLE_32.4.12",
-  "title": "No-Op Suppression for Undo/Redo Toasts",
-  "intent": "Prevent misleading toast notifications when undo/redo is triggered on empty history stacks. Buttons already have correct disabled bindings, but keyboard shortcuts can still call these functions when stacks are empty.",
+  "patch_id": "BUNDLE_32.4.13",
+  "title": "Subtle Shake on Disabled Undo/Redo (button + keyboard)",
+  "intent": "Add visual feedback (subtle shake animation) when users attempt undo/redo but it's unavailable. Works for both button clicks and keyboard shortcuts. No toast spam - just a gentle shake cue.",
   "change_type": "code",
   "behavior_change": "compatible",
   "risk_level": "low",
@@ -17,13 +17,17 @@
   },
   "diff_articulation": {
     "what_changed": [
-      "Added early return guard in undo() function when historyStack is empty",
-      "Added early return guard in redo() function when redoStack is empty",
-      "Changed label retrieval from conditional (with undefined fallback) to direct string conversion (since stack.length > 0 is now guaranteed)",
-      "Added Bundle 32.4.12 comment headers to both functions",
-      "Buttons already have correct :disabled bindings, no changes needed there"
+      "Added undoBtnRef and redoBtnRef template refs for button elements",
+      "Added shakeUndo and shakeRedo reactive state booleans",
+      "Created triggerShake() function that toggles shake state, uses requestAnimationFrame for restart, auto-clears after 260ms, and focuses the button",
+      "Updated undo() no-op guard to call triggerShake('undo') instead of silent return",
+      "Updated redo() no-op guard to call triggerShake('redo') instead of silent return",
+      "Attached ref='undoBtnRef' and :class='{ shake: shakeUndo }' to Undo button",
+      "Attached ref='redoBtnRef' and :class='{ shake: shakeRedo }' to Redo button",
+      "Added subtleShake keyframes animation (±2px horizontal movement, 220ms duration)",
+      "Added .shake CSS class that applies the animation"
     ],
-    "why_not_redundant": "Current implementation allows toast to fire even when stack is empty (label would be undefined). New implementation adds explicit guards to prevent no-op operations from showing misleading toasts. This complements the button disabled state which prevents clicks, but keyboard shortcuts can still trigger these functions."
+    "why_not_redundant": "Bundle 32.4.12 added silent no-op suppression (no toast when stacks empty). This enhances that behavior by providing visual feedback via shake animation instead of complete silence. Users now get a subtle cue that undo/redo is unavailable, improving UX without toast spam."
   },
   "diff_range": {
     "base": "origin/main",
@@ -35,7 +39,7 @@
   ],
   "overall_file_context_coverage": 100.0,
   "verification": {
-    "commands_run": "Manual code review - verified guard placement before store operations and toast calls. File scanned: 549/549 lines (100% coverage)."
+    "commands_run": "Manual code review - verified refs attached, shake state management correct, animation keyframes valid. File scanned: 575/575 lines (100% coverage)."
   },
-  "notes": "Minimal change - adds 2 early return guards. Buttons already have disabled state based on stack.length. This prevents keyboard shortcuts from triggering misleading toasts."
+  "notes": "Shake animation is intentionally subtle (±2px, 220ms). Works for both button clicks and keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y). Button is auto-focused during shake for keyboard accessibility. No toast spam - just visual feedback."
 }

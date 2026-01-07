@@ -58,7 +58,9 @@
         </div>
         <!-- Bundle 32.4.0: Undo button -->
         <button
+          ref="undoBtnRef"
           class="jump-btn undo-btn"
+          :class="{ shake: shakeUndo }"
           type="button"
           :title="store.historyStack.length ? 'Undo last edit (Ctrl+Z)' : 'Undo is unavailable (no edits to undo)'"
           :disabled="store.historyStack.length === 0"
@@ -68,7 +70,9 @@
         </button>
         <!-- Bundle 32.4.3.1: Redo button -->
         <button
+          ref="redoBtnRef"
           class="jump-btn redo-btn"
+          :class="{ shake: shakeRedo }"
           type="button"
           :title="store.redoStack.length ? 'Redo last undone edit (Ctrl+Shift+Z)' : 'Redo is unavailable (nothing to redo)'"
           :disabled="store.redoStack.length === 0"
@@ -154,6 +158,27 @@ import HistoryStackPanel from "./HistoryStackPanel.vue";
 const store = useRosetteStore();
 const toast = useUiToastStore();
 
+// Bundle 32.4.13: Button refs + shake state for disabled undo/redo feedback
+const undoBtnRef = ref<HTMLButtonElement | null>(null);
+const redoBtnRef = ref<HTMLButtonElement | null>(null);
+
+const shakeUndo = ref(false);
+const shakeRedo = ref(false);
+
+function triggerShake(which: "undo" | "redo") {
+  if (which === "undo") {
+    shakeUndo.value = false; // restart animation
+    requestAnimationFrame(() => (shakeUndo.value = true));
+    window.setTimeout(() => (shakeUndo.value = false), 260);
+    undoBtnRef.value?.focus?.();
+  } else {
+    shakeRedo.value = false;
+    requestAnimationFrame(() => (shakeRedo.value = true));
+    window.setTimeout(() => (shakeRedo.value = false), 260);
+    redoBtnRef.value?.focus?.();
+  }
+}
+
 // Bundle 32.4.11: Toast helper for undo/redo with source tracking
 function toastUndoRedo(kind: "undo" | "redo", source: "keyboard" | "clicked", label?: string) {
   const verb = kind === "undo" ? "Undo" : "Redo";
@@ -167,9 +192,13 @@ function toastUndoRedo(kind: "undo" | "redo", source: "keyboard" | "clicked", la
 
 // Bundle 32.4.11: Undo wrapper with label-aware toast
 // Bundle 32.4.12: No-op suppression (no toast when stack empty)
+// Bundle 32.4.13: Shake feedback when unavailable
 function undo(source: "keyboard" | "clicked" = "clicked") {
   const stack = store.historyStack ?? [];
-  if (!stack.length) return; // 🔕 no-op → no toast
+  if (!stack.length) {
+    triggerShake("undo");
+    return;
+  }
 
   const label = String(stack[stack.length - 1]?.label ?? "Edit");
 
@@ -179,9 +208,13 @@ function undo(source: "keyboard" | "clicked" = "clicked") {
 
 // Bundle 32.4.11: Redo wrapper with label-aware toast
 // Bundle 32.4.12: No-op suppression (no toast when stack empty)
+// Bundle 32.4.13: Shake feedback when unavailable
 function redo(source: "keyboard" | "clicked" = "clicked") {
   const stack = store.redoStack ?? [];
-  if (!stack.length) return; // 🔕 no-op → no toast
+  if (!stack.length) {
+    triggerShake("redo");
+    return;
+  }
 
   const label = String(stack[stack.length - 1]?.label ?? "Edit");
 
@@ -544,5 +577,18 @@ kbd {
 }
 .ring-actions .mini.dist:hover:not(:disabled) {
   background: #cce8f7;
+}
+
+/* Bundle 32.4.13: Subtle shake animation for disabled undo/redo */
+@keyframes subtleShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: subtleShake 220ms ease-in-out;
 }
 </style>
