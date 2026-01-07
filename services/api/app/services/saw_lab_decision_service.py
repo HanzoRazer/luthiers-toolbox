@@ -66,7 +66,7 @@ def _write_decision_artifact(
         event_type="saw_compare_decision",
         status=status,
         tool_id=index_meta.get("tool_id", "saw:decision"),
-        mode="saw_lab",
+        mode="saw_compare",
         material_id=index_meta.get("material_id", "unknown"),
         machine_id=index_meta.get("machine_id", "unknown"),
         workflow_session_id=index_meta.get("session_id"),

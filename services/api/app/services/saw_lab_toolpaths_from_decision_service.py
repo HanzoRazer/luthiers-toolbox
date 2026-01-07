@@ -63,6 +63,7 @@ def _write_artifact(*, kind: str, status: str, index_meta: Dict[str, Any], paylo
         run_id=run_id,
         created_at_utc=datetime.now(timezone.utc),
         mode="saw_compare",
+        event_type=kind,  # Set event_type to enable filtering by kind
         status=status,
         tool_id=tool_id,
         workflow_session_id=index_meta.get("session_id"),

@@ -60,7 +60,7 @@ def _write_run_artifact_safely(*, kind: str, status: str, index_meta: Dict[str, 
     
     # Extract required fields from index_meta
     tool_id = str(index_meta.get("tool_id") or "saw:unknown")
-    mode = "saw_lab"
+    mode = "saw_compare"
     
     # Extract risk level from payload if available
     risk_level = status
