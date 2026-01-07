@@ -57,3 +57,22 @@ def read_artifact(artifact_id: str) -> Dict[str, Any]:
 def clear_artifacts() -> None:
     """Clear all artifacts (for testing)."""
     _batch_artifacts.clear()
+
+
+def query_executions_by_decision(batch_decision_artifact_id: str) -> list[Dict[str, Any]]:
+    """
+    Query execution artifacts by parent decision ID.
+
+    Returns list of execution artifacts sorted by created_utc descending (newest first).
+    """
+    results = []
+    for art in _batch_artifacts.values():
+        if art.get("kind") != "saw_batch_execution":
+            continue
+        payload = art.get("payload", {})
+        if payload.get("batch_decision_artifact_id") == batch_decision_artifact_id:
+            results.append(art)
+
+    # Sort by created_utc descending (newest first)
+    results.sort(key=lambda a: a.get("created_utc", ""), reverse=True)
+    return results
