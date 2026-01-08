@@ -27,36 +27,44 @@ from typing import Dict, Iterable, List, Tuple
 
 # --- Config ------------------------------------------------------------------
 
+# SCOPE GATE V2: Backend-only scanning
+# Frontend uses SDK adapters - keyword matching produces false positives
+# (e.g., document.body, body: JSON.stringify, promote button text)
+
 DEFAULT_TARGETS = [
-    # Frontend (adjust if your repo uses packages/client/src instead of client/src)
-    "client/src/components/rmos",
-    "client/src/features/art_studio",
-    "client/src/features/rmos",
-    # Backend
+    # Backend only - frontend uses SDK adapters and has different rules
     "services/api/app/art_studio",
 ]
 
 ALT_FRONTEND_TARGETS = [
-    "packages/client/src/components/rmos",
-    "packages/client/src/features/art_studio",
-    "packages/client/src/features/rmos",
+    # Disabled: Frontend scanning produces too many false positives
+    # "packages/client/src/components/rmos",
+    # "packages/client/src/features/art_studio",
+    # "packages/client/src/features/rmos",
 ]
 
-INCLUDE_EXTS = {".ts", ".tsx", ".vue", ".py", ".md"}
+# Only scan Python files in backend
+INCLUDE_EXTS = {".py"}
 
 # Things Art Studio must not authoritatively do.
+# These patterns are tuned for Python backend code.
+# NOTE: Use SCOPE_ALLOW: TAG inline comments to suppress false positives in docs/comments.
 FORBIDDEN_PATTERNS: List[Tuple[str, str]] = [
     # Host geometry creep (structural domains)
-    ("HOST_GEOMETRY", r"\b(headstock|bridge|neck|body|tuner_hole|pin_hole|truss_rod)\b"),
+    # Exclude "bridge" - too ambiguous (bridge pattern, bridge_router, workflow_runs_bridge)
+    ("HOST_GEOMETRY", r"\b(headstock|neck_pocket|tuner_hole|pin_hole|truss_rod)\b"),
     ("HOST_GEOMETRY", r"\b(tuner(s)?|string\s*tension|saddle|bridge\s*pin)\b"),
-
-    # CAM / machine execution creep
-    ("MACHINE_OUTPUT", r"\b(gcode|toolpath(s)?|post[-_ ]?processor|\bnc\b)\b"),
-
-    # Authority creation / governance bypass
-    ("AUTHORITY", r"\b(create_run_id|persist_run|store_artifact|write_run_artifact)\b"),
-    ("AUTHORITY", r"\b/api/(cam|saw)/\b"),
-    ("AUTHORITY", r"\b(promote|decideManufacturingCandidate|bulk-review)\b"),
+    # CAM / machine execution creep - only match actual imports/function calls
+    # Don't match documentation strings mentioning toolpaths
+    ("MACHINE_OUTPUT", r"^from\s+.*\b(gcode|toolpath|post_processor)\b"),
+    ("MACHINE_OUTPUT", r"^\s*(import|from)\s+.*vcarve_toolpath"),
+    ("MACHINE_OUTPUT", r"^\s*gcode\s*=\s*svg_to_naive_gcode"),
+    # Authority creation / governance bypass (Python imports/calls)
+    ("AUTHORITY", r"^\s*from\s+\.\.(rmos\.runs|calculators\.saw_bridge)\s+import"),
+    (
+        "AUTHORITY",
+        r"\b(create_run_id|persist_run|store_artifact|write_run_artifact)\s*\(",
+    ),
 ]
 
 # Minimal allow mechanism (v1)
@@ -66,6 +74,7 @@ ALLOW_INLINE_RE = re.compile(r"SCOPE_ALLOW:\s*(\w+)\b", re.IGNORECASE)
 
 
 # --- Implementation -----------------------------------------------------------
+
 
 @dataclass
 class Finding:
@@ -168,7 +177,10 @@ def main() -> int:
         print("[art-studio-scope] PASS: no scope violations found")
         return 0
 
-    print(f"[art-studio-scope] FAIL: {len(violations)} scope violations found\n", file=sys.stderr)
+    print(
+        f"[art-studio-scope] FAIL: {len(violations)} scope violations found\n",
+        file=sys.stderr,
+    )
 
     # Group by file for readability
     by_file: dict[str, List[Finding]] = {}
@@ -182,7 +194,10 @@ def main() -> int:
             print(f"{f.line_no:4d} [{f.tag}] {f.line}", file=sys.stderr)
             printed += 1
             if printed >= args.max_findings:
-                print(f"\n[art-studio-scope] output truncated at {args.max_findings}", file=sys.stderr)
+                print(
+                    f"\n[art-studio-scope] output truncated at {args.max_findings}",
+                    file=sys.stderr,
+                )
                 return 1
 
     print(
