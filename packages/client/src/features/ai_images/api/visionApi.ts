@@ -346,16 +346,3 @@ export async function listRecentRuns(
   });
   return fetchJson<RunsListResponse>(`/api/rmos/runs?${params}`);
 }
-
-/**
- * Create a new RMOS run (canonical: POST /api/rmos/runs)
- * Used by VisionAttachToRunWidget when no runs exist yet.
- */
-export async function createRun(
-  request: CreateRunRequest = {}
-): Promise<CreateRunResponse> {
-  return fetchJson<CreateRunResponse>("/api/rmos/runs", {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
-}

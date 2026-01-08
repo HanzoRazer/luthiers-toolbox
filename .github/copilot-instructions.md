@@ -21,6 +21,7 @@ cd services/api && pytest tests/ -v -m cam            # CAM tests only (markers:
 cd packages/client && npm run test                     # Frontend (Vitest)
 cd packages/client && npm run test:request-id          # Request-ID validation
 make smoke-helix-posts                                 # Integration smoke test
+make check-boundaries                                  # All architectural fence checks
 
 # Start Both (for full stack dev)
 make start-api    # Terminal 1
@@ -66,6 +67,62 @@ Machine-executing endpoints follow **Operation Lane Governance**:
 **Reference Implementation**: CNC Saw Lab (`services/api/app/saw_lab/batch_router.py`)
 - Stage sequence: SPEC → PLAN → DECISION → EXECUTE → EXPORT → FEEDBACK
 - Artifacts persisted per stage for audit/replay
+
+## 🔗 Cross-Boundary Integration Patterns
+
+**Never import directly across domains.** Use these three patterns:
+
+### Pattern 1: Artifact Contract
+When Domain A needs Domain B's output **without code dependency**:
+```python
+# Producer (e.g., Analyzer)
+def perform_measurement():
+    result = {"frequency_hz": 440, "mode": "fundamental"}
+    write_json_artifact("measurement_001.json", result, sha256=True)
+    log_to_manifest("measurement_001.json")
+
+# Consumer (e.g., ToolBox)
+def interpret_measurement():
+    artifacts = list_artifacts_from_manifest()
+    data = load_json(artifacts[0])
+    validate_schema(data)  # Check JSON schema
+    return generate_advisory(data)
+```
+
+### Pattern 2: HTTP API Contract
+When Domain A needs to **invoke** Domain B's behavior:
+```python
+# Client (RMOS)
+from app.rmos.cam import CamIntentV1
+
+intent = CamIntentV1(mode="roughing", design={"entities": [...]})
+response = requests.post("/api/cam/toolpath/roughing/gcode", json=intent.dict())
+gcode = response.json()["gcode"]
+persist_result(gcode)
+
+# Server (CAM)
+@router.post("/toolpath/roughing/gcode")
+def generate_roughing(intent: CamIntentV1):
+    # Stateless: accept intent, compute, return result
+    toolpaths = generate_toolpaths(intent.design)
+    return {"gcode": post_process(toolpaths)}
+```
+
+### Pattern 3: SDK Adapter
+When **frontend** needs type-safe API access:
+```typescript
+// ✅ CORRECT: Typed SDK helper
+import { cam } from "@/sdk/endpoints";
+const { gcode, summary, requestId } = await cam.roughingGcode(payload);
+
+// ❌ WRONG: Raw fetch bypasses type safety and header parsing
+const response = await fetch("/api/cam/roughing/gcode", {
+  method: "POST",
+  body: JSON.stringify(payload),
+});
+```
+
+**Key Principle**: Artifact schemas, HTTP APIs, or SDK adapters – never direct imports.
 
 ## 🧪 Essential Patterns
 
@@ -160,6 +217,8 @@ describe("roughingGcode", () => {
 | RMOS importing CAM toolpaths | Use CAM Intent envelope + HTTP API |
 | CAM importing RMOS workflow | Accept intent, return data – no orchestration |
 | AI sandbox creating artifacts | Return advisory data only – humans decide |
+| Direct `RunArtifact()` construction | Use `validate_and_persist()` from `app.rmos.runs_v2.store` |
+| Frontend raw `fetch()` calls | Import from `@/sdk/endpoints` – provides types, headers, request-id |
 
 ## 🛠️ Essential CLI Commands
 
@@ -231,7 +290,37 @@ CI enforces ≥95% coverage verification for governed areas. See [CBSP21.md](../
 }
 ```
 
-## 📚 References
+## � Red Flags for AI Agents
+
+**Immediate rejection** – these patterns violate architectural fences:
+
+```python
+# ❌ RMOS importing CAM execution
+from app.cam.toolpath.roughing import generate_roughing_toolpath
+
+# ❌ CAM importing RMOS orchestration
+from app.rmos.workflow import approve_workflow
+
+# ❌ AI sandbox creating artifacts
+from app.rmos.runs.store import create_run_artifact
+
+# ❌ Direct RunArtifact construction
+from app.rmos.runs_v2.schemas import RunArtifact
+artifact = RunArtifact(run_id="xyz", ...)  # Bypasses validation!
+
+# ❌ External repo import
+from tap_tone.measurement import perform_analysis
+
+# ❌ Frontend raw fetch
+const response = await fetch("/api/cam/roughing/gcode", {...});
+```
+
+**Before importing across domains:**
+1. Check `FENCE_REGISTRY.json` for allowed imports
+2. If forbidden, use artifact contract, HTTP API, or SDK adapter
+3. Run `make check-boundaries` before commit
+
+## �📚 References
 
 - [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) – Architectural boundary registry (8 fence profiles)
 - [docs/governance/FENCE_ARCHITECTURE.md](../docs/governance/FENCE_ARCHITECTURE.md) – Complete fence documentation
@@ -240,12 +329,4 @@ CI enforces ≥95% coverage verification for governed areas. See [CBSP21.md](../
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
 - [docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md](../docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md) – Authoritative router prefixes
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
-
-
-## 📚 References
-
-- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~116 routers by wave)
-- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
-- [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
-- [docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md](../docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md) – Authoritative router prefixes
-- [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
+- [CBSP21.md](../CBSP21.md) – Completeness protocol for large changes
