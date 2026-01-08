@@ -1,0 +1,408 @@
+{
+  "$schema": "https://luthiers-toolbox.dev/schemas/fence-registry-v1.json",
+  "version": "1.0.0",
+  "repo_name": "luthiers-toolbox",
+  "last_updated": "2026-01-08",
+  "description": "Architectural boundary enforcement registry for Luthier's ToolBox",
+  
+  "profiles": {
+    "external_boundary": {
+      "description": "Cross-repository boundary: ToolBox ↔ Analyzer",
+      "enabled": true,
+      "scan_roots": ["services/api/app"],
+      "forbidden_imports": [
+        {
+          "prefix": "tap_tone.",
+          "reason": "Analyzer core measurement code - ToolBox interprets, not measures",
+          "alternative": "Use artifact ingestion (JSON/CSV/WAV) or HTTP API"
+        },
+        {
+          "prefix": "modes.",
+          "reason": "Analyzer modal analysis - external dependency",
+          "alternative": "Consume analysis results via artifacts"
+        }
+      ],
+      "enforcement_script": "services/api/app/ci/check_boundary_imports.py --profile toolbox",
+      "documentation": "docs/BOUNDARY_RULES.md#boundary-rules"
+    },
+
+    "rmos_cam_boundary": {
+      "description": "Internal domain boundary: RMOS orchestration ↔ CAM execution",
+      "enabled": true,
+      "scan_roots": [
+        "services/api/app/rmos",
+        "services/api/app/cam"
+      ],
+      "rules": [
+        {
+          "domain": "RMOS",
+          "paths": ["services/api/app/rmos/**"],
+          "allowed_imports": [
+            "app.rmos.*",
+            "app.util.*",
+            "app.schemas.*",
+            "app.models.*",
+            "app.core.*"
+          ],
+          "forbidden_imports": [
+            {
+              "prefix": "app.cam.toolpath.",
+              "reason": "RMOS orchestrates, doesn't generate toolpaths",
+              "alternative": "Use CAM Intent envelope + HTTP API calls"
+            },
+            {
+              "prefix": "app.cam.post.",
+              "reason": "Post-processing is CAM responsibility",
+              "alternative": "Pass post-processor ID, let CAM handle generation"
+            }
+          ],
+          "allowed_exceptions": [
+            "app/rmos/cam/schemas_intent.py",
+            "app/rmos/cam/__init__.py"
+          ]
+        },
+        {
+          "domain": "CAM",
+          "paths": ["services/api/app/cam/**"],
+          "allowed_imports": [
+            "app.cam.*",
+            "app.util.*",
+            "app.schemas.*",
+            "app.models.*",
+            "app.core.*",
+            "app.rmos.cam.CamIntentV1"
+          ],
+          "forbidden_imports": [
+            {
+              "prefix": "app.rmos.workflow.",
+              "reason": "CAM executes, doesn't orchestrate workflows",
+              "alternative": "Receive intent envelope, return results"
+            },
+            {
+              "prefix": "app.rmos.runs.",
+              "reason": "Artifact persistence is RMOS responsibility",
+              "alternative": "Return data structures, let caller persist"
+            },
+            {
+              "prefix": "app.rmos.feasibility.",
+              "reason": "Feasibility gates belong to orchestration layer",
+              "alternative": "Return risk metrics, let RMOS decide"
+            }
+          ],
+          "allowed_exceptions": []
+        }
+      ],
+      "enforcement_script": "services/api/app/ci/check_domain_boundaries.py --profile rmos_cam",
+      "documentation": "docs/governance/DOMAIN_BOUNDARIES.md"
+    },
+
+    "operation_lane_boundary": {
+      "description": "Operation Lane governance: OPERATION vs UTILITY separation",
+      "enabled": true,
+      "scan_roots": ["services/api/app/saw_lab", "services/api/app/rmos/operations"],
+      "rules": [
+        {
+          "domain": "OPERATION_LANE",
+          "paths": [
+            "services/api/app/saw_lab/**",
+            "services/api/app/rmos/operations/**"
+          ],
+          "required_patterns": [
+            {
+              "pattern": "validate_and_persist|persist_artifact",
+              "reason": "OPERATION lane must persist artifacts",
+              "files": ["*_service.py", "*_router.py"]
+            },
+            {
+              "pattern": "feasibility.*check|FeasibilityResult",
+              "reason": "OPERATION lane must have feasibility gate",
+              "files": ["*_service.py"]
+            }
+          ],
+          "forbidden_patterns": [
+            {
+              "pattern": "direct.*write|open.*w|makedirs",
+              "reason": "Use artifact abstraction, not direct file writes",
+              "exception_files": ["store.py", "artifact_writer.py"]
+            }
+          ]
+        },
+        {
+          "domain": "UTILITY_LANE",
+          "paths": [
+            "services/api/app/cam/routers/**",
+            "services/api/app/routers/cam_*.py"
+          ],
+          "forbidden_patterns": [
+            {
+              "pattern": "persist_artifact|store_run",
+              "reason": "UTILITY lane is stateless, no artifact storage",
+              "alternative": "Migrate to OPERATION lane if governance needed"
+            }
+          ]
+        }
+      ],
+      "enforcement_script": "services/api/app/ci/check_operation_lane_compliance.py",
+      "documentation": "docs/OPERATION_EXECUTION_GOVERNANCE_v1.md"
+    },
+
+    "ai_sandbox_boundary": {
+      "description": "AI sandbox isolation: advisory only, no execution authority",
+      "enabled": true,
+      "scan_roots": ["services/api/app/_experimental"],
+      "forbidden_imports": [
+        {
+          "prefix": "app.rmos.workflow.",
+          "reason": "AI cannot control workflow state machine",
+          "alternative": "Return advisories via artifact structure"
+        },
+        {
+          "prefix": "app.rmos.runs.store.",
+          "reason": "AI cannot create/modify run artifacts",
+          "alternative": "Return advisory data, let orchestrator persist"
+        },
+        {
+          "prefix": "app.rmos.toolpaths.",
+          "reason": "AI cannot generate toolpaths directly",
+          "alternative": "Return design suggestions, not executable code"
+        }
+      ],
+      "forbidden_calls": [
+        "approve_workflow",
+        "generate_toolpaths",
+        "create_run_artifact",
+        "persist_run_artifact",
+        "save_session"
+      ],
+      "enforcement_scripts": [
+        "ci/ai_sandbox/check_ai_import_boundaries.py",
+        "ci/ai_sandbox/check_ai_forbidden_calls.py",
+        "ci/ai_sandbox/check_ai_write_paths.py"
+      ],
+      "documentation": "docs/governance/AI_SANDBOX_GOVERNANCE.md"
+    },
+
+    "saw_lab_encapsulation": {
+      "description": "Saw Lab self-containment: reference implementation for OPERATION lane",
+      "enabled": true,
+      "scan_roots": ["services/api/app/saw_lab"],
+      "rules": [
+        {
+          "domain": "SAW_LAB",
+          "paths": ["services/api/app/saw_lab/**"],
+          "allowed_imports": [
+            "app.saw_lab.*",
+            "app.rmos.runs_v2.*",
+            "app.rmos.cam.CamIntentV1",
+            "app.util.*",
+            "app.schemas.*"
+          ],
+          "forbidden_imports": [
+            {
+              "prefix": "app.cam.toolpath.",
+              "reason": "Saw Lab uses CAM Intent envelope",
+              "alternative": "Construct CamIntentV1, call via HTTP"
+            },
+            {
+              "prefix": "app.rmos.workflow.",
+              "reason": "Saw Lab manages its own workflow stages",
+              "alternative": "Use saw_lab stage sequence (SPEC→PLAN→DECISION→EXECUTE)"
+            }
+          ],
+          "required_files": [
+            "batch_router.py",
+            "batch_service.py",
+            "schemas.py"
+          ],
+          "required_endpoints": [
+            "/spec",
+            "/plan",
+            "/approve",
+            "/toolpaths",
+            "/gcode"
+          ]
+        }
+      ],
+      "enforcement_script": "services/api/app/ci/check_saw_lab_encapsulation.py",
+      "documentation": "docs/CNC_SAW_LAB_DEVELOPER_GUIDE.md"
+    },
+
+    "frontend_sdk_boundary": {
+      "description": "Frontend must use SDK helpers, not raw fetch",
+      "enabled": true,
+      "scan_roots": [
+        "packages/client/src/components",
+        "packages/client/src/views",
+        "packages/client/src/features"
+      ],
+      "forbidden_patterns": [
+        {
+          "pattern": "fetch\\(['\"]/(api/)?[^'\"]*['\"]",
+          "reason": "Use typed SDK helpers from @/sdk/endpoints",
+          "alternative": "import { cam } from '@/sdk/endpoints'",
+          "exception_files": [
+            "packages/client/src/sdk/**",
+            "packages/client/src/utils/http.ts"
+          ]
+        },
+        {
+          "pattern": "axios\\.(get|post|put|delete)\\(['\"]/(api/)?",
+          "reason": "Use typed SDK helpers instead of raw axios",
+          "alternative": "import { rmos } from '@/sdk'",
+          "exception_files": [
+            "packages/client/src/sdk/core/apiFetch.ts"
+          ]
+        }
+      ],
+      "enforcement_script": "scripts/ci/check_frontend_sdk_usage.py",
+      "documentation": "packages/client/src/sdk/endpoints/README.md"
+    },
+
+    "artifact_authority": {
+      "description": "Run artifact creation restricted to authorized modules",
+      "enabled": true,
+      "scan_roots": ["services/api/app"],
+      "rules": [
+        {
+          "authority": "ARTIFACT_CREATION",
+          "allowed_files": [
+            "services/api/app/rmos/runs_v2/store.py",
+            "services/api/app/rmos/runs_v2/schemas.py"
+          ],
+          "forbidden_calls": [
+            {
+              "name": "RunArtifact",
+              "reason": "Direct construction bypasses validation",
+              "alternative": "Use validate_and_persist() from store"
+            }
+          ],
+          "forbidden_imports": [
+            {
+              "symbol": "RunArtifact",
+              "reason": "Import restricted to store.py and schemas.py",
+              "alternative": "Import through store interface",
+              "exception_context": "TYPE_CHECKING"
+            }
+          ]
+        },
+        {
+          "authority": "ARTIFACT_VALIDATION",
+          "allowed_files": [
+            "services/api/app/rmos/runs_v2/store.py"
+          ],
+          "required_checks": [
+            "feasibility_sha256",
+            "risk_level",
+            "completeness_guard"
+          ]
+        }
+      ],
+      "enforcement_scripts": [
+        "ci/rmos/check_no_direct_runartifact.py",
+        "ci/ai_sandbox/check_rmos_completeness_guard.py"
+      ],
+      "documentation": "docs/governance/SECURITY_TRUST_BOUNDARY_CONTRACT_v1.md"
+    },
+
+    "legacy_deprecation": {
+      "description": "Legacy endpoint usage tracking and migration enforcement",
+      "enabled": true,
+      "scan_roots": [
+        "packages/client/src",
+        "packages/sdk/src"
+      ],
+      "legacy_patterns": [
+        {
+          "pattern": "/api/cam/vcarve/",
+          "canonical": "/api/cam/toolpath/vcarve/",
+          "deprecation_date": "2025-12-31"
+        },
+        {
+          "pattern": "/api/cam/roughing/",
+          "canonical": "/api/cam/toolpath/roughing/",
+          "deprecation_date": "2025-12-31"
+        },
+        {
+          "pattern": "/api/rosette-patterns",
+          "canonical": "/api/art/rosette/pattern/patterns",
+          "deprecation_date": "2026-03-31"
+        },
+        {
+          "pattern": "/api/art-studio/workflow/",
+          "canonical": "/api/rmos/workflow/",
+          "deprecation_date": "2026-03-31"
+        }
+      ],
+      "budget": 10,
+      "enforcement_script": "services/api/app/ci/legacy_usage_gate.py --roots packages/client/src --budget 10",
+      "documentation": "docs/ENDPOINT_TRUTH_MAP.md#legacy-route-governance"
+    }
+  },
+
+  "enforcement_order": [
+    "external_boundary",
+    "artifact_authority",
+    "ai_sandbox_boundary",
+    "operation_lane_boundary",
+    "rmos_cam_boundary",
+    "saw_lab_encapsulation",
+    "frontend_sdk_boundary",
+    "legacy_deprecation"
+  ],
+
+  "ci_integration": {
+    "required_checks": [
+      {
+        "name": "External Boundary Check",
+        "script": "python -m app.ci.check_boundary_imports --profile toolbox",
+        "workflow": ".github/workflows/architecture_scan.yml",
+        "blocking": true
+      },
+      {
+        "name": "AI Sandbox Boundaries",
+        "scripts": [
+          "python ci/ai_sandbox/check_ai_import_boundaries.py",
+          "python ci/ai_sandbox/check_ai_forbidden_calls.py",
+          "python ci/ai_sandbox/check_ai_write_paths.py"
+        ],
+        "workflow": ".github/workflows/ai_sandbox_enforcement.yml",
+        "blocking": true
+      },
+      {
+        "name": "Artifact Authority Check",
+        "script": "python ci/rmos/check_no_direct_runartifact.py",
+        "workflow": ".github/workflows/artifact_linkage_gate.yml",
+        "blocking": true
+      },
+      {
+        "name": "Legacy Usage Gate",
+        "script": "python -m app.ci.legacy_usage_gate --roots packages/client/src --budget 10",
+        "workflow": ".github/workflows/legacy_endpoint_usage_gate.yml",
+        "blocking": false
+      }
+    ],
+    "pre_commit_hooks": [
+      "scripts/git-hooks/check-boundaries.sh"
+    ]
+  },
+
+  "exemption_process": {
+    "description": "No code exemptions allowed. Integration requires explicit contracts.",
+    "alternatives": [
+      "Create artifact contract (JSON/CSV schema)",
+      "Create HTTP API contract (OpenAPI spec)",
+      "Create SDK adapter layer"
+    ],
+    "escalation": "Architecture team review required for new integration patterns"
+  },
+
+  "metrics": {
+    "track": [
+      "boundary_violations_per_month",
+      "legacy_endpoint_usage_count",
+      "artifact_authority_violations",
+      "ai_sandbox_escape_attempts"
+    ],
+    "dashboard": "reports/boundary_health.json"
+  }
+}
