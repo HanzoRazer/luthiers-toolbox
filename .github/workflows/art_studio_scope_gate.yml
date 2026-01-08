@@ -1,0 +1,65 @@
+name: Art Studio Scope Gate
+
+on:
+  pull_request:
+    paths:
+      - "packages/client/src/features/art_studio/**"
+      - "packages/client/src/components/rmos/**"
+      - "client/src/features/art_studio/**"
+      - "client/src/components/rmos/**"
+      - "services/api/app/art_studio/**"
+      - "scripts/ci/check_art_studio_scope.py"
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  art-studio-scope-gate:
+    name: Ornament-Authority Boundary Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Art Studio Scope Gate
+        run: python scripts/ci/check_art_studio_scope.py --repo-root .
+
+  art-studio-scope-summary:
+    name: Scope Gate Summary
+    runs-on: ubuntu-latest
+    needs: art-studio-scope-gate
+    if: always()
+
+    steps:
+      - name: Report status
+        run: |
+          echo "## Art Studio Scope Gate Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.art-studio-scope-gate.result }}" == "success" ]; then
+            echo "PASS: Art Studio remains ornament-authority only" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No host geometry, CAM, or authority creep detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "FAIL: Scope violations detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Art Studio must remain ornament-authority only." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Please review:**" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/governance/ART_STUDIO_SCOPE_GOVERNANCE_v1.md" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/governance/ART_STUDIO_SCOPE_GUIDANCE_v1.md" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Violation categories:**" >> $GITHUB_STEP_SUMMARY
+            echo "- HOST_GEOMETRY: headstock/bridge/neck/tuner references" >> $GITHUB_STEP_SUMMARY
+            echo "- MACHINE_OUTPUT: gcode/toolpath/post-processor references" >> $GITHUB_STEP_SUMMARY
+            echo "- AUTHORITY: run artifact creation or approval actions" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**To suppress false positives:**" >> $GITHUB_STEP_SUMMARY
+            echo "Add \`# SCOPE_ALLOW: TAG reason\` on the line." >> $GITHUB_STEP_SUMMARY
+          fi

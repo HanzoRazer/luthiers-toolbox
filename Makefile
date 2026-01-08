@@ -5,11 +5,12 @@
 help:
 	@echo "Luthier's Toolbox - Makefile Targets"
 	@echo "====================================="
-	@echo "smoke-helix-posts    Test helical ramping with all post-processor presets"
-	@echo "test-api             Run API smoke tests"
-	@echo "start-api            Start FastAPI dev server"
-	@echo "start-client         Start Vue dev client"
-	@echo "check-boundaries     Run all architectural fence checks"
+	@echo "smoke-helix-posts       Test helical ramping with all post-processor presets"
+	@echo "test-api                Run API smoke tests"
+	@echo "start-api               Start FastAPI dev server"
+	@echo "start-client            Start Vue dev client"
+	@echo "check-art-studio-scope  Run Art Studio ornament-authority scope gate"
+	@echo "check-boundaries        Run all architectural fence checks"
 
 # Configuration
 API_HOST ?= 127.0.0.1
@@ -99,6 +100,12 @@ start-client:
 	cd packages/client && npm run dev
 
 # Architectural Boundary Enforcement
+.PHONY: check-art-studio-scope
+check-art-studio-scope:
+	@echo "=== Art Studio Scope Gate ==="
+	@python scripts/ci/check_art_studio_scope.py --repo-root .
+	@echo "=== Art Studio Scope Gate complete ==="
+
 .PHONY: check-boundaries
 check-boundaries:
 	@echo "=== Running Architectural Fence Checks ==="

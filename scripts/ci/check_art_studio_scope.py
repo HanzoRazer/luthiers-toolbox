@@ -18,46 +18,51 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 
 # --- Config ------------------------------------------------------------------
 
 DEFAULT_TARGETS = [
+    # Frontend (adjust if your repo uses packages/client/src instead of client/src)
     "client/src/components/rmos",
     "client/src/features/art_studio",
     "client/src/features/rmos",
+    # Backend
     "services/api/app/art_studio",
 ]
 
-INCLUDE_EXTS = {".ts", ".tsx", ".vue", ".py"}
+ALT_FRONTEND_TARGETS = [
+    "packages/client/src/components/rmos",
+    "packages/client/src/features/art_studio",
+    "packages/client/src/features/rmos",
+]
 
-# Things Art Studio must not *authoritatively* do.
-# Keep these focused to avoid noise.
+INCLUDE_EXTS = {".ts", ".tsx", ".vue", ".py", ".md"}
+
+# Things Art Studio must not authoritatively do.
 FORBIDDEN_PATTERNS: List[Tuple[str, str]] = [
     # Host geometry creep (structural domains)
     ("HOST_GEOMETRY", r"\b(headstock|bridge|neck|body|tuner_hole|pin_hole|truss_rod)\b"),
     ("HOST_GEOMETRY", r"\b(tuner(s)?|string\s*tension|saddle|bridge\s*pin)\b"),
 
     # CAM / machine execution creep
-    ("MACHINE_OUTPUT", r"\b(gcode|toolpath(s)?|post[-_ ]?processor|nc\b)\b"),
+    ("MACHINE_OUTPUT", r"\b(gcode|toolpath(s)?|post[-_ ]?processor|\bnc\b)\b"),
 
-    # Authority creation (ledger / governance bypass)
+    # Authority creation / governance bypass
     ("AUTHORITY", r"\b(create_run_id|persist_run|store_artifact|write_run_artifact)\b"),
-    ("AUTHORITY", r"\b(/api/(cam|saw)/)\b"),  # calling CAM/SAW directly from Art Studio lane
+    ("AUTHORITY", r"\b/api/(cam|saw)/\b"),
     ("AUTHORITY", r"\b(promote|decideManufacturingCandidate|bulk-review)\b"),
 ]
 
-# Allow-list exceptions (v1): places where words appear but are acceptable.
-# Keep this minimal—prefer fixing wording if possible.
-ALLOW_CONTEXT_PATTERNS: List[Tuple[str, str]] = [
-    # Future: Add inline allow mechanism: # SCOPE_ALLOW: <TAG> <reason>
-]
+# Minimal allow mechanism (v1)
+# Syntax (single-line):
+#   SCOPE_ALLOW: <TAG> <reason...>
+ALLOW_INLINE_RE = re.compile(r"SCOPE_ALLOW:\s*(\w+)\b", re.IGNORECASE)
 
 
 # --- Implementation -----------------------------------------------------------
@@ -85,18 +90,25 @@ def iter_files(root: Path, targets: Iterable[str]) -> Iterable[Path]:
                 yield fp
 
 
-def is_allowed(rel: str) -> bool:
-    # Placeholder for file allowlists if you choose to use them later
-    for _tag, pat in ALLOW_CONTEXT_PATTERNS:
-        if re.search(pat, rel):
-            return True
+def _detect_frontend_targets(root: Path) -> List[str]:
+    """Detect whether to use client/src or packages/client/src structure."""
+    # Check if packages/client/src exists (monorepo structure)
+    if (root / "packages" / "client" / "src").exists():
+        return ALT_FRONTEND_TARGETS + ["services/api/app/art_studio"]
+    return DEFAULT_TARGETS
+
+
+def _line_has_allow(line: str, tag: str) -> bool:
+    """Check if line contains SCOPE_ALLOW: TAG for the given tag."""
+    m = ALLOW_INLINE_RE.search(line)
+    if m and m.group(1).upper() == tag.upper():
+        return True
     return False
 
 
 def scan_file(root: Path, fp: Path) -> List[Finding]:
+    """Scan a single file for scope violations."""
     rel = str(fp.relative_to(root)).replace("\\", "/")
-    if is_allowed(rel):
-        return []
 
     findings: List[Finding] = []
     try:
@@ -112,26 +124,34 @@ def scan_file(root: Path, fp: Path) -> List[Finding]:
             continue
         for tag, pat in FORBIDDEN_PATTERNS:
             if re.search(pat, line, flags=re.IGNORECASE):
+                # Check for inline allow: SCOPE_ALLOW: TAG
+                if _line_has_allow(line, tag):
+                    continue
                 findings.append(Finding(tag, rel, i, line.rstrip(), pat))
     return findings
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(
+        description="Art Studio Scope Gate - prevents ornament-authority creep"
+    )
     ap.add_argument("--repo-root", default=".", help="Repo root (default: .)")
     ap.add_argument(
         "--targets",
         nargs="*",
-        default=DEFAULT_TARGETS,
-        help="Targets to scan (default: Art Studio/RMOS UI + art_studio backend)",
+        default=None,
+        help="Targets to scan (default: auto-detect frontend structure)",
     )
     ap.add_argument("--max-findings", type=int, default=200, help="Limit output")
     args = ap.parse_args()
 
     root = Path(args.repo_root).resolve()
 
+    # Auto-detect targets if not specified
+    targets = args.targets if args.targets else _detect_frontend_targets(root)
+
     all_findings: List[Finding] = []
-    for fp in iter_files(root, args.targets):
+    for fp in iter_files(root, targets):
         all_findings.extend(scan_file(root, fp))
 
     # Filter out read errors from counting as violations? No — fail fast.
