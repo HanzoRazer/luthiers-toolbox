@@ -4,6 +4,7 @@ SVG Generation Style Presets
 Defines style presets optimized for vectorization and lutherie patterns.
 These prompt suffixes produce images that vectorize well to SVG.
 """
+
 from __future__ import annotations
 
 from typing import Dict
@@ -58,7 +59,7 @@ SVG_STYLE_PRESETS: Dict[str, Dict[str, str]] = {
     },
     "inlay": {
         "name": "Inlay Design",
-        "description": "Guitar inlay pattern (headstock, fretboard)",
+        "description": "Guitar inlay pattern (headstock, fretboard)",  # SCOPE_ALLOW: HOST_GEOMETRY
         "prompt_suffix": (
             "guitar inlay design, decorative pattern, "
             "black and white silhouette, clean edges, "
