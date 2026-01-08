@@ -1,0 +1,75 @@
+{
+  "name": "Luthier's Toolbox - CNC Guitar Lutherie Platform",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "Vue.volar",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        },
+        "[vue]": {
+          "editor.defaultFormatter": "Vue.volar"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "forwardPorts": [8000, 5173],
+  "portsAttributes": {
+    "8000": {
+      "label": "FastAPI Backend",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Vite Frontend",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "remoteEnv": {
+    "CODESPACES": "true",
+    "PYTHONPATH": "${containerWorkspaceFolder}/services/api:${containerWorkspaceFolder}",
+    "RMOS_RUNS_V2_ENABLED": "true",
+    "ART_STUDIO_DB_PATH": "/tmp/art_studio.db"
+  },
+
+  "mounts": [
+    "source=${localWorkspaceFolder}/__REFERENCE__,target=${containerWorkspaceFolder}/__REFERENCE__,type=bind,consistency=cached"
+  ],
+
+  "containerEnv": {
+    "TZ": "UTC"
+  }
+}
