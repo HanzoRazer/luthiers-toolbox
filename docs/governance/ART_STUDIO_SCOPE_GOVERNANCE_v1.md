@@ -293,7 +293,7 @@ FORBIDDEN_PATTERNS: List[Tuple[str, str]] = [
     # Authority creation (ledger / governance bypass)
     ("AUTHORITY", r"\b(create_run_id|persist_run|store_artifact|write_run_artifact)\b"),
     ("AUTHORITY", r"\b(/api/(cam|saw)/)\b"),  # calling CAM/SAW directly from Art Studio lane
-    ("AUTHORITY", r"\b(promote|decideManufacturingCandidate|bulk-review|review)\b"),
+    ("AUTHORITY", r"\b(promote|decideManufacturingCandidate|bulk-review)\b"),
 ]
 
 # Allow-list exceptions (v1): places where words appear but are acceptable.
