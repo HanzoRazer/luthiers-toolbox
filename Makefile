@@ -9,6 +9,7 @@ help:
 	@echo "test-api             Run API smoke tests"
 	@echo "start-api            Start FastAPI dev server"
 	@echo "start-client         Start Vue dev client"
+	@echo "check-boundaries     Run all architectural fence checks"
 
 # Configuration
 API_HOST ?= 127.0.0.1
@@ -96,3 +97,26 @@ start-api:
 .PHONY: start-client
 start-client:
 	cd packages/client && npm run dev
+
+# Architectural Boundary Enforcement
+.PHONY: check-boundaries
+check-boundaries:
+	@echo "=== Running Architectural Fence Checks ==="
+	@echo "[1/7] External boundary (ToolBox ↔ Analyzer)..."
+	@cd services/api && python -m app.ci.check_boundary_imports --profile toolbox
+	@echo "[2/7] RMOS ↔ CAM domain boundary..."
+	@cd services/api && python -m app.ci.check_domain_boundaries --profile rmos_cam || true
+	@echo "[3/7] Operation lane compliance..."
+	@cd services/api && python -m app.ci.check_operation_lane_compliance || true
+	@echo "[4/7] AI sandbox boundaries..."
+	@python ci/ai_sandbox/check_ai_import_boundaries.py || true
+	@python ci/ai_sandbox/check_ai_forbidden_calls.py || true
+	@python ci/ai_sandbox/check_ai_write_paths.py || true
+	@echo "[5/7] Artifact authority..."
+	@python ci/rmos/check_no_direct_runartifact.py || true
+	@echo "[6/7] CAM Intent schema validation..."
+	@cd services/api && python -m app.ci.check_cam_intent_schema_hash
+	@echo "[7/7] Legacy usage gate..."
+	@cd services/api && python -m app.ci.legacy_usage_gate --roots "../../packages/client/src" --budget 10
+	@echo "=== All fence checks complete ==="
+	@echo "✅ See FENCE_REGISTRY.json and docs/governance/FENCE_ARCHITECTURE.md"

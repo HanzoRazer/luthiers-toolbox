@@ -1,7 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-07
+> **Last Updated:** 2026-01-08
 
 ## ⚡ Quick Start
 
@@ -12,9 +12,14 @@ cd services/api && source .venv/bin/activate && uvicorn app.main:app --reload --
 # Frontend (Vue on :5173, proxies /api → :8000)
 cd packages/client && npm run dev
 
+# Docker (full stack)
+docker compose up --build              # Development
+docker compose -f docker-compose.production.yml up -d  # Production
+
 # Key Tests
-cd services/api && pytest tests/ -v                    # Backend unit tests (pytest markers: unit, integration, smoke, cam)
+cd services/api && pytest tests/ -v -m cam            # CAM tests only (markers: unit, integration, smoke, cam)
 cd packages/client && npm run test                     # Frontend (Vitest)
+cd packages/client && npm run test:request-id          # Request-ID validation
 make smoke-helix-posts                                 # Integration smoke test
 
 # Start Both (for full stack dev)
@@ -29,10 +34,12 @@ make start-client # Terminal 2
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
 5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data)
-6. **Boundary**: Never import `tap_tone.*` or `modes.*` – ToolBox interprets, Analyzer measures (CI-enforced)
-7. **Request IDs**: All API responses MUST include `X-Request-Id` header for correlation
-8. **Machine Profiles**: Use valid IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
-9. **Error Handling**: Use `ApiError` class with `.is()`, `.isClientError()`, `.isServerError()` – never raw status checks
+6. **Request IDs**: All API responses MUST include `X-Request-Id` header for correlation
+7. **Machine Profiles**: Use valid IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
+8. **Error Handling**: Use `ApiError` class with `.is()`, `.isClientError()`, `.isServerError()` – never raw status checks
+9. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
+10. **Docker Ports**: API=8000, Client=8080, Proxy=8088 (hardcoded in docker-compose.yml)
+11. **Architectural Fences**: Check [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) before importing across domains (RMOS↔CAM, AI sandbox, etc.) – CI-enforced
 
 ## 📁 Key Paths
 
@@ -148,6 +155,42 @@ describe("roughingGcode", () => {
 | Schema drift | Run `python -m app.ci.check_cam_intent_schema_hash` |
 | SQLite `limit` keyword | Quote as `"limit"` in SQL statements |
 | CSV line ending issues | Use `splitlines()` not `split('\n')` |
+| Import boundary violation | Check [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) – use artifacts/HTTP, never direct imports |
+| Module-level `os.makedirs()` | Use lazy directory creation (Docker container crashes) |
+| RMOS importing CAM toolpaths | Use CAM Intent envelope + HTTP API |
+| CAM importing RMOS workflow | Accept intent, return data – no orchestration |
+| AI sandbox creating artifacts | Return advisory data only – humans decide |
+
+## 🛠️ Essential CLI Commands
+
+```bash
+# CI Gates (run before commit)
+python -m app.ci.check_boundary_imports --profile toolbox          # External boundaries
+python -m app.ci.check_domain_boundaries --profile rmos_cam        # Internal boundaries
+python -m app.ci.check_cam_intent_schema_hash                      # Schema validation
+python -m app.ci.check_endpoint_governance                         # Endpoint governance
+python -m app.ci.legacy_usage_gate --roots "../../packages/client/src" --budget 10  # Legacy usage
+python -m app.ci.check_operation_lane_compliance                   # Operation lane
+python ci/ai_sandbox/check_ai_import_boundaries.py                 # AI sandbox
+
+# Run all boundary checks
+make check-boundaries
+
+# RMOS Management (from services/api/)
+python -m app.rmos.runs_v2.cli_audit tail -n 50        # View run logs
+python -m app.rmos.runs_v2.cli_audit count --mode soft  # Count runs
+python -m app.rmos.runs_v2.cli_delete run_abc123 --reason "cleanup" --dry-run
+python -m app.rmos.runs_v2.cli_migrate status           # Check migration status
+
+# Package Scripts (from packages/client/)
+npm run dev                    # Start dev server (:5173)
+npm run build                  # Production build
+npm run test                   # Run all Vitest tests
+npm run test:watch             # Watch mode
+npm run test:request-id        # Request-ID specific tests
+npm run lint                   # ESLint check (max-warnings=0)
+npm run type-check             # Vue TypeScript check
+```
 
 ## 🔒 CBSP21 Completeness Protocol
 
@@ -160,6 +203,44 @@ When making large changes, create `.cbsp21/patch_input.json` manifest declaring:
 CI enforces ≥95% coverage verification for governed areas. See [CBSP21.md](../CBSP21.md).
 
 **Critical**: Never declare patches "redundant" without proving equivalence via `git diff` or validation commands.
+
+**Example manifest**:
+```json
+{
+  "schema": "cbsp21_patch_input_v1",
+  "patch_id": "FIX_409",
+  "title": "Fix helical ramping arc mode",
+  "intent": "Ensure post-processors use correct arc mode",
+  "change_type": "code",
+  "behavior_change": "compatible",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": ["services/api/app/cam/"],
+    "files_expected_to_change": ["services/api/app/cam/helical.py"]
+  },
+  "diff_articulation": {
+    "what_changed": [
+      "Fixed IJ vs R arc mode selection",
+      "Added post-processor validation"
+    ],
+    "why_not_redundant": "Previous code defaulted to IJ for all posts"
+  },
+  "verification": {
+    "commands_run": ["pytest tests/cam/test_helical.py -v"]
+  }
+}
+```
+
+## 📚 References
+
+- [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) – Architectural boundary registry (8 fence profiles)
+- [docs/governance/FENCE_ARCHITECTURE.md](../docs/governance/FENCE_ARCHITECTURE.md) – Complete fence documentation
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~116 routers by wave)
+- [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
+- [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
+- [docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md](../docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md) – Authoritative router prefixes
+- [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
+
 
 ## 📚 References
 
