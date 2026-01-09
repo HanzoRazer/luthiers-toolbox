@@ -36,10 +36,17 @@ from .schemas import (
     BindArtStudioCandidateRequest,
     BindArtStudioCandidateResponse,
 )
-from .store import get_run, list_runs_filtered, persist_run, create_run_id, attach_advisory
+from .store import (
+    get_run,
+    list_runs_filtered,
+    persist_run,
+    create_run_id,
+    attach_advisory,
+)
 from .diff import diff_runs
 from .attachments import get_attachment_path, put_json_attachment
 from .hashing import summarize_request, compute_feasibility_hash
+from app.rmos.api.response_utils import runs_list_response
 
 import json
 import time
@@ -51,8 +58,10 @@ router = APIRouter(prefix="/runs", tags=["runs"])
 # Response Models
 # =============================================================================
 
+
 class RunArtifactSummary(BaseModel):
     """Summary view of a run artifact for list endpoints."""
+
     run_id: str
     created_at_utc: str
     event_type: str
@@ -99,31 +108,51 @@ def _to_summary(r: RunArtifact) -> RunArtifactSummary:
 # Request Models
 # =============================================================================
 
+
 class RunCreateRequest(BaseModel):
     """Request body for creating a new run artifact."""
-    mode: str = Field(default="unknown", description="Operation mode (cam, preview, simulation)")
+
+    mode: str = Field(
+        default="unknown", description="Operation mode (cam, preview, simulation)"
+    )
     tool_id: str = Field(default="unknown", description="Tool identifier")
     status: str = Field(default="OK", description="Run status (OK, BLOCKED, ERROR)")
-    event_type: str = Field(default="unknown", description="Event type (approval, toolpaths, etc)")
-    request_summary: Dict[str, Any] = Field(default_factory=dict, description="Redacted request summary")
-    feasibility: Dict[str, Any] = Field(default_factory=dict, description="Feasibility evaluation result")
-    decision: Optional[Dict[str, Any]] = Field(default=None, description="Decision override (optional)")
+    event_type: str = Field(
+        default="unknown", description="Event type (approval, toolpaths, etc)"
+    )
+    request_summary: Dict[str, Any] = Field(
+        default_factory=dict, description="Redacted request summary"
+    )
+    feasibility: Dict[str, Any] = Field(
+        default_factory=dict, description="Feasibility evaluation result"
+    )
+    decision: Optional[Dict[str, Any]] = Field(
+        default=None, description="Decision override (optional)"
+    )
     meta: Dict[str, Any] = Field(default_factory=dict, description="Free-form metadata")
 
 
 class AttachAdvisoryRequest(BaseModel):
     """Request body for attaching an advisory to a run."""
+
     advisory_id: str = Field(..., description="Unique identifier of the advisory asset")
-    kind: str = Field(default="unknown", description="Type: explanation, advisory, note")
+    kind: str = Field(
+        default="unknown", description="Type: explanation, advisory, note"
+    )
     engine_id: Optional[str] = Field(None, description="AI engine that created it")
     engine_version: Optional[str] = Field(None, description="Engine version")
 
 
 class SuggestAndAttachRequest(BaseModel):
     """Request body for generating and attaching an explanation/advisory."""
+
     # Team decision: sync now; async flag reserved as escape hatch
-    generate_explanation: bool = Field(False, description="Generate placeholder explanation")
-    async_explanation: bool = Field(False, description="Reserved for future async support")
+    generate_explanation: bool = Field(
+        False, description="Generate placeholder explanation"
+    )
+    async_explanation: bool = Field(
+        False, description="Reserved for future async support"
+    )
 
     # Advisory typing
     kind: str = Field("explanation", description="Type: explanation, advisory, note")
@@ -132,8 +161,12 @@ class SuggestAndAttachRequest(BaseModel):
     prompt: Optional[str] = Field(None, description="User prompt for explanation")
 
     # Optional: allow attaching a provided payload without LLM
-    advisory_markdown: Optional[str] = Field(None, description="Pre-generated markdown content")
-    advisory_json: Optional[Dict[str, Any]] = Field(None, description="Pre-generated JSON data")
+    advisory_markdown: Optional[str] = Field(
+        None, description="Pre-generated markdown content"
+    )
+    advisory_json: Optional[Dict[str, Any]] = Field(
+        None, description="Pre-generated JSON data"
+    )
 
     # Optional provenance
     engine_id: Optional[str] = Field(None, description="AI engine that created it")
@@ -142,6 +175,7 @@ class SuggestAndAttachRequest(BaseModel):
 
 class SuggestAndAttachResponse(BaseModel):
     """Response from suggest-and-attach endpoint."""
+
     run_id: str
     advisory_sha256: str
     explanation_status: str
@@ -152,6 +186,7 @@ class SuggestAndAttachResponse(BaseModel):
 # =============================================================================
 # Create Endpoint (Immutable)
 # =============================================================================
+
 
 @router.post("", response_model=Dict[str, Any], summary="Create a new run artifact.")
 def create_run_endpoint(req: RunCreateRequest, request: Request):
@@ -186,7 +221,9 @@ def create_run_endpoint(req: RunCreateRequest, request: Request):
     ```
     """
     run_id = create_run_id()
-    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    req_id = getattr(request.state, "request_id", None) or request.headers.get(
+        "x-request-id"
+    )
 
     # Compute required feasibility hash
     feasibility_sha256 = compute_feasibility_hash(req.feasibility)
@@ -207,7 +244,11 @@ def create_run_endpoint(req: RunCreateRequest, request: Request):
         )
     else:
         # Extract from feasibility if available
-        risk_level = req.feasibility.get("risk_bucket") or req.feasibility.get("risk_level") or "UNKNOWN"
+        risk_level = (
+            req.feasibility.get("risk_bucket")
+            or req.feasibility.get("risk_level")
+            or "UNKNOWN"
+        )
         decision = RunDecision(
             risk_level=risk_level,
             score=req.feasibility.get("score"),
@@ -223,7 +264,9 @@ def create_run_endpoint(req: RunCreateRequest, request: Request):
         status=req.status,
         tool_id=req.tool_id,
         mode=req.mode,
-        request_summary=summarize_request(req.request_summary) if req.request_summary else {},
+        request_summary=(
+            summarize_request(req.request_summary) if req.request_summary else {}
+        ),
         feasibility=req.feasibility,
         decision=decision,
         hashes=hashes,
@@ -255,15 +298,20 @@ def create_run_endpoint(req: RunCreateRequest, request: Request):
 # List / Detail Endpoints
 # =============================================================================
 
-@router.get("", response_model=List[RunArtifactSummary], summary="List run artifacts.")
+
+@router.get("", response_model=Dict[str, Any], summary="List run artifacts.")
 def list_runs_endpoint(
     limit: int = Query(50, ge=1, le=500),
     event_type: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
-    batch_label: Optional[str] = Query(None, description="Filter runs by batch_label (from meta)"),
-    session_id: Optional[str] = Query(None, description="Filter runs by session_id (from meta)"),
+    batch_label: Optional[str] = Query(
+        None, description="Filter runs by batch_label (from meta)"
+    ),
+    session_id: Optional[str] = Query(
+        None, description="Filter runs by session_id (from meta)"
+    ),
 ):
     """
     List run artifacts with optional filtering.
@@ -280,7 +328,8 @@ def list_runs_endpoint(
         batch_label=batch_label,
         session_id=session_id,
     )
-    return [_to_summary(r) for r in runs]
+    items = [_to_summary(r).model_dump() for r in runs]
+    return runs_list_response(items, limit=limit)
 
 
 @router.get("/diff", summary="Diff two run artifacts by id.")
@@ -301,12 +350,17 @@ def diff_two_runs(a: str, b: str) -> Dict[str, Any]:
     return diff_runs(ra, rb)
 
 
-@router.get("/{run_id}", response_model=Dict[str, Any], summary="Get run artifact details.")
+@router.get(
+    "/{run_id}", response_model=Dict[str, Any], summary="Get run artifact details."
+)
 def read_run(run_id: str) -> Dict[str, Any]:
     """Get full details of a run artifact."""
     r = get_run(run_id)
     if r is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "RUN_NOT_FOUND", "run_id": run_id},
+        )
 
     created_at = r.created_at_utc
     if hasattr(created_at, "isoformat"):
@@ -363,7 +417,11 @@ def read_run(run_id: str) -> Dict[str, Any]:
                 "engine_id": a.engine_id,
                 "engine_version": a.engine_version,
                 "request_id": a.request_id,
-                "created_at_utc": a.created_at_utc.isoformat() if hasattr(a.created_at_utc, "isoformat") else a.created_at_utc,
+                "created_at_utc": (
+                    a.created_at_utc.isoformat()
+                    if hasattr(a.created_at_utc, "isoformat")
+                    else a.created_at_utc
+                ),
             }
             for a in (r.advisory_inputs or [])
         ],
@@ -404,6 +462,7 @@ def read_run(run_id: str) -> Dict[str, Any]:
 # Advisory Endpoints (NEW - Append-Only Pattern)
 # =============================================================================
 
+
 @router.post("/{run_id}/attach-advisory", summary="Attach an advisory to a run.")
 def attach_advisory_endpoint(run_id: str, req: AttachAdvisoryRequest, request: Request):
     """
@@ -433,7 +492,9 @@ def attach_advisory_endpoint(run_id: str, req: AttachAdvisoryRequest, request: R
     }
     ```
     """
-    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    req_id = getattr(request.state, "request_id", None) or request.headers.get(
+        "x-request-id"
+    )
 
     ref = attach_advisory(
         run_id=run_id,
@@ -472,15 +533,25 @@ def list_advisories(run_id: str):
                 "engine_id": a.engine_id,
                 "engine_version": a.engine_version,
                 "request_id": a.request_id,
-                "created_at_utc": a.created_at_utc.isoformat() if hasattr(a.created_at_utc, "isoformat") else a.created_at_utc,
+                "created_at_utc": (
+                    a.created_at_utc.isoformat()
+                    if hasattr(a.created_at_utc, "isoformat")
+                    else a.created_at_utc
+                ),
             }
             for a in advisories
         ],
     }
 
 
-@router.post("/{run_id}/suggest-and-attach", response_model=SuggestAndAttachResponse, summary="Generate and attach an explanation.")
-def suggest_and_attach(run_id: str, body: SuggestAndAttachRequest, request: Request) -> SuggestAndAttachResponse:
+@router.post(
+    "/{run_id}/suggest-and-attach",
+    response_model=SuggestAndAttachResponse,
+    summary="Generate and attach an explanation.",
+)
+def suggest_and_attach(
+    run_id: str, body: SuggestAndAttachRequest, request: Request
+) -> SuggestAndAttachResponse:
     """
     Orchestrator endpoint for generating and attaching explanations/advisories.
 
@@ -513,7 +584,9 @@ def suggest_and_attach(run_id: str, body: SuggestAndAttachRequest, request: Requ
     ```
     """
     t0 = time.perf_counter()
-    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    req_id = getattr(request.state, "request_id", None) or request.headers.get(
+        "x-request-id"
+    )
 
     # 1) Load run
     run = get_run(run_id)
@@ -539,7 +612,9 @@ def suggest_and_attach(run_id: str, body: SuggestAndAttachRequest, request: Requ
 
     if markdown is None and not payload_json and body.generate_explanation:
         # MVP placeholder until LLM transport is wired
-        summary = summarize_request(run.request_summary if isinstance(run.request_summary, dict) else {})
+        summary = summarize_request(
+            run.request_summary if isinstance(run.request_summary, dict) else {}
+        )
         markdown = (
             f"# RMOS {body.kind.title()}\n\n"
             f"**Run:** `{run.run_id}`\n\n"
@@ -562,7 +637,11 @@ def suggest_and_attach(run_id: str, body: SuggestAndAttachRequest, request: Requ
         )
 
     # 4) Build envelope and store as content-addressed attachment
-    created_at_str = run.created_at_utc.isoformat() if hasattr(run.created_at_utc, "isoformat") else str(run.created_at_utc)
+    created_at_str = (
+        run.created_at_utc.isoformat()
+        if hasattr(run.created_at_utc, "isoformat")
+        else str(run.created_at_utc)
+    )
     envelope = {
         "kind": body.kind,
         "run_id": run.run_id,
@@ -612,6 +691,7 @@ def suggest_and_attach(run_id: str, body: SuggestAndAttachRequest, request: Requ
 # Attachment Endpoints
 # =============================================================================
 
+
 @router.get("/{run_id}/attachments", summary="List attachments for a run.")
 def list_run_attachments(run_id: str):
     """List all attachments for a run artifact."""
@@ -651,7 +731,9 @@ def download_run_attachment(run_id: str, sha256: str):
 
     path = get_attachment_path(sha256)
     if not path:
-        raise HTTPException(status_code=404, detail="Attachment blob not found on disk.")
+        raise HTTPException(
+            status_code=404, detail="Attachment blob not found on disk."
+        )
 
     meta = next(a for a in atts if a.sha256 == sha256)
     return FileResponse(path, media_type=meta.mime, filename=meta.filename)
@@ -688,41 +770,45 @@ def verify_run_attachments(run_id: str):
     }
 
 
-@router.post("/{run_id}/attachments", response_model=RunAttachmentCreateResponse, summary="Create attachment for run")
+@router.post(
+    "/{run_id}/attachments",
+    response_model=RunAttachmentCreateResponse,
+    summary="Create attachment for run",
+)
 def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
     """
     Upload attachment to a run with SHA256 verification.
-    
+
     Returns 400 if:
     - Run not found
     - SHA256 mismatch between declared and actual content
     - Invalid base64 payload
-    
+
     Returns 200 with attachment metadata if successful.
     """
     import base64
     from .attachments import put_bytes_attachment
     from .hashing import sha256_of_bytes
-    
+
     # Verify run exists
     run = get_run(run_id)
     if run is None:
         raise HTTPException(status_code=400, detail=f"Run {run_id} not found")
-    
+
     # Decode base64 payload
     try:
         data = base64.b64decode(req.b64)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid base64 payload: {e}")
-    
+
     # Verify SHA256 matches
     actual_sha = sha256_of_bytes(data)
     if actual_sha != req.sha256:
         raise HTTPException(
             status_code=400,
-            detail=f"SHA256 mismatch: expected {req.sha256}, got {actual_sha}"
+            detail=f"SHA256 mismatch: expected {req.sha256}, got {actual_sha}",
         )
-    
+
     # Store attachment (content-addressed, auto-deduplicates)
     attachment, _path = put_bytes_attachment(
         data=data,
@@ -731,7 +817,7 @@ def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
         filename=req.filename,
         ext="",  # Extension determined from mime/filename if needed
     )
-    
+
     # Return response
     return RunAttachmentCreateResponse(
         attachment_id=attachment.sha256,  # Content-addressed: sha256 is the ID
@@ -743,9 +829,11 @@ def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
 @router.post(
     "/{run_id}/artifacts/bind-art-studio-candidate",
     response_model=BindArtStudioCandidateResponse,
-    summary="Bind Art Studio candidate to run artifact"
+    summary="Bind Art Studio candidate to run artifact",
 )
-def bind_art_studio_candidate_route(run_id: str, req: BindArtStudioCandidateRequest, request: Request):
+def bind_art_studio_candidate_route(
+    run_id: str, req: BindArtStudioCandidateRequest, request: Request
+):
     """
     RMOS authority gate: Bind Art Studio candidate attachments into a RunArtifact
     with ALLOW/BLOCK + risk + hashes.
@@ -769,7 +857,9 @@ def bind_art_studio_candidate_route(run_id: str, req: BindArtStudioCandidateRequ
         raise HTTPException(status_code=400, detail=f"Run {run_id} not found")
 
     # Get request ID for tracing
-    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    req_id = getattr(request.state, "request_id", None) or request.headers.get(
+        "x-request-id"
+    )
 
     try:
         # Run the real binding service with SVG safety checks
@@ -810,7 +900,10 @@ def bind_art_studio_candidate_route(run_id: str, req: BindArtStudioCandidateRequ
                 warnings=[],
             ),
             request_summary={"attachment_ids": list(attachment_sha_map.keys())},
-            meta={"engine_version": ENGINE_VERSION, "operator_notes": req.operator_notes},
+            meta={
+                "engine_version": ENGINE_VERSION,
+                "operator_notes": req.operator_notes,
+            },
         )
     else:
         # Create ALLOW artifact
@@ -828,7 +921,10 @@ def bind_art_studio_candidate_route(run_id: str, req: BindArtStudioCandidateRequ
                 warnings=[],
             ),
             request_summary={"attachment_ids": list(attachment_sha_map.keys())},
-            meta={"engine_version": ENGINE_VERSION, "operator_notes": req.operator_notes},
+            meta={
+                "engine_version": ENGINE_VERSION,
+                "operator_notes": req.operator_notes,
+            },
         )
 
     persist_run(artifact)
@@ -886,7 +982,10 @@ def preview_run_advisory_svg(run_id: str, sha256: str):
     return preview_svg(run_id, sha256)
 
 
-@router.get("/{run_id}/advisory/blobs/{sha256}/preview/status", response_model=SvgPreviewStatusResponse)
+@router.get(
+    "/{run_id}/advisory/blobs/{sha256}/preview/status",
+    response_model=SvgPreviewStatusResponse,
+)
 def check_run_advisory_svg_status(run_id: str, sha256: str):
     """
     Check if SVG preview is available and safe.
@@ -914,10 +1013,14 @@ from .store import query_recent
 @router.get("/query/recent", summary="Query runs with cursor pagination")
 def query_runs_cursor_endpoint(
     limit: int = Query(50, ge=1, le=500, description="Max results per page"),
-    cursor: Optional[str] = Query(None, description="Pagination cursor (format: timestamp|run_id)"),
+    cursor: Optional[str] = Query(
+        None, description="Pagination cursor (format: timestamp|run_id)"
+    ),
     mode: Optional[str] = Query(None, description="Filter by mode"),
     tool_id: Optional[str] = Query(None, description="Filter by tool_id"),
-    status: Optional[str] = Query(None, description="Filter by status (OK, BLOCKED, ERROR)"),
+    status: Optional[str] = Query(
+        None, description="Filter by status (OK, BLOCKED, ERROR)"
+    ),
     risk_level: Optional[str] = Query(None, description="Filter by risk level"),
     source: Optional[str] = Query(None, description="Filter by source"),
 ):
@@ -1007,7 +1110,9 @@ def delete_run_endpoint(
     Returns 200 on success, 400/403/404/429 on error.
     """
     # Extract request context
-    req_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+    req_id = getattr(request.state, "request_id", None) or request.headers.get(
+        "x-request-id"
+    )
     client_ip = request.client.host if request.client else None
     effective_actor = actor.strip() if actor else None
 
@@ -1023,6 +1128,7 @@ def delete_run_endpoint(
         # Audit the forbidden attempt
         try:
             from .store import _get_default_store
+
             store = _get_default_store()
             event = build_delete_audit_event(
                 run_id=run_id,
@@ -1122,7 +1228,10 @@ def get_advisory_variants(run_id: str):
     return list_variants(run_id)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/review", response_model=AdvisoryVariantReviewRecord)
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/review",
+    response_model=AdvisoryVariantReviewRecord,
+)
 def post_advisory_variant_review(
     run_id: str,
     advisory_id: str,
@@ -1143,7 +1252,9 @@ def post_advisory_variant_review(
     return save_review(run_id, advisory_id, payload, request)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/promote", response_model=PromoteVariantResponse)
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/promote", response_model=PromoteVariantResponse
+)
 def post_promote_advisory_variant(
     run_id: str,
     advisory_id: str,
@@ -1172,7 +1283,9 @@ def post_promote_advisory_variant(
     return promote_variant(run_id, advisory_id, payload, principal)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/reject", response_model=RejectVariantResponse)
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/reject", response_model=RejectVariantResponse
+)
 def post_reject_advisory_variant(
     run_id: str,
     advisory_id: str,
@@ -1201,7 +1314,9 @@ def post_reject_advisory_variant(
     return reject_variant(run_id, advisory_id, payload, principal)
 
 
-@router.post("/{run_id}/advisory/{advisory_id}/unreject", response_model=UnrejectVariantResponse)
+@router.post(
+    "/{run_id}/advisory/{advisory_id}/unreject", response_model=UnrejectVariantResponse
+)
 def post_unreject_advisory_variant(
     run_id: str,
     advisory_id: str,
@@ -1490,7 +1605,9 @@ def post_candidate_decision(
 def get_candidate_zip(
     run_id: str,
     candidate_id: str,
-    principal: Principal = Depends(require_roles("admin", "operator", "engineer", "viewer")),
+    principal: Principal = Depends(
+        require_roles("admin", "operator", "engineer", "viewer")
+    ),
 ):
     """
     Download a ZIP containing the candidate's advisory blob and manifest.

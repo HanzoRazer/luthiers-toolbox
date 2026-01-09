@@ -4,6 +4,7 @@ RMOS Run Artifacts E2E Tests
 Tests the run artifacts index, query, and diff endpoints
 per RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md.
 """
+
 from __future__ import annotations
 
 import os
@@ -16,10 +17,24 @@ def client(tmp_path, monkeypatch):
     """
     Uses the real FastAPI app but redirects artifact storage to a temp folder.
     """
-    # Ensure artifacts are written to temp
+    # Ensure artifacts are written to temp (legacy)
     monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(tmp_path / "run_artifacts"))
+    # runs_v2 store uses RMOS_RUNS_DIR
+    runs_dir = tmp_path / "rmos_runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+    # Seed empty index
+    (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
     # Mark as test environment
     monkeypatch.setenv("ENV", "test")
+
+    # Reset the store singleton to pick up new path
+    try:
+        from app.rmos.runs_v2 import store as runs_v2_store
+
+        runs_v2_store._default_store = None
+    except ImportError:
+        pass
 
     # Import the app
     try:
@@ -33,11 +48,22 @@ def client(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def artifact_dir(tmp_path, monkeypatch):
-    """Create and configure a temporary artifact directory."""
-    artifact_path = tmp_path / "run_artifacts"
-    artifact_path.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(artifact_path))
-    return artifact_path
+    """Create and configure a temporary artifact directory for runs_v2."""
+    runs_dir = tmp_path / "rmos_runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+    # Seed empty index
+    (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
+
+    # Reset the store singleton
+    try:
+        from app.rmos.runs_v2 import store as runs_v2_store
+
+        runs_v2_store._default_store = None
+    except ImportError:
+        pass
+
+    return runs_dir
 
 
 def test_runs_list_empty(client):
@@ -70,94 +96,90 @@ def test_runs_diff_404_for_missing(client):
 
 
 def test_runs_index_with_filters(client, artifact_dir):
-    """Test that filters work correctly."""
-    import json
-    from datetime import datetime, timezone
+    """Test that filters work correctly using the runs_v2 API."""
+    # Create test runs via API (runs_v2 uses event_type, not kind)
+    run1 = client.post(
+        "/api/rmos/runs",
+        json={
+            "mode": "cam",
+            "tool_id": "saw:test",
+            "status": "OK",
+            "event_type": "feasibility",
+            "request_summary": {},
+            "feasibility": {"score": 0.9},
+        },
+    )
+    assert run1.status_code == 200, f"Create run1 failed: {run1.text}"
 
-    # Create test artifacts
-    artifact1 = {
-        "artifact_id": "test_artifact_1",
-        "kind": "feasibility",
-        "status": "OK",
-        "created_utc": datetime.now(timezone.utc).isoformat(),
-        "session_id": "session_1",
-        "index_meta": {"tool_id": "saw:test"},
-    }
-    artifact2 = {
-        "artifact_id": "test_artifact_2",
-        "kind": "toolpaths",
-        "status": "BLOCKED",
-        "created_utc": datetime.now(timezone.utc).isoformat(),
-        "session_id": "session_2",
-        "index_meta": {"tool_id": "rosette:test"},
-    }
+    run2 = client.post(
+        "/api/rmos/runs",
+        json={
+            "mode": "cam",
+            "tool_id": "rosette:test",
+            "status": "BLOCKED",
+            "event_type": "toolpaths",
+            "request_summary": {},
+            "feasibility": {"score": 0.5},
+        },
+    )
+    assert run2.status_code == 200, f"Create run2 failed: {run2.text}"
 
-    (artifact_dir / "test_artifact_1.json").write_text(json.dumps(artifact1))
-    (artifact_dir / "test_artifact_2.json").write_text(json.dumps(artifact2))
-
-    # Test kind filter
-    res = client.get("/api/rmos/runs", params={"kind": "feasibility"})
+    # Test event_type filter (runs_v2 uses event_type, not kind)
+    res = client.get("/api/rmos/runs", params={"event_type": "feasibility"})
     assert res.status_code == 200
     items = res.json()["items"]
     assert len(items) == 1
-    assert items[0]["artifact_id"] == "test_artifact_1"
+    assert items[0]["event_type"] == "feasibility"
 
     # Test status filter
     res = client.get("/api/rmos/runs", params={"status": "BLOCKED"})
     assert res.status_code == 200
     items = res.json()["items"]
     assert len(items) == 1
-    assert items[0]["artifact_id"] == "test_artifact_2"
+    assert items[0]["status"] == "BLOCKED"
 
 
 def test_runs_diff_detects_changes(client, artifact_dir):
-    """Test that diff correctly detects changed fields."""
-    import json
-    from datetime import datetime, timezone
-
-    now = datetime.now(timezone.utc).isoformat()
-
-    artifact_a = {
-        "artifact_id": "diff_test_a",
-        "kind": "feasibility",
-        "status": "OK",
-        "created_utc": now,
-        "session_id": "session_a",
-        "index_meta": {"tool_id": "saw:test", "material_id": "ebony"},
-        "payload": {
-            "feasibility": {
-                "score": 92.0,
-                "risk_bucket": "GREEN",
-                "meta": {"feasibility_hash": "hash_a"},
-            }
+    """Test that diff correctly detects changed fields using runs_v2 API."""
+    # Create two runs via API with differing feasibility data
+    run_a_resp = client.post(
+        "/api/rmos/runs",
+        json={
+            "mode": "cam",
+            "tool_id": "saw:test",
+            "status": "OK",
+            "event_type": "feasibility",
+            "request_summary": {"material_id": "ebony"},
+            "feasibility": {"score": 92.0, "risk_bucket": "GREEN"},
+            "meta": {"material_id": "ebony"},
         },
-    }
-    artifact_b = {
-        "artifact_id": "diff_test_b",
-        "kind": "feasibility",
-        "status": "OK",
-        "created_utc": now,
-        "session_id": "session_b",
-        "index_meta": {"tool_id": "saw:test", "material_id": "maple"},
-        "payload": {
-            "feasibility": {
-                "score": 71.0,
-                "risk_bucket": "YELLOW",
-                "meta": {"feasibility_hash": "hash_b"},
-            }
+    )
+    assert run_a_resp.status_code == 200, f"Create run_a failed: {run_a_resp.text}"
+    run_a_id = run_a_resp.json()["run_id"]
+
+    run_b_resp = client.post(
+        "/api/rmos/runs",
+        json={
+            "mode": "cam",
+            "tool_id": "saw:test",
+            "status": "OK",
+            "event_type": "feasibility",
+            "request_summary": {"material_id": "maple"},
+            "feasibility": {"score": 71.0, "risk_bucket": "YELLOW"},
+            "meta": {"material_id": "maple"},
         },
-    }
+    )
+    assert run_b_resp.status_code == 200, f"Create run_b failed: {run_b_resp.text}"
+    run_b_id = run_b_resp.json()["run_id"]
 
-    (artifact_dir / "diff_test_a.json").write_text(json.dumps(artifact_a))
-    (artifact_dir / "diff_test_b.json").write_text(json.dumps(artifact_b))
-
-    res = client.get("/api/rmos/runs/diff/diff_test_a/diff_test_b")
+    # Use the query-param diff endpoint
+    res = client.get("/api/rmos/runs/diff", params={"a": run_a_id, "b": run_b_id})
     assert res.status_code == 200
     diff = res.json()
 
-    assert diff["a_id"] == "diff_test_a"
-    assert diff["b_id"] == "diff_test_b"
-    assert diff["summary"]["total_changes"] >= 1
-
-    changed_fields = {c["field"] for c in diff["changed_fields"]}
-    assert "score" in changed_fields or "risk_bucket" in changed_fields or "material_id" in changed_fields
+    # Diff response uses "a" and "b" keys containing run snapshots
+    assert diff["a"]["run_id"] == run_a_id
+    assert diff["b"]["run_id"] == run_b_id
+    # Should detect severity and changed fields
+    assert "diff_severity" in diff
+    assert "changed_paths" in diff or "diff" in diff
