@@ -36,11 +36,6 @@ from app.saw_lab.store import (
     query_executions_with_learning,
 )
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
-from app.saw_lab.decision_intel_apply_service import (
-    ArtifactStorePorts as IntelStorePorts,
-    find_latest_approved_tuning_decision,
-)
-from app.saw_lab.schemas_decision_intelligence import TuningDelta
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
 
@@ -86,17 +81,11 @@ class BatchPlanSetup(BaseModel):
     ops: List[BatchPlanOp]
 
 
-class DecisionIntelAdvisory(BaseModel):
-    """Advisory block: suggests applying a previously approved tuning delta."""
-    decision_artifact_id: Optional[str] = None
-    effective_delta: Optional[TuningDelta] = None
-    note: str = "No approved tuning decision found for this tool/material."
-
-
 class BatchPlanResponse(BaseModel):
     batch_plan_artifact_id: str
     setups: List[BatchPlanSetup]
-    decision_intel_advisory: Optional[DecisionIntelAdvisory] = None
+    # Advisory only (never auto-applies): latest approved delta for (tool_id, material_id)
+    decision_intel_advisory: Optional[Dict[str, Any]] = None
 
 
 class BatchApproveRequest(BaseModel):
@@ -229,6 +218,16 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
     tool_id = spec_payload.get("tool_id", "saw:thin_140")
     batch_label = spec_payload.get("batch_label", "")
     session_id = spec_payload.get("session_id", "")
+
+    # Decision Intel advisory (apply-on-next-plan): best-effort material_id from first item
+    material_id: Optional[str] = None
+    try:
+        if isinstance(items, list) and items:
+            first = items[0]
+            if isinstance(first, dict) and first.get("material_id"):
+                material_id = str(first.get("material_id"))
+    except Exception:
+        material_id = None
     
     ops = []
     for i, item in enumerate(items):
@@ -253,41 +252,27 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
         "setups": [s.model_dump() for s in setups],
     }
     artifact_id = store_artifact(kind="saw_batch_plan", payload=payload, parent_id=req.batch_spec_artifact_id, session_id=session_id)
-    
-    # --- Decision Intel Advisory (best-effort, never blocks) ---
-    advisory: Optional[DecisionIntelAdvisory] = None
+
+    # Attach advisory to the plan response (non-blocking; planning must never fail due to advisory)
+    decision_intel_advisory: Optional[Dict[str, Any]] = None
     try:
-        # Extract material_id from spec if present (common pattern: first item or spec-level)
-        material_id = spec_payload.get("material_id") or (items[0].get("material_id") if items else None) or "unknown"
-        intel_store = IntelStorePorts(
-            list_runs_filtered=lambda **kw: [],  # minimal stub - real impl uses runs_v2
-            persist_run_artifact=lambda **kw: {},
-        )
-        # Try to get real store if available
-        try:
-            from app.rmos.runs_v2 import store as runs_store
-            intel_store = IntelStorePorts(
-                list_runs_filtered=getattr(runs_store, "list_runs_filtered", lambda **kw: []),
-                persist_run_artifact=getattr(runs_store, "persist_run_artifact", lambda **kw: {}),
-            )
-        except Exception:
-            pass
-        decision_id, delta = find_latest_approved_tuning_decision(intel_store, tool_id=tool_id, material_id=material_id)
-        if decision_id and delta:
-            advisory = DecisionIntelAdvisory(
-                decision_artifact_id=decision_id,
-                effective_delta=delta,
-                note="Found approved tuning delta. Use /stamp-plan-link to apply.",
+        if tool_id and material_id:
+            # Uses the saw_lab-only helper which internally queries latest approved decisions.
+            from app.saw_lab.decision_intel_advisory import get_latest_approved_delta_advisory
+
+            decision_intel_advisory = get_latest_approved_delta_advisory(
+                tool_id=str(tool_id),
+                material_id=str(material_id),
             )
         else:
-            advisory = DecisionIntelAdvisory()
+            decision_intel_advisory = None
     except Exception:
-        advisory = None  # Never block plan creation
+        decision_intel_advisory = None
     
     return BatchPlanResponse(
         batch_plan_artifact_id=artifact_id,
         setups=setups,
-        decision_intel_advisory=advisory,
+        decision_intel_advisory=decision_intel_advisory,
     )
 
 
