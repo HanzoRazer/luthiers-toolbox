@@ -687,6 +687,15 @@ app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 app.include_router(saw_batch_router)  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
 
+# Saw Lab Decision Intelligence (Option A)
+try:
+    from app.saw_lab import include_decision_intel_router
+
+    include_decision_intel_router(app)
+except Exception:
+    # Do not block boot if Saw Lab is partially disabled in a deployment
+    pass
+
 # Specialty Modules (4) - optional
 if archtop_router:
     app.include_router(archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"])

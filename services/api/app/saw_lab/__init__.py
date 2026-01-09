@@ -156,3 +156,15 @@ __all__ = [
     "SawLabConfig",
     "plan_saw_cuts_for_board",
 ]
+
+
+def include_decision_intel_router(app) -> None:
+    """
+    Call from app.main after Saw routers are mounted.
+    Kept here so Saw Lab owns its own router wiring.
+    """
+    from .decision_intelligence_router import router as decision_intel_router
+    from .decision_intel_apply_router import router as decision_intel_apply_router
+
+    app.include_router(decision_intel_router)
+    app.include_router(decision_intel_apply_router)
