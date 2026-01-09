@@ -49,14 +49,25 @@ INCLUDE_EXTS = {".py"}
 # Things Art Studio must not authoritatively do.
 # These patterns are tuned for Python backend code.
 # NOTE: Use SCOPE_ALLOW: TAG inline comments to suppress false positives in docs/comments.
+# NOTE: Using (?<![a-zA-Z]) and (?![a-zA-Z]) instead of \b to allow underscore connections
 FORBIDDEN_PATTERNS: List[Tuple[str, str]] = [
     # Host geometry creep (structural domains)
-    # Exclude "bridge" - too ambiguous (bridge pattern, bridge_router, workflow_runs_bridge)
-    ("HOST_GEOMETRY", r"\b(headstock|neck_pocket|tuner_hole|pin_hole|truss_rod)\b"),
-    ("HOST_GEOMETRY", r"\b(tuner(s)?|string\s*tension|saddle|bridge\s*pin)\b"),
-    # CAM / machine execution creep - only match actual imports/function calls
-    # Don't match documentation strings mentioning toolpaths
-    ("MACHINE_OUTPUT", r"^from\s+.*\b(gcode|toolpath|post_processor)\b"),
+    # Match terms like headstock, headstock_outline, get_headstock
+    # Using (?<![a-zA-Z]) = not preceded by letter, (?![a-zA-Z]) = not followed by letter
+    (
+        "HOST_GEOMETRY",
+        r"(?<![a-zA-Z])(headstock|neck_pocket|tuner_hole|pin_hole|truss_rod)(?![a-zA-Z])",
+    ),
+    (
+        "HOST_GEOMETRY",
+        r"(?<![a-zA-Z])(tuners?|string\s*tension|saddle|bridge_pin)(?![a-zA-Z])",
+    ),
+    (
+        "HOST_GEOMETRY",
+        r"(?<![a-zA-Z])bridge[_\s]*(geometry|placement|position)(?![a-zA-Z])",
+    ),
+    # CAM / machine execution creep - match imports (with optional leading whitespace)
+    ("MACHINE_OUTPUT", r"^\s*from\s+.*\b(gcode|toolpath|post_processor)\b"),
     ("MACHINE_OUTPUT", r"^\s*(import|from)\s+.*vcarve_toolpath"),
     ("MACHINE_OUTPUT", r"^\s*gcode\s*=\s*svg_to_naive_gcode"),
     # Authority creation / governance bypass (Python imports/calls)

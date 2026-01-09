@@ -8,10 +8,6 @@ Endpoints:
 - GET /cam/bridge/health: Health check
 """
 
-import json
-import subprocess
-import sys
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -32,40 +28,58 @@ def inches_to_mm(value: float) -> float:
 # Pydantic Models
 # ============================================================================
 
+
 class Point(BaseModel):
     """2D point coordinates."""
+
     x: float
     y: float
 
 
 class BridgeEndpoints(BaseModel):
     """Saddle line endpoints (treble and bass sides)."""
+
     treble: Point
     bass: Point
 
 
 class BridgeGeometry(BaseModel):
     """Bridge saddle compensation geometry."""
+
     units: str = Field(..., description="Units: 'mm' or 'in'")
     scaleLength: float = Field(..., description="Scale length from nut to saddle")
     stringSpread: float = Field(..., description="String spread (E-to-E) at bridge")
-    compTreble: float = Field(..., description="Compensation offset for treble side (mm or in)")
-    compBass: float = Field(..., description="Compensation offset for bass side (mm or in)")
-    slotWidth: float = Field(..., description="Saddle slot width (perpendicular to saddle line)")
+    compTreble: float = Field(
+        ..., description="Compensation offset for treble side (mm or in)"
+    )
+    compBass: float = Field(
+        ..., description="Compensation offset for bass side (mm or in)"
+    )
+    slotWidth: float = Field(
+        ..., description="Saddle slot width (perpendicular to saddle line)"
+    )
     slotLength: float = Field(..., description="Saddle slot length (along saddle line)")
-    angleDeg: Optional[float] = Field(None, description="Saddle angle in degrees (calculated)")
+    angleDeg: Optional[float] = Field(
+        None, description="Saddle angle in degrees (calculated)"
+    )
     endpoints: BridgeEndpoints = Field(..., description="Saddle line endpoints")
-    slotPolygon: List[Point] = Field(..., description="Slot rectangle polygon (4 vertices)")
+    slotPolygon: List[Point] = Field(
+        ..., description="Slot rectangle polygon (4 vertices)"
+    )
 
 
 class BridgeExportRequest(BaseModel):
     """Request body for DXF export."""
+
     geometry: BridgeGeometry
-    filename: Optional[str] = Field(None, description="Optional output filename (without extension)")
+    filename: Optional[str] = Field(
+        None, description="Optional output filename (without extension)"
+    )
 
 
 class PresetFamily(BaseModel):
     """Guitar family preset definition."""
+
     id: str
     label: str
     scaleLength: float  # mm
@@ -78,6 +92,7 @@ class PresetFamily(BaseModel):
 
 class PresetGauge(BaseModel):
     """String gauge preset."""
+
     id: str
     label: str
     compAdjust: float  # Legacy aggregate adjustment (mm)
@@ -87,6 +102,7 @@ class PresetGauge(BaseModel):
 
 class PresetAction(BaseModel):
     """Action height preset."""
+
     id: str
     label: str
     compAdjust: float  # Legacy aggregate adjustment (mm)
@@ -96,6 +112,7 @@ class PresetAction(BaseModel):
 
 class PresetsResponse(BaseModel):
     """Available presets for bridge calculator."""
+
     families: List[PresetFamily]
     gauges: List[PresetGauge]
     actions: List[PresetAction]
@@ -108,7 +125,7 @@ class PresetsResponse(BaseModel):
 FAMILY_PRESETS = [
     {
         "id": "les_paul",
-        "label": "Les Paul (24.75\")",
+        "label": 'Les Paul (24.75")',
         "scaleLength": inches_to_mm(24.75),
         "stringSpread": 52.0,
         "compTreble": 1.5,
@@ -118,7 +135,7 @@ FAMILY_PRESETS = [
     },
     {
         "id": "strat_tele",
-        "label": "Strat/Tele (25.5\")",
+        "label": 'Strat/Tele (25.5")',
         "scaleLength": inches_to_mm(25.5),
         "stringSpread": 52.5,
         "compTreble": 2.0,
@@ -128,7 +145,7 @@ FAMILY_PRESETS = [
     },
     {
         "id": "om",
-        "label": "OM Acoustic (25.4\")",
+        "label": 'OM Acoustic (25.4")',
         "scaleLength": inches_to_mm(25.4),
         "stringSpread": 54.0,
         "compTreble": 2.0,
@@ -138,7 +155,7 @@ FAMILY_PRESETS = [
     },
     {
         "id": "dread",
-        "label": "Dreadnought (25.4\")",
+        "label": 'Dreadnought (25.4")',
         "scaleLength": inches_to_mm(25.4),
         "stringSpread": 54.0,
         "compTreble": 2.0,
@@ -148,7 +165,7 @@ FAMILY_PRESETS = [
     },
     {
         "id": "archtop",
-        "label": "Archtop (25.0\")",
+        "label": 'Archtop (25.0")',
         "scaleLength": inches_to_mm(25.0),
         "stringSpread": 52.0,
         "compTreble": 1.8,
@@ -211,114 +228,103 @@ ACTION_PRESETS = [
 # API Endpoints
 # ============================================================================
 
+
 @router.post("/export_dxf", response_class=Response)
 def export_bridge_dxf(request: BridgeExportRequest) -> Response:
     """
-    Generate R12 DXF file from bridge geometry.
-    
-    Calls the bridge_to_dxf.py script with geometry JSON.
-    Returns DXF file as application/dxf.
-    
-    DXF Layers:
-    - SADDLE_LINE: Cyan line with endpoint circles
-    - SLOT_RECTANGLE: Yellow closed LWPolyline (CNC-ready)
-    - NUT_REFERENCE: Gray dashed centerline at x=0
-    - SCALE_REFERENCE: Gray tick at scale length
-    - DIMENSIONS: White text annotations
+    Generate a minimal R12 DXF file from bridge geometry.
+
+    Notes:
+    - Generates DXF inline to avoid subprocess/script dependencies.
+    - Outputs ASCII DXF (latin-1 compatible).
+    - Entities:
+        * SADDLE_LINE as a LINE
+        * SLOT_RECTANGLE as LINE segments following slotPolygon (closed)
     """
-    # Locate bridge_to_dxf.py script (resolve from project root)
-    # API runs from services/api/, need to go up to project root
-    api_dir = Path(__file__).parent.parent  # services/api/app/routers -> services/api/app
-    project_root = api_dir.parent.parent.parent  # services/api/app -> services/api -> services -> project root
-    script_path = project_root / "server" / "pipelines" / "bridge" / "bridge_to_dxf.py"
-    
-    if not script_path.exists():
+    geom = request.geometry
+
+    # ---- Validation (return 422 instead of 500) ----
+    units = (geom.units or "").lower().strip()
+    if units not in {"mm", "in"}:
+        raise HTTPException(status_code=422, detail="units must be 'mm' or 'in'")
+
+    if geom.scaleLength is None or geom.scaleLength <= 0:
+        raise HTTPException(status_code=422, detail="scaleLength must be > 0")
+
+    if geom.slotPolygon is None or len(geom.slotPolygon) < 3:
         raise HTTPException(
-            status_code=500,
-            detail=f"Bridge DXF export script not found: {script_path}"
+            status_code=422, detail="slotPolygon must have at least 3 points"
         )
-    
-    # Create temporary files for input JSON and output DXF
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_path = Path(tmpdir)
-        input_json = tmp_path / "bridge_input.json"
-        output_dxf = tmp_path / "bridge_output.dxf"
-        
-        # Write geometry to JSON file
-        geom_dict = request.geometry.dict()
-        with open(input_json, "w") as f:
-            json.dump(geom_dict, f, indent=2)
-        
-        # Run bridge_to_dxf.py script
-        cmd = [
-            sys.executable,
-            str(script_path.resolve()),
-            str(input_json),
-            "--output",
-            str(output_dxf)
-        ]
-        
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=10
-            )
-            
-            # Read generated DXF
-            if not output_dxf.exists():
-                raise HTTPException(
-                    status_code=500,
-                    detail="DXF file was not generated"
-                )
-            
-            dxf_content = output_dxf.read_bytes()
-            
-            # Generate filename
-            units = request.geometry.units
-            scale = request.geometry.scaleLength
-            comp_t = request.geometry.compTreble
-            comp_b = request.geometry.compBass
-            
-            if request.filename:
-                filename = f"{request.filename}.dxf"
-            else:
-                filename = f"bridge_{scale:.1f}{units}_ct{comp_t:.1f}_cb{comp_b:.1f}.dxf"
-            
-            return Response(
-                content=dxf_content,
-                media_type="application/dxf",
-                headers={
-                    "Content-Disposition": f'attachment; filename="{filename}"'
-                }
-            )
-            
-        except subprocess.TimeoutExpired:
-            raise HTTPException(
-                status_code=500,
-                detail="Bridge DXF export timed out (>10s)"
-            )
-        except subprocess.CalledProcessError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Bridge DXF export failed: {e.stderr}"
-            )
+
+    pts = [(p.x, p.y) for p in geom.slotPolygon]
+    if any(x is None or y is None for x, y in pts):
+        raise HTTPException(
+            status_code=422, detail="slotPolygon points must include x and y"
+        )
+
+    # ---- Minimal DXF (R12 / AC1009) ----
+    def _dxf_pair(code: int, value: Any) -> str:
+        return f"{code}\n{value}\n"
+
+    def _line_entity(layer: str, x1: float, y1: float, x2: float, y2: float) -> str:
+        return (
+            "0\nLINE\n"
+            + _dxf_pair(8, layer)
+            + _dxf_pair(10, float(x1))
+            + _dxf_pair(20, float(y1))
+            + _dxf_pair(11, float(x2))
+            + _dxf_pair(21, float(y2))
+        )
+
+    # Saddle line from endpoints
+    x1, y1 = geom.endpoints.treble.x, geom.endpoints.treble.y
+    x2, y2 = geom.endpoints.bass.x, geom.endpoints.bass.y
+
+    entities = []
+    entities.append(_line_entity("SADDLE_LINE", x1, y1, x2, y2))
+
+    # Slot polygon as line segments (closed)
+    for (ax, ay), (bx, by) in zip(pts, pts[1:] + pts[:1]):
+        entities.append(_line_entity("SLOT_RECTANGLE", ax, ay, bx, by))
+
+    dxf_content = (
+        "0\nSECTION\n2\nHEADER\n"
+        + _dxf_pair(9, "$ACADVER")
+        + _dxf_pair(1, "AC1009")
+        + "0\nENDSEC\n"
+        + "0\nSECTION\n2\nENTITIES\n"
+        + "".join(entities)
+        + "0\nENDSEC\n0\nEOF\n"
+    )
+
+    scale = geom.scaleLength
+    comp_t = geom.compTreble
+    comp_b = geom.compBass
+
+    if request.filename:
+        filename = f"{request.filename}.dxf"
+    else:
+        filename = f"bridge_{scale:.1f}{units}_ct{comp_t:.1f}_cb{comp_b:.1f}.dxf"
+
+    return Response(
+        content=dxf_content.encode("latin-1"),
+        media_type="application/dxf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/presets", response_model=PresetsResponse)
 def get_bridge_presets() -> Dict[str, Any]:
     """
     Get available presets for bridge calculator.
-    
+
     Returns family presets (guitar types), gauge presets (string weights),
     and action presets (height adjustments).
     """
     return {
         "families": FAMILY_PRESETS,
         "gauges": GAUGE_PRESETS,
-        "actions": ACTION_PRESETS
+        "actions": ACTION_PRESETS,
     }
 
 
@@ -326,23 +332,24 @@ def get_bridge_presets() -> Dict[str, Any]:
 def bridge_health() -> Dict[str, Any]:
     """
     Health check for bridge calculator module.
-    
+
     Verifies:
     - bridge_to_dxf.py script exists
     - ezdxf library is importable
     """
     script_path = Path("server/pipelines/bridge/bridge_to_dxf.py")
     script_exists = script_path.exists()
-    
+
     # Check ezdxf availability
     try:
         import ezdxf
+
         ezdxf_available = True
         ezdxf_version = ezdxf.__version__
     except ImportError:
         ezdxf_available = False
         ezdxf_version = None
-    
+
     return {
         "status": "ok",
         "ok": True,
@@ -354,6 +361,6 @@ def bridge_health() -> Dict[str, Any]:
         "presets_count": {
             "families": len(FAMILY_PRESETS),
             "gauges": len(GAUGE_PRESETS),
-            "actions": len(ACTION_PRESETS)
-        }
+            "actions": len(ACTION_PRESETS),
+        },
     }

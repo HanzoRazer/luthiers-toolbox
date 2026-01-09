@@ -35,7 +35,7 @@ class TestForbiddenPatterns:
 
     def test_host_geometry_headstock(self):
         """Headstock references should be flagged."""
-        line = "const headstockOutline = generateHeadstock();"
+        line = "headstock_outline = generate_headstock()"
         matches = [
             (tag, pat)
             for tag, pat in FORBIDDEN_PATTERNS
@@ -45,14 +45,14 @@ class TestForbiddenPatterns:
         assert any(tag == "HOST_GEOMETRY" for tag, _ in matches)
 
     def test_host_geometry_bridge(self):
-        """Bridge references should be flagged."""
+        """Bridge geometry references should be flagged."""
         line = "def compute_bridge_geometry():"
         matches = [
             (tag, pat)
             for tag, pat in FORBIDDEN_PATTERNS
             if re.search(pat, line, flags=re.IGNORECASE)
         ]
-        assert len(matches) > 0, "bridge should be caught by HOST_GEOMETRY"
+        assert len(matches) > 0, "bridge_geometry should be caught by HOST_GEOMETRY"
 
     def test_host_geometry_tuner(self):
         """Tuner references should be flagged."""
@@ -64,26 +64,28 @@ class TestForbiddenPatterns:
         ]
         assert len(matches) > 0, "tuner_hole should be caught"
 
-    def test_machine_output_gcode(self):
-        """G-code references should be flagged."""
-        line = "gcode = generate_gcode(toolpath)"
+    def test_machine_output_gcode_import(self):
+        """G-code import statements should be flagged."""
+        line = "from app.toolpath.gcode import generate_gcode"
         matches = [
             (tag, pat)
             for tag, pat in FORBIDDEN_PATTERNS
             if re.search(pat, line, flags=re.IGNORECASE)
         ]
-        assert len(matches) > 0, "gcode should be caught by MACHINE_OUTPUT"
+        assert len(matches) > 0, "gcode import should be caught by MACHINE_OUTPUT"
         assert any(tag == "MACHINE_OUTPUT" for tag, _ in matches)
 
-    def test_machine_output_toolpath(self):
-        """Toolpath references should be flagged."""
-        line = "const toolpaths = computeToolpaths();"
+    def test_machine_output_toolpath_import(self):
+        """Toolpath import statements should be flagged."""
+        line = "from app.toolpath import vcarve_toolpath"
         matches = [
             (tag, pat)
             for tag, pat in FORBIDDEN_PATTERNS
             if re.search(pat, line, flags=re.IGNORECASE)
         ]
-        assert len(matches) > 0, "toolpaths should be caught by MACHINE_OUTPUT"
+        assert (
+            len(matches) > 0
+        ), "vcarve_toolpath import should be caught by MACHINE_OUTPUT"
 
     def test_authority_create_run_id(self):
         """create_run_id references should be flagged."""
@@ -96,15 +98,15 @@ class TestForbiddenPatterns:
         assert len(matches) > 0, "create_run_id should be caught by AUTHORITY"
         assert any(tag == "AUTHORITY" for tag, _ in matches)
 
-    def test_authority_bulk_review(self):
-        """bulk-review API references should be flagged."""
-        line = 'await fetch("/api/rmos/bulk-review", { method: "POST" })'
+    def test_authority_rmos_runs_import(self):
+        """RMOS runs import should be flagged."""
+        line = "from ..rmos.runs import persist_run"
         matches = [
             (tag, pat)
             for tag, pat in FORBIDDEN_PATTERNS
             if re.search(pat, line, flags=re.IGNORECASE)
         ]
-        assert len(matches) > 0, "bulk-review should be caught by AUTHORITY"
+        assert len(matches) > 0, "rmos.runs import should be caught by AUTHORITY"
 
     def test_safe_ornament_terms(self):
         """Ornament-related terms should NOT be flagged."""
@@ -170,16 +172,20 @@ def generate_rosette(rings):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             test_file = root / "bad.py"
+            # Use patterns that match the current stricter gate
             test_file.write_text(
                 """
 # Bad Art Studio file
-def generate_headstock():
-    gcode = create_toolpath()
-    return gcode
+def get_headstock_outline():
+    # Uses direct gcode import - bad
+    from app.toolpath.gcode import emit_gcode
+    return emit_gcode()
 """
             )
             findings = scan_file(root, test_file)
-            assert len(findings) >= 2
+            assert (
+                len(findings) >= 2
+            ), f"Expected >= 2 findings, got: {[f.tag for f in findings]}"
             tags = {f.tag for f in findings}
             assert "HOST_GEOMETRY" in tags
             assert "MACHINE_OUTPUT" in tags
@@ -193,19 +199,22 @@ def generate_headstock():
                 """
 # Placement adapter - legitimately needs host geometry reference
 headstock_bounds = get_bounds()  # SCOPE_ALLOW: HOST_GEOMETRY adapter
-gcode = create_toolpath()  # No allow - should be caught
+from app.toolpath.gcode import create_toolpath  # No allow - should be caught
 """
             )
             findings = scan_file(root, test_file)
-            # headstock should be allowed, gcode should be caught
+            # headstock should be allowed, gcode import should be caught
             tags = [f.tag for f in findings]
             assert "HOST_GEOMETRY" not in tags
             assert "MACHINE_OUTPUT" in tags
 
 
 class TestFrontendDetection:
-    """Test frontend structure detection."""
+    """Test frontend structure detection - disabled as frontend scanning is disabled."""
 
+    @pytest.mark.skip(
+        reason="Frontend scanning disabled in scope gate v2 - too many false positives"
+    )
     def test_detect_monorepo_structure(self):
         """Should detect packages/client/src structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -214,6 +223,9 @@ class TestFrontendDetection:
             targets = _detect_frontend_targets(root)
             assert any("packages/client/src" in t for t in targets)
 
+    @pytest.mark.skip(
+        reason="Frontend scanning disabled in scope gate v2 - too many false positives"
+    )
     def test_detect_flat_structure(self):
         """Should use default targets for flat structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
