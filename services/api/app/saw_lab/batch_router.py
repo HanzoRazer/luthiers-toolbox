@@ -36,6 +36,11 @@ from app.saw_lab.store import (
     query_executions_with_learning,
 )
 from app.services.saw_lab_metrics_trends_service import compute_decision_trends
+from app.saw_lab.decision_intel_apply_service import (
+    ArtifactStorePorts as IntelStorePorts,
+    find_latest_approved_tuning_decision,
+)
+from app.saw_lab.schemas_decision_intelligence import TuningDelta
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
 
@@ -81,9 +86,17 @@ class BatchPlanSetup(BaseModel):
     ops: List[BatchPlanOp]
 
 
+class DecisionIntelAdvisory(BaseModel):
+    """Advisory block: suggests applying a previously approved tuning delta."""
+    decision_artifact_id: Optional[str] = None
+    effective_delta: Optional[TuningDelta] = None
+    note: str = "No approved tuning decision found for this tool/material."
+
+
 class BatchPlanResponse(BaseModel):
     batch_plan_artifact_id: str
     setups: List[BatchPlanSetup]
+    decision_intel_advisory: Optional[DecisionIntelAdvisory] = None
 
 
 class BatchApproveRequest(BaseModel):
@@ -241,9 +254,40 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
     }
     artifact_id = store_artifact(kind="saw_batch_plan", payload=payload, parent_id=req.batch_spec_artifact_id, session_id=session_id)
     
+    # --- Decision Intel Advisory (best-effort, never blocks) ---
+    advisory: Optional[DecisionIntelAdvisory] = None
+    try:
+        # Extract material_id from spec if present (common pattern: first item or spec-level)
+        material_id = spec_payload.get("material_id") or (items[0].get("material_id") if items else None) or "unknown"
+        intel_store = IntelStorePorts(
+            list_runs_filtered=lambda **kw: [],  # minimal stub - real impl uses runs_v2
+            persist_run_artifact=lambda **kw: {},
+        )
+        # Try to get real store if available
+        try:
+            from app.rmos.runs_v2 import store as runs_store
+            intel_store = IntelStorePorts(
+                list_runs_filtered=getattr(runs_store, "list_runs_filtered", lambda **kw: []),
+                persist_run_artifact=getattr(runs_store, "persist_run_artifact", lambda **kw: {}),
+            )
+        except Exception:
+            pass
+        decision_id, delta = find_latest_approved_tuning_decision(intel_store, tool_id=tool_id, material_id=material_id)
+        if decision_id and delta:
+            advisory = DecisionIntelAdvisory(
+                decision_artifact_id=decision_id,
+                effective_delta=delta,
+                note="Found approved tuning delta. Use /stamp-plan-link to apply.",
+            )
+        else:
+            advisory = DecisionIntelAdvisory()
+    except Exception:
+        advisory = None  # Never block plan creation
+    
     return BatchPlanResponse(
         batch_plan_artifact_id=artifact_id,
         setups=setups,
+        decision_intel_advisory=advisory,
     )
 
 
