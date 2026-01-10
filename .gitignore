@@ -379,3 +379,4 @@ rmos_api_contracts_2\ .py
 G-CODE_*.xml
 nul
 services/api/services/
+.envsk-proj-*
