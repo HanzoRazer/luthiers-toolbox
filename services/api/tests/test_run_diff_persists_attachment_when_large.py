@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from fastapi.testclient import TestClient
 
 
@@ -14,10 +12,10 @@ def test_diff_endpoint_persists_full_diff_as_attachment_when_large(monkeypatch, 
     """
     from app.main import app
 
-    # Isolate attachments for the test
+    # Isolate attachments for the test (use monkeypatch for proper cleanup)
     attachments_dir = tmp_path / "attachments"
     attachments_dir.mkdir(parents=True, exist_ok=True)
-    os.environ["RMOS_RUN_ATTACHMENTS_DIR"] = str(attachments_dir)
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(attachments_dir))
 
     # Fake runs
     left = {"id": "A", "payload": {"x": "1"}}

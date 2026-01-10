@@ -177,9 +177,10 @@ def test_runs_diff_detects_changes(client, artifact_dir):
     assert res.status_code == 200
     diff = res.json()
 
-    # Diff response uses "a" and "b" keys containing run snapshots
-    assert diff["a"]["run_id"] == run_a_id
-    assert diff["b"]["run_id"] == run_b_id
-    # Should detect severity and changed fields
-    assert "diff_severity" in diff
-    assert "changed_paths" in diff or "diff" in diff
+    # Diff response uses flat keys for run IDs
+    assert diff["left_id"] == run_a_id
+    assert diff["right_id"] == run_b_id
+    assert diff["diff_kind"] == "unified"
+    # Preview contains the unified diff text
+    assert "preview" in diff
+    assert isinstance(diff["truncated"], bool)
