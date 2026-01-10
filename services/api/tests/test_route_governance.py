@@ -31,25 +31,26 @@ DOMAIN_RULES = {
     "fret": (
         "/api/fret",
         [
-            "/api/cam/fret_slots",      # CAM operations are separate
-            "/api/registry/",           # Registry endpoints (fret_formulas)
-            "/api/instrument_geometry", # Legacy (being migrated)
+            "/api/cam/fret_slots",  # CAM operations are separate
+            "/api/registry/",  # Registry endpoints (fret_formulas)
+            "/api/instrument_geometry",  # Legacy (being migrated)
+            "/api/art-studio/inlay",  # Inlay-specific fret position helper
         ],
     ),
     "neck": (
         "/api/neck",
         [
-            "/api/cam/neck",            # CAM operations
-            "/api/instrument/",         # Legacy instrument router
+            "/api/cam/neck",  # CAM operations
+            "/api/instrument/",  # Legacy instrument router
         ],
     ),
     "bridge": (
         "/api/bridge",
         [
-            "/api/cam/bridge",          # CAM operations
-            "/api/instrument/",         # Legacy instrument router
-            "/api/guitar/archtop",      # Archtop-specific bridge
-            "/api/instrument_geometry", # Legacy
+            "/api/cam/bridge",  # CAM operations
+            "/api/instrument/",  # Legacy instrument router
+            "/api/guitar/archtop",  # Archtop-specific bridge
+            "/api/instrument_geometry",  # Legacy
         ],
     ),
     "archtop": (
@@ -67,10 +68,12 @@ DOMAIN_RULES = {
 # TEST FIXTURES
 # =============================================================================
 
+
 @pytest.fixture(scope="module")
 def openapi_paths():
     """Get all API paths from OpenAPI schema."""
     from app.main import app
+
     client = TestClient(app)
     response = client.get("/openapi.json")
     assert response.status_code == 200
@@ -80,6 +83,7 @@ def openapi_paths():
 # =============================================================================
 # GOVERNANCE TESTS
 # =============================================================================
+
 
 class TestComponentRouterRule:
     """
@@ -117,8 +121,7 @@ class TestComponentRouterRule:
             pytest.fail(
                 f"Scattered fret routes found (violates COMPONENT_ROUTER_RULE_v1):\n"
                 f"  Expected prefix: {canonical}\n"
-                f"  Violations:\n" +
-                "\n".join(f"    - {v}" for v in violations)
+                f"  Violations:\n" + "\n".join(f"    - {v}" for v in violations)
             )
 
     def test_no_scattered_neck_routes(self, openapi_paths):
@@ -139,8 +142,7 @@ class TestComponentRouterRule:
             pytest.fail(
                 f"Scattered neck routes found:\n"
                 f"  Expected prefix: {canonical}\n"
-                f"  Violations:\n" +
-                "\n".join(f"    - {v}" for v in violations)
+                f"  Violations:\n" + "\n".join(f"    - {v}" for v in violations)
             )
 
     def test_no_scattered_bridge_routes(self, openapi_paths):
@@ -163,8 +165,7 @@ class TestComponentRouterRule:
             pytest.fail(
                 f"Scattered bridge routes found:\n"
                 f"  Expected prefix: {canonical}\n"
-                f"  Violations:\n" +
-                "\n".join(f"    - {v}" for v in violations)
+                f"  Violations:\n" + "\n".join(f"    - {v}" for v in violations)
             )
 
 
@@ -181,8 +182,8 @@ class TestNoDoublePrefix:
 
         if violations:
             pytest.fail(
-                f"Double /api/api/ prefix found (router registration bug):\n" +
-                "\n".join(f"    - {v}" for v in violations)
+                f"Double /api/api/ prefix found (router registration bug):\n"
+                + "\n".join(f"    - {v}" for v in violations)
             )
 
 
@@ -213,8 +214,8 @@ class TestNoDuplicatePrefixes:
 
         if violations:
             pytest.fail(
-                f"Fret design endpoints outside /api/fret/* (should be consolidated):\n" +
-                "\n".join(f"    - {v}" for v in set(violations))
+                f"Fret design endpoints outside /api/fret/* (should be consolidated):\n"
+                + "\n".join(f"    - {v}" for v in set(violations))
             )
 
 
@@ -244,10 +245,9 @@ class TestOpenAPIPathSnapshot:
 
     def test_fret_router_paths_stable(self, openapi_paths):
         """Verify fret router endpoints haven't changed unexpectedly."""
-        actual_fret_paths = sorted([
-            p for p in openapi_paths
-            if p.startswith("/api/fret")
-        ])
+        actual_fret_paths = sorted(
+            [p for p in openapi_paths if p.startswith("/api/fret")]
+        )
         expected = sorted(self.EXPECTED_FRET_PATHS)
 
         missing = set(expected) - set(actual_fret_paths)
@@ -255,14 +255,18 @@ class TestOpenAPIPathSnapshot:
 
         errors = []
         if missing:
-            errors.append(f"Missing endpoints:\n" + "\n".join(f"    - {p}" for p in missing))
+            errors.append(
+                f"Missing endpoints:\n" + "\n".join(f"    - {p}" for p in missing)
+            )
         if unexpected:
-            errors.append(f"Unexpected endpoints:\n" + "\n".join(f"    - {p}" for p in unexpected))
+            errors.append(
+                f"Unexpected endpoints:\n" + "\n".join(f"    - {p}" for p in unexpected)
+            )
 
         if errors:
             pytest.fail(
-                "Fret router paths changed (update EXPECTED_FRET_PATHS if intentional):\n" +
-                "\n".join(errors)
+                "Fret router paths changed (update EXPECTED_FRET_PATHS if intentional):\n"
+                + "\n".join(errors)
             )
 
 
@@ -293,30 +297,30 @@ FORTRAN_RULE_EXCEPTIONS = {
 # Math patterns that indicate inline computation (violations)
 INLINE_MATH_PATTERNS = [
     # Trigonometric computations
-    (r'\bmath\.sin\s*\(', "math.sin() - use geometry/arc_utils or instrument_geometry"),
-    (r'\bmath\.cos\s*\(', "math.cos() - use geometry/arc_utils or instrument_geometry"),
-    (r'\bmath\.tan\s*\(', "math.tan() - use geometry/arc_utils"),
-    (r'\bmath\.atan2?\s*\(', "math.atan/atan2() - use geometry/arc_utils"),
+    (r"\bmath\.sin\s*\(", "math.sin() - use geometry/arc_utils or instrument_geometry"),
+    (r"\bmath\.cos\s*\(", "math.cos() - use geometry/arc_utils or instrument_geometry"),
+    (r"\bmath\.tan\s*\(", "math.tan() - use geometry/arc_utils"),
+    (r"\bmath\.atan2?\s*\(", "math.atan/atan2() - use geometry/arc_utils"),
     # Exponential/power computations (fret math)
-    (r'\b2\s*\*\*\s*\(-?\s*\w+\s*/\s*12\)', "2^(-fret/12) - use fret_math.py"),
-    (r'\bmath\.pow\s*\(', "math.pow() - extract to math module"),
+    (r"\b2\s*\*\*\s*\(-?\s*\w+\s*/\s*12\)", "2^(-fret/12) - use fret_math.py"),
+    (r"\bmath\.pow\s*\(", "math.pow() - extract to math module"),
     # Hardcoded pi
-    (r'\b3\.14159', "Hardcoded pi - use math.pi"),
+    (r"\b3\.14159", "Hardcoded pi - use math.pi"),
     # Circle/arc formulas
-    (r'\b2\s*\*\s*(?:math\.)?pi\s*\*\s*\w+', "Circle formula - use geometry/arc_utils"),
+    (r"\b2\s*\*\s*(?:math\.)?pi\s*\*\s*\w+", "Circle formula - use geometry/arc_utils"),
 ]
 
 # Allowed math imports (stdlib conversions, not algorithms)
 ALLOWED_MATH_USAGE = [
-    "math.hypot",      # Distance calculation (stdlib, not algorithm)
-    "math.radians",    # Unit conversion
-    "math.degrees",    # Unit conversion
-    "math.pi",         # Constant (allowed when passed to functions)
-    "math.sqrt",       # When used for simple distance, not algorithm
-    "math.floor",      # Rounding
-    "math.ceil",       # Rounding
-    "math.isnan",      # Validation
-    "math.isinf",      # Validation
+    "math.hypot",  # Distance calculation (stdlib, not algorithm)
+    "math.radians",  # Unit conversion
+    "math.degrees",  # Unit conversion
+    "math.pi",  # Constant (allowed when passed to functions)
+    "math.sqrt",  # When used for simple distance, not algorithm
+    "math.floor",  # Rounding
+    "math.ceil",  # Rounding
+    "math.isnan",  # Validation
+    "math.isinf",  # Validation
 ]
 
 
@@ -403,11 +407,11 @@ class TestFortranRule:
                 matches = list(re.finditer(pattern, content))
                 for match in matches:
                     # Find line number
-                    line_num = content[:match.start()].count('\n') + 1
-                    line_content = content.split('\n')[line_num - 1].strip()
+                    line_num = content[: match.start()].count("\n") + 1
+                    line_content = content.split("\n")[line_num - 1].strip()
 
                     # Skip if it's in a comment
-                    if line_content.startswith('#'):
+                    if line_content.startswith("#"):
                         continue
                     # Skip if it's in a docstring context (rough heuristic)
                     if '"""' in line_content or "'''" in line_content:
@@ -441,18 +445,18 @@ class TestFortranRule:
         Always use math.pi for consistency and precision.
         """
         violations = []
-        pi_pattern = re.compile(r'\b3\.14\d*')
+        pi_pattern = re.compile(r"\b3\.14\d*")
 
         for router_path in router_files:
             content = router_path.read_text(encoding="utf-8")
             matches = list(pi_pattern.finditer(content))
 
             for match in matches:
-                line_num = content[:match.start()].count('\n') + 1
-                line_content = content.split('\n')[line_num - 1].strip()
+                line_num = content[: match.start()].count("\n") + 1
+                line_content = content.split("\n")[line_num - 1].strip()
 
                 # Skip comments
-                if line_content.startswith('#'):
+                if line_content.startswith("#"):
                     continue
 
                 violations.append(
@@ -461,8 +465,8 @@ class TestFortranRule:
 
         if violations:
             pytest.fail(
-                "Hardcoded pi values found (use math.pi instead):\n" +
-                "\n".join(f"  - {v}" for v in violations)
+                "Hardcoded pi values found (use math.pi instead):\n"
+                + "\n".join(f"  - {v}" for v in violations)
             )
 
 
@@ -472,6 +476,7 @@ class TestFortranRule:
 
 if __name__ == "__main__":
     from app.main import app
+
     client = TestClient(app)
     response = client.get("/openapi.json")
     paths = list(response.json().get("paths", {}).keys())
