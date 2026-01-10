@@ -189,7 +189,7 @@ def get_attachment_path(sha256: str) -> Optional[str]:
         return str(path)
 
     # Try common extensions
-    for ext in [".json", ".gcode", ".txt", ".svg", ".dxf"]:
+    for ext in [".json", ".gcode", ".txt", ".svg", ".dxf", ".diff"]:
         path = _path_for_sha(sha256, ext)
         if path.exists():
             return str(path)
