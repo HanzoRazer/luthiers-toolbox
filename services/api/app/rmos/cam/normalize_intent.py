@@ -84,10 +84,8 @@ def _convert_length_fields_in_place(
     """
     Convert numeric scalar fields in-place if present and coercible.
     Only touches keys listed in `length_keys`.
+    Always coerces types; only converts units when they differ.
     """
-    if from_units == to_units:
-        return
-
     for k in length_keys:
         if k not in d:
             continue
@@ -95,7 +93,9 @@ def _convert_length_fields_in_place(
         v = _as_float(d.get(k), path=path, issues=issues)
         if v is None:
             continue
-        if from_units == CamUnitsV1.INCH and to_units == CamUnitsV1.MM:
+        if from_units == to_units:
+            d[k] = v  # Type coercion only
+        elif from_units == CamUnitsV1.INCH and to_units == CamUnitsV1.MM:
             d[k] = _convert_inch_to_mm(v)
         elif from_units == CamUnitsV1.MM and to_units == CamUnitsV1.INCH:
             d[k] = _convert_mm_to_inch(v)
