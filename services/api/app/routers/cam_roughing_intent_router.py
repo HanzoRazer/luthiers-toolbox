@@ -6,7 +6,10 @@ from typing import Any, Dict, List, Tuple
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from app.governance.metrics_registry import metrics
+from app.observability.metrics import (
+    cam_roughing_gcode_intent_total,
+    cam_roughing_gcode_intent_strict_reject_total,
+)
 
 # TODO: Update these imports once CamIntentV1 and normalize_cam_intent_v1 are available
 # Canonical intent envelope (H7.1): app.rmos.cam.CamIntentV1
@@ -37,7 +40,7 @@ class NormalizeResponse(BaseModel):
     issues: List[Dict[str, Any]]
 
 
-def _issues_summary(issues: List[Dict[str, Any]]) -> Tuple[str, str]:
+def _issues_summary(issues: List[Any]) -> Tuple[str, str]:
     # labels must be low-cardinality
     has_issues = "1" if issues else "0"
     severity = "none"
@@ -46,7 +49,11 @@ def _issues_summary(issues: List[Dict[str, Any]]) -> Tuple[str, str]:
         # else just "some"
         severity = "some"
         for it in issues:
-            sev = (it.get("severity") or "").lower()
+            # Handle both dict-style and object-style issues
+            if isinstance(it, dict):
+                sev = (it.get("severity") or "").lower()
+            else:
+                sev = (getattr(it, "severity", None) or "").lower()
             if sev in ("error", "fatal"):
                 severity = "error"
                 break
@@ -78,29 +85,28 @@ async def roughing_gcode_intent(
     has_issues, severity = _issues_summary(issues)
     strict_lbl = "1" if strict else "0"
 
-    metrics.inc(
-        name="cam_roughing_gcode_intent_total",
-        help="Total requests to roughing_gcode_intent endpoint",
+    cam_roughing_gcode_intent_total.inc(
         labels={"strict": strict_lbl, "has_issues": has_issues, "severity": severity},
     )
 
-    if issues:
-        metrics.inc(
-            name="cam_intent_issues_total",
-            help="Total intent normalization issues emitted",
-            labels={"endpoint": "roughing_gcode_intent", "severity": severity},
-            amount=len(issues),
-        )
-
     if strict and issues:
-        metrics.inc(
-            name="cam_roughing_gcode_intent_strict_reject_total",
-            help="Strict-mode rejects for roughing_gcode_intent",
+        cam_roughing_gcode_intent_strict_reject_total.inc(
             labels={"severity": severity},
         )
+        # Convert issues to dicts for JSON serialization
+        issues_dicts = []
+        for i in issues:
+            if isinstance(i, dict):
+                issues_dicts.append(i)
+            elif hasattr(i, "model_dump"):
+                issues_dicts.append(i.model_dump())
+            elif hasattr(i, "dict"):
+                issues_dicts.append(i.dict())
+            else:
+                issues_dicts.append({"message": str(i)})
         raise HTTPException(
             status_code=422,
-            detail={"message": "Strict mode reject: intent normalization produced issues", "issues": issues},
+            detail={"message": "Strict mode reject: intent normalization produced issues", "issues": issues_dicts},
         )
 
     # Convert normalized intent -> legacy payload shape
@@ -116,4 +122,11 @@ async def roughing_gcode_intent(
 
     # Reuse legacy handler by calling it directly (same behavior, no duplication)
     # Legacy signature: roughing_gcode(payload: dict) -> Response/Text
-    return await _legacy_roughing_handler(design)  # type: ignore[arg-type]
+    try:
+        return await _legacy_roughing_handler(design)  # type: ignore[arg-type]
+    except Exception as e:
+        # If legacy handler fails, return a structured error but metrics still counted
+        raise HTTPException(
+            status_code=422,
+            detail={"message": f"Roughing generation failed: {e}", "issues": []},
+        )

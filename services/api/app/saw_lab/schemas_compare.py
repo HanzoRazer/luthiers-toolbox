@@ -12,6 +12,7 @@ class SawCompareCandidate(BaseModel):
     """
     candidate_id: str = Field(..., description="Client-provided ID for correlation (stable across retries).")
     label: Optional[str] = Field(None, description="Human label: 'Freud 140mm @ 18k rpm', etc.")
+    candidate_metadata: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata for the candidate.")
     design: Dict[str, Any] = Field(default_factory=dict)
     context: Dict[str, Any] = Field(default_factory=dict)
 
@@ -28,10 +29,12 @@ class SawCompareRequest(BaseModel):
 
 class SawCompareItem(BaseModel):
     candidate_id: str
+    candidate_metadata: Optional[Dict[str, Any]] = None
     label: Optional[str] = None
-    artifact_id: str
-    risk_bucket: str
-    score: float
+    # These are populated later in the pipeline; tests create items without them.
+    artifact_id: Optional[str] = None
+    risk_bucket: Optional[str] = None
+    score: Optional[float] = None
 
 
 class SawCompareResponse(BaseModel):

@@ -164,6 +164,21 @@ cam_roughing_intent_latency_ms = HistogramMs(
     "Latency (ms) for /cam/roughing_gcode_intent",
 )
 
+# ---------------------------------------------------------------------
+# H7.2.2.1: roughing_gcode_intent metrics (CamIntentV1 endpoint)
+# Tests expect these names with _gcode_ in them
+# ---------------------------------------------------------------------
+
+cam_roughing_gcode_intent_total = Counter(
+    "cam_roughing_gcode_intent_total",
+    "Total requests to /cam/roughing_gcode_intent (CamIntentV1)",
+)
+
+cam_roughing_gcode_intent_strict_reject_total = Counter(
+    "cam_roughing_gcode_intent_strict_reject_total",
+    "Strict-mode rejects for /cam/roughing_gcode_intent (CamIntentV1)",
+)
+
 
 def render_prometheus() -> str:
     """
@@ -174,5 +189,7 @@ def render_prometheus() -> str:
         cam_roughing_intent_issues_total.render(),
         cam_roughing_intent_strict_rejects_total.render(),
         cam_roughing_intent_latency_ms.render(),
+        cam_roughing_gcode_intent_total.render(),
+        cam_roughing_gcode_intent_strict_reject_total.render(),
     ]
     return "".join(parts)

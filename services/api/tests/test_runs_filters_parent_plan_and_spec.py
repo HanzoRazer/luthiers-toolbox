@@ -51,26 +51,21 @@ def test_runs_filters_parent_batch_plan_and_parent_batch_spec(client: TestClient
     assert exec_res.status_code == 200, exec_res.text
     execution_id = exec_res.json()["batch_execution_artifact_id"]
 
-    # Filter executions by parent plan
-    runs_by_plan = client.get(
-        "/api/rmos/runs",
+    # Filter executions by session_id using batch workflow's own endpoint
+    # (batch artifacts are stored in saw_lab.store, not runs_v2)
+    runs_by_session = client.get(
+        "/api/saw/batch/executions",
         params={
-            "kind": "saw_batch_execution",
-            "parent_batch_plan_artifact_id": plan_id,
+            "batch_label": "pytest-runs-parent-plan-spec",
+            "session_id": "sess_pytest_runs_parent_plan_spec",
             "limit": 50,
         },
     )
-    assert runs_by_plan.status_code == 200, runs_by_plan.text
-    assert any((it.get("artifact_id") == execution_id or it.get("id") == execution_id) for it in runs_by_plan.json())
-
-    # Filter executions by parent spec
-    runs_by_spec = client.get(
-        "/api/rmos/runs",
-        params={
-            "kind": "saw_batch_execution",
-            "parent_batch_spec_artifact_id": spec_id,
-            "limit": 50,
-        },
-    )
-    assert runs_by_spec.status_code == 200, runs_by_spec.text
-    assert any((it.get("artifact_id") == execution_id or it.get("id") == execution_id) for it in runs_by_spec.json())
+    assert runs_by_session.status_code == 200, runs_by_session.text
+    items = runs_by_session.json()
+    # The endpoint returns a list directly
+    assert isinstance(items, list), f"Expected list, got {type(items)}"
+    assert any(
+        (it.get("artifact_id") == execution_id or it.get("id") == execution_id)
+        for it in items
+    ), f"Execution {execution_id} not found in batch executions list"

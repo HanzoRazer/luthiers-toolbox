@@ -319,6 +319,7 @@ def create_run_endpoint(req: RunCreateRequest, request: Request):
 def list_runs_endpoint(
     limit: int = Query(50, ge=1, le=500),
     event_type: Optional[str] = None,
+    kind: Optional[str] = Query(None, description="Alias for event_type"),
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
@@ -327,6 +328,12 @@ def list_runs_endpoint(
     ),
     session_id: Optional[str] = Query(
         None, description="Filter runs by session_id (from meta)"
+    ),
+    parent_batch_plan_artifact_id: Optional[str] = Query(
+        None, description="Filter runs by parent batch plan artifact ID"
+    ),
+    parent_batch_spec_artifact_id: Optional[str] = Query(
+        None, description="Filter runs by parent batch spec artifact ID"
     ),
 ):
     """
@@ -338,11 +345,14 @@ def list_runs_endpoint(
     runs = list_runs_filtered(
         limit=limit,
         event_type=event_type,
+        kind=kind,
         status=status,
         tool_id=tool_id,
         mode=mode,
         batch_label=batch_label,
         session_id=session_id,
+        parent_batch_plan_artifact_id=parent_batch_plan_artifact_id,
+        parent_batch_spec_artifact_id=parent_batch_spec_artifact_id,
     )
     items = [_to_summary(r).model_dump() for r in runs]
     return runs_list_response(items, limit=limit)

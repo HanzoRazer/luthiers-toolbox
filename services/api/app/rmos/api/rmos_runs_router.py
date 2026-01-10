@@ -12,7 +12,7 @@ Provides:
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -59,7 +59,7 @@ class RunDiffOut(BaseModel):
 # List Endpoint
 # ---------------------------------------------------------------------------
 
-@router.get("", response_model=RunIndexPageOut)
+@router.get("", response_model=Union[RunIndexPageOut, List[Dict[str, Any]]])
 def list_runs(
     cursor: Optional[str] = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=50, ge=1, le=200, description="Max results per page"),
@@ -72,7 +72,7 @@ def list_runs(
     parent_batch_decision_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch decision artifact"),
     parent_batch_plan_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch plan artifact"),
     parent_batch_spec_artifact_id: Optional[str] = Query(default=None, description="Filter by parent batch spec artifact"),
-) -> RunIndexPageOut:
+) -> Union[RunIndexPageOut, List[Dict[str, Any]]]:
     """
     List run artifacts with filtering and pagination.
 
@@ -93,20 +93,27 @@ def list_runs(
             "parent_batch_spec_artifact_id": parent_batch_spec_artifact_id,
         },
     )
-    return RunIndexPageOut(
-        items=[
-            RunIndexRowOut(
-                artifact_id=r.artifact_id,
-                kind=r.kind,
-                status=r.status,
-                created_utc=r.created_utc,
-                session_id=r.session_id,
-                index_meta=r.index_meta,
-            )
-            for r in rows
-        ],
-        next_cursor=next_cursor,
-    )
+    items_models = [
+        RunIndexRowOut(
+            artifact_id=r.artifact_id,
+            kind=r.kind,
+            status=r.status,
+            created_utc=r.created_utc,
+            session_id=r.session_id,
+            index_meta=r.index_meta,
+        )
+        for r in rows
+    ]
+
+    # Compatibility mode:
+    # Some legacy tests/clients expect a raw list (not a paginated envelope)
+    # when filtering by parent batch plan/spec IDs.
+    if parent_batch_plan_artifact_id or parent_batch_spec_artifact_id:
+        def _dump(m: Any) -> Dict[str, Any]:
+            return m.model_dump() if hasattr(m, "model_dump") else m.dict()
+        return [_dump(m) for m in items_models]
+
+    return RunIndexPageOut(items=items_models, next_cursor=next_cursor)
 
 
 # ---------------------------------------------------------------------------

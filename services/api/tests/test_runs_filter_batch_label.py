@@ -65,7 +65,12 @@ def test_runs_filter_batch_label_finds_parent_batch_artifact(client: TestClient)
         },
     )
     assert q.status_code == 200, q.text
-    runs = q.json()
+    response = q.json()
+    # Handle both paginated {"items": [...]} and list response formats
+    if isinstance(response, dict) and "items" in response:
+        runs = response["items"]
+    else:
+        runs = response
     assert isinstance(runs, list), f"Expected list, got: {runs}"
 
     # Support either key naming: artifact_id, id, or run_id (depends on schema)

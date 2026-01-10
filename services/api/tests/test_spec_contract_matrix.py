@@ -59,6 +59,15 @@ def _get(client: TestClient, path: str, params: Optional[Dict[str, Any]] = None)
     return r.json()
 
 
+def _extract_items(response: Any) -> List[Dict[str, Any]]:
+    """Extract items from paginated or list response."""
+    if isinstance(response, dict) and "items" in response:
+        return response["items"]
+    elif isinstance(response, list):
+        return response
+    return []
+
+
 # ---------------------------
 # Fixtures
 # ---------------------------
@@ -185,17 +194,20 @@ def test_contract_matrix_compare_decide_toolpaths_and_query_and_diff(client: Tes
 
     # ---- Step E: /api/rmos/runs filters work ----
     # Parent batch discoverable by mode + batch_label
-    runs_batches = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_batches_raw = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_batches = _extract_items(runs_batches_raw)
     assert isinstance(runs_batches, list)
     _assert_any_id_matches(runs_batches, parent_batch_id)
 
     # Decision discoverable by mode + batch_label
-    runs_decisions = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_decisions_raw = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_decisions = _extract_items(runs_decisions_raw)
     assert isinstance(runs_decisions, list)
     _assert_any_id_matches(runs_decisions, decision_id)
 
     # Toolpaths discoverable by mode + batch_label
-    runs_toolpaths = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_toolpaths_raw = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 100})
+    runs_toolpaths = _extract_items(runs_toolpaths_raw)
     assert isinstance(runs_toolpaths, list)
     _assert_any_id_matches(runs_toolpaths, toolpaths_id)
 
@@ -265,9 +277,10 @@ def test_artifact_kinds_exist_in_index_for_batch_label(client: TestClient):
 
     # Now assert artifacts show up in /api/rmos/runs filtered by mode and batch_label
     # All three artifacts should be discoverable
-    all_runs = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 50})
+    all_runs_raw = _get(client, "/api/rmos/runs", {"mode": "saw_compare", "batch_label": batch_label, "limit": 50})
+    all_runs = _extract_items(all_runs_raw)
     assert isinstance(all_runs, list)
-    
+
     # Verify all three IDs are present
     _assert_any_id_matches(all_runs, parent_id)
     _assert_any_id_matches(all_runs, decision_id)
