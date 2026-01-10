@@ -113,6 +113,9 @@ All implementation documents, guides, and code related to artifact querying are 
 
 Full `RunArtifact` object as defined in RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md
 
+Persistence invariant: The contents of `decision.details` are governed by
+RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md and MUST reflect the verbatim decision payload persisted at creation time.
+
 #### Error Responses
 
 | Status | Condition | Response |
