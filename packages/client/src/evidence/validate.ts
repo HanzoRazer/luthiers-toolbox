@@ -83,3 +83,131 @@ export function detectSchema(x: unknown): DetectedSchema {
   return "unknown";
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Integrity Checking (viewer_pack_v1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compute SHA256 hash of bytes using SubtleCrypto.
+ */
+async function sha256Hex(data: Uint8Array): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Verify a single file's integrity against manifest entry.
+ */
+export async function verifyFileIntegrity(
+  entry: { relpath: string; sha256?: string; bytes: number },
+  actualBytes: Uint8Array
+): Promise<{ valid: boolean; errors: string[] }> {
+  const errors: string[] = [];
+
+  // Check byte size
+  if (actualBytes.byteLength !== entry.bytes) {
+    errors.push(
+      `bytes mismatch for ${entry.relpath}: manifest=${entry.bytes}, actual=${actualBytes.byteLength}`
+    );
+  }
+
+  // Check SHA256 if present
+  if (entry.sha256) {
+    const actualHash = await sha256Hex(actualBytes);
+    if (actualHash !== entry.sha256) {
+      errors.push(
+        `sha256 mismatch for ${entry.relpath}: manifest=${entry.sha256}, actual=${actualHash}`
+      );
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Verify bundle_sha256 matches the canonical manifest hash.
+ *
+ * The bundle hash is computed from the manifest JSON bytes WITHOUT bundle_sha256,
+ * using sorted keys and indent=2 (matching Python exporter).
+ */
+export async function verifyBundleHash(
+  manifest: Record<string, unknown>
+): Promise<{ valid: boolean; expected: string; actual: string }> {
+  // Remove bundle_sha256 for hashing
+  const manifestWithoutHash = { ...manifest };
+  delete manifestWithoutHash.bundle_sha256;
+
+  // Canonical JSON: sorted keys (JS default), indent 2
+  const sortedKeys = Object.keys(manifestWithoutHash).sort();
+  const sorted: Record<string, unknown> = {};
+  for (const k of sortedKeys) {
+    sorted[k] = manifestWithoutHash[k];
+  }
+
+  const jsonBytes = new TextEncoder().encode(JSON.stringify(sorted, null, 2));
+  const computedHash = await sha256Hex(jsonBytes);
+  const declaredHash = String(manifest.bundle_sha256 ?? "");
+
+  return {
+    valid: computedHash === declaredHash,
+    expected: declaredHash,
+    actual: computedHash,
+  };
+}
+
+/**
+ * Result of full pack integrity verification.
+ */
+export interface PackIntegrityResult {
+  valid: boolean;
+  bundleHashValid: boolean;
+  fileErrors: string[];
+  bundleHashExpected?: string;
+  bundleHashActual?: string;
+}
+
+/**
+ * Verify full pack integrity: bundle hash + all file hashes.
+ *
+ * @param manifest - The parsed manifest object
+ * @param resolveFile - Function to get file bytes by relpath
+ */
+export async function verifyPackIntegrity(
+  manifest: ViewerPackManifestV1,
+  resolveFile: (relpath: string) => Uint8Array | null
+): Promise<PackIntegrityResult> {
+  const result: PackIntegrityResult = {
+    valid: true,
+    bundleHashValid: true,
+    fileErrors: [],
+  };
+
+  // Verify bundle hash
+  const bundleCheck = await verifyBundleHash(manifest as unknown as Record<string, unknown>);
+  result.bundleHashValid = bundleCheck.valid;
+  result.bundleHashExpected = bundleCheck.expected;
+  result.bundleHashActual = bundleCheck.actual;
+  if (!bundleCheck.valid) {
+    result.valid = false;
+  }
+
+  // Verify each file
+  for (const entry of manifest.files) {
+    const bytes = resolveFile(entry.relpath);
+    if (!bytes) {
+      result.fileErrors.push(`missing file: ${entry.relpath}`);
+      result.valid = false;
+      continue;
+    }
+
+    const fileCheck = await verifyFileIntegrity(entry, bytes);
+    if (!fileCheck.valid) {
+      result.fileErrors.push(...fileCheck.errors);
+      result.valid = false;
+    }
+  }
+
+  return result;
+}
+
