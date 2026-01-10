@@ -363,12 +363,24 @@ def list_runs_endpoint(
 
 
 @router.get("/diff", summary="Diff two run artifacts by id.")
-def diff_two_runs(a: str, b: str) -> Dict[str, Any]:
+def diff_two_runs(
+    a: str,
+    b: str,
+    preview_max_chars: int = Query(20000, ge=1000, le=200000, description="Max chars in preview"),
+    force_attachment: bool = Query(False, description="Always store as attachment"),
+) -> Dict[str, Any]:
     """
     Compute authoritative diff between two runs.
 
     Returns severity (CRITICAL/WARNING/INFO) and structured diff.
+    
+    If the diff is large (>preview_max_chars) or force_attachment=true,
+    the full diff is stored as a content-addressed attachment and
+    `diff_attachment` contains the sha256 for download via
+    GET /api/rmos/runs/diff/download/{sha256}
     """
+    from .diff_attachments import persist_diff_as_attachment_if_needed
+
     ra = get_run(a)
     if ra is None:
         raise HTTPException(status_code=404, detail=f"Run {a} not found")
@@ -377,7 +389,57 @@ def diff_two_runs(a: str, b: str) -> Dict[str, Any]:
     if rb is None:
         raise HTTPException(status_code=404, detail=f"Run {b} not found")
 
-    return diff_runs(ra, rb)
+    # Compute the structured diff
+    diff_result = diff_runs(ra, rb)
+    
+    # Handle large diffs via attachment
+    attachment_result = persist_diff_as_attachment_if_needed(
+        left_id=a,
+        right_id=b,
+        diff_result=diff_result,
+        preview_max_chars=preview_max_chars,
+        force_attachment=force_attachment,
+    )
+    
+    # Build response
+    response = {
+        **diff_result,
+        "preview": attachment_result.preview,
+        "truncated": attachment_result.truncated,
+        "full_bytes": attachment_result.full_bytes,
+    }
+    
+    if attachment_result.truncated:
+        response["diff_attachment"] = {
+            "sha256": attachment_result.attachment_sha256,
+            "filename": attachment_result.attachment_filename,
+            "download_url": f"/api/rmos/runs/diff/download/{attachment_result.attachment_sha256}",
+        }
+    
+    return response
+
+
+@router.get("/diff/download/{sha256}", summary="Download full diff by SHA256.")
+def download_diff_attachment(sha256: str):
+    """
+    Download the full diff content by its SHA256 hash.
+    
+    Used when diff is truncated and stored as attachment.
+    """
+    from .attachments import get_attachment_path
+    
+    path = get_attachment_path(sha256)
+    if not path:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Diff attachment {sha256} not found"
+        )
+    
+    return FileResponse(
+        path,
+        media_type="application/json",
+        filename=f"diff_{sha256[:12]}.diff",
+    )
 
 
 @router.get(

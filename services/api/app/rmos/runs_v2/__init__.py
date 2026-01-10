@@ -112,6 +112,12 @@ from .diff import (
     diff_summary,
 )
 
+from .diff_attachments import (
+    DIFF_PREVIEW_MAX_CHARS_DEFAULT,
+    DiffAttachmentResult,
+    persist_diff_as_attachment_if_needed,
+)
+
 # =============================================================================
 # Compatibility Layer
 # =============================================================================
