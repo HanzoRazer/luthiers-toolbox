@@ -831,3 +831,48 @@ Coverage: 32%
 **Status:** CI STABILIZATION COMPLETE - All workflows green
 
 ---
+
+## A_N.9 Entry Criteria — Release Validation
+
+**Purpose:** Validate that the system is ready for production deployment through sustained CI health and real-path confirmation.
+
+**Predecessor:** A_N.8 (CI Stabilization Complete) ✅
+
+### Mandatory Criteria
+
+| # | Criterion | Verification Method | Status |
+|---|-----------|---------------------|--------|
+| 1 | **CI Soak (48h)** | All 13 workflows remain green across ≥5 consecutive commits | ⬜ Pending |
+| 2 | **No Regression** | Zero new test failures introduced after A_N.8 baseline | ⬜ Pending |
+| 3 | **Docker Smoke** | `docker compose up` + health check passes on clean clone | ⬜ Pending |
+| 4 | **Real-Path CAM** | End-to-end CAM workflow produces valid G-code artifact | ⬜ Pending |
+| 5 | **Real-Path RMOS** | Run artifact created, indexed, queryable, diffable | ⬜ Pending |
+| 6 | **Governance Gates** | All governance workflows pass (routing-truth, ai-import-guard, scope gates) | ⬜ Pending |
+
+### Recommended Criteria (non-blocking)
+
+| # | Criterion | Notes |
+|---|-----------|-------|
+| 7 | Performance baseline | Response times documented for key endpoints |
+| 8 | Error rate < 1% | No 5xx errors in smoke test logs |
+| 9 | Documentation review | Critical router docs reviewed for accuracy |
+
+### Exit Conditions
+
+A_N.9 is complete when:
+- All 6 mandatory criteria are checked ✅
+- Sign-off recorded in this document
+- Tag `v1.0.0-rc1` applied to commit
+
+### Sign-Off Record
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Engineering | — | — | ⬜ Pending |
+| QA | — | — | ⬜ Pending |
+
+---
+
+**Next milestone after A_N.9:** GA Release (production deployment authorization)
+
+---
