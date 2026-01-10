@@ -155,7 +155,23 @@ __all__ = [
     "SawMaterialSpec",
     "SawLabConfig",
     "plan_saw_cuts_for_board",
+    # Decision Intelligence
+    "apply_decision_to_context",
+    "get_multipliers_from_decision",
 ]
+
+
+# Lazy imports for decision apply service
+def apply_decision_to_context(base_context, decision_payload):
+    """Apply a tuning decision's multipliers to a base context."""
+    from .decision_apply_service import apply_decision_to_context as _apply
+    return _apply(base_context, decision_payload)
+
+
+def get_multipliers_from_decision(decision_payload):
+    """Extract multipliers from a tuning decision payload."""
+    from .decision_apply_service import get_multipliers_from_decision as _get
+    return _get(decision_payload)
 
 
 def include_decision_intel_router(app) -> None:

@@ -100,6 +100,29 @@ class BatchApproveResponse(BaseModel):
     batch_decision_artifact_id: str
 
 
+class BatchPlanChooseRequest(BaseModel):
+    """
+    Operator approval: select ops from a plan, optionally apply recommended patch.
+    """
+    batch_plan_artifact_id: str
+    selected_setup_key: str
+    selected_op_ids: List[str]
+    apply_recommended_patch: bool = False
+    operator_note: str = ""
+
+
+class BatchPlanChooseResponse(BaseModel):
+    """
+    Result of operator approval. If apply_recommended_patch=True,
+    includes the advisory source decision artifact ID.
+    """
+    batch_decision_artifact_id: str
+    selected_setup_key: str
+    applied_context_patch: Optional[Dict[str, Any]] = None
+    applied_multipliers: Optional[Dict[str, float]] = None
+    advisory_source_decision_artifact_id: Optional[str] = None
+
+
 class BatchToolpathsRequest(BaseModel):
     batch_decision_artifact_id: str
 
@@ -305,6 +328,132 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
     artifact_id = store_artifact(kind="saw_batch_decision", payload=payload, parent_id=req.batch_plan_artifact_id, session_id=session_id)
     
     return BatchApproveResponse(batch_decision_artifact_id=artifact_id)
+
+
+# ---------------------------------------------------------------------------
+# Plan Choose (operator approval with optional patch application)
+# ---------------------------------------------------------------------------
+
+
+def _extract_plan_snapshot(plan_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract the relevant snapshot from a plan payload for auditing."""
+    return {
+        "batch_label": plan_payload.get("batch_label", ""),
+        "session_id": plan_payload.get("session_id", ""),
+        "setups": plan_payload.get("setups", []),
+    }
+
+
+def _find_setup_ops(plan_payload: Dict[str, Any], setup_key: str, op_ids: List[str]) -> List[Dict[str, Any]]:
+    """Find ops from a specific setup by their IDs."""
+    for setup in plan_payload.get("setups", []):
+        if setup.get("setup_key") == setup_key:
+            return [op for op in setup.get("ops", []) if op.get("op_id") in op_ids]
+    return []
+
+
+def _apply_patch_to_context_patch(base_context: Dict[str, Any], decision_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply decision multipliers to base context, returning the patch."""
+    from app.saw_lab.decision_apply_service import apply_decision_to_context
+    return apply_decision_to_context(base_context, decision_payload)
+
+
+@router.post("/plan/choose", response_model=BatchPlanChooseResponse)
+def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
+    """
+    Operator approval: select ops from a plan, optionally apply recommended patch.
+    
+    This creates a decision artifact similar to /approve but with:
+    - Explicit op selection
+    - Optional patch application from latest approved tuning decision
+    
+    The advisory shown at /plan time is not auto-applied; operator must opt in.
+    """
+    plan = get_artifact(req.batch_plan_artifact_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Batch plan not found")
+    
+    plan_payload = plan.get("payload", {})
+    batch_label = plan_payload.get("batch_label", "")
+    session_id = plan_payload.get("session_id", "")
+    spec_id = plan_payload.get("batch_spec_artifact_id", "")
+    
+    # Extract tool_id and material_id from the plan (needed for advisory lookup)
+    tool_id: Optional[str] = None
+    material_id: Optional[str] = None
+    for setup in plan_payload.get("setups", []):
+        if setup.get("setup_key") == req.selected_setup_key:
+            tool_id = setup.get("tool_id")
+            break
+    
+    # Get material_id from spec
+    spec = get_artifact(spec_id) if spec_id else None
+    if spec:
+        spec_payload = spec.get("payload", {})
+        items = spec_payload.get("items", [])
+        if items:
+            material_id = items[0].get("material_id")
+    
+    # Build context patch if operator opted in
+    applied_context_patch: Optional[Dict[str, Any]] = None
+    applied_multipliers: Optional[Dict[str, float]] = None
+    advisory_source_decision_artifact_id: Optional[str] = None
+    
+    if req.apply_recommended_patch and tool_id and material_id:
+        try:
+            from app.saw_lab.decision_intel_apply_service import find_latest_approved_tuning_decision
+            from app.saw_lab.decision_apply_service import get_multipliers_from_decision
+            
+            latest = find_latest_approved_tuning_decision(tool_id, material_id)
+            if latest:
+                decision_payload = latest.get("payload", {})
+                advisory_source_decision_artifact_id = latest.get("artifact_id")
+                applied_multipliers = get_multipliers_from_decision(decision_payload)
+                
+                # Build a sample context patch (base values are nominal)
+                base_context = {
+                    "spindle_rpm": 3000.0,
+                    "feed_rate_mmpm": 600.0,
+                    "doc_mm": 3.0,
+                }
+                applied_context_patch = _apply_patch_to_context_patch(base_context, decision_payload)
+        except Exception:
+            # Never fail the decision due to advisory lookup errors
+            pass
+    
+    # Create the decision artifact
+    payload = {
+        "batch_plan_artifact_id": req.batch_plan_artifact_id,
+        "batch_spec_artifact_id": spec_id,
+        "batch_label": batch_label,
+        "session_id": session_id,
+        "selected_setup_key": req.selected_setup_key,
+        "selected_op_ids": req.selected_op_ids,
+        "apply_recommended_patch": req.apply_recommended_patch,
+        "operator_note": req.operator_note,
+        "applied_context_patch": applied_context_patch,
+        "applied_multipliers": applied_multipliers,
+        "advisory_source_decision_artifact_id": advisory_source_decision_artifact_id,
+        # Legacy fields for compatibility with /approve
+        "approved_by": "operator",
+        "reason": req.operator_note or "plan/choose",
+        "setup_order": [req.selected_setup_key],
+        "op_order": req.selected_op_ids,
+    }
+    artifact_id = store_artifact(
+        kind="saw_batch_decision",
+        payload=payload,
+        parent_id=req.batch_plan_artifact_id,
+        session_id=session_id,
+    )
+    
+    return BatchPlanChooseResponse(
+        batch_decision_artifact_id=artifact_id,
+        selected_setup_key=req.selected_setup_key,
+        applied_context_patch=applied_context_patch,
+        applied_multipliers=applied_multipliers,
+        advisory_source_decision_artifact_id=advisory_source_decision_artifact_id,
+    )
 
 
 @router.post("/toolpaths", response_model=BatchToolpathsResponse)
