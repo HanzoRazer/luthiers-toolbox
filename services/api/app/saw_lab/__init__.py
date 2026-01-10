@@ -158,6 +158,8 @@ __all__ = [
     # Decision Intelligence
     "apply_decision_to_context",
     "get_multipliers_from_decision",
+    # Toolpaths lookup
+    "get_latest_toolpaths_for_decision",
 ]
 
 
@@ -172,6 +174,12 @@ def get_multipliers_from_decision(decision_payload):
     """Extract multipliers from a tuning decision payload."""
     from .decision_apply_service import get_multipliers_from_decision as _get
     return _get(decision_payload)
+
+
+def get_latest_toolpaths_for_decision(*, batch_decision_artifact_id, tool_kind="saw", limit=500):
+    """Lookup alias: decision -> latest toolpaths artifact."""
+    from .toolpaths_lookup_service import get_latest_toolpaths_for_decision as _get
+    return _get(batch_decision_artifact_id=batch_decision_artifact_id, tool_kind=tool_kind, limit=limit)
 
 
 def include_decision_intel_router(app) -> None:
