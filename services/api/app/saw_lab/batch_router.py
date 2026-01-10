@@ -154,6 +154,16 @@ class BatchToolpathsResponse(BaseModel):
     learning: Optional[LearningInfo] = None
 
 
+class BatchToolpathsByDecisionResponse(BaseModel):
+    batch_decision_artifact_id: str
+    batch_toolpaths_artifact_id: Optional[str] = None
+    status: Optional[str] = None
+    created_utc: Optional[str] = None
+    statistics: Optional[Dict[str, Any]] = None
+    session_id: Optional[str] = None
+    batch_label: Optional[str] = None
+
+
 class JobLogMetrics(BaseModel):
     parts_ok: int = 0
     parts_scrap: int = 0
@@ -2260,3 +2270,18 @@ def get_metrics_rollup_alias(
         }
         for r in rollups
     ]
+
+
+@router.get("/toolpaths/by-decision", response_model=BatchToolpathsByDecisionResponse)
+def toolpaths_by_decision(batch_decision_artifact_id: str) -> BatchToolpathsByDecisionResponse:
+    """
+    Convenience alias:
+      decision -> latest toolpaths artifact id (+ small summary).
+    This is a read-only lookup (no generation).
+    """
+    from .toolpaths_lookup_service import get_latest_toolpaths_for_decision
+
+    out = get_latest_toolpaths_for_decision(batch_decision_artifact_id=batch_decision_artifact_id)
+    if not out:
+        return BatchToolpathsByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
+    return BatchToolpathsByDecisionResponse(**out)
