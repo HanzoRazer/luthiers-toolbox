@@ -53,6 +53,22 @@ import time
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
+# Mount batch-tree endpoints in the same /runs router namespace
+from .api_batch_tree import router as batch_tree_router
+router.include_router(batch_tree_router)
+
+# Option B: batch audit export
+from .api_audit_export import router as audit_export_router
+router.include_router(audit_export_router)
+
+# Option B: batch timeline
+from .api_batch_timeline import router as batch_timeline_router
+router.include_router(batch_timeline_router)
+
+# Option B: grouped (tree-aware) timeline feed
+from .api_grouped_timeline import router as grouped_timeline_router
+router.include_router(grouped_timeline_router)
+
 
 # =============================================================================
 # Response Models
