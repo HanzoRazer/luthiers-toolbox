@@ -173,7 +173,7 @@ def test_runs_diff_detects_changes(client, artifact_dir):
     run_b_id = run_b_resp.json()["run_id"]
 
     # Use the query-param diff endpoint
-    res = client.get("/api/rmos/runs/diff", params={"a": run_a_id, "b": run_b_id})
+    res = client.get("/api/rmos/runs/diff", params={"left_id": run_a_id, "right_id": run_b_id})
     assert res.status_code == 200
     diff = res.json()
 
