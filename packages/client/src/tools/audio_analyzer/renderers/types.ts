@@ -47,6 +47,7 @@ export function kindToCategory(kind: EvidenceFileKind | string): RendererCategor
 
     // JSON-based files
     case "analysis_peaks":
+    case "coherence":           // viewer_pack_v1 schema kind
     case "provenance":
     case "session_meta":
     case "transfer_function":

@@ -11,6 +11,11 @@ help:
 	@echo "start-client            Start Vue dev client"
 	@echo "check-art-studio-scope  Run Art Studio ornament-authority scope gate"
 	@echo "check-boundaries        Run all architectural fence checks"
+	@echo ""
+	@echo "Viewer Pack v1 Contract Gate:"
+	@echo "viewer-pack-fixture     Regenerate minimal viewer pack fixture zip"
+	@echo "viewer-pack-parity      Check schema parity with tap_tone_pi"
+	@echo "viewer-pack-gate        Run full viewer pack v1 contract gate"
 
 # Configuration
 API_HOST ?= 127.0.0.1
@@ -127,3 +132,27 @@ check-boundaries:
 	@cd services/api && python -m app.ci.legacy_usage_gate --roots "../../packages/client/src" --budget 10
 	@echo "=== All fence checks complete ==="
 	@echo "✅ See FENCE_REGISTRY.json and docs/governance/FENCE_ARCHITECTURE.md"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Viewer Pack v1 Contract Gate
+# Cross-repo contract between tap_tone_pi (producer) and ToolBox (consumer)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+.PHONY: viewer-pack-fixture
+viewer-pack-fixture:
+	@echo "=== Regenerating Viewer Pack v1 Fixture ==="
+	@python scripts/validate/generate_minimal_viewer_pack_fixture.py \
+		--output services/api/tests/fixtures/viewer_packs/session_minimal.zip
+	@echo "=== Fixture regenerated ==="
+
+.PHONY: viewer-pack-parity
+viewer-pack-parity:
+	@echo "=== Viewer Pack v1 Schema Parity Check ==="
+	@python scripts/validate/check_viewer_pack_schema_parity.py --mode check
+	@echo "=== Parity check complete ==="
+
+.PHONY: viewer-pack-gate
+viewer-pack-gate: viewer-pack-parity
+	@echo "=== Viewer Pack v1 Contract Gate ==="
+	@cd services/api && python -m pytest tests/test_viewer_pack_v1_ingestion_gate.py -v
+	@echo "=== Contract gate complete ==="
