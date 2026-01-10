@@ -2,8 +2,10 @@
 
 **Date:** 2026-01-10
 **Evaluated by:** Claude Code
-**Overall Readiness:** 94-96% (Production Ready)
+**Overall Readiness:** 96-98% (Release Candidate)
 **Status:** A_N.8 - CI STABILIZATION COMPLETE
+
+*Next milestone: A_N.9 – Release Validation (CI soak, real-path confirmation)*
 
 ---
 
@@ -19,18 +21,30 @@ The codebase has **solid foundations** with **all critical blockers resolved** a
 
 ---
 
+## Validation Evidence (2026-01-10)
+
+| Metric | Result |
+|--------|--------|
+| Full test suite | **708 passed / 5 skipped** |
+| CI workflows | **13/13 passing** |
+| Governance gates | **100% PASS** |
+| Coverage | **32%** (measured) |
+| Warnings | Non-blocking (deprecation) |
+
+---
+
 ## Component Breakdown
 
-| Component | % Complete | Status | Critical Issue |
-|-----------|-----------|--------|----------------|
-| **Backend API** | 72% | Good | RMOS batch filter broken |
-| **Frontend UI** | 45% | Good | CI pipeline active |
-| **Test Coverage** | 50% | Partial | 61 test files, gaps exist |
-| **CI/CD Workflows** | 60% | Good | 26 workflows active |
-| **Schema Validation** | 65% | Good | Pydantic V2 in place |
-| **Dependencies** | 75% | Good | All deps optional or graceful |
-| **Documentation** | 58% | Partial | 40+ routers undocumented |
-| **Integration Points** | 75% | Good | RMOS-CAM batch working |
+| Component | % Complete | Status | Notes |
+|-----------|-----------|--------|-------|
+| **Backend API** | ~90% | ✅ Green | All CI paths validated |
+| **Frontend UI** | ~55% | ✅ Green | CI pipeline active, non-blocking |
+| **Test Coverage** | 32% | ✅ Measured | 708 passed, acceptable for RC |
+| **CI/CD Workflows** | ~95% | ✅ Green | All 13 workflows passing |
+| **Schema Validation** | ~85% | ✅ Good | Pydantic V2 in place |
+| **Dependencies** | ~90% | ✅ Good | All deps optional or graceful |
+| **Documentation** | ~60% | Partial | 40+ routers undocumented |
+| **Integration Points** | ~90% | ✅ Good | RMOS-CAM batch verified |
 
 ---
 
@@ -192,26 +206,28 @@ luthiers-toolbox/
 
 ## Key Systems Status
 
-### CAM Core (80% Complete)
+### CAM Core (~88% Complete)
 - ✅ Adaptive pocketing (Module L)
 - ✅ Helical ramping (v16.1)
 - ✅ Modal drilling (G81-G89)
 - ✅ Probe patterns
 - ✅ 5 post-processors
+- ✅ Intent normalization hardened
 - ⚠️ DXF preflight minimal tests
 
-### RMOS System (75% Complete)
+### RMOS System (~90% Complete)
 - ✅ Pipeline run management
 - ✅ AI search/generation
 - ✅ Constraint profiles
 - ✅ Safety validation
-- ❌ Batch label filtering broken
+- ✅ Batch label filtering (resolved 2026-01-02)
 
-### Art Studio (62% Complete)
+### Art Studio (~80% Complete)
 - ✅ Rosette designer
 - ✅ Bracing calculator
 - ✅ Inlay designer
 - ✅ Storage env vars documented
+- ✅ Governance-clean (fret-positions removed)
 - ⚠️ V-carve minimal
 - ⚠️ AI integration incomplete
 
@@ -231,7 +247,7 @@ luthiers-toolbox/
 | Core (FastAPI, Pydantic) | ✅ Stable |
 | Geometry (Shapely, pyclipper) | ✅ Pinned |
 | CAM (ezdxf, numpy) | ✅ Current |
-| AI (Anthropic) | ⚠️ Hard dependency |
+| AI (Anthropic) | ✅ Optional (graceful degradation) |
 | PDF (weasyprint) | ⚠️ Untested in CI |
 
 ### Frontend (package.json)
@@ -239,20 +255,20 @@ luthiers-toolbox/
 |----------|--------|
 | Core (Vue 3, Vite, TS) | ✅ Current |
 | Validation (Zod) | ✅ Configured |
-| Testing (Vitest) | ⚠️ Not running |
-| Linting (ESLint) | ⚠️ Not in CI |
+| Testing (Vitest) | ✅ Running in CI |
+| Linting (ESLint) | ✅ Running in CI |
 
 ---
 
 ## Path to Production
 
-### Immediate (48 hours)
+### Immediate (48 hours) — ALL RESOLVED
 
-| Task | Priority | Effort |
+| Task | Priority | Status |
 |------|----------|--------|
-| Fix client CI pipeline | CRITICAL | 2-4 hrs |
-| Debug RMOS batch filtering | CRITICAL | 4-8 hrs |
-| Add Anthropic fallback | HIGH | 2-4 hrs |
+| ~~Fix client CI pipeline~~ | CRITICAL | ✅ Resolved 2026-01-02 |
+| ~~Debug RMOS batch filtering~~ | CRITICAL | ✅ Resolved 2026-01-02 |
+| ~~Add Anthropic fallback~~ | HIGH | ✅ Resolved 2026-01-02 |
 
 ### Short-term (1-2 weeks)
 
