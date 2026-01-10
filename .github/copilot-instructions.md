@@ -11,14 +11,15 @@ cd services/api && uvicorn app.main:app --reload --port 8000
 # Frontend (Vue on :5173, proxies /api → :8000)
 cd packages/client && npm run dev
 
-# Docker (full stack)
+# Docker (full stack) – recommended for integration testing
 docker compose up --build
 
 # Key Tests
-cd services/api && pytest tests/ -v -m cam    # markers: unit, integration, smoke, cam, sawlab, rmos
-cd packages/client && npm run test            # Vitest
-make smoke-helix-posts                        # Integration smoke test
-make check-boundaries                         # All architectural fence checks
+cd services/api && pytest tests/ -v              # All tests
+cd services/api && pytest tests/ -v -m cam       # pytest markers: cam, sawlab, rmos, integration, smoke
+cd packages/client && npm run test               # Vitest unit tests
+make smoke-helix-posts                           # Helical post-processor smoke test
+make check-boundaries                            # All architectural fence checks (run before PR)
 ```
 
 ## 🔑 Critical Rules
@@ -27,11 +28,12 @@ make check-boundaries                         # All architectural fence checks
 2. **DXF**: R12 format (AC1009) with closed LWPolylines – never newer versions
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
-5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data)
+5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data), legacy archives (`Guitar Design HTML app/`, `ToolBox_*`)
 6. **Request IDs**: All API responses MUST include `X-Request-Id` header
 7. **Machine Profiles**: Use IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
 8. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
 9. **Architectural Fences**: Check [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) before cross-domain imports – CI-enforced
+10. **Vue Components**: Use `<script setup lang="ts">` – state in Pinia stores (`packages/client/src/stores`)
 
 ## 📁 Key Paths
 
@@ -45,6 +47,19 @@ make check-boundaries                         # All architectural fence checks
 | Frontend SDK        | `packages/client/src/sdk/endpoints/` – typed helpers     |
 | Post Configs        | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
 | CI Workflows        | `.github/workflows/` – 38 workflow files                 |
+| Pinia Stores        | `packages/client/src/stores/` – frontend state           |
+| Shared Utils        | `packages/shared/` – cross-package types/utilities       |
+
+## 🏛️ Architecture Overview
+
+**Monorepo Structure:**
+
+- `services/api/` – FastAPI backend (~116 routers in `app/main.py`)
+- `packages/client/` – Vue 3 SPA with Pinia stores
+- `packages/shared/` – Cross-package types/utilities
+- `projects/rmos/` – Rosette Manufacturing OS documentation
+
+**Data Flow:** Frontend SDK → FastAPI → CAM/RMOS modules → JSON artifacts or G-code
 
 ## 🏗️ Architecture: Operation Lanes
 
@@ -138,6 +153,21 @@ intent = CamIntentV1(mode="roughing", units="mm", design={...})
 def test_roughing():
     response = client.post("/api/cam/roughing/gcode", json=payload)
     assert "X-Request-Id" in response.headers
+
+# Run specific markers
+# pytest tests/ -v -m cam        # CAM toolpath tests
+# pytest tests/ -v -m sawlab     # Saw Lab governance tests
+# pytest tests/ -v -m smoke      # Quick validation tests
+```
+
+### Feature Flags
+
+```python
+# Environment-based feature flags (default shown)
+RMOS_RUNS_V2_ENABLED=true                    # Runs v2 implementation
+SAW_LEARNING_HOOK_ENABLED=false              # Feedback loop learning
+SAW_METRICS_ROLLUP_HOOK_ENABLED=false        # Metrics rollup persistence
+SAW_LAB_APPLY_APPROVED_TUNING_ON_PLAN=false  # Decision Intelligence: apply approved tuning to plans
 ```
 
 ## 🗺️ API Surface
