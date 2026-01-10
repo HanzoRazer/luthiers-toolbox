@@ -385,10 +385,14 @@ def _find_setup_ops(plan_payload: Dict[str, Any], setup_key: str, op_ids: List[s
     return []
 
 
-def _apply_patch_to_context_patch(base_context: Dict[str, Any], decision_payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Apply decision multipliers to base context, returning the patch."""
+def _apply_patch_to_context_patch(base_context: Dict[str, Any], applied_multipliers: Dict[str, float]) -> Dict[str, Any]:
+    """Apply decision multipliers to base context, returning the patched context."""
     from app.saw_lab.decision_apply_service import apply_decision_to_context
-    return apply_decision_to_context(base_context, decision_payload)
+    result, _stamp = apply_decision_to_context(
+        base_context=base_context,
+        applied_multipliers=applied_multipliers,
+    )
+    return result
 
 
 @router.post("/plan/choose", response_model=BatchPlanChooseResponse)
@@ -434,14 +438,22 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     
     if req.apply_recommended_patch and tool_id and material_id:
         try:
-            from app.saw_lab.decision_intel_apply_service import find_latest_approved_tuning_decision
-            from app.saw_lab.decision_apply_service import get_multipliers_from_decision
-            
-            latest = find_latest_approved_tuning_decision(tool_id, material_id)
-            if latest:
-                decision_payload = latest.get("payload", {})
-                advisory_source_decision_artifact_id = latest.get("artifact_id")
-                applied_multipliers = get_multipliers_from_decision(decision_payload)
+            from app.saw_lab.decision_intel_apply_service import find_latest_approved_tuning_decision, ArtifactStorePorts
+            from app.rmos.runs_v2 import store as runs_store  # type: ignore
+
+            store = ArtifactStorePorts(
+                list_runs_filtered=getattr(runs_store, "list_runs_filtered"),
+                persist_run_artifact=getattr(runs_store, "persist_run_artifact"),
+            )
+            decision_id, delta = find_latest_approved_tuning_decision(store, tool_id=tool_id, material_id=material_id)
+            if decision_id and delta:
+                advisory_source_decision_artifact_id = decision_id
+                # Convert TuningDelta to dict for applied_multipliers
+                applied_multipliers = {
+                    "rpm_mul": delta.rpm_mul if hasattr(delta, "rpm_mul") else getattr(delta, "rpm_mul", 1.0),
+                    "feed_mul": delta.feed_mul if hasattr(delta, "feed_mul") else getattr(delta, "feed_mul", 1.0),
+                    "doc_mul": delta.doc_mul if hasattr(delta, "doc_mul") else getattr(delta, "doc_mul", 1.0),
+                }
                 
                 # Build a sample context patch (base values are nominal)
                 base_context = {
@@ -449,7 +461,7 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
                     "feed_rate_mmpm": 600.0,
                     "doc_mm": 3.0,
                 }
-                applied_context_patch = _apply_patch_to_context_patch(base_context, decision_payload)
+                applied_context_patch = _apply_patch_to_context_patch(base_context, applied_multipliers)
         except Exception:
             # Never fail the decision due to advisory lookup errors
             pass

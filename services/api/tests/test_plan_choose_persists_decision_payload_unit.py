@@ -110,32 +110,35 @@ class TestPlanChooseBasic:
     def test_choose_with_patch_applies_multipliers(self, mock_store, sample_plan_artifact, sample_spec_artifact):
         """Verify /plan/choose applies patch when opt-in."""
         mock_get, mock_store_fn = mock_store
-        
+
         def get_artifact_side_effect(artifact_id):
             if artifact_id == "plan-001":
                 return sample_plan_artifact
             if artifact_id == "spec-001":
                 return sample_spec_artifact
             return None
-        
+
         mock_get.side_effect = get_artifact_side_effect
         mock_store_fn.return_value = "decision-002"
-        
-        # Mock the latest approved decision lookup
-        mock_latest = {
-            "artifact_id": "tuning-decision-001",
-            "payload": {
-                "delta": {
-                    "rpm_mul": 1.05,
-                    "feed_mul": 0.95,
-                    "doc_mul": 1.0,
-                },
-            },
-        }
-        
-        with patch("app.saw_lab.batch_router.find_latest_approved_tuning_decision", return_value=mock_latest):
+
+        # Mock the TuningDelta (Pydantic model with rpm_mul, feed_mul, doc_mul)
+        from app.saw_lab.schemas_decision_intelligence import TuningDelta
+        mock_delta = TuningDelta(rpm_mul=1.05, feed_mul=0.95, doc_mul=1.0)
+
+        # Mock the latest approved decision lookup (returns tuple: decision_id, TuningDelta)
+        mock_return = ("tuning-decision-001", mock_delta)
+
+        # Create mock runs_store with the required attributes
+        mock_runs_store = MagicMock()
+        mock_runs_store.list_runs_filtered = MagicMock(return_value=[])
+        mock_runs_store.persist_run_artifact = MagicMock(return_value=None)
+
+        # Patch find_latest_approved_tuning_decision at its source module
+        # and mock the runs_store module that gets imported
+        with patch("app.saw_lab.decision_intel_apply_service.find_latest_approved_tuning_decision", return_value=mock_return), \
+             patch.dict("sys.modules", {"app.rmos.runs_v2": MagicMock(store=mock_runs_store)}):
             from app.saw_lab.batch_router import choose_batch_plan, BatchPlanChooseRequest
-            
+
             req = BatchPlanChooseRequest(
                 batch_plan_artifact_id="plan-001",
                 selected_setup_key="setup_1",
@@ -143,9 +146,9 @@ class TestPlanChooseBasic:
                 apply_recommended_patch=True,
                 operator_note="applying tuning",
             )
-            
+
             response = choose_batch_plan(req)
-            
+
             assert response.batch_decision_artifact_id == "decision-002"
             assert response.advisory_source_decision_artifact_id == "tuning-decision-001"
             assert response.applied_multipliers is not None
@@ -179,57 +182,60 @@ class TestDecisionApplyService:
     def test_apply_decision_to_context_basic(self):
         """Verify apply_decision_to_context applies multipliers."""
         from app.saw_lab.decision_apply_service import apply_decision_to_context
-        
+
         base_context = {
             "spindle_rpm": 3000.0,
             "feed_rate_mmpm": 600.0,
             "doc_mm": 3.0,
         }
-        decision_payload = {
-            "delta": {
-                "rpm_mul": 1.1,
-                "feed_mul": 0.9,
-                "doc_mul": 1.0,
-            }
+        applied_multipliers = {
+            "rpm_mul": 1.1,
+            "feed_mul": 0.9,
+            "doc_mul": 1.0,
         }
-        
-        result = apply_decision_to_context(base_context, decision_payload)
-        
-        assert result["spindle_rpm"] == 3300.0  # 3000 * 1.1
-        assert result["feed_rate_mmpm"] == 540.0  # 600 * 0.9
-        assert result["doc_mm"] == 3.0  # 3.0 * 1.0 (unchanged)
+
+        # Function uses keyword-only args and returns (result, stamp) tuple
+        result, stamp = apply_decision_to_context(
+            base_context=base_context,
+            applied_multipliers=applied_multipliers,
+        )
+
+        assert result["spindle_rpm"] == pytest.approx(3300.0)  # 3000 * 1.1
+        assert result["feed_rate_mmpm"] == pytest.approx(540.0)  # 600 * 0.9
+        assert result["doc_mm"] == pytest.approx(3.0)  # 3.0 * 1.0 (unchanged)
 
     def test_apply_decision_does_not_mutate_input(self):
         """Verify apply_decision_to_context doesn't mutate input."""
         from app.saw_lab.decision_apply_service import apply_decision_to_context
-        
+
         base_context = {
             "spindle_rpm": 3000.0,
             "feed_rate_mmpm": 600.0,
         }
-        decision_payload = {
-            "delta": {"rpm_mul": 1.1}
-        }
-        
+        applied_multipliers = {"rpm_mul": 1.1}
+
         original_rpm = base_context["spindle_rpm"]
-        result = apply_decision_to_context(base_context, decision_payload)
-        
+        result, stamp = apply_decision_to_context(
+            base_context=base_context,
+            applied_multipliers=applied_multipliers,
+        )
+
         assert base_context["spindle_rpm"] == original_rpm
-        assert result["spindle_rpm"] == 3300.0
+        assert result["spindle_rpm"] == pytest.approx(3300.0)
 
     def test_get_multipliers_from_decision(self):
         """Verify multiplier extraction."""
         from app.saw_lab.decision_apply_service import get_multipliers_from_decision
-        
+
         decision_payload = {
             "delta": {
                 "rpm_mul": 1.05,
                 "feed_mul": 0.95,
             }
         }
-        
+
         result = get_multipliers_from_decision(decision_payload)
-        
+
         assert result["rpm_mul"] == 1.05
         assert result["feed_mul"] == 0.95
         assert result["doc_mul"] == 1.0  # default
