@@ -123,6 +123,19 @@ class BatchPlanChooseResponse(BaseModel):
     advisory_source_decision_artifact_id: Optional[str] = None
 
 
+class BatchToolpathsFromDecisionRequest(BaseModel):
+    batch_decision_artifact_id: str
+    include_gcode: bool = True
+
+
+class BatchToolpathsFromDecisionResponse(BaseModel):
+    batch_toolpaths_artifact_id: str
+    status: str
+    error: Optional[str] = None
+    decision_apply_stamp: Optional[Dict[str, Any]] = None
+    preview: Optional[Dict[str, Any]] = None
+
+
 class BatchToolpathsRequest(BaseModel):
     batch_decision_artifact_id: str
 
@@ -463,6 +476,29 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         applied_context_patch=applied_context_patch,
         applied_multipliers=applied_multipliers,
         advisory_source_decision_artifact_id=advisory_source_decision_artifact_id,
+    )
+
+
+@router.post("/toolpaths/from-decision", response_model=BatchToolpathsFromDecisionResponse)
+def toolpaths_from_decision(req: BatchToolpathsFromDecisionRequest) -> BatchToolpathsFromDecisionResponse:
+    """
+    Selected decision -> generate toolpaths
+    Toolpaths artifact is parented to the decision and inherits lineage stamps.
+    """
+    from .saw_lab_toolpaths_from_decision_service import generate_toolpaths_from_decision
+
+    out = generate_toolpaths_from_decision(
+        batch_decision_artifact_id=req.batch_decision_artifact_id,
+        include_gcode=bool(req.include_gcode),
+    )
+    if not out.get("batch_toolpaths_artifact_id"):
+        raise HTTPException(status_code=500, detail=out.get("error") or "toolpaths generation failed")
+    return BatchToolpathsFromDecisionResponse(
+        batch_toolpaths_artifact_id=str(out["batch_toolpaths_artifact_id"]),
+        status=str(out.get("status") or "UNKNOWN"),
+        error=out.get("error"),
+        decision_apply_stamp=out.get("decision_apply_stamp"),
+        preview=out.get("preview"),
     )
 
 
