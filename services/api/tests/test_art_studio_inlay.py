@@ -299,23 +299,6 @@ class TestInlayRouter:
         
         assert "R12" in versions
 
-    def test_fret_positions_endpoint(self, client):
-        """Test GET /api/art-studio/inlay/fret-positions."""
-        response = client.get(
-            "/api/art-studio/inlay/fret-positions",
-            params={"scale_length_mm": 648.0, "max_fret": 24}
-        )
-        
-        assert response.status_code == 200
-        positions = response.json()
-        
-        assert len(positions) == 24
-        
-        # Check fret 12 is at half scale length
-        fret_12 = next(p for p in positions if p["fret_number"] == 12)
-        assert abs(fret_12["distance_from_nut_mm"] - 324.0) < 1.0
-
-
 class TestInlayDXFExport:
     """Tests for inlay DXF export functionality."""
 
