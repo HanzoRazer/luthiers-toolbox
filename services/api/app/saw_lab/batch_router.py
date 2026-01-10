@@ -177,6 +177,16 @@ class BatchToolpathsByDecisionResponse(BaseModel):
     batch_label: Optional[str] = None
 
 
+class BatchExecutionByDecisionResponse(BaseModel):
+    batch_decision_artifact_id: str
+    batch_execution_artifact_id: Optional[str] = None
+    status: Optional[str] = None
+    created_utc: Optional[str] = None
+    statistics: Optional[Dict[str, Any]] = None
+    session_id: Optional[str] = None
+    batch_label: Optional[str] = None
+
+
 class JobLogMetrics(BaseModel):
     parts_ok: int = 0
     parts_scrap: int = 0
@@ -2321,3 +2331,18 @@ def toolpaths_by_decision(batch_decision_artifact_id: str) -> BatchToolpathsByDe
     if not out:
         return BatchToolpathsByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
     return BatchToolpathsByDecisionResponse(**out)
+
+
+@router.get("/execution/by-decision", response_model=BatchExecutionByDecisionResponse)
+def execution_by_decision(batch_decision_artifact_id: str) -> BatchExecutionByDecisionResponse:
+    """
+    Convenience alias:
+      decision -> latest execution artifact id (+ small summary).
+    Read-only lookup (no execution start).
+    """
+    from .executions_lookup_service import get_latest_execution_for_decision
+
+    out = get_latest_execution_for_decision(batch_decision_artifact_id=batch_decision_artifact_id)
+    if not out:
+        return BatchExecutionByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
+    return BatchExecutionByDecisionResponse(**out)
