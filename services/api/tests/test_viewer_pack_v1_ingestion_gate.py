@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Viewer Pack v1 Ingestion Gate (Consumer Side)
+VIEWER_PACK_V1_CONTRACT_GATE (Consumer Side)
 
-This gate ensures:
+Gate ID: VIEWER_PACK_V1_CONTRACT_GATE
+
+This is a CONTRACT GATE, not a feature test. It ensures:
   "If ToolBox receives a viewer_pack_v1 zip, it validates."
 
 Gate layers:
@@ -12,7 +14,8 @@ Gate layers:
 This is the consumer-side complement to tap_tone_pi's producer-side gate.
 Together they ensure: "If a pack exports, it validates; if it validates, ToolBox can render it."
 
-Part of the cross-repo contract with tap_tone_pi.
+Cross-repo contract with tap_tone_pi.
+See: docs/gates/VIEWER_PACK_V1_GATE.md
 """
 from __future__ import annotations
 
@@ -74,9 +77,9 @@ def extract_kind_enum_from_schema(schema: Dict[str, Any]) -> set:
 
 class TestViewerPackV1IngestionGate:
     """
-    Viewer Pack v1 Ingestion Gate.
+    VIEWER_PACK_V1_CONTRACT_GATE - Ingestion Tests.
 
-    This is the consumer-side gate that ensures ToolBox can
+    Consumer-side contract gate ensuring ToolBox can
     validate and ingest packs produced by tap_tone_pi.
     """
 
@@ -157,9 +160,9 @@ class TestViewerPackV1IngestionGate:
 
 class TestViewerPackSchemaParityGate:
     """
-    Schema parity tests to detect drift between tap_tone_pi and ToolBox.
+    VIEWER_PACK_V1_CONTRACT_GATE - Schema Parity Tests.
 
-    These tests ensure the vendored schema hasn't drifted from expectations.
+    Detect drift between tap_tone_pi and ToolBox vendored schema.
     """
 
     # Pin this hash to detect vendored schema changes
@@ -255,9 +258,9 @@ class TestViewerPackSchemaParityGate:
 
 class TestViewerPackClientIntegration:
     """
-    Integration tests for client-side viewer pack loading.
+    VIEWER_PACK_V1_CONTRACT_GATE - Client Integration Tests.
 
-    These verify the evidence/ module can load valid packs.
+    Verify the client-side evidence/ module can load valid packs.
     """
 
     def test_evidence_module_exports_exist(self):

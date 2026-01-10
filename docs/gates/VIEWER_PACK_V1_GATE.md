@@ -1,8 +1,10 @@
-# Viewer Pack v1 Validation Gate
+# Viewer Pack v1 Contract Gate
+
+> **Gate ID:** `VIEWER_PACK_V1_CONTRACT_GATE`
 
 ## Overview
 
-This gate ensures cross-repo compatibility between:
+This is a **contract gate**, not a feature test. It ensures cross-repo compatibility between:
 - **tap_tone_pi** (producer): Exports `viewer_pack_v1` bundles from Phase 2 sessions
 - **ToolBox** (consumer): Ingests and renders `viewer_pack_v1` bundles
 

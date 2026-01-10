@@ -24,6 +24,9 @@ jobs:
       - name: Art Studio Scope Gate
         run: |
           python scripts/ci/check_art_studio_scope.py --repo-root .
+      - name: Viewer Pack v1 Schema Parity Gate
+        run: |
+          python scripts/validate/check_viewer_pack_schema_parity.py --mode check
       - name: Boot API
         run: |
           cd services/api
