@@ -1,7 +1,6 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-08
+> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-10
 
 ## ⚡ Quick Start
 
@@ -36,27 +35,28 @@ make check-boundaries                         # All architectural fence checks
 
 ## 📁 Key Paths
 
-| Area | Path |
-|------|------|
-| API Entry | `services/api/app/main.py` – ~116 routers |
-| CAM Algorithms | `services/api/app/cam/` – pocketing, helical, biarc |
-| RMOS Orchestration | `services/api/app/rmos/` – workflow, CAM intent |
+| Area                | Path                                                     |
+| ------------------- | -------------------------------------------------------- |
+| API Entry           | `services/api/app/main.py` – ~116 routers                |
+| CAM Algorithms      | `services/api/app/cam/` – pocketing, helical, biarc      |
+| RMOS Orchestration  | `services/api/app/rmos/` – workflow, CAM intent          |
 | Saw Lab (Reference) | `services/api/app/saw_lab/` – governed operation pattern |
-| CAM Intent Schema | `services/api/app/rmos/cam/schemas_intent.py` |
-| Frontend SDK | `packages/client/src/sdk/endpoints/` – typed helpers |
-| Post Configs | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
-| CI Workflows | `.github/workflows/` – 38 workflow files |
+| CAM Intent Schema   | `services/api/app/rmos/cam/schemas_intent.py`            |
+| Frontend SDK        | `packages/client/src/sdk/endpoints/` – typed helpers     |
+| Post Configs        | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
+| CI Workflows        | `.github/workflows/` – 38 workflow files                 |
 
 ## 🏗️ Architecture: Operation Lanes
 
 Machine-executing endpoints follow **Operation Lane Governance**:
 
-| Lane | Description | Example |
-|------|-------------|---------|
-| **OPERATION** | Full governance: artifacts, feasibility gate, audit trail | `/api/saw/batch/*` |
-| **UTILITY** | Stateless/preview, no artifacts | `/api/cam/roughing/gcode` |
+| Lane          | Description                                               | Example                   |
+| ------------- | --------------------------------------------------------- | ------------------------- |
+| **OPERATION** | Full governance: artifacts, feasibility gate, audit trail | `/api/saw/batch/*`        |
+| **UTILITY**   | Stateless/preview, no artifacts                           | `/api/cam/roughing/gcode` |
 
 **Reference Implementation**: CNC Saw Lab (`services/api/app/saw_lab/batch_router.py`)
+
 - Stage sequence: SPEC → PLAN → DECISION → EXECUTE → EXPORT → FEEDBACK
 
 ## 🔗 Cross-Boundary Patterns
@@ -64,6 +64,7 @@ Machine-executing endpoints follow **Operation Lane Governance**:
 **Never import directly across domains.** Use these patterns:
 
 ### Pattern 1: Artifact Contract (Domain A needs B's output)
+
 ```python
 # Producer writes JSON artifact with SHA256
 write_json_artifact("measurement.json", result, sha256=True)
@@ -72,6 +73,7 @@ data = load_json(artifact_path); validate_schema(data)
 ```
 
 ### Pattern 2: HTTP API Contract (Domain A invokes B)
+
 ```python
 from app.rmos.cam import CamIntentV1
 intent = CamIntentV1(mode="roughing", design={"entities": [...]})
@@ -79,6 +81,7 @@ response = requests.post("/api/cam/toolpath/roughing/gcode", json=intent.dict())
 ```
 
 ### Pattern 3: SDK Adapter (Frontend → API)
+
 ```typescript
 // ✅ CORRECT: Typed SDK helper
 import { cam } from "@/sdk/endpoints";
@@ -91,6 +94,7 @@ const response = await fetch("/api/cam/roughing/gcode", {...});
 ## 🧪 Essential Patterns
 
 ### Backend: New Router
+
 ```python
 # services/api/app/routers/my_feature_router.py
 from fastapi import APIRouter
@@ -104,6 +108,7 @@ app.include_router(my_feature_router, prefix="/api/my-feature", tags=["MyFeature
 ```
 
 ### Frontend: SDK Usage
+
 ```typescript
 import { cam } from "@/sdk/endpoints";
 import { ApiError } from "@/sdk/core/errors";
@@ -118,6 +123,7 @@ try {
 ```
 
 ### CAM Intent Envelope
+
 ```python
 from app.rmos.cam import CamIntentV1
 intent = CamIntentV1(mode="roughing", units="mm", design={...})
@@ -125,6 +131,7 @@ intent = CamIntentV1(mode="roughing", units="mm", design={...})
 ```
 
 ### Testing
+
 ```python
 # Backend (pytest markers: cam, sawlab, rmos, integration, smoke)
 @pytest.mark.cam
@@ -141,18 +148,18 @@ def test_roughing():
 
 ## ⚠️ Common Pitfalls
 
-| Issue | Fix |
-|-------|-----|
-| DXF not recognized | Export R12 (AC1009) with closed LWPolylines |
-| Missing request headers | Use SDK helpers, not raw fetch |
-| Post config not found | Check `app/data/posts/<name>.json` (lowercase) |
-| Schema drift | Run `python -m app.ci.check_cam_intent_schema_hash` |
-| SQLite `limit` keyword | Quote as `"limit"` in SQL statements |
-| CSV line endings | Use `splitlines()` not `split('\n')` |
-| Import boundary violation | Use artifacts/HTTP, never direct imports |
-| Module-level `os.makedirs()` | Use lazy directory creation (Docker crashes) |
-| Direct `RunArtifact()` | Use `validate_and_persist()` from store |
-| Frontend raw `fetch()` | Import from `@/sdk/endpoints` |
+| Issue                        | Fix                                                 |
+| ---------------------------- | --------------------------------------------------- |
+| DXF not recognized           | Export R12 (AC1009) with closed LWPolylines         |
+| Missing request headers      | Use SDK helpers, not raw fetch                      |
+| Post config not found        | Check `app/data/posts/<name>.json` (lowercase)      |
+| Schema drift                 | Run `python -m app.ci.check_cam_intent_schema_hash` |
+| SQLite `limit` keyword       | Quote as `"limit"` in SQL statements                |
+| CSV line endings             | Use `splitlines()` not `split('\n')`                |
+| Import boundary violation    | Use artifacts/HTTP, never direct imports            |
+| Module-level `os.makedirs()` | Use lazy directory creation (Docker crashes)        |
+| Direct `RunArtifact()`       | Use `validate_and_persist()` from store             |
+| Frontend raw `fetch()`       | Import from `@/sdk/endpoints`                       |
 
 ## 🛠️ Essential CLI Commands
 
@@ -165,7 +172,7 @@ make check-boundaries
 # RMOS Management
 python -m app.rmos.runs_v2.cli_audit tail -n 50
 
-# Package Scripts
+# Package Scripts (from packages/client/)
 npm run dev          # Start dev server
 npm run test         # Vitest
 npm run lint         # ESLint (max-warnings=0)
@@ -177,7 +184,7 @@ npm run lint         # ESLint (max-warnings=0)
 # ❌ RMOS importing CAM execution
 from app.cam.toolpath.roughing import generate_roughing_toolpath
 
-# ❌ CAM importing RMOS orchestration  
+# ❌ CAM importing RMOS orchestration
 from app.rmos.workflow import approve_workflow
 
 # ❌ Direct RunArtifact construction
