@@ -69,6 +69,10 @@ router.include_router(batch_timeline_router)
 from .api_grouped_timeline import router as grouped_timeline_router
 router.include_router(grouped_timeline_router)
 
+# Option B: batch summary dashboard (UI card rollup)
+from .api_batch_summary import router as batch_summary_router
+router.include_router(batch_summary_router)
+
 
 # =============================================================================
 # Response Models
