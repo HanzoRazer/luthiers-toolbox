@@ -59,9 +59,9 @@ def persist_diff_as_attachment_if_needed(
             full_bytes=full_bytes,
         )
 
-    # IMPORTANT: put_bytes_attachment signature (known):
-    # (data: bytes, kind: str, mime: str, filename: str, ext: str = "") -> Tuple[RunAttachment, str]
-    _att, sha256 = put_bytes_attachment(
+    # IMPORTANT: put_bytes_attachment returns (RunAttachment, path_str)
+    # The sha256 is in the attachment object, not the second return value
+    att, _path = put_bytes_attachment(
         diff_bytes,
         kind="run_diff",
         mime="text/plain; charset=utf-8",
@@ -73,7 +73,7 @@ def persist_diff_as_attachment_if_needed(
         preview=preview,
         truncated=True,
         full_bytes=full_bytes,
-        attachment_sha256=sha256,
+        attachment_sha256=att.sha256,
         attachment_filename=f"{_make_filename(left_id, right_id)}.diff",
         attachment_content_type="text/plain; charset=utf-8",
     )

@@ -226,10 +226,14 @@ def test_contract_matrix_compare_decide_toolpaths_and_query_and_diff(client: Tes
 
     assert ok, {"diff_failed": diff_body}
 
-    # Minimal structural assertions that won't overfit your diff schema
+    # Minimal structural assertions for the unified diff response format
     assert isinstance(diff_body, dict), diff_body
-    # common keys in diff payloads: "summary", "deltas", "changes", "left", "right"
-    assert any(k in diff_body for k in ("summary", "deltas", "changes", "left", "right")), diff_body
+    # Required keys in the new diff response format
+    assert "left_id" in diff_body, diff_body
+    assert "right_id" in diff_body, diff_body
+    assert "diff_kind" in diff_body, diff_body
+    assert "preview" in diff_body, diff_body
+    assert isinstance(diff_body.get("truncated"), bool), diff_body
 
 
 # ---------------------------
