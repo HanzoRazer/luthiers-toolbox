@@ -188,6 +188,19 @@ def get_latest_execution_for_decision(*, batch_decision_artifact_id, tool_kind="
     return _get(batch_decision_artifact_id=batch_decision_artifact_id, tool_kind=tool_kind, limit=limit)
 
 
+def list_executions_for_decision(*, batch_decision_artifact_id, tool_kind="saw", limit=200, offset=0, newest_first=True, max_scan=5000):
+    """List alias: decision -> all execution artifacts (summaries), paginated."""
+    from .executions_list_service import list_executions_for_decision as _list
+    return _list(
+        batch_decision_artifact_id=batch_decision_artifact_id,
+        tool_kind=tool_kind,
+        limit=limit,
+        offset=offset,
+        newest_first=newest_first,
+        max_scan=max_scan,
+    )
+
+
 def include_decision_intel_router(app) -> None:
     """
     Call from app.main after Saw routers are mounted.

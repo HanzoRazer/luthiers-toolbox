@@ -187,6 +187,17 @@ class BatchExecutionByDecisionResponse(BaseModel):
     batch_label: Optional[str] = None
 
 
+class BatchExecutionsByDecisionResponse(BaseModel):
+    batch_decision_artifact_id: str
+    session_id: Optional[str] = None
+    batch_label: Optional[str] = None
+    tool_kind: Optional[str] = None
+    total: int
+    offset: int
+    limit: int
+    items: List[Dict[str, Any]]
+
+
 class JobLogMetrics(BaseModel):
     parts_ok: int = 0
     parts_scrap: int = 0
@@ -2358,3 +2369,34 @@ def execution_by_decision(batch_decision_artifact_id: str) -> BatchExecutionByDe
     if not out:
         return BatchExecutionByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
     return BatchExecutionByDecisionResponse(**out)
+
+
+@router.get("/executions/by-decision", response_model=BatchExecutionsByDecisionResponse)
+def executions_by_decision(
+    batch_decision_artifact_id: str,
+    limit: int = 200,
+    offset: int = 0,
+    newest_first: bool = True,
+) -> BatchExecutionsByDecisionResponse:
+    """
+    Convenience list:
+      decision -> all execution artifacts (summaries), optionally paginated.
+    """
+    from .executions_list_service import list_executions_for_decision
+
+    out = list_executions_for_decision(
+        batch_decision_artifact_id=batch_decision_artifact_id,
+        limit=limit,
+        offset=offset,
+        newest_first=newest_first,
+    )
+    if not out:
+        # consistent empty response
+        return BatchExecutionsByDecisionResponse(
+            batch_decision_artifact_id=batch_decision_artifact_id,
+            total=0,
+            offset=int(offset),
+            limit=int(limit),
+            items=[],
+        )
+    return BatchExecutionsByDecisionResponse(**out)
