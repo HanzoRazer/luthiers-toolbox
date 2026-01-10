@@ -7,6 +7,7 @@ export type EvidenceFileKind =
   | "spectrum_csv"
   | "peaks_csv"
   | "coherence_csv"
+  | "coherence"          // viewer_pack_v1 schema kind
   | "waveform_csv"
   | "wsi_curve"
   | "notes_md"
