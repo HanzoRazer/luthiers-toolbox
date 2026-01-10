@@ -213,9 +213,9 @@ def test_contract_matrix_compare_decide_toolpaths_and_query_and_diff(client: Tes
 
     # ---- Step F: Diff endpoint returns structured output (best-effort) ----
     # We diff the parent batch vs decision or decision vs toolpaths.
-    # The diff endpoint uses query params: /api/rmos/runs/diff?a={id}&b={id}
+    # The diff endpoint uses query params: /api/rmos/runs/diff?left_id={id}&right_id={id}
     def try_diff(left_id: str, right_id: str) -> Tuple[bool, Any]:
-        r = client.get("/api/rmos/runs/diff", params={"a": left_id, "b": right_id})
+        r = client.get("/api/rmos/runs/diff", params={"left_id": left_id, "right_id": right_id})
         if r.status_code != 200:
             return False, {"status": r.status_code, "body": r.text}
         return True, r.json()
