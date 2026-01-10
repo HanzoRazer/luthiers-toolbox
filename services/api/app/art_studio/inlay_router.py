@@ -132,13 +132,6 @@ class PresetInfo(BaseModel):
     fret_count: int
 
 
-class FretPositionInfo(BaseModel):
-    """Information about a fret position."""
-    fret_number: int
-    distance_from_nut_mm: float
-    midpoint_mm: float
-
-
 # --------------------------------------------------------------------- #
 # Endpoints
 # --------------------------------------------------------------------- #
@@ -300,30 +293,6 @@ def get_dxf_versions() -> List[str]:
     R12 is recommended for maximum CAM compatibility.
     """
     return DXF_VERSIONS_AVAILABLE
-
-
-@router.get("/fret-positions", response_model=List[FretPositionInfo])
-def get_fret_positions(
-    scale_length_mm: float = Query(default=648.0, description="Scale length in mm"),
-    max_fret: int = Query(default=24, ge=12, le=36, description="Maximum fret number"),
-) -> List[FretPositionInfo]:
-    """
-    Calculate fret positions for a given scale length.
-    
-    Uses the 12-TET (twelve-tone equal temperament) formula:
-    position = scale_length × (1 - 2^(-fret/12))
-    
-    Returns both the fret wire position and the midpoint where
-    inlays are typically placed.
-    """
-    positions = []
-    for fret in range(1, max_fret + 1):
-        positions.append(FretPositionInfo(
-            fret_number=fret,
-            distance_from_nut_mm=round(fret_position_mm(fret, scale_length_mm), 3),
-            midpoint_mm=round(fret_midpoint_mm(fret, scale_length_mm), 3),
-        ))
-    return positions
 
 
 # --------------------------------------------------------------------- #
