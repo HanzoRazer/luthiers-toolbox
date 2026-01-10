@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query
 from .batch_summary import BatchSummaryPorts, build_batch_summary
 
 
-router = APIRouter(prefix="/runs", tags=["runs"])
+router = APIRouter(tags=["runs"])  # No prefix - included in api_runs.py which has /runs prefix
 
 
 @router.get("/batch-summary")
