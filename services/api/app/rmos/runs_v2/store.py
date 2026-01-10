@@ -640,9 +640,15 @@ class RunStoreV2:
             os.replace(tmp, path)
 
             # Update the global index with lightweight metadata
-            # System 2 hardening: extract, normalize, and validate index_meta
-            index_meta = extract_and_normalize_from_artifact(artifact)
-            
+            # Start with base index fields (run_id, partition, created_at_utc, etc)
+            base_meta = _extract_index_meta(artifact)
+
+            # System 2 hardening: extract, normalize, and validate additional index_meta
+            normalized_meta = extract_and_normalize_from_artifact(artifact)
+
+            # Merge: base fields + normalized fields (normalized takes precedence for filter fields)
+            index_meta = {**base_meta, **normalized_meta}
+
             # Validate index_meta (non-strict mode for backward compatibility)
             # Set strict=True once all artifact creation paths populate required fields
             try:
@@ -657,7 +663,7 @@ class RunStoreV2:
                 logging.getLogger(__name__).warning(
                     f"index_meta validation warning for {artifact.run_id}: {e}"
                 )
-            
+
             self._update_index_entry(artifact.run_id, index_meta)
 
             # Update global attachment meta index (best-effort)
@@ -709,9 +715,15 @@ class RunStoreV2:
             os.replace(tmp, path)
 
             # Update the global index with lightweight metadata
-            # System 2 hardening: extract, normalize, and validate index_meta
-            index_meta = extract_and_normalize_from_artifact(artifact)
-            
+            # Start with base index fields (run_id, partition, created_at_utc, etc)
+            base_meta = _extract_index_meta(artifact)
+
+            # System 2 hardening: extract, normalize, and validate additional index_meta
+            normalized_meta = extract_and_normalize_from_artifact(artifact)
+
+            # Merge: base fields + normalized fields (normalized takes precedence for filter fields)
+            index_meta = {**base_meta, **normalized_meta}
+
             # Validate index_meta (non-strict mode for backward compatibility)
             # Set strict=True once all artifact creation paths populate required fields
             try:
@@ -726,7 +738,7 @@ class RunStoreV2:
                 logging.getLogger(__name__).warning(
                     f"index_meta validation warning for {artifact.run_id}: {e}"
                 )
-            
+
             self._update_index_entry(artifact.run_id, index_meta)
         except Exception:
             # Clean up temp file on failure
@@ -1127,6 +1139,7 @@ class RunStoreV2:
         limit: int = 50,
         offset: int = 0,
         event_type: Optional[str] = None,
+        kind: Optional[str] = None,  # Alias for event_type
         status: Optional[str] = None,
         tool_id: Optional[str] = None,
         mode: Optional[str] = None,
@@ -1134,6 +1147,8 @@ class RunStoreV2:
         batch_label: Optional[str] = None,
         session_id: Optional[str] = None,
         parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
+        parent_batch_plan_artifact_id: Optional[str] = None,
+        parent_batch_spec_artifact_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[RunArtifact]:
@@ -1178,7 +1193,9 @@ class RunStoreV2:
                     except Exception:
                         pass
 
-            if event_type and m.get("event_type") != event_type:
+            # Merge kind into event_type (kind is an alias)
+            effective_event_type = event_type or kind
+            if effective_event_type and m.get("event_type") != effective_event_type:
                 return False
             if status and m.get("status") != status:
                 return False
@@ -1188,21 +1205,53 @@ class RunStoreV2:
                 return False
             if workflow_session_id and m.get("workflow_session_id") != workflow_session_id:
                 return False
-            
-            # Filter by batch_label and session_id from meta field
-            meta = m.get("meta") or {}
-            if batch_label and meta.get("batch_label") != batch_label:
+
+            # Filter by batch_label and session_id
+            # These can be at top level (normalized) or nested in meta (legacy)
+            nested_meta = m.get("meta") or {}
+            m_batch_label = m.get("batch_label") or nested_meta.get("batch_label")
+            m_session_id = m.get("session_id") or nested_meta.get("session_id")
+            if batch_label and m_batch_label != batch_label:
                 return False
-            if session_id and meta.get("session_id") != session_id:
+            if session_id and m_session_id != session_id:
                 return False
 
             # Bundle 10: Filter by parent_plan_run_id from lineage
             if parent_plan_run_id:
                 lineage = m.get("lineage") or {}
                 if lineage.get("parent_plan_run_id") != parent_plan_run_id:
-                    # Fallback: check meta for backwards compat
-                    if meta.get("parent_plan_run_id") != parent_plan_run_id:
-                        return False
+                    # Fallback: check meta and top level for backwards compat
+                    if m.get("parent_plan_run_id") != parent_plan_run_id:
+                        if nested_meta.get("parent_plan_run_id") != parent_plan_run_id:
+                            return False
+
+            # Filter by parent_batch_plan_artifact_id from top-level/lineage/meta
+            if parent_batch_plan_artifact_id:
+                lineage = m.get("lineage") or {}
+                # Check all possible locations
+                found = (
+                    m.get("parent_batch_plan_artifact_id") == parent_batch_plan_artifact_id or
+                    lineage.get("parent_batch_plan_artifact_id") == parent_batch_plan_artifact_id or
+                    nested_meta.get("parent_batch_plan_artifact_id") == parent_batch_plan_artifact_id or
+                    m.get("batch_plan_artifact_id") == parent_batch_plan_artifact_id or
+                    nested_meta.get("batch_plan_artifact_id") == parent_batch_plan_artifact_id
+                )
+                if not found:
+                    return False
+
+            # Filter by parent_batch_spec_artifact_id from top-level/lineage/meta
+            if parent_batch_spec_artifact_id:
+                lineage = m.get("lineage") or {}
+                # Check all possible locations
+                found = (
+                    m.get("parent_batch_spec_artifact_id") == parent_batch_spec_artifact_id or
+                    lineage.get("parent_batch_spec_artifact_id") == parent_batch_spec_artifact_id or
+                    nested_meta.get("parent_batch_spec_artifact_id") == parent_batch_spec_artifact_id or
+                    m.get("batch_spec_artifact_id") == parent_batch_spec_artifact_id or
+                    nested_meta.get("batch_spec_artifact_id") == parent_batch_spec_artifact_id
+                )
+                if not found:
+                    return False
 
             return True
 
@@ -1346,6 +1395,7 @@ def list_runs_filtered(
     limit: int = 50,
     offset: int = 0,
     event_type: Optional[str] = None,
+    kind: Optional[str] = None,  # Alias for event_type
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
@@ -1353,6 +1403,8 @@ def list_runs_filtered(
     batch_label: Optional[str] = None,
     session_id: Optional[str] = None,
     parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
+    parent_batch_plan_artifact_id: Optional[str] = None,
+    parent_batch_spec_artifact_id: Optional[str] = None,
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
@@ -1360,6 +1412,7 @@ def list_runs_filtered(
         limit=limit,
         offset=offset,
         event_type=event_type,
+        kind=kind,
         status=status,
         tool_id=tool_id,
         mode=mode,
@@ -1367,6 +1420,8 @@ def list_runs_filtered(
         batch_label=batch_label,
         session_id=session_id,
         parent_plan_run_id=parent_plan_run_id,
+        parent_batch_plan_artifact_id=parent_batch_plan_artifact_id,
+        parent_batch_spec_artifact_id=parent_batch_spec_artifact_id,
     )
 
 

@@ -33,6 +33,8 @@ class CamModeV1(str, Enum):
 
     ROUTER_3AXIS = "router_3axis"
     SAW = "saw"
+    # Legacy alias for router_3axis roughing operations
+    ROUGHING = "roughing"
 
 
 class CamIntentV1(BaseModel):
@@ -134,7 +136,7 @@ def cam_intent_schema_hash_v1() -> str:
 #   3) any downstream SDK surface expecting the old schema
 # ------------------------------------------------------------------------------
 
-CAM_INTENT_SCHEMA_HASH_V1 = "635126da80d097758f6141bf8eff87effed06e12c156613b5b9358168bc5ea6a"
+CAM_INTENT_SCHEMA_HASH_V1 = "9e2f47d2736314e91bf36196083a49b59c52373b0b9ec479d2e2533ac8e18b94"
 
 
 def assert_cam_intent_schema_frozen_v1() -> None:

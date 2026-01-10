@@ -292,6 +292,9 @@ def normalize_cam_intent_v1(
         norm_design = _normalize_router_3axis_design(design, units_in=units_in, units_out=units_out, issues=issues)
     elif intent.mode == CamModeV1.SAW:
         norm_design = _normalize_saw_design(design, units_in=units_in, units_out=units_out, issues=issues)
+    elif intent.mode == CamModeV1.ROUGHING:
+        # Roughing is a type of router 3-axis operation, use same normalization
+        norm_design = _normalize_router_3axis_design(design, units_in=units_in, units_out=units_out, issues=issues)
     else:
         # Should not happen because enum, but keep safe for forward compat
         raise CamIntentValidationError(f"Unsupported mode: {intent.mode}")

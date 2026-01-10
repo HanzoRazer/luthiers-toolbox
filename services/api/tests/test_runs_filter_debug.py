@@ -11,7 +11,7 @@ def api_client():
 
 def test_runs_filter_batch_label_finds_parent_batch_artifact(api_client):
     """Test that we can filter runs list by batch_label to find the parent batch artifact."""
-    from app.saw_lab.schemas_compare import SawCompareRequest, SawCompareItem
+    from app.saw_lab.schemas_compare import SawCompareRequest, SawCompareCandidate
 
     client = api_client
     # 1) Create 2 candidates → parent batch artifact is returned
@@ -19,8 +19,8 @@ def test_runs_filter_batch_label_finds_parent_batch_artifact(api_client):
         batch_label="pytest-batchlabel",
         session_id="sess_pytest_batchlabel",
         candidates=[
-            SawCompareItem(candidate_id="c1", candidate_metadata={"rpm": 5000}),
-            SawCompareItem(candidate_id="c2", candidate_metadata={"rpm": 6000}),
+            SawCompareCandidate(candidate_id="c1", candidate_metadata={"rpm": 5000}),
+            SawCompareCandidate(candidate_id="c2", candidate_metadata={"rpm": 6000}),
         ]
     )
     r = client.post("/api/saw/compare", json=req.dict())
