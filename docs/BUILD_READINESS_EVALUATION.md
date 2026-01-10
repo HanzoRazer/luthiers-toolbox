@@ -844,10 +844,10 @@ Coverage: 32%
 |---|-----------|---------------------|--------|
 | 1 | **CI Soak (48h)** | All 13 workflows remain green across ≥5 consecutive commits | ⬜ Pending |
 | 2 | **No Regression** | Zero new test failures introduced after A_N.8 baseline | ⬜ Pending |
-| 3 | **Docker Smoke** | `docker compose up` + health check passes on clean clone | ⬜ Pending |
+| 3 | **Docker Smoke** | `docker compose up` + health check passes on clean clone | ✅ Pass (run #20884529719) |
 | 4 | **Real-Path CAM** | End-to-end CAM workflow produces valid G-code artifact | ⬜ Pending |
 | 5 | **Real-Path RMOS** | Run artifact created, indexed, queryable, diffable | ⬜ Pending |
-| 6 | **Governance Gates** | All governance workflows pass (routing-truth, ai-import-guard, scope gates) | ⬜ Pending |
+| 6 | **Governance Gates** | All governance workflows pass (routing-truth, ai-import-guard, scope gates) | ✅ Pass (4/4 green) |
 
 ### Recommended Criteria (non-blocking)
 
