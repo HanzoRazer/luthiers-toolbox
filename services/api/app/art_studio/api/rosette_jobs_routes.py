@@ -201,11 +201,19 @@ def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
 @router.post("/save", response_model=RosetteJobOut)
 def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
     """Persist a rosette preview payload to the database."""
+    global _db_available
     if not _db_available:
-        raise HTTPException(
-            status_code=503,
-            detail="Rosette job persistence unavailable (database not initialized)"
-        )
+        # Best-effort on-demand initialization for test environments
+        try:
+            init_db()
+            _db_available = True
+            logger.info("On-demand DB init succeeded for /save endpoint")
+        except Exception as e:
+            logger.warning(f"On-demand DB init failed for /save endpoint: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Rosette job persistence unavailable (database not initialized)"
+            )
     preview = body.preview
 
     # Override name/preset if provided in save request

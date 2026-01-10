@@ -138,7 +138,12 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument("-n", "--lines", type=int, default=50, help="Number of lines to show")
     t.add_argument("-f", "--follow", action="store_true", help="Follow for new events")
     t.add_argument("--interval", type=float, default=0.5, help="Follow poll interval (seconds)")
-    t.add_argument("--json", action="store_true", help="Output raw JSON lines")
+    t.add_argument(
+        "--json",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Output JSON lines (default: true; use --no-json for human-readable)",
+    )
     t.set_defaults(fn=cmd_tail)
 
     # count command
