@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "description": "Minimal routing truth for smoke tests",
+  "routes": [
+    {"path": "/api/health", "status": "canonical"},
+    {"path": "/api/rmos/runs", "status": "canonical"},
+    {"path": "/geometry/export", "status": "legacy", "successor": "/api/geometry/export"}
+  ]
+}
