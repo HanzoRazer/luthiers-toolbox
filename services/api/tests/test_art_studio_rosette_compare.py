@@ -7,15 +7,21 @@
 # - Calls /art/rosette/compare
 # - Checks that the diff summary makes sense
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app  # adjust import if your app module path differs
-from app.art_studio_rosette_store import init_db
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    """TestClient with context manager to trigger startup events."""
+    with TestClient(app) as c:
+        yield c
 
 
 def _create_and_save_rosette(
+    client: TestClient,
     pattern_type: str,
     segments: int,
     inner_radius: float,
@@ -50,12 +56,10 @@ def _create_and_save_rosette(
     return job_id
 
 
-def test_rosette_compare_basic_diff():
-    # ensure DB tables exist
-    init_db()
-
+def test_rosette_compare_basic_diff(client: TestClient):
     # create A and B
     job_a = _create_and_save_rosette(
+        client,
         pattern_type="simple_ring",
         segments=64,
         inner_radius=40.0,
@@ -64,6 +68,7 @@ def test_rosette_compare_basic_diff():
         preset="Safe",
     )
     job_b = _create_and_save_rosette(
+        client,
         pattern_type="simple_ring",
         segments=96,
         inner_radius=39.0,
@@ -103,8 +108,7 @@ def test_rosette_compare_basic_diff():
     assert bbox_union[3] >= max(bbox_a[3], bbox_b[3])
 
 
-def test_rosette_compare_unknown_jobs():
-    init_db()
+def test_rosette_compare_unknown_jobs(client: TestClient):
     # comparing unknown jobs should yield 404
     r = client.post(
         "/api/art/rosette/compare",
