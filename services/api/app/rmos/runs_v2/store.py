@@ -31,6 +31,14 @@ from .schemas_advisories import (
 from .delete_audit import append_delete_audit, build_delete_audit_event
 from .attachment_meta import AttachmentMetaIndex
 
+# Index meta governance (System 2 hardening)
+from .index_meta import (
+    IndexMetaError,
+    normalize_index_meta,
+    validate_index_meta,
+    extract_and_normalize_from_artifact,
+)
+
 # =============================================================================
 # H3.6.2: Delete Rate Limiting
 # =============================================================================
@@ -632,7 +640,25 @@ class RunStoreV2:
             os.replace(tmp, path)
 
             # Update the global index with lightweight metadata
-            self._update_index_entry(artifact.run_id, _extract_index_meta(artifact))
+            # System 2 hardening: extract, normalize, and validate index_meta
+            index_meta = extract_and_normalize_from_artifact(artifact)
+            
+            # Validate index_meta (non-strict mode for backward compatibility)
+            # Set strict=True once all artifact creation paths populate required fields
+            try:
+                validate_index_meta(
+                    index_meta,
+                    event_type=getattr(artifact, 'event_type', None),
+                    strict=False,  # TODO: Enable strict=True after migration
+                )
+            except IndexMetaError as e:
+                # Log but don't fail - we want to track drift without breaking existing flows
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"index_meta validation warning for {artifact.run_id}: {e}"
+                )
+            
+            self._update_index_entry(artifact.run_id, index_meta)
 
             # Update global attachment meta index (best-effort)
             try:
@@ -683,7 +709,25 @@ class RunStoreV2:
             os.replace(tmp, path)
 
             # Update the global index with lightweight metadata
-            self._update_index_entry(artifact.run_id, _extract_index_meta(artifact))
+            # System 2 hardening: extract, normalize, and validate index_meta
+            index_meta = extract_and_normalize_from_artifact(artifact)
+            
+            # Validate index_meta (non-strict mode for backward compatibility)
+            # Set strict=True once all artifact creation paths populate required fields
+            try:
+                validate_index_meta(
+                    index_meta,
+                    event_type=getattr(artifact, 'event_type', None),
+                    strict=False,  # TODO: Enable strict=True after migration
+                )
+            except IndexMetaError as e:
+                # Log but don't fail - we want to track drift without breaking existing flows
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"index_meta validation warning for {artifact.run_id}: {e}"
+                )
+            
+            self._update_index_entry(artifact.run_id, index_meta)
         except Exception:
             # Clean up temp file on failure
             if tmp.exists():
