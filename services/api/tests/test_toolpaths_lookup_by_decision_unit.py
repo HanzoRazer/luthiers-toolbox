@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.rmos.runs_v2 import store as runs_store
 from app.saw_lab.toolpaths_lookup_service import get_latest_toolpaths_for_decision
 
 
@@ -25,8 +26,8 @@ def test_get_latest_toolpaths_for_decision_picks_latest(monkeypatch):
         assert kwargs.get("batch_label") == "b1"
         return {"items": [tp_old, tp_new]}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.get_run", _fake_get_run)
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     out = get_latest_toolpaths_for_decision(batch_decision_artifact_id="dec1")
     assert out is not None
