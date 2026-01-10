@@ -182,6 +182,12 @@ def get_latest_toolpaths_for_decision(*, batch_decision_artifact_id, tool_kind="
     return _get(batch_decision_artifact_id=batch_decision_artifact_id, tool_kind=tool_kind, limit=limit)
 
 
+def get_latest_execution_for_decision(*, batch_decision_artifact_id, tool_kind="saw", limit=1000):
+    """Lookup alias: decision -> latest execution artifact."""
+    from .executions_lookup_service import get_latest_execution_for_decision as _get
+    return _get(batch_decision_artifact_id=batch_decision_artifact_id, tool_kind=tool_kind, limit=limit)
+
+
 def include_decision_intel_router(app) -> None:
     """
     Call from app.main after Saw routers are mounted.
