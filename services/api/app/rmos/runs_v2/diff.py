@@ -236,3 +236,32 @@ def diff_summary(diff_result: Dict[str, Any]) -> str:
         return "No differences detected."
 
     return f"[{severity}] {len(changed)} field(s) changed: {', '.join(changed[:5])}{'...' if len(changed) > 5 else ''}"
+
+
+def build_diff(left: RunArtifact, right: RunArtifact) -> str:
+    """
+    Build a unified text diff between two run artifacts.
+
+    Returns a human-readable unified diff string suitable for
+    display or attachment storage.
+    """
+    import json
+
+    diff_result = diff_runs(left, right)
+
+    lines = []
+    lines.append(f"--- {diff_result['a']['run_id']} ({diff_result['a']['created_at_utc']})")
+    lines.append(f"+++ {diff_result['b']['run_id']} ({diff_result['b']['created_at_utc']})")
+    lines.append(f"")
+    lines.append(f"Severity: {diff_result['diff_severity']}")
+    lines.append(f"Changed paths: {len(diff_result['changed_paths'])}")
+    lines.append(f"")
+
+    for path in sorted(diff_result["changed_paths"]):
+        lines.append(f"@@ {path} @@")
+
+    lines.append(f"")
+    lines.append("--- Diff Detail ---")
+    lines.append(json.dumps(diff_result["diff"], indent=2, default=str))
+
+    return "\n".join(lines)
