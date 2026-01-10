@@ -43,7 +43,7 @@ from .store import (
     create_run_id,
     attach_advisory,
 )
-from .diff import diff_runs
+from .diff import build_diff
 from .attachments import get_attachment_path, put_json_attachment
 from .hashing import summarize_request, compute_feasibility_hash
 from app.rmos.api.response_utils import runs_list_response
@@ -364,82 +364,62 @@ def list_runs_endpoint(
 
 @router.get("/diff", summary="Diff two run artifacts by id.")
 def diff_two_runs(
-    a: str,
-    b: str,
-    preview_max_chars: int = Query(20000, ge=1000, le=200000, description="Max chars in preview"),
-    force_attachment: bool = Query(False, description="Always store as attachment"),
+    left_id: str = Query(..., description="Left run artifact id"),
+    right_id: str = Query(..., description="Right run artifact id"),
+    preview_max_chars: int = Query(20000, ge=1000, le=200000),
+    force_attachment: bool = Query(False, description="Always persist full diff as attachment"),
 ) -> Dict[str, Any]:
     """
-    Compute authoritative diff between two runs.
+    Diff two runs.
 
-    Returns severity (CRITICAL/WARNING/INFO) and structured diff.
-    
-    If the diff is large (>preview_max_chars) or force_attachment=true,
-    the full diff is stored as a content-addressed attachment and
-    `diff_attachment` contains the sha256 for download via
-    GET /api/rmos/runs/diff/download/{sha256}
+    Contract:
+      - preview is always present (bounded)
+      - full diff is persisted as a run attachment when needed
+      - NEVER returns full diff inline (prevents truncation by server/UI)
+
+    Download full diff (when provided):
+      GET /api/rmos/runs/{run_id}/attachments/{sha256}
+      where run_id is right_id in the response payload.
     """
     from .diff_attachments import persist_diff_as_attachment_if_needed
 
-    ra = get_run(a)
-    if ra is None:
-        raise HTTPException(status_code=404, detail=f"Run {a} not found")
+    left = get_run(left_id)
+    if left is None:
+        raise HTTPException(status_code=404, detail=f"Run {left_id} not found")
 
-    rb = get_run(b)
-    if rb is None:
-        raise HTTPException(status_code=404, detail=f"Run {b} not found")
+    right = get_run(right_id)
+    if right is None:
+        raise HTTPException(status_code=404, detail=f"Run {right_id} not found")
 
-    # Compute the structured diff
-    diff_result = diff_runs(ra, rb)
-    
-    # Handle large diffs via attachment
-    attachment_result = persist_diff_as_attachment_if_needed(
-        left_id=a,
-        right_id=b,
-        diff_result=diff_result,
+    diff_text = build_diff(left, right)
+
+    att = persist_diff_as_attachment_if_needed(
+        left_id=left_id,
+        right_id=right_id,
+        diff_text=diff_text,
         preview_max_chars=preview_max_chars,
         force_attachment=force_attachment,
     )
-    
-    # Build response
-    response = {
-        **diff_result,
-        "preview": attachment_result.preview,
-        "truncated": attachment_result.truncated,
-        "full_bytes": attachment_result.full_bytes,
+
+    return {
+        "left_id": left_id,
+        "right_id": right_id,
+        "diff_kind": "unified",
+        "preview": att.preview,
+        "truncated": att.truncated,
+        "full_bytes": att.full_bytes,
+        "diff_attachment": (
+            {
+                "run_id": right_id,  # IMPORTANT: route requires run_id
+                "sha256": att.attachment_sha256,
+                "content_type": att.attachment_content_type,
+                "filename": att.attachment_filename,
+                "kind": "run_diff",
+            }
+            if att.attachment_sha256
+            else None
+        ),
     }
-    
-    if attachment_result.truncated:
-        response["diff_attachment"] = {
-            "sha256": attachment_result.attachment_sha256,
-            "filename": attachment_result.attachment_filename,
-            "download_url": f"/api/rmos/runs/diff/download/{attachment_result.attachment_sha256}",
-        }
-    
-    return response
-
-
-@router.get("/diff/download/{sha256}", summary="Download full diff by SHA256.")
-def download_diff_attachment(sha256: str):
-    """
-    Download the full diff content by its SHA256 hash.
-    
-    Used when diff is truncated and stored as attachment.
-    """
-    from .attachments import get_attachment_path
-    
-    path = get_attachment_path(sha256)
-    if not path:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Diff attachment {sha256} not found"
-        )
-    
-    return FileResponse(
-        path,
-        media_type="application/json",
-        filename=f"diff_{sha256[:12]}.diff",
-    )
 
 
 @router.get(
@@ -812,23 +792,35 @@ def list_run_attachments(run_id: str):
 
 @router.get("/{run_id}/attachments/{sha256}", summary="Download a run attachment.")
 def download_run_attachment(run_id: str, sha256: str):
-    """Download attachment blob by SHA256."""
-    r = get_run(run_id)
-    if r is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+    """
+    Download attachment blob by SHA256.
 
-    atts = r.attachments or []
-    if not any(a.sha256 == sha256 for a in atts):
-        raise HTTPException(status_code=404, detail="Attachment not found on run.")
-
+    Supports both registered attachments (on run's attachments list) and
+    content-addressed blobs stored via persist_diff_as_attachment_if_needed.
+    """
+    # First check if file exists on disk (content-addressed)
     path = get_attachment_path(sha256)
     if not path:
         raise HTTPException(
             status_code=404, detail="Attachment blob not found on disk."
         )
 
-    meta = next(a for a in atts if a.sha256 == sha256)
-    return FileResponse(path, media_type=meta.mime, filename=meta.filename)
+    # Try to get metadata from run's attachments list
+    r = get_run(run_id)
+    if r is not None:
+        atts = getattr(r, "attachments", None) or []
+        meta = next((a for a in atts if a.sha256 == sha256), None)
+        if meta is not None:
+            return FileResponse(path, media_type=meta.mime, filename=meta.filename)
+
+    # Content-addressed blob exists but not registered on run
+    # (e.g., diff attachments created on-the-fly)
+    # Serve with generic mime type
+    return FileResponse(
+        path,
+        media_type="application/octet-stream",
+        filename=f"{sha256[:16]}.bin",
+    )
 
 
 @router.get("/{run_id}/attachments/verify", summary="Verify attachment integrity.")

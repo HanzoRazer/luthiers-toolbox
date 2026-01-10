@@ -110,6 +110,7 @@ from .attachments import (
 from .diff import (
     diff_runs,
     diff_summary,
+    build_diff,
 )
 
 from .diff_attachments import (
@@ -215,6 +216,7 @@ __all__ = [
     # Diff
     "diff_runs",
     "diff_summary",
+    "build_diff",
     # Compat
     "convert_v1_to_v2",
     "convert_v2_to_v1_dict",
