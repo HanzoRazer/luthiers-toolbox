@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.rmos.runs_v2 import store as runs_store
 from app.saw_lab.saw_lab_toolpaths_from_decision_service import generate_toolpaths_from_decision
 
 
@@ -39,8 +40,8 @@ def test_generate_toolpaths_from_decision_applies_patch_and_persists(monkeypatch
         assert abs(float(context["feed_rate"]) - 200.0) < 1e-6
         return {"gcode_text": "G1 X0 Y0", "statistics": {"move_count": 1}}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.get_run", _fake_get_run)
-    monkeypatch.setattr("app.rmos.runs_v2.store.store_artifact", _fake_store_artifact)
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
     monkeypatch.setattr("app.saw_lab_run_service.plan_saw_toolpaths_for_design", _fake_plan_saw_toolpaths_for_design)
 
     out = generate_toolpaths_from_decision(batch_decision_artifact_id="dec1", include_gcode=True)

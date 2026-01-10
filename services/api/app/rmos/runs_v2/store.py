@@ -1377,6 +1377,35 @@ def persist_run(artifact: RunArtifact) -> RunArtifact:
     return artifact
 
 
+def store_artifact(
+    *,
+    kind: str,
+    payload: Dict[str, Any],
+    parent_id: str,
+    session_id: str,
+) -> str:
+    """
+    Helper to create and persist a run artifact with minimal boilerplate.
+    Returns the generated run_id.
+    """
+    from .schemas import RunArtifact, utc_now
+
+    run_id = create_run_id()
+    artifact = RunArtifact(
+        run_id=run_id,
+        event_type=kind,
+        status="OK",
+        created_at_utc=utc_now(),
+        payload=payload,
+        meta={
+            "parent_id": parent_id,
+            "session_id": session_id,
+        },
+    )
+    persist_run(artifact)
+    return run_id
+
+
 def update_run(artifact: RunArtifact) -> RunArtifact:
     """Update mutable fields of an existing run artifact."""
     store = _get_default_store()
