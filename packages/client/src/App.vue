@@ -1,9 +1,14 @@
 <template>
-  <router-view />
+  <div class="app-container">
+    <AppNav />
+    <main class="app-main">
+      <router-view />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-// Root application component with router outlet
+import AppNav from '@/components/AppNav.vue';
 </script>
 
 <style>
@@ -16,5 +21,15 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
 }
 </style>

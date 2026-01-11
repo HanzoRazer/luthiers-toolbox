@@ -89,6 +89,14 @@
         >
           CAM Settings
         </RouterLink>
+
+        <RouterLink
+          to="/ai-images"
+          class="px-2 py-1 rounded hover:bg-gray-100"
+          active-class="bg-gray-900 text-white hover:bg-gray-900"
+        >
+          🎨 AI Images
+        </RouterLink>
       </nav>
     </div>
   </header>
