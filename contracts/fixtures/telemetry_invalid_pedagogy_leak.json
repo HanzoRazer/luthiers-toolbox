@@ -1,0 +1,16 @@
+{
+  "$comment": "INVALID - This payload must be REJECTED by the schema. Contains forbidden pedagogy data.",
+  "schema_id": "smart_guitar_toolbox_telemetry",
+  "schema_version": "v1",
+  "emitted_at_utc": "2026-01-10T17:06:00Z",
+  "instrument_id": "sg-0001-alpha",
+  "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+  "telemetry_category": "practice_usage",
+  "player_id": "user-12345",
+  "lesson_id": "lesson_fretting_101",
+  "accuracy": 0.82,
+  "metrics": {
+    "practice_minutes_total": { "value": 38, "unit": "count", "aggregation": "sum" },
+    "timing_accuracy_pct": { "value": 84.2, "unit": "percent", "aggregation": "avg" }
+  }
+}

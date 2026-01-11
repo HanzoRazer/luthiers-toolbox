@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.local/schemas/smart_guitar_toolbox_telemetry_v1.schema.json",
+  "title": "Smart Guitar → ToolBox Telemetry Payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "emitted_at_utc",
+    "instrument_id",
+    "manufacturing_batch_id",
+    "telemetry_category",
+    "metrics"
+  ],
+  "properties": {
+    "schema_id": {
+      "type": "string",
+      "const": "smart_guitar_toolbox_telemetry"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "v1"
+    },
+    "emitted_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when payload was emitted."
+    },
+
+    "instrument_id": {
+      "type": "string",
+      "minLength": 6,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{4,126}[A-Za-z0-9]$",
+      "description": "Smart Guitar physical unit identifier (non-player)."
+    },
+
+    "manufacturing_batch_id": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,126}[A-Za-z0-9]$",
+      "description": "ToolBox manufacturing batch/build identifier."
+    },
+
+    "design_revision_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,126}[A-Za-z0-9]$",
+      "description": "Optional design revision identifier (manufacturing correlation only)."
+    },
+
+    "hardware_sku": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,126}[A-Za-z0-9]$",
+      "description": "Optional hardware SKU (manufacturing correlation only)."
+    },
+
+    "component_lot_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,126}[A-Za-z0-9]$",
+      "description": "Optional component lot identifier (manufacturing correlation only)."
+    },
+
+    "telemetry_category": {
+      "type": "string",
+      "enum": [
+        "utilization",
+        "hardware_performance",
+        "environment",
+        "lifecycle"
+      ],
+      "description": "High-level category for manufacturing intelligence."
+    },
+
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Map of metric_name → metric data. Values must be numeric + aggregatable.",
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{1,63}$": {
+          "$ref": "#/$defs/metric_value"
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "metric_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "aggregation"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Numeric metric value. Must be aggregatable.",
+          "minimum": -1.0e308,
+          "maximum": 1.0e308
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "count",
+            "hours",
+            "seconds",
+            "milliseconds",
+            "ratio",
+            "percent",
+            "celsius",
+            "fahrenheit",
+            "volts",
+            "amps",
+            "ohms",
+            "db",
+            "hz",
+            "bytes"
+          ],
+          "description": "Unit label for the metric."
+        },
+        "aggregation": {
+          "type": "string",
+          "enum": [
+            "sum",
+            "avg",
+            "max",
+            "min",
+            "bucket"
+          ],
+          "description": "How this metric is aggregated upstream."
+        },
+
+        "bucket_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9 _./:-]{0,62}[A-Za-z0-9]$",
+          "description": "Only for aggregation=bucket. Human-readable bucket name."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "aggregation": { "const": "bucket" } }, "required": ["aggregation"] },
+          "then": { "required": ["bucket_label"] }
+        },
+        {
+          "if": { "properties": { "aggregation": { "enum": ["sum", "avg", "max", "min"] } }, "required": ["aggregation"] },
+          "then": { "not": { "required": ["bucket_label"] } }
+        }
+      ]
+    }
+  },
+
+  "allOf": [
+    {
+      "$comment": "Hard-block forbidden user/pedagogy fields if they appear at top-level.",
+      "not": {
+        "anyOf": [
+          { "required": ["player_id"] },
+          { "required": ["account_id"] },
+          { "required": ["lesson_id"] },
+          { "required": ["curriculum_id"] },
+          { "required": ["practice_session_id"] },
+          { "required": ["skill_level"] },
+          { "required": ["accuracy"] },
+          { "required": ["timing"] },
+          { "required": ["midi"] },
+          { "required": ["audio"] },
+          { "required": ["recording_url"] },
+          { "required": ["coach_feedback"] },
+          { "required": ["prompt_trace"] }
+        ]
+      }
+    }
+  ]
+}
