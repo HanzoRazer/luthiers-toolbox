@@ -1119,6 +1119,17 @@ except ImportError:
     pass
 
 # =============================================================================
+# WAVE 23: SMART GUITAR TELEMETRY INGESTION
+# Manufacturing-only telemetry from Smart Guitar devices.
+# Enforces boundary contract: NO player/pedagogy data allowed.
+# =============================================================================
+try:
+    from .smart_guitar_telemetry import telemetry_router as sg_telemetry_router
+    app.include_router(sg_telemetry_router, prefix="/api/telemetry", tags=["Smart Guitar", "Telemetry"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: sg_telemetry_router (%s)", e)
+
+# =============================================================================
 # COMPAT LEGACY ROUTES (CI + legacy callers)
 # Canonical remains /api/*; compat mounts are hidden from OpenAPI.
 # Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.
