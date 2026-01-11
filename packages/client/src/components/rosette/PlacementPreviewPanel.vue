@@ -227,9 +227,20 @@ const selectedUserPreset = computed(() =>
   userPresets.value.find((p) => p.id === selectedPresetId.value) ?? null
 );
 
+const isDirty = computed(() => {
+  const p = presets.value.find((x) => x.id === selectedPresetId.value);
+  if (!p) return false;
+  // Compare current values to preset values
+  if (JSON.stringify(host.value) !== JSON.stringify(p.host)) return true;
+  if (JSON.stringify(placement.value) !== JSON.stringify(p.placement)) return true;
+  if (p.polygonText !== undefined && polygonText.value !== p.polygonText) return true;
+  return false;
+});
+
 const starTitle = computed(() => {
-  if (selectedUserPreset.value) return `Update preset: ${selectedUserPreset.value.name}`;
-  return "Save current host + placement as a new preset";
+  if (!selectedUserPreset.value) return "Save current host + placement as a new preset";
+  if (isDirty.value) return `Unsaved changes (●). Click to overwrite or save as new: ${selectedUserPreset.value.name}`;
+  return `Update preset: ${selectedUserPreset.value.name}`;
 });
 
 /* -------------------------
@@ -280,27 +291,72 @@ function defaultPresetName(): string {
 }
 
 function savePresetFromCurrent() {
-  // If a user preset is selected, offer to update it (fast, no clutter)
+  // If a user preset is selected, ★ can update it (or branch)
   if (selectedUserPreset.value) {
-    const ok = confirm(`Update preset "${selectedUserPreset.value.name}" with current settings?`);
-    if (!ok) return;
+    // If no changes vs preset, update silently (fast path)
+    if (!isDirty.value) {
+      const updated = {
+        ...selectedUserPreset.value,
+        host: structuredClone(host.value),
+        placement: structuredClone(placement.value),
+        polygonText: polygonText.value,
+      };
+      userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+      selectedPresetId.value = updated.id;
+      return;
+    }
 
-    const updated = {
-      ...selectedUserPreset.value,
-      host: structuredClone(host.value),
-      placement: structuredClone(placement.value),
-      polygonText: polygonText.value,
-    };
+    // Dirty: prevent accidental overwrite
+    const msg =
+      `Preset "${selectedUserPreset.value.name}" has unsaved changes (●).\n\n` +
+      `Type one of these:\n` +
+      `  overwrite  — replace this preset\n` +
+      `  new        — save as a new preset\n` +
+      `  cancel     — do nothing`;
 
-    userPresets.value = userPresets.value.map((p) =>
-      p.id === updated.id ? updated : p
-    );
-    localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
-    selectedPresetId.value = updated.id;
+    const choiceRaw = prompt(msg, "new");
+    const choice = (choiceRaw ?? "").trim().toLowerCase();
+
+    if (!choice || choice === "cancel") return;
+
+    if (choice === "overwrite") {
+      const updated = {
+        ...selectedUserPreset.value,
+        host: structuredClone(host.value),
+        placement: structuredClone(placement.value),
+        polygonText: polygonText.value,
+      };
+      userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+      selectedPresetId.value = updated.id;
+      return;
+    }
+
+    if (choice === "new") {
+      const suggested = `${selectedUserPreset.value.name} (variant)`;
+      const name = prompt("New preset name?", suggested);
+      if (!name) return;
+
+      const preset: PlacementPreset = {
+        id: crypto.randomUUID(),
+        name,
+        host: structuredClone(host.value),
+        placement: structuredClone(placement.value),
+        polygonText: polygonText.value,
+      };
+
+      userPresets.value.push(preset);
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+      selectedPresetId.value = preset.id;
+      return;
+    }
+
+    // Unknown input: treat as cancel (safe)
     return;
   }
 
-  // Otherwise create a new preset
+  // No selected user preset => create new preset (existing behavior)
   const suggested = defaultPresetName();
   const name = prompt("Preset name?", suggested);
   if (!name) return;
