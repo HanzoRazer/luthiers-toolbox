@@ -1,0 +1,88 @@
+{
+  "schema_id": "toolbox_smart_guitar_safe_export",
+  "schema_version": "v1",
+  "created_at_utc": "2026-01-11T07:08:57.146622+00:00",
+  "export_id": "sample_001",
+  "producer": {
+    "system": "luthiers-toolbox",
+    "repo": "https://github.com/HanzoRazer/luthiers-toolbox.git",
+    "commit": "d74a70a8a3676ca9e14742a1936e60a65e95a73b",
+    "build_id": null
+  },
+  "scope": {
+    "domain": "education",
+    "safe_for": "smart_guitar",
+    "intended_consumers": []
+  },
+  "content_policy": {
+    "no_manufacturing": true,
+    "no_toolpaths": true,
+    "no_rmos_authority": true,
+    "no_secrets": true,
+    "notes": null
+  },
+  "index": {
+    "topics_relpath": "index/topics.json",
+    "lessons_relpath": "index/lessons.json",
+    "drills_relpath": "index/drills.json"
+  },
+  "files": [
+    {
+      "relpath": "index/topics.json",
+      "sha256": "1009c90f0bb0e5509caa43f10d85bf00c7e94accaa5290e592fa43774c781524",
+      "bytes": 486,
+      "mime": "application/json",
+      "kind": "topic_index"
+    },
+    {
+      "relpath": "index/lessons.json",
+      "sha256": "31922230cd561c48d6461641c3f5e3d4d72f3923b48f94b66465d13674084c76",
+      "bytes": 1090,
+      "mime": "application/json",
+      "kind": "lesson_index"
+    },
+    {
+      "relpath": "index/drills.json",
+      "sha256": "08dae4275d903637d9dbfcad5730bfa2bfc3536f16dc83da6c732a1ec968928f",
+      "bytes": 1222,
+      "mime": "application/json",
+      "kind": "drill_index"
+    },
+    {
+      "relpath": "assets/78eb926d2df562df5bfb5928630365a998f5ea36fc5a3cf310ab00f22c7c1afe.md",
+      "sha256": "78eb926d2df562df5bfb5928630365a998f5ea36fc5a3cf310ab00f22c7c1afe",
+      "bytes": 769,
+      "mime": "text/markdown",
+      "kind": "lesson_md"
+    },
+    {
+      "relpath": "assets/fa80ade89c6475121c813b60ab3d726302154405382d0e2d06c9ab52cd917f80.md",
+      "sha256": "fa80ade89c6475121c813b60ab3d726302154405382d0e2d06c9ab52cd917f80",
+      "bytes": 624,
+      "mime": "text/markdown",
+      "kind": "lesson_md"
+    },
+    {
+      "relpath": "assets/1c63eb441cc2eace692ceae6c707e457ebae2b1bd98f53611e2902736e46d21f.md",
+      "sha256": "1c63eb441cc2eace692ceae6c707e457ebae2b1bd98f53611e2902736e46d21f",
+      "bytes": 620,
+      "mime": "text/markdown",
+      "kind": "lesson_md"
+    },
+    {
+      "relpath": "assets/28944af1b888d97f04592fadf474aae0a28151a78052112a223ad0fe173f5647.md",
+      "sha256": "28944af1b888d97f04592fadf474aae0a28151a78052112a223ad0fe173f5647",
+      "bytes": 623,
+      "mime": "text/markdown",
+      "kind": "lesson_md"
+    },
+    {
+      "relpath": "provenance/build.json",
+      "sha256": "31f4888c495ea55496920c195368b90364de67873d042ee9004faa9ebece7b4d",
+      "bytes": 215,
+      "mime": "application/json",
+      "kind": "provenance"
+    }
+  ],
+  "bundle_sha256": "ff5be945a0c814ff7ba421e2397ce0572bb085aa86383269bfb7ffdc4c6e2d82"
+}

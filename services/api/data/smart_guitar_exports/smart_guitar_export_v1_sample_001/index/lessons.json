@@ -1,0 +1,41 @@
+{
+  "lessons": [
+    {
+      "id": "lesson_fretting_101",
+      "title": "Clean Fretting Basics",
+      "level": "beginner",
+      "relpath": "assets/78eb926d2df562df5bfb5928630365a998f5ea36fc5a3cf310ab00f22c7c1afe.md",
+      "topic_ids": [
+        "technique"
+      ]
+    },
+    {
+      "id": "lesson_picking_101",
+      "title": "Alternate Picking Fundamentals",
+      "level": "beginner",
+      "relpath": "assets/fa80ade89c6475121c813b60ab3d726302154405382d0e2d06c9ab52cd917f80.md",
+      "topic_ids": [
+        "technique"
+      ]
+    },
+    {
+      "id": "lesson_major_scale",
+      "title": "The Major Scale Pattern",
+      "level": "intermediate",
+      "relpath": "assets/1c63eb441cc2eace692ceae6c707e457ebae2b1bd98f53611e2902736e46d21f.md",
+      "topic_ids": [
+        "theory",
+        "technique"
+      ]
+    },
+    {
+      "id": "lesson_daily_warmup",
+      "title": "Five Minute Daily Warmup",
+      "level": "beginner",
+      "relpath": "assets/28944af1b888d97f04592fadf474aae0a28151a78052112a223ad0fe173f5647.md",
+      "topic_ids": [
+        "practice"
+      ]
+    }
+  ]
+}

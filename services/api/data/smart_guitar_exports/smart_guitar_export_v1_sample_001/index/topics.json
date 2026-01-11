@@ -1,0 +1,33 @@
+{
+  "topics": [
+    {
+      "id": "technique",
+      "title": "Playing Technique",
+      "tags": [
+        "core",
+        "beginner"
+      ]
+    },
+    {
+      "id": "theory",
+      "title": "Music Theory",
+      "tags": [
+        "knowledge"
+      ]
+    },
+    {
+      "id": "practice",
+      "title": "Practice Routines",
+      "tags": [
+        "daily"
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "Guitar Care",
+      "tags": [
+        "setup"
+      ]
+    }
+  ]
+}
