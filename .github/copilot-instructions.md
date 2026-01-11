@@ -1,6 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-11
+> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
+> **Last Updated:** 2026-01-11
 
 ## ⚡ Quick Start
 
@@ -15,12 +16,12 @@ cd packages/client && npm run dev
 docker compose up --build
 
 # Key Tests
-cd services/api && pytest tests/ -v                    # All backend tests
-cd services/api && pytest tests/ -v -m cam             # By marker: cam, unit, integration, smoke, slow
+cd services/api && pytest tests/ -v                      # All backend tests
+cd services/api && pytest tests/ -v -m cam               # By marker: cam, unit, integration, smoke, slow
 cd services/api && pytest tests/ -v -m "cam or helical"  # Multiple markers
-cd packages/client && npm run test                     # Vitest unit tests
-make smoke-helix-posts                                 # Helical post-processor smoke test
-make check-boundaries                                  # All architectural fence checks (run before PR)
+cd packages/client && npm run test                       # Vitest unit tests
+make smoke-helix-posts                                   # Helical post-processor smoke test
+make check-boundaries                                    # All architectural fence checks (run before PR)
 ```
 
 ### Pytest Markers (from `services/api/pytest.ini`)
