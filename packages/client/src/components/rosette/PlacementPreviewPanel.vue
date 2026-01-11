@@ -11,14 +11,19 @@
       <div class="presetRow">
         <select v-model="selectedPresetId" @change="applySelectedPreset">
           <option disabled value="">— Select preset —</option>
-          <option
-            v-for="p in presets"
-            :key="p.id"
-            :value="p.id"
-          >
+          <option v-for="p in presets" :key="p.id" :value="p.id">
             {{ p.name }}
           </option>
         </select>
+
+        <!-- ★ quick save from current selection -->
+        <button
+          class="ghost star"
+          :title="starTitle"
+          @click="savePresetFromCurrent"
+        >
+          ★
+        </button>
 
         <button class="ghost" @click="savePreset">
           Save
@@ -218,6 +223,15 @@ const canDeletePreset = computed(() =>
   userPresets.value.some((p) => p.id === selectedPresetId.value)
 );
 
+const selectedUserPreset = computed(() =>
+  userPresets.value.find((p) => p.id === selectedPresetId.value) ?? null
+);
+
+const starTitle = computed(() => {
+  if (selectedUserPreset.value) return `Update preset: ${selectedUserPreset.value.name}`;
+  return "Save current host + placement as a new preset";
+});
+
 /* -------------------------
    Preset Actions
 -------------------------- */
@@ -255,6 +269,53 @@ function deletePreset() {
   );
   localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
   selectedPresetId.value = "";
+}
+
+function defaultPresetName(): string {
+  const k = host.value?.kind ?? "host";
+  if (k === "rect") return `Rect ${host.value.width_mm ?? "?"}×${host.value.height_mm ?? "?"}`;
+  if (k === "circle") return `Circle r${host.value.radius_mm ?? "?"}`;
+  if (k === "polygon") return "Polygon";
+  return "Preset";
+}
+
+function savePresetFromCurrent() {
+  // If a user preset is selected, offer to update it (fast, no clutter)
+  if (selectedUserPreset.value) {
+    const ok = confirm(`Update preset "${selectedUserPreset.value.name}" with current settings?`);
+    if (!ok) return;
+
+    const updated = {
+      ...selectedUserPreset.value,
+      host: structuredClone(host.value),
+      placement: structuredClone(placement.value),
+      polygonText: polygonText.value,
+    };
+
+    userPresets.value = userPresets.value.map((p) =>
+      p.id === updated.id ? updated : p
+    );
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+    selectedPresetId.value = updated.id;
+    return;
+  }
+
+  // Otherwise create a new preset
+  const suggested = defaultPresetName();
+  const name = prompt("Preset name?", suggested);
+  if (!name) return;
+
+  const preset: PlacementPreset = {
+    id: crypto.randomUUID(),
+    name,
+    host: structuredClone(host.value),
+    placement: structuredClone(placement.value),
+    polygonText: polygonText.value,
+  };
+
+  userPresets.value.push(preset);
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+  selectedPresetId.value = preset.id;
 }
 
 /* -------------------------
@@ -355,6 +416,11 @@ button.ghost {
 }
 button.danger {
   color: #b00020;
+}
+button.star {
+  width: 40px;
+  padding: 6px 0;
+  font-weight: 800;
 }
 
 .preview {
