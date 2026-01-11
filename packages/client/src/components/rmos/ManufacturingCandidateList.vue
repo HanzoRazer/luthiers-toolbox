@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onBeforeUnmount } from "vue";
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+// Bundle D: JSZip for bulk packaging GREEN candidates into single operator-grade export
 import {
   decideManufacturingCandidate,
   downloadManufacturingCandidateZip,
@@ -8,6 +9,7 @@ import {
   type ManufacturingCandidate,
   type RiskLevel,
 } from "@/sdk/rmos/runs";
+import JSZip from "jszip";
 
 const props = defineProps<{
   runId: string;
@@ -56,11 +58,11 @@ const OPERATOR_ID_KEY = "rmos.operator_id";
 const myOperatorId = ref<string>("");
 try {
   myOperatorId.value = String(localStorage.getItem(OPERATOR_ID_KEY) || "");
-} catch {}
+} catch { }
 watch(myOperatorId, (v) => {
   try {
     localStorage.setItem(OPERATOR_ID_KEY, String(v || ""));
-  } catch {}
+  } catch { }
 });
 const filterOnlyMine = ref<boolean>(false);
 
@@ -1257,6 +1259,93 @@ async function exportGreenOnlyZips() {
     exporting.value = false;
   }
 }
+
+// -----------------------------------------------------------------------------
+// Bundle D: Bulk Export Package (single ZIP containing all GREEN candidate zips)
+// - One click → produces a single operator-grade ZIP
+// - Contains each candidate's existing /download-zip payload as nested files
+// - Includes manifest.json (run_id, exported_at, candidate list, advisory_ids)
+// - Export gating: if nothing GREEN, button disabled + tooltip explains why
+// -----------------------------------------------------------------------------
+const bulkPackaging = ref(false);
+const bulkPackageName = ref<string>("");
+
+const exportPackageDisabledReason = computed(() => {
+  if (loading.value) return "Still loading candidates.";
+  if (bulkPackaging.value) return "Package export already in progress.";
+  if (!candidates.value.length) return "No candidates available for this run.";
+  if (!greenCandidates.value.length) {
+    const undecided = candidates.value.filter((c) => c.decision === null).length;
+    if (undecided) {
+      return `Export blocked: ${undecided} candidate(s) are undecided, and none are GREEN yet.`;
+    }
+    return "Export blocked: no GREEN candidates.";
+  }
+  return null;
+});
+
+async function exportGreenOnlyPackageZip() {
+  const deny = exportPackageDisabledReason.value;
+  if (deny) {
+    showToast(deny, "err");
+    return;
+  }
+
+  bulkPackaging.value = true;
+  exportError.value = null;
+
+  try {
+    const zip = new JSZip();
+    const exportedAtUtc = new Date().toISOString();
+    const run_id = props.runId;
+
+    // Safe filename base
+    const safeRun = (run_id || "run").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const baseName =
+      bulkPackageName.value.trim() ||
+      `${safeRun}_GREEN_candidates_${exportedAtUtc.slice(0, 19).replace(/[:T]/g, "-")}`;
+
+    // Manifest helps downstream tools/operators understand what's inside
+    const manifest = {
+      run_id,
+      exported_at_utc: exportedAtUtc,
+      count: greenCandidates.value.length,
+      items: greenCandidates.value.map((c) => ({
+        candidate_id: c.candidate_id,
+        advisory_id: c.advisory_id ?? null,
+        decision: c.decision ?? null,
+        decided_by: c.decided_by ?? null,
+        decided_at_utc: c.decided_at_utc ?? null,
+        decision_note: c.decision_note ?? null,
+      })),
+    };
+    zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+    // Add each candidate's existing zip as a nested file.
+    // This keeps backend unchanged and uses canonical API surface.
+    for (const c of greenCandidates.value) {
+      try {
+        const res = await downloadManufacturingCandidateZip(props.runId, c.candidate_id);
+        requestId.value = res.requestId ?? requestId.value;
+        zip.file(`candidates/${c.candidate_id}.zip`, res.blob);
+      } catch (e: any) {
+        // Keep going; partial exports are still valuable, but surfaced.
+        zip.file(
+          `errors/${c.candidate_id}.error.txt`,
+          String(e?.message || e || "download failed")
+        );
+      }
+    }
+
+    const out = await zip.generateAsync({ type: "blob" });
+    downloadBlob(out, `${baseName}.zip`);
+    showToast(`Exported ${greenCandidates.value.length} GREEN candidate(s) as package`, "ok");
+  } catch (e: any) {
+    exportError.value = e?.message ?? String(e);
+  } finally {
+    bulkPackaging.value = false;
+  }
+}
 </script>
 
 <template>
@@ -1273,12 +1362,8 @@ async function exportGreenOnlyZips() {
         <button class="btn" @click="load" :disabled="loading || exporting">Refresh</button>
 
         <!-- Bulk export (GREEN-only), blocked if any undecided -->
-        <button
-          class="btn"
-          @click="exportGreenOnlyZips"
-          :disabled="!canExportGreenOnly"
-          :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'"
-        >
+        <button class="btn" @click="exportGreenOnlyZips" :disabled="!canExportGreenOnly"
+          :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'">
           {{ exporting ? "Exporting…" : "Export GREEN zips" }}
         </button>
       </div>
@@ -1288,6 +1373,42 @@ async function exportGreenOnlyZips() {
     <p v-if="saveError" class="error">Save error: {{ saveError }}</p>
     <p v-if="exportError" class="error">Export: {{ exportError }}</p>
     <p v-if="undoError" class="error">Undo: {{ undoError }}</p>
+
+    <!-- Bundle D: Manufacturing Summary + Bulk Package Export -->
+    <div class="mfg-topbar" v-if="!loading && candidates.length > 0">
+      <div class="mfg-summary">
+        <div class="kpi">
+          <div class="kpi-label">Total</div>
+          <div class="kpi-value">{{ candidates.length }}</div>
+        </div>
+        <div class="kpi kpi-green">
+          <div class="kpi-label">GREEN</div>
+          <div class="kpi-value">{{ greenCandidates.length }}</div>
+        </div>
+        <div class="kpi kpi-muted">
+          <div class="kpi-label">Undecided</div>
+          <div class="kpi-value">{{ undecidedCount }}</div>
+        </div>
+        <div class="kpi kpi-yellow">
+          <div class="kpi-label">YELLOW</div>
+          <div class="kpi-value">{{ summary.decisionCounts.YELLOW }}</div>
+        </div>
+        <div class="kpi kpi-red">
+          <div class="kpi-label">RED</div>
+          <div class="kpi-value">{{ summary.decisionCounts.RED }}</div>
+        </div>
+      </div>
+
+      <div class="mfg-export">
+        <input v-model="bulkPackageName" class="inputSmall" placeholder="Optional package name…"
+          :disabled="bulkPackaging" />
+        <button class="btn primary" type="button" :disabled="!!exportPackageDisabledReason"
+          @click="exportGreenOnlyPackageZip"
+          :title="exportPackageDisabledReason || 'Download one ZIP containing all GREEN candidate zips + manifest.json'">
+          {{ bulkPackaging ? "Packaging…" : "Export GREEN-only package" }}
+        </button>
+      </div>
+    </div>
 
     <p v-if="loading" class="muted">Loading candidates…</p>
     <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
@@ -1300,80 +1421,44 @@ async function exportGreenOnlyZips() {
           <div class="chipsRow" v-if="summary.total > 0">
             <div class="chipsGroup">
               <div class="small muted">Decision:</div>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'ALL', 'neutral')"
-                @click="setDecisionFilter('ALL')"
-                title="Show all decisions"
-              >
+              <button type="button" :class="chipClass(decisionFilter === 'ALL', 'neutral')"
+                @click="setDecisionFilter('ALL')" title="Show all decisions">
                 All <span class="count">{{ summary.total }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
-                @click="setDecisionFilter('UNDECIDED')"
-                title="Show candidates that still need an explicit decision"
-              >
+              <button type="button" :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
+                @click="setDecisionFilter('UNDECIDED')" title="Show candidates that still need an explicit decision">
                 Needs decision <span class="count">{{ summary.decisionCounts.NEEDS_DECISION }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'GREEN', 'good')"
-                @click="setDecisionFilter('GREEN')"
-                title="Show GREEN-only"
-              >
+              <button type="button" :class="chipClass(decisionFilter === 'GREEN', 'good')"
+                @click="setDecisionFilter('GREEN')" title="Show GREEN-only">
                 GREEN <span class="count">{{ summary.decisionCounts.GREEN }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
-                @click="setDecisionFilter('YELLOW')"
-                title="Show YELLOW-only"
-              >
+              <button type="button" :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
+                @click="setDecisionFilter('YELLOW')" title="Show YELLOW-only">
                 YELLOW <span class="count">{{ summary.decisionCounts.YELLOW }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'RED', 'bad')"
-                @click="setDecisionFilter('RED')"
-                title="Show RED-only"
-              >
+              <button type="button" :class="chipClass(decisionFilter === 'RED', 'bad')"
+                @click="setDecisionFilter('RED')" title="Show RED-only">
                 RED <span class="count">{{ summary.decisionCounts.RED }}</span>
               </button>
             </div>
 
             <div class="chipsGroup">
               <div class="small muted">Status:</div>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'ALL', 'neutral')"
-                @click="setStatusFilter('ALL')"
-                title="Show all statuses"
-              >
+              <button type="button" :class="chipClass(statusFilter === 'ALL', 'neutral')"
+                @click="setStatusFilter('ALL')" title="Show all statuses">
                 All <span class="count">{{ summary.total }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
-                @click="setStatusFilter('PROPOSED')"
-                title="Show PROPOSED-only"
-              >
+              <button type="button" :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
+                @click="setStatusFilter('PROPOSED')" title="Show PROPOSED-only">
                 PROPOSED <span class="count">{{ summary.statusCounts.PROPOSED }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
-                @click="setStatusFilter('ACCEPTED')"
-                title="Show ACCEPTED-only"
-              >
+              <button type="button" :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
+                @click="setStatusFilter('ACCEPTED')" title="Show ACCEPTED-only">
                 ACCEPTED <span class="count">{{ summary.statusCounts.ACCEPTED }}</span>
               </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'REJECTED', 'bad')"
-                @click="setStatusFilter('REJECTED')"
-                title="Show REJECTED-only"
-              >
+              <button type="button" :class="chipClass(statusFilter === 'REJECTED', 'bad')"
+                @click="setStatusFilter('REJECTED')" title="Show REJECTED-only">
                 REJECTED <span class="count">{{ summary.statusCounts.REJECTED }}</span>
               </button>
             </div>
@@ -1402,7 +1487,8 @@ async function exportGreenOnlyZips() {
 
           <div class="field">
             <label class="muted">Decided by</label>
-            <select v-model="filterDecidedBy" :disabled="saving || exporting || undoBusy" title="Filter by operator identity">
+            <select v-model="filterDecidedBy" :disabled="saving || exporting || undoBusy"
+              title="Filter by operator identity">
               <option value="ALL">All</option>
               <option v-for="op in decidedByOptions" :key="op" :value="op">{{ op }}</option>
             </select>
@@ -1410,12 +1496,8 @@ async function exportGreenOnlyZips() {
 
           <div class="field grow">
             <label class="muted">Search</label>
-            <input
-              v-model="searchText"
-              type="text"
-              placeholder="candidate id, advisory id, note, decided_by…"
-              :disabled="saving || exporting || undoBusy"
-            />
+            <input v-model="searchText" type="text" placeholder="candidate id, advisory id, note, decided_by…"
+              :disabled="saving || exporting || undoBusy" />
           </div>
 
           <div class="field">
@@ -1435,25 +1517,18 @@ async function exportGreenOnlyZips() {
 
           <div class="field">
             <label class="muted">My operator id</label>
-            <input
-              v-model="myOperatorId"
-              type="text"
-              placeholder="e.g., operator_jane"
+            <input v-model="myOperatorId" type="text" placeholder="e.g., operator_jane"
               title="Stored locally in this browser. Used by 'Only mine' filter."
-              :disabled="saving || exporting || undoBusy"
-            />
+              :disabled="saving || exporting || undoBusy" />
           </div>
 
           <div class="field">
             <label class="muted">Stamp</label>
-            <label
-              class="inlineCheck"
-              :title="stampDecisionsWithOperator
-                ? (effectiveOperatorId
-                    ? `Will send decided_by=${effectiveOperatorId} on decisions`
-                    : 'Enable stamping, then set an operator id to actually stamp')
-                : 'Decisions will not send decided_by (backend may still set it elsewhere)'"
-            >
+            <label class="inlineCheck" :title="stampDecisionsWithOperator
+              ? (effectiveOperatorId
+                ? `Will send decided_by=${effectiveOperatorId} on decisions`
+                : 'Enable stamping, then set an operator id to actually stamp')
+              : 'Decisions will not send decided_by (backend may still set it elsewhere)'">
               <input type="checkbox" v-model="stampDecisionsWithOperator" :disabled="saving || exporting || undoBusy" />
               decided_by on save
             </label>
@@ -1462,32 +1537,39 @@ async function exportGreenOnlyZips() {
           <div class="field">
             <label class="muted">Only mine</label>
             <label class="inlineCheck" title="Show only candidates decided by your operator id">
-              <input type="checkbox" v-model="filterOnlyMine" :disabled="!myOperatorId.trim() || saving || exporting || undoBusy" />
+              <input type="checkbox" v-model="filterOnlyMine"
+                :disabled="!myOperatorId.trim() || saving || exporting || undoBusy" />
               my decisions
             </label>
           </div>
         </div>
 
         <div class="filters-right">
-          <button class="btn ghost" @click="selectAllFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Select all shown rows">
+          <button class="btn ghost" @click="selectAllFiltered"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Select all shown rows">
             Select shown
           </button>
-          <button class="btn ghost" @click="clearAllFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Clear selection for shown rows">
+          <button class="btn ghost" @click="clearAllFiltered"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Clear selection for shown rows">
             Clear shown
           </button>
-          <button class="btn ghost" @click="invertSelectionFiltered" :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Invert selection (shown rows)">
+          <button class="btn ghost" @click="invertSelectionFiltered"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Invert selection (shown rows)">
             Invert
           </button>
 
           <label class="check">
-            <input type="checkbox" v-model="showSelectedOnly" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
+            <input type="checkbox" v-model="showSelectedOnly"
+              :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
             <span class="muted">Selected only</span>
           </label>
 
-          <button class="btn ghost" @click="quickUndecided" :disabled="saving || exporting || undoBusy" title="Jump to undecided candidates">
+          <button class="btn ghost" @click="quickUndecided" :disabled="saving || exporting || undoBusy"
+            title="Jump to undecided candidates">
             Undecided-only
           </button>
-          <button class="btn ghost" @click="clearFilters" :disabled="saving || exporting || undoBusy" title="Clear all filters">
+          <button class="btn ghost" @click="clearFilters" :disabled="saving || exporting || undoBusy"
+            title="Clear all filters">
             Clear filters
           </button>
 
@@ -1513,24 +1595,15 @@ async function exportGreenOnlyZips() {
 
       <div class="row head">
         <div class="sel">
-          <input
-            type="checkbox"
-            :checked="allFilteredSelected"
-            @change="toggleAllFiltered"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0"
-            title="Toggle select all shown"
-          />
+          <input type="checkbox" :checked="allFilteredSelected" @change="toggleAllFiltered"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Toggle select all shown" />
         </div>
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
-        <div class="audit auditHeader"
-             role="button"
-             tabindex="0"
-             @click="cycleAuditSort"
-             @keydown.enter="cycleAuditSort"
-             @keydown.space.prevent="cycleAuditSort"
-             :title="`Sort by audit fields (current: ${auditSortLabel})`">
+        <div class="audit auditHeader" role="button" tabindex="0" @click="cycleAuditSort"
+          @keydown.enter="cycleAuditSort" @keydown.space.prevent="cycleAuditSort"
+          :title="`Sort by audit fields (current: ${auditSortLabel})`">
           Audit
           <span class="sortHint" v-if="sortKey.startsWith('decided_')">{{ auditSortArrow }}</span>
         </div>
@@ -1550,29 +1623,25 @@ async function exportGreenOnlyZips() {
           <span class="muted" v-if="selectedIds.size === 0"> (select rows to bulk-set decision)</span>
         </div>
         <div class="bulk-actions">
-          <button class="btn" @click="bulkSetDecision('GREEN')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to GREEN">
+          <button class="btn" @click="bulkSetDecision('GREEN')"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to GREEN">
             Bulk GREEN
           </button>
-          <button class="btn" @click="bulkSetDecision('YELLOW')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to YELLOW">
+          <button class="btn" @click="bulkSetDecision('YELLOW')"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to YELLOW">
             Bulk YELLOW
           </button>
-          <button class="btn danger" @click="bulkSetDecision('RED')" :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to RED">
+          <button class="btn danger" @click="bulkSetDecision('RED')"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to RED">
             Bulk RED
           </button>
-          <button
-            class="btn ghost"
-            @click="bulkClearDecision"
-            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok"
-            :title="bulkClearBlockedHover()"
-          >
+          <button class="btn ghost" @click="bulkClearDecision"
+            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok" :title="bulkClearBlockedHover()">
             Clear decision
           </button>
-          <button
-            class="btn ghost"
-            @click="undoLast"
+          <button class="btn ghost" @click="undoLast"
             :disabled="undoBusy || saving || exporting || undoStack.length === 0"
-            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'"
-          >
+            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'">
             {{ undoBusy ? "Undoing…" : "Undo last" }}
           </button>
         </div>
@@ -1581,7 +1650,8 @@ async function exportGreenOnlyZips() {
       <!-- Undo history display -->
       <div class="undolist" v-if="undoStack.length > 0">
         <div class="undotitle muted">Undo history (most recent first)</div>
-        <div class="undoitem" v-for="(u, idx) in undoStack.slice(0, 5)" :key="u.ts_utc + ':' + idx" :title="undoStackHover(u)">
+        <div class="undoitem" v-for="(u, idx) in undoStack.slice(0, 5)" :key="u.ts_utc + ':' + idx"
+          :title="undoStackHover(u)">
           <span class="mono">{{ u.ts_utc }}</span>
           <span>—</span>
           <span>{{ u.label }}</span>
@@ -1598,44 +1668,27 @@ async function exportGreenOnlyZips() {
             <option value="YELLOW">YELLOW</option>
             <option value="RED">RED</option>
           </select>
-          <input
-            v-model="bulkNote"
-            class="inputSmall"
-            placeholder="Shared note (optional)"
-            :disabled="bulkApplying || saving || exporting"
-          />
-          <button
-            class="btn small"
-            :disabled="bulkApplying || saving || exporting || !bulkDecision"
-            @click="applyBulkDecision"
-          >
+          <input v-model="bulkNote" class="inputSmall" placeholder="Shared note (optional)"
+            :disabled="bulkApplying || saving || exporting" />
+          <button class="btn small" :disabled="bulkApplying || saving || exporting || !bulkDecision"
+            @click="applyBulkDecision">
             {{ bulkApplying ? `Applying… (${bulkProgress.done}/${bulkProgress.total})` : 'Apply' }}
           </button>
           <label class="inlineCheck" title="When clearing decisions, also clear decision notes">
             <input type="checkbox" v-model="bulkClearNoteToo" :disabled="bulkApplying" />
             clear note too
           </label>
-          <button
-            class="btn small"
-            :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
+          <button class="btn small" :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
             @click="clearBulkDecision"
-            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'"
-          >
+            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'">
             Clear decision
           </button>
-          <button
-            class="btn ghost small"
-            :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
-            @click="undoLastBulkAction"
-            title="Undo last bulk action"
-          >
+          <button class="btn ghost small" :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
+            @click="undoLastBulkAction" title="Undo last bulk action">
             Undo
           </button>
-          <button
-            class="btn ghost small"
-            @click="showBulkHistory = !showBulkHistory"
-            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'"
-          >
+          <button class="btn ghost small" @click="showBulkHistory = !showBulkHistory"
+            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'">
             {{ showBulkHistory ? 'Hide history' : `History (${bulkHistory.length})` }}
           </button>
         </div>
@@ -1647,11 +1700,7 @@ async function exportGreenOnlyZips() {
           Bulk history (newest first)
         </div>
         <div class="bulkHistoryList">
-          <div
-            v-for="rec in bulkHistory"
-            :key="rec.id"
-            class="bulkHistoryRow"
-          >
+          <div v-for="rec in bulkHistory" :key="rec.id" class="bulkHistoryRow">
             <span class="mono small">{{ rec.ts_utc }}</span>
             <span class="badge" :class="'b' + rec.decision">{{ rec.decision }}</span>
             <span>{{ rec.count }} items</span>
@@ -1660,21 +1709,12 @@ async function exportGreenOnlyZips() {
         </div>
       </div>
 
-      <div
-        v-for="c in filteredCandidates"
-        :key="c.candidate_id"
-        class="row clickable"
-        :title="auditHover(c)"
-        @click="toggleOne(c.candidate_id, $event)"
-      >
+      <div v-for="c in filteredCandidates" :key="c.candidate_id" class="row clickable" :title="auditHover(c)"
+        @click="toggleOne(c.candidate_id, $event)">
         <div class="sel">
-          <input
-            type="checkbox"
-            :checked="selectedIds.has(c.candidate_id)"
-            @click.stop="toggleOne(c.candidate_id, $event)"
-            :disabled="saving || exporting || undoBusy"
-            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'"
-          />
+          <input type="checkbox" :checked="selectedIds.has(c.candidate_id)"
+            @click.stop="toggleOne(c.candidate_id, $event)" :disabled="saving || exporting || undoBusy"
+            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'" />
         </div>
         <div class="mono">{{ c.candidate_id }}</div>
         <div class="mono">{{ c.advisory_id ?? "—" }}</div>
@@ -1683,21 +1723,16 @@ async function exportGreenOnlyZips() {
           <span class="badge" :data-badge="decisionBadge(c.decision)">
             {{ decisionBadge(c.decision) }}
           </span>
-          <span
-            v-if="c.decision_history && c.decision_history.length > 0"
-            class="history-count"
-            :title="`${c.decision_history.length} history entries`"
-            @click.stop="openDecisionHistory(c.candidate_id)"
-          >
+          <span v-if="c.decision_history && c.decision_history.length > 0" class="history-count"
+            :title="`${c.decision_history.length} history entries`" @click.stop="openDecisionHistory(c.candidate_id)">
             ({{ c.decision_history.length }})
           </span>
         </div>
 
         <!-- Audit column -->
-        <div class="audit"
-             :title="(c.decided_by || c.decided_at_utc)
-               ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
-               : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'">
+        <div class="audit" :title="(c.decided_by || c.decided_at_utc)
+          ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
+          : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'">
           <div class="auditBy">{{ c.decided_by || "—" }}</div>
           <div class="auditAt mono">
             {{ c.decided_at_utc ? c.decided_at_utc.slice(0, 19).replace('T', ' ') : '—' }}
@@ -1705,17 +1740,14 @@ async function exportGreenOnlyZips() {
         </div>
 
         <div class="history">
-          <button class="btn ghost smallbtn" @click.stop="openDecisionHistory(c.candidate_id)" :disabled="saving || exporting || undoBusy">
+          <button class="btn ghost smallbtn" @click.stop="openDecisionHistory(c.candidate_id)"
+            :disabled="saving || exporting || undoBusy">
             {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
           </button>
           <div v-if="openHistoryFor === c.candidate_id" class="popover">
-            <CandidateDecisionHistoryPopover
-              :items="c.decision_history ?? null"
-              :currentDecision="c.decision ?? null"
-              :currentNote="c.decision_note ?? null"
-              :currentBy="c.decided_by ?? null"
-              :currentAt="c.decided_at_utc ?? null"
-            />
+            <CandidateDecisionHistoryPopover :items="c.decision_history ?? null" :currentDecision="c.decision ?? null"
+              :currentNote="c.decision_note ?? null" :currentBy="c.decided_by ?? null"
+              :currentAt="c.decided_at_utc ?? null" />
           </div>
         </div>
 
@@ -1736,7 +1768,8 @@ async function exportGreenOnlyZips() {
         </div>
 
         <div class="copyCol">
-          <button class="btn ghost smallbtn" @click="copyText('candidate_id', c.candidate_id)" title="Copy candidate_id">
+          <button class="btn ghost smallbtn" @click="copyText('candidate_id', c.candidate_id)"
+            title="Copy candidate_id">
             📋 candidate_id
           </button>
           <button class="btn ghost smallbtn" @click="copyText('advisory_id', c.advisory_id)" title="Copy advisory_id">
@@ -1749,12 +1782,8 @@ async function exportGreenOnlyZips() {
           <button class="btn" @click="decide(c, 'YELLOW')" :disabled="saving || exporting">YELLOW</button>
           <button class="btn danger" @click="decide(c, 'RED')" :disabled="saving || exporting">RED</button>
 
-          <button
-            class="btn ghost"
-            @click="startEdit(c)"
-            :disabled="saving || exporting || c.decision == null"
-            :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'"
-          >
+          <button class="btn ghost" @click="startEdit(c)" :disabled="saving || exporting || c.decision == null"
+            :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'">
             Edit Note
           </button>
         </div>
@@ -1777,48 +1806,114 @@ async function exportGreenOnlyZips() {
 </template>
 
 <style scoped>
-.rmos-candidates { display: flex; flex-direction: column; gap: 10px; }
-.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.title { display: flex; flex-direction: column; gap: 4px; }
-.subtitle { font-size: 12px; }
-.meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-.reqid { font-size: 12px; opacity: 0.75; }
-.error { color: #b00020; }
-.muted { opacity: 0.75; }
-.small { font-size: 12px; }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+.rmos-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-.table { display: grid; gap: 6px; }
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtitle {
+  font-size: 12px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.reqid {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.error {
+  color: #b00020;
+}
+
+.muted {
+  opacity: 0.75;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+.table {
+  display: grid;
+  gap: 6px;
+}
+
 .row {
   display: grid;
   grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 190px 360px;
   gap: 10px;
   align-items: start;
   padding: 8px;
-  border: 1px solid rgba(0,0,0,0.12);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 10px;
   position: relative;
   background: white;
 }
+
 .row.head {
   font-weight: 600;
-  background: rgba(0,0,0,0.04);
+  background: rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 3;
   border-radius: 10px;
   backdrop-filter: blur(6px);
 }
-.row.clickable { cursor: pointer; }
+
+.row.clickable {
+  cursor: pointer;
+}
 
 /* micro-follow: compact density */
-.table.compact .row { padding: 6px; gap: 8px; }
-.table.compact .mono { font-size: 11px; }
-.table.compact .btn { padding: 4px 8px; }
-.table.compact .copyCol { gap: 4px; }
+.table.compact .row {
+  padding: 6px;
+  gap: 8px;
+}
+
+.table.compact .mono {
+  font-size: 11px;
+}
+
+.table.compact .btn {
+  padding: 4px 8px;
+}
+
+.table.compact .copyCol {
+  gap: 4px;
+}
 
 /* copyCol layout */
-.copyCol { display: flex; flex-direction: column; gap: 6px; }
+.copyCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Audit column layout                                                        */
@@ -1830,14 +1925,17 @@ async function exportGreenOnlyZips() {
   flex-direction: column;
   gap: 2px;
 }
+
 .auditBy {
   font-weight: 600;
 }
+
 .auditAt {
   font-size: 11px;
   line-height: 1.15;
   opacity: 0.75;
 }
+
 .auditHeader {
   cursor: pointer;
   user-select: none;
@@ -1845,9 +1943,11 @@ async function exportGreenOnlyZips() {
   align-items: center;
   gap: 4px;
 }
+
 .auditHeader:hover {
   color: var(--vscode-textLink-foreground, #3794ff);
 }
+
 .sortHint {
   opacity: 0.6;
   font-size: 12px;
@@ -1855,45 +1955,184 @@ async function exportGreenOnlyZips() {
 
 .kbdhint {
   cursor: help;
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   padding: 2px 8px;
   border-radius: 999px;
   display: inline-block;
 }
-.sel { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
 
-.filters { display: flex; gap: 10px; align-items: end; justify-content: space-between; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
-.filters-left { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; flex: 1; }
-.filters-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field.grow { min-width: 280px; flex: 1; }
-.field label { font-size: 12px; }
-.field select, .field input { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; }
-.check { display: inline-flex; gap: 6px; align-items: center; }
+.sel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
 
-.actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.btn { padding: 6px 10px; border: 1px solid rgba(0,0,0,0.16); border-radius: 10px; background: white; cursor: pointer; }
-.btn.ghost { background: transparent; }
-.btn.danger { border-color: rgba(176,0,32,0.35); }
-.smallbtn { padding: 4px 8px; font-size: 12px; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 10px;
+}
 
-.badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,0.14); }
-.badge[data-badge="NEEDS_DECISION"] { opacity: 0.75; }
+.filters-left {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+  flex: 1;
+}
 
-.note textarea { width: 100%; resize: vertical; padding: 6px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.16); }
-.editor-actions { display: flex; gap: 6px; margin-top: 6px; }
+.filters-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
-.bulkbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px; border: 1px dashed rgba(0,0,0,0.18); border-radius: 10px; }
-.bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.undolist { display: grid; gap: 4px; padding: 8px; border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
-.undotitle { font-size: 12px; }
-.undoitem { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-.policy ul { margin: 6px 0 0 18px; }
+.field.grow {
+  min-width: 280px;
+  flex: 1;
+}
 
-.history { position: relative; }
-.popover { position: absolute; z-index: 50; top: 30px; left: 0; }
+.field label {
+  font-size: 12px;
+}
+
+.field select,
+.field input {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  background: white;
+}
+
+.check {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn.danger {
+  border-color: rgba(176, 0, 32, 0.35);
+}
+
+.smallbtn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.badge[data-badge="NEEDS_DECISION"] {
+  opacity: 0.75;
+}
+
+.note textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.editor-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.bulkbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px;
+  border: 1px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.undolist {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 10px;
+}
+
+.undotitle {
+  font-size: 12px;
+}
+
+.undoitem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.policy ul {
+  margin: 6px 0 0 18px;
+}
+
+.history {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  z-index: 50;
+  top: 30px;
+  left: 0;
+}
 
 /* toast (copy feedback) */
 .toast {
@@ -1907,13 +2146,25 @@ async function exportGreenOnlyZips() {
   border-radius: 10px;
   z-index: 100;
   font-size: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
-.chipsRow { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-.chipsGroup { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chipsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chipsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .chip {
-  border: 1px solid rgba(0,0,0,0.14);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   background: white;
   border-radius: 999px;
   padding: 6px 10px;
@@ -1923,42 +2174,97 @@ async function exportGreenOnlyZips() {
   align-items: center;
   gap: 8px;
 }
+
 .chip .count {
   font-variant-numeric: tabular-nums;
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.03);
 }
-.chip.active { border-color: rgba(0,0,0,0.28); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
-.chip.good.active { border-color: #22c55e; }
-.chip.warn.active { border-color: #eab308; }
-.chip.bad.active { border-color: #ef4444; }
-.chip.muted.active { border-color: #6b7280; }
-.chip:hover { border-color: rgba(0,0,0,0.22); }
+
+.chip.active {
+  border-color: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+.chip.good.active {
+  border-color: #22c55e;
+}
+
+.chip.warn.active {
+  border-color: #eab308;
+}
+
+.chip.bad.active {
+  border-color: #ef4444;
+}
+
+.chip.muted.active {
+  border-color: #6b7280;
+}
+
+.chip:hover {
+  border-color: rgba(0, 0, 0, 0.22);
+}
 
 /* Decision cell with history count badge */
-.decision-cell { display: flex; align-items: center; gap: 6px; }
+.decision-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .history-count {
   font-size: 11px;
   color: #6b7280;
   cursor: pointer;
 }
-.history-count:hover { color: #374151; text-decoration: underline; }
+
+.history-count:hover {
+  color: #374151;
+  text-decoration: underline;
+}
 
 /* Bulk decision v2 */
-.bulkbar2 { padding: 10px 14px; background: #f0f7ff; border-radius: 8px; margin-bottom: 10px; }
-.bulk-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.selectSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; }
-.inputSmall { padding: 4px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ccc; min-width: 180px; }
+.bulkbar2 {
+  padding: 10px 14px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.bulk-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.selectSmall {
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.inputSmall {
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  min-width: 180px;
+}
+
 .inlineCheck {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: rgba(0,0,0,0.66);
+  color: rgba(0, 0, 0, 0.66);
   user-select: none;
 }
+
 .tiny {
   font-size: 11px;
   line-height: 1.15;
@@ -1966,11 +2272,140 @@ async function exportGreenOnlyZips() {
 }
 
 /* Bulk history panel */
-.bulkHistory { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
-.bulkHistoryHeader { font-weight: 600; margin-bottom: 8px; }
-.bulkHistoryList { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
-.bulkHistoryRow { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-.badge.bGREEN { background: #dcfce7; color: #166534; }
-.badge.bYELLOW { background: #fef9c3; color: #854d0e; }
-.badge.bRED { background: #fee2e2; color: #991b1b; }
+.bulkHistory {
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.bulkHistoryHeader {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.bulkHistoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.bulkHistoryRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.badge.bGREEN {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.bYELLOW {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge.bRED {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Bundle D: Manufacturing Summary Topbar */
+.mfg-topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+}
+
+.mfg-summary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kpi {
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-width: 72px;
+  background: white;
+  text-align: center;
+}
+
+.kpi-label {
+  font-size: 11px;
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-green {
+  border-color: #22c55e;
+}
+
+.kpi-green .kpi-value {
+  color: #16a34a;
+}
+
+.kpi-yellow {
+  border-color: #eab308;
+}
+
+.kpi-yellow .kpi-value {
+  color: #ca8a04;
+}
+
+.kpi-red {
+  border-color: #ef4444;
+}
+
+.kpi-red .kpi-value {
+  color: #dc2626;
+}
+
+.kpi-muted {
+  border-color: #9ca3af;
+}
+
+.kpi-muted .kpi-value {
+  color: #6b7280;
+}
+
+.mfg-export {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn.primary:disabled {
+  background: #93c5fd;
+  border-color: #93c5fd;
+}
 </style>
