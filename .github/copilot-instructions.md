@@ -15,7 +15,7 @@ cd packages/client && npm run dev
 docker compose up --build
 
 # Key Tests
-cd services/api && pytest tests/ -v              # All tests
+cd services/api && pytest tests/ -v              # All backend tests
 cd services/api && pytest tests/ -v -m cam       # pytest markers: cam, sawlab, rmos, integration, smoke, unit
 cd packages/client && npm run test               # Vitest unit tests
 make smoke-helix-posts                           # Helical post-processor smoke test
@@ -210,6 +210,12 @@ python -m app.rmos.runs_v2.cli_audit tail -n 50
 npm run dev          # Start dev server
 npm run test         # Vitest
 npm run lint         # ESLint (max-warnings=0)
+
+# Makefile Targets (from repo root)
+make smoke-helix-posts        # Test helical ramping with all post presets
+make test-api                 # Run API smoke tests
+make check-art-studio-scope   # Art Studio ornament-authority scope gate
+make viewer-pack-gate         # Full viewer pack v1 contract gate
 ```
 
 ## 🎸 Module Awareness
@@ -250,3 +256,11 @@ const response = await fetch("/api/cam/roughing/gcode", {...});
 - [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
+
+## 📝 Task Guidelines
+
+- **Atomic changes**: One feature/fix per request, scoped to relevant subsystem
+- **Present diffs**: Don't rewrite large files without justification
+- **Ask before**: Major refactors, schema changes, or API renames (external tooling depends on surfaces)
+- **Test verification**: Run the smoke test closest to the subsystem you modified
+- **Document features**: Update relevant `docs/` or quickref when adding functionality
