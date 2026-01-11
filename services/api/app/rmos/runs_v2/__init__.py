@@ -148,6 +148,7 @@ from .migration_utils import (
 # =============================================================================
 
 from .batch_tree import resolve_batch_root, list_batch_tree  # noqa: F401
+from .batch_dashboard import build_batch_summary_dashboard_card  # noqa: F401
 
 # =============================================================================
 # API Router
