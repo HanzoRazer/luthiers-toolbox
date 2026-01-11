@@ -66,9 +66,10 @@ def test_plan_auto_suggest_shows_recommended_when_override_cleared(monkeypatch):
 
     monkeypatch.setattr("app.saw_lab.batch_router.get_artifact", _fake_get_artifact)
     monkeypatch.setattr("app.saw_lab.batch_router.store_artifact", _fake_store_artifact)
-    monkeypatch.setattr(
-        "app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered
-    )
+
+    # Patch at the module level where the function is defined
+    from app.rmos.runs_v2 import store as runs_store
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     from app.saw_lab.batch_router import BatchPlanRequest, create_batch_plan
 
@@ -141,9 +142,10 @@ def test_plan_auto_suggest_shows_applied_override_when_chosen(monkeypatch):
 
     monkeypatch.setattr("app.saw_lab.batch_router.get_artifact", _fake_get_artifact)
     monkeypatch.setattr("app.saw_lab.batch_router.store_artifact", _fake_store_artifact)
-    monkeypatch.setattr(
-        "app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered
-    )
+
+    # Patch at the module level where the function is defined
+    from app.rmos.runs_v2 import store as runs_store
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     from app.saw_lab.batch_router import BatchPlanRequest, create_batch_plan
 

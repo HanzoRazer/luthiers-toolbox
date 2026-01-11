@@ -246,9 +246,20 @@ def test_attach_invalid_advisory_returns_409(client: TestClient):
 # Optional: Test with OpenAI (Local Only)
 # =============================================================================
 
+def _openai_available() -> bool:
+    """Check if OpenAI API key is set AND openai package is installed."""
+    if not os.environ.get("OPENAI_API_KEY"):
+        return False
+    try:
+        import openai  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 @pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"),
-    reason="OPENAI_API_KEY not set - skipping real OpenAI test"
+    not _openai_available(),
+    reason="OPENAI_API_KEY not set or openai package not installed"
 )
 def test_vision_generate_with_openai(client: TestClient):
     """
