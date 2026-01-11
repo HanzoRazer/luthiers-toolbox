@@ -156,6 +156,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/tools/AudioAnalyzerViewer.vue"),
   },
 
+  // AI Images — Visual Analyzer (Production)
+  {
+    path: "/ai-images",
+    name: "AiImages",
+    component: () => import("@/views/AiImagesView.vue"),
+  },
+
   // Dev: Vision Attach Widget Test
   {
     path: "/dev/vision-attach",
