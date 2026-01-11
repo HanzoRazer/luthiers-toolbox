@@ -21,6 +21,7 @@ from .validator import (
     TelemetryValidationResult,
     FORBIDDEN_FIELDS,
 )
+from .api import router as telemetry_router
 
 __all__ = [
     # Schemas
@@ -34,4 +35,6 @@ __all__ = [
     "validate_telemetry_json",
     "TelemetryValidationResult",
     "FORBIDDEN_FIELDS",
+    # API
+    "telemetry_router",
 ]
