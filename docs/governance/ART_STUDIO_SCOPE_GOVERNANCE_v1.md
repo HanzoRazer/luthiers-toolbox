@@ -636,7 +636,7 @@ Any future expansion must preserve this boundary.
 ## Related Documents
 
 * [BOUNDARY_RULES.md](../BOUNDARY_RULES.md) - Cross-repo boundaries
-* [OPERATION_EXECUTION_GOVERNANCE_v1.md](./OPERATION_EXECUTION_GOVERNANCE_v1.md) - Operation lanes
+* [OPERATION_EXECUTION_GOVERNANCE_v1.md](../OPERATION_EXECUTION_GOVERNANCE_v1.md) - Operation lanes
 * [CBSP21.md](../../CBSP21.md) - Completeness protocol
 * [ROUTER_MAP.md](../../ROUTER_MAP.md) - API organization
 
