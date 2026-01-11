@@ -51,7 +51,11 @@ def _group_key_from_kind(kind: str) -> str:
         return "learning"
     if "diff" in k:
         return "diffs"
-    if "execution_metrics" in k or ("metrics" in k and "execution" in k):
+    if (
+        "batch_execution_metrics" in k
+        or "execution_metrics" in k
+        or ("metrics" in k and "execution" in k)
+    ):
         return "execution_metrics"
     return "other"
 
@@ -82,7 +86,9 @@ def _counts_by_group(nodes: List[Dict[str, Any]]) -> Dict[str, int]:
     return counts
 
 
-def _try_extract_execution_kpis_from_metrics_artifact(nodes: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def _try_extract_execution_kpis_from_metrics_artifact(
+    nodes: List[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
     # Find latest "execution_metrics" artifact and return its kpis block (if present)
     best: Optional[Dict[str, Any]] = None
     best_key: Tuple[str, str] = ("", "")

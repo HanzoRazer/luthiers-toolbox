@@ -55,22 +55,27 @@ router = APIRouter(prefix="/runs", tags=["runs"])
 
 # Mount batch-tree endpoints in the same /runs router namespace
 from .api_batch_tree import router as batch_tree_router
+
 router.include_router(batch_tree_router)
 
 # Option B: batch audit export
 from .api_audit_export import router as audit_export_router
+
 router.include_router(audit_export_router)
 
 # Option B: batch timeline
 from .api_batch_timeline import router as batch_timeline_router
+
 router.include_router(batch_timeline_router)
 
 # Option B: grouped (tree-aware) timeline feed
 from .api_grouped_timeline import router as grouped_timeline_router
+
 router.include_router(grouped_timeline_router)
 
-# Option B: batch summary dashboard (UI card rollup)
+# Option B: batch summary dashboard with KPI rollups
 from .api_batch_dashboard import router as batch_dashboard_router
+
 router.include_router(batch_dashboard_router)
 
 
@@ -367,7 +372,9 @@ def diff_two_runs(
     left_id: str = Query(..., description="Left run artifact id"),
     right_id: str = Query(..., description="Right run artifact id"),
     preview_max_chars: int = Query(20000, ge=1000, le=200000),
-    force_attachment: bool = Query(False, description="Always persist full diff as attachment"),
+    force_attachment: bool = Query(
+        False, description="Always persist full diff as attachment"
+    ),
 ) -> Dict[str, Any]:
     """
     Diff two runs.

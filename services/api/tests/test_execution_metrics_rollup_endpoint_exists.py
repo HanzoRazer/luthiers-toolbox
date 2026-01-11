@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 
-def test_batch_summary_dashboard_endpoint_is_mounted():
+def test_execution_metrics_rollup_endpoint_is_mounted():
     from app.main import app
 
     c = TestClient(app)
@@ -14,4 +14,4 @@ def test_batch_summary_dashboard_endpoint_is_mounted():
         for x in r.json().get("routes", [])
         if isinstance(x, dict) and "path" in x
     }
-    assert "/api/rmos/runs/batch-summary-dashboard" in paths
+    assert "/api/saw/batch/execution/metrics/rollup" in paths
