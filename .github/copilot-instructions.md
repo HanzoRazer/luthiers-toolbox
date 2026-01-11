@@ -1,7 +1,6 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-11
+> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-11
 
 ## ⚡ Quick Start
 
