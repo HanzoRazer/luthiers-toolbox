@@ -26,6 +26,14 @@ from .validator import (
     FORBIDDEN_FIELDS,
 )
 from .schemas import TelemetryPayload, TelemetryCategory
+from .store import (
+    store_telemetry,
+    get_telemetry,
+    list_telemetry,
+    count_telemetry,
+    get_instrument_summary,
+    TelemetryStore,
+)
 
 _log = logging.getLogger(__name__)
 
@@ -77,18 +85,39 @@ class ContractInfoResponse(BaseModel):
 
 
 # =============================================================================
-# Telemetry Counter (in-memory for now)
+# Additional Response Models
 # =============================================================================
 
-_telemetry_counter = 0
+
+class TelemetryRecordResponse(BaseModel):
+    """Response for a single telemetry record."""
+    telemetry_id: str = Field(..., description="Unique telemetry ID")
+    received_at_utc: str = Field(..., description="Server receive timestamp")
+    partition: str = Field(..., description="Storage partition (date)")
+    instrument_id: str = Field(..., description="Instrument ID")
+    manufacturing_batch_id: str = Field(..., description="Manufacturing batch ID")
+    category: str = Field(..., description="Telemetry category")
+    emitted_at_utc: str = Field(..., description="When payload was emitted")
+    metric_count: int = Field(..., description="Number of metrics")
+    warnings: List[str] = Field(default_factory=list, description="Validation warnings")
 
 
-def _generate_telemetry_id() -> str:
-    """Generate a unique telemetry ID."""
-    global _telemetry_counter
-    _telemetry_counter += 1
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    return f"telem_{ts}_{_telemetry_counter:06d}"
+class TelemetryListResponse(BaseModel):
+    """Response for listing telemetry records."""
+    items: List[TelemetryRecordResponse] = Field(..., description="Telemetry records")
+    total: int = Field(..., description="Total matching records")
+    limit: int = Field(..., description="Page size")
+    offset: int = Field(..., description="Page offset")
+
+
+class InstrumentSummaryResponse(BaseModel):
+    """Summary statistics for an instrument."""
+    instrument_id: str = Field(..., description="Instrument ID")
+    total_records: int = Field(..., description="Total telemetry records")
+    categories: Dict[str, int] = Field(..., description="Record count by category")
+    first_seen_utc: Optional[str] = Field(None, description="First telemetry received")
+    last_seen_utc: Optional[str] = Field(None, description="Most recent telemetry")
+    batches: List[str] = Field(default_factory=list, description="Manufacturing batches")
 
 
 # =============================================================================
@@ -147,28 +176,24 @@ async def ingest_telemetry(payload: Dict[str, Any]) -> TelemetryIngestResponse:
             },
         )
 
-    # Payload is valid - accept it
-    telemetry_id = _generate_telemetry_id()
-    received_at = datetime.now(timezone.utc).isoformat()
+    # Payload is valid - store it
+    stored = store_telemetry(result.payload, warnings=result.warnings)
 
     _log.info(
         "Telemetry accepted: id=%s instrument=%s category=%s metrics=%d",
-        telemetry_id,
+        stored.telemetry_id,
         result.payload.instrument_id,
         result.payload.telemetry_category.value,
         len(result.payload.metrics),
     )
 
-    # TODO: Store telemetry in database/time-series store
-    # For now, just acknowledge receipt
-
     return TelemetryIngestResponse(
         accepted=True,
-        telemetry_id=telemetry_id,
+        telemetry_id=stored.telemetry_id,
         instrument_id=result.payload.instrument_id,
         category=result.payload.telemetry_category.value,
         metric_count=len(result.payload.metrics),
-        received_at_utc=received_at,
+        received_at_utc=stored.received_at_utc.isoformat(),
         warnings=result.warnings,
     )
 
@@ -229,6 +254,143 @@ async def telemetry_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "service": "smart_guitar_telemetry_ingestion",
+        "contract_version": "v1",
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# =============================================================================
+# Query Endpoints
+# =============================================================================
+
+
+@router.get(
+    "/records/{telemetry_id}",
+    response_model=TelemetryRecordResponse,
+    summary="Get telemetry record by ID",
+    description="Retrieve a specific telemetry record by its ID.",
+)
+async def get_telemetry_record(telemetry_id: str) -> TelemetryRecordResponse:
+    """Get a telemetry record by ID."""
+    record = get_telemetry(telemetry_id)
+    if record is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Telemetry record not found: {telemetry_id}",
+        )
+
+    return TelemetryRecordResponse(
+        telemetry_id=record.telemetry_id,
+        received_at_utc=record.received_at_utc.isoformat(),
+        partition=record.partition,
+        instrument_id=record.payload.instrument_id,
+        manufacturing_batch_id=record.payload.manufacturing_batch_id,
+        category=record.payload.telemetry_category.value,
+        emitted_at_utc=record.payload.emitted_at_utc.isoformat(),
+        metric_count=len(record.payload.metrics),
+        warnings=record.warnings,
+    )
+
+
+@router.get(
+    "/records",
+    response_model=TelemetryListResponse,
+    summary="List telemetry records",
+    description="List telemetry records with optional filtering by instrument, batch, or category.",
+)
+async def list_telemetry_records(
+    limit: int = 50,
+    offset: int = 0,
+    instrument_id: Optional[str] = None,
+    manufacturing_batch_id: Optional[str] = None,
+    category: Optional[str] = None,
+) -> TelemetryListResponse:
+    """List telemetry records with optional filtering."""
+    # Parse category if provided
+    cat_enum = None
+    if category:
+        try:
+            cat_enum = TelemetryCategory(category)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid category: {category}. Must be one of: {[c.value for c in TelemetryCategory]}",
+            )
+
+    records = list_telemetry(
+        limit=limit,
+        offset=offset,
+        instrument_id=instrument_id,
+        manufacturing_batch_id=manufacturing_batch_id,
+        category=cat_enum,
+    )
+
+    total = count_telemetry(
+        instrument_id=instrument_id,
+        manufacturing_batch_id=manufacturing_batch_id,
+        category=cat_enum,
+    )
+
+    items = [
+        TelemetryRecordResponse(
+            telemetry_id=r.telemetry_id,
+            received_at_utc=r.received_at_utc.isoformat(),
+            partition=r.partition,
+            instrument_id=r.payload.instrument_id,
+            manufacturing_batch_id=r.payload.manufacturing_batch_id,
+            category=r.payload.telemetry_category.value,
+            emitted_at_utc=r.payload.emitted_at_utc.isoformat(),
+            metric_count=len(r.payload.metrics),
+            warnings=r.warnings,
+        )
+        for r in records
+    ]
+
+    return TelemetryListResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get(
+    "/instruments/{instrument_id}/summary",
+    response_model=InstrumentSummaryResponse,
+    summary="Get instrument telemetry summary",
+    description="Get summary statistics for a specific instrument.",
+)
+async def get_instrument_telemetry_summary(instrument_id: str) -> InstrumentSummaryResponse:
+    """Get summary statistics for an instrument."""
+    summary = get_instrument_summary(instrument_id)
+
+    return InstrumentSummaryResponse(
+        instrument_id=summary["instrument_id"],
+        total_records=summary["total_records"],
+        categories=summary["categories"],
+        first_seen_utc=summary.get("first_seen_utc"),
+        last_seen_utc=summary.get("last_seen_utc"),
+        batches=summary.get("batches", []),
+    )
+
+
+@router.get(
+    "/stats",
+    summary="Get telemetry statistics",
+    description="Get overall telemetry ingestion statistics.",
+)
+async def get_telemetry_stats() -> Dict[str, Any]:
+    """Get overall telemetry statistics."""
+    total = count_telemetry()
+
+    # Count by category
+    categories = {}
+    for cat in TelemetryCategory:
+        categories[cat.value] = count_telemetry(category=cat)
+
+    return {
+        "total_records": total,
+        "by_category": categories,
         "contract_version": "v1",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
     }

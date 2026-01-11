@@ -364,3 +364,170 @@ def test_full_telemetry_workflow():
     assert data["accepted"] is True
     assert data["metric_count"] == 3
     assert "telemetry_id" in data
+
+
+# =============================================================================
+# Persistence Tests - Ingest + Retrieve
+# =============================================================================
+
+
+def test_ingest_then_retrieve_by_id():
+    """POST /ingest then GET /records/{id} retrieves the same record."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-11T10:00:00Z",
+        "instrument_id": "sg-persist-test-001",
+        "manufacturing_batch_id": "tb-persist-batch-001",
+        "telemetry_category": "hardware_performance",
+        "metrics": {
+            "uptime_hours": {"value": 100.5, "unit": "hours", "aggregation": "sum"},
+        },
+    }
+
+    # Ingest
+    ingest_resp = client.post("/api/telemetry/ingest", json=payload)
+    assert ingest_resp.status_code == 200
+    telemetry_id = ingest_resp.json()["telemetry_id"]
+
+    # Retrieve
+    get_resp = client.get(f"/api/telemetry/records/{telemetry_id}")
+    assert get_resp.status_code == 200
+    data = get_resp.json()
+    assert data["telemetry_id"] == telemetry_id
+    assert data["instrument_id"] == "sg-persist-test-001"
+    assert data["manufacturing_batch_id"] == "tb-persist-batch-001"
+    assert data["category"] == "hardware_performance"
+    assert data["metric_count"] == 1
+
+
+def test_get_nonexistent_record_returns_404():
+    """GET /records/{id} returns 404 for nonexistent record."""
+    response = client.get("/api/telemetry/records/telem_nonexistent_000000")
+    assert response.status_code == 404
+
+
+# =============================================================================
+# Persistence Tests - List Records
+# =============================================================================
+
+
+def test_list_records_returns_ingested():
+    """GET /records returns previously ingested records."""
+    # Ingest a unique record
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-11T11:00:00Z",
+        "instrument_id": "sg-list-test-unique",
+        "manufacturing_batch_id": "tb-list-batch-unique",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "session_count": {"value": 10, "unit": "count", "aggregation": "sum"},
+        },
+    }
+    ingest_resp = client.post("/api/telemetry/ingest", json=payload)
+    assert ingest_resp.status_code == 200
+    telemetry_id = ingest_resp.json()["telemetry_id"]
+
+    # List and verify it appears
+    list_resp = client.get("/api/telemetry/records", params={"instrument_id": "sg-list-test-unique"})
+    assert list_resp.status_code == 200
+    data = list_resp.json()
+    assert data["total"] >= 1
+    assert any(item["telemetry_id"] == telemetry_id for item in data["items"])
+
+
+def test_list_records_filter_by_category():
+    """GET /records filters by category."""
+    # Ingest records with different categories
+    base = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-11T12:00:00Z",
+        "instrument_id": "sg-cat-filter-test",
+        "manufacturing_batch_id": "tb-cat-filter-batch",
+        "metrics": {"test_metric": {"value": 1, "unit": "count", "aggregation": "sum"}},
+    }
+
+    # Ingest environment category
+    env_payload = {**base, "telemetry_category": "environment"}
+    client.post("/api/telemetry/ingest", json=env_payload)
+
+    # List with filter
+    resp = client.get("/api/telemetry/records", params={
+        "instrument_id": "sg-cat-filter-test",
+        "category": "environment",
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert all(item["category"] == "environment" for item in data["items"])
+
+
+def test_list_records_invalid_category_returns_400():
+    """GET /records returns 400 for invalid category."""
+    response = client.get("/api/telemetry/records", params={"category": "invalid_category"})
+    assert response.status_code == 400
+
+
+def test_list_records_pagination():
+    """GET /records supports limit and offset."""
+    response = client.get("/api/telemetry/records", params={"limit": 5, "offset": 0})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["limit"] == 5
+    assert data["offset"] == 0
+    assert len(data["items"]) <= 5
+
+
+# =============================================================================
+# Persistence Tests - Instrument Summary
+# =============================================================================
+
+
+def test_instrument_summary():
+    """GET /instruments/{id}/summary returns instrument statistics."""
+    # Ingest some records for a specific instrument
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-11T13:00:00Z",
+        "instrument_id": "sg-summary-test-inst",
+        "manufacturing_batch_id": "tb-summary-batch",
+        "telemetry_category": "lifecycle",
+        "metrics": {"fret_wear_events": {"value": 3, "unit": "count", "aggregation": "sum"}},
+    }
+    client.post("/api/telemetry/ingest", json=payload)
+
+    # Get summary
+    resp = client.get("/api/telemetry/instruments/sg-summary-test-inst/summary")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["instrument_id"] == "sg-summary-test-inst"
+    assert data["total_records"] >= 1
+    assert "lifecycle" in data["categories"]
+
+
+def test_instrument_summary_unknown_instrument():
+    """GET /instruments/{id}/summary returns empty summary for unknown instrument."""
+    resp = client.get("/api/telemetry/instruments/sg-unknown-instrument/summary")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["instrument_id"] == "sg-unknown-instrument"
+    assert data["total_records"] == 0
+
+
+# =============================================================================
+# Persistence Tests - Stats
+# =============================================================================
+
+
+def test_telemetry_stats():
+    """GET /stats returns overall telemetry statistics."""
+    response = client.get("/api/telemetry/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_records" in data
+    assert "by_category" in data
+    assert data["contract_version"] == "v1"
+    assert "timestamp_utc" in data
