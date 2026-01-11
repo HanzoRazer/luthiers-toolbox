@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import app.rmos.runs_v2.batch_tree as batch_tree_module
 from app.rmos.runs_v2.batch_dashboard import build_batch_summary_dashboard_card
 
 
@@ -18,7 +19,7 @@ def test_build_batch_summary_dashboard_card_counts_latest_and_links(monkeypatch)
             ],
         }
 
-    monkeypatch.setattr("app.rmos.runs_v2.batch_tree.list_batch_tree", _fake_list_batch_tree)
+    monkeypatch.setattr(batch_tree_module, "list_batch_tree", _fake_list_batch_tree)
 
     out = build_batch_summary_dashboard_card(session_id="s1", batch_label="b1", tool_kind="saw", include_links=True, include_kpis=True)
     assert out["root_artifact_id"] == "spec1"
