@@ -1,0 +1,65 @@
+{
+  "drills": [
+    {
+      "id": "drill_chromatic",
+      "title": "Chromatic Speed Builder",
+      "tempo_bpm": {
+        "min": 40,
+        "max": 200,
+        "step": 10
+      },
+      "metrics": [
+        "timing",
+        "accuracy",
+        "string_noise",
+        "finger_independence"
+      ],
+      "relpath": null
+    },
+    {
+      "id": "drill_alternate_picking",
+      "title": "Alternate Picking Trainer",
+      "tempo_bpm": {
+        "min": 60,
+        "max": 180,
+        "step": 5
+      },
+      "metrics": [
+        "timing",
+        "consistency",
+        "pick_attack"
+      ],
+      "relpath": null
+    },
+    {
+      "id": "drill_chord_changes",
+      "title": "Chord Change Speed",
+      "tempo_bpm": {
+        "min": 40,
+        "max": 120,
+        "step": 5
+      },
+      "metrics": [
+        "timing",
+        "chord_clarity",
+        "transition_smoothness"
+      ],
+      "relpath": null
+    },
+    {
+      "id": "drill_string_skipping",
+      "title": "String Skipping Accuracy",
+      "tempo_bpm": {
+        "min": 50,
+        "max": 140,
+        "step": 10
+      },
+      "metrics": [
+        "accuracy",
+        "timing",
+        "muted_strings"
+      ],
+      "relpath": null
+    }
+  ]
+}
