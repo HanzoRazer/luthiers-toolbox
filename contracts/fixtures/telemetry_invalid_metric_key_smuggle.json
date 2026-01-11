@@ -1,0 +1,30 @@
+{
+  "schema_id": "smart_guitar_toolbox_telemetry",
+  "schema_version": "v1",
+  "emitted_at_utc": "2026-01-10T17:06:00Z",
+  "instrument_id": "SG-UNIT_000001",
+  "manufacturing_batch_id": "TB-BATCH_0001",
+  "telemetry_category": "utilization",
+  "metrics": {
+    "uptime_seconds": {
+      "value": 3600,
+      "unit": "seconds",
+      "aggregation": "sum"
+    },
+    "player_id_hash": {
+      "value": 1,
+      "unit": "count",
+      "aggregation": "sum"
+    },
+    "lesson_progress_pct": {
+      "value": 75.5,
+      "unit": "percent",
+      "aggregation": "avg"
+    },
+    "accuracy_score_avg": {
+      "value": 0.82,
+      "unit": "ratio",
+      "aggregation": "avg"
+    }
+  }
+}

@@ -513,6 +513,179 @@ def test_invalid_fixture_file_rejected():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
 
+def test_metric_key_smuggle_fixture_rejected():
+    """Fixture with forbidden terms smuggled in metric keys is REJECTED."""
+    fixture_path = FIXTURES_DIR / "telemetry_invalid_metric_key_smuggle.json"
+    if fixture_path.exists():
+        result = validate_telemetry_file(fixture_path)
+        assert not result.valid, "Metric key smuggling should be rejected"
+        # Should catch player_id_hash, lesson_progress_pct, accuracy_score_avg
+        assert len(result.errors) >= 3
+        assert any("player_id" in e.lower() for e in result.errors)
+        assert any("lesson" in e.lower() for e in result.errors)
+        assert any("accuracy" in e.lower() for e in result.errors)
+    else:
+        pytest.skip(f"Fixture not found: {fixture_path}")
+
+
+# =============================================================================
+# Metric Key Smuggling Tests (Boundary Enforcement)
+# =============================================================================
+
+
+def test_rejects_player_id_in_metric_key():
+    """Metric key containing 'player_id' is REJECTED."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "player_id_hash": {"value": 1, "unit": "count", "aggregation": "sum"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, "Metric key 'player_id_hash' should be blocked"
+    assert any("player_id" in e.lower() and "metric key" in e.lower() for e in result.errors)
+
+
+def test_rejects_lesson_id_in_metric_key():
+    """Metric key containing 'lesson_id' is REJECTED."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "lesson_id_count": {"value": 5, "unit": "count", "aggregation": "sum"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, "Metric key 'lesson_id_count' should be blocked"
+    assert any("lesson_id" in e.lower() for e in result.errors)
+
+
+def test_rejects_accuracy_in_metric_key():
+    """Metric key containing 'accuracy' is REJECTED."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "accuracy_score_avg": {"value": 0.85, "unit": "ratio", "aggregation": "avg"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, "Metric key 'accuracy_score_avg' should be blocked"
+    assert any("accuracy" in e.lower() for e in result.errors)
+
+
+def test_rejects_timing_in_metric_key():
+    """Metric key containing 'timing' is REJECTED."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "hardware_performance",
+        "metrics": {
+            "timing_offset_ms": {"value": 5.2, "unit": "milliseconds", "aggregation": "avg"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, "Metric key 'timing_offset_ms' should be blocked"
+    assert any("timing" in e.lower() for e in result.errors)
+
+
+def test_rejects_score_in_metric_key():
+    """Metric key containing 'score' is REJECTED."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "score_total": {"value": 100, "unit": "count", "aggregation": "sum"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, "Metric key 'score_total' should be blocked"
+    assert any("score" in e.lower() for e in result.errors)
+
+
+def test_rejects_multiple_forbidden_metric_keys():
+    """Multiple forbidden metric keys all generate errors."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            "player_id_hash": {"value": 1, "unit": "count", "aggregation": "sum"},
+            "lesson_progress_pct": {"value": 75.0, "unit": "percent", "aggregation": "avg"},
+            "accuracy_avg": {"value": 0.92, "unit": "ratio", "aggregation": "avg"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid
+    # Should have at least 3 errors (one per forbidden metric key)
+    assert len(result.errors) >= 3
+
+
+@pytest.mark.parametrize("forbidden_term", [
+    "player_id", "user_id", "account_id", "lesson_id", "accuracy", "timing",
+    "midi", "audio", "score", "grade", "evaluation", "coach_feedback",
+])
+def test_forbidden_terms_blocked_in_metric_keys(forbidden_term):
+    """All forbidden terms are blocked when used in metric keys."""
+    metric_key = f"{forbidden_term}_count"
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "utilization",
+        "metrics": {
+            metric_key: {"value": 1, "unit": "count", "aggregation": "sum"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert not result.valid, f"Metric key '{metric_key}' should be blocked"
+    assert any(forbidden_term in e.lower() for e in result.errors)
+
+
+def test_accepts_valid_metric_key_without_forbidden_terms():
+    """Valid metric keys without forbidden terms are accepted."""
+    payload = {
+        "schema_id": "smart_guitar_toolbox_telemetry",
+        "schema_version": "v1",
+        "emitted_at_utc": "2026-01-10T17:06:00Z",
+        "instrument_id": "sg-0001-alpha",
+        "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+        "telemetry_category": "hardware_performance",
+        "metrics": {
+            "cpu_temp_c": {"value": 45.2, "unit": "celsius", "aggregation": "avg"},
+            "battery_voltage_v": {"value": 3.85, "unit": "volts", "aggregation": "avg"},
+            "uptime_hours": {"value": 100.5, "unit": "hours", "aggregation": "sum"},
+        },
+    }
+    result = validate_telemetry(payload)
+    assert result.valid, f"Valid metrics should pass: {result.errors}"
+
+
 # =============================================================================
 # JSON String Validation Tests
 # =============================================================================
