@@ -146,15 +146,44 @@ def validate_telemetry(payload_dict: Dict[str, Any]) -> TelemetryValidationResul
     if not payload.metrics:
         result.add_error("Payload must contain at least one metric")
 
-    # 5) Warning for suspiciously teaching-like metric names
-    suspicious_patterns = ["lesson", "practice", "score", "accuracy", "skill"]
+    # 5) Hard-block forbidden terms in metric keys (prevents smuggling)
+    # This catches attempts to hide pedagogy data in metric names like
+    # "player_id_hash", "lesson_progress_count", "accuracy_pct", etc.
+    # We check if the forbidden term appears as a complete segment (word boundary aware)
+    for metric_key in payload.metrics.keys():
+        metric_key_lower = metric_key.lower()
+        # Split into segments to avoid false positives like "humidity" matching "midi"
+        segments = metric_key_lower.split("_")
+        for forbidden in FORBIDDEN_FIELDS:
+            # Check if forbidden term matches as complete segment(s)
+            forbidden_parts = forbidden.split("_")
+            # Check for exact segment match or segment prefix/suffix
+            for i in range(len(segments)):
+                # Check if forbidden_parts match starting at position i
+                if i + len(forbidden_parts) <= len(segments):
+                    if segments[i:i + len(forbidden_parts)] == forbidden_parts:
+                        result.add_error(
+                            f"Forbidden metric key '{metric_key}': "
+                            f"contains blocked term '{forbidden}' (pedagogy data boundary violation)"
+                        )
+                        break
+            else:
+                continue
+            break  # Already found a match for this metric key
+
+    # 6) Warning for suspiciously teaching-like metric names
+    # (softer patterns that might indicate pedagogy data but aren't hard-blocked)
+    suspicious_patterns = ["practice", "skill", "progress", "performance_score"]
     for metric_name in payload.metrics.keys():
         for pattern in suspicious_patterns:
             if pattern in metric_name.lower():
-                result.add_warning(
-                    f"Suspicious metric name '{metric_name}': "
-                    "review for potential pedagogy data"
-                )
+                # Don't warn if already hard-blocked
+                already_blocked = any(f in metric_name.lower() for f in FORBIDDEN_FIELDS)
+                if not already_blocked:
+                    result.add_warning(
+                        f"Suspicious metric name '{metric_name}': "
+                        "review for potential pedagogy data"
+                    )
 
     return result
 
