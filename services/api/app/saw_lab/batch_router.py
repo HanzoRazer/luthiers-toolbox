@@ -6,6 +6,7 @@ Plus decision trends endpoint for metrics rollup analysis.
 
 Mounted at: /api/saw/batch
 """
+
 from __future__ import annotations
 
 import os
@@ -84,8 +85,11 @@ class BatchPlanSetup(BaseModel):
 class BatchPlanResponse(BaseModel):
     batch_plan_artifact_id: str
     setups: List[BatchPlanSetup]
-    # Advisory only (never auto-applies): latest approved delta for (tool_id, material_id)
+    # Decision Intelligence (approved tuning decision, not learning suggestions)
     decision_intel_advisory: Optional[Dict[str, Any]] = None
+    tuning_applied: bool = False
+    # Auto-suggest block for UI: applied override (if any) + recommended latest approved (when override cleared)
+    plan_auto_suggest: Optional[Dict[str, Any]] = None
 
 
 class BatchApproveRequest(BaseModel):
@@ -104,6 +108,7 @@ class BatchPlanChooseRequest(BaseModel):
     """
     Operator approval: select ops from a plan, optionally apply recommended patch.
     """
+
     batch_plan_artifact_id: str
     selected_setup_key: str
     selected_op_ids: List[str]
@@ -116,6 +121,7 @@ class BatchPlanChooseResponse(BaseModel):
     Result of operator approval. If apply_recommended_patch=True,
     includes the advisory source decision artifact ID.
     """
+
     batch_decision_artifact_id: str
     selected_setup_key: str
     applied_context_patch: Optional[Dict[str, Any]] = None
@@ -256,7 +262,7 @@ class LearningInfo(BaseModel):
 def create_batch_spec(req: BatchSpecRequest) -> BatchSpecResponse:
     """
     Create a batch specification artifact.
-    
+
     This is the first step in the batch workflow.
     """
     payload = {
@@ -273,13 +279,13 @@ def create_batch_spec(req: BatchSpecRequest) -> BatchSpecResponse:
 def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
     """
     Generate a batch plan from a spec.
-    
+
     Creates setups and operations for the batch.
     """
     spec = get_artifact(req.batch_spec_artifact_id)
     if not spec:
         raise HTTPException(status_code=404, detail="Batch spec not found")
-    
+
     spec_payload = spec.get("payload", {})
     items = spec_payload.get("items", [])
     tool_id = spec_payload.get("tool_id", "saw:thin_140")
@@ -295,15 +301,17 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                 material_id = str(first.get("material_id"))
     except Exception:
         material_id = None
-    
+
     ops = []
     for i, item in enumerate(items):
-        ops.append(BatchPlanOp(
-            op_id=f"op_{i+1}",
-            part_id=item.get("part_id", f"part_{i+1}"),
-            cut_type="crosscut",
-        ))
-    
+        ops.append(
+            BatchPlanOp(
+                op_id=f"op_{i+1}",
+                part_id=item.get("part_id", f"part_{i+1}"),
+                cut_type="crosscut",
+            )
+        )
+
     setups = [
         BatchPlanSetup(
             setup_key="setup_1",
@@ -311,35 +319,112 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
             ops=ops,
         )
     ]
-    
+
     payload = {
         "batch_spec_artifact_id": req.batch_spec_artifact_id,
         "batch_label": batch_label,
         "session_id": session_id,
         "setups": [s.model_dump() for s in setups],
     }
-    artifact_id = store_artifact(kind="saw_batch_plan", payload=payload, parent_id=req.batch_spec_artifact_id, session_id=session_id)
 
-    # Attach advisory to the plan response (non-blocking; planning must never fail due to advisory)
+    # Option A — Decision Intelligence (with explicit operator override):
+    # Prefer latest plan-choose override, else latest APPROVED tuning decision.
     decision_intel_advisory: Optional[Dict[str, Any]] = None
+    tuning_applied = False
+    plan_auto_suggest: Optional[Dict[str, Any]] = None
     try:
-        if tool_id and material_id:
-            # Uses the saw_lab-only helper which internally queries latest approved decisions.
-            from app.saw_lab.decision_intel_advisory import get_latest_approved_delta_advisory
+        from .tuning_decision_service import (
+            apply_approved_tuning_to_plan_payload,
+            advisory_from_plan_choose_artifact,
+            find_latest_approved_tuning_decision,
+            is_apply_approved_tuning_on_plan_enabled,
+        )
+        from .plan_choose_service import find_latest_plan_choose
 
-            decision_intel_advisory = get_latest_approved_delta_advisory(
-                tool_id=str(tool_id),
-                material_id=str(material_id),
+        if session_id and batch_label:
+            plan_choose = find_latest_plan_choose(
+                session_id=session_id,
+                batch_label=batch_label,
+                tool_kind="saw",
             )
-        else:
-            decision_intel_advisory = None
+            choose_payload = (
+                (plan_choose.get("payload") or plan_choose.get("data"))
+                if isinstance(plan_choose, dict)
+                else {}
+            )
+            choose_payload = choose_payload if isinstance(choose_payload, dict) else {}
+            choose_state = (
+                choose_payload.get("state")
+                if isinstance(choose_payload.get("state"), str)
+                else None
+            )
+            choose_state_norm = (
+                choose_state.strip().upper() if isinstance(choose_state, str) else None
+            )
+            plan_choose_artifact_id = (
+                (plan_choose.get("id") or plan_choose.get("artifact_id"))
+                if isinstance(plan_choose, dict)
+                else None
+            )
+
+            applied_override = (
+                advisory_from_plan_choose_artifact(plan_choose) if plan_choose else None
+            )
+
+            # Recommended latest approved is only shown when override is CLEARED (explicitly)
+            recommended_latest_approved = None
+            if choose_state_norm == "CLEARED":
+                recommended_latest_approved = find_latest_approved_tuning_decision(
+                    session_id=session_id,
+                    batch_label=batch_label,
+                    tool_kind="saw",
+                )
+
+            # The applied decision for this plan:
+            if applied_override:
+                decision_intel_advisory = applied_override
+            else:
+                # No active override; fall back to latest approved (but we still only *show* recommended when CLEARED)
+                decision_intel_advisory = find_latest_approved_tuning_decision(
+                    session_id=session_id,
+                    batch_label=batch_label,
+                    tool_kind="saw",
+                )
+
+            plan_auto_suggest = {
+                "plan_choose_artifact_id": (
+                    str(plan_choose_artifact_id) if plan_choose_artifact_id else None
+                ),
+                "override_state": choose_state_norm,
+                "applied_override": applied_override,
+                "recommended_latest_approved": recommended_latest_approved,
+            }
+
+            if decision_intel_advisory and is_apply_approved_tuning_on_plan_enabled():
+                payload = apply_approved_tuning_to_plan_payload(
+                    plan_payload=payload,
+                    advisory=decision_intel_advisory,
+                )
+                tuning_applied = bool(payload.get("tuning_applied"))
     except Exception:
+        # Never block planning on intelligence lookup
         decision_intel_advisory = None
-    
+        tuning_applied = False
+        plan_auto_suggest = None
+
+    artifact_id = store_artifact(
+        kind="saw_batch_plan",
+        payload=payload,
+        parent_id=req.batch_spec_artifact_id,
+        session_id=session_id,
+    )
+
     return BatchPlanResponse(
         batch_plan_artifact_id=artifact_id,
         setups=setups,
         decision_intel_advisory=decision_intel_advisory,
+        tuning_applied=tuning_applied,
+        plan_auto_suggest=plan_auto_suggest,
     )
 
 
@@ -347,18 +432,18 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
 def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
     """
     Approve a batch plan, creating a decision artifact.
-    
+
     This locks in the execution order.
     """
     plan = get_artifact(req.batch_plan_artifact_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Batch plan not found")
-    
+
     plan_payload = plan.get("payload", {})
     batch_label = plan_payload.get("batch_label", "")
     session_id = plan_payload.get("session_id", "")
     spec_id = plan_payload.get("batch_spec_artifact_id", "")
-    
+
     payload = {
         "batch_plan_artifact_id": req.batch_plan_artifact_id,
         "batch_spec_artifact_id": spec_id,
@@ -369,8 +454,13 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
         "setup_order": req.setup_order,
         "op_order": req.op_order,
     }
-    artifact_id = store_artifact(kind="saw_batch_decision", payload=payload, parent_id=req.batch_plan_artifact_id, session_id=session_id)
-    
+    artifact_id = store_artifact(
+        kind="saw_batch_decision",
+        payload=payload,
+        parent_id=req.batch_plan_artifact_id,
+        session_id=session_id,
+    )
+
     return BatchApproveResponse(batch_decision_artifact_id=artifact_id)
 
 
@@ -388,7 +478,9 @@ def _extract_plan_snapshot(plan_payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _find_setup_ops(plan_payload: Dict[str, Any], setup_key: str, op_ids: List[str]) -> List[Dict[str, Any]]:
+def _find_setup_ops(
+    plan_payload: Dict[str, Any], setup_key: str, op_ids: List[str]
+) -> List[Dict[str, Any]]:
     """Find ops from a specific setup by their IDs."""
     for setup in plan_payload.get("setups", []):
         if setup.get("setup_key") == setup_key:
@@ -396,9 +488,12 @@ def _find_setup_ops(plan_payload: Dict[str, Any], setup_key: str, op_ids: List[s
     return []
 
 
-def _apply_patch_to_context_patch(base_context: Dict[str, Any], applied_multipliers: Dict[str, float]) -> Dict[str, Any]:
+def _apply_patch_to_context_patch(
+    base_context: Dict[str, Any], applied_multipliers: Dict[str, float]
+) -> Dict[str, Any]:
     """Apply decision multipliers to base context, returning the patched context."""
     from app.saw_lab.decision_apply_service import apply_decision_to_context
+
     result, _stamp = apply_decision_to_context(
         base_context=base_context,
         applied_multipliers=applied_multipliers,
@@ -410,22 +505,22 @@ def _apply_patch_to_context_patch(base_context: Dict[str, Any], applied_multipli
 def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     """
     Operator approval: select ops from a plan, optionally apply recommended patch.
-    
+
     This creates a decision artifact similar to /approve but with:
     - Explicit op selection
     - Optional patch application from latest approved tuning decision
-    
+
     The advisory shown at /plan time is not auto-applied; operator must opt in.
     """
     plan = get_artifact(req.batch_plan_artifact_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Batch plan not found")
-    
+
     plan_payload = plan.get("payload", {})
     batch_label = plan_payload.get("batch_label", "")
     session_id = plan_payload.get("session_id", "")
     spec_id = plan_payload.get("batch_spec_artifact_id", "")
-    
+
     # Extract tool_id and material_id from the plan (needed for advisory lookup)
     tool_id: Optional[str] = None
     material_id: Optional[str] = None
@@ -433,7 +528,7 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         if setup.get("setup_key") == req.selected_setup_key:
             tool_id = setup.get("tool_id")
             break
-    
+
     # Get material_id from spec
     spec = get_artifact(spec_id) if spec_id else None
     if spec:
@@ -441,42 +536,61 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         items = spec_payload.get("items", [])
         if items:
             material_id = items[0].get("material_id")
-    
+
     # Build context patch if operator opted in
     applied_context_patch: Optional[Dict[str, Any]] = None
     applied_multipliers: Optional[Dict[str, float]] = None
     advisory_source_decision_artifact_id: Optional[str] = None
-    
+
     if req.apply_recommended_patch and tool_id and material_id:
         try:
-            from app.saw_lab.decision_intel_apply_service import find_latest_approved_tuning_decision, ArtifactStorePorts
+            from app.saw_lab.decision_intel_apply_service import (
+                find_latest_approved_tuning_decision,
+                ArtifactStorePorts,
+            )
             from app.rmos.runs_v2 import store as runs_store  # type: ignore
 
             store = ArtifactStorePorts(
                 list_runs_filtered=getattr(runs_store, "list_runs_filtered"),
                 persist_run_artifact=getattr(runs_store, "persist_run_artifact"),
             )
-            decision_id, delta = find_latest_approved_tuning_decision(store, tool_id=tool_id, material_id=material_id)
+            decision_id, delta = find_latest_approved_tuning_decision(
+                store, tool_id=tool_id, material_id=material_id
+            )
             if decision_id and delta:
                 advisory_source_decision_artifact_id = decision_id
                 # Convert TuningDelta to dict for applied_multipliers
                 applied_multipliers = {
-                    "rpm_mul": delta.rpm_mul if hasattr(delta, "rpm_mul") else getattr(delta, "rpm_mul", 1.0),
-                    "feed_mul": delta.feed_mul if hasattr(delta, "feed_mul") else getattr(delta, "feed_mul", 1.0),
-                    "doc_mul": delta.doc_mul if hasattr(delta, "doc_mul") else getattr(delta, "doc_mul", 1.0),
+                    "rpm_mul": (
+                        delta.rpm_mul
+                        if hasattr(delta, "rpm_mul")
+                        else getattr(delta, "rpm_mul", 1.0)
+                    ),
+                    "feed_mul": (
+                        delta.feed_mul
+                        if hasattr(delta, "feed_mul")
+                        else getattr(delta, "feed_mul", 1.0)
+                    ),
+                    "doc_mul": (
+                        delta.doc_mul
+                        if hasattr(delta, "doc_mul")
+                        else getattr(delta, "doc_mul", 1.0)
+                    ),
                 }
-                
+
                 # Build a sample context patch (base values are nominal)
                 base_context = {
                     "spindle_rpm": 3000.0,
                     "feed_rate_mmpm": 600.0,
                     "doc_mm": 3.0,
                 }
-                applied_context_patch = _apply_patch_to_context_patch(base_context, applied_multipliers)
+                applied_context_patch = _apply_patch_to_context_patch(
+                    base_context, applied_multipliers
+                )
         except Exception:
             # Never fail the decision due to advisory lookup errors
             pass
-    
+
     # Create the decision artifact
     payload = {
         "batch_plan_artifact_id": req.batch_plan_artifact_id,
@@ -502,7 +616,7 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         parent_id=req.batch_plan_artifact_id,
         session_id=session_id,
     )
-    
+
     return BatchPlanChooseResponse(
         batch_decision_artifact_id=artifact_id,
         selected_setup_key=req.selected_setup_key,
@@ -512,20 +626,28 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     )
 
 
-@router.post("/toolpaths/from-decision", response_model=BatchToolpathsFromDecisionResponse)
-def toolpaths_from_decision(req: BatchToolpathsFromDecisionRequest) -> BatchToolpathsFromDecisionResponse:
+@router.post(
+    "/toolpaths/from-decision", response_model=BatchToolpathsFromDecisionResponse
+)
+def toolpaths_from_decision(
+    req: BatchToolpathsFromDecisionRequest,
+) -> BatchToolpathsFromDecisionResponse:
     """
     Selected decision -> generate toolpaths
     Toolpaths artifact is parented to the decision and inherits lineage stamps.
     """
-    from .saw_lab_toolpaths_from_decision_service import generate_toolpaths_from_decision
+    from .saw_lab_toolpaths_from_decision_service import (
+        generate_toolpaths_from_decision,
+    )
 
     out = generate_toolpaths_from_decision(
         batch_decision_artifact_id=req.batch_decision_artifact_id,
         include_gcode=bool(req.include_gcode),
     )
     if not out.get("batch_toolpaths_artifact_id"):
-        raise HTTPException(status_code=500, detail=out.get("error") or "toolpaths generation failed")
+        raise HTTPException(
+            status_code=500, detail=out.get("error") or "toolpaths generation failed"
+        )
     return BatchToolpathsFromDecisionResponse(
         batch_toolpaths_artifact_id=str(out["batch_toolpaths_artifact_id"]),
         status=str(out.get("status") or "UNKNOWN"),
@@ -549,7 +671,12 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         error_payload = {
             "batch_decision_artifact_id": req.batch_decision_artifact_id,
             "error": f"Batch decision not found: {req.batch_decision_artifact_id}",
-            "summary": {"op_count": 0, "ok_count": 0, "blocked_count": 0, "error_count": 1},
+            "summary": {
+                "op_count": 0,
+                "ok_count": 0,
+                "blocked_count": 0,
+                "error_count": 1,
+            },
             "children": [],
             "results": [],
         }
@@ -570,19 +697,19 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
             results=[],
             gcode_lines=0,
         )
-    
+
     dec_payload = decision.get("payload", {})
     plan_id = dec_payload.get("batch_plan_artifact_id", "")
     spec_id = dec_payload.get("batch_spec_artifact_id", "")
     batch_label = dec_payload.get("batch_label", "")
     session_id = dec_payload.get("session_id", "")
     op_order = dec_payload.get("op_order", [])
-    
+
     # Get plan to access ops
     plan = get_artifact(plan_id) if plan_id else None
     plan_payload = plan.get("payload", {}) if plan else {}
     setups = plan_payload.get("setups", [])
-    
+
     # Build op lookup
     op_by_id: Dict[str, Dict[str, Any]] = {}
     for setup in setups:
@@ -592,17 +719,17 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
                 if isinstance(op, dict) and op.get("op_id"):
                     op["setup_key"] = setup_key
                     op_by_id[op["op_id"]] = op
-    
+
     # Generate toolpaths for each op
     child_ids: List[str] = []
     child_results: List[Dict[str, Any]] = []
     ok_count = 0
     total_gcode_lines = 0
-    
+
     for op_id in op_order:
         op = op_by_id.get(op_id, {})
         setup_key = op.get("setup_key", "")
-        
+
         # Generate mock G-code moves
         gcode_moves = [
             {"code": "G21", "comment": "Units: mm"},
@@ -615,7 +742,7 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
             {"code": "G0", "z": 10.0, "comment": "Retract"},
             {"code": "M5", "comment": "Spindle off"},
         ]
-        
+
         op_payload = {
             "batch_decision_artifact_id": req.batch_decision_artifact_id,
             "batch_plan_artifact_id": plan_id,
@@ -624,7 +751,7 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
             "setup_key": setup_key,
             "toolpaths": {"moves": gcode_moves},
         }
-        
+
         child_id = store_artifact(
             kind="saw_batch_op_toolpaths",
             payload=op_payload,
@@ -635,23 +762,29 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
         child_ids.append(child_id)
         ok_count += 1
         total_gcode_lines += len(gcode_moves)
-        
-        child_results.append({
-            "op_id": op_id,
-            "setup_key": setup_key,
-            "status": "OK",
-            "risk_bucket": "GREEN",
-            "score": 1.0,
-            "toolpaths_artifact_id": child_id,
-            "warnings": [],
-        })
-    
+
+        child_results.append(
+            {
+                "op_id": op_id,
+                "setup_key": setup_key,
+                "status": "OK",
+                "risk_bucket": "GREEN",
+                "score": 1.0,
+                "toolpaths_artifact_id": child_id,
+                "warnings": [],
+            }
+        )
+
     # Build learning info first so we can store it with the execution
     apply_enabled = os.getenv("SAW_LAB_APPLY_ACCEPTED_OVERRIDES", "").lower() == "true"
     learning_enabled = os.getenv("SAW_LAB_LEARNING_HOOK_ENABLED", "").lower() == "true"
 
     # Query accepted learning events for this decision
-    accepted_events = query_accepted_learning_events(req.batch_decision_artifact_id) if learning_enabled else []
+    accepted_events = (
+        query_accepted_learning_events(req.batch_decision_artifact_id)
+        if learning_enabled
+        else []
+    )
     source_count = len(accepted_events)
 
     tuning_stamp = None
@@ -692,7 +825,9 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
             "blocked_count": 0,
             "error_count": 0,
         },
-        "children": [{"artifact_id": cid, "kind": "saw_batch_op_toolpaths"} for cid in child_ids],
+        "children": [
+            {"artifact_id": cid, "kind": "saw_batch_op_toolpaths"} for cid in child_ids
+        ],
         "results": child_results,
         "gcode_lines": total_gcode_lines,
         "learning": learning_payload,
@@ -726,7 +861,9 @@ def generate_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsRespon
 
 @router.get("/execution")
 def get_execution_by_decision(
-    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID to look up execution for"),
+    batch_decision_artifact_id: str = Query(
+        ..., description="Decision artifact ID to look up execution for"
+    ),
 ) -> Dict[str, Any]:
     """
     Look up the latest execution artifact for a given decision.
@@ -747,7 +884,10 @@ def get_execution_by_decision(
 
     # Build index_meta with setdefault fallbacks for older artifacts
     index_meta = latest.get("index_meta") or {}
-    index_meta.setdefault("parent_batch_decision_artifact_id", payload.get("batch_decision_artifact_id") or batch_decision_artifact_id)
+    index_meta.setdefault(
+        "parent_batch_decision_artifact_id",
+        payload.get("batch_decision_artifact_id") or batch_decision_artifact_id,
+    )
     index_meta.setdefault("batch_label", payload.get("batch_label"))
     index_meta.setdefault("session_id", payload.get("session_id"))
     index_meta.setdefault("tool_kind", "saw_lab")
@@ -779,20 +919,25 @@ def list_executions_by_decision(
     for ex in executions:
         payload = ex.get("payload", {})
         index_meta = ex.get("index_meta") or {}
-        index_meta.setdefault("parent_batch_decision_artifact_id", payload.get("batch_decision_artifact_id") or batch_decision_artifact_id)
+        index_meta.setdefault(
+            "parent_batch_decision_artifact_id",
+            payload.get("batch_decision_artifact_id") or batch_decision_artifact_id,
+        )
         index_meta.setdefault("batch_label", payload.get("batch_label"))
         index_meta.setdefault("session_id", payload.get("session_id"))
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": ex.get("artifact_id"),
-            "id": ex.get("artifact_id"),
-            "kind": ex.get("kind", "saw_batch_execution"),
-            "status": ex.get("status", "OK"),
-            "created_utc": ex.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": ex.get("artifact_id"),
+                "id": ex.get("artifact_id"),
+                "kind": ex.get("kind", "saw_batch_execution"),
+                "status": ex.get("status", "OK"),
+                "created_utc": ex.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -819,14 +964,16 @@ def list_executions_by_label(
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": ex.get("artifact_id"),
-            "id": ex.get("artifact_id"),
-            "kind": ex.get("kind", "saw_batch_execution"),
-            "status": ex.get("status", "OK"),
-            "created_utc": ex.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": ex.get("artifact_id"),
+                "id": ex.get("artifact_id"),
+                "kind": ex.get("kind", "saw_batch_execution"),
+                "status": ex.get("status", "OK"),
+                "created_utc": ex.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -851,14 +998,16 @@ def list_decisions_by_plan(
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": dec.get("artifact_id"),
-            "id": dec.get("artifact_id"),
-            "kind": dec.get("kind", "saw_batch_decision"),
-            "status": dec.get("status", "OK"),
-            "created_utc": dec.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": dec.get("artifact_id"),
+                "id": dec.get("artifact_id"),
+                "kind": dec.get("kind", "saw_batch_decision"),
+                "status": dec.get("status", "OK"),
+                "created_utc": dec.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -883,14 +1032,16 @@ def list_decisions_by_spec(
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": dec.get("artifact_id"),
-            "id": dec.get("artifact_id"),
-            "kind": dec.get("kind", "saw_batch_decision"),
-            "status": dec.get("status", "OK"),
-            "created_utc": dec.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": dec.get("artifact_id"),
+                "id": dec.get("artifact_id"),
+                "kind": dec.get("kind", "saw_batch_decision"),
+                "status": dec.get("status", "OK"),
+                "created_utc": dec.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -915,14 +1066,16 @@ def list_executions_by_plan(
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": ex.get("artifact_id"),
-            "id": ex.get("artifact_id"),
-            "kind": ex.get("kind", "saw_batch_execution"),
-            "status": ex.get("status", "OK"),
-            "created_utc": ex.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": ex.get("artifact_id"),
+                "id": ex.get("artifact_id"),
+                "kind": ex.get("kind", "saw_batch_execution"),
+                "status": ex.get("status", "OK"),
+                "created_utc": ex.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -947,14 +1100,16 @@ def list_executions_by_spec(
         index_meta.setdefault("tool_kind", "saw_lab")
         index_meta.setdefault("kind_group", "batch")
 
-        results.append({
-            "artifact_id": ex.get("artifact_id"),
-            "id": ex.get("artifact_id"),
-            "kind": ex.get("kind", "saw_batch_execution"),
-            "status": ex.get("status", "OK"),
-            "created_utc": ex.get("created_utc"),
-            "index_meta": index_meta,
-        })
+        results.append(
+            {
+                "artifact_id": ex.get("artifact_id"),
+                "id": ex.get("artifact_id"),
+                "kind": ex.get("kind", "saw_batch_execution"),
+                "status": ex.get("status", "OK"),
+                "created_utc": ex.get("created_utc"),
+                "index_meta": index_meta,
+            }
+        )
 
     return results
 
@@ -1005,12 +1160,18 @@ def log_batch_job(
         "status": status,
         "metrics": metrics.model_dump(),
     }
-    job_log_id = store_artifact(kind="batch_job_log", payload=job_log_payload, parent_id=batch_execution_artifact_id)
+    job_log_id = store_artifact(
+        kind="batch_job_log",
+        payload=job_log_payload,
+        parent_id=batch_execution_artifact_id,
+    )
 
     # Optionally create metrics rollup
     rollup_id: Optional[str] = None
     rollups_resp: Optional[RollupArtifacts] = None
-    rollup_hook_enabled = os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true"
+    rollup_hook_enabled = (
+        os.getenv("SAW_LAB_METRICS_ROLLUP_HOOK_ENABLED", "").lower() == "true"
+    )
 
     if rollup_hook_enabled:
         # Compute aggregated metrics from all job logs
@@ -1047,9 +1208,17 @@ def log_batch_job(
                 "parts_scrap": parts_scrap,
             },
             "counts": {"job_log_count": len(all_logs)},
-            "signals": {"burn_events": burn_events, "tearout_events": tearout_events, "kickback_events": kickback_events},
+            "signals": {
+                "burn_events": burn_events,
+                "tearout_events": tearout_events,
+                "kickback_events": kickback_events,
+            },
         }
-        rollup_id = store_artifact(kind="saw_batch_execution_metrics_rollup", payload=rollup_payload, parent_id=batch_execution_artifact_id)
+        rollup_id = store_artifact(
+            kind="saw_batch_execution_metrics_rollup",
+            payload=rollup_payload,
+            parent_id=batch_execution_artifact_id,
+        )
 
         # Also store in the runs artifact index for query_run_artifacts to find
         _store_rollup_for_query(rollup_id, rollup_payload, decision_id)
@@ -1142,7 +1311,17 @@ def export_job_logs_csv(
     logs = query_job_logs_by_execution(batch_execution_artifact_id)
 
     # Build CSV
-    headers = ["job_log_artifact_id", "operator", "notes", "status", "parts_ok", "parts_scrap", "cut_time_s", "setup_time_s", "created_utc"]
+    headers = [
+        "job_log_artifact_id",
+        "operator",
+        "notes",
+        "status",
+        "parts_ok",
+        "parts_scrap",
+        "cut_time_s",
+        "setup_time_s",
+        "created_utc",
+    ]
     lines = [",".join(headers)]
 
     for log in logs:
@@ -1165,7 +1344,9 @@ def export_job_logs_csv(
     return PlainTextResponse(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="job_logs_{batch_execution_artifact_id[:8]}.csv"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="job_logs_{batch_execution_artifact_id[:8]}.csv"'
+        },
     )
 
 
@@ -1179,7 +1360,17 @@ def export_execution_rollups_csv(
     rollups = query_execution_rollups_by_decision(batch_decision_artifact_id)
 
     # Build CSV
-    headers = ["rollup_artifact_id", "batch_execution_artifact_id", "log_count", "parts_ok", "parts_scrap", "scrap_rate", "cut_time_s", "setup_time_s", "created_utc"]
+    headers = [
+        "rollup_artifact_id",
+        "batch_execution_artifact_id",
+        "log_count",
+        "parts_ok",
+        "parts_scrap",
+        "scrap_rate",
+        "cut_time_s",
+        "setup_time_s",
+        "created_utc",
+    ]
     lines = [",".join(headers)]
 
     for rollup in rollups:
@@ -1193,7 +1384,11 @@ def export_execution_rollups_csv(
         row = [
             rollup.get("artifact_id", ""),
             payload.get("batch_execution_artifact_id", ""),
-            str(payload.get("log_count", payload.get("counts", {}).get("job_log_count", 0))),
+            str(
+                payload.get(
+                    "log_count", payload.get("counts", {}).get("job_log_count", 0)
+                )
+            ),
             str(parts_ok),
             str(parts_scrap),
             f"{scrap_rate:.4f}",
@@ -1207,11 +1402,15 @@ def export_execution_rollups_csv(
     return PlainTextResponse(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id[:8]}.csv"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="execution_rollups_{batch_decision_artifact_id[:8]}.csv"'
+        },
     )
 
 
-def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id: str) -> None:
+def _store_rollup_for_query(
+    rollup_id: str, payload: Dict[str, Any], decision_id: str
+) -> None:
     """
     Store rollup in a format that query_run_artifacts can find.
 
@@ -1219,12 +1418,15 @@ def _store_rollup_for_query(rollup_id: str, payload: Dict[str, Any], decision_id
     """
     try:
         from app.rmos.run_artifacts.store import persist_run_artifact
+
         persist_run_artifact(
             kind="saw_batch_execution_metrics_rollup",
             payload=payload,
             index_meta={
                 "parent_batch_decision_artifact_id": decision_id,
-                "parent_batch_execution_artifact_id": payload.get("batch_execution_artifact_id"),
+                "parent_batch_execution_artifact_id": payload.get(
+                    "batch_execution_artifact_id"
+                ),
             },
         )
     except Exception:
@@ -1245,7 +1447,9 @@ class LearningEventApprovalResponse(BaseModel):
 
 @router.post("/learning-events/approve", response_model=LearningEventApprovalResponse)
 def approve_learning_event(
-    learning_event_artifact_id: str = Query(..., description="Learning event to approve/reject"),
+    learning_event_artifact_id: str = Query(
+        ..., description="Learning event to approve/reject"
+    ),
     policy_decision: str = Query(..., description="ACCEPT or REJECT"),
     approved_by: str = Query(..., description="Approver name"),
     reason: str = Query("", description="Approval reason"),
@@ -1267,6 +1471,7 @@ def approve_learning_event(
 
     # Update in place (in-memory store allows this)
     from app.saw_lab.store import _batch_artifacts
+
     _batch_artifacts[learning_event_artifact_id]["payload"] = payload
 
     return LearningEventApprovalResponse(
@@ -1289,16 +1494,18 @@ def list_learning_events_by_execution(
     results = []
     for ev in events:
         payload = ev.get("payload", {})
-        results.append({
-            "artifact_id": ev.get("artifact_id"),
-            "id": ev.get("artifact_id"),
-            "kind": "saw_lab_learning_event",  # Use saw_lab_ prefix for consistency
-            "status": ev.get("status", "OK"),
-            "created_utc": ev.get("created_utc"),
-            "suggestion_type": payload.get("suggestion_type"),
-            "policy_decision": payload.get("policy_decision"),
-            "payload": payload,
-        })
+        results.append(
+            {
+                "artifact_id": ev.get("artifact_id"),
+                "id": ev.get("artifact_id"),
+                "kind": "saw_lab_learning_event",  # Use saw_lab_ prefix for consistency
+                "status": ev.get("status", "OK"),
+                "created_utc": ev.get("created_utc"),
+                "suggestion_type": payload.get("suggestion_type"),
+                "policy_decision": payload.get("policy_decision"),
+                "payload": payload,
+            }
+        )
 
     return results
 
@@ -1412,7 +1619,10 @@ def get_latest_execution_rollup(
     """Get the latest persisted rollup for an execution."""
     rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
     if not rollups:
-        return {"found": False, "batch_execution_artifact_id": batch_execution_artifact_id}
+        return {
+            "found": False,
+            "batch_execution_artifact_id": batch_execution_artifact_id,
+        }
 
     latest = rollups[0]
     return {
@@ -1520,7 +1730,10 @@ def get_latest_decision_rollup(
     """Get the latest persisted rollup for a decision."""
     rollups = query_execution_rollups_by_decision(batch_decision_artifact_id)
     if not rollups:
-        return {"found": False, "batch_decision_artifact_id": batch_decision_artifact_id}
+        return {
+            "found": False,
+            "batch_decision_artifact_id": batch_decision_artifact_id,
+        }
 
     latest = rollups[0]
     return {
@@ -1547,9 +1760,14 @@ def compute_rollup_diff(
     right = get_artifact(right_rollup_artifact_id)
 
     if not left:
-        raise HTTPException(status_code=404, detail=f"Left rollup not found: {left_rollup_artifact_id}")
+        raise HTTPException(
+            status_code=404, detail=f"Left rollup not found: {left_rollup_artifact_id}"
+        )
     if not right:
-        raise HTTPException(status_code=404, detail=f"Right rollup not found: {right_rollup_artifact_id}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Right rollup not found: {right_rollup_artifact_id}",
+        )
 
     left_metrics = left.get("payload", {}).get("metrics", {})
     right_metrics = right.get("payload", {}).get("metrics", {})
@@ -1593,19 +1811,23 @@ def list_op_toolpaths_by_decision(
     for art in items:
         payload = art.get("payload", {})
         index_meta = art.get("index_meta") or {}
-        index_meta.setdefault("parent_batch_decision_artifact_id", batch_decision_artifact_id)
+        index_meta.setdefault(
+            "parent_batch_decision_artifact_id", batch_decision_artifact_id
+        )
         index_meta.setdefault("op_id", payload.get("op_id"))
         index_meta.setdefault("setup_key", payload.get("setup_key"))
 
-        results.append({
-            "artifact_id": art.get("artifact_id"),
-            "id": art.get("artifact_id"),
-            "kind": art.get("kind", "saw_batch_op_toolpaths"),
-            "status": art.get("status", "OK"),
-            "created_utc": art.get("created_utc"),
-            "index_meta": index_meta,
-            "payload": payload,
-        })
+        results.append(
+            {
+                "artifact_id": art.get("artifact_id"),
+                "id": art.get("artifact_id"),
+                "kind": art.get("kind", "saw_batch_op_toolpaths"),
+                "status": art.get("status", "OK"),
+                "created_utc": art.get("created_utc"),
+                "index_meta": index_meta,
+                "payload": payload,
+            }
+        )
 
     return results
 
@@ -1623,19 +1845,23 @@ def list_op_toolpaths_by_execution(
     for art in items:
         payload = art.get("payload", {})
         index_meta = art.get("index_meta") or {}
-        index_meta.setdefault("parent_batch_execution_artifact_id", batch_execution_artifact_id)
+        index_meta.setdefault(
+            "parent_batch_execution_artifact_id", batch_execution_artifact_id
+        )
         index_meta.setdefault("op_id", payload.get("op_id"))
         index_meta.setdefault("setup_key", payload.get("setup_key"))
 
-        results.append({
-            "artifact_id": art.get("artifact_id"),
-            "id": art.get("artifact_id"),
-            "kind": art.get("kind", "saw_batch_op_toolpaths"),
-            "status": art.get("status", "OK"),
-            "created_utc": art.get("created_utc"),
-            "index_meta": index_meta,
-            "payload": payload,
-        })
+        results.append(
+            {
+                "artifact_id": art.get("artifact_id"),
+                "id": art.get("artifact_id"),
+                "kind": art.get("kind", "saw_batch_op_toolpaths"),
+                "status": art.get("status", "OK"),
+                "created_utc": art.get("created_utc"),
+                "index_meta": index_meta,
+                "payload": payload,
+            }
+        )
 
     return results
 
@@ -1653,7 +1879,9 @@ class RetryResponse(BaseModel):
 
 @router.post("/executions/retry", response_model=RetryResponse)
 def retry_execution(
-    batch_execution_artifact_id: str = Query(..., description="Source execution to retry"),
+    batch_execution_artifact_id: str = Query(
+        ..., description="Source execution to retry"
+    ),
     reason: str = Query("", description="Reason for retry"),
 ) -> RetryResponse:
     """
@@ -1697,12 +1925,14 @@ def retry_execution(
             status="OK",
         )
         new_children.append({"artifact_id": child_id, "kind": "saw_batch_op_toolpaths"})
-        new_results.append({
-            "op_id": op.get("op_id"),
-            "setup_key": op.get("setup_key", ""),
-            "status": "OK",
-            "toolpaths_artifact_id": child_id,
-        })
+        new_results.append(
+            {
+                "op_id": op.get("op_id"),
+                "setup_key": op.get("setup_key", ""),
+                "status": "OK",
+                "toolpaths_artifact_id": child_id,
+            }
+        )
 
     # Create new execution artifact
     new_exec_payload = {
@@ -1896,13 +2126,15 @@ def list_metrics_rollups(
 
     results = []
     for art in rollups:
-        results.append({
-            "artifact_id": art.get("artifact_id"),
-            "kind": art.get("kind", "saw_batch_execution_rollup"),
-            "status": art.get("status", "OK"),
-            "created_utc": art.get("created_utc"),
-            "payload": art.get("payload", {}),
-        })
+        results.append(
+            {
+                "artifact_id": art.get("artifact_id"),
+                "kind": art.get("kind", "saw_batch_execution_rollup"),
+                "status": art.get("status", "OK"),
+                "created_utc": art.get("created_utc"),
+                "payload": art.get("payload", {}),
+            }
+        )
 
     return results
 
@@ -1915,22 +2147,25 @@ def list_metrics_rollups(
 @router.get("/decisions/trends")
 def get_decision_trends(
     batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
-    window: int = Query(default=20, ge=2, le=200, description="Window size for trend calculation"),
+    window: int = Query(
+        default=20, ge=2, le=200, description="Window size for trend calculation"
+    ),
 ) -> Dict[str, Any]:
     """
     Compute trend deltas for a batch decision's execution metrics over time.
-    
+
     Returns:
     - Time-series points from metrics rollup artifacts
     - Aggregates for last window vs previous window
     - Delta comparisons (scrap rate changes, etc.)
-    
+
     Even with 0-1 data points, returns a valid shape with deltas.available=False.
     """
     return compute_decision_trends(
         batch_decision_artifact_id=batch_decision_artifact_id,
         window=window,
     )
+
 
 # ---------------------------------------------------------------------------
 # G-code Export Endpoints
@@ -2002,7 +2237,9 @@ def get_op_toolpaths_gcode(op_toolpaths_artifact_id: str) -> PlainTextResponse:
 
 @router.post("/learning-events/approve")
 def approve_learning_event(
-    learning_event_artifact_id: str = Query(..., description="Learning event artifact ID"),
+    learning_event_artifact_id: str = Query(
+        ..., description="Learning event artifact ID"
+    ),
     policy_decision: str = Query(..., description="Policy decision (ACCEPT or REJECT)"),
     approved_by: str = Query(..., description="Approver name"),
     reason: str = Query("", description="Reason for decision"),
@@ -2152,7 +2389,9 @@ def apply_learning_overrides(
 
 @router.get("/executions/with-learning")
 def list_executions_with_learning(
-    only_applied: str = Query("false", description="Filter to only executions with learning applied"),
+    only_applied: str = Query(
+        "false", description="Filter to only executions with learning applied"
+    ),
     batch_label: Optional[str] = Query(None, description="Filter by batch label"),
 ) -> List[Dict[str, Any]]:
     """
@@ -2161,7 +2400,9 @@ def list_executions_with_learning(
     If only_applied=true, only returns executions where learning was actually applied.
     """
     only_applied_bool = only_applied.lower() in ("true", "1", "yes")
-    results = query_executions_with_learning(batch_label=batch_label, only_applied=only_applied_bool)
+    results = query_executions_with_learning(
+        batch_label=batch_label, only_applied=only_applied_bool
+    )
 
     return [
         {
@@ -2342,7 +2583,9 @@ def get_metrics_rollup_alias(
 
 
 @router.get("/toolpaths/by-decision", response_model=BatchToolpathsByDecisionResponse)
-def toolpaths_by_decision(batch_decision_artifact_id: str) -> BatchToolpathsByDecisionResponse:
+def toolpaths_by_decision(
+    batch_decision_artifact_id: str,
+) -> BatchToolpathsByDecisionResponse:
     """
     Convenience alias:
       decision -> latest toolpaths artifact id (+ small summary).
@@ -2350,14 +2593,20 @@ def toolpaths_by_decision(batch_decision_artifact_id: str) -> BatchToolpathsByDe
     """
     from .toolpaths_lookup_service import get_latest_toolpaths_for_decision
 
-    out = get_latest_toolpaths_for_decision(batch_decision_artifact_id=batch_decision_artifact_id)
+    out = get_latest_toolpaths_for_decision(
+        batch_decision_artifact_id=batch_decision_artifact_id
+    )
     if not out:
-        return BatchToolpathsByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
+        return BatchToolpathsByDecisionResponse(
+            batch_decision_artifact_id=batch_decision_artifact_id
+        )
     return BatchToolpathsByDecisionResponse(**out)
 
 
 @router.get("/execution/by-decision", response_model=BatchExecutionByDecisionResponse)
-def execution_by_decision(batch_decision_artifact_id: str) -> BatchExecutionByDecisionResponse:
+def execution_by_decision(
+    batch_decision_artifact_id: str,
+) -> BatchExecutionByDecisionResponse:
     """
     Convenience alias:
       decision -> latest execution artifact id (+ small summary).
@@ -2365,9 +2614,13 @@ def execution_by_decision(batch_decision_artifact_id: str) -> BatchExecutionByDe
     """
     from .executions_lookup_service import get_latest_execution_for_decision
 
-    out = get_latest_execution_for_decision(batch_decision_artifact_id=batch_decision_artifact_id)
+    out = get_latest_execution_for_decision(
+        batch_decision_artifact_id=batch_decision_artifact_id
+    )
     if not out:
-        return BatchExecutionByDecisionResponse(batch_decision_artifact_id=batch_decision_artifact_id)
+        return BatchExecutionByDecisionResponse(
+            batch_decision_artifact_id=batch_decision_artifact_id
+        )
     return BatchExecutionByDecisionResponse(**out)
 
 

@@ -1,6 +1,6 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-10
+> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-11
 
 ## ⚡ Quick Start
 
@@ -16,7 +16,7 @@ docker compose up --build
 
 # Key Tests
 cd services/api && pytest tests/ -v              # All tests
-cd services/api && pytest tests/ -v -m cam       # pytest markers: cam, sawlab, rmos, integration, smoke
+cd services/api && pytest tests/ -v -m cam       # pytest markers: cam, sawlab, rmos, integration, smoke, unit
 cd packages/client && npm run test               # Vitest unit tests
 make smoke-helix-posts                           # Helical post-processor smoke test
 make check-boundaries                            # All architectural fence checks (run before PR)
@@ -73,6 +73,10 @@ Machine-executing endpoints follow **Operation Lane Governance**:
 **Reference Implementation**: CNC Saw Lab (`services/api/app/saw_lab/batch_router.py`)
 
 - Stage sequence: SPEC → PLAN → DECISION → EXECUTE → EXPORT → FEEDBACK
+- **Decision Intelligence**: Plan responses include `plan_auto_suggest` for UI tuning recommendations
+  - `override_state`: `"CHOSEN"` | `"CLEARED"` | `None`
+  - `applied_override`: Active operator override (when CHOSEN)
+  - `recommended_latest_approved`: Suggested tuning (only when CLEARED)
 
 ## 🔗 Cross-Boundary Patterns
 
@@ -207,6 +211,16 @@ npm run dev          # Start dev server
 npm run test         # Vitest
 npm run lint         # ESLint (max-warnings=0)
 ```
+
+## 🎸 Module Awareness
+
+| Module         | Scope                                                   | Key Files                                 |
+| -------------- | ------------------------------------------------------- | ----------------------------------------- |
+| **Module L**   | Adaptive pocketing (spiralizer, trochoids, jerk timing) | `services/api/app/cam/`                   |
+| **Module M**   | Machine profiles, energy modeling, feed overrides       | `machines_router.py`, `cam_opt_router.py` |
+| **Art Studio** | SVG editor, relief mapper, helical Z-ramping            | `art_studio/`, `/api/art/*` routes        |
+| **Saw Lab**    | Reference implementation for governed operations        | `saw_lab/batch_router.py`                 |
+| **RMOS**       | Manufacturing orchestration system                      | `rmos/`, `/api/rmos/*` routes             |
 
 ## 🚨 Red Flags (Immediate Rejection)
 
