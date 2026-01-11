@@ -78,6 +78,11 @@ from .api_batch_dashboard import router as batch_dashboard_router
 
 router.include_router(batch_dashboard_router)
 
+# Option B: batch summary (session/batch scoped)
+from .api_batch_summary import router as batch_summary_router
+
+router.include_router(batch_summary_router)
+
 
 # =============================================================================
 # Response Models
