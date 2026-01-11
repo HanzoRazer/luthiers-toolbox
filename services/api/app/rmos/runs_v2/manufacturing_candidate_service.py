@@ -2,10 +2,19 @@
 """
 Manufacturing Candidate Service.
 
+Bundle C: Manufacturing Readiness & Decision Control
+
 Provides:
-- List candidates for a run
-- Approve/reject decisions
-- ZIP export for manufacturing
+- List candidates for a run (with decision state)
+- Decide: set decision (GREEN/YELLOW/RED/null) with append-only history
+- ZIP export for manufacturing (GREEN-only gated)
+
+Decision Protocol (spine-locked):
+- decision: null = NEEDS_DECISION (not ready)
+- decision: GREEN = OK to manufacture
+- decision: YELLOW = caution/hold
+- decision: RED = do not manufacture
+- All decisions append to decision_history (audit trail)
 """
 
 from __future__ import annotations
@@ -15,7 +24,7 @@ import json
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
@@ -28,6 +37,8 @@ from .schemas_manufacturing_ops import (
     CandidateListItem,
     CandidateDecisionRequest,
     CandidateDecisionResponse,
+    DecisionHistoryItem,
+    RiskLevel,
 )
 
 
@@ -56,7 +67,7 @@ def _set_attr(obj: Any, key: str, value: Any) -> None:
 
 
 def list_candidates(run_id: str) -> CandidateListResponse:
-    """List all manufacturing candidates for a run."""
+    """List all manufacturing candidates for a run (Bundle C enhanced)."""
     run = get_run(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
@@ -65,13 +76,61 @@ def list_candidates(run_id: str) -> CandidateListResponse:
 
     items: list[CandidateListItem] = []
     for c in candidates:
+        # Extract decision_history if present
+        raw_history = _get_attr(c, "decision_history", None)
+        history: Optional[List[DecisionHistoryItem]] = None
+        if raw_history and isinstance(raw_history, list):
+            history = [
+                DecisionHistoryItem(
+                    decision=(
+                        h.get("decision")
+                        if isinstance(h, dict)
+                        else getattr(h, "decision", "GREEN")
+                    ),
+                    note=(
+                        h.get("note")
+                        if isinstance(h, dict)
+                        else getattr(h, "note", None)
+                    ),
+                    decided_at_utc=(
+                        h.get("decided_at_utc")
+                        if isinstance(h, dict)
+                        else getattr(h, "decided_at_utc", "")
+                    ),
+                    decided_by=(
+                        h.get("decided_by")
+                        if isinstance(h, dict)
+                        else getattr(h, "decided_by", None)
+                    ),
+                )
+                for h in raw_history
+            ]
+
+        # Derive status from decision for legacy compat
+        decision = _get_attr(c, "decision", None)
+        if decision == "GREEN":
+            status = "ACCEPTED"
+        elif decision == "RED":
+            status = "REJECTED"
+        elif decision == "YELLOW":
+            status = "PROPOSED"  # YELLOW maps to PROPOSED (caution state)
+        else:
+            status = _get_attr(c, "status", "PROPOSED")
+
         items.append(
             CandidateListItem(
                 candidate_id=_get_attr(c, "candidate_id", ""),
                 advisory_id=_get_attr(c, "advisory_id", ""),
-                status=_get_attr(c, "status", "PROPOSED"),
+                decision=decision,
+                decision_note=_get_attr(c, "decision_note"),
+                decided_at_utc=_get_attr(c, "decided_at_utc"),
+                decided_by=_get_attr(c, "decided_by"),
+                decision_history=history,
+                status=status,
                 label=_get_attr(c, "label"),
                 note=_get_attr(c, "note"),
+                score=_get_attr(c, "score"),
+                risk_level=_get_attr(c, "risk_level"),
                 created_at_utc=_get_attr(c, "created_at_utc", ""),
                 created_by=_get_attr(c, "created_by"),
                 updated_at_utc=_get_attr(c, "updated_at_utc", ""),
@@ -98,34 +157,88 @@ def decide_candidate(
     payload: CandidateDecisionRequest,
     principal: Principal,
 ) -> CandidateDecisionResponse:
-    """Approve or reject a manufacturing candidate."""
+    """Set decision on a manufacturing candidate (Bundle C).
+
+    Decision Protocol:
+    - decision: null = clear decision (NEEDS_DECISION)
+    - decision: GREEN/YELLOW/RED = set explicit decision
+    - All non-null decisions append to decision_history (audit trail)
+    - Export is gated: only GREEN candidates can be exported
+    """
     run = get_run(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
 
     cand = _find_candidate_or_404(run, candidate_id)
 
-    decision = payload.decision
-    status = "ACCEPTED" if decision == "ACCEPT" else "REJECTED"
-
     now = _utc_now()
+    decision = payload.decision  # RiskLevel | None
+    note = payload.note
+    decided_by = payload.decided_by or principal.user_id
+
+    # Get or create decision_history (append-only audit trail)
+    raw_history = _get_attr(cand, "decision_history", None)
+    history: list = list(raw_history) if raw_history else []
+
+    # If setting a non-null decision, append to history
+    if decision is not None:
+        history.append(
+            {
+                "decision": decision,
+                "note": note,
+                "decided_at_utc": now,
+                "decided_by": decided_by,
+            }
+        )
+
+    # Update candidate fields
+    _set_attr(cand, "decision", decision)
+    _set_attr(cand, "decision_note", note)
+    _set_attr(cand, "decided_at_utc", now if decision else None)
+    _set_attr(cand, "decided_by", decided_by if decision else None)
+    _set_attr(cand, "decision_history", history)
+
+    # Derive status from decision for legacy compat
+    if decision == "GREEN":
+        status = "ACCEPTED"
+    elif decision == "RED":
+        status = "REJECTED"
+    else:  # null or YELLOW
+        status = "PROPOSED"
     _set_attr(cand, "status", status)
-    if payload.note:
-        _set_attr(cand, "note", payload.note)
+
     _set_attr(cand, "updated_at_utc", now)
-    _set_attr(cand, "updated_by", principal.user_id)
+    _set_attr(cand, "updated_by", decided_by)
 
     # Persist the updated candidates list
     run.manufacturing_candidates = _get_candidates(run)
     update_run(run)
 
+    # Build history items for response
+    history_items: Optional[List[DecisionHistoryItem]] = None
+    if history:
+        history_items = [
+            DecisionHistoryItem(
+                decision=h["decision"],
+                note=h.get("note"),
+                decided_at_utc=h["decided_at_utc"],
+                decided_by=h.get("decided_by"),
+            )
+            for h in history
+        ]
+
     return CandidateDecisionResponse(
         run_id=run_id,
         candidate_id=candidate_id,
         advisory_id=_get_attr(cand, "advisory_id", ""),
+        decision=decision,
+        decision_note=note,
+        decided_at_utc=now if decision else None,
+        decided_by=decided_by if decision else None,
+        decision_history=history_items,
         status=status,
         updated_at_utc=now,
-        updated_by=principal.user_id,
+        updated_by=decided_by,
     )
 
 
@@ -149,6 +262,10 @@ def download_candidate_zip(run_id: str, candidate_id: str) -> StreamingResponse:
     """
     Create a ZIP containing the advisory blob and manifest.
 
+    Bundle C Export Gating:
+    - Only GREEN candidates can be exported
+    - YELLOW, RED, or null decision = blocked
+
     Product-facing export for operators/manufacturing.
     """
     run = get_run(run_id)
@@ -156,6 +273,21 @@ def download_candidate_zip(run_id: str, candidate_id: str) -> StreamingResponse:
         raise HTTPException(status_code=404, detail="Run not found")
 
     cand = _find_candidate_or_404(run, candidate_id)
+
+    # Bundle C: Export gating - only GREEN can be exported
+    decision = _get_attr(cand, "decision", None)
+    if decision != "GREEN":
+        if decision is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Export blocked: candidate NEEDS DECISION. Set decision to GREEN to export.",
+            )
+        else:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Export blocked: candidate decision is {decision}. Only GREEN candidates can be exported.",
+            )
+
     advisory_id = _get_attr(cand, "advisory_id", "")
     if not advisory_id:
         raise HTTPException(status_code=400, detail="Candidate missing advisory_id")
@@ -175,7 +307,14 @@ def download_candidate_zip(run_id: str, candidate_id: str) -> StreamingResponse:
         "run_id": run_id,
         "candidate_id": candidate_id,
         "advisory_id": advisory_id,
+        # Bundle C decision fields
+        "decision": _get_attr(cand, "decision"),
+        "decision_note": _get_attr(cand, "decision_note"),
+        "decided_at_utc": _get_attr(cand, "decided_at_utc"),
+        "decided_by": _get_attr(cand, "decided_by"),
+        # Legacy compat
         "status": _get_attr(cand, "status", "PROPOSED"),
+        # Metadata
         "label": _get_attr(cand, "label"),
         "note": _get_attr(cand, "note"),
         "mime": mime,
@@ -183,6 +322,8 @@ def download_candidate_zip(run_id: str, candidate_id: str) -> StreamingResponse:
         "created_by": _get_attr(cand, "created_by"),
         "updated_at_utc": _get_attr(cand, "updated_at_utc"),
         "updated_by": _get_attr(cand, "updated_by"),
+        # Audit: include decision history in exported manifest
+        "decision_history": _get_attr(cand, "decision_history", []),
     }
 
     def _stream():

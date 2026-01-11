@@ -15,12 +15,17 @@ cd packages/client && npm run dev
 docker compose up --build
 
 # Key Tests
-cd services/api && pytest tests/ -v              # All backend tests
-cd services/api && pytest tests/ -v -m cam       # pytest markers: cam, sawlab, rmos, integration, smoke, unit
-cd packages/client && npm run test               # Vitest unit tests
-make smoke-helix-posts                           # Helical post-processor smoke test
-make check-boundaries                            # All architectural fence checks (run before PR)
+cd services/api && pytest tests/ -v                    # All backend tests
+cd services/api && pytest tests/ -v -m cam             # By marker: cam, unit, integration, smoke, slow
+cd services/api && pytest tests/ -v -m "cam or helical"  # Multiple markers
+cd packages/client && npm run test                     # Vitest unit tests
+make smoke-helix-posts                                 # Helical post-processor smoke test
+make check-boundaries                                  # All architectural fence checks (run before PR)
 ```
+
+### Pytest Markers (from `services/api/pytest.ini`)
+
+`unit` `integration` `smoke` `slow` `router` `geometry` `adaptive` `bridge` `helical` `cam` `export`
 
 ## 🔑 Critical Rules
 
@@ -28,12 +33,12 @@ make check-boundaries                            # All architectural fence check
 2. **DXF**: R12 format (AC1009) with closed LWPolylines – never newer versions
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
-5. **DO NOT MODIFY**: `__REFERENCE__/` directory (read-only reference data), legacy archives (`Guitar Design HTML app/`, `ToolBox_*`)
+5. **DO NOT MODIFY**: `__REFERENCE__/` directory, legacy archives (`Guitar Design HTML app/`, `ToolBox_*`)
 6. **Request IDs**: All API responses MUST include `X-Request-Id` header
 7. **Machine Profiles**: Use IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
 8. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
 9. **Architectural Fences**: Check [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) before cross-domain imports – CI-enforced
-10. **Vue Components**: Use `<script setup lang="ts">` – state in Pinia stores (`packages/client/src/stores`)
+10. **Vue Components**: Use `<script setup lang="ts">` – state in Pinia stores (`packages/client/src/stores/`)
 
 ## 📁 Key Paths
 
@@ -46,9 +51,10 @@ make check-boundaries                            # All architectural fence check
 | CAM Intent Schema   | `services/api/app/rmos/cam/schemas_intent.py`            |
 | Frontend SDK        | `packages/client/src/sdk/endpoints/` – typed helpers     |
 | Post Configs        | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
-| CI Workflows        | `.github/workflows/` – 38 workflow files                 |
+| CI Workflows        | `.github/workflows/` – 40 workflow files                 |
 | Pinia Stores        | `packages/client/src/stores/` – frontend state           |
 | Shared Utils        | `packages/shared/` – cross-package types/utilities       |
+| CI Boundary Checks  | `services/api/app/ci/` – boundary enforcement scripts    |
 
 ## 🏛️ Architecture Overview
 
@@ -152,16 +158,17 @@ intent = CamIntentV1(mode="roughing", units="mm", design={...})
 ### Testing
 
 ```python
-# Backend (pytest markers: cam, sawlab, rmos, integration, smoke)
+# Backend (pytest markers from pytest.ini)
 @pytest.mark.cam
 def test_roughing():
     response = client.post("/api/cam/roughing/gcode", json=payload)
     assert "X-Request-Id" in response.headers
 
-# Run specific markers
-# pytest tests/ -v -m cam        # CAM toolpath tests
-# pytest tests/ -v -m sawlab     # Saw Lab governance tests
-# pytest tests/ -v -m smoke      # Quick validation tests
+# Run by marker
+# pytest tests/ -v -m cam           # CAM toolpath tests
+# pytest tests/ -v -m integration   # API endpoint tests
+# pytest tests/ -v -m smoke         # Quick validation tests
+# pytest tests/ -v -m "cam or helical"  # Multiple markers
 ```
 
 ### Feature Flags
