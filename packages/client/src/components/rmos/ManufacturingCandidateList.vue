@@ -1323,11 +1323,14 @@ const exportPackageDisabledReason = computed(() => {
   if (loading.value) return "Still loading candidates.";
   if (bulkPackaging.value) return "Package export already in progress.";
   if (!candidates.value.length) return "No candidates available for this run.";
+
+  // Keep export logic spine-aligned with "RUN READY" semantics:
+  // exporting while undecided exist is ambiguous and breaks operator discipline.
+  if (undecidedCount.value > 0) {
+    return `Export blocked: ${undecidedCount.value} candidate(s) are undecided. Decide GREEN/YELLOW/RED to proceed.`;
+  }
+
   if (!greenCandidates.value.length) {
-    const undecided = candidates.value.filter((c) => c.decision === null).length;
-    if (undecided) {
-      return `Export blocked: ${undecided} candidate(s) are undecided, and none are GREEN yet.`;
-    }
     return "Export blocked: no GREEN candidates.";
   }
   return null;
@@ -1426,6 +1429,7 @@ async function exportGreenOnlyPackageZip() {
     <!-- Bundle D: Manufacturing Summary + Bulk Package Export -->
     <div class="mfg-topbar" v-if="!loading && candidates.length > 0">
       <div class="mfg-summary">
+        <!-- Run Ready Badge -->
         <div class="runReady">
           <span class="runReadyLabel">Run:</span>
           <span class="runReadyBadge" :class="runReadyBadgeClass()" :title="runReadyHover">
@@ -1446,11 +1450,11 @@ async function exportGreenOnlyPackageZip() {
         </div>
         <div class="kpi kpi-yellow">
           <div class="kpi-label">YELLOW</div>
-          <div class="kpi-value">{{ summary.decisionCounts.YELLOW }}</div>
+          <div class="kpi-value">{{ yellowCount }}</div>
         </div>
         <div class="kpi kpi-red">
           <div class="kpi-label">RED</div>
-          <div class="kpi-value">{{ summary.decisionCounts.RED }}</div>
+          <div class="kpi-value">{{ redCount }}</div>
         </div>
       </div>
 
@@ -2387,6 +2391,42 @@ async function exportGreenOnlyPackageZip() {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.runReady {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.runReadyLabel {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.runReadyBadge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  user-select: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.badgeReady {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.badgeBlocked {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.badgeEmpty {
+  background: rgba(107, 114, 128, 0.12);
 }
 
 .kpi {
