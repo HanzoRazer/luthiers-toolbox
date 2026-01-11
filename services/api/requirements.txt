@@ -37,3 +37,6 @@ scikit-image>=0.21.0
 python-dotenv>=1.0.0
 
 requests>=2.28.0
+
+# Smart Guitar Contracts (sg-spec)
+sg-spec @ git+https://github.com/HanzoRazer/sg-spec.git
