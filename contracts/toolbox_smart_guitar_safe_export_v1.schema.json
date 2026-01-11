@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.local/schemas/toolbox_smart_guitar_safe_export_v1.schema.json",
+  "title": "ToolBox Smart Guitar Safe Export v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "created_at_utc",
+    "export_id",
+    "producer",
+    "scope",
+    "content_policy",
+    "files",
+    "bundle_sha256"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "const": "toolbox_smart_guitar_safe_export" },
+    "schema_version": { "type": "string", "const": "v1" },
+
+    "created_at_utc": { "type": "string" },
+    "export_id": { "type": "string", "description": "Stable id for this export (uuid or content-derived)" },
+
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "repo", "commit"],
+      "properties": {
+        "system": { "type": "string", "const": "luthiers-toolbox" },
+        "repo": { "type": "string" },
+        "commit": { "type": "string" },
+        "build_id": { "type": "string" }
+      }
+    },
+
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "safe_for"],
+      "properties": {
+        "domain": { "type": "string", "enum": ["education", "practice", "coaching", "reference"] },
+        "safe_for": { "type": "string", "const": "smart_guitar" },
+        "intended_consumers": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["smart_guitar_app", "smart_guitar_coach", "smart_guitar_firmware_tools"] }
+        }
+      }
+    },
+
+    "content_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["no_manufacturing", "no_toolpaths", "no_rmos_authority", "no_secrets"],
+      "properties": {
+        "no_manufacturing": { "type": "boolean", "const": true },
+        "no_toolpaths": { "type": "boolean", "const": true },
+        "no_rmos_authority": { "type": "boolean", "const": true },
+        "no_secrets": { "type": "boolean", "const": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "topics_relpath": { "type": "string", "default": "index/topics.json" },
+        "lessons_relpath": { "type": "string", "default": "index/lessons.json" },
+        "drills_relpath": { "type": "string", "default": "index/drills.json" }
+      }
+    },
+
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["relpath", "sha256", "bytes", "mime", "kind"],
+        "properties": {
+          "relpath": { "type": "string" },
+          "sha256": { "type": "string" },
+          "bytes": { "type": "integer" },
+          "mime": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "manifest",
+              "topic_index",
+              "lesson_index",
+              "drill_index",
+              "lesson_md",
+              "lesson_json",
+              "reference_md",
+              "reference_json",
+              "audio_wav",
+              "audio_flac",
+              "image_png",
+              "image_jpg",
+              "chart_csv",
+              "provenance",
+              "unknown"
+            ]
+          }
+        }
+      }
+    },
+
+    "bundle_sha256": {
+      "type": "string",
+      "description": "sha256 of manifest json bytes BEFORE adding bundle_sha256 field (same convention as viewer_pack)"
+    }
+  }
+}
