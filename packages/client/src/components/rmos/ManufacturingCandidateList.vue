@@ -1206,6 +1206,55 @@ function undoStackHover(item: UndoItem) {
 // -------------------------
 const undecidedCount = computed(() => candidates.value.filter((c) => c.decision == null).length);
 const greenCandidates = computed(() => candidates.value.filter((c) => c.decision === "GREEN"));
+const yellowCount = computed(() => candidates.value.filter((c) => c.decision === "YELLOW").length);
+const redCount = computed(() => candidates.value.filter((c) => c.decision === "RED").length);
+
+// ---------------------------------------------------------------------------
+// Micro-follow: Run Ready badge + hover explainers (product-only)
+// "READY" means: at least one GREEN, and zero undecided (explicit decision made)
+// ---------------------------------------------------------------------------
+type RunReadyStatus = "READY" | "BLOCKED" | "EMPTY";
+
+const runReadyStatus = computed<RunReadyStatus>(() => {
+  if (loading.value) return "BLOCKED";
+  if (!candidates.value.length) return "EMPTY";
+  if (greenCandidates.value.length > 0 && undecidedCount.value === 0) return "READY";
+  return "BLOCKED";
+});
+
+const runReadyLabel = computed(() => {
+  if (runReadyStatus.value === "READY") return "RUN READY";
+  if (runReadyStatus.value === "EMPTY") return "NO CANDIDATES";
+  return "RUN BLOCKED";
+});
+
+const runReadyHover = computed(() => {
+  if (loading.value) return "Loading candidates…";
+  if (!candidates.value.length) return "No manufacturing candidates yet. Promote variants to create candidates.";
+
+  // Block reasons (most actionable first)
+  if (greenCandidates.value.length === 0) {
+    if (undecidedCount.value > 0) {
+      return `No GREEN candidates yet.\n${undecidedCount.value} candidate(s) are undecided.\nDecide GREEN/YELLOW/RED to proceed.`;
+    }
+    if (yellowCount.value > 0 || redCount.value > 0) {
+      return `No GREEN candidates.\nYELLOW: ${yellowCount.value}, RED: ${redCount.value}.\nSet at least one candidate to GREEN to enable export.`;
+    }
+    return "No GREEN candidates. Decide at least one candidate as GREEN to proceed.";
+  }
+
+  if (undecidedCount.value > 0) {
+    return `Export is gated by undecided candidates.\n${greenCandidates.value.length} GREEN candidate(s) available,\nbut ${undecidedCount.value} candidate(s) still need an explicit decision.`;
+  }
+
+  return `Ready:\nGREEN: ${greenCandidates.value.length}\nYELLOW: ${yellowCount.value}\nRED: ${redCount.value}\nNo undecided candidates.`;
+});
+
+function runReadyBadgeClass() {
+  if (runReadyStatus.value === "READY") return "badgeReady";
+  if (runReadyStatus.value === "EMPTY") return "badgeEmpty";
+  return "badgeBlocked";
+}
 
 const exportBlockedReason = computed(() => {
   if (candidates.value.length === 0) return "No candidates to export.";
@@ -1377,6 +1426,12 @@ async function exportGreenOnlyPackageZip() {
     <!-- Bundle D: Manufacturing Summary + Bulk Package Export -->
     <div class="mfg-topbar" v-if="!loading && candidates.length > 0">
       <div class="mfg-summary">
+        <div class="runReady">
+          <span class="runReadyLabel">Run:</span>
+          <span class="runReadyBadge" :class="runReadyBadgeClass()" :title="runReadyHover">
+            {{ runReadyLabel }}
+          </span>
+        </div>
         <div class="kpi">
           <div class="kpi-label">Total</div>
           <div class="kpi-value">{{ candidates.length }}</div>
@@ -2386,6 +2441,42 @@ async function exportGreenOnlyPackageZip() {
 
 .kpi-muted .kpi-value {
   color: #6b7280;
+}
+
+.runReady {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.runReadyLabel {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.runReadyBadge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  user-select: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.badgeReady {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.badgeBlocked {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.badgeEmpty {
+  background: rgba(107, 114, 128, 0.12);
 }
 
 .mfg-export {
