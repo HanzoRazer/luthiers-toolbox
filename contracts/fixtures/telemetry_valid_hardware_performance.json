@@ -1,0 +1,15 @@
+{
+  "schema_id": "smart_guitar_toolbox_telemetry",
+  "schema_version": "v1",
+  "emitted_at_utc": "2026-01-10T17:06:00Z",
+  "instrument_id": "sg-0001-alpha",
+  "manufacturing_batch_id": "tb-batch-2026-01-10-01",
+  "telemetry_category": "hardware_performance",
+  "metrics": {
+    "uptime_hours": { "value": 12.5, "unit": "hours", "aggregation": "sum" },
+    "boot_count": { "value": 4, "unit": "count", "aggregation": "sum" },
+    "adc_noise_db": { "value": -72.4, "unit": "db", "aggregation": "avg" },
+    "battery_voltage_v": { "value": 3.92, "unit": "volts", "aggregation": "avg" },
+    "temp_c": { "value": 31.2, "unit": "celsius", "aggregation": "max" }
+  }
+}
