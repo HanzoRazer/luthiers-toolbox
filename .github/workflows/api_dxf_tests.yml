@@ -1,61 +1,167 @@
 name: API DXF Export Tests
 
 # =============================================================================
-# WORKFLOW DISABLED: Legacy DXF Export Tests
+# DXF Export Tests - Migrated from ./server to services/api
 # =============================================================================
 #
-# This workflow tests legacy DXF export endpoints from the ./server directory
-# that have not been migrated to the main API (services/api).
-#
-# Legacy endpoints tested (NOT in current API):
-#   - /exports/dxf/health
+# Tests the DXF export endpoints:
 #   - /exports/polyline_dxf
 #   - /exports/biarc_dxf
+#   - /exports/dxf/health
 #   - /exports/history
 #
-# Current API DXF endpoints (different functionality):
-#   - /api/dxf/* (DXF Planning)
-#   - /api/cad/* (CAD, DXF)
-#   - /api/dxf/preflight/* (DXF Preflight)
-#
-# To re-enable: migrate server/dxf_exports_router.py to services/api
+# Migrated from legacy ./server directory to services/api/app/exports
 # =============================================================================
 
 on:
-  # Disabled: path triggers reference legacy ./server directory
-  # push:
-  #   branches: [main, develop]
-  #   paths:
-  #     - 'server/dxf_*.py'
-  #     - 'server/curvemath_router_biarc.py'
-  #     - 'server/tests/test_curvemath_dxf.py'
-  #     - '.github/workflows/api_dxf_tests.yml'
-  # pull_request:
-  #   branches: [main]
-  #   paths:
-  #     - 'server/dxf_*.py'
-  #     - 'server/curvemath_router_biarc.py'
-  #     - 'server/tests/test_curvemath_dxf.py'
-  workflow_dispatch:  # Manual trigger only - for testing after migration
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/exports/**'
+      - 'services/api/app/routers/legacy_dxf_exports_router.py'
+      - 'services/api/tests/test_legacy_dxf_exports.py'
+      - '.github/workflows/api_dxf_tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/api/app/exports/**'
+      - 'services/api/app/routers/legacy_dxf_exports_router.py'
+      - 'services/api/tests/test_legacy_dxf_exports.py'
+  workflow_dispatch:
 
 jobs:
-  dxf-summary:
-    name: DXF Tests Summary
+  dxf-pytest:
+    name: DXF Export Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Report disabled status
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Configure git for private repos
         run: |
-          echo "## DXF Export Tests - DISABLED" >> $GITHUB_STEP_SUMMARY
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install dependencies
+        working-directory: ./services/api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+          pip install ezdxf
+
+      - name: Run DXF export tests
+        working-directory: ./services/api
+        run: |
+          pytest tests/test_legacy_dxf_exports.py -v --tb=short
+
+  dxf-integration:
+    name: DXF Integration Test (Docker)
+    runs-on: ubuntu-latest
+    needs: [dxf-pytest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start services
+        env:
+          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+        run: |
+          docker compose up -d --build api
+          sleep 15
+
+      - name: Wait for API health
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/health > /dev/null 2>&1; then
+              echo "API is healthy"
+              break
+            fi
+            echo "Waiting for API... ($i/30)"
+            sleep 2
+          done
+
+      - name: Test DXF health endpoint
+        run: |
+          curl -fsS http://localhost:8000/exports/dxf/health | jq .
+          echo "DXF health check passed"
+
+      - name: Test polyline DXF export
+        run: |
+          curl -X POST http://localhost:8000/exports/polyline_dxf \
+            -H "Content-Type: application/json" \
+            -d '{"polyline": {"points": [[0,0], [100,0], [100,50]]}, "layer": "TEST"}' \
+            --output test_polyline.dxf \
+            --fail --silent --show-error
+
+          if [ ! -f test_polyline.dxf ]; then
+            echo "DXF file not created"
+            exit 1
+          fi
+
+          if ! grep -q "ENTITIES" test_polyline.dxf; then
+            echo "DXF file missing ENTITIES section"
+            exit 1
+          fi
+
+          echo "Polyline DXF export passed"
+
+      - name: Test bi-arc DXF export
+        run: |
+          curl -X POST http://localhost:8000/exports/biarc_dxf \
+            -H "Content-Type: application/json" \
+            -d '{"p0": [0, 0], "t0": [1, 0], "p1": [100, 50], "t1": [0, 1], "layer": "ARC"}' \
+            --output test_biarc.dxf \
+            --fail --silent --show-error
+
+          if [ ! -f test_biarc.dxf ]; then
+            echo "Bi-arc DXF file not created"
+            exit 1
+          fi
+
+          echo "Bi-arc DXF export passed"
+
+      - name: Upload DXF artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxf-test-files
+          path: |
+            test_polyline.dxf
+            test_biarc.dxf
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down
+
+  dxf-summary:
+    name: DXF Tests Summary
+    runs-on: ubuntu-latest
+    needs: [dxf-pytest, dxf-integration]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "## DXF Export Tests Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "This workflow is disabled pending migration of legacy DXF endpoints." >> $GITHUB_STEP_SUMMARY
+          echo "### Test Coverage:" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit tests (pytest)" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration tests (Docker)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Legacy endpoints (in ./server, NOT in current API):" >> $GITHUB_STEP_SUMMARY
-          echo "- /exports/polyline_dxf" >> $GITHUB_STEP_SUMMARY
-          echo "- /exports/biarc_dxf" >> $GITHUB_STEP_SUMMARY
-          echo "- /exports/dxf/health" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### To re-enable:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Migrate server/dxf_exports_router.py to services/api/app/routers/" >> $GITHUB_STEP_SUMMARY
-          echo "2. Update services/api/app/main.py to include the router" >> $GITHUB_STEP_SUMMARY
-          echo "3. Restore the test jobs in this workflow" >> $GITHUB_STEP_SUMMARY
+          echo "### Validated Endpoints:" >> $GITHUB_STEP_SUMMARY
+          echo "- POST /exports/polyline_dxf" >> $GITHUB_STEP_SUMMARY
+          echo "- POST /exports/biarc_dxf" >> $GITHUB_STEP_SUMMARY
+          echo "- GET /exports/dxf/health" >> $GITHUB_STEP_SUMMARY
+          echo "- GET /exports/history" >> $GITHUB_STEP_SUMMARY
