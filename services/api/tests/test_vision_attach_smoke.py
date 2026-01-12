@@ -250,11 +250,10 @@ def _openai_available() -> bool:
     """Check if OpenAI API key is set AND openai package is installed."""
     if not os.environ.get("OPENAI_API_KEY"):
         return False
-    try:
-        import openai  # noqa: F401
-        return True
-    except ImportError:
-        return False
+    # Use find_spec to check module availability without importing
+    # (avoids ai_import_guard violation)
+    import importlib.util
+    return importlib.util.find_spec("openai") is not None
 
 
 @pytest.mark.skipif(
