@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -27,6 +29,9 @@ jobs:
       - name: Viewer Pack v1 Schema Parity Gate
         run: |
           python scripts/validate/check_viewer_pack_schema_parity.py --mode check
+      - name: CONTRACTS_GOVERNANCE_SCENARIO_B_GATE
+        run: |
+          python scripts/ci/check_contracts_governance.py --base-ref origin/main
       - name: Boot API
         run: |
           cd services/api
