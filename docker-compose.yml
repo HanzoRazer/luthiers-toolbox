@@ -62,6 +62,8 @@ services:
       args:
         # Python version for runtime (3.11+ required for type hints)
         PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
+        # Token for private sg-spec repo access during build
+        SG_SPEC_TOKEN: ${SG_SPEC_TOKEN:-}
     image: ${API_IMAGE:-toolbox/api:local}
     container_name: ${COMPOSE_PROJECT_NAME:-toolbox}_api
     env_file: .env  # Load environment variables from .env
