@@ -27,6 +27,7 @@ jobs:
           tags: ${{ env.API_IMAGE }}
           build-args: |
             PYTHON_VERSION=3.11
+            SG_SPEC_TOKEN=${{ secrets.SG_SPEC_TOKEN }}
 
       - name: Build Client image
         uses: docker/build-push-action@v6
