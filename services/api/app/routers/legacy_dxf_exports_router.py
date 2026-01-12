@@ -125,7 +125,7 @@ class BiarcDXFReq(BaseModel):
     }
 )
 def export_polyline_dxf(req: PolyDXFReq):
-    """Export a polyline to DXF format with history tracking"""
+    """Export a polyline to DXF format with optional history tracking"""
     pts = req.polyline.points
     comment_extra = f"# POLYLINE VERTS={len(pts)}"
     comment = _comment_stamp(comment_extra)
@@ -144,28 +144,34 @@ def export_polyline_dxf(req: PolyDXFReq):
         entities = [write_polyline_ascii(pts, layer=req.layer)]
         data = build_ascii_r12(entities, comment=comment)
 
-    entry = start_entry("polyline", {
-        "verts": len(pts),
-        "layer": req.layer or "CURVE"
-    })
-    write_file(entry, "polyline.dxf", data)
+    # History tracking is optional - don't fail export if storage unavailable
+    export_id = "none"
+    try:
+        entry = start_entry("polyline", {
+            "verts": len(pts),
+            "layer": req.layer or "CURVE"
+        })
+        write_file(entry, "polyline.dxf", data)
 
-    summary = {
-        "mode": "polyline",
-        "created_utc": _utc_now_iso(),
-        "verts": len(pts),
-        "layer": req.layer,
-        "points": pts
-    }
-    write_text(entry, "summary.json", json.dumps(summary, indent=2))
-    finalize(entry)
+        summary = {
+            "mode": "polyline",
+            "created_utc": _utc_now_iso(),
+            "verts": len(pts),
+            "layer": req.layer,
+            "points": pts
+        }
+        write_text(entry, "summary.json", json.dumps(summary, indent=2))
+        finalize(entry)
+        export_id = entry["id"]
+    except Exception:
+        pass  # History storage unavailable - continue with export
 
     return Response(
         content=data,
         media_type="application/dxf",
         headers={
             "Content-Disposition": "attachment; filename=polycurve.dxf",
-            "X-Export-Id": entry["id"]
+            "X-Export-Id": export_id
         }
     )
 
@@ -229,36 +235,42 @@ def export_biarc_dxf(req: BiarcDXFReq):
     else:
         data = build_ascii_r12(ascii_entities, comment=comment)
 
-    entry = start_entry("biarc", {
-        "layer": req.layer or "ARC",
-        "arcs": len(arc_radii),
-        "lines": line_count,
-        "min_radius": min_r,
-        "max_radius": max_r
-    })
-    write_file(entry, "biarc.dxf", data)
-
-    summary = {
-        "mode": "biarc",
-        "created_utc": _utc_now_iso(),
-        "counts": {
+    # History tracking is optional - don't fail export if storage unavailable
+    export_id = "none"
+    try:
+        entry = start_entry("biarc", {
+            "layer": req.layer or "ARC",
             "arcs": len(arc_radii),
-            "lines": line_count
-        },
-        "min_radius": min_r,
-        "max_radius": max_r,
-        "radii": arc_radii,
-        "entities": ents
-    }
-    write_text(entry, "summary.json", json.dumps(summary, indent=2))
-    finalize(entry)
+            "lines": line_count,
+            "min_radius": min_r,
+            "max_radius": max_r
+        })
+        write_file(entry, "biarc.dxf", data)
+
+        summary = {
+            "mode": "biarc",
+            "created_utc": _utc_now_iso(),
+            "counts": {
+                "arcs": len(arc_radii),
+                "lines": line_count
+            },
+            "min_radius": min_r,
+            "max_radius": max_r,
+            "radii": arc_radii,
+            "entities": ents
+        }
+        write_text(entry, "summary.json", json.dumps(summary, indent=2))
+        finalize(entry)
+        export_id = entry["id"]
+    except Exception:
+        pass  # History storage unavailable - continue with export
 
     return Response(
         content=data,
         media_type="application/dxf",
         headers={
             "Content-Disposition": "attachment; filename=biarc.dxf",
-            "X-Export-Id": entry["id"]
+            "X-Export-Id": export_id
         }
     )
 
