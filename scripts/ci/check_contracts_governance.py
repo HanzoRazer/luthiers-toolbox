@@ -3,7 +3,7 @@
 Contracts Governance Gate (Scenario B)
 
 Enforces:
-  1) sha256 file format = single 64-hex line (lowercase preferred)
+  1) sha256 file format = single 64-hex line (lowercase required)
   2) if any contract schema/hash changes => contracts/CHANGELOG.md must change
      and must mention each changed contract stem
   3) if contracts are publicly released => *_v1.schema.json and *_v1.schema.sha256 are immutable
@@ -112,7 +112,7 @@ def check_sha256_format(repo_root: Path) -> List[Violation]:
     return v
 
 
-def check_changelog_required(repo_root: Path, changed: List[str]) -> List[Violation]:
+def check_changelog_required(repo_root: Path, changed: List[str], base_ref: str) -> List[Violation]:
     v: List[Violation] = []
 
     contract_changes = [p for p in changed if is_contract_schema(p) or is_contract_sha(p)]
@@ -128,26 +128,16 @@ def check_changelog_required(repo_root: Path, changed: List[str]) -> List[Violat
         )
         return v
 
-    # Ensure changelog mentions each changed contract stem somewhere in the diff.
-    changelog_path = repo_root / "contracts" / "CHANGELOG.md"
-    if not changelog_path.exists():
-        v.append(
-            Violation(
-                "CHANGELOG_MISSING",
-                "contracts/CHANGELOG.md does not exist.",
-            )
-        )
-        return v
-
-    changelog_text = changelog_path.read_text(encoding="utf-8", errors="replace")
-
+    # Require stems to appear in the diff for this PR (not anywhere in file history)
+    diff = run_git(["diff", f"{base_ref}...HEAD", "--", "contracts/CHANGELOG.md"], cwd=repo_root)
     stems = sorted({contract_stem(p) for p in contract_changes})
-    missing = [s for s in stems if s not in changelog_text]
+    missing = [s for s in stems if s not in diff]
+
     if missing:
         v.append(
             Violation(
                 "CHANGELOG_MISSING_MENTIONS",
-                "contracts/CHANGELOG.md must mention each changed contract: "
+                "contracts/CHANGELOG.md diff must mention each changed contract: "
                 + ", ".join(missing),
             )
         )
@@ -195,7 +185,7 @@ def main() -> int:
     violations: List[Violation] = []
     try:
         violations.extend(check_sha256_format(repo_root))
-        violations.extend(check_changelog_required(repo_root, changed))
+        violations.extend(check_changelog_required(repo_root, changed, args.base_ref))
         violations.extend(check_v1_immutability(repo_root, changed))
     except Exception as e:
         print(f"[contracts-gov] ERROR: {e}", file=sys.stderr)
