@@ -33,6 +33,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install deps (prefer requirements.lock)
         shell: bash
         run: |
