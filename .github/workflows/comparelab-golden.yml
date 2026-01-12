@@ -37,6 +37,11 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
