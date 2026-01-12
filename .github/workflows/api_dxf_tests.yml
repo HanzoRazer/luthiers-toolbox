@@ -208,7 +208,7 @@ jobs:
       
       - name: Upload DXF artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dxf-test-files
           path: |
@@ -272,6 +272,8 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Build and start services
+        env:
+          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
         run: |
           docker compose up -d --build api
           sleep 10  # Wait for server
