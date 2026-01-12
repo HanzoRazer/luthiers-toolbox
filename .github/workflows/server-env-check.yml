@@ -27,6 +27,8 @@ jobs:
           cat .env
 
       - name: Start server (Docker Compose)
+        env:
+          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
         run: |
           docker compose up -d --build api
           docker compose ps

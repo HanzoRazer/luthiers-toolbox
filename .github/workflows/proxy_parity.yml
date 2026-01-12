@@ -33,6 +33,8 @@ jobs:
           file: docker/api/Dockerfile
           load: true
           tags: toolbox/api:ci
+          build-args: |
+            SG_SPEC_TOKEN=${{ secrets.SG_SPEC_TOKEN }}
 
       - name: Build Client
         uses: docker/build-push-action@v6
