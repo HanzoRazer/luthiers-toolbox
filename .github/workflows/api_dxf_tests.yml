@@ -1,325 +1,61 @@
 name: API DXF Export Tests
 
+# =============================================================================
+# WORKFLOW DISABLED: Legacy DXF Export Tests
+# =============================================================================
+#
+# This workflow tests legacy DXF export endpoints from the ./server directory
+# that have not been migrated to the main API (services/api).
+#
+# Legacy endpoints tested (NOT in current API):
+#   - /exports/dxf/health
+#   - /exports/polyline_dxf
+#   - /exports/biarc_dxf
+#   - /exports/history
+#
+# Current API DXF endpoints (different functionality):
+#   - /api/dxf/* (DXF Planning)
+#   - /api/cad/* (CAD, DXF)
+#   - /api/dxf/preflight/* (DXF Preflight)
+#
+# To re-enable: migrate server/dxf_exports_router.py to services/api
+# =============================================================================
+
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'server/dxf_*.py'
-      - 'server/curvemath_router_biarc.py'
-      - 'server/tests/test_curvemath_dxf.py'
-      - '.github/workflows/api_dxf_tests.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'server/dxf_*.py'
-      - 'server/curvemath_router_biarc.py'
-      - 'server/tests/test_curvemath_dxf.py'
-  workflow_dispatch:  # Allow manual trigger
+  # Disabled: path triggers reference legacy ./server directory
+  # push:
+  #   branches: [main, develop]
+  #   paths:
+  #     - 'server/dxf_*.py'
+  #     - 'server/curvemath_router_biarc.py'
+  #     - 'server/tests/test_curvemath_dxf.py'
+  #     - '.github/workflows/api_dxf_tests.yml'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'server/dxf_*.py'
+  #     - 'server/curvemath_router_biarc.py'
+  #     - 'server/tests/test_curvemath_dxf.py'
+  workflow_dispatch:  # Manual trigger only - for testing after migration
 
 jobs:
-  dxf-smoke-tests:
-    name: DXF Export Smoke Tests
-    runs-on: ubuntu-latest
-    env:
-      API_BASE: $API_BASE
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-
-      - name: Configure git for private repos
-        run: |
-          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
-      - name: Install server dependencies
-        working-directory: ./server
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ezdxf  # Optional but preferred for DXF export
-      
-      - name: Start FastAPI server (background)
-        working-directory: ./server
-        run: |
-          uvicorn app:app --host 0.0.0.0 --port 8000 &
-          echo $! > server.pid
-          sleep 5  # Wait for server startup
-      
-      - name: Test server health
-        run: |
-          curl -f $API_BASE/health || exit 1
-          echo "✅ Server health check passed"
-      
-      - name: Test DXF health endpoint
-        run: |
-          curl -f $API_BASE/exports/dxf/health || exit 1
-          echo "✅ DXF health check passed"
-      
-      - name: Test polyline DXF export
-        run: |
-          curl -X POST $API_BASE/exports/polyline_dxf \
-            -H "Content-Type: application/json" \
-            -d '{
-              "polyline": {
-                "points": [[0,0], [100,0], [100,50]]
-              },
-              "layer": "TEST"
-            }' \
-            --output test_polyline.dxf \
-            --dump-header polyline_headers.txt \
-            --fail \
-            --silent \
-            --show-error
-          
-          # Verify DXF file was created and contains ENTITIES
-          if [ ! -f test_polyline.dxf ]; then
-            echo "❌ DXF file not created"
-            exit 1
-          fi
-          
-          if ! grep -q "ENTITIES" test_polyline.dxf; then
-            echo "❌ DXF file missing ENTITIES section"
-            exit 1
-          fi
-          
-          # Verify export history ID in response header
-          if grep -q "X-Export-Id:" polyline_headers.txt; then
-            echo "✅ Export history ID present in response"
-          else
-            echo "⚠ Warning: No export history ID (Patch A may not be integrated)"
-          fi
-          
-          # Verify DXF comment stamp (999 group code)
-          if grep -E "999|POLYLINE|ToolBox" test_polyline.dxf; then
-            echo "✅ DXF comment stamp verified"
-            echo "Comment content:"
-            head -30 test_polyline.dxf | grep -A 1 "999" || true
-          else
-            echo "⚠ Warning: No DXF comment stamp found"
-          fi
-          
-          echo "✅ Polyline DXF export passed"
-          ls -lh test_polyline.dxf
-      
-      - name: Test bi-arc DXF export
-        run: |
-          curl -X POST $API_BASE/exports/biarc_dxf \
-            -H "Content-Type: application/json" \
-            -d '{
-              "p0": [0, 0],
-              "t0": [1, 0],
-              "p1": [100, 50],
-              "t1": [0, 1],
-              "layer": "ARC"
-            }' \
-            --output test_biarc.dxf \
-            --fail \
-            --silent \
-            --show-error
-          
-          # Verify DXF file
-          if [ ! -f test_biarc.dxf ]; then
-            echo "❌ Bi-arc DXF file not created"
-            exit 1
-          fi
-          
-          if ! grep -q "ENTITIES" test_biarc.dxf; then
-            echo "❌ Bi-arc DXF file missing ENTITIES section"
-            exit 1
-          fi
-          
-          echo "✅ Bi-arc DXF export passed"
-          ls -lh test_biarc.dxf
-      
-      - name: Test DXF format validity (header/footer)
-        run: |
-          # Check polyline DXF has proper R12 format
-          if ! grep -q "SECTION" test_polyline.dxf; then
-            echo "❌ Missing SECTION in polyline DXF"
-            exit 1
-          fi
-          
-          if ! grep -q "EOF" test_polyline.dxf; then
-            echo "❌ Missing EOF in polyline DXF"
-            exit 1
-          fi
-          
-          # Check bi-arc DXF
-          if ! grep -q "SECTION" test_biarc.dxf; then
-            echo "❌ Missing SECTION in bi-arc DXF"
-            exit 1
-          fi
-          
-          if ! grep -q "EOF" test_biarc.dxf; then
-            echo "❌ Missing EOF in bi-arc DXF"
-            exit 1
-          fi
-          
-          echo "✅ DXF format validation passed"
-      
-      - name: Test error handling (invalid data)
-        run: |
-          # Should return 422 for validation error
-          STATUS=$(curl -X POST $API_BASE/exports/polyline_dxf \
-            -H "Content-Type: application/json" \
-            -d '{"polyline": {"points": "invalid"}, "layer": "BAD"}' \
-            -o /dev/null \
-            -w '%{http_code}' \
-            --silent)
-          
-          if [ "$STATUS" != "422" ]; then
-            echo "❌ Expected 422 for invalid data, got $STATUS"
-            exit 1
-          fi
-          
-          echo "✅ Error handling test passed"
-      
-      - name: Test export history (Patch A)
-        run: |
-          # Test history list endpoint
-          curl -f $API_BASE/exports/history?limit=5 \
-            -H "Accept: application/json" \
-            -o history.json \
-            --silent \
-            --show-error || {
-            echo "⚠ History endpoint not available (Patch A not integrated)"
-            exit 0
-          }
-          
-          echo "✅ Export history available"
-          echo "Recent exports:"
-          cat history.json | jq '.items | length'
-          cat history.json | jq '.items[] | {id: .id, kind: .kind, created_utc: .created_utc}' || true
-          
-          # Try to retrieve first export
-          FIRST_ID=$(cat history.json | jq -r '.items[0].id // empty')
-          if [ ! -z "$FIRST_ID" ]; then
-            echo "Testing retrieval of export $FIRST_ID"
-            curl -f "$API_BASE/exports/history/$FIRST_ID" \
-              -H "Accept: application/json" || true
-          fi
-      
-      - name: Upload DXF artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dxf-test-files
-          path: |
-            test_polyline.dxf
-            test_biarc.dxf
-          retention-days: 7
-      
-      - name: Stop server
-        if: always()
-        run: |
-          if [ -f server.pid ]; then
-            kill $(cat server.pid) || true
-          fi
-
-  dxf-pytest:
-    name: Pytest DXF Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Configure git for private repos
-        run: |
-          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
-      - name: Install dependencies
-        working-directory: ./server
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
-          pip install ezdxf  # Optional DXF library
-      
-      - name: Run DXF export tests
-        working-directory: ./server
-        run: |
-          pytest tests/test_curvemath_dxf.py -v --cov=. --cov-report=term
-      
-      - name: Check test coverage
-        working-directory: ./server
-        run: |
-          pytest tests/test_curvemath_dxf.py --cov=dxf_exports_router --cov=dxf_helpers --cov=curvemath_router_biarc --cov-report=term --cov-fail-under=80
-
-  dxf-integration:
-    name: DXF Integration Test
-    runs-on: ubuntu-latest
-    needs: [dxf-smoke-tests, dxf-pytest]
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build and start services
-        env:
-          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
-        run: |
-          docker compose up -d --build api
-          sleep 10  # Wait for server
-      
-      - name: Test DXF exports through Docker
-        run: |
-          # Polyline export
-          docker compose exec -T api curl -X POST $API_BASE/exports/polyline_dxf \
-            -H "Content-Type: application/json" \
-            -d '{"polyline": {"points": [[0,0], [200,0], [200,100]]}, "layer": "DOCKER_TEST"}' \
-            --output /tmp/docker_poly.dxf \
-            --fail
-          
-          # Bi-arc export
-          docker compose exec -T api curl -X POST $API_BASE/exports/biarc_dxf \
-            -H "Content-Type: application/json" \
-            -d '{"p0": [0,0], "t0": [1,0], "p1": [150,75], "t1": [0,1], "layer": "DOCKER_ARC"}' \
-            --output /tmp/docker_biarc.dxf \
-            --fail
-          
-          echo "✅ Docker integration tests passed"
-      
-      - name: Cleanup
-        if: always()
-        run: docker compose down
-
   dxf-summary:
     name: DXF Tests Summary
     runs-on: ubuntu-latest
-    needs: [dxf-smoke-tests, dxf-pytest, dxf-integration]
-    if: always()
-    
+
     steps:
-      - name: Check test results
+      - name: Report disabled status
         run: |
-          echo "## DXF Export Tests Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## DXF Export Tests - DISABLED" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ All DXF export tests passed!" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow is disabled pending migration of legacy DXF endpoints." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Test Coverage:" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Smoke tests (curl-based)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Unit tests (pytest)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Integration tests (Docker)" >> $GITHUB_STEP_SUMMARY
+          echo "### Legacy endpoints (in ./server, NOT in current API):" >> $GITHUB_STEP_SUMMARY
+          echo "- /exports/polyline_dxf" >> $GITHUB_STEP_SUMMARY
+          echo "- /exports/biarc_dxf" >> $GITHUB_STEP_SUMMARY
+          echo "- /exports/dxf/health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Validated:" >> $GITHUB_STEP_SUMMARY
-          echo "- Polyline → DXF export" >> $GITHUB_STEP_SUMMARY
-          echo "- Bi-arc → DXF export" >> $GITHUB_STEP_SUMMARY
-          echo "- DXF R12 format compliance" >> $GITHUB_STEP_SUMMARY
-          echo "- Error handling (422 validation)" >> $GITHUB_STEP_SUMMARY
+          echo "### To re-enable:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Migrate server/dxf_exports_router.py to services/api/app/routers/" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update services/api/app/main.py to include the router" >> $GITHUB_STEP_SUMMARY
+          echo "3. Restore the test jobs in this workflow" >> $GITHUB_STEP_SUMMARY
