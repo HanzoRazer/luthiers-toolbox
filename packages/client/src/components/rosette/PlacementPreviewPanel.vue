@@ -128,6 +128,17 @@
         <div class="svgBox" v-html="svg"></div>
       </div>
     </div>
+
+    <!-- Preset Save Modal -->
+    <PresetSaveModal
+      :open="showSaveModal"
+      :preset-name="selectedUserPreset?.name ?? ''"
+      :suggested-name="defaultPresetName()"
+      :is-dirty="isDirty"
+      @close="showSaveModal = false"
+      @overwrite="handleOverwrite"
+      @save-new="handleSaveNew"
+    />
   </div>
 </template>
 
@@ -135,6 +146,8 @@
 import { computed, ref, watch } from "vue";
 import { previewPlacementSvg } from "@/sdk/endpoints/artPlacement";
 import { useRosetteStore } from "@/stores/rosetteStore";
+import { useToastStore } from "@/stores/toastStore";
+import PresetSaveModal from "./PresetSaveModal.vue";
 
 /* -------------------------
    Types
@@ -156,6 +169,9 @@ const PRESETS_KEY = "artstudio.placementPresets.v1";
    State
 -------------------------- */
 const store = useRosetteStore();
+const toast = useToastStore();
+
+const showSaveModal = ref(false);
 
 const host = ref<any>({
   kind: "rect",
@@ -258,28 +274,20 @@ function applySelectedPreset() {
 }
 
 function savePreset() {
-  const name = prompt("Preset name?");
-  if (!name) return;
-
-  const preset: PlacementPreset = {
-    id: crypto.randomUUID(),
-    name,
-    host: structuredClone(host.value),
-    placement: structuredClone(placement.value),
-    polygonText: polygonText.value,
-  };
-
-  userPresets.value.push(preset);
-  localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
-  selectedPresetId.value = preset.id;
+  // Use the modal for saving new presets
+  showSaveModal.value = true;
 }
 
 function deletePreset() {
+  const presetName = selectedUserPreset.value?.name ?? "preset";
+  if (!confirm(`Delete preset "${presetName}"?`)) return;
+
   userPresets.value = userPresets.value.filter(
     (p) => p.id !== selectedPresetId.value
   );
   localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
   selectedPresetId.value = "";
+  toast.info(`Preset "${presetName}" deleted`);
 }
 
 function defaultPresetName(): string {
@@ -291,76 +299,41 @@ function defaultPresetName(): string {
 }
 
 function savePresetFromCurrent() {
-  // If a user preset is selected, ★ can update it (or branch)
-  if (selectedUserPreset.value) {
-    // If no changes vs preset, update silently (fast path)
-    if (!isDirty.value) {
-      const updated = {
-        ...selectedUserPreset.value,
-        host: structuredClone(host.value),
-        placement: structuredClone(placement.value),
-        polygonText: polygonText.value,
-      };
-      userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
-      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
-      selectedPresetId.value = updated.id;
-      return;
-    }
-
-    // Dirty: prevent accidental overwrite
-    const msg =
-      `Preset "${selectedUserPreset.value.name}" has unsaved changes (●).\n\n` +
-      `Type one of these:\n` +
-      `  overwrite  — replace this preset\n` +
-      `  new        — save as a new preset\n` +
-      `  cancel     — do nothing`;
-
-    const choiceRaw = prompt(msg, "new");
-    const choice = (choiceRaw ?? "").trim().toLowerCase();
-
-    if (!choice || choice === "cancel") return;
-
-    if (choice === "overwrite") {
-      const updated = {
-        ...selectedUserPreset.value,
-        host: structuredClone(host.value),
-        placement: structuredClone(placement.value),
-        polygonText: polygonText.value,
-      };
-      userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
-      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
-      selectedPresetId.value = updated.id;
-      return;
-    }
-
-    if (choice === "new") {
-      const suggested = `${selectedUserPreset.value.name} (variant)`;
-      const name = prompt("New preset name?", suggested);
-      if (!name) return;
-
-      const preset: PlacementPreset = {
-        id: crypto.randomUUID(),
-        name,
-        host: structuredClone(host.value),
-        placement: structuredClone(placement.value),
-        polygonText: polygonText.value,
-      };
-
-      userPresets.value.push(preset);
-      localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
-      selectedPresetId.value = preset.id;
-      return;
-    }
-
-    // Unknown input: treat as cancel (safe)
+  // If a user preset is selected and not dirty, update silently (fast path)
+  if (selectedUserPreset.value && !isDirty.value) {
+    const updated = {
+      ...selectedUserPreset.value,
+      host: structuredClone(host.value),
+      placement: structuredClone(placement.value),
+      polygonText: polygonText.value,
+    };
+    userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+    selectedPresetId.value = updated.id;
+    toast.success(`Preset "${updated.name}" updated`);
     return;
   }
 
-  // No selected user preset => create new preset (existing behavior)
-  const suggested = defaultPresetName();
-  const name = prompt("Preset name?", suggested);
-  if (!name) return;
+  // Otherwise open the modal (dirty preset or new preset)
+  showSaveModal.value = true;
+}
 
+function handleOverwrite() {
+  if (!selectedUserPreset.value) return;
+
+  const updated = {
+    ...selectedUserPreset.value,
+    host: structuredClone(host.value),
+    placement: structuredClone(placement.value),
+    polygonText: polygonText.value,
+  };
+  userPresets.value = userPresets.value.map((p) => (p.id === updated.id ? updated : p));
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
+  selectedPresetId.value = updated.id;
+  toast.success(`Preset "${updated.name}" overwritten`);
+}
+
+function handleSaveNew(name: string) {
   const preset: PlacementPreset = {
     id: crypto.randomUUID(),
     name,
@@ -372,6 +345,7 @@ function savePresetFromCurrent() {
   userPresets.value.push(preset);
   localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
   selectedPresetId.value = preset.id;
+  toast.success(`Preset "${name}" saved`);
 }
 
 /* -------------------------
