@@ -10,8 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `smart_guitar_toolbox_telemetry_v1` - Smart Guitar telemetry contract for cross-repo validation
 - `toolbox_smart_guitar_safe_export_v1` - Safe export format for Smart Guitar data
 - `viewer_pack_v1` - Viewer pack schema for instrument geometry visualization
-- `cam_policy` - CAM policy schema (non-versioned, internal)
-- `qa_core` - QA core schema (non-versioned, internal)
+- `cam_policy` - CAM policy schema (non-versioned, internal) + SHA256 hash
+- `qa_core` - QA core schema (non-versioned, internal) + SHA256 hash
 - `CONTRACTS_VERSION.json` - Sentinel file for governance (Scenario B)
 - `CHANGELOG.md` - This file
 
