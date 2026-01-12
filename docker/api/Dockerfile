@@ -2,16 +2,23 @@
 ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim AS base
 
-# system deps
+# system deps (git needed for private repo install)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates build-essential && \
+      curl ca-certificates build-essential git && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Build arg for private repo access (sg-spec)
+ARG SG_SPEC_TOKEN=""
+
 # leverage docker layer caching
 COPY services/api/requirements.txt ./services/api/requirements.txt
-RUN pip install --no-cache-dir -r services/api/requirements.txt
+RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
+      git config --global url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf "https://github.com/"; \
+    fi && \
+    pip install --no-cache-dir -r services/api/requirements.txt && \
+    git config --global --unset-all url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf || true
 
 # app
 COPY services/api /app/services/api
