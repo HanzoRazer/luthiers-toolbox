@@ -65,6 +65,8 @@ jobs:
     name: DXF Integration Test (Docker)
     runs-on: ubuntu-latest
     needs: [dxf-pytest]
+    env:
+      API_BASE: http://127.0.0.1:8000
 
     steps:
       - name: Checkout repository
@@ -83,7 +85,7 @@ jobs:
       - name: Wait for API health
         run: |
           for i in {1..30}; do
-            if curl -fsS http://localhost:8000/health > /dev/null 2>&1; then
+            if curl -fsS $API_BASE/health > /dev/null 2>&1; then
               echo "API is healthy"
               break
             fi
@@ -93,12 +95,12 @@ jobs:
 
       - name: Test DXF health endpoint
         run: |
-          curl -fsS http://localhost:8000/exports/dxf/health | jq .
+          curl -fsS $API_BASE/exports/dxf/health | jq .
           echo "DXF health check passed"
 
       - name: Test polyline DXF export
         run: |
-          curl -X POST http://localhost:8000/exports/polyline_dxf \
+          curl -X POST $API_BASE/exports/polyline_dxf \
             -H "Content-Type: application/json" \
             -d '{"polyline": {"points": [[0,0], [100,0], [100,50]]}, "layer": "TEST"}' \
             --output test_polyline.dxf \
@@ -118,7 +120,7 @@ jobs:
 
       - name: Test bi-arc DXF export
         run: |
-          curl -X POST http://localhost:8000/exports/biarc_dxf \
+          curl -X POST $API_BASE/exports/biarc_dxf \
             -H "Content-Type: application/json" \
             -d '{"p0": [0, 0], "t0": [1, 0], "p1": [100, 50], "t1": [0, 1], "layer": "ARC"}' \
             --output test_biarc.dxf \
