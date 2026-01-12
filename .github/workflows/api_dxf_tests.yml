@@ -75,6 +75,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          SERVER_PORT=8000
+          CLIENT_PORT=8080
+          CORS_ORIGINS=http://localhost:8080
+          COMPOSE_PROJECT_NAME=toolbox-dxf-test
+          ART_STUDIO_DB_PATH=/tmp/art_studio.db
+          EOF
+
       - name: Build and start services
         env:
           SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
