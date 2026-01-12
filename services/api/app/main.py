@@ -178,6 +178,11 @@ from .routers.pipeline_presets_router import router as pipeline_presets_router
 from .routers.dxf_plan_router import router as dxf_plan_router
 
 # =============================================================================
+# LEGACY DXF EXPORTS (1 router) - Migrated from ./server
+# =============================================================================
+from .routers.legacy_dxf_exports_router import router as legacy_dxf_exports_router
+
+# =============================================================================
 # BLUEPRINT IMPORT (2 routers)
 # Note: blueprint_router now gracefully degrades if analyzer deps missing
 # Optional: AI deps may not be installed in minimal deployments
@@ -725,6 +730,9 @@ app.include_router(
     pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"]
 )
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
+
+# Legacy DXF Exports (1) - Migrated from ./server, routes at /exports/*
+app.include_router(legacy_dxf_exports_router, prefix="", tags=["DXF Exports", "Legacy"])
 
 # Blueprint (2) - blueprint_router is optional (AI deps may be missing)
 if blueprint_router:
