@@ -128,16 +128,28 @@ def check_changelog_required(repo_root: Path, changed: List[str], base_ref: str)
         )
         return v
 
-    # Require stems to appear in the diff for this PR (not anywhere in file history)
-    diff = run_git(["diff", f"{base_ref}...HEAD", "--", "contracts/CHANGELOG.md"], cwd=repo_root)
+    # Require stems to appear in the *added lines* of the changelog diff for this PR.
+    # Deleted mentions must NOT satisfy the "document your change" rule.
+    raw_diff = run_git(["diff", f"{base_ref}...HEAD", "--", "contracts/CHANGELOG.md"], cwd=repo_root)
+    added_only = "\n".join(
+        ln[1:] for ln in raw_diff.splitlines()
+        if ln.startswith("+") and not ln.startswith("+++ ")
+    )
+
     stems = sorted({contract_stem(p) for p in contract_changes})
-    missing = [s for s in stems if s not in diff]
+
+    def stem_mentioned(text: str, stem: str) -> bool:
+        # Token-safe match: avoid partial matches like cam_policy in cam_policy_extended
+        pat = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(stem)}(?![A-Za-z0-9_])")
+        return pat.search(text) is not None
+
+    missing = [s for s in stems if not stem_mentioned(added_only, s)]
 
     if missing:
         v.append(
             Violation(
                 "CHANGELOG_MISSING_MENTIONS",
-                "contracts/CHANGELOG.md diff must mention each changed contract: "
+                "contracts/CHANGELOG.md added lines must mention each changed contract: "
                 + ", ".join(missing),
             )
         )
