@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `viewer_pack_v1` - Viewer pack schema for instrument geometry visualization
 - `cam_policy` - CAM policy schema (non-versioned, internal) + SHA256 hash
 - `qa_core` - QA core schema (non-versioned, internal) + SHA256 hash
+- `telemetry_cost_mapping_policy_v1` - Telemetry-to-cost dimension mapping policy (internal, ToolBox-only)
 - `CONTRACTS_VERSION.json` - Sentinel file for governance (Scenario B)
 - `CHANGELOG.md` - This file
 
