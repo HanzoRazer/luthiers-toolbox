@@ -1,0 +1,23 @@
+{
+  "schema_id": "telemetry_cost_mapping_policy",
+  "schema_version": "v1",
+  "description": "Allowed mappings from Smart Guitar telemetry metrics to internal manufacturing cost dimensions.",
+  "allowed_mappings": {
+    "hardware_performance.cpu_hours": "compute_cost_hours",
+    "hardware_performance.amp_draw_avg": "energy_amp_hours",
+    "hardware_performance.temp_c_max": "thermal_stress_c",
+    "lifecycle.power_cycles": "wear_cycles"
+  },
+  "forbidden_metric_key_substrings": [
+    "player",
+    "lesson",
+    "practice",
+    "accuracy",
+    "timing",
+    "midi",
+    "audio",
+    "recording",
+    "coach",
+    "prompt"
+  ]
+}

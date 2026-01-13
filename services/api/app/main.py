@@ -1138,6 +1138,17 @@ except ImportError as e:
     _log.warning("Optional router unavailable: sg_telemetry_router (%s)", e)
 
 # =============================================================================
+# WAVE 24: COST ATTRIBUTION
+# Maps validated telemetry to internal manufacturing cost dimensions.
+# Read-only endpoint: GET /api/cost/summary
+# =============================================================================
+try:
+    from .cost_attribution import cost_router
+    app.include_router(cost_router, tags=["Cost Attribution"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: cost_router (%s)", e)
+
+# =============================================================================
 # COMPAT LEGACY ROUTES (CI + legacy callers)
 # Canonical remains /api/*; compat mounts are hidden from OpenAPI.
 # Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.

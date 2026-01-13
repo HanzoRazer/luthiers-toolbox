@@ -35,7 +35,16 @@ from .store import (
     TelemetryStore,
 )
 
+# Cost attribution integration
+from app.cost_attribution.mapper import telemetry_to_cost_facts
+from app.cost_attribution.store import append_cost_facts
+
 _log = logging.getLogger(__name__)
+
+def _repo_root() -> Path:
+    """Get repository root for cost attribution."""
+    from pathlib import Path
+    return Path(__file__).resolve().parents[4]
 
 router = APIRouter()
 
@@ -178,6 +187,28 @@ async def ingest_telemetry(payload: Dict[str, Any]) -> TelemetryIngestResponse:
 
     # Payload is valid - store it
     stored = store_telemetry(result.payload, warnings=result.warnings)
+
+    # Map to internal cost facts (if applicable)
+    try:
+        payload_dict = {
+            "schema_id": result.payload.schema_id,
+            "schema_version": result.payload.schema_version,
+            "emitted_at_utc": result.payload.emitted_at_utc.isoformat(),
+            "instrument_id": result.payload.instrument_id,
+            "manufacturing_batch_id": result.payload.manufacturing_batch_id,
+            "telemetry_category": result.payload.telemetry_category.value,
+            "metrics": {k: {"value": v.value, "unit": v.unit.value, "aggregation": v.aggregation.value} for k, v in result.payload.metrics.items()},
+            "design_revision_id": result.payload.design_revision_id,
+            "hardware_sku": result.payload.hardware_sku,
+            "component_lot_id": result.payload.component_lot_id,
+        }
+        cost_facts, cost_warnings = telemetry_to_cost_facts(_repo_root(), payload_dict)
+        if cost_facts:
+            append_cost_facts(_repo_root(), cost_facts)
+            _log.info("Cost attribution: mapped %d facts from telemetry %s", len(cost_facts), stored.telemetry_id)
+        result.warnings.extend(cost_warnings)
+    except Exception as e:
+        _log.warning("Cost attribution failed (non-fatal): %s", e)
 
     _log.info(
         "Telemetry accepted: id=%s instrument=%s category=%s metrics=%d",
