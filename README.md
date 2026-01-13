@@ -566,6 +566,13 @@ Organized by construction workflow:
 - [ART_STUDIO_V16_0_INTEGRATION_COMPLETE.md](./ART_STUDIO_V16_0_INTEGRATION_COMPLETE.md) - v16.0 features
 - [ART_STUDIO_V15_5_INTEGRATION.md](./ART_STUDIO_V15_5_INTEGRATION.md) - v15.5 post-processor
 
+### **Governance & Cross-Repo Contracts**
+- [GOVERNANCE_EXECUTIVE_SUMMARY.md](./docs/GOVERNANCE_EXECUTIVE_SUMMARY.md) - Governance architecture between luthiers-toolbox and sg-spec
+- [TELEMETRY_SYSTEM_AUDIT.md](./docs/TELEMETRY_SYSTEM_AUDIT.md) - Smart Guitar → Toolbox telemetry ingestion audit
+- [SAFE_EXPORT_SYSTEM_AUDIT.md](./docs/SAFE_EXPORT_SYSTEM_AUDIT.md) - Toolbox → Smart Guitar safe export audit
+- [scripts/governance/README.md](./scripts/governance/README.md) - Governance scripts and tooling
+- [ADR-001-fields-and-policy-ownership.md](./docs/ADR-001-fields-and-policy-ownership.md) - Field ownership architecture decision
+
 ### **Testing & CI/CD**
 - [.github/workflows/cam_essentials.yml](./.github/workflows/cam_essentials.yml) - CAM Essentials CI 🆕
 - [.github/workflows/adaptive_pocket.yml](./.github/workflows/adaptive_pocket.yml) - Adaptive pocketing CI
