@@ -1,6 +1,6 @@
 # Governance Executive Summary: luthiers-toolbox ↔ sg-spec
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Created**: 2026-01-12
 > **Authors**: Development Team
 > **Status**: Active
@@ -535,7 +535,59 @@ The governance script validates parent linkage:
 | `validate_run_artifact_contract.py` | `scripts/governance/` | Validates artifact metadata |
 | `check_routing_truth.py` | `scripts/governance/` | Validates endpoint documentation |
 
-### 6.2 Contract Fixtures
+### 6.2 CI Gate Scripts (`scripts/ci/`)
+
+| Script | Purpose |
+|--------|---------|
+| `check_art_studio_scope.py` | Art Studio boundary enforcement |
+| `check_cbsp21_gate.py` | CBSP21 gate checks |
+| `check_cbsp21_patch_input.py` | CBSP21 patch validation |
+| `check_contracts_governance.py` | **Contracts governance gate (Scenario B)** |
+| `check_workflow_api_base.py` | Workflow API base URL checks |
+| `check_workflow_api_paths.py` | Workflow API path validation |
+
+### 6.3 Contracts Governance Gate Entrypoints
+
+The `check_contracts_governance.py` script enforces three invariants:
+
+```python
+# Main gate checks (3 functions):
+check_sha256_format(repo_root)                          # SHA256 = 64 lowercase hex
+check_changelog_required(repo_root, changed, base_ref)  # Require CHANGELOG update
+check_v1_immutability(repo_root, changed)               # Block v1 schema edits if public_released=true
+```
+
+**CLI Usage:**
+```bash
+python scripts/ci/check_contracts_governance.py --repo-root . --base-ref origin/main
+```
+
+**Exit codes:** `0` pass, `1` violations, `2` execution error
+
+### 6.4 Governance Gate Workflow Locations
+
+Both repositories run the contracts governance gate:
+
+| Repo | Workflow | Job | Gate Name |
+|------|----------|-----|-----------|
+| `luthiers-toolbox` | `.github/workflows/core_ci.yml` | `api-tests` | `CONTRACTS_GOVERNANCE_SCENARIO_B_GATE` |
+| `sg-spec` | `.github/workflows/ci.yml` | `contracts-governance` | `CONTRACTS_GOVERNANCE_SCENARIO_B_GATE` |
+
+**luthiers-toolbox** (`core_ci.yml` lines 35-37):
+```yaml
+- name: CONTRACTS_GOVERNANCE_SCENARIO_B_GATE
+  run: |
+    python scripts/ci/check_contracts_governance.py --base-ref origin/main
+```
+
+**sg-spec** (`ci.yml` lines 19-21):
+```yaml
+- name: CONTRACTS_GOVERNANCE_SCENARIO_B_GATE
+  run: |
+    python scripts/ci/check_contracts_governance.py --repo-root . --base-ref origin/main
+```
+
+### 6.5 Contract Fixtures
 
 Test fixtures ensure schema validation catches violations:
 
@@ -546,7 +598,7 @@ contracts/fixtures/
 └── telemetry_invalid_metric_key_smuggle.json    # Should FAIL (invalid keys)
 ```
 
-### 6.3 Endpoint Truth File
+### 6.6 Endpoint Truth File
 
 ```
 services/api/app/data/endpoint_truth.json
@@ -671,6 +723,7 @@ LEGACY_USAGE_BUDGET=0 python scripts/governance/check_legacy_endpoint_usage.py
 |------|---------|--------|---------|
 | 2026-01-12 | 1.0.0 | Development Team | Initial creation |
 | 2026-01-12 | 1.1.0 | Development Team | Added detailed schema field tables (sections 3.4, 3.5) |
+| 2026-01-13 | 1.2.0 | Development Team | Added CI gate scripts, governance entrypoints, workflow locations (sections 6.2-6.4) |
 
 ---
 
