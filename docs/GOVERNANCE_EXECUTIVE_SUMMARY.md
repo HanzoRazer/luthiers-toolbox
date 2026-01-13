@@ -1,6 +1,6 @@
 # Governance Executive Summary: luthiers-toolbox ↔ sg-spec
 
-> **Version**: 1.2.0
+> **Version**: 1.3.0
 > **Created**: 2026-01-12
 > **Authors**: Development Team
 > **Status**: Active
@@ -648,10 +648,7 @@ From `contracts/CHANGELOG.md`:
    - `$id` with canonical URL
    - `title` with descriptive name
 
-2. Generate SHA256 hash:
-   ```bash
-   sha256sum contracts/new_contract_v1.schema.json | cut -d' ' -f1 > contracts/new_contract_v1.schema.sha256
-   ```
+2. Generate SHA256 hash (see section 8.5 for batch commands)
 
 3. Update `contracts/CHANGELOG.md` with new contract entry
 
@@ -663,7 +660,7 @@ From `contracts/CHANGELOG.md`:
 
 **Pre-Release:**
 1. Edit the schema
-2. Regenerate SHA256 hash
+2. Regenerate SHA256 hash (see section 8.5)
 3. Update CHANGELOG.md
 4. Mirror changes to sg-spec
 
@@ -690,6 +687,57 @@ CONTRACT_SESSION_ID=sess123 python scripts/governance/check_artifact_linkage_inv
 
 # Legacy endpoint check with zero budget
 LEGACY_USAGE_BUDGET=0 python scripts/governance/check_legacy_endpoint_usage.py
+```
+
+### 8.5 SHA256 Generation Commands
+
+Drop-in commands to generate/update `*.schema.sha256` files for all `contracts/*.schema.json`.
+
+**Format requirement:** Single line, 64 lowercase hex characters, no newline.
+
+#### Windows PowerShell (recommended on Windows)
+
+Run from repo root:
+```powershell
+Get-ChildItem -Path contracts -Filter "*.schema.json" | ForEach-Object {
+  $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+  $sha = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+  $out = $_.FullName -replace '\.json$', '.sha256'
+  Set-Content -Path $out -Value $sha -NoNewline -Encoding ascii
+  Write-Host "wrote $out"
+}
+```
+
+#### Bash (Linux/macOS/GitHub Actions)
+
+Run from repo root:
+```bash
+set -euo pipefail
+for f in contracts/*.schema.json; do
+  sha=$(python3 - <<'PY' "$f"
+import hashlib, sys, pathlib
+p=pathlib.Path(sys.argv[1])
+h=hashlib.sha256(p.read_bytes()).hexdigest()
+print(h)
+PY
+)
+  printf "%s" "$sha" > "${f%.json}.sha256"
+  echo "wrote ${f%.json}.sha256"
+done
+```
+
+#### Python (cross-platform)
+
+Run from repo root:
+```python
+import hashlib
+from pathlib import Path
+
+for schema in Path("contracts").glob("*.schema.json"):
+    sha = hashlib.sha256(schema.read_bytes()).hexdigest()
+    sha_file = schema.with_suffix(".sha256")
+    sha_file.write_text(sha, encoding="ascii")
+    print(f"wrote {sha_file.name}")
 ```
 
 ---
@@ -724,6 +772,7 @@ LEGACY_USAGE_BUDGET=0 python scripts/governance/check_legacy_endpoint_usage.py
 | 2026-01-12 | 1.0.0 | Development Team | Initial creation |
 | 2026-01-12 | 1.1.0 | Development Team | Added detailed schema field tables (sections 3.4, 3.5) |
 | 2026-01-13 | 1.2.0 | Development Team | Added CI gate scripts, governance entrypoints, workflow locations (sections 6.2-6.4) |
+| 2026-01-13 | 1.3.0 | Development Team | Added SHA256 generation commands for all platforms (section 8.5) |
 
 ---
 
