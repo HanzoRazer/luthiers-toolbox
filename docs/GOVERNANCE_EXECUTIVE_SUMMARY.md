@@ -1,6 +1,6 @@
 # Governance Executive Summary: luthiers-toolbox ↔ sg-spec
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Created**: 2026-01-12
 > **Authors**: Development Team
 > **Status**: Active
@@ -12,6 +12,11 @@
 1. [Purpose and Rationale](#1-purpose-and-rationale)
 2. [Repository Relationship](#2-repository-relationship)
 3. [Contract Schema Registry](#3-contract-schema-registry)
+   - 3.1 [Public Contracts](#31-public-contracts-cross-repo)
+   - 3.2 [Internal Contracts](#32-internal-contracts-luthiers-toolbox-only)
+   - 3.3 [Contract Files Structure](#33-contract-files-structure)
+   - 3.4 [Telemetry Schema Field Reference](#34-telemetry-schema-field-reference)
+   - 3.5 [Safe Export Schema Field Reference](#35-safe-export-schema-field-reference)
 4. [Governance Mechanisms](#4-governance-mechanisms)
 5. [CI/CD Gates and Workflows](#5-cicd-gates-and-workflows)
 6. [Key Code References](#6-key-code-references)
@@ -220,6 +225,190 @@ sg-spec/contracts/
 ├── cam_policy.schema.sha256
 ├── qa_core.schema.json
 └── qa_core.schema.sha256
+```
+
+### 3.4 Telemetry Schema Field Reference
+
+**Schema**: `smart_guitar_toolbox_telemetry_v1.schema.json`
+
+#### Required Fields (7)
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `schema_id` | string | `const: "smart_guitar_toolbox_telemetry"` | Fixed identifier |
+| `schema_version` | string | `const: "v1"` | Fixed version |
+| `emitted_at_utc` | string | `format: date-time` | UTC timestamp when payload was emitted |
+| `instrument_id` | string | 6-128 chars, pattern: `^[A-Za-z0-9][A-Za-z0-9._:-]{4,126}[A-Za-z0-9]$` | Smart Guitar physical unit identifier (non-player) |
+| `manufacturing_batch_id` | string | 4-128 chars, pattern: `^[A-Za-z0-9][A-Za-z0-9._:-]{2,126}[A-Za-z0-9]$` | ToolBox manufacturing batch/build identifier |
+| `telemetry_category` | string | enum: `utilization`, `hardware_performance`, `environment`, `lifecycle` | High-level category for manufacturing intelligence |
+| `metrics` | object | min 1 property, pattern keys: `^[a-z][a-z0-9_]{1,63}$` | Map of metric_name → metric data |
+
+#### Optional Fields (3)
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `design_revision_id` | string | 1-128 chars | Design revision identifier (manufacturing correlation only) |
+| `hardware_sku` | string | 1-128 chars | Hardware SKU (manufacturing correlation only) |
+| `component_lot_id` | string | 1-128 chars | Component lot identifier (manufacturing correlation only) |
+
+#### Metrics Object Structure
+
+Each metric key must match pattern `^[a-z][a-z0-9_]{1,63}$` and contains:
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| `value` | number | **Yes** | Range: ±1.0e308 |
+| `unit` | string | **Yes** | enum: `count`, `hours`, `seconds`, `milliseconds`, `ratio`, `percent`, `celsius`, `fahrenheit`, `volts`, `amps`, `ohms`, `db`, `hz`, `bytes` |
+| `aggregation` | string | **Yes** | enum: `sum`, `avg`, `max`, `min`, `bucket` |
+| `bucket_label` | string | Only if `aggregation=bucket` | 1-64 chars, human-readable bucket name |
+
+#### Blocked Fields (13) - Privacy Boundary
+
+These fields are **explicitly forbidden** at the top level to protect user privacy:
+
+| Blocked Field | Category | Reason |
+|---------------|----------|--------|
+| `player_id` | Identity | User identity |
+| `account_id` | Identity | User identity |
+| `lesson_id` | Pedagogy | Learning content |
+| `curriculum_id` | Pedagogy | Learning content |
+| `practice_session_id` | Pedagogy | Learning content |
+| `skill_level` | Performance | User performance |
+| `accuracy` | Performance | User performance |
+| `timing` | Performance | User performance |
+| `midi` | Content | User content |
+| `audio` | Content | User content |
+| `recording_url` | Content | User content |
+| `coach_feedback` | AI | AI/coaching data |
+| `prompt_trace` | AI | AI/coaching data |
+
+#### Example Valid Telemetry Payload
+
+```json
+{
+  "schema_id": "smart_guitar_toolbox_telemetry",
+  "schema_version": "v1",
+  "emitted_at_utc": "2026-01-12T23:45:00Z",
+  "instrument_id": "SG-2026-001234",
+  "manufacturing_batch_id": "BATCH-2026-Q1-042",
+  "telemetry_category": "hardware_performance",
+  "metrics": {
+    "battery_voltage": { "value": 3.72, "unit": "volts", "aggregation": "avg" },
+    "cpu_temp": { "value": 42.5, "unit": "celsius", "aggregation": "max" },
+    "uptime_hours": { "value": 156.3, "unit": "hours", "aggregation": "sum" }
+  }
+}
+```
+
+### 3.5 Safe Export Schema Field Reference
+
+**Schema**: `toolbox_smart_guitar_safe_export_v1.schema.json`
+
+#### Top-Level Required Fields (9)
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `schema_id` | string | `const: "toolbox_smart_guitar_safe_export"` | Fixed identifier |
+| `schema_version` | string | `const: "v1"` | Fixed version |
+| `created_at_utc` | string | - | UTC timestamp |
+| `export_id` | string | - | Stable id (uuid or content-derived) |
+| `producer` | object | see below | Origin system info |
+| `scope` | object | see below | Usage domain and consumers |
+| `content_policy` | object | see below | **Manufacturing boundary assertions** |
+| `files` | array | see below | File manifest |
+| `bundle_sha256` | string | - | SHA256 of manifest (before this field added) |
+
+#### `producer` Object
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| `system` | string | **Yes** | `const: "luthiers-toolbox"` |
+| `repo` | string | **Yes** | Repository URL |
+| `commit` | string | **Yes** | Git commit SHA |
+| `build_id` | string | No | CI build identifier |
+
+#### `scope` Object
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| `domain` | string | **Yes** | enum: `education`, `practice`, `coaching`, `reference` |
+| `safe_for` | string | **Yes** | `const: "smart_guitar"` |
+| `intended_consumers` | array | No | enum items: `smart_guitar_app`, `smart_guitar_coach`, `smart_guitar_firmware_tools` |
+
+#### `content_policy` Object - **THE GOVERNANCE BOUNDARY**
+
+| Field | Type | Required | Constraints | Purpose |
+|-------|------|----------|-------------|---------|
+| `no_manufacturing` | boolean | **Yes** | `const: true` | **Blocks G-code, CAM data** |
+| `no_toolpaths` | boolean | **Yes** | `const: true` | **Blocks DXF, toolpath files** |
+| `no_rmos_authority` | boolean | **Yes** | `const: true` | **Blocks run IDs, decisions** |
+| `no_secrets` | boolean | **Yes** | `const: true` | **Blocks API keys, tokens** |
+| `notes` | string | No | - | Optional explanation |
+
+> **Key Insight**: All four policy fields are `const: true` - the schema REJECTS any export that doesn't explicitly assert these boundaries.
+
+#### `index` Object (Optional)
+
+| Field | Type | Default |
+|-------|------|---------|
+| `topics_relpath` | string | `"index/topics.json"` |
+| `lessons_relpath` | string | `"index/lessons.json"` |
+| `drills_relpath` | string | `"index/drills.json"` |
+
+#### `files` Array Items
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `relpath` | string | **Yes** | Relative path inside bundle |
+| `sha256` | string | **Yes** | File content hash |
+| `bytes` | integer | **Yes** | File size |
+| `mime` | string | **Yes** | MIME type |
+| `kind` | string | **Yes** | enum: `manifest`, `topic_index`, `lesson_index`, `drill_index`, `lesson_md`, `lesson_json`, `reference_md`, `reference_json`, `audio_wav`, `audio_flac`, `image_png`, `image_jpg`, `chart_csv`, `provenance`, `unknown` |
+
+#### Governance Comparison: What CAN vs CANNOT Cross
+
+| ✅ **Allowed in Safe Export** | ❌ **Blocked by content_policy** |
+|------------------------------|----------------------------------|
+| Lesson markdown | G-code files |
+| Reference JSON | DXF toolpaths |
+| Audio samples (WAV/FLAC) | RMOS run artifacts |
+| Images (PNG/JPG) | Decision records |
+| Chart data (CSV) | API keys/tokens |
+| Topic/drill indexes | Manufacturing parameters |
+| Provenance metadata | CAM policy constraints |
+
+#### Example Valid Safe Export Manifest
+
+```json
+{
+  "schema_id": "toolbox_smart_guitar_safe_export",
+  "schema_version": "v1",
+  "created_at_utc": "2026-01-12T23:50:00Z",
+  "export_id": "export-2026-01-12-abc123",
+  "producer": {
+    "system": "luthiers-toolbox",
+    "repo": "https://github.com/HanzoRazer/luthiers-toolbox",
+    "commit": "c36c852",
+    "build_id": "ci-build-4521"
+  },
+  "scope": {
+    "domain": "education",
+    "safe_for": "smart_guitar",
+    "intended_consumers": ["smart_guitar_app", "smart_guitar_coach"]
+  },
+  "content_policy": {
+    "no_manufacturing": true,
+    "no_toolpaths": true,
+    "no_rmos_authority": true,
+    "no_secrets": true,
+    "notes": "Educational content only - fretboard theory lessons"
+  },
+  "files": [
+    { "relpath": "index/topics.json", "sha256": "a1b2c3...", "bytes": 1024, "mime": "application/json", "kind": "topic_index" },
+    { "relpath": "lessons/scales-101.md", "sha256": "f6e5d4...", "bytes": 4096, "mime": "text/markdown", "kind": "lesson_md" }
+  ],
+  "bundle_sha256": "9f8e7d6c5b4a3210..."
+}
 ```
 
 ---
@@ -481,6 +670,7 @@ LEGACY_USAGE_BUDGET=0 python scripts/governance/check_legacy_endpoint_usage.py
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-01-12 | 1.0.0 | Development Team | Initial creation |
+| 2026-01-12 | 1.1.0 | Development Team | Added detailed schema field tables (sections 3.4, 3.5) |
 
 ---
 
