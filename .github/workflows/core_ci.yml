@@ -38,6 +38,10 @@ jobs:
       - name: Governance Unit Tests (stem_mentioned)
         run: |
           python -m pytest scripts/ci/test_check_contracts_governance.py -v
+      - name: Cost Attribution Unit Tests
+        run: |
+          cd services/api
+          python -m pytest tests/test_cost_attribution_mapper_unit.py -v
       - name: Boot API
         run: |
           cd services/api
