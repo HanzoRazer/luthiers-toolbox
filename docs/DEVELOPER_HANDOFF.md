@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -19,6 +19,7 @@
 9. [Gaps & Future Work](#9-gaps--future-work)
 10. [CAM System Analysis](#10-cam-system-analysis)
 11. [Wave 18 Migration - Duplicate Paths](#11-wave-18-migration---duplicate-paths)
+12. [Path to MVP](#12-path-to-mvp)
 
 ---
 
@@ -624,6 +625,83 @@ if toolpath_router:
 - **True duplicates**: V-Carve, Helical, Roughing have separate implementations in both legacy and consolidated locations
 - **Resolution needed**: Decide whether to keep legacy paths (with deprecation warnings) or remove them entirely
 - **Client impact**: Frontend API calls in `client/src/api/` may need updating when legacy paths are removed
+
+---
+
+## 12. Path to MVP
+
+### Summary of Findings
+
+#### What Exists (Working Infrastructure)
+
+The luthiers-toolbox repository has **solid architectural foundations**:
+
+- **CAM Core**: Toolpath generation works (drilling, roughing, biarc, v-carve, adaptive pocketing) at 65-100% coverage
+- **G-code Pipeline**: Parsing, simulation, thermal analysis, and 5+ post-processor dialects (GRBL, LinuxCNC, Mach3, Fanuc, Heidenhain)
+- **Geometry Processing**: DXF/SVG import/export, parity checking, unit conversion
+- **Governance**: Cross-repo contracts enforced via CI gates with SHA256 verification
+- **Calculator Suite**: 85% production-ready across general, woodworking, instrument, and CAM categories
+- **API Structure**: FastAPI with ~50+ routers organized by domain
+
+#### What's Missing (Critical Gaps)
+
+The system lacks the **supporting infrastructure** that transforms algorithms into a usable product:
+
+| Gap | Impact |
+|-----|--------|
+| **Feed & Speed Calculator** | Users must manually enter cutting parameters - dangerous for CNC |
+| **3D Toolpath Visualization** | Only 2D backplot exists; can't verify Z-clearances or collisions |
+| **Job Persistence** | Work lost on page refresh; no save/load workflow |
+| **Tool & Material Libraries** | Hardcoded defaults; not scalable |
+| **Collision Detection** | No warning before spindle crashes into stock or table |
+
+#### Technical Debt
+
+- **Wave 18 Migration Incomplete**: Duplicate endpoints at legacy (`/api/cam/vcarve`) and consolidated (`/api/cam/toolpath/vcarve`) paths
+- **9 Router Categories Untested**: drilling, simulation, utility, relief, risk, fret_slots, monitoring lack dedicated tests
+- **Frontend Test Coverage**: Zero Vue component or E2E tests
+
+---
+
+### Definitive Path to MVP
+
+**The core CAM algorithms are done. The gap is user-facing infrastructure.**
+
+#### Phase 1: Safety & Usability (2 weeks, ~50 hours)
+
+| Priority | Task | Hours | Outcome |
+|----------|------|-------|---------|
+| 1 | Implement Feed & Speed Calculator | 8h | Safe cutting parameters |
+| 2 | Add Three.js 3D Preview | 10h | Visual verification before cutting |
+| 3 | Job Persistence Layer | 6h | Save/load workflows |
+| 4 | Basic Collision Detection | 4h | Crash prevention warnings |
+| 5 | Tool Library API | 4h | Selectable tool definitions |
+| 6 | Material Lookup API | 4h | Wood/metal properties database |
+| 7 | Job Create/List UI | 8h | User workflow forms |
+| 8 | Complete Wave 18 Migration | 6h | Remove duplicate paths |
+
+#### Phase 2: Polish & Test (1 week, ~20 hours)
+
+- Add tests for 9 untested router categories
+- Frontend component tests for CAM views
+- Documentation for calculator and CAM APIs
+
+---
+
+### The Definitive Statement
+
+**Luthiers-ToolBox is 62% of the way to MVP. The remaining 38% is not algorithmic complexity—it's user experience infrastructure.**
+
+The toolpath math works. The G-code generation works. The post-processors work. What's missing is the wrapper that lets a human safely use these systems:
+
+1. **They can't calculate safe feeds/speeds** → implement `chipload_db.py`
+2. **They can't see what they're about to cut** → add Three.js 3D preview
+3. **They can't save their work** → add job persistence
+4. **They won't know if they'll crash** → add collision detection
+
+**50 focused hours of development on these 4 systems transforms this from a collection of working algorithms into a shippable MVP.**
+
+The path is clear. The scope is bounded. The infrastructure exists to support these additions. This is not a rewrite—it's completion.
 
 ---
 
