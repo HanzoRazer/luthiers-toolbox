@@ -504,6 +504,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: art_workflow_router (%s)", e)
     art_workflow_router = None
 
+# Bundle 32.7.0: Design-First Workflow Binding
+try:
+    from .art_studio.api.design_first_workflow_routes import router as design_first_workflow_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: design_first_workflow_router (%s)", e)
+    design_first_workflow_router = None
+
 # =============================================================================
 # WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
 # Implements governance contracts for server-side feasibility, artifact persistence
@@ -1006,6 +1013,9 @@ if art_snapshots_router:
     app.include_router(art_snapshots_router, tags=["Art Studio", "Snapshots"])
 if art_workflow_router:
     app.include_router(art_workflow_router, tags=["Art Studio", "Workflow"])
+# Bundle 32.7.0: Design-First Workflow Binding
+if design_first_workflow_router:
+    app.include_router(design_first_workflow_router, tags=["Art Studio", "Design-First Workflow"])
 
 # Wave 16: Governance Code Bundle - Canonical Workflow + Run Artifacts (4)
 # Implements governance contracts:
@@ -1147,6 +1157,18 @@ try:
     app.include_router(cost_router, tags=["Cost Attribution"])
 except ImportError as e:
     _log.warning("Optional router unavailable: cost_router (%s)", e)
+
+# =============================================================================
+# AI CONTEXT ADAPTER (v1) - Read-Only Context Snapshots for AI
+# Provides redaction-first, read-only context for external AI systems.
+# Endpoints: GET /api/ai/context/envelope, /run_summary, /design_intent, etc.
+# No POST/PUT/DELETE - strictly read-only.
+# =============================================================================
+try:
+    from .ai_context.routes import router as ai_context_router
+    app.include_router(ai_context_router, tags=["AI Context"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: ai_context_router (%s)", e)
 
 # =============================================================================
 # COMPAT LEGACY ROUTES (CI + legacy callers)
