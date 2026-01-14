@@ -1,6 +1,6 @@
 # Governance Executive Summary: luthiers-toolbox ↔ sg-spec
 
-> **Version**: 1.3.0
+> **Version**: 1.4.0
 > **Created**: 2026-01-12
 > **Authors**: Development Team
 > **Status**: Active
@@ -17,6 +17,7 @@
    - 3.3 [Contract Files Structure](#33-contract-files-structure)
    - 3.4 [Telemetry Schema Field Reference](#34-telemetry-schema-field-reference)
    - 3.5 [Safe Export Schema Field Reference](#35-safe-export-schema-field-reference)
+   - 3.6 [Cost Attribution System](#36-cost-attribution-system)
 4. [Governance Mechanisms](#4-governance-mechanisms)
 5. [CI/CD Gates and Workflows](#5-cicd-gates-and-workflows)
 6. [Key Code References](#6-key-code-references)
@@ -182,6 +183,7 @@ Key ownership:
 |----------|---------|
 | `cam_policy` | CAM manufacturing constraints (non-versioned) |
 | `qa_core` | Quality assessment coupling fields |
+| `telemetry_cost_mapping_policy_v1` | Telemetry-to-cost dimension mapping policy |
 
 ### 3.3 Contract Files Structure
 
@@ -199,6 +201,7 @@ luthiers-toolbox/contracts/
 ├── cam_policy.schema.sha256
 ├── qa_core.schema.json
 ├── qa_core.schema.sha256
+├── telemetry_cost_mapping_policy_v1.json  # Cost attribution policy
 └── fixtures/                       # Test fixtures for validation
     ├── telemetry_valid_hardware_performance.json
     ├── telemetry_invalid_pedagogy_leak.json
@@ -410,6 +413,98 @@ These fields are **explicitly forbidden** at the top level to protect user priva
   "bundle_sha256": "9f8e7d6c5b4a3210..."
 }
 ```
+
+### 3.6 Cost Attribution System
+
+The cost attribution system maps validated Smart Guitar telemetry to internal manufacturing cost dimensions. It treats telemetry as **untrusted input → validated → mapped → internal cost facts**.
+
+#### Data Flow
+
+```
+Smart Guitar Device
+        │
+        ▼
+POST /api/telemetry/ingest
+        │
+        ├─► Validation (telemetry contract)
+        │
+        ├─► Storage (telemetry store)
+        │
+        └─► Cost Attribution Hook
+                │
+                ├─► Load mapping policy
+                ├─► Filter forbidden metric keys
+                ├─► Map allowed metrics → cost dimensions
+                └─► Append cost facts (JSONL)
+                        │
+                        ▼
+              GET /api/cost/summary
+```
+
+#### Mapping Policy (`telemetry_cost_mapping_policy_v1.json`)
+
+```json
+{
+  "allowed_mappings": {
+    "hardware_performance.cpu_hours": "compute_cost_hours",
+    "hardware_performance.amp_draw_avg": "energy_amp_hours",
+    "hardware_performance.temp_c_max": "thermal_stress_c",
+    "lifecycle.power_cycles": "wear_cycles"
+  },
+  "forbidden_metric_key_substrings": [
+    "player", "lesson", "practice", "accuracy", "timing",
+    "midi", "audio", "recording", "coach", "prompt"
+  ]
+}
+```
+
+#### Cost Dimensions
+
+| Telemetry Metric | Cost Dimension | Description |
+|------------------|----------------|-------------|
+| `hardware_performance.cpu_hours` | `compute_cost_hours` | CPU utilization for manufacturing correlation |
+| `hardware_performance.amp_draw_avg` | `energy_amp_hours` | Power consumption tracking |
+| `hardware_performance.temp_c_max` | `thermal_stress_c` | Thermal stress monitoring |
+| `lifecycle.power_cycles` | `wear_cycles` | Component wear tracking |
+
+#### API Endpoint
+
+```
+GET /api/cost/summary?manufacturing_batch_id=batch_001
+GET /api/cost/summary?instrument_id=sg_ABC123
+```
+
+Returns:
+```json
+{
+  "manufacturing_batch_id": "batch_001",
+  "cost_breakdown": {
+    "compute_cost_hours": 125.5,
+    "energy_amp_hours": 45.2,
+    "wear_cycles": 1500
+  },
+  "currency": "USD"
+}
+```
+
+#### Module Structure
+
+```
+services/api/app/cost_attribution/
+├── __init__.py      # Module exports
+├── models.py        # CostFact dataclass, CostDimension literal
+├── policy.py        # load_policy() from contracts
+├── mapper.py        # telemetry_to_cost_facts()
+├── store.py         # JSONL storage, summarize_by_batch/instrument
+└── api.py           # GET /api/cost/summary endpoint
+```
+
+#### Key Design Decisions
+
+1. **Explicit allow-list**: Only metrics in `allowed_mappings` produce cost facts
+2. **Double-defense**: Forbidden substrings checked even for unmapped metrics
+3. **Non-fatal failures**: Cost attribution errors don't block telemetry ingestion
+4. **Append-only storage**: Cost facts stored in date-partitioned JSONL files
 
 ---
 
@@ -773,6 +868,7 @@ for schema in Path("contracts").glob("*.schema.json"):
 | 2026-01-12 | 1.1.0 | Development Team | Added detailed schema field tables (sections 3.4, 3.5) |
 | 2026-01-13 | 1.2.0 | Development Team | Added CI gate scripts, governance entrypoints, workflow locations (sections 6.2-6.4) |
 | 2026-01-13 | 1.3.0 | Development Team | Added SHA256 generation commands for all platforms (section 8.5) |
+| 2026-01-13 | 1.4.0 | Development Team | Added Cost Attribution System documentation (section 3.6) |
 
 ---
 
