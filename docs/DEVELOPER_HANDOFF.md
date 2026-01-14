@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.2.0
+**Version:** 1.4.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -20,6 +20,8 @@
 10. [CAM System Analysis](#10-cam-system-analysis)
 11. [Wave 18 Migration - Duplicate Paths](#11-wave-18-migration---duplicate-paths)
 12. [Path to MVP](#12-path-to-mvp)
+13. [Art Studio System Analysis](#13-art-studio-system-analysis)
+14. [Blueprint Reader System Analysis](#14-blueprint-reader-system-analysis)
 
 ---
 
@@ -702,6 +704,196 @@ The toolpath math works. The G-code generation works. The post-processors work. 
 **50 focused hours of development on these 4 systems transforms this from a collection of working algorithms into a shippable MVP.**
 
 The path is clear. The scope is bounded. The infrastructure exists to support these additions. This is not a rewrite—it's completion.
+
+---
+
+## 13. Art Studio System Analysis
+
+### Overall Status: ~85% Production-Ready (Core), ~60% Experimental Features
+
+The Art Studio is **substantially more complete** than the CAM system. Core design workflows are production-ready.
+
+**Full audit document:** `docs/ART_STUDIO_SYSTEM_AUDIT.md`
+
+### Architecture (Design-First Principle)
+
+Art Studio is the **design authority only**. It does NOT generate G-code or CAM artifacts.
+
+```
+Art Studio (Design) → Workflow (Governance) → CAM (Execution)
+```
+
+### What's Working (Production-Ready)
+
+| Component | Status | Features |
+|-----------|--------|----------|
+| **Rosette Calculator** | Complete | Channel math, SVG preview, DXF export |
+| **Bracing Calculator** | Complete | 4 profiles, mass calculation, DXF export |
+| **Inlay Generator** | Complete | Dots, diamonds, blocks, side dots |
+| **Snapshot Management** | Complete | Save/load/export with feasibility |
+| **Pattern Library** | Complete | CRUD, filtering, versioned generators |
+| **Feasibility Scoring** | Complete | RMOS integration, risk bucketing |
+| **DXF Export** | Complete | R12-R18 version support |
+| **Test Coverage** | Good | 7+ dedicated test modules |
+
+### What's Incomplete
+
+| Component | Status | Gap |
+|-----------|--------|-----|
+| **Workflow State Machine** | 80% | Some endpoints not fully wired |
+| **AI-Powered SVG** | Exploratory | Integration incomplete |
+| **CAM Promotion Path** | Not exposed | Manual handoff required |
+| **Frontend Components** | Multiple versions | Consolidation needed |
+
+### Backend Structure
+
+```
+services/api/app/art_studio/
+├── api/                    # 10 route modules (Bundle 31.0+)
+├── schemas/                # 8 Pydantic models
+├── services/               # 8 business logic modules
+│   └── generators/         # 2 parametric generators
+├── svg/                    # AI-powered SVG (experimental)
+└── routers/                # Classic calculators (rosette, bracing, inlay)
+```
+
+### API Endpoints Summary
+
+| Category | Endpoints | Status |
+|----------|-----------|--------|
+| Generators | 2 | ✅ Functional |
+| Pattern Library | 5 CRUD | ✅ Functional |
+| Snapshots | 6 CRUD | ✅ Functional |
+| Workflow | 12 | ⚠️ 80% wired |
+| Rosette Jobs | 4 | ✅ Functional |
+| Rosette Compare | 4 | ✅ Functional |
+| Classic Calculators | 10+ | ✅ Functional |
+
+**Total: ~50 endpoints, ~90% functional**
+
+### Path to Full Completion (~30 hours)
+
+| Phase | Tasks | Hours |
+|-------|-------|-------|
+| **Phase 1: Core** | Workflow binding, CAM promotion, frontend consolidation | 15h |
+| **Phase 2: Experimental** | AI integration, custom generator UI, E2E tests | 15h |
+
+### Comparison: Art Studio vs CAM
+
+| Aspect | Art Studio | CAM System |
+|--------|------------|------------|
+| Core Algorithms | ✅ Complete | ✅ Complete |
+| Persistence | ✅ Complete | ❌ Missing |
+| User Infrastructure | ✅ 85% | ❌ 62% |
+| Test Coverage | ✅ Good | ⚠️ Gaps |
+| Hours to MVP | ~30h | ~50h |
+
+**Art Studio is closer to MVP than CAM. The remaining work is integration polish, not fundamental infrastructure.**
+
+---
+
+## 14. Blueprint Reader System Analysis
+
+### Overall Status: ~93% Production-Ready
+
+The Blueprint Reader is the **most complete subsystem** in the repository. All core phases are operational with excellent graceful degradation architecture.
+
+**Full audit document:** `docs/BLUEPRINT_READER_SYSTEM_AUDIT.md`
+
+### Phase Pipeline
+
+```
+[Upload] → [Phase 1: AI] → [Phase 2: OpenCV] → [Phase 3: CAM]
+   │            │               │                    │
+ PDF/PNG    Claude API     Edge Detection      Adaptive
+ JPG        Dimensions     Contours            Pocketing
+            Extraction     DXF Export          Toolpaths
+```
+
+### What's Working (Production-Ready)
+
+| Phase | Component | Status | Description |
+|-------|-----------|--------|-------------|
+| **1** | AI Analysis | ✅ Complete | Claude Sonnet 4 dimension extraction |
+| **1** | SVG Export | ✅ Complete | Dimension annotations (501 in Docker) |
+| **2** | Vectorization | ✅ Complete | OpenCV edge detection + contours |
+| **2** | DXF Export | ✅ Complete | DXF R12 with LWPOLYLINE |
+| **2.5** | CAM Bridge | ✅ Complete | Blueprint → adaptive pocketing |
+| **3.1** | Contour Reconstruction | ✅ Complete | LINE/SPLINE → closed loops |
+| **3.2** | DXF Preflight | ✅ Complete | 6-stage validation pipeline |
+
+### API Endpoints (8/9 Functional)
+
+| Endpoint | Status |
+|----------|--------|
+| `POST /api/blueprint/analyze` | ✅ Functional |
+| `POST /api/blueprint/vectorize-geometry` | ✅ Functional |
+| `POST /api/blueprint/cam/reconstruct-contours` | ✅ Functional |
+| `POST /api/blueprint/cam/preflight` | ✅ Functional |
+| `POST /api/blueprint/cam/to-adaptive` | ✅ Functional |
+| `GET /api/blueprint/health` | ✅ Functional |
+| `POST /api/blueprint/to-dxf` | ❌ Planned |
+
+### Backend Structure
+
+```
+services/api/app/routers/
+├── blueprint_router.py           # 1,315 lines (Phase 1 & 2)
+└── blueprint_cam_bridge.py       # 965 lines (Phase 2.5 & 3)
+
+services/api/app/cam/
+├── contour_reconstructor.py      # 23KB - LINE/SPLINE → loops
+├── dxf_preflight.py              # 28KB - 6-stage validation
+└── adaptive_core_l1.py           # 25KB - Adaptive pocketing
+```
+
+### Frontend
+
+| Component | Status |
+|-----------|--------|
+| BlueprintLab.vue | ✅ Complete |
+| Upload zone (drag-and-drop) | ✅ Working |
+| Phase 1 UI (AI analysis) | ✅ Working |
+| Phase 2 UI (vectorization) | ✅ Working |
+| Phase 3 UI ("Send to Adaptive") | 🟡 Disabled |
+
+### Graceful Degradation
+
+| Missing Dependency | Behavior |
+|--------------------|----------|
+| Claude API key | `/analyze` returns 503 |
+| OpenCV | `/vectorize-geometry` returns 501 |
+| pdf2image | PDF upload returns 503 |
+
+### What's Incomplete
+
+| Gap | Status | Effort |
+|-----|--------|--------|
+| **RMOS Integration** | Missing | 8h |
+| **Multi-page PDF** | Not supported | 4h |
+| **Frontend CAM Button** | Disabled | 2h |
+| **Phase 3 CI Tests** | Partial | 4h |
+
+### Path to Full Completion (~24 hours)
+
+| Priority | Tasks | Hours |
+|----------|-------|-------|
+| **Critical** | RMOS bridge, Docker SVG | 10h |
+| **Important** | Multi-page PDF, CI tests, CAM button | 10h |
+| **Enhancement** | Art Studio integration | 4h |
+
+### Comparison: All Systems
+
+| Aspect | Blueprint | Art Studio | CAM |
+|--------|-----------|------------|-----|
+| Core Algorithms | ✅ Complete | ✅ Complete | ✅ Complete |
+| API Endpoints | ✅ 93% | ✅ 90% | ⚠️ 65% |
+| Persistence | ✅ Complete | ✅ Complete | ❌ Missing |
+| User Infrastructure | ✅ 93% | ✅ 85% | ❌ 62% |
+| Graceful Degradation | ✅ Excellent | ✅ Good | ⚠️ Partial |
+| Hours to MVP | ~24h | ~30h | ~50h |
+
+**Blueprint Reader is the closest system to production. 24 focused hours completes it.**
 
 ---
 
