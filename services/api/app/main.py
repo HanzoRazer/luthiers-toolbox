@@ -1159,14 +1159,25 @@ except ImportError as e:
     _log.warning("Optional router unavailable: cost_router (%s)", e)
 
 # =============================================================================
-# AI CONTEXT ADAPTER (v1) - Read-Only Context Snapshots for AI
-# Provides redaction-first, read-only context for external AI systems.
-# Endpoints: GET /api/ai/context/envelope, /run_summary, /design_intent, etc.
+# AI CONTEXT ADAPTER (v1) - Read-Only Context Envelope for AI
+# Produces a single envelope for AI consumption with:
+# - Hard-locked capabilities (no PII, no sensitive manufacturing)
+# - Strict redaction (removes forbidden fields)
+# - Focused payload: run_summary, design_intent, artifacts
+# Endpoints: GET /api/ai/context, /api/ai/context/health
 # No POST/PUT/DELETE - strictly read-only.
+# Schema: contracts/toolbox_ai_context_envelope_v1.schema.json
 # =============================================================================
 try:
+    from .ai_context_adapter.routes import router as ai_context_adapter_router
+    app.include_router(ai_context_adapter_router, tags=["AI Context"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: ai_context_adapter_router (%s)", e)
+
+# Legacy ai_context (more complex envelope) - can be removed once adapter is stable
+try:
     from .ai_context.routes import router as ai_context_router
-    app.include_router(ai_context_router, tags=["AI Context"])
+    app.include_router(ai_context_router, tags=["AI Context (Legacy)"])
 except ImportError as e:
     _log.warning("Optional router unavailable: ai_context_router (%s)", e)
 

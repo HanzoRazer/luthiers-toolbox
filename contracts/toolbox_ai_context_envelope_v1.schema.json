@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toolbox.local/schemas/toolbox_ai_context_envelope_v1.schema.json",
+  "title": "ToolBox → AI Context Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "created_at_utc",
+    "context_id",
+    "source",
+    "capabilities",
+    "redaction",
+    "payload"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "const": "toolbox_ai_context_envelope" },
+    "schema_version": { "type": "string", "const": "v1" },
+
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when this envelope was created."
+    },
+
+    "context_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{6,126}[A-Za-z0-9]$",
+      "description": "Stable identifier for this context snapshot (not user identity)."
+    },
+
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "repo", "commit", "environment"],
+      "properties": {
+        "system": { "type": "string", "const": "toolbox" },
+        "repo": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "commit": { "type": "string", "minLength": 7, "maxLength": 80 },
+        "environment": {
+          "type": "string",
+          "enum": ["dev", "ci", "prod"],
+          "description": "Where this context was assembled."
+        }
+      }
+    },
+
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow_sensitive_manufacturing", "allow_pii", "allow_audio_raw"],
+      "properties": {
+        "allow_sensitive_manufacturing": {
+          "type": "boolean",
+          "const": false,
+          "description": "Hard-locked false in v1."
+        },
+        "allow_pii": {
+          "type": "boolean",
+          "const": false,
+          "description": "Hard-locked false in v1."
+        },
+        "allow_audio_raw": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether raw audio bytes are included. Default false."
+        }
+      }
+    },
+
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "ruleset", "warnings"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["strict"],
+          "description": "v1 only supports strict redaction."
+        },
+        "ruleset": {
+          "type": "string",
+          "const": "toolbox_ai_redaction_strict_v1",
+          "description": "Pinned ruleset identifier."
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 240 },
+          "default": []
+        }
+      }
+    },
+
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_summary", "design_intent", "artifacts"],
+      "properties": {
+        "run_summary": { "$ref": "#/$defs/run_summary" },
+        "design_intent": { "$ref": "#/$defs/design_intent" },
+        "artifacts": { "$ref": "#/$defs/artifacts" }
+      }
+    }
+  },
+
+  "$defs": {
+    "run_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "status", "event_type", "created_at_utc"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 6, "maxLength": 128 },
+        "status": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "event_type": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "created_at_utc": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string", "maxLength": 4000 }
+      }
+    },
+
+    "design_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "summary"],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "enum": ["rosette", "inlay", "unknown"],
+          "description": "Ornamental intent domain only (not structural guitar parts)."
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 12000,
+          "description": "Human-readable, redacted summary of the design intent."
+        },
+        "spec_refs": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 256 },
+          "default": [],
+          "description": "Optional lightweight references (IDs only), never raw geometry."
+        }
+      }
+    },
+
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counts", "recent"],
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["advisories", "candidates", "executions"],
+          "properties": {
+            "advisories": { "type": "integer", "minimum": 0 },
+            "candidates": { "type": "integer", "minimum": 0 },
+            "executions": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "recent": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "id", "created_at_utc"],
+            "properties": {
+              "kind": { "type": "string", "maxLength": 64 },
+              "id": { "type": "string", "maxLength": 128 },
+              "created_at_utc": { "type": "string", "format": "date-time" },
+              "summary": { "type": "string", "maxLength": 2000 }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "$comment": "Hard-block manufacturing secrets / CAM leakage at top-level.",
+      "not": {
+        "anyOf": [
+          { "required": ["gcode"] },
+          { "required": ["toolpaths"] },
+          { "required": ["post_processor"] },
+          { "required": ["feeds_and_speeds"] },
+          { "required": ["machine_profile"] },
+          { "required": ["fixture_offsets"] }
+        ]
+      }
+    },
+    {
+      "$comment": "Hard-block obvious PII/pedagogy identifiers.",
+      "not": {
+        "anyOf": [
+          { "required": ["player_id"] },
+          { "required": ["account_id"] },
+          { "required": ["lesson_id"] },
+          { "required": ["practice_session_id"] }
+        ]
+      }
+    }
+  ]
+}
