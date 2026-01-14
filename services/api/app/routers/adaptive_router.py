@@ -58,7 +58,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ..geometry.arc_utils import tessellate_arc_radians
 
-from ezdxf import readfile as dxf_readfile
+from ezdxf import read as dxf_read
 from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -1339,8 +1339,18 @@ def _dxf_to_loops_from_bytes(data: bytes, layer_name: str = "GEOMETRY") -> List[
         - First loop should be outer boundary (CCW), rest islands (CW)
     """
     try:
-        fp = io.BytesIO(data)
-        doc = dxf_readfile(fp)
+        # ezdxf.read() with StringIO has issues with complex DXF files,
+        # so we use a temp file approach with readfile() instead
+        import tempfile
+        from ezdxf import readfile as dxf_readfile
+        with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
+            tmp.write(data)
+            tmp_path = tmp.name
+        try:
+            doc = dxf_readfile(tmp_path)
+        finally:
+            import os
+            os.unlink(tmp_path)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Invalid DXF: {exc}") from exc
 
@@ -1465,5 +1475,5 @@ async def plan_from_dxf(
 
     return {
         "request": body.dict(),
-        "plan": plan_result.dict(),
+        "plan": plan_result.dict() if hasattr(plan_result, 'dict') else plan_result,
     }
