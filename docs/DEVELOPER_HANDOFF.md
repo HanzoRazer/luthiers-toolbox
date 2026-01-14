@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -450,6 +450,16 @@ done
 ### Overall Status: ~62% Functional
 
 The CAM system has solid infrastructure but lacks critical supporting systems for production use.
+
+**Full audit document with implementation code:** `docs/CAM_SYSTEM_AUDIT.md`
+
+The CAM audit includes:
+- Complete code examples for implementing feeds & speeds calculator
+- Collision detection module with working Python code
+- Job persistence enhancement patterns
+- Tool library importer implementations
+- Test file templates
+- File-by-file implementation checklist
 
 ### What's Working Well
 
