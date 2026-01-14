@@ -45,21 +45,7 @@ curl -X POST "http://localhost:8000/api/cam/blueprint/preflight" \
 ### Step 2: Generate Toolpath from DXF
 
 ```bash
-curl -X POST "http://localhost:8000/api/cam/blueprint/to-adaptive" \
-  -F "file=@your_design.dxf" \
-  -F "layer_name=GEOMETRY" \
-  -F "tool_d=6.0" \
-  -F "stepover=0.45" \
-  -F "stepdown=1.5" \
-  -F "strategy=Spiral" \
-  -F "feed_xy=1200" \
-  -F "feed_z=300" \
-  -F "rapid=3000" \
-  -F "safe_z=5.0" \
-  -F "z_rough=-3.0" \
-  -F "climb=true" \
-  -F "smoothing=0.1" \
-  -o toolpath_response.json
+curl -X POST "http://localhost:8000/api/blueprint/cam/to-adaptive?layer_name=GEOMETRY&tool_d=6&stepover=0.4&z_rough=-3&feed_xy=1200&safe_z=5"   -F "file=@your_design.dxf"   -o toolpath_response.json
 ```
 
 **Response (toolpath_response.json):**
