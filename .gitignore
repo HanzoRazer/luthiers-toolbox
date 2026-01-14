@@ -380,3 +380,7 @@ G-CODE_*.xml
 nul
 services/api/services/
 .envsk-proj-*
+
+# Local test artifacts
+services/api/exports/
+services/api/test.dxf
