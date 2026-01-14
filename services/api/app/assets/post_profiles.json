@@ -6,9 +6,12 @@
       "(GRBL CNC Controller)",
       "G90",
       "G17",
-      "G21"
+      "G21",
+      "M3 S18000",
+      "G4 P2"
     ],
     "footer": [
+      "M5",
       "M30",
       "(End of program)"
     ],
