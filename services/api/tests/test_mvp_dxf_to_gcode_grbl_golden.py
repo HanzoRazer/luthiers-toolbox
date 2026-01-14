@@ -40,6 +40,7 @@ def _normalize_gcode(text: str) -> str:
 
 
 @pytest.mark.integration
+@pytest.mark.allow_missing_request_id
 def test_mvp_dxf_to_gcode_grbl_golden_snapshot():
     """
     Locks the ToolBox MVP golden path:
