@@ -12,8 +12,12 @@ The luthiers-toolbox provides a complete pipeline to convert DXF files to CNC-re
 
 **Quick Path (API):**
 ```
-DXF File → /api/cam/blueprint/to-adaptive → Toolpath JSON → /api/cam/pocket/adaptive/gcode → .nc File
+DXF File → /api/cam/pocket/adaptive/plan_from_dxf → response.request.loops → /api/cam/pocket/adaptive/gcode → .nc File
 ```
+
+**Required fields:**
+- `/plan_from_dxf`: `file` (form), `tool_d` (form)
+- `/gcode`: `loops` (JSON), `tool_d` (JSON)
 
 ---
 
@@ -118,8 +122,10 @@ Create this script for automated DXF → G-code conversion:
 ```python
 #!/usr/bin/env python3
 """
-DXF to G-code Converter
+DXF to G-code Converter (Golden Path)
 Usage: python dxf_to_gcode.py input.dxf output.nc [--post GRBL]
+
+Uses plan_from_dxf endpoint which returns loops in response.request.loops
 """
 import sys
 import json
@@ -128,101 +134,58 @@ from pathlib import Path
 
 API_BASE = "http://localhost:8000/api"
 
-# Default CAM parameters
 DEFAULT_PARAMS = {
-    "tool_d": 6.0,           # Tool diameter (mm)
-    "stepover": 0.45,        # 45% of tool diameter
-    "stepdown": 1.5,         # Depth per pass (mm)
-    "strategy": "Spiral",    # "Spiral" or "Lanes"
-    "feed_xy": 1200,         # XY feed rate (mm/min)
-    "feed_z": 300,           # Z plunge rate (mm/min)
-    "rapid": 3000,           # Rapid traverse (mm/min)
-    "safe_z": 5.0,           # Safe retract height (mm)
-    "z_rough": -3.0,         # Total cutting depth (mm)
-    "climb": True,           # Climb milling
-    "smoothing": 0.1,        # Arc smoothing tolerance (mm)
-    "layer_name": "GEOMETRY" # DXF layer to process
+    "tool_d": 6.0,
+    "stepover": 0.4,
+    "z_rough": -3.0,
+    "feed_xy": 1200,
+    "safe_z": 5.0,
 }
 
 
-def preflight_dxf(dxf_path: Path) -> dict:
-    """Validate DXF before processing."""
-    print(f"[1/3] Validating DXF: {dxf_path.name}")
+def plan_from_dxf(dxf_path: Path, params: dict) -> dict:
+    """Generate toolpath from DXF using plan_from_dxf endpoint."""
+    print(f"[1/2] Generating toolpath from DXF...")
 
     with open(dxf_path, "rb") as f:
         response = requests.post(
-            f"{API_BASE}/cam/blueprint/preflight",
-            files={"file": (dxf_path.name, f, "application/dxf")},
-            data={"layer_name": DEFAULT_PARAMS["layer_name"]}
-        )
-
-    result = response.json()
-
-    if not result.get("valid", False):
-        print(f"  ❌ Validation failed:")
-        for error in result.get("errors", []):
-            print(f"     - {error}")
-        return None
-
-    print(f"  ✅ Valid DXF")
-    print(f"     Entities: {result['info']['entity_count']}")
-    print(f"     Closed paths: {result['info']['lwpolyline_count']}")
-
-    for warning in result.get("warnings", []):
-        print(f"  ⚠️  {warning}")
-
-    return result
-
-
-def generate_toolpath(dxf_path: Path, params: dict) -> dict:
-    """Generate adaptive toolpath from DXF."""
-    print(f"[2/3] Generating toolpath...")
-
-    with open(dxf_path, "rb") as f:
-        response = requests.post(
-            f"{API_BASE}/cam/blueprint/to-adaptive",
+            f"{API_BASE}/cam/pocket/adaptive/plan_from_dxf",
             files={"file": (dxf_path.name, f, "application/dxf")},
             data=params
         )
 
     if response.status_code != 200:
-        print(f"  ❌ Toolpath generation failed: {response.text}")
+        print(f"  Error: {response.text}")
         return None
 
     result = response.json()
-
-    if not result.get("success", False):
-        print(f"  ❌ Failed: {result.get('error', 'Unknown error')}")
+    
+    # Loops are in response["request"]["loops"]
+    loops = result.get("request", {}).get("loops", [])
+    if not loops:
+        print("  Error: No loops extracted from DXF")
         return None
 
-    stats = result["plan"]["stats"]
-    print(f"  ✅ Toolpath generated")
-    print(f"     Moves: {stats['move_count']}")
-    print(f"     Length: {stats['length_mm']:.1f} mm")
-    print(f"     Est. time: {stats['time_s']:.1f} sec")
+    plan_stats = result.get("plan", {})
+    print(f"  Loops extracted: {len(loops)}")
+    print(f"  Moves generated: {plan_stats.get('stats', {}).get('move_count', 'N/A')}")
 
     return result
 
 
-def generate_gcode(plan: dict, post_id: str, output_path: Path) -> bool:
-    """Convert toolpath to G-code."""
-    print(f"[3/3] Generating G-code ({post_id})...")
+def generate_gcode(plan_result: dict, post_id: str, output_path: Path, params: dict) -> bool:
+    """Generate G-code from plan result."""
+    print(f"[2/2] Generating G-code ({post_id})...")
 
-    # Extract loops from the plan response
-    # We need to re-request with the loops data
+    # Extract loops from plan_from_dxf response
+    loops = plan_result["request"]["loops"]
+
     gcode_request = {
-        "loops": plan.get("debug", {}).get("loops", []),
-        "tool_d": DEFAULT_PARAMS["tool_d"],
-        "stepover": DEFAULT_PARAMS["stepover"],
-        "stepdown": DEFAULT_PARAMS["stepdown"],
-        "strategy": DEFAULT_PARAMS["strategy"],
-        "feed_xy": DEFAULT_PARAMS["feed_xy"],
-        "feed_z": DEFAULT_PARAMS["feed_z"],
-        "rapid": DEFAULT_PARAMS["rapid"],
-        "safe_z": DEFAULT_PARAMS["safe_z"],
-        "z_rough": DEFAULT_PARAMS["z_rough"],
-        "climb": DEFAULT_PARAMS["climb"],
-        "smoothing": DEFAULT_PARAMS["smoothing"],
+        "loops": loops,
+        "tool_d": params["tool_d"],
+        "z_rough": params["z_rough"],
+        "feed_xy": params.get("feed_xy", 1200),
+        "safe_z": params.get("safe_z", 5.0),
         "post_id": post_id,
         "units": "mm"
     }
@@ -234,70 +197,52 @@ def generate_gcode(plan: dict, post_id: str, output_path: Path) -> bool:
     )
 
     if response.status_code != 200:
-        print(f"  ❌ G-code generation failed: {response.text}")
+        print(f"  Error: {response.text}")
         return False
 
-    # Save G-code file
     with open(output_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
 
-    # Count lines
-    with open(output_path, "r") as f:
-        line_count = sum(1 for _ in f)
-
-    print(f"  ✅ G-code saved: {output_path}")
-    print(f"     Lines: {line_count}")
-
+    print(f"  Saved: {output_path}")
     return True
 
 
 def main():
     if len(sys.argv) < 3:
         print("Usage: python dxf_to_gcode.py input.dxf output.nc [--post GRBL]")
-        print("\nSupported post-processors: GRBL, Mach4, LinuxCNC, PathPilot, MASSO")
+        print("
+Post-processors: GRBL, Mach4, LinuxCNC, PathPilot, MASSO")
         sys.exit(1)
 
     dxf_path = Path(sys.argv[1])
     output_path = Path(sys.argv[2])
-    post_id = "GRBL"  # Default
+    post_id = "GRBL"
 
-    # Parse --post argument
     if "--post" in sys.argv:
         idx = sys.argv.index("--post")
         if idx + 1 < len(sys.argv):
             post_id = sys.argv[idx + 1]
 
     if not dxf_path.exists():
-        print(f"Error: DXF file not found: {dxf_path}")
+        print(f"Error: File not found: {dxf_path}")
         sys.exit(1)
 
-    print(f"\n{'='*50}")
-    print(f"DXF to G-code Converter")
-    print(f"{'='*50}")
-    print(f"Input:  {dxf_path}")
-    print(f"Output: {output_path}")
-    print(f"Post:   {post_id}")
-    print(f"{'='*50}\n")
+    print(f"
+DXF to G-code: {dxf_path.name} -> {output_path.name} ({post_id})")
+    print("-" * 50)
 
-    # Step 1: Preflight validation
-    preflight = preflight_dxf(dxf_path)
-    if preflight is None:
+    # Step 1: plan_from_dxf (returns loops in response.request.loops)
+    plan_result = plan_from_dxf(dxf_path, DEFAULT_PARAMS)
+    if plan_result is None:
         sys.exit(1)
 
-    # Step 2: Generate toolpath
-    plan = generate_toolpath(dxf_path, DEFAULT_PARAMS)
-    if plan is None:
+    # Step 2: Generate G-code
+    if not generate_gcode(plan_result, post_id, output_path, DEFAULT_PARAMS):
         sys.exit(1)
 
-    # Step 3: Generate G-code
-    success = generate_gcode(plan, post_id, output_path)
-    if not success:
-        sys.exit(1)
-
-    print(f"\n{'='*50}")
-    print(f"✅ Conversion complete!")
-    print(f"{'='*50}\n")
+    print("-" * 50)
+    print("Done!")
 
 
 if __name__ == "__main__":
