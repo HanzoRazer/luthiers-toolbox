@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -17,6 +17,8 @@
 7. [Key File Reference](#7-key-file-reference)
 8. [Quick Start Commands](#8-quick-start-commands)
 9. [Gaps & Future Work](#9-gaps--future-work)
+10. [CAM System Analysis](#10-cam-system-analysis)
+11. [Wave 18 Migration - Duplicate Paths](#11-wave-18-migration---duplicate-paths)
 
 ---
 
@@ -434,6 +436,194 @@ done
 | `fe48e9c` | Cost attribution bundle (695 lines) |
 | `72da081` | Cost attribution tests added to CI |
 | `c276e2c` | Cost attribution docs in governance summary |
+
+---
+
+## 10. CAM System Analysis
+
+### Overall Status: ~62% Functional
+
+The CAM system has solid infrastructure but lacks critical supporting systems for production use.
+
+### What's Working Well
+
+| Component | Coverage | Notes |
+|-----------|----------|-------|
+| Geometry Router | 73% | DXF/SVG import, export, parity |
+| Drilling Operations | Complete | G81/G83 cycles work |
+| Roughing/Biarc/VCarve | 65-100% | Core toolpath generation |
+| Adaptive Pocketing | 65% | L.1 implementation |
+| G-code Simulation | 80% | Parsing, thermal analysis |
+| Post-processors | 80% | GRBL, LinuxCNC, Mach3, Fanuc, Heidenhain |
+
+### Critical MVP Gaps (Ranked by Impact)
+
+| Gap | Status | Why Critical | Effort |
+|-----|--------|--------------|--------|
+| **Feed & Speed Calculator** | STUB ONLY | Users can't generate safe cutting params | 4 days |
+| **3D Toolpath Visualization** | MISSING | Only 2D backplot exists; can't verify clearances | 5 days |
+| **Job Persistence** | MISSING | Work lost on refresh; no save/load | 4 days |
+| **Collision Detection** | MISSING | No warning before spindle/table crashes | 3 days |
+| **Tool & Material Libraries** | HARDCODED | Not scalable; defaults only | 3 days |
+
+### Backend Files Requiring Work
+
+```
+services/api/app/cam_core/feeds_speeds/
+├── calculator.py         [STUB] - returns placeholders
+├── materials.py          [INCOMPLETE] - basic profiles only
+├── presets.py            [SKELETON] - no actual values
+└── chipload_db.py        [MISSING] - needs creation
+
+services/api/app/models/
+└── cam_job.py            [MISSING] - no persistence layer
+
+services/api/app/routers/
+└── cam_jobs_router.py    [MISSING] - no CRUD endpoints
+```
+
+### Frontend Files Requiring Work
+
+```
+client/src/components/cam/
+├── CamBackplotViewer.vue  [2D ONLY] - needs Three.js 3D integration
+├── Cam3DPreview.vue       [MISSING]
+└── (existing components are monitoring only)
+
+client/src/views/cam/
+├── JobCreate.vue          [MISSING]
+└── JobList.vue            [MISSING]
+
+client/src/api/
+├── feeds.ts               [MISSING]
+├── tools.ts               [MISSING]
+└── materials.ts           [MISSING]
+```
+
+### Missing API Endpoints
+
+```
+POST /api/cam/jobs/               # Create job
+GET  /api/cam/jobs/{job_id}       # Fetch job
+GET  /api/cam/tools/              # Tool library
+POST /api/cam/materials/lookup    # Material properties
+POST /api/cam/utility/feed-lookup # Feed/speed calculation
+```
+
+### Recommended MVP Focus (~25 hours)
+
+| Task | Hours | Files |
+|------|-------|-------|
+| Implement feed/speed calculator | 8h | `cam_core/feeds_speeds/` |
+| Add Three.js 3D preview | 8h | `CamBackplotViewer.vue` |
+| Create job persistence layer | 4h | `models/cam_job.py`, router |
+| Add job create/list UI | 4h | Vue views |
+| Basic collision detection | 3h | `sim_validate.py` |
+
+---
+
+## 11. Wave 18 Migration - Duplicate Paths
+
+### Overview
+
+The codebase has a **Wave 18 migration in progress** where CAM endpoints are being consolidated from legacy flat paths to a hierarchical structure. During this transition, some endpoints exist at **both** old and new paths.
+
+### Duplicate Path Summary
+
+| Operation | Legacy Path | Consolidated Path | Status |
+|-----------|-------------|-------------------|--------|
+| V-Carve | `/api/cam/vcarve/*` | `/api/cam/toolpath/vcarve/*` | **DUPLICATE** |
+| Helical | `/api/cam/helical/*` | `/api/cam/toolpath/helical_entry` | **DUPLICATE** |
+| Relief | `/api/cam/relief/*` | `/api/cam/relief/*` (proxy) | **PROXY** |
+| Roughing | `/api/cam/roughing/*` | `/api/cam/toolpath/roughing/*` | **DUPLICATE** |
+| Fret Slots | `/api/cam/fret_slots/*` | `/api/cam/fret_slots/*` (proxy) | **PROXY** |
+| SVG Export | `/api/cam/svg/*` | `/api/cam/export/*` | **DUPLICATE** |
+| Backplot | `/api/cam/backplot/*` | (none) | Legacy only |
+| Post | `/api/cam/post/*` | (none) | Legacy only |
+| Smoke | `/api/cam/smoke/*` | (none) | Legacy only |
+
+### Key Code Locations
+
+#### Location 1: Legacy Imports (`main.py:160-171`)
+
+```python
+from .routers.cam_vcarve_router import router as cam_vcarve_router
+from .routers.cam_post_v155_router import router as cam_post_v155_router
+from .routers.cam_relief_v160_router import router as cam_relief_router
+from .routers.cam_helical_v161_router import router as cam_helical_router
+```
+
+#### Location 2: Legacy Registration (`main.py:700-726`)
+
+```python
+# CAM Subsystem (8) - Legacy routes, consolidated equivalents in Wave 18
+app.include_router(
+    cam_vcarve_router, prefix="/api/cam/vcarve", tags=["V-Carve", "Legacy"]
+)  # → /api/cam/toolpath/vcarve
+app.include_router(
+    cam_relief_router, prefix="/api/cam/relief", tags=["Relief Carving", "Legacy"]
+)  # → /api/cam/relief (proxy)
+app.include_router(
+    cam_helical_router, prefix="/api/cam/helical", tags=["Helical Ramping", "Legacy"]
+)  # → /api/cam/toolpath/helical
+```
+
+#### Location 3: Wave 18 Consolidated Registration (`main.py:1029-1034`)
+
+```python
+# Wave 18: CAM Router Consolidation (Phase 5+6)
+# Categories: drilling, fret_slots, relief, risk, rosette, simulation, toolpath,
+#             export, monitoring, pipeline, utility
+if cam_router:
+    app.include_router(cam_router, prefix="/api/cam", tags=["CAM Consolidated"])
+```
+
+#### Location 4: Aggregator Definition (`app/cam/routers/aggregator.py:94-129`)
+
+```python
+cam_router = APIRouter()
+
+if drilling_router:
+    cam_router.include_router(drilling_router, prefix="/drilling")
+if toolpath_router:
+    cam_router.include_router(toolpath_router, prefix="/toolpath")
+if relief_router:
+    cam_router.include_router(relief_router, prefix="/relief")
+# ... etc
+```
+
+#### Location 5: Toolpath Category (`app/cam/routers/toolpath/__init__.py`)
+
+```python
+# Migrated from:
+#   - routers/cam_roughing_router.py     → roughing_router.py
+#   - routers/cam_helical_v161_router.py → helical_router.py
+#   - routers/cam_vcarve_router.py       → vcarve_router.py
+
+router = APIRouter()
+router.include_router(roughing_router, prefix="/roughing")
+router.include_router(helical_router)
+router.include_router(vcarve_router, prefix="/vcarve")
+```
+
+#### Location 6: Relief Proxy Pattern (`app/cam/routers/relief/__init__.py`)
+
+```python
+# Proxy imports from existing routers (transitional)
+from ....routers.cam_relief_router import router as toolpath_router
+from ....routers.cam_relief_v160_router import router as preview_router
+
+router = APIRouter()
+if toolpath_router:
+    router.include_router(toolpath_router)
+```
+
+### Migration Notes
+
+- **Proxy pattern**: Some consolidated routes (relief, fret_slots) import the SAME legacy router, meaning both paths hit identical code
+- **True duplicates**: V-Carve, Helical, Roughing have separate implementations in both legacy and consolidated locations
+- **Resolution needed**: Decide whether to keep legacy paths (with deprecation warnings) or remove them entirely
+- **Client impact**: Frontend API calls in `client/src/api/` may need updating when legacy paths are removed
 
 ---
 
