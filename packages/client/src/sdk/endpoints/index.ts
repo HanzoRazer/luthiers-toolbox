@@ -12,3 +12,4 @@
  */
 
 export * as cam from "./cam/cam";
+export * as artDesignFirstWorkflow from "./artDesignFirstWorkflow";

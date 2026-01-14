@@ -139,6 +139,18 @@
       @overwrite="handleOverwrite"
       @save-new="handleSaveNew"
     />
+
+    <!-- Delete Confirmation Modal (32.6.5) -->
+    <SmallModal
+      :open="showDeleteModal"
+      mode="confirm"
+      title="Delete Preset"
+      :message="`Delete preset &quot;${selectedUserPreset?.name ?? 'preset'}&quot;? This cannot be undone.`"
+      ok-text="Delete"
+      cancel-text="Cancel"
+      @ok="confirmDelete"
+      @cancel="showDeleteModal = false"
+    />
   </div>
 </template>
 
@@ -148,6 +160,7 @@ import { previewPlacementSvg } from "@/sdk/endpoints/artPlacement";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import PresetSaveModal from "./PresetSaveModal.vue";
+import SmallModal from "@/components/ui/SmallModal.vue";
 
 /* -------------------------
    Types
@@ -172,6 +185,7 @@ const store = useRosetteStore();
 const toast = useToastStore();
 
 const showSaveModal = ref(false);
+const showDeleteModal = ref(false);
 
 const host = ref<any>({
   kind: "rect",
@@ -279,14 +293,19 @@ function savePreset() {
 }
 
 function deletePreset() {
-  const presetName = selectedUserPreset.value?.name ?? "preset";
-  if (!confirm(`Delete preset "${presetName}"?`)) return;
+  // Open confirmation modal instead of browser confirm() (32.6.5)
+  showDeleteModal.value = true;
+}
 
+function confirmDelete() {
+  // Called when user confirms deletion in modal
+  const presetName = selectedUserPreset.value?.name ?? "preset";
   userPresets.value = userPresets.value.filter(
     (p) => p.id !== selectedPresetId.value
   );
   localStorage.setItem(PRESETS_KEY, JSON.stringify(userPresets.value));
   selectedPresetId.value = "";
+  showDeleteModal.value = false;
   toast.info(`Preset "${presetName}" deleted`);
 }
 
