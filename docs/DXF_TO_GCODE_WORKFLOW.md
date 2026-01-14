@@ -298,7 +298,7 @@ def generate_gcode(plan: dict, post_id: str, output_path: Path) -> bool:
 def main():
     if len(sys.argv) < 3:
         print("Usage: python dxf_to_gcode.py input.dxf output.nc [--post GRBL]")
-        print("\nSupported post-processors: GRBL, Mach3, Mach4, LinuxCNC, Fanuc, PathPilot")
+        print("\nSupported post-processors: GRBL, Mach4, LinuxCNC, PathPilot, MASSO")
         sys.exit(1)
 
     dxf_path = Path(sys.argv[1])
@@ -353,9 +353,9 @@ if __name__ == "__main__":
 python dxf_to_gcode.py guitar_body.dxf output.nc
 
 # Specify post-processor
-python dxf_to_gcode.py guitar_body.dxf output.nc --post Mach3
+python dxf_to_gcode.py guitar_body.dxf output.nc --post Mach4
 python dxf_to_gcode.py guitar_body.dxf output.nc --post LinuxCNC
-python dxf_to_gcode.py guitar_body.dxf output.nc --post Fanuc
+python dxf_to_gcode.py guitar_body.dxf output.nc --post MASSO
 ```
 
 ---
@@ -443,12 +443,10 @@ SECTION
 | Post ID | Machine Type | G-code Dialect |
 |---------|--------------|----------------|
 | `GRBL` | Hobby CNC, 3018 | Standard G-code, M3/M5 spindle |
-| `Mach3` | Mach3 controllers | Windows-based, macro support |
-| `Mach4` | Mach4 controllers | Enhanced Mach3 |
+| `Mach4` | Mach4 controllers | Windows-based, enhanced macro support |
 | `LinuxCNC` | LinuxCNC/EMC2 | Linux-based, full G-code |
-| `Fanuc` | Industrial Fanuc | Fanuc dialect, canned cycles |
 | `PathPilot` | Tormach machines | PathPilot-specific features |
-| `Heidenhain` | Heidenhain TNC | Conversational format |
+| `MASSO` | MASSO controllers | Touch-screen CNC, simplified G-code |
 
 ### Post-Processor Features
 
