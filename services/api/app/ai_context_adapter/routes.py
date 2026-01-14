@@ -2,20 +2,30 @@
 """
 AI Context Adapter API Routes
 
-Single endpoint that emits the toolbox_ai_context_envelope_v1.
-
-GET /api/ai/context?run_id=...
+Endpoints:
+- GET /api/ai/context?run_id=... (envelope for existing run)
+- GET /api/ai/context/health (health check)
+- POST /api/ai/context/build (bounded context assembly)
 
 This is the ONLY interface AI systems should use to get ToolBox context.
+
+HARD BOUNDARY RULE: Context payloads must NEVER contain:
+- toolpaths (manufacturing execution paths)
+- gcode (machine instructions)
+- sensitive manufacturing parameters
+
+Contract: toolbox_ai_context_envelope_v1
 """
 
 from __future__ import annotations
 
 import os
+import re
 import subprocess
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from .assembler.default import build_context_envelope
 
@@ -23,6 +33,78 @@ router = APIRouter(
     prefix="/api/ai/context",
     tags=["AI Context"],
 )
+
+# Feature flag for context adapter
+_AI_CONTEXT_ENABLED = os.getenv("AI_CONTEXT_ENABLED", "true").lower() == "true"
+
+# =============================================================================
+# HARD BOUNDARY RULES - Manufacturing Secrets Fence
+# =============================================================================
+
+# Keys that must NEVER appear in any context payload
+FORBIDDEN_KEYS: Set[str] = {
+    "toolpaths",
+    "toolpath",
+    "gcode",
+    "g_code",
+    "gcode_text",
+    "gcode_path",
+    "nc_program",
+    "machine_instructions",
+}
+
+# Patterns that indicate manufacturing secrets in values
+FORBIDDEN_PATTERNS: List[re.Pattern] = [
+    re.compile(r"G[012][0-9]", re.IGNORECASE),  # G-code commands
+    re.compile(r"M[0-9]{1,2}", re.IGNORECASE),  # M-codes
+    re.compile(r"X-?\d+\.?\d*\s*Y-?\d+\.?\d*", re.IGNORECASE),  # Coordinates
+]
+
+
+def _contains_forbidden_content(obj: Any, path: str = "") -> List[str]:
+    """
+    Recursively check for forbidden manufacturing content.
+
+    Returns list of violations found.
+    """
+    violations: List[str] = []
+
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            key_lower = key.lower()
+            if key_lower in FORBIDDEN_KEYS:
+                violations.append(f"Forbidden key '{key}' at {path or 'root'}")
+            violations.extend(_contains_forbidden_content(value, f"{path}.{key}" if path else key))
+
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            violations.extend(_contains_forbidden_content(item, f"{path}[{i}]"))
+
+    elif isinstance(obj, str):
+        for pattern in FORBIDDEN_PATTERNS:
+            if pattern.search(obj):
+                violations.append(f"Forbidden pattern '{pattern.pattern}' found at {path}")
+                break
+
+    return violations
+
+
+def enforce_boundary_gate(context: Dict[str, Any]) -> None:
+    """
+    Enforce hard boundary rule: no manufacturing secrets in context.
+
+    Raises HTTPException if violations found.
+    """
+    violations = _contains_forbidden_content(context)
+    if violations:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "boundary_violation",
+                "message": "Context contains forbidden manufacturing content",
+                "violations": violations[:10],  # Limit to first 10
+            },
+        )
 
 
 def _get_git_commit() -> str:
@@ -173,3 +255,207 @@ def get_context(
     )
 
     return envelope
+
+
+# =============================================================================
+# POST /build - Bounded Context Assembly
+# =============================================================================
+
+class AiContextBuildRequest(BaseModel):
+    """Request to build a bounded AI context bundle."""
+    # Identify what the user is working on
+    run_id: Optional[str] = Field(None, description="RMOS run ID")
+    pattern_id: Optional[str] = Field(None, description="Pattern/design ID")
+
+    # What the UI wants to include (explicit allowlist)
+    include: List[str] = Field(
+        default_factory=list,
+        description="What to include: rosette_param_spec, manufacturing_candidates, run_summary, design_intent, governance_notes",
+    )
+
+    # Optional UI-provided notes (kept separate so we can fence it)
+    user_notes: Optional[str] = Field(None, description="User-provided notes for context")
+
+
+class AiContextBuildResponse(BaseModel):
+    """Response with bounded AI context bundle."""
+    schema_id: str = Field(default="toolbox_ai_context", description="Schema identifier")
+    schema_version: str = Field(default="v1", description="Schema version")
+    context_id: str = Field(..., description="Unique context bundle ID")
+    summary: str = Field(..., description="Human-readable summary of what's included")
+    context: Dict[str, Any] = Field(default_factory=dict, description="The bounded context payload")
+    warnings: List[str] = Field(default_factory=list, description="Warnings about missing or stubbed data")
+
+
+# Allowlisted includes (explicit opt-in)
+ALLOWED_INCLUDES: Set[str] = {
+    "rosette_param_spec",
+    "manufacturing_candidates",
+    "run_summary",
+    "design_intent",
+    "governance_notes",
+    "docs_excerpt",
+    "ui_state_hint",
+}
+
+
+def _build_run_summary(run_id: str) -> Dict[str, Any]:
+    """Build run summary context (no manufacturing secrets)."""
+    run = _fetch_run(run_id)
+    if not run:
+        return {"status": "not_found", "run_id": run_id}
+    return run
+
+
+def _build_design_intent(pattern_id: str) -> Dict[str, Any]:
+    """Build design intent context."""
+    return _fetch_design_intent(pattern_id)
+
+
+def _build_rosette_param_spec(pattern_id: Optional[str]) -> Dict[str, Any]:
+    """
+    Build rosette parameter spec context.
+
+    Does NOT include manufacturing parameters - only design parameters.
+    """
+    if not pattern_id:
+        return {"status": "no_pattern_id", "note": "Provide pattern_id to fetch rosette params"}
+
+    try:
+        from app.art_studio.services.rosette_snapshot_store import RosetteSnapshotStore
+
+        store = RosetteSnapshotStore()
+        snapshot = store.get(pattern_id)
+        if snapshot:
+            # Extract only design-safe parameters
+            return {
+                "status": "ok",
+                "pattern_id": pattern_id,
+                "pattern_type": getattr(snapshot, "pattern_type", "unknown"),
+                "ring_count": getattr(snapshot, "ring_count", None),
+                "target_diameter_mm": getattr(snapshot, "target_diameter_mm", None),
+                "material_type": getattr(snapshot, "material_type", None),
+                # Note: NO toolpaths, NO gcode, NO machining params
+            }
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    return {"status": "not_found", "pattern_id": pattern_id}
+
+
+def _build_manufacturing_candidates(run_id: Optional[str]) -> Dict[str, Any]:
+    """
+    Build manufacturing candidates summary (counts only, no details).
+
+    Returns counts of candidates by status, not the actual candidate data.
+    """
+    if not run_id:
+        return {"status": "no_run_id", "note": "Provide run_id to fetch candidates"}
+
+    counts, recent = _fetch_artifacts_summary(run_id)
+
+    # Return only aggregate info, no actual manufacturing data
+    return {
+        "status": "ok",
+        "run_id": run_id,
+        "counts": counts,
+        "recent_count": len(recent),
+        # Note: actual candidate details are NOT included
+    }
+
+
+def _build_governance_notes(intent: str = "") -> Dict[str, Any]:
+    """Build governance notes for common topics."""
+    return {
+        "status": "ok",
+        "topics": [
+            {"topic": "feasibility", "summary": "Feasibility checks ensure safe manufacturing parameters."},
+            {"topic": "boundary", "summary": "Boundary validation prevents tool crashes."},
+            {"topic": "export_blocked", "summary": "Export blocked when run not in approved state."},
+        ],
+        "note": "Wire to full governance_notes provider for detailed explanations.",
+    }
+
+
+@router.post("/build", response_model=AiContextBuildResponse)
+def build_context(payload: AiContextBuildRequest) -> AiContextBuildResponse:
+    """
+    Build a bounded AI context bundle.
+
+    This endpoint assembles context from ToolBox state based on explicit includes.
+    It does NOT call any AI provider - it only prepares context for later AI consumption.
+
+    **HARD BOUNDARY RULE**: Context will NEVER contain toolpaths, G-code, or
+    sensitive manufacturing execution data. The boundary gate enforces this.
+
+    Use this endpoint to gather context before making an AI call.
+    """
+    if not _AI_CONTEXT_ENABLED:
+        raise HTTPException(
+            status_code=503,
+            detail="AI context adapter disabled by AI_CONTEXT_ENABLED=false",
+        )
+
+    warnings: List[str] = []
+    context: Dict[str, Any] = {}
+
+    # Filter to allowed includes only
+    requested = set(payload.include)
+    unknown = requested - ALLOWED_INCLUDES
+    if unknown:
+        warnings.append(f"Unknown includes ignored: {', '.join(unknown)}")
+
+    allowed = requested & ALLOWED_INCLUDES
+
+    # Build requested context sections
+    if "run_summary" in allowed and payload.run_id:
+        context["run_summary"] = _build_run_summary(payload.run_id)
+
+    if "design_intent" in allowed and payload.pattern_id:
+        context["design_intent"] = _build_design_intent(payload.pattern_id)
+
+    if "rosette_param_spec" in allowed:
+        context["rosette_param_spec"] = _build_rosette_param_spec(payload.pattern_id)
+
+    if "manufacturing_candidates" in allowed:
+        context["manufacturing_candidates"] = _build_manufacturing_candidates(payload.run_id)
+
+    if "governance_notes" in allowed:
+        context["governance_notes"] = _build_governance_notes()
+
+    # Include user notes (kept separate for fencing)
+    if payload.user_notes:
+        context["user_notes"] = payload.user_notes
+
+    # Add metadata
+    context["_meta"] = {
+        "run_id": payload.run_id,
+        "pattern_id": payload.pattern_id,
+        "includes_requested": list(allowed),
+        "environment": _get_environment(),
+        "commit": _get_git_commit(),
+    }
+
+    # ==========================================================================
+    # CRITICAL: Enforce hard boundary gate before returning
+    # ==========================================================================
+    enforce_boundary_gate(context)
+
+    # Build context ID
+    context_id = f"ctx:{payload.run_id or 'none'}:{payload.pattern_id or 'none'}:{len(context)}"
+
+    # Add standard warnings
+    if not context.get("run_summary") and not context.get("design_intent"):
+        warnings.append("No run_id or pattern_id provided - context is minimal.")
+    warnings.append("Manufacturing secrets (toolpaths/G-code) are excluded by design.")
+
+    return AiContextBuildResponse(
+        schema_id="toolbox_ai_context",
+        schema_version="v1",
+        context_id=context_id,
+        summary="Bounded ToolBox context bundle for AI consumption (no manufacturing secrets).",
+        context=context,
+        warnings=warnings,
+    )
