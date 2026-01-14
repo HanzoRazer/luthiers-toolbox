@@ -219,22 +219,100 @@
         </div>
       </section>
 
-      <!-- Phase 3: CAM Integration (Future) -->
+      <!-- Phase 3: CAM Integration (MVP Wrapper) -->
       <section v-if="vectorizedGeometry" class="workflow-section phase-3">
         <div class="section-header">
           <h2>
             <span class="step-number">3</span>
-            Send to CAM Pipeline (Coming Soon)
+            Send to CAM Pipeline (GRBL)
           </h2>
         </div>
+
+        <!-- CAM Parameters -->
         <div class="action-card">
-          <p class="hint">Auto-populate adaptive pocketing parameters from blueprint geometry</p>
-          <button disabled class="btn-secondary">
+          <p class="hint">Generate G-code from vectorized DXF using adaptive pocketing</p>
+
+          <div class="controls-grid">
+            <div class="control-group">
+              <label>Tool Diameter (mm):</label>
+              <input v-model.number="camParams.tool_d" type="number" step="0.5" min="0.5" max="25" />
+            </div>
+            <div class="control-group">
+              <label>Stepover (0-1):</label>
+              <input v-model.number="camParams.stepover" type="number" step="0.05" min="0.1" max="0.9" />
+            </div>
+            <div class="control-group">
+              <label>Stepdown (mm):</label>
+              <input v-model.number="camParams.stepdown" type="number" step="0.5" min="0.5" max="10" />
+            </div>
+            <div class="control-group">
+              <label>Target Depth (mm):</label>
+              <input v-model.number="camParams.z_rough" type="number" step="0.5" max="0" />
+            </div>
+            <div class="control-group">
+              <label>Feed XY (mm/min):</label>
+              <input v-model.number="camParams.feed_xy" type="number" step="100" min="100" max="5000" />
+            </div>
+            <div class="control-group">
+              <label>Feed Z (mm/min):</label>
+              <input v-model.number="camParams.feed_z" type="number" step="50" min="50" max="1000" />
+            </div>
+          </div>
+
+          <button @click="sendToCAM" :disabled="isSendingToCAM" class="btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Send to Adaptive Lab (Coming Soon)
+            {{ isSendingToCAM ? 'Generating G-code...' : 'Generate G-code (GRBL)' }}
           </button>
+        </div>
+
+        <!-- RMOS Result -->
+        <div v-if="rmosResult" class="results-card">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-value">{{ rmosResult.decision?.risk_level || 'N/A' }}</span>
+              <span class="stat-label">Risk Level</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" style="font-size: 0.875rem; word-break: break-all;">{{ rmosResult.run_id || 'N/A' }}</span>
+              <span class="stat-label">RMOS Run ID</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value">{{ rmosResult.rmos_persisted ? '✓' : '✗' }}</span>
+              <span class="stat-label">RMOS Persisted</span>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div v-if="rmosResult.decision?.warnings?.length" class="warning-list">
+            <strong>Warnings:</strong>
+            <ul>
+              <li v-for="(w, i) in rmosResult.decision.warnings" :key="i">{{ w }}</li>
+            </ul>
+          </div>
+
+          <!-- RMOS Error -->
+          <div v-if="!rmosResult.rmos_persisted && rmosResult.rmos_error" class="rmos-error">
+            <strong>RMOS Error:</strong> {{ rmosResult.rmos_error }}
+          </div>
+
+          <!-- Download Button -->
+          <div class="export-row">
+            <button
+              @click="downloadGcode"
+              :disabled="!gcodeReady"
+              class="btn-primary"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download G-code (.nc)
+            </button>
+            <span v-if="rmosResult && !rmosResult.gcode?.inline" class="hint-small">
+              G-code too large for inline delivery. Use RMOS attachments.
+            </span>
+          </div>
         </div>
       </section>
     </div>
@@ -253,7 +331,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -281,6 +359,28 @@ const vectorParams = ref({
 
 // Export state
 const isExporting = ref(false)
+
+// Phase 3: CAM state
+const isSendingToCAM = ref(false)
+const rmosResult = ref<any>(null)
+const camParams = ref({
+  tool_d: 6.0,
+  stepover: 0.45,
+  stepdown: 1.5,
+  z_rough: -3.0,
+  feed_xy: 1200,
+  feed_z: 300,
+  rapid: 3000,
+  safe_z: 5.0,
+  strategy: 'Spiral',
+  layer_name: 'GEOMETRY',
+  climb: true,
+  smoothing: 0.1,
+  margin: 0.0
+})
+
+// Computed: G-code ready for download
+const gcodeReady = computed(() => rmosResult.value?.gcode?.inline && !!rmosResult.value?.gcode?.text)
 
 // Error state
 const error = ref<string | null>(null)
@@ -521,6 +621,69 @@ const downloadBlob = (blob: Blob, filename: string) => {
   a.href = url
   a.download = filename
   document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(url)
+}
+
+// Phase 3: Send to CAM (MVP Wrapper)
+const sendToCAM = async () => {
+  if (\!vectorizedGeometry.value?.dxf_path) return
+
+  try {
+    isSendingToCAM.value = true
+    error.value = null
+    rmosResult.value = null
+
+    // Fetch the DXF file from server
+    const dxfResponse = await fetch(\)
+    if (\!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
+    const dxfBlob = await dxfResponse.blob()
+
+    // Build form data for MVP wrapper
+    const fd = new FormData()
+    fd.append('file', dxfBlob, 'blueprint.dxf')
+
+    // Add all CAM parameters
+    for (const [k, v] of Object.entries(camParams.value)) {
+      if (typeof v === 'boolean') {
+        fd.append(k, v ? 'true' : 'false')
+      } else {
+        fd.append(k, String(v))
+      }
+    }
+
+    // Call MVP wrapper endpoint
+    const response = await fetch('/api/rmos/wrap/mvp/dxf-to-grbl', {
+      method: 'POST',
+      body: fd
+    })
+
+    if (\!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || \)
+    }
+
+    rmosResult.value = await response.json()
+
+  } catch (err: any) {
+    console.error('CAM error:', err)
+    error.value = err.message || 'Failed to generate G-code'
+  } finally {
+    isSendingToCAM.value = false
+  }
+}
+
+// Download G-code from inline response
+const downloadGcode = () => {
+  if (\!rmosResult.value?.gcode?.inline || \!rmosResult.value?.gcode?.text) return
+
+  const blob = new Blob([rmosResult.value.gcode.text], { type: 'text/plain' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const baseName = (uploadedFile.value?.name || 'blueprint').replace(/\.[^.]+$/, '')
+  a.download =   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(url)
@@ -989,5 +1152,32 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+/* Warning list */
+.warning-list {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.warning-list ul {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+}
+
+.warning-list li {
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+/* RMOS Error */
+.rmos-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #991b1b;
+  font-size: 0.875rem;
 }
 </style>
