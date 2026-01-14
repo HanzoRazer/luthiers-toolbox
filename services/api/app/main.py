@@ -539,6 +539,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_workflow_router (%s)", e)
     rmos_workflow_router = None
 
+# MVP Wrapper: RMOS-wrapped DXF -> GRBL golden path
+try:
+    from .rmos.mvp_wrapper import router as rmos_mvp_wrapper_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_mvp_wrapper_router (%s)", e)
+    rmos_mvp_wrapper_router = None
+
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
 # =============================================================================
@@ -1031,6 +1038,10 @@ if rmos_runs_api_router:
     app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
 if rmos_workflow_router:
     app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
+
+# MVP Wrapper: RMOS-wrapped DXF -> GRBL golden path
+if rmos_mvp_wrapper_router:
+    app.include_router(rmos_mvp_wrapper_router, tags=["RMOS", "MVP Wrapper"])
 
 # Wave 17: Workflow Sessions (SQLite persistence layer)
 if workflow_sessions_router:
