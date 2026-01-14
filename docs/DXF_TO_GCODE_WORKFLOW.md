@@ -69,24 +69,7 @@ curl -X POST "http://localhost:8000/api/blueprint/cam/to-adaptive?layer_name=GEO
 ```bash
 curl -X POST "http://localhost:8000/api/cam/pocket/adaptive/gcode" \
   -H "Content-Type: application/json" \
-  -d '{
-    "loops": [
-      {"pts": [[0,0], [100,0], [100,50], [0,50], [0,0]]}
-    ],
-    "tool_d": 6.0,
-    "stepover": 0.45,
-    "stepdown": 1.5,
-    "strategy": "Spiral",
-    "feed_xy": 1200,
-    "feed_z": 300,
-    "rapid": 3000,
-    "safe_z": 5.0,
-    "z_rough": -3.0,
-    "climb": true,
-    "smoothing": 0.1,
-    "post_id": "GRBL",
-    "units": "mm"
-  }' \
+  -d '{"loops":[{"pts":[[0,0],[100,0],[100,50],[0,50]]}],"tool_d":6,"z_rough":-3,"post_id":"GRBL"}' \
   -o output.nc
 ```
 
@@ -95,16 +78,15 @@ curl -X POST "http://localhost:8000/api/cam/pocket/adaptive/gcode" \
 G90
 G17
 G21
-(POST=GRBL;UNITS=mm;DATE=2026-01-14T10:30:00Z)
-(TOOL=6.0mm;STEPOVER=45%;DEPTH=-3.0mm)
+M3 S18000           ; Spindle ON
+G4 P2               ; Dwell for ramp-up
 G0 Z5.0
-G0 X10.5 Y15.2
-G1 Z-1.5 F300
-G1 X50.0 Y15.2 F1200
-G1 X50.0 Y45.0 F1200
+G0 X96.5 Y46.5
+G1 Z-3.0 F1200
+G1 X3.5 Y46.5 F1200
 ...
 G0 Z5.0
-M5
+M5                  ; Spindle OFF
 M30
 ```
 
@@ -575,17 +557,11 @@ curl -X POST "http://localhost:8000/api/cam/blueprint/preflight" \
 
 ### Minimal API Call Sequence
 ```bash
-# 1. DXF → Toolpath
-curl -X POST "http://localhost:8000/api/cam/blueprint/to-adaptive" \
-  -F "file=@design.dxf" \
-  -F "tool_d=6" -F "stepover=0.4" -F "z_rough=-3" \
-  -o plan.json
+# 1. DXF → Toolpath (params in URL, file as form data)
+curl -X POST "http://localhost:8000/api/blueprint/cam/to-adaptive?tool_d=6&z_rough=-3"   -F "file=@design.dxf" -o plan.json
 
-# 2. Toolpath → G-code (use loops from plan.json)
-curl -X POST "http://localhost:8000/api/cam/pocket/adaptive/gcode" \
-  -H "Content-Type: application/json" \
-  -d @gcode_request.json \
-  -o output.nc
+# 2. Toolpath → G-code (JSON body - use loops from plan.json response)
+curl -X POST "http://localhost:8000/api/cam/pocket/adaptive/gcode"   -H "Content-Type: application/json"   -d '{"loops":[{"pts":[[0,0],[100,0],[100,50],[0,50]]}],"tool_d":6,"z_rough":-3,"post_id":"GRBL"}'   -o output.nc
 ```
 
 ### Supported File Types
