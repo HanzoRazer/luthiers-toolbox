@@ -440,28 +440,45 @@ SECTION
 
 ## 6. Post-Processor Profiles
 
-| Post ID | Machine Type | G-code Dialect |
-|---------|--------------|----------------|
-| `GRBL` | Hobby CNC, 3018 | Standard G-code, M3/M5 spindle |
-| `Mach4` | Mach4 controllers | Windows-based, enhanced macro support |
-| `LinuxCNC` | LinuxCNC/EMC2 | Linux-based, full G-code |
-| `PathPilot` | Tormach machines | PathPilot-specific features |
-| `MASSO` | MASSO controllers | Touch-screen CNC, simplified G-code |
+All post-processors include automatic spindle control (M3 S18000 on, M5 off).
 
-### Post-Processor Features
+| Post ID | Machine Type | Spindle | End Code |
+|---------|--------------|---------|----------|
+| `GRBL` | Hobby CNC, 3018 | M3 S18000 | M30 |
+| `Mach4` | Mach4 controllers | M3 S18000 | M30 |
+| `LinuxCNC` | LinuxCNC/EMC2 | M3 S18000 | M2 |
+| `PathPilot` | Tormach machines | M3 S18000 | M30 |
+| `MASSO` | MASSO controllers | M3 S18000 | M30 |
 
-```json
-{
-  "GRBL": {
-    "header": ["G90", "G17", "G21"],
-    "footer": ["M5", "M30"],
-    "spindle_on": "M3 S{rpm}",
-    "spindle_off": "M5",
-    "coolant_on": "M8",
-    "coolant_off": "M9"
-  }
-}
+### G-code Structure
+
+All post-processors generate this structure:
+
+```gcode
+; === HEADER ===
+G90                 ; Absolute positioning
+G17                 ; XY plane selection
+G21                 ; Metric units (mm)
+M3 S18000           ; Spindle ON at 18000 RPM
+G4 P2               ; 2-second dwell for spindle ramp-up
+
+; === TOOLPATH ===
+G0 Z5.0             ; Rapid to safe height
+G0 X10.5 Y15.2      ; Rapid to start position
+G1 Z-3.0 F300       ; Plunge to cutting depth
+G1 X50.0 Y15.2 F1200 ; Cutting moves...
+
+; === FOOTER ===
+G0 Z5.0             ; Retract to safe height
+M5                  ; Spindle OFF
+M30                 ; Program end (M2 for LinuxCNC)
 ```
+
+### Spindle Speed
+
+Default: **18000 RPM** (typical wood router speed). The spindle speed is
+currently fixed in the post-processor profile. For variable RPM support,
+the `rpm` parameter would need to be added to the G-code endpoint.
 
 ---
 
