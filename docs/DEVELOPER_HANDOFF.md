@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -23,6 +23,7 @@
 13. [Art Studio System Analysis](#13-art-studio-system-analysis)
 14. [Blueprint Reader System Analysis](#14-blueprint-reader-system-analysis)
 15. [RMOS System Analysis](#15-rmos-system-analysis)
+16. [CNC Saw Lab System Analysis](#16-cnc-saw-lab-system-analysis)
 
 ---
 
@@ -996,6 +997,102 @@ Alternative: IN_REVIEW → REJECTED | REVISION_REQUESTED → DRAFT
 | Hours to MVP | ~48h | ~24h | ~30h | ~50h |
 
 **RMOS provides the governance foundation all other systems depend on. Its completion enables safe manufacturing operations across the entire platform.**
+
+---
+
+## 16. CNC Saw Lab System Analysis
+
+### Overall Status: ~75-80% Production-Ready
+
+The CNC Saw Lab is a **substantially complete manufacturing subsystem** with robust safety validation, comprehensive RMOS integration, and excellent test coverage (11,030 lines across 132 test files).
+
+**Full audit document:** `docs/SAW_LAB_SYSTEM_AUDIT.md`
+
+### Architecture (Safety-First Manufacturing)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Blade Registry  →  5 Safety Calculators  →  RMOS Safety Gate   │
+│   CRUD + PDF         rim/bite/heat/          Policy blocking     │
+│   import             deflection/kickback     RED/UNKNOWN         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+              G-Code Generation (multi-pass, 3 operation types)
+                              ↓
+              Learning System (automatic override application)
+```
+
+### What's Working (Production-Ready)
+
+| Component | Status | Features |
+|-----------|--------|----------|
+| **Blade Registry** | Complete | CRUD, validation, PDF import, search |
+| **5 Safety Calculators** | Complete | Rim speed, bite load, heat, deflection, kickback |
+| **G-Code Generator** | Complete | Multi-pass depth, 3 operation types |
+| **Safety Validation** | Complete | 5 endpoints, material-specific limits |
+| **Telemetry System** | Complete | 3-factor real-time risk scoring |
+| **RMOS Integration** | Complete | Safety policy gating, 5 CAM guards |
+| **Learning System** | Complete | Automatic override application |
+| **Test Coverage** | Excellent | 11,030 lines across 132 files |
+
+### Five Core Safety Calculators
+
+| Calculator | Formula/Check | Material Limits |
+|------------|---------------|-----------------|
+| **Rim Speed** | π × D × RPM / 60000 | 40-80 m/s by material |
+| **Bite Load** | feed / (RPM × teeth) | 0.03-0.15 mm/tooth |
+| **Heat Index** | speed × feed × dust | 500mm cut threshold |
+| **Deflection** | max = 40% × diameter | D/kerf ratio checks |
+| **Kickback** | 6-factor weighted | Material-dependent |
+
+### Backend Structure
+
+```
+services/api/app/
+├── saw_lab/                    # 788 lines - Core calculators
+│   └── calculators/            # 5 safety calculators (27KB)
+├── services/                   # 4,548 lines - 31 service files
+│   ├── saw_lab_batch_*.py      # Batch workflows
+│   ├── saw_lab_learning_*.py   # Learning integration
+│   └── saw_lab_decision_service.py
+├── routers/                    # 1,244 lines - 5 routers
+│   ├── saw_blade_router.py     # CRUD (241 lines)
+│   ├── saw_gcode_router.py     # G-code (132 lines)
+│   ├── saw_validate_router.py  # Validation (230 lines)
+│   └── saw_telemetry_router.py # Telemetry (498 lines)
+├── cam_core/saw_lab/           # Blade registry (34KB)
+└── rmos/
+    ├── saw_safety_gate.py      # 84 lines
+    └── saw_cam_guard.py        # 286 lines - 5 guards
+```
+
+### What's Incomplete
+
+| Component | Status | Gap |
+|-----------|--------|-----|
+| **Frontend Stubs** | 2 components | DiffPanel, QueuePanel not implemented |
+| **CAM Core Router** | Placeholder | 22 lines, needs delegation |
+| **Path Planner 2.1** | Future | Skeleton for optimization |
+
+### Path to Completion
+
+| Target | Hours | Tasks |
+|--------|-------|-------|
+| **90% Ready** | ~75h | Frontend stubs, CAM router, docs |
+| **95% Ready** | ~120h | + anomaly handling, path planning |
+| **98% Ready** | ~185h | + Path Planner 2.1, blade selection UI |
+
+### Comparison: All Systems
+
+| Aspect | Saw Lab | Blueprint | Art Studio | RMOS | CAM |
+|--------|---------|-----------|------------|------|-----|
+| Core Algorithms | ✅ Complete | ✅ Complete | ✅ Complete | ✅ Complete | ✅ Complete |
+| API Endpoints | ✅ 95% | ✅ 93% | ✅ 90% | ✅ 95% | ⚠️ 65% |
+| Test Coverage | ✅ Excellent | ⚠️ Partial | ✅ Good | ⚠️ 20% | ⚠️ Gaps |
+| RMOS Integration | ✅ Complete | ⚠️ Planned | ✅ Complete | N/A | ⚠️ Stubs |
+| Hours to MVP | ~75h | ~24h | ~30h | ~48h | ~50h |
+
+**The Saw Lab is mature and production-ready for operator use. It represents one of the most complete subsystems with the strongest test coverage and safety infrastructure.**
 
 ---
 
