@@ -1,0 +1,56 @@
+name: MVP Golden Gate (DXF → GRBL)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/routers/adaptive_router.py'
+      - 'services/api/app/cam/**'
+      - 'services/api/app/assets/post_profiles.json'
+      - 'services/api/tests/test_mvp_dxf_to_gcode_grbl_golden.py'
+      - 'services/api/tests/golden/mvp_rect_with_island__grbl.nc'
+      - 'services/api/tests/testdata/mvp_rect_with_island.dxf'
+      - '.github/workflows/mvp_golden_gate.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/routers/adaptive_router.py'
+      - 'services/api/app/cam/**'
+      - 'services/api/app/assets/post_profiles.json'
+      - 'services/api/tests/test_mvp_dxf_to_gcode_grbl_golden.py'
+      - 'services/api/tests/golden/mvp_rect_with_island__grbl.nc'
+      - 'services/api/tests/testdata/mvp_rect_with_island.dxf'
+      - '.github/workflows/mvp_golden_gate.yml'
+
+jobs:
+  mvp-golden-gate:
+    name: MVP DXF → GRBL Golden Snapshot
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run MVP golden gate test
+        run: |
+          pytest tests/test_mvp_dxf_to_gcode_grbl_golden.py \
+            -v \
+            -m integration \
+            --no-cov \
+            --tb=short
