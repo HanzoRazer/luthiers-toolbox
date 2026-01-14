@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthiers-toolbox.dev/schemas/ai-context-envelope-v1.json",
+  "title": "ToolBox AI Context Envelope v1",
+  "description": "Read-only, redaction-first context envelope for AI consumption. No mutation, no actions.",
+  "type": "object",
+  "required": ["schema_id", "schema_version", "created_at_utc", "request", "policy", "context", "integrity"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_id": {
+      "const": "toolbox_ai_context_envelope",
+      "description": "Fixed identifier for this envelope type"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+$",
+      "description": "Schema version (v1, v2, etc.)"
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of envelope creation"
+    },
+    "request": {
+      "$ref": "#/$defs/ContextRequest"
+    },
+    "policy": {
+      "$ref": "#/$defs/RedactionPolicy"
+    },
+    "context": {
+      "$ref": "#/$defs/ContextBundle"
+    },
+    "integrity": {
+      "$ref": "#/$defs/IntegrityBlock"
+    }
+  },
+  "$defs": {
+    "ContextRequest": {
+      "type": "object",
+      "required": ["request_id", "actor", "intent", "scope"],
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^ctxreq_[a-zA-Z0-9_-]+$",
+          "description": "Unique request identifier"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Natural language description of what the AI should help with"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        }
+      }
+    },
+    "Actor": {
+      "type": "object",
+      "required": ["kind", "role", "auth_context"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["human", "system", "automated"],
+          "description": "Actor type"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["builder", "operator", "admin", "viewer"],
+          "description": "Actor's role in the system"
+        },
+        "auth_context": {
+          "type": "string",
+          "description": "Authentication context (e.g., 'toolbox_session', 'api_key')"
+        }
+      }
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "Project identifier"
+        },
+        "run_id": {
+          "type": "string",
+          "description": "RMOS run identifier"
+        },
+        "pattern_id": {
+          "type": "string",
+          "description": "Pattern/design identifier"
+        },
+        "session_id": {
+          "type": "string",
+          "description": "Workflow session identifier"
+        },
+        "artifact_id": {
+          "type": "string",
+          "description": "Specific artifact identifier"
+        }
+      }
+    },
+    "RedactionPolicy": {
+      "type": "object",
+      "required": ["mode", "redaction_level", "forbidden_categories"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "read_only",
+          "description": "v1 only supports read_only mode"
+        },
+        "redaction_level": {
+          "type": "string",
+          "enum": ["strict", "balanced"],
+          "default": "strict",
+          "description": "How aggressively to redact sensitive content"
+        },
+        "forbidden_categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "toolpaths",
+              "gcode",
+              "machine_secrets",
+              "credential_material",
+              "player_pedagogy",
+              "personal_data",
+              "proprietary_algorithms",
+              "raw_telemetry"
+            ]
+          },
+          "uniqueItems": true,
+          "description": "Categories that MUST be redacted from all sources"
+        }
+      }
+    },
+    "ContextBundle": {
+      "type": "object",
+      "required": ["sources"],
+      "additionalProperties": false,
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContextSource"
+          },
+          "description": "Array of context sources (run summaries, docs, etc.)"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContextAttachment"
+          },
+          "default": [],
+          "description": "Binary attachments (images, files) referenced by URL"
+        }
+      }
+    },
+    "ContextSource": {
+      "type": "object",
+      "required": ["source_id", "kind", "content_type", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "description": "Stable identifier for this source"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "run_summary",
+            "design_intent",
+            "governance_notes",
+            "docs_excerpt",
+            "ui_state_hint",
+            "telemetry_summary",
+            "calc_status"
+          ],
+          "description": "Source type from the v1 vocabulary"
+        },
+        "content_type": {
+          "type": "string",
+          "enum": ["application/json", "text/markdown", "text/plain"],
+          "description": "MIME type of the payload"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Already-sanitized content (structure varies by kind)"
+        }
+      }
+    },
+    "ContextAttachment": {
+      "type": "object",
+      "required": ["attachment_id", "kind", "mime", "sha256", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string",
+          "pattern": "^att_[a-zA-Z0-9_-]+$",
+          "description": "Attachment identifier"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["image", "file", "preview"],
+          "description": "Attachment type"
+        },
+        "mime": {
+          "type": "string",
+          "description": "MIME type (e.g., image/png, application/pdf)"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 hash of the attachment content"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "URL to download the attachment (read-only)"
+        }
+      }
+    },
+    "IntegrityBlock": {
+      "type": "object",
+      "required": ["bundle_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "bundle_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 of the canonical JSON representation of sources + attachments"
+        }
+      }
+    }
+  }
+}
