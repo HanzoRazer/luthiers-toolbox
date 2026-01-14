@@ -37,31 +37,65 @@ router = APIRouter(prefix="/api/rmos/wrap/mvp", tags=["RMOS MVP Wrapper"])
 
 
 # =============================================================================
-# Response Schemas
+# Response Schemas (aligned to RMOS wrapping contract)
 # =============================================================================
 
-class MVPWrapperResponse(BaseModel):
-    """Response from MVP DXF-to-GRBL wrapper."""
-    run_id: str = Field(..., description="RMOS run artifact ID")
-    status: str = Field(..., description="Overall status: GREEN, YELLOW, RED")
-    gcode_text: str = Field(..., description="Generated GRBL G-code")
-    warnings: List[str] = Field(default_factory=list, description="CAM warnings")
+# Inline size limit for gcode (200KB)
+GCODE_INLINE_LIMIT = 200_000
 
-    # Artifact hashes for verification
-    hashes: Dict[str, str] = Field(
-        default_factory=dict,
-        description="SHA256 hashes: dxf, plan, gcode, manifest"
-    )
 
-    # RMOS status
-    rmos_status: str = Field(
-        "ok",
-        description="RMOS storage status: ok, failed, partial"
-    )
-    rmos_error: Optional[str] = Field(
-        None,
-        description="RMOS error message if storage failed"
-    )
+class RMOSWrapDecision(BaseModel):
+    """Decision outcome from RMOS wrapping."""
+    risk_level: str = Field(..., description="GREEN|YELLOW|RED|UNKNOWN|ERROR")
+    warnings: List[str] = Field(default_factory=list)
+    block_reason: Optional[str] = None
+
+
+class RMOSWrapAttachmentRef(BaseModel):
+    """Reference to a content-addressed attachment."""
+    kind: str = Field(..., description="dxf_input|cam_plan|gcode_output|manifest")
+    sha256: str = Field(..., min_length=64, max_length=64)
+    filename: str
+    mime: Optional[str] = None
+    size_bytes: Optional[int] = None
+    created_at_utc: Optional[str] = None
+
+
+class RMOSWrapHashes(BaseModel):
+    """SHA256 hash chain for audit verification."""
+    feasibility_sha256: str = Field(..., min_length=64, max_length=64)
+    opplan_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
+    gcode_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
+    toolpaths_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
+
+
+class RMOSWrapGCodeRef(BaseModel):
+    """G-code reference - inline text or path to attachment."""
+    inline: bool = Field(..., description="True if gcode is included inline")
+    text: Optional[str] = Field(None, description="Inline gcode text when inline=true")
+    path: Optional[str] = Field(None, description="Attachment path when inline=false")
+
+
+class RMOSWrapMvpResponse(BaseModel):
+    """
+    Response from MVP DXF-to-GRBL wrapper.
+
+    Designed for:
+    - Clear downstream integration (UI, audit systems)
+    - Best-effort RMOS (ok=true even if rmos_persisted=false)
+    - Explicit gcode delivery (inline vs path)
+    """
+    ok: bool = Field(True, description="True if CAM succeeded (regardless of RMOS)")
+    run_id: str = Field(..., description="RMOS run artifact ID (empty string if not persisted)")
+    decision: RMOSWrapDecision = Field(..., description="Risk assessment outcome")
+    hashes: RMOSWrapHashes = Field(..., description="SHA256 hash chain")
+    attachments: List[RMOSWrapAttachmentRef] = Field(default_factory=list, description="Content-addressed attachments")
+    gcode: RMOSWrapGCodeRef = Field(..., description="G-code delivery reference")
+
+    # Convenience fields
+    warnings: List[str] = Field(default_factory=list, description="All warnings (same as decision.warnings)")
+    rmos_persisted: bool = Field(True, description="True if RMOS artifact was persisted")
+    rmos_error: Optional[str] = Field(None, description="RMOS error message if persistence failed")
 
 
 class MVPManifest(BaseModel):
@@ -226,7 +260,7 @@ def _call_gcode(request_payload: Dict[str, Any], plan_result: Dict[str, Any]) ->
 # Main Wrapper Endpoint
 # =============================================================================
 
-@router.post("/dxf-to-grbl", response_model=MVPWrapperResponse)
+@router.post("/dxf-to-grbl", response_model=RMOSWrapMvpResponse)
 async def wrap_mvp_dxf_to_grbl(
     request: Request,
     file: UploadFile = File(..., description="DXF file to process"),
@@ -245,7 +279,7 @@ async def wrap_mvp_dxf_to_grbl(
     margin: float = Form(0.0, description="Boundary margin"),
     job_name: Optional[str] = Form(None, description="Job name for tracking"),
     notes: Optional[str] = Form(None, description="Operator notes"),
-) -> MVPWrapperResponse:
+) -> RMOSWrapMvpResponse:
     """
     MVP Golden Path with RMOS Wrapping.
 
@@ -450,17 +484,45 @@ async def wrap_mvp_dxf_to_grbl(
     # ==========================================================================
     # Return response (always includes gcode per best-effort policy)
     # ==========================================================================
-    return MVPWrapperResponse(
+
+    # Build attachment refs
+    attachment_refs = [
+        RMOSWrapAttachmentRef(
+            kind=att.kind,
+            sha256=att.sha256,
+            filename=att.filename,
+            mime=att.mime,
+            size_bytes=att.size_bytes,
+            created_at_utc=att.created_at_utc,
+        )
+        for att in attachments
+    ]
+
+    # Determine inline vs path for gcode
+    gcode_inline = len(gcode_text) <= GCODE_INLINE_LIMIT
+    gcode_ref = RMOSWrapGCodeRef(
+        inline=gcode_inline,
+        text=gcode_text if gcode_inline else None,
+        path=f"attachments/{gcode_sha256}.nc" if not gcode_inline else None,
+    )
+
+    return RMOSWrapMvpResponse(
+        ok=True,
         run_id=run_id,
-        status=risk_level,
-        gcode_text=gcode_text,
+        decision=RMOSWrapDecision(
+            risk_level=risk_level,
+            warnings=warnings,
+            block_reason=None,
+        ),
+        hashes=RMOSWrapHashes(
+            feasibility_sha256=feasibility_sha256,
+            opplan_sha256=plan_sha256,
+            gcode_sha256=gcode_sha256,
+            toolpaths_sha256=None,
+        ),
+        attachments=attachment_refs,
+        gcode=gcode_ref,
         warnings=warnings,
-        hashes={
-            "dxf": dxf_sha256,
-            "plan": plan_sha256,
-            "gcode": gcode_sha256,
-            "manifest": manifest_sha256,
-        },
-        rmos_status=rmos_status,
+        rmos_persisted=(rmos_status == "ok"),
         rmos_error=rmos_error,
     )
