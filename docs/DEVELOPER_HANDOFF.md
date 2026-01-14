@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.4.0
+**Version:** 1.5.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -22,6 +22,7 @@
 12. [Path to MVP](#12-path-to-mvp)
 13. [Art Studio System Analysis](#13-art-studio-system-analysis)
 14. [Blueprint Reader System Analysis](#14-blueprint-reader-system-analysis)
+15. [RMOS System Analysis](#15-rmos-system-analysis)
 
 ---
 
@@ -894,6 +895,107 @@ services/api/app/cam/
 | Hours to MVP | ~24h | ~30h | ~50h |
 
 **Blueprint Reader is the closest system to production. 24 focused hours completes it.**
+
+---
+
+## 15. RMOS System Analysis
+
+### Overall Status: ~80% Production-Ready
+
+The **Rosette Manufacturing Orchestration System (RMOS)** is the governance backbone of luthiers-toolbox, managing run lifecycles, feasibility scoring, safety policies, and manufacturing workflow state.
+
+**Full audit document:** `docs/RMOS_SYSTEM_AUDIT.md`
+
+### Architecture (Governance Backbone)
+
+RMOS ensures that manufacturing operations are tracked, assessed, gated, and orchestrated:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Run Artifacts (Immutable)  →  Feasibility Engines  →  Safety   │
+│       date-partitioned           Baseline V1            Policy   │
+│       SHA256 hashing             CAM stubs              Gate     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+              Workflow State Machine (10 states, 3 modes)
+```
+
+### What's Working (Production-Ready)
+
+| Component | Status | Features |
+|-----------|--------|----------|
+| **Run Artifact Store** | Complete | Immutable JSON, date partitioning, SHA256 |
+| **Baseline V1 Engine** | Complete | Weighted scoring (0-100), risk bucketing |
+| **Safety Policy** | Complete | Environment gating, RED/UNKNOWN blocking |
+| **Workflow FSM** | Complete | 10 states, 3 modes, session management |
+| **Saw Operations** | Complete | Batch processing, comparison |
+| **API Endpoints** | 95% | 50+ endpoints across 4 routers |
+| **Frontend Components** | Complete | 47 Vue components |
+
+### What's Incomplete
+
+| Component | Status | Gap |
+|-----------|--------|-----|
+| **Test Coverage** | 20% | Only 3 of 15+ modules tested |
+| **CAM Feasibility Engines** | Stubs | 6 modes return GREEN by default |
+| **FANUC Scheduling** | Planned | Not implemented |
+| **Blueprint RMOS Bridge** | Planned | Blueprint analysis ungoverned |
+
+### Backend Structure
+
+```
+services/api/app/rmos/
+├── runs_v2/                    # Immutable run artifacts
+│   ├── store.py                # Date-partitioned JSON storage
+│   ├── api_runs.py             # 15+ endpoints
+│   └── schemas.py              # Governance-compliant models
+├── engines/
+│   ├── feasibility_baseline_v1.py  # Production engine
+│   └── cam_feasibility.py          # 6 CAM mode stubs
+├── policies/
+│   └── safety_policy.py        # Central safety gate
+├── workflow/
+│   └── state_machine.py        # 10-state FSM
+└── api/                        # 4 router modules
+```
+
+### Risk Bucketing
+
+| Score Range | Bucket | Safety Decision |
+|-------------|--------|-----------------|
+| ≥80 | GREEN | ✅ ALLOW |
+| 50-79 | YELLOW | ⚠️ WARN (override available) |
+| <50 | RED | ❌ BLOCK |
+| Unknown | UNKNOWN | ❌ BLOCK (normalized to RED) |
+
+### Workflow States
+
+```
+DRAFT → PENDING_REVIEW → IN_REVIEW → APPROVED → SCHEDULED →
+    IN_PROGRESS → COMPLETED → ARCHIVED
+
+Alternative: IN_REVIEW → REJECTED | REVISION_REQUESTED → DRAFT
+```
+
+### Path to Full Completion (~48 hours)
+
+| Phase | Tasks | Hours |
+|-------|-------|-------|
+| **Phase 1: Testing** | Workflow FSM, Session, CAM, Saw, API tests | 20h |
+| **Phase 2: CAM Engines** | 6 real feasibility engines | 24h |
+| **Phase 3: Features** | Blueprint bridge, Intent completion, FANUC stub | 8h |
+
+### Comparison: All Systems
+
+| Aspect | RMOS | Blueprint | Art Studio | CAM |
+|--------|------|-----------|------------|-----|
+| Core Algorithms | ✅ Complete | ✅ Complete | ✅ Complete | ✅ Complete |
+| API Endpoints | ✅ 95% | ✅ 93% | ✅ 90% | ⚠️ 65% |
+| Persistence | ✅ Complete | ✅ Complete | ✅ Complete | ❌ Missing |
+| Test Coverage | ⚠️ 20% | ⚠️ Partial | ✅ Good | ⚠️ Gaps |
+| Hours to MVP | ~48h | ~24h | ~30h | ~50h |
+
+**RMOS provides the governance foundation all other systems depend on. Its completion enables safe manufacturing operations across the entire platform.**
 
 ---
 
