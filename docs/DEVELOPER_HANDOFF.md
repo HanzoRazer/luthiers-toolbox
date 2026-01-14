@@ -1,6 +1,6 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.6.0
+**Version:** 1.7.0
 **Date:** 2026-01-13
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
@@ -24,6 +24,7 @@
 14. [Blueprint Reader System Analysis](#14-blueprint-reader-system-analysis)
 15. [RMOS System Analysis](#15-rmos-system-analysis)
 16. [CNC Saw Lab System Analysis](#16-cnc-saw-lab-system-analysis)
+17. [AI System Analysis](#17-ai-system-analysis)
 
 ---
 
@@ -1093,6 +1094,90 @@ services/api/app/
 | Hours to MVP | ~75h | ~24h | ~30h | ~48h | ~50h |
 
 **The Saw Lab is mature and production-ready for operator use. It represents one of the most complete subsystems with the strongest test coverage and safety infrastructure.**
+
+---
+
+## 17. AI System Analysis
+
+### Overall Status: ~65-70% Production-Ready
+
+The AI System is a **multi-layered platform** with approximately **26,878 lines of AI-related backend code**. Core infrastructure is production-ready; domain integrations are at various stages.
+
+**Full audit document:** `docs/AI_SYSTEM_AUDIT.md`
+
+### Architecture (Multi-Layer Design)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Canonical AI Platform (app/ai/)                                 │
+│  ├── Transport Layer    - Multi-provider LLM + Image clients    │
+│  ├── Cost Estimation    - Token pricing tables                  │
+│  ├── Safety Policy      - Content filtering framework           │
+│  └── Availability Gate  - Graceful 503 degradation              │
+├─────────────────────────────────────────────────────────────────┤
+│  Domain Integrations                                             │
+│  ├── Blueprint Reader   - Claude Sonnet 4 vision ✅              │
+│  ├── RMOS AI Search     - Constraint-first design ✅             │
+│  ├── AI Graphics        - Rosette suggestions ⚠️                 │
+│  └── G-code Explainer   - CNC analysis ❌                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### What's Working (Production-Ready)
+
+| Component | Lines | Status | Features |
+|-----------|-------|--------|----------|
+| **Canonical AI Platform** | 2,924 | ✅ 95% | Multi-provider transport, safety, cost |
+| **Blueprint Reader Phase 1** | 1,177 | ✅ 100% | Claude Sonnet 4 vision, PDF→PNG |
+| **Blueprint Reader Phase 2** | 730 | ✅ 100% | OpenCV vectorization, DXF export |
+| **RMOS AI Search** | 2,080+ | ✅ 90% | Constraint-first design, feasibility scoring |
+| **Availability Gate** | 147 | ✅ 100% | Graceful 503 degradation |
+
+### What's Incomplete
+
+| Component | Lines | Status | Gap |
+|-----------|-------|--------|-----|
+| **AI Graphics** | 6,647+ | ⚠️ 50% | Works API-side, no Vue UI |
+| **Cost Tracking** | 215 | ⚠️ 60% | Not persisted |
+| **G-code Explainer** | 115 | ❌ 20% | Parsing only, no LLM |
+
+### Provider Configuration
+
+| Provider | Env Variable | Required | Use Case |
+|----------|-------------|----------|----------|
+| **Anthropic (Claude)** | `ANTHROPIC_API_KEY` | ✅ Yes | Blueprint, RMOS |
+| OpenAI | `OPENAI_API_KEY` | No | Image generation |
+| Ollama | `OLLAMA_URL` | No | Local LLM fallback |
+
+### API Endpoints
+
+| Endpoint | Status | Description |
+|----------|--------|-------------|
+| `POST /api/blueprint/analyze` | ✅ | Claude vision extraction |
+| `POST /api/rmos/ai/constraint-search` | ✅ | LLM-guided design |
+| `POST /api/rmos/ai/quick-check` | ✅ | Fast feasibility |
+| `GET /api/rmos/ai/health` | ✅ | AI availability |
+| `POST /api/ai/graphics/suggest` | ⚠️ | Experimental |
+| `POST /api/gcode/explain` | ❌ | Stub only |
+
+### Path to Completion (~65 hours)
+
+| Phase | Tasks | Hours |
+|-------|-------|-------|
+| **Phase 1: Core** | AI Graphics UI, cost tracking, refinement loop | 35h |
+| **Phase 2: Polish** | Provider tests, G-code LLM, dashboard | 30h |
+
+### Comparison: All Systems
+
+| Aspect | AI | Saw Lab | Blueprint | Art Studio | RMOS | CAM |
+|--------|-----|---------|-----------|------------|------|-----|
+| Core Algorithms | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| API Endpoints | ⚠️ 80% | ✅ 95% | ✅ 93% | ✅ 90% | ✅ 95% | ⚠️ 65% |
+| Frontend UI | ⚠️ 30% | ⚠️ 70% | ✅ 90% | ✅ 85% | ✅ 100% | ⚠️ 60% |
+| Test Coverage | ⚠️ 70% | ✅ Excellent | ⚠️ Partial | ✅ Good | ⚠️ 20% | ⚠️ Gaps |
+| Hours to MVP | ~65h | ~75h | ~24h | ~30h | ~48h | ~50h |
+
+**The AI System provides the foundation for intelligent features across the platform. Core infrastructure is solid; remaining work focuses on UI integration and operational visibility.**
 
 ---
 
