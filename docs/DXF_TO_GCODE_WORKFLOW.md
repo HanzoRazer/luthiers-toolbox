@@ -65,27 +65,16 @@ curl -X POST "http://localhost:8000/api/cam/blueprint/to-adaptive" \
 **Response (toolpath_response.json):**
 ```json
 {
-  "success": true,
-  "plan": {
-    "moves": [
-      {"type": "G0", "x": 0, "y": 0, "z": 5.0},
-      {"type": "G0", "x": 10.5, "y": 15.2, "z": 5.0},
-      {"type": "G1", "x": 10.5, "y": 15.2, "z": -1.5, "f": 300},
-      {"type": "G1", "x": 50.0, "y": 15.2, "z": -1.5, "f": 1200}
-    ],
-    "stats": {
-      "length_mm": 547.3,
-      "time_s": 28.4,
-      "volume_mm3": 125000,
-      "move_count": 284
-    }
-  },
-  "warnings": [],
-  "debug": {
-    "filename": "your_design.dxf",
-    "layer": "GEOMETRY",
-    "loop_count": 2
-  }
+  "loops_extracted": 1,
+  "loops": [{"pts": [[0,0], [100,0], [100,50], [0,50]]}],
+  "moves": [
+    {"code": "G0", "z": 5.0},
+    {"code": "G0", "x": 96.5, "y": 46.5},
+    {"code": "G1", "z": -3.0, "f": 1200.0},
+    {"code": "G1", "x": 3.5, "y": 46.5, "f": 1200.0}
+  ],
+  "stats": {"move_count": 23},
+  "warnings": []
 }
 ```
 
