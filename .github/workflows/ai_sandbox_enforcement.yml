@@ -30,6 +30,9 @@ jobs:
       - name: Enforce AI sandbox write-path restrictions
         run: python ci/ai_sandbox/check_ai_write_paths.py
 
+      - name: AI Context Governance Comment Gate
+        run: python scripts/ci/check_ai_context_governance_comment.py
+
   ai-sandbox-summary:
     name: Governance Summary
     runs-on: ubuntu-latest
