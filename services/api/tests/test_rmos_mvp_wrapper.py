@@ -109,17 +109,24 @@ class TestMVPWrapperIntegration:
         assert response.status_code == 200, response.text
         data = response.json()
 
-        # Verify response structure
+        # Verify new response structure
+        assert data["ok"] is True
         assert "run_id" in data
         assert data["run_id"].startswith("run_")
-        assert "gcode_text" in data
-        assert len(data["gcode_text"]) > 0
-        assert "status" in data
-        assert data["status"] in ("GREEN", "YELLOW", "RED")
+
+        # G-code via gcode ref
+        assert "gcode" in data
+        assert data["gcode"]["inline"] is True
+        assert len(data["gcode"]["text"]) > 0
+
+        # Decision
+        assert "decision" in data
+        assert data["decision"]["risk_level"] in ("GREEN", "YELLOW", "RED")
+
+        # Hashes
         assert "hashes" in data
-        assert "dxf" in data["hashes"]
-        assert "plan" in data["hashes"]
-        assert "gcode" in data["hashes"]
+        assert "feasibility_sha256" in data["hashes"]
+        assert "gcode_sha256" in data["hashes"]
 
     def test_wrapper_creates_rmos_artifact(self, client, dxf_fixture):
         """Wrapper creates RMOS run artifact."""
@@ -132,13 +139,10 @@ class TestMVPWrapperIntegration:
         data = response.json()
 
         run_id = data["run_id"]
-        rmos_status = data.get("rmos_status", "ok")
-
-        # RMOS should succeed or be best-effort
-        assert rmos_status in ("ok", "partial", "failed")
+        rmos_persisted = data.get("rmos_persisted", True)
 
         # If RMOS succeeded, verify artifact exists
-        if rmos_status == "ok":
+        if rmos_persisted:
             from app.rmos.runs_v2.store import get_run
             artifact = get_run(run_id)
             # Artifact should exist (may be None in isolated test)
@@ -149,7 +153,7 @@ class TestMVPWrapperIntegration:
                 assert artifact.hashes.gcode_sha256
 
     def test_wrapper_hashes_are_deterministic(self, client, dxf_fixture):
-        """Same input produces same DXF hash (content-addressed)."""
+        """Same input produces same feasibility hash (content-addressed)."""
         params = {
             "tool_d": "6.0",
             "stepover": "0.45",
@@ -177,10 +181,11 @@ class TestMVPWrapperIntegration:
         assert resp2.status_code == 200
         data2 = resp2.json()
 
-        # DXF hash should be identical (pure content hash)
-        assert data1["hashes"]["dxf"] == data2["hashes"]["dxf"]
+        # Feasibility hash should be identical when no warnings
+        # (same geometry, same params -> same feasibility check)
+        assert data1["hashes"]["feasibility_sha256"] == data2["hashes"]["feasibility_sha256"]
 
-        # Note: plan hash may differ due to timing stats (e.g., est_time_sec)
+        # Note: opplan hash may differ due to timing stats (e.g., est_time_sec)
         # Note: gcode hash may differ due to timestamp in metadata comment
         # The key determinism test is test_wrapper_gcode_matches_direct_endpoint
         # which compares actual G-code moves
@@ -229,7 +234,7 @@ class TestMVPWrapperDeterminism:
             data=params,
         )
         assert wrapper_resp.status_code == 200
-        wrapper_gcode = wrapper_resp.json()["gcode_text"]
+        wrapper_gcode = wrapper_resp.json()["gcode"]["text"]
 
         # Call direct endpoint
         direct_resp = client.post(
@@ -273,7 +278,7 @@ class TestMVPWrapperBestEffort:
     def test_gcode_returned_even_with_invalid_run_id(self, client, dxf_fixture):
         """
         Best-effort policy: G-code should be returned even if RMOS storage
-        has issues. The response should indicate rmos_status != "ok".
+        has issues. The response should indicate rmos_persisted.
         """
         response = client.post(
             "/api/rmos/wrap/mvp/dxf-to-grbl",
@@ -283,9 +288,13 @@ class TestMVPWrapperBestEffort:
         assert response.status_code == 200
         data = response.json()
 
-        # G-code must be present regardless of RMOS status
-        assert "gcode_text" in data
-        assert len(data["gcode_text"]) > 0
+        # ok must be true regardless of RMOS status
+        assert data["ok"] is True
 
-        # RMOS status should be reported
-        assert "rmos_status" in data
+        # G-code must be present via gcode ref
+        assert "gcode" in data
+        assert data["gcode"]["inline"] is True
+        assert len(data["gcode"]["text"]) > 0
+
+        # RMOS persistence status should be reported
+        assert "rmos_persisted" in data
