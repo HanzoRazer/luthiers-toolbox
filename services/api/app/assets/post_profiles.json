@@ -27,15 +27,18 @@
       "(Mach4 CNC Controller)",
       "G90",
       "G17",
-      "G21"
+      "G21",
+      "M3 S18000",
+      "G4 P2"
     ],
     "footer": [
+      "M5",
       "M30",
       "(End of program)"
     ],
     "adaptive_feed": {
       "mode": "inline_f",
-      "slowdown_threshold": 0.90,
+      "slowdown_threshold": 0.9,
       "inline_min_f": 100
     }
   },
@@ -54,7 +57,7 @@
     ],
     "adaptive_feed": {
       "mode": "mcode",
-      "slowdown_threshold": 0.90,
+      "slowdown_threshold": 0.9,
       "inline_min_f": 100,
       "mcode_start": "M52 P0.7",
       "mcode_end": "M52 P1.0"
