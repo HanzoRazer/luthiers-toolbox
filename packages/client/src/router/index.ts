@@ -121,6 +121,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/cam/CamAdvisorView.vue"),
   },
 
+  // Shop-floor DXF → G-code (GRBL)
+  {
+    path: "/cam/dxf-to-gcode",
+    name: "DxfToGcode",
+    component: () => import("@/views/DxfToGcodeView.vue"),
+  },
+
   // Waves 15-16 — Instrument Geometry Designer (Fretboard CAM)
   {
     path: "/instrument-geometry",
