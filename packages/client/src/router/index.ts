@@ -149,6 +149,14 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/RmosRunsDiffView.vue"),
   },
 
+  // Run Artifact Viewer (single run detail page)
+  {
+    path: "/rmos/runs/:id",
+    name: "RmosRunViewer",
+    component: () => import("@/views/RmosRunViewerView.vue"),
+    props: true,
+  },
+
   // Run Variants Review Page (H3 Product Bundle)
   {
     path: "/rmos/runs/:run_id/variants",
