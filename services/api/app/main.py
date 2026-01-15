@@ -546,6 +546,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_mvp_wrapper_router (%s)", e)
     rmos_mvp_wrapper_router = None
 
+# RMOS Runs v2 Operator Pack Export
+try:
+    from .rmos.runs_v2.exports import router as rmos_runs_v2_exports_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_runs_v2_exports_router (%s)", e)
+    rmos_runs_v2_exports_router = None
+
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
 # =============================================================================
@@ -1043,6 +1050,10 @@ if rmos_workflow_router:
 if rmos_mvp_wrapper_router:
     app.include_router(rmos_mvp_wrapper_router, tags=["RMOS", "MVP Wrapper"])
 
+# RMOS Runs v2 Operator Pack Export
+if rmos_runs_v2_exports_router:
+    app.include_router(rmos_runs_v2_exports_router, tags=["RMOS", "Operator Pack"])
+
 # Wave 17: Workflow Sessions (SQLite persistence layer)
 if workflow_sessions_router:
     app.include_router(workflow_sessions_router, tags=["Workflow", "Sessions"])
@@ -1175,8 +1186,8 @@ except ImportError as e:
 # - Hard-locked capabilities (no PII, no sensitive manufacturing)
 # - Strict redaction (removes forbidden fields)
 # - Focused payload: run_summary, design_intent, artifacts
-# Endpoints: GET /api/ai/context, /api/ai/context/health
-# No POST/PUT/DELETE - strictly read-only.
+# Endpoints: GET /api/ai/context, /api/ai/context/health, POST /api/ai/context/build
+# No PUT/DELETE. POST /build is bounded assembly (no manufacturing secrets).
 # Schema: contracts/toolbox_ai_context_envelope_v1.schema.json
 # =============================================================================
 try:
