@@ -31,6 +31,7 @@ from .runs_v2.schemas import (
 from .runs_v2.store import create_run_id, persist_run
 from .runs_v2.hashing import sha256_of_bytes, sha256_of_obj, sha256_of_text
 from .runs_v2.attachments import put_bytes_attachment, put_json_attachment, put_text_attachment
+from .feasibility import FeasibilityInput, compute_feasibility
 
 
 router = APIRouter(prefix="/api/rmos/wrap/mvp", tags=["RMOS MVP Wrapper"])
@@ -317,40 +318,144 @@ async def wrap_mvp_dxf_to_grbl(
     # Read DXF bytes
     dxf_bytes = await file.read()
     dxf_filename = file.filename or "input.dxf"
+    dxf_sha256 = sha256_of_bytes(dxf_bytes)
 
     # ==========================================================================
-    # Step 1: Generate plan (existing golden path logic)
+    # Step 1: Pre-CAM Feasibility Check (deterministic, before plan generation)
     # ==========================================================================
+    # Build FeasibilityInput from request params + cheap DXF-derived signals
+    # NOTE: We don't have loops yet (they come from plan), so we use preflight hints
+    # For MVP, preflight signals are optional (None) - rules will skip checks if missing
+    fi = FeasibilityInput(
+        tool_d=tool_d,
+        stepover=stepover,
+        stepdown=stepdown,
+        z_rough=z_rough,
+        feed_xy=feed_xy,
+        feed_z=feed_z,
+        rapid=rapid,
+        safe_z=safe_z,
+        strategy=strategy,
+        layer_name=layer_name,
+        climb=climb,
+        smoothing=smoothing,
+        margin=margin,
+        # Preflight signals (None for MVP - can be enhanced later)
+        has_closed_paths=None,
+        loop_count_hint=None,
+        entity_count=None,
+        bbox=None,
+        smallest_feature_mm=None,
+        post_id="GRBL",
+        units="mm",
+    )
+
+    feasibility_result = compute_feasibility(fi)
+
+    # Compute deterministic feasibility hash (exclude computed_at_utc)
+    feasibility_for_hash = feasibility_result.model_dump()
+    feasibility_for_hash.pop("computed_at_utc", None)
+    feasibility_sha256 = sha256_of_obj(feasibility_for_hash)
+
+    # Derive decision from feasibility (authoritative)
+    risk_level = feasibility_result.risk_level.value
+    block_reason: Optional[str] = None
+    if feasibility_result.blocking:
+        block_reason = "; ".join(feasibility_result.blocking_reasons[:3])
+        warnings.extend(feasibility_result.blocking_reasons)
+    warnings.extend(feasibility_result.warnings)
+
+    # Option A (MVP): RED does not block generation, but marks decision as RED
+    # Operator pack download can require override later
+    # If CAM fails due to invalid params, we still return RMOS response with feasibility
+
+    # ==========================================================================
+    # Step 1.5: Generate plan (existing golden path logic)
+    # ==========================================================================
+    plan_result: Optional[Dict[str, Any]] = None
+    gcode_text: Optional[str] = None
+    cam_error: Optional[str] = None
+    cam_ok = True
+
     try:
         plan_result = _call_plan_from_dxf(dxf_bytes, dxf_filename, params)
+
+        # Extract request payload for gcode generation
+        request_payload = plan_result.get("request", {})
+        if not request_payload.get("loops"):
+            cam_error = "No geometry found in DXF"
+            cam_ok = False
+        else:
+            # Collect any warnings from plan
+            plan_warnings = plan_result.get("warnings", [])
+            if plan_warnings:
+                warnings.extend(plan_warnings)
+
+            # ==========================================================================
+            # Step 2: Generate G-code (existing golden path logic)
+            # ==========================================================================
+            request_payload["post_id"] = "GRBL"
+            request_payload["units"] = "mm"
+
+            try:
+                gcode_text = _call_gcode(request_payload, plan_result)
+            except Exception as e:
+                cam_error = f"G-code generation failed: {e}"
+                cam_ok = False
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"DXF processing failed: {e}")
+        cam_error = f"DXF processing failed: {e}"
+        cam_ok = False
 
-    # Extract request payload for gcode generation
-    request_payload = plan_result.get("request", {})
-    if not request_payload.get("loops"):
-        raise HTTPException(status_code=400, detail="No geometry found in DXF")
+    # If CAM failed, return RMOS response with feasibility but no gcode
+    if not cam_ok:
+        # Store feasibility attachment even if CAM failed
+        try:
+            feasibility_att, _, _ = put_json_attachment(
+                feasibility_result.model_dump(),
+                kind="feasibility",
+                filename="feasibility.json",
+            )
+            attachments: List[RunAttachment] = [feasibility_att]
+        except Exception:
+            attachments = []
 
-    # Collect any warnings from plan
-    plan_warnings = plan_result.get("warnings", [])
-    if plan_warnings:
-        warnings.extend(plan_warnings)
-
-    # ==========================================================================
-    # Step 2: Generate G-code (existing golden path logic)
-    # ==========================================================================
-    request_payload["post_id"] = "GRBL"
-    request_payload["units"] = "mm"
-
-    try:
-        gcode_text = _call_gcode(request_payload, plan_result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"G-code generation failed: {e}")
+        # Build error response with feasibility info
+        return RMOSWrapMvpResponse(
+            ok=False,
+            run_id=run_id,
+            decision=RMOSWrapDecision(
+                risk_level=risk_level,
+                warnings=warnings,
+                block_reason=block_reason or cam_error,
+            ),
+            hashes=RMOSWrapHashes(
+                feasibility_sha256=feasibility_sha256,
+                opplan_sha256=None,
+                gcode_sha256=None,
+                toolpaths_sha256=None,
+            ),
+            attachments=[
+                RMOSWrapAttachmentRef(
+                    kind=att.kind,
+                    sha256=att.sha256,
+                    filename=att.filename,
+                    mime=att.mime,
+                    size_bytes=att.size_bytes,
+                    created_at_utc=att.created_at_utc,
+                )
+                for att in attachments
+            ],
+            gcode=RMOSWrapGCodeRef(inline=True, text=None, path=None),
+            warnings=warnings,
+            rmos_persisted=False,
+            rmos_error=cam_error,
+        )
 
     # ==========================================================================
     # Step 3: Compute content hashes (RMOS wrapping begins here)
     # ==========================================================================
-    dxf_sha256 = sha256_of_bytes(dxf_bytes)
+    # dxf_sha256 already computed in Step 1
     plan_sha256 = sha256_of_obj(plan_result)
     gcode_sha256 = sha256_of_text(gcode_text)
 
@@ -408,6 +513,14 @@ async def wrap_mvp_dxf_to_grbl(
         )
         attachments.append(manifest_att)
 
+        # Feasibility (from pre-CAM check)
+        feasibility_att, _, _ = put_json_attachment(
+            feasibility_result.model_dump(),
+            kind="feasibility",
+            filename="feasibility.json",
+        )
+        attachments.append(feasibility_att)
+
     except Exception as e:
         rmos_status = "partial"
         rmos_error = f"Attachment storage failed: {e}"
@@ -416,38 +529,38 @@ async def wrap_mvp_dxf_to_grbl(
     # ==========================================================================
     # Step 5: Create RMOS run artifact (best-effort)
     # ==========================================================================
-    risk_level = _compute_risk_level(warnings)
-
-    # Build feasibility record (simple for MVP)
-    feasibility = {
-        "status": "PASS" if risk_level == "GREEN" else "WARN",
-        "risk_level": risk_level,
-        "warnings": warnings,
-        "params_valid": True,
-        "geometry_valid": bool(request_payload.get("loops")),
-    }
-    feasibility_sha256 = sha256_of_obj(feasibility)
+    # risk_level and feasibility_sha256 already computed in Step 1
+    # Compute score from risk_level
+    if risk_level == "GREEN":
+        score = 100.0
+    elif risk_level == "YELLOW":
+        score = 75.0
+    else:  # RED
+        score = 25.0
 
     try:
         artifact = RunArtifact(
             run_id=run_id,
             mode="mvp_dxf_to_grbl",
             tool_id=f"endmill_{tool_d}mm",
-            status="OK",
+            status="BLOCKED" if feasibility_result.blocking else "OK",
             request_summary={
                 "pipeline_id": "mvp_dxf_to_grbl_v1",
                 "dxf_filename": dxf_filename,
                 "job_name": job_name,
                 "params": params,
             },
-            feasibility=feasibility,
+            feasibility=feasibility_result.model_dump(),
             decision=RunDecision(
                 risk_level=risk_level,
-                score=100.0 if risk_level == "GREEN" else 75.0,
+                score=score,
+                block_reason=block_reason,
                 warnings=warnings,
                 details={
                     "policy": "best_effort",
                     "controller": "GRBL",
+                    "engine_version": feasibility_result.engine_version,
+                    "blocking": feasibility_result.blocking,
                 },
             ),
             hashes=Hashes(
@@ -512,7 +625,7 @@ async def wrap_mvp_dxf_to_grbl(
         decision=RMOSWrapDecision(
             risk_level=risk_level,
             warnings=warnings,
-            block_reason=None,
+            block_reason=block_reason,
         ),
         hashes=RMOSWrapHashes(
             feasibility_sha256=feasibility_sha256,
