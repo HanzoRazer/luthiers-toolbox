@@ -18,13 +18,15 @@ from .schemas import RunAttachment
 from .hashing import sha256_of_obj, sha256_of_text, sha256_of_bytes, sha256_file
 
 
-# Default storage path
-ATTACHMENTS_DIR_DEFAULT = "services/api/data/run_attachments"
+# Default storage path (computed from module location)
+def _default_attachments_dir() -> str:
+    """Compute default attachments directory from module location."""
+    return str(Path(__file__).resolve().parents[3] / "data" / "run_attachments")
 
 
 def _get_attachments_dir() -> str:
     """Get attachments directory from environment or default."""
-    return os.getenv("RMOS_RUN_ATTACHMENTS_DIR", ATTACHMENTS_DIR_DEFAULT)
+    return os.getenv("RMOS_RUN_ATTACHMENTS_DIR", _default_attachments_dir())
 
 
 def _ensure_dir(path: Path) -> None:
