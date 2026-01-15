@@ -10,7 +10,7 @@ import os
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -40,6 +40,69 @@ def _attachment_path_for(sha256: str, filename: str) -> Path:
     ext = Path(filename).suffix or ""
     root = _attachments_root_dir()
     return root / sha256[0:2] / sha256[2:4] / f"{sha256}{ext}"
+
+
+def _attachments_dir_for_sha(sha256: str) -> Path:
+    root = _attachments_root_dir()
+    return root / sha256[0:2] / sha256[2:4]
+
+
+def _guess_mime_from_suffix(suffix: str) -> str:
+    s = suffix.lower()
+    if s == ".dxf":
+        return "application/dxf"
+    if s in (".json",):
+        return "application/json"
+    if s in (".nc", ".gcode", ".tap", ".txt"):
+        return "text/plain"
+    if s in (".zip",):
+        return "application/zip"
+    return "application/octet-stream"
+
+
+def _resolve_attachment_file(sha256: str) -> Tuple[Path, str]:
+    """
+    Attachments are stored as:
+      {root}/{aa}/{bb}/{sha256}{ext}
+    But the API caller only has sha. We locate the file by globbing sha256.*
+    in the correct subdir and picking the first match.
+    """
+    d = _attachments_dir_for_sha(sha256)
+    if not d.exists():
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    # Prefer common extensions first for determinism
+    preferred = [".dxf", ".json", ".nc", ".gcode", ".tap", ".txt"]
+    for ext in preferred:
+        p = d / f"{sha256}{ext}"
+        if p.exists():
+            return p, ext
+
+    matches = sorted(d.glob(f"{sha256}*"))
+    if not matches:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    p = matches[0]
+    return p, p.suffix or ""
+
+
+@router.get("/attachments/{sha256}")
+def download_attachment(sha256: str):
+    """
+    Read-only attachment fetch by sha256.
+    Best-effort filename + mime based on stored extension.
+    """
+    sha256 = (sha256 or "").strip()
+    if len(sha256) != 64:
+        raise HTTPException(status_code=422, detail="sha256 must be 64 hex chars")
+
+    path, ext = _resolve_attachment_file(sha256)
+    mime = _guess_mime_from_suffix(ext)
+    filename = f"{sha256}{ext}"
+
+    f = open(path, "rb")
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(f, media_type=mime, headers=headers)
 
 
 def _pick_by_kind(attachments, kind: str):

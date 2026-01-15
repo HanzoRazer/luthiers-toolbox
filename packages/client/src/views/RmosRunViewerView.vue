@@ -63,6 +63,56 @@ function goToDiff() {
 function goBack() {
   router.push("/rmos/runs");
 }
+
+async function downloadOperatorPack() {
+  if (!runId.value) return;
+  error.value = null;
+  let url: string | null = null;
+  try {
+    const res = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId.value)}/operator-pack`);
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const t = await res.text(); if (t) msg = t; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `operator_pack_${runId.value}.zip`;
+    a.click();
+  } catch (e: any) {
+    error.value = String(e?.message || e);
+  } finally {
+    if (url) URL.revokeObjectURL(url);
+  }
+}
+
+async function downloadAttachment(att: any) {
+  if (!att?.sha256) return;
+  error.value = null;
+  let url: string | null = null;
+  try {
+    const res = await fetch(`/api/rmos/runs_v2/attachments/${encodeURIComponent(att.sha256)}`);
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const t = await res.text(); if (t) msg = t; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    url = URL.createObjectURL(blob);
+    const dl = document.createElement("a");
+    dl.href = url;
+    // Prefer original filename if present, else sha-based
+    const safeName = (att.filename || `${att.sha256}`).replace(/[^\w.\-]+/g, "_");
+    dl.download = safeName;
+    dl.click();
+  } catch (e: any) {
+    error.value = String(e?.message || e);
+  } finally {
+    if (url) URL.revokeObjectURL(url);
+  }
+}
 </script>
 
 <template>
@@ -77,6 +127,9 @@ function goBack() {
       </div>
       <div class="header-actions" v-if="run">
         <button class="btn" @click="handleDownload">Download JSON</button>
+        <button class="btn btn-success" @click="downloadOperatorPack" :disabled="loading">
+          Operator Pack (.zip)
+        </button>
         <button class="btn btn-primary" @click="goToDiff">Compare (Diff)</button>
       </div>
     </header>
@@ -196,6 +249,9 @@ function goBack() {
             <span class="att-name">{{ att.filename }}</span>
             <span class="att-mime">{{ att.mime }}</span>
             <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
+            <button class="btn btn-sm" @click="downloadAttachment(att)" :disabled="loading">
+              Download
+            </button>
           </div>
         </div>
         <div v-else class="empty-state">No attachments</div>
@@ -287,6 +343,21 @@ function goBack() {
 
 .btn-primary:hover {
   background: #0052a3;
+}
+
+.btn-success {
+  background: #28a745;
+  border-color: #28a745;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
 }
 
 /* States */
