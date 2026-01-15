@@ -265,12 +265,20 @@ class AiContextBuildRequest(BaseModel):
     """Request to build a bounded AI context bundle."""
     # Identify what the user is working on
     run_id: Optional[str] = Field(None, description="RMOS run ID")
-    pattern_id: Optional[str] = Field(None, description="Pattern/design ID")
+    snapshot_id: Optional[str] = Field(None, description="Art Studio snapshot ID (for rosette_param_spec)")
+    pattern_id: Optional[str] = Field(None, description="[DEPRECATED] Alias for snapshot_id")
+    compare_run_id: Optional[str] = Field(None, description="Run ID to compare against for diff_summary")
+
+    # Mode selection
+    mode: str = Field(
+        default="run_first",
+        description="Context mode: run_first (default) or art_studio_first",
+    )
 
     # What the UI wants to include (explicit allowlist)
     include: List[str] = Field(
         default_factory=list,
-        description="What to include: rosette_param_spec, manufacturing_candidates, run_summary, design_intent, governance_notes",
+        description="What to include: rosette_param_spec, diff_summary, artifact_manifest, run_summary, design_intent, governance_notes",
     )
 
     # Optional UI-provided notes (kept separate so we can fence it)
@@ -296,7 +304,12 @@ ALLOWED_INCLUDES: Set[str] = {
     "governance_notes",
     "docs_excerpt",
     "ui_state_hint",
+    "diff_summary",
+    "artifact_manifest",
 }
+
+# Supported modes
+ALLOWED_MODES: Set[str] = {"run_first", "art_studio_first"}
 
 
 def _build_run_summary(run_id: str) -> Dict[str, Any]:
@@ -312,37 +325,52 @@ def _build_design_intent(pattern_id: str) -> Dict[str, Any]:
     return _fetch_design_intent(pattern_id)
 
 
-def _build_rosette_param_spec(pattern_id: Optional[str]) -> Dict[str, Any]:
+def _build_rosette_param_spec(snapshot_id: Optional[str]) -> Dict[str, Any]:
     """
     Build rosette parameter spec context.
 
-    Does NOT include manufacturing parameters - only design parameters.
+    Requires snapshot_id (Art Studio snapshot). Does NOT include manufacturing
+    parameters - only design parameters.
+
+    v1 behavior: caller must provide snapshot_id explicitly.
+    v1.1+: may resolve from run.meta["snapshot_id"] if bound.
     """
-    if not pattern_id:
-        return {"status": "no_pattern_id", "note": "Provide pattern_id to fetch rosette params"}
+    if not snapshot_id:
+        return {
+            "status": "rosette_snapshot_unbound",
+            "note": "Provide snapshot_id to fetch rosette params. Art Studio UI knows this value.",
+        }
 
     try:
         from app.art_studio.services.rosette_snapshot_store import RosetteSnapshotStore
 
         store = RosetteSnapshotStore()
-        snapshot = store.get(pattern_id)
+        snapshot = store.get(snapshot_id)
         if snapshot:
-            # Extract only design-safe parameters
-            return {
+            # Extract only design-safe parameters from snapshot.design (RosetteParamSpec)
+            design = getattr(snapshot, "design", None)
+            result = {
                 "status": "ok",
-                "pattern_id": pattern_id,
-                "pattern_type": getattr(snapshot, "pattern_type", "unknown"),
-                "ring_count": getattr(snapshot, "ring_count", None),
-                "target_diameter_mm": getattr(snapshot, "target_diameter_mm", None),
-                "material_type": getattr(snapshot, "material_type", None),
-                # Note: NO toolpaths, NO gcode, NO machining params
+                "snapshot_id": snapshot_id,
+                "design_fingerprint": getattr(snapshot, "design_fingerprint", None),
+                "created_at_utc": getattr(snapshot, "created_at_utc", None),
+                "run_id": getattr(snapshot, "run_id", None),  # if bound
             }
+            if design:
+                # Safe design params only - NO machining/toolpath params
+                result["design"] = {
+                    "pattern_type": getattr(design, "pattern_type", "unknown"),
+                    "ring_count": getattr(design, "ring_count", None),
+                    "outer_diameter_mm": getattr(design, "outer_diameter_mm", None),
+                    "material": getattr(design, "material", None),
+                }
+            return result
     except ImportError:
-        pass
-    except Exception:
-        pass
+        return {"status": "store_unavailable", "snapshot_id": snapshot_id}
+    except Exception as e:
+        return {"status": "error", "snapshot_id": snapshot_id, "error": str(e)[:100]}
 
-    return {"status": "not_found", "pattern_id": pattern_id}
+    return {"status": "not_found", "snapshot_id": snapshot_id}
 
 
 def _build_manufacturing_candidates(run_id: Optional[str]) -> Dict[str, Any]:
@@ -377,6 +405,90 @@ def _build_governance_notes(intent: str = "") -> Dict[str, Any]:
         ],
         "note": "Wire to full governance_notes provider for detailed explanations.",
     }
+
+
+def _build_diff_summary(run_id: str, compare_run_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Build diff summary context (safe text only, no manufacturing data).
+
+    If compare_run_id is provided, computes diff between runs.
+    Otherwise returns status indicating no comparison available.
+    """
+    if not compare_run_id:
+        return {
+            "status": "no_comparison",
+            "summary": "No comparison run specified.",
+            "note": "Provide compare_run_id to compute diff.",
+        }
+
+    try:
+        from app.rmos.runs_v2.store import get_run
+        from app.rmos.runs_v2.diff import diff_runs, diff_summary
+
+        run_a = get_run(run_id)
+        run_b = get_run(compare_run_id)
+
+        if not run_a or not run_b:
+            return {
+                "status": "run_not_found",
+                "summary": f"One or both runs not found: {run_id}, {compare_run_id}",
+            }
+
+        diff_result = diff_runs(run_a, run_b)
+        summary_text = diff_summary(diff_result)
+
+        return {
+            "status": "ok",
+            "summary": summary_text,
+            "severity": diff_result.get("diff_severity", "INFO"),
+            "changed_count": len(diff_result.get("changed_paths", [])),
+            # Note: raw diff detail excluded - only safe summary text
+        }
+    except ImportError:
+        return {"status": "unavailable", "summary": "Diff engine not available."}
+    except Exception as e:
+        return {"status": "error", "summary": str(e)[:200]}
+
+
+def _build_artifact_manifest(run_id: str) -> Dict[str, Any]:
+    """
+    Build artifact manifest (metadata only, NO bytes, NO toolpaths/gcode content).
+
+    Returns list of artifacts with: artifact_id, kind, sha256, bytes (size), mime, filename, created_utc.
+    """
+    try:
+        from app.rmos.runs_v2.store import get_run
+
+        run = get_run(run_id)
+        if not run:
+            return {"status": "not_found", "run_id": run_id, "artifact_count": 0, "artifacts": []}
+
+        attachments = getattr(run, "attachments", None) or []
+        manifest = []
+
+        for att in attachments:
+            # Only include metadata, never actual content
+            entry = {
+                "kind": getattr(att, "kind", "unknown"),
+                "sha256": getattr(att, "sha256", None),
+                "size_bytes": getattr(att, "size_bytes", 0),
+                "mime": getattr(att, "mime", "application/octet-stream"),
+                "filename": getattr(att, "filename", ""),
+                "created_at_utc": str(getattr(att, "created_at_utc", "")),
+            }
+            manifest.append(entry)
+
+        return {
+            "status": "ok",
+            "run_id": run_id,
+            "artifact_count": len(manifest),
+            "artifacts": manifest,
+            # Note: NO raw bytes, NO toolpath/gcode content
+        }
+    except ImportError:
+        return {"status": "unavailable", "run_id": run_id, "artifact_count": 0, "artifacts": []}
+    except Exception as e:
+        return {"status": "error", "run_id": run_id, "artifact_count": 0, "error": str(e)[:200], "artifacts": []}
 
 
 @router.post("/build", response_model=AiContextBuildResponse)
@@ -417,13 +529,22 @@ def build_context(payload: AiContextBuildRequest) -> AiContextBuildResponse:
         context["design_intent"] = _build_design_intent(payload.pattern_id)
 
     if "rosette_param_spec" in allowed:
-        context["rosette_param_spec"] = _build_rosette_param_spec(payload.pattern_id)
+        # snapshot_id preferred, pattern_id as deprecated fallback
+        sid = payload.snapshot_id or payload.pattern_id
+        context["rosette_param_spec"] = _build_rosette_param_spec(sid)
 
     if "manufacturing_candidates" in allowed:
         context["manufacturing_candidates"] = _build_manufacturing_candidates(payload.run_id)
 
     if "governance_notes" in allowed:
         context["governance_notes"] = _build_governance_notes()
+
+    # Art-studio-first mode includes
+    if "diff_summary" in allowed and payload.run_id:
+        context["diff_summary"] = _build_diff_summary(payload.run_id, payload.compare_run_id)
+
+    if "artifact_manifest" in allowed and payload.run_id:
+        context["artifact_manifest"] = _build_artifact_manifest(payload.run_id)
 
     # Include user notes (kept separate for fencing)
     if payload.user_notes:
@@ -433,6 +554,8 @@ def build_context(payload: AiContextBuildRequest) -> AiContextBuildResponse:
     context["_meta"] = {
         "run_id": payload.run_id,
         "pattern_id": payload.pattern_id,
+        "compare_run_id": payload.compare_run_id,
+        "mode": payload.mode,
         "includes_requested": list(allowed),
         "environment": _get_environment(),
         "commit": _get_git_commit(),

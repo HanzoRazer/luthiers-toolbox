@@ -1,267 +1,108 @@
+# services/api/app/rmos/runs_v2/diff.py
 """
-RMOS Run Diff Engine v2 - Governance Compliant
+Run Diff Engine (Stub)
 
-Provides authoritative diff between two run artifacts.
-Adapted for Pydantic-based RunArtifact models.
+Computes safe, text-only diffs between runs.
+NEVER exposes toolpaths, gcode, or manufacturing secrets.
 
-Used for:
-- Comparing runs in the UI
-- Detecting drift in replay
-- Audit trail analysis
+Contract: Only metadata and design-intent differences are surfaced.
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-
-from .schemas import RunArtifact
+from typing import Any, Dict, List
 
 
-def _to_dict(obj: Any) -> Any:
-    """Convert Pydantic model to dict if needed."""
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump()
-    if hasattr(obj, "dict"):
-        return obj.dict()
-    return obj
-
-
-def _diff_values(a: Any, b: Any) -> Optional[Dict[str, Any]]:
-    """Diff two values. Returns None if equal."""
-    if a == b:
-        return None
-    return {"a": a, "b": b}
-
-
-def _diff_dict(a: Dict[str, Any] | None, b: Dict[str, Any] | None) -> Dict[str, Any]:
-    """Diff two dicts, returning changed keys."""
-    a = a or {}
-    b = b or {}
-    keys = sorted(set(a.keys()) | set(b.keys()))
-    out: Dict[str, Any] = {}
-    for k in keys:
-        if a.get(k) != b.get(k):
-            out[k] = {"a": a.get(k), "b": b.get(k)}
-    return out
-
-
-def _severity_from_diff(diff: Dict[str, Any]) -> str:
+def diff_runs(run_a: Any, run_b: Any) -> Dict[str, Any]:
     """
-    Determine severity from diff.
+    Compute diff between two runs.
 
-    CRITICAL: gcode/toolpaths hash changed, risk_level changed, status changed
-    WARNING: feasibility_sha256 changed, score changed
-    INFO: notes/errors-only changes
+    Returns a safe diff structure with:
+    - changed_paths: list of field paths that differ
+    - diff_severity: INFO | WARN | CRITICAL
+    - metadata_changes: dict of safe metadata diffs
+
+    NEVER includes toolpath or gcode content.
     """
-    critical_keys = {
-        "hashes.gcode_sha256",
-        "hashes.toolpaths_sha256",
-        "decision.risk_level",
-        "status",
-    }
-    warning_keys = {
-        "hashes.feasibility_sha256",
-        "decision.score",
-    }
-
-    changed_paths = set(diff.get("changed_paths", []))
-
-    if any(p in changed_paths for p in critical_keys):
-        return "CRITICAL"
-    if any(p in changed_paths for p in warning_keys):
-        return "WARNING"
-    if changed_paths:
-        return "INFO"
-    return "INFO"
-
-
-def diff_runs(a: RunArtifact, b: RunArtifact) -> Dict[str, Any]:
-    """
-    Compute authoritative diff between two run artifacts.
-
-    Returns structured diff with:
-    - a/b run identifiers
-    - diff_severity: CRITICAL | WARNING | INFO
-    - changed_paths: list of dotted paths that changed
-    - diff: structured diff data
-    """
-    A = _to_dict(a)
-    B = _to_dict(b)
-
-    diffs: Dict[str, Any] = {}
     changed_paths: List[str] = []
+    severity = "INFO"
 
-    def set_diff(path: str, d: Optional[Dict[str, Any]]):
-        if d is None:
-            return
-        diffs[path] = d
-        changed_paths.append(path)
+    # Compare safe metadata fields only
+    safe_fields = ["status", "notes", "event_type", "batch_label", "parent_plan_id"]
 
-    # Top-level identity
-    set_diff("event_type", _diff_values(A.get("event_type"), B.get("event_type")))
-    set_diff("status", _diff_values(A.get("status"), B.get("status")))
-    set_diff("mode", _diff_values(A.get("mode"), B.get("mode")))
+    for field in safe_fields:
+        val_a = getattr(run_a, field, None)
+        val_b = getattr(run_b, field, None)
+        if val_a != val_b:
+            changed_paths.append(field)
 
-    # Context group
-    ctx_fields = ["tool_id", "material_id", "machine_id", "workflow_mode", "workflow_session_id"]
-    ctx = {}
-    for f in ctx_fields:
-        d = _diff_values(A.get(f), B.get(f))
-        if d:
-            ctx[f] = d
-            changed_paths.append(f"context.{f}")
-    if ctx:
-        diffs["context"] = ctx
+    # Compare attachment counts (not content)
+    att_a = getattr(run_a, "attachments", []) or []
+    att_b = getattr(run_b, "attachments", []) or []
+    if len(att_a) != len(att_b):
+        changed_paths.append("attachments.count")
 
-    # Hashes group (v2 uses nested Hashes model)
-    a_hashes = A.get("hashes") or {}
-    b_hashes = B.get("hashes") or {}
-    hashes = {}
-    for f in ["feasibility_sha256", "toolpaths_sha256", "gcode_sha256", "opplan_sha256"]:
-        d = _diff_values(a_hashes.get(f), b_hashes.get(f))
-        if d:
-            hashes[f] = d
-            changed_paths.append(f"hashes.{f}")
-    if hashes:
-        diffs["hashes"] = hashes
+    # Determine severity
+    if "status" in changed_paths:
+        severity = "WARN"
+    if len(changed_paths) > 5:
+        severity = "WARN"
 
-    # Decision group (v2 uses nested RunDecision model)
-    a_decision = A.get("decision") or {}
-    b_decision = B.get("decision") or {}
-    decision_diff = {}
-    for f in ["risk_level", "score", "block_reason"]:
-        d = _diff_values(a_decision.get(f), b_decision.get(f))
-        if d:
-            decision_diff[f] = d
-            changed_paths.append(f"decision.{f}")
-    if decision_diff:
-        diffs["decision"] = decision_diff
-
-    # Feasibility diff
-    feas_diff = _diff_dict(A.get("feasibility"), B.get("feasibility"))
-    if feas_diff:
-        diffs["feasibility"] = feas_diff
-        for k in feas_diff:
-            changed_paths.append(f"feasibility.{k}")
-
-    # Attachments diff
-    a_atts = A.get("attachments") or []
-    b_atts = B.get("attachments") or []
-
-    def norm_atts(atts):
-        out = []
-        for x in atts:
-            if isinstance(x, dict):
-                out.append({
-                    "sha256": x.get("sha256"),
-                    "kind": x.get("kind"),
-                    "filename": x.get("filename"),
-                })
-        return sorted(out, key=lambda z: (z.get("kind") or "", z.get("sha256") or ""))
-
-    na = norm_atts(a_atts)
-    nb = norm_atts(b_atts)
-    if na != nb:
-        diffs["attachments"] = {"a": na, "b": nb}
-        changed_paths.append("attachments")
-
-    # Advisory inputs diff
-    a_advisory = A.get("advisory_inputs") or []
-    b_advisory = B.get("advisory_inputs") or []
-
-    def norm_advisory(advs):
-        out = []
-        for x in advs:
-            if isinstance(x, dict):
-                out.append({
-                    "advisory_id": x.get("advisory_id"),
-                    "kind": x.get("kind"),
-                })
-        return sorted(out, key=lambda z: z.get("advisory_id") or "")
-
-    na_adv = norm_advisory(a_advisory)
-    nb_adv = norm_advisory(b_advisory)
-    if na_adv != nb_adv:
-        diffs["advisory_inputs"] = {"a": na_adv, "b": nb_adv}
-        changed_paths.append("advisory_inputs")
-
-    # Notes / errors
-    set_diff("notes", _diff_values(A.get("notes"), B.get("notes")))
-    set_diff("errors", _diff_values(A.get("errors"), B.get("errors")))
-
-    # Meta diff
-    meta_diff = _diff_dict(A.get("meta"), B.get("meta"))
-    if meta_diff:
-        diffs["meta"] = meta_diff
-        for k in meta_diff:
-            changed_paths.append(f"meta.{k}")
-
-    severity = _severity_from_diff({"changed_paths": changed_paths})
-
-    # Format created_at for output
-    a_created = A.get("created_at_utc")
-    b_created = B.get("created_at_utc")
-    if hasattr(a_created, "isoformat"):
-        a_created = a_created.isoformat()
-    if hasattr(b_created, "isoformat"):
-        b_created = b_created.isoformat()
-
-    # Build result with summary for API contract compliance
-    result = {
-        "a": {"run_id": A.get("run_id"), "created_at_utc": a_created},
-        "b": {"run_id": B.get("run_id"), "created_at_utc": b_created},
+    return {
+        "run_id_a": getattr(run_a, "run_id", "unknown"),
+        "run_id_b": getattr(run_b, "run_id", "unknown"),
+        "changed_paths": changed_paths,
         "diff_severity": severity,
-        "changed_paths": sorted(set(changed_paths)),
-        "diff": diffs,
+        "change_count": len(changed_paths),
     }
-    # Add summary for standard diff payload structure
-    result["summary"] = diff_summary(result)
-    return result
 
 
 def diff_summary(diff_result: Dict[str, Any]) -> str:
     """
-    Generate a human-readable summary of a diff result.
+    Generate human-readable summary of a diff result.
 
-    Args:
-        diff_result: Output from diff_runs()
-
-    Returns:
-        Brief summary string
+    Returns safe text only - no manufacturing data.
     """
-    severity = diff_result.get("diff_severity", "INFO")
+    run_a = diff_result.get("run_id_a", "A")
+    run_b = diff_result.get("run_id_b", "B")
     changed = diff_result.get("changed_paths", [])
+    severity = diff_result.get("diff_severity", "INFO")
 
     if not changed:
-        return "No differences detected."
+        return f"No differences between {run_a} and {run_b}."
 
-    return f"[{severity}] {len(changed)} field(s) changed: {', '.join(changed[:5])}{'...' if len(changed) > 5 else ''}"
+    changes_text = ", ".join(changed[:5])
+    if len(changed) > 5:
+        changes_text += f" (+{len(changed) - 5} more)"
+
+    return f"[{severity}] {len(changed)} difference(s) between {run_a} and {run_b}: {changes_text}"
 
 
-def build_diff(left: RunArtifact, right: RunArtifact) -> str:
+def build_diff(run_a: Any, run_b: Any) -> str:
     """
-    Build a unified text diff between two run artifacts.
+    Build a text diff between two runs.
 
-    Returns a human-readable unified diff string suitable for
-    display or attachment storage.
+    This is the main entry point used by the API.
+    Returns a safe, text-only diff string.
+
+    NEVER includes toolpath or gcode content.
     """
-    import json
+    diff_result = diff_runs(run_a, run_b)
+    lines = [diff_summary(diff_result), ""]
 
-    diff_result = diff_runs(left, right)
+    # Add field-by-field details for changed paths
+    for path in diff_result.get("changed_paths", []):
+        val_a = getattr(run_a, path, None) if not path.startswith("attachments") else None
+        val_b = getattr(run_b, path, None) if not path.startswith("attachments") else None
 
-    lines = []
-    lines.append(f"--- {diff_result['a']['run_id']} ({diff_result['a']['created_at_utc']})")
-    lines.append(f"+++ {diff_result['b']['run_id']} ({diff_result['b']['created_at_utc']})")
-    lines.append(f"")
-    lines.append(f"Severity: {diff_result['diff_severity']}")
-    lines.append(f"Changed paths: {len(diff_result['changed_paths'])}")
-    lines.append(f"")
-
-    for path in sorted(diff_result["changed_paths"]):
-        lines.append(f"@@ {path} @@")
-
-    lines.append(f"")
-    lines.append("--- Diff Detail ---")
-    lines.append(json.dumps(diff_result["diff"], indent=2, default=str))
+        if path == "attachments.count":
+            att_a = getattr(run_a, "attachments", []) or []
+            att_b = getattr(run_b, "attachments", []) or []
+            lines.append(f"  {path}: {len(att_a)} -> {len(att_b)}")
+        else:
+            # Truncate long values
+            str_a = str(val_a)[:100] if val_a else "(none)"
+            str_b = str(val_b)[:100] if val_b else "(none)"
+            lines.append(f"  {path}: {str_a} -> {str_b}")
 
     return "\n".join(lines)
