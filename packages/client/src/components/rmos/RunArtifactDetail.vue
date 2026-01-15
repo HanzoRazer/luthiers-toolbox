@@ -67,6 +67,13 @@ function formatDate(iso: string): string {
       </div>
 
       <div class="actions">
+        <router-link
+          :to="`/rmos/runs/${artifact.run_id}`"
+          class="btn"
+          title="Open full page viewer"
+        >
+          Open
+        </router-link>
         <button class="btn" @click="handleDownload" title="Download run as JSON">
           Download JSON
         </button>
