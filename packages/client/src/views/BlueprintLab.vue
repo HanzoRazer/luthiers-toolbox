@@ -628,7 +628,7 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 // Phase 3: Send to CAM (MVP Wrapper)
 const sendToCAM = async () => {
-  if (\!vectorizedGeometry.value?.dxf_path) return
+  if (!vectorizedGeometry.value?.dxf_path) return
 
   try {
     isSendingToCAM.value = true
@@ -636,8 +636,9 @@ const sendToCAM = async () => {
     rmosResult.value = null
 
     // Fetch the DXF file from server
-    const dxfResponse = await fetch(\)
-    if (\!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
+    const dxfFilename = vectorizedGeometry.value.dxf_path.split('/').pop()
+    const dxfResponse = await fetch(`/api/blueprint/static/${dxfFilename}`)
+    if (!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
     const dxfBlob = await dxfResponse.blob()
 
     // Build form data for MVP wrapper
@@ -659,9 +660,9 @@ const sendToCAM = async () => {
       body: fd
     })
 
-    if (\!response.ok) {
+    if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || \)
+      throw new Error(errorData.detail || `HTTP ${response.status}`)
     }
 
     rmosResult.value = await response.json()
@@ -676,14 +677,15 @@ const sendToCAM = async () => {
 
 // Download G-code from inline response
 const downloadGcode = () => {
-  if (\!rmosResult.value?.gcode?.inline || \!rmosResult.value?.gcode?.text) return
+  if (!rmosResult.value?.gcode?.inline || !rmosResult.value?.gcode?.text) return
 
   const blob = new Blob([rmosResult.value.gcode.text], { type: 'text/plain' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   const baseName = (uploadedFile.value?.name || 'blueprint').replace(/\.[^.]+$/, '')
-  a.download =   document.body.appendChild(a)
+  a.download = `${baseName}_GRBL.nc`
+  document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(url)
