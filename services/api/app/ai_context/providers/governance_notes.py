@@ -100,13 +100,13 @@ GOVERNANCE_NOTES: Dict[str, Dict[str, Any]] = {
             "Run not in APPROVED state",
             "Missing required approvals",
             "Feasibility not yet checked",
-            "Toolpaths not yet generated",
+            "CAM generation not yet completed",
         ],
         "suggested_actions": [
             "Complete all required workflow steps",
             "Ensure feasibility check passes",
             "Get required approvals",
-            "Generate toolpaths before export",
+            "Complete CAM generation before export",
         ],
     },
 }
