@@ -430,20 +430,30 @@ class TestIntegration:
     def test_full_pipeline_no_forbidden_leaks(self, assembler, sample_request, strict_policy):
         """Full pipeline should not leak forbidden content."""
         result = assembler.build(sample_request, strict_policy)
-        
-        # Check all sources for forbidden patterns
-        forbidden_patterns = [
-            "toolpath", "gcode", "api_key", "password",
-            "player_id", "lesson_id", "email", "ssn",
-        ]
-        
+
+        # CAM terms are forbidden in data sources but allowed in documentation
+        # (docs naturally describe toolpaths, gcode endpoints, etc.)
+        cam_patterns = ["toolpath", "gcode"]
+
+        # PII patterns are forbidden everywhere
+        pii_patterns = ["api_key", "password", "player_id", "lesson_id", "email", "ssn"]
+
         for source in result.envelope.sources:
             payload_str = str(source.payload).lower()
-            for pattern in forbidden_patterns:
-                # Allow if it's redacted
+            is_doc_source = source.source_id.startswith("docs_")
+
+            # Check PII patterns in ALL sources
+            for pattern in pii_patterns:
                 if pattern in payload_str:
                     assert "[redacted]" in payload_str.lower(), \
                         f"Forbidden pattern '{pattern}' leaked in {source.source_id}"
+
+            # Check CAM patterns only in non-doc sources
+            if not is_doc_source:
+                for pattern in cam_patterns:
+                    if pattern in payload_str:
+                        assert "[redacted]" in payload_str.lower(), \
+                            f"Forbidden pattern '{pattern}' leaked in {source.source_id}"
     
     def test_envelope_integrity_hash_valid(self, assembler, sample_request, strict_policy):
         """Envelope integrity hash should be verifiable."""

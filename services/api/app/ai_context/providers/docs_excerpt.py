@@ -49,8 +49,7 @@ DOC_INDEX: Dict[str, List[str]] = {
         "ROUTER_MAP.md",
     ],
     "getting_started": [
-        # NOTE: copilot-instructions.md excluded - contains code examples with
-        # endpoint names (e.g., /api/cam/roughing/gcode) that trigger false positives
+        ".github/copilot-instructions.md",
         "README.md",
     ],
 }
