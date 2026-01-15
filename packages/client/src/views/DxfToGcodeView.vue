@@ -32,40 +32,40 @@
     </div>
 
     <!-- CAM Parameters -->
-    <div class="params-section">
+    <div class="params-section" :class="{ disabled: isGenerating }">
       <h2>CAM Parameters</h2>
       <div class="params-grid">
         <div class="param">
           <label>Tool Diameter (mm)</label>
-          <input v-model.number="params.tool_d" type="number" step="0.5" min="0.5" max="25" />
+          <input v-model.number="params.tool_d" type="number" step="0.5" min="0.5" max="25"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Stepover (0-1)</label>
-          <input v-model.number="params.stepover" type="number" step="0.05" min="0.1" max="0.9" />
+          <input v-model.number="params.stepover" type="number" step="0.05" min="0.1" max="0.9"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Stepdown (mm)</label>
-          <input v-model.number="params.stepdown" type="number" step="0.5" min="0.5" max="10" />
+          <input v-model.number="params.stepdown" type="number" step="0.5" min="0.5" max="10"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Target Depth (mm)</label>
-          <input v-model.number="params.z_rough" type="number" step="0.5" max="0" />
+          <input v-model.number="params.z_rough" type="number" step="0.5" max="0"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Feed XY (mm/min)</label>
-          <input v-model.number="params.feed_xy" type="number" step="100" min="100" max="5000" />
+          <input v-model.number="params.feed_xy" type="number" step="100" min="100" max="5000"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Feed Z (mm/min)</label>
-          <input v-model.number="params.feed_z" type="number" step="50" min="50" max="1000" />
+          <input v-model.number="params.feed_z" type="number" step="50" min="50" max="1000"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Safe Z (mm)</label>
-          <input v-model.number="params.safe_z" type="number" step="1" min="1" max="50" />
+          <input v-model.number="params.safe_z" type="number" step="1" min="1" max="50"  :disabled="isGenerating" />
         </div>
         <div class="param">
           <label>Layer Name</label>
-          <input v-model="params.layer_name" type="text" />
+          <input v-model="params.layer_name" type="text"  :disabled="isGenerating" />
         </div>
       </div>
     </div>
@@ -79,14 +79,20 @@
       >
         {{ isGenerating ? 'Generating...' : 'Generate G-code' }}
       </button>
+      <p class="generate-hint">Uses GRBL profile · Units: mm · Output: .nc</p>
     </div>
 
     <!-- Result -->
     <div v-if="result" class="result-section">
-      <div class="result-header">
-        <span class="risk" :class="result.decision?.risk_level?.toLowerCase()">
-          {{ result.decision?.risk_level || 'N/A' }}
-        </span>
+      <!-- Risk Banner (prominent, top-of-section) -->
+      <div class="risk-banner" :class="result.decision?.risk_level?.toLowerCase()">
+        <span class="risk-label">{{ result.decision?.risk_level || 'N/A' }}</span>
+        <span class="risk-text" v-if="result.decision?.risk_level === 'GREEN'">Ready to run</span>
+        <span class="risk-text" v-else-if="result.decision?.risk_level === 'YELLOW'">Review warnings below</span>
+        <span class="risk-text" v-else>Check details</span>
+      </div>
+
+      <div class="result-meta">
         <span class="run-id">Run: {{ result.run_id }}</span>
         <button @click="copyRunId" class="copy-btn" title="Copy Run ID">Copy</button>
         <span v-if="!result.rmos_persisted" class="not-persisted">RMOS not persisted</span>
@@ -429,6 +435,11 @@ h1 {
   margin-bottom: 2rem;
 }
 
+.params-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .params-section h2 {
   font-size: 1.125rem;
   margin-bottom: 1rem;
@@ -459,8 +470,19 @@ h1 {
   font-size: 1rem;
 }
 
+.param input:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
 .action-section {
   margin-bottom: 2rem;
+}
+
+.generate-hint {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
 }
 
 .btn-generate {
@@ -493,34 +515,62 @@ h1 {
   margin-bottom: 1rem;
 }
 
-.result-header {
+/* Risk Banner - prominent at top */
+.risk-banner {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
 }
 
-.risk {
+.risk-banner.green {
+  background: #d1fae5;
+  border: 1px solid #10b981;
+}
+
+.risk-banner.yellow {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+}
+
+.risk-banner.red {
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+.risk-label {
+  font-weight: 700;
+  font-size: 1rem;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.875rem;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.risk.green {
-  background: #d1fae5;
+.risk-banner.green .risk-label {
   color: #065f46;
 }
 
-.risk.yellow {
-  background: #fef3c7;
+.risk-banner.yellow .risk-label {
   color: #92400e;
 }
 
-.risk.red {
-  background: #fee2e2;
+.risk-banner.red .risk-label {
   color: #991b1b;
+}
+
+.risk-text {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .run-id {
