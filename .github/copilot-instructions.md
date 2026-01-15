@@ -1,6 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
-> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).** > **Last Updated:** 2026-01-11
+> CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
+> **Last Updated:** 2026-01-14
 
 ## ⚡ Quick Start
 
@@ -83,6 +84,27 @@ Machine-executing endpoints follow **Operation Lane Governance**:
   - `override_state`: `"CHOSEN"` | `"CLEARED"` | `None`
   - `applied_override`: Active operator override (when CHOSEN)
   - `recommended_latest_approved`: Suggested tuning (only when CLEARED)
+
+### Service Abstraction: StorePorts Pattern
+
+Use `ArtifactStorePorts` dataclass to inject store dependencies into services:
+
+```python
+# services/api/app/saw_lab/decision_intelligence_service.py
+@dataclass
+class ArtifactStorePorts:
+    list_runs_filtered: Any   # callable(**filters) -> list[dict]
+    persist_run_artifact: Any # callable(kind, payload, index_meta, parent_artifact_id=...) -> dict
+
+# Router wires real store at runtime
+store = ArtifactStorePorts(
+    list_runs_filtered=getattr(runs_store, "list_runs_filtered"),
+    persist_run_artifact=getattr(runs_store, "persist_run_artifact"),
+)
+result = service_function(store, ...)  # Service receives abstract ports
+```
+
+This pattern enables testing with mock stores and enforces boundary isolation.
 
 ## 🔗 Cross-Boundary Patterns
 
@@ -179,6 +201,7 @@ RMOS_RUNS_V2_ENABLED=true                    # Runs v2 implementation
 SAW_LEARNING_HOOK_ENABLED=false              # Feedback loop learning
 SAW_METRICS_ROLLUP_HOOK_ENABLED=false        # Metrics rollup persistence
 SAW_LAB_APPLY_APPROVED_TUNING_ON_PLAN=false  # Decision Intelligence: apply approved tuning to plans
+SAW_LAB_DECISION_INTEL_ENABLED=true          # Decision Intelligence advisory on /plan
 ```
 
 ## 🗺️ API Surface
