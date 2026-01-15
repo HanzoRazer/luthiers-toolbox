@@ -154,6 +154,15 @@ const labs = [
     route: '/lab/saw-dashboard',
     tags: ['CAM', 'Analysis', 'Beginner'],
     module: 'CP-S61/62'
+  },
+  {
+    id: 'dxf-to-gcode',
+    name: 'DXF → G-code (GRBL)',
+    icon: '📄',
+    description: 'Shop-floor quick path: upload DXF, set CAM params, download G-code. Includes Operator Pack ZIP export.',
+    route: '/cam/dxf-to-gcode',
+    tags: ['CAM', 'Beginner'],
+    module: 'MVP'
   }
 ]
 
