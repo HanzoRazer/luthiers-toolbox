@@ -98,7 +98,7 @@
 
             <aside class="preview-side">
               <div class="side-header">
-                <div class="side-title">Peak Details</div>
+                <div class="side-title">Selection Details</div>
                 <button class="btn btn-small" :disabled="!selectedPeak" @click="clearSelectedPeak">
                   Clear
                 </button>
@@ -112,12 +112,30 @@
 
               <div v-else class="side-body">
                 <div class="side-kv">
+                  <div><span>source</span><code>{{ selectionSource }}</code></div>
                   <div><span>point</span><code>{{ selectedPeak.pointId || "—" }}</code></div>
-                  <div><span>freq_hz</span><code>{{ selectedPeak.freq_hz.toFixed(2) }}</code></div>
+                  <div>
+                    <span>freq_hz</span>
+                    <code>{{ Number.isFinite(selectedPeak.freq_hz) ? selectedPeak.freq_hz.toFixed(2) : "—" }}</code>
+                  </div>
                   <div v-if="selectedPeak.label"><span>label</span><code>{{ selectedPeak.label }}</code></div>
-                  <div><span>spectrum</span><code class="mono">{{ selectedPeak.spectrumRelpath }}</code></div>
-                  <div><span>analysis</span><code class="mono">{{ selectedPeak.peaksRelpath }}</code></div>
+                  <div><span>file</span><code class="mono">{{ selectedPeak.spectrumRelpath }}</code></div>
+                  <div v-if="selectedPeak.peaksRelpath">
+                    <span>analysis</span><code class="mono">{{ selectedPeak.peaksRelpath }}</code>
+                  </div>
                 </div>
+
+                <details v-if="selectionSource === 'wsi'" class="side-raw" open>
+                  <summary class="side-summary">WSI row fields</summary>
+                  <div class="side-kv">
+                    <div><span>wsi</span><code>{{ fmtNum(selectedWsiRow?.wsi) }}</code></div>
+                    <div><span>coh_mean</span><code>{{ fmtNum(selectedWsiRow?.coh_mean) }}</code></div>
+                    <div><span>phase_disorder</span><code>{{ fmtNum(selectedWsiRow?.phase_disorder) }}</code></div>
+                    <div><span>loc</span><code>{{ fmtNum(selectedWsiRow?.loc) }}</code></div>
+                    <div><span>grad</span><code>{{ fmtNum(selectedWsiRow?.grad) }}</code></div>
+                    <div><span>admissible</span><code>{{ fmtBool(selectedWsiRow?.admissible) }}</code></div>
+                  </div>
+                </details>
 
                 <div class="side-actions">
                   <button class="btn" :disabled="!selectedPeak.pointId" @click="jumpToPointAudio">
@@ -129,7 +147,7 @@
                 </div>
 
                 <details class="side-raw" open>
-                  <summary class="side-summary">Raw peak JSON</summary>
+                  <summary class="side-summary">Raw selection JSON</summary>
                   <pre class="side-pre">{{ selectedPeak.rawPretty }}</pre>
                 </details>
               </div>
@@ -227,6 +245,40 @@ const cursorFreqHz = computed<number | null>(() => {
   const f = selectedPeak.value?.freq_hz;
   return Number.isFinite(f) ? f! : null;
 });
+
+const selectionSource = computed<"spectrum" | "wsi" | "unknown">(() => {
+  const rp = selectedPeak.value?.spectrumRelpath ?? "";
+  if (rp.endsWith("/spectrum.csv")) return "spectrum";
+  if (rp === "wolf/wsi_curve.csv") return "wsi";
+  return "unknown";
+});
+
+type WsiRow = {
+  freq_hz?: number;
+  wsi?: number;
+  loc?: number;
+  grad?: number;
+  phase_disorder?: number;
+  coh_mean?: number;
+  admissible?: boolean;
+};
+
+const selectedWsiRow = computed<WsiRow | null>(() => {
+  if (!selectedPeak.value) return null;
+  if (selectionSource.value !== "wsi") return null;
+  const raw = selectedPeak.value.raw;
+  if (!raw || typeof raw !== "object") return null;
+  return raw as WsiRow;
+});
+
+function fmtNum(v: unknown): string {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toFixed(3) : "—";
+}
+function fmtBool(v: unknown): string {
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return "—";
+}
 
 // Current active file entry
 const activeEntry = computed<NormalizedFileEntry | null>(() => {
