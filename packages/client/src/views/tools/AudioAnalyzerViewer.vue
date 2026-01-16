@@ -227,6 +227,20 @@ const err = ref<string>("");
 const activePath = ref<string>("");
 const kindFilter = ref<string>("");
 
+/**
+ * GOVERNANCE NOTE — READ BEFORE MODIFYING
+ *
+ * SelectedPeak represents a user-controlled navigation cursor only.
+ * It exists to coordinate highlighting and view alignment across renderers
+ * without performing analysis, inference, ranking, filtering, or scoring.
+ *
+ * This object MUST NOT contain derived values, interpretations, risk scores,
+ * recommendations, or cross-evidence aggregation. All fields must originate
+ * directly from user actions or exported evidence artifacts.
+ *
+ * Any change that causes selection to imply meaning rather than display it
+ * constitutes interpretation and is OUT OF SCOPE for Wave 6A / 6B.1.
+ */
 type SelectedPeak = {
   pointId: string | null;
   spectrumRelpath: string;
