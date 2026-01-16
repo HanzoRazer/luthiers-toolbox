@@ -1,0 +1,27 @@
+{
+  "api_version": "1.0.0",
+  "controller": "GRBL",
+  "created_at_utc": "2026-01-15T21:54:10.638914+00:00",
+  "dxf_sha256": "e9b55f5f200b7e824269fa8541e4ab47dadc975edbb6a5a3c516296e10ee3242",
+  "gcode_sha256": "d1761392c20ac341a9350c637afc0741c06c3fe7112379afb7977d4e0db1ed4e",
+  "git_sha": null,
+  "params": {
+    "climb": true,
+    "feed_xy": 1000.0,
+    "feed_z": 300.0,
+    "layer_name": "GEOMETRY",
+    "margin": 0.5,
+    "rapid": 3000.0,
+    "safe_z": 5.0,
+    "smoothing": 0.1,
+    "stepdown": 2.0,
+    "stepover": 0.4,
+    "strategy": "Spiral",
+    "tool_d": 6.0,
+    "z_rough": -3.0
+  },
+  "pipeline_id": "mvp_dxf_to_grbl_v1",
+  "plan_sha256": "786ce3c14da2c654de041aa41ab7980d7c2b356d1840c1b96a20d10e2f2a7444",
+  "post_profile_id": "GRBL",
+  "warnings": []
+}

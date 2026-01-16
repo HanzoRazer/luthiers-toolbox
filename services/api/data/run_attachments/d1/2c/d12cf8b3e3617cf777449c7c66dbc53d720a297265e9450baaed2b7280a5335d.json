@@ -1,0 +1,21 @@
+{
+  "blocking": true,
+  "blocking_reasons": [
+    "z_rough must be negative (cutting depth)"
+  ],
+  "computed_at_utc": "2026-01-15T21:47:20.181461+00:00",
+  "constraints": [],
+  "details": {
+    "bbox": null,
+    "entity_count": null,
+    "has_closed_paths": null,
+    "layer_name": "GEOMETRY",
+    "loop_count_hint": null,
+    "pipeline_id": "mvp_dxf_to_grbl_v1",
+    "post_id": "GRBL",
+    "units": "mm"
+  },
+  "engine_version": "feasibility_engine_v1",
+  "risk_level": "RED",
+  "warnings": []
+}
