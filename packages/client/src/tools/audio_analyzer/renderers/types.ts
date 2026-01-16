@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { NormalizedFileEntry, EvidenceFileKind } from "@/evidence/types";
+import type { EvidenceSelection } from "../selection";
 
 /**
  * Props passed to all evidence file renderers.
@@ -14,6 +15,11 @@ export interface RendererProps {
   bytes: Uint8Array;
   /** Optional sibling peaks data (analysis.json bytes for spectrum CSV) */
   peaksBytes?: Uint8Array | null;
+  /**
+   * Wave 6A: Viewer-owned selection cursor.
+   * Invariant: highlight + navigation only; no derived/interpretive fields.
+   */
+  selection?: EvidenceSelection | null;
 }
 
 /**
