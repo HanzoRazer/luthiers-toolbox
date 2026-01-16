@@ -68,6 +68,7 @@ tmp/
 **/ToolBox_*/
 **/*_extracted/
 **/*.zip
+!services/api/tests/fixtures/**/*.zip
 
 # ------------------------------------------
 # Database Files (Local Dev)
