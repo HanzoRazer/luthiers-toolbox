@@ -122,6 +122,7 @@ def download_operator_pack(run_id: str):
       - plan.json
       - manifest.json
       - output.nc
+      - feasibility.json (optional, included if available)
     """
     run = get_run(run_id)
     if not run:
@@ -131,6 +132,7 @@ def download_operator_pack(run_id: str):
     att_plan = _pick_by_kind(run.attachments, "cam_plan")
     att_manifest = _pick_by_kind(run.attachments, "manifest")
     att_gcode = _pick_by_kind(run.attachments, "gcode_output")
+    att_feasibility = _pick_by_kind(run.attachments, "feasibility")  # Optional
 
     missing = [
         name
@@ -155,6 +157,12 @@ def download_operator_pack(run_id: str):
         "manifest.json": _attachment_path_for(att_manifest.sha256, att_manifest.filename),
         "output.nc": _attachment_path_for(att_gcode.sha256, att_gcode.filename),
     }
+
+    # Include feasibility.json if available (optional, not required for older runs)
+    if att_feasibility:
+        feas_path = _attachment_path_for(att_feasibility.sha256, att_feasibility.filename)
+        if feas_path.exists():
+            paths["feasibility.json"] = feas_path
 
     for name, p in paths.items():
         if not p.exists():
