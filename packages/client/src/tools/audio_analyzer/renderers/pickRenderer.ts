@@ -12,6 +12,7 @@ import MarkdownRenderer from "./MarkdownRenderer.vue";
 import UnknownRenderer from "./UnknownRenderer.vue";
 import SpectrumChartRenderer from "./SpectrumChartRenderer.vue";
 import TransferFunctionRenderer from "./TransferFunctionRenderer.vue";
+import WsiCurveRenderer from "./WsiCurveRenderer.vue";
 
 /**
  * Map of renderer category to Vue component.
@@ -23,6 +24,7 @@ const rendererMap: Record<RendererCategory, Component> = {
   json: JsonRenderer,
   markdown: MarkdownRenderer,
   spectrum_chart: SpectrumChartRenderer,
+  wsi_chart: WsiCurveRenderer,
   bode_plot: TransferFunctionRenderer,
   unknown: UnknownRenderer,
 };

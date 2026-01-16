@@ -20,7 +20,7 @@ export interface RendererProps {
  * Category of renderer to dispatch to.
  * Used by pickRenderer() to select the appropriate component.
  */
-export type RendererCategory = "audio" | "image" | "csv" | "json" | "markdown" | "spectrum_chart" | "bode_plot" | "unknown";
+export type RendererCategory = "audio" | "image" | "csv" | "json" | "markdown" | "spectrum_chart" | "wsi_chart" | "bode_plot" | "unknown";
 
 /**
  * Maps a file kind to its renderer category.
@@ -44,6 +44,10 @@ export function kindToCategory(kind: EvidenceFileKind | string): RendererCategor
     case "coherence_csv":
       return "spectrum_chart";
 
+    // WSI curve (session-level wolf stress index)
+    case "wsi_curve":
+      return "wsi_chart";
+
     // Bode plot (transfer function / frequency response)
     case "transfer_function":
       return "bode_plot";
@@ -51,7 +55,6 @@ export function kindToCategory(kind: EvidenceFileKind | string): RendererCategor
     // CSV-based files (table display)
     case "peaks_csv":
     case "waveform_csv":
-    case "wsi_curve":
       return "csv";
 
     // JSON-based files

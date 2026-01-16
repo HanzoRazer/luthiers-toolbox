@@ -79,9 +79,11 @@ describe("kindToCategory", () => {
     it("maps waveform_csv to csv", () => {
       expect(kindToCategory("waveform_csv")).toBe("csv");
     });
+  });
 
-    it("maps wsi_curve to csv", () => {
-      expect(kindToCategory("wsi_curve")).toBe("csv");
+  describe("wsi chart kinds", () => {
+    it("maps wsi_curve to wsi_chart", () => {
+      expect(kindToCategory("wsi_curve")).toBe("wsi_chart");
     });
   });
 
@@ -131,6 +133,7 @@ describe("kindToCategory", () => {
         "json",
         "markdown",
         "spectrum_chart",
+        "wsi_chart",
         "bode_plot",
         "unknown",
       ];
@@ -167,10 +170,11 @@ describe("RendererCategory exhaustiveness", () => {
     const categoryToKind: Record<RendererCategory, string> = {
       audio: "audio_raw",
       image: "plot_png",
-      csv: "wsi_curve",
+      csv: "peaks_csv",
       json: "analysis_peaks",
       markdown: "notes_md",
       spectrum_chart: "spectrum_csv",
+      wsi_chart: "wsi_curve",
       bode_plot: "transfer_function",
       unknown: "some_random_string",
     };
