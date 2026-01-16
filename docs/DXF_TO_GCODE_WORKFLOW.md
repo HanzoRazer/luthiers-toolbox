@@ -1,7 +1,7 @@
 # DXF to G-code Workflow Guide
 
-**Version:** 1.1.0
-**Date:** 2026-01-14
+**Version:** 1.2.0
+**Date:** 2026-01-16
 **Status:** 95% Complete - API Working, UI Needs Enablement
 
 ---
@@ -77,7 +77,73 @@ Extract loops from response.request.loops and pass to /gcode:
 
 ---
 
-## 2. Optional: DXF Validation (Preflight)
+## 2. RMOS-Wrapped Golden Path (Recommended for Production)
+
+For production use with governance and audit trails, use the **RMOS MVP Wrapper**:
+
+    curl -X POST "http://localhost:8000/api/rmos/wrap/mvp/dxf-to-grbl" \
+      -F "file=@your_design.dxf" \
+      -F "tool_d=6.0" \
+      -F "stepover=0.4" \
+      -F "z_rough=-3.0" \
+      -F "feed_xy=1200" \
+      -F "safe_z=5.0"
+
+### Benefits Over Direct API
+
+| Feature | Direct API | RMOS Wrapper |
+|---------|------------|--------------|
+| G-code Output | ✅ | ✅ |
+| Feasibility Check | ❌ | ✅ Pre-CAM validation |
+| Content-Addressed Artifacts | ❌ | ✅ SHA256 hashing |
+| Audit Trail | ❌ | ✅ Run artifacts |
+| Operator Pack Download | ❌ | ✅ ZIP with all files |
+
+### Feasibility Phase 1 (Shipped)
+
+The RMOS wrapper runs a **deterministic feasibility check before CAM**:
+
+- **RED rules** (blocking): Invalid tool_d, stepover, stepdown, z_rough, safe_z
+- **YELLOW rules** (warnings): feed_z > feed_xy, stepdown > 3mm, high loop count
+- **GREEN**: All checks pass
+
+**Response includes:**
+
+```json
+{
+  "ok": true,
+  "run_id": "run_abc123...",
+  "decision": {
+    "risk_level": "GREEN",
+    "warnings": []
+  },
+  "hashes": {
+    "feasibility_sha256": "abc123...",
+    "gcode_sha256": "def456..."
+  },
+  "gcode": {
+    "inline": true,
+    "text": "G90\nG17\n..."
+  }
+}
+```
+
+### Operator Pack Download
+
+After a run, download a ZIP containing all artifacts:
+
+    curl -O "http://localhost:8000/api/rmos/runs_v2/{run_id}/operator-pack"
+
+**ZIP contents:**
+- `input.dxf` - Original DXF file
+- `plan.json` - CAM plan
+- `manifest.json` - Execution metadata
+- `output.nc` - G-code output
+- `feasibility.json` - Pre-CAM validation (Phase 1+)
+
+---
+
+## 3. Optional: DXF Validation (Preflight)
 
 Before processing, you can validate your DXF file:
 

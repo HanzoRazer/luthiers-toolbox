@@ -1,7 +1,7 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.8.0
-**Date:** 2026-01-13
+**Version:** 1.9.0
+**Date:** 2026-01-16
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
 
 ---
@@ -943,6 +943,22 @@ RMOS ensures that manufacturing operations are tracked, assessed, gated, and orc
 | **Saw Operations** | Complete | Batch processing, comparison |
 | **API Endpoints** | 95% | 50+ endpoints across 4 routers |
 | **Frontend Components** | Complete | 47 Vue components |
+| **Feasibility Phase 1** | ✅ Shipped | Pre-CAM validation, deterministic hashing |
+
+### Feasibility Phase 1 (Shipped 2026-01-16)
+
+The MVP wrapper now includes a **deterministic feasibility check before CAM**:
+
+- **Pre-CAM validation**: Runs before plan generation, not after
+- **Deterministic hashing**: Same input → same `feasibility_sha256`
+- **Rule-based decisions**: RED (blocking), YELLOW (warnings), GREEN (pass)
+- **Persisted artifacts**: `feasibility.json` in run attachments + operator pack
+
+**Key files:**
+- `services/api/app/rmos/feasibility/` - Engine, schemas, rules
+- `services/api/app/rmos/mvp_wrapper.py` - Wrapper integration
+- `services/api/tests/test_feasibility_engine.py` - 24 unit tests
+- `services/api/tests/test_rmos_wrapper_feasibility_phase1.py` - 10 integration tests
 
 ### What's Incomplete
 
