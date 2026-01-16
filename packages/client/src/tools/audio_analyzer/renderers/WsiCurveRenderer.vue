@@ -44,6 +44,25 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * GOVERNANCE NOTE — WSI CURVE RENDERER
+ *
+ * This renderer displays the exported Wolf Stress Index (WSI) curve exactly
+ * as provided by tap-tone-pi. Its role is visual correlation only.
+ *
+ * Allowed:
+ * - Plotting exporter-provided fields (freq_hz, wsi, coh_mean, phase_disorder, etc.)
+ * - Shading using the exporter-provided `admissible` boolean
+ * - Emitting a frequency cursor on click (freqHz only; no point context)
+ *
+ * Prohibited:
+ * - Computing thresholds, scores, rankings, or "risk" indicators
+ * - Comparing WSI values to peaks, modes, or other datasets
+ * - Inferring wolf likelihood, severity, or recommendations
+ *
+ * Any logic that derives meaning beyond displaying exported measurements
+ * constitutes interpretation and is OUT OF SCOPE for Wave 6B.1.
+ */
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import {
   Chart,
