@@ -12,6 +12,10 @@
           <input type="checkbox" v-model="logScale" />
           <span>Log Scale</span>
         </label>
+        <label v-if="parsedPeaks.length > 0" class="toggle">
+          <input type="checkbox" v-model="showPeaks" />
+          <span>Peaks ({{ parsedPeaks.length }})</span>
+        </label>
         <button class="btn" @click="downloadChart">📷 PNG</button>
       </div>
     </div>
@@ -71,6 +75,7 @@ const props = defineProps<RendererProps>();
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const showCoherence = ref(true);
 const logScale = ref(false);
+const showPeaks = ref(true);
 const parseError = ref<string | null>(null);
 
 let chartInstance: Chart | null = null;
@@ -143,6 +148,33 @@ const parsedData = computed<SpectrumRow[]>(() => {
 // Decimation state
 const isDecimated = computed(() => originalRowCount.value > MAX_CHART_POINTS);
 
+// Parse peaks from sibling analysis.json (peaksBytes)
+interface PeakData {
+  freq_hz: number;
+  label?: string;
+}
+
+const parsedPeaks = computed<PeakData[]>(() => {
+  if (!props.peaksBytes || props.peaksBytes.length === 0) return [];
+  try {
+    const text = new TextDecoder("utf-8").decode(props.peaksBytes);
+    const json = JSON.parse(text);
+    // Support various analysis.json structures:
+    // 1. { peaks: [{ freq_hz, ... }] }
+    // 2. { peaks: [{ frequency_hz, ... }] }
+    // 3. [{ freq_hz, ... }] (direct array)
+    const arr = Array.isArray(json) ? json : (json.peaks ?? []);
+    return arr
+      .filter((p: any) => typeof p.freq_hz === "number" || typeof p.frequency_hz === "number")
+      .map((p: any, i: number) => ({
+        freq_hz: p.freq_hz ?? p.frequency_hz,
+        label: p.label ?? p.note ?? `P${i + 1}`,
+      }));
+  } catch {
+    return [];
+  }
+});
+
 // Computed stats
 const dataPoints = computed(() => parsedData.value.length);
 
@@ -211,12 +243,46 @@ function createChart() {
     });
   }
 
+  // Custom plugin to draw vertical lines at peak frequencies
+  const peaksOverlayPlugin = {
+    id: "peaksOverlay",
+    afterDraw(chart: Chart) {
+      if (!showPeaks.value || parsedPeaks.value.length === 0) return;
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      if (!xScale || !chartArea) return;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(239, 68, 68, 0.7)"; // red-500
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+
+      for (const peak of parsedPeaks.value) {
+        const x = xScale.getPixelForValue(peak.freq_hz);
+        if (x >= chartArea.left && x <= chartArea.right) {
+          ctx.beginPath();
+          ctx.moveTo(x, chartArea.top);
+          ctx.lineTo(x, chartArea.bottom);
+          ctx.stroke();
+
+          // Draw label at top
+          ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+          ctx.font = "10px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(`${peak.freq_hz.toFixed(0)}`, x, chartArea.top - 4);
+        }
+      }
+      ctx.restore();
+    },
+  };
+
   chartInstance = new Chart(chartCanvas.value, {
     type: "line",
     data: {
       labels,
       datasets,
     },
+    plugins: [peaksOverlayPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -318,7 +384,7 @@ onUnmounted(() => {
 });
 
 // Watch for changes
-watch([showCoherence, logScale, () => props.bytes], () => {
+watch([showCoherence, logScale, showPeaks, () => props.bytes, () => props.peaksBytes], () => {
   nextTick(() => createChart());
 });
 </script>

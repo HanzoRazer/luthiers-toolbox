@@ -80,6 +80,7 @@
             :is="currentRenderer"
             :entry="activeEntry"
             :bytes="activeBytes"
+            :peaks-bytes="peaksBytes"
           />
         </div>
 
@@ -151,6 +152,7 @@
 import { ref, computed, shallowRef, type Component } from "vue";
 import { loadNormalizedPack, type NormalizedPack, type NormalizedFileEntry } from "@/evidence";
 import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/renderers";
+import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
 
 const pack = shallowRef<NormalizedPack | null>(null);
 const err = ref<string>("");
@@ -167,6 +169,14 @@ const activeEntry = computed<NormalizedFileEntry | null>(() => {
 const activeBytes = computed<Uint8Array>(() => {
   if (!pack.value || !activePath.value) return new Uint8Array(0);
   return pack.value.resolveFile(activePath.value) ?? new Uint8Array(0);
+});
+
+// Sibling peaks bytes for spectrum CSV files (analysis.json)
+const peaksBytes = computed<Uint8Array | null>(() => {
+  if (!pack.value || !activePath.value) return null;
+  const siblingPath = findSiblingPeaksRelpath(activePath.value);
+  if (!siblingPath) return null;
+  return pack.value.resolveFile(siblingPath) ?? null;
 });
 
 // Dynamically pick renderer based on file kind

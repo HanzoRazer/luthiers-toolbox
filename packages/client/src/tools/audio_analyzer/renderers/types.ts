@@ -12,6 +12,8 @@ export interface RendererProps {
   entry: NormalizedFileEntry;
   /** Raw bytes for the file */
   bytes: Uint8Array;
+  /** Optional sibling peaks data (analysis.json bytes for spectrum CSV) */
+  peaksBytes?: Uint8Array | null;
 }
 
 /**
