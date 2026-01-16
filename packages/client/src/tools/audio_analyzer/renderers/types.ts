@@ -18,7 +18,7 @@ export interface RendererProps {
  * Category of renderer to dispatch to.
  * Used by pickRenderer() to select the appropriate component.
  */
-export type RendererCategory = "audio" | "image" | "csv" | "json" | "markdown" | "unknown";
+export type RendererCategory = "audio" | "image" | "csv" | "json" | "markdown" | "spectrum_chart" | "unknown";
 
 /**
  * Maps a file kind to its renderer category.
@@ -37,10 +37,13 @@ export function kindToCategory(kind: EvidenceFileKind | string): RendererCategor
     case "plot_png":
       return "image";
 
-    // CSV-based files
+    // Spectrum chart (visual frequency analysis)
     case "spectrum_csv":
-    case "peaks_csv":
     case "coherence_csv":
+      return "spectrum_chart";
+
+    // CSV-based files (table display)
+    case "peaks_csv":
     case "waveform_csv":
     case "wsi_curve":
       return "csv";

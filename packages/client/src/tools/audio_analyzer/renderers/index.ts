@@ -10,3 +10,4 @@ export { default as CsvRenderer } from "./CsvRenderer.vue";
 export { default as JsonRenderer } from "./JsonRenderer.vue";
 export { default as MarkdownRenderer } from "./MarkdownRenderer.vue";
 export { default as UnknownRenderer } from "./UnknownRenderer.vue";
+export { default as SpectrumChartRenderer } from "./SpectrumChartRenderer.vue";
