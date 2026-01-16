@@ -16,6 +16,7 @@ import MarkdownRenderer from "../MarkdownRenderer.vue";
 import UnknownRenderer from "../UnknownRenderer.vue";
 import SpectrumChartRenderer from "../SpectrumChartRenderer.vue";
 import TransferFunctionRenderer from "../TransferFunctionRenderer.vue";
+import WsiCurveRenderer from "../WsiCurveRenderer.vue";
 
 describe("pickRenderer", () => {
   describe("audio kinds", () => {
@@ -62,11 +63,13 @@ describe("pickRenderer", () => {
     });
   });
 
-  describe("csv kinds (table)", () => {
-    it("picks CsvRenderer for wsi_curve", () => {
-      expect(pickRenderer("wsi_curve")).toBe(CsvRenderer);
+  describe("wsi chart kinds", () => {
+    it("picks WsiCurveRenderer for wsi_curve", () => {
+      expect(pickRenderer("wsi_curve")).toBe(WsiCurveRenderer);
     });
+  });
 
+  describe("csv kinds (table)", () => {
     it("picks CsvRenderer for peaks_csv", () => {
       expect(pickRenderer("peaks_csv")).toBe(CsvRenderer);
     });
@@ -123,7 +126,7 @@ describe("getRendererCategory", () => {
     expect(getRendererCategory("spectrum_csv")).toBe("spectrum_chart");
     expect(getRendererCategory("transfer_function")).toBe("bode_plot");
     expect(getRendererCategory("plot_png")).toBe("image");
-    expect(getRendererCategory("wsi_curve")).toBe("csv");
+    expect(getRendererCategory("wsi_curve")).toBe("wsi_chart");
     expect(getRendererCategory("analysis_peaks")).toBe("json");
     expect(getRendererCategory("notes_md")).toBe("markdown");
     expect(getRendererCategory("unknown")).toBe("unknown");
