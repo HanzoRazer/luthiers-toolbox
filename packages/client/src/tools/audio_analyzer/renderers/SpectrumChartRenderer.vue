@@ -56,6 +56,7 @@ import {
   Filler,
 } from "chart.js";
 import type { RendererProps } from "./types";
+import type { EvidenceSelection } from "../selection";
 
 // Register Chart.js components
 Chart.register(
@@ -71,6 +72,15 @@ Chart.register(
 );
 
 const props = defineProps<RendererProps>();
+const emit = defineEmits<{
+  (e: "select", sel: EvidenceSelection): void;
+}>();
+
+// Wave 6A: Extract point ID from spectrum relpath
+function pointIdFromSpectrumRelpath(relpath: string): string | null {
+  const m = relpath.match(/^spectra\/points\/([^/]+)\/spectrum\.csv$/);
+  return m?.[1] ?? null;
+}
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const showCoherence = ref(true);
@@ -151,6 +161,7 @@ const isDecimated = computed(() => originalRowCount.value > MAX_CHART_POINTS);
 // Parse peaks from sibling analysis.json (peaksBytes)
 interface PeakData {
   freq_hz: number;
+  mag: number;
   label?: string;
 }
 
@@ -168,6 +179,7 @@ const parsedPeaks = computed<PeakData[]>(() => {
       .filter((p: any) => typeof p.freq_hz === "number" || typeof p.frequency_hz === "number")
       .map((p: any, i: number) => ({
         freq_hz: p.freq_hz ?? p.frequency_hz,
+        mag: p.H_mag ?? p.mag ?? p.amplitude ?? 0,
         label: p.label ?? p.note ?? `P${i + 1}`,
       }));
   } catch {
@@ -243,6 +255,22 @@ function createChart() {
     });
   }
 
+  // Wave 6A: Invisible peaks dataset for click detection
+  const peaks = parsedPeaks.value;
+  if (peaks.length > 0) {
+    datasets.push({
+      label: "__peaks__",
+      showLine: false,
+      data: peaks.map((p) => ({ x: p.freq_hz, y: p.mag })),
+      pointRadius: 6,
+      pointHitRadius: 10,
+      pointHoverRadius: 8,
+      pointBackgroundColor: "rgba(0,0,0,0)",
+      pointBorderColor: "rgba(0,0,0,0)",
+      yAxisID: "y",
+    });
+  }
+
   // Custom plugin to draw vertical lines at peak frequencies
   const peaksOverlayPlugin = {
     id: "peaksOverlay",
@@ -276,16 +304,55 @@ function createChart() {
     },
   };
 
+  // Wave 6A: Cursor plugin to draw selection highlight
+  const cursorPlugin = {
+    id: "wave6a_cursor",
+    afterDraw(chart: Chart) {
+      const f = props.selection?.freqHz;
+      if (typeof f !== "number") return;
+      const xScale = chart.scales.x;
+      if (!xScale || !chart.chartArea) return;
+      const x = xScale.getPixelForValue(f);
+      const { top, bottom } = chart.chartArea;
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+
+  // Wave 6A: onClick handler for peak selection
+  const handleClick = (_e: any, active: any[], chart: any) => {
+    const hit = active?.[0];
+    if (!hit) return;
+    const ds = chart.data.datasets?.[hit.datasetIndex];
+    if (ds?.label !== "__peaks__") return;
+    const peak = peaks[hit.index];
+    if (!peak) return;
+
+    emit("select", {
+      pointId: pointIdFromSpectrumRelpath(props.entry.relpath),
+      freqHz: Number(peak.freq_hz),
+      source: "spectrum",
+    });
+  };
+
   chartInstance = new Chart(chartCanvas.value, {
     type: "line",
     data: {
       labels,
       datasets,
     },
-    plugins: [peaksOverlayPlugin],
+    plugins: [peaksOverlayPlugin, cursorPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: handleClick,
       interaction: {
         mode: "index",
         intersect: false,
@@ -297,6 +364,7 @@ function createChart() {
             color: "#ccc",
             usePointStyle: true,
             padding: 16,
+            filter: (item: any) => item.text !== "__peaks__",
           },
         },
         tooltip: {
@@ -384,7 +452,7 @@ onUnmounted(() => {
 });
 
 // Watch for changes
-watch([showCoherence, logScale, showPeaks, () => props.bytes, () => props.peaksBytes], () => {
+watch([showCoherence, logScale, showPeaks, () => props.bytes, () => props.peaksBytes, () => props.selection], () => {
   nextTick(() => createChart());
 });
 </script>

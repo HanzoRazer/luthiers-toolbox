@@ -81,6 +81,8 @@
             :entry="activeEntry"
             :bytes="activeBytes"
             :peaks-bytes="peaksBytes"
+            :selection="selection"
+            @select="onSelect"
           />
         </div>
 
@@ -153,11 +155,15 @@ import { ref, computed, shallowRef, type Component } from "vue";
 import { loadNormalizedPack, type NormalizedPack, type NormalizedFileEntry } from "@/evidence";
 import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/renderers";
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
+import { makeEmptySelection, type EvidenceSelection } from "@/tools/audio_analyzer/selection";
 
 const pack = shallowRef<NormalizedPack | null>(null);
 const err = ref<string>("");
 const activePath = ref<string>("");
 const kindFilter = ref<string>("");
+
+// Wave 6A: Viewer-owned selection cursor
+const selection = ref<EvidenceSelection>(makeEmptySelection());
 
 // Current active file entry
 const activeEntry = computed<NormalizedFileEntry | null>(() => {
@@ -252,6 +258,11 @@ async function onDrop(ev: DragEvent) {
 
 function selectFile(relpath: string) {
   activePath.value = relpath;
+}
+
+// Wave 6A: Handle selection from renderer
+function onSelect(sel: EvidenceSelection) {
+  selection.value = sel;
 }
 </script>
 
