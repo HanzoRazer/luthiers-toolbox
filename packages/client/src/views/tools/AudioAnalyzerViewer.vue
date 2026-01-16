@@ -1,7 +1,16 @@
 <template>
   <div class="page">
     <header class="header">
-      <h1>🎛️ Audio Analyzer Evidence Viewer</h1>
+      <div class="header-row">
+        <h1>🎛️ Audio Analyzer Evidence Viewer</h1>
+        <div v-if="cursorFreqHz !== null" class="cursor-pill" :title="`Linked cursor @ ${cursorFreqHz.toFixed(2)} Hz`">
+          <span class="cursor-pill-label">Cursor</span>
+          <code class="cursor-pill-val">{{ cursorFreqHz.toFixed(2) }} Hz</code>
+          <button class="cursor-pill-clear" @click="clearCursorOnly" aria-label="Clear cursor">
+            ✕
+          </button>
+        </div>
+      </div>
       <p class="sub">
         Evidence-pack viewer (ZIP). Supports both
         <code>viewer_pack_v1</code> and <code>toolbox_evidence_manifest_v1</code> schemas.
@@ -82,7 +91,7 @@
                 :entry="activeEntry"
                 :bytes="activeBytes"
                 :peaks-bytes="peaksBytes"
-                :selected-freq-hz="selectedPeak?.freq_hz ?? null"
+                :selected-freq-hz="Number.isFinite(selectedPeak?.freq_hz) ? selectedPeak!.freq_hz : null"
                 @peak-selected="onPeakSelected"
               />
             </div>
@@ -213,6 +222,12 @@ type SelectedPeak = {
 const selectedPeak = ref<SelectedPeak | null>(null);
 const audioJumpError = ref<string>("");
 
+// Wave 6A "linked cursor" pill should persist across file changes
+const cursorFreqHz = computed<number | null>(() => {
+  const f = selectedPeak.value?.freq_hz;
+  return Number.isFinite(f) ? f! : null;
+});
+
 // Current active file entry
 const activeEntry = computed<NormalizedFileEntry | null>(() => {
   if (!pack.value || !activePath.value) return null;
@@ -314,6 +329,13 @@ function clearSelectedPeak() {
   audioJumpError.value = "";
 }
 
+function clearCursorOnly() {
+  // Keep details panel context but clear the linked cursor frequency.
+  if (!selectedPeak.value) return;
+  selectedPeak.value = { ...selectedPeak.value, freq_hz: NaN };
+  // We treat NaN as "no cursor" in the renderer binding below by mapping to null.
+}
+
 function pointIdFromSpectrumRelpath(relpath: string): string | null {
   // spectra/points/{POINT_ID}/spectrum.csv
   const m = relpath.match(/^spectra\/points\/([^/]+)\/spectrum\.csv$/);
@@ -380,6 +402,14 @@ watch(activePath, () => {
   margin: 0 auto;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .header h1 {
   margin: 0;
 }
@@ -394,6 +424,47 @@ watch(activePath, () => {
   padding: 0.125rem 0.35rem;
   border-radius: 3px;
   font-size: 0.9em;
+}
+
+.cursor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+.cursor-pill-label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+.cursor-pill-val {
+  font-size: 0.85rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(147, 197, 253, 0.12);
+  border: 1px solid rgba(147, 197, 253, 0.18);
+}
+.cursor-pill-clear {
+  appearance: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  border-radius: 999px;
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.cursor-pill-clear:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 720px) {
+  .cursor-pill {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .drop {
