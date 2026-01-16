@@ -74,18 +74,59 @@
       <!-- Preview Panel -->
       <div class="card wide">
         <h2>Preview</h2>
-
         <div v-if="activePath && activeEntry" class="preview-container">
-          <component
-            :is="currentRenderer"
-            :entry="activeEntry"
-            :bytes="activeBytes"
-            :peaks-bytes="peaksBytes"
-            :selection="selection"
-            @select="onSelect"
-          />
-        </div>
+          <div class="preview-split">
+            <div class="preview-main">
+              <component
+                :is="currentRenderer"
+                :entry="activeEntry"
+                :bytes="activeBytes"
+                :peaks-bytes="peaksBytes"
+                :selected-freq-hz="selectedPeak?.freq_hz ?? null"
+                @peak-selected="onPeakSelected"
+              />
+            </div>
 
+            <aside class="preview-side">
+              <div class="side-header">
+                <div class="side-title">Peak Details</div>
+                <button class="btn btn-small" :disabled="!selectedPeak" @click="clearSelectedPeak">
+                  Clear
+                </button>
+              </div>
+
+              <div v-if="!selectedPeak" class="side-empty">
+                <p class="muted">
+                  Click a peak marker in the spectrum chart to inspect it here.
+                </p>
+              </div>
+
+              <div v-else class="side-body">
+                <div class="side-kv">
+                  <div><span>point</span><code>{{ selectedPeak.pointId || "—" }}</code></div>
+                  <div><span>freq_hz</span><code>{{ selectedPeak.freq_hz.toFixed(2) }}</code></div>
+                  <div v-if="selectedPeak.label"><span>label</span><code>{{ selectedPeak.label }}</code></div>
+                  <div><span>spectrum</span><code class="mono">{{ selectedPeak.spectrumRelpath }}</code></div>
+                  <div><span>analysis</span><code class="mono">{{ selectedPeak.peaksRelpath }}</code></div>
+                </div>
+
+                <div class="side-actions">
+                  <button class="btn" :disabled="!selectedPeak.pointId" @click="jumpToPointAudio">
+                    ▶ Open point audio
+                  </button>
+                  <div v-if="audioJumpError" class="side-warn">
+                    {{ audioJumpError }}
+                  </div>
+                </div>
+
+                <details class="side-raw" open>
+                  <summary class="side-summary">Raw peak JSON</summary>
+                  <pre class="side-pre">{{ selectedPeak.rawPretty }}</pre>
+                </details>
+              </div>
+            </aside>
+          </div>
+        </div>
         <div v-else class="placeholder">
           <p>Select a file from the list above to preview.</p>
         </div>
@@ -107,7 +148,6 @@
                 <code class="hash">{{ pack.bundle_sha256 || "—" }}</code>
               </div>
             </div>
-
             <div class="debug-section">
               <h3>Kinds Present ({{ uniqueKinds.length }})</h3>
               <div class="kind-chips">
@@ -122,7 +162,6 @@
               </div>
             </div>
           </div>
-
           <div class="debug-section">
             <h3>All Files ({{ pack.files.length }})</h3>
             <table class="debug-tbl">
@@ -151,19 +190,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, shallowRef, type Component } from "vue";
+import { ref, computed, shallowRef, type Component, watch } from "vue";
 import { loadNormalizedPack, type NormalizedPack, type NormalizedFileEntry } from "@/evidence";
 import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/renderers";
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
-import { makeEmptySelection, type EvidenceSelection } from "@/tools/audio_analyzer/selection";
 
 const pack = shallowRef<NormalizedPack | null>(null);
 const err = ref<string>("");
 const activePath = ref<string>("");
 const kindFilter = ref<string>("");
 
-// Wave 6A: Viewer-owned selection cursor
-const selection = ref<EvidenceSelection>(makeEmptySelection());
+type SelectedPeak = {
+  pointId: string | null;
+  spectrumRelpath: string;
+  peaksRelpath: string;
+  peakIndex: number;
+  freq_hz: number;
+  label?: string;
+  raw: unknown;
+  rawPretty: string;
+};
+const selectedPeak = ref<SelectedPeak | null>(null);
+const audioJumpError = ref<string>("");
 
 // Current active file entry
 const activeEntry = computed<NormalizedFileEntry | null>(() => {
@@ -233,11 +281,12 @@ async function loadZip(f: File) {
   resetError();
   try {
     pack.value = await loadNormalizedPack(f);
-
     // Default preview: first CSV if present, else first file
     const firstCsv = pack.value.files.find((x) => x.kind.endsWith("_csv"));
     activePath.value = (firstCsv ?? pack.value.files[0])?.relpath ?? "";
     kindFilter.value = "";
+    selectedPeak.value = null;
+    audioJumpError.value = "";
   } catch (e: unknown) {
     pack.value = null;
     activePath.value = "";
@@ -260,10 +309,68 @@ function selectFile(relpath: string) {
   activePath.value = relpath;
 }
 
-// Wave 6A: Handle selection from renderer
-function onSelect(sel: EvidenceSelection) {
-  selection.value = sel;
+function clearSelectedPeak() {
+  selectedPeak.value = null;
+  audioJumpError.value = "";
 }
+
+function pointIdFromSpectrumRelpath(relpath: string): string | null {
+  // spectra/points/{POINT_ID}/spectrum.csv
+  const m = relpath.match(/^spectra\/points\/([^/]+)\/spectrum\.csv$/);
+  return m?.[1] ?? null;
+}
+
+function audioRelpathForPoint(pointId: string): string {
+  // Contracted path for point audio in viewer_pack_v1
+  return `audio/points/${pointId}.wav`;
+}
+
+function onPeakSelected(payload: any) {
+  audioJumpError.value = "";
+  const spectrumRelpath = typeof payload?.spectrumRelpath === "string" ? payload.spectrumRelpath : activePath.value;
+  const peaksRelpath = findSiblingPeaksRelpath(spectrumRelpath) ?? "";
+  const pointId = pointIdFromSpectrumRelpath(spectrumRelpath);
+  const freq_hz = Number(payload?.freq_hz);
+  if (!Number.isFinite(freq_hz)) return;
+
+  const raw = payload?.raw ?? payload;
+  let rawPretty = "";
+  try {
+    rawPretty = JSON.stringify(raw, null, 2);
+  } catch {
+    rawPretty = String(raw);
+  }
+
+  selectedPeak.value = {
+    pointId,
+    spectrumRelpath,
+    peaksRelpath,
+    peakIndex: Number(payload?.peakIndex ?? -1),
+    freq_hz,
+    label: typeof payload?.label === "string" ? payload.label : undefined,
+    raw,
+    rawPretty,
+  };
+}
+
+function jumpToPointAudio() {
+  audioJumpError.value = "";
+  if (!pack.value || !selectedPeak.value?.pointId) return;
+  const audioRel = audioRelpathForPoint(selectedPeak.value.pointId);
+  const exists = pack.value.files.some((f) => f.relpath === audioRel);
+  if (!exists) {
+    audioJumpError.value = `Audio missing for point ${selectedPeak.value.pointId}: expected ${audioRel}`;
+    return;
+  }
+  activePath.value = audioRel;
+}
+
+// If user navigates away from the source spectrum, keep selection but make sure
+// details stay coherent: if activePath is not a spectrum.csv, we keep selectedPeak as-is.
+// (This is Wave 3 behavior; Wave 6A persistence rules can extend later.)
+watch(activePath, () => {
+  audioJumpError.value = "";
+});
 </script>
 
 <style scoped>
@@ -459,15 +566,107 @@ function onSelect(sel: EvidenceSelection) {
 .btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-
 .preview-container {
   margin-top: 12px;
 }
-
+.preview-split {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 12px;
+  align-items: start;
+}
+.preview-main {
+  min-width: 0;
+}
+.preview-side {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 12px;
+}
+.side-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.side-title {
+  font-weight: 650;
+}
+.btn-small {
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+.side-empty {
+  padding: 10px 0;
+}
+.muted {
+  opacity: 0.75;
+}
+.side-body {
+  display: grid;
+  gap: 12px;
+}
+.side-kv {
+  display: grid;
+  gap: 6px;
+}
+.side-kv > div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.side-kv span {
+  opacity: 0.75;
+}
+.side-actions {
+  display: grid;
+  gap: 8px;
+}
+.side-warn {
+  font-size: 0.85rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.side-raw {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+}
+.side-summary {
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+.side-pre {
+  max-height: 280px;
+  overflow: auto;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  margin: 0;
+}
 .placeholder {
   padding: 2rem;
   text-align: center;
   opacity: 0.7;
+}
+
+@media (max-width: 980px) {
+  .preview-split {
+    grid-template-columns: 1fr;
+  }
+  .preview-side {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+  }
 }
 
 /* Pack Debug Panel */

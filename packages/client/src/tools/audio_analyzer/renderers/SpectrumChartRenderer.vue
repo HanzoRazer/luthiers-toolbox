@@ -23,7 +23,6 @@
     <div v-if="parseError" class="error">
       <strong>Parse Error:</strong> {{ parseError }}
     </div>
-
     <div v-else class="chart-container">
       <canvas ref="chartCanvas"></canvas>
     </div>
@@ -56,7 +55,6 @@ import {
   Filler,
 } from "chart.js";
 import type { RendererProps } from "./types";
-import type { EvidenceSelection } from "../selection";
 
 // Register Chart.js components
 Chart.register(
@@ -71,23 +69,24 @@ Chart.register(
   Filler
 );
 
-const props = defineProps<RendererProps>();
-const emit = defineEmits<{
-  (e: "select", sel: EvidenceSelection): void;
-}>();
+type PeakSelectedPayload = {
+  spectrumRelpath: string;
+  peakIndex: number;
+  freq_hz: number;
+  label?: string;
+  raw: unknown;
+};
 
-// Wave 6A: Extract point ID from spectrum relpath
-function pointIdFromSpectrumRelpath(relpath: string): string | null {
-  const m = relpath.match(/^spectra\/points\/([^/]+)\/spectrum\.csv$/);
-  return m?.[1] ?? null;
-}
+const props = defineProps<RendererProps & { selectedFreqHz?: number | null }>();
+const emit = defineEmits<{
+  (e: "peak-selected", payload: PeakSelectedPayload): void;
+}>();
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 const showCoherence = ref(true);
 const logScale = ref(false);
 const showPeaks = ref(true);
 const parseError = ref<string | null>(null);
-
 let chartInstance: Chart | null = null;
 
 // Parse CSV data
@@ -101,7 +100,6 @@ interface SpectrumRow {
 // Decimation constants
 const MAX_CHART_POINTS = 2000;
 const originalRowCount = ref(0);
-
 const parsedData = computed<SpectrumRow[]>(() => {
   parseError.value = null;
   originalRowCount.value = 0;
@@ -112,7 +110,6 @@ const parsedData = computed<SpectrumRow[]>(() => {
       parseError.value = "CSV has no data rows";
       return [];
     }
-
     // Parse header
     const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
     const freqIdx = header.findIndex((h) => h.includes("freq"));
@@ -133,7 +130,6 @@ const parsedData = computed<SpectrumRow[]>(() => {
       const mag = parseFloat(cells[magIdx]);
       const coh = cohIdx >= 0 ? parseFloat(cells[cohIdx]) : 0;
       const phase = phaseIdx >= 0 ? parseFloat(cells[phaseIdx]) : 0;
-
       if (!isNaN(freq) && !isNaN(mag)) {
         rows.push({ freq_hz: freq, H_mag: mag, coherence: coh, phase_deg: phase });
       }
@@ -161,10 +157,10 @@ const isDecimated = computed(() => originalRowCount.value > MAX_CHART_POINTS);
 // Parse peaks from sibling analysis.json (peaksBytes)
 interface PeakData {
   freq_hz: number;
-  mag: number;
   label?: string;
+  peakIndex: number;
+  raw: any;
 }
-
 const parsedPeaks = computed<PeakData[]>(() => {
   if (!props.peaksBytes || props.peaksBytes.length === 0) return [];
   try {
@@ -179,8 +175,9 @@ const parsedPeaks = computed<PeakData[]>(() => {
       .filter((p: any) => typeof p.freq_hz === "number" || typeof p.frequency_hz === "number")
       .map((p: any, i: number) => ({
         freq_hz: p.freq_hz ?? p.frequency_hz,
-        mag: p.H_mag ?? p.mag ?? p.amplitude ?? 0,
         label: p.label ?? p.note ?? `P${i + 1}`,
+        peakIndex: i,
+        raw: p,
       }));
   } catch {
     return [];
@@ -189,7 +186,6 @@ const parsedPeaks = computed<PeakData[]>(() => {
 
 // Computed stats
 const dataPoints = computed(() => parsedData.value.length);
-
 const peakFreq = computed<number | null>(() => {
   if (parsedData.value.length === 0) return null;
   let maxRow = parsedData.value[0];
@@ -198,12 +194,10 @@ const peakFreq = computed<number | null>(() => {
   }
   return maxRow.freq_hz;
 });
-
 const peakMag = computed<number>(() => {
   if (parsedData.value.length === 0) return 0;
   return Math.max(...parsedData.value.map((r) => r.H_mag));
 });
-
 const freqRange = computed<string | null>(() => {
   if (parsedData.value.length === 0) return null;
   const freqs = parsedData.value.map((r) => r.freq_hz);
@@ -211,6 +205,21 @@ const freqRange = computed<string | null>(() => {
   const max = Math.max(...freqs);
   return `${min.toFixed(0)}–${max.toFixed(0)} Hz`;
 });
+
+function nearestMagAtFreq(freqHz: number): number {
+  const rows = parsedData.value;
+  if (rows.length === 0) return 0;
+  let best = rows[0];
+  let bestD = Math.abs(rows[0].freq_hz - freqHz);
+  for (const r of rows) {
+    const d = Math.abs(r.freq_hz - freqHz);
+    if (d < bestD) {
+      bestD = d;
+      best = r;
+    }
+  }
+  return best.H_mag;
+}
 
 // Chart rendering
 function createChart() {
@@ -255,16 +264,23 @@ function createChart() {
     });
   }
 
-  // Wave 6A: Invisible peaks dataset for click detection
-  const peaks = parsedPeaks.value;
-  if (peaks.length > 0) {
+  // Invisible-ish peaks dataset for robust hit-testing.
+  // (Points are fully transparent but retain hit radius.)
+  // NOTE: This does not change the evidence; it's only an interaction surface.
+  let peaksDatasetIndex = -1;
+  if (showPeaks.value && parsedPeaks.value.length > 0) {
+    const peakPts = parsedPeaks.value.map((p) => ({ x: p.freq_hz, y: nearestMagAtFreq(p.freq_hz) }));
+    peaksDatasetIndex = datasets.length;
     datasets.push({
-      label: "__peaks__",
+      label: "__peaks_hit__",
+      data: peakPts,
+      parsing: false,
       showLine: false,
-      data: peaks.map((p) => ({ x: p.freq_hz, y: p.mag })),
       pointRadius: 6,
-      pointHitRadius: 10,
-      pointHoverRadius: 8,
+      pointHitRadius: 12,
+      pointHoverRadius: 6,
+      borderWidth: 0,
+      // transparent points
       pointBackgroundColor: "rgba(0,0,0,0)",
       pointBorderColor: "rgba(0,0,0,0)",
       yAxisID: "y",
@@ -300,46 +316,32 @@ function createChart() {
           ctx.fillText(`${peak.freq_hz.toFixed(0)}`, x, chartArea.top - 4);
         }
       }
+
       ctx.restore();
     },
   };
 
-  // Wave 6A: Cursor plugin to draw selection highlight
-  const cursorPlugin = {
-    id: "wave6a_cursor",
+  // Cursor plugin: draws selected frequency cursor (exact freqHz).
+  const selectionCursorPlugin = {
+    id: "selectionCursor",
     afterDraw(chart: Chart) {
-      const f = props.selection?.freqHz;
-      if (typeof f !== "number") return;
-      const xScale = chart.scales.x;
-      if (!xScale || !chart.chartArea) return;
-      const x = xScale.getPixelForValue(f);
-      const { top, bottom } = chart.chartArea;
-      const ctx = chart.ctx;
+      const freqHz = props.selectedFreqHz ?? null;
+      if (!freqHz || !Number.isFinite(freqHz)) return;
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      if (!xScale || !chartArea) return;
+      const x = xScale.getPixelForValue(freqHz);
+      if (x < chartArea.left || x > chartArea.right) return;
       ctx.save();
+      ctx.strokeStyle = "rgba(147, 197, 253, 0.85)"; // blue-ish cursor
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([]);
       ctx.beginPath();
-      ctx.moveTo(x, top);
-      ctx.lineTo(x, bottom);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
       ctx.stroke();
       ctx.restore();
     },
-  };
-
-  // Wave 6A: onClick handler for peak selection
-  const handleClick = (_e: any, active: any[], chart: any) => {
-    const hit = active?.[0];
-    if (!hit) return;
-    const ds = chart.data.datasets?.[hit.datasetIndex];
-    if (ds?.label !== "__peaks__") return;
-    const peak = peaks[hit.index];
-    if (!peak) return;
-
-    emit("select", {
-      pointId: pointIdFromSpectrumRelpath(props.entry.relpath),
-      freqHz: Number(peak.freq_hz),
-      source: "spectrum",
-    });
   };
 
   chartInstance = new Chart(chartCanvas.value, {
@@ -348,14 +350,63 @@ function createChart() {
       labels,
       datasets,
     },
-    plugins: [peaksOverlayPlugin, cursorPlugin],
+    plugins: [peaksOverlayPlugin, selectionCursorPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      onClick: handleClick,
       interaction: {
         mode: "index",
         intersect: false,
+      },
+      onClick: (event: any) => {
+        if (!chartInstance) return;
+        if (!showPeaks.value || parsedPeaks.value.length === 0) return;
+        const els = chartInstance.getElementsAtEventForMode(
+          event as any,
+          "nearest",
+          { intersect: true },
+          true
+        );
+        // Prefer the hit-test dataset when present
+        const hit = els.find((e: any) => e.datasetIndex === peaksDatasetIndex);
+        if (hit) {
+          const idx = hit.index;
+          const peak = parsedPeaks.value[idx];
+          if (peak) {
+            emit("peak-selected", {
+              spectrumRelpath: props.entry.relpath,
+              peakIndex: peak.peakIndex,
+              freq_hz: peak.freq_hz,
+              label: peak.label,
+              raw: peak.raw,
+            });
+          }
+          return;
+        }
+        // Fallback: click near a vertical line (within a small pixel threshold)
+        const { chartArea, scales } = chartInstance as any;
+        const xScale = scales?.x;
+        if (!chartArea || !xScale) return;
+        const xPx = event?.x ?? 0;
+        let bestPeak: PeakData | null = null;
+        let bestDx = Infinity;
+        for (const p of parsedPeaks.value) {
+          const px = xScale.getPixelForValue(p.freq_hz);
+          const dx = Math.abs(px - xPx);
+          if (dx < bestDx) {
+            bestDx = dx;
+            bestPeak = p;
+          }
+        }
+        if (bestPeak && bestDx <= 10) {
+          emit("peak-selected", {
+            spectrumRelpath: props.entry.relpath,
+            peakIndex: bestPeak.peakIndex,
+            freq_hz: bestPeak.freq_hz,
+            label: bestPeak.label,
+            raw: bestPeak.raw,
+          });
+        }
       },
       plugins: {
         legend: {
@@ -364,7 +415,8 @@ function createChart() {
             color: "#ccc",
             usePointStyle: true,
             padding: 16,
-            filter: (item: any) => item.text !== "__peaks__",
+            // Hide the internal peaks hit-test dataset label
+            filter: (item: any) => item.text !== "__peaks_hit__",
           },
         },
         tooltip: {
@@ -385,6 +437,9 @@ function createChart() {
               const val = Number(item.raw);
               if (item.dataset.label?.includes("Coherence")) {
                 return `Coherence: ${val.toFixed(3)}`;
+              }
+              if (item.dataset.label === "__peaks_hit__") {
+                return "";
               }
               return `Magnitude: ${val.toFixed(6)}`;
             },
@@ -452,7 +507,7 @@ onUnmounted(() => {
 });
 
 // Watch for changes
-watch([showCoherence, logScale, showPeaks, () => props.bytes, () => props.peaksBytes, () => props.selection], () => {
+watch([showCoherence, logScale, showPeaks, () => props.bytes, () => props.peaksBytes, () => props.selectedFreqHz], () => {
   nextTick(() => createChart());
 });
 </script>
