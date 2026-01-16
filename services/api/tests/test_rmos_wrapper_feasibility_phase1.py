@@ -298,3 +298,79 @@ class TestFeasibilityDeterminism:
         hash2 = resp2.json()["hashes"]["feasibility_sha256"]
 
         assert hash1 != hash2, "Different outcomes should produce different hashes"
+
+
+@pytest.mark.integration
+@pytest.mark.allow_missing_request_id
+def test_wrapper_persists_run_with_feasibility_in_runs_v2_store(tmp_path, monkeypatch, dxf_fixture):
+    """
+    Isolated test: verifies run persistence using tmp_path for RMOS storage.
+
+    Uses monkeypatch to isolate RMOS_RUNS_DIR and RMOS_RUN_ATTACHMENTS_DIR
+    so test doesn't pollute shared storage or depend on external state.
+    """
+    # Isolate storage directories
+    runs_dir = tmp_path / "runs"
+    attachments_dir = tmp_path / "attachments"
+    runs_dir.mkdir(parents=True)
+    attachments_dir.mkdir(parents=True)
+
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(attachments_dir))
+    # Seed empty index
+    (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
+
+    # Reset the store singleton to pick up new path
+    from app.rmos.runs_v2 import store as runs_v2_store
+    runs_v2_store._default_store = None
+
+    # Create fresh app after env and store reset
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app.rmos.mvp_wrapper import router as mvp_wrapper_router
+    from app.routers.adaptive_router import router as adaptive_router
+    from app.rmos.runs_v2.exports import router as exports_router
+
+    app = FastAPI()
+    app.include_router(mvp_wrapper_router)
+    app.include_router(adaptive_router, prefix="/api")
+    app.include_router(exports_router)
+    client = TestClient(app)
+
+    # Execute wrapper
+    response = client.post(
+        "/api/rmos/wrap/mvp/dxf-to-grbl",
+        files={"file": ("test.dxf", dxf_fixture, "application/dxf")},
+        data={
+            "tool_d": "6.0",
+            "stepover": "0.45",
+            "stepdown": "1.5",
+        },
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+
+    # Verify response structure
+    assert "run_id" in data
+    assert "hashes" in data
+    assert data["hashes"].get("feasibility_sha256") is not None
+    assert len(data["hashes"]["feasibility_sha256"]) == 64
+
+    # Verify feasibility attachment exists
+    attachments = data.get("attachments", [])
+    feas_att = next((a for a in attachments if a.get("kind") == "feasibility"), None)
+    assert feas_att is not None, "feasibility attachment missing"
+
+    # Verify run was persisted to isolated storage (date-partitioned)
+    run_id = data["run_id"]
+    # Runs are stored in date partitions: {runs_dir}/{YYYY-MM-DD}/{run_id}.json
+    run_files = list(runs_dir.glob(f"*/{run_id}.json"))
+    assert len(run_files) == 1, f"Run file not persisted. Found: {list(runs_dir.glob('**/*.json'))}"
+    run_file = run_files[0]
+
+    # Load and verify run artifact
+    run_data = json.loads(run_file.read_text())
+    assert run_data.get("feasibility") is not None
+    assert run_data["feasibility"]["risk_level"] in ("GREEN", "YELLOW", "RED")
+    assert run_data["feasibility"]["engine_version"] == "feasibility_engine_v1"
+    assert run_data["hashes"]["feasibility_sha256"] == data["hashes"]["feasibility_sha256"]
