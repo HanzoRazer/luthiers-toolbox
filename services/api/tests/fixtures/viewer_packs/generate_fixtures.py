@@ -87,20 +87,31 @@ def create_session_with_coherence():
         0x00, 0x00, 0x00, 0x00,  # data size
     ])
 
+    # Coherence summary JSON (separate kind=coherence file)
+    coherence_summary = json.dumps({
+        "overall_coherence": 0.87,
+        "frequency_range_hz": [50, 500],
+        "low_coherence_bands": [[180, 220]],
+        "notes": "Good coherence except around 200Hz"
+    }, indent=2).encode("utf-8")
+
     files_data = {
         "spectra/points/A1/spectrum.csv": spectrum_csv,
         "meta/session_meta.json": session_meta,
         "audio/points/A1.wav": audio_wav,
+        "coherence/coherence_summary.json": coherence_summary,
     }
 
     file_entries = []
     for relpath, data in files_data.items():
-        kind = "spectrum_csv" if "spectrum" in relpath else \
-               "session_meta" if "session_meta" in relpath else \
-               "audio_raw"
-        mime = "text/csv" if kind == "spectrum_csv" else \
-               "application/json" if kind == "session_meta" else \
-               "audio/wav"
+        if "spectrum" in relpath:
+            kind, mime = "spectrum_csv", "text/csv"
+        elif "session_meta" in relpath:
+            kind, mime = "session_meta", "application/json"
+        elif "coherence" in relpath:
+            kind, mime = "coherence", "application/json"
+        else:
+            kind, mime = "audio_raw", "audio/wav"
 
         file_entries.append({
             "relpath": relpath,
