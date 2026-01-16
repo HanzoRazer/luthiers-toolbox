@@ -10,6 +10,7 @@ import CsvRenderer from "./CsvRenderer.vue";
 import JsonRenderer from "./JsonRenderer.vue";
 import MarkdownRenderer from "./MarkdownRenderer.vue";
 import UnknownRenderer from "./UnknownRenderer.vue";
+import SpectrumChartRenderer from "./SpectrumChartRenderer.vue";
 
 /**
  * Map of renderer category to Vue component.
@@ -20,6 +21,7 @@ const rendererMap: Record<RendererCategory, Component> = {
   csv: CsvRenderer,
   json: JsonRenderer,
   markdown: MarkdownRenderer,
+  spectrum_chart: SpectrumChartRenderer,
   unknown: UnknownRenderer,
 };
 

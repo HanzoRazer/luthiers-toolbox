@@ -87,6 +87,62 @@
           <p>Select a file from the list above to preview.</p>
         </div>
       </div>
+
+      <!-- Pack Debug Panel -->
+      <details class="card wide pack-debug">
+        <summary class="debug-summary">🔍 Pack Debug Info</summary>
+        <div class="debug-content">
+          <div class="debug-grid">
+            <div class="debug-section">
+              <h3>Schema</h3>
+              <div class="debug-kv">
+                <span>schema_id</span>
+                <code>{{ pack.schema_id }}</code>
+              </div>
+              <div class="debug-kv">
+                <span>bundle_sha256</span>
+                <code class="hash">{{ pack.bundle_sha256 || "—" }}</code>
+              </div>
+            </div>
+
+            <div class="debug-section">
+              <h3>Kinds Present ({{ uniqueKinds.length }})</h3>
+              <div class="kind-chips">
+                <code
+                  v-for="k in uniqueKinds"
+                  :key="k"
+                  class="kind-chip"
+                  :data-category="getCategory(k)"
+                >
+                  {{ k }} ({{ kindCounts[k] }})
+                </code>
+              </div>
+            </div>
+          </div>
+
+          <div class="debug-section">
+            <h3>All Files ({{ pack.files.length }})</h3>
+            <table class="debug-tbl">
+              <thead>
+                <tr>
+                  <th>kind</th>
+                  <th>relpath</th>
+                  <th>bytes</th>
+                  <th>sha256</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="f in pack.files" :key="f.relpath">
+                  <td><code class="kind-badge" :data-category="getCategory(f.kind)">{{ f.kind }}</code></td>
+                  <td class="mono">{{ f.relpath }}</td>
+                  <td class="mono">{{ f.bytes }}</td>
+                  <td class="mono hash">{{ f.sha256?.slice(0, 12) || "—" }}…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
     </section>
   </div>
 </template>
@@ -124,6 +180,16 @@ const uniqueKinds = computed<string[]>(() => {
   if (!pack.value) return [];
   const kinds = new Set(pack.value.files.map((f) => f.kind));
   return Array.from(kinds).sort();
+});
+
+// Kind counts for debug panel
+const kindCounts = computed<Record<string, number>>(() => {
+  if (!pack.value) return {};
+  const counts: Record<string, number> = {};
+  for (const f of pack.value.files) {
+    counts[f.kind] = (counts[f.kind] || 0) + 1;
+  }
+  return counts;
 });
 
 // Filtered file list
@@ -345,6 +411,11 @@ function selectFile(relpath: string) {
   color: #2196f3;
 }
 
+.kind-badge[data-category="spectrum_chart"] {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
 .kind-badge[data-category="json"] {
   background: rgba(156, 39, 176, 0.2);
   color: #ce93d8;
@@ -376,5 +447,119 @@ function selectFile(relpath: string) {
   padding: 2rem;
   text-align: center;
   opacity: 0.7;
+}
+
+/* Pack Debug Panel */
+.pack-debug {
+  margin-top: 8px;
+}
+
+.debug-summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.debug-summary:hover {
+  color: #42b883;
+}
+
+.debug-content {
+  margin-top: 12px;
+}
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.debug-section h3 {
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  opacity: 0.8;
+}
+
+.debug-kv {
+  display: flex;
+  gap: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.debug-kv span {
+  opacity: 0.6;
+  min-width: 100px;
+}
+
+.debug-kv code {
+  word-break: break-all;
+}
+
+.hash {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.kind-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kind-chip {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.kind-chip[data-category="audio"] {
+  background: rgba(66, 184, 131, 0.2);
+  color: #42b883;
+}
+
+.kind-chip[data-category="spectrum_chart"] {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.kind-chip[data-category="csv"] {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+}
+
+.kind-chip[data-category="json"] {
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+}
+
+.kind-chip[data-category="image"] {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.debug-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.debug-tbl th,
+.debug-tbl td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.debug-tbl th {
+  opacity: 0.6;
+  font-weight: 500;
+}
+
+.debug-tbl tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 </style>
