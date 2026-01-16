@@ -34,6 +34,9 @@
       <span v-if="selectedNearest !== null" class="selected">
         <strong>Nearest:</strong> {{ selectedNearest.freq_hz.toFixed(2) }} Hz → wsi {{ selectedNearest.wsi.toFixed(3) }}
       </span>
+      <span v-if="selectedNearest !== null" class="selected muted">
+        (exporter fields; nearest sample)
+      </span>
     </div>
 
     <details class="raw" v-if="rows.length > 0">
@@ -99,6 +102,7 @@ const showCohMean = ref(true);
 const showPhaseDisorder = ref(true);
 const shadeAdmissible = ref(true);
 const parseError = ref<string | null>(null);
+const emphasizeSelectionPoint = ref(true);
 
 type WsiRow = {
   freq_hz: number;
@@ -214,6 +218,16 @@ const selectedNearest = computed<WsiRow | null>(() => {
   return nearestRowByFreq(f);
 });
 
+function boolText(v: boolean): string {
+  return v ? "true" : "false";
+}
+
+function nearestRowByLabel(label: any): WsiRow | null {
+  const f = Number(label);
+  if (!Number.isFinite(f)) return null;
+  return nearestRowByFreq(f);
+}
+
 const rawPreview = computed(() => {
   const slice = rows.value.slice(0, 25);
   return JSON.stringify(slice, null, 2);
@@ -271,6 +285,25 @@ function createChart() {
       pointRadius: 0,
       fill: false,
       tension: 0.1,
+      yAxisID: "y",
+    });
+  }
+
+  // Optional: add a single emphasized point at the nearest sample to selectedFreqHz.
+  // Cursor line remains at exact selectedFreqHz (no snapping of the cursor itself).
+  const sel = selectedNearest.value;
+  if (emphasizeSelectionPoint.value && sel) {
+    datasets.push({
+      label: "__selection_point__",
+      data: [{ x: sel.freq_hz, y: sel.wsi }],
+      parsing: false,
+      showLine: false,
+      pointRadius: 5,
+      pointHoverRadius: 6,
+      pointHitRadius: 10,
+      borderWidth: 0,
+      pointBackgroundColor: "rgba(147, 197, 253, 0.95)",
+      pointBorderColor: "rgba(147, 197, 253, 0.95)",
       yAxisID: "y",
     });
   }
@@ -371,7 +404,12 @@ function createChart() {
       plugins: {
         legend: {
           position: "top",
-          labels: { color: "#ccc", usePointStyle: true, padding: 16 },
+          labels: {
+            color: "#ccc",
+            usePointStyle: true,
+            padding: 16,
+            filter: (item: any) => item.text !== "__selection_point__",
+          },
         },
         tooltip: {
           backgroundColor: "rgba(30, 30, 30, 0.95)",
@@ -385,11 +423,13 @@ function createChart() {
               if (items.length > 0) return `${Number(items[0].label).toFixed(2)} Hz`;
               return "";
             },
+            // Consolidated tooltip: show exporter fields for nearest row at hovered freq.
+            // No derived metrics, no thresholds, no interpretation.
             label: (item) => {
-              const v = Number(item.raw);
-              const name = item.dataset?.label ?? "";
-              if (name === "WSI") return `WSI: ${v.toFixed(3)}`;
-              return `${name}: ${v.toFixed(3)}`;
+              if (item.dataset?.label === "__selection_point__") return "";
+              const row = nearestRowByLabel(item.label);
+              if (!row) return "";
+              return `wsi ${row.wsi.toFixed(3)} | coh_mean ${row.coh_mean.toFixed(3)} | phase_disorder ${row.phase_disorder.toFixed(3)} | admissible ${boolText(row.admissible)}`;
             },
           },
         },
@@ -431,7 +471,7 @@ onUnmounted(() => {
 });
 
 watch(
-  [showCohMean, showPhaseDisorder, shadeAdmissible, () => props.bytes, () => props.selectedFreqHz],
+  [showCohMean, showPhaseDisorder, shadeAdmissible, emphasizeSelectionPoint, () => props.bytes, () => props.selectedFreqHz],
   () => nextTick(createChart)
 );
 </script>
@@ -511,6 +551,9 @@ watch(
 }
 .selected {
   color: #93c5fd;
+}
+.muted {
+  opacity: 0.7;
 }
 .error {
   padding: 1rem;
