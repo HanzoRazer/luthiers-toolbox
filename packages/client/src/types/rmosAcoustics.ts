@@ -68,13 +68,23 @@ export type BrowseResponse = {
 // Facets
 // ============================================================
 
+export type FacetCountKind = {
+  kind: string;
+  count: number;
+};
+
+export type FacetCountMime = {
+  mime: string;
+  count: number;
+};
+
 export type FacetsResponse = {
-  facets: {
-    kind: Record<string, number>;
-    mime: Record<string, number>;
-  };
-  total_attachments: number;
-  index_version: string;
+  total: number;
+  kinds: FacetCountKind[];
+  mime_prefixes: { mime_prefix: string; count: number }[];
+  mime_exact: FacetCountMime[];
+  size_buckets: { bucket: string; count: number }[];
+  note?: string;
 };
 
 // ============================================================

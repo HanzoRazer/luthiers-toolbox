@@ -53,13 +53,13 @@
           <h3>Kind</h3>
           <div class="facet-chips">
             <button
-              v-for="(count, kind) in facets?.facets.kind"
-              :key="kind"
+              v-for="item in facets?.kinds"
+              :key="item.kind"
               class="facet-chip"
-              :class="{ active: kindFilter === kind }"
-              @click="toggleKindFilter(kind as string)"
+              :class="{ active: kindFilter === item.kind }"
+              @click="toggleKindFilter(item.kind)"
             >
-              {{ kind }} ({{ count }})
+              {{ item.kind }} ({{ item.count }})
             </button>
           </div>
         </div>
@@ -67,18 +67,18 @@
           <h3>MIME</h3>
           <div class="facet-chips">
             <button
-              v-for="(count, mime) in facets?.facets.mime"
-              :key="mime"
+              v-for="item in facets?.mime_exact"
+              :key="item.mime"
               class="facet-chip"
-              :class="{ active: mimeFilter === mime }"
-              @click="toggleMimeFilter(mime as string)"
+              :class="{ active: mimeFilter === item.mime }"
+              @click="toggleMimeFilter(item.mime)"
             >
-              {{ mime }} ({{ count }})
+              {{ item.mime }} ({{ item.count }})
             </button>
           </div>
         </div>
         <div class="facet-total">
-          Total: {{ facets?.total_attachments ?? 0 }} attachments
+          Total: {{ facets?.total ?? 0 }} attachments
         </div>
       </div>
     </section>
