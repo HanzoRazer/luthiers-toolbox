@@ -33,12 +33,12 @@
     <section class="lab-grid">
       <CompareBaselinePicker
         :current-geometry="currentGeometry"
-        @diff-computed="(payload) => (diffResult = payload)"
+        @diff-computed="(payload: any) => (diffResult = payload)"
       />
 
-      <CompareSvgDualViewer class="middle" :diff="diffResult" />
+      <CompareSvgDualViewer class="middle" :diff="diffResult as any" />
 
-      <CompareDiffViewer :diff="diffResult" :current-geometry="currentGeometry" />
+      <CompareDiffViewer :diff="diffResult as any" :current-geometry="currentGeometry" />
     </section>
 
     <!-- B23: Export Dialog -->
@@ -245,6 +245,9 @@ import { normalizeGeometryPayload } from '@/utils/geometry'
 interface DiffResult {
   baseline_id: string
   baseline_name: string
+  summary?: { added: number; removed: number; matched: number }
+  segments?: Array<{ status: string; length: number; path_index: number }>
+  mode?: string
 }
 
 const STORAGE_KEY = 'toolbox.compare.currentGeometry'

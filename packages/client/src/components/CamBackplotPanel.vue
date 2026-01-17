@@ -22,7 +22,8 @@
 
     <CamBackplotViewer
       v-if="mode==='2d'"
-      :moves="moves"
+      :loops="[]"
+      :moves="moves || []"
       :stats="stats"
       :overlays="overlays"
       :sim-issues="simIssues"
@@ -30,8 +31,8 @@
 
     <CamBackplot3D
       v-else
-      :moves="moves"
-      :metrics="metrics"
+      :moves="(moves || []) as any"
+      :metrics="metrics as any"
       :units="units"
       :tool-d="toolD"
     />

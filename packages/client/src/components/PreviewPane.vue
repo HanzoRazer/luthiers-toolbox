@@ -36,7 +36,7 @@ const ranges = computed(()=>{
   return r
 })
 function inHint(i:number){
-  return ranges.value.some(([a,b]: [number, number])=> i>=a && i<=b)
+  return ranges.value.some((range: number[])=> i >= (range[0] ?? 0) && i <= (range[1] ?? 0))
 }
 function esc(s:string){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')

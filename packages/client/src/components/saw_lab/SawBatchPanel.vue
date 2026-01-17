@@ -346,7 +346,7 @@ const kerfLossMm3 = computed(() => {
 })
 
 const slicePaths = computed(() => {
-  const paths = []
+  const paths: { x1: number; y1: number; x2: number; y2: number }[] = []
   for (let i = 0; i < numSlices.value; i++) {
     if (orientation.value === 'horizontal') {
       paths.push({

@@ -12,6 +12,8 @@ import { nextTick } from 'vue'
 import { useCompareState } from './useCompareState'
 import type { CanonicalGeometry } from '@/utils/geometry'
 
+declare const global: typeof globalThis;
+
 describe('useCompareState - B22.8 State Machine Guardrails', () => {
   describe('Initial State', () => {
     it('starts with idle, no reason, overlay enabled', () => {

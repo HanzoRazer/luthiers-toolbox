@@ -1,8 +1,8 @@
 <template>
   <div class="toast-host">
-    <div v-for="t in toast.toasts" :key="t.id" class="toast" :data-level="t.level">
+    <div v-for="t in toast.toasts" :key="t.id" class="toast" :data-level="t.variant">
       <div class="msg">{{ t.message }}</div>
-      <button class="x" @click="toast.remove(t.id)">x</button>
+      <button class="x" @click="toast.removeToast(t.id)">x</button>
     </div>
   </div>
 </template>

@@ -193,7 +193,7 @@ const filteredSorted = computed(() => {
   if (sortBy.value === "RATING_DESC") {
     list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   } else if (sortBy.value === "RISK_DESC") {
-    list.sort((a, b) => riskRank(b.risk_level) - riskRank(a.risk_level));
+    list.sort((a, b) => riskRank(b.risk_level as any) - riskRank(a.risk_level as any));
   } else {
     list.sort((a, b) => parseCreatedAt(b) - parseCreatedAt(a));
   }

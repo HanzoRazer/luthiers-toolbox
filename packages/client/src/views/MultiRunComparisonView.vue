@@ -548,7 +548,7 @@ watch(() => comparisonResult.value, async (newResult) => {
             tooltip: {
               callbacks: {
                 label: (context) => {
-                  return `${context.parsed.y.toFixed(2)}s`
+                  return `${(context.parsed.y ?? 0).toFixed(2)}s`
                 }
               }
             }

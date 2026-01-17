@@ -16,7 +16,7 @@
           </div>
 
           <div class="mt-2 mb-2">
-            <ReliefRiskPresetPanel @update="applyPreset" />
+            <ReliefRiskPresetPanel @update="(p: any) => applyPreset(p)" />
           </div>
 
           <input

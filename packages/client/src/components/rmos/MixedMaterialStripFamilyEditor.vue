@@ -142,7 +142,7 @@
                 <input v-model="mat.cam_profile" type="text" class="input-text" placeholder="e.g. hardwood_fast, metal_slow" />
 
                 <!-- Visual Properties -->
-                <details class="visual-details">
+                <details v-if="mat.visual" class="visual-details">
                   <summary>Visual Properties</summary>
                   <label>Base Color</label>
                   <input v-model="mat.visual.base_color" type="color" class="input-color" />
@@ -157,7 +157,7 @@
                   <input v-model="mat.visual.texture_map" type="text" class="input-text" placeholder="Optional texture URL" />
 
                   <label>Burn Gradient (optional JSON)</label>
-                  <textarea v-model="mat.visual.burn_gradient" class="input-textarea" rows="2" placeholder='{"start":"#000","end":"#8b4513"}'></textarea>
+                  <textarea v-model="(mat.visual as any).burn_gradient" class="input-textarea" rows="2" placeholder='{"start":"#000","end":"#8b4513"}'></textarea>
                 </details>
               </div>
             </div>
@@ -206,7 +206,7 @@ const store = useStripFamilyStore()
 const workingFamily = reactive<Partial<StripFamily>>({
   name: '',
   default_width_mm: 3.0,
-  sequence: 0,
+  sequence: [],
   lane: 'experimental',
   description: '',
   materials: [],
@@ -239,13 +239,13 @@ function addMaterial() {
     species: '',
     thickness_mm: 0.5,
     finish: 'polished',
-    cam_profile: null,
+    cam_profile: undefined,
     visual: {
       base_color: '#8b4513',
       reflectivity: 0.3,
-      iridescence: 0.0,
-      texture_map: null,
-      burn_gradient: null,
+      iridescence: false,
+      texture_map: undefined,
+      burn_gradient: undefined,
     },
   })
 }

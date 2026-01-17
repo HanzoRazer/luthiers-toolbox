@@ -58,7 +58,7 @@ function formatBytes(bytes: number): string {
 function downloadFile() {
   const mime = props.entry.mime ?? "application/octet-stream";
   // Create blob from ArrayBuffer for better compatibility
-  const blob = new Blob([props.bytes.buffer.slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
+  const blob = new Blob([(props.bytes.buffer as ArrayBuffer).slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");

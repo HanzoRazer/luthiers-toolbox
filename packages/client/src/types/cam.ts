@@ -14,7 +14,7 @@ export interface BackplotOverlay {
   x: number;
   y: number;
   radius?: number;
-  severity?: "low" | "medium" | "high" | "critical";
+  severity?: "info" | "low" | "medium" | "high" | "critical";
   feed_pct?: number;
 }
 
@@ -35,6 +35,11 @@ export interface SimIssue {
   severity: "info" | "low" | "medium" | "high" | "critical";
   note?: string | null;
   move_idx?: number | null;
+}
+
+export interface BackplotFocusPoint {
+  x: number;
+  y: number;
 }
 
 export interface AdaptiveStats {

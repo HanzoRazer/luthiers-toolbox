@@ -148,6 +148,7 @@ FUTURE ENHANCEMENTS:
     />
 
     <CamBackplotViewer
+      :loops="[]"
       :moves="plotMoves"
       :stats="plotStats"
       :overlays="adaptiveOverlays"

@@ -218,7 +218,7 @@
             <div v-for="(check, key) in validationResult.checks" :key="key" 
                  :class="['check-item', check.result.toLowerCase()]">
               <span class="check-icon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
-              <span class="check-name">{{ formatCheckName(key) }}</span>
+              <span class="check-name">{{ formatCheckName(String(key)) }}</span>
               <span class="check-message">{{ check.message }}</span>
             </div>
           </div>
@@ -476,7 +476,7 @@ function updateContourPath() {
     
     contourPath.value = `M ${x1} ${y1} A ${radius.value} ${radius.value} 0 1 1 ${x2} ${y2} A ${radius.value} ${radius.value} 0 1 1 ${x1} ${y1}`
   } else if (contourType.value === 'rosette') {
-    const points = []
+    const points: { x: number; y: number }[] = []
     const angleStep = (2 * Math.PI) / (petalCount.value * 2)
     
     for (let i = 0; i <= petalCount.value * 2; i++) {

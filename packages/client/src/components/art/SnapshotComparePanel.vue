@@ -75,7 +75,7 @@ const deltaRows = computed(() => {
   const b = ringRows(right.value);
   const n = Math.max(a.length, b.length);
 
-  const rows = [];
+  const rows: { ring: number; aWidth: number; bWidth: number; delta: number; aPattern: string; bPattern: string }[] = [];
   for (let i = 0; i < n; i++) {
     const aw = a[i]?.width_mm ?? 0;
     const bw = b[i]?.width_mm ?? 0;
@@ -146,7 +146,7 @@ async function loadSnapshotsForCompare() {
     right.value = b as AnySnap;
   } catch (e: any) {
     error.value = e?.message || String(e);
-    toast.push("error", error.value);
+    toast.error( error.value);
   } finally {
     loading.value = false;
   }
@@ -259,7 +259,7 @@ watch(
 function pickBaselineLeft() {
   const base = (store.snapshots || []).find((s: any) => s.baseline === true);
   if (!base) {
-    toast.push("warning", "No baseline snapshot found.");
+    toast.warning( "No baseline snapshot found.");
     return;
   }
   leftId.value = base.snapshot_id;

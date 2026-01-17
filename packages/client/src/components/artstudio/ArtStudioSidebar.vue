@@ -215,7 +215,7 @@ function onGenerateRosette() {
       pattern: "concentric",
       outer_diameter_mm: 100,
       inner_diameter_mm: 80,
-    })
+    } as any)
     .catch(console.error);
 }
 

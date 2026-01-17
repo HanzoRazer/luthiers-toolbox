@@ -12,6 +12,9 @@
  * Uses mocked fetch for CI, real API calls when VITE_TEST_REAL_API=true.
  */
 
+// Node.js global for mocking fetch in tests
+declare const global: typeof globalThis;
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // =============================================================================

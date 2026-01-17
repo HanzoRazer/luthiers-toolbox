@@ -377,7 +377,7 @@
               <div class="bg-white rounded p-3">
                 <div class="text-sm text-gray-600">Max RPM</div>
                 <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.max_rpm?.toFixed(0) }}
+                  {{ (selectedRun.metrics as any).max_rpm?.toFixed(0) }}
                 </div>
               </div>
               <div class="bg-white rounded p-3">
@@ -413,10 +413,10 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
                   <tr v-for="(hist, idx) in selectedRun.lane_scale_history" :key="idx">
-                    <td class="px-3 py-2 text-sm text-gray-900">{{ formatDateTime(hist.timestamp) }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-900">{{ formatDateTime((hist as any).timestamp || hist.ts) }}</td>
                     <td class="px-3 py-2 text-sm font-semibold text-gray-900">{{ hist.lane_scale.toFixed(2) }}</td>
                     <td class="px-3 py-2 text-sm text-gray-600">{{ hist.source }}</td>
-                    <td class="px-3 py-2 text-sm text-gray-600">{{ hist.meta?.reason || 'N/A' }}</td>
+                    <td class="px-3 py-2 text-sm text-gray-600">{{ (hist as any).meta?.reason || 'N/A' }}</td>
                   </tr>
                 </tbody>
               </table>

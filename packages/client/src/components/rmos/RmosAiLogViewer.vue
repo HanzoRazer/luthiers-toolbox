@@ -106,7 +106,7 @@
           <tbody>
             <tr
               v-for="row in logs"
-              :key="`attempt-${row.run_id}-${row.attempt_index}-${row.timestamp}`"
+              :key="`attempt-${row.run_id}-${(row as any).attempt_index}-${row.timestamp}`"
             >
               <td class="px-2 py-1 border whitespace-nowrap">
                 {{ prettyTime(row.timestamp) }}
@@ -115,7 +115,7 @@
                 {{ row.run_id }}
               </td>
               <td class="px-2 py-1 border text-center">
-                {{ row.attempt_index }}
+                {{ (row as any).attempt_index }}
               </td>
               <td class="px-2 py-1 border">
                 {{ row.workflow_mode }}
@@ -130,16 +130,16 @@
                 {{ row.geometry_engine || "—" }}
               </td>
               <td class="px-2 py-1 border text-right">
-                {{ row.score.toFixed(3) }}
+                {{ ((row as any).score || 0).toFixed(3) }}
               </td>
               <td class="px-2 py-1 border text-center">
-                {{ row.risk_bucket }}
+                {{ (row as any).risk_bucket }}
               </td>
               <td
                 class="px-2 py-1 border text-center"
-                :class="row.is_acceptable ? 'text-green-600' : 'text-gray-500'"
+                :class="(row as any).is_acceptable ? 'text-green-600' : 'text-gray-500'"
               >
-                {{ row.is_acceptable ? "Yes" : "No" }}
+                {{ (row as any).is_acceptable ? "Yes" : "No" }}
               </td>
             </tr>
           </tbody>
@@ -188,26 +188,26 @@
                 {{ row.geometry_engine || "—" }}
               </td>
               <td class="px-2 py-1 border text-center">
-                {{ row.attempts }}
+                {{ (row as any).attempts }}
               </td>
               <td class="px-2 py-1 border text-center">
-                {{ row.max_attempts }}
+                {{ (row as any).max_attempts }}
               </td>
               <td class="px-2 py-1 border text-right">
                 {{
-                  row.selected_score != null
-                    ? row.selected_score.toFixed(3)
+                  (row as any).selected_score != null
+                    ? (row as any).selected_score.toFixed(3)
                     : "—"
                 }}
               </td>
               <td class="px-2 py-1 border text-center">
-                {{ row.selected_risk_bucket || "—" }}
+                {{ (row as any).selected_risk_bucket || "—" }}
               </td>
               <td
                 class="px-2 py-1 border text-center"
-                :class="row.success ? 'text-green-600' : 'text-red-600'"
+                :class="(row as any).success ? 'text-green-600' : 'text-red-600'"
               >
-                {{ row.success ? "Yes" : "No" }}
+                {{ (row as any).success ? "Yes" : "No" }}
               </td>
             </tr>
           </tbody>

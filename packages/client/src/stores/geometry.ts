@@ -102,7 +102,7 @@ export interface GeometryData {
  * - svg-editor: SVG path editing and manipulation
  */
 export interface CAMTarget {
-  tool: 'helical' | 'adaptive' | 'vcarve' | 'relief' | 'svg-editor'
+  tool: 'helical' | 'adaptive' | 'vcarve' | 'relief' | 'svg-editor' | 'compare-runs'
   label: string      // Display name
   icon: string       // Emoji or icon character
   route: string      // Vue Router path

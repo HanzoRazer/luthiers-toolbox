@@ -182,7 +182,7 @@
                   ? "⚠"
                   : "✗"
               }}</span>
-              <span class="check-name">{{ formatCheckName(key) }}</span>
+              <span class="check-name">{{ formatCheckName(String(key)) }}</span>
               <span class="check-message">{{ check.message }}</span>
             </div>
           </div>

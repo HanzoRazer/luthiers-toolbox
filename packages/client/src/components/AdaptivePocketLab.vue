@@ -783,13 +783,13 @@ const LL_MIN = 0.80  // -20%
 const LL_MAX = 1.25  // +25%
 
 // Batch export mode selection state (localStorage persisted)
-const exportModes = ref<{comment: boolean, inline_f: boolean, mcode: boolean}>(() => {
+const exportModes = ref<{comment: boolean, inline_f: boolean, mcode: boolean}>((() => {
   try {
     return JSON.parse(localStorage.getItem('toolbox.af.modes') || '')
   } catch {
     return {comment: true, inline_f: true, mcode: true}
   }
-})
+})())
 
 watch(exportModes, () => {
   localStorage.setItem('toolbox.af.modes', JSON.stringify(exportModes.value))
@@ -809,6 +809,13 @@ const loops = ref([
 const moves = ref<any[]>([])
 const stats = ref<any|null>(null)
 const posts = ref<string[]>(['GRBL','Mach4','LinuxCNC','PathPilot','MASSO'])
+
+// Computed aliases for template compatibility
+const planOut = computed(() => ({
+  moves: moves.value,
+  stats: stats.value
+}))
+const profileId = computed(() => machineId.value)
 
 // Per-post adaptive-feed preset store (localStorage)
 type AfPreset = {
@@ -894,7 +901,7 @@ function openCompare(){ compareOpen.value = true }
 function handleMakeDefault(mode: string){
   afMode.value = mode as any
   // persist for current post
-  savePresetForPost(postId)
+  savePresetForPost(postId.value)
   compareOpen.value = false
 }
 
@@ -1341,7 +1348,7 @@ async function runWhatIf() {
   }
   
   try {
-    const body = {
+    const body: Record<string, any> = {
       moves: moves.value,
       machine_profile_id: machineId.value,
       z_total: -stepdown.value,
@@ -1358,7 +1365,7 @@ async function runWhatIf() {
       },
       grid: [optGridF.value, optGridS.value]
     }
-    
+
     // M.3 Add chipload enforcement tolerance if enabled
     if (enforceChip.value) {
       body.tolerance_chip_mm = chipTol.value
@@ -1498,7 +1505,7 @@ async function runHeatTS() {
       machine_profile_id: profileId.value,
       material_id: materialId.value,
       tool_d: toolD.value,
-      stepover: stepover.value,
+      stepover: stepoverPct.value / 100,
       stepdown: stepdown.value,
       bins: 120
     }
@@ -1588,7 +1595,7 @@ async function exportThermalReport() {
       machine_profile_id: profileId.value || 'Mach4_Router_4x8',
       material_id: materialId.value || 'maple_hard',
       tool_d: toolD.value,
-      stepover: stepover.value,
+      stepover: stepoverPct.value / 100,
       stepdown: stepdown.value,
       bins: 200,
       job_name: 'pocket',
@@ -1634,7 +1641,7 @@ async function exportThermalBundle() {
       machine_profile_id: profileId.value || 'Mach4_Router_4x8',
       material_id: materialId.value || 'maple_hard',
       tool_d: toolD.value,
-      stepover: stepover.value,
+      stepover: stepoverPct.value / 100,
       stepdown: stepdown.value,
       bins: 200,
       job_name: 'pocket',
@@ -1713,7 +1720,7 @@ async function logCurrentRun(actualSeconds?: number) {
       machine_id: profileId.value || 'Mach4_Router_4x8',
       material_id: materialId.value || 'maple_hard',
       tool_d: toolD.value,
-      stepover: stepover.value,
+      stepover: stepoverPct.value / 100,
       stepdown: stepdown.value,
       post_id: null,
       feed_xy: feedXY.value || undefined,

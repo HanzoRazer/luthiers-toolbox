@@ -64,8 +64,8 @@ export const useRmosRunsStore = defineStore("rmosRuns", {
           ...this.cleanFilters(),
           limit,
         });
-        this.items = res.items;
-        this.nextCursor = res.next_cursor ?? null;
+        this.items = res;  // fetchRuns returns RunIndexItem[] directly
+        this.nextCursor = null;  // cursor pagination not yet implemented
       } finally {
         this.loading = false;
       }
@@ -81,10 +81,9 @@ export const useRmosRunsStore = defineStore("rmosRuns", {
         const res = await fetchRuns({
           ...this.cleanFilters(),
           limit,
-          cursor: this.nextCursor,
-        });
-        this.items.push(...res.items);
-        this.nextCursor = res.next_cursor ?? null;
+          });
+        this.items.push(...res);  // fetchRuns returns RunIndexItem[] directly
+        this.nextCursor = null;  // cursor pagination not yet implemented
       } finally {
         this.loading = false;
       }

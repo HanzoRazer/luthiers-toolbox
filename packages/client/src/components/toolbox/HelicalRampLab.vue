@@ -20,7 +20,14 @@ Features:
 import { ref } from 'vue'
 import { helicalEntry, type HelicalReq } from '@/api/v161'
 
-const form = ref<HelicalReq>({
+// Extended form type with safety validation parameters  
+type HelicalFormData = HelicalReq & {
+  tool_diameter_mm: number;
+  material: string;
+  spindle_rpm: number;
+};
+
+const form = ref<HelicalFormData>({
   cx: 0, cy: 0, radius_mm: 6.0, direction: 'CCW',
   plane_z_mm: 5.0, start_z_mm: 0.0, z_target_mm: -3.0,
   pitch_mm_per_rev: 1.5, feed_xy_mm_min: 600, feed_z_mm_min: null,

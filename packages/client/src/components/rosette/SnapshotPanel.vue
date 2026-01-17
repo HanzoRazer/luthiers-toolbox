@@ -90,7 +90,7 @@ function parseTags(s: string) {
 
 async function save() {
   if (!name.value.trim()) {
-    toast.push("warning", "Enter a snapshot name.");
+    toast.warning( "Enter a snapshot name.");
     return;
   }
   await store.saveSnapshot({ name: name.value.trim(), notes: notes.value, tags: parseTags(tags.value) });

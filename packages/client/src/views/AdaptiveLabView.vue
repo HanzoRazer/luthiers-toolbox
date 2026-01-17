@@ -315,6 +315,7 @@ FUTURE ENHANCEMENTS:
       </div>
 
       <CamBackplotViewer
+        :loops="[]"
         :moves="moves"
         :stats="stats"
         :overlays="overlays"

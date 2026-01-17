@@ -76,7 +76,7 @@
                 {{ formatValue(value, key) }}
               </div>
               <div v-if="metric.direction && idx > 0 && typeof value === 'number'" class="delta">
-                {{ formatDelta(value, metric.values[0], metric.direction) }}
+                {{ formatDelta(value as number, metric.values[0] as number, metric.direction) }}
               </div>
             </td>
           </tr>

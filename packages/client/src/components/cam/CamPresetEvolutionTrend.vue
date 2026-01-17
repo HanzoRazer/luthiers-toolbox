@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <div v-if="points.length === 0" class="text-[11px] text-gray-500">
+    <div v-if="points.A.length === 0" class="text-[11px] text-gray-500">
       Not enough data to plot.
     </div>
 
@@ -221,10 +221,10 @@ const points = computed(() => {
 const polyA = computed(() => points.value.A.map((p) => `${p.x},${p.y}`).join(" "));
 const polyB = computed(() => points.value.B.map((p) => `${p.x},${p.y}`).join(" "));
 
-const lastA = computed(() => points.value.A.at(-1) || null);
-const lastB = computed(() => points.value.B.at(-1) || null);
+const lastA = computed(() => points.value.A.slice(-1)[0] || null);
+const lastB = computed(() => points.value.B.slice(-1)[0] || null);
 const lastDelta = computed(() => {
-  const r = series.value.at(-1);
+  const r = series.value.slice(-1)[0];
   return r ? r.d : 0;
 });
 const lastDeltaStr = computed(() => {

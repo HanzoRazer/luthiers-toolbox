@@ -518,6 +518,20 @@ export const useAiImageStore = defineStore('aiImages', () => {
   function setFilters(newFilters: GalleryFilters): void {
     filters.value = newFilters;
   }
+
+  /**
+   * Set a single filter key.
+   */
+  function setFilter<K extends keyof GalleryFilters>(key: K, value: GalleryFilters[K]): void {
+    filters.value = { ...filters.value, [key]: value };
+  }
+
+  /**
+   * Clear all filters.
+   */
+  function clearFilters(): void {
+    filters.value = {};
+  }
   
   /**
    * Set sort options.
@@ -605,6 +619,8 @@ export const useAiImageStore = defineStore('aiImages', () => {
     downloadImage,
     attachToDesign,
     setFilters,
+    setFilter,
+    clearFilters,
     setSort,
     clearError,
     getEstimate,

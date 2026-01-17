@@ -27,7 +27,7 @@ const imageUrl = computed(() => {
   }
 
   // Create blob from ArrayBuffer for better compatibility
-  const blob = new Blob([props.bytes.buffer.slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
+  const blob = new Blob([(props.bytes.buffer as ArrayBuffer).slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
   return URL.createObjectURL(blob);
 });
 

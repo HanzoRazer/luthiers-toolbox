@@ -145,7 +145,7 @@ function resetViewPrefs() {
 // Copy-to-clipboard toast
 const toast = ref<string | null>(null);
 let _toastTimer: number | null = null;
-function showToast(msg: string) {
+function showToast(msg: string, _variant?: "ok" | "err") {
   toast.value = msg;
   if (_toastTimer) window.clearTimeout(_toastTimer);
   _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
@@ -485,7 +485,6 @@ function matchesSearch(c: CandidateRow, q: string) {
     c.advisory_id ?? "",
     c.decision_note ?? "",
     c.decided_by ?? "",
-    c.created_by ?? "",
   ].map(normalize).join(" | ");
   return hay.includes(q);
 }
@@ -1731,7 +1730,7 @@ async function exportGreenOnlyPackageZip() {
             :disabled="bulkApplying || saving || exporting" />
           <button class="btn small" :disabled="bulkApplying || saving || exporting || !bulkDecision"
             @click="applyBulkDecision">
-            {{ bulkApplying ? `Applying… (${bulkProgress.done}/${bulkProgress.total})` : 'Apply' }}
+            {{ bulkApplying ? `Applying… (${bulkProgress?.done ?? 0}/${bulkProgress?.total ?? 0})` : 'Apply' }}
           </button>
           <label class="inlineCheck" title="When clearing decisions, also clear decision notes">
             <input type="checkbox" v-model="bulkClearNoteToo" :disabled="bulkApplying" />
@@ -1760,9 +1759,9 @@ async function exportGreenOnlyPackageZip() {
         </div>
         <div class="bulkHistoryList">
           <div v-for="rec in bulkHistory" :key="rec.id" class="bulkHistoryRow">
-            <span class="mono small">{{ rec.ts_utc }}</span>
+            <span class="mono small">{{ rec.at_utc }}</span>
             <span class="badge" :class="'b' + rec.decision">{{ rec.decision }}</span>
-            <span>{{ rec.count }} items</span>
+            <span>{{ rec.selected_count }} items</span>
             <span class="muted" v-if="rec.note">— {{ rec.note }}</span>
           </div>
         </div>
@@ -1831,7 +1830,7 @@ async function exportGreenOnlyPackageZip() {
             title="Copy candidate_id">
             📋 candidate_id
           </button>
-          <button class="btn ghost smallbtn" @click="copyText('advisory_id', c.advisory_id)" title="Copy advisory_id">
+          <button class="btn ghost smallbtn" @click="copyText('advisory_id', c.advisory_id || '')" title="Copy advisory_id">
             📋 advisory_id
           </button>
         </div>

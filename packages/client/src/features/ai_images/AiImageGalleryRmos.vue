@@ -148,7 +148,7 @@ async function promoteAsset(a: VisionAsset) {
       <img v-if="a.url" :src="a.url" class="thumb" />
       <div class="meta">
         <div class="mono">{{ a.sha256 }}</div>
-        <div class="small muted">{{ a.revised_prompt || a.prompt }}</div>
+        <div class="small muted">{{ a.revised_prompt || (a as any).prompt }}</div>
       </div>
 
       <div class="actions">

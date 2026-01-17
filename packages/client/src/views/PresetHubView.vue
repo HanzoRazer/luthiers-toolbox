@@ -509,7 +509,7 @@ async function savePreset() {
   saving.value = true
   try {
     // Parse tags
-    formData.value.tags = tagsInput.value
+    (formData.value as any).tags = tagsInput.value
       .split(',')
       .map(t => t.trim())
       .filter(t => t.length > 0)

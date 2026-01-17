@@ -378,10 +378,9 @@ function downloadCsv() {
     <!-- Metrics bar: counts per severity -->
     <div class="flex items-center justify-between text-[10px] text-gray-600 mb-1">
       <div class="flex flex-wrap gap-1.5">
+        <template v-for="s in severityOptions" :key="s">
         <span
-          v-for="s in severityOptions"
-          :key="s"
-          v-if="severityCounts[s]"
+          v-if="(severityCounts as Record<string, number>)[s]"
           class="inline-flex items-center"
         >
           <span
@@ -393,9 +392,10 @@ function downloadCsv() {
             ]"
           >
             <span>{{ severityLabelShort(s as any) }}:</span>
-            <span>{{ severityCounts[s] }}</span>
+            <span>{{ (severityCounts as Record<string, number>)[s] }}</span>
           </span>
         </span>
+        </template>
       </div>
       <span
         v-if="issues.length"

@@ -46,7 +46,7 @@ const risk = computed(() => store.feasibilityRisk || "UNKNOWN");
 
 async function manualRefresh() {
   await store.refreshPreviewAndFeasibility();
-  toast.push("info", "Preview + feasibility refreshed.");
+  toast.info( "Preview + feasibility refreshed.");
 }
 </script>
 

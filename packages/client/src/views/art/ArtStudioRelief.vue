@@ -441,9 +441,7 @@ async function saveNote() {
   noteSaving.value = true;
   noteSaveError.value = null;
   try {
-    await patchRiskNotes(lastRiskReportId.value, {
-      notes: noteDraft.value || null,
-    });
+    await patchRiskNotes(lastRiskReportId.value, noteDraft.value || "");
     noteEditorVisible.value = false;
   } catch (err: any) {
     console.error("Failed to save relief note:", err);
@@ -479,7 +477,7 @@ function handleIssueFocusRequest(payload: { index: number; issue: SimIssue }) {
       
       <!-- Preset controls -->
       <section class="mt-2 flex flex-wrap items-center gap-3">
-        <ReliefRiskPresetPanel @update="applyLocalPreset" />
+        <ReliefRiskPresetPanel @update="(p: any) => applyLocalPreset(p)" />
 
         <button
           type="button"
