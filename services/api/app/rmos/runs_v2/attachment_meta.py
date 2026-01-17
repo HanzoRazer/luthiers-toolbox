@@ -286,6 +286,48 @@ class AttachmentMetaIndex:
 
 
 # =============================================================================
+# Facets (Attachment Meta Inventory)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class AttachmentMetaFacets:
+    """Facet counts over the attachment meta index."""
+    kind: Dict[str, int]
+    mime: Dict[str, int]
+    total_attachments: int
+    index_version: str = "attachment_meta_v1"
+
+
+def compute_facets(meta_index: "AttachmentMetaIndex") -> AttachmentMetaFacets:
+    """
+    Compute facet counts from the attachment meta index.
+
+    Index-only operation: no filesystem access, no blob resolution.
+
+    Returns deterministic output with sorted keys.
+    """
+    entries = meta_index.list_all()
+
+    kind_counts: Dict[str, int] = {}
+    mime_counts: Dict[str, int] = {}
+
+    for e in entries:
+        k = e.get("kind") or "unknown"
+        m = e.get("mime") or "application/octet-stream"
+
+        kind_counts[k] = kind_counts.get(k, 0) + 1
+        mime_counts[m] = mime_counts.get(m, 0) + 1
+
+    # Sorted keys for deterministic output
+    return AttachmentMetaFacets(
+        kind=dict(sorted(kind_counts.items())),
+        mime=dict(sorted(mime_counts.items())),
+        total_attachments=len(entries),
+    )
+
+
+# =============================================================================
 # Recency Index (H7.2.2.3)
 # =============================================================================
 
