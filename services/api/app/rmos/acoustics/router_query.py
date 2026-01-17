@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -30,6 +30,11 @@ def _parse_iso_utc(s: str) -> datetime:
     return datetime.fromisoformat(s)
 
 
+# =============================================================================
+# Schemas
+# =============================================================================
+
+
 class IndexResponse(BaseModel):
     version: int = 1
     updated_at: Optional[str] = None
@@ -38,6 +43,51 @@ class IndexResponse(BaseModel):
     offset: int
     limit: int
     runs: list[dict[str, Any]]
+
+
+class AttachmentMetaFacetsOut(BaseModel):
+    """Facet counts over the attachment meta index."""
+    facets: Dict[str, Dict[str, int]] = Field(
+        description="Facet name -> value -> count"
+    )
+    total_attachments: int
+    index_version: str = "attachment_meta_v1"
+
+
+# =============================================================================
+# Routes
+# =============================================================================
+
+
+@router.get("/index/attachment_meta/facets", response_model=AttachmentMetaFacetsOut)
+def get_attachment_meta_facets() -> AttachmentMetaFacetsOut:
+    """
+    Return facet counts over the attachment meta index.
+
+    Index-only operation: no filesystem access, no blob resolution.
+    Useful for inventory summaries and filter population.
+    """
+    try:
+        from ..runs_v2.attachment_meta import AttachmentMetaIndex, compute_facets
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="AttachmentMetaIndex not available"
+        )
+
+    runs_root = _get_runs_root()
+    meta_idx = AttachmentMetaIndex(runs_root)
+
+    facets = compute_facets(meta_idx)
+
+    return AttachmentMetaFacetsOut(
+        facets={
+            "kind": facets.kind,
+            "mime": facets.mime,
+        },
+        total_attachments=facets.total_attachments,
+        index_version=facets.index_version,
+    )
 
 
 @router.get("/index", response_model=IndexResponse)
