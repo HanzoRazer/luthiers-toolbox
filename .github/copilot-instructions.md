@@ -1,7 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-14
+> **Last Updated:** 2026-01-16
 
 ## ⚡ Quick Start
 
@@ -26,7 +26,7 @@ make check-boundaries                                    # All architectural fen
 
 ### Pytest Markers (from `services/api/pytest.ini`)
 
-`unit` `integration` `smoke` `slow` `router` `geometry` `adaptive` `bridge` `helical` `cam` `export`
+`unit` `integration` `smoke` `slow` `router` `geometry` `adaptive` `bridge` `helical` `cam` `export` `allow_missing_request_id`
 
 ## 🔑 Critical Rules
 
@@ -90,21 +90,39 @@ Machine-executing endpoints follow **Operation Lane Governance**:
 Use `ArtifactStorePorts` dataclass to inject store dependencies into services:
 
 ```python
-# services/api/app/saw_lab/decision_intelligence_service.py
+# services/api/app/saw_lab/decision_intel_apply_service.py
 @dataclass
 class ArtifactStorePorts:
     list_runs_filtered: Any   # callable(**filters) -> list[dict]
     persist_run_artifact: Any # callable(kind, payload, index_meta, parent_artifact_id=...) -> dict
 
-# Router wires real store at runtime
-store = ArtifactStorePorts(
-    list_runs_filtered=getattr(runs_store, "list_runs_filtered"),
-    persist_run_artifact=getattr(runs_store, "persist_run_artifact"),
-)
-result = service_function(store, ...)  # Service receives abstract ports
+# Router wires real store at runtime via helper
+def _get_store_ports() -> ArtifactStorePorts:
+    from app.rmos.runs_v2 import store as runs_store
+    return ArtifactStorePorts(
+        list_runs_filtered=getattr(runs_store, "list_runs_filtered", lambda **kw: []),
+        persist_run_artifact=getattr(runs_store, "persist_run_artifact", lambda **kw: {}),
+    )
+
+result = service_function(_get_store_ports(), ...)  # Service receives abstract ports
 ```
 
 This pattern enables testing with mock stores and enforces boundary isolation.
+
+### Decision Intelligence (Saw Lab)
+
+The Saw Lab implements **Decision Intelligence** for tuning parameter recommendations:
+
+- **Advisory on `/plan`**: When `SAW_LAB_DECISION_INTEL_ENABLED=true`, plan responses include `decision_intel_advisory` with recommended tuning from prior approved decisions
+- **Signal detection**: `_conservative_delta_from_signals()` converts operator feedback (burn, tearout, kickback, chatter) into tuning multipliers (rpm_mul, feed_mul, doc_mul)
+- **Apply flow**: `/stamp-plan-link` persists link between plan and approved tuning decision
+
+```python
+# Key files:
+# - decision_intel_advisory.py — Simple helper for plan responses
+# - decision_intelligence_service.py — Signal-to-delta heuristics
+# - decision_intel_apply_service.py — find_latest_approved_tuning_decision()
+```
 
 ## 🔗 Cross-Boundary Patterns
 
