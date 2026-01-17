@@ -97,6 +97,38 @@
         >
           🎨 AI Images
         </RouterLink>
+
+        <!-- Acoustics Dropdown -->
+        <div class="relative" @mouseenter="showAcousticsMenu = true" @mouseleave="showAcousticsMenu = false">
+          <button
+            class="px-2 py-1 rounded hover:bg-gray-100 flex items-center gap-1"
+            :class="{ 'bg-gray-900 text-white hover:bg-gray-900': isAcousticsActive }"
+          >
+            🎛️ Acoustics
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            v-if="showAcousticsMenu"
+            class="absolute top-full right-0 mt-1 bg-white border rounded shadow-lg py-1 min-w-[140px] z-50"
+          >
+            <RouterLink
+              to="/tools/audio-analyzer/library"
+              class="block px-3 py-1.5 hover:bg-gray-100"
+              active-class="bg-blue-50 text-blue-600"
+            >
+              Library
+            </RouterLink>
+            <RouterLink
+              to="/tools/audio-analyzer"
+              class="block px-3 py-1.5 hover:bg-gray-100"
+              active-class="bg-blue-50 text-blue-600"
+            >
+              Viewer
+            </RouterLink>
+          </div>
+        </div>
       </nav>
     </div>
   </header>
@@ -107,10 +139,16 @@ import { ref, computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const showSawMenu = ref(false)
+const showAcousticsMenu = ref(false)
 const route = useRoute()
 
 // Highlight Saw Lab button when any saw route is active
 const isSawLabActive = computed(() => {
   return route.path.startsWith('/lab/saw/')
+})
+
+// Highlight Acoustics button when any acoustics route is active
+const isAcousticsActive = computed(() => {
+  return route.path.startsWith('/tools/audio-analyzer')
 })
 </script>
