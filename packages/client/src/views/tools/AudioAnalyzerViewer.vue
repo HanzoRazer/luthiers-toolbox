@@ -217,10 +217,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, shallowRef, type Component, watch } from "vue";
+import { ref, computed, shallowRef, type Component, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { loadNormalizedPack, type NormalizedPack, type NormalizedFileEntry } from "@/evidence";
 import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/renderers";
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
+import { getDownloadUrl } from "@/sdk/endpoints/rmosAcoustics";
+
+const route = useRoute();
 
 const pack = shallowRef<NormalizedPack | null>(null);
 const err = ref<string>("");
@@ -458,6 +462,28 @@ function jumpToPointAudio() {
 // (This is Wave 3 behavior; Wave 6A persistence rules can extend later.)
 watch(activePath, () => {
   audioJumpError.value = "";
+});
+
+// Deep-link support: load from sha256 query param (from Acoustics Library)
+onMounted(async () => {
+  const sha256 = route.query.sha256;
+  if (typeof sha256 === "string" && sha256.length > 0) {
+    resetError();
+    try {
+      const url = getDownloadUrl(sha256);
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error(`Failed to fetch attachment: ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      const file = new File([blob], `viewer_pack_${sha256.slice(0, 8)}.zip`, {
+        type: "application/zip",
+      });
+      await loadZip(file);
+    } catch (e) {
+      err.value = e instanceof Error ? e.message : String(e);
+    }
+  }
 });
 </script>
 

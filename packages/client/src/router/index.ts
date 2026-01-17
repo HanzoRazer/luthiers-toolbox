@@ -171,6 +171,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/tools/AudioAnalyzerViewer.vue"),
   },
 
+  // Tools: Acoustics Library (browse/import viewer_packs)
+  {
+    path: "/tools/audio-analyzer/library",
+    name: "AudioAnalyzerLibrary",
+    component: () => import("@/views/tools/AudioAnalyzerLibrary.vue"),
+  },
+
   // AI Images — Visual Analyzer (Production)
   {
     path: "/ai-images",
