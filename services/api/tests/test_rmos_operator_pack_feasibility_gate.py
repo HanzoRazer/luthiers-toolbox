@@ -79,7 +79,7 @@ def test_operator_pack_blocked_when_risk_red(tmp_path, monkeypatch):
 @pytest.mark.integration
 @pytest.mark.allow_missing_request_id
 def test_operator_pack_requires_override_when_yellow(tmp_path, monkeypatch):
-    """YELLOW feasibility requires override params for operator pack export."""
+    """YELLOW feasibility requires override for operator pack export."""
     # Isolate runs/attachments
     monkeypatch.setenv("RMOS_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "attachments"))
@@ -121,12 +121,10 @@ def test_operator_pack_requires_override_when_yellow(tmp_path, monkeypatch):
     decision = r.json().get("decision", {})
     assert decision.get("risk_level") == "YELLOW", f"Expected YELLOW, got {decision}"
 
-    # Without override params, should get 400
+    # Without override, should get 403
     r2 = client.get(f"/api/rmos/runs_v2/{run_id}/operator-pack")
-    assert r2.status_code == 400, f"Expected 400, got {r2.status_code}"
-    detail = r2.json().get("detail", {})
-    if isinstance(detail, dict):
-        assert detail.get("error") == "OVERRIDE_REQUIRED"
+    assert r2.status_code == 403, f"Expected 403, got {r2.status_code}"
+    assert "override required" in (r2.json().get("detail") or "").lower()
 
 
 @pytest.mark.integration
@@ -183,7 +181,7 @@ def test_operator_pack_allowed_when_green(tmp_path, monkeypatch):
 @pytest.mark.integration
 @pytest.mark.allow_missing_request_id
 def test_operator_pack_yellow_with_override_succeeds(tmp_path, monkeypatch):
-    """YELLOW feasibility with override params allows export and creates override attachment."""
+    """YELLOW feasibility with override allows export and creates override attachment."""
     # Isolate runs/attachments
     monkeypatch.setenv("RMOS_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "attachments"))
@@ -216,11 +214,16 @@ def test_operator_pack_yellow_with_override_succeeds(tmp_path, monkeypatch):
     assert r.status_code == 200
     run_id = r.json().get("run_id")
 
-    # With override params, should succeed
-    r2 = client.get(
-        f"/api/rmos/runs_v2/{run_id}/operator-pack",
-        params={"override_by": "test_operator", "override_reason": "Approved for testing"},
+    # Create override via POST endpoint
+    r_override = client.post(
+        f"/api/rmos/runs_v2/{run_id}/override",
+        json={"reason": "Approved for testing", "operator": "test_operator"},
     )
+    assert r_override.status_code == 200, f"Override failed: {r_override.text}"
+    assert r_override.json().get("ok") is True
+
+    # Now export should succeed
+    r2 = client.get(f"/api/rmos/runs_v2/{run_id}/operator-pack")
     assert r2.status_code == 200, f"Expected 200, got {r2.status_code}: {r2.text}"
     assert r2.headers.get("content-type") == "application/zip"
 
