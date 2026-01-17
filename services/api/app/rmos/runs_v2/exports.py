@@ -5,27 +5,26 @@ Provides a deterministic ZIP download of run artifacts for shop-floor use.
 The operator pack contains everything needed to reproduce a manufacturing run.
 
 Feasibility Enforcement (Phase 2):
-- RED: Blocks export by default (requires allow_red_override feature flag)
-- YELLOW: Requires explicit override with audit trail
+- RED: Blocks export by default (requires override + RMOS_ALLOW_RED_OVERRIDE=1)
+- YELLOW: Requires override attachment to exist
 - GREEN: Proceeds normally
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import tempfile
+import threading
 import zipfile
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 
-from .store import get_run, persist_run
+from .store import get_run
 from .attachments import put_json_attachment
-from .schemas import RunAttachment
 
 
 router = APIRouter(prefix="/api/rmos/runs_v2", tags=["RMOS"])
@@ -37,26 +36,56 @@ router = APIRouter(prefix="/api/rmos/runs_v2", tags=["RMOS"])
 
 def _allow_red_override() -> bool:
     """Feature flag: allow override for RED runs (disabled by default)."""
-    return os.getenv("RMOS_ALLOW_RED_OVERRIDE", "false").lower() in ("true", "1", "yes")
+    return os.getenv("RMOS_ALLOW_RED_OVERRIDE", "").strip() in ("1", "true", "TRUE", "yes", "YES")
 
 
 # =============================================================================
-# Override Schema
+# Override Index (separate from immutable run artifacts)
 # =============================================================================
 
-class OverrideRecord(BaseModel):
-    """
-    Auditable override record for feasibility warnings.
+_OVERRIDE_INDEX_LOCK = threading.Lock()
 
-    Overrides are additive - they never mutate the original feasibility result.
-    The override attachment documents who approved proceeding despite warnings.
-    """
-    overridden_at_utc: str = Field(..., description="ISO timestamp of override")
-    overridden_by: str = Field(..., description="User/operator ID who approved")
-    reason: str = Field(..., description="Justification for override")
-    original_risk_level: str = Field(..., description="Risk level being overridden")
-    warnings_acknowledged: list[str] = Field(default_factory=list, description="Warnings acknowledged")
-    client_info: Optional[Dict[str, Any]] = Field(None, description="Optional client metadata")
+
+def _overrides_index_path() -> Path:
+    """Path to the overrides index file."""
+    env = os.environ.get("RMOS_RUN_ATTACHMENTS_DIR")
+    if env:
+        return Path(env) / "_overrides_index.json"
+    return Path(__file__).resolve().parents[3] / "data" / "run_attachments" / "_overrides_index.json"
+
+
+def _load_overrides_index() -> Dict[str, str]:
+    """Load the overrides index (run_id -> override_sha256)."""
+    path = _overrides_index_path()
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_overrides_index(index: Dict[str, str]) -> None:
+    """Save the overrides index."""
+    path = _overrides_index_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(index, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _register_override(run_id: str, override_sha256: str) -> None:
+    """Register an override for a run (atomic update to index)."""
+    with _OVERRIDE_INDEX_LOCK:
+        index = _load_overrides_index()
+        index[run_id] = override_sha256
+        _save_overrides_index(index)
+
+
+def _get_override_sha(run_id: str) -> Optional[str]:
+    """Get the override attachment sha256 for a run, if any."""
+    index = _load_overrides_index()
+    return index.get(run_id)
 
 
 def _attachments_root_dir() -> Path:
@@ -150,51 +179,97 @@ def _pick_by_kind(attachments, kind: str):
     return None
 
 
-def _get_risk_level(run) -> str:
-    """Extract risk level from run artifact."""
-    # Check feasibility first (authoritative)
+def _has_override(run_id: str) -> bool:
+    """Check if run has an override in the index."""
+    return _get_override_sha(run_id) is not None
+
+
+def _risk_level_from_run(run) -> str:
+    """
+    Prefer decision.risk_level (authoritative), fallback to feasibility.risk_level.
+    Returns uppercase string or "UNKNOWN".
+    """
+    # Check decision first (authoritative)
+    if run.decision and getattr(run.decision, "risk_level", None):
+        return run.decision.risk_level.upper()
+    # Fallback to feasibility
     if run.feasibility and isinstance(run.feasibility, dict):
-        return run.feasibility.get("risk_level", "UNKNOWN")
-    # Fallback to decision
-    if run.decision:
-        return run.decision.risk_level or "UNKNOWN"
+        return run.feasibility.get("risk_level", "UNKNOWN").upper()
     return "UNKNOWN"
 
 
-def _get_warnings(run) -> list[str]:
-    """Extract warnings from run artifact."""
-    warnings = []
-    if run.feasibility and isinstance(run.feasibility, dict):
-        warnings.extend(run.feasibility.get("warnings", []))
-        warnings.extend(run.feasibility.get("blocking_reasons", []))
-    if run.decision and run.decision.warnings:
-        for w in run.decision.warnings:
-            if w not in warnings:
-                warnings.append(w)
-    return warnings
+# =============================================================================
+# Override Endpoint
+# =============================================================================
+
+@router.post("/{run_id}/override")
+def create_override(run_id: str, payload: Dict):
+    """
+    Create an override record as a content-addressed attachment.
+    This does NOT mutate feasibility or the run artifact; it only records operator intent
+    in a separate index.
+
+    Body (minimal):
+      { "reason": "...", "operator": "..." }
+    """
+    run = get_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    reason = str((payload or {}).get("reason") or "").strip()
+    operator = str((payload or {}).get("operator") or "").strip()
+    if not reason:
+        raise HTTPException(status_code=422, detail="Override requires non-empty reason")
+
+    override_obj = {
+        "run_id": run_id,
+        "reason": reason,
+        "operator": operator or None,
+        # Timestamp is OK in the override artifact; it is not used for feasibility hashes.
+        "created_at_utc": datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+    override_att, override_path, override_sha = put_json_attachment(
+        override_obj,
+        kind="override",
+        filename="override.json",
+        ext=".json",
+    )
+
+    # Register override in the index (does NOT mutate immutable run artifact)
+    _register_override(run_id, override_sha)
+
+    return {
+        "ok": True,
+        "run_id": run_id,
+        "override": {
+            "reason": reason,
+            "operator": operator or None,
+        },
+        "attachment": {
+            "kind": "override",
+            "sha256": override_att.sha256,
+            "filename": override_att.filename,
+            "mime": override_att.mime,
+            "size_bytes": override_att.size_bytes,
+            "created_at_utc": override_att.created_at_utc,
+        },
+    }
 
 
-def _has_override(run) -> bool:
-    """Check if run has an override attachment."""
-    for att in run.attachments or []:
-        if getattr(att, "kind", None) == "override":
-            return True
-    return False
-
+# =============================================================================
+# Operator Pack Export
+# =============================================================================
 
 @router.get("/{run_id}/operator-pack")
-def download_operator_pack(
-    run_id: str,
-    override_by: Optional[str] = Query(None, description="User ID for override (required for YELLOW)"),
-    override_reason: Optional[str] = Query(None, description="Reason for override (required for YELLOW)"),
-):
+def export_operator_pack(run_id: str):
     """
     Download a deterministic operator pack ZIP for a run.
 
     Feasibility Enforcement:
     - GREEN: Proceeds normally
-    - YELLOW: Requires override_by and override_reason parameters
-    - RED: Blocked by default (requires RMOS_ALLOW_RED_OVERRIDE=true env var)
+    - YELLOW: Requires override attachment to exist
+    - RED: Requires override attachment AND RMOS_ALLOW_RED_OVERRIDE=1
 
     ZIP contents (canonical names):
       - input.dxf
@@ -205,97 +280,40 @@ def download_operator_pack(
       - override.json (included if override was applied)
     """
     run = get_run(run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
 
     # ==========================================================================
     # Feasibility Enforcement Gate
     # ==========================================================================
-    risk_level = _get_risk_level(run)
-    warnings = _get_warnings(run)
-    has_existing_override = _has_override(run)
+    risk = _risk_level_from_run(run)
 
-    if risk_level == "RED":
-        if not _allow_red_override():
+    if risk == "RED":
+        if not (_has_override(run_id) and _allow_red_override()):
             raise HTTPException(
                 status_code=403,
-                detail={
-                    "error": "FEASIBILITY_RED_BLOCKED",
-                    "message": f"Run {run_id} has RED feasibility status and cannot be exported.",
-                    "risk_level": risk_level,
-                    "warnings": warnings,
-                    "resolution": "Fix the blocking issues or contact admin to enable RED override.",
-                },
+                detail="Operator pack export blocked: feasibility risk_level=RED (override disabled)",
             )
-        # RED with feature flag: still requires override params
-        if not override_by or not override_reason:
+
+    if risk == "YELLOW":
+        if not _has_override(run_id):
             raise HTTPException(
-                status_code=400,
-                detail={
-                    "error": "OVERRIDE_REQUIRED",
-                    "message": "RED override requires override_by and override_reason parameters.",
-                    "risk_level": risk_level,
-                    "warnings": warnings,
-                },
+                status_code=403,
+                detail="Operator pack export blocked: feasibility risk_level=YELLOW (override required)",
             )
-
-    if risk_level == "YELLOW" and not has_existing_override:
-        if not override_by or not override_reason:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "error": "OVERRIDE_REQUIRED",
-                    "message": f"Run {run_id} has YELLOW feasibility status. Override required.",
-                    "risk_level": risk_level,
-                    "warnings": warnings,
-                    "required_params": ["override_by", "override_reason"],
-                },
-            )
-
-    # ==========================================================================
-    # Create Override Attachment (if override provided and not already present)
-    # ==========================================================================
-    att_override = _pick_by_kind(run.attachments, "override")
-    override_created = False
-
-    if override_by and override_reason and not att_override:
-        # Create auditable override record
-        override_record = OverrideRecord(
-            overridden_at_utc=datetime.now(timezone.utc).isoformat(),
-            overridden_by=override_by,
-            reason=override_reason,
-            original_risk_level=risk_level,
-            warnings_acknowledged=warnings,
-            client_info=None,
-        )
-
-        # Store override attachment
-        try:
-            att_override, _, _ = put_json_attachment(
-                override_record.model_dump(),
-                kind="override",
-                filename="override.json",
-            )
-            override_created = True
-
-            # Add to run's attachments and persist (additive, doesn't mutate feasibility)
-            if run.attachments is None:
-                run.attachments = []
-            run.attachments.append(att_override)
-            persist_run(run)
-        except Exception as e:
-            # Non-fatal: override storage failed but we can still export
-            # Log warning but proceed
-            pass
 
     # ==========================================================================
     # Gather Attachments
     # ==========================================================================
-    att_dxf = _pick_by_kind(run.attachments, "dxf_input")
-    att_plan = _pick_by_kind(run.attachments, "cam_plan")
-    att_manifest = _pick_by_kind(run.attachments, "manifest")
-    att_gcode = _pick_by_kind(run.attachments, "gcode_output")
-    att_feasibility = _pick_by_kind(run.attachments, "feasibility")  # Optional
+    attachments = getattr(run, "attachments", None) or []
+    att_dxf = _pick_by_kind(attachments, "dxf_input")
+    att_plan = _pick_by_kind(attachments, "cam_plan")
+    att_manifest = _pick_by_kind(attachments, "manifest")
+    att_gcode = _pick_by_kind(attachments, "gcode_output")
+    att_feasibility = _pick_by_kind(attachments, "feasibility")
+
+    # Override is stored in separate index, not in run attachments
+    override_sha = _get_override_sha(run_id)
 
     missing = [
         name
@@ -327,9 +345,9 @@ def download_operator_pack(
         if feas_path.exists():
             paths["feasibility.json"] = feas_path
 
-    # Include override.json if present (either existing or just created)
-    if att_override:
-        override_path = _attachment_path_for(att_override.sha256, att_override.filename)
+    # Include override.json if present (from override index)
+    if override_sha:
+        override_path = _attachment_path_for(override_sha, "override.json")
         if override_path.exists():
             paths["override.json"] = override_path
 
