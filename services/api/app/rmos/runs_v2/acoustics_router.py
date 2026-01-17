@@ -513,6 +513,84 @@ def attachment_meta_exists(
     )
 
 
+# NOTE: facets/recent routes MUST be defined BEFORE /{sha256} to prevent FastAPI
+# from matching "facets" or "recent" as sha256 values (path parameter matching)
+@router.get("/index/attachment_meta/facets", response_model=AttachmentMetaFacetsOut)
+def attachment_meta_facets(
+    kind_prefix: Optional[str] = Query(
+        default=None,
+        description="Filter to kinds starting with this prefix"
+    ),
+    mime_prefix: Optional[str] = Query(
+        default=None,
+        description="Filter to MIME types starting with this prefix"
+    ),
+    size_buckets: bool = Query(
+        default=True,
+        description="Include size bucket counts"
+    ),
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> AttachmentMetaFacetsOut:
+    """
+    Facet counts for attachment meta index.
+
+    Returns counts by kind, MIME prefix, exact MIME, and size buckets
+    for building filter UIs without downloading all entries.
+
+    No path disclosure.
+    """
+    from collections import Counter
+
+    idx = AttachmentMetaIndex(store.root)
+    entries = list(idx.list_all())
+
+    # Apply filters (optional)
+    if kind_prefix:
+        entries = [e for e in entries if (e.get("kind") or "").startswith(kind_prefix)]
+    if mime_prefix:
+        entries = [e for e in entries if (e.get("mime") or "").startswith(mime_prefix)]
+
+    total = len(entries)
+
+    # Counts by kind
+    kind_counts = Counter((e.get("kind") or "unknown") for e in entries)
+
+    # MIME prefix grouping (first token + '/')
+    def _mime_group(m: str) -> str:
+        if not m:
+            return "unknown"
+        if "/" in m:
+            return m.split("/", 1)[0] + "/"
+        return m
+
+    mime_prefix_counts = Counter(_mime_group(e.get("mime") or "") for e in entries)
+    mime_exact_counts = Counter((e.get("mime") or "unknown") for e in entries)
+
+    # Size buckets
+    bucket_counts: Counter = Counter()
+    if size_buckets:
+        for e in entries:
+            n = int(e.get("size_bytes") or 0)
+            if n < 100_000:
+                bucket_counts["lt_100kb"] += 1
+            elif n < 1_000_000:
+                bucket_counts["100kb_1mb"] += 1
+            elif n < 20_000_000:
+                bucket_counts["1mb_20mb"] += 1
+            else:
+                bucket_counts["ge_20mb"] += 1
+
+    return AttachmentMetaFacetsOut(
+        total=total,
+        kinds=[{"kind": k, "count": c} for k, c in kind_counts.most_common()],
+        mime_prefixes=[{"mime_prefix": k, "count": c} for k, c in mime_prefix_counts.most_common()],
+        mime_exact=[{"mime": k, "count": c} for k, c in mime_exact_counts.most_common()],
+        size_buckets=[{"bucket": k, "count": c} for k, c in bucket_counts.items()] if size_buckets else [],
+        note="Counts computed from _attachment_meta.json. No paths disclosed.",
+    )
+
+
 @router.get("/index/attachment_meta/{sha256}")
 def get_attachment_meta_from_index(
     sha256: str,
@@ -677,82 +755,8 @@ def list_attachment_meta_from_index(
     )
 
 
-@router.get("/index/attachment_meta/facets", response_model=AttachmentMetaFacetsOut)
-def attachment_meta_facets(
-    kind_prefix: Optional[str] = Query(
-        default=None,
-        description="Filter to kinds starting with this prefix"
-    ),
-    mime_prefix: Optional[str] = Query(
-        default=None,
-        description="Filter to MIME types starting with this prefix"
-    ),
-    size_buckets: bool = Query(
-        default=True,
-        description="Include size bucket counts"
-    ),
-    _auth: None = Depends(require_auth),
-    store: RunStoreV2 = Depends(get_store),
-) -> AttachmentMetaFacetsOut:
-    """
-    Facet counts for attachment meta index.
-
-    Returns counts by kind, MIME prefix, exact MIME, and size buckets
-    for building filter UIs without downloading all entries.
-
-    No path disclosure.
-    """
-    from collections import Counter
-
-    idx = AttachmentMetaIndex(store.root)
-    entries = list(idx.list_all())
-
-    # Apply filters (optional)
-    if kind_prefix:
-        entries = [e for e in entries if (e.get("kind") or "").startswith(kind_prefix)]
-    if mime_prefix:
-        entries = [e for e in entries if (e.get("mime") or "").startswith(mime_prefix)]
-
-    total = len(entries)
-
-    # Counts by kind
-    kind_counts = Counter((e.get("kind") or "unknown") for e in entries)
-
-    # MIME prefix grouping (first token + '/')
-    def _mime_group(m: str) -> str:
-        if not m:
-            return "unknown"
-        if "/" in m:
-            return m.split("/", 1)[0] + "/"
-        return m
-
-    mime_prefix_counts = Counter(_mime_group(e.get("mime") or "") for e in entries)
-    mime_exact_counts = Counter((e.get("mime") or "unknown") for e in entries)
-
-    # Size buckets
-    bucket_counts: Counter = Counter()
-    if size_buckets:
-        for e in entries:
-            n = int(e.get("size_bytes") or 0)
-            if n < 100_000:
-                bucket_counts["lt_100kb"] += 1
-            elif n < 1_000_000:
-                bucket_counts["100kb_1mb"] += 1
-            elif n < 20_000_000:
-                bucket_counts["1mb_20mb"] += 1
-            else:
-                bucket_counts["ge_20mb"] += 1
-
-    return AttachmentMetaFacetsOut(
-        total=total,
-        kinds=[{"kind": k, "count": c} for k, c in kind_counts.most_common()],
-        mime_prefixes=[{"mime_prefix": k, "count": c} for k, c in mime_prefix_counts.most_common()],
-        mime_exact=[{"mime": k, "count": c} for k, c in mime_exact_counts.most_common()],
-        size_buckets=[{"bucket": k, "count": c} for k, c in bucket_counts.items()] if size_buckets else [],
-        note="Counts computed from _attachment_meta.json. No paths disclosed.",
-    )
-
-
+# NOTE: /recent route MUST also be defined BEFORE /{sha256} - it's already in the
+# correct position relative to /facets above, but we add this note for clarity.
 @router.get("/index/attachment_meta/recent", response_model=AttachmentMetaRecentOut)
 def attachment_meta_recent(
     kind: Optional[str] = Query(
