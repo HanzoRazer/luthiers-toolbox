@@ -37,6 +37,9 @@ from .acoustics_schemas import (
     RunAdvisoriesListOut,
     AdvisorySummary,
     IndexRebuildOut,
+    RunSummary,
+    RunsBrowseOut,
+    RunDetailOut,
 )
 
 
@@ -112,6 +115,179 @@ def require_auth_or_signed(
 # -------------------------
 # Endpoints
 # -------------------------
+
+
+# =============================================================================
+# Runs Browse (Session/Run-centric Library)
+# =============================================================================
+
+
+@router.get("/runs", response_model=RunsBrowseOut)
+def browse_runs(
+    limit: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+        description="Max runs to return (1..100)"
+    ),
+    cursor: Optional[str] = Query(
+        default=None,
+        description="Pagination cursor (created_at_utc|run_id from previous response)"
+    ),
+    session_id: Optional[str] = Query(
+        default=None,
+        description="Filter by session_id (exact match)"
+    ),
+    batch_label: Optional[str] = Query(
+        default=None,
+        description="Filter by batch_label (exact match)"
+    ),
+    include_urls: bool = Query(
+        default=False,
+        description="Include attachment URLs in viewer_pack entries"
+    ),
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> RunsBrowseOut:
+    """
+    Browse runs with pagination.
+
+    Returns newest runs first (sorted by created_at_utc DESC).
+    Use cursor for pagination (format: created_at_utc|run_id).
+    """
+    # Fetch more than needed for filtering
+    fetch_limit = limit * 4 + 50
+
+    runs = store.list_runs(limit=fetch_limit)
+
+    # Sort by created_at_utc descending
+    def _sort_key(r):
+        ts = r.created_at_utc.isoformat() if hasattr(r.created_at_utc, "isoformat") else str(r.created_at_utc)
+        return (ts, r.run_id)
+
+    runs = sorted(runs, key=_sort_key, reverse=True)
+
+    # Cursor pagination: skip entries until we pass the cursor
+    if cursor:
+        try:
+            cursor_ts, cursor_rid = cursor.split("|", 1)
+            found_cursor = False
+            filtered = []
+            for r in runs:
+                ts = r.created_at_utc.isoformat() if hasattr(r.created_at_utc, "isoformat") else str(r.created_at_utc)
+                if found_cursor:
+                    filtered.append(r)
+                elif ts == cursor_ts and r.run_id == cursor_rid:
+                    found_cursor = True
+                elif ts < cursor_ts:
+                    # Older than cursor, include
+                    filtered.append(r)
+            runs = filtered
+        except Exception:
+            pass  # Invalid cursor, ignore
+
+    # Filter by session_id
+    want_session = session_id.strip() if session_id and session_id.strip() else None
+    if want_session:
+        runs = [r for r in runs if (r.meta.get("session_id") or r.workflow_session_id) == want_session]
+
+    # Filter by batch_label
+    want_batch = batch_label.strip() if batch_label and batch_label.strip() else None
+    if want_batch:
+        runs = [r for r in runs if r.meta.get("batch_label") == want_batch]
+
+    # Take page
+    page = runs[:limit]
+
+    # Build next_cursor
+    next_cursor = None
+    if len(runs) > limit and page:
+        last = page[-1]
+        ts = last.created_at_utc.isoformat() if hasattr(last.created_at_utc, "isoformat") else str(last.created_at_utc)
+        next_cursor = f"{ts}|{last.run_id}"
+
+    # Build summaries
+    summaries = []
+    for r in page:
+        attachments = r.attachments or []
+        kinds = list(set(a.kind for a in attachments if a.kind))
+        viewer_packs = [a for a in attachments if a.kind == "viewer_pack"]
+        primary_vp = viewer_packs[0].sha256 if viewer_packs else None
+
+        summaries.append(RunSummary(
+            run_id=r.run_id,
+            created_at_utc=r.created_at_utc.isoformat() if hasattr(r.created_at_utc, "isoformat") else str(r.created_at_utc),
+            mode=r.mode,
+            status=r.status,
+            session_id=r.meta.get("session_id") or r.workflow_session_id,
+            batch_label=r.meta.get("batch_label"),
+            event_type=r.event_type,
+            attachment_count=len(attachments),
+            viewer_pack_count=len(viewer_packs),
+            kinds_present=sorted(kinds),
+            primary_viewer_pack_sha256=primary_vp,
+        ))
+
+    return RunsBrowseOut(
+        count=len(summaries),
+        limit=limit,
+        session_id_filter=want_session,
+        batch_label_filter=want_batch,
+        next_cursor=next_cursor,
+        runs=summaries,
+    )
+
+
+@router.get("/runs/{run_id}", response_model=RunDetailOut)
+def get_run_detail(
+    run_id: str,
+    include_urls: bool = Query(
+        default=True,
+        description="Include attachment_url for each attachment"
+    ),
+    _auth: None = Depends(require_auth),
+    store: RunStoreV2 = Depends(get_store),
+) -> RunDetailOut:
+    """
+    Get detailed run metadata + attachments.
+
+    Returns full run context with attachment list.
+    """
+    artifact = store.get(run_id)
+    if not artifact:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
+
+    attachments_raw = artifact.attachments or []
+
+    # Build attachment list
+    attachment_list = []
+    for a in attachments_raw:
+        pub = AttachmentMetaPublic(
+            sha256=a.sha256,
+            kind=a.kind,
+            mime=a.mime,
+            filename=a.filename,
+            size_bytes=a.size_bytes,
+            created_at_utc=a.created_at_utc,
+        )
+        if include_urls:
+            pub.download_url = f"/api/rmos/acoustics/attachments/{a.sha256}"
+        attachment_list.append(pub)
+
+    return RunDetailOut(
+        run_id=artifact.run_id,
+        created_at_utc=artifact.created_at_utc.isoformat() if hasattr(artifact.created_at_utc, "isoformat") else str(artifact.created_at_utc),
+        mode=artifact.mode,
+        status=artifact.status,
+        tool_id=artifact.tool_id,
+        session_id=artifact.meta.get("session_id") or artifact.workflow_session_id,
+        batch_label=artifact.meta.get("batch_label"),
+        event_type=artifact.event_type,
+        request_summary=artifact.request_summary,
+        meta=artifact.meta,
+        attachment_count=len(attachment_list),
+        attachments=attachment_list,
+    )
 
 
 @router.get("/runs/{run_id}/advisories", response_model=RunAdvisoriesListOut)
