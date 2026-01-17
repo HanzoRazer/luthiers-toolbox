@@ -9,14 +9,16 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from .persist_glue import RUNS_ROOT_DEFAULT, INDEX_FILENAME
+from .persist_glue import INDEX_FILENAME
 
+# Use same store root as RunStoreV2 for consistency
+STORE_ROOT_DEFAULT = "services/api/data/runs/rmos"
 
 router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
 
 def _get_runs_root() -> Path:
-    return Path(os.getenv("RMOS_RUNS_ROOT", RUNS_ROOT_DEFAULT)).expanduser().resolve()
+    return Path(os.getenv("RMOS_RUNS_DIR", STORE_ROOT_DEFAULT)).expanduser().resolve()
 
 
 def _load_json(path: Path) -> Any:
@@ -45,49 +47,13 @@ class IndexResponse(BaseModel):
     runs: list[dict[str, Any]]
 
 
-class AttachmentMetaFacetsOut(BaseModel):
-    """Facet counts over the attachment meta index."""
-    facets: Dict[str, Dict[str, int]] = Field(
-        description="Facet name -> value -> count"
-    )
-    total_attachments: int
-    index_version: str = "attachment_meta_v1"
+# NOTE: Facets endpoint moved to runs_v2/acoustics_router.py (H7.2.2.2)
+# which provides richer faceting (kind, mime_prefix, mime_exact, size_buckets)
 
 
 # =============================================================================
 # Routes
 # =============================================================================
-
-
-@router.get("/index/attachment_meta/facets", response_model=AttachmentMetaFacetsOut)
-def get_attachment_meta_facets() -> AttachmentMetaFacetsOut:
-    """
-    Return facet counts over the attachment meta index.
-
-    Index-only operation: no filesystem access, no blob resolution.
-    Useful for inventory summaries and filter population.
-    """
-    try:
-        from ..runs_v2.attachment_meta import AttachmentMetaIndex, compute_facets
-    except ImportError:
-        raise HTTPException(
-            status_code=501,
-            detail="AttachmentMetaIndex not available"
-        )
-
-    runs_root = _get_runs_root()
-    meta_idx = AttachmentMetaIndex(runs_root)
-
-    facets = compute_facets(meta_idx)
-
-    return AttachmentMetaFacetsOut(
-        facets={
-            "kind": facets.kind,
-            "mime": facets.mime,
-        },
-        total_attachments=facets.total_attachments,
-        index_version=facets.index_version,
-    )
 
 
 @router.get("/index", response_model=IndexResponse)

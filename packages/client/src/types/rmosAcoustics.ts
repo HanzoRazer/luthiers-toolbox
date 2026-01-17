@@ -79,6 +79,7 @@ export type FacetCountMime = {
 };
 
 export type FacetsResponse = {
+  schema_version?: string;
   total: number;
   kinds: FacetCountKind[];
   mime_prefixes: { mime_prefix: string; count: number }[];
