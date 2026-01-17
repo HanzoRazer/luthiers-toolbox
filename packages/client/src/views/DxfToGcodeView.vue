@@ -233,6 +233,26 @@ function closeOverrideModal() {
   showOverrideModal.value = false
 }
 
+async function refreshRunCanonical(runId: string) {
+  try {
+    const resp = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId)}`)
+    if (!resp.ok) return // Non-fatal; keep local state if refresh fails
+
+    const run = await resp.json()
+
+    // Merge strategy: preserve wrapper envelope, patch in canonical fields
+    result.value = {
+      ...result.value,
+      attachments: run.attachments ?? result.value?.attachments,
+      hashes: run.hashes ?? result.value?.hashes,
+      decision: run.decision ?? result.value?.decision,
+      feasibility: run.feasibility ?? result.value?.feasibility,
+    }
+  } catch {
+    // Non-fatal: refresh failure doesn't block operator action
+  }
+}
+
 async function submitOverrideAndRetryPack() {
   const runId = String(result.value?.run_id || '').trim()
   if (!runId) return
@@ -264,17 +284,8 @@ async function submitOverrideAndRetryPack() {
       throw new Error(msg)
     }
 
-    // Best-effort: reflect override immediately in UI without re-running wrapper
-    try {
-      const j = await resp.json()
-      const att = j?.attachment
-      if (att) {
-        result.value = {
-          ...result.value,
-          attachments: [...(result.value?.attachments || []), { kind: 'override', ...att }]
-        }
-      }
-    } catch {}
+    // Canonical refresh from Runs v2 so attachments list is authoritative
+    await refreshRunCanonical(runId)
 
     showOverrideModal.value = false
     await doDownloadOperatorPack() // retry download
