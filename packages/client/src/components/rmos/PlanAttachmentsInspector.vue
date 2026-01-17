@@ -116,7 +116,7 @@ function pathOf(a: RunAttachmentRow): string {
 }
 
 function normalizePath(p: string): string {
-  return (p || "").replaceAll("\\", "/").trim().toLowerCase();
+  return (p || "").split("\\").join("/").trim().toLowerCase();
 }
 
 function findExact(path: string): RunAttachmentRow | null {

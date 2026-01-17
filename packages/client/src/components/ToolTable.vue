@@ -93,7 +93,7 @@ async function refresh() {
 }
 
 function add() {
-  const lastT = tools.value.at(-1)?.t || 0
+  const lastT = tools.value.slice(-1)[0]?.t || 0
   tools.value.push({ 
     t: lastT + 1, 
     name: 'New Tool', 

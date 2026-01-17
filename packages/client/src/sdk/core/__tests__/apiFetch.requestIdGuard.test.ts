@@ -79,7 +79,7 @@ describe("apiFetch request-id guard integration", () => {
 
     // Verify the request included X-Request-Id
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(init.headers).toBeDefined();
     expect((init.headers as Record<string, string>)["X-Request-Id"]).toBeTruthy();
   });
@@ -92,7 +92,7 @@ describe("apiFetch request-id guard integration", () => {
 
     await apiFetch("/rmos/runs", { method: "GET" }, { requestId: "my-custom-id" });
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect((init.headers as Record<string, string>)["X-Request-Id"]).toBe(
       "my-custom-id"
     );
@@ -109,8 +109,8 @@ describe("apiFetch request-id guard integration", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
-    const [, init1] = fetchMock.mock.calls[0] as [string, RequestInit];
-    const [, init2] = fetchMock.mock.calls[1] as [string, RequestInit];
+    const [, init1] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    const [, init2] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
 
     const reqId1 = (init1.headers as Record<string, string>)["X-Request-Id"];
     const reqId2 = (init2.headers as Record<string, string>)["X-Request-Id"];

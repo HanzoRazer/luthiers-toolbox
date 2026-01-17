@@ -58,9 +58,9 @@ function applyParamsJson() {
   try {
     const parsed = JSON.parse(paramsJson.value || "{}");
     store.generatorParams = parsed;
-    toast.push("success", "Generator params applied.");
+    toast.success( "Generator params applied.");
   } catch (e: any) {
-    toast.push("error", e?.message || "Invalid JSON.");
+    toast.error( e?.message || "Invalid JSON.");
   }
 }
 </script>

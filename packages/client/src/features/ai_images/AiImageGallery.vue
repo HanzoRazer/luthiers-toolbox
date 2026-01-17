@@ -269,7 +269,7 @@ async function ensureRunSelected(): Promise<string | null> {
 
     // keep dropdown in sync (best-effort, non-blocking)
     try {
-      runs.value = await listRecentRuns();
+      runs.value = (await listRecentRuns()).runs;
     } catch {
       // ignore
     }
@@ -488,7 +488,7 @@ onMounted(async () => {
               <button
                 class="btn small primary"
                 type="button"
-                :disabled="Boolean(promoteDisabledReason(a)) || busyByAdvisoryId[_advisoryIdForAsset(a)!]"
+                :disabled="Boolean(promoteDisabledReason(a)) || !!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
                 :title="promoteDisabledReason(a) || 'Promote to manufacturing candidate'"
                 @click="quickPromote(_advisoryIdForAsset(a)!)"
               >
@@ -499,7 +499,7 @@ onMounted(async () => {
                 class="btn small"
                 type="button"
                 v-if="_variantForAsset(a)?.rejected"
-                :disabled="!!canUndoReject(_variantForAsset(a)) || busyByAdvisoryId[_advisoryIdForAsset(a)!]"
+                :disabled="!!canUndoReject(_variantForAsset(a)) || !!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
                 :title="canUndoReject(_variantForAsset(a)) || 'Clear rejection (Undo Reject)'"
                 @click="undoReject(_advisoryIdForAsset(a)!)"
               >

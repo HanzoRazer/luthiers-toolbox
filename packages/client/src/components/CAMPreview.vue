@@ -181,7 +181,7 @@ async function simulate(){
     }
 
     // H8.3.2: Use SDK helper with typed response and automatic header parsing
-    const result = await cam.roughingGcodeIntent(norm.intent, strictNormalize.value)
+    const result = await cam.roughingGcodeIntent(norm.intent as unknown as Record<string, unknown>, strictNormalize.value)
     
     gcode.value = result.gcode
     summary.value = result.summary

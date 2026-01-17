@@ -21,7 +21,7 @@
   </svg>
 </template>
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits, computed } from 'vue'
 const props = defineProps<{
   moves: any[],
   color: string,

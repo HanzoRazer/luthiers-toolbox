@@ -922,9 +922,10 @@ function applyLanePreset(id: string) {
 }
 
 function isLanePresetActive(p: LanePresetDef): boolean {
-  const laneMatch =
+  const laneMatch = Boolean(
     laneFilter.value &&
-    laneFilter.value.toLowerCase() === p.lane.toLowerCase();
+    laneFilter.value.toLowerCase() === p.lane.toLowerCase()
+  );
 
   const presetVal = p.preset ?? "";
   const presetMatch =
@@ -1689,7 +1690,7 @@ function formatRelativeMetaTime(ts?: string | null): string {
   return "just now";
 }
 
-function exportBucketCsv() {
+function exportBucketCsvLocal() {
   if (!selectedBucket.value || !bucketEntries.value.length) return;
 
   const b = selectedBucket.value;
@@ -1871,6 +1872,12 @@ async function exportBucketJson() {
   } catch (err) {
     console.error("Failed to export bucket JSON", err);
   }
+}
+
+// toggle tag filter (used by tag chips in the view)
+function toggleTagFilter(tag: string) {
+  // For now, just log - implement filtering by tag if needed
+  console.log('Toggle tag filter:', tag);
 }
 
 // clear all filters in one shot

@@ -21,6 +21,13 @@ import { useToastStore } from "./toastStore";
 import { useUiToastStore } from "./uiToastStore";
 import { debounce } from "../utils/debounce";
 
+/** History entry for undo/redo stack */
+interface HistoryEntry {
+  params: RosetteParamSpec;
+  label: string;
+  ts: number;
+}
+
 function defaultSpec(): RosetteParamSpec {
   return {
     outer_diameter_mm: 120,
@@ -199,9 +206,9 @@ export const useRosetteStore = defineStore("rosette", {
         this.selectedPattern = rec;
         this.selectedGeneratorKey = rec.generator_key;
         this.generatorParams = { ...(rec.params || {}) };
-        toast.push("success", `Loaded pattern: ${rec.name}`);
+        toast.success( `Loaded pattern: ${rec.name}`);
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to load pattern");
+        toast.error( e?.message || "Failed to load pattern");
       }
     },
 
@@ -215,27 +222,27 @@ export const useRosetteStore = defineStore("rosette", {
           generator_key: this.selectedGeneratorKey,
           params: this.generatorParams || {},
         });
-        toast.push("success", `Saved pattern: ${rec.name}`);
+        toast.success( `Saved pattern: ${rec.name}`);
         await this.loadPatterns();
         this.selectedPattern = rec;
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to save pattern");
+        toast.error( e?.message || "Failed to save pattern");
       }
     },
 
     async deleteSelectedPattern() {
       const toast = useToastStore();
       if (!this.selectedPattern) {
-        toast.push("warning", "No pattern selected.");
+        toast.warning( "No pattern selected.");
         return;
       }
       try {
         await artPatternsClient.delete(this.selectedPattern.pattern_id);
-        toast.push("success", "Pattern deleted.");
+        toast.success( "Pattern deleted.");
         this.selectedPattern = null;
         await this.loadPatterns();
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to delete pattern");
+        toast.error( e?.message || "Failed to delete pattern");
       }
     },
 
@@ -270,13 +277,13 @@ export const useRosetteStore = defineStore("rosette", {
         this.currentParams = res.spec;
         this.generatorWarnings = res.warnings || [];
         if (this.generatorWarnings.length) {
-          toast.push("warning", `Generated with warnings: ${this.generatorWarnings[0]}`);
+          toast.warning( `Generated with warnings: ${this.generatorWarnings[0]}`);
         } else {
-          toast.push("success", "Generated RosetteParamSpec.");
+          toast.success( "Generated RosetteParamSpec.");
         }
         this.requestAutoRefresh();
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to generate design");
+        toast.error( e?.message || "Failed to generate design");
       }
     },
 
@@ -410,7 +417,7 @@ export const useRosetteStore = defineStore("rosette", {
       const toast = useToastStore();
 
       if (this.isRedBlocked) {
-        toast.push("warning", "Blocked: Feasibility is RED. Adjust design before saving a snapshot.");
+        toast.warning( "Blocked: Feasibility is RED. Adjust design before saving a snapshot.");
         return;
       }
 
@@ -425,10 +432,10 @@ export const useRosetteStore = defineStore("rosette", {
           feasibility: this.lastFeasibility || null,
         });
         this.lastSavedSnapshot = snap;
-        toast.push("success", `Snapshot saved: ${snap.name}`);
+        toast.success( `Snapshot saved: ${snap.name}`);
         await this.loadRecentSnapshots();
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to save snapshot");
+        toast.error( e?.message || "Failed to save snapshot");
       }
     },
 
@@ -438,10 +445,10 @@ export const useRosetteStore = defineStore("rosette", {
         const snap = await artSnapshotsClient.get(snapshot_id);
         this.currentParams = snap.rosette_params;
         this.lastFeasibility = (snap.feasibility as any) || null;
-        toast.push("success", `Loaded snapshot: ${snap.name}`);
+        toast.success( `Loaded snapshot: ${snap.name}`);
         this.requestAutoRefresh();
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to load snapshot");
+        toast.error( e?.message || "Failed to load snapshot");
       }
     },
 
@@ -458,9 +465,9 @@ export const useRosetteStore = defineStore("rosette", {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        toast.push("success", "Snapshot exported.");
+        toast.success( "Snapshot exported.");
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to export snapshot");
+        toast.error( e?.message || "Failed to export snapshot");
       }
     },
 
@@ -469,12 +476,12 @@ export const useRosetteStore = defineStore("rosette", {
       try {
         const parsed = JSON.parse(jsonText);
         const snap = await artSnapshotsClient.import({ snapshot: parsed });
-        toast.push("success", `Imported snapshot: ${snap.name}`);
+        toast.success( `Imported snapshot: ${snap.name}`);
         await this.loadRecentSnapshots();
         this.currentParams = snap.rosette_params;
         this.lastFeasibility = (snap.feasibility as any) || null;
       } catch (e: any) {
-        toast.push("error", e?.message || "Failed to import snapshot");
+        toast.error( e?.message || "Failed to import snapshot");
       }
     },
 

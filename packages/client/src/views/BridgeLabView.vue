@@ -58,7 +58,7 @@ Features:
         <!-- Pipeline Preset Save Panel (Phase 25.0) -->
         <div class="mt-3">
           <CamBridgeToPipelinePanel
-            :machine="machine"
+            :machine="machine as any"
             :adaptive-units="adaptiveParams.units"
             :tool-d="adaptiveParams.tool_d"
             :stepover-pct="adaptiveParams.stepover * 100"

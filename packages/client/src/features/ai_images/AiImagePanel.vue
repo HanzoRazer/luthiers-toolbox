@@ -11,12 +11,12 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useAiImageStore } from './useAiImageStore';
 import AiImageGallery from './AiImageGallery.vue';
-import type {
+import {
   ImageProvider,
   ImageQuality,
   PhotoStyle,
-  QuickTag,
 } from './types';
+import type { QuickTag } from './types';
 
 // =============================================================================
 // PROPS & EMITS
@@ -43,9 +43,9 @@ const store = useAiImageStore();
 // =============================================================================
 
 const prompt = ref('');
-const selectedStyle = ref<PhotoStyle>('product');
-const selectedProvider = ref<ImageProvider>('auto');
-const selectedQuality = ref<ImageQuality>('standard');
+const selectedStyle = ref<PhotoStyle>(PhotoStyle.PRODUCT);
+const selectedProvider = ref<ImageProvider>(ImageProvider.AUTO);
+const selectedQuality = ref<ImageQuality>(ImageQuality.STANDARD);
 const imageCount = ref(2);
 
 const showAdvanced = ref(false);

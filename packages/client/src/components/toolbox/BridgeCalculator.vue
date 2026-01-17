@@ -394,7 +394,7 @@ async function exportDXF(){
     a.click();
     URL.revokeObjectURL(url);
     
-  } catch (err) {
+  } catch (err: any) {
     console.error('DXF export error:', err);
     alert(`DXF export failed: ${err.message}`);
   }

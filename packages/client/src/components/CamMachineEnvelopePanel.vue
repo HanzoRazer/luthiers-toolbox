@@ -100,13 +100,13 @@ Features:
             Tool ⌀: {{ fmt(current.camDefaults.tool_d) }} {{ units }}
           </div>
           <div>
-            Stepover: {{ (current.camDefaults.stepover * 100).toFixed(0) }}%
+            Stepover: {{ ((current.camDefaults?.stepover ?? 0) * 100).toFixed(0) }}%
           </div>
           <div>
             Stepdown: {{ fmt(current.camDefaults.stepdown) }} {{ units }}
           </div>
           <div>
-            Feed XY: {{ Math.round(current.camDefaults.feed_xy) }} {{ units }}/min
+            Feed XY: {{ Math.round(current.camDefaults?.feed_xy ?? 0) }} {{ units }}/min
           </div>
           <div>
             Safe Z: {{ fmt(current.camDefaults.safe_z) }} {{ units }}

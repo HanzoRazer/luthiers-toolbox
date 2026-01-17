@@ -7,6 +7,12 @@
  * @package features/ai_images
  */
 
+import {
+  ImageQuality,
+  ImageSize,
+  PhotoStyle,
+  ImageProvider,
+} from './types';
 import type {
   GenerationRequest,
   GenerationResponse,
@@ -16,10 +22,6 @@ import type {
   ProvidersResponse,
   ImageAsset,
   ImageAssetManifest,
-  ImageQuality,
-  ImageSize,
-  PhotoStyle,
-  ImageProvider,
 } from './types';
 
 // =============================================================================

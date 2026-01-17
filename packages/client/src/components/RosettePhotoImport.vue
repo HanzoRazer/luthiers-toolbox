@@ -1,8 +1,20 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useToast } from "primevue/usetoast";
+import { useToastStore } from "@/stores/toastStore";
 
-const toast = useToast();
+// Adapter for PrimeVue-style toast API
+const _toastStore = useToastStore();
+const toast = {
+  add(opts: { severity: string; summary?: string; detail?: string; life?: number }) {
+    const msg = opts.detail || opts.summary || "Notification";
+    const method = opts.severity as "success" | "error" | "warning" | "info";
+    if (method in _toastStore) {
+      (_toastStore as any)[method](msg, opts.life);
+    } else {
+      _toastStore.info(msg, opts.life);
+    }
+  }
+};
 
 // Upload state
 const selectedFile = ref<File | null>(null);
@@ -21,6 +33,12 @@ const invert = ref(false);
 const svgContent = ref<string | null>(null);
 const dxfContent = ref<string | null>(null);
 const stats = ref<any>(null);
+
+// Trigger file input click
+function triggerPhotoInput() {
+  const el = document.getElementById('photoInput');
+  if (el) el.click();
+}
 
 // File input handling
 function onFileSelected(event: Event) {
@@ -181,7 +199,7 @@ const canConvert = computed(
             <Button
               label="Choose Image File"
               icon="pi pi-upload"
-              @click="() => document.getElementById('photoInput')?.click()"
+              @click="triggerPhotoInput"
               :disabled="isUploading"
             />
 

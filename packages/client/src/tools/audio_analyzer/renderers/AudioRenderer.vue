@@ -35,7 +35,7 @@ const audioUrl = computed(() => {
   }
 
   // Create blob from ArrayBuffer (not Uint8Array directly for better compat)
-  const blob = new Blob([props.bytes.buffer.slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
+  const blob = new Blob([(props.bytes.buffer as ArrayBuffer).slice(props.bytes.byteOffset, props.bytes.byteOffset + props.bytes.byteLength)], { type: mime });
   return URL.createObjectURL(blob);
 });
 

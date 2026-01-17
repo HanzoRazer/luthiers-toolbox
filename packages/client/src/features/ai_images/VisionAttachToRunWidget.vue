@@ -257,7 +257,7 @@ async function generate() {
     successMessage.value = `Generated ${res.assets.length} image(s)`;
   } catch (e: any) {
     error.value = e.message || "Failed to generate images";
-    emit("error", error.value);
+    emit("error", error.value || "Unknown error");
   } finally {
     isGenerating.value = false;
   }
@@ -292,7 +292,7 @@ async function attachToRun() {
     }
   } catch (e: any) {
     error.value = e.message || "Failed to attach to run";
-    emit("error", error.value);
+    emit("error", error.value || "Unknown error");
   } finally {
     isAttaching.value = false;
   }

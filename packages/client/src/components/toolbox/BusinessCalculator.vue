@@ -395,7 +395,7 @@ const totalInterest = computed(() =>
 )
 
 const amortizationSchedule = computed(() => {
-  const schedule = []
+  const schedule: { number: number; date: string; principal: number; interest: number; balance: number }[] = []
   let balance = startup.value.loanAmount
   const monthlyRate = startup.value.interestRate / 100 / 12
   const totalPayments = startup.value.loanTermYears * 12

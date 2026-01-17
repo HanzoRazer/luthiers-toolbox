@@ -318,9 +318,7 @@ async function saveNote() {
   noteSaving.value = true;
   noteSaveError.value = null;
   try {
-    await patchRiskNotes(lastRiskReportId.value, {
-      notes: noteDraft.value || null,
-    });
+    await patchRiskNotes(lastRiskReportId.value, noteDraft.value || "");
     noteEditorVisible.value = false;
   } catch (err: any) {
     console.error("Failed to save headstock note:", err);

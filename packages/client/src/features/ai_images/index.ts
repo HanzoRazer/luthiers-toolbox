@@ -66,15 +66,18 @@ export * as visionApi from './api/visionApi';
 // TYPES
 // =============================================================================
 
-export type {
-  // Enums
+// Re-export enums as values (usable at runtime)
+export {
   ImageProvider,
   ImageQuality,
   ImageSize,
   PhotoStyle,
   GuitarCategory,
   AssetStatus,
+} from './types';
 
+// Re-export types (interfaces, type aliases)
+export type {
   // Request/Response
   GenerationRequest,
   GenerationResponse,
@@ -86,30 +89,20 @@ export type {
   ProviderInfo,
   PromptVariation,
   VocabularyCategory,
-  
+
   // Assets
   ImageAsset,
   ImageAssetManifest,
-  
+
   // Store
   AiImageState,
-  
+
   // UI
   QuickTag,
   GalleryFilters,
   GallerySortBy,
   SortDirection,
-  
+
   // Events
   AiImageEvents,
-} from './types';
-
-// Re-export enums as values (not just types)
-export {
-  ImageProvider,
-  ImageQuality,
-  ImageSize,
-  PhotoStyle,
-  GuitarCategory,
-  AssetStatus,
 } from './types';

@@ -1,8 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useToast } from "primevue/usetoast";
+import { useToastStore } from "@/stores/toastStore";
 
-const toast = useToast();
+// Adapter for PrimeVue-style toast API
+const _toastStore = useToastStore();
+const toast = {
+  add(opts: { severity: string; summary?: string; detail?: string; life?: number }) {
+    const msg = opts.detail || opts.summary || "Notification";
+    const method = opts.severity as "success" | "error" | "warning" | "info";
+    if (method in _toastStore) {
+      (_toastStore as any)[method](msg, opts.life);
+    } else {
+      _toastStore.info(msg, opts.life);
+    }
+  }
+};
 
 // State
 const patterns = ref<any[]>([]);

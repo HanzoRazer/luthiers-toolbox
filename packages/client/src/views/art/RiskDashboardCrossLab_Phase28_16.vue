@@ -1687,6 +1687,12 @@ async function downloadSnapshotJson() {
   }
 }
 
+// toggle tag filter (used by tag chips in the view)
+function toggleTagFilter(tag: string) {
+  // For now, just log - implement filtering by tag if needed
+  console.log('Toggle tag filter:', tag);
+}
+
 // clear all filters in one shot
 function clearAllFilters() {
   laneFilter.value = "";

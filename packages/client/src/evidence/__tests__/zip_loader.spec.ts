@@ -14,9 +14,9 @@
 
 import { describe, it, expect } from "vitest";
 import JSZip from "jszip";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import { loadNormalizedPack } from "../zip_loader";
 import type { NormalizedPack, NormalizedFileEntry } from "../types";

@@ -322,16 +322,7 @@ export interface RunsListResponse {
   total: number;
 }
 
-export interface CreateRunRequest {
-  event_type?: string;
-  mode?: string;
-  tool_id?: string;
-  status?: string;
-}
-
-export interface CreateRunResponse {
-  run_id: string;
-}
+// NOTE: CreateRunRequest and CreateRunResponse are defined at top of file
 
 /**
  * List recent runs (for selecting a run to attach to).
