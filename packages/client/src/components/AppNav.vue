@@ -121,6 +121,13 @@
               Library
             </RouterLink>
             <RouterLink
+              to="/tools/audio-analyzer/runs"
+              class="block px-3 py-1.5 hover:bg-gray-100"
+              active-class="bg-blue-50 text-blue-600"
+            >
+              Runs Browser
+            </RouterLink>
+            <RouterLink
               to="/tools/audio-analyzer"
               class="block px-3 py-1.5 hover:bg-gray-100"
               active-class="bg-blue-50 text-blue-600"

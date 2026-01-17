@@ -134,3 +134,69 @@ export type RecentResponse = {
   next_cursor: string | null;
   entries: AttachmentMetaEntry[];
 };
+
+// ============================================================
+// Runs Browse (Session/Run-centric Library)
+// ============================================================
+
+export type RunSummary = {
+  run_id: string;
+  created_at_utc: string;
+  mode: string;
+  status: string;
+  session_id: string | null;
+  batch_label: string | null;
+  event_type: string | null;
+  attachment_count: number;
+  viewer_pack_count: number;
+  kinds_present: string[];
+  primary_viewer_pack_sha256: string | null;
+};
+
+export type RunsBrowseParams = {
+  limit?: number;
+  cursor?: string;
+  session_id?: string;
+  batch_label?: string;
+  include_urls?: boolean;
+};
+
+export type RunsBrowseResponse = {
+  schema_version: string;
+  count: number;
+  limit: number;
+  session_id_filter: string | null;
+  batch_label_filter: string | null;
+  next_cursor: string | null;
+  runs: RunSummary[];
+};
+
+export type RunAttachmentEntry = {
+  sha256: string;
+  kind: string | null;
+  mime: string | null;
+  filename: string | null;
+  size_bytes: number | null;
+  created_at_utc: string | null;
+  download_url?: string;
+};
+
+export type RunDetailParams = {
+  include_urls?: boolean;
+};
+
+export type RunDetailResponse = {
+  schema_version: string;
+  run_id: string;
+  created_at_utc: string;
+  mode: string;
+  status: string;
+  tool_id: string;
+  session_id: string | null;
+  batch_label: string | null;
+  event_type: string | null;
+  request_summary: Record<string, unknown>;
+  meta: Record<string, unknown>;
+  attachment_count: number;
+  attachments: RunAttachmentEntry[];
+};

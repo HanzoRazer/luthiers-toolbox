@@ -178,6 +178,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/tools/AudioAnalyzerLibrary.vue"),
   },
 
+  // Tools: Acoustics Runs Browser (session/run-centric library)
+  {
+    path: "/tools/audio-analyzer/runs",
+    name: "AudioAnalyzerRunsLibrary",
+    component: () => import("@/views/tools/AudioAnalyzerRunsLibrary.vue"),
+  },
+
   // AI Images — Visual Analyzer (Production)
   {
     path: "/ai-images",

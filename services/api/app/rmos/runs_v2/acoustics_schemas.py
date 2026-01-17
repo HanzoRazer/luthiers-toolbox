@@ -289,3 +289,95 @@ class AttachmentMetaRecentOut(BaseModel):
         default_factory=list,
         description="Recent attachment meta entries (sorted by created_at_utc DESC)"
     )
+
+
+# =============================================================================
+# Runs Browse Schemas
+# =============================================================================
+
+
+class RunSummary(BaseModel):
+    """
+    Lightweight run summary for browse lists.
+
+    Minimal shape for efficient listing.
+    """
+    run_id: str = Field(..., description="Unique run identifier")
+    created_at_utc: str = Field(..., description="ISO timestamp of creation")
+    mode: str = Field(..., description="Run mode (acoustics, saw, etc.)")
+    status: str = Field(..., description="Run outcome: OK, BLOCKED, ERROR")
+
+    # Context (optional for acoustics imports)
+    session_id: Optional[str] = Field(None, description="Session identifier (if provided during import)")
+    batch_label: Optional[str] = Field(None, description="Batch label (if provided during import)")
+    event_type: Optional[str] = Field(None, description="Event type (e.g., acoustics_import)")
+
+    # Counts
+    attachment_count: int = Field(0, ge=0, description="Number of attachments")
+    viewer_pack_count: int = Field(0, ge=0, description="Number of viewer_pack attachments")
+
+    # Convenience (optional)
+    kinds_present: List[str] = Field(default_factory=list, description="Distinct attachment kinds")
+    primary_viewer_pack_sha256: Optional[str] = Field(
+        None,
+        description="SHA256 of first viewer_pack (for quick-open)"
+    )
+
+
+class RunsBrowseOut(BaseModel):
+    """
+    Response for GET /runs endpoint.
+
+    Returns paginated list of runs, newest first.
+    """
+    schema_version: str = Field(
+        default="acoustics_runs_browse_out_v1",
+        description="Schema version for forward compatibility"
+    )
+    count: int = Field(..., ge=0, description="Number of entries returned")
+    limit: int = Field(..., description="Limit applied")
+    session_id_filter: Optional[str] = Field(None, description="Session ID filter applied")
+    batch_label_filter: Optional[str] = Field(None, description="Batch label filter applied")
+    next_cursor: Optional[str] = Field(
+        None,
+        description="Pagination cursor for next page (null when no more)"
+    )
+    runs: List[RunSummary] = Field(default_factory=list, description="Run summaries")
+
+
+class RunDetailOut(BaseModel):
+    """
+    Response for GET /runs/{run_id} endpoint.
+
+    Returns full run metadata + attachments list.
+    """
+    schema_version: str = Field(
+        default="acoustics_run_detail_out_v1",
+        description="Schema version for forward compatibility"
+    )
+    run_id: str = Field(..., description="Unique run identifier")
+    created_at_utc: str = Field(..., description="ISO timestamp of creation")
+    mode: str = Field(..., description="Run mode")
+    status: str = Field(..., description="Run outcome")
+    tool_id: str = Field(..., description="Tool identifier")
+
+    # Context
+    session_id: Optional[str] = Field(None, description="Session identifier")
+    batch_label: Optional[str] = Field(None, description="Batch label")
+    event_type: Optional[str] = Field(None, description="Event type")
+
+    # Request summary (safe subset)
+    request_summary: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Sanitized request context"
+    )
+
+    # Meta
+    meta: Dict[str, Any] = Field(default_factory=dict, description="Run metadata")
+
+    # Attachments
+    attachment_count: int = Field(0, description="Number of attachments")
+    attachments: List[AttachmentMetaPublic] = Field(
+        default_factory=list,
+        description="Attachment list with optional URLs"
+    )

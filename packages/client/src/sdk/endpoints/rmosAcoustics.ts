@@ -19,6 +19,10 @@ import type {
   RebuildResponse,
   RecentParams,
   RecentResponse,
+  RunsBrowseParams,
+  RunsBrowseResponse,
+  RunDetailParams,
+  RunDetailResponse,
 } from "@/types/rmosAcoustics";
 
 const BASE = "/rmos/acoustics";
@@ -151,6 +155,60 @@ export async function checkExists(sha256: string): Promise<ExistsResponse> {
  */
 export async function rebuildIndex(): Promise<RebuildResponse> {
   return post<RebuildResponse>(`${BASE}/index/rebuild_attachment_meta`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Runs Browse (Session/Run-centric Library)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Browse runs with pagination and optional filters.
+ * Returns newest runs first (sorted by created_at_utc DESC).
+ *
+ * @param params - Optional filters (limit, cursor, session_id, batch_label)
+ * @returns Paginated list of run summaries
+ */
+export async function browseRuns(params: RunsBrowseParams = {}): Promise<RunsBrowseResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params.cursor) {
+    searchParams.set("cursor", params.cursor);
+  }
+  if (params.session_id) {
+    searchParams.set("session_id", params.session_id);
+  }
+  if (params.batch_label) {
+    searchParams.set("batch_label", params.batch_label);
+  }
+  if (params.include_urls) {
+    searchParams.set("include_urls", "true");
+  }
+
+  const query = searchParams.toString();
+  const path = query ? `${BASE}/runs?${query}` : `${BASE}/runs`;
+
+  return get<RunsBrowseResponse>(path);
+}
+
+/**
+ * Get detailed run metadata + attachments.
+ *
+ * @param runId - Run identifier
+ * @param params - Optional settings (include_urls)
+ * @returns Run detail with attachments list
+ */
+export async function getRun(runId: string, params: RunDetailParams = {}): Promise<RunDetailResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.include_urls !== undefined) {
+    searchParams.set("include_urls", String(params.include_urls));
+  }
+
+  const query = searchParams.toString();
+  const path = query ? `${BASE}/runs/${runId}?${query}` : `${BASE}/runs/${runId}`;
+
+  return get<RunDetailResponse>(path);
 }
 
 // ─────────────────────────────────────────────────────────────
