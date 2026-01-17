@@ -32,35 +32,29 @@ FROM nginx:1.27-alpine
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration for SPA routing
-RUN echo 'server { \
-    listen 80; \
+# Create nginx config template that uses PORT env var
+RUN mkdir -p /etc/nginx/templates && echo 'server { \
+    listen ${PORT}; \
     server_name _; \
     root /usr/share/nginx/html; \
     index index.html; \
     \
-    # SPA routing - serve index.html for all routes \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \
     \
-    # Health check endpoint \
     location /health { \
         return 200 "OK"; \
         add_header Content-Type text/plain; \
     } \
     \
-    # Cache static assets \
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ { \
         expires 1y; \
         add_header Cache-Control "public, immutable"; \
     } \
-}' > /etc/nginx/conf.d/default.conf
+}' > /etc/nginx/templates/default.conf.template
 
-# Health check
-HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:80/health || exit 1
+# Default port (Railway overrides via PORT env var)
+ENV PORT=80
 
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "envsubst '$$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
