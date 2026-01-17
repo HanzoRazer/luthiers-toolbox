@@ -83,6 +83,52 @@
       </div>
     </section>
 
+    <!-- Recent Panel -->
+    <section class="card">
+      <h2>Recent</h2>
+      <div v-if="recentLoading" class="muted">Loading...</div>
+      <div v-else-if="recentError" class="import-error">{{ recentError }}</div>
+      <div v-else-if="!recentData?.entries?.length" class="muted">
+        No recent attachments. Import a viewer_pack to get started.
+      </div>
+      <div v-else class="recent-list">
+        <div
+          v-for="entry in recentData.entries"
+          :key="entry.sha256"
+          class="recent-item"
+        >
+          <div class="recent-info">
+            <span class="recent-filename" :title="entry.filename">{{ entry.filename }}</span>
+            <code class="kind-badge">{{ entry.kind }}</code>
+            <span class="recent-meta">{{ formatSize(entry.size_bytes) }}</span>
+          </div>
+          <div class="recent-actions">
+            <a
+              v-if="isViewerPack(entry)"
+              class="btn btn-sm"
+              :href="`/tools/audio-analyzer?sha256=${entry.sha256}`"
+            >
+              Open
+            </a>
+            <a
+              class="btn btn-sm"
+              :href="getDownloadUrl(entry.sha256)"
+              download
+            >
+              Download
+            </a>
+          </div>
+        </div>
+        <button
+          v-if="recentData.next_cursor"
+          class="btn"
+          @click="loadMoreRecent"
+        >
+          More
+        </button>
+      </div>
+    </section>
+
     <!-- Browse Table -->
     <section class="card wide">
       <h2>Browse Attachments</h2>
@@ -156,6 +202,7 @@ import {
   importZip,
   browse,
   getFacets,
+  getRecent,
   getDownloadUrl,
   isViewerPack,
   formatSize,
@@ -164,6 +211,7 @@ import type {
   ImportResponse,
   BrowseResponse,
   FacetsResponse,
+  RecentResponse,
   AttachmentMetaEntry,
 } from "@/types/rmosAcoustics";
 
@@ -189,6 +237,12 @@ const kindFilter = ref("");
 const mimeFilter = ref("");
 const cursor = ref<string | null>(null);
 
+// Recent state
+const recentData = ref<RecentResponse | null>(null);
+const recentLoading = ref(false);
+const recentError = ref("");
+const recentCursor = ref<string | null>(null);
+
 function onFileChange(ev: Event) {
   const input = ev.target as HTMLInputElement;
   selectedFile.value = input.files?.[0] ?? null;
@@ -208,8 +262,8 @@ async function doImport() {
       batch_label: batchLabel.value || undefined,
     });
     importResult.value = result;
-    // Refresh facets and browse after import
-    await Promise.all([loadFacets(), loadBrowse()]);
+    // Refresh facets, recent, and browse after import
+    await Promise.all([loadFacets(), loadRecent(), loadBrowse()]);
   } catch (e) {
     importError.value = e instanceof Error ? e.message : String(e);
   } finally {
@@ -247,6 +301,43 @@ async function loadBrowse() {
   }
 }
 
+async function loadRecent() {
+  recentLoading.value = true;
+  recentError.value = "";
+  recentCursor.value = null;
+  try {
+    recentData.value = await getRecent({
+      limit: 10,
+      include_urls: true,
+    });
+  } catch (e) {
+    recentError.value = e instanceof Error ? e.message : String(e);
+  } finally {
+    recentLoading.value = false;
+  }
+}
+
+async function loadMoreRecent() {
+  if (!recentData.value?.next_cursor) return;
+  recentLoading.value = true;
+  try {
+    const more = await getRecent({
+      limit: 10,
+      cursor: recentData.value.next_cursor,
+      include_urls: true,
+    });
+    // Append entries
+    recentData.value = {
+      ...more,
+      entries: [...(recentData.value?.entries ?? []), ...more.entries],
+    };
+  } catch (e) {
+    recentError.value = e instanceof Error ? e.message : String(e);
+  } finally {
+    recentLoading.value = false;
+  }
+}
+
 function toggleKindFilter(kind: string) {
   kindFilter.value = kindFilter.value === kind ? "" : kind;
   cursor.value = null;
@@ -275,6 +366,7 @@ function loadNextPage() {
 
 onMounted(() => {
   loadFacets();
+  loadRecent();
   loadBrowse();
 });
 </script>
@@ -412,6 +504,60 @@ onMounted(() => {
 .facet-total {
   font-size: 0.85rem;
   opacity: 0.7;
+}
+
+/* Recent Panel */
+.recent-list {
+  display: grid;
+  gap: 8px;
+}
+
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.recent-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.recent-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.recent-filename {
+  font-family: monospace;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+.recent-meta {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.recent-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.8rem;
 }
 
 /* Browse Table */

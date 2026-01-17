@@ -113,3 +113,24 @@ export type RebuildResponse = {
   attachments_indexed: number;
   unique_sha256: number;
 };
+
+// ============================================================
+// Recent Attachments
+// ============================================================
+
+export type RecentParams = {
+  limit?: number;
+  cursor?: string;
+  kind?: string;
+  include_urls?: boolean;
+};
+
+export type RecentResponse = {
+  schema_version: string;
+  source: "attachment_recent_index";
+  count: number;
+  limit: number;
+  kind_filter: string | null;
+  next_cursor: string | null;
+  entries: AttachmentMetaEntry[];
+};

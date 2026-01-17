@@ -17,6 +17,8 @@ import type {
   ImportResponse,
   ImportZipOptions,
   RebuildResponse,
+  RecentParams,
+  RecentResponse,
 } from "@/types/rmosAcoustics";
 
 const BASE = "/rmos/acoustics";
@@ -95,6 +97,36 @@ export async function browse(params: BrowseParams = {}): Promise<BrowseResponse>
  */
 export async function getFacets(): Promise<FacetsResponse> {
   return get<FacetsResponse>(`${BASE}/index/attachment_meta/facets`);
+}
+
+/**
+ * Get recent attachments from precomputed recency index.
+ * Fast O(K) where K is max_recent_entries (default 5000).
+ *
+ * @param params - Optional filters (limit, cursor, kind, include_urls)
+ * @returns Paginated list of recent attachment entries (sorted by created_at_utc DESC)
+ */
+export async function getRecent(params: RecentParams = {}): Promise<RecentResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params.cursor) {
+    searchParams.set("cursor", params.cursor);
+  }
+  if (params.kind) {
+    searchParams.set("kind", params.kind);
+  }
+  if (params.include_urls) {
+    searchParams.set("include_urls", "true");
+  }
+
+  const query = searchParams.toString();
+  const path = query
+    ? `${BASE}/index/attachment_meta/recent?${query}`
+    : `${BASE}/index/attachment_meta/recent`;
+
+  return get<RecentResponse>(path);
 }
 
 /**
