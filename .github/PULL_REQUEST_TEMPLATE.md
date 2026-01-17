@@ -32,27 +32,22 @@ Closes #____ / Related #____
 
 ---
 
-## Governance Check — Wave Boundary
+### Wave Boundary Check (quick self-check)
 
-**Does this PR introduce interpretation beyond measurement display?**
+This project distinguishes between:
 
-- [ ] **No** — This PR is Wave 6A / 6B.1–safe
-  (display, navigation, highlighting, exporter-provided fields only)
+- **Measurement display** (charts, highlighting, navigation, showing exporter fields)
+- **Interpretation** (deriving meaning, scores, rankings, or recommendations)
 
-- [ ] **Yes** — This PR crosses into **Wave 7+ (interpretation)**
-  (derived metrics, thresholds, ranking, inference, recommendations, or judgments)
+Please check one:
 
-If **Yes**, briefly describe:
-- What interpretation is being introduced:
-- Source of the interpretation logic (exporter / documented rule / new heuristic):
-- Whether this is isolated behind a feature flag, mode, or separate surface:
+- [ ] This PR stays within **measurement display**
+  (no derived metrics, no scoring, no "good/bad" judgments)
 
----
+- [ ] This PR begins to introduce **interpretation**
+  (derived values, thresholds, rankings, or inferred meaning)
 
-### Reviewer reminder
-If this PR adds:
-- derived fields (score, risk, rank, severity)
-- thresholds or judgmental language
-- cross-artifact aggregation used to imply meaning
+If you checked the second box, that's OK — just leave a short note below so reviewers
+can route it correctly and help you land it safely.
 
-→ it **must** be treated as Wave 7+ and reviewed accordingly.
+> Tip: If you're unsure, reviewers are happy to help clarify where the boundary sits.
