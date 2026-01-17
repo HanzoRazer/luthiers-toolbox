@@ -1,0 +1,26 @@
+# Railway Configuration for Luthier's Tool Box
+# =============================================
+# Multi-service monorepo deployment
+#
+# Services:
+#   - api: FastAPI backend (Python 3.11)
+#   - client: Vue 3 + Vite frontend (Node 20)
+#
+# Setup:
+#   1. Create a new project on Railway
+#   2. Connect this GitHub repo
+#   3. Railway will auto-detect services from this config
+#
+# Environment Variables (set in Railway dashboard):
+#   - SG_SPEC_TOKEN: GitHub token for private sg-spec repo
+#   - CORS_ORIGINS: Client URL (auto-set by Railway)
+#   - ART_STUDIO_DB_PATH: SQLite DB path (use Railway volume)
+
+[build]
+# Default builder for all services
+builder = "DOCKERFILE"
+
+[deploy]
+# Default deployment settings
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
