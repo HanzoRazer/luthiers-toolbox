@@ -130,8 +130,9 @@
  * Bundle 32.7.7: Session picker for jumping between sessions.
  * Bundle 32.8.4.1: Download Intent as JSON file.
  * Bundle 32.8.4.2: Download intent with overrides (tool/material/profile dropdowns).
+ * Bundle 32.8.4.3: Remember overrides (localStorage persistence).
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
 import { useToastStore } from "@/stores/toastStore";
 import SideDrawer from "@/components/ui/SideDrawer.vue";
@@ -186,6 +187,54 @@ const overrideMachineProfileId = ref<string>("");
 const overrideCamProfileId = ref<string>("");
 const overrideRiskTolerance = ref<string>("");
 
+// ==========================================================================
+// Bundle 32.8.4.3: Remember overrides (localStorage persistence)
+// ==========================================================================
+
+const OVERRIDES_LS_KEY = "artStudio.promotionIntentExport.overrides.v1";
+
+type ExportOverrides = {
+  tool_id: string;
+  material_id: string;
+  machine_profile_id: string;
+  requested_cam_profile_id: string;
+  risk_tolerance: string;
+};
+
+function _readOverridesFromStorage(): ExportOverrides | null {
+  try {
+    const raw = localStorage.getItem(OVERRIDES_LS_KEY);
+    if (!raw) return null;
+    const j = JSON.parse(raw);
+    if (!j || typeof j !== "object") return null;
+    return {
+      tool_id: String((j as any).tool_id ?? ""),
+      material_id: String((j as any).material_id ?? ""),
+      machine_profile_id: String((j as any).machine_profile_id ?? ""),
+      requested_cam_profile_id: String((j as any).requested_cam_profile_id ?? ""),
+      risk_tolerance: String((j as any).risk_tolerance ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function _writeOverridesToStorage(v: ExportOverrides) {
+  try {
+    localStorage.setItem(OVERRIDES_LS_KEY, JSON.stringify(v));
+  } catch {
+    // ignore (private browsing / storage disabled)
+  }
+}
+
+function _clearOverridesStorage() {
+  try {
+    localStorage.removeItem(OVERRIDES_LS_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 const session = computed(() => wf.session);
 const state = computed(() => wf.stateName);
 const busy = computed(() => wf.loading);
@@ -221,9 +270,41 @@ const drawerTitle = computed(() => {
 });
 
 // Hydrate session from localStorage on mount (Bundle 32.7.2)
+// + Hydrate overrides from localStorage (Bundle 32.8.4.3)
 onMounted(() => {
   wf.hydrateFromLocalStorage();
+
+  // Restore saved overrides (32.8.4.3)
+  const saved = _readOverridesFromStorage();
+  if (saved) {
+    overrideToolId.value = saved.tool_id;
+    overrideMaterialId.value = saved.material_id;
+    overrideMachineProfileId.value = saved.machine_profile_id;
+    overrideCamProfileId.value = saved.requested_cam_profile_id;
+    overrideRiskTolerance.value = saved.risk_tolerance;
+  }
 });
+
+// Auto-save overrides to localStorage when changed (Bundle 32.8.4.3)
+watch(
+  [
+    overrideToolId,
+    overrideMaterialId,
+    overrideMachineProfileId,
+    overrideCamProfileId,
+    overrideRiskTolerance,
+  ],
+  () => {
+    _writeOverridesToStorage({
+      tool_id: overrideToolId.value || "",
+      material_id: overrideMaterialId.value || "",
+      machine_profile_id: overrideMachineProfileId.value || "",
+      requested_cam_profile_id: overrideCamProfileId.value || "",
+      risk_tolerance: overrideRiskTolerance.value || "",
+    });
+  },
+  { deep: false }
+);
 
 async function ensure() {
   if (wf.hasSession) {
@@ -346,6 +427,8 @@ function clearOverrides() {
   overrideMachineProfileId.value = "";
   overrideCamProfileId.value = "";
   overrideRiskTolerance.value = "";
+
+  _clearOverridesStorage(); // (32.8.4.3)
   toast.info("Download overrides cleared.");
 }
 
