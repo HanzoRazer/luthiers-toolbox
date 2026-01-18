@@ -51,10 +51,23 @@ class FeasibilityInput(BaseModel):
 
 
 class FeasibilityResult(BaseModel):
+    """
+    Phase 3 — Explainability-ready feasibility result.
+    
+    Every YELLOW/RED outcome can be explained by looking up rules_triggered
+    in the authoritative rule_registry.py.
+    """
     risk_level: RiskLevel
     blocking: bool = False
     blocking_reasons: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
+
+    # Phase 3: Rule IDs that triggered this outcome (for registry lookup)
+    rules_triggered: List[str] = Field(
+        default_factory=list,
+        description="Rule IDs (e.g., 'F001', 'F010') that triggered this outcome. "
+                    "Look up in rule_registry.py for human-readable explanations.",
+    )
 
     # "constraints" should be machine-readable later; strings are fine for MVP.
     constraints: List[str] = Field(default_factory=list)

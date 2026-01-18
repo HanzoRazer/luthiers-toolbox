@@ -83,6 +83,11 @@ from .api_batch_summary import router as batch_summary_router
 
 router.include_router(batch_summary_router)
 
+# Global content-addressed attachment fetch (fixes truncated diffs)
+from .api_global_attachments import router as global_attachments_router
+
+router.include_router(global_attachments_router)
+
 
 # =============================================================================
 # Response Models

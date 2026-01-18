@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.art_studio.schemas.rosette_params import RosetteParamSpec
 from app.art_studio.schemas.rosette_feasibility import RosetteFeasibilitySummary
+from app.shared.fingerprint import FINGERPRINT_ALGO
 
 
 class PromotionIntentV1(BaseModel):
@@ -40,6 +41,9 @@ class PromotionIntentV1(BaseModel):
     # Deterministic fingerprints for traceability + caching
     design_fingerprint: str
     feasibility_fingerprint: str
+
+    # Fingerprint algorithm metadata (explicit contract, Bundle 32.8.3)
+    fingerprint_algo: str = Field(default=FINGERPRINT_ALGO)
 
     # Optional downstream hints (references only)
     requested_cam_profile_id: Optional[str] = None

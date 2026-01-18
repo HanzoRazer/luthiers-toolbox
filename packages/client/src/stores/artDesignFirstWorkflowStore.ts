@@ -1,11 +1,12 @@
 // packages/client/src/stores/artDesignFirstWorkflowStore.ts
 /**
- * Art Design-First Workflow Store (Bundle 32.7.0 + 32.7.2)
+ * Art Design-First Workflow Store (Bundle 32.7.0 + 32.7.2 + 32.7.7)
  *
  * Pinia store for managing design-first workflow state.
  * Handles session lifecycle: DRAFT → IN_REVIEW → APPROVED → promotion intent.
  *
  * Bundle 32.7.2: Added localStorage persistence for session ID.
+ * Bundle 32.7.7: Added loadSessionById for session picker.
  */
 
 import { defineStore } from "pinia";
@@ -21,6 +22,7 @@ import {
   getDesignFirstPromotionIntent,
   getDesignFirstWorkflow,
 } from "@/sdk/endpoints/artDesignFirstWorkflow";
+import { getWorkflowSession } from "@/sdk/endpoints/artDesignFirstWorkflowSessions";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 
@@ -202,6 +204,30 @@ export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflo
     }
   }
 
+  /**
+   * Load a session by ID (Bundle 32.7.7).
+   * Used by session picker to jump between sessions.
+   */
+  async function loadSessionById(sessionId: string): Promise<DesignFirstSession | null> {
+    const toast = useToastStore();
+    loading.value = true;
+    error.value = null;
+    try {
+      const res = await getWorkflowSession(sessionId);
+      session.value = res.session;
+      _persistSessionId(res.session.session_id);
+      toast.success("Loaded workflow session.");
+      return session.value;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      error.value = msg;
+      toast.error(`Load failed: ${msg}`);
+      return null;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     // State
     session,
@@ -219,5 +245,6 @@ export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflo
     requestPromotionIntent,
     clearSession,
     hydrateFromLocalStorage,
+    loadSessionById,
   };
 });
