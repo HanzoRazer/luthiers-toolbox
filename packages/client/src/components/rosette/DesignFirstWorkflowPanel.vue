@@ -50,6 +50,35 @@
       </button>
     </div>
 
+    <!-- Download overrides (Bundle 32.8.4.2) -->
+    <div class="overrides">
+      <div class="ovTitle">Download overrides</div>
+
+      <select v-model="overrideToolId" class="sel" title="Override tool_id">
+        <option v-for="o in TOOL_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      </select>
+
+      <select v-model="overrideMaterialId" class="sel" title="Override material_id">
+        <option v-for="o in MATERIAL_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      </select>
+
+      <select v-model="overrideMachineProfileId" class="sel" title="Override machine_profile_id">
+        <option v-for="o in MACHINE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      </select>
+
+      <select v-model="overrideCamProfileId" class="sel" title="Override requested_cam_profile_id">
+        <option v-for="o in CAM_PROFILE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      </select>
+
+      <select v-model="overrideRiskTolerance" class="sel" title="Override risk_tolerance">
+        <option v-for="o in RISK_TOLERANCE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      </select>
+
+      <button class="btn ghost" @click="clearOverrides" title="Clear overrides">
+        Clear
+      </button>
+    </div>
+
     <div v-if="err" class="wf-error">{{ err }}</div>
 
     <!-- History -->
@@ -100,6 +129,7 @@
  * Bundle 32.7.5: Pin a run in drawer (iframe stays on pinned run_id).
  * Bundle 32.7.7: Session picker for jumping between sessions.
  * Bundle 32.8.4.1: Download Intent as JSON file.
+ * Bundle 32.8.4.2: Download intent with overrides (tool/material/profile dropdowns).
  */
 import { computed, onMounted, ref } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
@@ -109,6 +139,52 @@ import WorkflowSessionPicker from "@/components/rosette/WorkflowSessionPicker.vu
 
 const wf = useArtDesignFirstWorkflowStore();
 const toast = useToastStore();
+
+// ==========================================================================
+// Bundle 32.8.4.2: Download intent with overrides
+// ==========================================================================
+
+type Option = { id: string; label: string };
+
+const TOOL_OPTIONS: Option[] = [
+  { id: "", label: "Tool (default)" },
+  { id: "vbit_60", label: "V-bit 60°" },
+  { id: "downcut_2mm", label: "Downcut 2mm" },
+  { id: "upcut_2mm", label: "Upcut 2mm" },
+];
+
+const MATERIAL_OPTIONS: Option[] = [
+  { id: "", label: "Material (default)" },
+  { id: "ebony", label: "Ebony" },
+  { id: "rosewood", label: "Rosewood" },
+  { id: "maple", label: "Maple" },
+  { id: "spruce", label: "Spruce" },
+];
+
+const MACHINE_OPTIONS: Option[] = [
+  { id: "", label: "Machine (default)" },
+  { id: "shopbot_alpha", label: "ShopBot Alpha" },
+  { id: "shapeoko_pro", label: "Shapeoko Pro" },
+];
+
+const CAM_PROFILE_OPTIONS: Option[] = [
+  { id: "", label: "CAM profile (default)" },
+  { id: "vbit_60_ebony_safe", label: "V-bit 60 / Ebony / Safe" },
+  { id: "downcut_maple_fast", label: "Downcut / Maple / Fast" },
+];
+
+const RISK_TOLERANCE_OPTIONS: Option[] = [
+  { id: "", label: "Risk tolerance (default)" },
+  { id: "GREEN_ONLY", label: "GREEN only" },
+  { id: "ALLOW_YELLOW", label: "Allow YELLOW" },
+];
+
+// Selected overrides (empty = not sent)
+const overrideToolId = ref<string>("");
+const overrideMaterialId = ref<string>("");
+const overrideMachineProfileId = ref<string>("");
+const overrideCamProfileId = ref<string>("");
+const overrideRiskTolerance = ref<string>("");
 
 const session = computed(() => wf.session);
 const state = computed(() => wf.stateName);
@@ -244,11 +320,33 @@ async function copyIntentCurl() {
 }
 
 // ==========================================================================
-// Bundle 32.8.4.1: Download Intent as JSON file
+// Bundle 32.8.4.1 + 32.8.4.2: Download Intent as JSON file with overrides
 // ==========================================================================
 
 function buildPromotionIntentExportUrl(session_id: string): string {
-  return `${_baseUrl()}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent/export`;
+  const base = _baseUrl();
+  const url = new URL(
+    `${base}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent.json`,
+    window.location.origin
+  );
+
+  // Append only if provided (32.8.4.2)
+  if (overrideToolId.value) url.searchParams.set("tool_id", overrideToolId.value);
+  if (overrideMaterialId.value) url.searchParams.set("material_id", overrideMaterialId.value);
+  if (overrideMachineProfileId.value) url.searchParams.set("machine_profile_id", overrideMachineProfileId.value);
+  if (overrideCamProfileId.value) url.searchParams.set("requested_cam_profile_id", overrideCamProfileId.value);
+  if (overrideRiskTolerance.value) url.searchParams.set("risk_tolerance", overrideRiskTolerance.value);
+
+  return url.toString();
+}
+
+function clearOverrides() {
+  overrideToolId.value = "";
+  overrideMaterialId.value = "";
+  overrideMachineProfileId.value = "";
+  overrideCamProfileId.value = "";
+  overrideRiskTolerance.value = "";
+  toast.info("Download overrides cleared.");
 }
 
 async function downloadIntent() {
@@ -476,5 +574,31 @@ function closeDrawer() {
   flex: 1;
   width: 100%;
   border: none;
+}
+
+/* Bundle 32.8.4.2: Download overrides */
+.overrides {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ovTitle {
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.85;
+  margin-right: 4px;
+}
+
+.sel {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: white;
 }
 </style>
