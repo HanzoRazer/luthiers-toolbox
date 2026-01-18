@@ -17,6 +17,7 @@ from .toolpaths_lookup_router import router as toolpaths_lookup_router
 from .toolpaths_validate_router import router as toolpaths_validate_router
 from .toolpaths_lint_router import router as toolpaths_lint_router
 from .execution_start_from_toolpaths_router import router as execution_start_from_toolpaths_router
+from .toolpaths_download_router import router as toolpaths_download_router
 
 
 router = APIRouter()
@@ -29,3 +30,4 @@ router.include_router(toolpaths_lookup_router)
 router.include_router(toolpaths_validate_router)
 router.include_router(toolpaths_lint_router)
 router.include_router(execution_start_from_toolpaths_router)
+router.include_router(toolpaths_download_router)
