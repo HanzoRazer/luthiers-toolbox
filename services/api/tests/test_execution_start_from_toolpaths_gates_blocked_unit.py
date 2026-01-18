@@ -4,7 +4,9 @@ from fastapi.testclient import TestClient
 
 
 def test_start_execution_from_toolpaths_blocks_when_lint_fails(monkeypatch):
-    from app.main import app
+    # Import the source modules where functions are defined
+    from app.saw_lab import toolpaths_lint_service
+    from app.rmos.runs_v2 import store as runs_store
 
     def _fake_write_lint(**kwargs):
         return {
@@ -18,12 +20,15 @@ def test_start_execution_from_toolpaths_blocks_when_lint_fails(monkeypatch):
         assert kwargs["payload"]["status"] == "BLOCKED"
         return "exec_blocked_1"
 
+    # Patch on the source module (where the function is defined)
     monkeypatch.setattr(
-        "app.saw_lab.execution_start_from_toolpaths_router.write_toolpaths_lint_report_artifact",
+        toolpaths_lint_service,
+        "write_toolpaths_lint_report_artifact",
         _fake_write_lint,
-        raising=False,
     )
-    monkeypatch.setattr("app.rmos.runs_v2.store.store_artifact", _fake_store_artifact)
+    monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
+
+    from app.main import app
 
     c = TestClient(app)
     r = c.post(
