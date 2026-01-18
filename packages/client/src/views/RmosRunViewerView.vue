@@ -15,6 +15,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchRun, downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
+import { explainRule } from "@/lib/feasibilityRuleRegistry";
 
 const route = useRoute();
 const router = useRouter();
@@ -24,6 +25,29 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 const runId = computed(() => route.params.id as string);
+
+// Phase 3.3: Explainability - triggered rules
+const triggeredRuleIds = computed<string[]>(() => {
+  const ids = run.value?.feasibility?.rules_triggered;
+  if (!Array.isArray(ids)) return [];
+  return ids.map((x: any) => String(x).trim().toUpperCase()).filter(Boolean);
+});
+
+const triggeredRules = computed(() => {
+  return triggeredRuleIds.value.map((rid) => explainRule(rid));
+});
+
+const hasExplainability = computed(() => triggeredRuleIds.value.length > 0);
+
+const riskLevel = computed(() => {
+  return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
+});
+
+const overrideAttachment = computed(() => {
+  const atts = run.value?.attachments || [];
+  if (!Array.isArray(atts)) return null;
+  return atts.find((a: any) => a?.kind === "override") ?? null;
+});
 
 async function loadRun() {
   if (!runId.value) return;
@@ -184,6 +208,27 @@ async function downloadAttachment(att: any) {
             <span class="label">Block Reason:</span>
             <span class="block-text">{{ run.feasibility.block_reason }}</span>
           </div>
+        </div>
+
+        <!-- Phase 3.3: Explainability - Why section -->
+        <div v-if="hasExplainability" class="explain-section">
+          <h3>Why</h3>
+          <ul class="explain-list">
+            <li v-for="r in triggeredRules" :key="r.rule_id" class="explain-item">
+              <span class="rule-pill" :data-level="r.level">{{ r.level }}</span>
+              <span class="rule-id">{{ r.rule_id }}</span>
+              <span class="rule-summary">{{ r.summary }}</span>
+              <span v-if="r.operator_hint" class="rule-hint">{{ r.operator_hint }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Override info -->
+        <div v-if="overrideAttachment" class="override-info">
+          <span class="label">Override:</span>
+          <span class="override-text">
+            Recorded (sha: <code>{{ overrideAttachment.sha256?.slice(0, 12) }}…</code>)
+          </span>
         </div>
       </section>
 
@@ -729,5 +774,91 @@ async function downloadAttachment(att: any) {
   .att-kind {
     background: #6c757d;
   }
+}
+
+/* Phase 3.3: Explainability section */
+.explain-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.explain-section h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.explain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.explain-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.rule-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+}
+
+.rule-pill[data-level="RED"] {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.rule-pill[data-level="YELLOW"] {
+  color: #92400e;
+  border-color: #fcd34d;
+  background: #fefce8;
+}
+
+.rule-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.rule-summary {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.rule-hint {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.override-info {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.override-text {
+  font-size: 0.875rem;
+  color: #059669;
+}
+
+.override-text code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 4px;
 }
 </style>

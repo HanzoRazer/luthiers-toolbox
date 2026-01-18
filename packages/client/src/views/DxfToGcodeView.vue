@@ -95,6 +95,14 @@
       <div class="result-meta">
         <span class="run-id">Run: {{ result.run_id }}</span>
         <button @click="copyRunId" class="copy-btn" title="Copy Run ID">Copy</button>
+        <button
+          v-if="canViewRun"
+          class="btn-link"
+          @click="viewRunNewTab"
+          title="Open canonical RMOS run record"
+        >
+          View Run <span class="ext" aria-hidden="true">↗</span>
+        </button>
         <span v-if="!result.rmos_persisted" class="not-persisted">RMOS not persisted</span>
       </div>
 
@@ -103,6 +111,30 @@
         <ul>
           <li v-for="(w, i) in result.decision.warnings" :key="i">{{ w }}</li>
         </ul>
+      </div>
+
+      <!-- Phase 3.3: Explainability - Why YELLOW/RED? -->
+      <div v-if="hasExplainability" class="explain-card">
+        <div class="explain-header">
+          <h3>Why this is {{ riskLevel }}</h3>
+          <div v-if="explainSummary" class="explain-summary">{{ explainSummary }}</div>
+        </div>
+
+        <ul class="explain-list">
+          <li v-for="r in triggeredRules" :key="r.rule_id" class="explain-item">
+            <span class="rule-pill" :data-level="r.level">{{ r.level }}</span>
+            <span class="rule-id">{{ r.rule_id }}</span>
+            <span class="rule-summary">{{ r.summary }}</span>
+            <span v-if="r.operator_hint" class="rule-hint">{{ r.operator_hint }}</span>
+          </li>
+        </ul>
+
+        <div v-if="riskLevel === 'YELLOW' && !hasOverrideAttachment" class="explain-hint">
+          Operator Pack requires an override for YELLOW runs.
+        </div>
+        <div v-if="hasOverrideAttachment" class="explain-hint explain-hint-ok">
+          Override recorded (see operator pack for override.json).
+        </div>
       </div>
 
       <button
@@ -120,6 +152,15 @@
         title="Downloads input.dxf + plan.json + manifest.json + output.nc"
       >
         Download Operator Pack (.zip)
+      </button>
+
+      <button
+        v-if="canViewRun"
+        class="btn-view-run"
+        @click="viewRunNewTab"
+        title="Open canonical RMOS run record in a new tab"
+      >
+        View Run <span class="ext" aria-hidden="true">↗</span>
       </button>
 
       <div v-if="result && !result.gcode?.inline" class="attachment-hint">
@@ -176,6 +217,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { explainRule } from '@/lib/feasibilityRuleRegistry'
+
+const router = useRouter()
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isDragOver = ref(false)
@@ -212,6 +257,38 @@ const riskLevel = computed(() => String(result.value?.decision?.risk_level || ''
 const hasOverrideAttachment = computed(() => {
   const atts = result.value?.attachments || []
   return Array.isArray(atts) && atts.some((a: any) => a?.kind === 'override')
+})
+
+// Phase 3.3: Explainability - triggered rules
+const triggeredRuleIds = computed<string[]>(() => {
+  const ids = result.value?.feasibility?.rules_triggered
+  if (!Array.isArray(ids)) return []
+  return ids.map((x: any) => String(x).trim().toUpperCase()).filter(Boolean)
+})
+
+const triggeredRules = computed(() => {
+  return triggeredRuleIds.value.map((rid) => explainRule(rid))
+})
+
+const hasExplainability = computed(() => triggeredRuleIds.value.length > 0)
+
+const canViewRun = computed(() => {
+  const runId = String(result.value?.run_id || '').trim()
+  return !!runId
+})
+
+function viewRunNewTab() {
+  const runId = String(result.value?.run_id || '').trim()
+  if (!runId) return
+  const href = router.resolve(`/rmos/runs/${encodeURIComponent(runId)}`).href
+  window.open(href, '_blank', 'noopener,noreferrer')
+}
+
+const explainSummary = computed(() => {
+  const n = triggeredRuleIds.value.length
+  if (!n) return null
+  const rl = riskLevel.value || 'UNKNOWN'
+  return `${n} feasibility rule(s) triggered → ${rl}`
 })
 
 // Override Modal state
@@ -737,6 +814,16 @@ h1 {
   background: #d1d5db;
 }
 
+.view-run-link {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.view-run-link:hover {
+  text-decoration: underline;
+}
+
 .not-persisted {
   color: #f59e0b;
   font-size: 0.875rem;
@@ -966,5 +1053,131 @@ h1 {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Phase 3.3: Explainability Card */
+.explain-card {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.explain-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.explain-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.explain-summary {
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.explain-list {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.explain-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.rule-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+}
+
+.rule-pill[data-level="RED"] {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.rule-pill[data-level="YELLOW"] {
+  color: #92400e;
+  border-color: #fcd34d;
+  background: #fefce8;
+}
+
+.rule-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.rule-summary {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.rule-hint {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.explain-hint {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+.explain-hint-ok {
+  color: #059669;
+}
+
+.btn-view-run {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #374151;
+  opacity: 0.9;
+}
+
+.btn-view-run:hover {
+  background: #d1d5db;
+}
+
+.btn-link {
+  padding: 0 4px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.btn-link:hover {
+  opacity: 1;
+}
+
+.ext {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+  transform: translateY(-1px);
 }
 </style>

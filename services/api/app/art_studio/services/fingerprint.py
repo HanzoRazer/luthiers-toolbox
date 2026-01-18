@@ -1,27 +1,18 @@
 from __future__ import annotations
 
-import hashlib
-import json
-from typing import Any
+"""
+Art Studio fingerprinting (delegates to shared hardened implementation).
 
+This module provides backwards-compatible exports while delegating
+to the hardened shared fingerprint implementation (Bundle 32.8.3).
+"""
 
-def _stable(obj: Any) -> str:
-    """
-    Deterministic JSON serialization:
-      - sorted keys
-      - no whitespace
-      - safe for hashing
-    """
-    if hasattr(obj, "model_dump"):
-        obj = obj.model_dump()
-    elif hasattr(obj, "dict"):
-        obj = obj.dict()
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str)
+# Re-export from hardened shared implementation
+from app.shared.fingerprint import fingerprint_stable, FINGERPRINT_ALGO
+from app.shared.stablejson import stable_dumps
 
-
-def fingerprint_stable(obj: Any) -> str:
-    """
-    Stable SHA256 fingerprint for design / feasibility objects.
-    """
-    payload = _stable(obj)
-    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
+__all__ = [
+    "fingerprint_stable",
+    "FINGERPRINT_ALGO",
+    "stable_dumps",
+]
