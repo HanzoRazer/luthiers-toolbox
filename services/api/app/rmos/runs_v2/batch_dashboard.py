@@ -115,6 +115,37 @@ def _try_extract_execution_kpis_from_metrics_artifact(
     return None
 
 
+def _try_extract_metrics_for_execution(nodes: List[Dict[str, Any]], execution_artifact_id: Optional[str]) -> Optional[Dict[str, Any]]:
+    """
+    Prefer metrics that are explicitly linked to the *latest execution*.
+    """
+    if not execution_artifact_id:
+        return None
+    best: Optional[Dict[str, Any]] = None
+    best_key: Tuple[str, str] = ("", "")
+    for n in nodes:
+        if not isinstance(n, dict):
+            continue
+        if _group_key_from_kind(_kind(n)) != "execution_metrics":
+            continue
+        p = _as_dict(n.get("payload") or n.get("data"))
+        pid = n.get("parent_id")
+        ref = p.get("batch_execution_artifact_id")
+        if (pid and str(pid) == str(execution_artifact_id)) or (ref and str(ref) == str(execution_artifact_id)):
+            ts = _created_utc(n) or ""
+            nid = _id(n)
+            if (ts, nid) >= best_key:
+                best_key = (ts, nid)
+                best = n
+    if not best:
+        return None
+    p = _as_dict(best.get("payload") or best.get("data"))
+    kpis = p.get("kpis")
+    if isinstance(kpis, dict):
+        return {"source": "execution_metrics_for_latest_execution", "artifact_id": _id(best) or None, "kpis": kpis}
+    return None
+
+
 def _heuristic_rollup_from_job_logs(nodes: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Minimal KPI rollup when you haven't persisted a dedicated metrics artifact yet.
@@ -194,7 +225,10 @@ def build_batch_summary_dashboard_card(
 
     kpi_block: Optional[Dict[str, Any]] = None
     if include_kpis:
-        kpi_block = _try_extract_execution_kpis_from_metrics_artifact(nodes)
+        # Prefer metrics associated with the *latest execution* first.
+        kpi_block = _try_extract_metrics_for_execution(nodes, latest.get("execution"))
+        if not kpi_block:
+            kpi_block = _try_extract_execution_kpis_from_metrics_artifact(nodes)
         if not kpi_block:
             kpi_block = _heuristic_rollup_from_job_logs(nodes)
 
