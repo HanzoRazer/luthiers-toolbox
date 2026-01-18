@@ -3,27 +3,21 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["Saw", "Batch"])
 
 
-class ToolpathsValidateRequest(BaseModel):
-    toolpaths_artifact_id: str = Field(..., description="Artifact ID of saw_batch_toolpaths")
+class ToolpathsLintRequest(BaseModel):
+    toolpaths_artifact_id: str
+    session_id: Optional[str] = None
+    batch_label: Optional[str] = None
+    tool_kind: str = "saw"
 
-    # either set these directly...
-    safe_z_mm: float = Field(5.0, description="Minimum safe Z height")
-    bounds_mm: Optional[Dict[str, float]] = Field(
-        None,
-        description="Optional hard bounds: min_x, max_x, min_y, max_y, min_z, max_z",
-    )
-
-    # ...or have them pulled from a machine profile artifact
-    machine_profile_artifact_id: Optional[str] = Field(
-        None,
-        description="If provided, overrides safe_z_mm/bounds_mm from machine profile payload.",
-    )
+    machine_profile_artifact_id: Optional[str] = None
+    safe_z_mm: float = 5.0
+    bounds_mm: Optional[Dict[str, float]] = None
 
     require_units_mm: bool = True
     require_absolute: bool = True
@@ -32,15 +26,16 @@ class ToolpathsValidateRequest(BaseModel):
     require_feed_on_cut: bool = True
 
 
-class ToolpathsValidateResponse(BaseModel):
+class ToolpathsLintResponse(BaseModel):
+    lint_artifact_id: str
     ok: bool
     errors: list[str]
     warnings: list[str]
     summary: Dict[str, Any]
 
 
-@router.post("/toolpaths/validate", response_model=ToolpathsValidateResponse)
-def validate_toolpaths(req: ToolpathsValidateRequest) -> ToolpathsValidateResponse:
+@router.post("/toolpaths/lint", response_model=ToolpathsLintResponse)
+def lint_toolpaths(req: ToolpathsLintRequest) -> ToolpathsLintResponse:
     if not req.toolpaths_artifact_id:
         raise HTTPException(status_code=400, detail="toolpaths_artifact_id required")
 
@@ -56,10 +51,14 @@ def validate_toolpaths(req: ToolpathsValidateRequest) -> ToolpathsValidateRespon
         if isinstance(c.get("bounds_mm"), dict):
             bounds_mm = c["bounds_mm"]
 
-    from .toolpaths_validate_service import validate_toolpaths_artifact_static
+    from .toolpaths_lint_service import write_toolpaths_lint_report_artifact
 
-    result = validate_toolpaths_artifact_static(
+    out = write_toolpaths_lint_report_artifact(
         toolpaths_artifact_id=req.toolpaths_artifact_id,
+        session_id=req.session_id,
+        batch_label=req.batch_label,
+        tool_kind=req.tool_kind,
+        machine_profile_artifact_id=req.machine_profile_artifact_id,
         safe_z_mm=safe_z_mm,
         bounds_mm=bounds_mm,
         require_units_mm=req.require_units_mm,
@@ -69,11 +68,12 @@ def validate_toolpaths(req: ToolpathsValidateRequest) -> ToolpathsValidateRespon
         require_feed_on_cut=req.require_feed_on_cut,
     )
 
-    # stamp which constraints were applied (for UI)
-    summary = result.get("summary") if isinstance(result, dict) else None
-    if isinstance(summary, dict):
-        summary["applied_safe_z_mm"] = safe_z_mm
-        summary["applied_bounds_mm"] = bounds_mm
-        summary["machine_profile_artifact_id"] = req.machine_profile_artifact_id
-
-    return ToolpathsValidateResponse(**result)
+    result = out["result"]
+    summary = result.get("summary") if isinstance(result, dict) else {}
+    return ToolpathsLintResponse(
+        lint_artifact_id=out["lint_artifact_id"],
+        ok=bool(result.get("ok")),
+        errors=list(result.get("errors") or []),
+        warnings=list(result.get("warnings") or []),
+        summary=summary if isinstance(summary, dict) else {},
+    )
