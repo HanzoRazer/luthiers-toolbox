@@ -12,8 +12,8 @@ def test_toolpaths_validate_endpoint_smoke(monkeypatch):
       - POSTs to /api/saw/batch/toolpaths/validate
       - verifies response structure + success
     """
-    # Import app lazily so monkeypatch works cleanly
-    from app.main import app
+    # Import module for patching BEFORE importing app
+    from app.rmos.runs_v2 import store as runs_store
 
     fake_toolpaths_artifact = {
         "id": "tp1",
@@ -39,11 +39,10 @@ def test_toolpaths_validate_endpoint_smoke(monkeypatch):
         assert run_id == "tp1"
         return fake_toolpaths_artifact
 
-    # Patch RMOS run store lookup
-    monkeypatch.setattr(
-        "app.rmos.runs_v2.store.get_run",
-        _fake_get_run,
-    )
+    # Use import-based patching
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+
+    from app.main import app
 
     client = TestClient(app)
 
