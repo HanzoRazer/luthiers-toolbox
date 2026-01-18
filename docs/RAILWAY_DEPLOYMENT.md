@@ -1,160 +1,117 @@
 # Railway Deployment Guide
 
-This guide explains how to deploy Luthier's Tool Box to [Railway](https://railway.app).
-
 ## Overview
 
-The project deploys as two services:
-- **API** (`services/api`): FastAPI backend (Python 3.11)
-- **Client** (`packages/client`): Vue 3 + Vite frontend (nginx)
+Luthier's ToolBox is deployed on Railway as two services:
 
-## Quick Start
-
-### Option 1: Deploy via Railway Dashboard (Recommended)
-
-1. **Create a Railway Account**
-   - Go to [railway.app](https://railway.app) and sign up
-   - Link your GitHub account
-
-2. **Create New Project**
-   - Click "New Project" → "Deploy from GitHub repo"
-   - Select `HanzoRazer/luthiers-toolbox`
-   - Railway will detect the `railway.json` files automatically
-
-3. **Configure Services**
-
-   For the **API service**:
-   - Root Directory: `services/api`
-   - Add environment variables:
-     - `SG_SPEC_TOKEN`: Your GitHub token for private sg-spec repo
-     - `CORS_ORIGINS`: Will be auto-set to client URL
-   - Add a volume for persistent SQLite storage (optional)
-
-   For the **Client service**:
-   - Root Directory: `packages/client`
-   - Add environment variable:
-     - `VITE_API_URL`: Set to the API service URL
-
-4. **Generate Domain**
-   - Click on each service → Settings → Generate Domain
-   - Update `CORS_ORIGINS` on API with the client domain
-
-### Option 2: Deploy via GitHub Actions
-
-1. **Get Railway Token**
-   - Go to Railway Dashboard → Account → Tokens
-   - Create a new token
-
-2. **Add GitHub Secret**
-   - Go to your GitHub repo → Settings → Secrets → Actions
-   - Add `RAILWAY_TOKEN` with your Railway token
-
-3. **Push to main**
-   - The workflow `.github/workflows/railway-deploy.yml` will auto-deploy
-
-4. **Manual Deploy**
-   - Go to Actions → Railway Deploy → Run workflow
-   - Select which service to deploy
-
-### Option 3: Deploy via Railway CLI
-
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login to Railway
-railway login
-
-# Link to your project
-railway link
-
-# Deploy API
-cd services/api
-railway up --service api
-
-# Deploy Client
-cd packages/client
-railway up --service client
-```
-
-## Environment Variables
-
-### API Service
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SG_SPEC_TOKEN` | GitHub token for private sg-spec repo | Yes (for build) |
-| `CORS_ORIGINS` | Allowed CORS origins (client URL) | Yes |
-| `ART_STUDIO_DB_PATH` | SQLite database path | No (defaults to /app/...) |
-| `SERVER_PORT` | API server port | No (defaults to 8000) |
-
-### Client Service
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VITE_API_URL` | API backend URL | Yes |
+| Service | URL | Description |
+|---------|-----|-------------|
+| **API** | `luthiers-toolbox-production.up.railway.app` | FastAPI backend |
+| **Client** | `luthiers-toolbox-production-635e.up.railway.app` | Vue 3 frontend |
 
 ## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐
-│     Client      │────▶│       API       │
-│   (Vue + nginx) │     │   (FastAPI)     │
-│     Port 80     │     │    Port 8000    │
+│     Client      │────▶│      API        │
+│  (Vue 3/Vite)   │     │   (FastAPI)     │
+│     nginx       │     │    uvicorn      │
 └─────────────────┘     └─────────────────┘
-         │                       │
-         │                       ▼
-         │              ┌─────────────────┐
-         │              │   SQLite DB     │
-         │              │   (Volume)      │
-         │              └─────────────────┘
-         ▼
-    User Browser
+   packages/client        services/api
 ```
 
-## Volumes (Persistent Storage)
+## Service Configuration
 
-For production, attach a volume to the API service:
-- Mount path: `/app/services/api/app/data`
-- This persists the SQLite database across deployments
+### API Service (`services/api`)
 
-## Health Checks
+- **Builder**: Dockerfile
+- **Root Directory**: `services/api`
+- **Dockerfile**: `services/api/Dockerfile`
+- **Health Check**: `/health`
+- **Port**: Dynamic (uses Railway's `PORT` env var, defaults to 8000)
 
-Both services have health check endpoints:
-- **API**: `GET /health`
-- **Client**: `GET /health`
+**Environment Variables**:
+- `PORT` - Set automatically by Railway
+- `SG_SPEC_TOKEN` - GitHub token for private repo access (if needed)
+- `CORS_ORIGINS` - Allowed CORS origins (set to client URL)
 
-Railway monitors these automatically.
+### Client Service (`packages/client`)
+
+- **Builder**: Dockerfile
+- **Root Directory**: `packages/client`
+- **Dockerfile**: `packages/client/Dockerfile`
+- **Health Check**: `/health`
+- **Port**: Dynamic (uses Railway's `PORT` env var)
+
+**Environment Variables**:
+- `PORT` - Set automatically by Railway
+- `VITE_API_URL` - API base URL (e.g., `https://luthiers-toolbox-production.up.railway.app`)
+
+**Note**: `VITE_*` variables are baked in at build time. Changes require a redeploy.
+
+## Configuration Files
+
+### `packages/client/railway.json`
+```json
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "/bin/sh /start.sh",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 60
+  }
+}
+```
+
+### `services/api/railway.json`
+```json
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 120
+  }
+}
+```
+
+## Auto-Deploy
+
+Both services auto-deploy on push to `main` branch.
 
 ## Troubleshooting
 
-### Build Fails: "Cannot find module sg-spec"
-- Ensure `SG_SPEC_TOKEN` is set in Railway environment variables
-- The token needs read access to the private sg-spec repository
+### "Dockerfile does not exist"
+- Check `railway.json` has correct `dockerfilePath`
+- Verify Root Directory is set correctly in Railway dashboard
 
-### CORS Errors
-- Update `CORS_ORIGINS` on the API service to include the client domain
-- Format: `https://your-client.railway.app`
+### "pnpm not found" or wrong start command
+- Add `startCommand` in `railway.json` to override stuck dashboard settings
 
-### Database Reset on Deploy
-- Attach a volume to the API service to persist data
-- Mount at `/app/services/api/app/data`
+### 502 Bad Gateway
+- Check deployment logs for errors
+- Verify PORT env var is being used correctly
 
-### Client Shows Blank Page
-- Check browser console for errors
-- Verify `VITE_API_URL` points to the correct API URL
-- Ensure API is running and accessible
+### Client shows JSON errors
+- Set `VITE_API_URL` environment variable
+- Redeploy (Vite vars are baked at build time)
 
-## Monitoring
+## Useful Commands
 
-Railway provides built-in monitoring:
-- Logs: Click on service → Logs
-- Metrics: Click on service → Metrics
-- Deployments: Click on service → Deployments
+```bash
+# Check API health
+curl https://luthiers-toolbox-production.up.railway.app/health
 
-## Cost Estimation
+# Check client health  
+curl https://luthiers-toolbox-production-635e.up.railway.app/health
 
-Railway pricing (as of 2025):
-- Free tier: $5/month credit
-- Usage-based: ~$0.000463/GB-minute for memory
-- Typical cost for this project: $5-20/month depending on traffic
+# View API docs
+open https://luthiers-toolbox-production.up.railway.app/docs
+```
