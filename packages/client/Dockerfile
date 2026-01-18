@@ -14,19 +14,7 @@ RUN test -f /app/dist/index.html || (echo "Build failed" && exit 1)
 FROM nginx:1.27-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY start.sh /start.sh
+RUN chmod +x /start.sh && rm -f /etc/nginx/conf.d/default.conf
 
-# Simple startup script that configures nginx with Railway's PORT
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'cat > /etc/nginx/conf.d/default.conf << NGINX' >> /start.sh && \
-    echo 'server {' >> /start.sh && \
-    echo '    listen $PORT;' >> /start.sh && \
-    echo '    root /usr/share/nginx/html;' >> /start.sh && \
-    echo '    location / { try_files \$uri \$uri/ /index.html; }' >> /start.sh && \
-    echo '    location /health { return 200 "OK"; }' >> /start.sh && \
-    echo '}' >> /start.sh && \
-    echo 'NGINX' >> /start.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /start.sh && \
-    chmod +x /start.sh
-
-ENV PORT=80
 CMD ["/bin/sh", "/start.sh"]
