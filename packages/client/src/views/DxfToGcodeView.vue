@@ -137,22 +137,33 @@
         </div>
       </div>
 
-      <button
-        @click="downloadGcode"
-        :disabled="!canDownload"
-        class="btn-download"
-      >
-        Download G-code (.nc)
-      </button>
+      <!-- Action row with risk badge + downloads -->
+      <div class="action-row">
+        <span
+          class="action-risk-badge"
+          :class="riskLevel.toLowerCase()"
+          title="Decision from feasibility engine (RMOS)"
+        >
+          {{ riskLevel || 'N/A' }}
+        </span>
 
-      <button
-        @click="downloadOperatorPack"
-        :disabled="!canDownloadOperatorPack"
-        class="btn-operator-pack"
-        title="Downloads input.dxf + plan.json + manifest.json + output.nc"
-      >
-        Download Operator Pack (.zip)
-      </button>
+        <button
+          @click="downloadGcode"
+          :disabled="!canDownload"
+          class="btn-download"
+        >
+          Download G-code (.nc)
+        </button>
+
+        <button
+          @click="downloadOperatorPack"
+          :disabled="!canDownloadOperatorPack"
+          class="btn-operator-pack"
+          title="Downloads input.dxf + plan.json + manifest.json + output.nc"
+        >
+          Download Operator Pack (.zip)
+        </button>
+      </div>
 
       <button
         v-if="canViewRun"
@@ -1179,5 +1190,39 @@ h1 {
   font-size: 12px;
   opacity: 0.8;
   transform: translateY(-1px);
+}
+
+/* Action row with risk badge + download buttons */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.action-risk-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  cursor: help;
+}
+
+.action-risk-badge.green {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.action-risk-badge.yellow {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.action-risk-badge.red {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
 }
 </style>
