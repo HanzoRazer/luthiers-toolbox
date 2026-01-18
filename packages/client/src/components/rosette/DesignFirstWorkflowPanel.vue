@@ -77,15 +77,19 @@
         <button class="btn ghost" @click="copySessionId">Copy Session ID</button>
         <button class="btn ghost" @click="copyIntentCurl" title="Copy cURL for promotion intent">Copy cURL</button>
         <button class="btn ghost" @click="openInLogViewer" title="Open Log Viewer filtered to this run">Open logs</button>
+        <button class="btn ghost" @click="downloadIntent" title="Download intent as JSON file">Download intent</button>
         <button class="btn ghost" @click="clearIntent">Clear</button>
       </div>
     </div>
+
+    <!-- Session Picker (Bundle 32.7.7) -->
+    <WorkflowSessionPicker />
   </div>
 </template>
 
 <script setup lang="ts">
 /**
- * DesignFirstWorkflowPanel.vue (Bundle 32.7.0 + 32.7.2 + 32.7.3 + 32.7.4)
+ * DesignFirstWorkflowPanel.vue (Bundle 32.7.0 + 32.7.2 + 32.7.3 + 32.7.4 + 32.7.5 + 32.7.7 + 32.8.4.1)
  *
  * UI panel for managing design-first workflow state.
  * Displays workflow state, history, and promotion intent.
@@ -94,11 +98,14 @@
  * Bundle 32.7.3: Added Copy cURL + Open in Log Viewer deep-link.
  * Bundle 32.7.4: Open logs in split pane drawer (iframe).
  * Bundle 32.7.5: Pin a run in drawer (iframe stays on pinned run_id).
+ * Bundle 32.7.7: Session picker for jumping between sessions.
+ * Bundle 32.8.4.1: Download Intent as JSON file.
  */
 import { computed, onMounted, ref } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
 import { useToastStore } from "@/stores/toastStore";
 import SideDrawer from "@/components/ui/SideDrawer.vue";
+import WorkflowSessionPicker from "@/components/rosette/WorkflowSessionPicker.vue";
 
 const wf = useArtDesignFirstWorkflowStore();
 const toast = useToastStore();
@@ -233,6 +240,39 @@ async function copyIntentCurl() {
     toast.success("cURL copied to clipboard");
   } catch {
     toast.error("Failed to copy cURL");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.1: Download Intent as JSON file
+// ==========================================================================
+
+function buildPromotionIntentExportUrl(session_id: string): string {
+  return `${_baseUrl()}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent/export`;
+}
+
+async function downloadIntent() {
+  const sid = wf.sessionId;
+  if (!sid) return;
+  const url = buildPromotionIntentExportUrl(sid);
+  try {
+    const resp = await fetch(url, { method: "GET" });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${txt}`);
+    }
+    const blob = await resp.blob();
+    const filename = `promotion_intent_${sid.slice(0, 8)}.json`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast.success(`Downloaded ${filename}`);
+  } catch (e: any) {
+    toast.error(`Download failed: ${e.message || e}`);
   }
 }
 
