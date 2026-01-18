@@ -2,7 +2,8 @@ from __future__ import annotations
 
 
 def test_resolve_latest_metrics_by_decision_prefers_latest_execution_then_latest_metrics(monkeypatch):
-    from app.saw_lab.metrics_lookup_service import resolve_latest_metrics_by_decision
+    from app.saw_lab import metrics_lookup_service
+    from app.rmos.runs_v2 import store as runs_store
 
     # Two executions for same decision; newest is exec2
     exec1 = {"id": "exec1", "kind": "saw_batch_execution", "created_utc": "2026-01-01T00:01:00+00:00", "payload": {"decision_artifact_id": "dec1"}}
@@ -14,9 +15,9 @@ def test_resolve_latest_metrics_by_decision_prefers_latest_execution_then_latest
     def _fake_list_runs_filtered(**kwargs):
         return {"items": [exec1, exec2, mx1]}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
-    out = resolve_latest_metrics_by_decision(decision_artifact_id="dec1", session_id="s1", batch_label="b1", tool_kind="saw")
+    out = metrics_lookup_service.resolve_latest_metrics_by_decision(decision_artifact_id="dec1", session_id="s1", batch_label="b1", tool_kind="saw")
     assert out["latest_execution_artifact_id"] == "exec2"
     assert out["latest_metrics_artifact_id"] == "mx1"
     assert out["kpis"]["totals"]["job_log_count"] == 2
