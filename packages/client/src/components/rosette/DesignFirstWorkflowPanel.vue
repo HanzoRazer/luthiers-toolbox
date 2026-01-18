@@ -55,6 +55,9 @@
       <div class="wf-intent-actions">
         <button class="btn ghost" @click="copyIntent">Copy JSON</button>
         <button class="btn ghost" @click="copySessionId">Copy Session ID</button>
+        <button class="btn ghost" @click="copyIntentCurl" title="Copy cURL for promotion intent">Copy cURL</button>
+        <button class="btn ghost" @click="openInLogViewer" title="Open Log Viewer filtered to this run">Open logs</button>
+        <button class="btn ghost" @click="clearIntent">Clear</button>
       </div>
     </div>
   </div>
@@ -62,12 +65,15 @@
 
 <script setup lang="ts">
 /**
- * DesignFirstWorkflowPanel.vue (Bundle 32.7.0)
+ * DesignFirstWorkflowPanel.vue (Bundle 32.7.0 + 32.7.2 + 32.7.3)
  *
  * UI panel for managing design-first workflow state.
  * Displays workflow state, history, and promotion intent.
+ *
+ * Bundle 32.7.2: Added session hydration on mount + Clear button.
+ * Bundle 32.7.3: Added Copy cURL + Open in Log Viewer deep-link.
  */
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
 import { useToastStore } from "@/stores/toastStore";
 
@@ -81,6 +87,11 @@ const err = computed(() => wf.error);
 const hasSession = computed(() => wf.hasSession);
 const canIntent = computed(() => wf.canRequestIntent);
 const lastIntent = computed(() => wf.lastPromotionIntent);
+
+// Hydrate session from localStorage on mount (Bundle 32.7.2)
+onMounted(() => {
+  wf.hydrateFromLocalStorage();
+});
 
 async function ensure() {
   if (wf.hasSession) {
@@ -135,6 +146,60 @@ async function copySessionId() {
   } catch {
     toast.error("Failed to copy to clipboard");
   }
+}
+
+function clearIntent() {
+  wf.clearSession();
+  toast.info("Session cleared");
+}
+
+// ==========================================================================
+// Bundle 32.7.3: Copy cURL + Open in Log Viewer
+// ==========================================================================
+
+function _baseUrl(): string {
+  // Prefer explicit VITE_API_URL if provided; otherwise assume same-origin /api
+  const envBase = (import.meta as any).env?.VITE_API_URL;
+  const base = envBase && typeof envBase === "string" ? envBase : "/api";
+  const origin = window.location.origin;
+  if (base.startsWith("http://") || base.startsWith("https://")) return base;
+  return origin + base;
+}
+
+function buildPromotionIntentCurl(session_id: string): string {
+  const url = `${_baseUrl()}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent`;
+  return [
+    `curl -X POST "${url}"`,
+    `  -H "Accept: application/json"`,
+    `  -H "Content-Type: application/json"`,
+  ].join(" \\\n");
+}
+
+async function copyIntentCurl() {
+  const sid = wf.sessionId;
+  if (!sid) return;
+  const curl = buildPromotionIntentCurl(sid);
+  try {
+    await navigator.clipboard.writeText(curl);
+    toast.success("cURL copied to clipboard");
+  } catch {
+    toast.error("Failed to copy cURL");
+  }
+}
+
+function buildLogViewerUrl(session_id: string): string {
+  const u = new URL(window.location.href);
+  u.pathname = "/rmos/logs";
+  u.searchParams.set("mode", "art_studio");
+  u.searchParams.set("run_id", session_id);
+  return u.toString();
+}
+
+function openInLogViewer() {
+  const sid = wf.sessionId;
+  if (!sid) return;
+  const url = buildLogViewerUrl(sid);
+  window.location.href = url;
 }
 </script>
 
@@ -284,7 +349,13 @@ async function copySessionId() {
 
 .wf-intent-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+}
+
+.wf-intent-actions .btn {
+  font-size: 11px;
+  padding: 4px 8px;
 }
 </style>
