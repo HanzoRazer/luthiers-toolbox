@@ -16,14 +16,32 @@ from importlib.metadata import PackageNotFoundError
 router = APIRouter(tags=["System"])
 
 # Determine repository root relative to this file
-REPO_ROOT = Path(__file__).resolve().parents[4]
+# In local dev: /repo/services/api/app/routers/health_router.py -> parents[4]
+# In Railway container: /app/app/routers/health_router.py -> different structure
+def _find_repo_root() -> Path:
+    """Find repo root, handling different deployment environments."""
+    current = Path(__file__).resolve()
+    # Try to find repo root by looking for marker files
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+            return parent
+    # Fallback: in containerized deployment, /app is the working directory
+    if Path("/app").exists():
+        return Path("/app")
+    # Last resort: go up 4 levels (local dev structure)
+    try:
+        return current.parents[4]
+    except IndexError:
+        return current.parent
+
+REPO_ROOT = _find_repo_root()
 
 CRITICAL_PATHS = {
-    "services_api": REPO_ROOT / "services" / "api",
-    "packages_client": REPO_ROOT / "packages" / "client",
-    "projects": REPO_ROOT / "projects",
-    "scripts": REPO_ROOT / "scripts",
-    "docs": REPO_ROOT / "docs",
+    "services_api": REPO_ROOT / "services" / "api" if (REPO_ROOT / "services").exists() else REPO_ROOT,
+    "packages_client": REPO_ROOT / "packages" / "client" if (REPO_ROOT / "packages").exists() else REPO_ROOT,
+    "projects": REPO_ROOT / "projects" if (REPO_ROOT / "projects").exists() else REPO_ROOT,
+    "scripts": REPO_ROOT / "scripts" if (REPO_ROOT / "scripts").exists() else REPO_ROOT,
+    "docs": REPO_ROOT / "docs" if (REPO_ROOT / "docs").exists() else REPO_ROOT,
 }
 
 DIAGNOSTIC_DEPENDENCIES = (
