@@ -283,3 +283,86 @@ def clear_logs() -> int:
     count = len(_LOG_BUFFER)
     _LOG_BUFFER.clear()
     return count
+
+
+# =============================================================================
+# Promotion Intent Logging (Bundle 32.7.1)
+# =============================================================================
+
+class PromotionIntentLogEntry(BaseModel):
+    """Log entry for design-first workflow promotion intent events."""
+    
+    id: int = Field(..., description="Monotonic ID within this process.")
+    timestamp: datetime = Field(..., description="UTC timestamp of the event.")
+    session_id: str = Field(..., description="Design-first workflow session ID.")
+    approved: bool = Field(..., description="True if intent was generated, False if blocked.")
+    blocked_reason: Optional[str] = Field(
+        default=None,
+        description="Reason if blocked (e.g., 'workflow_not_approved')."
+    )
+    mode: str = Field(default="design_first", description="Workflow mode.")
+    design_snapshot: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Design parameters at time of intent request."
+    )
+
+
+_INTENT_LOG_BUFFER: Deque[PromotionIntentLogEntry] = deque(maxlen=_MAX_LOG_ENTRIES)
+
+
+def log_promotion_intent_event(
+    *,
+    session_id: str,
+    approved: bool,
+    blocked_reason: Optional[str] = None,
+    mode: str = "design_first",
+    design_snapshot: Optional[Dict[str, Any]] = None,
+) -> PromotionIntentLogEntry:
+    """
+    Record a promotion intent event into the in-memory buffer.
+    
+    Called when a design-first workflow requests CAM handoff intent.
+    
+    Args:
+        session_id: The workflow session ID
+        approved: True if intent generated, False if blocked
+        blocked_reason: Reason string if blocked
+        mode: Workflow mode
+        design_snapshot: Design parameters at request time
+    
+    Returns:
+        The created log entry
+    """
+    import logging
+    
+    now = datetime.now(timezone.utc)
+    
+    entry = PromotionIntentLogEntry(
+        id=_next_id(),
+        timestamp=now,
+        session_id=session_id,
+        approved=approved,
+        blocked_reason=blocked_reason,
+        mode=mode,
+        design_snapshot=design_snapshot,
+    )
+    
+    _INTENT_LOG_BUFFER.append(entry)
+    
+    # Also emit to standard logging for observability
+    log = logging.getLogger("rmos.promotion_intent")
+    log.info(
+        "promotion_intent session_id=%s approved=%s blocked_reason=%s",
+        session_id,
+        approved,
+        blocked_reason,
+    )
+    
+    return entry
+
+
+def get_recent_intent_logs(limit: int = 50) -> List[PromotionIntentLogEntry]:
+    """Return up to `limit` most recent promotion intent log entries (newest first)."""
+    if limit <= 0:
+        return []
+    return list(reversed(_INTENT_LOG_BUFFER))[:limit]

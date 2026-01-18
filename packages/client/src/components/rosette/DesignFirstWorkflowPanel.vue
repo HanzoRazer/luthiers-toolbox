@@ -5,6 +5,26 @@
       <div class="wf-pill" :data-state="state">{{ state || "—" }}</div>
     </div>
 
+    <!-- Log Viewer split pane drawer (Bundle 32.7.4 + 32.7.5) -->
+    <SideDrawer :open="logDrawerOpen" :title="drawerTitle" @close="closeDrawer">
+      <template #actions>
+        <button
+          class="btn ghost"
+          :class="{ active: isPinned }"
+          title="Pin to this run (keep logs stable)"
+          @click="togglePin"
+        >
+          {{ isPinned ? "📌" : "📍" }}
+        </button>
+        <button class="btn ghost" @click="openLogsNewTab" title="Open in new tab">↗</button>
+      </template>
+      <iframe
+        v-if="logDrawerOpen && logsUrl"
+        :src="logsUrl"
+        class="log-iframe"
+      />
+    </SideDrawer>
+
     <div class="wf-actions">
       <button :disabled="busy" @click="ensure" class="btn">
         {{ hasSession ? "Restart" : "Start" }}
@@ -65,17 +85,20 @@
 
 <script setup lang="ts">
 /**
- * DesignFirstWorkflowPanel.vue (Bundle 32.7.0 + 32.7.2 + 32.7.3)
+ * DesignFirstWorkflowPanel.vue (Bundle 32.7.0 + 32.7.2 + 32.7.3 + 32.7.4)
  *
  * UI panel for managing design-first workflow state.
  * Displays workflow state, history, and promotion intent.
  *
  * Bundle 32.7.2: Added session hydration on mount + Clear button.
  * Bundle 32.7.3: Added Copy cURL + Open in Log Viewer deep-link.
+ * Bundle 32.7.4: Open logs in split pane drawer (iframe).
+ * Bundle 32.7.5: Pin a run in drawer (iframe stays on pinned run_id).
  */
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
 import { useToastStore } from "@/stores/toastStore";
+import SideDrawer from "@/components/ui/SideDrawer.vue";
 
 const wf = useArtDesignFirstWorkflowStore();
 const toast = useToastStore();
@@ -87,6 +110,32 @@ const err = computed(() => wf.error);
 const hasSession = computed(() => wf.hasSession);
 const canIntent = computed(() => wf.canRequestIntent);
 const lastIntent = computed(() => wf.lastPromotionIntent);
+
+// Log Viewer drawer state (Bundle 32.7.4 + 32.7.5)
+const logDrawerOpen = ref(false);
+
+// Pinned run_id for the drawer — keeps iframe stable across workflow changes (Bundle 32.7.5)
+const pinnedRunId = ref<string>("");
+
+const effectiveRunId = computed(() => {
+  // If pinned, use pinned; else follow current sessionId
+  return pinnedRunId.value || wf.sessionId || "";
+});
+
+const logsUrl = computed(() => {
+  const id = effectiveRunId.value;
+  if (!id) return "";
+  return buildLogViewerUrl(id);
+});
+
+const isPinned = computed(() => !!pinnedRunId.value);
+
+const drawerTitle = computed(() => {
+  if (isPinned.value) {
+    return `Log Viewer (pinned: ${pinnedRunId.value.slice(0, 8)}…)`;
+  }
+  return "Log Viewer";
+});
 
 // Hydrate session from localStorage on mount (Bundle 32.7.2)
 onMounted(() => {
@@ -198,8 +247,31 @@ function buildLogViewerUrl(session_id: string): string {
 function openInLogViewer() {
   const sid = wf.sessionId;
   if (!sid) return;
-  const url = buildLogViewerUrl(sid);
-  window.location.href = url;
+  // Bundle 32.7.5: Pin to the current session when opening
+  pinnedRunId.value = sid;
+  logDrawerOpen.value = true;
+}
+
+function openLogsNewTab() {
+  if (logsUrl.value) {
+    window.open(logsUrl.value, "_blank");
+  }
+}
+
+function togglePin() {
+  if (isPinned.value) {
+    // Unpin: follow current session
+    pinnedRunId.value = "";
+  } else {
+    // Pin to current effective run_id
+    pinnedRunId.value = effectiveRunId.value;
+  }
+}
+
+function closeDrawer() {
+  logDrawerOpen.value = false;
+  // Clear pin when closing (optional: remove this line to persist pin)
+  pinnedRunId.value = "";
 }
 </script>
 
@@ -357,5 +429,12 @@ function openInLogViewer() {
 .wf-intent-actions .btn {
   font-size: 11px;
   padding: 4px 8px;
+}
+
+/* Bundle 32.7.4: Log viewer iframe in drawer */
+.log-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
 }
 </style>

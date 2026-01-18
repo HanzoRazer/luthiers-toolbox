@@ -11,9 +11,11 @@ from fastapi import APIRouter
 from .batch_router import router as batch_router
 from .execution_metrics_router import router as execution_metrics_router
 from .metrics_lookup_router import router as metrics_lookup_router
+from .latest_batch_chain_router import router as latest_batch_chain_router
 
 
 router = APIRouter()
 router.include_router(batch_router)
 router.include_router(execution_metrics_router)
 router.include_router(metrics_lookup_router)
+router.include_router(latest_batch_chain_router)

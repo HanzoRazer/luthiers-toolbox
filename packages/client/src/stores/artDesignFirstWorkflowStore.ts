@@ -1,9 +1,11 @@
 // packages/client/src/stores/artDesignFirstWorkflowStore.ts
 /**
- * Art Design-First Workflow Store (Bundle 32.7.0)
+ * Art Design-First Workflow Store (Bundle 32.7.0 + 32.7.2)
  *
  * Pinia store for managing design-first workflow state.
  * Handles session lifecycle: DRAFT → IN_REVIEW → APPROVED → promotion intent.
+ *
+ * Bundle 32.7.2: Added localStorage persistence for session ID.
  */
 
 import { defineStore } from "pinia";
@@ -17,12 +19,46 @@ import {
   startDesignFirstWorkflow,
   transitionDesignFirstWorkflow,
   getDesignFirstPromotionIntent,
+  getDesignFirstWorkflow,
 } from "@/sdk/endpoints/artDesignFirstWorkflow";
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 
+// localStorage key for session persistence
+const LS_KEY = "artstudio.workflow.sessionId.v1";
+
 export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflow", () => {
+  // ==========================================================================
+  // localStorage Persistence Helpers (Bundle 32.7.2)
+  // ==========================================================================
+
+  function _persistSessionId(sid: string): void {
+    try {
+      localStorage.setItem(LS_KEY, sid);
+    } catch {
+      // localStorage may be unavailable (e.g., private mode)
+    }
+  }
+
+  function _clearPersistedSessionId(): void {
+    try {
+      localStorage.removeItem(LS_KEY);
+    } catch {
+      // Ignore if localStorage unavailable
+    }
+  }
+
+  function _getPersistedSessionId(): string | null {
+    try {
+      return localStorage.getItem(LS_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  // ==========================================================================
   // State
+  // ==========================================================================
   const session = ref<DesignFirstSession | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -50,6 +86,8 @@ export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflo
         feasibility: rosette.lastFeasibility ?? undefined,
       });
       session.value = res.session;
+      // Persist session ID for page reload recovery
+      _persistSessionId(res.session.session_id);
       toast.info("Workflow started (Design-First)");
       return session.value;
     } catch (e: unknown) {
@@ -126,6 +164,42 @@ export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflo
     session.value = null;
     lastPromotionIntent.value = null;
     error.value = null;
+    _clearPersistedSessionId();
+  }
+
+  /**
+   * Hydrate session from localStorage if available.
+   * Call this on component mount to restore session across page reloads.
+   */
+  async function hydrateFromLocalStorage(): Promise<DesignFirstSession | null> {
+    const toast = useToastStore();
+    const persistedId = _getPersistedSessionId();
+
+    if (!persistedId) {
+      return null;
+    }
+
+    // Already have this session loaded
+    if (session.value?.session_id === persistedId) {
+      return session.value;
+    }
+
+    loading.value = true;
+    error.value = null;
+    try {
+      const res = await getDesignFirstWorkflow(persistedId);
+      session.value = res.session;
+      toast.info("Workflow session restored");
+      return session.value;
+    } catch (e: unknown) {
+      // Session not found on server — clear stale localStorage
+      _clearPersistedSessionId();
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn("[ArtDesignFirstWorkflow] Failed to hydrate session:", msg);
+      return null;
+    } finally {
+      loading.value = false;
+    }
   }
 
   return {
@@ -144,5 +218,6 @@ export const useArtDesignFirstWorkflowStore = defineStore("artDesignFirstWorkflo
     transition,
     requestPromotionIntent,
     clearSession,
+    hydrateFromLocalStorage,
   };
 });
