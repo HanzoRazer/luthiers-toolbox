@@ -1,4 +1,5 @@
 #!/bin/sh
+# Railway nginx startup script
 # Use Railway's PORT or default to 3000
 PORT="${PORT:-3000}"
 
