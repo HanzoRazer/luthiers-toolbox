@@ -153,6 +153,13 @@ __all__ = [
     # Execution Metrics Rollup
     "rollup_execution_metrics_from_job_logs",
     "write_execution_metrics_rollup_artifact",
+    # Execution Metrics Autorollup (Bundle 32.7.3)
+    "is_execution_metrics_autorollup_enabled",
+    "maybe_autorollup_execution_metrics",
+    # Latest Batch Chain (Bundle 32.7.5)
+    "resolve_latest_approved_decision_for_batch",
+    "resolve_latest_execution_for_batch",
+    "resolve_latest_metrics_for_batch",
 ]
 
 
@@ -254,6 +261,68 @@ def write_execution_metrics_rollup_artifact(
 
     return _write(
         batch_execution_artifact_id=batch_execution_artifact_id,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind=tool_kind,
+    )
+
+
+# Lazy imports for execution metrics autorollup (Bundle 32.7.3)
+def is_execution_metrics_autorollup_enabled():
+    """Check if autorollup on job log write is enabled."""
+    from .execution_metrics_autorollup import is_execution_metrics_autorollup_enabled as _is_enabled
+
+    return _is_enabled()
+
+
+def maybe_autorollup_execution_metrics(
+    *, batch_execution_artifact_id, session_id=None, batch_label=None, tool_kind="saw"
+):
+    """Best-effort writer for execution metrics rollup triggered by job log write."""
+    from .execution_metrics_autorollup import maybe_autorollup_execution_metrics as _maybe
+
+    return _maybe(
+        batch_execution_artifact_id=batch_execution_artifact_id,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind=tool_kind,
+    )
+
+
+# Lazy imports for latest batch chain (Bundle 32.7.5)
+def resolve_latest_approved_decision_for_batch(
+    *, session_id, batch_label, tool_kind="saw", limit=20000
+):
+    """Returns latest APPROVED decision artifact for a batch (best-effort)."""
+    from .latest_batch_chain_service import resolve_latest_approved_decision_for_batch as _resolve
+
+    return _resolve(
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind=tool_kind,
+        limit=limit,
+    )
+
+
+def resolve_latest_execution_for_batch(
+    *, session_id, batch_label, tool_kind="saw", limit=20000
+):
+    """Latest execution for the batch (does not require decision id)."""
+    from .latest_batch_chain_service import resolve_latest_execution_for_batch as _resolve
+
+    return _resolve(
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind=tool_kind,
+        limit=limit,
+    )
+
+
+def resolve_latest_metrics_for_batch(*, session_id, batch_label, tool_kind="saw"):
+    """No decision id required: batch -> latest execution -> latest metrics."""
+    from .latest_batch_chain_service import resolve_latest_metrics_for_batch as _resolve
+
+    return _resolve(
         session_id=session_id,
         batch_label=batch_label,
         tool_kind=tool_kind,

@@ -1166,6 +1166,20 @@ def log_batch_job(
         parent_id=batch_execution_artifact_id,
     )
 
+    # Auto-rollup (behind flag): write saw_batch_execution_metrics for this execution.
+    # Best-effort: never blocks job log writes.
+    try:
+        from .execution_metrics_autorollup import maybe_autorollup_execution_metrics
+
+        maybe_autorollup_execution_metrics(
+            batch_execution_artifact_id=batch_execution_artifact_id,
+            session_id=execution.get("session_id"),
+            batch_label=execution.get("batch_label"),
+            tool_kind="saw",
+        )
+    except Exception:
+        pass
+
     # Optionally create metrics rollup
     rollup_id: Optional[str] = None
     rollups_resp: Optional[RollupArtifacts] = None

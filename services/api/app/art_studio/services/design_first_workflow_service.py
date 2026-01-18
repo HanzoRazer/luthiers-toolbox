@@ -134,10 +134,47 @@ def build_promotion_intent(session_id: str) -> PromotionIntent:
     payload that downstream CAM/RMOS lanes may consume.
     
     Raises PermissionError if session is not approved.
+    Emits a promotion_intent log event for observability.
     """
+    # Import log emitter (best-effort, non-blocking)
+    try:
+        from app.rmos.logs import log_promotion_intent_event
+    except ImportError:
+        log_promotion_intent_event = None  # type: ignore
+
     sess = get_session(session_id)
+    
+    # Extract design snapshot for logging
+    design_snapshot = None
+    if sess.design is not None:
+        if hasattr(sess.design, "model_dump"):
+            design_snapshot = sess.design.model_dump()
+        elif hasattr(sess.design, "dict"):
+            design_snapshot = sess.design.dict()
+        elif isinstance(sess.design, dict):
+            design_snapshot = sess.design
+
     if sess.state != DesignFirstState.APPROVED:
+        # Log blocked intent request
+        if log_promotion_intent_event:
+            log_promotion_intent_event(
+                session_id=sess.session_id,
+                approved=False,
+                blocked_reason="workflow_not_approved",
+                mode=sess.mode.value if hasattr(sess.mode, "value") else str(sess.mode),
+                design_snapshot=design_snapshot,
+            )
         raise PermissionError("workflow_not_approved")
+
+    # Log successful intent generation
+    if log_promotion_intent_event:
+        log_promotion_intent_event(
+            session_id=sess.session_id,
+            approved=True,
+            blocked_reason=None,
+            mode=sess.mode.value if hasattr(sess.mode, "value") else str(sess.mode),
+            design_snapshot=design_snapshot,
+        )
 
     return PromotionIntent(
         session_id=sess.session_id,
