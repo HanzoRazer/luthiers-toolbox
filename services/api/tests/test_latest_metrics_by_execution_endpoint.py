@@ -18,6 +18,7 @@ def test_latest_metrics_by_execution_returns_shape(monkeypatch):
     Smoke: endpoint responds and returns the expected keys.
     """
     from app.main import app
+    from app.rmos.runs_v2 import store as runs_store
 
     # Metrics artifact for exec1
     mx1 = {
@@ -31,7 +32,7 @@ def test_latest_metrics_by_execution_returns_shape(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         return {"items": [mx1]}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     c = TestClient(app)
     r = c.get("/api/saw/batch/execution/metrics/latest?batch_execution_artifact_id=exec1")
@@ -47,11 +48,12 @@ def test_latest_metrics_by_execution_returns_null_when_no_metrics(monkeypatch):
     If no metrics exist for the execution, endpoint returns nulls (not 404).
     """
     from app.main import app
+    from app.rmos.runs_v2 import store as runs_store
 
     def _fake_list_runs_filtered(**kwargs):
         return {"items": []}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     c = TestClient(app)
     r = c.get("/api/saw/batch/execution/metrics/latest?batch_execution_artifact_id=exec_no_metrics")
