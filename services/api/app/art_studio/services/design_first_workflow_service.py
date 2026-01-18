@@ -183,3 +183,53 @@ def build_promotion_intent(session_id: str) -> PromotionIntent:
         design=sess.design,
         feasibility=sess.feasibility,
     )
+
+
+def build_promotion_intent_v1(
+    *,
+    session: DesignFirstSession,
+    requested_cam_profile_id: str | None = None,
+    context_refs: dict[str, str] | None = None,
+    risk_tolerance: str | None = None,
+):
+    """
+    Build a v1 PromotionIntent payload from a workflow session.
+
+    This function is PURE:
+      - no persistence
+      - no CAM execution
+      - no authority creation
+
+    Returns a PromotionIntentV1 with fingerprints and explain block.
+    """
+    from app.art_studio.schemas.promotion_intent import PromotionIntentV1
+    from app.art_studio.services.fingerprint import fingerprint_stable
+    from app.art_studio.services.promotion_intent_explain import build_intent_explain
+
+    if not session.design:
+        raise ValueError("Session has no design attached")
+
+    if not session.feasibility:
+        raise ValueError("Session has no feasibility result attached")
+
+    design_fp = fingerprint_stable(session.design)
+    feas_fp = fingerprint_stable(session.feasibility)
+
+    mode_val = session.mode.value if hasattr(session.mode, "value") else str(session.mode)
+
+    return PromotionIntentV1(
+        session_id=session.session_id,
+        mode=mode_val,
+        created_at=datetime.utcnow(),
+        design=session.design,
+        feasibility=session.feasibility,
+        design_fingerprint=design_fp,
+        feasibility_fingerprint=feas_fp,
+        requested_cam_profile_id=requested_cam_profile_id,
+        context_refs=context_refs,
+        risk_tolerance=risk_tolerance,
+        explain=build_intent_explain(
+            design=session.design,
+            feasibility=session.feasibility,
+        ),
+    )
