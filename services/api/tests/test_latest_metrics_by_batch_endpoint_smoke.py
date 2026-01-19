@@ -8,6 +8,7 @@ def test_latest_metrics_by_batch_returns_shape(monkeypatch):
     Smoke: endpoint responds and returns the expected keys.
     Does not require DB; stubs list_runs_filtered.
     """
+    from app.rmos.runs_v2 import store as runs_store
     from app.main import app
 
     # Minimal artifacts in the batch: execution + metrics
@@ -23,7 +24,7 @@ def test_latest_metrics_by_batch_returns_shape(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         return {"items": [exec1, mx1]}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     c = TestClient(app)
     r = c.get("/api/saw/batch/execution/metrics/latest-by-batch?session_id=s1&batch_label=b1")

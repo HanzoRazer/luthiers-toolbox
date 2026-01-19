@@ -2,6 +2,7 @@ from __future__ import annotations
 
 
 def test_resolve_latest_metrics_for_batch_picks_latest_execution_then_metrics(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
     from app.saw_lab.latest_batch_chain_service import resolve_latest_metrics_for_batch
 
     # Latest execution is exec2
@@ -18,7 +19,7 @@ def test_resolve_latest_metrics_for_batch_picks_latest_execution_then_metrics(mo
         # Includes execs + decision + metrics
         return {"items": [exec1, exec2, dec1, mx1]}
 
-    monkeypatch.setattr("app.rmos.runs_v2.store.list_runs_filtered", _fake_list_runs_filtered)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
 
     out = resolve_latest_metrics_for_batch(session_id="s1", batch_label="b1", tool_kind="saw")
     assert out["latest_execution_artifact_id"] == "exec2"
