@@ -10,4 +10,4 @@ def test_global_attachment_endpoint_is_mounted():
     r = c.get("/api/_meta/routing-truth")
     assert r.status_code == 200
     paths = {x["path"] for x in r.json().get("routes", []) if isinstance(x, dict) and "path" in x}
-    assert "/api/rmos/attachments/{sha256}" in paths
+    assert "/api/rmos/runs/attachments/{sha256}" in paths

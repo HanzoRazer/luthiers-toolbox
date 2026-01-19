@@ -49,6 +49,17 @@ const overrideAttachment = computed(() => {
   return atts.find((a: any) => a?.kind === "override") ?? null;
 });
 
+// Phase 5: Advisory Explanation state
+const explainError = ref<string | null>(null);
+const isExplaining = ref(false);
+const assistantExplanation = ref<any | null>(null);
+
+const assistantExplanationAttachment = computed(() => {
+  const atts = run.value?.attachments || [];
+  if (!Array.isArray(atts)) return null;
+  return atts.find((a: any) => a?.kind === "assistant_explanation") ?? null;
+});
+
 async function loadRun() {
   if (!runId.value) return;
   loading.value = true;
@@ -65,6 +76,36 @@ async function loadRun() {
 
 onMounted(loadRun);
 watch(runId, loadRun);
+
+// Phase 5: Generate advisory explanation
+async function generateAdvisoryExplanation(force: boolean) {
+  const id = runId.value;
+  if (!id) return;
+  isExplaining.value = true;
+  explainError.value = null;
+  try {
+    const url = force
+      ? `/api/rmos/runs/${encodeURIComponent(id)}/explain?force=true`
+      : `/api/rmos/runs/${encodeURIComponent(id)}/explain`;
+    const resp = await fetch(url, { method: "POST" });
+    if (!resp.ok) {
+      let msg = `Explain failed (HTTP ${resp.status})`;
+      try {
+        const j = await resp.json();
+        if (j?.detail) msg = String(j.detail);
+      } catch {}
+      throw new Error(msg);
+    }
+    const j = await resp.json();
+    assistantExplanation.value = j?.explanation ?? null;
+    // Refresh run to pick up new attachment
+    await loadRun();
+  } catch (e: any) {
+    explainError.value = e?.message || "Failed to generate advisory explanation.";
+  } finally {
+    isExplaining.value = false;
+  }
+}
 
 function formatDate(iso: string): string {
   try {
@@ -229,6 +270,54 @@ async function downloadAttachment(att: any) {
           <span class="override-text">
             Recorded (sha: <code>{{ overrideAttachment.sha256?.slice(0, 12) }}…</code>)
           </span>
+        </div>
+
+        <!-- Phase 5: Advisory Explanation -->
+        <div class="advisory-section">
+          <div class="advisory-head">
+            <h3>Advisory Explanation</h3>
+            <div class="advisory-actions">
+              <button
+                class="btn btn-sm"
+                @click="generateAdvisoryExplanation(false)"
+                :disabled="isExplaining"
+              >
+                {{ assistantExplanationAttachment ? 'Refresh Advisory' : 'Generate Advisory' }}
+              </button>
+              <button
+                class="btn btn-sm"
+                @click="generateAdvisoryExplanation(true)"
+                :disabled="isExplaining"
+                title="Regenerate even if one exists"
+              >
+                Regenerate (force)
+              </button>
+            </div>
+          </div>
+          <div v-if="explainError" class="advisory-error">{{ explainError }}</div>
+          <div v-else-if="isExplaining" class="advisory-loading">Generating advisory explanation…</div>
+
+          <div v-if="assistantExplanation" class="advisory-box">
+            <div class="advisory-summary">{{ assistantExplanation.summary }}</div>
+            <div v-if="assistantExplanation.operator_notes?.length" class="advisory-subsection">
+              <h4>Operator Notes</h4>
+              <ul>
+                <li v-for="(n, idx) in assistantExplanation.operator_notes" :key="idx">{{ n }}</li>
+              </ul>
+            </div>
+            <div v-if="assistantExplanation.suggested_actions?.length" class="advisory-subsection">
+              <h4>Suggested Actions</h4>
+              <ul>
+                <li v-for="(a, idx) in assistantExplanation.suggested_actions" :key="idx">{{ a }}</li>
+              </ul>
+            </div>
+            <div class="advisory-disclaimer">{{ assistantExplanation.disclaimer }}</div>
+          </div>
+          <div v-else-if="assistantExplanationAttachment" class="advisory-placeholder">
+            assistant_explanation.json attached (sha: <code>{{ assistantExplanationAttachment.sha256?.slice(0, 12) }}</code>…)
+            — click "Refresh Advisory" to load it.
+          </div>
+          <div v-else class="advisory-empty">No advisory explanation generated for this run.</div>
         </div>
       </section>
 
@@ -860,5 +949,101 @@ async function downloadAttachment(att: any) {
   background: #f1f5f9;
   padding: 0.125rem 0.25rem;
   border-radius: 4px;
+}
+
+/* Phase 5: Advisory Explanation */
+.advisory-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.advisory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.advisory-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.advisory-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.advisory-error {
+  color: #b00020;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisory-loading {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisory-box {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.advisory-summary {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.advisory-subsection {
+  margin-top: 0.75rem;
+}
+
+.advisory-subsection h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.advisory-subsection ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.advisory-disclaimer {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.advisory-placeholder {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.advisory-placeholder code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 4px;
+}
+
+.advisory-empty {
+  font-size: 0.875rem;
+  color: #9ca3af;
 }
 </style>

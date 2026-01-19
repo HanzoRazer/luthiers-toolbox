@@ -27,9 +27,9 @@ def test_write_job_log_calls_autorollup_when_enabled(monkeypatch):
     monkeypatch.setattr("app.saw_lab.batch_router.maybe_autorollup_execution_metrics", _fake_maybe_autorollup_execution_metrics, raising=False)
 
     # Import after monkeypatch where possible
-    from app.saw_lab.batch_router import BatchJobLogRequest, write_job_log
+    from app.saw_lab.batch_router import JobLogRequest, write_job_log
 
-    req = BatchJobLogRequest(
+    req = JobLogRequest(
         batch_plan_artifact_id="plan1",
         batch_execution_artifact_id="exec1",
         session_id="s1",
