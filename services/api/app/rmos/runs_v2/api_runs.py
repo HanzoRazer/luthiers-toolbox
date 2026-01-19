@@ -40,6 +40,7 @@ from .store import (
     get_run,
     list_runs_filtered,
     persist_run,
+    update_run,
     create_run_id,
     attach_advisory,
 )
@@ -1827,7 +1828,7 @@ def explain_run_on_demand(
     except Exception:
         pass
 
-    persist_run(run)
+    update_run(run)
 
     return {
         "ok": True,

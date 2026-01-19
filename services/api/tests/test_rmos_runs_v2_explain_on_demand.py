@@ -73,7 +73,7 @@ def test_explain_endpoint_attaches_assistant_explanation(client: TestClient):
     """Test that explain endpoint creates and attaches assistant_explanation."""
     run_id = _create_min_run(client)
 
-    resp = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    resp = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert resp.status_code == 200, resp.text
     j = resp.json()
     assert j["ok"] is True
@@ -84,7 +84,7 @@ def test_explain_endpoint_attaches_assistant_explanation(client: TestClient):
     assert j["explanation"]["disclaimer"].lower().startswith("this text is advisory")
 
     # Run artifact should now include attachment
-    r2 = client.get(f"/api/rmos/runs_v2/runs/{run_id}")
+    r2 = client.get(f"/api/rmos/runs/{run_id}")
     assert r2.status_code == 200
     run = r2.json()
     kinds = [a["kind"] for a in (run.get("attachments") or [])]
@@ -95,10 +95,10 @@ def test_explain_endpoint_idempotent_without_force(client: TestClient):
     """Test that calling explain twice without force returns existing."""
     run_id = _create_min_run(client)
 
-    r1 = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    r1 = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert r1.status_code == 200
 
-    r2 = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    r2 = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert r2.status_code == 200
     j2 = r2.json()
     assert "already present" in (j2.get("note") or "")
@@ -108,13 +108,13 @@ def test_explain_endpoint_force_regenerates(client: TestClient):
     """Test that force=true regenerates the explanation."""
     run_id = _create_min_run(client)
 
-    r1 = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    r1 = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert r1.status_code == 200
     a1_sha = r1.json()["attachment"]["sha256"]
 
     # Force regenerate - should produce same hash since deterministic
     # but the endpoint should still go through regeneration path
-    r2 = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain?force=true")
+    r2 = client.post(f"/api/rmos/runs/{run_id}/explain?force=true")
     assert r2.status_code == 200
     j2 = r2.json()
     assert j2["ok"] is True
@@ -125,7 +125,7 @@ def test_explain_endpoint_force_regenerates(client: TestClient):
 
 def test_explain_endpoint_404_for_missing_run(client: TestClient):
     """Test that explain returns 404 for non-existent run."""
-    resp = client.post("/api/rmos/runs_v2/runs/nonexistent_run_id/explain")
+    resp = client.post("/api/rmos/runs/nonexistent_run_id/explain")
     assert resp.status_code == 404
 
 
@@ -133,7 +133,7 @@ def test_explanation_contains_based_on_context(client: TestClient):
     """Test that explanation includes based_on context."""
     run_id = _create_min_run(client)
 
-    resp = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    resp = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert resp.status_code == 200
     j = resp.json()
 
@@ -148,7 +148,7 @@ def test_explanation_meta_contains_generator_info(client: TestClient):
     """Test that explanation meta includes generator info."""
     run_id = _create_min_run(client)
 
-    resp = client.post(f"/api/rmos/runs_v2/runs/{run_id}/explain")
+    resp = client.post(f"/api/rmos/runs/{run_id}/explain")
     assert resp.status_code == 200
     j = resp.json()
 

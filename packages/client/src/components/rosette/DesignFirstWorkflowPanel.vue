@@ -188,10 +188,16 @@ const overrideCamProfileId = ref<string>("");
 const overrideRiskTolerance = ref<string>("");
 
 // ==========================================================================
-// Bundle 32.8.4.3: Remember overrides (localStorage persistence)
+// Bundle 32.8.4.3 + 32.8.4.4: Remember overrides (per-mode localStorage)
 // ==========================================================================
 
-const OVERRIDES_LS_KEY = "artStudio.promotionIntentExport.overrides.v1";
+/** Prefix used for per-mode storage keys */
+const OVERRIDES_LS_KEY_PREFIX = "artStudio.promotionIntentExport.overrides.v1";
+
+function _overridesKeyForMode(mode: string | undefined | null): string {
+  const m = (mode || "unknown").trim() || "unknown";
+  return `${OVERRIDES_LS_KEY_PREFIX}:${m}`;
+}
 
 type ExportOverrides = {
   tool_id: string;
@@ -201,9 +207,9 @@ type ExportOverrides = {
   risk_tolerance: string;
 };
 
-function _readOverridesFromStorage(): ExportOverrides | null {
+function _readOverridesFromStorage(key: string): ExportOverrides | null {
   try {
-    const raw = localStorage.getItem(OVERRIDES_LS_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const j = JSON.parse(raw);
     if (!j || typeof j !== "object") return null;
@@ -219,17 +225,17 @@ function _readOverridesFromStorage(): ExportOverrides | null {
   }
 }
 
-function _writeOverridesToStorage(v: ExportOverrides) {
+function _writeOverridesToStorage(key: string, v: ExportOverrides) {
   try {
-    localStorage.setItem(OVERRIDES_LS_KEY, JSON.stringify(v));
+    localStorage.setItem(key, JSON.stringify(v));
   } catch {
     // ignore (private browsing / storage disabled)
   }
 }
 
-function _clearOverridesStorage() {
+function _clearOverridesStorage(key: string) {
   try {
-    localStorage.removeItem(OVERRIDES_LS_KEY);
+    localStorage.removeItem(key);
   } catch {
     // ignore
   }
@@ -242,6 +248,10 @@ const err = computed(() => wf.error);
 const hasSession = computed(() => wf.hasSession);
 const canIntent = computed(() => wf.canRequestIntent);
 const lastIntent = computed(() => wf.lastPromotionIntent);
+
+// Per-mode storage key (Bundle 32.8.4.4)
+const currentMode = computed(() => (wf.session?.mode as any) ?? "design_first");
+const overridesStorageKey = computed(() => _overridesKeyForMode(String(currentMode.value)));
 
 // Log Viewer drawer state (Bundle 32.7.4 + 32.7.5)
 const logDrawerOpen = ref(false);
@@ -270,12 +280,12 @@ const drawerTitle = computed(() => {
 });
 
 // Hydrate session from localStorage on mount (Bundle 32.7.2)
-// + Hydrate overrides from localStorage (Bundle 32.8.4.3)
+// + Hydrate overrides from localStorage (Bundle 32.8.4.3 + 32.8.4.4 per-mode)
 onMounted(() => {
   wf.hydrateFromLocalStorage();
 
-  // Restore saved overrides (32.8.4.3)
-  const saved = _readOverridesFromStorage();
+  // Restore saved overrides for current mode (32.8.4.4)
+  const saved = _readOverridesFromStorage(overridesStorageKey.value);
   if (saved) {
     overrideToolId.value = saved.tool_id;
     overrideMaterialId.value = saved.material_id;
@@ -285,7 +295,33 @@ onMounted(() => {
   }
 });
 
-// Auto-save overrides to localStorage when changed (Bundle 32.8.4.3)
+// When mode changes, swap overrides (load the saved set for that mode) (32.8.4.4)
+watch(
+  overridesStorageKey,
+  (newKey, oldKey) => {
+    if (newKey === oldKey) return;
+    const saved = _readOverridesFromStorage(newKey);
+
+    if (saved) {
+      overrideToolId.value = saved.tool_id;
+      overrideMaterialId.value = saved.material_id;
+      overrideMachineProfileId.value = saved.machine_profile_id;
+      overrideCamProfileId.value = saved.requested_cam_profile_id;
+      overrideRiskTolerance.value = saved.risk_tolerance;
+      toast.info(`Loaded export overrides for mode: ${String(currentMode.value)}`);
+    } else {
+      // No saved overrides for this mode -> reset to default empty overrides
+      overrideToolId.value = "";
+      overrideMaterialId.value = "";
+      overrideMachineProfileId.value = "";
+      overrideCamProfileId.value = "";
+      overrideRiskTolerance.value = "";
+    }
+  },
+  { immediate: false }
+);
+
+// Auto-save overrides to current mode key when changed (Bundle 32.8.4.3 + 32.8.4.4)
 watch(
   [
     overrideToolId,
@@ -293,9 +329,10 @@ watch(
     overrideMachineProfileId,
     overrideCamProfileId,
     overrideRiskTolerance,
+    overridesStorageKey,
   ],
   () => {
-    _writeOverridesToStorage({
+    _writeOverridesToStorage(overridesStorageKey.value, {
       tool_id: overrideToolId.value || "",
       material_id: overrideMaterialId.value || "",
       machine_profile_id: overrideMachineProfileId.value || "",
@@ -428,8 +465,8 @@ function clearOverrides() {
   overrideCamProfileId.value = "";
   overrideRiskTolerance.value = "";
 
-  _clearOverridesStorage(); // (32.8.4.3)
-  toast.info("Download overrides cleared.");
+  _clearOverridesStorage(overridesStorageKey.value); // (32.8.4.4 per-mode)
+  toast.info(`Download overrides cleared for mode: ${String(currentMode.value)}`);
 }
 
 async function downloadIntent() {
