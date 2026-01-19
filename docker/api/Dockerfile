@@ -21,13 +21,13 @@ RUN grep -v "^sg-spec" services/api/requirements.txt > /tmp/requirements-core.tx
     pip install --no-cache-dir -r /tmp/requirements-core.txt
 
 # Install sg-spec separately (requires SG_SPEC_TOKEN for private repo)
-# Try both token formats: classic PAT (token as username) and fine-grained (x-access-token:token)
-# NOTE: This step is OPTIONAL - build continues even if it fails
+# Configure git credential store before pip install
 RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
-      echo "Attempting sg-spec install with classic PAT format..." && \
-      pip install --no-cache-dir "sg-spec @ git+https://${SG_SPEC_TOKEN}@github.com/HanzoRazer/sg-spec.git" || \
-      ( echo "Classic PAT format failed, trying fine-grained format..." && \
-        pip install --no-cache-dir "sg-spec @ git+https://x-access-token:${SG_SPEC_TOKEN}@github.com/HanzoRazer/sg-spec.git" ) || \
+      git config --global credential.helper store && \
+      echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials && \
+      chmod 600 ~/.git-credentials && \
+      pip install --no-cache-dir "sg-spec @ git+https://github.com/HanzoRazer/sg-spec.git" && \
+      rm -f ~/.git-credentials || \
       echo "WARNING: sg-spec installation failed, continuing without it"; \
     else \
       echo "WARNING: SG_SPEC_TOKEN not set, skipping sg-spec installation"; \
