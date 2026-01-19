@@ -27,7 +27,6 @@ on:
 
 env:
   RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  RAILWAY_PROJECT_ID: 644a5eb9-dd6d-4e61-9ee7-4248d49697b1
 
 jobs:
   deploy-api:
@@ -45,7 +44,9 @@ jobs:
       - name: Deploy API to Railway
         run: |
           cd services/api
-          railway link $RAILWAY_PROJECT_ID && railway up --service api --detach
+          railway up --service api --detach
+        env:
+          RAILWAY_PROJECT_ID: 644a5eb9-dd6d-4e61-9ee7-4248d49697b1
 
   deploy-client:
     name: Deploy Client
@@ -62,7 +63,9 @@ jobs:
       - name: Deploy Client to Railway
         run: |
           cd packages/client
-          railway link $RAILWAY_PROJECT_ID && railway up --service client --detach
+          railway up --service client --detach
+        env:
+          RAILWAY_PROJECT_ID: 644a5eb9-dd6d-4e61-9ee7-4248d49697b1
 
   notify:
     name: Deployment Status
