@@ -79,6 +79,21 @@
       </button>
     </div>
 
+    <!-- Export URL Preview (Bundle 32.8.4.5) -->
+    <div v-if="hasSession" class="export-url-preview">
+      <div class="export-url-label">Export URL</div>
+      <input
+        type="text"
+        class="export-url-input"
+        :value="exportUrlPreview"
+        readonly
+        @click="($event.target as HTMLInputElement)?.select()"
+      />
+      <button class="btn ghost" @click="copyExportUrl" title="Copy URL to clipboard">
+        Copy URL
+      </button>
+    </div>
+
     <div v-if="err" class="wf-error">{{ err }}</div>
 
     <!-- History -->
@@ -131,6 +146,7 @@
  * Bundle 32.8.4.1: Download Intent as JSON file.
  * Bundle 32.8.4.2: Download intent with overrides (tool/material/profile dropdowns).
  * Bundle 32.8.4.3: Remember overrides (localStorage persistence).
+ * Bundle 32.8.4.5: Export URL preview + Copy URL for testers.
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
@@ -469,6 +485,27 @@ function clearOverrides() {
   toast.info(`Download overrides cleared for mode: ${String(currentMode.value)}`);
 }
 
+// ==========================================================================
+// Bundle 32.8.4.5: Export URL preview + Copy URL
+// ==========================================================================
+
+const exportUrlPreview = computed(() => {
+  const sid = wf.sessionId;
+  if (!sid) return "";
+  return buildPromotionIntentExportUrl(sid);
+});
+
+async function copyExportUrl() {
+  const url = exportUrlPreview.value;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("Export URL copied to clipboard");
+  } catch {
+    toast.error("Failed to copy URL");
+  }
+}
+
 async function downloadIntent() {
   const sid = wf.sessionId;
   if (!sid) return;
@@ -705,6 +742,35 @@ function closeDrawer() {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+/* Bundle 32.8.4.5: Export URL preview */
+.export-url-preview {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.export-url-label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.export-url-input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.02);
+  color: #333;
 }
 
 .ovTitle {
