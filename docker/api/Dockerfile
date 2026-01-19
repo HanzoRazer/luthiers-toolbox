@@ -14,11 +14,22 @@ ARG SG_SPEC_TOKEN=""
 
 # leverage docker layer caching
 COPY services/api/requirements.txt ./services/api/requirements.txt
+
+# Install core dependencies first (excluding sg-spec which needs auth)
+# This ensures uvicorn/fastapi are always available even if sg-spec fails
+RUN grep -v "^sg-spec" services/api/requirements.txt > /tmp/requirements-core.txt && \
+    pip install --no-cache-dir -r /tmp/requirements-core.txt
+
+# Install sg-spec separately (requires SG_SPEC_TOKEN for private repo)
+# Uses .netrc for git authentication (more reliable than git config)
 RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
-      git config --global url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf "https://github.com/"; \
-    fi && \
-    pip install --no-cache-dir -r services/api/requirements.txt && \
-    git config --global --unset-all url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf || true
+      echo "machine github.com login x-access-token password ${SG_SPEC_TOKEN}" > ~/.netrc && \
+      chmod 600 ~/.netrc && \
+      pip install --no-cache-dir "sg-spec @ git+https://github.com/HanzoRazer/sg-spec.git" && \
+      rm -f ~/.netrc; \
+    else \
+      echo "WARNING: SG_SPEC_TOKEN not set, skipping sg-spec installation"; \
+    fi
 
 # app
 COPY services/api /app/services/api
