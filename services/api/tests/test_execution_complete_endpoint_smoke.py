@@ -1,0 +1,108 @@
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+
+
+def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    # Execution exists
+    def _fake_get_run(run_id: str):
+        assert run_id == "exec1"
+        return {"id": "exec1", "kind": "saw_batch_execution", "payload": {"status": "OK"}}
+
+    # Complete artifact write
+    def _fake_store_artifact(**kwargs):
+        assert kwargs["kind"] == "saw_batch_execution_complete"
+        assert kwargs["parent_id"] == "exec1"
+        assert kwargs["session_id"] == "s1"
+        assert kwargs["batch_label"] == "b1"
+        payload = kwargs["payload"]
+        assert payload["state"] == "COMPLETE"
+        assert payload["operator_id"] == "op1"
+        assert "notes" in payload
+        # Checklist should be present
+        assert payload["checklist"]["all_cuts_complete"] is True
+        assert payload["checklist"]["workpiece_inspected"] is True
+        return "complete1"
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec1",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "notes": "All cuts completed successfully.",
+            "operator_id": "op1",
+            "checklist": {
+                "all_cuts_complete": True,
+                "material_removed": True,
+                "workpiece_inspected": True,
+                "area_cleared": True,
+            },
+        },
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["batch_execution_artifact_id"] == "exec1"
+    assert data["complete_artifact_id"] == "complete1"
+    assert data["state"] == "COMPLETE"
+
+
+def test_execution_complete_404_when_execution_missing(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return None
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "missing",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "notes": "No execution existed.",
+        },
+    )
+    assert r.status_code == 404
+
+
+def test_execution_complete_without_checklist(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": "exec2", "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_store_artifact(**kwargs):
+        assert kwargs["kind"] == "saw_batch_execution_complete"
+        payload = kwargs["payload"]
+        assert payload["state"] == "COMPLETE"
+        # No checklist provided
+        assert "checklist" not in payload or payload["checklist"] is None
+        return "complete2"
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec2",
+            "session_id": "s1",
+            "batch_label": "b1",
+        },
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["state"] == "COMPLETE"
