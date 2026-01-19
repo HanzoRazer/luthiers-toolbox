@@ -21,6 +21,7 @@ from .toolpaths_download_router import router as toolpaths_download_router
 from .execution_confirmation_router import router as execution_confirmation_router
 from .execution_status_router import router as execution_status_router
 from .execution_abort_router import router as execution_abort_router
+from .execution_complete_router import router as execution_complete_router
 
 
 router = APIRouter()
@@ -37,3 +38,4 @@ router.include_router(toolpaths_download_router)
 router.include_router(execution_confirmation_router)
 router.include_router(execution_status_router)
 router.include_router(execution_abort_router)
+router.include_router(execution_complete_router)
