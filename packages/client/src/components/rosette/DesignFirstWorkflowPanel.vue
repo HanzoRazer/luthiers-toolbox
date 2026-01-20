@@ -735,6 +735,42 @@ function _yamlEscapeSingleQuotes(s: string): string {
   return s.replace(/'/g, "''");
 }
 
+/**
+ * Best-effort repo name detection for workflow header.
+ * Priority: VITE_REPO_NAME env → BASE_URL → pathname heuristic → fallback.
+ */
+function _detectRepoNameForHeader(): string {
+  try {
+    // Vite env (available at build-time)
+    const viteRepo =
+      (import.meta as any)?.env?.VITE_REPO_NAME ||
+      (import.meta as any)?.env?.REPO_NAME;
+
+    if (typeof viteRepo === "string" && viteRepo.trim()) {
+      return viteRepo.trim();
+    }
+
+    const baseUrl = (import.meta as any)?.env?.BASE_URL;
+    if (typeof baseUrl === "string" && baseUrl !== "/" && baseUrl.trim()) {
+      // If BASE_URL looks like "/luthiers-toolbox/", treat that as repo name.
+      const m = baseUrl.match(/^\/([^/]+)\/?$/);
+      if (m?.[1]) return m[1];
+    }
+
+    const path = window.location?.pathname || "";
+    // Common case: deployed at /<repo>/...
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length >= 1) {
+      // If your app is hosted under a repo subpath, first segment is often the repo.
+      return parts[0];
+    }
+  } catch {
+    // ignore
+  }
+
+  return "UNKNOWN_REPO";
+}
+
 /** Build GitHub Actions step YAML for downloading export + artifact upload */
 function buildExportGitHubActionsStep(url: string, session_id: string): string {
   const out = _safeFilenameFromSession(session_id);
@@ -825,62 +861,110 @@ async function copyExportGitHubActionsJob() {
 
 // ==========================================================================
 // Bundle 32.8.4.13: Copy GitHub Actions Workflow (full .yml file)
+// Bundle 32.8.4.14: Add validation job + repo auto-detect in header
 // ==========================================================================
 
 function buildExportGitHubActionsWorkflow(url: string, session_id: string): string {
   const safeOut = _safeFilenameFromSession(session_id);
+
+  // YAML single-quote escaping for scalar strings
   const u = _yamlEscapeSingleQuotes(url);
   const out = _yamlEscapeSingleQuotes(safeOut);
 
+  // We keep the filename configurable via workflow_dispatch inputs, but we also
+  // use it consistently across both jobs.
   return [
-    "# Save as: .github/workflows/art-studio-export-intent.yml",
-    "name: Art Studio - Download Export Intent",
-    "",
-    "on:",
-    "  workflow_dispatch:",
-    "    inputs:",
-    "      export_url:",
-    "        description: Override export URL (optional)",
-    "        required: false",
-    "        default: '" + u + "'",
-    "      out_file:",
-    "        description: Output filename (optional)",
-    "        required: false",
-    "        default: '" + out + "'",
-    "",
-    "permissions:",
-    "  contents: read",
-    "",
-    "jobs:",
-    "  art-studio-export-intent:",
-    "    name: Download Art Studio export intent",
-    "    runs-on: ubuntu-latest",
-    "    steps:",
-    "      - name: Download export intent JSON",
-    "        env:",
-    "          TOOLBOX_API_TOKEN: ${{ secrets.TOOLBOX_API_TOKEN }}",
-    "          EXPORT_URL: ${{ inputs.export_url }}",
-    "          OUT_FILE: ${{ inputs.out_file }}",
-    "        run: |",
-    "          set -euo pipefail",
-    '          URL="${EXPORT_URL}"',
-    '          OUT="${OUT_FILE}"',
-    "          HDR=()",
-    '          if [ -n "${TOOLBOX_API_TOKEN:-}" ]; then',
-    '            HDR+=(-H "Authorization: Bearer ${TOOLBOX_API_TOKEN}")',
-    "          fi",
-    '          curl -sSfL "${HDR[@]}" "${URL}" -o "${OUT}"',
-    '          echo "Saved ${OUT}"',
-    "",
-    "      - name: Upload artifact",
-    "        uses: actions/upload-artifact@v4",
-    "        with:",
-    "          name: art-studio-export-intent",
-    "          path: ${{ inputs.out_file }}",
-    "          retention-days: 7",
-    "",
-  ].join("
-");
+    `name: Art Studio — Download + Validate Export Intent`,
+    ``,
+    `on:`,
+    `  workflow_dispatch:`,
+    `    inputs:`,
+    `      export_url:`,
+    `        description: 'Override export URL (optional)'`,
+    `        required: false`,
+    `        default: '${u}'`,
+    `      out_file:`,
+    `        description: 'Output filename (optional)'`,
+    `        required: false`,
+    `        default: '${out}'`,
+    ``,
+    `permissions:`,
+    `  contents: read`,
+    ``,
+    `jobs:`,
+    `  art-studio-export-intent:`,
+    `    name: Download export intent`,
+    `    runs-on: ubuntu-latest`,
+    `    steps:`,
+    `      - name: Download export intent JSON`,
+    `        env:`,
+    `          TOOLBOX_API_TOKEN: \${{ secrets.TOOLBOX_API_TOKEN }}`,
+    `          EXPORT_URL: \${{ inputs.export_url }}`,
+    `          OUT_FILE: \${{ inputs.out_file }}`,
+    `        run: |`,
+    `          set -euo pipefail`,
+    `          URL="\${EXPORT_URL}"`,
+    `          OUT="\${OUT_FILE}"`,
+    `          HDR=()`,
+    `          if [ -n "\${TOOLBOX_API_TOKEN:-}" ]; then`,
+    `            HDR+=(-H "Authorization: Bearer \${TOOLBOX_API_TOKEN}")`,
+    `          fi`,
+    `          curl -L "\${HDR[@]}" "\${URL}" -o "\${OUT}"`,
+    `          echo "Saved \${OUT}"`,
+    `          ls -la`,
+    ``,
+    `      - name: Upload artifact`,
+    `        uses: actions/upload-artifact@v4`,
+    `        with:`,
+    `          name: art-studio-export-intent`,
+    `          path: \${{ inputs.out_file }}`,
+    `          retention-days: 7`,
+    ``,
+    `  validate-export-intent:`,
+    `    name: Validate export intent JSON`,
+    `    runs-on: ubuntu-latest`,
+    `    needs: [art-studio-export-intent]`,
+    `    steps:`,
+    `      - name: Download artifact`,
+    `        uses: actions/download-artifact@v4`,
+    `        with:`,
+    `          name: art-studio-export-intent`,
+    ``,
+    `      - name: Validate JSON (parse + basic shape)`,
+    `        env:`,
+    `          OUT_FILE: \${{ inputs.out_file }}`,
+    `        run: |`,
+    `          set -euo pipefail`,
+    `          python - <<'PY'`,
+    `          import json, os, sys`,
+    `          path = os.environ.get("OUT_FILE")`,
+    `          if not path or not os.path.exists(path):`,
+    `              # Artifact download may place file in cwd; try fallback to first .json`,
+    `              candidates = [p for p in os.listdir(".") if p.lower().endswith(".json")]`,
+    `              if len(candidates) == 1:`,
+    `                  path = candidates[0]`,
+    `              else:`,
+    `                  raise SystemExit(f"Could not locate OUT_FILE. OUT_FILE={path!r}, candidates={candidates}")`,
+    `          # Parse JSON`,
+    `          with open(path, "r", encoding="utf-8") as f:`,
+    `              data = json.load(f)`,
+    `          # Basic validation: must be object or list, not empty`,
+    `          if not isinstance(data, (dict, list)):`,
+    `              raise SystemExit(f"Top-level JSON must be object or list, got {type(data).__name__}")`,
+    `          if isinstance(data, dict) and len(data) == 0:`,
+    `              raise SystemExit("Top-level JSON object is empty")`,
+    `          if isinstance(data, list) and len(data) == 0:`,
+    `              raise SystemExit("Top-level JSON list is empty")`,
+    `          # Soft heuristics (non-fatal warnings)`,
+    `          expected_any = ["session", "session_id", "design", "spec", "rosette", "intent"]`,
+    `          if isinstance(data, dict):`,
+    `              keys = set(map(str, data.keys()))`,
+    `              if not any(k in keys for k in expected_any):`,
+    `                  print("WARN: JSON parsed but did not contain any typical intent keys:", expected_any)`,
+    `          print("OK: JSON is valid and non-empty:", path)`,
+    `          PY`,
+    ``,
+  ].join("\n");
 }
 
 async function copyExportGitHubActionsWorkflow() {
@@ -904,22 +988,22 @@ async function copyExportGitHubActionsWorkflow() {
 
 function buildRepoReadyWorkflowBundle(url: string, session_id: string): string {
   const filename = "art-studio-export-intent.yml";
+  const repoName = _detectRepoNameForHeader();
   const workflow = buildExportGitHubActionsWorkflow(url, session_id);
 
   return [
     `# =====================================================================`,
-    `# Art Studio — Export Intent Download Workflow`,
+    `# Art Studio — Export Intent Download + Validate Workflow`,
     `#`,
-    `# HOW TO USE:`,
-    `# 1. Create this file in your repo at:`,
-    `#    .github/workflows/${filename}`,
-    `# 2. Commit the file`,
-    `# 3. (Optional) Add this secret in GitHub repo settings:`,
-    `#      TOOLBOX_API_TOKEN = <your API token>`,
-    `# 4. Run manually via GitHub Actions → Workflow Dispatch`,
+    `# Detected repo (best-effort): ${repoName}`,
+    `# Recommended path: .github/workflows/${filename}`,
     `#`,
-    `# This workflow downloads a ToolBox Art Studio export intent`,
-    `# and uploads it as a build artifact.`,
+    `# Optional secret (only needed if your export URL requires auth):`,
+    `#   TOOLBOX_API_TOKEN = <your API token>`,
+    `#`,
+    `# This workflow:`,
+    `#   Job 1) downloads the export intent JSON and uploads it as an artifact`,
+    `#   Job 2) downloads the artifact and validates JSON in the same run`,
     `# =====================================================================`,
     ``,
     workflow,
