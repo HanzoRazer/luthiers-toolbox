@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -135,6 +135,32 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
 
         return None
 
+    def _latest_by_ts_then_order(items: list[Any]) -> Any:
+        """
+        Select the latest item by created timestamp.
+        Micro-hardening: if timestamps collide (same second), pick the later item
+        by insertion order (higher index). If timestamps are missing, fall back to
+        the last item.
+        """
+        if not items:
+            raise ValueError("items must be non-empty")
+
+        scored: list[Tuple[float, int, Any]] = []
+        for idx, it in enumerate(items):
+            ts = _created_ts(it)
+            if ts is None:
+                continue
+            # Use integer seconds for collision-aware monotonicity.
+            # Tie-breaker: idx (insertion order).
+            scored.append((float(int(ts)), idx, it))
+
+        if scored:
+            # Max by (second-resolution timestamp, insertion index)
+            return max(scored, key=lambda t: (t[0], t[1]))[2]
+
+        # No parseable timestamps → deterministic fallback to last item
+        return items[-1]
+
     # Prefer filtered lists; tolerate older store signatures
     try:
         aborts = _items(
@@ -208,13 +234,8 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         )
 
     # Determine the latest log deterministically.
-    # Prefer a parseable created timestamp; if none are parseable, fall back to last item.
-    logs_with_ts = [(jl, _created_ts(jl)) for jl in exec_logs]
-    parseable = [(jl, ts) for (jl, ts) in logs_with_ts if ts is not None]
-    if parseable:
-        latest_log = max(parseable, key=lambda t: t[1])[0]
-    else:
-        latest_log = exec_logs[-1]
+    # Uses second-resolution timestamps with insertion order as tie-breaker.
+    latest_log = _latest_by_ts_then_order(exec_logs)
 
     # Validate that the latest log is qualifying
     p = _payload(latest_log)

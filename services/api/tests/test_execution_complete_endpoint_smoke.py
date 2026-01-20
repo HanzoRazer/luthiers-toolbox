@@ -347,3 +347,61 @@ def test_execution_complete_409_when_latest_job_log_not_qualifying(monkeypatch):
     )
     assert r.status_code == 409
     assert "latest job log" in r.json()["detail"]
+
+
+def test_execution_complete_uses_insertion_order_when_timestamps_collide(monkeypatch):
+    """When multiple job logs have the same second, pick the later one by insertion order."""
+    from datetime import datetime, timezone
+    from fastapi.testclient import TestClient
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_execution_abort":
+            return {"items": []}
+        if kind == "saw_batch_execution_complete":
+            return {"items": []}
+        if kind == "saw_batch_job_log":
+            # Same second timestamps; last one should be treated as "latest"
+            t = datetime(2026, 1, 19, 4, 10, 0, tzinfo=timezone.utc)
+            return {
+                "items": [
+                    {
+                        "id": "jl_earlier_in_list",
+                        "kind": kind,
+                        "parent_id": "exec_collide",
+                        "created_at_utc": t,
+                        "payload": {"status": "OK", "metrics": {"parts_ok": 1, "parts_scrap": 0}},
+                    },
+                    {
+                        "id": "jl_later_in_list",
+                        "kind": kind,
+                        "parent_id": "exec_collide",
+                        "created_at_utc": t,
+                        # Make latest non-qualifying to prove we pick by insertion order
+                        "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0}},
+                    },
+                ]
+            }
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec_collide",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    # Because the last (latest-by-order on collision) is non-qualifying, we must reject.
+    assert r.status_code == 409
+    assert "latest job log" in r.json()["detail"] or "lacks work metrics" in r.json()["detail"]
