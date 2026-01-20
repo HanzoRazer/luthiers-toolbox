@@ -22,6 +22,7 @@ try:
         DesignFirstState,
         GetDesignFirstResponse,
         PromotionIntentResponse,
+        PromotionIntentV1Response,
         StartDesignFirstRequest,
         StartDesignFirstResponse,
         TransitionDesignFirstRequest,
@@ -49,6 +50,7 @@ except ImportError:
         DesignFirstState,
         GetDesignFirstResponse,
         PromotionIntentResponse,
+        PromotionIntentV1Response,
         StartDesignFirstRequest,
         StartDesignFirstResponse,
         TransitionDesignFirstRequest,
@@ -215,6 +217,66 @@ async def workflow_promotion_intent_export(
         risk_tolerance=risk_tol,
     )
 
+
+
+
+# ==========================================================================
+# Bundle 32.8.5: POST /promotion_intent_v1 - Wrapper for canonical v1
+# ==========================================================================
+
+
+@router.post(
+    "/sessions/{session_id}/promotion_intent_v1",
+    response_model=PromotionIntentV1Response,
+)
+async def workflow_promotion_intent_v1(
+    session_id: str,
+    tool_id: Optional[str] = Query(None, description="Override tool_id in context_refs"),
+    material_id: Optional[str] = Query(None, description="Override material_id in context_refs"),
+    machine_profile_id: Optional[str] = Query(None, description="Override machine_profile_id in context_refs"),
+    cam_profile_id: Optional[str] = Query(None, description="Override requested_cam_profile_id"),
+    risk_tolerance: Optional[str] = Query(None, description="Override risk_tolerance (GREEN_ONLY or ALLOW_YELLOW)"),
+) -> PromotionIntentV1Response:
+    """
+    Generate canonical PromotionIntentV1 payload with wrapper envelope.
+
+    Returns { ok, intent, blocked_reason } for ergonomic UI consumption.
+    The intent field contains the canonical PromotionIntentV1 when approved.
+
+    Query params allow overriding context_refs for testing different configurations.
+    """
+    try:
+        session = get_session(session_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="design_first_session_not_found")
+
+    if session.state != DesignFirstState.APPROVED:
+        return PromotionIntentV1Response(ok=False, blocked_reason="workflow_not_approved")
+
+    # Build context_refs from query params
+    context_refs = {}
+    if tool_id:
+        context_refs["tool_id"] = tool_id
+    if material_id:
+        context_refs["material_id"] = material_id
+    if machine_profile_id:
+        context_refs["machine_profile_id"] = machine_profile_id
+
+    # Normalize risk_tolerance
+    risk_tol = None
+    if risk_tolerance:
+        rt_upper = risk_tolerance.upper()
+        if rt_upper in ("GREEN_ONLY", "ALLOW_YELLOW"):
+            risk_tol = rt_upper
+
+    intent = build_promotion_intent_v1(
+        session=session,
+        requested_cam_profile_id=cam_profile_id,
+        context_refs=context_refs if context_refs else None,
+        risk_tolerance=risk_tol,
+    )
+
+    return PromotionIntentV1Response(ok=True, intent=intent)
 
 # ==========================================================================
 # Bundle 32.7.6: List recent + Delete endpoints
