@@ -553,6 +553,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_runs_v2_exports_router (%s)", e)
     rmos_runs_v2_exports_router = None
 
+# RMOS Runs v2 Query Router (envelope list with cursor pagination)
+try:
+    from .rmos.runs_v2.router_query import router as rmos_runs_v2_query_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_runs_v2_query_router (%s)", e)
+    rmos_runs_v2_query_router = None
+
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
 # =============================================================================
@@ -1053,6 +1060,10 @@ if rmos_mvp_wrapper_router:
 # RMOS Runs v2 Operator Pack Export
 if rmos_runs_v2_exports_router:
     app.include_router(rmos_runs_v2_exports_router, tags=["RMOS", "Operator Pack"])
+
+# RMOS Runs v2 Query Router (envelope list with cursor pagination)
+if rmos_runs_v2_query_router:
+    app.include_router(rmos_runs_v2_query_router, prefix="/api/rmos", tags=["RMOS", "Runs v2 Query"])
 
 # Wave 17: Workflow Sessions (SQLite persistence layer)
 if workflow_sessions_router:
