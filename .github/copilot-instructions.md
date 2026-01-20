@@ -1,7 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-16
+> **Last Updated:** 2026-01-20
 
 ## ⚡ Quick Start
 
@@ -48,6 +48,8 @@ make check-boundaries                                    # All architectural fen
 | API Entry           | `services/api/app/main.py` – ~116 routers                |
 | CAM Algorithms      | `services/api/app/cam/` – pocketing, helical, biarc      |
 | RMOS Orchestration  | `services/api/app/rmos/` – workflow, CAM intent          |
+| Runs v2 Store       | `services/api/app/rmos/runs_v2/` – artifacts, attachments|
+| MVP Wrapper         | `services/api/app/rmos/mvp_wrapper.py` – DXF→GRBL path   |
 | Saw Lab (Reference) | `services/api/app/saw_lab/` – governed operation pattern |
 | CAM Intent Schema   | `services/api/app/rmos/cam/schemas_intent.py`            |
 | Frontend SDK        | `packages/client/src/sdk/endpoints/` – typed helpers     |
@@ -124,6 +126,34 @@ The Saw Lab implements **Decision Intelligence** for tuning parameter recommenda
 # - decision_intel_apply_service.py — find_latest_approved_tuning_decision()
 ```
 
+### RMOS Runs v2 & Operator Packs
+
+The **runs_v2** system provides governance-compliant artifact storage:
+
+- **Immutable artifacts**: Date-partitioned (`{YYYY-MM-DD}/{run_id}.json`), write-once
+- **Risk-gated exports**: Operator pack ZIP export blocked for YELLOW/RED without override
+- **Deterministic ZIPs**: Fixed timestamps (`1980-01-01`) for reproducibility
+- **Content-addressed attachments**: `{sha[0:2]}/{sha[2:4]}/{sha}.ext`
+
+```python
+# Creating a governed run artifact:
+from app.rmos.runs_v2.store import create_run_id, persist_run
+from app.rmos.runs_v2.schemas import RunArtifact, Hashes, RunDecision
+
+run_id = create_run_id()
+artifact = RunArtifact(
+    run_id=run_id,
+    mode="roughing",
+    tool_id="cam_roughing_v1",
+    status="OK",
+    hashes=Hashes(feasibility_sha256=sha256_of_obj(feasibility)),
+    decision=RunDecision(risk_level="GREEN"),
+    feasibility=feasibility,
+    # ... other fields
+)
+persist_run(artifact)  # Atomic write via .tmp + os.replace()
+```
+
 ## 🔗 Cross-Boundary Patterns
 
 **Never import directly across domains.** Use these patterns:
@@ -155,6 +185,30 @@ const { gcode, summary, requestId } = await cam.roughingGcode(payload);
 // ❌ WRONG: Raw fetch bypasses type safety
 const response = await fetch("/api/cam/roughing/gcode", {...});
 ```
+
+### Pattern 4: MVP Wrapper (DXF → GRBL Golden Path)
+
+The MVP wrapper (`/api/rmos/wrap/mvp/dxf-to-grbl`) wraps the locked manufacturing path with RMOS governance:
+
+```python
+# services/api/app/rmos/mvp_wrapper.py
+# Policy: Best-effort RMOS (returns gcode even if RMOS storage fails)
+# Response includes: run_id, decision (risk_level), hashes, attachments, gcode
+```
+
+### Pattern 5: Operator Pack Export
+
+Operator packs bundle run artifacts for manufacturing handoff:
+
+```python
+# GET /api/rmos/runs_v2/{run_id}/operator-pack.zip
+# Gate behavior:
+#   - GREEN: allowed immediately
+#   - YELLOW/RED: requires override attachment OR status == "OK"
+# Contents: manifest.json, feasibility.json, decision.json, output.nc, override.json (if present)
+```
+
+See [operator_pack.py](services/api/app/rmos/runs_v2/operator_pack.py) for deterministic ZIP generation.
 
 ## 🧪 Essential Patterns
 
