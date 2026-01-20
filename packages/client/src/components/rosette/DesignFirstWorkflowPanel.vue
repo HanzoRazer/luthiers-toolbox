@@ -79,7 +79,7 @@
       </button>
     </div>
 
-    <!-- Export URL Preview (Bundle 32.8.4.5) -->
+    <!-- Export URL Preview (Bundle 32.8.4.5 + 32.8.4.8) -->
     <div v-if="hasSession" class="export-url-preview">
       <div class="export-url-label">Export URL</div>
       <input
@@ -91,6 +91,22 @@
       />
       <button class="btn ghost" @click="copyExportUrl" title="Copy URL to clipboard">
         Copy URL
+      </button>
+      <button
+        class="btn ghost"
+        @click="copyExportPowerShell"
+        :disabled="!exportUrlPreview"
+        title="Copy PowerShell Invoke-WebRequest command (downloads JSON to a file)"
+      >
+        Copy PowerShell
+      </button>
+      <button
+        class="btn ghost"
+        @click="copyExportPython"
+        :disabled="!exportUrlPreview"
+        title="Copy Python requests snippet (downloads JSON to a file)"
+      >
+        Copy Python
       </button>
     </div>
 
@@ -147,6 +163,7 @@
  * Bundle 32.8.4.2: Download intent with overrides (tool/material/profile dropdowns).
  * Bundle 32.8.4.3: Remember overrides (localStorage persistence).
  * Bundle 32.8.4.5: Export URL preview + Copy URL for testers.
+ * Bundle 32.8.4.8: Copy PowerShell Invoke-WebRequest command (Windows-first shops).
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
@@ -503,6 +520,109 @@ async function copyExportUrl() {
     toast.success("Export URL copied to clipboard");
   } catch {
     toast.error("Failed to copy URL");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.8: Copy PowerShell Invoke-WebRequest (Windows-first shops)
+// ==========================================================================
+
+function _psEscape(s: string): string {
+  // Single-quote safe for PowerShell: ' becomes ''
+  return `'${String(s).replace(/'/g, "''")}'`;
+}
+
+function _safeFilenameFromSession(session_id: string): string {
+  return `promotion_intent_v1_${session_id}.json`.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+function buildExportPowerShellIwr(url: string, session_id: string): string {
+  const out = _safeFilenameFromSession(session_id);
+
+  // Use Invoke-WebRequest with -OutFile
+  // Add -UseBasicParsing for older PS compatibility (harmless on newer)
+  return [
+    `$url = ${_psEscape(url)}`,
+    `$out = ${_psEscape(out)}`,
+    `Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing`,
+    `Write-Host ("Saved: " + $out)`,
+  ].join("\r\n");
+}
+
+async function copyExportPowerShell() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const cmd = buildExportPowerShellIwr(url, sid);
+
+  const combined = [
+    "# Promotion intent export (PowerShell)",
+    cmd,
+    "",
+  ].join("\n");
+
+  try {
+    await navigator.clipboard.writeText(combined);
+    toast.success("Copied PowerShell command.");
+  } catch {
+    toast.error("Copy failed.");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.9: Copy Python requests snippet (CI/script repro)
+// ==========================================================================
+
+function _pyEscape(s: string): string {
+  // Safe for python triple-quoted strings
+  return String(s).replace(/\\/g, "\\\\").replace(/"""/g, '\\"\\"\\"');
+}
+
+function buildExportPythonRequests(url: string, session_id: string): string {
+  const out = _safeFilenameFromSession(session_id);
+  const u = _pyEscape(url);
+
+  return [
+    "# Promotion intent export (Python requests)",
+    "import sys",
+    "import json",
+    "import requests",
+    "",
+    `url = """${u}"""`,
+    `out = r"""${out}"""`,
+    "",
+    "resp = requests.get(url, headers={'Accept': 'application/json'}, timeout=30)",
+    "resp.raise_for_status()",
+    "",
+    "# Save raw body",
+    "with open(out, 'wb') as f:",
+    "    f.write(resp.content)",
+    "",
+    "# Optional: quick sanity parse",
+    "try:",
+    "    data = resp.json()",
+    "    print('Downloaded intent:', data.get('intent_version'), 'session_id=', data.get('session_id'))",
+    "except Exception as e:",
+    "    print('Downloaded file saved, but JSON parse failed:', e, file=sys.stderr)",
+    "",
+    "print('Saved:', out)",
+    "",
+  ].join("\n");
+}
+
+async function copyExportPython() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const snippet = buildExportPythonRequests(url, sid);
+
+  try {
+    await navigator.clipboard.writeText(snippet);
+    toast.success("Copied Python requests snippet.");
+  } catch {
+    toast.error("Copy failed.");
   }
 }
 
