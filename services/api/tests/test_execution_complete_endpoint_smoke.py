@@ -14,7 +14,19 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_job_log":
-            return {"items": [{"id": "jl1", "kind": kind, "parent_id": "exec1"}]}
+            return {
+                "items": [
+                    {
+                        "id": "jl1",
+                        "kind": kind,
+                        "parent_id": "exec1",
+                        "payload": {
+                            "status": "OK",
+                            "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 12.0},
+                        },
+                    }
+                ]
+            }
         return {"items": []}
 
     def _fake_store_artifact(**kwargs):
@@ -94,7 +106,19 @@ def test_execution_complete_without_checklist(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_job_log":
-            return {"items": [{"id": "jl2", "kind": kind, "parent_id": "exec2"}]}
+            return {
+                "items": [
+                    {
+                        "id": "jl2",
+                        "kind": kind,
+                        "parent_id": "exec2",
+                        "payload": {
+                            "status": "OK",
+                            "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 5.0},
+                        },
+                    }
+                ]
+            }
         return {"items": []}
 
     def _fake_store_artifact(**kwargs):
@@ -212,4 +236,49 @@ def test_execution_complete_409_when_no_job_logs(monkeypatch):
         },
     )
     assert r.status_code == 409
-    assert "no job logs" in r.json()["detail"]
+    assert "qualifying job log" in r.json()["detail"]
+
+
+def test_execution_complete_409_when_job_log_not_qualifying(monkeypatch):
+    """Job log exists but is ABORTED or has no work metrics — should reject."""
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_execution_abort":
+            return {"items": []}
+        if kind == "saw_batch_execution_complete":
+            return {"items": []}
+        if kind == "saw_batch_job_log":
+            # Non-qualifying: ABORTED status OR metrics show no work
+            return {
+                "items": [
+                    {
+                        "id": "jl_bad",
+                        "kind": kind,
+                        "parent_id": "exec_bad",
+                        "payload": {"status": "ABORTED", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
+                    }
+                ]
+            }
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec_bad",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    assert r.status_code == 409
+    assert "qualifying job log" in r.json()["detail"]

@@ -75,6 +75,12 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
             return str(pid) if pid else None
         return None
 
+    def _payload(art: Any) -> Dict[str, Any]:
+        if isinstance(art, dict):
+            p = art.get("payload") or art.get("data") or {}
+            return p if isinstance(p, dict) else {}
+        return {}
+
     # Prefer filtered lists; tolerate older store signatures
     try:
         aborts = _items(
@@ -114,14 +120,49 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         if _parent_id(c) == str(req.batch_execution_artifact_id):
             raise HTTPException(status_code=409, detail="execution already completed")
 
-    # Prerequisite: at least one job log must exist for this execution
-    has_job_log = False
+    # Prerequisite: at least one QUALIFYING job log must exist for this execution.
+    # Qualifying means:
+    #   - parented to this execution
+    #   - payload.status != "ABORTED"
+    #   - payload.metrics indicates work (yield or time > 0)
+    def _metrics_indicate_work(m: Any) -> bool:
+        if not isinstance(m, dict):
+            return False
+        try:
+            parts_ok = int(m.get("parts_ok") or 0)
+            parts_scrap = int(m.get("parts_scrap") or 0)
+        except Exception:
+            parts_ok, parts_scrap = 0, 0
+
+        def _f(key: str) -> float:
+            try:
+                return float(m.get(key) or 0.0)
+            except Exception:
+                return 0.0
+
+        cut_time_s = _f("cut_time_s")
+        total_time_s = _f("total_time_s")
+
+        return (parts_ok + parts_scrap) > 0 or cut_time_s > 0.0 or total_time_s > 0.0
+
+    qualifying = False
     for jl in job_logs:
-        if _parent_id(jl) == str(req.batch_execution_artifact_id):
-            has_job_log = True
+        if _parent_id(jl) != str(req.batch_execution_artifact_id):
+            continue
+        p = _payload(jl)
+        status = p.get("status")
+        if isinstance(status, str) and status.upper() == "ABORTED":
+            continue
+        metrics = p.get("metrics")
+        if _metrics_indicate_work(metrics):
+            qualifying = True
             break
-    if not has_job_log:
-        raise HTTPException(status_code=409, detail="execution has no job logs; cannot complete")
+
+    if not qualifying:
+        raise HTTPException(
+            status_code=409,
+            detail="execution lacks qualifying job log (non-ABORTED with work metrics); cannot complete",
+        )
 
     # Convert checklist pydantic model to dict if provided
     checklist_dict = req.checklist.model_dump() if req.checklist else None
