@@ -160,19 +160,19 @@
           <div v-if="compareError" class="compare-error">{{ compareError }}</div>
 
           <div v-else class="compare-tabs">
-            <button class="tab" :class="{ active: compareTab === 'inputs' }" @click="setCompareTab('inputs')">
+            <button class="tab" :class="{ active: compareTab === 'inputs' }" @click="setCompareTab('inputs')" :disabled="!showInputs">
               Inputs <span class="badge" v-if="compareSummary?.inputs">{{ compareSummary.inputs }}</span>
             </button>
-            <button class="tab" :class="{ active: compareTab === 'feasibility' }" @click="setCompareTab('feasibility')">
+            <button class="tab" :class="{ active: compareTab === 'feasibility' }" @click="setCompareTab('feasibility')" :disabled="!showFeasibility">
               Feasibility <span class="badge" v-if="compareSummary?.feasibility">{{ compareSummary.feasibility }}</span>
             </button>
-            <button class="tab" :class="{ active: compareTab === 'decision' }" @click="setCompareTab('decision')">
+            <button class="tab" :class="{ active: compareTab === 'decision' }" @click="setCompareTab('decision')" :disabled="!showDecision">
               Decision <span class="badge" v-if="compareSummary?.decision">{{ compareSummary.decision }}</span>
             </button>
-            <button class="tab" :class="{ active: compareTab === 'hashes' }" @click="setCompareTab('hashes')">
+            <button class="tab" :class="{ active: compareTab === 'hashes' }" @click="setCompareTab('hashes')" :disabled="!showHashes">
               Hashes <span class="badge" v-if="compareSummary?.hashes">{{ compareSummary.hashes }}</span>
             </button>
-            <button class="tab" :class="{ active: compareTab === 'attachments' }" @click="setCompareTab('attachments')">
+            <button class="tab" :class="{ active: compareTab === 'attachments' }" @click="setCompareTab('attachments')" :disabled="!showAttachments">
               Attachments
               <span class="badge" v-if="(compareSummary?.attachOnlyA ?? 0) + (compareSummary?.attachOnlyB ?? 0)">
                 {{ (compareSummary?.attachOnlyA ?? 0) + (compareSummary?.attachOnlyB ?? 0) }}
@@ -182,7 +182,7 @@
 
           <div class="compare-body">
             <!-- Inputs -->
-            <table v-if="compareTab === 'inputs'" class="diff-table">
+            <table v-if="compareTab === 'inputs' && showInputs" class="diff-table">
               <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
               <tbody>
                 <template v-for="[key, a, b] in inputDiffEntries" :key="key">
@@ -196,7 +196,7 @@
             </table>
 
             <!-- Feasibility -->
-            <table v-if="compareTab === 'feasibility'" class="diff-table">
+            <table v-if="compareTab === 'feasibility' && showFeasibility" class="diff-table">
               <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
               <tbody>
                 <template v-for="[key, a, b] in feasibilityDiffEntries" :key="key">
@@ -210,7 +210,7 @@
             </table>
 
             <!-- Decision -->
-            <table v-if="compareTab === 'decision'" class="diff-table">
+            <table v-if="compareTab === 'decision' && showDecision" class="diff-table">
               <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
               <tbody>
                 <template v-for="[key, a, b] in decisionDiffEntries" :key="key">
@@ -224,7 +224,7 @@
             </table>
 
             <!-- Hashes -->
-            <table v-if="compareTab === 'hashes'" class="diff-table">
+            <table v-if="compareTab === 'hashes' && showHashes" class="diff-table">
               <thead><tr><th>Hash Key</th><th>Previous</th><th>Current</th></tr></thead>
               <tbody>
                 <template v-for="[key, a, b] in hashesDiffEntries" :key="key">
@@ -238,7 +238,7 @@
             </table>
 
             <!-- Attachments -->
-            <div v-if="compareTab === 'attachments'" class="attach-diff">
+            <div v-if="compareTab === 'attachments' && showAttachments" class="attach-diff">
               <div v-if="attachmentsOnlyA.length" class="attach-section">
                 <h4>Only in Previous</h4>
                 <ul>
@@ -553,6 +553,29 @@ const decisionDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.dec
 const hashesDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.hashes, compareDiff.value?.b?.hashes))
 const attachmentsOnlyA = computed(() => (compareDiff.value?.attachments_only_a ?? []) as any[])
 const attachmentsOnlyB = computed(() => (compareDiff.value?.attachments_only_b ?? []) as any[])
+
+// Section visibility: hide empty sections when "Only changed" is OFF
+function hasAnyDiff(entries: [string, any, any][]) {
+  return entries.some(([, a, b]) => a !== b)
+}
+
+const showInputs = computed(() =>
+  showOnlyChanged.value || hasAnyDiff(inputDiffEntries.value)
+)
+const showFeasibility = computed(() =>
+  showOnlyChanged.value || hasAnyDiff(feasibilityDiffEntries.value)
+)
+const showDecision = computed(() =>
+  showOnlyChanged.value || hasAnyDiff(decisionDiffEntries.value)
+)
+const showHashes = computed(() =>
+  showOnlyChanged.value || hasAnyDiff(hashesDiffEntries.value)
+)
+const showAttachments = computed(() =>
+  showOnlyChanged.value ||
+  attachmentsOnlyA.value.length > 0 ||
+  attachmentsOnlyB.value.length > 0
+)
 
 const explainSummary = computed(() => {
   const n = triggeredRuleIds.value.length
