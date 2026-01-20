@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
 
@@ -81,6 +82,32 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
             return p if isinstance(p, dict) else {}
         return {}
 
+    def _created_ts(art: Any) -> Optional[float]:
+        """
+        Best-effort extraction of a creation timestamp from common fields.
+        Returns Unix seconds if parseable, else None.
+        """
+        if not isinstance(art, dict):
+            return None
+        for k in ("created_utc", "created_at", "created", "timestamp", "ts"):
+            v = art.get(k)
+            if v is None:
+                continue
+            # numeric seconds
+            if isinstance(v, (int, float)):
+                return float(v)
+            # ISO strings
+            if isinstance(v, str) and v.strip():
+                s = v.strip()
+                # tolerate Z
+                if s.endswith("Z"):
+                    s = s[:-1] + "+00:00"
+                try:
+                    return datetime.fromisoformat(s).timestamp()
+                except Exception:
+                    continue
+        return None
+
     # Prefer filtered lists; tolerate older store signatures
     try:
         aborts = _items(
@@ -120,7 +147,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         if _parent_id(c) == str(req.batch_execution_artifact_id):
             raise HTTPException(status_code=409, detail="execution already completed")
 
-    # Prerequisite: at least one QUALIFYING job log must exist for this execution.
+    # Prerequisite (tight): the LATEST job log for this execution must be QUALIFYING.
     # Qualifying means:
     #   - parented to this execution
     #   - payload.status != "ABORTED"
@@ -145,23 +172,36 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
 
         return (parts_ok + parts_scrap) > 0 or cut_time_s > 0.0 or total_time_s > 0.0
 
-    qualifying = False
-    for jl in job_logs:
-        if _parent_id(jl) != str(req.batch_execution_artifact_id):
-            continue
-        p = _payload(jl)
-        status = p.get("status")
-        if isinstance(status, str) and status.upper() == "ABORTED":
-            continue
-        metrics = p.get("metrics")
-        if _metrics_indicate_work(metrics):
-            qualifying = True
-            break
-
-    if not qualifying:
+    # Select job logs that belong to THIS execution
+    exec_logs = [jl for jl in job_logs if _parent_id(jl) == str(req.batch_execution_artifact_id)]
+    if not exec_logs:
         raise HTTPException(
             status_code=409,
-            detail="execution lacks qualifying job log (non-ABORTED with work metrics); cannot complete",
+            detail="execution has no job logs; cannot complete",
+        )
+
+    # Determine the latest log deterministically.
+    # Prefer a parseable created timestamp; if none are parseable, fall back to last item.
+    logs_with_ts = [(jl, _created_ts(jl)) for jl in exec_logs]
+    parseable = [(jl, ts) for (jl, ts) in logs_with_ts if ts is not None]
+    if parseable:
+        latest_log = max(parseable, key=lambda t: t[1])[0]
+    else:
+        latest_log = exec_logs[-1]
+
+    # Validate that the latest log is qualifying
+    p = _payload(latest_log)
+    status = p.get("status")
+    if isinstance(status, str) and status.upper() == "ABORTED":
+        raise HTTPException(
+            status_code=409,
+            detail="latest job log indicates ABORTED; cannot complete",
+        )
+    metrics = p.get("metrics")
+    if not _metrics_indicate_work(metrics):
+        raise HTTPException(
+            status_code=409,
+            detail="latest job log lacks work metrics; cannot complete",
         )
 
     # Convert checklist pydantic model to dict if provided

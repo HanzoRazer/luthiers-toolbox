@@ -17,14 +17,25 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
             return {
                 "items": [
                     {
-                        "id": "jl1",
+                        "id": "jl_old",
                         "kind": kind,
                         "parent_id": "exec1",
+                        "created_utc": "2026-01-19T04:00:00Z",
+                        "payload": {
+                            "status": "OK",
+                            "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0},
+                        },
+                    },
+                    {
+                        "id": "jl_new",
+                        "kind": kind,
+                        "parent_id": "exec1",
+                        "created_utc": "2026-01-19T04:10:00Z",
                         "payload": {
                             "status": "OK",
                             "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 12.0},
                         },
-                    }
+                    },
                 ]
             }
         return {"items": []}
@@ -112,6 +123,7 @@ def test_execution_complete_without_checklist(monkeypatch):
                         "id": "jl2",
                         "kind": kind,
                         "parent_id": "exec2",
+                        "created_utc": "2026-01-19T05:00:00Z",
                         "payload": {
                             "status": "OK",
                             "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 5.0},
@@ -236,7 +248,7 @@ def test_execution_complete_409_when_no_job_logs(monkeypatch):
         },
     )
     assert r.status_code == 409
-    assert "qualifying job log" in r.json()["detail"]
+    assert "execution has no job logs" in r.json()["detail"]
 
 
 def test_execution_complete_409_when_job_log_not_qualifying(monkeypatch):
@@ -281,4 +293,57 @@ def test_execution_complete_409_when_job_log_not_qualifying(monkeypatch):
         },
     )
     assert r.status_code == 409
-    assert "qualifying job log" in r.json()["detail"]
+    assert "latest job log" in r.json()["detail"]
+
+
+def test_execution_complete_409_when_latest_job_log_not_qualifying(monkeypatch):
+    """An older job log qualifies but the LATEST does not — should reject."""
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_execution_abort":
+            return {"items": []}
+        if kind == "saw_batch_execution_complete":
+            return {"items": []}
+        if kind == "saw_batch_job_log":
+            # Old log qualifies (has work metrics), new log does NOT (zero metrics)
+            return {
+                "items": [
+                    {
+                        "id": "jl_old_good",
+                        "kind": kind,
+                        "parent_id": "exec_latest_test",
+                        "created_utc": "2026-01-20T10:00:00Z",
+                        "payload": {"status": "OK", "metrics": {"parts_ok": 5, "parts_scrap": 0}},
+                    },
+                    {
+                        "id": "jl_new_bad",
+                        "kind": kind,
+                        "parent_id": "exec_latest_test",
+                        "created_utc": "2026-01-20T11:00:00Z",
+                        "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
+                    },
+                ]
+            }
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec_latest_test",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    assert r.status_code == 409
+    assert "latest job log" in r.json()["detail"]
