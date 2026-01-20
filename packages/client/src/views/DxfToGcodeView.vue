@@ -137,123 +137,90 @@
         </div>
       </div>
 
-      <!-- Run-to-run compare (sectioned UI) -->
+      <!-- Run-to-run compare (minimal operator UI) -->
       <div class="compare-shell" v-if="hasCompare || compareError">
-        <button class="pill-group" @click="compareOpen = !compareOpen">
-          <span class="pill-label">Compare</span>
-          <span class="pill-caret">{{ compareOpen ? '▾' : '▸' }}</span>
-          <span class="pill-meta">{{ previousRunId?.slice(0, 8) }}… → {{ result?.run_id?.slice(0, 8) }}…</span>
-        </button>
+        <div class="compare-header-row">
+          <h3>Compare with Previous Run</h3>
+          <div class="muted">{{ previousRunId?.slice(0, 8) }}… → {{ result?.run_id?.slice(0, 8) }}…</div>
+          <button class="btn-clear" @click="clearCompare">Clear</button>
+        </div>
 
-        <div v-if="compareOpen" class="compare-card">
-          <div class="compare-header">
-            <h3>Run-to-Run Compare</h3>
-            <div class="compare-actions">
-              <label class="toggle-label">
-                <input type="checkbox" v-model="showOnlyChanged" />
-                Only changed
-              </label>
-              <button class="btn-clear" @click="clearCompare">Clear</button>
+        <div v-if="compareError" class="compare-error">{{ compareError }}</div>
+
+        <div v-else class="compare-content">
+          <!-- Summary chips -->
+          <div v-if="compareSummary" class="pill-row">
+            <template v-for="(v, k) in compareSummary" :key="k">
+              <span v-if="v" class="pill ok">{{ pillLabel(String(k)) }}</span>
+            </template>
+            <span v-if="Object.values(compareSummary).every((x: any) => !x)" class="pill muted">
+              No changes detected
+            </span>
+          </div>
+
+          <!-- Decision -->
+          <div v-if="compareDecision" class="compare-section">
+            <div class="section-title">Decision</div>
+            <div class="kv-row">
+              <div class="kv-label">Risk</div>
+              <div class="kv-value">
+                <span class="pill">{{ compareDecision.before?.risk_level }}</span>
+                <span class="arrow">→</span>
+                <span class="pill">{{ compareDecision.after?.risk_level }}</span>
+              </div>
+            </div>
+            <div class="kv-row" v-if="compareDecision.before?.block_reason || compareDecision.after?.block_reason">
+              <div class="kv-label">Block reason</div>
+              <div class="kv-value muted">
+                {{ compareDecision.before?.block_reason || '—' }}
+                <span class="arrow">→</span>
+                {{ compareDecision.after?.block_reason || '—' }}
+              </div>
             </div>
           </div>
 
-          <div v-if="compareError" class="compare-error">{{ compareError }}</div>
-
-          <div v-else class="compare-tabs">
-            <button class="tab" :class="{ active: compareTab === 'inputs' }" @click="setCompareTab('inputs')" :disabled="!showInputs">
-              Inputs <span class="badge" v-if="compareSummary?.inputs">{{ compareSummary.inputs }}</span>
-            </button>
-            <button class="tab" :class="{ active: compareTab === 'feasibility' }" @click="setCompareTab('feasibility')" :disabled="!showFeasibility">
-              Feasibility <span class="badge" v-if="compareSummary?.feasibility">{{ compareSummary.feasibility }}</span>
-            </button>
-            <button class="tab" :class="{ active: compareTab === 'decision' }" @click="setCompareTab('decision')" :disabled="!showDecision">
-              Decision <span class="badge" v-if="compareSummary?.decision">{{ compareSummary.decision }}</span>
-            </button>
-            <button class="tab" :class="{ active: compareTab === 'hashes' }" @click="setCompareTab('hashes')" :disabled="!showHashes">
-              Hashes <span class="badge" v-if="compareSummary?.hashes">{{ compareSummary.hashes }}</span>
-            </button>
-            <button class="tab" :class="{ active: compareTab === 'attachments' }" @click="setCompareTab('attachments')" :disabled="!showAttachments">
-              Attachments
-              <span class="badge" v-if="(compareSummary?.attachOnlyA ?? 0) + (compareSummary?.attachOnlyB ?? 0)">
-                {{ (compareSummary?.attachOnlyA ?? 0) + (compareSummary?.attachOnlyB ?? 0) }}
-              </span>
-            </button>
-          </div>
-
-          <div class="compare-body">
-            <!-- Inputs -->
-            <table v-if="compareTab === 'inputs' && showInputs" class="diff-table">
-              <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
-              <tbody>
-                <template v-for="[key, a, b] in inputDiffEntries" :key="key">
-                  <tr v-if="!showOnlyChanged || a !== b" :class="{ changed: a !== b }">
-                    <td class="key">{{ key }}</td>
-                    <td class="val"><pre>{{ formatValue(a) }}</pre></td>
-                    <td class="val"><pre>{{ formatValue(b) }}</pre></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-
-            <!-- Feasibility -->
-            <table v-if="compareTab === 'feasibility' && showFeasibility" class="diff-table">
-              <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
-              <tbody>
-                <template v-for="[key, a, b] in feasibilityDiffEntries" :key="key">
-                  <tr v-if="!showOnlyChanged || a !== b" :class="{ changed: a !== b }">
-                    <td class="key">{{ key }}</td>
-                    <td class="val"><pre>{{ formatValue(a) }}</pre></td>
-                    <td class="val"><pre>{{ formatValue(b) }}</pre></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-
-            <!-- Decision -->
-            <table v-if="compareTab === 'decision' && showDecision" class="diff-table">
-              <thead><tr><th>Field</th><th>Previous</th><th>Current</th></tr></thead>
-              <tbody>
-                <template v-for="[key, a, b] in decisionDiffEntries" :key="key">
-                  <tr v-if="!showOnlyChanged || a !== b" :class="{ changed: a !== b }">
-                    <td class="key">{{ key }}</td>
-                    <td class="val"><pre>{{ formatValue(a) }}</pre></td>
-                    <td class="val"><pre>{{ formatValue(b) }}</pre></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-
-            <!-- Hashes -->
-            <table v-if="compareTab === 'hashes' && showHashes" class="diff-table">
-              <thead><tr><th>Hash Key</th><th>Previous</th><th>Current</th></tr></thead>
-              <tbody>
-                <template v-for="[key, a, b] in hashesDiffEntries" :key="key">
-                  <tr v-if="!showOnlyChanged || a !== b" :class="{ changed: a !== b }">
-                    <td class="key">{{ key }}</td>
-                    <td class="val mono">{{ shortSha(a) }}</td>
-                    <td class="val mono">{{ shortSha(b) }}</td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-
-            <!-- Attachments -->
-            <div v-if="compareTab === 'attachments' && showAttachments" class="attach-diff">
-              <div v-if="attachmentsOnlyA.length" class="attach-section">
-                <h4>Only in Previous</h4>
-                <ul>
-                  <li v-for="(att, i) in attachmentsOnlyA" :key="'a' + i">{{ formatAttachment(att) }}</li>
-                </ul>
+          <!-- Feasibility rules -->
+          <div v-if="compareFeasibility" class="compare-section">
+            <div class="section-title">Feasibility rules</div>
+            <div class="kv-row">
+              <div class="kv-label">Added</div>
+              <div class="kv-value">
+                <span v-if="(compareFeasibility.rules_added || []).length === 0" class="muted">—</span>
+                <span v-for="rid in (compareFeasibility.rules_added || [])" :key="rid" class="pill ok">{{ rid }}</span>
               </div>
-              <div v-if="attachmentsOnlyB.length" class="attach-section">
-                <h4>Only in Current</h4>
-                <ul>
-                  <li v-for="(att, i) in attachmentsOnlyB" :key="'b' + i">{{ formatAttachment(att) }}</li>
-                </ul>
+            </div>
+            <div class="kv-row">
+              <div class="kv-label">Removed</div>
+              <div class="kv-value">
+                <span v-if="(compareFeasibility.rules_removed || []).length === 0" class="muted">—</span>
+                <span v-for="rid in (compareFeasibility.rules_removed || [])" :key="rid" class="pill">{{ rid }}</span>
               </div>
-              <p v-if="!attachmentsOnlyA.length && !attachmentsOnlyB.length" class="no-diff">No attachment differences.</p>
             </div>
           </div>
+
+          <!-- Parameter changes -->
+          <div class="compare-section">
+            <div class="section-title">Parameter changes</div>
+            <div v-if="paramDiffRows.length === 0" class="muted">No parameter changes detected.</div>
+            <div v-else class="diff-grid">
+              <div class="diff-row diff-head">
+                <div>Field</div><div>Previous</div><div>Current</div>
+              </div>
+              <div class="diff-row" v-for="row in paramDiffRows" :key="row.key">
+                <div class="k">{{ row.key }}</div>
+                <div class="vcell">{{ row.a ?? '—' }}</div>
+                <div class="vcell">{{ row.b ?? '—' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deep diff toggle -->
+          <button class="compare-toggle" @click="showDeepCompare = !showDeepCompare">
+            <span class="chev">{{ showDeepCompare ? '▾' : '▸' }}</span>
+            <span>Show deep diffs</span>
+            <span class="muted">(request/feasibility/decision/hashes/attachments)</span>
+          </button>
+          <pre v-if="showDeepCompare" class="code">{{ JSON.stringify(compareResult, null, 2) }}</pre>
         </div>
       </div>
 
@@ -372,10 +339,8 @@ const abortController = ref<AbortController | null>(null)
 const previousRunId = ref<string | null>(null)
 const isComparing = ref(false)
 const compareError = ref<string | null>(null)
-const compareDiff = ref<any | null>(null)
-const compareOpen = ref(false)
-const compareTab = ref<'inputs' | 'feasibility' | 'decision' | 'hashes' | 'attachments'>('inputs')
-const showOnlyChanged = ref(true)
+const compareResult = ref<any | null>(null)
+const showDeepCompare = ref(false)
 
 const params = ref({
   tool_d: 6.0,
@@ -475,12 +440,11 @@ async function compareWithPreviousRun() {
 
   isComparing.value = true
   compareError.value = null
-  compareDiff.value = null
-  compareOpen.value = true
-  compareTab.value = 'inputs'
+  compareResult.value = null
+  showDeepCompare.value = false
 
   try {
-    const resp = await fetch(`/api/rmos/runs_v2/diff/${encodeURIComponent(prev)}/${encodeURIComponent(runId)}`)
+    const resp = await fetch(`/api/rmos/runs_v2/compare/${encodeURIComponent(prev)}/${encodeURIComponent(runId)}`)
     if (!resp.ok) {
       let msg = `Compare failed (HTTP ${resp.status})`
       try {
@@ -489,16 +453,7 @@ async function compareWithPreviousRun() {
       } catch {}
       throw new Error(msg)
     }
-    compareDiff.value = await resp.json()
-    // Auto-switch to first section with diffs (quiet UX)
-    compareTab.value =
-      inputDiffEntries.value.length ? 'inputs' :
-      feasibilityDiffEntries.value.length ? 'feasibility' :
-      decisionDiffEntries.value.length ? 'decision' :
-      hashesDiffEntries.value.length ? 'hashes' :
-      (attachmentsOnlyA.value.length || attachmentsOnlyB.value.length) ? 'attachments' :
-      'inputs'
-    compareOpen.value = true
+    compareResult.value = await resp.json()
   } catch (e: any) {
     compareError.value = e?.message || 'Failed to compare runs.'
   } finally {
@@ -507,86 +462,34 @@ async function compareWithPreviousRun() {
 }
 
 function clearCompare() {
-  compareDiff.value = null
+  compareResult.value = null
   compareError.value = null
-  compareOpen.value = false
-  compareTab.value = 'inputs'
+  showDeepCompare.value = false
 }
 
-// ─── Compare Helpers ────────────────────────────────────────────────────────
-const hasCompare = computed(() => !!compareDiff.value && !compareError.value)
-
-const compareSummary = computed(() => {
-  if (!compareDiff.value) return null
-  const c = (arr: [string, any, any][]) => arr.filter(([, a, b]) => a !== b).length
-  return {
-    inputs: c(inputDiffEntries.value),
-    feasibility: c(feasibilityDiffEntries.value),
-    decision: c(decisionDiffEntries.value),
-    hashes: c(hashesDiffEntries.value),
-    attachOnlyA: attachmentsOnlyA.value.length,
-    attachOnlyB: attachmentsOnlyB.value.length
-  }
+// ─── Compare Helpers (Minimal UI) ───────────────────────────────────────────
+const hasCompare = computed(() => !!compareResult.value && !compareError.value)
+const compareSummary = computed(() => compareResult.value?.summary ?? null)
+const compareDecision = computed(() => compareResult.value?.decision_diff ?? null)
+const compareFeasibility = computed(() => compareResult.value?.feasibility_diff ?? null)
+const compareParamDiff = computed(() => compareResult.value?.param_diff ?? {})
+const paramDiffRows = computed(() => {
+  const obj = compareParamDiff.value || {}
+  return Object.keys(obj).sort().map((k) => ({ key: k, a: obj[k]?.[0], b: obj[k]?.[1] }))
 })
 
-function setCompareTab(tab: typeof compareTab.value) {
-  compareTab.value = tab
+function pillLabel(k: string) {
+  const map: Record<string, string> = {
+    risk_changed: 'Risk changed',
+    blocking_changed: 'Block reason changed',
+    feasibility_changed: 'Feasibility changed',
+    cam_changed: 'CAM changed',
+    gcode_changed: 'G-code changed',
+    attachments_changed: 'Attachments changed',
+    override_changed: 'Override changed',
+  }
+  return map[k] ?? k
 }
-
-function formatValue(v: unknown): string {
-  if (v === null || v === undefined) return '—'
-  if (typeof v === 'object') return JSON.stringify(v, null, 2)
-  return String(v)
-}
-
-function diffEntries(objA: Record<string, any> | null | undefined, objB: Record<string, any> | null | undefined): [string, any, any][] {
-  const a = objA ?? {}
-  const b = objB ?? {}
-  const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort()
-  return keys.map((k) => [k, a[k], b[k]])
-}
-
-function shortSha(sha: string | undefined | null): string {
-  if (!sha) return '—'
-  return sha.slice(0, 12) + '…'
-}
-
-function formatAttachment(att: any): string {
-  const kind = att?.kind ?? '?'
-  const sha = att?.sha256 ? att.sha256.slice(0, 8) : '?'
-  const kb = att?.size_bytes != null ? `${(att.size_bytes / 1024).toFixed(1)}KB` : ''
-  return `${kind} [${sha}] ${kb}`.trim()
-}
-
-const inputDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.inputs, compareDiff.value?.b?.inputs))
-const feasibilityDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.feasibility, compareDiff.value?.b?.feasibility))
-const decisionDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.decision, compareDiff.value?.b?.decision))
-const hashesDiffEntries = computed(() => diffEntries(compareDiff.value?.a?.hashes, compareDiff.value?.b?.hashes))
-const attachmentsOnlyA = computed(() => (compareDiff.value?.attachments_only_a ?? []) as any[])
-const attachmentsOnlyB = computed(() => (compareDiff.value?.attachments_only_b ?? []) as any[])
-
-// Section visibility: hide empty sections when "Only changed" is OFF
-function hasAnyDiff(entries: [string, any, any][]) {
-  return entries.some(([, a, b]) => a !== b)
-}
-
-const showInputs = computed(() =>
-  showOnlyChanged.value || hasAnyDiff(inputDiffEntries.value)
-)
-const showFeasibility = computed(() =>
-  showOnlyChanged.value || hasAnyDiff(feasibilityDiffEntries.value)
-)
-const showDecision = computed(() =>
-  showOnlyChanged.value || hasAnyDiff(decisionDiffEntries.value)
-)
-const showHashes = computed(() =>
-  showOnlyChanged.value || hasAnyDiff(hashesDiffEntries.value)
-)
-const showAttachments = computed(() =>
-  showOnlyChanged.value ||
-  attachmentsOnlyA.value.length > 0 ||
-  attachmentsOnlyB.value.length > 0
-)
 
 const explainSummary = computed(() => {
   const n = triggeredRuleIds.value.length
@@ -1548,81 +1451,142 @@ h1 {
   cursor: not-allowed;
 }
 
-/* ─── Sectioned Compare UI ─────────────────────────────────────────────────── */
+/* ─── Minimal Compare UI ──────────────────────────────────────────────────── */
 .compare-shell {
   margin-top: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #fafafa;
+  padding: 1rem;
 }
 
-.pill-group {
-  display: inline-flex;
+.compare-header-row {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 9999px;
-  background: #f9fafb;
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition: background 0.15s;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.pill-group:hover {
-  background: #f3f4f6;
-}
-
-.pill-label {
+.compare-header-row h3 {
+  margin: 0;
+  font-size: 1rem;
   font-weight: 600;
 }
 
-.pill-caret {
-  font-size: 0.75rem;
-  opacity: 0.7;
+.compare-content {
+  margin-top: 0.75rem;
 }
 
-.pill-meta {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.pill.ok {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pill.muted {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.compare-section {
+  margin-top: 1rem;
+}
+
+.section-title {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  margin-bottom: 0.5rem;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.75rem;
+  margin: 0.375rem 0;
+  align-items: start;
+}
+
+.kv-label {
   font-size: 0.75rem;
   color: #6b7280;
 }
 
-.compare-card {
-  margin-top: 0.75rem;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #fafafa;
+.kv-value {
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.compare-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+.arrow {
+  color: #9ca3af;
+}
+
+.diff-grid {
+  display: grid;
   gap: 0.5rem;
 }
 
-.compare-header h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.compare-actions {
-  display: flex;
-  align-items: center;
+.diff-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 0.75rem;
+  align-items: start;
 }
 
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
+.diff-head {
   font-size: 0.75rem;
   color: #6b7280;
-  cursor: pointer;
+  font-weight: 500;
 }
 
-.toggle-label input {
-  accent-color: #3b82f6;
+.vcell {
+  font-size: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  word-break: break-word;
+}
+
+.compare-toggle {
+  width: 100%;
+  text-align: left;
+  margin-top: 1rem;
+  padding: 0.625rem 0.875rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.compare-toggle:hover {
+  background: #f9fafb;
+}
+
+.chev {
+  width: 1.125rem;
+  display: inline-block;
 }
 
 .compare-error {
@@ -1630,127 +1594,20 @@ h1 {
   margin-top: 0.75rem;
 }
 
-.compare-tabs {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 0.25rem;
+.muted {
+  color: #9ca3af;
 }
 
-.tab {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-  background: transparent;
-  border: none;
-  border-radius: 0.375rem 0.375rem 0 0;
-  cursor: pointer;
-  color: #6b7280;
-  transition: all 0.15s;
-}
-
-.tab:hover {
-  background: #f3f4f6;
-}
-
-.tab.active {
-  background: #fff;
-  color: #111827;
-  box-shadow: 0 1px 0 #fff;
-  font-weight: 500;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  margin-left: 0.375rem;
-  padding: 0 0.375rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  background: #fbbf24;
-  color: #78350f;
-  border-radius: 9999px;
-}
-
-.compare-body {
+.code {
   margin-top: 0.75rem;
-}
-
-.diff-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8125rem;
-}
-
-.diff-table th,
-.diff-table td {
-  text-align: left;
-  padding: 0.5rem 0.625rem;
-  border-bottom: 1px solid #e5e7eb;
-  vertical-align: top;
-}
-
-.diff-table th {
-  font-weight: 600;
-  color: #374151;
-  background: #f3f4f6;
-}
-
-.diff-table tr.changed {
-  background: #fef9c3;
-}
-
-.diff-table .key {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  white-space: nowrap;
-}
-
-.diff-table .val pre {
-  margin: 0;
+  padding: 1rem;
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 0.5rem;
   font-size: 0.75rem;
+  overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.diff-table .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.attach-diff {
-  display: grid;
-  gap: 1rem;
-}
-
-.attach-section h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
-}
-
-.attach-section ul {
-  margin: 0;
-  padding: 0 0 0 1.25rem;
-  font-size: 0.8125rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.no-diff {
-  color: #6b7280;
-  font-size: 0.8125rem;
-}
-
-.btn-clear {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.btn-clear:hover {
-  background: #e5e7eb;
-}
 </style>

@@ -517,7 +517,7 @@ async function copyIntentCurl() {
 function buildPromotionIntentExportUrl(session_id: string): string {
   const base = _baseUrl();
   const url = new URL(
-    `${base}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent.json`,
+    `${base}/art/design-first-workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent.json`,
     window.location.origin
   );
 

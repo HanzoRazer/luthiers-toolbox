@@ -16,6 +16,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchRun, downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
 import { explainRule } from "@/lib/feasibilityRuleRegistry";
+import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -426,6 +427,11 @@ async function downloadAttachment(att: any) {
         <ul>
           <li v-for="(err, i) in run.errors" :key="i">{{ err }}</li>
         </ul>
+      </section>
+
+      <!-- Inline Compare Panel -->
+      <section class="info-section">
+        <RunComparePanel :currentRunId="runId" :defaultOtherRunId="parentRunId" />
       </section>
     </div>
 
