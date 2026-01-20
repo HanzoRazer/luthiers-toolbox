@@ -85,28 +85,45 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     def _created_ts(art: Any) -> Optional[float]:
         """
         Best-effort extraction of a creation timestamp.
-        Handles RunArtifact Pydantic models and dicts.
-        Returns Unix seconds if parseable, else None.
-        """
-        # Priority: RunArtifact.created_at_utc (datetime)
-        cat = getattr(art, "created_at_utc", None)
-        if cat is not None:
-            if isinstance(cat, datetime):
-                return cat.timestamp()
 
-        # Fallback for dicts (serialized artifacts or test fixtures)
+        Supports:
+        - RunArtifact Pydantic models with `created_at_utc: datetime`
+        - Dict-based artifacts (tests / serialized forms)
+        - datetime objects
+        - numeric epoch seconds
+        - ISO-8601 strings (with or without 'Z')
+
+        Returns:
+            Unix timestamp in seconds, or None if unavailable.
+        """
+        # 1) Pydantic RunArtifact (authoritative runtime path)
+        created = getattr(art, "created_at_utc", None)
+        if isinstance(created, datetime):
+            return created.timestamp()
+
+        # 2) Dict-based fallbacks (tests / serialized artifacts)
         if isinstance(art, dict):
-            for k in ("created_at_utc", "created_utc", "created_at", "created", "timestamp", "ts"):
-                v = art.get(k)
+            for key in (
+                "created_at_utc",
+                "created_utc",
+                "created_at",
+                "created",
+                "timestamp",
+                "ts",
+            ):
+                v = art.get(key)
                 if v is None:
                     continue
-                # datetime object (unlikely in dict but possible)
+
+                # datetime
                 if isinstance(v, datetime):
                     return v.timestamp()
-                # numeric seconds
+
+                # numeric epoch
                 if isinstance(v, (int, float)):
                     return float(v)
-                # ISO strings
+
+                # ISO-8601 string
                 if isinstance(v, str) and v.strip():
                     s = v.strip()
                     if s.endswith("Z"):
@@ -115,6 +132,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
                         return datetime.fromisoformat(s).timestamp()
                     except Exception:
                         continue
+
         return None
 
     # Prefer filtered lists; tolerate older store signatures
