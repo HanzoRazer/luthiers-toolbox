@@ -151,6 +151,33 @@ from .batch_tree import resolve_batch_root, list_batch_tree  # noqa: F401
 from .batch_dashboard import build_batch_summary_dashboard_card  # noqa: F401
 
 # =============================================================================
+# Override Primitive (YELLOW unlock)
+# =============================================================================
+
+from .schemas_override import (
+    OverrideRequest,
+    OverrideRecord,
+    OverrideMetaUpdate,
+    OverrideResponse,
+    OverrideScope,
+)
+
+from .override_service import (
+    apply_override,
+    get_override_info,
+    is_overridden,
+    validate_override_preconditions,
+    # Errors
+    OverrideError,
+    RunNotFoundError,
+    NotBlockedError,
+    AlreadyOverriddenError,
+    RedOverrideNotAllowedError,
+    RiskMismatchError,
+    AcknowledgmentRequiredError,
+)
+
+# =============================================================================
 # API Router
 # =============================================================================
 
@@ -230,6 +257,23 @@ __all__ = [
     "verify_migration",
     "rollback_migration",
     "migration_status",
+    # Override
+    "OverrideRequest",
+    "OverrideRecord",
+    "OverrideMetaUpdate",
+    "OverrideResponse",
+    "OverrideScope",
+    "apply_override",
+    "get_override_info",
+    "is_overridden",
+    "validate_override_preconditions",
+    "OverrideError",
+    "RunNotFoundError",
+    "NotBlockedError",
+    "AlreadyOverriddenError",
+    "RedOverrideNotAllowedError",
+    "RiskMismatchError",
+    "AcknowledgmentRequiredError",
     # Router
     "router",
 ]
