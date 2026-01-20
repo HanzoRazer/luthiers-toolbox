@@ -6,7 +6,7 @@ Provides stable list endpoint with cursor pagination and envelope response.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, Optional, List, Tuple, Set
 
 import os
 import json
@@ -183,3 +183,81 @@ def list_runs_v2(
         next_cursor = _cursor_key(last.created_at_utc, last.run_id)
 
     return RunsListResponse(items=items, next_cursor=next_cursor, count=len(items))
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Run Diff Endpoint
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class RunDiffResponse(BaseModel):
+    run_a: str
+    run_b: str
+    request_diff: Dict[str, Any]
+    feasibility_diff: Dict[str, Any]
+    decision_diff: Dict[str, Any]
+    hashes_diff: Dict[str, Any]
+    attachments_diff: Dict[str, Any]
+
+
+def _dict_diff(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    keys: Set[str] = set(a.keys()) | set(b.keys())
+    out: Dict[str, Dict[str, Any]] = {}
+    for k in sorted(keys):
+        va = a.get(k)
+        vb = b.get(k)
+        if va != vb:
+            out[k] = {"a": va, "b": vb}
+    return out
+
+
+def _list_diff(a: List[Any], b: List[Any]) -> Dict[str, List[Any]]:
+    sa = set(map(json.dumps, a))
+    sb = set(map(json.dumps, b))
+    return {
+        "only_in_a": [json.loads(x) for x in sa - sb],
+        "only_in_b": [json.loads(x) for x in sb - sa],
+    }
+
+
+@router.get("/runs_v2/diff/{run_id_a}/{run_id_b}", response_model=RunDiffResponse)
+def diff_runs(run_id_a: str, run_id_b: str) -> RunDiffResponse:
+    """
+    Compare two RunArtifacts and return a structured diff.
+
+    Intended for operator / engineer trust-building:
+      - What changed between two runs?
+      - Why does the outcome differ?
+    """
+    ra = get_run(run_id_a)
+    rb = get_run(run_id_b)
+
+    if ra is None:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id_a}")
+    if rb is None:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id_b}")
+
+    # Normalize to dicts where needed
+    ra_req = ra.request_summary or {}
+    rb_req = rb.request_summary or {}
+
+    ra_feat = ra.feasibility or {}
+    rb_feat = rb.feasibility or {}
+
+    ra_dec = ra.decision.model_dump() if hasattr(ra.decision, "model_dump") else (ra.decision or {})
+    rb_dec = rb.decision.model_dump() if hasattr(rb.decision, "model_dump") else (rb.decision or {})
+
+    ra_hash = ra.hashes.model_dump() if hasattr(ra.hashes, "model_dump") else (ra.hashes or {})
+    rb_hash = rb.hashes.model_dump() if hasattr(rb.hashes, "model_dump") else (rb.hashes or {})
+
+    ra_atts = [a.model_dump() if hasattr(a, "model_dump") else a for a in (ra.attachments or [])]
+    rb_atts = [a.model_dump() if hasattr(a, "model_dump") else a for a in (rb.attachments or [])]
+
+    return RunDiffResponse(
+        run_a=run_id_a,
+        run_b=run_id_b,
+        request_diff=_dict_diff(ra_req, rb_req),
+        feasibility_diff=_dict_diff(ra_feat, rb_feat),
+        decision_diff=_dict_diff(ra_dec, rb_dec),
+        hashes_diff=_dict_diff(ra_hash, rb_hash),
+        attachments_diff=_list_diff(ra_atts, rb_atts),
+    )
