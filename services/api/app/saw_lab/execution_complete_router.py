@@ -84,28 +84,37 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
 
     def _created_ts(art: Any) -> Optional[float]:
         """
-        Best-effort extraction of a creation timestamp from common fields.
+        Best-effort extraction of a creation timestamp.
+        Handles RunArtifact Pydantic models and dicts.
         Returns Unix seconds if parseable, else None.
         """
-        if not isinstance(art, dict):
-            return None
-        for k in ("created_utc", "created_at", "created", "timestamp", "ts"):
-            v = art.get(k)
-            if v is None:
-                continue
-            # numeric seconds
-            if isinstance(v, (int, float)):
-                return float(v)
-            # ISO strings
-            if isinstance(v, str) and v.strip():
-                s = v.strip()
-                # tolerate Z
-                if s.endswith("Z"):
-                    s = s[:-1] + "+00:00"
-                try:
-                    return datetime.fromisoformat(s).timestamp()
-                except Exception:
+        # Priority: RunArtifact.created_at_utc (datetime)
+        cat = getattr(art, "created_at_utc", None)
+        if cat is not None:
+            if isinstance(cat, datetime):
+                return cat.timestamp()
+
+        # Fallback for dicts (serialized artifacts or test fixtures)
+        if isinstance(art, dict):
+            for k in ("created_at_utc", "created_utc", "created_at", "created", "timestamp", "ts"):
+                v = art.get(k)
+                if v is None:
                     continue
+                # datetime object (unlikely in dict but possible)
+                if isinstance(v, datetime):
+                    return v.timestamp()
+                # numeric seconds
+                if isinstance(v, (int, float)):
+                    return float(v)
+                # ISO strings
+                if isinstance(v, str) and v.strip():
+                    s = v.strip()
+                    if s.endswith("Z"):
+                        s = s[:-1] + "+00:00"
+                    try:
+                        return datetime.fromisoformat(s).timestamp()
+                    except Exception:
+                        continue
         return None
 
     # Prefer filtered lists; tolerate older store signatures
