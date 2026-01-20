@@ -11,6 +11,9 @@
 # Required secrets in Analyzer repo:
 #   TOOLBOX_DISPATCH_TOKEN - PAT with repo dispatch permission for this repo
 #
+# Required secrets in THIS repo (ToolBox):
+#   SG_SPEC_TOKEN - PAT with read access to sg-spec private repo
+#
 # ────────────────────────────────────────────────────────────────────────────────
 
 name: Analyzer Release Ingest Smoke
@@ -118,6 +121,10 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('services/api/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         working-directory: services/api
@@ -291,6 +298,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         working-directory: services/api
