@@ -116,6 +116,14 @@
       >
         Copy Node
       </button>
+      <button
+        class="btn ghost"
+        @click="copyExportGitHubActionsStep"
+        :disabled="!exportUrlPreview"
+        title="Copy GitHub Actions step YAML (curl + artifact upload)"
+      >
+        Copy GHA
+      </button>
     </div>
 
     <div v-if="err" class="wf-error">{{ err }}</div>
@@ -640,7 +648,7 @@ async function copyExportPython() {
 
 function _jsEscape(s: string): string {
   // Escape for JS template literal (backticks)
-  return String(s).replace(/\/g, "\\\\").replace(/`/g, "\`");
+  return String(s).replace(/\\/g, "\\\\").replace(new RegExp(String.fromCharCode(96), "g"), "\\" + String.fromCharCode(96));
 }
 
 function buildExportNodeFetch(url: string, session_id: string): string {
@@ -651,7 +659,7 @@ function buildExportNodeFetch(url: string, session_id: string): string {
     "// Promotion intent export (Node fetch, Node 18+)",
     "import fs from 'node:fs';",
     "",
-    "const url = \`" + u + "\`;",
+    "const url = '" + u + "';",
     "const out = " + JSON.stringify(out) + ";",
     "",
     "const res = await fetch(url, {",
@@ -663,7 +671,7 @@ function buildExportNodeFetch(url: string, session_id: string): string {
     "  const ct = res.headers.get('content-type') || '';",
     "  let body = '';",
     "  try { body = ct.includes('application/json') ? JSON.stringify(await res.json()) : await res.text(); } catch {}",
-    "  throw new Error(\`HTTP \${res.status} \${res.statusText} :: \${body}\`);",
+    "  throw new Error('HTTP ' + res.status + ' ' + res.statusText + ' :: ' + body);",
     "}",
     "",
     "const buf = Buffer.from(await res.arrayBuffer());",
@@ -697,6 +705,42 @@ async function copyExportNode() {
   }
 }
 
+/** Escape single quotes for YAML single-quoted strings */
+function _yamlEscapeSingleQuotes(s: string): string {
+  return s.replace(/'/g, "''");
+}
+
+/** Build GitHub Actions step YAML for downloading export + artifact upload */
+function buildExportGitHubActionsStep(url: string, session_id: string): string {
+  const out = _safeFilenameFromSession(session_id);
+  const safeUrl = _yamlEscapeSingleQuotes(url);
+  return [
+    "- name: Download RMOS promotion-intent",
+    "  run: |",
+    `    curl -sSfL '${safeUrl}' -o ${out}`,
+    "",
+    "- name: Upload promotion-intent artifact",
+    "  uses: actions/upload-artifact@v4",
+    "  with:",
+    "    name: promotion-intent",
+    `    path: ${out}`,
+  ].join("\n");
+}
+
+async function copyExportGitHubActionsStep() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const snippet = buildExportGitHubActionsStep(url, sid);
+
+  try {
+    await navigator.clipboard.writeText(snippet);
+    toast.success("Copied GitHub Actions step YAML.");
+  } catch {
+    toast.error("Copy failed.");
+  }
+}
 
 async function downloadIntent() {
   const sid = wf.sessionId;
