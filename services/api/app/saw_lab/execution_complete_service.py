@@ -8,6 +8,7 @@ def write_execution_complete_artifact(
     batch_execution_artifact_id: str,
     session_id: str,
     batch_label: str,
+    outcome: str,
     notes: Optional[str] = None,
     operator_id: Optional[str] = None,
     tool_kind: str = "saw",
@@ -35,6 +36,8 @@ def write_execution_complete_artifact(
         raise ValueError("session_id required")
     if not batch_label:
         raise ValueError("batch_label required")
+    if not outcome:
+        raise ValueError("outcome required")
 
     # Validate checklist if provided
     if checklist:
@@ -46,9 +49,10 @@ def write_execution_complete_artifact(
         "batch_execution_artifact_id": batch_execution_artifact_id,
         "session_id": session_id,
         "batch_label": batch_label,
+        "outcome": outcome,
         "notes": notes,
         "operator_id": operator_id,
-        "state": "COMPLETE",
+        "state": "COMPLETED",
     }
 
     if checklist:

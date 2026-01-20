@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -7,6 +8,13 @@ from pydantic import BaseModel, Field
 
 
 router = APIRouter(prefix="/api/saw/batch", tags=["Saw", "Batch"])
+
+
+class ExecutionOutcome(str, Enum):
+    SUCCESS = "SUCCESS"
+    PARTIAL = "PARTIAL"
+    REWORK_REQUIRED = "REWORK_REQUIRED"
+    SCRAP = "SCRAP"
 
 
 class ExecutionCompleteChecklist(BaseModel):
@@ -20,6 +28,7 @@ class ExecutionCompleteRequest(BaseModel):
     batch_execution_artifact_id: str = Field(..., description="Execution artifact id to complete")
     session_id: str
     batch_label: str
+    outcome: ExecutionOutcome
     notes: Optional[str] = None
     operator_id: Optional[str] = None
     tool_kind: str = "saw"
@@ -30,7 +39,7 @@ class ExecutionCompleteRequest(BaseModel):
 class ExecutionCompleteResponse(BaseModel):
     batch_execution_artifact_id: str
     complete_artifact_id: str
-    state: str = "COMPLETE"
+    state: str = "COMPLETED"
 
 
 @router.post("/execution/complete", response_model=ExecutionCompleteResponse)
@@ -40,17 +49,63 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     if not req.session_id or not req.batch_label:
         raise HTTPException(status_code=400, detail="session_id and batch_label required")
 
-    # Ensure execution exists
     from app.rmos.runs_v2 import store as runs_store
 
+    # Ensure execution exists (avoid completing phantom IDs)
     ex = runs_store.get_run(req.batch_execution_artifact_id)
-    if not isinstance(ex, dict):
+    if ex is None:
         raise HTTPException(status_code=404, detail="execution artifact not found")
 
+    # Guardrails:
+    # - do not allow completion if already aborted
+    # - do not allow double completion
+    def _items(res: Any) -> list:
+        if isinstance(res, dict):
+            v = res.get("items")
+            return v if isinstance(v, list) else []
+        return res if isinstance(res, list) else []
+
+    def _parent_id(art: Any) -> Optional[str]:
+        if isinstance(art, dict):
+            return str(art.get("parent_id") or art.get("parent_artifact_id") or "") or None
+        meta = getattr(art, "meta", None)
+        if isinstance(meta, dict):
+            pid = meta.get("parent_id")
+            return str(pid) if pid else None
+        return None
+
+    # Prefer filtered lists; tolerate older store signatures
+    try:
+        aborts = _items(
+            runs_store.list_runs_filtered(
+                session_id=req.session_id,
+                batch_label=req.batch_label,
+                kind="saw_batch_execution_abort",
+                limit=5000,
+            )
+        )
+        completes = _items(
+            runs_store.list_runs_filtered(
+                session_id=req.session_id,
+                batch_label=req.batch_label,
+                kind="saw_batch_execution_complete",
+                limit=5000,
+            )
+        )
+    except TypeError:
+        aborts = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
+        completes = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
+
+    for a in aborts:
+        if _parent_id(a) == str(req.batch_execution_artifact_id):
+            raise HTTPException(status_code=409, detail="execution already aborted")
+
+    for c in completes:
+        if _parent_id(c) == str(req.batch_execution_artifact_id):
+            raise HTTPException(status_code=409, detail="execution already completed")
+
     # Convert checklist pydantic model to dict if provided
-    checklist_dict = None
-    if req.checklist:
-        checklist_dict = req.checklist.model_dump()
+    checklist_dict = req.checklist.model_dump() if req.checklist else None
 
     from .execution_complete_service import write_execution_complete_artifact
 
@@ -58,6 +113,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         batch_execution_artifact_id=req.batch_execution_artifact_id,
         session_id=req.session_id,
         batch_label=req.batch_label,
+        outcome=str(req.outcome.value),
         notes=req.notes,
         operator_id=req.operator_id,
         tool_kind=req.tool_kind,
@@ -68,5 +124,5 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     return ExecutionCompleteResponse(
         batch_execution_artifact_id=req.batch_execution_artifact_id,
         complete_artifact_id=complete_id,
-        state="COMPLETE",
+        state="COMPLETED",
     )
