@@ -137,6 +137,22 @@
         </div>
       </div>
 
+      <!-- Run-to-run compare -->
+      <div class="compare-card" v-if="compareDiff || compareError">
+        <div class="compare-header">
+          <h3>Compare with Previous Run</h3>
+          <div class="compare-meta">{{ previousRunId }} → {{ result?.run_id }}</div>
+        </div>
+        <div v-if="compareError" class="compare-error">{{ compareError }}</div>
+        <div v-else-if="compareDiff" class="compare-body">
+          <div class="compare-row">
+            <span class="compare-hint">Inputs, feasibility, decision, hashes, and attachments diffs.</span>
+            <button class="btn-clear" @click="clearCompare">Clear</button>
+          </div>
+          <pre class="compare-code">{{ JSON.stringify(compareDiff, null, 2) }}</pre>
+        </div>
+      </div>
+
       <!-- Action row with risk badge + downloads -->
       <div class="action-row">
         <span
@@ -162,6 +178,15 @@
           title="Downloads input.dxf + plan.json + manifest.json + output.nc"
         >
           Download Operator Pack (.zip)
+        </button>
+
+        <button
+          @click="compareWithPreviousRun"
+          :disabled="!canCompare"
+          class="btn-compare"
+          :title="previousRunId ? `Compare ${previousRunId} → ${result?.run_id}` : 'No previous run found yet'"
+        >
+          {{ isComparing ? 'Comparing…' : 'Compare w/ Previous' }}
         </button>
       </div>
 
@@ -240,6 +265,10 @@ const isGenerating = ref(false)
 const result = ref<any>(null)
 const error = ref<string | null>(null)
 const abortController = ref<AbortController | null>(null)
+const previousRunId = ref<string | null>(null)
+const isComparing = ref(false)
+const compareError = ref<string | null>(null)
+const compareDiff = ref<any | null>(null)
 
 const params = ref({
   tool_d: 6.0,
@@ -258,6 +287,11 @@ const params = ref({
 })
 
 const canDownload = computed(() => result.value?.gcode?.inline && !!result.value?.gcode?.text)
+
+const canCompare = computed(() => {
+  const runId = String(result.value?.run_id || '').trim()
+  return !!runId && !!previousRunId.value && !isGenerating.value && !isComparing.value
+})
 
 const canDownloadOperatorPack = computed(() => {
   const runId = (result.value?.run_id || '').trim()
@@ -293,6 +327,70 @@ function viewRunNewTab() {
   if (!runId) return
   const href = router.resolve(`/rmos/runs/${encodeURIComponent(runId)}`).href
   window.open(href, '_blank', 'noopener,noreferrer')
+}
+
+async function refreshPreviousRunId(currentRunId: string) {
+  // Uses the new envelope endpoint. We only need the previous run in the same mode.
+  try {
+    previousRunId.value = null
+    const resp = await fetch('/api/rmos/runs_v2?limit=20')
+    if (!resp.ok) return
+    const j = await resp.json()
+    const items = Array.isArray(j?.items) ? j.items : []
+    // Prefer matching mode (if present in wrapper result, else just "previous by time")
+    const mode = String(result.value?.mode || '').trim()
+
+    let filtered = items
+    if (mode) {
+      filtered = items.filter((it: any) => String(it?.mode || '').trim() === mode)
+    }
+
+    // Find current run in list, then pick the next item after it (newest-first).
+    const idx = filtered.findIndex((it: any) => String(it?.run_id || '').trim() === currentRunId)
+    if (idx >= 0 && idx + 1 < filtered.length) {
+      previousRunId.value = String(filtered[idx + 1]?.run_id || '').trim() || null
+      return
+    }
+
+    // Fallback: take the first run that isn't current
+    const alt = filtered.find((it: any) => String(it?.run_id || '').trim() && String(it?.run_id || '').trim() !== currentRunId)
+    previousRunId.value = alt ? String(alt.run_id).trim() : null
+  } catch {
+    // Non-fatal
+    previousRunId.value = null
+  }
+}
+
+async function compareWithPreviousRun() {
+  const runId = String(result.value?.run_id || '').trim()
+  const prev = String(previousRunId.value || '').trim()
+  if (!runId || !prev) return
+
+  isComparing.value = true
+  compareError.value = null
+  compareDiff.value = null
+
+  try {
+    const resp = await fetch(`/api/rmos/runs_v2/diff/${encodeURIComponent(prev)}/${encodeURIComponent(runId)}`)
+    if (!resp.ok) {
+      let msg = `Compare failed (HTTP ${resp.status})`
+      try {
+        const j = await resp.json()
+        if (j?.detail) msg = String(j.detail)
+      } catch {}
+      throw new Error(msg)
+    }
+    compareDiff.value = await resp.json()
+  } catch (e: any) {
+    compareError.value = e?.message || 'Failed to compare runs.'
+  } finally {
+    isComparing.value = false
+  }
+}
+
+function clearCompare() {
+  compareDiff.value = null
+  compareError.value = null
 }
 
 const explainSummary = computed(() => {
@@ -335,10 +433,17 @@ async function refreshRunCanonical(runId: string) {
       hashes: run.hashes ?? result.value?.hashes,
       decision: run.decision ?? result.value?.decision,
       feasibility: run.feasibility ?? result.value?.feasibility,
+      mode: run.mode ?? result.value?.mode,
     }
+    await refreshPreviousRunId(runId)
   } catch {
     // Non-fatal: refresh failure doesn't block operator action
   }
+}
+
+async function onRunProduced(runId: string) {
+  // Best-effort: refresh mode + previous run id
+  await refreshPreviousRunId(runId)
 }
 
 async function submitOverrideAndRetryPack() {
@@ -481,6 +586,7 @@ const generateGcode = async () => {
     }
 
     result.value = await response.json()
+    await onRunProduced(String(result.value?.run_id || '').trim())
 
   } catch (err: any) {
     // Ignore abort errors (user changed file or re-submitted)
@@ -1224,5 +1330,92 @@ h1 {
   background: #fee2e2;
   color: #991b1b;
   border: 1px solid #ef4444;
+}
+
+.btn-compare {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-compare:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn-compare:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compare-card {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fafafa;
+}
+
+.compare-header h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+}
+
+.compare-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.compare-error {
+  color: #b91c1c;
+  margin-top: 0.5rem;
+}
+
+.compare-body {
+  margin-top: 0.75rem;
+}
+
+.compare-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.compare-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.btn-clear {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.btn-clear:hover {
+  background: #e5e7eb;
+}
+
+.compare-code {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>
