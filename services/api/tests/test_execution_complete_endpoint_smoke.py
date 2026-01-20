@@ -7,27 +7,30 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
     from app.rmos.runs_v2 import store as runs_store
     from app.main import app
 
-    # Execution exists
     def _fake_get_run(run_id: str):
         assert run_id == "exec1"
         return {"id": "exec1", "kind": "saw_batch_execution", "payload": {"status": "OK"}}
 
-    # Complete artifact write
+    def _fake_list_runs_filtered(**kwargs):
+        return {"items": []}
+
     def _fake_store_artifact(**kwargs):
         assert kwargs["kind"] == "saw_batch_execution_complete"
         assert kwargs["parent_id"] == "exec1"
         assert kwargs["session_id"] == "s1"
         assert kwargs["batch_label"] == "b1"
+
         payload = kwargs["payload"]
-        assert payload["state"] == "COMPLETE"
+        assert payload["state"] == "COMPLETED"
+        assert payload["outcome"] == "SUCCESS"
         assert payload["operator_id"] == "op1"
         assert "notes" in payload
-        # Checklist should be present
         assert payload["checklist"]["all_cuts_complete"] is True
         assert payload["checklist"]["workpiece_inspected"] is True
         return "complete1"
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
     monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
 
     c = TestClient(app)
@@ -37,6 +40,7 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
             "batch_execution_artifact_id": "exec1",
             "session_id": "s1",
             "batch_label": "b1",
+            "outcome": "SUCCESS",
             "notes": "All cuts completed successfully.",
             "operator_id": "op1",
             "checklist": {
@@ -51,7 +55,7 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
     data = r.json()
     assert data["batch_execution_artifact_id"] == "exec1"
     assert data["complete_artifact_id"] == "complete1"
-    assert data["state"] == "COMPLETE"
+    assert data["state"] == "COMPLETED"
 
 
 def test_execution_complete_404_when_execution_missing(monkeypatch):
@@ -70,6 +74,7 @@ def test_execution_complete_404_when_execution_missing(monkeypatch):
             "batch_execution_artifact_id": "missing",
             "session_id": "s1",
             "batch_label": "b1",
+            "outcome": "SUCCESS",
             "notes": "No execution existed.",
         },
     )
@@ -83,15 +88,18 @@ def test_execution_complete_without_checklist(monkeypatch):
     def _fake_get_run(run_id: str):
         return {"id": "exec2", "kind": "saw_batch_execution", "payload": {}}
 
+    def _fake_list_runs_filtered(**kwargs):
+        return {"items": []}
+
     def _fake_store_artifact(**kwargs):
-        assert kwargs["kind"] == "saw_batch_execution_complete"
         payload = kwargs["payload"]
-        assert payload["state"] == "COMPLETE"
-        # No checklist provided
+        assert payload["state"] == "COMPLETED"
+        assert payload["outcome"] == "PARTIAL"
         assert "checklist" not in payload or payload["checklist"] is None
         return "complete2"
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
     monkeypatch.setattr(runs_store, "store_artifact", _fake_store_artifact)
 
     c = TestClient(app)
@@ -101,8 +109,70 @@ def test_execution_complete_without_checklist(monkeypatch):
             "batch_execution_artifact_id": "exec2",
             "session_id": "s1",
             "batch_label": "b1",
+            "outcome": "PARTIAL",
         },
     )
     assert r.status_code == 200, r.text
-    data = r.json()
-    assert data["state"] == "COMPLETE"
+    assert r.json()["state"] == "COMPLETED"
+
+
+def test_execution_complete_409_when_execution_already_aborted(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_execution_abort":
+            return {"items": [{"id": "ab1", "kind": kind, "parent_id": "exec3"}]}
+        if kind == "saw_batch_execution_complete":
+            return {"items": []}
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec3",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    assert r.status_code == 409
+
+
+def test_execution_complete_409_when_execution_already_completed(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_execution_abort":
+            return {"items": []}
+        if kind == "saw_batch_execution_complete":
+            return {"items": [{"id": "c1", "kind": kind, "parent_id": "exec4"}]}
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec4",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    assert r.status_code == 409
