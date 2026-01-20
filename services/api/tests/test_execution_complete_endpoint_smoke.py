@@ -12,6 +12,9 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
         return {"id": "exec1", "kind": "saw_batch_execution", "payload": {"status": "OK"}}
 
     def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_job_log":
+            return {"items": [{"id": "jl1", "kind": kind, "parent_id": "exec1"}]}
         return {"items": []}
 
     def _fake_store_artifact(**kwargs):
@@ -89,6 +92,9 @@ def test_execution_complete_without_checklist(monkeypatch):
         return {"id": "exec2", "kind": "saw_batch_execution", "payload": {}}
 
     def _fake_list_runs_filtered(**kwargs):
+        kind = kwargs.get("kind")
+        if kind == "saw_batch_job_log":
+            return {"items": [{"id": "jl2", "kind": kind, "parent_id": "exec2"}]}
         return {"items": []}
 
     def _fake_store_artifact(**kwargs):
@@ -176,3 +182,34 @@ def test_execution_complete_409_when_execution_already_completed(monkeypatch):
         },
     )
     assert r.status_code == 409
+
+
+def test_execution_complete_409_when_no_job_logs(monkeypatch):
+    from app.rmos.runs_v2 import store as runs_store
+    from app.main import app
+
+    def _fake_get_run(run_id: str):
+        return {"id": run_id, "kind": "saw_batch_execution", "payload": {}}
+
+    def _fake_list_runs_filtered(**kwargs):
+        # No job logs returned for this session/batch
+        kind = kwargs.get("kind")
+        if kind in ("saw_batch_execution_abort", "saw_batch_execution_complete", "saw_batch_job_log"):
+            return {"items": []}
+        return {"items": []}
+
+    monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
+    monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
+
+    c = TestClient(app)
+    r = c.post(
+        "/api/saw/batch/execution/complete",
+        json={
+            "batch_execution_artifact_id": "exec_no_logs",
+            "session_id": "s1",
+            "batch_label": "b1",
+            "outcome": "SUCCESS",
+        },
+    )
+    assert r.status_code == 409
+    assert "no job logs" in r.json()["detail"]
