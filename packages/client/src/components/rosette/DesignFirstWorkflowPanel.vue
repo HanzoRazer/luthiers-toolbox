@@ -557,7 +557,8 @@ function _psEscape(s: string): string {
 }
 
 function _safeFilenameFromSession(session_id: string): string {
-  return `promotion_intent_v1_${session_id}.json`.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const cleaned = (session_id || "session").trim().slice(0, 32).replace(/[^a-zA-Z0-9._-]+/g, "_");
+  return `art_studio_export_intent_${cleaned}.json`;
 }
 
 function buildExportPowerShellIwr(url: string, session_id: string): string {
@@ -759,50 +760,36 @@ function buildExportGitHubActionsJob(url: string, session_id: string): string {
   const u = _yamlEscapeSingleQuotes(url);
   const out = _yamlEscapeSingleQuotes(safeOut);
 
+  // Repo-aligned conventions:
+  // - secret: TOOLBOX_API_TOKEN (SCREAMING_SNAKE_CASE)
+  // - artifact name: kebab-case
+  // - job id: kebab-case
   return [
-    "# GitHub Actions job: download promotion intent + upload artifact",
-    "# Paste under: jobs:",
-    "",
-    "download_promotion_intent:",
-    "  name: Download promotion intent (Art Studio)",
+    "art-studio-export-intent:",
+    "  name: Download Art Studio export intent",
     "  runs-on: ubuntu-latest",
-    "  timeout-minutes: 10",
     "  steps:",
-    "    - name: Checkout",
-    "      uses: actions/checkout@v4",
-    "",
-    "    # Optional: set API base if your job runs against an env-specific host",
-    "    # - name: Set API base",
-    "    #   run: echo \"API_BASE=https://your-host.example.com/api\" >> $GITHUB_ENV",
-    "",
-    "    # Optional auth: set secrets.API_TOKEN to inject Authorization header",
-    "    # (If empty/unset, request runs without auth header.)",
-    "    - name: Download promotion intent JSON",
-    "      shell: bash",
+    "    - name: Download export intent JSON",
     "      env:",
-    "        API_TOKEN: ${{ secrets.API_TOKEN }}",
+    "        TOOLBOX_API_TOKEN: ${{ secrets.TOOLBOX_API_TOKEN }}",
     "      run: |",
     "        set -euo pipefail",
-    "        URL='" + u + "'",
-    "        OUT='" + out + "'",
-    "        echo \"Downloading: $URL\"",
-    "        AUTH_ARGS=()",
-    "        if [ -n \"\${API_TOKEN:-}\" ]; then",
-    "          AUTH_ARGS=(-H \"Authorization: Bearer \${API_TOKEN}\")",
-    "          echo \"Auth: enabled (Bearer token)\"",
-    "        else",
-    "          echo \"Auth: not set\"",
+    `        URL='${u}'`,
+    `        OUT='${out}'`,
+    "        HDR=()",
+    '        if [ -n "${TOOLBOX_API_TOKEN:-}" ]; then',
+    '          HDR+=(-H "Authorization: Bearer ${TOOLBOX_API_TOKEN}")',
     "        fi",
-    "        curl -sSfL \"\${AUTH_ARGS[@]}\" \"$URL\" -o \"$OUT\"",
-    "        echo \"Saved: $OUT\"",
-    "",
-    "    - name: Upload promotion-intent artifact",
+    '        curl -sSfL "${HDR[@]}" "$URL" -o "$OUT"',
+    '        echo "Saved ${OUT}"',
+    "    - name: Upload artifact",
     "      uses: actions/upload-artifact@v4",
     "      with:",
-    "        name: promotion-intent",
-    "        path: " + out,
-  ].join("
-");
+    "        name: art-studio-export-intent",
+    `        path: ${out}`,
+    "        retention-days: 7",
+    "",
+  ].join("\n");
 }
 
 async function copyExportGitHubActionsJob() {
