@@ -90,6 +90,11 @@ from .api_global_attachments import router as global_attachments_router
 
 router.include_router(global_attachments_router)
 
+# Override endpoint (YELLOW unlock primitive)
+from .router_override import router as override_router
+
+router.include_router(override_router)
+
 
 # =============================================================================
 # Response Models
