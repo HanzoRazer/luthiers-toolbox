@@ -124,6 +124,14 @@
       >
         Copy GHA
       </button>
+      <button
+        class="btn ghost"
+        @click="copyExportGitHubActionsJob"
+        :disabled="!exportUrlPreview"
+        title="Copy full GitHub Actions job YAML (checkout + auth + download + upload)"
+      >
+        Copy GHA Job
+      </button>
     </div>
 
     <div v-if="err" class="wf-error">{{ err }}</div>
@@ -737,6 +745,76 @@ async function copyExportGitHubActionsStep() {
   try {
     await navigator.clipboard.writeText(snippet);
     toast.success("Copied GitHub Actions step YAML.");
+  } catch {
+    toast.error("Copy failed.");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.12: Copy GitHub Actions Job (full job block + optional auth)
+// ==========================================================================
+
+function buildExportGitHubActionsJob(url: string, session_id: string): string {
+  const safeOut = _safeFilenameFromSession(session_id);
+  const u = _yamlEscapeSingleQuotes(url);
+  const out = _yamlEscapeSingleQuotes(safeOut);
+
+  return [
+    "# GitHub Actions job: download promotion intent + upload artifact",
+    "# Paste under: jobs:",
+    "",
+    "download_promotion_intent:",
+    "  name: Download promotion intent (Art Studio)",
+    "  runs-on: ubuntu-latest",
+    "  timeout-minutes: 10",
+    "  steps:",
+    "    - name: Checkout",
+    "      uses: actions/checkout@v4",
+    "",
+    "    # Optional: set API base if your job runs against an env-specific host",
+    "    # - name: Set API base",
+    "    #   run: echo \"API_BASE=https://your-host.example.com/api\" >> $GITHUB_ENV",
+    "",
+    "    # Optional auth: set secrets.API_TOKEN to inject Authorization header",
+    "    # (If empty/unset, request runs without auth header.)",
+    "    - name: Download promotion intent JSON",
+    "      shell: bash",
+    "      env:",
+    "        API_TOKEN: ${{ secrets.API_TOKEN }}",
+    "      run: |",
+    "        set -euo pipefail",
+    "        URL='" + u + "'",
+    "        OUT='" + out + "'",
+    "        echo \"Downloading: $URL\"",
+    "        AUTH_ARGS=()",
+    "        if [ -n \"\${API_TOKEN:-}\" ]; then",
+    "          AUTH_ARGS=(-H \"Authorization: Bearer \${API_TOKEN}\")",
+    "          echo \"Auth: enabled (Bearer token)\"",
+    "        else",
+    "          echo \"Auth: not set\"",
+    "        fi",
+    "        curl -sSfL \"\${AUTH_ARGS[@]}\" \"$URL\" -o \"$OUT\"",
+    "        echo \"Saved: $OUT\"",
+    "",
+    "    - name: Upload promotion-intent artifact",
+    "      uses: actions/upload-artifact@v4",
+    "      with:",
+    "        name: promotion-intent",
+    "        path: " + out,
+  ].join("
+");
+}
+
+async function copyExportGitHubActionsJob() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const snippet = buildExportGitHubActionsJob(url, sid);
+
+  try {
+    await navigator.clipboard.writeText(snippet);
+    toast.success("Copied GitHub Actions job YAML.");
   } catch {
     toast.error("Copy failed.");
   }
