@@ -111,3 +111,22 @@ class PromotionIntentResponse(BaseModel):
     ok: bool
     intent: Optional[PromotionIntent] = None
     blocked_reason: Optional[str] = None
+
+
+# Conditional import for PromotionIntentV1
+try:
+    from app.art_studio.schemas.promotion_intent import PromotionIntentV1
+except ImportError:
+    from art_studio.schemas.promotion_intent import PromotionIntentV1
+
+
+class PromotionIntentV1Response(BaseModel):
+    """
+    Wrapper response for canonical PromotionIntentV1.
+
+    Provides ergonomic { ok, blocked_reason } envelope for UI flows
+    while returning the strict v1 schema when approved.
+    """
+    ok: bool
+    intent: Optional[PromotionIntentV1] = None
+    blocked_reason: Optional[str] = None
