@@ -19,6 +19,7 @@ from fastapi import APIRouter, HTTPException, Query
 # Conditional imports
 try:
     from app.art_studio.schemas.workflow_design_first import (
+        DesignFirstState,
         GetDesignFirstResponse,
         PromotionIntentResponse,
         StartDesignFirstRequest,
@@ -33,16 +34,19 @@ try:
     )
     from app.art_studio.services.design_first_workflow_service import (
         build_promotion_intent,
+        build_promotion_intent_v1,
         get_session,
         start_session,
         transition_session,
     )
+    from app.art_studio.schemas.promotion_intent import PromotionIntentV1
     from app.art_studio.stores.design_first_workflow_store import (
         delete_session as store_delete_session,
         list_recent,
     )
 except ImportError:
     from art_studio.schemas.workflow_design_first import (
+        DesignFirstState,
         GetDesignFirstResponse,
         PromotionIntentResponse,
         StartDesignFirstRequest,
@@ -57,10 +61,12 @@ except ImportError:
     )
     from art_studio.services.design_first_workflow_service import (
         build_promotion_intent,
+        build_promotion_intent_v1,
         get_session,
         start_session,
         transition_session,
     )
+    from art_studio.schemas.promotion_intent import PromotionIntentV1
     from art_studio.stores.design_first_workflow_store import (
         delete_session as store_delete_session,
         list_recent,
@@ -151,6 +157,63 @@ async def workflow_promotion_intent(session_id: str) -> PromotionIntentResponse:
         raise HTTPException(status_code=404, detail="design_first_session_not_found")
     except PermissionError:
         return PromotionIntentResponse(ok=False, blocked_reason="workflow_not_approved")
+
+
+# ==========================================================================
+# Bundle 32.8.5: GET /promotion_intent.json - Canonical PromotionIntentV1 Export
+# ==========================================================================
+
+
+@router.get(
+    "/sessions/{session_id}/promotion_intent.json",
+    response_model=PromotionIntentV1,
+)
+async def workflow_promotion_intent_export(
+    session_id: str,
+    tool_id: Optional[str] = Query(None, description="Override tool_id in context_refs"),
+    material_id: Optional[str] = Query(None, description="Override material_id in context_refs"),
+    machine_profile_id: Optional[str] = Query(None, description="Override machine_profile_id in context_refs"),
+    cam_profile_id: Optional[str] = Query(None, description="Override requested_cam_profile_id"),
+    risk_tolerance: Optional[str] = Query(None, description="Override risk_tolerance (GREEN_ONLY or ALLOW_YELLOW)"),
+) -> PromotionIntentV1:
+    """
+    Export canonical PromotionIntentV1 payload as JSON.
+    
+    This is the strict contract for CI/CD validation and downstream consumers.
+    Returns the raw PromotionIntentV1 schema (no wrapper).
+    
+    Query params allow overriding context_refs for testing different configurations.
+    """
+    try:
+        session = get_session(session_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="design_first_session_not_found")
+    
+    if session.state != DesignFirstState.APPROVED:
+        raise HTTPException(status_code=403, detail="workflow_not_approved")
+    
+    # Build context_refs from query params
+    context_refs = {}
+    if tool_id:
+        context_refs["tool_id"] = tool_id
+    if material_id:
+        context_refs["material_id"] = material_id
+    if machine_profile_id:
+        context_refs["machine_profile_id"] = machine_profile_id
+    
+    # Normalize risk_tolerance
+    risk_tol = None
+    if risk_tolerance:
+        rt_upper = risk_tolerance.upper()
+        if rt_upper in ("GREEN_ONLY", "ALLOW_YELLOW"):
+            risk_tol = rt_upper
+    
+    return build_promotion_intent_v1(
+        session=session,
+        requested_cam_profile_id=cam_profile_id,
+        context_refs=context_refs if context_refs else None,
+        risk_tolerance=risk_tol,
+    )
 
 
 # ==========================================================================
