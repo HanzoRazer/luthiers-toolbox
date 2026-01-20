@@ -132,6 +132,22 @@
       >
         Copy GHA Job
       </button>
+      <button
+        class="btn ghost"
+        @click="copyExportGitHubActionsWorkflow"
+        :disabled="!exportUrlPreview"
+        title="Copy complete GitHub Actions workflow file (.yml)"
+      >
+        Copy GHA Workflow
+      </button>
+      <button
+        class="btn ghost"
+        @click="copyGitHubActionsWorkflowFile"
+        :disabled="!exportUrlPreview"
+        title="Copy a complete GitHub Actions workflow with filename instructions"
+      >
+        Copy GH Workflow (File-Ready)
+      </button>
     </div>
 
     <div v-if="err" class="wf-error">{{ err }}</div>
@@ -804,6 +820,124 @@ async function copyExportGitHubActionsJob() {
     toast.success("Copied GitHub Actions job YAML.");
   } catch {
     toast.error("Copy failed.");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.13: Copy GitHub Actions Workflow (full .yml file)
+// ==========================================================================
+
+function buildExportGitHubActionsWorkflow(url: string, session_id: string): string {
+  const safeOut = _safeFilenameFromSession(session_id);
+  const u = _yamlEscapeSingleQuotes(url);
+  const out = _yamlEscapeSingleQuotes(safeOut);
+
+  return [
+    "# Save as: .github/workflows/art-studio-export-intent.yml",
+    "name: Art Studio - Download Export Intent",
+    "",
+    "on:",
+    "  workflow_dispatch:",
+    "    inputs:",
+    "      export_url:",
+    "        description: Override export URL (optional)",
+    "        required: false",
+    "        default: '" + u + "'",
+    "      out_file:",
+    "        description: Output filename (optional)",
+    "        required: false",
+    "        default: '" + out + "'",
+    "",
+    "permissions:",
+    "  contents: read",
+    "",
+    "jobs:",
+    "  art-studio-export-intent:",
+    "    name: Download Art Studio export intent",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - name: Download export intent JSON",
+    "        env:",
+    "          TOOLBOX_API_TOKEN: ${{ secrets.TOOLBOX_API_TOKEN }}",
+    "          EXPORT_URL: ${{ inputs.export_url }}",
+    "          OUT_FILE: ${{ inputs.out_file }}",
+    "        run: |",
+    "          set -euo pipefail",
+    '          URL="${EXPORT_URL}"',
+    '          OUT="${OUT_FILE}"',
+    "          HDR=()",
+    '          if [ -n "${TOOLBOX_API_TOKEN:-}" ]; then',
+    '            HDR+=(-H "Authorization: Bearer ${TOOLBOX_API_TOKEN}")',
+    "          fi",
+    '          curl -sSfL "${HDR[@]}" "${URL}" -o "${OUT}"',
+    '          echo "Saved ${OUT}"',
+    "",
+    "      - name: Upload artifact",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: art-studio-export-intent",
+    "          path: ${{ inputs.out_file }}",
+    "          retention-days: 7",
+    "",
+  ].join("
+");
+}
+
+async function copyExportGitHubActionsWorkflow() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const workflow = buildExportGitHubActionsWorkflow(url, sid);
+
+  try {
+    await navigator.clipboard.writeText(workflow);
+    toast.success("Copied GitHub Actions workflow YAML.");
+  } catch {
+    toast.error("Copy failed.");
+  }
+}
+
+// ==========================================================================
+// Bundle 32.8.4.13: Copy GH Workflow (File-Ready) — includes usage instructions
+// ==========================================================================
+
+function buildRepoReadyWorkflowBundle(url: string, session_id: string): string {
+  const filename = "art-studio-export-intent.yml";
+  const workflow = buildExportGitHubActionsWorkflow(url, session_id);
+
+  return [
+    `# =====================================================================`,
+    `# Art Studio — Export Intent Download Workflow`,
+    `#`,
+    `# HOW TO USE:`,
+    `# 1. Create this file in your repo at:`,
+    `#    .github/workflows/${filename}`,
+    `# 2. Commit the file`,
+    `# 3. (Optional) Add this secret in GitHub repo settings:`,
+    `#      TOOLBOX_API_TOKEN = <your API token>`,
+    `# 4. Run manually via GitHub Actions → Workflow Dispatch`,
+    `#`,
+    `# This workflow downloads a ToolBox Art Studio export intent`,
+    `# and uploads it as a build artifact.`,
+    `# =====================================================================`,
+    ``,
+    workflow,
+  ].join("\n");
+}
+
+async function copyGitHubActionsWorkflowFile() {
+  const sid = wf.sessionId;
+  const url = exportUrlPreview.value;
+  if (!sid || !url) return;
+
+  const bundle = buildRepoReadyWorkflowBundle(url, sid);
+
+  try {
+    await navigator.clipboard.writeText(bundle);
+    toast.success("Repo-ready GitHub Actions workflow copied");
+  } catch {
+    toast.error("Failed to copy workflow");
   }
 }
 
