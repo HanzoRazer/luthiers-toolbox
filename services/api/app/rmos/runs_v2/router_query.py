@@ -21,6 +21,7 @@ from app.rmos.explain_ai import generate_assistant_explanation
 from .store import get_run, persist_run, _get_store_root
 from .attachments import put_json_attachment
 from .hashing import sha256_of_obj
+from .compare import compare_run_artifacts
 
 
 router = APIRouter()
@@ -261,3 +262,18 @@ def diff_runs(run_id_a: str, run_id_b: str) -> RunDiffResponse:
         hashes_diff=_dict_diff(ra_hash, rb_hash),
         attachments_diff=_list_diff(ra_atts, rb_atts),
     )
+
+
+@router.get("/runs_v2/compare/{run_id_a}/{run_id_b}")
+def compare_runs_v2(run_id_a: str, run_id_b: str) -> Dict[str, Any]:
+    """
+    Operator-facing structured compare endpoint.
+    Returns a compact summary + focused diffs (and also includes optional deep diffs).
+    """
+    ra = get_run(run_id_a)
+    rb = get_run(run_id_b)
+    if ra is None:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id_a}")
+    if rb is None:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id_b}")
+    return compare_run_artifacts(ra, rb)
