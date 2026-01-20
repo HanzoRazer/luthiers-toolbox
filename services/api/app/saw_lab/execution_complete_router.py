@@ -59,6 +59,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     # Guardrails:
     # - do not allow completion if already aborted
     # - do not allow double completion
+    # - require at least one job log to exist for this execution
     def _items(res: Any) -> list:
         if isinstance(res, dict):
             v = res.get("items")
@@ -92,9 +93,18 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
                 limit=5000,
             )
         )
+        job_logs = _items(
+            runs_store.list_runs_filtered(
+                session_id=req.session_id,
+                batch_label=req.batch_label,
+                kind="saw_batch_job_log",
+                limit=5000,
+            )
+        )
     except TypeError:
         aborts = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
         completes = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
+        job_logs = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
 
     for a in aborts:
         if _parent_id(a) == str(req.batch_execution_artifact_id):
@@ -103,6 +113,15 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     for c in completes:
         if _parent_id(c) == str(req.batch_execution_artifact_id):
             raise HTTPException(status_code=409, detail="execution already completed")
+
+    # Prerequisite: at least one job log must exist for this execution
+    has_job_log = False
+    for jl in job_logs:
+        if _parent_id(jl) == str(req.batch_execution_artifact_id):
+            has_job_log = True
+            break
+    if not has_job_log:
+        raise HTTPException(status_code=409, detail="execution has no job logs; cannot complete")
 
     # Convert checklist pydantic model to dict if provided
     checklist_dict = req.checklist.model_dump() if req.checklist else None
