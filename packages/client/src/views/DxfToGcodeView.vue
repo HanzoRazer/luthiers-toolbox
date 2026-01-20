@@ -476,6 +476,8 @@ async function compareWithPreviousRun() {
   isComparing.value = true
   compareError.value = null
   compareDiff.value = null
+  compareOpen.value = true
+  compareTab.value = 'inputs'
 
   try {
     const resp = await fetch(`/api/rmos/runs_v2/diff/${encodeURIComponent(prev)}/${encodeURIComponent(runId)}`)
@@ -488,6 +490,15 @@ async function compareWithPreviousRun() {
       throw new Error(msg)
     }
     compareDiff.value = await resp.json()
+    // Auto-switch to first section with diffs (quiet UX)
+    compareTab.value =
+      inputDiffEntries.value.length ? 'inputs' :
+      feasibilityDiffEntries.value.length ? 'feasibility' :
+      decisionDiffEntries.value.length ? 'decision' :
+      hashesDiffEntries.value.length ? 'hashes' :
+      (attachmentsOnlyA.value.length || attachmentsOnlyB.value.length) ? 'attachments' :
+      'inputs'
+    compareOpen.value = true
   } catch (e: any) {
     compareError.value = e?.message || 'Failed to compare runs.'
   } finally {
