@@ -49,6 +49,9 @@ const overrideAttachment = computed(() => {
   return atts.find((a: any) => a?.kind === "override") ?? null;
 });
 
+// Parent run for "Compare with Parent" button
+const parentRunId = computed(() => run.value?.parent_run_id || null);
+
 // Phase 5: Advisory Explanation state
 const explainError = ref<string | null>(null);
 const isExplaining = ref(false);
@@ -125,6 +128,12 @@ function goToDiff() {
   router.push({ path: "/rmos/runs/diff", query: { a: runId.value } });
 }
 
+function goToDiffWithParent() {
+  if (parentRunId.value) {
+    router.push({ path: "/rmos/runs/diff", query: { a: parentRunId.value, b: runId.value } });
+  }
+}
+
 function goBack() {
   router.push("/rmos/runs");
 }
@@ -196,6 +205,14 @@ async function downloadAttachment(att: any) {
           Operator Pack (.zip)
         </button>
         <button class="btn btn-primary" @click="goToDiff">Compare (Diff)</button>
+        <button 
+          class="btn btn-secondary" 
+          @click="goToDiffWithParent" 
+          :disabled="!parentRunId"
+          :title="parentRunId ? 'Compare with parent run: ' + parentRunId.slice(0, 16) + '...' : 'No parent run'"
+        >
+          Compare with Parent
+        </button>
       </div>
     </header>
 

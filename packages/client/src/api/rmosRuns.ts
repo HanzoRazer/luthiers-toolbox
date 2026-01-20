@@ -138,16 +138,82 @@ export async function fetchRun(runId: string): Promise<RunArtifactDetail> {
 
 /**
  * Compute diff between two run artifacts.
+ * Calls the runs_v2 diff endpoint and transforms to UI-friendly format.
  */
 export async function fetchRunDiff(runIdA: string, runIdB: string): Promise<RunDiffResult> {
-  const response = await fetch(`${BASE_URL}/diff?a=${encodeURIComponent(runIdA)}&b=${encodeURIComponent(runIdB)}`);
+  const response = await fetch(`/api/rmos/runs_v2/diff/${encodeURIComponent(runIdA)}/${encodeURIComponent(runIdB)}`);
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`One or both runs not found`);
     }
     throw new Error(`Failed to fetch diff: ${response.statusText}`);
   }
-  return response.json();
+  
+  // Transform raw diff response to UI format
+  const raw = await response.json();
+  const diffs: DiffEntry[] = [];
+  
+  // Helper to add diff entries from a diff dict
+  const addDiffs = (diffDict: Record<string, { a: any; b: any }>, category: string, severity: "CRITICAL" | "WARNING" | "INFO") => {
+    for (const [field, values] of Object.entries(diffDict || {})) {
+      diffs.push({
+        field: `${category}.${field}`,
+        a_value: values.a,
+        b_value: values.b,
+        severity,
+        message: `${field} differs between runs`,
+      });
+    }
+  };
+  
+  // Decision diffs are most critical
+  addDiffs(raw.decision_diff, "decision", "CRITICAL");
+  // Feasibility diffs are warnings
+  addDiffs(raw.feasibility_diff, "feasibility", "WARNING");
+  // Request diffs are informational
+  addDiffs(raw.request_diff, "request", "INFO");
+  // Hash diffs are informational
+  addDiffs(raw.hashes_diff, "hashes", "INFO");
+  
+  // Attachment diffs
+  const attDiff = raw.attachments_diff || {};
+  if (attDiff.only_in_a?.length) {
+    diffs.push({
+      field: "attachments.only_in_a",
+      a_value: attDiff.only_in_a,
+      b_value: null,
+      severity: "INFO",
+      message: `${attDiff.only_in_a.length} attachment(s) only in run A`,
+    });
+  }
+  if (attDiff.only_in_b?.length) {
+    diffs.push({
+      field: "attachments.only_in_b",
+      a_value: null,
+      b_value: attDiff.only_in_b,
+      severity: "INFO",
+      message: `${attDiff.only_in_b.length} attachment(s) only in run B`,
+    });
+  }
+  
+  // Compute overall severity
+  let severity: "CRITICAL" | "WARNING" | "INFO" | "NONE" = "NONE";
+  if (diffs.some(d => d.severity === "CRITICAL")) severity = "CRITICAL";
+  else if (diffs.some(d => d.severity === "WARNING")) severity = "WARNING";
+  else if (diffs.length > 0) severity = "INFO";
+  
+  // Generate summary
+  const summary = diffs.length === 0
+    ? "Runs are identical"
+    : `Found ${diffs.length} difference(s) across request, feasibility, decision, and attachments`;
+  
+  return {
+    run_a: raw.run_a,
+    run_b: raw.run_b,
+    severity,
+    diffs,
+    summary,
+  };
 }
 
 /**
