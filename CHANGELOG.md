@@ -11,6 +11,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🆕 Added
 
+#### **CNC Saw Lab Execution Completion** - 2026-01-19
+Completes the CNC Saw Lab execution lifecycle with explicit, auditable terminal states.
+
+**New Endpoint:**
+- `POST /api/saw/batch/execution/complete` — Explicit execution closure
+- Terminal artifact: `saw_batch_execution_complete`
+- Outcomes: `SUCCESS`, `PARTIAL`, `REWORK_REQUIRED`, `SCRAP`
+- Optional operator ID and notes captured at completion
+
+**Execution Lifecycle:**
+- All execution paths now terminate explicitly and deterministically
+- Terminal states: `saw_batch_execution_abort` or `saw_batch_execution_complete`
+- Eliminates implicit "success by absence of abort"
+
+**Safety Guardrails:**
+- Completion rejected unless:
+  - Execution artifact exists
+  - Execution not already aborted or completed
+  - At least one job log exists
+  - Latest job log is not `ABORTED` and shows evidence of work (yield or time)
+- Deterministic tie-break when timestamps collide (insertion order)
+
+**Audit & Observability:**
+- Every execution ends with a terminal artifact
+- Parent/child lineage enforced
+- Timelines, dashboards, and audit ZIPs include explicit closure context
+
+**Compatibility:** No schema migrations, no breaking changes, fully backward compatible.
+
+---
+
 #### **B22.16: Golden + Report Fusion** - 2025-12-03
 Complete visual QA pipeline connecting golden baseline validation with automatic HTML report generation.
 

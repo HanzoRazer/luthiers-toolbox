@@ -3,9 +3,17 @@ name: Architecture Scan (Non-Blocking)
 on:
   pull_request:
     paths:
-      - "services/**"
-      - "packages/**"
+      # Backend API
+      - "services/api/**"
+      # Frontend (canonical)
+      - "packages/client/**"
+      # Shared contracts / schemas
+      - "contracts/**"
+      # Docker (deployment/runtime shape)
+      - "docker/**"
+      # Utilities and governance scripts
       - "scripts/**"
+      # Workflow changes should always re-run
       - ".github/workflows/**"
   workflow_dispatch:
 
@@ -57,4 +65,6 @@ jobs:
       - name: Run fence checks (ratchet mode)
         working-directory: services/api
         run: |
-          python -m app.ci.check_all_fences
+          python -m app.ci.check_all_fences \
+            --imports-baseline app/ci/fence_baseline.json \
+            --patterns-baseline app/ci/fence_patterns_baseline.json

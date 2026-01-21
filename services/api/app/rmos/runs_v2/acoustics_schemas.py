@@ -59,6 +59,20 @@ class AttachmentMetaIndexEntry(BaseModel):
     last_seen_at_utc: Optional[str] = None
     ref_count: Optional[int] = None
 
+    # Validation report fields (populated for kind=viewer_pack)
+    validation_passed: Optional[bool] = Field(
+        None,
+        description="True if validation_report.json passed (viewer_pack only)"
+    )
+    validation_errors: Optional[int] = Field(
+        None,
+        description="Number of validation errors (viewer_pack only)"
+    )
+    validation_warnings: Optional[int] = Field(
+        None,
+        description="Number of validation warnings (viewer_pack only)"
+    )
+
     # URL enrichment (optional, populated when include_urls=True)
     attachment_url: Optional[str] = Field(
         None,

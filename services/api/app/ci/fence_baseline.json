@@ -28,7 +28,7 @@
     "artifact_authority|app/cam/routers/toolpath/vcarve_router.py|49|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",
     "artifact_authority|app/rmos/__init__.py|126|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",
     "artifact_authority|app/rmos/__init__.py|99|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",
-    "artifact_authority|app/rmos/acoustics/persist_glue.py|440|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
+    "artifact_authority|app/rmos/acoustics/persist_glue.py|473|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
     "artifact_authority|app/rmos/api/rmos_toolpaths_router.py|118|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
     "artifact_authority|app/rmos/api/rmos_toolpaths_router.py|146|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
     "artifact_authority|app/rmos/api/rmos_toolpaths_router.py|30|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",

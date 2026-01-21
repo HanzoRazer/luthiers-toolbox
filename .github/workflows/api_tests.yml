@@ -40,3 +40,7 @@ jobs:
       - name: Tooling endpoints
         run: |
           curl -sSf $API_BASE/api/tooling/posts | jq '.'
+
+      - name: API verify (includes Phase 32.0 contract tests)
+        run: |
+          cd services/api && python -m pytest -q app/tests/

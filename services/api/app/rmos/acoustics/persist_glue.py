@@ -13,6 +13,14 @@ from typing import Any, Dict, List, Optional
 from .importer import ImportPlan
 from .schemas_manifest_v1 import TapToneBundleManifestV1
 
+
+@dataclass(frozen=True)
+class ValidationSummary:
+    """Minimal validation info for indexing (avoids circular imports)."""
+    passed: bool
+    errors_count: int
+    warnings_count: int
+
 # Import meta index for incremental updates on import
 try:
     from ..runs_v2.attachment_meta import AttachmentMetaIndex
@@ -125,6 +133,8 @@ def persist_import_plan(
     manifest: Optional[TapToneBundleManifestV1] = None,
     # Run lifecycle fields
     status: str = "completed",
+    # Validation summary for viewer_pack entries (optional)
+    validation_summary: Optional[ValidationSummary] = None,
 ) -> PersistResult:
     """
     Consume ImportPlan and persist into RMOS runs_v2 split store.
@@ -222,7 +232,11 @@ def persist_import_plan(
     )
 
     # Update _attachment_meta.json (Decision B: incremental on every import)
-    _update_attachment_meta_index(runs_root=runs_root, run_obj=run_obj)
+    _update_attachment_meta_index(
+        runs_root=runs_root,
+        run_obj=run_obj,
+        validation_summary=validation_summary,
+    )
 
     return PersistResult(
         run_id=run_id,
@@ -234,12 +248,19 @@ def persist_import_plan(
     )
 
 
-def _update_attachment_meta_index(*, runs_root: Path, run_obj: Dict[str, Any]) -> bool:
+def _update_attachment_meta_index(
+    *,
+    runs_root: Path,
+    run_obj: Dict[str, Any],
+    validation_summary: Optional[ValidationSummary] = None,
+) -> bool:
     """
     Update _attachment_meta.json with attachments from this run.
 
     Decision B: Incremental update on every import.
     Maps acoustics schema fields to runs_v2 expected fields.
+    
+    If validation_summary is provided, adds validation fields to viewer_pack entries.
     """
     if not _HAS_META_INDEX or AttachmentMetaIndex is None:
         return False
@@ -281,7 +302,7 @@ def _update_attachment_meta_index(*, runs_root: Path, run_obj: Dict[str, Any]) -
             existing = data.get(sha)
 
             if existing is None:
-                data[sha] = {
+                entry = {
                     "sha256": sha,
                     "kind": att["kind"],
                     "mime": att["mime"],
@@ -294,6 +315,12 @@ def _update_attachment_meta_index(*, runs_root: Path, run_obj: Dict[str, Any]) -
                     "last_seen_at_utc": created_at_utc,
                     "ref_count": 1,
                 }
+                # Add validation fields for viewer_pack entries
+                if att["kind"] == "viewer_pack" and validation_summary is not None:
+                    entry["validation_passed"] = validation_summary.passed
+                    entry["validation_errors"] = validation_summary.errors_count
+                    entry["validation_warnings"] = validation_summary.warnings_count
+                data[sha] = entry
             else:
                 # Update last seen and ref count
                 existing["last_seen_run_id"] = run_id
@@ -309,6 +336,12 @@ def _update_attachment_meta_index(*, runs_root: Path, run_obj: Dict[str, Any]) -
                     existing["filename"] = att["filename"]
                 if int(existing.get("size_bytes", 0) or 0) <= 0 and att["size_bytes"] > 0:
                     existing["size_bytes"] = att["size_bytes"]
+
+                # Update validation fields for viewer_pack entries (always refresh on re-import)
+                if att["kind"] == "viewer_pack" and validation_summary is not None:
+                    existing["validation_passed"] = validation_summary.passed
+                    existing["validation_errors"] = validation_summary.errors_count
+                    existing["validation_warnings"] = validation_summary.warnings_count
 
                 data[sha] = existing
 

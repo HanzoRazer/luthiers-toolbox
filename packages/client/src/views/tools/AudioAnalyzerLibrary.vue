@@ -151,6 +151,7 @@
           <tr>
             <th>Filename</th>
             <th>Kind</th>
+            <th>Validation</th>
             <th>MIME</th>
             <th>Size</th>
             <th>Actions</th>
@@ -160,6 +161,17 @@
           <tr v-for="entry in browseData?.entries" :key="entry.sha256">
             <td class="mono filename-cell" :title="entry.filename">{{ entry.filename }}</td>
             <td><code class="kind-badge">{{ entry.kind }}</code></td>
+            <td>
+              <span
+                v-if="isViewerPack(entry)"
+                class="validation-badge"
+                :class="getValidationClass(entry)"
+                :title="getValidationTooltip(entry)"
+              >
+                {{ getValidationLabel(entry) }}
+              </span>
+              <span v-else class="validation-na">—</span>
+            </td>
             <td class="mono">{{ entry.mime }}</td>
             <td class="mono">{{ formatSize(entry.size_bytes) }}</td>
             <td class="actions-cell">
@@ -362,6 +374,28 @@ function loadNextPage() {
     cursor.value = browseData.value.next_cursor;
     loadBrowse();
   }
+}
+
+// Validation badge helpers
+function getValidationClass(entry: AttachmentMetaEntry): string {
+  if (entry.validation_passed === true) return "badge-pass";
+  if (entry.validation_passed === false) return "badge-fail";
+  return "badge-unknown";
+}
+
+function getValidationLabel(entry: AttachmentMetaEntry): string {
+  if (entry.validation_passed === true) return "PASS";
+  if (entry.validation_passed === false) return "FAIL";
+  return "UNKNOWN";
+}
+
+function getValidationTooltip(entry: AttachmentMetaEntry): string {
+  if (entry.validation_passed === undefined) {
+    return "No validation report (legacy pack)";
+  }
+  const errors = entry.validation_errors ?? 0;
+  const warnings = entry.validation_warnings ?? 0;
+  return `${entry.validation_passed ? "Passed" : "Failed"}: ${errors} errors, ${warnings} warnings`;
 }
 
 onMounted(() => {
@@ -672,5 +706,36 @@ onMounted(() => {
 .muted {
   opacity: 0.7;
   padding: 8px 0;
+}
+
+/* Validation badge styles */
+.validation-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.validation-badge.badge-pass {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.validation-badge.badge-fail {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.validation-badge.badge-unknown {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.validation-na {
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 </style>
