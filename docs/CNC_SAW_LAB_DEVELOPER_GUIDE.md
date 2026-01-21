@@ -59,12 +59,33 @@ Every operation produces **immutable artifacts** stored with:
 | `saw_batch_execution` | Parent execution with summary |
 | `saw_batch_op_toolpaths` | Individual op toolpaths (G-code moves) |
 | `saw_batch_job_log` | Operator feedback per execution |
+| `saw_batch_execution_abort` | Terminal state: execution aborted |
+| `saw_batch_execution_complete` | Terminal state: execution completed |
 | `saw_lab_learning_event` | Proposed parameter adjustments |
 | `saw_lab_learning_decision` | ACCEPT/REJECT of learning events |
 | `saw_batch_execution_metrics_rollup` | Aggregated execution metrics |
 | `saw_batch_decision_metrics_rollup` | Aggregated decision metrics |
 
-### 2. Feature Flags
+### 2. Execution Lifecycle (Terminal States)
+
+An execution can reach exactly one terminal state:
+
+| State | Artifact Kind | Meaning |
+|-------|---------------|---------|
+| **ABORTED** | `saw_batch_execution_abort` | Operator stopped execution early (jam, burn, kickback, etc.) |
+| **COMPLETED** | `saw_batch_execution_complete` | Execution finished; operator recorded outcome |
+
+**Invariants:**
+- An execution cannot be both ABORTED and COMPLETED
+- COMPLETED requires at least one qualifying job log (non-ABORTED status, metrics showing work)
+- Abort and Complete are symmetric: same 404/409 codes, same detail strings
+
+**Outcome values for COMPLETED:**
+- `SUCCESS` — All cuts completed as planned
+- `PARTIAL` — Some cuts completed, others skipped
+- `REWORK_NEEDED` — Completed but quality issues detected
+
+### 3. Feature Flags
 
 All advanced features are **off by default** for safety:
 
@@ -102,6 +123,20 @@ POST /api/saw/batch/approve
 POST /api/saw/batch/toolpaths
   Body: { batch_decision_artifact_id }
   Returns: { batch_execution_artifact_id, results: [{op_id, status, toolpaths_artifact_id}] }
+```
+
+### Terminal States
+
+```
+POST /api/saw/batch/execution/abort
+  Body: { batch_execution_artifact_id, session_id, batch_label, reason, notes?, operator_id? }
+  Returns: { batch_execution_artifact_id, abort_artifact_id, state: "ABORTED" }
+  Errors: 404 (execution not found), 400 (missing required fields)
+
+POST /api/saw/batch/execution/complete
+  Body: { batch_execution_artifact_id, session_id, batch_label, outcome, notes?, operator_id?, checklist?, statistics? }
+  Returns: { batch_execution_artifact_id, complete_artifact_id, state: "COMPLETED" }
+  Errors: 404 (execution not found), 409 (already aborted/completed, no job logs, latest job log not qualifying)
 ```
 
 ### G-Code Export (MVP)
