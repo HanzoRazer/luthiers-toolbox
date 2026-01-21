@@ -1,0 +1,9 @@
+{
+  "name": "miq-default",
+  "description": "MIQ (Mixed-Integer Quadrangulation) default preset for lutherie",
+  "target_density": 1.0,
+  "prioritize_quads": true,
+  "minimize_poles": true,
+  "boundary_preservation": "strict",
+  "notes": "Scaffold preset - tune for specific instrument geometries"
+}

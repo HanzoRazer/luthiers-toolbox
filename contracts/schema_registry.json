@@ -1,0 +1,13 @@
+{
+  "$schema": "https://luthierstoolbox.com/schemas/schema_registry_v1.json",
+  "description": "Schema registry for ToolBox contract schemas",
+  "version": "1.0",
+  "schemas": [
+    { "schema_id": "qa_core",     "version": "1.0", "file": "qa_core.schema.json" },
+    { "schema_id": "cam_policy",  "version": "1.0", "file": "cam_policy.schema.json" },
+    { "schema_id": "viewer_pack_v1", "version": "1.0", "file": "viewer_pack_v1.schema.json" },
+    { "schema_id": "smart_guitar_toolbox_telemetry_v1", "version": "1.0", "file": "smart_guitar_toolbox_telemetry_v1.schema.json" },
+    { "schema_id": "toolbox_ai_context_envelope_v1", "version": "1.0", "file": "toolbox_ai_context_envelope_v1.schema.json" },
+    { "schema_id": "toolbox_smart_guitar_safe_export_v1", "version": "1.0", "file": "toolbox_smart_guitar_safe_export_v1.schema.json" }
+  ]
+}
