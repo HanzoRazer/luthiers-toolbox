@@ -1,0 +1,36 @@
+name: API Verify (Contracts + Fences)
+
+on:
+  push:
+    paths:
+      - "services/api/**"
+      - "packages/client/**"
+      - "scripts/**"
+      - "Makefile"
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "packages/client/**"
+      - "scripts/**"
+      - "Makefile"
+  workflow_dispatch:
+
+jobs:
+  api-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install API deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+
+      - name: Run api-verify
+        run: make api-verify
