@@ -23,12 +23,24 @@ import { computed } from 'vue'
 </script>
 
 <template>
-  <div v-if="hasOverride" class="override-banner" role="alert">
-    <span class="override-icon" aria-hidden="true">⚡</span>
+  <div
+    v-if="hasOverride"
+    class="override-banner"
+    role="alert"
+  >
+    <span
+      class="override-icon"
+      aria-hidden="true"
+    >⚡</span>
     <div class="override-content">
       <strong class="override-title">Override Applied</strong>
-      <p class="override-reason">{{ displayReason }}</p>
-      <span v-if="overrideArtifact?.sha256" class="override-meta">
+      <p class="override-reason">
+        {{ displayReason }}
+      </p>
+      <span
+        v-if="overrideArtifact?.sha256"
+        class="override-meta"
+      >
         SHA: <code>{{ overrideArtifact.sha256.slice(0, 12) }}…</code>
       </span>
     </div>

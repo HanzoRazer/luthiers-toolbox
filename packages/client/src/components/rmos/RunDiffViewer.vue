@@ -107,35 +107,57 @@ function formatDate(iso: string): string {
 <template>
   <div class="run-diff-viewer">
     <!-- Loading State -->
-    <div v-if="loading" class="state-message">
+    <div
+      v-if="loading"
+      class="state-message"
+    >
       Loading diff…
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="state-message error">
+    <div
+      v-else-if="error"
+      class="state-message error"
+    >
       {{ error }}
     </div>
 
     <!-- No IDs Provided -->
-    <div v-else-if="!runAId || !runBId" class="state-message">
+    <div
+      v-else-if="!runAId || !runBId"
+      class="state-message"
+    >
       <p>Select two runs to compare.</p>
-      <p class="hint">Use the inputs above or navigate from the Run Artifacts list.</p>
+      <p class="hint">
+        Use the inputs above or navigate from the Run Artifacts list.
+      </p>
     </div>
 
     <!-- Diff Results -->
     <template v-else-if="runA && runB && diffResult">
       <!-- Summary Banner -->
-      <div class="diff-summary" :class="severityClass">
-        <div class="summary-severity">{{ diffResult.severity }}</div>
-        <div class="summary-text">{{ diffResult.summary }}</div>
-        <div class="summary-count">{{ diffResult.diffs.length }} difference(s)</div>
+      <div
+        class="diff-summary"
+        :class="severityClass"
+      >
+        <div class="summary-severity">
+          {{ diffResult.severity }}
+        </div>
+        <div class="summary-text">
+          {{ diffResult.summary }}
+        </div>
+        <div class="summary-count">
+          {{ diffResult.diffs.length }} difference(s)
+        </div>
       </div>
 
       <!-- Side-by-Side Headers -->
       <div class="comparison-header">
         <div class="side side-a">
           <h4>Run A</h4>
-          <div class="run-id">{{ runA.run_id.slice(0, 16) }}…</div>
+          <div class="run-id">
+            {{ runA.run_id.slice(0, 16) }}…
+          </div>
           <div class="run-meta">
             <span>{{ runA.status }}</span>
             <span>{{ formatDate(runA.created_at_utc) }}</span>
@@ -143,7 +165,9 @@ function formatDate(iso: string): string {
         </div>
         <div class="side side-b">
           <h4>Run B</h4>
-          <div class="run-id">{{ runB.run_id.slice(0, 16) }}…</div>
+          <div class="run-id">
+            {{ runB.run_id.slice(0, 16) }}…
+          </div>
           <div class="run-meta">
             <span>{{ runB.status }}</span>
             <span>{{ formatDate(runB.created_at_utc) }}</span>
@@ -153,7 +177,10 @@ function formatDate(iso: string): string {
 
       <!-- Diff Entries -->
       <div class="diff-entries">
-        <div v-if="diffResult.diffs.length === 0" class="no-diffs">
+        <div
+          v-if="diffResult.diffs.length === 0"
+          class="no-diffs"
+        >
           No differences found.
         </div>
 
@@ -175,7 +202,10 @@ function formatDate(iso: string): string {
               <pre>{{ formatValue(entry.b_value) }}</pre>
             </div>
           </div>
-          <div v-if="entry.message" class="diff-message">
+          <div
+            v-if="entry.message"
+            class="diff-message"
+          >
             {{ entry.message }}
           </div>
         </div>

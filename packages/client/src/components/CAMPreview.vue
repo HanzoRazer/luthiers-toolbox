@@ -3,54 +3,129 @@
     <!-- H7.2: optional strict normalize toggle + visible issue count -->
     <div class="flex items-center gap-3 text-xs">
       <label class="inline-flex items-center gap-2">
-        <input type="checkbox" v-model="strictNormalize" />
+        <input
+          v-model="strictNormalize"
+          type="checkbox"
+        >
         <span>Strict CAM intent normalize</span>
       </label>
-      <span v-if="normalizationIssues.length" class="text-amber-600">
+      <span
+        v-if="normalizationIssues.length"
+        class="text-amber-600"
+      >
         Normalize issues: {{ normalizationIssues.length }}
       </span>
     </div>
 
     <!-- H7.2: show issues (non-breaking) -->
-    <details v-if="normalizationIssues.length" class="text-xs mb-2">
+    <details
+      v-if="normalizationIssues.length"
+      class="text-xs mb-2"
+    >
       <summary class="cursor-pointer text-amber-700 hover:underline">
         CAM intent normalization issues ({{ normalizationIssues.length }})
       </summary>
       <ul class="mt-2 ml-4 list-disc text-amber-700">
-        <li v-for="(iss, idx) in normalizationIssues.slice(0, 50)" :key="idx">
-          <span v-if="iss.code" class="font-mono">[{{ iss.code }}]</span>
+        <li
+          v-for="(iss, idx) in normalizationIssues.slice(0, 50)"
+          :key="idx"
+        >
+          <span
+            v-if="iss.code"
+            class="font-mono"
+          >[{{ iss.code }}]</span>
           {{ iss.message }}
-          <span v-if="iss.path" class="opacity-70"> ({{ iss.path }})</span>
+          <span
+            v-if="iss.path"
+            class="opacity-70"
+          > ({{ iss.path }})</span>
         </li>
       </ul>
-      <div v-if="normalizationIssues.length > 50" class="text-gray-500 mt-1">
+      <div
+        v-if="normalizationIssues.length > 50"
+        class="text-gray-500 mt-1"
+      >
         Showing first 50...
       </div>
     </details>
 
     <div class="flex gap-3 flex-wrap items-center">
-      <label>Tool ⌀ (mm) <input type="number" v-model.number="tool" style="width:90px"></label>
-      <label>Depth/Pass (mm) <input type="number" v-model.number="dpp" style="width:90px"></label>
-      <label>Stock (mm) <input type="number" v-model.number="stock" style="width:90px"></label>
-      <label>Feed XY (mm/min) <input type="number" v-model.number="fxy" style="width:110px"></label>
-      <label>Feed Z (mm/min) <input type="number" v-model.number="fz" style="width:110px"></label>
-      <label>Safe Z (mm) <input type="number" v-model.number="safeZ" style="width:90px"></label>
-      <label>Tabs <input type="number" v-model.number="tabs" style="width:70px"></label>
+      <label>Tool ⌀ (mm) <input
+        v-model.number="tool"
+        type="number"
+        style="width:90px"
+      ></label>
+      <label>Depth/Pass (mm) <input
+        v-model.number="dpp"
+        type="number"
+        style="width:90px"
+      ></label>
+      <label>Stock (mm) <input
+        v-model.number="stock"
+        type="number"
+        style="width:90px"
+      ></label>
+      <label>Feed XY (mm/min) <input
+        v-model.number="fxy"
+        type="number"
+        style="width:110px"
+      ></label>
+      <label>Feed Z (mm/min) <input
+        v-model.number="fz"
+        type="number"
+        style="width:110px"
+      ></label>
+      <label>Safe Z (mm) <input
+        v-model.number="safeZ"
+        type="number"
+        style="width:90px"
+      ></label>
+      <label>Tabs <input
+        v-model.number="tabs"
+        type="number"
+        style="width:70px"
+      ></label>
       <select v-model="post">
-        <option value="grbl">GRBL</option>
-        <option value="mach4">Mach4</option>
-        <option value="pathpilot">PathPilot</option>
-        <option value="linuxcnc">LinuxCNC</option>
-        <option value="masso">MASSO</option>
+        <option value="grbl">
+          GRBL
+        </option>
+        <option value="mach4">
+          Mach4
+        </option>
+        <option value="pathpilot">
+          PathPilot
+        </option>
+        <option value="linuxcnc">
+          LinuxCNC
+        </option>
+        <option value="masso">
+          MASSO
+        </option>
       </select>
-      <button @click="simulate">Simulate & Preview</button>
-      <button :disabled="!gcode" @click="download">Download G-code</button>
+      <button @click="simulate">
+        Simulate & Preview
+      </button>
+      <button
+        :disabled="!gcode"
+        @click="download"
+      >
+        Download G-code
+      </button>
     </div>
-    <canvas ref="cv" style="width:100%;height:240px;border:1px solid #e5e7eb;border-radius:8px;background:#fff"></canvas>
-    <div v-if="errorMessage" class="text-sm p-2 bg-red-50 border border-red-200 rounded text-red-800">
+    <canvas
+      ref="cv"
+      style="width:100%;height:240px;border:1px solid #e5e7eb;border-radius:8px;background:#fff"
+    />
+    <div
+      v-if="errorMessage"
+      class="text-sm p-2 bg-red-50 border border-red-200 rounded text-red-800"
+    >
       <b>Error:</b> {{ errorMessage }}
     </div>
-    <div v-if="summary" class="text-sm grid grid-cols-2 gap-2">
+    <div
+      v-if="summary"
+      class="text-sm grid grid-cols-2 gap-2"
+    >
       <div><b>Post:</b> {{ summary.post }}</div>
       <div><b>Passes:</b> {{ summary.passes }}</div>
       <div><b>Total path (mm):</b> {{ summary.total_path_mm.toFixed(1) }}</div>

@@ -2,7 +2,9 @@
   <div class="finishing-designer">
     <!-- Header -->
     <div class="designer-header">
-      <h1 class="designer-title">🎨 Finishing Designer</h1>
+      <h1 class="designer-title">
+        🎨 Finishing Designer
+      </h1>
       <p class="designer-subtitle">
         Plan finishes, track labor hours, and understand the true value of your craftsmanship
       </p>
@@ -22,16 +24,26 @@
     </div>
 
     <!-- Tab 1: Finish Types & Planning -->
-    <div v-if="activeTab === 'types'" class="tab-content">
+    <div
+      v-if="activeTab === 'types'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Finish Types</h2>
         <p>Select a finishing technique and explore its requirements</p>
       </div>
 
       <div class="finish-grid">
-        <div class="finish-card" @click="selectFinish('varnish')">
-          <div class="finish-name">Simple Varnish</div>
-          <div class="finish-time">8-12 hours labor</div>
+        <div
+          class="finish-card"
+          @click="selectFinish('varnish')"
+        >
+          <div class="finish-name">
+            Simple Varnish
+          </div>
+          <div class="finish-time">
+            8-12 hours labor
+          </div>
           <div class="finish-info">
             <div>• Easiest for beginners</div>
             <div>• 3-5 coats</div>
@@ -40,9 +52,16 @@
           </div>
         </div>
 
-        <div class="finish-card" @click="selectFinish('french')">
-          <div class="finish-name">French Polish (Shellac)</div>
-          <div class="finish-time">20-40 hours labor</div>
+        <div
+          class="finish-card"
+          @click="selectFinish('french')"
+        >
+          <div class="finish-name">
+            French Polish (Shellac)
+          </div>
+          <div class="finish-time">
+            20-40 hours labor
+          </div>
           <div class="finish-info">
             <div>• Traditional hand-rubbed</div>
             <div>• 50-100+ applications</div>
@@ -51,9 +70,16 @@
           </div>
         </div>
 
-        <div class="finish-card" @click="selectFinish('nitro')">
-          <div class="finish-name">Nitrocellulose Lacquer</div>
-          <div class="finish-time">15-25 hours labor</div>
+        <div
+          class="finish-card"
+          @click="selectFinish('nitro')"
+        >
+          <div class="finish-name">
+            Nitrocellulose Lacquer
+          </div>
+          <div class="finish-time">
+            15-25 hours labor
+          </div>
           <div class="finish-info">
             <div>• Classic guitar finish</div>
             <div>• 6-12 coats + sanding</div>
@@ -62,9 +88,16 @@
           </div>
         </div>
 
-        <div class="finish-card" @click="selectFinish('poly')">
-          <div class="finish-name">Polyurethane</div>
-          <div class="finish-time">10-18 hours labor</div>
+        <div
+          class="finish-card"
+          @click="selectFinish('poly')"
+        >
+          <div class="finish-name">
+            Polyurethane
+          </div>
+          <div class="finish-time">
+            10-18 hours labor
+          </div>
           <div class="finish-info">
             <div>• Modern durable finish</div>
             <div>• 3-6 coats</div>
@@ -73,9 +106,16 @@
           </div>
         </div>
 
-        <div class="finish-card" @click="selectFinish('oil')">
-          <div class="finish-name">Oil Finish (Tung/Linseed)</div>
-          <div class="finish-time">12-20 hours labor</div>
+        <div
+          class="finish-card"
+          @click="selectFinish('oil')"
+        >
+          <div class="finish-name">
+            Oil Finish (Tung/Linseed)
+          </div>
+          <div class="finish-time">
+            12-20 hours labor
+          </div>
           <div class="finish-info">
             <div>• Natural "in-the-wood" finish</div>
             <div>• 5-8 coats + buffing</div>
@@ -87,18 +127,34 @@
     </div>
 
     <!-- Tab 2: Process Workflow -->
-    <div v-if="activeTab === 'workflow'" class="tab-content">
+    <div
+      v-if="activeTab === 'workflow'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Finishing Workflow: {{ finishTypes[selectedFinish]?.name || 'Select a finish type' }}</h2>
         <p>Step-by-step process with labor time estimates</p>
       </div>
 
-      <div v-if="selectedFinish" class="workflow-section">
-        <div v-for="(step, idx) in finishTypes[selectedFinish].steps" :key="idx" class="workflow-step">
-          <div class="step-number">{{ idx + 1 }}</div>
+      <div
+        v-if="selectedFinish"
+        class="workflow-section"
+      >
+        <div
+          v-for="(step, idx) in finishTypes[selectedFinish].steps"
+          :key="idx"
+          class="workflow-step"
+        >
+          <div class="step-number">
+            {{ idx + 1 }}
+          </div>
           <div class="step-content">
-            <div class="step-title">{{ step.title }}</div>
-            <div class="step-desc">{{ step.description }}</div>
+            <div class="step-title">
+              {{ step.title }}
+            </div>
+            <div class="step-desc">
+              {{ step.description }}
+            </div>
             <div class="step-time">
               <strong>Time:</strong> {{ step.time }} | 
               <strong>Cure:</strong> {{ step.cure }}
@@ -110,28 +166,46 @@
           <h3>Total Labor Estimate</h3>
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-label">Active Work Time</div>
-              <div class="summary-value">{{ finishTypes[selectedFinish].totalLabor }}</div>
+              <div class="summary-label">
+                Active Work Time
+              </div>
+              <div class="summary-value">
+                {{ finishTypes[selectedFinish].totalLabor }}
+              </div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Cure/Wait Time</div>
-              <div class="summary-value">{{ finishTypes[selectedFinish].totalCure }}</div>
+              <div class="summary-label">
+                Cure/Wait Time
+              </div>
+              <div class="summary-value">
+                {{ finishTypes[selectedFinish].totalCure }}
+              </div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Calendar Days</div>
-              <div class="summary-value">{{ finishTypes[selectedFinish].calendarDays }}</div>
+              <div class="summary-label">
+                Calendar Days
+              </div>
+              <div class="summary-value">
+                {{ finishTypes[selectedFinish].calendarDays }}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-else class="empty-state">
+      <div
+        v-else
+        class="empty-state"
+      >
         Select a finish type from the Finish Types tab to see the workflow
       </div>
     </div>
 
     <!-- Tab 3: Labor & Cost -->
-    <div v-if="activeTab === 'labor'" class="tab-content">
+    <div
+      v-if="activeTab === 'labor'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Labor Value Calculator</h2>
         <p>Understand what your time and skill are worth</p>
@@ -142,36 +216,84 @@
           <h3>Your Labor Rate</h3>
           <div class="input-group">
             <label>Hourly Rate ($/hr)</label>
-            <input v-model.number="hourlyRate" type="number" step="5" min="10" max="200">
+            <input
+              v-model.number="hourlyRate"
+              type="number"
+              step="5"
+              min="10"
+              max="200"
+            >
           </div>
           <div class="rate-presets">
-            <button @click="hourlyRate = 25" class="btn-preset">Hobbyist ($25)</button>
-            <button @click="hourlyRate = 50" class="btn-preset">Semi-Pro ($50)</button>
-            <button @click="hourlyRate = 75" class="btn-preset">Professional ($75)</button>
-            <button @click="hourlyRate = 100" class="btn-preset">Master ($100)</button>
+            <button
+              class="btn-preset"
+              @click="hourlyRate = 25"
+            >
+              Hobbyist ($25)
+            </button>
+            <button
+              class="btn-preset"
+              @click="hourlyRate = 50"
+            >
+              Semi-Pro ($50)
+            </button>
+            <button
+              class="btn-preset"
+              @click="hourlyRate = 75"
+            >
+              Professional ($75)
+            </button>
+            <button
+              class="btn-preset"
+              @click="hourlyRate = 100"
+            >
+              Master ($100)
+            </button>
           </div>
 
           <h3>Project Size</h3>
           <div class="input-group">
             <label>Instrument Type</label>
             <select v-model="instrumentType">
-              <option value="full-body">Full Body Electric (Strat/Les Paul)</option>
-              <option value="neck">Neck Only</option>
-              <option value="acoustic">Acoustic Guitar</option>
-              <option value="classical">Classical Guitar</option>
-              <option value="bass">Bass Guitar</option>
-              <option value="violin">Violin</option>
+              <option value="full-body">
+                Full Body Electric (Strat/Les Paul)
+              </option>
+              <option value="neck">
+                Neck Only
+              </option>
+              <option value="acoustic">
+                Acoustic Guitar
+              </option>
+              <option value="classical">
+                Classical Guitar
+              </option>
+              <option value="bass">
+                Bass Guitar
+              </option>
+              <option value="violin">
+                Violin
+              </option>
             </select>
           </div>
 
           <div class="input-group">
             <label>Finish Type</label>
             <select v-model="laborFinishType">
-              <option value="varnish">Simple Varnish</option>
-              <option value="french">French Polish</option>
-              <option value="nitro">Nitrocellulose</option>
-              <option value="poly">Polyurethane</option>
-              <option value="oil">Oil Finish</option>
+              <option value="varnish">
+                Simple Varnish
+              </option>
+              <option value="french">
+                French Polish
+              </option>
+              <option value="nitro">
+                Nitrocellulose
+              </option>
+              <option value="poly">
+                Polyurethane
+              </option>
+              <option value="oil">
+                Oil Finish
+              </option>
             </select>
           </div>
         </div>
@@ -222,7 +344,10 @@
     </div>
 
     <!-- Tab 4: Burst Patterns -->
-    <div v-if="activeTab === 'burst'" class="tab-content">
+    <div
+      v-if="activeTab === 'burst'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Sunburst Pattern Designer</h2>
         <p>Plan color bursts and export for robotic application</p>
@@ -247,17 +372,32 @@
           <div class="color-inputs">
             <div class="color-input">
               <label>Center Color</label>
-              <input v-model="centerColor" type="color">
+              <input
+                v-model="centerColor"
+                type="color"
+              >
               <span>{{ centerColor }}</span>
             </div>
-            <div class="color-input" v-if="burstType !== 'solid'">
+            <div
+              v-if="burstType !== 'solid'"
+              class="color-input"
+            >
               <label>Mid Color (optional)</label>
-              <input v-model="midColor" type="color">
+              <input
+                v-model="midColor"
+                type="color"
+              >
               <span>{{ midColor }}</span>
             </div>
-            <div class="color-input" v-if="burstType !== 'solid'">
+            <div
+              v-if="burstType !== 'solid'"
+              class="color-input"
+            >
               <label>Edge Color</label>
-              <input v-model="edgeColor" type="color">
+              <input
+                v-model="edgeColor"
+                type="color"
+              >
               <span>{{ edgeColor }}</span>
             </div>
           </div>
@@ -266,44 +406,116 @@
           <div class="param-inputs">
             <div class="param-input">
               <label>Fade Start (mm from center)</label>
-              <input v-model.number="fadeStart" type="number" step="5" min="0" max="150">
+              <input
+                v-model.number="fadeStart"
+                type="number"
+                step="5"
+                min="0"
+                max="150"
+              >
             </div>
             <div class="param-input">
               <label>Fade End (mm from center)</label>
-              <input v-model.number="fadeEnd" type="number" step="5" min="0" max="200">
+              <input
+                v-model.number="fadeEnd"
+                type="number"
+                step="5"
+                min="0"
+                max="200"
+              >
             </div>
           </div>
 
           <h3>Classic Presets</h3>
           <div class="burst-presets">
-            <button @click="applyBurstPreset('tobacco')" class="btn-burst">Tobacco Sunburst</button>
-            <button @click="applyBurstPreset('cherry')" class="btn-burst">Cherry Sunburst</button>
-            <button @click="applyBurstPreset('honeyburst')" class="btn-burst">Honeyburst</button>
-            <button @click="applyBurstPreset('lemondrop')" class="btn-burst">Lemon Drop</button>
+            <button
+              class="btn-burst"
+              @click="applyBurstPreset('tobacco')"
+            >
+              Tobacco Sunburst
+            </button>
+            <button
+              class="btn-burst"
+              @click="applyBurstPreset('cherry')"
+            >
+              Cherry Sunburst
+            </button>
+            <button
+              class="btn-burst"
+              @click="applyBurstPreset('honeyburst')"
+            >
+              Honeyburst
+            </button>
+            <button
+              class="btn-burst"
+              @click="applyBurstPreset('lemondrop')"
+            >
+              Lemon Drop
+            </button>
           </div>
 
-          <button @click="exportBurstCSV" class="btn-export">Export CSV for Robotic Spray</button>
+          <button
+            class="btn-export"
+            @click="exportBurstCSV"
+          >
+            Export CSV for Robotic Spray
+          </button>
         </div>
 
         <div class="burst-preview">
           <h3>Preview</h3>
           <div class="preview-canvas">
-            <svg width="300" height="400" viewBox="0 0 300 400">
+            <svg
+              width="300"
+              height="400"
+              viewBox="0 0 300 400"
+            >
               <!-- Body outline -->
-              <ellipse cx="150" cy="200" rx="140" ry="180" fill="none" stroke="#333" stroke-width="2"/>
+              <ellipse
+                cx="150"
+                cy="200"
+                rx="140"
+                ry="180"
+                fill="none"
+                stroke="#333"
+                stroke-width="2"
+              />
               
               <!-- Burst gradient (simplified visual) -->
               <defs>
-                <radialGradient :id="'burst-gradient'" cx="50%" cy="40%">
-                  <stop offset="0%" :stop-color="centerColor" />
-                  <stop v-if="midColor && burstType !== 'solid'" offset="50%" :stop-color="midColor" />
-                  <stop offset="100%" :stop-color="edgeColor" />
+                <radialGradient
+                  :id="'burst-gradient'"
+                  cx="50%"
+                  cy="40%"
+                >
+                  <stop
+                    offset="0%"
+                    :stop-color="centerColor"
+                  />
+                  <stop
+                    v-if="midColor && burstType !== 'solid'"
+                    offset="50%"
+                    :stop-color="midColor"
+                  />
+                  <stop
+                    offset="100%"
+                    :stop-color="edgeColor"
+                  />
                 </radialGradient>
               </defs>
-              <ellipse cx="150" cy="160" rx="140" ry="180" :fill="`url(#burst-gradient)`" opacity="0.8"/>
+              <ellipse
+                cx="150"
+                cy="160"
+                rx="140"
+                ry="180"
+                :fill="`url(#burst-gradient)`"
+                opacity="0.8"
+              />
             </svg>
           </div>
-          <p class="preview-note">Simplified preview - actual burst will blend more smoothly</p>
+          <p class="preview-note">
+            Simplified preview - actual burst will blend more smoothly
+          </p>
         </div>
       </div>
     </div>

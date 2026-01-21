@@ -3,44 +3,88 @@
     <div class="monitor-header">
       <h2>🔴 Real-time Monitoring</h2>
       <div class="connection-status">
-        <span v-if="isConnected" class="status-badge connected">● Connected</span>
-        <span v-else class="status-badge disconnected">○ Disconnected</span>
-        <span v-if="reconnectAttempts > 0" class="reconnect-info">
+        <span
+          v-if="isConnected"
+          class="status-badge connected"
+        >● Connected</span>
+        <span
+          v-else
+          class="status-badge disconnected"
+        >○ Disconnected</span>
+        <span
+          v-if="reconnectAttempts > 0"
+          class="reconnect-info"
+        >
           (Retry {{ reconnectAttempts }}/5)
         </span>
       </div>
       <div class="controls">
-        <button @click="toggleConnection" class="btn-primary">
+        <button
+          class="btn-primary"
+          @click="toggleConnection"
+        >
           {{ isConnected ? 'Disconnect' : 'Connect' }}
         </button>
-        <button @click="clearEvents" class="btn-secondary">Clear</button>
+        <button
+          class="btn-secondary"
+          @click="clearEvents"
+        >
+          Clear
+        </button>
       </div>
     </div>
 
     <div class="filter-panel">
       <label>
-        <input type="checkbox" v-model="filters.job" @change="updateFilters" />
+        <input
+          v-model="filters.job"
+          type="checkbox"
+          @change="updateFilters"
+        >
         Jobs
       </label>
       <label>
-        <input type="checkbox" v-model="filters.pattern" @change="updateFilters" />
+        <input
+          v-model="filters.pattern"
+          type="checkbox"
+          @change="updateFilters"
+        >
         Patterns
       </label>
       <label>
-        <input type="checkbox" v-model="filters.material" @change="updateFilters" />
+        <input
+          v-model="filters.material"
+          type="checkbox"
+          @change="updateFilters"
+        >
         Materials
       </label>
       <label>
-        <input type="checkbox" v-model="filters.metrics" @change="updateFilters" />
+        <input
+          v-model="filters.metrics"
+          type="checkbox"
+          @change="updateFilters"
+        >
         Metrics
       </label>
     </div>
 
-    <div class="event-stream" ref="eventContainer">
-      <div v-if="events.length === 0" class="no-events">
+    <div
+      ref="eventContainer"
+      class="event-stream"
+    >
+      <div
+        v-if="events.length === 0"
+        class="no-events"
+      >
         No events yet. Connect to start monitoring.
       </div>
-      <div v-for="(event, index) in events" :key="index" class="event-item" :class="getEventClass(event.type)">
+      <div
+        v-for="(event, index) in events"
+        :key="index"
+        class="event-item"
+        :class="getEventClass(event.type)"
+      >
         <div class="event-header">
           <span class="event-type">{{ event.type }}</span>
           <span class="event-time">{{ formatTime(event.timestamp) }}</span>
@@ -48,27 +92,42 @@
           <button 
             v-if="event.type.startsWith('job:') && event.data.job_id"
             class="drilldown-btn"
+            title="View subjobs and CAM events"
             @click="openDrilldown(event.data.job_id)"
-            title="View subjobs and CAM events">
+          >
             🔍 Drill-down
           </button>
         </div>
         
         <!-- MM-6: Fragility and Materials Display -->
-        <div v-if="event.data.fragility_band || event.data.materials" class="event-metadata">
-          <span v-if="event.data.fragility_band" 
-                class="fragility-badge"
-                :class="fragilityBadgeClass(event.data.fragility_band)"
-                :title="fragilityTitle(event.data.fragility_band, event.data.worst_fragility_score)">
+        <div
+          v-if="event.data.fragility_band || event.data.materials"
+          class="event-metadata"
+        >
+          <span
+            v-if="event.data.fragility_band" 
+            class="fragility-badge"
+            :class="fragilityBadgeClass(event.data.fragility_band)"
+            :title="fragilityTitle(event.data.fragility_band, event.data.worst_fragility_score)"
+          >
             {{ fragilityLabel(event.data.fragility_band) }}
-            <span v-if="event.data.worst_fragility_score !== undefined" class="fragility-score">
+            <span
+              v-if="event.data.worst_fragility_score !== undefined"
+              class="fragility-score"
+            >
               {{ (event.data.worst_fragility_score * 100).toFixed(0) }}%
             </span>
           </span>
-          <span v-if="event.data.materials && event.data.materials.length > 0" class="materials-list">
+          <span
+            v-if="event.data.materials && event.data.materials.length > 0"
+            class="materials-list"
+          >
             🪵 {{ event.data.materials.join(', ') }}
           </span>
-          <span v-if="event.data.lane_hint" class="lane-hint">
+          <span
+            v-if="event.data.lane_hint"
+            class="lane-hint"
+          >
             Lane: {{ event.data.lane_hint }}
           </span>
         </div>

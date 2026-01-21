@@ -1,21 +1,45 @@
 <template>
-  <div v-if="visible" class="drilldown-drawer">
+  <div
+    v-if="visible"
+    class="drilldown-drawer"
+  >
     <header class="drawer-header">
-      <h3 class="drawer-title">Job Drill-Down – {{ drill?.job_id }}</h3>
-      <button class="close-btn" @click="$emit('close')" aria-label="Close">✕</button>
+      <h3 class="drawer-title">
+        Job Drill-Down – {{ drill?.job_id }}
+      </h3>
+      <button
+        class="close-btn"
+        aria-label="Close"
+        @click="$emit('close')"
+      >
+        ✕
+      </button>
     </header>
 
-    <div v-if="loading" class="drawer-loading">
-      <div class="spinner"></div>
+    <div
+      v-if="loading"
+      class="drawer-loading"
+    >
+      <div class="spinner" />
       Loading drill-down data...
     </div>
     
-    <div v-if="error" class="drawer-error">
+    <div
+      v-if="error"
+      class="drawer-error"
+    >
       ⚠️ {{ error }}
     </div>
 
-    <div v-if="drill && !loading" class="drawer-content">
-      <div v-for="(sj, idx) in drill.subjobs" :key="idx" class="subjob-card">
+    <div
+      v-if="drill && !loading"
+      class="drawer-content"
+    >
+      <div
+        v-for="(sj, idx) in drill.subjobs"
+        :key="idx"
+        class="subjob-card"
+      >
         <div class="subjob-header">
           <div class="subjob-title">
             <span class="subjob-icon">{{ getSubjobIcon(sj.subjob_type) }}</span>
@@ -26,7 +50,10 @@
           </div>
         </div>
 
-        <div v-if="sj.cam_events.length > 0" class="cam-events-table">
+        <div
+          v-if="sj.cam_events.length > 0"
+          class="cam-events-table"
+        >
           <table>
             <thead>
               <tr>
@@ -49,12 +76,18 @@
                 <td>{{ e.spindle_speed.toFixed(0) }}</td>
                 <td>{{ e.doc.toFixed(2) }}</td>
                 <td>
-                  <span class="feed-state-badge" :class="feedStateClass(e.feed_state)">
+                  <span
+                    class="feed-state-badge"
+                    :class="feedStateClass(e.feed_state)"
+                  >
                     {{ e.feed_state }}
                   </span>
                 </td>
                 <td>
-                  <span class="heuristic-badge" :class="heuristicClass(e.heuristic)">
+                  <span
+                    class="heuristic-badge"
+                    :class="heuristicClass(e.heuristic)"
+                  >
                     {{ e.heuristic }}
                   </span>
                 </td>
@@ -63,12 +96,18 @@
           </table>
         </div>
         
-        <div v-else class="no-events">
+        <div
+          v-else
+          class="no-events"
+        >
           No CAM events recorded for this subjob.
         </div>
       </div>
 
-      <div v-if="drill.subjobs.length === 0" class="no-subjobs">
+      <div
+        v-if="drill.subjobs.length === 0"
+        class="no-subjobs"
+      >
         No subjobs found for this job.
       </div>
     </div>

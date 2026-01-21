@@ -1,6 +1,8 @@
 <template>
   <div class="p-4 space-y-4">
-    <h1 class="text-xl font-semibold">Full Rosette Manufacturing OS — Sandbox</h1>
+    <h1 class="text-xl font-semibold">
+      Full Rosette Manufacturing OS — Sandbox
+    </h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-[260px,1fr,320px] gap-4">
       <!-- Left: Pattern Library + JobLog -->
@@ -15,16 +17,19 @@
           v-if="selectedPattern"
           :pattern="selectedPattern"
           @update:pattern="updatePattern"
-          @update:batchOp="updateBatchOp"
+          @update:batch-op="updateBatchOp"
         />
-        <div v-else class="border rounded-lg p-3 text-sm text-gray-600">
+        <div
+          v-else
+          class="border rounded-lg p-3 text-sm text-gray-600"
+        >
           Select or create a pattern in the library.
         </div>
 
         <RosetteMultiRingOpPanel
           v-if="batchOp"
-          :batchOp="batchOp"
-          @update:batchOp="updateBatchOp"
+          :batch-op="batchOp"
+          @update:batch-op="updateBatchOp"
         />
       </div>
 
@@ -34,25 +39,31 @@
           <button
             class="px-3 py-1 rounded border text-sm"
             :class="rightPane==='plan' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'"
-            @click="rightPane='plan'"
             aria-label="Show Manufacturing Plan"
+            @click="rightPane='plan'"
           >
             Plan
           </button>
           <button
             class="px-3 py-1 rounded border text-sm"
             :class="rightPane==='monitor' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'"
-            @click="rightPane='monitor'"
             aria-label="Show Live Monitor"
+            @click="rightPane='monitor'"
           >
             Live Monitor
           </button>
         </div>
 
-        <div v-if="rightPane==='plan'" class="space-y-4">
-          <RosetteManufacturingPlanPanel :patternId="selectedPattern?.id ?? null" />
+        <div
+          v-if="rightPane==='plan'"
+          class="space-y-4"
+        >
+          <RosetteManufacturingPlanPanel :pattern-id="selectedPattern?.id ?? null" />
         </div>
-        <div v-else class="min-h-[320px]">
+        <div
+          v-else
+          class="min-h-[320px]"
+        >
           <LiveMonitor />
         </div>
       </div>

@@ -378,23 +378,26 @@ function downloadCsv() {
     <!-- Metrics bar: counts per severity -->
     <div class="flex items-center justify-between text-[10px] text-gray-600 mb-1">
       <div class="flex flex-wrap gap-1.5">
-        <template v-for="s in severityOptions" :key="s">
-        <span
-          v-if="(severityCounts as Record<string, number>)[s]"
-          class="inline-flex items-center"
+        <template
+          v-for="s in severityOptions"
+          :key="s"
         >
           <span
-            class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 border tabular-nums"
-            :class="[
-              activeSeveritiesSet.has(s as any)
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-700 border-gray-300'
-            ]"
+            v-if="(severityCounts as Record<string, number>)[s]"
+            class="inline-flex items-center"
           >
-            <span>{{ severityLabelShort(s as any) }}:</span>
-            <span>{{ (severityCounts as Record<string, number>)[s] }}</span>
+            <span
+              class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 border tabular-nums"
+              :class="[
+                activeSeveritiesSet.has(s as any)
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300'
+              ]"
+            >
+              <span>{{ severityLabelShort(s as any) }}:</span>
+              <span>{{ (severityCounts as Record<string, number>)[s] }}</span>
+            </span>
           </span>
-        </span>
         </template>
       </div>
       <span
@@ -425,7 +428,7 @@ function downloadCsv() {
           class="border rounded px-1.5 py-0.5"
           :class="[
             activeSeveritiesSet.has('high') && activeSeveritiesSet.has('critical') &&
-            activeSeverities.length === 2
+              activeSeverities.length === 2
               ? 'bg-red-600 text-white'
               : 'bg-white hover:bg-gray-100'
           ]"

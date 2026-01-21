@@ -12,312 +12,356 @@ Shows two canvases plus a small diff summary panel
   <div class="p-4 flex gap-4">
     <!-- Main content area -->
     <div class="flex-1 flex flex-col gap-4">
-    <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <h1 class="text-base font-semibold text-gray-900">
-          Art Studio · Rosette Compare
-        </h1>
-        <p class="text-xs text-gray-600 max-w-xl">
-          Select two saved rosette jobs (A &amp; B), then compare geometry and key parameters.
-          This is the first Compare Mode hook — later we can add overlay coloring and analytics.
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button
-          class="px-3 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-50"
-          @click="reloadJobs"
-        >
-          Reload jobs
-        </button>
-        <button
-          v-if="selectedJobIdA && selectedJobIdB"
-          class="px-3 py-1 rounded border text-[11px] text-blue-700 hover:bg-blue-50"
-          @click="toggleHistorySidebar"
-        >
-          {{ showHistory ? 'Hide' : 'Show' }} History
-        </button>
-      </div>
-    </div>
-
-    <!-- Job selectors -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800">
-        <h2 class="text-[12px] font-semibold mb-2 text-gray-900">
-          Baseline (A)
-        </h2>
-        <select
-          v-model="selectedJobIdA"
-          class="w-full px-2 py-1 border rounded text-[11px]"
-        >
-          <option value="">(select a job)</option>
-          <option
-            v-for="job in jobs"
-            :key="job.job_id"
-            :value="job.job_id"
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 class="text-base font-semibold text-gray-900">
+            Art Studio · Rosette Compare
+          </h1>
+          <p class="text-xs text-gray-600 max-w-xl">
+            Select two saved rosette jobs (A &amp; B), then compare geometry and key parameters.
+            This is the first Compare Mode hook — later we can add overlay coloring and analytics.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="px-3 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-50"
+            @click="reloadJobs"
           >
-            {{ job.name || job.job_id }} · {{ job.preview.preset || 'no preset' }}
-          </option>
-        </select>
-        <p class="text-[10px] text-gray-500 mt-1">
-          Pick the baseline rosette you want to compare from your recent jobs.
-        </p>
-      </div>
-
-      <div class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800">
-        <h2 class="text-[12px] font-semibold mb-2 text-gray-900">
-          Variant (B)
-        </h2>
-        <select
-          v-model="selectedJobIdB"
-          class="w-full px-2 py-1 border rounded text-[11px]"
-        >
-          <option value="">(select a job)</option>
-          <option
-            v-for="job in jobs"
-            :key="job.job_id"
-            :value="job.job_id"
+            Reload jobs
+          </button>
+          <button
+            v-if="selectedJobIdA && selectedJobIdB"
+            class="px-3 py-1 rounded border text-[11px] text-blue-700 hover:bg-blue-50"
+            @click="toggleHistorySidebar"
           >
-            {{ job.name || job.job_id }} · {{ job.preview.preset || 'no preset' }}
-          </option>
-        </select>
-        <p class="text-[10px] text-gray-500 mt-1">
-          Pick the variant rosette to compare against baseline.
+            {{ showHistory ? 'Hide' : 'Show' }} History
+          </button>
+        </div>
+      </div>
+
+      <!-- Job selectors -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800">
+          <h2 class="text-[12px] font-semibold mb-2 text-gray-900">
+            Baseline (A)
+          </h2>
+          <select
+            v-model="selectedJobIdA"
+            class="w-full px-2 py-1 border rounded text-[11px]"
+          >
+            <option value="">
+              (select a job)
+            </option>
+            <option
+              v-for="job in jobs"
+              :key="job.job_id"
+              :value="job.job_id"
+            >
+              {{ job.name || job.job_id }} · {{ job.preview.preset || 'no preset' }}
+            </option>
+          </select>
+          <p class="text-[10px] text-gray-500 mt-1">
+            Pick the baseline rosette you want to compare from your recent jobs.
+          </p>
+        </div>
+
+        <div class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800">
+          <h2 class="text-[12px] font-semibold mb-2 text-gray-900">
+            Variant (B)
+          </h2>
+          <select
+            v-model="selectedJobIdB"
+            class="w-full px-2 py-1 border rounded text-[11px]"
+          >
+            <option value="">
+              (select a job)
+            </option>
+            <option
+              v-for="job in jobs"
+              :key="job.job_id"
+              :value="job.job_id"
+            >
+              {{ job.name || job.job_id }} · {{ job.preview.preset || 'no preset' }}
+            </option>
+          </select>
+          <p class="text-[10px] text-gray-500 mt-1">
+            Pick the variant rosette to compare against baseline.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          class="px-3 py-1 rounded bg-indigo-600 text-white text-[11px] hover:bg-indigo-700 disabled:opacity-50"
+          :disabled="compareLoading || !selectedJobIdA || !selectedJobIdB"
+          @click="runCompare"
+        >
+          {{ compareLoading ? 'Comparing…' : 'Compare A ↔ B' }}
+        </button>
+        <!-- Phase 27.2: Save to Risk Timeline button -->
+        <button
+          v-if="compareResult"
+          class="px-3 py-1 rounded bg-blue-600 text-white text-[11px] hover:bg-blue-700 disabled:opacity-50"
+          :disabled="saveSnapshotLoading"
+          @click="saveSnapshot"
+        >
+          {{ saveSnapshotLoading ? 'Saving…' : '💾 Save to Risk Timeline' }}
+        </button>
+        <p
+          v-if="statusMessage"
+          class="text-[10px]"
+          :class="statusClass"
+        >
+          {{ statusMessage }}
         </p>
       </div>
-    </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <button
-        class="px-3 py-1 rounded bg-indigo-600 text-white text-[11px] hover:bg-indigo-700 disabled:opacity-50"
-        :disabled="compareLoading || !selectedJobIdA || !selectedJobIdB"
-        @click="runCompare"
-      >
-        {{ compareLoading ? 'Comparing…' : 'Compare A ↔ B' }}
-      </button>
-      <!-- Phase 27.2: Save to Risk Timeline button -->
-      <button
+      <!-- Diff summary -->
+      <div
         v-if="compareResult"
-        class="px-3 py-1 rounded bg-blue-600 text-white text-[11px] hover:bg-blue-700 disabled:opacity-50"
-        :disabled="saveSnapshotLoading"
-        @click="saveSnapshot"
+        class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800"
       >
-        {{ saveSnapshotLoading ? 'Saving…' : '💾 Save to Risk Timeline' }}
-      </button>
-      <p v-if="statusMessage" class="text-[10px]" :class="statusClass">
-        {{ statusMessage }}
-      </p>
-    </div>
-
-    <!-- Diff summary -->
-    <div
-      v-if="compareResult"
-      class="border rounded-lg bg-white shadow-sm p-3 text-[11px] text-gray-800"
-    >
-      <h2 class="text-[12px] font-semibold text-gray-900 mb-1">
-        Diff Summary
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <div>
-          <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
-            Pattern & Segments
-          </h3>
-          <p class="text-[10px] text-gray-700">
-            A: {{ compareResult.diff_summary.pattern_type_a }} ·
-            {{ compareResult.diff_summary.segments_a }} seg
-          </p>
-          <p class="text-[10px] text-gray-700">
-            B: {{ compareResult.diff_summary.pattern_type_b }} ·
-            {{ compareResult.diff_summary.segments_b }} seg
-          </p>
-          <p class="text-[10px]" :class="deltaClass(compareResult.diff_summary.segments_delta)">
-            Δ segments: {{ signed(compareResult.diff_summary.segments_delta) }}
-          </p>
-        </div>
-        <div>
-          <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
-            Radii
-          </h3>
-          <p class="text-[10px] text-gray-700">
-            Inner A: {{ compareResult.diff_summary.inner_radius_a }} ·
-            B: {{ compareResult.diff_summary.inner_radius_b }}
-          </p>
-          <p class="text-[10px]" :class="deltaClass(compareResult.diff_summary.inner_radius_delta)">
-            Δ inner: {{ signedFloat(compareResult.diff_summary.inner_radius_delta) }}
-          </p>
-          <p class="text-[10px] text-gray-700 mt-1">
-            Outer A: {{ compareResult.diff_summary.outer_radius_a }} ·
-            B: {{ compareResult.diff_summary.outer_radius_b }}
-          </p>
-          <p class="text-[10px]" :class="deltaClass(compareResult.diff_summary.outer_radius_delta)">
-            Δ outer: {{ signedFloat(compareResult.diff_summary.outer_radius_delta) }}
-          </p>
-        </div>
-        <div>
-          <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
-            Units & BBox
-          </h3>
-          <p class="text-[10px] text-gray-700">
-            Units A: {{ compareResult.diff_summary.units_a }} ·
-            B: {{ compareResult.diff_summary.units_b }}
-          </p>
-          <p class="text-[10px]" :class="compareResult.diff_summary.units_same ? 'text-emerald-700' : 'text-amber-700'">
-            Units {{ compareResult.diff_summary.units_same ? 'match' : 'differ' }}
-          </p>
-          <p class="text-[10px] text-gray-700 mt-1">
-            BBox union:
-            [{{ compareResult.diff_summary.bbox_union.join(', ') }}]
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dual canvases with Phase 27.1 coloring -->
-    <div
-      v-if="compareResult"
-      class="grid grid-cols-1 md:grid-cols-2 gap-3"
-    >
-      <!-- Baseline (A) Canvas -->
-      <div class="border rounded-lg bg-white shadow-sm p-3 flex flex-col gap-2 relative">
-        <!-- Legend -->
-        <div class="absolute top-2 right-2 bg-white/90 p-2 rounded shadow text-[10px] z-10 border border-gray-200">
-          <div class="flex items-center gap-1">
-            <span class="w-3 h-3 rounded" style="background:#111827;"></span>
-            <span>Unchanged</span>
-          </div>
-          <div class="flex items-center gap-1 mt-1">
-            <span class="w-3 h-3 rounded" style="background:#10b981;"></span>
-            <span>Added in A</span>
-          </div>
-          <div class="flex items-center gap-1 mt-1">
-            <span class="w-3 h-3 rounded" style="background:#ef4444;"></span>
-            <span>Removed from A</span>
-          </div>
-        </div>
-        
-        <div class="flex items-center justify-between">
+        <h2 class="text-[12px] font-semibold text-gray-900 mb-1">
+          Diff Summary
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div>
-            <h2 class="text-[12px] font-semibold text-gray-900">
-              Baseline (A)
-            </h2>
-            <p class="text-[10px] text-gray-500">
-              {{ compareResult.job_a.name || compareResult.job_a.job_id }} ·
-              {{ compareResult.job_a.preset || 'no preset' }}
+            <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
+              Pattern & Segments
+            </h3>
+            <p class="text-[10px] text-gray-700">
+              A: {{ compareResult.diff_summary.pattern_type_a }} ·
+              {{ compareResult.diff_summary.segments_a }} seg
+            </p>
+            <p class="text-[10px] text-gray-700">
+              B: {{ compareResult.diff_summary.pattern_type_b }} ·
+              {{ compareResult.diff_summary.segments_b }} seg
+            </p>
+            <p
+              class="text-[10px]"
+              :class="deltaClass(compareResult.diff_summary.segments_delta)"
+            >
+              Δ segments: {{ signed(compareResult.diff_summary.segments_delta) }}
             </p>
           </div>
-          <div class="text-[10px] font-mono text-gray-500">
-            {{ compareResult.job_a.segments }} seg
-          </div>
-        </div>
-        <div
-          class="border rounded bg-gray-50 flex items-center justify-center"
-          style="height: 260px;"
-        >
-          <svg
-            v-if="compareResult.job_a.paths.length"
-            :viewBox="viewBoxUnion"
-            preserveAspectRatio="xMidYMid meet"
-            class="w-full h-full"
-          >
-            <!-- Unchanged paths (common segment count) -->
-            <polyline
-              v-for="(path, idx) in unchangedPathsA"
-              :key="'a_unchanged_' + idx"
-              :points="polylinePoints(path.points)"
-              fill="none"
-              stroke="#111827"
-              stroke-width="0.4"
-            />
-            <!-- Added paths (A has more segments than B) -->
-            <polyline
-              v-for="(path, idx) in addedPathsA"
-              :key="'a_added_' + idx"
-              :points="polylinePoints(path.points)"
-              fill="none"
-              stroke="#10b981"
-              stroke-width="0.7"
-            />
-          </svg>
-          <div v-else class="text-[10px] text-gray-500 italic">
-            No geometry for job A.
-          </div>
-        </div>
-      </div>
-
-      <!-- Variant (B) Canvas -->
-      <div class="border rounded-lg bg-white shadow-sm p-3 flex flex-col gap-2 relative">
-        <!-- Legend -->
-        <div class="absolute top-2 right-2 bg-white/90 p-2 rounded shadow text-[10px] z-10 border border-gray-200">
-          <div class="flex items-center gap-1">
-            <span class="w-3 h-3 rounded" style="background:#111827;"></span>
-            <span>Unchanged</span>
-          </div>
-          <div class="flex items-center gap-1 mt-1">
-            <span class="w-3 h-3 rounded" style="background:#10b981;"></span>
-            <span>Added in B</span>
-          </div>
-          <div class="flex items-center gap-1 mt-1">
-            <span class="w-3 h-3 rounded" style="background:#ef4444;"></span>
-            <span>Removed from B</span>
-          </div>
-        </div>
-        
-        <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-[12px] font-semibold text-gray-900">
-              Variant (B)
-            </h2>
-            <p class="text-[10px] text-gray-500">
-              {{ compareResult.job_b.name || compareResult.job_b.job_id }} ·
-              {{ compareResult.job_b.preset || 'no preset' }}
+            <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
+              Radii
+            </h3>
+            <p class="text-[10px] text-gray-700">
+              Inner A: {{ compareResult.diff_summary.inner_radius_a }} ·
+              B: {{ compareResult.diff_summary.inner_radius_b }}
+            </p>
+            <p
+              class="text-[10px]"
+              :class="deltaClass(compareResult.diff_summary.inner_radius_delta)"
+            >
+              Δ inner: {{ signedFloat(compareResult.diff_summary.inner_radius_delta) }}
+            </p>
+            <p class="text-[10px] text-gray-700 mt-1">
+              Outer A: {{ compareResult.diff_summary.outer_radius_a }} ·
+              B: {{ compareResult.diff_summary.outer_radius_b }}
+            </p>
+            <p
+              class="text-[10px]"
+              :class="deltaClass(compareResult.diff_summary.outer_radius_delta)"
+            >
+              Δ outer: {{ signedFloat(compareResult.diff_summary.outer_radius_delta) }}
             </p>
           </div>
-          <div class="text-[10px] font-mono text-gray-500">
-            {{ compareResult.job_b.segments }} seg
-          </div>
-        </div>
-        <div
-          class="border rounded bg-gray-50 flex items-center justify-center"
-          style="height: 260px;"
-        >
-          <svg
-            v-if="compareResult.job_b.paths.length"
-            :viewBox="viewBoxUnion"
-            preserveAspectRatio="xMidYMid meet"
-            class="w-full h-full"
-          >
-            <!-- Unchanged paths (common segment count) -->
-            <polyline
-              v-for="(path, idx) in unchangedPathsB"
-              :key="'b_unchanged_' + idx"
-              :points="polylinePoints(path.points)"
-              fill="none"
-              stroke="#111827"
-              stroke-width="0.4"
-            />
-            <!-- Added paths (B has more segments than A) -->
-            <polyline
-              v-for="(path, idx) in addedPathsB"
-              :key="'b_added_' + idx"
-              :points="polylinePoints(path.points)"
-              fill="none"
-              stroke="#10b981"
-              stroke-width="0.7"
-            />
-          </svg>
-          <div v-else class="text-[10px] text-gray-500 italic">
-            No geometry for job B.
+          <div>
+            <h3 class="font-semibold text-[11px] text-gray-900 mb-0.5">
+              Units & BBox
+            </h3>
+            <p class="text-[10px] text-gray-700">
+              Units A: {{ compareResult.diff_summary.units_a }} ·
+              B: {{ compareResult.diff_summary.units_b }}
+            </p>
+            <p
+              class="text-[10px]"
+              :class="compareResult.diff_summary.units_same ? 'text-emerald-700' : 'text-amber-700'"
+            >
+              Units {{ compareResult.diff_summary.units_same ? 'match' : 'differ' }}
+            </p>
+            <p class="text-[10px] text-gray-700 mt-1">
+              BBox union:
+              [{{ compareResult.diff_summary.bbox_union.join(', ') }}]
+            </p>
           </div>
         </div>
       </div>
-    </div>
 
-    <div
-      v-else
-      class="text-[11px] text-gray-500 italic"
-    >
-      Pick two jobs and run a comparison to see dual canvases and a diff summary.
-    </div>
+      <!-- Dual canvases with Phase 27.1 coloring -->
+      <div
+        v-if="compareResult"
+        class="grid grid-cols-1 md:grid-cols-2 gap-3"
+      >
+        <!-- Baseline (A) Canvas -->
+        <div class="border rounded-lg bg-white shadow-sm p-3 flex flex-col gap-2 relative">
+          <!-- Legend -->
+          <div class="absolute top-2 right-2 bg-white/90 p-2 rounded shadow text-[10px] z-10 border border-gray-200">
+            <div class="flex items-center gap-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#111827;"
+              />
+              <span>Unchanged</span>
+            </div>
+            <div class="flex items-center gap-1 mt-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#10b981;"
+              />
+              <span>Added in A</span>
+            </div>
+            <div class="flex items-center gap-1 mt-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#ef4444;"
+              />
+              <span>Removed from A</span>
+            </div>
+          </div>
+        
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-[12px] font-semibold text-gray-900">
+                Baseline (A)
+              </h2>
+              <p class="text-[10px] text-gray-500">
+                {{ compareResult.job_a.name || compareResult.job_a.job_id }} ·
+                {{ compareResult.job_a.preset || 'no preset' }}
+              </p>
+            </div>
+            <div class="text-[10px] font-mono text-gray-500">
+              {{ compareResult.job_a.segments }} seg
+            </div>
+          </div>
+          <div
+            class="border rounded bg-gray-50 flex items-center justify-center"
+            style="height: 260px;"
+          >
+            <svg
+              v-if="compareResult.job_a.paths.length"
+              :viewBox="viewBoxUnion"
+              preserveAspectRatio="xMidYMid meet"
+              class="w-full h-full"
+            >
+              <!-- Unchanged paths (common segment count) -->
+              <polyline
+                v-for="(path, idx) in unchangedPathsA"
+                :key="'a_unchanged_' + idx"
+                :points="polylinePoints(path.points)"
+                fill="none"
+                stroke="#111827"
+                stroke-width="0.4"
+              />
+              <!-- Added paths (A has more segments than B) -->
+              <polyline
+                v-for="(path, idx) in addedPathsA"
+                :key="'a_added_' + idx"
+                :points="polylinePoints(path.points)"
+                fill="none"
+                stroke="#10b981"
+                stroke-width="0.7"
+              />
+            </svg>
+            <div
+              v-else
+              class="text-[10px] text-gray-500 italic"
+            >
+              No geometry for job A.
+            </div>
+          </div>
+        </div>
+
+        <!-- Variant (B) Canvas -->
+        <div class="border rounded-lg bg-white shadow-sm p-3 flex flex-col gap-2 relative">
+          <!-- Legend -->
+          <div class="absolute top-2 right-2 bg-white/90 p-2 rounded shadow text-[10px] z-10 border border-gray-200">
+            <div class="flex items-center gap-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#111827;"
+              />
+              <span>Unchanged</span>
+            </div>
+            <div class="flex items-center gap-1 mt-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#10b981;"
+              />
+              <span>Added in B</span>
+            </div>
+            <div class="flex items-center gap-1 mt-1">
+              <span
+                class="w-3 h-3 rounded"
+                style="background:#ef4444;"
+              />
+              <span>Removed from B</span>
+            </div>
+          </div>
+        
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-[12px] font-semibold text-gray-900">
+                Variant (B)
+              </h2>
+              <p class="text-[10px] text-gray-500">
+                {{ compareResult.job_b.name || compareResult.job_b.job_id }} ·
+                {{ compareResult.job_b.preset || 'no preset' }}
+              </p>
+            </div>
+            <div class="text-[10px] font-mono text-gray-500">
+              {{ compareResult.job_b.segments }} seg
+            </div>
+          </div>
+          <div
+            class="border rounded bg-gray-50 flex items-center justify-center"
+            style="height: 260px;"
+          >
+            <svg
+              v-if="compareResult.job_b.paths.length"
+              :viewBox="viewBoxUnion"
+              preserveAspectRatio="xMidYMid meet"
+              class="w-full h-full"
+            >
+              <!-- Unchanged paths (common segment count) -->
+              <polyline
+                v-for="(path, idx) in unchangedPathsB"
+                :key="'b_unchanged_' + idx"
+                :points="polylinePoints(path.points)"
+                fill="none"
+                stroke="#111827"
+                stroke-width="0.4"
+              />
+              <!-- Added paths (B has more segments than A) -->
+              <polyline
+                v-for="(path, idx) in addedPathsB"
+                :key="'b_added_' + idx"
+                :points="polylinePoints(path.points)"
+                fill="none"
+                stroke="#10b981"
+                stroke-width="0.7"
+              />
+            </svg>
+            <div
+              v-else
+              class="text-[10px] text-gray-500 italic"
+            >
+              No geometry for job B.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-else
+        class="text-[11px] text-gray-500 italic"
+      >
+        Pick two jobs and run a comparison to see dual canvases and a diff summary.
+      </div>
     </div> <!-- End main content area -->
 
     <!-- Phase 27.3: History Sidebar -->
@@ -332,8 +376,8 @@ Shows two canvases plus a small diff summary panel
         </h2>
         <button
           class="px-2 py-0.5 rounded border text-[10px] text-blue-700 hover:bg-blue-50"
-          @click="exportHistoryCSV"
           :disabled="historyLoading || !historySnapshots.length"
+          @click="exportHistoryCSV"
         >
           Export CSV
         </button>
@@ -346,10 +390,10 @@ Shows two canvases plus a small diff summary panel
       >
         <label class="flex items-center gap-1 text-[10px] text-gray-700 cursor-pointer">
           <input
-            type="checkbox"
             v-model="groupByPreset"
+            type="checkbox"
             class="rounded"
-          />
+          >
           Group by Preset
         </label>
       </div>
@@ -364,26 +408,47 @@ Shows two canvases plus a small diff summary panel
         </div>
         <div class="grid grid-cols-2 gap-2 text-[9px]">
           <div>
-            <div class="text-gray-600">Total</div>
-            <div class="font-semibold text-gray-900">{{ historySnapshots.length }}</div>
+            <div class="text-gray-600">
+              Total
+            </div>
+            <div class="font-semibold text-gray-900">
+              {{ historySnapshots.length }}
+            </div>
           </div>
           <div>
-            <div class="text-gray-600">Avg Risk</div>
-            <div class="font-semibold" :class="riskTextClass(averageRisk)">
+            <div class="text-gray-600">
+              Avg Risk
+            </div>
+            <div
+              class="font-semibold"
+              :class="riskTextClass(averageRisk)"
+            >
               {{ averageRisk.toFixed(1) }}%
             </div>
           </div>
           <div>
-            <div class="text-green-700">Low (<40%)</div>
-            <div class="font-semibold text-green-800">{{ lowRiskCount }}</div>
+            <div class="text-green-700">
+              Low (<40%)
+            </div>
+            <div class="font-semibold text-green-800">
+              {{ lowRiskCount }}
+            </div>
           </div>
           <div>
-            <div class="text-yellow-700">Med (40-70%)</div>
-            <div class="font-semibold text-yellow-800">{{ mediumRiskCount }}</div>
+            <div class="text-yellow-700">
+              Med (40-70%)
+            </div>
+            <div class="font-semibold text-yellow-800">
+              {{ mediumRiskCount }}
+            </div>
           </div>
           <div class="col-span-2">
-            <div class="text-red-700">High (>70%)</div>
-            <div class="font-semibold text-red-800">{{ highRiskCount }}</div>
+            <div class="text-red-700">
+              High (>70%)
+            </div>
+            <div class="font-semibold text-red-800">
+              {{ highRiskCount }}
+            </div>
           </div>
         </div>
         
@@ -393,17 +458,17 @@ Shows two canvases plus a small diff summary panel
             v-if="lowRiskCount > 0"
             class="bg-green-500"
             :style="{ width: `${(lowRiskCount / historySnapshots.length) * 100}%` }"
-          ></div>
+          />
           <div
             v-if="mediumRiskCount > 0"
             class="bg-yellow-500"
             :style="{ width: `${(mediumRiskCount / historySnapshots.length) * 100}%` }"
-          ></div>
+          />
           <div
             v-if="highRiskCount > 0"
             class="bg-red-500"
             :style="{ width: `${(highRiskCount / historySnapshots.length) * 100}%` }"
-          ></div>
+          />
         </div>
       </div>
 
@@ -421,19 +486,31 @@ Shows two canvases plus a small diff summary panel
             :key="groupKey"
             class="border rounded bg-white p-2 flex-shrink-0 w-36"
           >
-            <div class="text-[10px] font-semibold text-gray-900 mb-1 truncate" :title="group.presetLabel">
+            <div
+              class="text-[10px] font-semibold text-gray-900 mb-1 truncate"
+              :title="group.presetLabel"
+            >
               {{ group.presetLabel }}
             </div>
             
             <!-- Scorecard metrics -->
             <div class="grid grid-cols-2 gap-1 text-[9px] mb-1.5">
               <div>
-                <div class="text-gray-600">Total</div>
-                <div class="font-semibold text-gray-900">{{ group.snapshots.length }}</div>
+                <div class="text-gray-600">
+                  Total
+                </div>
+                <div class="font-semibold text-gray-900">
+                  {{ group.snapshots.length }}
+                </div>
               </div>
               <div>
-                <div class="text-gray-600">Avg</div>
-                <div class="font-semibold" :class="riskTextClass(group.avgRisk)">
+                <div class="text-gray-600">
+                  Avg
+                </div>
+                <div
+                  class="font-semibold"
+                  :class="riskTextClass(group.avgRisk)"
+                >
                   {{ group.avgRisk.toFixed(1) }}%
                 </div>
               </div>
@@ -463,7 +540,10 @@ Shows two canvases plus a small diff summary panel
 
             <!-- Mini sparkline showing risk trend -->
             <div class="border-t pt-1">
-              <svg viewBox="0 0 120 20" class="w-full h-4">
+              <svg
+                viewBox="0 0 120 20"
+                class="w-full h-4"
+              >
                 <polyline
                   :points="generatePresetSparkline(group.snapshots)"
                   fill="none"
@@ -476,7 +556,10 @@ Shows two canvases plus a small diff summary panel
         </div>
       </div>
 
-      <div v-if="historyLoading" class="text-[10px] text-gray-500 italic">
+      <div
+        v-if="historyLoading"
+        class="text-[10px] text-gray-500 italic"
+      >
         Loading history...
       </div>
 
@@ -488,7 +571,10 @@ Shows two canvases plus a small diff summary panel
       </div>
 
       <!-- Phase 27.4: Grouped or flat history display -->
-      <div v-else-if="!groupByPreset" class="flex flex-col gap-2">
+      <div
+        v-else-if="!groupByPreset"
+        class="flex flex-col gap-2"
+      >
         <div
           v-for="snapshot in historySnapshots"
           :key="snapshot.id"
@@ -508,7 +594,10 @@ Shows two canvases plus a small diff summary panel
 
           <!-- Sparkline: segments over time (simplified inline SVG) -->
           <div class="mb-1">
-            <svg viewBox="0 0 80 20" class="w-full h-5">
+            <svg
+              viewBox="0 0 80 20"
+              class="w-full h-5"
+            >
               <polyline
                 :points="generateSparkline(snapshot)"
                 fill="none"
@@ -524,14 +613,20 @@ Shows two canvases plus a small diff summary panel
             <div>Outer Δ: {{ snapshot.diff_summary.outer_radius_delta?.toFixed(2) }}</div>
           </div>
 
-          <div v-if="snapshot.lane" class="mt-1 text-[9px] text-gray-500">
+          <div
+            v-if="snapshot.lane"
+            class="mt-1 text-[9px] text-gray-500"
+          >
             Lane: {{ snapshot.lane }}
           </div>
         </div>
       </div>
 
       <!-- Phase 27.4: Preset-grouped history -->
-      <div v-else class="flex flex-col gap-2">
+      <div
+        v-else
+        class="flex flex-col gap-2"
+      >
         <div
           v-for="(group, groupKey) in groupedSnapshots"
           :key="groupKey"
@@ -539,8 +634,8 @@ Shows two canvases plus a small diff summary panel
         >
           <!-- Group header -->
           <button
-            @click="toggleGroup(groupKey)"
             class="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-50 text-left"
+            @click="toggleGroup(groupKey)"
           >
             <div class="flex-1">
               <div class="text-[11px] font-semibold text-gray-900">
@@ -580,7 +675,10 @@ Shows two canvases plus a small diff summary panel
 
               <!-- Sparkline -->
               <div class="mb-1">
-                <svg viewBox="0 0 80 20" class="w-full h-5">
+                <svg
+                  viewBox="0 0 80 20"
+                  class="w-full h-5"
+                >
                   <polyline
                     :points="generateSparkline(snapshot)"
                     fill="none"
@@ -596,7 +694,10 @@ Shows two canvases plus a small diff summary panel
                 <div>Outer Δ: {{ snapshot.diff_summary.outer_radius_delta?.toFixed(2) }}</div>
               </div>
 
-              <div v-if="snapshot.lane" class="mt-1 text-[9px] text-gray-500">
+              <div
+                v-if="snapshot.lane"
+                class="mt-1 text-[9px] text-gray-500"
+              >
                 Lane: {{ snapshot.lane }}
               </div>
             </div>

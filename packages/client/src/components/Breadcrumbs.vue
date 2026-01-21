@@ -1,15 +1,29 @@
 <template>
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
+  <nav
+    class="breadcrumbs"
+    aria-label="Breadcrumb"
+  >
     <ol>
       <li>
-        <router-link to="/">🏠 Home</router-link>
+        <router-link to="/">
+          🏠 Home
+        </router-link>
       </li>
-      <li v-for="(crumb, index) in breadcrumbs" :key="index">
+      <li
+        v-for="(crumb, index) in breadcrumbs"
+        :key="index"
+      >
         <span class="separator">/</span>
-        <router-link v-if="crumb.to && index < breadcrumbs.length - 1" :to="crumb.to">
+        <router-link
+          v-if="crumb.to && index < breadcrumbs.length - 1"
+          :to="crumb.to"
+        >
           {{ crumb.label }}
         </router-link>
-        <span v-else class="current">{{ crumb.label }}</span>
+        <span
+          v-else
+          class="current"
+        >{{ crumb.label }}</span>
       </li>
     </ol>
   </nav>

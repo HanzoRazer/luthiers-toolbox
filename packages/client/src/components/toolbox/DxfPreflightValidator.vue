@@ -1,34 +1,64 @@
 <template>
   <div class="dxf-preflight">
     <h2>🔍 DXF Preflight Validator</h2>
-    <p class="subtitle">Validate DXF files before CAM import — catch issues early!</p>
+    <p class="subtitle">
+      Validate DXF files before CAM import — catch issues early!
+    </p>
 
     <!-- File Upload Section -->
     <div class="upload-section">
       <label class="file-upload">
-        <input type="file" accept=".dxf" @change="handleFileSelect" ref="fileInput" />
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".dxf"
+          @change="handleFileSelect"
+        >
         <span class="upload-button">📁 Choose DXF File</span>
       </label>
-      <span v-if="selectedFile" class="file-info">
+      <span
+        v-if="selectedFile"
+        class="file-info"
+      >
         {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
       </span>
-      <button v-if="selectedFile" @click="validateFile" :disabled="validating" class="validate-btn">
+      <button
+        v-if="selectedFile"
+        :disabled="validating"
+        class="validate-btn"
+        @click="validateFile"
+      >
         {{ validating ? '⏳ Validating...' : '✅ Validate DXF' }}
       </button>
     </div>
 
     <!-- Validation Report -->
-    <div v-if="report" class="report">
+    <div
+      v-if="report"
+      class="report"
+    >
       <!-- Header Summary -->
-      <div class="report-header" :class="{ 'cam-ready': report.cam_ready, 'has-issues': !report.cam_ready }">
+      <div
+        class="report-header"
+        :class="{ 'cam-ready': report.cam_ready, 'has-issues': !report.cam_ready }"
+      >
         <h3>
           <span v-if="report.cam_ready">✅ CAM-Ready</span>
           <span v-else>⚠️ Issues Found</span>
         </h3>
         <div class="stats">
-          <span class="stat error" v-if="report.errors_count > 0">{{ report.errors_count }} Error(s)</span>
-          <span class="stat warning" v-if="report.warnings_count > 0">{{ report.warnings_count }} Warning(s)</span>
-          <span class="stat info" v-if="report.info_count > 0">{{ report.info_count }} Info</span>
+          <span
+            v-if="report.errors_count > 0"
+            class="stat error"
+          >{{ report.errors_count }} Error(s)</span>
+          <span
+            v-if="report.warnings_count > 0"
+            class="stat warning"
+          >{{ report.warnings_count }} Warning(s)</span>
+          <span
+            v-if="report.info_count > 0"
+            class="stat info"
+          >{{ report.info_count }} Info</span>
         </div>
       </div>
 
@@ -91,13 +121,19 @@
           </div>
           <div class="geom-stat">
             <span class="geom-label">Splines:</span>
-            <span class="geom-value" :class="{ 'warn-value': report.geometry.splines > 0 }">
+            <span
+              class="geom-value"
+              :class="{ 'warn-value': report.geometry.splines > 0 }"
+            >
               {{ report.geometry.splines }}
             </span>
           </div>
           <div class="geom-stat">
             <span class="geom-label">Ellipses:</span>
-            <span class="geom-value" :class="{ 'warn-value': report.geometry.ellipses > 0 }">
+            <span
+              class="geom-value"
+              :class="{ 'warn-value': report.geometry.ellipses > 0 }"
+            >
               {{ report.geometry.ellipses }}
             </span>
           </div>
@@ -116,21 +152,39 @@
       <div class="section">
         <h4>🗂️ Layers ({{ report.layers.length }})</h4>
         <div class="layers-list">
-          <div v-for="layer in report.layers" :key="layer.name" class="layer-item">
+          <div
+            v-for="layer in report.layers"
+            :key="layer.name"
+            class="layer-item"
+          >
             <span class="layer-name">{{ layer.name }}</span>
             <span class="layer-count">{{ layer.entity_count }} entities</span>
             <span class="layer-types">{{ layer.geometry_types.join(', ') }}</span>
-            <span v-if="layer.frozen" class="layer-badge frozen">Frozen</span>
-            <span v-if="layer.locked" class="layer-badge locked">Locked</span>
+            <span
+              v-if="layer.frozen"
+              class="layer-badge frozen"
+            >Frozen</span>
+            <span
+              v-if="layer.locked"
+              class="layer-badge locked"
+            >Locked</span>
           </div>
         </div>
       </div>
 
       <!-- Issues -->
-      <div v-if="report.issues.length > 0" class="section">
+      <div
+        v-if="report.issues.length > 0"
+        class="section"
+      >
         <h4>🔍 Issues ({{ report.issues.length }})</h4>
         <div class="issues-list">
-          <div v-for="(issue, idx) in report.issues" :key="idx" class="issue-item" :class="`severity-${issue.severity}`">
+          <div
+            v-for="(issue, idx) in report.issues"
+            :key="idx"
+            class="issue-item"
+            :class="`severity-${issue.severity}`"
+          >
             <div class="issue-header">
               <span class="issue-icon">
                 <span v-if="issue.severity === 'error'">❌</span>
@@ -140,8 +194,16 @@
               <span class="issue-category">[{{ issue.category }}]</span>
               <span class="issue-message">{{ issue.message }}</span>
             </div>
-            <div v-if="issue.details" class="issue-details">{{ issue.details }}</div>
-            <div v-if="issue.fix_available" class="issue-fix">
+            <div
+              v-if="issue.details"
+              class="issue-details"
+            >
+              {{ issue.details }}
+            </div>
+            <div
+              v-if="issue.fix_available"
+              class="issue-fix"
+            >
               <span class="fix-icon">🔧</span>
               <span class="fix-desc">{{ issue.fix_description }}</span>
             </div>
@@ -153,57 +215,97 @@
       <div class="section">
         <h4>💡 Recommended Actions</h4>
         <ul class="recommendations">
-          <li v-for="(action, idx) in report.recommended_actions" :key="idx">
+          <li
+            v-for="(action, idx) in report.recommended_actions"
+            :key="idx"
+          >
             {{ action }}
           </li>
         </ul>
       </div>
 
       <!-- Auto-Fix Section -->
-      <div v-if="hasFixableIssues" class="section">
+      <div
+        v-if="hasFixableIssues"
+        class="section"
+      >
         <h4>🔧 Auto-Fix</h4>
         <p>Select fixes to apply automatically:</p>
         <div class="fix-options">
           <label v-if="!report.cam_ready && report.dxf_version !== 'AC1009'">
-            <input type="checkbox" v-model="fixes.convert_to_r12" />
+            <input
+              v-model="fixes.convert_to_r12"
+              type="checkbox"
+            >
             Convert to R12 format
           </label>
           <label v-if="hasOpenPolylines">
-            <input type="checkbox" v-model="fixes.close_open_polylines" />
+            <input
+              v-model="fixes.close_open_polylines"
+              type="checkbox"
+            >
             Close open polylines (0.1mm tolerance)
           </label>
           <label v-if="report.units === 'unknown'">
-            <input type="checkbox" v-model="fixes.set_units_mm" />
+            <input
+              v-model="fixes.set_units_mm"
+              type="checkbox"
+            >
             Set units to millimeters
           </label>
           <label v-if="report.geometry.splines > 0">
-            <input type="checkbox" v-model="fixes.explode_splines" disabled />
+            <input
+              v-model="fixes.explode_splines"
+              type="checkbox"
+              disabled
+            >
             Explode splines (coming soon)
           </label>
         </div>
-        <button @click="applyAutoFix" :disabled="!hasSelectedFixes || autoFixing" class="auto-fix-btn">
+        <button
+          :disabled="!hasSelectedFixes || autoFixing"
+          class="auto-fix-btn"
+          @click="applyAutoFix"
+        >
           {{ autoFixing ? '⏳ Applying Fixes...' : '🔧 Apply Selected Fixes' }}
         </button>
       </div>
 
       <!-- Fixed DXF Download -->
-      <div v-if="fixedDxf" class="section fixed-section">
+      <div
+        v-if="fixedDxf"
+        class="section fixed-section"
+      >
         <h4>✅ Fixed DXF Ready!</h4>
         <p><strong>Fixes Applied:</strong></p>
         <ul>
-          <li v-for="(fix, idx) in appliedFixes" :key="idx">{{ fix }}</li>
+          <li
+            v-for="(fix, idx) in appliedFixes"
+            :key="idx"
+          >
+            {{ fix }}
+          </li>
         </ul>
-        <button @click="downloadFixedDxf" class="download-btn">
+        <button
+          class="download-btn"
+          @click="downloadFixedDxf"
+        >
           💾 Download Fixed DXF
         </button>
-        <button @click="validateFixedDxf" class="validate-btn">
+        <button
+          class="validate-btn"
+          @click="validateFixedDxf"
+        >
           🔄 Re-Validate Fixed DXF
         </button>
       </div>
     </div>
 
     <!-- Error Display -->
-    <div v-if="error" class="error-box">
+    <div
+      v-if="error"
+      class="error-box"
+    >
       <strong>❌ Error:</strong> {{ error }}
     </div>
   </div>

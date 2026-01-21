@@ -2,43 +2,112 @@
   <div class="card">
     <div class="row">
       <h3>Pattern Library</h3>
-      <button class="btn" @click="store.loadPatterns()" :disabled="store.patternsLoading">Refresh</button>
+      <button
+        class="btn"
+        :disabled="store.patternsLoading"
+        @click="store.loadPatterns()"
+      >
+        Refresh
+      </button>
     </div>
     <div class="filters">
-      <input class="input" v-model="q" placeholder="Search..." />
-      <input class="input" v-model="tag" placeholder="Tag..." />
-      <button class="btn" @click="applyFilters">Filter</button>
-    </div>
-    <div v-if="store.patternsError" class="err">{{ store.patternsError }}</div>
-    <div class="list" v-if="store.patterns?.length">
+      <input
+        v-model="q"
+        class="input"
+        placeholder="Search..."
+      >
+      <input
+        v-model="tag"
+        class="input"
+        placeholder="Tag..."
+      >
       <button
-        class="item"
+        class="btn"
+        @click="applyFilters"
+      >
+        Filter
+      </button>
+    </div>
+    <div
+      v-if="store.patternsError"
+      class="err"
+    >
+      {{ store.patternsError }}
+    </div>
+    <div
+      v-if="store.patterns?.length"
+      class="list"
+    >
+      <button
         v-for="p in store.patterns"
         :key="p.pattern_id"
+        class="item"
         @click="store.openPattern(p.pattern_id)"
       >
-        <div class="name">{{ p.name }}</div>
-        <div class="meta">{{ p.generator_key }}</div>
+        <div class="name">
+          {{ p.name }}
+        </div>
+        <div class="meta">
+          {{ p.generator_key }}
+        </div>
         <div class="tags">
-          <span class="tag" v-for="t in p.tags" :key="t">{{ t }}</span>
+          <span
+            v-for="t in p.tags"
+            :key="t"
+            class="tag"
+          >{{ t }}</span>
         </div>
       </button>
     </div>
-    <div v-else class="empty">No patterns yet.</div>
-    <hr class="hr" />
+    <div
+      v-else
+      class="empty"
+    >
+      No patterns yet.
+    </div>
+    <hr class="hr">
     <h4>Save Current as Pattern</h4>
-    <input class="input" v-model="newName" placeholder="Pattern name" />
-    <input class="input" v-model="newTags" placeholder="tags (comma separated)" />
-    <textarea class="input" v-model="newDesc" rows="3" placeholder="description (optional)"></textarea>
+    <input
+      v-model="newName"
+      class="input"
+      placeholder="Pattern name"
+    >
+    <input
+      v-model="newTags"
+      class="input"
+      placeholder="tags (comma separated)"
+    >
+    <textarea
+      v-model="newDesc"
+      class="input"
+      rows="3"
+      placeholder="description (optional)"
+    />
     <div class="row">
-      <button class="btn primary" @click="savePattern">Save</button>
-      <button class="btn danger" @click="store.deleteSelectedPattern()" :disabled="!store.selectedPattern">
+      <button
+        class="btn primary"
+        @click="savePattern"
+      >
+        Save
+      </button>
+      <button
+        class="btn danger"
+        :disabled="!store.selectedPattern"
+        @click="store.deleteSelectedPattern()"
+      >
         Delete Selected
       </button>
     </div>
-    <div class="hint" v-if="store.selectedPattern">
-      <div class="small"><strong>Selected:</strong> {{ store.selectedPattern.name }}</div>
-      <div class="small">ID: {{ store.selectedPattern.pattern_id }}</div>
+    <div
+      v-if="store.selectedPattern"
+      class="hint"
+    >
+      <div class="small">
+        <strong>Selected:</strong> {{ store.selectedPattern.name }}
+      </div>
+      <div class="small">
+        ID: {{ store.selectedPattern.pattern_id }}
+      </div>
     </div>
   </div>
 </template>

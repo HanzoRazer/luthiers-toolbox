@@ -257,7 +257,10 @@ function downloadJSON(data: any, filename: string) {
     </div>
 
     <!-- Traditional Method -->
-    <div v-if="generationMode === 'traditional'" class="traditional-section">
+    <div
+      v-if="generationMode === 'traditional'"
+      class="traditional-section"
+    >
       <div class="content-grid">
         <!-- Pattern Catalog -->
         <div class="catalog-panel">
@@ -267,16 +270,16 @@ function downloadJSON(data: any, filename: string) {
             <Button
               label="All"
               :class="{ 'p-button-outlined': selectedCategory !== null }"
-              @click="selectedCategory = null"
               size="small"
+              @click="selectedCategory = null"
             />
             <Button
               v-for="cat in categories"
               :key="cat"
               :label="cat"
               :class="{ 'p-button-outlined': selectedCategory !== cat }"
-              @click="selectedCategory = cat"
               size="small"
+              @click="selectedCategory = cat"
             />
           </div>
 
@@ -296,7 +299,10 @@ function downloadJSON(data: any, filename: string) {
                 <span>{{ pattern.rows }}×{{ pattern.columns }}</span>
                 <span>{{ pattern.materials.join(", ") }}</span>
               </div>
-              <div v-if="pattern.notes" class="pattern-notes">
+              <div
+                v-if="pattern.notes"
+                class="pattern-notes"
+              >
                 {{ pattern.notes }}
               </div>
             </div>
@@ -307,7 +313,10 @@ function downloadJSON(data: any, filename: string) {
         <div class="generation-panel">
           <h2>Generate Pattern</h2>
 
-          <div v-if="selectedPattern" class="selected-pattern-info">
+          <div
+            v-if="selectedPattern"
+            class="selected-pattern-info"
+          >
             <h3>{{ selectedPattern.name }}</h3>
             <p>{{ selectedPattern.notes }}</p>
           </div>
@@ -330,7 +339,7 @@ function downloadJSON(data: any, filename: string) {
                 :min="0"
                 :max="0.5"
                 :step="0.05"
-                :minFractionDigits="2"
+                :min-fraction-digits="2"
               />
             </div>
           </div>
@@ -338,19 +347,24 @@ function downloadJSON(data: any, filename: string) {
           <Button
             label="Generate Traditional Pattern"
             icon="pi pi-cog"
-            @click="generateTraditional"
             :disabled="!selectedPattern || isLoading"
             :loading="isLoading"
             class="w-full"
+            @click="generateTraditional"
           />
 
           <!-- Results -->
-          <div v-if="traditionalResult" class="results-section">
+          <div
+            v-if="traditionalResult"
+            class="results-section"
+          >
             <h3>Results</h3>
 
             <div class="stats-grid">
               <div class="stat-card">
-                <div class="stat-label">Width</div>
+                <div class="stat-label">
+                  Width
+                </div>
                 <div class="stat-value">
                   {{
                     traditionalResult.pattern_dimensions.width_mm.toFixed(1)
@@ -359,7 +373,9 @@ function downloadJSON(data: any, filename: string) {
                 </div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Height</div>
+                <div class="stat-label">
+                  Height
+                </div>
                 <div class="stat-value">
                   {{
                     traditionalResult.pattern_dimensions.height_mm.toFixed(1)
@@ -410,13 +426,13 @@ function downloadJSON(data: any, filename: string) {
             <Button
               label="Download JSON"
               icon="pi pi-download"
+              class="w-full"
               @click="
                 downloadJSON(
                   traditionalResult,
                   `${selectedPattern.id}_traditional.json`
                 )
               "
-              class="w-full"
             />
           </div>
         </div>
@@ -424,7 +440,10 @@ function downloadJSON(data: any, filename: string) {
     </div>
 
     <!-- Modern Parametric Method -->
-    <div v-if="generationMode === 'modern'" class="modern-section">
+    <div
+      v-if="generationMode === 'modern'"
+      class="modern-section"
+    >
       <div class="content-grid">
         <!-- Ring Designer -->
         <div class="designer-panel">
@@ -437,31 +456,45 @@ function downloadJSON(data: any, filename: string) {
 
           <div class="field">
             <label>Soundhole Diameter (mm)</label>
-            <InputNumber v-model="soundholeDiameter" :min="50" :max="150" />
+            <InputNumber
+              v-model="soundholeDiameter"
+              :min="50"
+              :max="150"
+            />
           </div>
 
           <div class="rings-list">
             <h4>Rings (inner to outer)</h4>
 
-            <div v-for="(ring, idx) in rings" :key="idx" class="ring-editor">
+            <div
+              v-for="(ring, idx) in rings"
+              :key="idx"
+              class="ring-editor"
+            >
               <div class="ring-header">
                 <strong>Ring {{ idx + 1 }}</strong>
                 <Button
                   icon="pi pi-times"
                   class="p-button-text p-button-danger p-button-sm"
-                  @click="removeRing(idx)"
                   :disabled="rings.length === 1"
+                  @click="removeRing(idx)"
                 />
               </div>
 
               <div class="ring-fields">
                 <div class="field-inline">
                   <label>Inner (mm)</label>
-                  <InputNumber v-model="ring.inner_diameter_mm" :min="0" />
+                  <InputNumber
+                    v-model="ring.inner_diameter_mm"
+                    :min="0"
+                  />
                 </div>
                 <div class="field-inline">
                   <label>Outer (mm)</label>
-                  <InputNumber v-model="ring.outer_diameter_mm" :min="0" />
+                  <InputNumber
+                    v-model="ring.outer_diameter_mm"
+                    :min="0"
+                  />
                 </div>
               </div>
 
@@ -484,27 +517,33 @@ function downloadJSON(data: any, filename: string) {
                 </div>
               </div>
 
-              <div v-if="ring.pattern_type !== 'solid'" class="field">
+              <div
+                v-if="ring.pattern_type !== 'solid'"
+                class="field"
+              >
                 <label>Segments (optional)</label>
-                <InputNumber v-model="ring.segment_count" :min="1" />
+                <InputNumber
+                  v-model="ring.segment_count"
+                  :min="1"
+                />
               </div>
             </div>
 
             <Button
               label="Add Ring"
               icon="pi pi-plus"
-              @click="addRing"
               class="w-full"
               size="small"
+              @click="addRing"
             />
           </div>
 
           <Button
             label="Generate Modern Pattern"
             icon="pi pi-cog"
-            @click="generateModern"
             :loading="isLoading"
             class="w-full"
+            @click="generateModern"
           />
         </div>
 
@@ -515,17 +554,25 @@ function downloadJSON(data: any, filename: string) {
           <div v-if="modernResult">
             <div class="stats-grid">
               <div class="stat-card">
-                <div class="stat-label">Rings</div>
+                <div class="stat-label">
+                  Rings
+                </div>
                 <div class="stat-value">
                   {{ modernResult.spec.rings.length }}
                 </div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Path Segments</div>
-                <div class="stat-value">{{ modernResult.paths.length }}</div>
+                <div class="stat-label">
+                  Path Segments
+                </div>
+                <div class="stat-value">
+                  {{ modernResult.paths.length }}
+                </div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Est. Cut Time</div>
+                <div class="stat-label">
+                  Est. Cut Time
+                </div>
                 <div class="stat-value">
                   {{ modernResult.estimated_cut_time_min.toFixed(1) }} min
                 </div>
@@ -544,9 +591,15 @@ function downloadJSON(data: any, filename: string) {
               </div>
             </div>
 
-            <div v-if="modernResult.svg_content" class="svg-preview">
+            <div
+              v-if="modernResult.svg_content"
+              class="svg-preview"
+            >
               <h4>SVG Preview</h4>
-              <div class="preview-box" v-html="modernResult.svg_content"></div>
+              <div
+                class="preview-box"
+                v-html="modernResult.svg_content"
+              />
             </div>
 
             <div class="download-actions">
@@ -554,25 +607,25 @@ function downloadJSON(data: any, filename: string) {
                 v-if="modernResult.dxf_content"
                 label="Download DXF"
                 icon="pi pi-download"
+                class="p-button-success"
                 @click="
                   downloadDXF(
                     modernResult.dxf_content,
                     `${patternName.replace(/\s+/g, '_')}.dxf`
                   )
                 "
-                class="p-button-success"
               />
               <Button
                 v-if="modernResult.svg_content"
                 label="Download SVG"
                 icon="pi pi-download"
+                class="p-button-success"
                 @click="
                   downloadSVG(
                     modernResult.svg_content,
                     `${patternName.replace(/\s+/g, '_')}.svg`
                   )
                 "
-                class="p-button-success"
               />
               <Button
                 label="Download JSON"
@@ -587,8 +640,11 @@ function downloadJSON(data: any, filename: string) {
             </div>
           </div>
 
-          <div v-else class="empty-state">
-            <i class="pi pi-info-circle"></i>
+          <div
+            v-else
+            class="empty-state"
+          >
+            <i class="pi pi-info-circle" />
             <p>Configure rings and generate to see results</p>
           </div>
         </div>

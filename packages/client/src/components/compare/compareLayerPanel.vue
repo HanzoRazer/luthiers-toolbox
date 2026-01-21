@@ -1,13 +1,16 @@
 <template>
-  <aside v-if="hasLayers" class="layer-panel">
+  <aside
+    v-if="hasLayers"
+    class="layer-panel"
+  >
     <header class="layer-panel__header">
       <span class="layer-panel__title">Layers</span>
       <label class="layer-panel__filter">
         <input
-          type="checkbox"
           v-model="showOnlyMismatched"
+          type="checkbox"
           :disabled="disabled"
-        />
+        >
         Only mismatched
       </label>
     </header>
@@ -26,7 +29,10 @@
           <span class="layer-row__name">
             {{ layer.label || layer.id }}
           </span>
-          <span v-if="layer.inLeft !== layer.inRight" class="layer-row__badge">
+          <span
+            v-if="layer.inLeft !== layer.inRight"
+            class="layer-row__badge"
+          >
             {{ layer.inLeft && !layer.inRight ? "Left only" : "Right only" }}
           </span>
         </div>
@@ -34,29 +40,32 @@
         <div class="layer-row__toggles">
           <label class="layer-row__toggle">
             <input
-              type="checkbox"
               v-model="layer.visibleLeft"
+              type="checkbox"
               :disabled="!layer.inLeft || disabled"
               :title="layer.inLeft ? 'Toggle left visibility' : 'Not in left'"
-            />
+            >
             L
           </label>
           <label class="layer-row__toggle">
             <input
-              type="checkbox"
               v-model="layer.visibleRight"
+              type="checkbox"
               :disabled="!layer.inRight || disabled"
               :title="
                 layer.inRight ? 'Toggle right visibility' : 'Not in right'
               "
-            />
+            >
             R
           </label>
         </div>
       </li>
     </ul>
 
-    <footer v-if="summary" class="layer-panel__footer">
+    <footer
+      v-if="summary"
+      class="layer-panel__footer"
+    >
       <div class="layer-summary">
         <span class="layer-summary__stat">
           {{ summary.common.length }} common

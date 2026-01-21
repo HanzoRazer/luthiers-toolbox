@@ -65,8 +65,13 @@ function onFocus() {
   <div class="wrap">
     <div class="row">
       <div class="left">
-        <div class="title">{{ headline }}</div>
-        <div class="sub" :title="reason.detail">
+        <div class="title">
+          {{ headline }}
+        </div>
+        <div
+          class="sub"
+          :title="reason.detail"
+        >
           {{ reason.short }}
         </div>
       </div>
@@ -76,7 +81,10 @@ function onFocus() {
       </div>
     </div>
 
-    <div v-if="previous && current" class="diff">
+    <div
+      v-if="previous && current"
+      class="diff"
+    >
       <div class="diffRow">
         <span class="k">Score</span>
         <span class="v">{{ change.aScore.toFixed(1) }} &rarr; {{ change.bScore.toFixed(1) }}</span>
@@ -87,21 +95,41 @@ function onFocus() {
         <span class="v">{{ change.aWarn }} &rarr; {{ change.bWarn }}</span>
       </div>
 
-      <div class="diffRow" v-if="change.riskChanged">
+      <div
+        v-if="change.riskChanged"
+        class="diffRow"
+      >
         <span class="k">Risk</span>
         <span class="v">{{ change.aRisk }} &rarr; {{ change.bRisk }}</span>
       </div>
     </div>
 
-    <div v-if="topWarnings.length" class="warnings">
-      <div class="sectionTitle">Top warnings</div>
+    <div
+      v-if="topWarnings.length"
+      class="warnings"
+    >
+      <div class="sectionTitle">
+        Top warnings
+      </div>
       <ul>
-        <li v-for="(w, i) in topWarnings" :key="i">{{ w }}</li>
+        <li
+          v-for="(w, i) in topWarnings"
+          :key="i"
+        >
+          {{ w }}
+        </li>
       </ul>
     </div>
 
-    <div v-if="worstRing && onFocusWorstRing" class="actions">
-      <button class="btn" type="button" @click="onFocus">
+    <div
+      v-if="worstRing && onFocusWorstRing"
+      class="actions"
+    >
+      <button
+        class="btn"
+        type="button"
+        @click="onFocus"
+      >
         Focus worst ring
       </button>
       <span class="hint">

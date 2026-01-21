@@ -3,15 +3,31 @@
     <div class="header">
       <span class="label">{{ entry.kind }}</span>
       <span class="path">{{ entry.relpath }}</span>
-      <button class="copy-btn" @click="copyToClipboard">📋 Copy</button>
-      <button class="toggle-btn" @click="collapsed = !collapsed">
+      <button
+        class="copy-btn"
+        @click="copyToClipboard"
+      >
+        📋 Copy
+      </button>
+      <button
+        class="toggle-btn"
+        @click="collapsed = !collapsed"
+      >
         {{ collapsed ? "▶ Expand" : "▼ Collapse" }}
       </button>
     </div>
 
-    <div v-if="!collapsed" class="json-content">
+    <div
+      v-if="!collapsed"
+      class="json-content"
+    >
       <pre v-if="parsedJson !== null">{{ formattedJson }}</pre>
-      <div v-else class="error">Invalid JSON: {{ parseError }}</div>
+      <div
+        v-else
+        class="error"
+      >
+        Invalid JSON: {{ parseError }}
+      </div>
     </div>
   </div>
 </template>

@@ -101,57 +101,101 @@ async function runCompare() {
     <div class="head">
       <div>
         <h3>Compare runs</h3>
-        <div class="muted">Compare the current run against any other run id.</div>
+        <div class="muted">
+          Compare the current run against any other run id.
+        </div>
       </div>
     </div>
 
     <div class="row">
       <div class="field">
         <label>Current</label>
-        <div class="mono pill">{{ currentRunId }}</div>
+        <div class="mono pill">
+          {{ currentRunId }}
+        </div>
       </div>
       <div class="field grow">
         <label>Other run id</label>
         <input
-          class="input mono"
           v-model="otherRunId"
+          class="input mono"
           placeholder="run_..."
           spellcheck="false"
           autocomplete="off"
-        />
+        >
       </div>
       <div class="btns">
-        <button class="btn" @click="runCompare" :disabled="!canCompare">
+        <button
+          class="btn"
+          :disabled="!canCompare"
+          @click="runCompare"
+        >
           {{ isComparing ? "Comparing…" : "Compare" }}
         </button>
-        <button class="btn secondary" @click="clear" :disabled="!compare && !error">
+        <button
+          class="btn secondary"
+          :disabled="!compare && !error"
+          @click="clear"
+        >
           Clear
         </button>
       </div>
     </div>
 
-    <div v-if="error" class="error">{{ error }}</div>
+    <div
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
 
-    <div v-else-if="compare" class="compare">
-      <div v-if="summary" class="pillbar">
-        <template v-for="(v, k) in summary" :key="k">
-          <span v-if="v" class="pill ok">{{ pillLabel(String(k)) }}</span>
+    <div
+      v-else-if="compare"
+      class="compare"
+    >
+      <div
+        v-if="summary"
+        class="pillbar"
+      >
+        <template
+          v-for="(v, k) in summary"
+          :key="k"
+        >
+          <span
+            v-if="v"
+            class="pill ok"
+          >{{ pillLabel(String(k)) }}</span>
         </template>
-        <span v-if="Object.values(summary).every((x:any)=>!x)" class="pill">No changes detected</span>
+        <span
+          v-if="Object.values(summary).every((x:any)=>!x)"
+          class="pill"
+        >No changes detected</span>
       </div>
 
-      <div v-if="decision" class="section">
-        <div class="title">Decision</div>
+      <div
+        v-if="decision"
+        class="section"
+      >
+        <div class="title">
+          Decision
+        </div>
         <div class="kv">
-          <div class="k">Risk</div>
+          <div class="k">
+            Risk
+          </div>
           <div class="v">
             <span class="pill mono">{{ decision.before?.risk_level }}</span>
             <span class="muted">→</span>
             <span class="pill mono">{{ decision.after?.risk_level }}</span>
           </div>
         </div>
-        <div class="kv" v-if="decision.before?.block_reason || decision.after?.block_reason">
-          <div class="k">Block reason</div>
+        <div
+          v-if="decision.before?.block_reason || decision.after?.block_reason"
+          class="kv"
+        >
+          <div class="k">
+            Block reason
+          </div>
           <div class="v mono">
             <span class="muted">{{ decision.before?.block_reason || "—" }}</span>
             <span class="muted">→</span>
@@ -160,45 +204,94 @@ async function runCompare() {
         </div>
       </div>
 
-      <div v-if="feasibility" class="section">
-        <div class="title">Feasibility rules</div>
+      <div
+        v-if="feasibility"
+        class="section"
+      >
+        <div class="title">
+          Feasibility rules
+        </div>
         <div class="kv">
-          <div class="k">Added</div>
+          <div class="k">
+            Added
+          </div>
           <div class="v">
-            <span v-if="(feasibility.rules_added||[]).length===0" class="muted">—</span>
-            <span v-for="rid in (feasibility.rules_added||[])" :key="rid" class="pill ok mono">{{ rid }}</span>
+            <span
+              v-if="(feasibility.rules_added||[]).length===0"
+              class="muted"
+            >—</span>
+            <span
+              v-for="rid in (feasibility.rules_added||[])"
+              :key="rid"
+              class="pill ok mono"
+            >{{ rid }}</span>
           </div>
         </div>
         <div class="kv">
-          <div class="k">Removed</div>
+          <div class="k">
+            Removed
+          </div>
           <div class="v">
-            <span v-if="(feasibility.rules_removed||[]).length===0" class="muted">—</span>
-            <span v-for="rid in (feasibility.rules_removed||[])" :key="rid" class="pill mono">{{ rid }}</span>
+            <span
+              v-if="(feasibility.rules_removed||[]).length===0"
+              class="muted"
+            >—</span>
+            <span
+              v-for="rid in (feasibility.rules_removed||[])"
+              :key="rid"
+              class="pill mono"
+            >{{ rid }}</span>
           </div>
         </div>
       </div>
 
       <div class="section">
-        <div class="title">Parameter changes</div>
-        <div v-if="paramRows.length === 0" class="muted">No parameter changes detected.</div>
-        <div v-else class="table">
+        <div class="title">
+          Parameter changes
+        </div>
+        <div
+          v-if="paramRows.length === 0"
+          class="muted"
+        >
+          No parameter changes detected.
+        </div>
+        <div
+          v-else
+          class="table"
+        >
           <div class="tr head">
             <div>Field</div><div>Previous</div><div>Current</div>
           </div>
-          <div class="tr" v-for="row in paramRows" :key="row.key">
-            <div class="mono k">{{ row.key }}</div>
-            <div class="cell mono">{{ row.a ?? "—" }}</div>
-            <div class="cell mono">{{ row.b ?? "—" }}</div>
+          <div
+            v-for="row in paramRows"
+            :key="row.key"
+            class="tr"
+          >
+            <div class="mono k">
+              {{ row.key }}
+            </div>
+            <div class="cell mono">
+              {{ row.a ?? "—" }}
+            </div>
+            <div class="cell mono">
+              {{ row.b ?? "—" }}
+            </div>
           </div>
         </div>
       </div>
 
-      <button class="toggle" @click="showDeep = !showDeep">
+      <button
+        class="toggle"
+        @click="showDeep = !showDeep"
+      >
         <span class="chev">{{ showDeep ? "▾" : "▸" }}</span>
         <span>Show deep diffs</span>
         <span class="muted">(engineer)</span>
       </button>
-      <pre v-if="showDeep" class="code">{{ JSON.stringify(compare, null, 2) }}</pre>
+      <pre
+        v-if="showDeep"
+        class="code"
+      >{{ JSON.stringify(compare, null, 2) }}</pre>
     </div>
   </div>
 </template>

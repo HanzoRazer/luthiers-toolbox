@@ -18,32 +18,66 @@
         ref="fileInput"
         type="file"
         accept=".pdf,.png,.jpg,.jpeg"
-        @change="handleFileSelect"
         style="display: none"
-      />
+        @change="handleFileSelect"
+      >
       
-      <div v-if="!isUploading && !analysis" class="upload-prompt">
-        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      <div
+        v-if="!isUploading && !analysis"
+        class="upload-prompt"
+      >
+        <svg
+          class="upload-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
         </svg>
         <p class="upload-text">
-          <strong>Drop blueprint here</strong> or <button @click="($refs.fileInput as HTMLInputElement)?.click()" class="browse-btn">browse</button>
+          <strong>Drop blueprint here</strong> or <button
+            class="browse-btn"
+            @click="($refs.fileInput as HTMLInputElement)?.click()"
+          >
+            browse
+          </button>
         </p>
-        <p class="upload-hint">Supports PDF, PNG, JPG (max 20MB)</p>
+        <p class="upload-hint">
+          Supports PDF, PNG, JPG (max 20MB)
+        </p>
       </div>
 
-      <div v-if="isUploading" class="upload-progress">
-        <div class="spinner"></div>
+      <div
+        v-if="isUploading"
+        class="upload-progress"
+      >
+        <div class="spinner" />
         <p>Analyzing with Claude Sonnet 4...</p>
-        <p class="progress-time">{{ uploadProgress }}s elapsed</p>
+        <p class="progress-time">
+          {{ uploadProgress }}s elapsed
+        </p>
       </div>
     </div>
 
     <!-- Analysis Results -->
-    <div v-if="analysis && !isUploading" class="analysis-results">
+    <div
+      v-if="analysis && !isUploading"
+      class="analysis-results"
+    >
       <div class="results-header">
         <h3>Analysis Results</h3>
-        <button @click="reset" class="btn-secondary">New Blueprint</button>
+        <button
+          class="btn-secondary"
+          @click="reset"
+        >
+          New Blueprint
+        </button>
       </div>
 
       <!-- Scale Info -->
@@ -55,11 +89,17 @@
             {{ analysis.scale_confidence || 'unknown' }}
           </span>
         </div>
-        <div v-if="analysis.blueprint_type" class="info-card">
+        <div
+          v-if="analysis.blueprint_type"
+          class="info-card"
+        >
           <span class="label">Type:</span>
           <span class="value">{{ analysis.blueprint_type }}</span>
         </div>
-        <div v-if="analysis.detected_model" class="info-card">
+        <div
+          v-if="analysis.detected_model"
+          class="info-card"
+        >
           <span class="label">Model:</span>
           <span class="value">{{ analysis.detected_model }}</span>
         </div>
@@ -93,36 +133,86 @@
 
       <!-- Export Actions -->
       <div class="export-actions">
-        <button @click="exportSVG" class="btn-primary" :disabled="isExporting">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <button
+          class="btn-primary"
+          :disabled="isExporting"
+          @click="exportSVG"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
           {{ isExporting ? 'Exporting...' : 'Export SVG' }}
         </button>
-        <button @click="exportDXF" class="btn-secondary" disabled title="Coming in Phase 2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <button
+          class="btn-secondary"
+          disabled
+          title="Coming in Phase 2"
+          @click="exportDXF"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
           Export DXF (Phase 2)
         </button>
       </div>
 
       <!-- Notes -->
-      <div v-if="analysis.notes" class="analysis-notes">
+      <div
+        v-if="analysis.notes"
+        class="analysis-notes"
+      >
         <h4>Analysis Notes</h4>
         <p>{{ analysis.notes }}</p>
       </div>
     </div>
 
     <!-- Error Display -->
-    <div v-if="error" class="error-message">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div
+      v-if="error"
+      class="error-message"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <div>
         <strong>Error:</strong> {{ error }}
       </div>
-      <button @click="error = null" class="btn-close">×</button>
+      <button
+        class="btn-close"
+        @click="error = null"
+      >
+        ×
+      </button>
     </div>
   </div>
 </template>

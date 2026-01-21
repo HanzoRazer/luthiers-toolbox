@@ -2,7 +2,9 @@
   <div class="hardware-layout">
     <h3>Hardware Layout</h3>
     <p>Electronics cavity positioning with DXF export</p>
-    <p class="coming-soon">Component implementation in progress...</p>
+    <p class="coming-soon">
+      Component implementation in progress...
+    </p>
   </div>
 </template>
 

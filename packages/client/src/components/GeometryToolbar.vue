@@ -28,7 +28,10 @@
 -->
 
 <template>
-  <div class="geometry-toolbar" v-if="geometryStore.hasGeometry">
+  <div
+    v-if="geometryStore.hasGeometry"
+    class="geometry-toolbar"
+  >
     <!-- ======================================================================
          HEADER - Geometry Metadata Display
          ====================================================================== -->
@@ -49,10 +52,10 @@
     <div class="toolbar-actions">
       <!-- Copy to Clipboard -->
       <button 
-        @click="copyGeometry" 
-        class="btn-icon"
+        class="btn-icon" 
         title="Copy geometry JSON to clipboard"
         :disabled="isLoading"
+        @click="copyGeometry"
       >
         📋 Copy
       </button>
@@ -61,18 +64,21 @@
       <div class="dropdown">
         <button 
           class="btn-primary" 
-          @click="toggleCAMMenu"
           :disabled="isLoading"
+          @click="toggleCAMMenu"
         >
           🔧 Send to CAM {{ camMenuOpen ? '▲' : '▼' }}
         </button>
         
-        <div v-if="camMenuOpen" class="dropdown-menu">
+        <div
+          v-if="camMenuOpen"
+          class="dropdown-menu"
+        >
           <button 
             v-for="target in geometryStore.camTargets" 
             :key="target.tool"
-            @click="sendToCAM(target.tool)"
             class="dropdown-item"
+            @click="sendToCAM(target.tool)"
           >
             {{ target.icon }} {{ target.label }}
           </button>
@@ -81,20 +87,20 @@
 
       <!-- Export DXF -->
       <button 
-        @click="exportDXF" 
-        class="btn-secondary"
+        class="btn-secondary" 
         title="Export as DXF R12 for CAM software"
         :disabled="isLoading"
+        @click="exportDXF"
       >
         📄 DXF
       </button>
 
       <!-- Clear Geometry (with confirmation) -->
       <button 
-        @click="clearGeometry" 
-        class="btn-danger-outline"
+        class="btn-danger-outline" 
         title="Clear current geometry"
         :disabled="isLoading"
+        @click="clearGeometry"
       >
         ✕
       </button>
@@ -103,7 +109,11 @@
     <!-- ======================================================================
          STATUS - Feedback Messages
          ====================================================================== -->
-    <div v-if="statusMessage" class="status-message" :class="statusType">
+    <div
+      v-if="statusMessage"
+      class="status-message"
+      :class="statusType"
+    >
       {{ statusMessage }}
     </div>
   </div>

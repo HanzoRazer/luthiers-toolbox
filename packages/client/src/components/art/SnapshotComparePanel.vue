@@ -435,167 +435,318 @@ onBeforeUnmount(() => {
   <div class="card">
     <div class="row">
       <h3 style="display:flex; align-items:center; gap:8px; margin:0;">
-        <button class="btn" @click="isOpen = !isOpen" style="padding:6px 10px;">
+        <button
+          class="btn"
+          style="padding:6px 10px;"
+          @click="isOpen = !isOpen"
+        >
           {{ isOpen ? "▾" : "▸" }}
         </button>
         Snapshot Compare
       </h3>
       <div class="actions">
-        <button class="btn" @click="store.loadRecentSnapshots()" :disabled="store.snapshotsLoading">
+        <button
+          class="btn"
+          :disabled="store.snapshotsLoading"
+          @click="store.loadRecentSnapshots()"
+        >
           Refresh list
         </button>
       </div>
     </div>
 
     <div v-if="isOpen">
-    <div class="row">
-      <select class="input" v-model="leftId">
-        <option value="">Left snapshot…</option>
-        <option v-for="s in store.snapshots" :key="s.snapshot_id" :value="s.snapshot_id">
-          {{ s.name }} ({{ s.snapshot_id }})
-        </option>
-      </select>
+      <div class="row">
+        <select
+          v-model="leftId"
+          class="input"
+        >
+          <option value="">
+            Left snapshot…
+          </option>
+          <option
+            v-for="s in store.snapshots"
+            :key="s.snapshot_id"
+            :value="s.snapshot_id"
+          >
+            {{ s.name }} ({{ s.snapshot_id }})
+          </option>
+        </select>
 
-      <select class="input" v-model="rightId">
-        <option value="">Right snapshot…</option>
-        <option v-for="s in store.snapshots" :key="s.snapshot_id" :value="s.snapshot_id">
-          {{ s.name }} ({{ s.snapshot_id }})
-        </option>
-      </select>
-    </div>
-
-    <div class="row">
-      <button class="btn" @click="pickBaselineLeft">Use baseline as Left</button>
-      <button class="btn" @click="swapSides" :disabled="!leftId || !rightId">Swap</button>
-      <button class="btn" @click="loadSnapshotsForCompare" :disabled="!canCompare">Compare</button>
-      <button class="btn" @click="clearCompare">Clear</button>
-    </div>
-
-    <!-- Bundle 03: Keyboard hints with user toggle -->
-    <div class="keyboard-hints-row">
-      <label class="hint-toggle">
-        <input type="checkbox" v-model="showKeyboardHints" />
-        Show keyboard hints
-      </label>
-      <div v-if="showKeyboardHints" class="hint-text">
-        <kbd>[</kbd> / <kbd>]</kbd> step <strong>Right</strong>
-        <span class="hint-sep">·</span>
-        <kbd>Shift</kbd>+<kbd>[</kbd> / <kbd>]</kbd> step <strong>Left</strong>
-      </div>
-    </div>
-
-    <div class="row" style="justify-content:flex-start;">
-      <label class="meta" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-        <input type="checkbox" v-model="liveCompare" />
-        Live compare
-      </label>
-      <span class="meta" style="font-size:11px; color:#888;">
-        (auto-runs on selection change)
-      </span>
-    </div>
-
-    <div v-if="loading" class="empty">Loading snapshots…</div>
-    <div v-else-if="error" class="err">{{ error }}</div>
-    <div v-else-if="!leftId || !rightId" class="empty">Select two snapshots to compare.</div>
-    <div v-else-if="leftId === rightId" class="hint-red">Pick two different snapshots.</div>
-
-    <div v-else>
-      <!-- Header cards that match SnapshotPanel visual language -->
-      <div class="list">
-        <div class="snap" v-if="left">
-          <div class="left">
-            <div class="nm">Left: {{ left.name || left.snapshot_id }}</div>
-            <div class="meta">
-              {{ left.snapshot_id }} - {{ fmtDate(left.updated_at || left.created_at) }}
-              <span v-if="left.baseline === true"> • BASELINE</span>
-            </div>
-            <div class="meta" v-if="left.notes">Notes: {{ left.notes }}</div>
-          </div>
-          <div class="actions">
-            <button class="btn" @click="store.loadSnapshot(left.snapshot_id)">Load</button>
-          </div>
-        </div>
-
-        <div class="snap" v-if="right">
-          <div class="left">
-            <div class="nm">Right: {{ right.name || right.snapshot_id }}</div>
-            <div class="meta">
-              {{ right.snapshot_id }} - {{ fmtDate(right.updated_at || right.created_at) }}
-              <span v-if="right.baseline === true"> • BASELINE</span>
-            </div>
-            <div class="meta" v-if="right.notes">Notes: {{ right.notes }}</div>
-          </div>
-          <div class="actions">
-            <button class="btn" @click="store.loadSnapshot(right.snapshot_id)">Load</button>
-          </div>
-        </div>
+        <select
+          v-model="rightId"
+          class="input"
+        >
+          <option value="">
+            Right snapshot…
+          </option>
+          <option
+            v-for="s in store.snapshots"
+            :key="s.snapshot_id"
+            :value="s.snapshot_id"
+          >
+            {{ s.name }} ({{ s.snapshot_id }})
+          </option>
+        </select>
       </div>
 
-      <!-- Compare summary -->
-      <div class="snap" style="margin-top: 10px;">
-        <div class="left">
-          <div class="nm">
-            Summary
-            <!-- Bundle 07: Tooltip wrapper for confidence badge + trend -->
-            <span class="confidence-tooltip-wrap" :title="confidenceTooltip">
-              <!-- Bundle 05: Confidence badge -->
-              <span
-                class="confidence-badge"
-                :data-level="confidenceLevel"
+      <div class="row">
+        <button
+          class="btn"
+          @click="pickBaselineLeft"
+        >
+          Use baseline as Left
+        </button>
+        <button
+          class="btn"
+          :disabled="!leftId || !rightId"
+          @click="swapSides"
+        >
+          Swap
+        </button>
+        <button
+          class="btn"
+          :disabled="!canCompare"
+          @click="loadSnapshotsForCompare"
+        >
+          Compare
+        </button>
+        <button
+          class="btn"
+          @click="clearCompare"
+        >
+          Clear
+        </button>
+      </div>
+
+      <!-- Bundle 03: Keyboard hints with user toggle -->
+      <div class="keyboard-hints-row">
+        <label class="hint-toggle">
+          <input
+            v-model="showKeyboardHints"
+            type="checkbox"
+          >
+          Show keyboard hints
+        </label>
+        <div
+          v-if="showKeyboardHints"
+          class="hint-text"
+        >
+          <kbd>[</kbd> / <kbd>]</kbd> step <strong>Right</strong>
+          <span class="hint-sep">·</span>
+          <kbd>Shift</kbd>+<kbd>[</kbd> / <kbd>]</kbd> step <strong>Left</strong>
+        </div>
+      </div>
+
+      <div
+        class="row"
+        style="justify-content:flex-start;"
+      >
+        <label
+          class="meta"
+          style="display:flex; align-items:center; gap:6px; cursor:pointer;"
+        >
+          <input
+            v-model="liveCompare"
+            type="checkbox"
+          >
+          Live compare
+        </label>
+        <span
+          class="meta"
+          style="font-size:11px; color:#888;"
+        >
+          (auto-runs on selection change)
+        </span>
+      </div>
+
+      <div
+        v-if="loading"
+        class="empty"
+      >
+        Loading snapshots…
+      </div>
+      <div
+        v-else-if="error"
+        class="err"
+      >
+        {{ error }}
+      </div>
+      <div
+        v-else-if="!leftId || !rightId"
+        class="empty"
+      >
+        Select two snapshots to compare.
+      </div>
+      <div
+        v-else-if="leftId === rightId"
+        class="hint-red"
+      >
+        Pick two different snapshots.
+      </div>
+
+      <div v-else>
+        <!-- Header cards that match SnapshotPanel visual language -->
+        <div class="list">
+          <div
+            v-if="left"
+            class="snap"
+          >
+            <div class="left">
+              <div class="nm">
+                Left: {{ left.name || left.snapshot_id }}
+              </div>
+              <div class="meta">
+                {{ left.snapshot_id }} - {{ fmtDate(left.updated_at || left.created_at) }}
+                <span v-if="left.baseline === true"> • BASELINE</span>
+              </div>
+              <div
+                v-if="left.notes"
+                class="meta"
               >
-                {{ confidenceLevel }}
-              </span>
-              <!-- Bundle 06: Confidence trend arrow -->
-              <span class="confidence-trend" :data-trend="confidenceTrend">
-                <span v-if="confidenceTrend === 'UP'">↑</span>
-                <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
-                <span v-else-if="confidenceTrend === 'FLAT'">→</span>
-              </span>
-            </span>
-            <!-- Bundle 09: Confidence Legend Modal -->
-            <ConfidenceLegendModal />
+                Notes: {{ left.notes }}
+              </div>
+            </div>
+            <div class="actions">
+              <button
+                class="btn"
+                @click="store.loadSnapshot(left.snapshot_id)"
+              >
+                Load
+              </button>
+            </div>
           </div>
-          <div class="meta">
-            Score Δ:
-            <b v-if="scoreDelta !== null">{{ scoreDelta.toFixed(1) }}</b>
-            <span v-else>—</span>
-            • Warnings Δ: <b>{{ warningDelta }}</b>
-          </div>
-          <div class="meta">
-            Left risk: <b>{{ left?.feasibility?.risk_bucket ?? left?.feasibility?.riskBucket ?? "—" }}</b>
-            • Right risk: <b>{{ right?.feasibility?.risk_bucket ?? right?.feasibility?.riskBucket ?? "—" }}</b>
+
+          <div
+            v-if="right"
+            class="snap"
+          >
+            <div class="left">
+              <div class="nm">
+                Right: {{ right.name || right.snapshot_id }}
+              </div>
+              <div class="meta">
+                {{ right.snapshot_id }} - {{ fmtDate(right.updated_at || right.created_at) }}
+                <span v-if="right.baseline === true"> • BASELINE</span>
+              </div>
+              <div
+                v-if="right.notes"
+                class="meta"
+              >
+                Notes: {{ right.notes }}
+              </div>
+            </div>
+            <div class="actions">
+              <button
+                class="btn"
+                @click="store.loadSnapshot(right.snapshot_id)"
+              >
+                Load
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Ring deltas displayed in SnapshotPanel-style list rows -->
-      <div class="row" style="margin-top: 8px;">
-        <h4 style="margin: 0;">Ring width deltas</h4>
-        <div class="meta" style="font-size: 12px;">
-          Highlight when |Δ| ≥ 0.15mm
-        </div>
-      </div>
-
-      <div class="list" v-if="deltaRows.length">
-        <div class="snap" v-for="r in deltaRows" :key="r.ring">
+        <!-- Compare summary -->
+        <div
+          class="snap"
+          style="margin-top: 10px;"
+        >
           <div class="left">
             <div class="nm">
-              Ring {{ r.ring }}
-              <span v-if="Math.abs(r.delta) >= 0.15" class="hint-red"> • HOT</span>
+              Summary
+              <!-- Bundle 07: Tooltip wrapper for confidence badge + trend -->
+              <span
+                class="confidence-tooltip-wrap"
+                :title="confidenceTooltip"
+              >
+                <!-- Bundle 05: Confidence badge -->
+                <span
+                  class="confidence-badge"
+                  :data-level="confidenceLevel"
+                >
+                  {{ confidenceLevel }}
+                </span>
+                <!-- Bundle 06: Confidence trend arrow -->
+                <span
+                  class="confidence-trend"
+                  :data-trend="confidenceTrend"
+                >
+                  <span v-if="confidenceTrend === 'UP'">↑</span>
+                  <span v-else-if="confidenceTrend === 'DOWN'">↓</span>
+                  <span v-else-if="confidenceTrend === 'FLAT'">→</span>
+                </span>
+              </span>
+              <!-- Bundle 09: Confidence Legend Modal -->
+              <ConfidenceLegendModal />
             </div>
             <div class="meta">
-              Left: {{ r.aWidth.toFixed(2) }}mm → Right: {{ r.bWidth.toFixed(2) }}mm
-              • Δ {{ r.delta.toFixed(2) }}mm
+              Score Δ:
+              <b v-if="scoreDelta !== null">{{ scoreDelta.toFixed(1) }}</b>
+              <span v-else>—</span>
+              • Warnings Δ: <b>{{ warningDelta }}</b>
             </div>
-            <div class="meta" v-if="r.aPattern || r.bPattern">
-              Pattern: {{ r.aPattern || "—" }} → {{ r.bPattern || "—" }}
+            <div class="meta">
+              Left risk: <b>{{ left?.feasibility?.risk_bucket ?? left?.feasibility?.riskBucket ?? "—" }}</b>
+              • Right risk: <b>{{ right?.feasibility?.risk_bucket ?? right?.feasibility?.riskBucket ?? "—" }}</b>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="empty">No ring data found in one or both snapshots.</div>
-    </div>
+        <!-- Ring deltas displayed in SnapshotPanel-style list rows -->
+        <div
+          class="row"
+          style="margin-top: 8px;"
+        >
+          <h4 style="margin: 0;">
+            Ring width deltas
+          </h4>
+          <div
+            class="meta"
+            style="font-size: 12px;"
+          >
+            Highlight when |Δ| ≥ 0.15mm
+          </div>
+        </div>
+
+        <div
+          v-if="deltaRows.length"
+          class="list"
+        >
+          <div
+            v-for="r in deltaRows"
+            :key="r.ring"
+            class="snap"
+          >
+            <div class="left">
+              <div class="nm">
+                Ring {{ r.ring }}
+                <span
+                  v-if="Math.abs(r.delta) >= 0.15"
+                  class="hint-red"
+                > • HOT</span>
+              </div>
+              <div class="meta">
+                Left: {{ r.aWidth.toFixed(2) }}mm → Right: {{ r.bWidth.toFixed(2) }}mm
+                • Δ {{ r.delta.toFixed(2) }}mm
+              </div>
+              <div
+                v-if="r.aPattern || r.bPattern"
+                class="meta"
+              >
+                Pattern: {{ r.aPattern || "—" }} → {{ r.bPattern || "—" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="empty"
+        >
+          No ring data found in one or both snapshots.
+        </div>
+      </div>
     </div>
   </div>
 </template>

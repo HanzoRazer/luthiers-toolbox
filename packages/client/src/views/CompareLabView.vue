@@ -3,27 +3,44 @@
     <header class="lab-header">
       <div>
         <h1>Compare Lab</h1>
-        <p class="hint">Load Adaptive geometry, capture baselines, and inspect SVG diffs.</p>
+        <p class="hint">
+          Load Adaptive geometry, capture baselines, and inspect SVG diffs.
+        </p>
       </div>
       <div class="header-actions">
-        <input type="file" ref="fileInput" class="hidden" accept="application/json" @change="handleFile" />
-        <button class="ghost" @click="triggerFileDialog">Import Geometry JSON</button>
-        <button class="primary" @click="loadPersistedGeometry" :disabled="!hasStoredGeometry">
+        <input
+          ref="fileInput"
+          type="file"
+          class="hidden"
+          accept="application/json"
+          @change="handleFile"
+        >
+        <button
+          class="ghost"
+          @click="triggerFileDialog"
+        >
+          Import Geometry JSON
+        </button>
+        <button
+          class="primary"
+          :disabled="!hasStoredGeometry"
+          @click="loadPersistedGeometry"
+        >
           Load From Adaptive Lab
         </button>
         <button
           class="secondary"
-          @click="showExportDialog = true"
           :disabled="!diffResult"
           title="Export comparison as SVG, PNG, or CSV"
+          @click="showExportDialog = true"
         >
           Export Diff
         </button>
         <button
           class="primary"
-          @click="showSavePresetModal = true"
           :disabled="!diffResult || !filenameTemplate"
           title="Save current comparison configuration as preset"
+          @click="showSavePresetModal = true"
         >
           💾 Save as Preset
         </button>
@@ -36,26 +53,49 @@
         @diff-computed="(payload: any) => (diffResult = payload)"
       />
 
-      <CompareSvgDualViewer class="middle" :diff="diffResult as any" />
+      <CompareSvgDualViewer
+        class="middle"
+        :diff="diffResult as any"
+      />
 
-      <CompareDiffViewer :diff="diffResult as any" :current-geometry="currentGeometry" />
+      <CompareDiffViewer
+        :diff="diffResult as any"
+        :current-geometry="currentGeometry"
+      />
     </section>
 
     <!-- B23: Export Dialog -->
-    <div v-if="showExportDialog" class="modal-overlay" @click.self="showExportDialog = false">
+    <div
+      v-if="showExportDialog"
+      class="modal-overlay"
+      @click.self="showExportDialog = false"
+    >
       <div class="export-dialog">
         <header class="dialog-header">
           <h2>Export Comparison</h2>
-          <button class="close-btn" @click="showExportDialog = false">✕</button>
+          <button
+            class="close-btn"
+            @click="showExportDialog = false"
+          >
+            ✕
+          </button>
         </header>
 
         <div class="dialog-content">
           <div class="naming-section">
             <label class="field-label">
               Export Preset (optional):
-              <select v-model="selectedPresetId" class="text-input" @change="loadPresetTemplate">
+              <select
+                v-model="selectedPresetId"
+                class="text-input"
+                @change="loadPresetTemplate"
+              >
                 <option value="">-- Use custom template --</option>
-                <option v-for="preset in exportPresets" :key="preset.id" :value="preset.id">
+                <option
+                  v-for="preset in exportPresets"
+                  :key="preset.id"
+                  :value="preset.id"
+                >
                   {{ preset.name }}
                 </option>
               </select>
@@ -64,16 +104,19 @@
             <label class="field-label">
               Filename Template:
               <input
-                type="text"
                 v-model="filenameTemplate"
+                type="text"
                 placeholder="{preset}__{compare_mode}__{date}"
                 class="text-input"
                 @blur="validateTemplate"
-              />
+              >
             </label>
             
             <!-- Extension Mismatch Warning -->
-            <div v-if="extensionMismatch" class="extension-warning">
+            <div
+              v-if="extensionMismatch"
+              class="extension-warning"
+            >
               <div class="warning-banner">
                 <span class="warning-icon">⚠️</span>
                 <div class="warning-content">
@@ -85,35 +128,59 @@
                 </div>
               </div>
               <div class="warning-actions">
-                <button type="button" class="fix-button" @click="fixTemplateExtension" title="Change template extension to match format">
+                <button
+                  type="button"
+                  class="fix-button"
+                  title="Change template extension to match format"
+                  @click="fixTemplateExtension"
+                >
                   Fix Template → .{{ extensionMismatch.expectedExt }}
                 </button>
-                <button type="button" class="fix-button secondary" @click="fixExportFormat" title="Change format to match template extension">
+                <button
+                  type="button"
+                  class="fix-button secondary"
+                  title="Change format to match template extension"
+                  @click="fixExportFormat"
+                >
                   Fix Format → {{ extensionMismatch.templateExt.toUpperCase() }}
                 </button>
               </div>
             </div>
             
-            <p v-if="templateValidation" class="field-hint" :class="{'text-red-600': templateValidation.warnings?.length}">
+            <p
+              v-if="templateValidation"
+              class="field-hint"
+              :class="{'text-red-600': templateValidation.warnings?.length}"
+            >
               <span v-if="templateValidation.valid">✓ Valid template</span>
               <span v-else>⚠ {{ templateValidation.warnings?.join(', ') }}</span>
             </p>
             <p class="field-hint text-xs text-gray-500">
               Tokens: {preset}, {compare_mode}, {neck_profile}, {neck_section}, {date}, {timestamp}
             </p>
-            <p v-if="neckProfileContext || neckSectionContext" class="field-hint text-xs text-blue-600">
+            <p
+              v-if="neckProfileContext || neckSectionContext"
+              class="field-hint text-xs text-blue-600"
+            >
               ℹ Neck context: 
               <span v-if="neckProfileContext">Profile: <code class="bg-blue-50 px-1 rounded">{{ neckProfileContext }}</code></span>
               <span v-if="neckSectionContext">Section: <code class="bg-blue-50 px-1 rounded">{{ neckSectionContext }}</code></span>
             </p>
-            <p v-else class="field-hint text-xs text-amber-600">
+            <p
+              v-else
+              class="field-hint text-xs text-amber-600"
+            >
               ⚠ No neck context detected. Tokens {neck_profile} and {neck_section} will be empty.
             </p>
           </div>
 
           <div class="export-options">
             <label class="export-option">
-              <input type="radio" v-model="exportFormat" value="svg" />
+              <input
+                v-model="exportFormat"
+                type="radio"
+                value="svg"
+              >
               <span class="option-label">
                 <strong>SVG</strong>
                 <span class="option-desc">Dual-pane layout with delta annotations (vector)</span>
@@ -121,7 +188,11 @@
             </label>
 
             <label class="export-option">
-              <input type="radio" v-model="exportFormat" value="png" />
+              <input
+                v-model="exportFormat"
+                type="radio"
+                value="png"
+              >
               <span class="option-label">
                 <strong>PNG</strong>
                 <span class="option-desc">Rasterized screenshot at 300 DPI</span>
@@ -129,7 +200,11 @@
             </label>
 
             <label class="export-option">
-              <input type="radio" v-model="exportFormat" value="csv" />
+              <input
+                v-model="exportFormat"
+                type="radio"
+                value="csv"
+              >
               <span class="option-label">
                 <strong>CSV</strong>
                 <span class="option-desc">Delta metrics table (Excel compatible)</span>
@@ -144,8 +219,17 @@
         </div>
 
         <div class="dialog-actions">
-          <button class="ghost" @click="showExportDialog = false">Cancel</button>
-          <button class="primary" @click="executeExport" :disabled="exportInProgress">
+          <button
+            class="ghost"
+            @click="showExportDialog = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="primary"
+            :disabled="exportInProgress"
+            @click="executeExport"
+          >
             {{ exportInProgress ? 'Exporting...' : 'Export' }}
           </button>
         </div>
@@ -153,11 +237,20 @@
     </div>
 
     <!-- CompareLab: Save as Preset Modal -->
-    <div v-if="showSavePresetModal" class="modal-overlay" @click.self="showSavePresetModal = false">
+    <div
+      v-if="showSavePresetModal"
+      class="modal-overlay"
+      @click.self="showSavePresetModal = false"
+    >
       <div class="export-dialog">
         <header class="dialog-header">
           <h2>Save Comparison as Preset</h2>
-          <button class="close-btn" @click="showSavePresetModal = false">✕</button>
+          <button
+            class="close-btn"
+            @click="showSavePresetModal = false"
+          >
+            ✕
+          </button>
         </header>
 
         <div class="dialog-content">
@@ -165,12 +258,12 @@
             <label class="field-label">
               Preset Name:
               <input
-                type="text"
                 v-model="presetForm.name"
+                type="text"
                 placeholder="e.g., Les Paul Neck Comparison Template"
                 class="text-input"
                 required
-              />
+              >
             </label>
 
             <label class="field-label">
@@ -180,22 +273,25 @@
                 placeholder="Describe this comparison preset..."
                 class="text-input"
                 rows="3"
-              ></textarea>
+              />
             </label>
 
             <label class="field-label">
               Tags (comma-separated):
               <input
-                type="text"
                 v-model="presetForm.tagsInput"
+                type="text"
                 placeholder="comparison, neck, les-paul"
                 class="text-input"
-              />
+              >
             </label>
 
             <label class="field-label">
               Preset Kind:
-              <select v-model="presetForm.kind" class="text-input">
+              <select
+                v-model="presetForm.kind"
+                class="text-input"
+              >
                 <option value="export">Export Only (template + format)</option>
                 <option value="combo">Combo (comparison mode + export)</option>
               </select>
@@ -207,24 +303,45 @@
           </div>
 
           <div class="preset-summary">
-            <h3 class="text-sm font-semibold mb-2">Preset Will Include:</h3>
+            <h3 class="text-sm font-semibold mb-2">
+              Preset Will Include:
+            </h3>
             <ul class="text-xs space-y-1">
               <li>✓ Filename Template: <code class="bg-gray-100 px-1">{{ filenameTemplate }}</code></li>
               <li>✓ Export Format: <code class="bg-gray-100 px-1">{{ exportFormat }}</code></li>
-              <li v-if="neckProfileContext">✓ Neck Profile Context: <code class="bg-gray-100 px-1">{{ neckProfileContext }}</code></li>
-              <li v-if="neckSectionContext">✓ Neck Section Context: <code class="bg-gray-100 px-1">{{ neckSectionContext }}</code></li>
-              <li v-if="presetForm.kind === 'combo'">✓ Compare Mode: <code class="bg-gray-100 px-1">{{ diffResult?.mode || 'neck_diff' }}</code></li>
+              <li v-if="neckProfileContext">
+                ✓ Neck Profile Context: <code class="bg-gray-100 px-1">{{ neckProfileContext }}</code>
+              </li>
+              <li v-if="neckSectionContext">
+                ✓ Neck Section Context: <code class="bg-gray-100 px-1">{{ neckSectionContext }}</code>
+              </li>
+              <li v-if="presetForm.kind === 'combo'">
+                ✓ Compare Mode: <code class="bg-gray-100 px-1">{{ diffResult?.mode || 'neck_diff' }}</code>
+              </li>
             </ul>
           </div>
 
-          <div v-if="presetSaveMessage" class="p-3 rounded text-sm" :class="presetSaveMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'">
+          <div
+            v-if="presetSaveMessage"
+            class="p-3 rounded text-sm"
+            :class="presetSaveMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+          >
             {{ presetSaveMessage.text }}
           </div>
         </div>
 
         <div class="dialog-actions">
-          <button class="ghost" @click="showSavePresetModal = false">Cancel</button>
-          <button class="primary" @click="saveAsPreset" :disabled="!presetForm.name || presetSaveInProgress">
+          <button
+            class="ghost"
+            @click="showSavePresetModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="primary"
+            :disabled="!presetForm.name || presetSaveInProgress"
+            @click="saveAsPreset"
+          >
             {{ presetSaveInProgress ? 'Saving...' : 'Save Preset' }}
           </button>
         </div>

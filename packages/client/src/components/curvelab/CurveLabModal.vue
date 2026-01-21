@@ -8,8 +8,12 @@
       <div class="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl">
         <header class="mb-6 flex items-center justify-between gap-3">
           <div>
-            <p class="text-xs uppercase tracking-wide text-emerald-600">CurveLab</p>
-            <h2 class="text-xl font-semibold">DXF Preflight + Auto-Fix</h2>
+            <p class="text-xs uppercase tracking-wide text-emerald-600">
+              CurveLab
+            </p>
+            <h2 class="text-xl font-semibold">
+              DXF Preflight + Auto-Fix
+            </h2>
             <p class="text-sm text-slate-500">
               Validate inline CurveLab geometry or uploaded DXF files before CAM export.
             </p>
@@ -17,8 +21,8 @@
           <button
             class="rounded-full border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"
             type="button"
-            @click="close"
             aria-label="Close CurveLab modal"
+            @click="close"
           >
             ✕
           </button>
@@ -29,7 +33,9 @@
           <section class="rounded-xl border bg-slate-50/70 p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 class="text-base font-semibold">Inline Geometry Report</h3>
+                <h3 class="text-base font-semibold">
+                  Inline Geometry Report
+                </h3>
                 <p class="text-xs text-slate-500">
                   Runs <code class="rounded bg-white px-1 py-0.5">/dxf/preflight/curve_report</code> using current CurveLab points.
                 </p>
@@ -52,11 +58,15 @@
                   min="0.001"
                   step="0.01"
                   class="w-24 rounded border px-2 py-1"
-                />
+                >
               </label>
               <label class="flex items-center gap-2">
                 Layer
-                <input v-model="layer" type="text" class="w-32 rounded border px-2 py-1" />
+                <input
+                  v-model="layer"
+                  type="text"
+                  class="w-32 rounded border px-2 py-1"
+                >
               </label>
               <span class="flex items-center gap-2 text-xs text-slate-500">
                 Points: <span class="font-mono text-slate-700">{{ inlinePointCount }}</span>
@@ -83,20 +93,30 @@
               </button>
             </div>
 
-            <p v-if="inlineError" class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p
+              v-if="inlineError"
+              class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+            >
               {{ inlineError }}
             </p>
 
-            <div v-else-if="inlineResponse" class="space-y-3 text-sm">
+            <div
+              v-else-if="inlineResponse"
+              class="space-y-3 text-sm"
+            >
               <div class="grid grid-cols-2 gap-3 rounded border bg-white p-3 text-xs">
                 <div>
-                  <p class="text-slate-500">Polyline Length</p>
+                  <p class="text-slate-500">
+                    Polyline Length
+                  </p>
                   <p class="font-mono text-slate-900">
                     {{ formatNumber(inlineResponse.polyline.length) }} {{ inlineResponse.polyline.length_units }}
                   </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Bounding Box</p>
+                  <p class="text-slate-500">
+                    Bounding Box
+                  </p>
                   <p class="font-mono text-slate-900">
                     {{ formatNumber(inlineResponse.polyline.bounding_box.width) }} ×
                     {{ formatNumber(inlineResponse.polyline.bounding_box.height) }}
@@ -104,41 +124,63 @@
                   </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Closed</p>
-                  <p class="font-semibold" :class="inlineResponse.polyline.closed ? 'text-emerald-600' : 'text-amber-600'">
+                  <p class="text-slate-500">
+                    Closed
+                  </p>
+                  <p
+                    class="font-semibold"
+                    :class="inlineResponse.polyline.closed ? 'text-emerald-600' : 'text-amber-600'"
+                  >
                     {{ inlineResponse.polyline.closed ? 'Yes' : 'No' }}
                   </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Closure Gap</p>
+                  <p class="text-slate-500">
+                    Closure Gap
+                  </p>
                   <p class="font-mono text-slate-900">
                     {{ formatNumber(inlineResponse.polyline.closure_gap) }} {{ inlineResponse.polyline.closure_units }}
                   </p>
                 </div>
               </div>
 
-              <div v-if="inlineResponse.biarc" class="rounded border bg-white p-3">
-                <p class="mb-2 text-xs font-semibold uppercase text-slate-500">Bi-arc Metrics</p>
+              <div
+                v-if="inlineResponse.biarc"
+                class="rounded border bg-white p-3"
+              >
+                <p class="mb-2 text-xs font-semibold uppercase text-slate-500">
+                  Bi-arc Metrics
+                </p>
                 <dl class="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <dt class="text-slate-500">Entities</dt>
-                    <dd class="font-mono text-slate-900">{{ inlineResponse.biarc.entity_count }}</dd>
+                    <dt class="text-slate-500">
+                      Entities
+                    </dt>
+                    <dd class="font-mono text-slate-900">
+                      {{ inlineResponse.biarc.entity_count }}
+                    </dd>
                   </div>
                   <div>
-                    <dt class="text-slate-500">Arcs / Lines</dt>
+                    <dt class="text-slate-500">
+                      Arcs / Lines
+                    </dt>
                     <dd class="font-mono text-slate-900">
                       {{ inlineResponse.biarc.arcs }} / {{ inlineResponse.biarc.lines }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-slate-500">Min Radius</dt>
+                    <dt class="text-slate-500">
+                      Min Radius
+                    </dt>
                     <dd class="font-mono text-slate-900">
                       {{ inlineResponse.biarc.min_radius ? formatNumber(inlineResponse.biarc.min_radius) : '—' }}
                       {{ inlineResponse.biarc.radius_units }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-slate-500">Max Radius</dt>
+                    <dt class="text-slate-500">
+                      Max Radius
+                    </dt>
                     <dd class="font-mono text-slate-900">
                       {{ inlineResponse.biarc.max_radius ? formatNumber(inlineResponse.biarc.max_radius) : '—' }}
                       {{ inlineResponse.biarc.radius_units }}
@@ -148,9 +190,19 @@
               </div>
 
               <div>
-                <p class="text-xs font-semibold uppercase text-slate-500">Issues</p>
-                <p v-if="!inlineResponse.issues.length" class="text-sm text-emerald-600">No issues detected 🎉</p>
-                <ul v-else class="mt-2 space-y-2">
+                <p class="text-xs font-semibold uppercase text-slate-500">
+                  Issues
+                </p>
+                <p
+                  v-if="!inlineResponse.issues.length"
+                  class="text-sm text-emerald-600"
+                >
+                  No issues detected 🎉
+                </p>
+                <ul
+                  v-else
+                  class="mt-2 space-y-2"
+                >
                   <li
                     v-for="(issue, idx) in inlineResponse.issues"
                     :key="idx"
@@ -160,11 +212,24 @@
                       <span :class="severityClass(issue.severity)">
                         {{ issue.severity.toUpperCase() }} · {{ issue.category }}
                       </span>
-                      <span v-if="issue.fix_available" class="text-[11px] text-slate-500">Fix suggested</span>
+                      <span
+                        v-if="issue.fix_available"
+                        class="text-[11px] text-slate-500"
+                      >Fix suggested</span>
                     </div>
-                    <p class="font-medium text-slate-800">{{ issue.message }}</p>
-                    <p v-if="issue.details" class="text-xs text-slate-500">{{ issue.details }}</p>
-                    <p v-if="issue.fix_description" class="text-xs text-emerald-600">
+                    <p class="font-medium text-slate-800">
+                      {{ issue.message }}
+                    </p>
+                    <p
+                      v-if="issue.details"
+                      class="text-xs text-slate-500"
+                    >
+                      {{ issue.details }}
+                    </p>
+                    <p
+                      v-if="issue.fix_description"
+                      class="text-xs text-emerald-600"
+                    >
                       {{ issue.fix_description }}
                     </p>
                   </li>
@@ -172,16 +237,24 @@
               </div>
 
               <div>
-                <p class="text-xs font-semibold uppercase text-slate-500">Recommended Actions</p>
+                <p class="text-xs font-semibold uppercase text-slate-500">
+                  Recommended Actions
+                </p>
                 <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                  <li v-for="(rec, idx) in inlineResponse.recommended_actions" :key="idx">
+                  <li
+                    v-for="(rec, idx) in inlineResponse.recommended_actions"
+                    :key="idx"
+                  >
                     {{ rec }}
                   </li>
                 </ul>
               </div>
             </div>
 
-            <p v-else class="text-sm text-slate-500">
+            <p
+              v-else
+              class="text-sm text-slate-500"
+            >
               Provide at least two points to generate a CurveLab report. Use the Adaptive Kernel or Blueprint tools to feed geometry
               into this modal.
             </p>
@@ -191,12 +264,18 @@
           <section class="rounded-xl border bg-white p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 class="text-base font-semibold">DXF Validation</h3>
+                <h3 class="text-base font-semibold">
+                  DXF Validation
+                </h3>
                 <p class="text-xs text-slate-500">
                   Uses <code class="rounded bg-slate-50 px-1 py-0.5">/dxf/preflight/validate</code> and <code>/auto_fix</code> for uploaded files.
                 </p>
               </div>
-              <span v-if="fileCamReadyLabel" class="rounded-full px-3 py-1 text-xs font-semibold" :class="fileCamReadyClass">
+              <span
+                v-if="fileCamReadyLabel"
+                class="rounded-full px-3 py-1 text-xs font-semibold"
+                :class="fileCamReadyClass"
+              >
                 {{ fileCamReadyLabel }}
               </span>
             </div>
@@ -205,7 +284,10 @@
               <p class="text-slate-600">
                 File: <span class="font-mono text-slate-800">{{ filename }}</span>
               </p>
-              <p v-if="!hasDxf" class="text-xs text-amber-600">
+              <p
+                v-if="!hasDxf"
+                class="text-xs text-amber-600"
+              >
                 Provide a DXF file in Blueprint Lab to enable validation + auto-fix tools.
               </p>
             </div>
@@ -248,7 +330,9 @@
             </div>
 
             <div class="mb-4 rounded border bg-slate-50 p-3 text-xs">
-              <p class="mb-2 font-semibold uppercase text-slate-500">Auto-Fix Options</p>
+              <p class="mb-2 font-semibold uppercase text-slate-500">
+                Auto-Fix Options
+              </p>
               <div class="grid gap-2">
                 <label
                   v-for="opt in fixOptions"
@@ -261,7 +345,7 @@
                     class="mt-1"
                     :value="opt.id"
                     :disabled="!hasDxf"
-                  />
+                  >
                   <span>
                     <span class="block text-sm font-semibold">{{ opt.label }}</span>
                     <span class="text-[11px] text-slate-500">{{ opt.helper }}</span>
@@ -270,44 +354,93 @@
               </div>
             </div>
 
-            <p v-if="fileError" class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p
+              v-if="fileError"
+              class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+            >
               {{ fileError }}
             </p>
 
-            <div v-else-if="fileResponse" class="space-y-3 text-sm">
+            <div
+              v-else-if="fileResponse"
+              class="space-y-3 text-sm"
+            >
               <div class="grid grid-cols-2 gap-3 rounded border bg-slate-50 p-3 text-xs">
                 <div>
-                  <p class="text-slate-500">Version</p>
-                  <p class="font-mono text-slate-900">{{ fileResponse.dxf_version }}</p>
+                  <p class="text-slate-500">
+                    Version
+                  </p>
+                  <p class="font-mono text-slate-900">
+                    {{ fileResponse.dxf_version }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Units</p>
-                  <p class="font-mono text-slate-900">{{ fileResponse.units ?? 'unknown' }}</p>
+                  <p class="text-slate-500">
+                    Units
+                  </p>
+                  <p class="font-mono text-slate-900">
+                    {{ fileResponse.units ?? 'unknown' }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Geometry Total</p>
-                  <p class="font-mono text-slate-900">{{ fileResponse.geometry.total }}</p>
+                  <p class="text-slate-500">
+                    Geometry Total
+                  </p>
+                  <p class="font-mono text-slate-900">
+                    {{ fileResponse.geometry.total }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-slate-500">Layers</p>
-                  <p class="font-mono text-slate-900">{{ fileResponse.layers.length }}</p>
+                  <p class="text-slate-500">
+                    Layers
+                  </p>
+                  <p class="font-mono text-slate-900">
+                    {{ fileResponse.layers.length }}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <p class="text-xs font-semibold uppercase text-slate-500">Issues</p>
-                <p v-if="!fileResponse.issues.length" class="text-sm text-emerald-600">No issues detected.</p>
-                <ul v-else class="mt-2 space-y-2">
-                  <li v-for="(issue, idx) in fileResponse.issues" :key="idx" class="rounded border p-2">
+                <p class="text-xs font-semibold uppercase text-slate-500">
+                  Issues
+                </p>
+                <p
+                  v-if="!fileResponse.issues.length"
+                  class="text-sm text-emerald-600"
+                >
+                  No issues detected.
+                </p>
+                <ul
+                  v-else
+                  class="mt-2 space-y-2"
+                >
+                  <li
+                    v-for="(issue, idx) in fileResponse.issues"
+                    :key="idx"
+                    class="rounded border p-2"
+                  >
                     <div class="flex items-center justify-between text-xs">
                       <span :class="severityClass(issue.severity)">
                         {{ issue.severity.toUpperCase() }} · {{ issue.category }}
                       </span>
-                      <span v-if="issue.fix_available" class="text-[11px] text-slate-500">Fix available</span>
+                      <span
+                        v-if="issue.fix_available"
+                        class="text-[11px] text-slate-500"
+                      >Fix available</span>
                     </div>
-                    <p class="font-medium text-slate-800">{{ issue.message }}</p>
-                    <p v-if="issue.details" class="text-xs text-slate-500">{{ issue.details }}</p>
-                    <p v-if="issue.fix_description" class="text-xs text-emerald-600">
+                    <p class="font-medium text-slate-800">
+                      {{ issue.message }}
+                    </p>
+                    <p
+                      v-if="issue.details"
+                      class="text-xs text-slate-500"
+                    >
+                      {{ issue.details }}
+                    </p>
+                    <p
+                      v-if="issue.fix_description"
+                      class="text-xs text-emerald-600"
+                    >
                       {{ issue.fix_description }}
                     </p>
                   </li>
@@ -315,16 +448,24 @@
               </div>
 
               <div>
-                <p class="text-xs font-semibold uppercase text-slate-500">Recommended Actions</p>
+                <p class="text-xs font-semibold uppercase text-slate-500">
+                  Recommended Actions
+                </p>
                 <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                  <li v-for="(rec, idx) in fileResponse.recommended_actions" :key="idx">
+                  <li
+                    v-for="(rec, idx) in fileResponse.recommended_actions"
+                    :key="idx"
+                  >
                     {{ rec }}
                   </li>
                 </ul>
               </div>
             </div>
 
-            <p v-else class="text-sm text-slate-500">
+            <p
+              v-else
+              class="text-sm text-slate-500"
+            >
               Select a DXF in Blueprint Lab to enable validation. CurveLab will remember previous reports so you can quickly review before exporting CAM assets.
             </p>
           </section>

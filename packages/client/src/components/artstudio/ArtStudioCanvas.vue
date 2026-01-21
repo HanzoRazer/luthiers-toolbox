@@ -1,5 +1,8 @@
 <template>
-  <div class="artstudio-canvas" ref="containerRef">
+  <div
+    ref="containerRef"
+    class="artstudio-canvas"
+  >
     <canvas
       ref="canvasRef"
       class="artstudio-canvas__surface"
@@ -8,18 +11,36 @@
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
       @mouseleave="onMouseUp"
-    ></canvas>
+    />
 
     <!-- Overlay controls -->
     <div class="artstudio-canvas__controls">
-      <button @click="resetView" title="Reset View">⌂</button>
-      <button @click="zoomIn" title="Zoom In">+</button>
-      <button @click="zoomOut" title="Zoom Out">−</button>
+      <button
+        title="Reset View"
+        @click="resetView"
+      >
+        ⌂
+      </button>
+      <button
+        title="Zoom In"
+        @click="zoomIn"
+      >
+        +
+      </button>
+      <button
+        title="Zoom Out"
+        @click="zoomOut"
+      >
+        −
+      </button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
     </div>
 
     <!-- Coordinate display -->
-    <div class="artstudio-canvas__coords" v-if="mouseCoords">
+    <div
+      v-if="mouseCoords"
+      class="artstudio-canvas__coords"
+    >
       X: {{ mouseCoords.x.toFixed(2) }} Y: {{ mouseCoords.y.toFixed(2) }}
     </div>
   </div>

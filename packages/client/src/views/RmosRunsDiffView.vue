@@ -43,7 +43,9 @@ function swapAB() {
         <h1>Run Artifact Comparison</h1>
         <p class="subtitle">
           Compare two run artifacts side-by-side.
-          <router-link to="/rmos/runs">← Back to Run Artifacts</router-link>
+          <router-link to="/rmos/runs">
+            ← Back to Run Artifacts
+          </router-link>
         </p>
       </div>
 
@@ -55,7 +57,7 @@ function swapAB() {
             type="text"
             placeholder="run_id A"
             spellcheck="false"
-          />
+          >
         </label>
         <label>
           Run B
@@ -64,10 +66,20 @@ function swapAB() {
             type="text"
             placeholder="run_id B"
             spellcheck="false"
-          />
+          >
         </label>
-        <button class="btn-swap" @click="swapAB" title="Swap A and B">⇄</button>
-        <button class="btn-compare" @click="normalizeQuery" :disabled="!a || !b">
+        <button
+          class="btn-swap"
+          title="Swap A and B"
+          @click="swapAB"
+        >
+          ⇄
+        </button>
+        <button
+          class="btn-compare"
+          :disabled="!a || !b"
+          @click="normalizeQuery"
+        >
           Compare
         </button>
       </div>

@@ -2,7 +2,9 @@
   <div class="backplot-gcode">
     <!-- Header -->
     <div class="mb-3">
-      <h2 class="text-base font-semibold text-gray-900">G-code Backplot & Estimator</h2>
+      <h2 class="text-base font-semibold text-gray-900">
+        G-code Backplot & Estimator
+      </h2>
       <p class="text-xs text-gray-600 mt-1">
         Visualize any G-code and estimate machining time
       </p>
@@ -35,7 +37,6 @@
           </label>
           <div class="flex gap-2">
             <button
-              @click="units = 'mm'"
               :class="[
                 'px-3 py-1 text-xs rounded border transition-colors',
                 units === 'mm'
@@ -43,11 +44,11 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="units = 'mm'"
             >
               mm
             </button>
             <button
-              @click="units = 'inch'"
               :class="[
                 'px-3 py-1 text-xs rounded border transition-colors',
                 units === 'inch'
@@ -55,6 +56,7 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="units = 'inch'"
             >
               inch
             </button>
@@ -64,24 +66,29 @@
         <!-- Action Buttons -->
         <div class="flex gap-2">
           <button
-            @click="runBackplot"
             :disabled="busy || !gcodeInput.trim()"
             class="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            @click="runBackplot"
           >
             {{ busy ? 'Generating...' : 'Generate Backplot' }}
           </button>
           <button
-            @click="clearAll"
             :disabled="busy"
             class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            @click="clearAll"
           >
             Clear
           </button>
         </div>
 
         <!-- Stats Display -->
-        <div v-if="stats" class="border border-gray-200 rounded-lg p-3 bg-gray-50">
-          <h3 class="text-xs font-semibold text-gray-900 mb-2">Statistics</h3>
+        <div
+          v-if="stats"
+          class="border border-gray-200 rounded-lg p-3 bg-gray-50"
+        >
+          <h3 class="text-xs font-semibold text-gray-900 mb-2">
+            Statistics
+          </h3>
           <div class="grid grid-cols-2 gap-2 text-[11px]">
             <div>
               <span class="text-gray-600">Travel:</span>
@@ -107,12 +114,19 @@
         </div>
 
         <!-- Error Display -->
-        <div v-if="errorMessage" class="border border-red-200 rounded-lg p-3 bg-red-50">
+        <div
+          v-if="errorMessage"
+          class="border border-red-200 rounded-lg p-3 bg-red-50"
+        >
           <div class="flex items-start gap-2">
             <span class="text-red-600 text-xs">⚠️</span>
             <div class="flex-1">
-              <p class="text-xs font-medium text-red-900">Error</p>
-              <p class="text-[11px] text-red-700 mt-1">{{ errorMessage }}</p>
+              <p class="text-xs font-medium text-red-900">
+                Error
+              </p>
+              <p class="text-[11px] text-red-700 mt-1">
+                {{ errorMessage }}
+              </p>
             </div>
           </div>
         </div>
@@ -126,23 +140,45 @@
           </label>
           <button
             v-if="svgResult"
-            @click="downloadSVG"
             class="px-2 py-1 text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline"
+            @click="downloadSVG"
           >
             Download SVG
           </button>
         </div>
         
         <!-- SVG Container -->
-        <div class="border border-gray-300 rounded-lg bg-white overflow-hidden" style="height: 500px;">
-          <div v-if="svgResult" class="w-full h-full p-4 overflow-auto" v-html="svgResult" />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+        <div
+          class="border border-gray-300 rounded-lg bg-white overflow-hidden"
+          style="height: 500px;"
+        >
+          <div
+            v-if="svgResult"
+            class="w-full h-full p-4 overflow-auto"
+            v-html="svgResult"
+          />
+          <div
+            v-else
+            class="w-full h-full flex items-center justify-center text-gray-400 text-xs"
+          >
             <div class="text-center">
-              <svg class="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                class="w-16 h-16 mx-auto mb-2 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               <p>No preview available</p>
-              <p class="text-[10px] mt-1">Paste G-code and click Generate</p>
+              <p class="text-[10px] mt-1">
+                Paste G-code and click Generate
+              </p>
             </div>
           </div>
         </div>

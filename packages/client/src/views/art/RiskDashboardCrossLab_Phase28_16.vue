@@ -84,7 +84,9 @@ Action: Replace the entire file with this version.
             v-model="laneFilter"
             class="px-2 py-1 border rounded text-[11px]"
           >
-            <option value="">All</option>
+            <option value="">
+              All
+            </option>
             <option
               v-for="laneOpt in allLanes"
               :key="laneOpt"
@@ -101,7 +103,9 @@ Action: Replace the entire file with this version.
             v-model="presetFilter"
             class="px-2 py-1 border rounded text-[11px]"
           >
-            <option value="">All</option>
+            <option value="">
+              All
+            </option>
             <option
               v-for="presetOpt in allPresets"
               :key="presetOpt"
@@ -119,7 +123,7 @@ Action: Replace the entire file with this version.
             type="text"
             placeholder="rosette_, neck_pocket..."
             class="px-2 py-1 border rounded text-[11px] w-48"
-          />
+          >
           <span class="text-[10px] text-gray-500">
             Used for deep links &amp; bucket details (not filtering aggregates).
           </span>
@@ -134,13 +138,13 @@ Action: Replace the entire file with this version.
             v-model="since"
             type="date"
             class="px-2 py-1 border rounded text-[11px]"
-          />
+          >
           <span class="font-semibold">Until:</span>
           <input
             v-model="until"
             type="date"
             class="px-2 py-1 border rounded text-[11px]"
-          />
+          >
         </div>
 
         <!-- Quick time range chips -->
@@ -180,7 +184,7 @@ Action: Replace the entire file with this version.
               type="text"
               placeholder="e.g. Rosette Safe Last 30d"
               class="px-2 py-1 border rounded text-[11px] w-52"
-            />
+            >
             <button
               class="px-2 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-100 disabled:opacity-50"
               :disabled="!canSaveCurrentView"
@@ -195,7 +199,7 @@ Action: Replace the entire file with this version.
               type="text"
               placeholder="Optional description (e.g. 'High-risk Adaptive night jobs')"
               class="px-2 py-1 border rounded text-[11px] flex-1 min-w-[220px]"
-            />
+            >
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <input
@@ -203,7 +207,7 @@ Action: Replace the entire file with this version.
               type="text"
               placeholder="Tags (comma-separated: rosette, safe, q4, maple)"
               class="px-2 py-1 border rounded text-[11px] flex-1 min-w-[220px]"
-            />
+            >
             <span class="text-[10px] text-gray-500">
               Tags help you remember intent (e.g., <span class="font-mono">rosette, safe, test</span>).
             </span>
@@ -218,10 +222,18 @@ Action: Replace the entire file with this version.
               v-model="viewSortMode"
               class="px-2 py-1 border rounded text-[10px]"
             >
-              <option value="default">Default priority</option>
-              <option value="name">Name</option>
-              <option value="created">Created time</option>
-              <option value="lastUsed">Last used</option>
+              <option value="default">
+                Default priority
+              </option>
+              <option value="name">
+                Name
+              </option>
+              <option value="created">
+                Created time
+              </option>
+              <option value="lastUsed">
+                Last used
+              </option>
             </select>
           </div>
 
@@ -232,7 +244,7 @@ Action: Replace the entire file with this version.
               type="text"
               placeholder="Search name/description/tags"
               class="px-2 py-1 border rounded text-[10px] flex-1"
-            />
+            >
           </div>
 
           <div class="flex items-center gap-2">
@@ -241,7 +253,9 @@ Action: Replace the entire file with this version.
               v-model="viewTagFilter"
               class="px-2 py-1 border rounded text-[10px] flex-1"
             >
-              <option value="">All tags</option>
+              <option value="">
+                All tags
+              </option>
               <option
                 v-for="tag in allViewTags"
                 :key="tag"
@@ -259,7 +273,7 @@ Action: Replace the entire file with this version.
               accept="application/json"
               class="hidden"
               @change="handleImportFile"
-            />
+            >
             <button
               class="px-2 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-100"
               @click="triggerImport"
@@ -278,7 +292,10 @@ Action: Replace the entire file with this version.
       </div>
 
       <!-- Recently used strip -->
-      <div v-if="recentViews.length" class="flex flex-wrap items-center gap-2 mt-1">
+      <div
+        v-if="recentViews.length"
+        class="flex flex-wrap items-center gap-2 mt-1"
+      >
         <span class="text-[10px] text-gray-500">
           Recently used:
         </span>
@@ -286,8 +303,8 @@ Action: Replace the entire file with this version.
           v-for="view in recentViews"
           :key="view.id"
           class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-white text-[10px] text-gray-800 hover:bg-gray-100"
-          @click="applySavedView(view)"
           :title="viewTooltip(view)"
+          @click="applySavedView(view)"
         >
           <span class="font-mono truncate max-w-[160px]">
             {{ view.name }}
@@ -300,16 +317,28 @@ Action: Replace the entire file with this version.
 
       <!-- Saved views status line -->
       <div class="flex flex-wrap items-center gap-2 mt-1">
-        <span v-if="saveError" class="text-[10px] text-rose-600">
+        <span
+          v-if="saveError"
+          class="text-[10px] text-rose-600"
+        >
           {{ saveError }}
         </span>
-        <span v-else-if="saveHint" class="text-[10px] text-gray-500">
+        <span
+          v-else-if="saveHint"
+          class="text-[10px] text-gray-500"
+        >
           {{ saveHint }}
         </span>
-        <span v-else class="text-[10px] text-gray-500">
+        <span
+          v-else
+          class="text-[10px] text-gray-500"
+        >
           Default view:
           <span class="font-mono">{{ defaultViewLabel }}</span>
-          <span v-if="viewSearch || viewTagFilter" class="ml-2">
+          <span
+            v-if="viewSearch || viewTagFilter"
+            class="ml-2"
+          >
             · Filtered showing
             <span class="font-mono">{{ sortedViews.length }}</span>
             of
@@ -320,7 +349,10 @@ Action: Replace the entire file with this version.
       </div>
 
       <!-- Saved views chips + metadata -->
-      <div v-if="sortedViews.length" class="flex flex-col gap-1">
+      <div
+        v-if="sortedViews.length"
+        class="flex flex-col gap-1"
+      >
         <div class="text-[10px] text-gray-500">
           Click name to apply · ✏ rename · ⧉ duplicate · ⭐ set default · 🗑 remove · hover for filters, description &amp; tags
         </div>
@@ -332,8 +364,8 @@ Action: Replace the entire file with this version.
           >
             <button
               class="text-[10px] text-gray-800 font-medium hover:underline"
-              @click="applySavedView(view)"
               :title="viewTooltip(view)"
+              @click="applySavedView(view)"
             >
               {{ view.name }}
             </button>
@@ -345,8 +377,8 @@ Action: Replace the entire file with this version.
                 v-for="tag in view.tags"
                 :key="view.id + ':' + tag"
                 class="px-1 rounded-full bg-sky-50 border border-sky-100 text-[9px] text-sky-700 cursor-pointer"
-                @click.stop="toggleTagFilter(tag)"
                 :title="`Filter by tag '${tag}'`"
+                @click.stop="toggleTagFilter(tag)"
               >
                 {{ tag }}
               </span>
@@ -368,15 +400,15 @@ Action: Replace the entire file with this version.
             <button
               class="text-[10px]"
               :class="view.isDefault ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'"
-              @click="setDefaultView(view.id)"
               :title="view.isDefault ? 'Default view' : 'Set as default view'"
+              @click="setDefaultView(view.id)"
             >
               ⭐
             </button>
             <button
               class="text-[10px] text-gray-500 hover:text-rose-600"
-              @click="deleteSavedView(view.id)"
               title="Delete this view"
+              @click="deleteSavedView(view.id)"
             >
               🗑
             </button>
@@ -392,7 +424,10 @@ Action: Replace the entire file with this version.
             <span class="font-mono text-[10px]">
               {{ view.name }}
             </span>
-            <span v-if="view.isDefault" class="text-amber-600 text-[10px]">
+            <span
+              v-if="view.isDefault"
+              class="text-amber-600 text-[10px]"
+            >
               (default)
             </span>
             <span
@@ -411,7 +446,10 @@ Action: Replace the entire file with this version.
         </div>
       </div>
 
-      <div v-else class="text-[10px] text-gray-500 italic">
+      <div
+        v-else
+        class="text-[10px] text-gray-500 italic"
+      >
         No saved views match the current view filters.
         <span v-if="savedViews.length">
           Try clearing search or tag filter.
@@ -423,43 +461,78 @@ Action: Replace the entire file with this version.
     </div>
 
     <!-- Summary chips -->
-    <div v-if="filteredBuckets.length" class="text-[11px] text-gray-700 flex flex-wrap gap-3">
+    <div
+      v-if="filteredBuckets.length"
+      class="text-[11px] text-gray-700 flex flex-wrap gap-3"
+    >
       <span>
         Buckets: <span class="font-mono">{{ filteredBuckets.length }}</span>
       </span>
       <span>
         Entries (sum of bucket counts): <span class="font-mono">{{ filteredEntriesCount }}</span>
       </span>
-      <span v-if="since || until" class="text-[10px] text-gray-500">
+      <span
+        v-if="since || until"
+        class="text-[10px] text-gray-500"
+      >
         Window:
         <span v-if="since">from <span class="font-mono">{{ since }}</span></span>
         <span v-if="since && until"> to </span>
         <span v-if="until"> <span class="font-mono">{{ until }}</span> </span>
       </span>
-      <span v-if="quickRangeMode" class="text-[10px] text-indigo-600">
+      <span
+        v-if="quickRangeMode"
+        class="text-[10px] text-indigo-600"
+      >
         Quick range: <span class="font-mono">{{ currentQuickRangeLabel }}</span>
       </span>
     </div>
 
-    <div v-else class="text-[11px] text-gray-500 italic">
+    <div
+      v-else
+      class="text-[11px] text-gray-500 italic"
+    >
       No buckets match the current filters (or time window).
     </div>
 
     <!-- Buckets table -->
-    <div v-if="filteredBuckets.length" class="overflow-x-auto">
+    <div
+      v-if="filteredBuckets.length"
+      class="overflow-x-auto"
+    >
       <table class="min-w-full text-[11px] text-left">
         <thead class="border-b bg-gray-50">
           <tr>
-            <th class="px-2 py-1 whitespace-nowrap">Lane</th>
-            <th class="px-2 py-1 whitespace-nowrap">Preset</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Entries</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg +Added</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg -Removed</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg =Unchanged</th>
-            <th class="px-2 py-1 whitespace-nowrap">Risk</th>
-            <th class="px-2 py-1 whitespace-nowrap">Trend (Added)</th>
-            <th class="px-2 py-1 whitespace-nowrap">Trend (Removed)</th>
-            <th class="px-2 py-1 whitespace-nowrap">Actions</th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Lane
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Preset
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Entries
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg +Added
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg -Removed
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg =Unchanged
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Risk
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Trend (Added)
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Trend (Removed)
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -470,15 +543,15 @@ Action: Replace the entire file with this version.
           >
             <td
               class="px-2 py-1 whitespace-nowrap cursor-pointer"
-              @click="goToLab(bucket)"
               :title="`Open ${bucket.lane} lab for preset '${bucket.preset}'`"
+              @click="goToLab(bucket)"
             >
               {{ bucket.lane }}
             </td>
             <td
               class="px-2 py-1 whitespace-nowrap cursor-pointer"
-              @click="goToLab(bucket)"
               :title="`Open ${bucket.lane} lab for preset '${bucket.preset}'`"
+              @click="goToLab(bucket)"
             >
               {{ bucket.preset }}
             </td>
@@ -503,7 +576,11 @@ Action: Replace the entire file with this version.
               </span>
             </td>
             <td class="px-2 py-1 whitespace-nowrap">
-              <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+              <svg
+                :width="sparkWidth"
+                :height="sparkHeight"
+                viewBox="0 0 60 20"
+              >
                 <polyline
                   v-if="bucket.addedPath"
                   :points="bucket.addedPath"
@@ -514,7 +591,11 @@ Action: Replace the entire file with this version.
               </svg>
             </td>
             <td class="px-2 py-1 whitespace-nowrap">
-              <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+              <svg
+                :width="sparkWidth"
+                :height="sparkHeight"
+                viewBox="0 0 60 20"
+              >
                 <polyline
                   v-if="bucket.removedPath"
                   :points="bucket.removedPath"
@@ -577,26 +658,52 @@ Action: Replace the entire file with this version.
         </div>
       </div>
 
-      <div v-if="bucketEntriesLoading" class="text-[10px] text-gray-500 italic">
+      <div
+        v-if="bucketEntriesLoading"
+        class="text-[10px] text-gray-500 italic"
+      >
         Loading bucket entries…
       </div>
-      <div v-else-if="bucketEntriesError" class="text-[10px] text-rose-600">
+      <div
+        v-else-if="bucketEntriesError"
+        class="text-[10px] text-rose-600"
+      >
         {{ bucketEntriesError }}
       </div>
-      <div v-else-if="!bucketEntries.length" class="text-[10px] text-gray-500 italic">
+      <div
+        v-else-if="!bucketEntries.length"
+        class="text-[10px] text-gray-500 italic"
+      >
         No entries found for this bucket (with current job hint).
       </div>
-      <div v-else class="overflow-x-auto max-h-64 border-t pt-2">
+      <div
+        v-else
+        class="overflow-x-auto max-h-64 border-t pt-2"
+      >
         <table class="min-w-full text-[10px] text-left">
           <thead class="">
             <tr class="border-b bg-gray-50">
-              <th class="px-2 py-1 whitespace-nowrap">Time</th>
-              <th class="px-2 py-1 whitespace-nowrap">Job ID</th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">Baseline</th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">Current</th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">+Added</th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">-Removed</th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">=Unchanged</th>
+              <th class="px-2 py-1 whitespace-nowrap">
+                Time
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap">
+                Job ID
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap text-right">
+                Baseline
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap text-right">
+                Current
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap text-right">
+                +Added
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap text-right">
+                -Removed
+              </th>
+              <th class="px-2 py-1 whitespace-nowrap text-right">
+                =Unchanged
+              </th>
             </tr>
           </thead>
           <tbody>

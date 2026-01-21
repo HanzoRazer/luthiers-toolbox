@@ -271,7 +271,7 @@ export function biarcEntitiesTS(
     const C = add(A, scale(NA, s))
     const radius = Math.sqrt((A[0] - C[0]) ** 2 + (A[1] - C[1]) ** 2)
 
-    let start_angle = (Math.atan2(A[1] - C[1], A[0] - C[0]) * 180) / Math.PI
+    const start_angle = (Math.atan2(A[1] - C[1], A[0] - C[0]) * 180) / Math.PI
     let end_angle = (Math.atan2(B[1] - C[1], B[0] - C[0]) * 180) / Math.PI
 
     // Go the "short way" around the circle

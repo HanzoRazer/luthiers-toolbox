@@ -74,7 +74,10 @@ function copyPrompt(): void {
 <template>
   <div class="ai-image-properties">
     <!-- No Selection -->
-    <div v-if="!image" class="no-selection">
+    <div
+      v-if="!image"
+      class="no-selection"
+    >
       <span class="icon">🖼️</span>
       <p>Select an image to view details</p>
     </div>
@@ -83,7 +86,11 @@ function copyPrompt(): void {
     <template v-else>
       <!-- Preview -->
       <div class="preview-section">
-        <img :src="image.url" :alt="image.userPrompt" class="preview-image" />
+        <img
+          :src="image.url"
+          :alt="image.userPrompt"
+          class="preview-image"
+        >
       </div>
 
       <!-- Details Section -->
@@ -125,7 +132,10 @@ function copyPrompt(): void {
           <span class="value">{{ formattedDate }}</span>
         </div>
         
-        <div class="property-row" v-if="image.attachedTo">
+        <div
+          v-if="image.attachedTo"
+          class="property-row"
+        >
           <span class="label">Attached to</span>
           <span class="value accent">{{ image.attachedTo }}</span>
         </div>
@@ -135,7 +145,11 @@ function copyPrompt(): void {
       <div class="prompt-section">
         <div class="section-header">
           <h4>Prompt</h4>
-          <button class="copy-btn" @click="copyPrompt" title="Copy prompt">
+          <button
+            class="copy-btn"
+            title="Copy prompt"
+            @click="copyPrompt"
+          >
             📋
           </button>
         </div>
@@ -149,7 +163,10 @@ function copyPrompt(): void {
           <span class="value">{{ categoryName }} / {{ image.bodyShape ?? 'Unknown' }}</span>
         </div>
         
-        <div class="property-row" v-if="image.finish">
+        <div
+          v-if="image.finish"
+          class="property-row"
+        >
           <span class="label">Finish</span>
           <span class="value">{{ image.finish }}</span>
         </div>
@@ -169,29 +186,43 @@ function copyPrompt(): void {
             ★
           </button>
         </div>
-        <p class="rating-hint">Rate to improve AI routing</p>
+        <p class="rating-hint">
+          Rate to improve AI routing
+        </p>
       </div>
 
       <!-- Actions Section -->
       <div class="actions-section">
         <h4>Actions</h4>
         
-        <button class="action-btn primary" @click="emit('attach')">
+        <button
+          class="action-btn primary"
+          @click="emit('attach')"
+        >
           <span>📎</span>
           <span>Attach to Design</span>
         </button>
         
-        <button class="action-btn" @click="emit('download')">
+        <button
+          class="action-btn"
+          @click="emit('download')"
+        >
           <span>⬇️</span>
           <span>Download PNG</span>
         </button>
         
-        <button class="action-btn" @click="emit('regenerate')">
+        <button
+          class="action-btn"
+          @click="emit('regenerate')"
+        >
           <span>🔄</span>
           <span>Regenerate</span>
         </button>
         
-        <button class="action-btn danger" @click="emit('delete')">
+        <button
+          class="action-btn danger"
+          @click="emit('delete')"
+        >
           <span>🗑️</span>
           <span>Delete</span>
         </button>
@@ -211,7 +242,10 @@ function copyPrompt(): void {
           <span class="value">${{ store.totalCost.toFixed(2) }}</span>
         </div>
         
-        <div class="property-row" v-if="store.providerStats[image.provider]">
+        <div
+          v-if="store.providerStats[image.provider]"
+          class="property-row"
+        >
           <span class="label">{{ providerName }} count</span>
           <span class="value">{{ store.providerStats[image.provider]?.count ?? 0 }}</span>
         </div>

@@ -25,7 +25,10 @@
     <div class="section">
       <h3>Export Settings</h3>
       <p>Export all CAM configuration to JSON file for backup or sharing.</p>
-      <button @click="exportSettings" :disabled="loading">
+      <button
+        :disabled="loading"
+        @click="exportSettings"
+      >
         {{ loading ? 'Exporting...' : 'Export to JSON' }}
       </button>
     </div>
@@ -37,24 +40,33 @@
       
       <div class="import-controls">
         <input 
+          ref="fileInput" 
           type="file" 
           accept=".json" 
-          @change="handleFileSelect" 
-          ref="fileInput"
-        />
+          @change="handleFileSelect"
+        >
         
         <label class="checkbox-label">
-          <input type="checkbox" v-model="overwriteMode" />
+          <input
+            v-model="overwriteMode"
+            type="checkbox"
+          >
           Overwrite existing (if unchecked, skip duplicates)
         </label>
         
-        <button @click="importSettings" :disabled="!selectedFile || loading">
+        <button
+          :disabled="!selectedFile || loading"
+          @click="importSettings"
+        >
           {{ loading ? 'Importing...' : 'Import from JSON' }}
         </button>
       </div>
 
       <!-- Import Results -->
-      <div v-if="importResults" class="import-results">
+      <div
+        v-if="importResults"
+        class="import-results"
+      >
         <h4>Import Results</h4>
         <div class="result-grid">
           <div class="result-item">
@@ -75,10 +87,18 @@
           </div>
         </div>
         
-        <div v-if="importResults.errors && importResults.errors.length > 0" class="errors">
+        <div
+          v-if="importResults.errors && importResults.errors.length > 0"
+          class="errors"
+        >
           <strong>Errors ({{ importResults.errors.length }}):</strong>
           <ul>
-            <li v-for="(err, idx) in importResults.errors" :key="idx">{{ err }}</li>
+            <li
+              v-for="(err, idx) in importResults.errors"
+              :key="idx"
+            >
+              {{ err }}
+            </li>
           </ul>
         </div>
       </div>

@@ -1,22 +1,40 @@
 <template>
   <div class="unknown-renderer">
-    <div class="icon">❓</div>
+    <div class="icon">
+      ❓
+    </div>
     <div class="info">
-      <div class="kind">{{ entry.kind }}</div>
-      <div class="path">{{ entry.relpath }}</div>
+      <div class="kind">
+        {{ entry.kind }}
+      </div>
+      <div class="path">
+        {{ entry.relpath }}
+      </div>
       <div class="meta">
         <span>{{ formatBytes(entry.bytes) }}</span>
         <span v-if="entry.mime">{{ entry.mime }}</span>
       </div>
     </div>
     <div class="actions">
-      <button @click="downloadFile" class="download-btn">⬇️ Download</button>
-      <button v-if="isTextLike" @click="showRawText = !showRawText" class="view-btn">
+      <button
+        class="download-btn"
+        @click="downloadFile"
+      >
+        ⬇️ Download
+      </button>
+      <button
+        v-if="isTextLike"
+        class="view-btn"
+        @click="showRawText = !showRawText"
+      >
         {{ showRawText ? "Hide" : "View Raw" }}
       </button>
     </div>
 
-    <div v-if="showRawText && isTextLike" class="raw-content">
+    <div
+      v-if="showRawText && isTextLike"
+      class="raw-content"
+    >
       <pre>{{ rawText }}</pre>
     </div>
   </div>

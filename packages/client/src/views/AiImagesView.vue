@@ -122,7 +122,9 @@ function copyAiContext() {
   <div class="ai-images-view">
     <header class="view-header">
       <h1>Visual Analyzer</h1>
-      <p class="subtitle">AI-powered guitar design visualization</p>
+      <p class="subtitle">
+        AI-powered guitar design visualization
+      </p>
 
       <div class="tab-bar">
         <button
@@ -147,7 +149,10 @@ function copyAiContext() {
     </header>
 
     <!-- Tab: Generate Images -->
-    <div v-if="activeTab === 'generate'" class="tab-content generate-tab">
+    <div
+      v-if="activeTab === 'generate'"
+      class="tab-content generate-tab"
+    >
       <div class="layout-three-col">
         <!-- Left: Generation Panel -->
         <div class="panel left-panel">
@@ -177,7 +182,10 @@ function copyAiContext() {
             @delete="handleDelete"
             @rate="handleRate"
           />
-          <div v-else class="empty-state">
+          <div
+            v-else
+            class="empty-state"
+          >
             <p>Select an image to view properties</p>
           </div>
         </div>
@@ -185,7 +193,10 @@ function copyAiContext() {
     </div>
 
     <!-- Tab: Attach to Run -->
-    <div v-if="activeTab === 'attach'" class="tab-content attach-tab">
+    <div
+      v-if="activeTab === 'attach'"
+      class="tab-content attach-tab"
+    >
       <VisionAttachToRunWidget
         @attached="handleAttached"
         @error="(msg) => console.error('Attach error:', msg)"
@@ -193,7 +204,10 @@ function copyAiContext() {
     </div>
 
     <!-- Tab: AI Context -->
-    <div v-if="activeTab === 'context'" class="tab-content context-tab">
+    <div
+      v-if="activeTab === 'context'"
+      class="tab-content context-tab"
+    >
       <div class="context-panel">
         <h2>Generate AI Context</h2>
         <p class="context-description">
@@ -209,7 +223,7 @@ function copyAiContext() {
               type="text"
               placeholder="run_abc123..."
               class="context-input"
-            />
+            >
           </label>
 
           <button
@@ -221,20 +235,39 @@ function copyAiContext() {
           </button>
         </div>
 
-        <div v-if="aiContextError" class="context-error">
+        <div
+          v-if="aiContextError"
+          class="context-error"
+        >
           <strong>Error:</strong> {{ aiContextError }}
         </div>
 
-        <div v-if="aiContextResult" class="context-result">
+        <div
+          v-if="aiContextResult"
+          class="context-result"
+        >
           <div class="context-result-header">
             <span class="context-id">{{ aiContextResult.context_id }}</span>
-            <button class="btn-copy" @click="copyAiContext">Copy JSON</button>
+            <button
+              class="btn-copy"
+              @click="copyAiContext"
+            >
+              Copy JSON
+            </button>
           </div>
 
-          <div v-if="aiContextResult.warnings?.length" class="context-warnings">
+          <div
+            v-if="aiContextResult.warnings?.length"
+            class="context-warnings"
+          >
             <strong>Warnings:</strong>
             <ul>
-              <li v-for="(w, i) in aiContextResult.warnings" :key="i">{{ w }}</li>
+              <li
+                v-for="(w, i) in aiContextResult.warnings"
+                :key="i"
+              >
+                {{ w }}
+              </li>
             </ul>
           </div>
 

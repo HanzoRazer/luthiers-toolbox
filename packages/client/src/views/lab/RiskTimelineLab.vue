@@ -39,7 +39,9 @@ onMounted(() => {
 <template>
   <div class="p-6 space-y-6">
     <header class="space-y-1">
-      <h1 class="text-2xl font-bold">Risk Timeline Lab</h1>
+      <h1 class="text-2xl font-bold">
+        Risk Timeline Lab
+      </h1>
       <p class="text-sm text-gray-600">
         Browse recent jobs and their CAM risk analytics: severity counts, risk score, and extra time.
       </p>
@@ -47,7 +49,9 @@ onMounted(() => {
 
     <section class="border rounded p-4 bg-white space-y-3">
       <div class="flex items-center justify-between">
-        <h2 class="font-semibold text-lg">Recent Risk Reports</h2>
+        <h2 class="font-semibold text-lg">
+          Recent Risk Reports
+        </h2>
         <button
           type="button"
           class="border rounded px-3 py-1 text-xs bg-white hover:bg-gray-100"
@@ -77,15 +81,33 @@ onMounted(() => {
           <table class="w-full text-[11px]">
             <thead class="bg-gray-100 border-b text-gray-600 sticky top-0">
               <tr>
-                <th class="px-2 py-1 text-left">When</th>
-                <th class="px-2 py-1 text-left">Job</th>
-                <th class="px-2 py-1 text-right">Risk</th>
-                <th class="px-2 py-1 text-right">Issues</th>
-                <th class="px-2 py-1 text-right">Crit</th>
-                <th class="px-2 py-1 text-right">H</th>
-                <th class="px-2 py-1 text-right">M</th>
-                <th class="px-2 py-1 text-right">L</th>
-                <th class="px-2 py-1 text-right">Time Δ (s)</th>
+                <th class="px-2 py-1 text-left">
+                  When
+                </th>
+                <th class="px-2 py-1 text-left">
+                  Job
+                </th>
+                <th class="px-2 py-1 text-right">
+                  Risk
+                </th>
+                <th class="px-2 py-1 text-right">
+                  Issues
+                </th>
+                <th class="px-2 py-1 text-right">
+                  Crit
+                </th>
+                <th class="px-2 py-1 text-right">
+                  H
+                </th>
+                <th class="px-2 py-1 text-right">
+                  M
+                </th>
+                <th class="px-2 py-1 text-right">
+                  L
+                </th>
+                <th class="px-2 py-1 text-right">
+                  Time Δ (s)
+                </th>
               </tr>
             </thead>
             <tbody>

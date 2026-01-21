@@ -137,20 +137,32 @@ onMounted(loadData);
     <!-- Header -->
     <div class="panel-header">
       <h2>🎓 Teaching Loop</h2>
-      <button class="refresh-btn" @click="loadData" :disabled="isLoading">
+      <button
+        class="refresh-btn"
+        :disabled="isLoading"
+        @click="loadData"
+      >
         🔄
       </button>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="error-banner">
+    <div
+      v-if="error"
+      class="error-banner"
+    >
       {{ error }}
-      <button @click="error = null">×</button>
+      <button @click="error = null">
+        ×
+      </button>
     </div>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="loading">
-      <span class="spinner"></span>
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      <span class="spinner" />
       Loading training data...
     </div>
 
@@ -161,24 +173,41 @@ onMounted(loadData);
         <div class="status-card">
           <div class="stage">
             <span class="stage-label">{{ stageLabel }}</span>
-            <span class="stage-step" v-if="workflow?.currentStep">
+            <span
+              v-if="workflow?.currentStep"
+              class="stage-step"
+            >
               {{ workflow.currentStep }}
             </span>
           </div>
           <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: `${progressPercent}%` }"></div>
+            <div
+              class="progress-fill"
+              :style="{ width: `${progressPercent}%` }"
+            />
           </div>
-          <div class="progress-label">{{ progressPercent }}%</div>
-          <div class="time-remaining" v-if="workflow?.estimatedTimeRemaining">
+          <div class="progress-label">
+            {{ progressPercent }}%
+          </div>
+          <div
+            v-if="workflow?.estimatedTimeRemaining"
+            class="time-remaining"
+          >
             ~{{ formatTime(workflow.estimatedTimeRemaining) }} remaining
           </div>
         </div>
       </div>
 
       <!-- Training Readiness -->
-      <div class="section readiness" v-if="readiness">
+      <div
+        v-if="readiness"
+        class="section readiness"
+      >
         <h3>Training Readiness</h3>
-        <div class="readiness-card" :class="{ ready: readiness.ready }">
+        <div
+          class="readiness-card"
+          :class="{ ready: readiness.ready }"
+        >
           <div class="readiness-status">
             <span class="icon">{{ readiness.ready ? '✅' : '⏳' }}</span>
             <span>{{ readiness.ready ? 'Ready to Train' : 'Not Ready' }}</span>
@@ -203,16 +232,28 @@ onMounted(loadData);
             </div>
           </div>
 
-          <div class="reasons" v-if="!readiness.ready && readiness.reasons.length">
-            <p v-for="(reason, i) in readiness.reasons" :key="i">
+          <div
+            v-if="!readiness.ready && readiness.reasons.length"
+            class="reasons"
+          >
+            <p
+              v-for="(reason, i) in readiness.reasons"
+              :key="i"
+            >
               ⚠️ {{ reason }}
             </p>
           </div>
 
-          <div class="recommendations" v-if="readiness.recommendations.length">
+          <div
+            v-if="readiness.recommendations.length"
+            class="recommendations"
+          >
             <h4>Recommendations</h4>
             <ul>
-              <li v-for="(rec, i) in readiness.recommendations" :key="i">
+              <li
+                v-for="(rec, i) in readiness.recommendations"
+                :key="i"
+              >
                 {{ rec }}
               </li>
             </ul>
@@ -221,7 +262,10 @@ onMounted(loadData);
       </div>
 
       <!-- Statistics -->
-      <div class="section stats" v-if="stats">
+      <div
+        v-if="stats"
+        class="section stats"
+      >
         <h3>Learning Statistics</h3>
         
         <div class="stats-grid">
@@ -247,13 +291,17 @@ onMounted(loadData);
         <div class="rating-distribution">
           <h4>Rating Distribution</h4>
           <div class="distribution-bars">
-            <div v-for="item in ratingDistribution" :key="item.rating" class="bar-row">
+            <div
+              v-for="item in ratingDistribution"
+              :key="item.rating"
+              class="bar-row"
+            >
               <span class="rating">{{ '★'.repeat(item.rating) }}</span>
               <div class="bar-container">
                 <div 
                   class="bar" 
                   :style="{ width: `${(item.count / maxRatingCount) * 100}%` }"
-                ></div>
+                />
               </div>
               <span class="count">{{ item.count }}</span>
             </div>
@@ -261,10 +309,17 @@ onMounted(loadData);
         </div>
 
         <!-- Top Prompts -->
-        <div class="top-prompts" v-if="stats.topPrompts.length">
+        <div
+          v-if="stats.topPrompts.length"
+          class="top-prompts"
+        >
           <h4>Top Performing Prompts</h4>
           <div class="prompt-list">
-            <div v-for="(prompt, i) in stats.topPrompts.slice(0, 5)" :key="i" class="prompt-item">
+            <div
+              v-for="(prompt, i) in stats.topPrompts.slice(0, 5)"
+              :key="i"
+              class="prompt-item"
+            >
               <span class="prompt-text">{{ prompt.prompt }}</span>
               <span class="prompt-stats">
                 {{ prompt.avgRating.toFixed(1) }}★ ({{ prompt.count }})
@@ -281,28 +336,44 @@ onMounted(loadData);
           <div class="control-group">
             <label>Format</label>
             <select v-model="exportFormat">
-              <option value="kohya">Kohya SS</option>
-              <option value="dreambooth">DreamBooth</option>
-              <option value="lora">LoRA</option>
+              <option value="kohya">
+                Kohya SS
+              </option>
+              <option value="dreambooth">
+                DreamBooth
+              </option>
+              <option value="lora">
+                LoRA
+              </option>
             </select>
           </div>
           <div class="control-group">
             <label>Min Rating</label>
             <select v-model="minRating">
-              <option :value="5">5 stars only</option>
-              <option :value="4">4+ stars</option>
-              <option :value="3">3+ stars</option>
-              <option :value="2">2+ stars</option>
-              <option :value="1">All rated</option>
+              <option :value="5">
+                5 stars only
+              </option>
+              <option :value="4">
+                4+ stars
+              </option>
+              <option :value="3">
+                3+ stars
+              </option>
+              <option :value="2">
+                2+ stars
+              </option>
+              <option :value="1">
+                All rated
+              </option>
             </select>
           </div>
           <button 
             class="export-btn"
-            @click="handleExport"
             :disabled="isExporting || !readiness?.metrics.totalSamples"
+            @click="handleExport"
           >
             <template v-if="isExporting">
-              <span class="spinner small"></span>
+              <span class="spinner small" />
               Exporting...
             </template>
             <template v-else>

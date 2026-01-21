@@ -96,61 +96,55 @@ function severityClass(severity: string): string {
 
       <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Tool ID</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Tool ID</label>
           <input
             v-model="toolId"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
             placeholder="e.g., endmill-6mm"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Material ID</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Material ID</label>
           <input
             v-model="materialId"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
             placeholder="e.g., hardwood-maple"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Tool Kind</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Tool Kind</label>
           <select
             v-model="toolKind"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
           >
-            <option value="router_bit">Router Bit</option>
-            <option value="saw_blade">Saw Blade</option>
+            <option value="router_bit">
+              Router Bit
+            </option>
+            <option value="saw_blade">
+              Saw Blade
+            </option>
           </select>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Machine ID (optional)</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Machine ID (optional)</label>
           <input
             v-model="machineId"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
             placeholder="e.g., shapeoko-3"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Feed (mm/min)</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Feed (mm/min)</label>
           <input
             v-model.number="feedMmMin"
             type="number"
             min="1"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
-          />
+          >
         </div>
 
         <div>
@@ -160,20 +154,18 @@ function severityClass(severity: string): string {
             type="number"
             min="1"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-200"
-            >Depth of Cut (mm)</label
-          >
+          <label class="block text-xs font-medium text-slate-200">Depth of Cut (mm)</label>
           <input
             v-model.number="depthOfCutMm"
             type="number"
             step="0.01"
             min="0.01"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
-          />
+          >
         </div>
 
         <div>
@@ -186,7 +178,7 @@ function severityClass(severity: string): string {
             step="0.01"
             class="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
             placeholder="Leave empty for full width"
-          />
+          >
         </div>
       </div>
 
@@ -200,14 +192,20 @@ function severityClass(severity: string): string {
           {{ store.loading ? "Analyzing..." : "Analyze Operation" }}
         </button>
 
-        <p v-if="store.lastError" class="text-xs text-red-400">
+        <p
+          v-if="store.lastError"
+          class="text-xs text-red-400"
+        >
           {{ store.lastError }}
         </p>
       </div>
     </div>
 
     <!-- Results -->
-    <div v-if="hasResults" class="space-y-4">
+    <div
+      v-if="hasResults"
+      class="space-y-4"
+    >
       <!-- Physics Summary -->
       <div
         v-if="store.physics"
@@ -229,8 +227,7 @@ function severityClass(severity: string): string {
         </h3>
         <pre
           class="overflow-x-auto rounded bg-slate-950 p-2 text-xs text-slate-200"
-          >{{ JSON.stringify(store.recommendedChanges, null, 2) }}</pre
-        >
+        >{{ JSON.stringify(store.recommendedChanges, null, 2) }}</pre>
       </div>
 
       <!-- Advisories -->
@@ -240,12 +237,14 @@ function severityClass(severity: string): string {
       >
         <h3 class="mb-2 text-sm font-semibold text-slate-50">
           Advisories
-          <span v-if="store.errorCount" class="ml-2 text-red-400"
-            >({{ store.errorCount }} errors)</span
-          >
-          <span v-if="store.warningCount" class="ml-2 text-amber-400"
-            >({{ store.warningCount }} warnings)</span
-          >
+          <span
+            v-if="store.errorCount"
+            class="ml-2 text-red-400"
+          >({{ store.errorCount }} errors)</span>
+          <span
+            v-if="store.warningCount"
+            class="ml-2 text-amber-400"
+          >({{ store.warningCount }} warnings)</span>
         </h3>
         <ul class="space-y-2 text-xs">
           <li
@@ -265,8 +264,7 @@ function severityClass(severity: string): string {
               <pre
                 v-if="adv.context"
                 class="mt-1 text-[0.65rem] text-slate-400"
-                >{{ JSON.stringify(adv.context, null, 2) }}</pre
-              >
+              >{{ JSON.stringify(adv.context, null, 2) }}</pre>
             </div>
           </li>
         </ul>

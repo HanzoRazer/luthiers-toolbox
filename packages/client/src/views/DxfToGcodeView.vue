@@ -1,7 +1,9 @@
 <template>
   <div class="dxf-to-gcode">
     <h1>DXF → G-code (GRBL)</h1>
-    <p class="subtitle">Shop-floor quick path: upload DXF, set params, download G-code</p>
+    <p class="subtitle">
+      Shop-floor quick path: upload DXF, set params, download G-code
+    </p>
 
     <!-- Upload Zone -->
     <div
@@ -15,57 +17,132 @@
         ref="fileInput"
         type="file"
         accept=".dxf"
-        @change="handleFileSelect"
         style="display: none"
-      />
+        @change="handleFileSelect"
+      >
 
-      <div v-if="!dxfFile" class="upload-prompt">
-        <p><strong>Drop DXF here</strong> or <button @click="($refs.fileInput as HTMLInputElement).click()" class="link-btn">browse</button></p>
-        <p class="hint">DXF R12/R2000 format</p>
+      <div
+        v-if="!dxfFile"
+        class="upload-prompt"
+      >
+        <p>
+          <strong>Drop DXF here</strong> or <button
+            class="link-btn"
+            @click="($refs.fileInput as HTMLInputElement).click()"
+          >
+            browse
+          </button>
+        </p>
+        <p class="hint">
+          DXF R12/R2000 format
+        </p>
       </div>
 
-      <div v-else class="file-info">
+      <div
+        v-else
+        class="file-info"
+      >
         <span class="filename">{{ dxfFile.name }}</span>
         <span class="filesize">({{ (dxfFile.size / 1024).toFixed(1) }} KB)</span>
-        <button @click="clearFile" class="clear-btn">×</button>
+        <button
+          class="clear-btn"
+          @click="clearFile"
+        >
+          ×
+        </button>
       </div>
     </div>
 
     <!-- CAM Parameters -->
-    <div class="params-section" :class="{ disabled: isGenerating }">
+    <div
+      class="params-section"
+      :class="{ disabled: isGenerating }"
+    >
       <h2>CAM Parameters</h2>
       <div class="params-grid">
         <div class="param">
           <label>Tool Diameter (mm)</label>
-          <input v-model.number="params.tool_d" type="number" step="0.5" min="0.5" max="25"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.tool_d"
+            type="number"
+            step="0.5"
+            min="0.5"
+            max="25"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Stepover (0-1)</label>
-          <input v-model.number="params.stepover" type="number" step="0.05" min="0.1" max="0.9"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.stepover"
+            type="number"
+            step="0.05"
+            min="0.1"
+            max="0.9"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Stepdown (mm)</label>
-          <input v-model.number="params.stepdown" type="number" step="0.5" min="0.5" max="10"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.stepdown"
+            type="number"
+            step="0.5"
+            min="0.5"
+            max="10"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Target Depth (mm)</label>
-          <input v-model.number="params.z_rough" type="number" step="0.5" max="0"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.z_rough"
+            type="number"
+            step="0.5"
+            max="0"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Feed XY (mm/min)</label>
-          <input v-model.number="params.feed_xy" type="number" step="100" min="100" max="5000"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.feed_xy"
+            type="number"
+            step="100"
+            min="100"
+            max="5000"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Feed Z (mm/min)</label>
-          <input v-model.number="params.feed_z" type="number" step="50" min="50" max="1000"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.feed_z"
+            type="number"
+            step="50"
+            min="50"
+            max="1000"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Safe Z (mm)</label>
-          <input v-model.number="params.safe_z" type="number" step="1" min="1" max="50"  :disabled="isGenerating" />
+          <input
+            v-model.number="params.safe_z"
+            type="number"
+            step="1"
+            min="1"
+            max="50"
+            :disabled="isGenerating"
+          >
         </div>
         <div class="param">
           <label>Layer Name</label>
-          <input v-model="params.layer_name" type="text"  :disabled="isGenerating" />
+          <input
+            v-model="params.layer_name"
+            type="text"
+            :disabled="isGenerating"
+          >
         </div>
       </div>
     </div>
@@ -73,104 +150,175 @@
     <!-- Generate Button -->
     <div class="action-section">
       <button
-        @click="generateGcode"
         :disabled="!dxfFile || isGenerating"
         class="btn-generate"
+        @click="generateGcode"
       >
         {{ isGenerating ? 'Generating...' : 'Generate G-code' }}
       </button>
-      <p class="generate-hint">Uses GRBL profile � Units: mm � Output: .nc</p>
+      <p class="generate-hint">
+        Uses GRBL profile � Units: mm � Output: .nc
+      </p>
     </div>
 
     <!-- Result -->
-    <div v-if="result" class="result-section">
-      <!-- Risk Banner (prominent, top-of-section) -->
-      <div class="risk-banner" :class="result.decision?.risk_level?.toLowerCase()">
-        <span class="risk-label">{{ result.decision?.risk_level || 'N/A' }}</span>
-        <span class="risk-text" v-if="result.decision?.risk_level === 'GREEN'">Ready to run</span>
-        <span class="risk-text" v-else-if="result.decision?.risk_level === 'YELLOW'">Review warnings below</span>
-        <span class="risk-text" v-else>Check details</span>
+    <div
+      v-if="result"
+      class="result-section"
+    >
+      <!-- Results Header: Title+Badge -> Run ID/Copy/View/Why? -> Override -> Warnings -> WhyPanel -->
+      <div class="results-header">
+        <div class="results-title">
+          <h2>Result</h2>
+          <RiskBadge
+            v-if="result.decision?.risk_level"
+            :risk-level="result.decision.risk_level"
+          />
+        </div>
+
+        <div class="result-meta">
+          <span class="run-id">Run: {{ result.run_id }}</span>
+          <button
+            class="copy-btn"
+            title="Copy Run ID"
+            @click="copyRunId"
+          >
+            Copy
+          </button>
+          <button
+            v-if="canViewRun"
+            class="btn-link"
+            title="Open canonical RMOS run record"
+            @click="viewRunNewTab"
+          >
+            View Run <span
+              class="ext"
+              aria-hidden="true"
+            >↗</span>
+          </button>
+          <span
+            v-if="!result.rmos_persisted"
+            class="not-persisted"
+          >RMOS not persisted</span>
+          <button
+            v-if="hasExplainability"
+            class="btn-link"
+            :aria-expanded="showWhy"
+            title="Show why this decision happened"
+            @click="showWhy = !showWhy"
+          >
+            Why?
+          </button>
+        </div>
       </div>
 
-      <div class="result-meta">
-        <span class="run-id">Run: {{ result.run_id }}</span>
-        <button @click="copyRunId" class="copy-btn" title="Copy Run ID">Copy</button>
-        <button
-          v-if="canViewRun"
-          class="btn-link"
-          @click="viewRunNewTab"
-          title="Open canonical RMOS run record"
-        >
-          View Run <span class="ext" aria-hidden="true">↗</span>
-        </button>
-        <span v-if="!result.rmos_persisted" class="not-persisted">RMOS not persisted</span>
-      </div>
+      <!-- Always-visible override banner (if any) -->
+      <OverrideBanner
+        v-if="result?.override_reason || result?.explanation?.override_reason || result?.decision?.details?.override_reason"
+        :reason="result?.override_reason || result?.explanation?.override_reason || result?.decision?.details?.override_reason"
+      />
 
-      <div v-if="result.decision?.warnings?.length" class="warnings">
+      <div
+        v-if="result.decision?.warnings?.length"
+        class="warnings"
+      >
         <strong>Warnings:</strong>
         <ul>
-          <li v-for="(w, i) in result.decision.warnings" :key="i">{{ w }}</li>
-        </ul>
-      </div>
-
-      <!-- Phase 3.3: Explainability - Why YELLOW/RED? -->
-      <div v-if="hasExplainability" class="explain-card">
-        <div class="explain-header">
-          <h3>Why this is {{ riskLevel }}</h3>
-          <div v-if="explainSummary" class="explain-summary">{{ explainSummary }}</div>
-        </div>
-
-        <ul class="explain-list">
-          <li v-for="r in triggeredRules" :key="r.rule_id" class="explain-item">
-            <span class="rule-pill" :data-level="r.level">{{ r.level }}</span>
-            <span class="rule-id">{{ r.rule_id }}</span>
-            <span class="rule-summary">{{ r.summary }}</span>
-            <span v-if="r.operator_hint" class="rule-hint">{{ r.operator_hint }}</span>
+          <li
+            v-for="(w, i) in result.decision.warnings"
+            :key="i"
+          >
+            {{ w }}
           </li>
         </ul>
-
-        <div v-if="riskLevel === 'YELLOW' && !hasOverrideAttachment" class="explain-hint">
-          Operator Pack requires an override for YELLOW runs.
-        </div>
-        <div v-if="hasOverrideAttachment" class="explain-hint explain-hint-ok">
-          Override recorded (see operator pack for override.json).
-        </div>
       </div>
 
+      <!-- Explainability: auto-opens for YELLOW/RED; toggleable via header Why? button -->
+      <WhyPanel
+        v-if="hasExplainability && showWhy"
+        :rules-triggered="triggeredRuleIds"
+        :risk-level="riskLevel"
+        :show-override-hint="riskLevel === 'YELLOW' && !hasOverrideAttachment"
+        :has-override="hasOverrideAttachment"
+        class="mt-3"
+      />
+
       <!-- Run-to-run compare (minimal operator UI) -->
-      <div class="compare-shell" v-if="hasCompare || compareError">
+      <div
+        v-if="hasCompare || compareError"
+        class="compare-shell"
+      >
         <div class="compare-header-row">
           <h3>Compare with Previous Run</h3>
-          <div class="muted">{{ previousRunId?.slice(0, 8) }}… → {{ result?.run_id?.slice(0, 8) }}…</div>
-          <button class="btn-clear" @click="clearCompare">Clear</button>
+          <div class="muted">
+            {{ previousRunId?.slice(0, 8) }}… → {{ result?.run_id?.slice(0, 8) }}…
+          </div>
+          <button
+            class="btn-clear"
+            @click="clearCompare"
+          >
+            Clear
+          </button>
         </div>
 
-        <div v-if="compareError" class="compare-error">{{ compareError }}</div>
+        <div
+          v-if="compareError"
+          class="compare-error"
+        >
+          {{ compareError }}
+        </div>
 
-        <div v-else class="compare-content">
+        <div
+          v-else
+          class="compare-content"
+        >
           <!-- Summary chips -->
-          <div v-if="compareSummary" class="pill-row">
-            <template v-for="(v, k) in compareSummary" :key="k">
-              <span v-if="v" class="pill ok">{{ pillLabel(String(k)) }}</span>
+          <div
+            v-if="compareSummary"
+            class="pill-row"
+          >
+            <template
+              v-for="(v, k) in compareSummary"
+              :key="k"
+            >
+              <span
+                v-if="v"
+                class="pill ok"
+              >{{ pillLabel(String(k)) }}</span>
             </template>
-            <span v-if="Object.values(compareSummary).every((x: any) => !x)" class="pill muted">
+            <span
+              v-if="Object.values(compareSummary).every((x: any) => !x)"
+              class="pill muted"
+            >
               No changes detected
             </span>
           </div>
 
           <!-- Decision -->
-          <div v-if="compareDecision" class="compare-section">
-            <div class="section-title">Decision</div>
+          <div
+            v-if="compareDecision"
+            class="compare-section"
+          >
+            <div class="section-title">
+              Decision
+            </div>
             <div class="kv-row">
-              <div class="kv-label">Risk</div>
+              <div class="kv-label">
+                Risk
+              </div>
               <div class="kv-value">
                 <span class="pill">{{ compareDecision.before?.risk_level }}</span>
                 <span class="arrow">→</span>
                 <span class="pill">{{ compareDecision.after?.risk_level }}</span>
               </div>
             </div>
-            <div class="kv-row" v-if="compareDecision.before?.block_reason || compareDecision.after?.block_reason">
-              <div class="kv-label">Block reason</div>
+            <div
+              v-if="compareDecision.before?.block_reason || compareDecision.after?.block_reason"
+              class="kv-row"
+            >
+              <div class="kv-label">
+                Block reason
+              </div>
               <div class="kv-value muted">
                 {{ compareDecision.before?.block_reason || '—' }}
                 <span class="arrow">→</span>
@@ -180,47 +328,96 @@
           </div>
 
           <!-- Feasibility rules -->
-          <div v-if="compareFeasibility" class="compare-section">
-            <div class="section-title">Feasibility rules</div>
+          <div
+            v-if="compareFeasibility"
+            class="compare-section"
+          >
+            <div class="section-title">
+              Feasibility rules
+            </div>
             <div class="kv-row">
-              <div class="kv-label">Added</div>
+              <div class="kv-label">
+                Added
+              </div>
               <div class="kv-value">
-                <span v-if="(compareFeasibility.rules_added || []).length === 0" class="muted">—</span>
-                <span v-for="rid in (compareFeasibility.rules_added || [])" :key="rid" class="pill ok">{{ rid }}</span>
+                <span
+                  v-if="(compareFeasibility.rules_added || []).length === 0"
+                  class="muted"
+                >—</span>
+                <span
+                  v-for="rid in (compareFeasibility.rules_added || [])"
+                  :key="rid"
+                  class="pill ok"
+                >{{ rid }}</span>
               </div>
             </div>
             <div class="kv-row">
-              <div class="kv-label">Removed</div>
+              <div class="kv-label">
+                Removed
+              </div>
               <div class="kv-value">
-                <span v-if="(compareFeasibility.rules_removed || []).length === 0" class="muted">—</span>
-                <span v-for="rid in (compareFeasibility.rules_removed || [])" :key="rid" class="pill">{{ rid }}</span>
+                <span
+                  v-if="(compareFeasibility.rules_removed || []).length === 0"
+                  class="muted"
+                >—</span>
+                <span
+                  v-for="rid in (compareFeasibility.rules_removed || [])"
+                  :key="rid"
+                  class="pill"
+                >{{ rid }}</span>
               </div>
             </div>
           </div>
 
           <!-- Parameter changes -->
           <div class="compare-section">
-            <div class="section-title">Parameter changes</div>
-            <div v-if="paramDiffRows.length === 0" class="muted">No parameter changes detected.</div>
-            <div v-else class="diff-grid">
+            <div class="section-title">
+              Parameter changes
+            </div>
+            <div
+              v-if="paramDiffRows.length === 0"
+              class="muted"
+            >
+              No parameter changes detected.
+            </div>
+            <div
+              v-else
+              class="diff-grid"
+            >
               <div class="diff-row diff-head">
                 <div>Field</div><div>Previous</div><div>Current</div>
               </div>
-              <div class="diff-row" v-for="row in paramDiffRows" :key="row.key">
-                <div class="k">{{ row.key }}</div>
-                <div class="vcell">{{ row.a ?? '—' }}</div>
-                <div class="vcell">{{ row.b ?? '—' }}</div>
+              <div
+                v-for="row in paramDiffRows"
+                :key="row.key"
+                class="diff-row"
+              >
+                <div class="k">
+                  {{ row.key }}
+                </div>
+                <div class="vcell">
+                  {{ row.a ?? '—' }}
+                </div>
+                <div class="vcell">
+                  {{ row.b ?? '—' }}
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Deep diff toggle -->
-          <button class="compare-toggle" @click="showDeepCompare = !showDeepCompare">
+          <button
+            class="compare-toggle"
+            @click="showDeepCompare = !showDeepCompare"
+          >
             <span class="chev">{{ showDeepCompare ? '▾' : '▸' }}</span>
             <span>Show deep diffs</span>
             <span class="muted">(request/feasibility/decision/hashes/attachments)</span>
           </button>
-          <pre v-if="showDeepCompare" class="code">{{ JSON.stringify(compareResult, null, 2) }}</pre>
+          <pre
+            v-if="showDeepCompare"
+            class="code"
+          >{{ JSON.stringify(compareResult, null, 2) }}</pre>
         </div>
       </div>
 
@@ -235,27 +432,27 @@
         </span>
 
         <button
-          @click="downloadGcode"
           :disabled="!canDownload"
           class="btn-download"
+          @click="downloadGcode"
         >
           Download G-code (.nc)
         </button>
 
         <button
-          @click="downloadOperatorPack"
           :disabled="!canDownloadOperatorPack"
           class="btn-operator-pack"
           title="Downloads input.dxf + plan.json + manifest.json + output.nc"
+          @click="downloadOperatorPack"
         >
           Download Operator Pack (.zip)
         </button>
 
         <button
-          @click="compareWithPreviousRun"
           :disabled="!canCompare"
           class="btn-compare"
           :title="previousRunId ? `Compare ${previousRunId} → ${result?.run_id}` : 'No previous run found yet'"
+          @click="compareWithPreviousRun"
         >
           {{ isComparing ? 'Comparing…' : 'Compare w/ Previous' }}
         </button>
@@ -264,13 +461,19 @@
       <button
         v-if="canViewRun"
         class="btn-view-run"
-        @click="viewRunNewTab"
         title="Open canonical RMOS run record in a new tab"
+        @click="viewRunNewTab"
       >
-        View Run <span class="ext" aria-hidden="true">↗</span>
+        View Run <span
+          class="ext"
+          aria-hidden="true"
+        >↗</span>
       </button>
 
-      <div v-if="result && !result.gcode?.inline" class="attachment-hint">
+      <div
+        v-if="result && !result.gcode?.inline"
+        class="attachment-hint"
+      >
         <p>G-code stored as RMOS attachment (too large for inline).</p>
         <p class="attachment-meta">
           Run ID: <code>{{ result.run_id }}</code>
@@ -283,17 +486,35 @@
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="error">
+    <div
+      v-if="error"
+      class="error"
+    >
       <strong>Error:</strong> {{ error }}
-      <button @click="error = null" class="clear-btn">×</button>
+      <button
+        class="clear-btn"
+        @click="error = null"
+      >
+        ×
+      </button>
     </div>
 
     <!-- Override Modal (YELLOW gate) -->
-    <div v-if="showOverrideModal" class="modal-backdrop" @click.self="closeOverrideModal">
+    <div
+      v-if="showOverrideModal"
+      class="modal-backdrop"
+      @click.self="closeOverrideModal"
+    >
       <div class="modal">
         <div class="modal-header">
           <h3>Override Required</h3>
-          <button class="icon-btn" @click="closeOverrideModal" :disabled="isSubmittingOverride">×</button>
+          <button
+            class="icon-btn"
+            :disabled="isSubmittingOverride"
+            @click="closeOverrideModal"
+          >
+            ×
+          </button>
         </div>
         <p class="muted">
           This run is <strong>YELLOW</strong>. To download an operator pack, record an override reason for audit.
@@ -301,19 +522,42 @@
 
         <label class="field">
           <div class="label">Reason (required)</div>
-          <textarea v-model="overrideReason" rows="4" placeholder="Why is it safe to proceed?"></textarea>
+          <textarea
+            v-model="overrideReason"
+            rows="4"
+            placeholder="Why is it safe to proceed?"
+          />
         </label>
 
         <label class="field">
           <div class="label">Operator (optional)</div>
-          <input v-model="overrideOperator" type="text" placeholder="Name / initials" />
+          <input
+            v-model="overrideOperator"
+            type="text"
+            placeholder="Name / initials"
+          >
         </label>
 
-        <div v-if="overrideError" class="override-error">{{ overrideError }}</div>
+        <div
+          v-if="overrideError"
+          class="override-error"
+        >
+          {{ overrideError }}
+        </div>
 
         <div class="modal-actions">
-          <button class="btn-secondary" @click="closeOverrideModal" :disabled="isSubmittingOverride">Cancel</button>
-          <button class="btn-primary" @click="submitOverrideAndRetryPack" :disabled="isSubmittingOverride">
+          <button
+            class="btn-secondary"
+            :disabled="isSubmittingOverride"
+            @click="closeOverrideModal"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="isSubmittingOverride"
+            @click="submitOverrideAndRetryPack"
+          >
             {{ isSubmittingOverride ? 'Submitting...' : 'Submit Override & Download' }}
           </button>
         </div>
@@ -323,9 +567,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { explainRule } from '@/lib/feasibilityRuleRegistry'
+import { runs as rmosRuns } from '@/sdk/rmos'
+import RiskBadge from '@/components/ui/RiskBadge.vue'
+import OverrideBanner from '@/components/ui/OverrideBanner.vue'
+import WhyPanel from '@/components/rmos/WhyPanel.vue'
 
 const router = useRouter()
 
@@ -341,6 +589,7 @@ const isComparing = ref(false)
 const compareError = ref<string | null>(null)
 const compareResult = ref<any | null>(null)
 const showDeepCompare = ref(false)
+const showWhy = ref(false)
 
 const params = ref({
   tool_d: 6.0,
@@ -389,6 +638,13 @@ const triggeredRules = computed(() => {
 
 const hasExplainability = computed(() => triggeredRuleIds.value.length > 0)
 
+// Auto-open Why on YELLOW/RED when explainability exists; close on GREEN/UNKNOWN
+watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
+  if (!result.value) return
+  if (!hasExp) return
+  showWhy.value = rl === 'YELLOW' || rl === 'RED'
+}, { immediate: true })
+
 const canViewRun = computed(() => {
   const runId = String(result.value?.run_id || '').trim()
   return !!runId
@@ -402,19 +658,17 @@ function viewRunNewTab() {
 }
 
 async function refreshPreviousRunId(currentRunId: string) {
-  // Uses the new envelope endpoint. We only need the previous run in the same mode.
+  // Uses SDK helper. We only need the previous run in the same mode.
   try {
     previousRunId.value = null
-    const resp = await fetch('/api/rmos/runs_v2?limit=20')
-    if (!resp.ok) return
-    const j = await resp.json()
-    const items = Array.isArray(j?.items) ? j.items : []
+    const { items } = await rmosRuns.listRuns({ limit: 20 })
+    const list = Array.isArray(items) ? items : []
     // Prefer matching mode (if present in wrapper result, else just "previous by time")
     const mode = String(result.value?.mode || '').trim()
 
-    let filtered = items
+    let filtered = list
     if (mode) {
-      filtered = items.filter((it: any) => String(it?.mode || '').trim() === mode)
+      filtered = list.filter((it: any) => String(it?.mode || '').trim() === mode)
     }
 
     // Find current run in list, then pick the next item after it (newest-first).
@@ -444,16 +698,8 @@ async function compareWithPreviousRun() {
   showDeepCompare.value = false
 
   try {
-    const resp = await fetch(`/api/rmos/runs_v2/compare/${encodeURIComponent(prev)}/${encodeURIComponent(runId)}`)
-    if (!resp.ok) {
-      let msg = `Compare failed (HTTP ${resp.status})`
-      try {
-        const j = await resp.json()
-        if (j?.detail) msg = String(j.detail)
-      } catch {}
-      throw new Error(msg)
-    }
-    compareResult.value = await resp.json()
+    const diffResult = await rmosRuns.compareRuns(prev, runId)
+    compareResult.value = diffResult
   } catch (e: any) {
     compareError.value = e?.message || 'Failed to compare runs.'
   } finally {
@@ -519,11 +765,8 @@ function closeOverrideModal() {
 
 async function refreshRunCanonical(runId: string) {
   try {
-    const resp = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId)}`)
-    if (!resp.ok) return // Non-fatal; keep local state if refresh fails
-
-    const run = await resp.json()
-
+    const run = await rmosRuns.getRun(runId)
+    
     // Merge strategy: preserve wrapper envelope, patch in canonical fields
     result.value = {
       ...result.value,
@@ -557,23 +800,10 @@ async function submitOverrideAndRetryPack() {
   isSubmittingOverride.value = true
   overrideError.value = null
   try {
-    const resp = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId)}/override`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reason,
-        operator: overrideOperator.value.trim() || undefined
-      })
+    await rmosRuns.addOverride(runId, {
+      reason,
+      operator: overrideOperator.value.trim() || undefined
     })
-
-    if (!resp.ok) {
-      let msg = `Override failed (HTTP ${resp.status})`
-      try {
-        const j = await resp.json()
-        if (j?.detail) msg = String(j.detail)
-      } catch {}
-      throw new Error(msg)
-    }
 
     // Canonical refresh from Runs v2 so attachments list is authoritative
     await refreshRunCanonical(runId)
@@ -747,31 +977,8 @@ const doDownloadOperatorPack = async () => {
   if (!runId) return
 
   try {
-    const res = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId)}/operator-pack`, {
-      method: 'GET',
-    })
-
-    if (res.status === 403 && riskLevel.value === 'YELLOW' && !hasOverrideAttachment.value) {
-      // server says override required — open modal
-      openOverrideModal()
-      return
-    }
-
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`
-      try {
-        const j = await res.json()
-        if (j?.detail) msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
-      } catch {
-        try {
-          const t = await res.text()
-          if (t) msg = t
-        } catch {}
-      }
-      throw new Error(msg)
-    }
-
-    const blob = await res.blob()
+    const { blob } = await rmosRuns.downloadOperatorPack(runId)
+    
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -779,6 +986,11 @@ const doDownloadOperatorPack = async () => {
     a.click()
     URL.revokeObjectURL(url)
   } catch (e: any) {
+    // Check if 403 and YELLOW without override — open modal
+    if (e?.status === 403 && riskLevel.value === 'YELLOW' && !hasOverrideAttachment.value) {
+      openOverrideModal()
+      return
+    }
     error.value = String(e?.message || e)
   }
 }
@@ -1001,12 +1213,33 @@ h1 {
   color: #374151;
 }
 
+.results-header {
+  margin-bottom: 1rem;
+}
+
+.results-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.results-title h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
 .result-meta {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
 }
 
 .run-id {

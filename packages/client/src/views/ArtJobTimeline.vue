@@ -84,7 +84,9 @@ onMounted(loadJobs);
 <template>
   <div class="p-4 text-xs flex flex-col gap-4">
     <header>
-      <h1 class="text-sm font-semibold text-gray-900">Art Studio — Job Timeline</h1>
+      <h1 class="text-sm font-semibold text-gray-900">
+        Art Studio — Job Timeline
+      </h1>
       <p class="text-[11px] text-gray-600">
         Aggregated job history across Rosette, Adaptive, and Relief lanes.
       </p>
@@ -98,7 +100,7 @@ onMounted(loadJobs);
             v-model="filters.lane"
             placeholder="rosette / adaptive / relief"
             class="border rounded px-2 py-1 text-xs"
-          />
+          >
         </div>
 
         <div class="flex flex-col">
@@ -109,7 +111,7 @@ onMounted(loadJobs);
             min="1"
             max="500"
             class="border rounded px-2 py-1 text-xs"
-          />
+          >
         </div>
 
         <button
@@ -121,14 +123,25 @@ onMounted(loadJobs);
           <span v-else>Loading…</span>
         </button>
 
-        <span v-if="error" class="text-red-600">{{ error }}</span>
+        <span
+          v-if="error"
+          class="text-red-600"
+        >{{ error }}</span>
       </div>
     </section>
 
     <section class="rounded border bg-white p-3">
-      <div v-if="jobs.length === 0" class="text-gray-500">No jobs found.</div>
+      <div
+        v-if="jobs.length === 0"
+        class="text-gray-500"
+      >
+        No jobs found.
+      </div>
 
-      <div v-else class="space-y-2">
+      <div
+        v-else
+        class="space-y-2"
+      >
         <div
           v-for="job in jobs"
           :key="job.id"
@@ -145,7 +158,10 @@ onMounted(loadJobs);
             </div>
           </div>
 
-          <div v-if="riskForJob(job.id)" class="text-[11px] flex flex-wrap gap-2 items-center">
+          <div
+            v-if="riskForJob(job.id)"
+            class="text-[11px] flex flex-wrap gap-2 items-center"
+          >
             <span class="rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-800">
               Risk saved
             </span>
@@ -178,7 +194,12 @@ onMounted(loadJobs);
               View risk
             </button>
           </div>
-          <div v-else class="text-[11px] text-gray-400">No risk snapshot yet</div>
+          <div
+            v-else
+            class="text-[11px] text-gray-400"
+          >
+            No risk snapshot yet
+          </div>
 
           <div class="flex flex-wrap gap-2 text-[11px]">
             <button

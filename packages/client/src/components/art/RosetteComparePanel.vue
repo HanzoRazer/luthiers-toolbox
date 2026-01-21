@@ -9,7 +9,7 @@
           type="text"
           placeholder="e.g. Rosette V1 – Herringbone"
           class="px-2 py-1 border rounded text-xs w-64"
-        />
+        >
       </div>
 
       <button
@@ -26,7 +26,9 @@
           v-model="selectedBaselineId"
           class="px-2 py-1 border rounded text-xs w-64"
         >
-          <option :value="null">— choose baseline —</option>
+          <option :value="null">
+            — choose baseline —
+          </option>
           <option
             v-for="b in baselines"
             :key="b.id"
@@ -45,7 +47,7 @@
           placeholder="e.g. rosette_job_001"
           class="px-2 py-1 border rounded text-xs w-48"
           @input="handleJobIdInput"
-        />
+        >
       </div>
 
       <div class="flex flex-col text-xs">
@@ -55,7 +57,7 @@
           type="text"
           placeholder="e.g. Safe, Aggressive"
           class="px-2 py-1 border rounded text-xs w-32"
-        />
+        >
       </div>
 
       <button
@@ -68,7 +70,10 @@
     </div>
 
     <!-- Stats -->
-    <div v-if="diffStats" class="text-[11px] text-gray-800 flex flex-wrap gap-3">
+    <div
+      v-if="diffStats"
+      class="text-[11px] text-gray-800 flex flex-wrap gap-3"
+    >
       <span>
         Baseline paths: <span class="font-mono">{{ diffStats.baseline_path_count }}</span>
       </span>
@@ -89,15 +94,15 @@
     <!-- Legend -->
     <div class="flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
       <div class="flex items-center gap-1">
-        <span class="inline-block w-3 h-3 rounded bg-emerald-500 border border-emerald-700"></span>
+        <span class="inline-block w-3 h-3 rounded bg-emerald-500 border border-emerald-700" />
         <span>Added (current only)</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="inline-block w-3 h-3 rounded bg-rose-500 border border-rose-700"></span>
+        <span class="inline-block w-3 h-3 rounded bg-rose-500 border border-rose-700" />
         <span>Removed (baseline only)</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="inline-block w-3 h-3 rounded bg-gray-500 border border-gray-700"></span>
+        <span class="inline-block w-3 h-3 rounded bg-gray-500 border border-gray-700" />
         <span>Unchanged (both)</span>
       </div>
     </div>
@@ -108,7 +113,10 @@
       <div class="border rounded bg-white p-2 flex flex-col">
         <div class="text-[11px] text-gray-600 mb-1 flex items-center justify-between">
           <span class="font-semibold">Baseline</span>
-          <span v-if="selectedBaseline" class="text-[10px]">
+          <span
+            v-if="selectedBaseline"
+            class="text-[10px]"
+          >
             {{ selectedBaseline.name }}
           </span>
         </div>

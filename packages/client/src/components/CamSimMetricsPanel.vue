@@ -2,17 +2,33 @@
   <div class="border rounded-lg bg-white p-3 text-[11px] space-y-3">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-xs font-semibold text-gray-800">Simulation Metrics</h3>
-        <p class="text-[10px] text-gray-500">Time, power, energy (chip/tool/work), feed compliance</p>
+        <h3 class="text-xs font-semibold text-gray-800">
+          Simulation Metrics
+        </h3>
+        <p class="text-[10px] text-gray-500">
+          Time, power, energy (chip/tool/work), feed compliance
+        </p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="px-2 py-1 border rounded hover:bg-gray-50" :disabled="!metrics" @click="downloadJSON">
+        <button
+          class="px-2 py-1 border rounded hover:bg-gray-50"
+          :disabled="!metrics"
+          @click="downloadJSON"
+        >
           Export JSON
         </button>
-        <button class="px-2 py-1 border rounded hover:bg-gray-50" :disabled="!hasTS" @click="downloadCSV">
+        <button
+          class="px-2 py-1 border rounded hover:bg-gray-50"
+          :disabled="!hasTS"
+          @click="downloadCSV"
+        >
           Export CSV
         </button>
-        <button class="px-2 py-1 border rounded hover:bg-gray-50" :disabled="!metrics" @click="downloadMarkdown">
+        <button
+          class="px-2 py-1 border rounded hover:bg-gray-50"
+          :disabled="!metrics"
+          @click="downloadMarkdown"
+        >
           Export Markdown
         </button>
       </div>
@@ -21,74 +37,159 @@
     <!-- Top cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
       <div class="border rounded p-2">
-        <div class="text-[10px] text-gray-500">Total Time</div>
-        <div class="text-sm font-semibold">{{ fmt(metrics?.total_time_s ?? 0, 2) }} s</div>
+        <div class="text-[10px] text-gray-500">
+          Total Time
+        </div>
+        <div class="text-sm font-semibold">
+          {{ fmt(metrics?.total_time_s ?? 0, 2) }} s
+        </div>
       </div>
       <div class="border rounded p-2">
-        <div class="text-[10px] text-gray-500">Peak Power</div>
-        <div class="text-sm font-semibold">{{ fmt(metrics?.peak_power_w ?? 0, 0) }} W</div>
+        <div class="text-[10px] text-gray-500">
+          Peak Power
+        </div>
+        <div class="text-sm font-semibold">
+          {{ fmt(metrics?.peak_power_w ?? 0, 0) }} W
+        </div>
       </div>
       <div class="border rounded p-2">
-        <div class="text-[10px] text-gray-500">Total Energy</div>
-        <div class="text-sm font-semibold">{{ fmt(metrics?.total_energy_j ?? 0, 0) }} J</div>
+        <div class="text-[10px] text-gray-500">
+          Total Energy
+        </div>
+        <div class="text-sm font-semibold">
+          {{ fmt(metrics?.total_energy_j ?? 0, 0) }} J
+        </div>
       </div>
       <div class="border rounded p-2">
-        <div class="text-[10px] text-gray-500">Feed Limited</div>
-        <div class="text-sm font-semibold">{{ fmt(metrics?.feed_limited_pct ?? 0, 1) }}%</div>
+        <div class="text-[10px] text-gray-500">
+          Feed Limited
+        </div>
+        <div class="text-sm font-semibold">
+          {{ fmt(metrics?.feed_limited_pct ?? 0, 1) }}%
+        </div>
       </div>
     </div>
 
     <!-- Tiny charts row (pure SVG) -->
-    <div v-if="hasTS" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+    <div
+      v-if="hasTS"
+      class="grid grid-cols-1 md:grid-cols-2 gap-2"
+    >
       <!-- Power sparkline -->
       <div class="border rounded p-2">
         <div class="flex items-center justify-between mb-1">
-          <div class="text-[10px] text-gray-500">Power (W)</div>
-          <div class="text-[10px] text-gray-400">min {{ fmt(minP,0) }} · mean {{ fmt(metrics?.mean_power_w ?? 0,0) }} · max {{ fmt(maxP,0) }}</div>
+          <div class="text-[10px] text-gray-500">
+            Power (W)
+          </div>
+          <div class="text-[10px] text-gray-400">
+            min {{ fmt(minP,0) }} · mean {{ fmt(metrics?.mean_power_w ?? 0,0) }} · max {{ fmt(maxP,0) }}
+          </div>
         </div>
-        <svg :viewBox="`0 0 ${W} ${H}`" class="w-full h-24">
-          <polyline :points="powerPolyline" fill="none" stroke="currentColor" stroke-width="1.2" class="text-blue-600"/>
+        <svg
+          :viewBox="`0 0 ${W} ${H}`"
+          class="w-full h-24"
+        >
+          <polyline
+            :points="powerPolyline"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            class="text-blue-600"
+          />
         </svg>
       </div>
 
       <!-- Feed sparkline -->
       <div class="border rounded p-2">
         <div class="flex items-center justify-between mb-1">
-          <div class="text-[10px] text-gray-500">Feed ({{ metrics?.units }}/min)</div>
-          <div class="text-[10px] text-gray-400">min {{ fmt(minF,0) }} · avg {{ fmt(metrics?.avg_feed_u_per_min ?? 0,0) }} · max {{ fmt(maxF,0) }}</div>
+          <div class="text-[10px] text-gray-500">
+            Feed ({{ metrics?.units }}/min)
+          </div>
+          <div class="text-[10px] text-gray-400">
+            min {{ fmt(minF,0) }} · avg {{ fmt(metrics?.avg_feed_u_per_min ?? 0,0) }} · max {{ fmt(maxF,0) }}
+          </div>
         </div>
-        <svg :viewBox="`0 0 ${W} ${H}`" class="w-full h-24">
-          <polyline :points="feedPolyline" fill="none" stroke="currentColor" stroke-width="1.2" class="text-emerald-600"/>
+        <svg
+          :viewBox="`0 0 ${W} ${H}`"
+          class="w-full h-24"
+        >
+          <polyline
+            :points="feedPolyline"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            class="text-emerald-600"
+          />
         </svg>
       </div>
     </div>
 
     <!-- Timeseries table -->
-    <div v-if="hasTS" class="border rounded">
+    <div
+      v-if="hasTS"
+      class="border rounded"
+    >
       <table class="w-full text-[10px]">
         <thead class="bg-gray-50 text-gray-600">
           <tr>
-            <th class="px-2 py-1 text-left">#</th>
-            <th class="px-2 py-1 text-left">Code</th>
-            <th class="px-2 py-1 text-right">Length (mm)</th>
-            <th class="px-2 py-1 text-right">Feed ({{ metrics?.units }}/min)</th>
-            <th class="px-2 py-1 text-right">t (s)</th>
-            <th class="px-2 py-1 text-right">P (W)</th>
-            <th class="px-2 py-1 text-right">E (J)</th>
+            <th class="px-2 py-1 text-left">
+              #
+            </th>
+            <th class="px-2 py-1 text-left">
+              Code
+            </th>
+            <th class="px-2 py-1 text-right">
+              Length (mm)
+            </th>
+            <th class="px-2 py-1 text-right">
+              Feed ({{ metrics?.units }}/min)
+            </th>
+            <th class="px-2 py-1 text-right">
+              t (s)
+            </th>
+            <th class="px-2 py-1 text-right">
+              P (W)
+            </th>
+            <th class="px-2 py-1 text-right">
+              E (J)
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in pagedTS" :key="row.idx" class="border-t">
-            <td class="px-2 py-1">{{ row.idx }}</td>
-            <td class="px-2 py-1">{{ row.code }}</td>
-            <td class="px-2 py-1 text-right">{{ fmt(row.length_mm, 3) }}</td>
-            <td class="px-2 py-1 text-right">{{ fmt(row.feed_u_per_min, 1) }}</td>
-            <td class="px-2 py-1 text-right">{{ fmt(row.time_s, 3) }}</td>
-            <td class="px-2 py-1 text-right">{{ fmt(row.power_w, 1) }}</td>
-            <td class="px-2 py-1 text-right">{{ fmt(row.energy_j, 3) }}</td>
+          <tr
+            v-for="row in pagedTS"
+            :key="row.idx"
+            class="border-t"
+          >
+            <td class="px-2 py-1">
+              {{ row.idx }}
+            </td>
+            <td class="px-2 py-1">
+              {{ row.code }}
+            </td>
+            <td class="px-2 py-1 text-right">
+              {{ fmt(row.length_mm, 3) }}
+            </td>
+            <td class="px-2 py-1 text-right">
+              {{ fmt(row.feed_u_per_min, 1) }}
+            </td>
+            <td class="px-2 py-1 text-right">
+              {{ fmt(row.time_s, 3) }}
+            </td>
+            <td class="px-2 py-1 text-right">
+              {{ fmt(row.power_w, 1) }}
+            </td>
+            <td class="px-2 py-1 text-right">
+              {{ fmt(row.energy_j, 3) }}
+            </td>
           </tr>
           <tr v-if="pagedTS.length === 0">
-            <td class="px-2 py-2 text-gray-500" colspan="7">No entries.</td>
+            <td
+              class="px-2 py-2 text-gray-500"
+              colspan="7"
+            >
+              No entries.
+            </td>
           </tr>
         </tbody>
       </table>
@@ -97,14 +198,29 @@
           {{ start+1 }}–{{ Math.min(end, timeseries.length) }} of {{ timeseries.length }}
         </div>
         <div class="flex items-center gap-1">
-          <button class="px-2 py-0.5 border rounded disabled:opacity-50" :disabled="page===0" @click="page--">Prev</button>
-          <button class="px-2 py-0.5 border rounded disabled:opacity-50" :disabled="end>=timeseries.length" @click="page++">Next</button>
+          <button
+            class="px-2 py-0.5 border rounded disabled:opacity-50"
+            :disabled="page===0"
+            @click="page--"
+          >
+            Prev
+          </button>
+          <button
+            class="px-2 py-0.5 border rounded disabled:opacity-50"
+            :disabled="end>=timeseries.length"
+            @click="page++"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
 
     <!-- No TS note -->
-    <div v-else class="text-[10px] text-gray-500">
+    <div
+      v-else
+      class="text-[10px] text-gray-500"
+    >
       Timeseries not provided. Re-run simulate with <span class="font-mono">include_timeseries=true</span>.
     </div>
   </div>

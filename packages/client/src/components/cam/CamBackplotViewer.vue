@@ -3,7 +3,10 @@
     <div class="flex items-center justify-between text-[11px] text-gray-600">
       <div class="flex items-center gap-3">
         <span class="font-semibold text-sm text-gray-800">Backplot</span>
-        <span v-if="stats" class="text-[10px] text-gray-500">
+        <span
+          v-if="stats"
+          class="text-[10px] text-gray-500"
+        >
           {{ timeLabel }} · {{ moveCountLabel }}
         </span>
       </div>
@@ -13,11 +16,15 @@
             type="checkbox"
             :checked="showToolpath"
             @change="emit('update:showToolpath', ($event.target as HTMLInputElement).checked)"
-          />
+          >
           <span>Toolpath</span>
         </label>
         <label class="inline-flex items-center gap-1 cursor-pointer">
-          <input type="checkbox" :checked="showOverlays" disabled />
+          <input
+            type="checkbox"
+            :checked="showOverlays"
+            disabled
+          >
           <span>Overlays</span>
         </label>
       </div>
@@ -30,7 +37,12 @@
         class="w-full h-full"
       >
         <!-- Boundary loops -->
-        <g v-if="loops.length" fill="none" :stroke="boundaryColor || '#0f766e'" stroke-width="0.3">
+        <g
+          v-if="loops.length"
+          fill="none"
+          :stroke="boundaryColor || '#0f766e'"
+          stroke-width="0.3"
+        >
           <polyline
             v-for="(loop, idx) in loops"
             :key="`loop-${idx}`"
@@ -39,7 +51,10 @@
         </g>
 
         <!-- Toolpath segments -->
-        <g v-if="showToolpath && segments.length" fill="none">
+        <g
+          v-if="showToolpath && segments.length"
+          fill="none"
+        >
           <line
             v-for="seg in segments"
             :key="`seg-${seg.idx}`"
@@ -70,33 +85,41 @@
           />
         </g>
       </svg>
-      <div v-else class="text-xs text-gray-500">No geometry to display.</div>
+      <div
+        v-else
+        class="text-xs text-gray-500"
+      >
+        No geometry to display.
+      </div>
     </div>
 
     <!-- Legend -->
     <div class="flex flex-wrap gap-3 text-[11px] text-gray-500">
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px] bg-[#0f766e]"></span>
+        <span class="inline-block w-4 h-[2px] bg-[#0f766e]" />
         <span>Boundary</span>
       </div>
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px] bg-[#1d4ed8]"></span>
+        <span class="inline-block w-4 h-[2px] bg-[#1d4ed8]" />
         <span>Cut (normal)</span>
       </div>
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px] bg-[#22c55e]"></span>
+        <span class="inline-block w-4 h-[2px] bg-[#22c55e]" />
         <span>Cut (mild slowdown)</span>
       </div>
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px] bg-[#f97316]"></span>
+        <span class="inline-block w-4 h-[2px] bg-[#f97316]" />
         <span>Cut (medium slowdown)</span>
       </div>
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px] bg-[#ef4444]"></span>
+        <span class="inline-block w-4 h-[2px] bg-[#ef4444]" />
         <span>Cut (heavy / collision)</span>
       </div>
       <div class="inline-flex items-center gap-1">
-        <span class="inline-block w-4 h-[2px]" style="border-bottom:1px dashed #9ca3af"></span>
+        <span
+          class="inline-block w-4 h-[2px]"
+          style="border-bottom:1px dashed #9ca3af"
+        />
         <span>Rapid</span>
       </div>
     </div>

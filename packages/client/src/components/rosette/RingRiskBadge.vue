@@ -19,9 +19,16 @@ function warnCount() {
 </script>
 
 <template>
-  <span v-if="diag" class="badge" :class="riskOf().toLowerCase()">
+  <span
+    v-if="diag"
+    class="badge"
+    :class="riskOf().toLowerCase()"
+  >
     {{ riskOf() }}
-    <span v-if="warnCount() > 0" class="warn-count">&bull; {{ warnCount() }}</span>
+    <span
+      v-if="warnCount() > 0"
+      class="warn-count"
+    >&bull; {{ warnCount() }}</span>
   </span>
 </template>
 

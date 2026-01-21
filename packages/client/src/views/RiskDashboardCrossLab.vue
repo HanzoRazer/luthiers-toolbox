@@ -36,7 +36,9 @@
           v-model="laneFilter"
           class="px-2 py-1 border rounded text-[11px]"
         >
-          <option value="">All</option>
+          <option value="">
+            All
+          </option>
           <option
             v-for="laneOpt in allLanes"
             :key="laneOpt"
@@ -53,7 +55,9 @@
           v-model="presetFilter"
           class="px-2 py-1 border rounded text-[11px]"
         >
-          <option value="">All</option>
+          <option value="">
+            All
+          </option>
           <option
             v-for="presetOpt in allPresets"
             :key="presetOpt"
@@ -71,12 +75,15 @@
           type="text"
           placeholder="e.g. rosette_"
           class="px-2 py-1 border rounded text-[11px] w-40"
-        />
+        >
       </div>
     </div>
 
     <!-- Summary chips -->
-    <div v-if="filteredBuckets.length" class="text-[11px] text-gray-700 flex flex-wrap gap-3">
+    <div
+      v-if="filteredBuckets.length"
+      class="text-[11px] text-gray-700 flex flex-wrap gap-3"
+    >
       <span>
         Buckets: <span class="font-mono">{{ filteredBuckets.length }}</span>
       </span>
@@ -85,24 +92,48 @@
       </span>
     </div>
 
-    <div v-else class="text-[11px] text-gray-500 italic">
+    <div
+      v-else
+      class="text-[11px] text-gray-500 italic"
+    >
       No entries match the current filters.
     </div>
 
     <!-- Buckets table -->
-    <div v-if="filteredBuckets.length" class="overflow-x-auto">
+    <div
+      v-if="filteredBuckets.length"
+      class="overflow-x-auto"
+    >
       <table class="min-w-full text-[11px] text-left">
         <thead class="border-b bg-gray-50">
           <tr>
-            <th class="px-2 py-1 whitespace-nowrap">Lane</th>
-            <th class="px-2 py-1 whitespace-nowrap">Preset</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Entries</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg +Added</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg -Removed</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Avg =Unchanged</th>
-            <th class="px-2 py-1 whitespace-nowrap">Risk</th>
-            <th class="px-2 py-1 whitespace-nowrap">Trend (Added)</th>
-            <th class="px-2 py-1 whitespace-nowrap">Trend (Removed)</th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Lane
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Preset
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Entries
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg +Added
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg -Removed
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Avg =Unchanged
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Risk
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Trend (Added)
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Trend (Removed)
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -110,8 +141,8 @@
             v-for="bucket in filteredBuckets"
             :key="bucket.key"
             class="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
-            @click="goToLab(bucket)"
             :title="`Open ${bucket.lane} lab for preset '${bucket.preset}'`"
+            @click="goToLab(bucket)"
           >
             <td class="px-2 py-1 whitespace-nowrap">
               {{ bucket.lane }}
@@ -140,7 +171,11 @@
               </span>
             </td>
             <td class="px-2 py-1 whitespace-nowrap">
-              <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+              <svg
+                :width="sparkWidth"
+                :height="sparkHeight"
+                viewBox="0 0 60 20"
+              >
                 <polyline
                   v-if="bucket.addedPath"
                   :points="bucket.addedPath"
@@ -151,7 +186,11 @@
               </svg>
             </td>
             <td class="px-2 py-1 whitespace-nowrap">
-              <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+              <svg
+                :width="sparkWidth"
+                :height="sparkHeight"
+                viewBox="0 0 60 20"
+              >
                 <polyline
                   v-if="bucket.removedPath"
                   :points="bucket.removedPath"

@@ -20,12 +20,24 @@ Features:
 <template>
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold">Wiring Workbench</h1>
+      <h1 class="text-2xl font-bold">
+        Wiring Workbench
+      </h1>
       <div class="flex items-center gap-2 text-sm">
         <span class="opacity-70">Help:</span>
-        <a class="underline" :href="reportHtmlHref" target="_blank" rel="noopener">Community Report (HTML)</a>
+        <a
+          class="underline"
+          :href="reportHtmlHref"
+          target="_blank"
+          rel="noopener"
+        >Community Report (HTML)</a>
         <span>·</span>
-        <a class="underline" :href="reportPdfHref" target="_blank" rel="noopener">Community Report (PDF)</a>
+        <a
+          class="underline"
+          :href="reportPdfHref"
+          target="_blank"
+          rel="noopener"
+        >Community Report (PDF)</a>
       </div>
     </div>
 
@@ -42,23 +54,36 @@ Features:
     </div>
 
     <!-- Analyzer Tab -->
-    <div v-if="tab === 'Analyzer'" class="space-y-2">
-      <p class="opacity-80 text-sm">Load a wiring JSON to estimate output impedance and tone RC cutoff.</p>
+    <div
+      v-if="tab === 'Analyzer'"
+      class="space-y-2"
+    >
+      <p class="opacity-80 text-sm">
+        Load a wiring JSON to estimate output impedance and tone RC cutoff.
+      </p>
       <input 
         type="file" 
-        @change="onFile" 
         accept=".json" 
         class="border p-2 rounded w-full max-w-md" 
-      />
-      <div v-if="result" class="grid gap-1 p-4 bg-gray-50 rounded">
+        @change="onFile" 
+      >
+      <div
+        v-if="result"
+        class="grid gap-1 p-4 bg-gray-50 rounded"
+      >
         <div><b>Output Impedance (Zout)</b>: {{ result.zout.toFixed(1) }} Ω</div>
         <div><b>RC Cutoff Frequency</b>: {{ result.fc ? result.fc.toFixed(1) + ' Hz' : 'n/a' }}</div>
       </div>
     </div>
 
     <!-- Treble Bleed Tab -->
-    <div v-else-if="tab === 'Treble Bleed'" class="space-y-2">
-      <p class="opacity-80 text-sm">Suggest capacitor and resistor values and estimate corner frequency.</p>
+    <div
+      v-else-if="tab === 'Treble Bleed'"
+      class="space-y-2"
+    >
+      <p class="opacity-80 text-sm">
+        Suggest capacitor and resistor values and estimate corner frequency.
+      </p>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
         <label class="flex flex-col">
           <span class="text-sm font-medium mb-1">Pot Resistance (Ω)</span>
@@ -66,7 +91,7 @@ Features:
             v-model.number="tb.pot" 
             type="number" 
             class="border p-2 rounded" 
-          />
+          >
         </label>
         <label class="flex flex-col">
           <span class="text-sm font-medium mb-1">Cable Capacitance (pF)</span>
@@ -74,11 +99,14 @@ Features:
             v-model.number="tb.cable" 
             type="number" 
             class="border p-2 rounded" 
-          />
+          >
         </label>
         <label class="flex flex-col">
           <span class="text-sm font-medium mb-1">Circuit Style</span>
-          <select v-model="tb.style" class="border p-2 rounded">
+          <select
+            v-model="tb.style"
+            class="border p-2 rounded"
+          >
             <option value="parallel">Parallel (cap || resistor)</option>
             <option value="series">Series (cap + resistor)</option>
             <option value="cap-only">Cap only</option>
@@ -91,22 +119,35 @@ Features:
       >
         Calculate
       </button>
-      <div v-if="tbOut" class="space-y-1 p-4 bg-gray-50 rounded">
+      <div
+        v-if="tbOut"
+        class="space-y-1 p-4 bg-gray-50 rounded"
+      >
         <div><b>Capacitor</b>: {{ tbOut.cap_pf }} pF</div>
         <div><b>Resistor</b>: {{ tbOut.resistor_k ?? '—' }} kΩ</div>
         <div><b>Approx Corner Frequency</b>: {{ tbOut.approx_fc_hz ? tbOut.approx_fc_hz.toFixed(1) + ' Hz' : 'n/a' }}</div>
-        <div class="opacity-70 text-sm italic mt-2">{{ tbOut.note }}</div>
+        <div class="opacity-70 text-sm italic mt-2">
+          {{ tbOut.note }}
+        </div>
       </div>
     </div>
 
     <!-- Switch Validator Tab -->
-    <div v-else-if="tab === 'Switch Validator'" class="space-y-2">
-      <p class="opacity-80 text-sm">Check if requested pickup combinations are supported by your hardware configuration.</p>
+    <div
+      v-else-if="tab === 'Switch Validator'"
+      class="space-y-2"
+    >
+      <p class="opacity-80 text-sm">
+        Check if requested pickup combinations are supported by your hardware configuration.
+      </p>
       <div class="grid md:grid-cols-2 gap-4">
         <div class="space-y-2">
           <label class="flex flex-col">
             <span class="text-sm font-medium mb-1">Selector Switch</span>
-            <select v-model="hw.selector" class="border p-2 rounded">
+            <select
+              v-model="hw.selector"
+              class="border p-2 rounded"
+            >
               <option value="3-way">3-way</option>
               <option value="5-way">5-way</option>
               <option value="5-way-superswitch">5-way Superswitch</option>
@@ -119,7 +160,7 @@ Features:
               type="number" 
               min="0"
               class="border p-2 rounded"
-            />
+            >
           </label>
           <label class="flex flex-col">
             <span class="text-sm font-medium mb-1">Mini Toggle Switches</span>
@@ -128,7 +169,7 @@ Features:
               type="number" 
               min="0"
               class="border p-2 rounded"
-            />
+            >
           </label>
         </div>
         <label class="flex flex-col">
@@ -146,8 +187,15 @@ Features:
       >
         Validate
       </button>
-      <div v-if="valOut" class="mt-2 p-4 bg-gray-50 rounded">
-        <div v-for="(v, k) in valOut" :key="k" class="text-sm py-1">
+      <div
+        v-if="valOut"
+        class="mt-2 p-4 bg-gray-50 rounded"
+      >
+        <div
+          v-for="(v, k) in valOut"
+          :key="k"
+          class="text-sm py-1"
+        >
           <b>{{ k }}</b>: 
           <span :class="v.includes('not supported') ? 'text-red-600' : 'text-green-600'">
             {{ v }}
@@ -157,13 +205,18 @@ Features:
     </div>
 
     <!-- Docs Tab -->
-    <div v-else-if="tab === 'Docs'" class="space-y-2">
-      <p class="opacity-80 text-sm">Embedded quick help. Use the Help links above for the full Community Report.</p>
+    <div
+      v-else-if="tab === 'Docs'"
+      class="space-y-2"
+    >
+      <p class="opacity-80 text-sm">
+        Embedded quick help. Use the Help links above for the full Community Report.
+      </p>
       <iframe 
         :src="docsSrc" 
         class="w-full border rounded" 
         style="height:60vh;"
-      ></iframe>
+      />
     </div>
   </div>
 </template>

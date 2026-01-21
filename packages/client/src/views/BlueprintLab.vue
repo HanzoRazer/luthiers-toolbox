@@ -22,23 +22,44 @@
         ref="fileInput"
         type="file"
         accept=".pdf,.png,.jpg,.jpeg"
-        @change="handleFileSelect"
         style="display: none"
-      />
+        @change="handleFileSelect"
+      >
       
       <div class="upload-prompt">
-        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        <svg
+          class="upload-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
         </svg>
         <p class="upload-text">
-          <strong>Drop blueprint here</strong> or <button @click="($refs.fileInput as HTMLInputElement)?.click()" class="browse-btn">browse</button>
+          <strong>Drop blueprint here</strong> or <button
+            class="browse-btn"
+            @click="($refs.fileInput as HTMLInputElement)?.click()"
+          >
+            browse
+          </button>
         </p>
-        <p class="upload-hint">Supports PDF, PNG, JPG (max 20MB)</p>
+        <p class="upload-hint">
+          Supports PDF, PNG, JPG (max 20MB)
+        </p>
       </div>
     </div>
 
     <!-- Main Workflow (After Upload) -->
-    <div v-if="uploadedFile" class="workflow">
+    <div
+      v-if="uploadedFile"
+      class="workflow"
+    >
       <!-- Phase 1: AI Analysis -->
       <section class="workflow-section">
         <div class="section-header">
@@ -46,23 +67,54 @@
             <span class="step-number">1</span>
             AI Analysis (Claude Sonnet 4)
           </h2>
-          <button v-if="analysis && !isAnalyzing" @click="resetWorkflow" class="btn-secondary">
+          <button
+            v-if="analysis && !isAnalyzing"
+            class="btn-secondary"
+            @click="resetWorkflow"
+          >
             Upload New Blueprint
           </button>
         </div>
 
-        <div v-if="!analysis" class="action-card">
-          <p class="hint">Analyze blueprint to detect scale, dimensions, and blueprint type</p>
-          <button @click="analyzeBlueprint" :disabled="isAnalyzing" class="btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <div
+          v-if="!analysis"
+          class="action-card"
+        >
+          <p class="hint">
+            Analyze blueprint to detect scale, dimensions, and blueprint type
+          </p>
+          <button
+            :disabled="isAnalyzing"
+            class="btn-primary"
+            @click="analyzeBlueprint"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
             </svg>
             {{ isAnalyzing ? 'Analyzing...' : 'Start Analysis' }}
           </button>
-          <div v-if="isAnalyzing" class="progress-timer">{{ analysisProgress }}s elapsed</div>
+          <div
+            v-if="isAnalyzing"
+            class="progress-timer"
+          >
+            {{ analysisProgress }}s elapsed
+          </div>
         </div>
 
-        <div v-if="analysis" class="results-card">
+        <div
+          v-if="analysis"
+          class="results-card"
+        >
           <!-- Scale Info -->
           <div class="scale-grid">
             <div class="info-card">
@@ -72,18 +124,27 @@
                 {{ analysis.scale_confidence || 'unknown' }}
               </span>
             </div>
-            <div v-if="analysis.blueprint_type" class="info-card">
+            <div
+              v-if="analysis.blueprint_type"
+              class="info-card"
+            >
               <span class="label">Type:</span>
               <span class="value">{{ analysis.blueprint_type }}</span>
             </div>
-            <div v-if="analysis.detected_model" class="info-card">
+            <div
+              v-if="analysis.detected_model"
+              class="info-card"
+            >
               <span class="label">Model:</span>
               <span class="value">{{ analysis.detected_model }}</span>
             </div>
           </div>
 
           <!-- Dimensions Table (Collapsible) -->
-          <details class="dimensions-details" :open="analysis.dimensions?.length <= 10">
+          <details
+            class="dimensions-details"
+            :open="analysis.dimensions?.length <= 10"
+          >
             <summary>
               <strong>Detected Dimensions ({{ analysis.dimensions?.length || 0 }})</strong>
             </summary>
@@ -112,15 +173,43 @@
 
           <!-- Phase 1 Export -->
           <div class="export-row">
-            <button @click="exportSVGBasic" :disabled="isExporting" class="btn-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <button
+              :disabled="isExporting"
+              class="btn-secondary"
+              @click="exportSVGBasic"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               Export SVG (Dimensions Only)
             </button>
-            <button @click="editDimensions" class="btn-primary" style="margin-left: 12px;">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <button
+              class="btn-primary"
+              style="margin-left: 12px;"
+              @click="editDimensions"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
               📐 Edit Dimensions in Parametric Designer
             </button>
@@ -129,7 +218,10 @@
       </section>
 
       <!-- Phase 2: Geometry Vectorization -->
-      <section v-if="analysis" class="workflow-section phase-2">
+      <section
+        v-if="analysis"
+        class="workflow-section phase-2"
+      >
         <div class="section-header">
           <h2>
             <span class="step-number">2</span>
@@ -137,42 +229,85 @@
           </h2>
         </div>
 
-        <div v-if="!vectorizedGeometry" class="action-card">
-          <p class="hint">Detect edges, extract contours, and export CAM-ready DXF with closed polylines</p>
+        <div
+          v-if="!vectorizedGeometry"
+          class="action-card"
+        >
+          <p class="hint">
+            Detect edges, extract contours, and export CAM-ready DXF with closed polylines
+          </p>
           
           <!-- Vectorization Controls -->
           <div class="controls-grid">
             <div class="control-group">
               <label>Scale Factor:</label>
-              <input v-model.number="vectorParams.scaleFactor" type="number" step="0.1" min="0.1" max="10" />
+              <input
+                v-model.number="vectorParams.scaleFactor"
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="10"
+              >
               <span class="control-hint">Adjust if scale detection was incorrect</span>
             </div>
             <div class="control-group">
               <label>Edge Threshold (Low):</label>
-              <input v-model.number="vectorParams.lowThreshold" type="number" min="10" max="200" />
+              <input
+                v-model.number="vectorParams.lowThreshold"
+                type="number"
+                min="10"
+                max="200"
+              >
               <span class="control-hint">Lower = more edges detected</span>
             </div>
             <div class="control-group">
               <label>Edge Threshold (High):</label>
-              <input v-model.number="vectorParams.highThreshold" type="number" min="50" max="300" />
+              <input
+                v-model.number="vectorParams.highThreshold"
+                type="number"
+                min="50"
+                max="300"
+              >
               <span class="control-hint">Higher = stricter edge detection</span>
             </div>
             <div class="control-group">
               <label>Min Contour Area (px²):</label>
-              <input v-model.number="vectorParams.minArea" type="number" min="10" max="1000" />
+              <input
+                v-model.number="vectorParams.minArea"
+                type="number"
+                min="10"
+                max="1000"
+              >
               <span class="control-hint">Filter small noise</span>
             </div>
           </div>
 
-          <button @click="vectorizeGeometry" :disabled="isVectorizing" class="btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+          <button
+            :disabled="isVectorizing"
+            class="btn-primary"
+            @click="vectorizeGeometry"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+              />
             </svg>
             {{ isVectorizing ? 'Vectorizing...' : 'Vectorize Geometry' }}
           </button>
         </div>
 
-        <div v-if="vectorizedGeometry" class="results-card">
+        <div
+          v-if="vectorizedGeometry"
+          class="results-card"
+        >
           <!-- Vectorization Stats -->
           <div class="stats-grid">
             <div class="stat-card">
@@ -193,26 +328,62 @@
           <div class="preview-section">
             <h4>Geometry Preview:</h4>
             <div class="preview-placeholder">
-              <p>SVG Preview: <a :href="`/api/blueprint/static/${vectorizedGeometry.svg_path.split('/').pop()}`" target="_blank">View SVG</a></p>
-              <p class="hint-small">Detected contours shown in blue, lines in red</p>
+              <p>
+                SVG Preview: <a
+                  :href="`/api/blueprint/static/${vectorizedGeometry.svg_path.split('/').pop()}`"
+                  target="_blank"
+                >View SVG</a>
+              </p>
+              <p class="hint-small">
+                Detected contours shown in blue, lines in red
+              </p>
             </div>
           </div>
 
           <!-- Phase 2 Exports -->
           <div class="export-row">
-            <button @click="downloadVectorizedSVG" class="btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <button
+              class="btn-primary"
+              @click="downloadVectorizedSVG"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               Download SVG (Vectorized)
             </button>
-            <button @click="downloadVectorizedDXF" class="btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <button
+              class="btn-primary"
+              @click="downloadVectorizedDXF"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               Download DXF R2000 (CAM-Ready)
             </button>
-            <button @click="vectorizedGeometry = null" class="btn-secondary">
+            <button
+              class="btn-secondary"
+              @click="vectorizedGeometry = null"
+            >
               Re-vectorize with New Settings
             </button>
           </div>
@@ -220,7 +391,10 @@
       </section>
 
       <!-- Phase 3: CAM Integration (MVP Wrapper) -->
-      <section v-if="vectorizedGeometry" class="workflow-section phase-3">
+      <section
+        v-if="vectorizedGeometry"
+        class="workflow-section phase-3"
+      >
         <div class="section-header">
           <h2>
             <span class="step-number">3</span>
@@ -230,52 +404,109 @@
 
         <!-- CAM Parameters -->
         <div class="action-card">
-          <p class="hint">Generate G-code from vectorized DXF using adaptive pocketing</p>
+          <p class="hint">
+            Generate G-code from vectorized DXF using adaptive pocketing
+          </p>
 
           <div class="controls-grid">
             <div class="control-group">
               <label>Tool Diameter (mm):</label>
-              <input v-model.number="camParams.tool_d" type="number" step="0.5" min="0.5" max="25" />
+              <input
+                v-model.number="camParams.tool_d"
+                type="number"
+                step="0.5"
+                min="0.5"
+                max="25"
+              >
             </div>
             <div class="control-group">
               <label>Stepover (0-1):</label>
-              <input v-model.number="camParams.stepover" type="number" step="0.05" min="0.1" max="0.9" />
+              <input
+                v-model.number="camParams.stepover"
+                type="number"
+                step="0.05"
+                min="0.1"
+                max="0.9"
+              >
             </div>
             <div class="control-group">
               <label>Stepdown (mm):</label>
-              <input v-model.number="camParams.stepdown" type="number" step="0.5" min="0.5" max="10" />
+              <input
+                v-model.number="camParams.stepdown"
+                type="number"
+                step="0.5"
+                min="0.5"
+                max="10"
+              >
             </div>
             <div class="control-group">
               <label>Target Depth (mm):</label>
-              <input v-model.number="camParams.z_rough" type="number" step="0.5" max="0" />
+              <input
+                v-model.number="camParams.z_rough"
+                type="number"
+                step="0.5"
+                max="0"
+              >
             </div>
             <div class="control-group">
               <label>Feed XY (mm/min):</label>
-              <input v-model.number="camParams.feed_xy" type="number" step="100" min="100" max="5000" />
+              <input
+                v-model.number="camParams.feed_xy"
+                type="number"
+                step="100"
+                min="100"
+                max="5000"
+              >
             </div>
             <div class="control-group">
               <label>Feed Z (mm/min):</label>
-              <input v-model.number="camParams.feed_z" type="number" step="50" min="50" max="1000" />
+              <input
+                v-model.number="camParams.feed_z"
+                type="number"
+                step="50"
+                min="50"
+                max="1000"
+              >
             </div>
           </div>
 
-          <button @click="sendToCAM" :disabled="isSendingToCAM" class="btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <button
+            :disabled="isSendingToCAM"
+            class="btn-primary"
+            @click="sendToCAM"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
             {{ isSendingToCAM ? 'Generating G-code...' : 'Generate G-code (GRBL)' }}
           </button>
         </div>
 
         <!-- RMOS Result -->
-        <div v-if="rmosResult" class="results-card">
+        <div
+          v-if="rmosResult"
+          class="results-card"
+        >
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ rmosResult.decision?.risk_level || 'N/A' }}</span>
               <span class="stat-label">Risk Level</span>
             </div>
             <div class="stat-card">
-              <span class="stat-value" style="font-size: 0.875rem; word-break: break-all;">{{ rmosResult.run_id || 'N/A' }}</span>
+              <span
+                class="stat-value"
+                style="font-size: 0.875rem; word-break: break-all;"
+              >{{ rmosResult.run_id || 'N/A' }}</span>
               <span class="stat-label">RMOS Run ID</span>
             </div>
             <div class="stat-card">
@@ -285,31 +516,55 @@
           </div>
 
           <!-- Warnings -->
-          <div v-if="rmosResult.decision?.warnings?.length" class="warning-list">
+          <div
+            v-if="rmosResult.decision?.warnings?.length"
+            class="warning-list"
+          >
             <strong>Warnings:</strong>
             <ul>
-              <li v-for="(w, i) in rmosResult.decision.warnings" :key="i">{{ w }}</li>
+              <li
+                v-for="(w, i) in rmosResult.decision.warnings"
+                :key="i"
+              >
+                {{ w }}
+              </li>
             </ul>
           </div>
 
           <!-- RMOS Error -->
-          <div v-if="!rmosResult.rmos_persisted && rmosResult.rmos_error" class="rmos-error">
+          <div
+            v-if="!rmosResult.rmos_persisted && rmosResult.rmos_error"
+            class="rmos-error"
+          >
             <strong>RMOS Error:</strong> {{ rmosResult.rmos_error }}
           </div>
 
           <!-- Download Button -->
           <div class="export-row">
             <button
-              @click="downloadGcode"
               :disabled="!gcodeReady"
               class="btn-primary"
+              @click="downloadGcode"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               Download G-code (.nc)
             </button>
-            <span v-if="rmosResult && !rmosResult.gcode?.inline" class="hint-small">
+            <span
+              v-if="rmosResult && !rmosResult.gcode?.inline"
+              class="hint-small"
+            >
               G-code too large for inline delivery. Use RMOS attachments.
             </span>
           </div>
@@ -318,14 +573,32 @@
     </div>
 
     <!-- Error Display -->
-    <div v-if="error" class="error-message">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div
+      v-if="error"
+      class="error-message"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <div>
         <strong>Error:</strong> {{ error }}
       </div>
-      <button @click="error = null" class="btn-close">×</button>
+      <button
+        class="btn-close"
+        @click="error = null"
+      >
+        ×
+      </button>
     </div>
   </div>
 </template>

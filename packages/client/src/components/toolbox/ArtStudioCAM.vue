@@ -2,7 +2,9 @@
   <div class="p-4 bg-white">
     <!-- Header -->
     <div class="mb-4">
-      <h2 class="text-lg font-semibold text-gray-900">CAM Toolbox</h2>
+      <h2 class="text-lg font-semibold text-gray-900">
+        CAM Toolbox
+      </h2>
       <p class="text-sm text-gray-600 mt-1">
         N15-N18 Production CAM Modules - G-code Analysis, Adaptive Strategies, and Polygon Processing
       </p>
@@ -10,17 +12,20 @@
 
     <!-- Tool Tabs -->
     <div class="border-b border-gray-200 mb-4">
-      <nav class="-mb-px flex space-x-2" aria-label="Tabs">
+      <nav
+        class="-mb-px flex space-x-2"
+        aria-label="Tabs"
+      >
         <button
           v-for="tool in tools"
           :key="tool.id"
-          @click="activeTab = tool.id"
           :class="[
             'px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
             activeTab === tool.id
               ? 'border-blue-600 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           ]"
+          @click="activeTab = tool.id"
         >
           <span class="mr-1">{{ tool.icon }}</span>
           {{ tool.name }}
@@ -37,7 +42,10 @@
     <!-- Tool Content -->
     <div class="mt-4">
       <!-- N15: G-code Backplot -->
-      <div v-if="activeTab === 'backplot'" class="space-y-3">
+      <div
+        v-if="activeTab === 'backplot'"
+        class="space-y-3"
+      >
         <div class="border-l-4 border-blue-500 bg-blue-50 p-3 rounded">
           <h3 class="text-sm font-semibold text-blue-900 mb-1">
             📊 N15: G-code Backplot & Analysis
@@ -51,7 +59,10 @@
       </div>
 
       <!-- N16: Adaptive Benchmark -->
-      <div v-if="activeTab === 'benchmark'" class="space-y-3">
+      <div
+        v-if="activeTab === 'benchmark'"
+        class="space-y-3"
+      >
         <div class="border-l-4 border-green-500 bg-green-50 p-3 rounded">
           <h3 class="text-sm font-semibold text-green-900 mb-1">
             🔬 N16: Adaptive Kernel Benchmark
@@ -65,7 +76,10 @@
       </div>
 
       <!-- N17+N18: Polygon Processing -->
-      <div v-if="activeTab === 'polygon'" class="space-y-3">
+      <div
+        v-if="activeTab === 'polygon'"
+        class="space-y-3"
+      >
         <div class="border-l-4 border-purple-500 bg-purple-50 p-3 rounded">
           <h3 class="text-sm font-semibold text-purple-900 mb-1">
             🔺 N17+N18: Polygon Offset & Spiral
@@ -79,7 +93,10 @@
       </div>
 
       <!-- Documentation Tab -->
-      <div v-if="activeTab === 'docs'" class="space-y-4">
+      <div
+        v-if="activeTab === 'docs'"
+        class="space-y-4"
+      >
         <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
           <h3 class="text-base font-semibold text-gray-900 mb-3">
             📚 N15-N18 CAM Modules Documentation
@@ -168,7 +185,9 @@
 
           <!-- Quick Start Guide -->
           <div class="mt-4 pt-4 border-t border-gray-200">
-            <h4 class="text-sm font-semibold text-gray-900 mb-2">🚀 Quick Start Workflow</h4>
+            <h4 class="text-sm font-semibold text-gray-900 mb-2">
+              🚀 Quick Start Workflow
+            </h4>
             <div class="space-y-2 text-xs text-gray-700">
               <p><strong>1. Design Phase:</strong></p>
               <ul class="list-disc list-inside ml-4">
@@ -198,7 +217,9 @@
 
           <!-- Related Systems -->
           <div class="mt-4 pt-4 border-t border-gray-200">
-            <h4 class="text-sm font-semibold text-gray-900 mb-2">🔗 Related Systems</h4>
+            <h4 class="text-sm font-semibold text-gray-900 mb-2">
+              🔗 Related Systems
+            </h4>
             <div class="space-y-1 text-xs text-gray-700">
               <p><strong>Module L:</strong> Adaptive Pocketing Engine (island handling, smoothing, trochoids)</p>
               <p><strong>Module M:</strong> Machine Profiles (feed/speed optimization per CNC platform)</p>

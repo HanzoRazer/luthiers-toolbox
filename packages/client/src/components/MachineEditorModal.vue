@@ -1,21 +1,47 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="$emit('update:modelValue', false)"></div>
+  <div
+    v-if="modelValue"
+    class="fixed inset-0 z-50"
+  >
+    <div
+      class="absolute inset-0 bg-black/40"
+      @click="$emit('update:modelValue', false)"
+    />
     <div class="absolute inset-0 sm:inset-10 bg-white rounded-xl shadow-xl flex flex-col">
       <div class="px-4 py-3 border-b flex items-center gap-2">
-        <h3 class="text-lg font-semibold">{{ title }}</h3>
-        <button class="ml-auto px-3 py-1 border rounded hover:bg-gray-50" @click="save">Save</button>
-        <button class="px-3 py-1 border rounded hover:bg-gray-50" @click="$emit('update:modelValue', false)">Close</button>
+        <h3 class="text-lg font-semibold">
+          {{ title }}
+        </h3>
+        <button
+          class="ml-auto px-3 py-1 border rounded hover:bg-gray-50"
+          @click="save"
+        >
+          Save
+        </button>
+        <button
+          class="px-3 py-1 border rounded hover:bg-gray-50"
+          @click="$emit('update:modelValue', false)"
+        >
+          Close
+        </button>
       </div>
       <div class="p-3 grid gap-2 overflow-y-auto">
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="text-xs font-medium">ID</label>
-            <input v-model="working.id" class="border px-2 py-1 rounded w-full" placeholder="unique_id"/>
+            <input
+              v-model="working.id"
+              class="border px-2 py-1 rounded w-full"
+              placeholder="unique_id"
+            >
           </div>
           <div>
             <label class="text-xs font-medium">Title</label>
-            <input v-model="working.title" class="border px-2 py-1 rounded w-full" placeholder="Display Name"/>
+            <input
+              v-model="working.title"
+              class="border px-2 py-1 rounded w-full"
+              placeholder="Display Name"
+            >
           </div>
         </div>
         <label class="text-xs font-medium">JSON Configuration</label>
@@ -23,13 +49,23 @@
           v-model="jsonText" 
           class="border rounded w-full h-96 font-mono text-[12px] p-2"
           spellcheck="false"
-        ></textarea>
+        />
         <div class="text-xs text-gray-500">
           💡 Tip: Use <b>Clone As...</b> to duplicate an existing profile, change id/title, then Save.
         </div>
         <div class="flex gap-2">
-          <button class="px-3 py-1 border rounded hover:bg-gray-50" @click="cloneAs">Clone As...</button>
-          <button class="px-3 py-1 border rounded hover:bg-gray-50" @click="formatJson">Format JSON</button>
+          <button
+            class="px-3 py-1 border rounded hover:bg-gray-50"
+            @click="cloneAs"
+          >
+            Clone As...
+          </button>
+          <button
+            class="px-3 py-1 border rounded hover:bg-gray-50"
+            @click="formatJson"
+          >
+            Format JSON
+          </button>
         </div>
       </div>
     </div>

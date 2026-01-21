@@ -5,31 +5,54 @@
       <span class="path">{{ entry.relpath }}</span>
       <div class="controls">
         <label class="toggle">
-          <input type="checkbox" v-model="showPhase" />
+          <input
+            v-model="showPhase"
+            type="checkbox"
+          >
           <span>Phase</span>
         </label>
         <label class="toggle">
-          <input type="checkbox" v-model="logFreq" />
+          <input
+            v-model="logFreq"
+            type="checkbox"
+          >
           <span>Log Freq</span>
         </label>
         <label class="toggle">
-          <input type="checkbox" v-model="dbScale" />
+          <input
+            v-model="dbScale"
+            type="checkbox"
+          >
           <span>dB</span>
         </label>
-        <button class="btn" @click="downloadChart">📷 PNG</button>
+        <button
+          class="btn"
+          @click="downloadChart"
+        >
+          📷 PNG
+        </button>
       </div>
     </div>
 
-    <div v-if="parseError" class="error">
+    <div
+      v-if="parseError"
+      class="error"
+    >
       <strong>Parse Error:</strong> {{ parseError }}
     </div>
 
-    <div v-else-if="!hasData" class="empty">
+    <div
+      v-else-if="!hasData"
+      class="empty"
+    >
       No transfer function data found in JSON.
     </div>
 
-    <div v-else class="chart-container">
-      <canvas ref="chartCanvas"></canvas>
+    <div
+      v-else
+      class="chart-container"
+    >
+      <canvas ref="chartCanvas" />
     </div>
 
     <div class="stats">
@@ -38,7 +61,10 @@
       </span>
       <span><strong>Points:</strong> {{ dataPoints }}</span>
       <span v-if="freqRange"><strong>Range:</strong> {{ freqRange }}</span>
-      <span v-if="odsMetadata" class="metadata-badge">
+      <span
+        v-if="odsMetadata"
+        class="metadata-badge"
+      >
         {{ odsMetadata }}
       </span>
     </div>

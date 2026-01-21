@@ -40,7 +40,11 @@ function handleRefresh() {
     <!-- Header -->
     <div class="panel-header">
       <h3>Run Artifacts</h3>
-      <button class="btn-refresh" @click="handleRefresh" :disabled="store.loading">
+      <button
+        class="btn-refresh"
+        :disabled="store.loading"
+        @click="handleRefresh"
+      >
         {{ store.loading ? "Loading…" : "Refresh" }}
       </button>
     </div>
@@ -63,7 +67,7 @@ function handleRefresh() {
           v-model="store.filters.event_type"
           type="text"
           placeholder="e.g., approval"
-        />
+        >
       </label>
 
       <label>
@@ -72,10 +76,15 @@ function handleRefresh() {
           v-model="store.filters.tool_id"
           type="text"
           placeholder="e.g., T102"
-        />
+        >
       </label>
 
-      <button class="btn-clear" @click="store.clearFilters">Clear</button>
+      <button
+        class="btn-clear"
+        @click="store.clearFilters"
+      >
+        Clear
+      </button>
     </div>
 
     <!-- Column Headers -->
@@ -84,21 +93,29 @@ function handleRefresh() {
       <div>Status</div>
       <div>Event</div>
       <div>Tool</div>
-      <div class="text-right">Created</div>
+      <div class="text-right">
+        Created
+      </div>
     </div>
 
     <!-- Run List -->
     <div class="run-list">
       <template v-if="store.loading && store.items.length === 0">
-        <div class="loading">Loading runs…</div>
+        <div class="loading">
+          Loading runs…
+        </div>
       </template>
 
       <template v-else-if="store.error">
-        <div class="error">{{ store.error }}</div>
+        <div class="error">
+          {{ store.error }}
+        </div>
       </template>
 
       <template v-else-if="store.items.length === 0">
-        <div class="empty">No run artifacts found.</div>
+        <div class="empty">
+          No run artifacts found.
+        </div>
       </template>
 
       <template v-else>
@@ -115,7 +132,10 @@ function handleRefresh() {
     <!-- Status Bar -->
     <div class="status-bar">
       <span>{{ store.items.length }} run(s)</span>
-      <span v-if="store.lastSelectedRunId" class="last-selected">
+      <span
+        v-if="store.lastSelectedRunId"
+        class="last-selected"
+      >
         Last: {{ store.lastSelectedRunId.slice(0, 12) }}…
       </span>
     </div>

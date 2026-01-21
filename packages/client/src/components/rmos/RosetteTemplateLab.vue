@@ -2,7 +2,9 @@
   <div class="space-y-4">
     <header class="flex items-center justify-between">
       <div>
-        <h2 class="text-lg font-semibold">Rosette Manufacturing OS</h2>
+        <h2 class="text-lg font-semibold">
+          Rosette Manufacturing OS
+        </h2>
         <p class="text-sm text-gray-500">
           Edit rings, strip families, and defaults. Batch op updates automatically.
         </p>
@@ -12,14 +14,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Pattern meta -->
       <div class="space-y-2 border rounded-lg p-3">
-        <h3 class="font-semibold text-sm">Pattern Info</h3>
+        <h3 class="font-semibold text-sm">
+          Pattern Info
+        </h3>
         <label class="block text-xs">
           Name
           <input
             v-model="localPattern.name"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1 text-sm"
-          />
+          >
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block text-xs">
@@ -28,7 +32,7 @@
               v-model.number="localPattern.center_x_mm"
               type="number"
               class="mt-1 w-full border rounded px-2 py-1 text-sm"
-            />
+            >
           </label>
           <label class="block text-xs">
             Center Y (mm)
@@ -36,7 +40,7 @@
               v-model.number="localPattern.center_y_mm"
               type="number"
               class="mt-1 w-full border rounded px-2 py-1 text-sm"
-            />
+            >
           </label>
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -47,7 +51,7 @@
               type="number"
               step="0.01"
               class="mt-1 w-full border rounded px-2 py-1 text-sm"
-            />
+            >
           </label>
           <label class="block text-xs">
             Passes
@@ -55,7 +59,7 @@
               v-model.number="localPattern.default_passes"
               type="number"
               class="mt-1 w-full border rounded px-2 py-1 text-sm"
-            />
+            >
           </label>
         </div>
         <label class="block text-xs">
@@ -64,7 +68,7 @@
             v-model="localPattern.default_workholding"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1 text-sm"
-          />
+          >
         </label>
         <label class="block text-xs">
           Default tool id
@@ -72,14 +76,16 @@
             v-model="localPattern.default_tool_id"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1 text-sm"
-          />
+          >
         </label>
       </div>
 
       <!-- Rings table -->
       <div class="space-y-2 border rounded-lg p-3">
         <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-sm">Rings</h3>
+          <h3 class="font-semibold text-sm">
+            Rings
+          </h3>
           <button
             class="text-xs border rounded px-2 py-1 hover:bg-gray-100"
             @click="addRing"
@@ -88,21 +94,41 @@
           </button>
         </div>
 
-        <div v-if="localPattern.ring_bands.length === 0" class="text-xs text-gray-500">
+        <div
+          v-if="localPattern.ring_bands.length === 0"
+          class="text-xs text-gray-500"
+        >
           No rings yet. Add one to get started.
         </div>
 
-        <table v-else class="w-full text-xs border-collapse">
+        <table
+          v-else
+          class="w-full text-xs border-collapse"
+        >
           <thead>
             <tr class="border-b">
-              <th class="text-left p-1">Idx</th>
-              <th class="text-left p-1">Radius</th>
-              <th class="text-left p-1">Width</th>
-              <th class="text-left p-1">Family</th>
-              <th class="text-left p-1">Angle</th>
-              <th class="text-left p-1">Tile L</th>
-              <th class="text-left p-1">Color</th>
-              <th class="p-1"></th>
+              <th class="text-left p-1">
+                Idx
+              </th>
+              <th class="text-left p-1">
+                Radius
+              </th>
+              <th class="text-left p-1">
+                Width
+              </th>
+              <th class="text-left p-1">
+                Family
+              </th>
+              <th class="text-left p-1">
+                Angle
+              </th>
+              <th class="text-left p-1">
+                Tile L
+              </th>
+              <th class="text-left p-1">
+                Color
+              </th>
+              <th class="p-1" />
             </tr>
           </thead>
           <tbody>
@@ -116,7 +142,7 @@
                   v-model.number="ring.index"
                   type="number"
                   class="w-12 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
@@ -124,7 +150,7 @@
                   type="number"
                   step="0.1"
                   class="w-16 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
@@ -132,14 +158,14 @@
                   type="number"
                   step="0.1"
                   class="w-16 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
                   v-model="ring.strip_family_id"
                   type="text"
                   class="w-24 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
@@ -147,7 +173,7 @@
                   type="number"
                   step="1"
                   class="w-16 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
@@ -155,14 +181,14 @@
                   type="number"
                   step="0.1"
                   class="w-16 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1">
                 <input
                   v-model="ring.color_hint"
                   type="text"
                   class="w-20 border rounded px-1 py-0.5"
-                />
+                >
               </td>
               <td class="p-1 text-right">
                 <button
@@ -180,7 +206,9 @@
 
     <!-- Small preview of generated batch op -->
     <div class="border rounded-lg p-3 text-xs bg-gray-50">
-      <h3 class="font-semibold mb-1">Derived Saw Batch Op (circle mode)</h3>
+      <h3 class="font-semibold mb-1">
+        Derived Saw Batch Op (circle mode)
+      </h3>
       <pre class="overflow-x-auto whitespace-pre-wrap">
 {{ JSON.stringify(currentBatchOp, null, 2) }}
       </pre>

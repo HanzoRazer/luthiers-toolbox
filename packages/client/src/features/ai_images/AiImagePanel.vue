@@ -173,7 +173,13 @@ watch(prompt, () => {
       <span class="icon">🎸</span>
       <h2>AI Image Generator</h2>
       <span class="beta-badge">BETA</span>
-      <button class="close-btn" @click="emit('close')" title="Close">×</button>
+      <button
+        class="close-btn"
+        title="Close"
+        @click="emit('close')"
+      >
+        ×
+      </button>
     </div>
 
     <!-- Prompt Section -->
@@ -200,12 +206,17 @@ watch(prompt, () => {
       </div>
 
       <!-- Prompt Preview -->
-      <div v-if="promptPreview" class="prompt-preview">
+      <div
+        v-if="promptPreview"
+        class="prompt-preview"
+      >
         <div class="preview-label">
           <span>Engineered prompt</span>
           <span class="confidence">{{ Math.round(previewConfidence * 100) }}% confidence</span>
         </div>
-        <div class="preview-text">{{ promptPreview }}</div>
+        <div class="preview-text">
+          {{ promptPreview }}
+        </div>
       </div>
     </div>
 
@@ -215,12 +226,24 @@ watch(prompt, () => {
         <div class="option-group">
           <label>Style</label>
           <select v-model="selectedStyle">
-            <option value="product">Product Shot</option>
-            <option value="dramatic">Dramatic</option>
-            <option value="studio">Studio</option>
-            <option value="lifestyle">Lifestyle</option>
-            <option value="vintage">Vintage</option>
-            <option value="cinematic">Cinematic</option>
+            <option value="product">
+              Product Shot
+            </option>
+            <option value="dramatic">
+              Dramatic
+            </option>
+            <option value="studio">
+              Studio
+            </option>
+            <option value="lifestyle">
+              Lifestyle
+            </option>
+            <option value="vintage">
+              Vintage
+            </option>
+            <option value="cinematic">
+              Cinematic
+            </option>
           </select>
         </div>
 
@@ -240,35 +263,53 @@ watch(prompt, () => {
         <div class="option-group">
           <label>Quality</label>
           <select v-model="selectedQuality">
-            <option value="draft">Draft</option>
-            <option value="standard">Standard</option>
-            <option value="hd">HD (+$)</option>
+            <option value="draft">
+              Draft
+            </option>
+            <option value="standard">
+              Standard
+            </option>
+            <option value="hd">
+              HD (+$)
+            </option>
           </select>
         </div>
 
         <div class="option-group">
           <label>Count</label>
           <select v-model="imageCount">
-            <option :value="1">1 image</option>
-            <option :value="2">2 images</option>
-            <option :value="4">4 images</option>
+            <option :value="1">
+              1 image
+            </option>
+            <option :value="2">
+              2 images
+            </option>
+            <option :value="4">
+              4 images
+            </option>
           </select>
         </div>
       </div>
 
       <!-- Advanced Options Toggle -->
-      <button class="advanced-toggle" @click="showAdvanced = !showAdvanced">
+      <button
+        class="advanced-toggle"
+        @click="showAdvanced = !showAdvanced"
+      >
         {{ showAdvanced ? '▼' : '▶' }} Advanced options
       </button>
 
-      <div v-if="showAdvanced" class="advanced-options">
+      <div
+        v-if="showAdvanced"
+        class="advanced-options"
+      >
         <div class="option-group full-width">
           <label>Negative prompt</label>
           <input
             type="text"
             placeholder="blurry, low quality, distorted..."
             class="text-input"
-          />
+          >
         </div>
       </div>
     </div>
@@ -297,9 +338,14 @@ watch(prompt, () => {
     </div>
 
     <!-- Error Display -->
-    <div v-if="store.error" class="error-banner">
+    <div
+      v-if="store.error"
+      class="error-banner"
+    >
       <span>⚠️ {{ store.error }}</span>
-      <button @click="store.clearError">×</button>
+      <button @click="store.clearError">
+        ×
+      </button>
     </div>
 
     <!-- Gallery -->
@@ -326,7 +372,10 @@ watch(prompt, () => {
         <span class="stat-value">${{ store.sessionCost.toFixed(2) }}</span>
         <span class="stat-label">spent</span>
       </div>
-      <div class="stat" v-if="store.providerStats['guitar_lora']">
+      <div
+        v-if="store.providerStats['guitar_lora']"
+        class="stat"
+      >
         <span class="stat-value">
           {{ Math.round((store.providerStats['guitar_lora']?.count ?? 0) / Math.max(store.sessionCount, 1) * 100) }}%
         </span>

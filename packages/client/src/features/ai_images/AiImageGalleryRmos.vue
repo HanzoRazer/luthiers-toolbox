@@ -144,21 +144,48 @@ async function promoteAsset(a: VisionAsset) {
 
 <template>
   <div class="gallery">
-    <div v-for="a in items" :key="a.sha256" class="card">
-      <img v-if="a.url" :src="a.url" class="thumb" />
+    <div
+      v-for="a in items"
+      :key="a.sha256"
+      class="card"
+    >
+      <img
+        v-if="a.url"
+        :src="a.url"
+        class="thumb"
+      >
       <div class="meta">
-        <div class="mono">{{ a.sha256 }}</div>
-        <div class="small muted">{{ a.revised_prompt || (a as any).prompt }}</div>
+        <div class="mono">
+          {{ a.sha256 }}
+        </div>
+        <div class="small muted">
+          {{ a.revised_prompt || (a as any).prompt }}
+        </div>
       </div>
 
       <div class="actions">
-        <button class="btn small" type="button" :disabled="_isBusy(a.sha256)" @click="attachAsset(a)">
+        <button
+          class="btn small"
+          type="button"
+          :disabled="_isBusy(a.sha256)"
+          @click="attachAsset(a)"
+        >
           Attach
         </button>
-        <button class="btn small" type="button" :disabled="_isBusy(a.sha256)" @click="reviewAsset(a)">
+        <button
+          class="btn small"
+          type="button"
+          :disabled="_isBusy(a.sha256)"
+          @click="reviewAsset(a)"
+        >
           Review
         </button>
-        <button class="btn small primary" type="button" :disabled="_isBusy(a.sha256)" @click="promoteAsset(a)">
+        <button
+          class="btn small primary"
+          type="button"
+          :disabled="_isBusy(a.sha256)"
+          @click="promoteAsset(a)"
+        >
           Promote
         </button>
       </div>

@@ -23,25 +23,45 @@ Features:
       <h2>🌉 Bridge Calculator</h2>
       <div class="bc-row gap">
         <label class="switch">
-          <input type="checkbox" v-model="isMM" />
+          <input
+            v-model="isMM"
+            type="checkbox"
+          >
           <span>Units: {{ isMM ? 'mm' : 'in' }}</span>
         </label>
         <select v-model="presetFamily">
-          <option v-for="p in familyPresets" :key="p.id" :value="p.id">
+          <option
+            v-for="p in familyPresets"
+            :key="p.id"
+            :value="p.id"
+          >
             {{ p.label }}
           </option>
         </select>
         <select v-model="gaugePresetId">
-          <option v-for="g in gaugePresets" :key="g.id" :value="g.id">
+          <option
+            v-for="g in gaugePresets"
+            :key="g.id"
+            :value="g.id"
+          >
             {{ g.label }}
           </option>
         </select>
         <select v-model="actionPresetId">
-          <option v-for="a in actionPresets" :key="a.id" :value="a.id">
+          <option
+            v-for="a in actionPresets"
+            :key="a.id"
+            :value="a.id"
+          >
             {{ a.label }}
           </option>
         </select>
-        <button class="btn" @click="applyPresets">Apply Presets</button>
+        <button
+          class="btn"
+          @click="applyPresets"
+        >
+          Apply Presets
+        </button>
       </div>
     </header>
 
@@ -52,7 +72,11 @@ Features:
         <div class="field">
           <label>Scale length</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.scale" step="0.01" />
+            <input
+              v-model.number="ui.scale"
+              type="number"
+              step="0.01"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -60,7 +84,11 @@ Features:
         <div class="field">
           <label>Saddle string spread (1st–6th)</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.spread" step="0.01" />
+            <input
+              v-model.number="ui.spread"
+              type="number"
+              step="0.01"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -68,7 +96,11 @@ Features:
         <div class="field">
           <label>Compensation — Treble (C<sub>t</sub>)</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.compTreble" step="0.01" />
+            <input
+              v-model.number="ui.compTreble"
+              type="number"
+              step="0.01"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -76,7 +108,11 @@ Features:
         <div class="field">
           <label>Compensation — Bass (C<sub>b</sub>)</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.compBass" step="0.01" />
+            <input
+              v-model.number="ui.compBass"
+              type="number"
+              step="0.01"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -84,7 +120,11 @@ Features:
         <div class="field">
           <label>Slot width</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.slotWidth" step="0.01" />
+            <input
+              v-model.number="ui.slotWidth"
+              type="number"
+              step="0.01"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -92,7 +132,11 @@ Features:
         <div class="field">
           <label>Slot length (visual)</label>
           <div class="ctrl">
-            <input type="number" v-model.number="ui.slotLength" step="0.1" />
+            <input
+              v-model.number="ui.slotLength"
+              type="number"
+              step="0.1"
+            >
             <span class="unit">{{ unitLabel }}</span>
           </div>
         </div>
@@ -106,31 +150,109 @@ Features:
 
       <div class="panel">
         <h3>Preview (not to scale on screen)</h3>
-        <svg :viewBox="svgViewBox" preserveAspectRatio="xMidYMid meet" class="preview">
+        <svg
+          :viewBox="svgViewBox"
+          preserveAspectRatio="xMidYMid meet"
+          class="preview"
+        >
           <!-- centerline -->
-          <line :x1="0" :y1="-svgH/2" :x2="0" :y2="svgH/2" stroke="#d1d5db" stroke-width="0.2"/>
+          <line
+            :x1="0"
+            :y1="-svgH/2"
+            :x2="0"
+            :y2="svgH/2"
+            stroke="#d1d5db"
+            stroke-width="0.2"
+          />
           <!-- nut at x=0 -->
-          <line :x1="0" :y1="-svgH/2" :x2="0" :y2="svgH/2" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.2"/>
+          <line
+            :x1="0"
+            :y1="-svgH/2"
+            :x2="0"
+            :y2="svgH/2"
+            stroke="#94a3b8"
+            stroke-dasharray="2,2"
+            stroke-width="0.2"
+          />
           <!-- scale tick -->
-          <line :x1="scale" y1="-3" :x2="scale" y2="3" stroke="#94a3b8" stroke-width="0.3"/>
-          <text :x="scale + 1" y="-2" font-size="2" fill="#64748b">SL</text>
+          <line
+            :x1="scale"
+            y1="-3"
+            :x2="scale"
+            y2="3"
+            stroke="#94a3b8"
+            stroke-width="0.3"
+          />
+          <text
+            :x="scale + 1"
+            y="-2"
+            font-size="2"
+            fill="#64748b"
+          >SL</text>
 
           <!-- saddle line -->
-          <line :x1="treble.x" :y1="treble.y" :x2="bass.x" :y2="bass.y" stroke="#0ea5e9" stroke-width="0.5"/>
+          <line
+            :x1="treble.x"
+            :y1="treble.y"
+            :x2="bass.x"
+            :y2="bass.y"
+            stroke="#0ea5e9"
+            stroke-width="0.5"
+          />
           <!-- slot polygon -->
-          <polygon :points="slotPolygonPoints" fill="rgba(14,165,233,0.25)" stroke="#0284c7" stroke-width="0.4"/>
+          <polygon
+            :points="slotPolygonPoints"
+            fill="rgba(14,165,233,0.25)"
+            stroke="#0284c7"
+            stroke-width="0.4"
+          />
 
           <!-- labels -->
-          <circle :cx="treble.x" :cy="treble.y" r="0.7" fill="#0ea5e9"/>
-          <text :x="treble.x + 1" :y="treble.y - 1" font-size="2" fill="#0ea5e9">Treble</text>
-          <circle :cx="bass.x" :cy="bass.y" r="0.7" fill="#0ea5e9"/>
-          <text :x="bass.x + 1" :y="bass.y - 1" font-size="2" fill="#0ea5e9">Bass</text>
+          <circle
+            :cx="treble.x"
+            :cy="treble.y"
+            r="0.7"
+            fill="#0ea5e9"
+          />
+          <text
+            :x="treble.x + 1"
+            :y="treble.y - 1"
+            font-size="2"
+            fill="#0ea5e9"
+          >Treble</text>
+          <circle
+            :cx="bass.x"
+            :cy="bass.y"
+            r="0.7"
+            fill="#0ea5e9"
+          />
+          <text
+            :x="bass.x + 1"
+            :y="bass.y - 1"
+            font-size="2"
+            fill="#0ea5e9"
+          >Bass</text>
         </svg>
 
         <div class="bc-row gap">
-          <button class="btn" @click="copyJSON">Copy JSON</button>
-          <button class="btn" @click="downloadSVG">Download SVG</button>
-          <button class="btn btn-export" @click="exportDXF">Export DXF</button>
+          <button
+            class="btn"
+            @click="copyJSON"
+          >
+            Copy JSON
+          </button>
+          <button
+            class="btn"
+            @click="downloadSVG"
+          >
+            Download SVG
+          </button>
+          <button
+            class="btn btn-export"
+            @click="exportDXF"
+          >
+            Export DXF
+          </button>
         </div>
       </div>
     </section>

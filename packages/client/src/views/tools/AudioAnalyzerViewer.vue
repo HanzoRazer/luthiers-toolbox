@@ -3,10 +3,18 @@
     <header class="header">
       <div class="header-row">
         <h1>🎛️ Audio Analyzer Evidence Viewer</h1>
-        <div v-if="cursorFreqHz !== null" class="cursor-pill" :title="`Linked cursor @ ${cursorFreqHz.toFixed(2)} Hz`">
+        <div
+          v-if="cursorFreqHz !== null"
+          class="cursor-pill"
+          :title="`Linked cursor @ ${cursorFreqHz.toFixed(2)} Hz`"
+        >
           <span class="cursor-pill-label">Cursor</span>
           <code class="cursor-pill-val">{{ cursorFreqHz.toFixed(2) }} Hz</code>
-          <button class="cursor-pill-clear" @click="clearCursorOnly" aria-label="Clear cursor">
+          <button
+            class="cursor-pill-clear"
+            aria-label="Clear cursor"
+            @click="clearCursorOnly"
+          >
             ✕
           </button>
         </div>
@@ -17,67 +25,121 @@
       </p>
     </header>
 
-    <section class="drop" @dragover.prevent @drop.prevent="onDrop">
+    <section
+      class="drop"
+      @dragover.prevent
+      @drop.prevent="onDrop"
+    >
       <div class="drop-inner">
-        <div class="drop-title">Drop an evidence ZIP here</div>
-        <div class="drop-sub">or</div>
-        <input type="file" accept=".zip" @change="onPick" />
+        <div class="drop-title">
+          Drop an evidence ZIP here
+        </div>
+        <div class="drop-sub">
+          or
+        </div>
+        <input
+          type="file"
+          accept=".zip"
+          @change="onPick"
+        >
       </div>
     </section>
 
-    <section v-if="err" class="err">
+    <section
+      v-if="err"
+      class="err"
+    >
       <strong>Error:</strong> {{ err }}
     </section>
 
-    <section v-if="pack" class="grid">
+    <section
+      v-if="pack"
+      class="grid"
+    >
       <!-- Pack Metadata -->
       <div class="card">
         <h2>Pack Summary</h2>
         <div class="kv">
           <div><span>schema</span><code>{{ pack.schema_id }}</code></div>
           <div><span>created_at_utc</span><code>{{ pack.created_at_utc || "-" }}</code></div>
-          <div v-if="pack.source_capdir"><span>source_capdir</span><code>{{ pack.source_capdir }}</code></div>
-          <div v-if="pack.detected_phase"><span>detected_phase</span><code>{{ pack.detected_phase }}</code></div>
+          <div v-if="pack.source_capdir">
+            <span>source_capdir</span><code>{{ pack.source_capdir }}</code>
+          </div>
+          <div v-if="pack.detected_phase">
+            <span>detected_phase</span><code>{{ pack.detected_phase }}</code>
+          </div>
           <div><span>measurement_only</span><code>{{ pack.measurement_only ? "Yes" : "No" }}</code></div>
-          <div v-if="pack.interpretation"><span>interpretation</span><code>{{ pack.interpretation }}</code></div>
+          <div v-if="pack.interpretation">
+            <span>interpretation</span><code>{{ pack.interpretation }}</code>
+          </div>
           <div><span>files</span><code>{{ pack.files.length }}</code></div>
         </div>
       </div>
 
       <!-- Validation Report -->
-      <div class="card validation-card" :class="validationStatusClass">
+      <div
+        class="card validation-card"
+        :class="validationStatusClass"
+      >
         <h2>
           <span class="validation-icon">{{ validationIcon }}</span>
           Validation Report
         </h2>
-        <div v-if="!pack.validation" class="validation-unknown">
+        <div
+          v-if="!pack.validation"
+          class="validation-unknown"
+        >
           <p>No validation_report.json found in pack.</p>
-          <p class="muted">Legacy packs may not include validation data.</p>
+          <p class="muted">
+            Legacy packs may not include validation data.
+          </p>
         </div>
-        <div v-else class="validation-content">
+        <div
+          v-else
+          class="validation-content"
+        >
           <div class="validation-status">
-            <span class="validation-badge" :class="{ pass: pack.validation.passed, fail: !pack.validation.passed }">
+            <span
+              class="validation-badge"
+              :class="{ pass: pack.validation.passed, fail: !pack.validation.passed }"
+            >
               {{ pack.validation.passed ? "PASS" : "FAIL" }}
             </span>
           </div>
           <div class="kv">
             <div><span>errors</span><code>{{ pack.validation.errors.length }}</code></div>
             <div><span>warnings</span><code>{{ pack.validation.warnings.length }}</code></div>
-            <div v-if="pack.validation.schema_id"><span>schema_id</span><code>{{ pack.validation.schema_id }}</code></div>
-            <div v-if="pack.validation.validated_at"><span>validated_at</span><code>{{ pack.validation.validated_at }}</code></div>
+            <div v-if="pack.validation.schema_id">
+              <span>schema_id</span><code>{{ pack.validation.schema_id }}</code>
+            </div>
+            <div v-if="pack.validation.validated_at">
+              <span>validated_at</span><code>{{ pack.validation.validated_at }}</code>
+            </div>
           </div>
-          <details v-if="pack.validation.errors.length > 0" class="validation-details">
+          <details
+            v-if="pack.validation.errors.length > 0"
+            class="validation-details"
+          >
             <summary>Errors ({{ pack.validation.errors.length }})</summary>
             <ul class="validation-list">
-              <li v-for="(e, i) in pack.validation.errors" :key="'err-' + i">
+              <li
+                v-for="(e, i) in pack.validation.errors"
+                :key="'err-' + i"
+              >
                 <code>{{ e.path }}</code>: {{ e.message }}
               </li>
             </ul>
           </details>
-          <details v-if="pack.validation.warnings.length > 0" class="validation-details">
+          <details
+            v-if="pack.validation.warnings.length > 0"
+            class="validation-details"
+          >
             <summary>Warnings ({{ pack.validation.warnings.length }})</summary>
             <ul class="validation-list">
-              <li v-for="(w, i) in pack.validation.warnings" :key="'warn-' + i">
+              <li
+                v-for="(w, i) in pack.validation.warnings"
+                :key="'warn-' + i"
+              >
                 <code>{{ w.path }}</code>: {{ w.message }}
               </li>
             </ul>
@@ -89,9 +151,20 @@
       <div class="card">
         <h2>Files</h2>
         <div class="filter-bar">
-          <select v-model="kindFilter" class="filter-select">
-            <option value="">All kinds</option>
-            <option v-for="k in uniqueKinds" :key="k" :value="k">{{ k }}</option>
+          <select
+            v-model="kindFilter"
+            class="filter-select"
+          >
+            <option value="">
+              All kinds
+            </option>
+            <option
+              v-for="k in uniqueKinds"
+              :key="k"
+              :value="k"
+            >
+              {{ k }}
+            </option>
           </select>
           <span class="file-count">{{ filteredFiles.length }} file(s)</span>
         </div>
@@ -101,7 +174,7 @@
               <th>kind</th>
               <th>path</th>
               <th>bytes</th>
-              <th></th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -110,11 +183,28 @@
               :key="f.relpath"
               :class="{ active: activePath === f.relpath }"
             >
-              <td><code class="kind-badge" :data-category="getCategory(f.kind)">{{ f.kind }}</code></td>
-              <td class="mono path-cell" :title="f.relpath">{{ f.relpath }}</td>
-              <td class="mono">{{ formatBytes(f.bytes) }}</td>
               <td>
-                <button class="btn" @click="selectFile(f.relpath)">View</button>
+                <code
+                  class="kind-badge"
+                  :data-category="getCategory(f.kind)"
+                >{{ f.kind }}</code>
+              </td>
+              <td
+                class="mono path-cell"
+                :title="f.relpath"
+              >
+                {{ f.relpath }}
+              </td>
+              <td class="mono">
+                {{ formatBytes(f.bytes) }}
+              </td>
+              <td>
+                <button
+                  class="btn"
+                  @click="selectFile(f.relpath)"
+                >
+                  View
+                </button>
               </td>
             </tr>
           </tbody>
@@ -124,7 +214,10 @@
       <!-- Preview Panel -->
       <div class="card wide">
         <h2>Preview</h2>
-        <div v-if="activePath && activeEntry" class="preview-container">
+        <div
+          v-if="activePath && activeEntry"
+          class="preview-container"
+        >
           <div class="preview-split">
             <div class="preview-main">
               <component
@@ -139,19 +232,31 @@
 
             <aside class="preview-side">
               <div class="side-header">
-                <div class="side-title">Selection Details</div>
-                <button class="btn btn-small" :disabled="!selectedPeak" @click="clearSelectedPeak">
+                <div class="side-title">
+                  Selection Details
+                </div>
+                <button
+                  class="btn btn-small"
+                  :disabled="!selectedPeak"
+                  @click="clearSelectedPeak"
+                >
                   Clear
                 </button>
               </div>
 
-              <div v-if="!selectedPeak" class="side-empty">
+              <div
+                v-if="!selectedPeak"
+                class="side-empty"
+              >
                 <p class="muted">
                   Click a peak marker in the spectrum chart to inspect it here.
                 </p>
               </div>
 
-              <div v-else class="side-body">
+              <div
+                v-else
+                class="side-body"
+              >
                 <div class="side-kv">
                   <div><span>source</span><code>{{ selectionSource }}</code></div>
                   <div><span>point</span><code>{{ selectedPeak.pointId || "—" }}</code></div>
@@ -159,15 +264,23 @@
                     <span>freq_hz</span>
                     <code>{{ Number.isFinite(selectedPeak.freq_hz) ? selectedPeak.freq_hz.toFixed(2) : "—" }}</code>
                   </div>
-                  <div v-if="selectedPeak.label"><span>label</span><code>{{ selectedPeak.label }}</code></div>
+                  <div v-if="selectedPeak.label">
+                    <span>label</span><code>{{ selectedPeak.label }}</code>
+                  </div>
                   <div><span>file</span><code class="mono">{{ selectedPeak.spectrumRelpath }}</code></div>
                   <div v-if="selectedPeak.peaksRelpath">
                     <span>analysis</span><code class="mono">{{ selectedPeak.peaksRelpath }}</code>
                   </div>
                 </div>
 
-                <details v-if="selectionSource === 'wsi'" class="side-raw" open>
-                  <summary class="side-summary">WSI row fields</summary>
+                <details
+                  v-if="selectionSource === 'wsi'"
+                  class="side-raw"
+                  open
+                >
+                  <summary class="side-summary">
+                    WSI row fields
+                  </summary>
                   <div class="side-kv">
                     <div><span>wsi</span><code>{{ fmtNum(selectedWsiRow?.wsi) }}</code></div>
                     <div><span>coh_mean</span><code>{{ fmtNum(selectedWsiRow?.coh_mean) }}</code></div>
@@ -179,30 +292,47 @@
                 </details>
 
                 <div class="side-actions">
-                  <button class="btn" :disabled="!selectedPeak.pointId" @click="jumpToPointAudio">
+                  <button
+                    class="btn"
+                    :disabled="!selectedPeak.pointId"
+                    @click="jumpToPointAudio"
+                  >
                     ▶ Open point audio
                   </button>
-                  <div v-if="audioJumpError" class="side-warn">
+                  <div
+                    v-if="audioJumpError"
+                    class="side-warn"
+                  >
                     {{ audioJumpError }}
                   </div>
                 </div>
 
-                <details class="side-raw" open>
-                  <summary class="side-summary">Raw selection JSON</summary>
+                <details
+                  class="side-raw"
+                  open
+                >
+                  <summary class="side-summary">
+                    Raw selection JSON
+                  </summary>
                   <pre class="side-pre">{{ selectedPeak.rawPretty }}</pre>
                 </details>
               </div>
             </aside>
           </div>
         </div>
-        <div v-else class="placeholder">
+        <div
+          v-else
+          class="placeholder"
+        >
           <p>Select a file from the list above to preview.</p>
         </div>
       </div>
 
       <!-- Pack Debug Panel -->
       <details class="card wide pack-debug">
-        <summary class="debug-summary">🔍 Pack Debug Info</summary>
+        <summary class="debug-summary">
+          🔍 Pack Debug Info
+        </summary>
         <div class="debug-content">
           <div class="debug-grid">
             <div class="debug-section">
@@ -242,11 +372,25 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="f in pack.files" :key="f.relpath">
-                  <td><code class="kind-badge" :data-category="getCategory(f.kind)">{{ f.kind }}</code></td>
-                  <td class="mono">{{ f.relpath }}</td>
-                  <td class="mono">{{ f.bytes }}</td>
-                  <td class="mono hash">{{ f.sha256?.slice(0, 12) || "—" }}…</td>
+                <tr
+                  v-for="f in pack.files"
+                  :key="f.relpath"
+                >
+                  <td>
+                    <code
+                      class="kind-badge"
+                      :data-category="getCategory(f.kind)"
+                    >{{ f.kind }}</code>
+                  </td>
+                  <td class="mono">
+                    {{ f.relpath }}
+                  </td>
+                  <td class="mono">
+                    {{ f.bytes }}
+                  </td>
+                  <td class="mono hash">
+                    {{ f.sha256?.slice(0, 12) || "—" }}…
+                  </td>
                 </tr>
               </tbody>
             </table>

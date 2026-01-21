@@ -2,8 +2,12 @@
   <div class="border rounded-lg bg-white p-3 text-[11px] space-y-2">
     <div class="flex items-center justify-between gap-2">
       <div>
-        <div class="font-semibold text-gray-800">Job Intelligence Summary</div>
-        <div class="text-[10px] text-gray-500">Patterns across machines, woods, and review gates</div>
+        <div class="font-semibold text-gray-800">
+          Job Intelligence Summary
+        </div>
+        <div class="text-[10px] text-gray-500">
+          Patterns across machines, woods, and review gates
+        </div>
       </div>
       <div class="flex items-center gap-2 text-[10px]">
         <button
@@ -20,23 +24,40 @@
     <div class="flex flex-wrap items-center gap-2 text-[10px]">
       <label class="flex items-center gap-1">
         Machine
-        <select v-model="filterMachine" class="border rounded px-1 py-0.5 text-[10px] min-w-[140px]">
+        <select
+          v-model="filterMachine"
+          class="border rounded px-1 py-0.5 text-[10px] min-w-[140px]"
+        >
           <option value="">All</option>
-          <option v-for="m in machineOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+          <option
+            v-for="m in machineOptions"
+            :key="m.value"
+            :value="m.value"
+          >{{ m.label }}</option>
         </select>
       </label>
 
       <label class="flex items-center gap-1">
         Wood
-        <select v-model="filterWood" class="border rounded px-1 py-0.5 text-[10px] min-w-[100px]">
+        <select
+          v-model="filterWood"
+          class="border rounded px-1 py-0.5 text-[10px] min-w-[100px]"
+        >
           <option value="">All</option>
-          <option v-for="w in woodOptions" :key="w" :value="w">{{ w }}</option>
+          <option
+            v-for="w in woodOptions"
+            :key="w"
+            :value="w"
+          >{{ w }}</option>
         </select>
       </label>
 
       <label class="flex items-center gap-1">
         Limit
-        <select v-model.number="limit" class="border rounded px-1 py-0.5 text-[10px]">
+        <select
+          v-model.number="limit"
+          class="border rounded px-1 py-0.5 text-[10px]"
+        >
           <option :value="20">20</option>
           <option :value="50">50</option>
           <option :value="100">100</option>
@@ -46,29 +67,56 @@
       <span class="text-[10px] text-gray-500">{{ insights.length }} insights loaded</span>
     </div>
 
-    <div v-if="errorText" class="text-[10px] text-red-600">{{ errorText }}</div>
+    <div
+      v-if="errorText"
+      class="text-[10px] text-red-600"
+    >
+      {{ errorText }}
+    </div>
 
-    <div v-if="!loading && !insights.length && !errorText" class="text-[10px] text-gray-500">
+    <div
+      v-if="!loading && !insights.length && !errorText"
+      class="text-[10px] text-gray-500"
+    >
       No insights available yet. Run some jobs through the pipeline to populate this view.
     </div>
 
-    <div v-else class="space-y-2">
+    <div
+      v-else
+      class="space-y-2"
+    >
       <div class="grid grid-cols-4 gap-2 text-[10px]">
         <div class="border rounded p-2 bg-gray-50">
-          <div class="text-gray-500">Below gate</div>
-          <div class="text-xs font-semibold text-emerald-800">{{ counts.below_gate }}</div>
+          <div class="text-gray-500">
+            Below gate
+          </div>
+          <div class="text-xs font-semibold text-emerald-800">
+            {{ counts.below_gate }}
+          </div>
         </div>
         <div class="border rounded p-2 bg-gray-50">
-          <div class="text-gray-500">Near gate</div>
-          <div class="text-xs font-semibold text-amber-800">{{ counts.near_gate }}</div>
+          <div class="text-gray-500">
+            Near gate
+          </div>
+          <div class="text-xs font-semibold text-amber-800">
+            {{ counts.near_gate }}
+          </div>
         </div>
         <div class="border rounded p-2 bg-gray-50">
-          <div class="text-gray-500">Over gate</div>
-          <div class="text-xs font-semibold text-red-700">{{ counts.over_gate }}</div>
+          <div class="text-gray-500">
+            Over gate
+          </div>
+          <div class="text-xs font-semibold text-red-700">
+            {{ counts.over_gate }}
+          </div>
         </div>
         <div class="border rounded p-2 bg-gray-50">
-          <div class="text-gray-500">Blocked</div>
-          <div class="text-xs font-semibold text-red-700">{{ counts.blocked }}</div>
+          <div class="text-gray-500">
+            Blocked
+          </div>
+          <div class="text-xs font-semibold text-red-700">
+            {{ counts.blocked }}
+          </div>
         </div>
       </div>
 
@@ -76,21 +124,50 @@
         <table class="min-w-full text-[10px] whitespace-nowrap">
           <thead class="border-b bg-gray-50">
             <tr>
-              <th class="px-2 py-1 text-left">Job</th>
-              <th class="px-2 py-1 text-left">Machine</th>
-              <th class="px-2 py-1 text-left">Wood</th>
-              <th class="px-2 py-1 text-right">Gate %</th>
-              <th class="px-2 py-1 text-right">Review %</th>
-              <th class="px-2 py-1 text-right">Δ %</th>
-              <th class="px-2 py-1 text-left">Class</th>
-              <th class="px-2 py-1 text-left">Tags</th>
+              <th class="px-2 py-1 text-left">
+                Job
+              </th>
+              <th class="px-2 py-1 text-left">
+                Machine
+              </th>
+              <th class="px-2 py-1 text-left">
+                Wood
+              </th>
+              <th class="px-2 py-1 text-right">
+                Gate %
+              </th>
+              <th class="px-2 py-1 text-right">
+                Review %
+              </th>
+              <th class="px-2 py-1 text-right">
+                Δ %
+              </th>
+              <th class="px-2 py-1 text-left">
+                Class
+              </th>
+              <th class="px-2 py-1 text-left">
+                Tags
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="i in filteredInsights" :key="i.job_id" class="border-b last:border-0">
-              <td class="px-2 py-1 max-w-[180px] truncate" :title="i.job_name || ''">{{ i.job_name || '(unnamed)' }}</td>
-              <td class="px-2 py-1 max-w-[160px] truncate">{{ i.machine_name || i.machine_id || '—' }}</td>
-              <td class="px-2 py-1">{{ i.wood_hint || '—' }}</td>
+            <tr
+              v-for="i in filteredInsights"
+              :key="i.job_id"
+              class="border-b last:border-0"
+            >
+              <td
+                class="px-2 py-1 max-w-[180px] truncate"
+                :title="i.job_name || ''"
+              >
+                {{ i.job_name || '(unnamed)' }}
+              </td>
+              <td class="px-2 py-1 max-w-[160px] truncate">
+                {{ i.machine_name || i.machine_id || '—' }}
+              </td>
+              <td class="px-2 py-1">
+                {{ i.wood_hint || '—' }}
+              </td>
               <td class="px-2 py-1 text-right">
                 <span v-if="i.gate_pct != null">{{ i.gate_pct.toFixed(1) }}</span>
                 <span v-else>—</span>
@@ -104,9 +181,15 @@
                 <span v-else>—</span>
               </td>
               <td class="px-2 py-1">
-                <span class="px-2 py-0.5 rounded-full" :class="classificationClass(i)">{{ i.classification }}</span>
+                <span
+                  class="px-2 py-0.5 rounded-full"
+                  :class="classificationClass(i)"
+                >{{ i.classification }}</span>
               </td>
-              <td class="px-2 py-1 max-w-[180px] truncate" :title="i.tags.join(', ')">
+              <td
+                class="px-2 py-1 max-w-[180px] truncate"
+                :title="i.tags.join(', ')"
+              >
                 <span
                   v-for="tag in i.tags"
                   :key="tag"

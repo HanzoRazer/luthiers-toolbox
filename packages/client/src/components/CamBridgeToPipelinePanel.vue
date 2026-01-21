@@ -142,7 +142,7 @@ async function runPreset(presetId: string) {
         type="text"
         placeholder="e.g., Bridge Pocket 6mm"
         :disabled="saving"
-      />
+      >
     </div>
 
     <div class="form-group">
@@ -153,7 +153,7 @@ async function runPreset(presetId: string) {
         type="text"
         placeholder="e.g., GRBL"
         :disabled="saving"
-      />
+      >
     </div>
 
     <div class="form-group">
@@ -164,20 +164,37 @@ async function runPreset(presetId: string) {
         type="text"
         placeholder="e.g., shapeoko_pro"
         :disabled="saving"
-      />
+      >
     </div>
 
     <div class="button-group">
-      <button @click="savePreset(false)" :disabled="saving || !name.trim()">
+      <button
+        :disabled="saving || !name.trim()"
+        @click="savePreset(false)"
+      >
         {{ saving ? 'Saving...' : 'Save preset' }}
       </button>
-      <button @click="savePreset(true)" :disabled="saving || !name.trim()" class="primary">
+      <button
+        :disabled="saving || !name.trim()"
+        class="primary"
+        @click="savePreset(true)"
+      >
         {{ saving ? 'Saving...' : 'Save & Run' }}
       </button>
     </div>
 
-    <div v-if="error" class="error-message">{{ error }}</div>
-    <div v-if="success" class="success-message">{{ success }}</div>
+    <div
+      v-if="error"
+      class="error-message"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-if="success"
+      class="success-message"
+    >
+      {{ success }}
+    </div>
 
     <details class="spec-preview">
       <summary>Spec Preview</summary>

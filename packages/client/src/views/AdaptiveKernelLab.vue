@@ -335,7 +335,9 @@ onMounted(() => {
 
 <template>
   <div class="p-6 space-y-6">
-    <h1 class="text-2xl font-bold">Adaptive Kernel Dev Lab</h1>
+    <h1 class="text-2xl font-bold">
+      Adaptive Kernel Dev Lab
+    </h1>
     <p class="text-sm text-gray-600">
       Direct playground for
       <code>/api/cam/pocket/adaptive/plan</code>. Edit loops, adjust parameters,
@@ -345,7 +347,9 @@ onMounted(() => {
     <!-- Controls -->
     <section class="border rounded p-4 bg-white space-y-4">
       <div class="flex items-center justify-between gap-2">
-        <h2 class="font-semibold text-lg">Parameters</h2>
+        <h2 class="font-semibold text-lg">
+          Parameters
+        </h2>
         <button
           class="border rounded px-3 py-1 text-xs hover:bg-gray-50"
           type="button"
@@ -358,7 +362,10 @@ onMounted(() => {
       <div class="grid gap-3 md:grid-cols-4 text-sm">
         <label class="flex flex-col gap-1">
           Units
-          <select v-model="units" class="border rounded px-2 py-1">
+          <select
+            v-model="units"
+            class="border rounded px-2 py-1"
+          >
             <option value="mm">mm</option>
             <option value="inch">inch</option>
           </select>
@@ -370,7 +377,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Stepover
@@ -379,7 +386,7 @@ onMounted(() => {
             type="number"
             step="0.01"
             class="border rounded px-2 py-1"
-          />
+          >
           <span class="text-[10px] text-gray-500">fraction of tool_d</span>
         </label>
         <label class="flex flex-col gap-1">
@@ -389,7 +396,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Margin
@@ -398,11 +405,14 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Strategy
-          <select v-model="strategy" class="border rounded px-2 py-1">
+          <select
+            v-model="strategy"
+            class="border rounded px-2 py-1"
+          >
             <option value="Spiral">Spiral</option>
             <option value="Lanes">Lanes</option>
           </select>
@@ -414,7 +424,7 @@ onMounted(() => {
             type="number"
             step="10"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Safe Z
@@ -423,7 +433,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Rough Z
@@ -432,7 +442,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
       </div>
 
@@ -444,7 +454,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Target stepover
@@ -453,7 +463,7 @@ onMounted(() => {
             type="number"
             step="0.01"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Slowdown feed %
@@ -462,10 +472,13 @@ onMounted(() => {
             type="number"
             step="1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex items-center gap-2 mt-6 text-sm">
-          <input type="checkbox" v-model="useTrochoids" />
+          <input
+            v-model="useTrochoids"
+            type="checkbox"
+          >
           Use trochoids
         </label>
         <label class="flex flex-col gap-1">
@@ -475,7 +488,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="flex flex-col gap-1">
           Trochoid pitch
@@ -484,7 +497,7 @@ onMounted(() => {
             type="number"
             step="0.1"
             class="border rounded px-2 py-1"
-          />
+          >
         </label>
       </div>
 
@@ -497,14 +510,19 @@ onMounted(() => {
         {{ busy ? "Running..." : "Run Adaptive Kernel" }}
       </button>
 
-      <p v-if="errorMsg" class="text-sm text-red-600">
+      <p
+        v-if="errorMsg"
+        class="text-sm text-red-600"
+      >
         {{ errorMsg }}
       </p>
     </section>
 
     <!-- Loops JSON editor + preview -->
     <section class="border rounded p-4 bg-white space-y-4">
-      <h2 class="font-semibold text-lg">Loops & Overlays</h2>
+      <h2 class="font-semibold text-lg">
+        Loops & Overlays
+      </h2>
       <div class="grid gap-4 md:grid-cols-2">
         <div class="flex flex-col gap-2 text-sm">
           <label class="font-semibold">Loops JSON</label>
@@ -515,7 +533,7 @@ onMounted(() => {
           <textarea
             v-model="loopsText"
             class="border rounded px-2 py-1 text-xs font-mono min-h-[220px]"
-          ></textarea>
+          />
         </div>
 
         <div class="flex flex-col gap-2">
@@ -523,7 +541,10 @@ onMounted(() => {
             <label class="font-semibold text-sm">2D Preview</label>
             <div class="flex items-center gap-3 text-[11px] text-gray-600">
               <label class="inline-flex items-center gap-1">
-                <input type="checkbox" v-model="showToolpathPreview" />
+                <input
+                  v-model="showToolpathPreview"
+                  type="checkbox"
+                >
                 <span>Show toolpath preview</span>
               </label>
             </div>
@@ -537,7 +558,11 @@ onMounted(() => {
               class="w-full h-full"
             >
               <!-- pocket loops -->
-              <g fill="none" stroke="#0f766e" stroke-width="0.3">
+              <g
+                fill="none"
+                stroke="#0f766e"
+                stroke-width="0.3"
+              >
                 <polyline
                   v-for="(loop, idx) in previewLoops"
                   :key="idx"
@@ -575,25 +600,28 @@ onMounted(() => {
                 />
               </g>
             </svg>
-            <div v-else class="text-xs text-gray-500">
+            <div
+              v-else
+              class="text-xs text-gray-500"
+            >
               No loops to display. Load demo or paste JSON.
             </div>
           </div>
           
           <div class="flex gap-3 text-[11px] text-gray-500">
             <div class="inline-flex items-center gap-1">
-              <span class="inline-block w-4 h-[2px] bg-[#0f766e]"></span>
+              <span class="inline-block w-4 h-[2px] bg-[#0f766e]" />
               <span>Boundary loops</span>
             </div>
             <div class="inline-flex items-center gap-1">
-              <span class="inline-block w-4 h-[2px] bg-[#1d4ed8]"></span>
+              <span class="inline-block w-4 h-[2px] bg-[#1d4ed8]" />
               <span>Cut moves</span>
             </div>
             <div class="inline-flex items-center gap-1">
               <span
                 class="inline-block w-4 h-[2px]"
                 style="border-bottom:1px dashed #9ca3af"
-              ></span>
+              />
               <span>Rapid moves</span>
             </div>
           </div>
@@ -602,11 +630,18 @@ onMounted(() => {
     </section>
 
     <!-- Stats + raw JSON -->
-    <section v-if="result" class="border rounded p-4 bg-white space-y-4">
-      <h2 class="font-semibold text-lg">Kernel Output</h2>
+    <section
+      v-if="result"
+      class="border rounded p-4 bg-white space-y-4"
+    >
+      <h2 class="font-semibold text-lg">
+        Kernel Output
+      </h2>
       <div class="grid gap-4 md:grid-cols-2 text-xs">
         <div class="space-y-1">
-          <h3 class="font-semibold text-sm">Stats</h3>
+          <h3 class="font-semibold text-sm">
+            Stats
+          </h3>
           <p v-if="result.stats.length_mm != null">
             <b>Length:</b> {{ result.stats.length_mm.toFixed?.(1) ?? result.stats.length_mm }}
             mm
@@ -661,9 +696,14 @@ onMounted(() => {
     <!-- Pipeline op export -->
     <section class="border rounded p-4 bg-white space-y-2">
       <div class="flex items-center justify-between">
-        <h2 class="font-semibold text-lg">Export as Pipeline Op</h2>
+        <h2 class="font-semibold text-lg">
+          Export as Pipeline Op
+        </h2>
         <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" v-model="showPipelineSnippet" />
+          <input
+            v-model="showPipelineSnippet"
+            type="checkbox"
+          >
           <span>Show pipeline snippet</span>
         </label>
       </div>
@@ -676,7 +716,10 @@ onMounted(() => {
         <code>workspace_id</code> per job.
       </p>
 
-      <div v-if="showPipelineSnippet" class="space-y-2">
+      <div
+        v-if="showPipelineSnippet"
+        class="space-y-2"
+      >
         <textarea
           readonly
           class="border rounded px-2 py-1 text-xs font-mono w-full min-h-[180px] bg-gray-50"

@@ -1409,114 +1409,240 @@ async function exportGreenOnlyPackageZip() {
         </div>
       </div>
       <div class="meta">
-        <span v-if="requestId" class="reqid" title="X-Request-Id">req: {{ requestId }}</span>
-        <button class="btn" @click="load" :disabled="loading || exporting">Refresh</button>
+        <span
+          v-if="requestId"
+          class="reqid"
+          title="X-Request-Id"
+        >req: {{ requestId }}</span>
+        <button
+          class="btn"
+          :disabled="loading || exporting"
+          @click="load"
+        >
+          Refresh
+        </button>
 
         <!-- Bulk export (GREEN-only), blocked if any undecided -->
-        <button class="btn" @click="exportGreenOnlyZips" :disabled="!canExportGreenOnly"
-          :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'">
+        <button
+          class="btn"
+          :disabled="!canExportGreenOnly"
+          :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'"
+          @click="exportGreenOnlyZips"
+        >
           {{ exporting ? "Exporting…" : "Export GREEN zips" }}
         </button>
       </div>
     </div>
 
-    <p v-if="error" class="error">Error: {{ error }}</p>
-    <p v-if="saveError" class="error">Save error: {{ saveError }}</p>
-    <p v-if="exportError" class="error">Export: {{ exportError }}</p>
-    <p v-if="undoError" class="error">Undo: {{ undoError }}</p>
+    <p
+      v-if="error"
+      class="error"
+    >
+      Error: {{ error }}
+    </p>
+    <p
+      v-if="saveError"
+      class="error"
+    >
+      Save error: {{ saveError }}
+    </p>
+    <p
+      v-if="exportError"
+      class="error"
+    >
+      Export: {{ exportError }}
+    </p>
+    <p
+      v-if="undoError"
+      class="error"
+    >
+      Undo: {{ undoError }}
+    </p>
 
     <!-- Bundle D: Manufacturing Summary + Bulk Package Export -->
-    <div class="mfg-topbar" v-if="!loading && candidates.length > 0">
+    <div
+      v-if="!loading && candidates.length > 0"
+      class="mfg-topbar"
+    >
       <div class="mfg-summary">
         <!-- Run Ready Badge -->
         <div class="runReady">
           <span class="runReadyLabel">Run:</span>
-          <span class="runReadyBadge" :class="runReadyBadgeClass()" :title="runReadyHover">
+          <span
+            class="runReadyBadge"
+            :class="runReadyBadgeClass()"
+            :title="runReadyHover"
+          >
             {{ runReadyLabel }}
           </span>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Total</div>
-          <div class="kpi-value">{{ candidates.length }}</div>
+          <div class="kpi-label">
+            Total
+          </div>
+          <div class="kpi-value">
+            {{ candidates.length }}
+          </div>
         </div>
         <div class="kpi kpi-green">
-          <div class="kpi-label">GREEN</div>
-          <div class="kpi-value">{{ greenCandidates.length }}</div>
+          <div class="kpi-label">
+            GREEN
+          </div>
+          <div class="kpi-value">
+            {{ greenCandidates.length }}
+          </div>
         </div>
         <div class="kpi kpi-muted">
-          <div class="kpi-label">Undecided</div>
-          <div class="kpi-value">{{ undecidedCount }}</div>
+          <div class="kpi-label">
+            Undecided
+          </div>
+          <div class="kpi-value">
+            {{ undecidedCount }}
+          </div>
         </div>
         <div class="kpi kpi-yellow">
-          <div class="kpi-label">YELLOW</div>
-          <div class="kpi-value">{{ yellowCount }}</div>
+          <div class="kpi-label">
+            YELLOW
+          </div>
+          <div class="kpi-value">
+            {{ yellowCount }}
+          </div>
         </div>
         <div class="kpi kpi-red">
-          <div class="kpi-label">RED</div>
-          <div class="kpi-value">{{ redCount }}</div>
+          <div class="kpi-label">
+            RED
+          </div>
+          <div class="kpi-value">
+            {{ redCount }}
+          </div>
         </div>
       </div>
 
       <div class="mfg-export">
-        <input v-model="bulkPackageName" class="inputSmall" placeholder="Optional package name…"
-          :disabled="bulkPackaging" />
-        <button class="btn primary" type="button" :disabled="!!exportPackageDisabledReason"
+        <input
+          v-model="bulkPackageName"
+          class="inputSmall"
+          placeholder="Optional package name…"
+          :disabled="bulkPackaging"
+        >
+        <button
+          class="btn primary"
+          type="button"
+          :disabled="!!exportPackageDisabledReason"
+          :title="exportPackageDisabledReason || 'Download one ZIP containing all GREEN candidate zips + manifest.json'"
           @click="exportGreenOnlyPackageZip"
-          :title="exportPackageDisabledReason || 'Download one ZIP containing all GREEN candidate zips + manifest.json'">
+        >
           {{ bulkPackaging ? "Packaging…" : "Export GREEN-only package" }}
         </button>
       </div>
     </div>
 
-    <p v-if="loading" class="muted">Loading candidates…</p>
-    <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
+    <p
+      v-if="loading"
+      class="muted"
+    >
+      Loading candidates…
+    </p>
+    <p
+      v-else-if="candidates.length === 0"
+      class="muted"
+    >
+      No candidates yet.
+    </p>
 
-    <div v-else class="table" :class="{ compact }">
+    <div
+      v-else
+      class="table"
+      :class="{ compact }"
+    >
       <!-- Filters -->
       <div class="filters">
         <div class="filters-left">
           <!-- micro-follow: quick chips -->
-          <div class="chipsRow" v-if="summary.total > 0">
+          <div
+            v-if="summary.total > 0"
+            class="chipsRow"
+          >
             <div class="chipsGroup">
-              <div class="small muted">Decision:</div>
-              <button type="button" :class="chipClass(decisionFilter === 'ALL', 'neutral')"
-                @click="setDecisionFilter('ALL')" title="Show all decisions">
+              <div class="small muted">
+                Decision:
+              </div>
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'ALL', 'neutral')"
+                title="Show all decisions"
+                @click="setDecisionFilter('ALL')"
+              >
                 All <span class="count">{{ summary.total }}</span>
               </button>
-              <button type="button" :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
-                @click="setDecisionFilter('UNDECIDED')" title="Show candidates that still need an explicit decision">
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
+                title="Show candidates that still need an explicit decision"
+                @click="setDecisionFilter('UNDECIDED')"
+              >
                 Needs decision <span class="count">{{ summary.decisionCounts.NEEDS_DECISION }}</span>
               </button>
-              <button type="button" :class="chipClass(decisionFilter === 'GREEN', 'good')"
-                @click="setDecisionFilter('GREEN')" title="Show GREEN-only">
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'GREEN', 'good')"
+                title="Show GREEN-only"
+                @click="setDecisionFilter('GREEN')"
+              >
                 GREEN <span class="count">{{ summary.decisionCounts.GREEN }}</span>
               </button>
-              <button type="button" :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
-                @click="setDecisionFilter('YELLOW')" title="Show YELLOW-only">
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
+                title="Show YELLOW-only"
+                @click="setDecisionFilter('YELLOW')"
+              >
                 YELLOW <span class="count">{{ summary.decisionCounts.YELLOW }}</span>
               </button>
-              <button type="button" :class="chipClass(decisionFilter === 'RED', 'bad')"
-                @click="setDecisionFilter('RED')" title="Show RED-only">
+              <button
+                type="button"
+                :class="chipClass(decisionFilter === 'RED', 'bad')"
+                title="Show RED-only"
+                @click="setDecisionFilter('RED')"
+              >
                 RED <span class="count">{{ summary.decisionCounts.RED }}</span>
               </button>
             </div>
 
             <div class="chipsGroup">
-              <div class="small muted">Status:</div>
-              <button type="button" :class="chipClass(statusFilter === 'ALL', 'neutral')"
-                @click="setStatusFilter('ALL')" title="Show all statuses">
+              <div class="small muted">
+                Status:
+              </div>
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'ALL', 'neutral')"
+                title="Show all statuses"
+                @click="setStatusFilter('ALL')"
+              >
                 All <span class="count">{{ summary.total }}</span>
               </button>
-              <button type="button" :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
-                @click="setStatusFilter('PROPOSED')" title="Show PROPOSED-only">
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
+                title="Show PROPOSED-only"
+                @click="setStatusFilter('PROPOSED')"
+              >
                 PROPOSED <span class="count">{{ summary.statusCounts.PROPOSED }}</span>
               </button>
-              <button type="button" :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
-                @click="setStatusFilter('ACCEPTED')" title="Show ACCEPTED-only">
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
+                title="Show ACCEPTED-only"
+                @click="setStatusFilter('ACCEPTED')"
+              >
                 ACCEPTED <span class="count">{{ summary.statusCounts.ACCEPTED }}</span>
               </button>
-              <button type="button" :class="chipClass(statusFilter === 'REJECTED', 'bad')"
-                @click="setStatusFilter('REJECTED')" title="Show REJECTED-only">
+              <button
+                type="button"
+                :class="chipClass(statusFilter === 'REJECTED', 'bad')"
+                title="Show REJECTED-only"
+                @click="setStatusFilter('REJECTED')"
+              >
                 REJECTED <span class="count">{{ summary.statusCounts.REJECTED }}</span>
               </button>
             </div>
@@ -1524,127 +1650,243 @@ async function exportGreenOnlyPackageZip() {
 
           <div class="field">
             <label class="muted">Decision</label>
-            <select v-model="decisionFilter" :disabled="saving || exporting || undoBusy">
-              <option value="ALL">All</option>
-              <option value="UNDECIDED">Undecided</option>
-              <option value="GREEN">GREEN</option>
-              <option value="YELLOW">YELLOW</option>
-              <option value="RED">RED</option>
+            <select
+              v-model="decisionFilter"
+              :disabled="saving || exporting || undoBusy"
+            >
+              <option value="ALL">
+                All
+              </option>
+              <option value="UNDECIDED">
+                Undecided
+              </option>
+              <option value="GREEN">
+                GREEN
+              </option>
+              <option value="YELLOW">
+                YELLOW
+              </option>
+              <option value="RED">
+                RED
+              </option>
             </select>
           </div>
 
           <div class="field">
             <label class="muted">Status</label>
-            <select v-model="statusFilter" :disabled="saving || exporting || undoBusy">
-              <option value="ALL">All</option>
-              <option value="PROPOSED">PROPOSED</option>
-              <option value="ACCEPTED">ACCEPTED</option>
-              <option value="REJECTED">REJECTED</option>
+            <select
+              v-model="statusFilter"
+              :disabled="saving || exporting || undoBusy"
+            >
+              <option value="ALL">
+                All
+              </option>
+              <option value="PROPOSED">
+                PROPOSED
+              </option>
+              <option value="ACCEPTED">
+                ACCEPTED
+              </option>
+              <option value="REJECTED">
+                REJECTED
+              </option>
             </select>
           </div>
 
           <div class="field">
             <label class="muted">Decided by</label>
-            <select v-model="filterDecidedBy" :disabled="saving || exporting || undoBusy"
-              title="Filter by operator identity">
-              <option value="ALL">All</option>
-              <option v-for="op in decidedByOptions" :key="op" :value="op">{{ op }}</option>
+            <select
+              v-model="filterDecidedBy"
+              :disabled="saving || exporting || undoBusy"
+              title="Filter by operator identity"
+            >
+              <option value="ALL">
+                All
+              </option>
+              <option
+                v-for="op in decidedByOptions"
+                :key="op"
+                :value="op"
+              >
+                {{ op }}
+              </option>
             </select>
           </div>
 
           <div class="field grow">
             <label class="muted">Search</label>
-            <input v-model="searchText" type="text" placeholder="candidate id, advisory id, note, decided_by…"
-              :disabled="saving || exporting || undoBusy" />
+            <input
+              v-model="searchText"
+              type="text"
+              placeholder="candidate id, advisory id, note, decided_by…"
+              :disabled="saving || exporting || undoBusy"
+            >
           </div>
 
           <div class="field">
             <label class="muted">Sort</label>
-            <select v-model="sortKey" :disabled="saving || exporting || undoBusy">
-              <option value="id">ID ↑</option>
-              <option value="id_desc">ID ↓</option>
-              <option value="created">Created ↑</option>
-              <option value="created_desc">Created ↓</option>
-              <option value="decided_at">Decided at ↑</option>
-              <option value="decided_at_desc">Decided at ↓</option>
-              <option value="decided_by">Decided by (A→Z)</option>
-              <option value="status">Status</option>
-              <option value="decision">Decision</option>
+            <select
+              v-model="sortKey"
+              :disabled="saving || exporting || undoBusy"
+            >
+              <option value="id">
+                ID ↑
+              </option>
+              <option value="id_desc">
+                ID ↓
+              </option>
+              <option value="created">
+                Created ↑
+              </option>
+              <option value="created_desc">
+                Created ↓
+              </option>
+              <option value="decided_at">
+                Decided at ↑
+              </option>
+              <option value="decided_at_desc">
+                Decided at ↓
+              </option>
+              <option value="decided_by">
+                Decided by (A→Z)
+              </option>
+              <option value="status">
+                Status
+              </option>
+              <option value="decision">
+                Decision
+              </option>
             </select>
           </div>
 
           <div class="field">
             <label class="muted">My operator id</label>
-            <input v-model="myOperatorId" type="text" placeholder="e.g., operator_jane"
+            <input
+              v-model="myOperatorId"
+              type="text"
+              placeholder="e.g., operator_jane"
               title="Stored locally in this browser. Used by 'Only mine' filter."
-              :disabled="saving || exporting || undoBusy" />
+              :disabled="saving || exporting || undoBusy"
+            >
           </div>
 
           <div class="field">
             <label class="muted">Stamp</label>
-            <label class="inlineCheck" :title="stampDecisionsWithOperator
-              ? (effectiveOperatorId
-                ? `Will send decided_by=${effectiveOperatorId} on decisions`
-                : 'Enable stamping, then set an operator id to actually stamp')
-              : 'Decisions will not send decided_by (backend may still set it elsewhere)'">
-              <input type="checkbox" v-model="stampDecisionsWithOperator" :disabled="saving || exporting || undoBusy" />
+            <label
+              class="inlineCheck"
+              :title="stampDecisionsWithOperator
+                ? (effectiveOperatorId
+                  ? `Will send decided_by=${effectiveOperatorId} on decisions`
+                  : 'Enable stamping, then set an operator id to actually stamp')
+                : 'Decisions will not send decided_by (backend may still set it elsewhere)'"
+            >
+              <input
+                v-model="stampDecisionsWithOperator"
+                type="checkbox"
+                :disabled="saving || exporting || undoBusy"
+              >
               decided_by on save
             </label>
           </div>
 
           <div class="field">
             <label class="muted">Only mine</label>
-            <label class="inlineCheck" title="Show only candidates decided by your operator id">
-              <input type="checkbox" v-model="filterOnlyMine"
-                :disabled="!myOperatorId.trim() || saving || exporting || undoBusy" />
+            <label
+              class="inlineCheck"
+              title="Show only candidates decided by your operator id"
+            >
+              <input
+                v-model="filterOnlyMine"
+                type="checkbox"
+                :disabled="!myOperatorId.trim() || saving || exporting || undoBusy"
+              >
               my decisions
             </label>
           </div>
         </div>
 
         <div class="filters-right">
-          <button class="btn ghost" @click="selectAllFiltered"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Select all shown rows">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0"
+            title="Select all shown rows"
+            @click="selectAllFiltered"
+          >
             Select shown
           </button>
-          <button class="btn ghost" @click="clearAllFiltered"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Clear selection for shown rows">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0"
+            title="Clear selection for shown rows"
+            @click="clearAllFiltered"
+          >
             Clear shown
           </button>
-          <button class="btn ghost" @click="invertSelectionFiltered"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Invert selection (shown rows)">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0"
+            title="Invert selection (shown rows)"
+            @click="invertSelectionFiltered"
+          >
             Invert
           </button>
 
           <label class="check">
-            <input type="checkbox" v-model="showSelectedOnly"
-              :disabled="saving || exporting || undoBusy || selectedIds.size === 0" />
+            <input
+              v-model="showSelectedOnly"
+              type="checkbox"
+              :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
+            >
             <span class="muted">Selected only</span>
           </label>
 
-          <button class="btn ghost" @click="quickUndecided" :disabled="saving || exporting || undoBusy"
-            title="Jump to undecided candidates">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy"
+            title="Jump to undecided candidates"
+            @click="quickUndecided"
+          >
             Undecided-only
           </button>
-          <button class="btn ghost" @click="clearFilters" :disabled="saving || exporting || undoBusy"
-            title="Clear all filters">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy"
+            title="Clear all filters"
+            @click="clearFilters"
+          >
             Clear filters
           </button>
 
           <div class="muted small">
             Showing <strong>{{ filteredCount }}</strong> / {{ candidates.length }}
           </div>
-          <label class="check" :title="compact ? 'Compact rows (more visible)' : 'Comfortable rows (more spacing)'">
-            <input type="checkbox" v-model="compact" />
+          <label
+            class="check"
+            :title="compact ? 'Compact rows (more visible)' : 'Comfortable rows (more spacing)'"
+          >
+            <input
+              v-model="compact"
+              type="checkbox"
+            >
             <span class="muted">{{ compact ? 'Compact' : 'Comfortable' }}</span>
           </label>
-          <div class="small muted" style="margin-top:4px;">
-            <span class="kbdhint" :title="_hotkeyHelp()">
+          <div
+            class="small muted"
+            style="margin-top:4px;"
+          >
+            <span
+              class="kbdhint"
+              :title="_hotkeyHelp()"
+            >
               Hotkeys: g/y/r · u · b · e · a · c · i · x · h · esc
             </span>
           </div>
           <div style="margin-top:8px;">
-            <button class="btn small" @click="resetViewPrefs" title="Reset filters, density, and sort (persisted)">
+            <button
+              class="btn small"
+              title="Reset filters, density, and sort (persisted)"
+              @click="resetViewPrefs"
+            >
               Reset view
             </button>
           </div>
@@ -1653,63 +1895,117 @@ async function exportGreenOnlyPackageZip() {
 
       <div class="row head">
         <div class="sel">
-          <input type="checkbox" :checked="allFilteredSelected" @change="toggleAllFiltered"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0" title="Toggle select all shown" />
+          <input
+            type="checkbox"
+            :checked="allFilteredSelected"
+            :disabled="saving || exporting || undoBusy || filteredCount === 0"
+            title="Toggle select all shown"
+            @change="toggleAllFiltered"
+          >
         </div>
         <div>Candidate</div>
         <div>Advisory</div>
         <div>Decision</div>
-        <div class="audit auditHeader" role="button" tabindex="0" @click="cycleAuditSort"
-          @keydown.enter="cycleAuditSort" @keydown.space.prevent="cycleAuditSort"
-          :title="`Sort by audit fields (current: ${auditSortLabel})`">
+        <div
+          class="audit auditHeader"
+          role="button"
+          tabindex="0"
+          :title="`Sort by audit fields (current: ${auditSortLabel})`"
+          @click="cycleAuditSort"
+          @keydown.enter="cycleAuditSort"
+          @keydown.space.prevent="cycleAuditSort"
+        >
           Audit
-          <span class="sortHint" v-if="sortKey.startsWith('decided_')">{{ auditSortArrow }}</span>
+          <span
+            v-if="sortKey.startsWith('decided_')"
+            class="sortHint"
+          >{{ auditSortArrow }}</span>
         </div>
         <div>History</div>
         <div>Status</div>
-        <div class="note">Decision Note</div>
-        <div class="copyCol">Copy</div>
-        <div class="actions">Actions</div>
+        <div class="note">
+          Decision Note
+        </div>
+        <div class="copyCol">
+          Copy
+        </div>
+        <div class="actions">
+          Actions
+        </div>
       </div>
 
       <!-- Bulk decision bar -->
-      <div class="bulkbar" v-if="candidates.length > 0">
+      <div
+        v-if="candidates.length > 0"
+        class="bulkbar"
+      >
         <div class="bulk-left">
           <span class="muted">
             Selected: <strong>{{ selectedIds.size }}</strong>
           </span>
-          <span class="muted" v-if="selectedIds.size === 0"> (select rows to bulk-set decision)</span>
+          <span
+            v-if="selectedIds.size === 0"
+            class="muted"
+          > (select rows to bulk-set decision)</span>
         </div>
         <div class="bulk-actions">
-          <button class="btn" @click="bulkSetDecision('GREEN')"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to GREEN">
+          <button
+            class="btn"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
+            title="Set selected to GREEN"
+            @click="bulkSetDecision('GREEN')"
+          >
             Bulk GREEN
           </button>
-          <button class="btn" @click="bulkSetDecision('YELLOW')"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to YELLOW">
+          <button
+            class="btn"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
+            title="Set selected to YELLOW"
+            @click="bulkSetDecision('YELLOW')"
+          >
             Bulk YELLOW
           </button>
-          <button class="btn danger" @click="bulkSetDecision('RED')"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0" title="Set selected to RED">
+          <button
+            class="btn danger"
+            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
+            title="Set selected to RED"
+            @click="bulkSetDecision('RED')"
+          >
             Bulk RED
           </button>
-          <button class="btn ghost" @click="bulkClearDecision"
-            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok" :title="bulkClearBlockedHover()">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok"
+            :title="bulkClearBlockedHover()"
+            @click="bulkClearDecision"
+          >
             Clear decision
           </button>
-          <button class="btn ghost" @click="undoLast"
+          <button
+            class="btn ghost"
             :disabled="undoBusy || saving || exporting || undoStack.length === 0"
-            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'">
+            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'"
+            @click="undoLast"
+          >
             {{ undoBusy ? "Undoing…" : "Undo last" }}
           </button>
         </div>
       </div>
 
       <!-- Undo history display -->
-      <div class="undolist" v-if="undoStack.length > 0">
-        <div class="undotitle muted">Undo history (most recent first)</div>
-        <div class="undoitem" v-for="(u, idx) in undoStack.slice(0, 5)" :key="u.ts_utc + ':' + idx"
-          :title="undoStackHover(u)">
+      <div
+        v-if="undoStack.length > 0"
+        class="undolist"
+      >
+        <div class="undotitle muted">
+          Undo history (most recent first)
+        </div>
+        <div
+          v-for="(u, idx) in undoStack.slice(0, 5)"
+          :key="u.ts_utc + ':' + idx"
+          class="undoitem"
+          :title="undoStackHover(u)"
+        >
           <span class="mono">{{ u.ts_utc }}</span>
           <span>—</span>
           <span>{{ u.label }}</span>
@@ -1717,131 +2013,273 @@ async function exportGreenOnlyPackageZip() {
       </div>
 
       <!-- Bulk decision v2 controls -->
-      <div class="bulkbar2" v-if="selectedIds.size > 0">
+      <div
+        v-if="selectedIds.size > 0"
+        class="bulkbar2"
+      >
         <div class="bulk-row">
           <label class="muted">Bulk Decision:</label>
-          <select v-model="bulkDecision" class="selectSmall" :disabled="bulkApplying || saving || exporting">
-            <option value="">— pick —</option>
-            <option value="GREEN">GREEN</option>
-            <option value="YELLOW">YELLOW</option>
-            <option value="RED">RED</option>
+          <select
+            v-model="bulkDecision"
+            class="selectSmall"
+            :disabled="bulkApplying || saving || exporting"
+          >
+            <option value="">
+              — pick —
+            </option>
+            <option value="GREEN">
+              GREEN
+            </option>
+            <option value="YELLOW">
+              YELLOW
+            </option>
+            <option value="RED">
+              RED
+            </option>
           </select>
-          <input v-model="bulkNote" class="inputSmall" placeholder="Shared note (optional)"
-            :disabled="bulkApplying || saving || exporting" />
-          <button class="btn small" :disabled="bulkApplying || saving || exporting || !bulkDecision"
-            @click="applyBulkDecision">
+          <input
+            v-model="bulkNote"
+            class="inputSmall"
+            placeholder="Shared note (optional)"
+            :disabled="bulkApplying || saving || exporting"
+          >
+          <button
+            class="btn small"
+            :disabled="bulkApplying || saving || exporting || !bulkDecision"
+            @click="applyBulkDecision"
+          >
             {{ bulkApplying ? `Applying… (${bulkProgress?.done ?? 0}/${bulkProgress?.total ?? 0})` : 'Apply' }}
           </button>
-          <label class="inlineCheck" title="When clearing decisions, also clear decision notes">
-            <input type="checkbox" v-model="bulkClearNoteToo" :disabled="bulkApplying" />
+          <label
+            class="inlineCheck"
+            title="When clearing decisions, also clear decision notes"
+          >
+            <input
+              v-model="bulkClearNoteToo"
+              type="checkbox"
+              :disabled="bulkApplying"
+            >
             clear note too
           </label>
-          <button class="btn small" :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
+          <button
+            class="btn small"
+            :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
+            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'"
             @click="clearBulkDecision"
-            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'">
+          >
             Clear decision
           </button>
-          <button class="btn ghost small" :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
-            @click="undoLastBulkAction" title="Undo last bulk action">
+          <button
+            class="btn ghost small"
+            :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
+            title="Undo last bulk action"
+            @click="undoLastBulkAction"
+          >
             Undo
           </button>
-          <button class="btn ghost small" @click="showBulkHistory = !showBulkHistory"
-            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'">
+          <button
+            class="btn ghost small"
+            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'"
+            @click="showBulkHistory = !showBulkHistory"
+          >
             {{ showBulkHistory ? 'Hide history' : `History (${bulkHistory.length})` }}
           </button>
         </div>
       </div>
 
       <!-- Bulk history panel -->
-      <div class="bulkHistory" v-if="showBulkHistory && bulkHistory.length > 0">
+      <div
+        v-if="showBulkHistory && bulkHistory.length > 0"
+        class="bulkHistory"
+      >
         <div class="bulkHistoryHeader muted">
           Bulk history (newest first)
         </div>
         <div class="bulkHistoryList">
-          <div v-for="rec in bulkHistory" :key="rec.id" class="bulkHistoryRow">
+          <div
+            v-for="rec in bulkHistory"
+            :key="rec.id"
+            class="bulkHistoryRow"
+          >
             <span class="mono small">{{ rec.at_utc }}</span>
-            <span class="badge" :class="'b' + rec.decision">{{ rec.decision }}</span>
+            <span
+              class="badge"
+              :class="'b' + rec.decision"
+            >{{ rec.decision }}</span>
             <span>{{ rec.selected_count }} items</span>
-            <span class="muted" v-if="rec.note">— {{ rec.note }}</span>
+            <span
+              v-if="rec.note"
+              class="muted"
+            >— {{ rec.note }}</span>
           </div>
         </div>
       </div>
 
-      <div v-for="c in filteredCandidates" :key="c.candidate_id" class="row clickable" :title="auditHover(c)"
-        @click="toggleOne(c.candidate_id, $event)">
+      <div
+        v-for="c in filteredCandidates"
+        :key="c.candidate_id"
+        class="row clickable"
+        :title="auditHover(c)"
+        @click="toggleOne(c.candidate_id, $event)"
+      >
         <div class="sel">
-          <input type="checkbox" :checked="selectedIds.has(c.candidate_id)"
-            @click.stop="toggleOne(c.candidate_id, $event)" :disabled="saving || exporting || undoBusy"
-            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'" />
+          <input
+            type="checkbox"
+            :checked="selectedIds.has(c.candidate_id)"
+            :disabled="saving || exporting || undoBusy"
+            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'"
+            @click.stop="toggleOne(c.candidate_id, $event)"
+          >
         </div>
-        <div class="mono">{{ c.candidate_id }}</div>
-        <div class="mono">{{ c.advisory_id ?? "—" }}</div>
+        <div class="mono">
+          {{ c.candidate_id }}
+        </div>
+        <div class="mono">
+          {{ c.advisory_id ?? "—" }}
+        </div>
 
         <div class="decision-cell">
-          <span class="badge" :data-badge="decisionBadge(c.decision)">
+          <span
+            class="badge"
+            :data-badge="decisionBadge(c.decision)"
+          >
             {{ decisionBadge(c.decision) }}
           </span>
-          <span v-if="c.decision_history && c.decision_history.length > 0" class="history-count"
-            :title="`${c.decision_history.length} history entries`" @click.stop="openDecisionHistory(c.candidate_id)">
+          <span
+            v-if="c.decision_history && c.decision_history.length > 0"
+            class="history-count"
+            :title="`${c.decision_history.length} history entries`"
+            @click.stop="openDecisionHistory(c.candidate_id)"
+          >
             ({{ c.decision_history.length }})
           </span>
         </div>
 
         <!-- Audit column -->
-        <div class="audit" :title="(c.decided_by || c.decided_at_utc)
-          ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
-          : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'">
-          <div class="auditBy">{{ c.decided_by || "—" }}</div>
+        <div
+          class="audit"
+          :title="(c.decided_by || c.decided_at_utc)
+            ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
+            : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'"
+        >
+          <div class="auditBy">
+            {{ c.decided_by || "—" }}
+          </div>
           <div class="auditAt mono">
             {{ c.decided_at_utc ? c.decided_at_utc.slice(0, 19).replace('T', ' ') : '—' }}
           </div>
         </div>
 
         <div class="history">
-          <button class="btn ghost smallbtn" @click.stop="openDecisionHistory(c.candidate_id)"
-            :disabled="saving || exporting || undoBusy">
+          <button
+            class="btn ghost smallbtn"
+            :disabled="saving || exporting || undoBusy"
+            @click.stop="openDecisionHistory(c.candidate_id)"
+          >
             {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
           </button>
-          <div v-if="openHistoryFor === c.candidate_id" class="popover">
-            <CandidateDecisionHistoryPopover :items="c.decision_history ?? null" :currentDecision="c.decision ?? null"
-              :currentNote="c.decision_note ?? null" :currentBy="c.decided_by ?? null"
-              :currentAt="c.decided_at_utc ?? null" />
+          <div
+            v-if="openHistoryFor === c.candidate_id"
+            class="popover"
+          >
+            <CandidateDecisionHistoryPopover
+              :items="c.decision_history ?? null"
+              :current-decision="c.decision ?? null"
+              :current-note="c.decision_note ?? null"
+              :current-by="c.decided_by ?? null"
+              :current-at="c.decided_at_utc ?? null"
+            />
           </div>
         </div>
 
-        <div class="muted">{{ statusText(c) }}</div>
+        <div class="muted">
+          {{ statusText(c) }}
+        </div>
 
         <div class="note">
-          <div v-if="editingId === c.candidate_id" class="editor">
-            <textarea v-model="editValue" rows="2" />
+          <div
+            v-if="editingId === c.candidate_id"
+            class="editor"
+          >
+            <textarea
+              v-model="editValue"
+              rows="2"
+            />
             <div class="editor-actions">
-              <button class="btn" @click="saveEdit(c)" :disabled="saving || exporting">Save</button>
-              <button class="btn ghost" @click="cancelEdit" :disabled="saving || exporting">Cancel</button>
+              <button
+                class="btn"
+                :disabled="saving || exporting"
+                @click="saveEdit(c)"
+              >
+                Save
+              </button>
+              <button
+                class="btn ghost"
+                :disabled="saving || exporting"
+                @click="cancelEdit"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-          <div v-else class="note-display">
-            <span class="muted" v-if="!c.decision_note">—</span>
+          <div
+            v-else
+            class="note-display"
+          >
+            <span
+              v-if="!c.decision_note"
+              class="muted"
+            >—</span>
             <span v-else>{{ notePreview(c.decision_note) }}</span>
           </div>
         </div>
 
         <div class="copyCol">
-          <button class="btn ghost smallbtn" @click="copyText('candidate_id', c.candidate_id)"
-            title="Copy candidate_id">
+          <button
+            class="btn ghost smallbtn"
+            title="Copy candidate_id"
+            @click="copyText('candidate_id', c.candidate_id)"
+          >
             📋 candidate_id
           </button>
-          <button class="btn ghost smallbtn" @click="copyText('advisory_id', c.advisory_id || '')" title="Copy advisory_id">
+          <button
+            class="btn ghost smallbtn"
+            title="Copy advisory_id"
+            @click="copyText('advisory_id', c.advisory_id || '')"
+          >
             📋 advisory_id
           </button>
         </div>
 
         <div class="actions">
-          <button class="btn" @click="decide(c, 'GREEN')" :disabled="saving || exporting">GREEN</button>
-          <button class="btn" @click="decide(c, 'YELLOW')" :disabled="saving || exporting">YELLOW</button>
-          <button class="btn danger" @click="decide(c, 'RED')" :disabled="saving || exporting">RED</button>
+          <button
+            class="btn"
+            :disabled="saving || exporting"
+            @click="decide(c, 'GREEN')"
+          >
+            GREEN
+          </button>
+          <button
+            class="btn"
+            :disabled="saving || exporting"
+            @click="decide(c, 'YELLOW')"
+          >
+            YELLOW
+          </button>
+          <button
+            class="btn danger"
+            :disabled="saving || exporting"
+            @click="decide(c, 'RED')"
+          >
+            RED
+          </button>
 
-          <button class="btn ghost" @click="startEdit(c)" :disabled="saving || exporting || c.decision == null"
-            :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'">
+          <button
+            class="btn ghost"
+            :disabled="saving || exporting || c.decision == null"
+            :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'"
+            @click="startEdit(c)"
+          >
             Edit Note
           </button>
         </div>
@@ -1849,7 +2287,10 @@ async function exportGreenOnlyPackageZip() {
     </div>
 
     <!-- Export policy explainers (visible, not just hover) -->
-    <div class="policy muted" v-if="candidates.length > 0">
+    <div
+      v-if="candidates.length > 0"
+      class="policy muted"
+    >
       <div><strong>Export policy:</strong></div>
       <ul>
         <li>Export is blocked while any candidate is <span class="mono">NEEDS_DECISION</span>.</li>
@@ -1859,7 +2300,12 @@ async function exportGreenOnlyPackageZip() {
     </div>
 
     <!-- Copy toast -->
-    <div class="toast" v-if="toast">{{ toast }}</div>
+    <div
+      v-if="toast"
+      class="toast"
+    >
+      {{ toast }}
+    </div>
   </section>
 </template>
 

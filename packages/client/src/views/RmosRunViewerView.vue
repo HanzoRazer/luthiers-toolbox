@@ -16,7 +16,11 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchRun, downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
 import { explainRule } from "@/lib/feasibilityRuleRegistry";
+import { runs as rmosRuns } from "@/sdk/rmos";
 import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
+import RiskBadge from "@/components/ui/RiskBadge.vue";
+import OverrideBanner from "@/components/ui/OverrideBanner.vue";
+import WhyPanel from "@/components/rmos/WhyPanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -24,6 +28,7 @@ const router = useRouter();
 const run = ref<RunArtifactDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showWhy = ref(false);
 
 const runId = computed(() => route.params.id as string);
 
@@ -39,6 +44,13 @@ const triggeredRules = computed(() => {
 });
 
 const hasExplainability = computed(() => triggeredRuleIds.value.length > 0);
+
+// Auto-open Why on YELLOW/RED when explainability exists; close for GREEN/UNKNOWN.
+watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
+  if (!run.value) return;
+  if (!hasExp) return;
+  showWhy.value = rl === "YELLOW" || rl === "RED";
+}, { immediate: true });
 
 const riskLevel = computed(() => {
   return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
@@ -88,20 +100,8 @@ async function generateAdvisoryExplanation(force: boolean) {
   isExplaining.value = true;
   explainError.value = null;
   try {
-    const url = force
-      ? `/api/rmos/runs/${encodeURIComponent(id)}/explain?force=true`
-      : `/api/rmos/runs/${encodeURIComponent(id)}/explain`;
-    const resp = await fetch(url, { method: "POST" });
-    if (!resp.ok) {
-      let msg = `Explain failed (HTTP ${resp.status})`;
-      try {
-        const j = await resp.json();
-        if (j?.detail) msg = String(j.detail);
-      } catch {}
-      throw new Error(msg);
-    }
-    const j = await resp.json();
-    assistantExplanation.value = j?.explanation ?? null;
+    const result = await rmosRuns.explainRun(id, force);
+    assistantExplanation.value = result.explanation ?? null;
     // Refresh run to pick up new attachment
     await loadRun();
   } catch (e: any) {
@@ -144,13 +144,7 @@ async function downloadOperatorPack() {
   error.value = null;
   let url: string | null = null;
   try {
-    const res = await fetch(`/api/rmos/runs_v2/${encodeURIComponent(runId.value)}/operator-pack`);
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try { const t = await res.text(); if (t) msg = t; } catch {}
-      throw new Error(msg);
-    }
-    const blob = await res.blob();
+    const { blob } = await rmosRuns.downloadOperatorPack(runId.value);
     url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -168,13 +162,7 @@ async function downloadAttachment(att: any) {
   error.value = null;
   let url: string | null = null;
   try {
-    const res = await fetch(`/api/rmos/runs_v2/attachments/${encodeURIComponent(att.sha256)}`);
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try { const t = await res.text(); if (t) msg = t; } catch {}
-      throw new Error(msg);
-    }
-    const blob = await res.blob();
+    const { blob } = await rmosRuns.downloadAttachment(att.sha256);
     url = URL.createObjectURL(blob);
     const dl = document.createElement("a");
     dl.href = url;
@@ -195,22 +183,51 @@ async function downloadAttachment(att: any) {
     <!-- Header -->
     <header class="viewer-header">
       <div class="header-left">
-        <button class="btn btn-back" @click="goBack">
+        <button
+          class="btn btn-back"
+          @click="goBack"
+        >
           &larr; Back to Runs
         </button>
         <h1>Run Viewer</h1>
       </div>
-      <div class="header-actions" v-if="run">
-        <button class="btn" @click="handleDownload">Download JSON</button>
-        <button class="btn btn-success" @click="downloadOperatorPack" :disabled="loading">
+      <div
+        v-if="run"
+        class="header-actions"
+      >
+        <button
+          v-if="hasExplainability"
+          class="btn btn-secondary"
+          :aria-expanded="showWhy"
+          title="Show why this decision happened"
+          @click="showWhy = !showWhy"
+        >
+          Why?
+        </button>
+        <button
+          class="btn"
+          @click="handleDownload"
+        >
+          Download JSON
+        </button>
+        <button
+          class="btn btn-success"
+          :disabled="loading"
+          @click="downloadOperatorPack"
+        >
           Operator Pack (.zip)
         </button>
-        <button class="btn btn-primary" @click="goToDiff">Compare (Diff)</button>
+        <button
+          class="btn btn-primary"
+          @click="goToDiff"
+        >
+          Compare (Diff)
+        </button>
         <button 
           class="btn btn-secondary" 
-          @click="goToDiffWithParent" 
-          :disabled="!parentRunId"
+          :disabled="!parentRunId" 
           :title="parentRunId ? 'Compare with parent run: ' + parentRunId.slice(0, 16) + '...' : 'No parent run'"
+          @click="goToDiffWithParent"
         >
           Compare with Parent
         </button>
@@ -218,72 +235,142 @@ async function downloadAttachment(att: any) {
     </header>
 
     <!-- Loading State -->
-    <div v-if="loading" class="state-loading">
-      <div class="spinner"></div>
+    <div
+      v-if="loading"
+      class="state-loading"
+    >
+      <div class="spinner" />
       <p>Loading run artifact...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="state-error">
+    <div
+      v-else-if="error"
+      class="state-error"
+    >
       <h2>Error</h2>
       <p>{{ error }}</p>
-      <button class="btn" @click="loadRun">Retry</button>
+      <button
+        class="btn"
+        @click="loadRun"
+      >
+        Retry
+      </button>
     </div>
 
     <!-- Run Details -->
-    <div v-else-if="run" class="run-content">
+    <div
+      v-else-if="run"
+      class="run-content"
+    >
       <!-- Run ID Banner -->
       <section class="id-banner">
         <code class="run-id">{{ run.run_id }}</code>
         <div class="status-badges">
-          <span class="badge" :class="run.status?.toLowerCase()">{{ run.status }}</span>
-          <span class="badge mode" v-if="run.workflow_mode">{{ run.workflow_mode }}</span>
+          <span
+            class="badge"
+            :class="run.status?.toLowerCase()"
+          >{{ run.status }}</span>
+          <span
+            v-if="run.workflow_mode"
+            class="badge mode"
+          >{{ run.workflow_mode }}</span>
         </div>
       </section>
 
       <!-- Gate Decision (Risk Level) -->
-      <section v-if="run.gate_decision || run.feasibility" class="decision-section">
+      <section
+        v-if="run.gate_decision || run.feasibility"
+        class="decision-section"
+      >
         <h2>Decision</h2>
         <div class="decision-grid">
-          <div v-if="run.gate_decision" class="decision-item">
+          <div
+            v-if="run.gate_decision"
+            class="decision-item"
+          >
             <span class="label">Gate:</span>
-            <span class="gate-badge" :class="run.gate_decision.toLowerCase()">
+            <span
+              class="gate-badge"
+              :class="run.gate_decision.toLowerCase()"
+            >
               {{ run.gate_decision }}
             </span>
           </div>
-          <div v-if="run.feasibility?.risk_level" class="decision-item">
+          <div
+            v-if="run.feasibility?.risk_level"
+            class="decision-item"
+          >
             <span class="label">Risk Level:</span>
-            <span class="risk-badge" :class="run.feasibility.risk_level.toLowerCase()">
+            <span
+              class="risk-badge"
+              :class="run.feasibility.risk_level.toLowerCase()"
+            >
               {{ run.feasibility.risk_level }}
             </span>
           </div>
-          <div v-if="run.feasibility?.warnings?.length" class="decision-item warnings">
+          <div
+            v-if="run.feasibility?.warnings?.length"
+            class="decision-item warnings"
+          >
             <span class="label">Warnings:</span>
             <ul>
-              <li v-for="(w, i) in run.feasibility.warnings" :key="i">{{ w }}</li>
+              <li
+                v-for="(w, i) in run.feasibility.warnings"
+                :key="i"
+              >
+                {{ w }}
+              </li>
             </ul>
           </div>
-          <div v-if="run.feasibility?.block_reason" class="decision-item block-reason">
+          <div
+            v-if="run.feasibility?.block_reason"
+            class="decision-item block-reason"
+          >
             <span class="label">Block Reason:</span>
             <span class="block-text">{{ run.feasibility.block_reason }}</span>
           </div>
         </div>
 
-        <!-- Phase 3.3: Explainability - Why section -->
-        <div v-if="hasExplainability" class="explain-section">
+        <!-- WhyPanel: auto-opens for YELLOW/RED; toggleable via header Why? button -->
+        <WhyPanel
+          v-if="hasExplainability && showWhy"
+          :rules-triggered="triggeredRuleIds"
+          :risk-level="riskLevel"
+          class="mt-3"
+        />
+
+        <!-- Phase 3.3: Explainability - Legacy Why section (shown when WhyPanel is closed) -->
+        <div
+          v-if="hasExplainability && !showWhy"
+          class="explain-section"
+        >
           <h3>Why</h3>
           <ul class="explain-list">
-            <li v-for="r in triggeredRules" :key="r.rule_id" class="explain-item">
-              <span class="rule-pill" :data-level="r.level">{{ r.level }}</span>
+            <li
+              v-for="r in triggeredRules"
+              :key="r.rule_id"
+              class="explain-item"
+            >
+              <span
+                class="rule-pill"
+                :data-level="r.level"
+              >{{ r.level }}</span>
               <span class="rule-id">{{ r.rule_id }}</span>
               <span class="rule-summary">{{ r.summary }}</span>
-              <span v-if="r.operator_hint" class="rule-hint">{{ r.operator_hint }}</span>
+              <span
+                v-if="r.operator_hint"
+                class="rule-hint"
+              >{{ r.operator_hint }}</span>
             </li>
           </ul>
         </div>
 
         <!-- Override info -->
-        <div v-if="overrideAttachment" class="override-info">
+        <div
+          v-if="overrideAttachment"
+          class="override-info"
+        >
           <span class="label">Override:</span>
           <span class="override-text">
             Recorded (sha: <code>{{ overrideAttachment.sha256?.slice(0, 12) }}…</code>)
@@ -297,45 +384,86 @@ async function downloadAttachment(att: any) {
             <div class="advisory-actions">
               <button
                 class="btn btn-sm"
-                @click="generateAdvisoryExplanation(false)"
                 :disabled="isExplaining"
+                @click="generateAdvisoryExplanation(false)"
               >
                 {{ assistantExplanationAttachment ? 'Refresh Advisory' : 'Generate Advisory' }}
               </button>
               <button
                 class="btn btn-sm"
-                @click="generateAdvisoryExplanation(true)"
                 :disabled="isExplaining"
                 title="Regenerate even if one exists"
+                @click="generateAdvisoryExplanation(true)"
               >
                 Regenerate (force)
               </button>
             </div>
           </div>
-          <div v-if="explainError" class="advisory-error">{{ explainError }}</div>
-          <div v-else-if="isExplaining" class="advisory-loading">Generating advisory explanation…</div>
+          <div
+            v-if="explainError"
+            class="advisory-error"
+          >
+            {{ explainError }}
+          </div>
+          <div
+            v-else-if="isExplaining"
+            class="advisory-loading"
+          >
+            Generating advisory explanation…
+          </div>
 
-          <div v-if="assistantExplanation" class="advisory-box">
-            <div class="advisory-summary">{{ assistantExplanation.summary }}</div>
-            <div v-if="assistantExplanation.operator_notes?.length" class="advisory-subsection">
+          <div
+            v-if="assistantExplanation"
+            class="advisory-box"
+          >
+            <div class="advisory-summary">
+              {{ assistantExplanation.summary }}
+            </div>
+            <div
+              v-if="assistantExplanation.operator_notes?.length"
+              class="advisory-subsection"
+            >
               <h4>Operator Notes</h4>
               <ul>
-                <li v-for="(n, idx) in assistantExplanation.operator_notes" :key="idx">{{ n }}</li>
+                <li
+                  v-for="(n, idx) in assistantExplanation.operator_notes"
+                  :key="idx"
+                >
+                  {{ n }}
+                </li>
               </ul>
             </div>
-            <div v-if="assistantExplanation.suggested_actions?.length" class="advisory-subsection">
+            <div
+              v-if="assistantExplanation.suggested_actions?.length"
+              class="advisory-subsection"
+            >
               <h4>Suggested Actions</h4>
               <ul>
-                <li v-for="(a, idx) in assistantExplanation.suggested_actions" :key="idx">{{ a }}</li>
+                <li
+                  v-for="(a, idx) in assistantExplanation.suggested_actions"
+                  :key="idx"
+                >
+                  {{ a }}
+                </li>
               </ul>
             </div>
-            <div class="advisory-disclaimer">{{ assistantExplanation.disclaimer }}</div>
+            <div class="advisory-disclaimer">
+              {{ assistantExplanation.disclaimer }}
+            </div>
           </div>
-          <div v-else-if="assistantExplanationAttachment" class="advisory-placeholder">
+          <div
+            v-else-if="assistantExplanationAttachment"
+            class="advisory-placeholder"
+          >
             assistant_explanation.json attached (sha: <code>{{ assistantExplanationAttachment.sha256?.slice(0, 12) }}</code>…)
             — click "Refresh Advisory" to load it.
           </div>
-          <div v-else class="advisory-empty">No advisory explanation generated for this run.</div>
+          <div
+            v-else
+            class="advisory-empty"
+          >
+            No advisory explanation generated for this run.
+          </div>
         </div>
       </section>
 
@@ -380,14 +508,20 @@ async function downloadAttachment(att: any) {
             <strong>Config:</strong>
             <code>{{ run.config_fingerprint }}</code>
           </div>
-          <div v-if="!run.request_hash && !run.toolpaths_hash && !run.gcode_hash && !run.geometry_hash && !run.config_fingerprint" class="empty-state">
+          <div
+            v-if="!run.request_hash && !run.toolpaths_hash && !run.gcode_hash && !run.geometry_hash && !run.config_fingerprint"
+            class="empty-state"
+          >
             No hashes recorded
           </div>
         </div>
       </section>
 
       <!-- Drift Warning -->
-      <section v-if="run.drift_detected" class="drift-section">
+      <section
+        v-if="run.drift_detected"
+        class="drift-section"
+      >
         <h2>Drift Detected</h2>
         <p>{{ run.drift_summary || "Configuration drift detected from parent run." }}</p>
       </section>
@@ -395,50 +529,93 @@ async function downloadAttachment(att: any) {
       <!-- Attachments -->
       <section class="info-section">
         <h2>Attachments ({{ run.attachments?.length || 0 }})</h2>
-        <div v-if="run.attachments?.length" class="attachment-list">
-          <div v-for="att in run.attachments" :key="att.sha256" class="attachment-item">
+        <div
+          v-if="run.attachments?.length"
+          class="attachment-list"
+        >
+          <div
+            v-for="att in run.attachments"
+            :key="att.sha256"
+            class="attachment-item"
+          >
             <span class="att-kind">{{ att.kind }}</span>
             <span class="att-name">{{ att.filename }}</span>
             <span class="att-mime">{{ att.mime }}</span>
             <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
-            <button class="btn btn-sm" @click="downloadAttachment(att)" :disabled="loading">
+            <button
+              class="btn btn-sm"
+              :disabled="loading"
+              @click="downloadAttachment(att)"
+            >
               Download
             </button>
           </div>
         </div>
-        <div v-else class="empty-state">No attachments</div>
+        <div
+          v-else
+          class="empty-state"
+        >
+          No attachments
+        </div>
       </section>
 
       <!-- Feasibility Details -->
-      <section v-if="run.feasibility" class="info-section">
+      <section
+        v-if="run.feasibility"
+        class="info-section"
+      >
         <h2>Feasibility</h2>
         <pre class="code-block">{{ JSON.stringify(run.feasibility, null, 2) }}</pre>
       </section>
 
       <!-- Notes -->
-      <section v-if="run.notes" class="info-section">
+      <section
+        v-if="run.notes"
+        class="info-section"
+      >
         <h2>Notes</h2>
-        <p class="notes-text">{{ run.notes }}</p>
+        <p class="notes-text">
+          {{ run.notes }}
+        </p>
       </section>
 
       <!-- Errors -->
-      <section v-if="run.errors?.length" class="error-section">
+      <section
+        v-if="run.errors?.length"
+        class="error-section"
+      >
         <h2>Errors</h2>
         <ul>
-          <li v-for="(err, i) in run.errors" :key="i">{{ err }}</li>
+          <li
+            v-for="(err, i) in run.errors"
+            :key="i"
+          >
+            {{ err }}
+          </li>
         </ul>
       </section>
 
       <!-- Inline Compare Panel -->
       <section class="info-section">
-        <RunComparePanel :currentRunId="runId" :defaultOtherRunId="parentRunId" />
+        <RunComparePanel
+          :current-run-id="runId"
+          :default-other-run-id="parentRunId"
+        />
       </section>
     </div>
 
     <!-- No Run State -->
-    <div v-else class="state-empty">
+    <div
+      v-else
+      class="state-empty"
+    >
       <p>No run ID provided</p>
-      <button class="btn" @click="goBack">Go to Runs List</button>
+      <button
+        class="btn"
+        @click="goBack"
+      >
+        Go to Runs List
+      </button>
     </div>
   </div>
 </template>

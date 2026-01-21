@@ -1,11 +1,25 @@
 <template>
   <div class="p-3 border rounded space-y-2">
-    <h3 class="text-base font-semibold">Geometry Upload (DXF/SVG/JSON)</h3>
+    <h3 class="text-base font-semibold">
+      Geometry Upload (DXF/SVG/JSON)
+    </h3>
     <div class="flex gap-2 items-center">
-      <input type="file" @change="onFile" accept=".dxf,.svg" />
-      <button @click="sendJson" class="px-3 py-1 border rounded">Send JSON Example</button>
+      <input
+        type="file"
+        accept=".dxf,.svg"
+        @change="onFile"
+      >
+      <button
+        class="px-3 py-1 border rounded"
+        @click="sendJson"
+      >
+        Send JSON Example
+      </button>
     </div>
-    <pre class="text-xs bg-slate-50 p-2 overflow-auto" v-if="resp">Response: {{ resp }}</pre>
+    <pre
+      v-if="resp"
+      class="text-xs bg-slate-50 p-2 overflow-auto"
+    >Response: {{ resp }}</pre>
   </div>
 </template>
 

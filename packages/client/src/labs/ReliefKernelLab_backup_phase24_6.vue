@@ -282,27 +282,32 @@ async function pushSnapshot() {
 
 <template>
   <div class="p-4 space-y-4">
-    <h2 class="text-xl font-bold">🪶 Relief Kernel Lab</h2>
+    <h2 class="text-xl font-bold">
+      🪶 Relief Kernel Lab
+    </h2>
 
     <!-- Load Heightmap -->
     <div class="flex items-center space-x-2">
       <input 
         type="file" 
-        @change="onFile" 
-        accept="image/*"
+        accept="image/*" 
         class="border rounded px-2 py-1"
-      />
+        @change="onFile"
+      >
       <button 
-        @click="runMap" 
-        :disabled="!file"
+        :disabled="!file" 
         class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
+        @click="runMap"
       >
         Map Heightfield
       </button>
     </div>
 
     <!-- Parameter Panel -->
-    <div v-if="map" class="grid grid-cols-4 gap-2 mt-2">
+    <div
+      v-if="map"
+      class="grid grid-cols-4 gap-2 mt-2"
+    >
       <div>
         <label class="block text-xs font-medium">Tool Ø (mm)</label>
         <input 
@@ -310,7 +315,7 @@ async function pushSnapshot() {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Step-down (mm)</label>
@@ -319,7 +324,7 @@ async function pushSnapshot() {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Scallop (mm)</label>
@@ -328,7 +333,7 @@ async function pushSnapshot() {
           type="number" 
           step="0.01"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Stock (mm)</label>
@@ -337,7 +342,7 @@ async function pushSnapshot() {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       
       <!-- Phase 24.6: Dynamic Scallop Control -->
@@ -347,31 +352,37 @@ async function pushSnapshot() {
             v-model="useDynamicScallop" 
             type="checkbox" 
             class="align-middle" 
-          />
+          >
           <span>Use dynamic scallop (slope-aware spacing)</span>
         </label>
       </div>
     </div>
 
     <!-- Run Buttons -->
-    <div v-if="map" class="space-x-2">
+    <div
+      v-if="map"
+      class="space-x-2"
+    >
       <button 
-        @click="runFinish"
         class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+        @click="runFinish"
       >
         Generate Finishing
       </button>
       <button 
-        @click="pushSnapshot" 
-        :disabled="!result"
+        :disabled="!result" 
         class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300"
+        @click="pushSnapshot"
       >
         Save Snapshot
       </button>
     </div>
 
     <!-- Canvas Preview -->
-    <div class="mt-4 relative border rounded bg-gray-100" style="height: 400px;">
+    <div
+      class="mt-4 relative border rounded bg-gray-100"
+      style="height: 400px;"
+    >
       <canvas 
         ref="canvas" 
         class="w-full h-full"
@@ -422,7 +433,10 @@ async function pushSnapshot() {
     </div>
 
     <!-- Map Info -->
-    <div v-if="map" class="text-xs text-gray-600 mt-2">
+    <div
+      v-if="map"
+      class="text-xs text-gray-600 mt-2"
+    >
       <div><strong>Map:</strong> {{ map.width }}×{{ map.height }} cells</div>
       <div><strong>Z Range:</strong> {{ map.z_min.toFixed(2) }} to {{ map.z_max.toFixed(2) }} mm</div>
       <div><strong>Cell Size:</strong> {{ map.cell_size_xy.toFixed(2) }} mm</div>

@@ -1,13 +1,25 @@
 <template>
   <div class="image-renderer">
-    <div v-if="imageUrl" class="image-container">
-      <img :src="imageUrl" :alt="entry.relpath" loading="lazy" />
+    <div
+      v-if="imageUrl"
+      class="image-container"
+    >
+      <img
+        :src="imageUrl"
+        :alt="entry.relpath"
+        loading="lazy"
+      >
       <div class="info">
         <span class="label">{{ entry.kind }}</span>
         <span class="path">{{ entry.relpath }}</span>
       </div>
     </div>
-    <div v-else class="error">Unable to render image</div>
+    <div
+      v-else
+      class="error"
+    >
+      Unable to render image
+    </div>
   </div>
 </template>
 

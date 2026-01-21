@@ -172,6 +172,24 @@ viewer-pack-gate: viewer-pack-parity
 	@echo "=== Contract gate complete ==="
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Mesh Pipeline (retopo/healing/fields → CAM policy)
+# ─────────────────────────────────────────────────────────────────────────────
+.PHONY: mesh-example
+mesh-example:
+	@echo "=== Mesh Pipeline Scaffold Example ==="
+	@bash examples/retopo/run.sh qrm
+	@python scripts/validate_schemas.py --out-root examples/retopo
+	@echo "=== Mesh Pipeline complete ==="
+
+.PHONY: mesh-validate
+mesh-validate:
+	@python scripts/validate_schemas.py --out-root examples/retopo
+
+.PHONY: mesh-pipeline-tag
+mesh-pipeline-tag:
+	@bash scripts/tag_preview.sh v0.1.0
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Analyzer Ingest Smoke (local - requires tap_tone_pi sibling checkout)
 # ─────────────────────────────────────────────────────────────────────────────
 .PHONY: analyzer-smoke-local

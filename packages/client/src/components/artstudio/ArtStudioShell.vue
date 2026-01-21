@@ -11,19 +11,31 @@
         <h1>Art Studio</h1>
         <div class="header-controls">
           <label class="toggle">
-            <input type="checkbox" v-model="showToolpaths" />
+            <input
+              v-model="showToolpaths"
+              type="checkbox"
+            >
             Toolpaths
           </label>
           <label class="toggle">
-            <input type="checkbox" v-model="showFretboard" />
+            <input
+              v-model="showFretboard"
+              type="checkbox"
+            >
             Fretboard
           </label>
           <label class="toggle">
-            <input type="checkbox" v-model="showFretSlots" />
+            <input
+              v-model="showFretSlots"
+              type="checkbox"
+            >
             Fret Slots
           </label>
           <label class="toggle">
-            <input type="checkbox" v-model="showGrid" />
+            <input
+              v-model="showGrid"
+              type="checkbox"
+            >
             Grid
           </label>
         </div>

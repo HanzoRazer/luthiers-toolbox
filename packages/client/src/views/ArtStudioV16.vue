@@ -35,36 +35,96 @@ async function doReliefPreview(){
 
 <template>
   <div class="p-6 space-y-6">
-    <h1 class="text-xl font-bold">Art Studio — Phase 16.0 (SVG Editor + Relief Mapper)</h1>
+    <h1 class="text-xl font-bold">
+      Art Studio — Phase 16.0 (SVG Editor + Relief Mapper)
+    </h1>
 
     <section class="border rounded p-4 space-y-3 bg-white">
-      <h2 class="font-semibold">SVG Editor (stub)</h2>
-      <textarea v-model="svgText" class="w-full h-28 border rounded p-2 font-mono text-xs"></textarea>
+      <h2 class="font-semibold">
+        SVG Editor (stub)
+      </h2>
+      <textarea
+        v-model="svgText"
+        class="w-full h-28 border rounded p-2 font-mono text-xs"
+      />
       <div class="flex gap-3">
-        <button class="border rounded px-3 py-1" @click="doSvgNormalize">Normalize</button>
+        <button
+          class="border rounded px-3 py-1"
+          @click="doSvgNormalize"
+        >
+          Normalize
+        </button>
         <label class="text-sm">Stroke→Outline width (mm)</label>
-        <input type="number" step="0.1" v-model.number="strokeWidth" class="border rounded px-2 py-1 w-24" />
-        <button class="border rounded px-3 py-1" @click="doSvgOutline">Stroke→Outline</button>
-        <input class="border rounded px-2 py-1" v-model="svgName" placeholder="name" />
-        <button class="border rounded px-3 py-1" @click="doSvgSave">Save</button>
+        <input
+          v-model.number="strokeWidth"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <button
+          class="border rounded px-3 py-1"
+          @click="doSvgOutline"
+        >
+          Stroke→Outline
+        </button>
+        <input
+          v-model="svgName"
+          class="border rounded px-2 py-1"
+          placeholder="name"
+        >
+        <button
+          class="border rounded px-3 py-1"
+          @click="doSvgSave"
+        >
+          Save
+        </button>
       </div>
-      <SvgCanvas :svgText="svgText" />
+      <SvgCanvas :svg-text="svgText" />
       <div class="text-xs mt-2">
-        <div class="font-semibold">Outline response (JSON)</div>
+        <div class="font-semibold">
+          Outline response (JSON)
+        </div>
         <pre class="text-xs bg-gray-50 p-2 border rounded max-h-48 overflow-auto">{{ outlineJson }}</pre>
       </div>
     </section>
 
     <section class="border rounded p-4 space-y-3 bg-white">
-      <h2 class="font-semibold">Relief Mapper (stub)</h2>
+      <h2 class="font-semibold">
+        Relief Mapper (stub)
+      </h2>
       <div class="flex flex-wrap gap-3 items-center text-sm">
-        <label>Z min</label><input type="number" step="0.1" v-model.number="zmin" class="border rounded px-2 py-1 w-24" />
-        <label>Z max</label><input type="number" step="0.1" v-model.number="zmax" class="border rounded px-2 py-1 w-24" />
-        <label>Scale XY (mm)</label><input type="number" step="0.1" v-model.number="scaleXY" class="border rounded px-2 py-1 w-24" />
-        <button class="border rounded px-3 py-1" @click="doReliefPreview">Preview Heightmap</button>
+        <label>Z min</label><input
+          v-model.number="zmin"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <label>Z max</label><input
+          v-model.number="zmax"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <label>Scale XY (mm)</label><input
+          v-model.number="scaleXY"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <button
+          class="border rounded px-3 py-1"
+          @click="doReliefPreview"
+        >
+          Preview Heightmap
+        </button>
       </div>
-      <div class="text-xs">Grayscale array (0..1):</div>
-      <textarea v-model="(gray as any)" class="w-full h-24 border rounded p-2 font-mono text-xs"></textarea>
+      <div class="text-xs">
+        Grayscale array (0..1):
+      </div>
+      <textarea
+        v-model="(gray as any)"
+        class="w-full h-24 border rounded p-2 font-mono text-xs"
+      />
       <ReliefGrid :verts="verts" />
     </section>
   </div>

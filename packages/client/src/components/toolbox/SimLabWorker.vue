@@ -1,22 +1,27 @@
 <template>
   <div class="p-3 space-y-3">
-    <h3 class="text-lg font-bold">SimLab - Worker Renderer (Patch I1.3)</h3>
+    <h3 class="text-lg font-bold">
+      SimLab - Worker Renderer (Patch I1.3)
+    </h3>
     <div class="flex gap-3">
-      <button @click="runSim" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        @click="runSim"
+      >
         Run Simulation
       </button>
       <button 
-        @click="togglePlay" 
-        :disabled="!moves.length"
+        :disabled="!moves.length" 
         class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+        @click="togglePlay"
       >
         {{ playing ? 'Pause' : 'Play' }}
       </button>
       <label class="flex items-center gap-2">
         Speed × 
         <input 
-          type="number" 
           v-model.number="speed" 
+          type="number" 
           min="0.1" 
           max="10" 
           step="0.1" 
@@ -24,12 +29,12 @@
         >
       </label>
       <input 
+        v-model.number="tCursor" 
         type="range" 
         min="0" 
         :max="timelineMax" 
-        v-model.number="tCursor" 
-        @input="postFrame" 
-        class="flex-1"
+        class="flex-1" 
+        @input="postFrame"
       >
       <span class="text-xs">{{ tCursor.toFixed(2) }}s / {{ timelineMax.toFixed(2) }}s</span>
     </div>
@@ -37,7 +42,7 @@
     <canvas 
       ref="cv" 
       style="width:100%; height:360px; border:1px solid #e5e7eb; border-radius:8px; background:#fff"
-    ></canvas>
+    />
     
     <div class="text-xs text-gray-500 mt-2">
       Using OffscreenCanvas in Web Worker for non-blocking rendering. 

@@ -3,13 +3,22 @@
     <h3>Post Processor Templates Editor</h3>
     
     <div class="controls">
-      <button @click="loadTemplates" :disabled="loading">
+      <button
+        :disabled="loading"
+        @click="loadTemplates"
+      >
         {{ loading ? 'Loading...' : 'Load Templates' }}
       </button>
-      <button @click="saveTemplates" :disabled="loading">
+      <button
+        :disabled="loading"
+        @click="saveTemplates"
+      >
         {{ loading ? 'Saving...' : 'Save Templates' }}
       </button>
-      <span v-if="feedback.message" :class="['feedback', feedback.type]">
+      <span
+        v-if="feedback.message"
+        :class="['feedback', feedback.type]"
+      >
         {{ feedback.message }}
       </span>
     </div>

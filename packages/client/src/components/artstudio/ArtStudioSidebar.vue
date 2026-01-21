@@ -4,27 +4,45 @@
     <section class="sidebar-section">
       <h3>Tools & Materials</h3>
       <div class="button-row">
-        <button @click="onLoadTools" :disabled="engine.loading.tools">
+        <button
+          :disabled="engine.loading.tools"
+          @click="onLoadTools"
+        >
           {{ engine.loading.tools ? "Loading..." : "Load Tools" }}
         </button>
-        <button @click="onLoadMaterials" :disabled="engine.loading.materials">
+        <button
+          :disabled="engine.loading.materials"
+          @click="onLoadMaterials"
+        >
           {{ engine.loading.materials ? "Loading..." : "Load Materials" }}
         </button>
       </div>
 
-      <div v-if="engine.tools.value.length" class="list-section">
+      <div
+        v-if="engine.tools.value.length"
+        class="list-section"
+      >
         <h4>Tools ({{ engine.tools.value.length }})</h4>
         <ul class="item-list">
-          <li v-for="t in engine.tools.value.slice(0, 5)" :key="t.tool_id">
+          <li
+            v-for="t in engine.tools.value.slice(0, 5)"
+            :key="t.tool_id"
+          >
             {{ t.name }} ({{ t.diameter_mm ?? "?" }}mm)
           </li>
-          <li v-if="engine.tools.value.length > 5" class="more">
+          <li
+            v-if="engine.tools.value.length > 5"
+            class="more"
+          >
             +{{ engine.tools.value.length - 5 }} more...
           </li>
         </ul>
       </div>
 
-      <div v-if="engine.materials.value.length" class="list-section">
+      <div
+        v-if="engine.materials.value.length"
+        class="list-section"
+      >
         <h4>Materials ({{ engine.materials.value.length }})</h4>
         <ul class="item-list">
           <li
@@ -33,7 +51,10 @@
           >
             {{ m.name }}
           </li>
-          <li v-if="engine.materials.value.length > 5" class="more">
+          <li
+            v-if="engine.materials.value.length > 5"
+            class="more"
+          >
             +{{ engine.materials.value.length - 5 }} more...
           </li>
         </ul>
@@ -44,18 +65,30 @@
     <section class="sidebar-section">
       <h3>Geometry</h3>
       <div class="button-row">
-        <button @click="onGenerateRosette" :disabled="engine.loading.geometry">
+        <button
+          :disabled="engine.loading.geometry"
+          @click="onGenerateRosette"
+        >
           Rosette
         </button>
-        <button @click="onGenerateRelief" :disabled="engine.loading.geometry">
+        <button
+          :disabled="engine.loading.geometry"
+          @click="onGenerateRelief"
+        >
           Relief
         </button>
-        <button @click="onGenerateVCarve" :disabled="engine.loading.geometry">
+        <button
+          :disabled="engine.loading.geometry"
+          @click="onGenerateVCarve"
+        >
           V-Carve
         </button>
       </div>
 
-      <div v-if="engine.hasGeometry.value" class="status-info">
+      <div
+        v-if="engine.hasGeometry.value"
+        class="status-info"
+      >
         ✓ {{ engine.currentPaths.value.length }} paths loaded
       </div>
     </section>
@@ -65,12 +98,15 @@
       <h3>RMOS Feasibility</h3>
       <div class="button-row">
         <button
-          @click="onEvaluateFeasibility"
           :disabled="engine.loading.feasibility"
+          @click="onEvaluateFeasibility"
         >
           Evaluate
         </button>
-        <button @click="onPlanToolpaths" :disabled="engine.loading.toolpaths">
+        <button
+          :disabled="engine.loading.toolpaths"
+          @click="onPlanToolpaths"
+        >
           Plan Toolpaths
         </button>
       </div>
@@ -78,7 +114,10 @@
       <!-- Wave 9: Feasibility Panel with Risk Overlays -->
       <ArtStudioFeasibilityPanel />
 
-      <div v-if="engine.hasToolpaths.value" class="status-info">
+      <div
+        v-if="engine.hasToolpaths.value"
+        class="status-info"
+      >
         ✓ {{ engine.toolpaths.value.length }} toolpaths generated
       </div>
     </section>
@@ -90,33 +129,63 @@
       <!-- Presets -->
       <div class="form-row">
         <label>Preset</label>
-        <select v-model="selectedPreset" @change="onPresetChange">
-          <option value="">Custom</option>
-          <option value="fender_25.5">Fender 25.5"</option>
-          <option value="gibson_24.75">Gibson 24.75"</option>
-          <option value="prs_25">PRS 25"</option>
-          <option value="classical">Classical</option>
+        <select
+          v-model="selectedPreset"
+          @change="onPresetChange"
+        >
+          <option value="">
+            Custom
+          </option>
+          <option value="fender_25.5">
+            Fender 25.5"
+          </option>
+          <option value="gibson_24.75">
+            Gibson 24.75"
+          </option>
+          <option value="prs_25">
+            PRS 25"
+          </option>
+          <option value="classical">
+            Classical
+          </option>
         </select>
       </div>
 
       <div class="form-row">
         <label>Scale Length (mm)</label>
-        <input v-model.number="scaleLengthMm" type="number" step="0.1" />
+        <input
+          v-model.number="scaleLengthMm"
+          type="number"
+          step="0.1"
+        >
       </div>
 
       <div class="form-row">
         <label>Fret Count</label>
-        <input v-model.number="fretCount" type="number" min="1" max="36" />
+        <input
+          v-model.number="fretCount"
+          type="number"
+          min="1"
+          max="36"
+        >
       </div>
 
       <div class="form-row">
         <label>Nut Width (mm)</label>
-        <input v-model.number="nutWidthMm" type="number" step="0.1" />
+        <input
+          v-model.number="nutWidthMm"
+          type="number"
+          step="0.1"
+        >
       </div>
 
       <div class="form-row">
         <label>Heel Width (mm)</label>
-        <input v-model.number="heelWidthMm" type="number" step="0.1" />
+        <input
+          v-model.number="heelWidthMm"
+          type="number"
+          step="0.1"
+        >
       </div>
 
       <details class="advanced-options">
@@ -128,7 +197,7 @@
             type="number"
             step="1"
             placeholder="e.g., 184 (7.25in)"
-          />
+          >
         </div>
         <div class="form-row">
           <label>End Radius (mm)</label>
@@ -137,20 +206,23 @@
             type="number"
             step="1"
             placeholder="e.g., 305 (12in)"
-          />
+          >
         </div>
       </details>
 
       <button
-        @click="onComputeInstrumentGeometry"
         :disabled="engine.loading.instrument"
         class="primary-button"
+        @click="onComputeInstrumentGeometry"
       >
         {{ engine.loading.instrument ? "Computing..." : "Compute Geometry" }}
       </button>
 
       <!-- Results -->
-      <div v-if="engine.fretPositions.value.length" class="instrument-results">
+      <div
+        v-if="engine.fretPositions.value.length"
+        class="instrument-results"
+      >
         <p>✓ {{ engine.fretPositions.value.length }} frets calculated</p>
         <p v-if="engine.bridgeLocationMm.value !== null">
           Bridge @ {{ engine.bridgeLocationMm.value?.toFixed(2) }}mm
@@ -170,7 +242,10 @@
     </section>
 
     <!-- Error display -->
-    <div v-if="engine.lastError.value" class="error-banner">
+    <div
+      v-if="engine.lastError.value"
+      class="error-banner"
+    >
       {{ engine.lastError.value }}
     </div>
   </aside>

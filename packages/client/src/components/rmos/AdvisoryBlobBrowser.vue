@@ -2,20 +2,53 @@
   <div class="panel">
     <div class="header">
       <div>
-        <div class="title">Advisory Blob Browser</div>
-        <div class="subtle">Run: <code>{{ runId }}</code></div>
+        <div class="title">
+          Advisory Blob Browser
+        </div>
+        <div class="subtle">
+          Run: <code>{{ runId }}</code>
+        </div>
       </div>
       <div class="actions">
-        <button class="btn" :disabled="!items.length" @click="downloadAllZip">Download all (.zip)</button>
-        <button class="btn secondary" @click="refresh">Refresh</button>
+        <button
+          class="btn"
+          :disabled="!items.length"
+          @click="downloadAllZip"
+        >
+          Download all (.zip)
+        </button>
+        <button
+          class="btn secondary"
+          @click="refresh"
+        >
+          Refresh
+        </button>
       </div>
     </div>
 
-    <div v-if="loading" class="subtle">Loading...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="!items.length" class="subtle">No advisory blobs linked to this run.</div>
+    <div
+      v-if="loading"
+      class="subtle"
+    >
+      Loading...
+    </div>
+    <div
+      v-else-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-else-if="!items.length"
+      class="subtle"
+    >
+      No advisory blobs linked to this run.
+    </div>
 
-    <div v-else class="grid">
+    <div
+      v-else
+      class="grid"
+    >
       <div class="left">
         <table class="tbl">
           <thead>
@@ -25,19 +58,42 @@
               <th>Filename</th>
               <th>MIME</th>
               <th>SHA</th>
-              <th></th>
+              <th />
             </tr>
           </thead>
           <tbody>
-            <tr v-for="b in items" :key="b.advisory_id" :class="{ selected: selected?.advisory_id === b.advisory_id }" @click="select(b)">
+            <tr
+              v-for="b in items"
+              :key="b.advisory_id"
+              :class="{ selected: selected?.advisory_id === b.advisory_id }"
+              @click="select(b)"
+            >
               <td><code>{{ b.kind ?? "advisory" }}</code></td>
               <td>{{ b.title ?? "" }}</td>
               <td>{{ b.filename ?? "" }}</td>
-              <td class="subtle">{{ b.mime ?? "" }}</td>
-              <td class="mono">{{ b.advisory_id.slice(0, 12) }}...</td>
-              <td class="row-actions" @click.stop>
-                <button class="btn tiny" @click="downloadOne(b)">Download</button>
-                <button class="btn tiny secondary" v-if="isSvg(b)" @click="checkAndPreview(b)">Preview</button>
+              <td class="subtle">
+                {{ b.mime ?? "" }}
+              </td>
+              <td class="mono">
+                {{ b.advisory_id.slice(0, 12) }}...
+              </td>
+              <td
+                class="row-actions"
+                @click.stop
+              >
+                <button
+                  class="btn tiny"
+                  @click="downloadOne(b)"
+                >
+                  Download
+                </button>
+                <button
+                  v-if="isSvg(b)"
+                  class="btn tiny secondary"
+                  @click="checkAndPreview(b)"
+                >
+                  Preview
+                </button>
               </td>
             </tr>
           </tbody>
@@ -46,19 +102,51 @@
 
       <div class="right">
         <div class="preview-header">
-          <div class="title">Preview</div>
-          <div class="subtle" v-if="selected"><code>{{ selected.filename ?? selected.advisory_id.slice(0, 12) }}</code></div>
+          <div class="title">
+            Preview
+          </div>
+          <div
+            v-if="selected"
+            class="subtle"
+          >
+            <code>{{ selected.filename ?? selected.advisory_id.slice(0, 12) }}</code>
+          </div>
         </div>
 
-        <div v-if="!selected" class="subtle">Select an SVG blob to preview.</div>
-        <div v-else-if="!isSvg(selected)" class="subtle">Preview available only for SVG blobs.</div>
-        <div v-else-if="previewBlocked" class="preview-blocked">
-          <div class="blocked-icon">!</div>
-          <div class="blocked-reason">{{ previewBlockedReason }}</div>
-          <button class="btn" @click="downloadOne(selected)">Download Instead</button>
+        <div
+          v-if="!selected"
+          class="subtle"
+        >
+          Select an SVG blob to preview.
+        </div>
+        <div
+          v-else-if="!isSvg(selected)"
+          class="subtle"
+        >
+          Preview available only for SVG blobs.
+        </div>
+        <div
+          v-else-if="previewBlocked"
+          class="preview-blocked"
+        >
+          <div class="blocked-icon">
+            !
+          </div>
+          <div class="blocked-reason">
+            {{ previewBlockedReason }}
+          </div>
+          <button
+            class="btn"
+            @click="downloadOne(selected)"
+          >
+            Download Instead
+          </button>
         </div>
 
-        <div v-else class="preview-box">
+        <div
+          v-else
+          class="preview-box"
+        >
           <!-- Use backend run-authorized SVG preview endpoint -->
           <object
             :data="svgPreviewUrl(selected)"

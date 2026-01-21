@@ -2,32 +2,65 @@
   <div class="card">
     <div class="head">
       <div>
-        <div class="title">Plan Attachments Inspector</div>
-        <div class="sub">Bundle 16: View plan.json and normalized_intent.json</div>
+        <div class="title">
+          Plan Attachments Inspector
+        </div>
+        <div class="sub">
+          Bundle 16: View plan.json and normalized_intent.json
+        </div>
       </div>
       <div class="actions">
-        <button :disabled="busy || !planRunId" @click="refresh">Refresh</button>
+        <button
+          :disabled="busy || !planRunId"
+          @click="refresh"
+        >
+          Refresh
+        </button>
       </div>
     </div>
 
-    <div v-if="error" class="error">{{ error }}</div>
+    <div
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
 
-    <div v-if="!planRunId" class="empty">
+    <div
+      v-if="!planRunId"
+      class="empty"
+    >
       No plan run ID provided. Execute a plan first.
     </div>
 
-    <div v-else class="grid">
+    <div
+      v-else
+      class="grid"
+    >
       <div class="left">
         <div class="section">
-          <div class="sectionTitle">Attachments</div>
+          <div class="sectionTitle">
+            Attachments
+          </div>
 
-          <div v-if="busy" class="empty">Loading...</div>
+          <div
+            v-if="busy"
+            class="empty"
+          >
+            Loading...
+          </div>
 
-          <div v-else-if="attachments.length === 0" class="empty">
+          <div
+            v-else-if="attachments.length === 0"
+            class="empty"
+          >
             No attachments found for this run.
           </div>
 
-          <div v-else class="list">
+          <div
+            v-else
+            class="list"
+          >
             <button
               v-for="a in attachments"
               :key="idOf(a)"
@@ -35,15 +68,31 @@
               :class="{ active: selectedId === idOf(a) }"
               @click="selectAttachment(a)"
             >
-              <div class="p">{{ pathOf(a) }}</div>
-              <div class="m">{{ a.content_type || "unknown" }}</div>
+              <div class="p">
+                {{ pathOf(a) }}
+              </div>
+              <div class="m">
+                {{ a.content_type || "unknown" }}
+              </div>
             </button>
           </div>
 
-          <div class="sectionTitle">Quick Picks</div>
+          <div class="sectionTitle">
+            Quick Picks
+          </div>
           <div class="qp">
-            <button :disabled="busy || !planRunId" @click="openPlanJson">Open meta/plan.json</button>
-            <button :disabled="busy || !planRunId" @click="openNormalizedIntent">Open inputs/normalized_intent.json</button>
+            <button
+              :disabled="busy || !planRunId"
+              @click="openPlanJson"
+            >
+              Open meta/plan.json
+            </button>
+            <button
+              :disabled="busy || !planRunId"
+              @click="openNormalizedIntent"
+            >
+              Open inputs/normalized_intent.json
+            </button>
           </div>
 
           <div class="hint">
@@ -56,15 +105,34 @@
         <div class="section">
           <div class="sectionTitle">
             Viewer
-            <span v-if="selectedPath" class="pill"><code>{{ selectedPath }}</code></span>
-            <span v-if="selectedSource" class="pill">{{ selectedSource }}</span>
+            <span
+              v-if="selectedPath"
+              class="pill"
+            ><code>{{ selectedPath }}</code></span>
+            <span
+              v-if="selectedSource"
+              class="pill"
+            >{{ selectedSource }}</span>
           </div>
 
-          <div v-if="viewerBusy" class="empty">Fetching attachment...</div>
+          <div
+            v-if="viewerBusy"
+            class="empty"
+          >
+            Fetching attachment...
+          </div>
 
-          <div v-else-if="viewerError" class="error">{{ viewerError }}</div>
+          <div
+            v-else-if="viewerError"
+            class="error"
+          >
+            {{ viewerError }}
+          </div>
 
-          <pre v-else class="pre">{{ renderedText }}</pre>
+          <pre
+            v-else
+            class="pre"
+          >{{ renderedText }}</pre>
         </div>
       </div>
     </div>

@@ -1,26 +1,52 @@
 <template>
-  <div v-if="open" class="modal-backdrop" @click.self="cancel">
-    <div class="modal-card" role="dialog" aria-modal="true">
+  <div
+    v-if="open"
+    class="modal-backdrop"
+    @click.self="cancel"
+  >
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal-header">
-        <div class="modal-title">{{ title }}</div>
-        <button class="modal-close" @click="cancel" aria-label="Close">×</button>
+        <div class="modal-title">
+          {{ title }}
+        </div>
+        <button
+          class="modal-close"
+          aria-label="Close"
+          @click="cancel"
+        >
+          ×
+        </button>
       </div>
 
       <div class="modal-body">
-        <div v-if="message" class="modal-message">{{ message }}</div>
+        <div
+          v-if="message"
+          class="modal-message"
+        >
+          {{ message }}
+        </div>
         <input
           v-if="mode === 'prompt'"
+          ref="inputRef"
           v-model="draft"
           class="modal-input"
           type="text"
           :placeholder="placeholder"
           @keydown.enter.prevent="ok"
-          ref="inputRef"
-        />
+        >
       </div>
 
       <div class="modal-footer">
-        <button class="modal-btn ghost" @click="cancel">{{ cancelText }}</button>
+        <button
+          class="modal-btn ghost"
+          @click="cancel"
+        >
+          {{ cancelText }}
+        </button>
         <button
           v-for="b in extraButtons"
           :key="b.key"
@@ -29,7 +55,12 @@
         >
           {{ b.label }}
         </button>
-        <button class="modal-btn primary" @click="ok">{{ okText }}</button>
+        <button
+          class="modal-btn primary"
+          @click="ok"
+        >
+          {{ okText }}
+        </button>
       </div>
     </div>
   </div>

@@ -1,6 +1,8 @@
 <template>
   <div class="relief-risk-preset-panel">
-    <p class="text-sm text-gray-500">Relief Risk Preset Panel - Stub component</p>
+    <p class="text-sm text-gray-500">
+      Relief Risk Preset Panel - Stub component
+    </p>
   </div>
 </template>
 

@@ -120,15 +120,15 @@ FUTURE ENHANCEMENTS:
 
     <div class="flex flex-wrap gap-3 text-[10px] text-gray-600">
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+        <span class="w-3 h-3 rounded-full bg-emerald-500" />
         <span>OK</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+        <span class="w-3 h-3 rounded-full bg-rose-500" />
         <span>Failed</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400"></span>
+        <span class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400" />
         <span>Pending/Not run</span>
       </div>
     </div>

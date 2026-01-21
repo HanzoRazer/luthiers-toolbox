@@ -56,27 +56,52 @@ watch(() => [props.runId, props.advisoryId], loadLineage);
 
 <template>
   <div class="lineage-box">
-    <div class="title">Prompt Lineage</div>
+    <div class="title">
+      Prompt Lineage
+    </div>
 
-    <div v-if="loading" class="subtle">Loading lineage...</div>
+    <div
+      v-if="loading"
+      class="subtle"
+    >
+      Loading lineage...
+    </div>
 
-    <div v-else-if="lineage" class="lineage-content">
-      <div v-if="lineage.engine_id" class="row">
+    <div
+      v-else-if="lineage"
+      class="lineage-content"
+    >
+      <div
+        v-if="lineage.engine_id"
+        class="row"
+      >
         <span class="label">Engine:</span>
         <code>{{ lineage.engine_id }}</code>
-        <span v-if="lineage.engine_version" class="subtle">v{{ lineage.engine_version }}</span>
+        <span
+          v-if="lineage.engine_version"
+          class="subtle"
+        >v{{ lineage.engine_version }}</span>
       </div>
-      <div v-if="lineage.request_id" class="row">
+      <div
+        v-if="lineage.request_id"
+        class="row"
+      >
         <span class="label">Request:</span>
         <code>{{ lineage.request_id }}</code>
       </div>
-      <div v-if="lineage.prompt" class="prompt">
+      <div
+        v-if="lineage.prompt"
+        class="prompt"
+      >
         <span class="label">Prompt:</span>
         <pre>{{ lineage.prompt }}</pre>
       </div>
     </div>
 
-    <div v-else class="subtle">
+    <div
+      v-else
+      class="subtle"
+    >
       No lineage data available for this variant.
     </div>
   </div>

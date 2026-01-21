@@ -4,30 +4,62 @@
       <h3>Feasibility</h3>
       <div class="tog">
         <label class="small">
-          <input type="checkbox" v-model="store.autoRefreshEnabled" />
+          <input
+            v-model="store.autoRefreshEnabled"
+            type="checkbox"
+          >
           Auto-refresh
         </label>
-        <button class="btn" @click="manualRefresh" :disabled="store.previewLoading || store.feasibilityLoading">
+        <button
+          class="btn"
+          :disabled="store.previewLoading || store.feasibilityLoading"
+          @click="manualRefresh"
+        >
           Refresh Now
         </button>
       </div>
     </div>
-    <div v-if="store.feasibilityError" class="err">{{ store.feasibilityError }}</div>
-    <div class="pill" :data-risk="risk">
-      <strong>{{ store.feasibilityLabel }}</strong>
-      <span v-if="store.feasibilityLoading" class="spin">- updating...</span>
+    <div
+      v-if="store.feasibilityError"
+      class="err"
+    >
+      {{ store.feasibilityError }}
     </div>
-    <div v-if="risk === 'RED'" class="block">
+    <div
+      class="pill"
+      :data-risk="risk"
+    >
+      <strong>{{ store.feasibilityLabel }}</strong>
+      <span
+        v-if="store.feasibilityLoading"
+        class="spin"
+      >- updating...</span>
+    </div>
+    <div
+      v-if="risk === 'RED'"
+      class="block"
+    >
       <strong>BLOCKED:</strong> This design is currently <strong>RED</strong>.
       Fix warnings before saving snapshots or applying the design in downstream flows.
     </div>
-    <div v-if="store.lastFeasibility?.warnings?.length" class="warn">
+    <div
+      v-if="store.lastFeasibility?.warnings?.length"
+      class="warn"
+    >
       <div><strong>Warnings:</strong></div>
       <ul>
-        <li v-for="(w, i) in store.lastFeasibility.warnings" :key="i">{{ w }}</li>
+        <li
+          v-for="(w, i) in store.lastFeasibility.warnings"
+          :key="i"
+        >
+          {{ w }}
+        </li>
       </ul>
     </div>
-    <div class="mini" v-if="store.lastFeasibility">
+    <div
+      v-if="store.lastFeasibility"
+      class="mini"
+    >
       <div>Material Efficiency: {{ (store.lastFeasibility.material_efficiency * 100).toFixed(0) }}%</div>
       <div>Estimated Cut Time: {{ store.lastFeasibility.estimated_cut_time_min.toFixed(1) }} min</div>
     </div>

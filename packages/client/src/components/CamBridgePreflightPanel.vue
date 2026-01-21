@@ -2,7 +2,9 @@
   <div class="cam-bridge-preflight-panel">
     <div class="panel-header">
       <h3>Bridge DXF Preflight</h3>
-      <p class="text-sm text-gray-600">Validate DXF geometry before CAM processing</p>
+      <p class="text-sm text-gray-600">
+        Validate DXF geometry before CAM processing
+      </p>
     </div>
 
     <!-- File Upload Section -->
@@ -14,41 +16,72 @@
         @dragover.prevent="isDragging = true"
         @dragleave="isDragging = false"
       >
-        <div v-if="!file" class="upload-prompt">
-          <div class="icon">📄</div>
+        <div
+          v-if="!file"
+          class="upload-prompt"
+        >
+          <div class="icon">
+            📄
+          </div>
           <p>Drag & drop DXF file here</p>
-          <p class="or-text">or</p>
+          <p class="or-text">
+            or
+          </p>
           <label class="upload-button">
             Browse Files
-            <input type="file" accept=".dxf" @change="onFileChange" hidden>
+            <input
+              type="file"
+              accept=".dxf"
+              hidden
+              @change="onFileChange"
+            >
           </label>
         </div>
         
-        <div v-else class="file-info">
-          <div class="icon">✅</div>
+        <div
+          v-else
+          class="file-info"
+        >
+          <div class="icon">
+            ✅
+          </div>
           <div class="file-details">
             <h4>{{ file.name }}</h4>
-            <p class="text-sm text-gray-600">{{ formatFileSize(file.size) }}</p>
+            <p class="text-sm text-gray-600">
+              {{ formatFileSize(file.size) }}
+            </p>
           </div>
-          <button @click="clearFile" class="clear-btn" title="Remove file">✕</button>
+          <button
+            class="clear-btn"
+            title="Remove file"
+            @click="clearFile"
+          >
+            ✕
+          </button>
         </div>
       </div>
 
       <button 
         v-if="file && !preflightResult"
-        @click="runPreflight" 
-        class="btn-primary"
+        class="btn-primary" 
         :disabled="preflightRunning"
+        @click="runPreflight"
       >
         {{ preflightRunning ? 'Validating...' : 'Run Preflight Check' }}
       </button>
     </div>
 
     <!-- Preflight Results -->
-    <div v-if="preflightResult" class="preflight-results">
+    <div
+      v-if="preflightResult"
+      class="preflight-results"
+    >
       <div class="results-header">
         <h4>Validation Results</h4>
-        <div class="status-badge" :class="preflightResult.passed ? 'passed' : 'failed'">
+        <div
+          class="status-badge"
+          :class="preflightResult.passed ? 'passed' : 'failed'"
+        >
           {{ preflightResult.passed ? '✅ PASSED' : '❌ FAILED' }}
         </div>
       </div>
@@ -73,23 +106,38 @@
       </div>
 
       <!-- Issue Summary -->
-      <div v-if="preflightResult.summary" class="issue-summary">
-        <div class="issue-count error" v-if="preflightResult.summary.errors > 0">
+      <div
+        v-if="preflightResult.summary"
+        class="issue-summary"
+      >
+        <div
+          v-if="preflightResult.summary.errors > 0"
+          class="issue-count error"
+        >
           <span class="badge">{{ preflightResult.summary.errors }}</span>
           <span class="label">Errors</span>
         </div>
-        <div class="issue-count warning" v-if="preflightResult.summary.warnings > 0">
+        <div
+          v-if="preflightResult.summary.warnings > 0"
+          class="issue-count warning"
+        >
           <span class="badge">{{ preflightResult.summary.warnings }}</span>
           <span class="label">Warnings</span>
         </div>
-        <div class="issue-count info" v-if="preflightResult.summary.info > 0">
+        <div
+          v-if="preflightResult.summary.info > 0"
+          class="issue-count info"
+        >
           <span class="badge">{{ preflightResult.summary.info }}</span>
           <span class="label">Info</span>
         </div>
       </div>
 
       <!-- Issues List -->
-      <div v-if="preflightResult.issues && preflightResult.issues.length > 0" class="issues-list">
+      <div
+        v-if="preflightResult.issues && preflightResult.issues.length > 0"
+        class="issues-list"
+      >
         <h5>Issues Found</h5>
         <div 
           v-for="(issue, idx) in preflightResult.issues" 
@@ -101,18 +149,36 @@
             <span class="severity-badge">{{ issue.severity }}</span>
             <span class="category">{{ issue.category }}</span>
           </div>
-          <p class="issue-message">{{ issue.message }}</p>
-          <p v-if="issue.layer" class="issue-detail">Layer: {{ issue.layer }}</p>
-          <p v-if="issue.suggestion" class="issue-suggestion">💡 {{ issue.suggestion }}</p>
+          <p class="issue-message">
+            {{ issue.message }}
+          </p>
+          <p
+            v-if="issue.layer"
+            class="issue-detail"
+          >
+            Layer: {{ issue.layer }}
+          </p>
+          <p
+            v-if="issue.suggestion"
+            class="issue-suggestion"
+          >
+            💡 {{ issue.suggestion }}
+          </p>
         </div>
       </div>
 
       <!-- Actions -->
       <div class="results-actions">
-        <button @click="downloadHTMLReport" class="btn-secondary">
+        <button
+          class="btn-secondary"
+          @click="downloadHTMLReport"
+        >
           📄 Download HTML Report
         </button>
-        <button @click="clearResults" class="btn-secondary">
+        <button
+          class="btn-secondary"
+          @click="clearResults"
+        >
           🔄 Check Another File
         </button>
       </div>

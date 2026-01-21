@@ -14,8 +14,8 @@
       <button
         v-for="m in modes"
         :key="m.id"
-        @click="mode = m.id"
         :class="['btn', mode === m.id ? 'btn-active' : 'btn-normal']"
+        @click="mode = m.id"
       >
         {{ m.label }}
       </button>
@@ -23,81 +23,144 @@
     </div>
 
     <!-- Mode-Specific Controls -->
-    <div v-if="mode === 'offset'" class="params flex gap-3 items-center flex-wrap">
+    <div
+      v-if="mode === 'offset'"
+      class="params flex gap-3 items-center flex-wrap"
+    >
       <label class="param-label">
         Distance (mm)
         <input
-          type="number"
           v-model.number="offsetDist"
+          type="number"
           class="param-input"
           step="0.5"
-        />
+        >
       </label>
       <label class="param-label">
         Join Type
-        <select v-model="join" class="param-select">
+        <select
+          v-model="join"
+          class="param-select"
+        >
           <option value="round">Round</option>
           <option value="miter">Miter</option>
           <option value="bevel">Bevel</option>
         </select>
       </label>
-      <button @click="doOffset" class="btn btn-primary">Apply Offset</button>
+      <button
+        class="btn btn-primary"
+        @click="doOffset"
+      >
+        Apply Offset
+      </button>
     </div>
 
-    <div v-if="mode === 'fillet'" class="params flex gap-3 items-center flex-wrap">
+    <div
+      v-if="mode === 'fillet'"
+      class="params flex gap-3 items-center flex-wrap"
+    >
       <label class="param-label">
         Radius (mm)
         <input
-          type="number"
           v-model.number="filletR"
+          type="number"
           class="param-input"
           step="0.5"
           min="0.1"
-        />
+        >
       </label>
-      <button @click="doFillet" class="btn btn-primary">Apply Fillet</button>
+      <button
+        class="btn btn-primary"
+        @click="doFillet"
+      >
+        Apply Fillet
+      </button>
     </div>
 
-    <div v-if="mode === 'fair'" class="params flex gap-3 items-center flex-wrap">
+    <div
+      v-if="mode === 'fair'"
+      class="params flex gap-3 items-center flex-wrap"
+    >
       <label class="param-label">
         λ (Lambda)
         <input
-          type="number"
           v-model.number="lam"
+          type="number"
           class="param-input"
           step="1"
           min="0"
-        />
+        >
       </label>
       <label class="param-checkbox">
-        <input type="checkbox" v-model="preserve" />
+        <input
+          v-model="preserve"
+          type="checkbox"
+        >
         Preserve endpoints
       </label>
-      <button @click="doFair" class="btn btn-primary">Apply Fairing</button>
+      <button
+        class="btn btn-primary"
+        @click="doFair"
+      >
+        Apply Fairing
+      </button>
     </div>
 
-    <div v-if="mode === 'clothoid'" class="params flex gap-3 items-center flex-wrap">
+    <div
+      v-if="mode === 'clothoid'"
+      class="params flex gap-3 items-center flex-wrap"
+    >
       <span class="text-sm text-gray-700">
         Pick: p0 (green) → t0 (tangent) → p1 (green) → t1 (tangent)
       </span>
-      <button @click="resetClothoid" class="btn btn-normal">Reset</button>
-      <button @click="doClothoid" class="btn btn-primary">Blend</button>
+      <button
+        class="btn btn-normal"
+        @click="resetClothoid"
+      >
+        Reset
+      </button>
+      <button
+        class="btn btn-primary"
+        @click="doClothoid"
+      >
+        Blend
+      </button>
     </div>
 
     <!-- Canvas -->
     <canvas
       ref="canvas"
-      @click="onClick"
       class="canvas-drawing"
       :style="{ width: '100%', height: canvasHeight + 'px' }"
-    ></canvas>
+      @click="onClick"
+    />
 
     <!-- Actions -->
     <div class="actions flex gap-3">
-      <button @click="clearAll" class="btn btn-danger">Clear All</button>
-      <button @click="undo" class="btn btn-normal">Undo</button>
-      <button @click="exportJSON" class="btn btn-success">Export JSON</button>
-      <button @click="exportDXF" class="btn btn-success">Export DXF</button>
+      <button
+        class="btn btn-danger"
+        @click="clearAll"
+      >
+        Clear All
+      </button>
+      <button
+        class="btn btn-normal"
+        @click="undo"
+      >
+        Undo
+      </button>
+      <button
+        class="btn btn-success"
+        @click="exportJSON"
+      >
+        Export JSON
+      </button>
+      <button
+        class="btn btn-success"
+        @click="exportDXF"
+      >
+        Export DXF
+      </button>
     </div>
 
     <!-- Info Display -->

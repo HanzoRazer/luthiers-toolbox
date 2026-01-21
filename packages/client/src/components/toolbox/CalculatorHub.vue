@@ -6,19 +6,32 @@
     </div>
 
     <!-- Calculator Selection Grid -->
-    <div v-if="!activeCalculator" class="calculator-grid">
+    <div
+      v-if="!activeCalculator"
+      class="calculator-grid"
+    >
       <!-- Math & Precision Calculators -->
       <div class="calc-category">
         <h3>📐 Math & Precision</h3>
         <div class="calc-cards">
-          <div class="calc-card placeholder" @click="selectCalculator('fractions')">
-            <div class="calc-icon">🔢</div>
+          <div
+            class="calc-card placeholder"
+            @click="selectCalculator('fractions')"
+          >
+            <div class="calc-icon">
+              🔢
+            </div>
             <h4>Fraction Calculator</h4>
             <p>Decimal↔fraction for woodworking precision</p>
             <span class="status-badge">Coming Soon</span>
           </div>
-          <div class="calc-card active" @click="selectCalculator('scientific')">
-            <div class="calc-icon">🧮</div>
+          <div
+            class="calc-card active"
+            @click="selectCalculator('scientific')"
+          >
+            <div class="calc-icon">
+              🧮
+            </div>
             <h4>Scientific Calculator</h4>
             <p>Trig, logarithms, and lutherie math</p>
             <span class="status-badge ready">✓ Ready</span>
@@ -30,14 +43,24 @@
       <div class="calc-category">
         <h3>💼 Business & ROI</h3>
         <div class="calc-cards">
-          <div class="calc-card placeholder" @click="selectCalculator('cnc-roi')">
-            <div class="calc-icon">💰</div>
+          <div
+            class="calc-card placeholder"
+            @click="selectCalculator('cnc-roi')"
+          >
+            <div class="calc-icon">
+              💰
+            </div>
             <h4>CNC ROI Calculator</h4>
             <p>Financial analysis for CNC investment</p>
             <span class="status-badge">Coming Soon</span>
           </div>
-          <div class="calc-card active" @click="selectCalculator('business-calc')">
-            <div class="calc-icon">💼</div>
+          <div
+            class="calc-card active"
+            @click="selectCalculator('business-calc')"
+          >
+            <div class="calc-icon">
+              💼
+            </div>
             <h4>Business Calculator</h4>
             <p>Costing, pricing, cash flow projections</p>
             <span class="status-badge ready">✓ Ready</span>
@@ -47,9 +70,15 @@
     </div>
 
     <!-- Active Calculator Display -->
-    <div v-else class="active-calculator">
+    <div
+      v-else
+      class="active-calculator"
+    >
       <div class="calc-toolbar">
-        <button @click="activeCalculator = null" class="back-btn">
+        <button
+          class="back-btn"
+          @click="activeCalculator = null"
+        >
           ← Back to Calculator Hub
         </button>
         <h3>{{ getCalculatorTitle(activeCalculator) }}</h3>

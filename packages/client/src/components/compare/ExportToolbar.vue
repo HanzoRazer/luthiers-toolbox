@@ -1,8 +1,23 @@
 <template>
   <div class="export-toolbar">
-    <button @click="$emit('export-dxf')" aria-label="Export DXF (Diff)">Export DXF (Diff)</button>
-    <button @click="$emit('export-svg')" aria-label="Export SVG (Diff)">Export SVG (Diff)</button>
-    <button @click="$emit('export-gcode')" aria-label="Export G-code (Candidate)">Export G-code (Candidate)</button>
+    <button
+      aria-label="Export DXF (Diff)"
+      @click="$emit('export-dxf')"
+    >
+      Export DXF (Diff)
+    </button>
+    <button
+      aria-label="Export SVG (Diff)"
+      @click="$emit('export-svg')"
+    >
+      Export SVG (Diff)
+    </button>
+    <button
+      aria-label="Export G-code (Candidate)"
+      @click="$emit('export-gcode')"
+    >
+      Export G-code (Candidate)
+    </button>
   </div>
 </template>
 <script setup lang="ts">

@@ -8,15 +8,28 @@
           type="text" 
           placeholder="Search posts..." 
           class="search-input"
-        />
-        <button @click="showCreateDialog = true" class="btn-create">
+        >
+        <button
+          class="btn-create"
+          @click="showCreateDialog = true"
+        >
           + Create New Post
         </button>
       </div>
     </div>
 
-    <div v-if="loading" class="loading">Loading posts...</div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      Loading posts...
+    </div>
+    <div
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
 
     <div class="post-grid">
       <div 
@@ -27,17 +40,27 @@
       >
         <div class="card-header">
           <h3>{{ post.name }}</h3>
-          <span v-if="post.builtin" class="badge-builtin">Built-in</span>
+          <span
+            v-if="post.builtin"
+            class="badge-builtin"
+          >Built-in</span>
         </div>
-        <p class="card-description">{{ post.description }}</p>
+        <p class="card-description">
+          {{ post.description }}
+        </p>
         <div class="card-footer">
           <span class="post-id">{{ post.id }}</span>
           <div class="card-actions">
-            <button @click="editPost(post.id)" class="btn-edit">Edit</button>
+            <button
+              class="btn-edit"
+              @click="editPost(post.id)"
+            >
+              Edit
+            </button>
             <button 
               v-if="!post.builtin" 
-              @click="confirmDelete(post.id)" 
-              class="btn-delete"
+              class="btn-delete" 
+              @click="confirmDelete(post.id)"
             >
               Delete
             </button>
@@ -49,19 +72,36 @@
     <!-- Create/Edit Dialog -->
     <PostEditor 
       v-if="showCreateDialog || editingPostId" 
-      :postId="editingPostId"
+      :post-id="editingPostId"
       @close="closeDialog"
       @saved="handleSaved"
     />
 
     <!-- Delete Confirmation -->
-    <div v-if="deletingPostId" class="modal-overlay" @click="deletingPostId = null">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="deletingPostId"
+      class="modal-overlay"
+      @click="deletingPostId = null"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <h3>Confirm Delete</h3>
         <p>Are you sure you want to delete post "{{ deletingPostId }}"?</p>
         <div class="modal-actions">
-          <button @click="deletingPostId = null" class="btn-cancel">Cancel</button>
-          <button @click="handleDelete" class="btn-confirm-delete">Delete</button>
+          <button
+            class="btn-cancel"
+            @click="deletingPostId = null"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-confirm-delete"
+            @click="handleDelete"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>

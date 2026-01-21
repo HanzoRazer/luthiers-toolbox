@@ -1,7 +1,9 @@
 <template>
   <div class="border rounded-md p-3 bg-white text-[11px] space-y-2 shadow-lg">
     <div class="flex items-center justify-between">
-      <div class="font-semibold text-xs">Mentor Override Panel</div>
+      <div class="font-semibold text-xs">
+        Mentor Override Panel
+      </div>
       <button
         class="text-[10px] text-gray-500 hover:text-gray-800"
         @click="$emit('close')"
@@ -37,7 +39,7 @@
           type="text"
           placeholder="e.g. Ross, Mentor1"
           class="border rounded px-2 py-1 text-[11px]"
-        />
+        >
       </label>
 
       <!-- TTL -->
@@ -49,7 +51,7 @@
           min="1"
           max="120"
           class="border rounded px-2 py-1 text-[11px] w-20"
-        />
+        >
       </label>
 
       <!-- Generate button -->
@@ -63,25 +65,45 @@
         </button>
       </div>
 
-      <p v-if="error" class="text-[11px] text-red-600">
+      <p
+        v-if="error"
+        class="text-[11px] text-red-600"
+      >
         {{ error }}
       </p>
     </div>
 
     <!-- Recent tokens -->
-    <div v-if="tokens.length" class="mt-2 border-t pt-2 space-y-1">
-      <div class="font-semibold text-xs">Recent tokens (this session)</div>
+    <div
+      v-if="tokens.length"
+      class="mt-2 border-t pt-2 space-y-1"
+    >
+      <div class="font-semibold text-xs">
+        Recent tokens (this session)
+      </div>
       <table class="w-full text-[10px] border-collapse">
         <thead>
           <tr class="border-b">
-            <th class="text-left p-1">Token</th>
-            <th class="text-left p-1">Action</th>
-            <th class="text-left p-1">Created by</th>
-            <th class="text-left p-1">Expires</th>
+            <th class="text-left p-1">
+              Token
+            </th>
+            <th class="text-left p-1">
+              Action
+            </th>
+            <th class="text-left p-1">
+              Created by
+            </th>
+            <th class="text-left p-1">
+              Expires
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="t in tokens" :key="t.token" class="border-b last:border-0">
+          <tr
+            v-for="t in tokens"
+            :key="t.token"
+            class="border-b last:border-0"
+          >
             <td class="p-1 font-mono">
               {{ t.token }}
             </td>

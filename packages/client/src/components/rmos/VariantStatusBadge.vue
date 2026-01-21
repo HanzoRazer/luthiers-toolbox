@@ -35,7 +35,10 @@ function riskDotCls() {
 
 <template>
   <span :class="cls()">
-    <span :class="riskDotCls()" aria-hidden="true"></span>
+    <span
+      :class="riskDotCls()"
+      aria-hidden="true"
+    />
     {{ label() }}
   </span>
 </template>

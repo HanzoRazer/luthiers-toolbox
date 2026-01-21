@@ -1,0 +1,1050 @@
+{
+  "schema_version": "validation_scenarios_v1",
+  "description": "RMOS v1 30-run validation protocol scenarios",
+  "scenarios": [
+    {
+      "id": "baseline-01",
+      "tier": "baseline",
+      "name": "Simple pocket, softwood, conservative",
+      "description": "Standard small pocket in pine with conservative DOC",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-02",
+      "tier": "baseline",
+      "name": "Simple pocket, hardwood, conservative",
+      "description": "Standard small pocket in maple with reduced DOC",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-03",
+      "tier": "baseline",
+      "name": "Medium pocket, softwood",
+      "description": "Medium-sized pocket in cedar",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 100,
+          "length_mm": 80,
+          "depth_mm": 12
+        },
+        "material": {
+          "id": "cedar",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-04",
+      "tier": "baseline",
+      "name": "Medium pocket, hardwood",
+      "description": "Medium-sized pocket in walnut",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 100,
+          "length_mm": 80,
+          "depth_mm": 12
+        },
+        "material": {
+          "id": "walnut",
+          "type": "hardwood",
+          "hardness": "medium-hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": ["GREEN", "YELLOW"],
+        "rules_triggered_any": ["HARDWOOD_MODERATE_DOC"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-05",
+      "tier": "baseline",
+      "name": "Deep pocket, softwood",
+      "description": "Deep pocket triggers depth review",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 15
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["DEPTH_REVIEW", "DEEP_POCKET"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-06",
+      "tier": "baseline",
+      "name": "Island geometry, softwood",
+      "description": "Pocket with island in pine",
+      "input": {
+        "geometry": {
+          "type": "pocket_with_island",
+          "width_mm": 80,
+          "length_mm": 80,
+          "depth_mm": 10,
+          "island": {
+            "width_mm": 20,
+            "length_mm": 20
+          }
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-07",
+      "tier": "baseline",
+      "name": "Island geometry, hardwood",
+      "description": "Pocket with island in maple",
+      "input": {
+        "geometry": {
+          "type": "pocket_with_island",
+          "width_mm": 80,
+          "length_mm": 80,
+          "depth_mm": 10,
+          "island": {
+            "width_mm": 20,
+            "length_mm": 20
+          }
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": ["GREEN", "YELLOW"],
+        "rules_triggered_any": ["ISLAND_HARDWOOD"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-08",
+      "tier": "baseline",
+      "name": "Multi-pocket, softwood",
+      "description": "Three pockets in pine",
+      "input": {
+        "geometry": {
+          "type": "multi_pocket",
+          "pockets": [
+            {"width_mm": 40, "length_mm": 40, "depth_mm": 8},
+            {"width_mm": 40, "length_mm": 40, "depth_mm": 8},
+            {"width_mm": 40, "length_mm": 40, "depth_mm": 8}
+          ]
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-09",
+      "tier": "baseline",
+      "name": "Thin wall, conservative",
+      "description": "Thin wall triggers warning",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10,
+          "wall_thickness_mm": 2
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 1,
+          "woc_percent": 30,
+          "feed_rate_mm_min": 600
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["THIN_WALL", "WALL_THICKNESS"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "baseline-10",
+      "tier": "baseline",
+      "name": "Standard rosette pocket",
+      "description": "Typical rosette dimensions in spruce",
+      "input": {
+        "geometry": {
+          "type": "rosette_pocket",
+          "outer_diameter_mm": 100,
+          "inner_diameter_mm": 85,
+          "depth_mm": 3
+        },
+        "material": {
+          "id": "spruce",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 3,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 1,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "GREEN",
+        "rules_triggered": [],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-11",
+      "tier": "edge_pressure",
+      "name": "Max safe DOC, softwood",
+      "description": "DOC at upper limit for softwood",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 15
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 5,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["DOC_LIMIT", "AGGRESSIVE_DOC"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-12",
+      "tier": "edge_pressure",
+      "name": "Max safe DOC, hardwood",
+      "description": "DOC at upper limit for hardwood",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 12
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["DOC_LIMIT", "HARDWOOD_DOC"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-13",
+      "tier": "edge_pressure",
+      "name": "Minimum tool diameter",
+      "description": "Small endmill at limit",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 20,
+          "length_mm": 20,
+          "depth_mm": 5
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 1.5,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 0.5,
+          "woc_percent": 30,
+          "feed_rate_mm_min": 400
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["SMALL_TOOL", "TOOL_DIAMETER_MIN"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-14",
+      "tier": "edge_pressure",
+      "name": "Maximum pocket depth",
+      "description": "Deep pocket near system limit",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 25
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2,
+          "flute_length_mm": 20
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": ["YELLOW", "RED"],
+        "rules_triggered_any": ["DEPTH_EXCEEDS_FLUTE", "MAX_DEPTH"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "edge-15",
+      "tier": "edge_pressure",
+      "name": "Narrow slot",
+      "description": "High aspect ratio slot",
+      "input": {
+        "geometry": {
+          "type": "slot",
+          "width_mm": 4,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 3,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 100,
+          "feed_rate_mm_min": 600
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["SLOT_ASPECT_RATIO", "NARROW_SLOT"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-16",
+      "tier": "edge_pressure",
+      "name": "Complex island",
+      "description": "L-shaped island in hardwood",
+      "input": {
+        "geometry": {
+          "type": "pocket_with_island",
+          "width_mm": 100,
+          "length_mm": 100,
+          "depth_mm": 10,
+          "island": {
+            "type": "L-shape",
+            "width_mm": 30,
+            "length_mm": 50
+          }
+        },
+        "material": {
+          "id": "walnut",
+          "type": "hardwood",
+          "hardness": "medium-hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 40,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["COMPLEX_GEOMETRY", "ISLAND_HARDWOOD"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-17",
+      "tier": "edge_pressure",
+      "name": "Thin floor",
+      "description": "Floor thickness near minimum",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10,
+          "floor_thickness_mm": 1.5
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["THIN_FLOOR", "FLOOR_THICKNESS"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-18",
+      "tier": "edge_pressure",
+      "name": "High feed override",
+      "description": "Feed rate override at 150%",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1500,
+          "feed_override_percent": 150
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["FEED_OVERRIDE", "HIGH_FEED"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-19",
+      "tier": "edge_pressure",
+      "name": "Aggressive stepover",
+      "description": "WOC at 80%",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 80,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "YELLOW",
+        "rules_triggered_any": ["AGGRESSIVE_WOC", "STEPOVER_LIMIT"],
+        "export_allowed": true
+      }
+    },
+    {
+      "id": "edge-20",
+      "tier": "edge_pressure",
+      "name": "Combined pressure",
+      "description": "Multiple edge conditions combined",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 18,
+          "wall_thickness_mm": 3
+        },
+        "material": {
+          "id": "walnut",
+          "type": "hardwood",
+          "hardness": "medium-hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 60,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": ["YELLOW", "RED"],
+        "rules_triggered_any": ["COMBINED_RISK", "MULTIPLE_WARNINGS"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-21",
+      "tier": "adversarial",
+      "name": "Excessive DOC",
+      "description": "Dangerous DOC in hardwood - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 20
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 15,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["DOC_UNSAFE", "EXCESSIVE_DOC"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-22",
+      "tier": "adversarial",
+      "name": "Tool breakage risk",
+      "description": "Tiny tool with excessive DOC - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 20,
+          "length_mm": 20,
+          "depth_mm": 15
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 1,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 10,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 500
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["TOOL_BREAKAGE", "DOC_VS_DIAMETER"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-23",
+      "tier": "adversarial",
+      "name": "Impossible geometry",
+      "description": "Pocket deeper than material - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 50
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft",
+          "thickness_mm": 20
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["DEPTH_EXCEEDS_MATERIAL", "IMPOSSIBLE_GEOMETRY"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-24",
+      "tier": "adversarial",
+      "name": "Zero/negative dimensions",
+      "description": "Invalid geometry - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 0,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["INVALID_GEOMETRY", "ZERO_DIMENSION"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-25",
+      "tier": "adversarial",
+      "name": "Missing material",
+      "description": "No material specified - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 10
+        },
+        "material": null,
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["MISSING_MATERIAL", "INCOMPLETE_REQUEST"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-26",
+      "tier": "adversarial",
+      "name": "Incompatible tool",
+      "description": "Tool larger than pocket - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 8,
+          "length_mm": 20,
+          "depth_mm": 5
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 12,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 800
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["TOOL_TOO_LARGE", "TOOL_GEOMETRY_MISMATCH"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-27",
+      "tier": "adversarial",
+      "name": "Chatter-inducing setup",
+      "description": "Long thin tool, deep cut, hardwood - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 25
+        },
+        "material": {
+          "id": "maple",
+          "type": "hardwood",
+          "hardness": "hard"
+        },
+        "tool": {
+          "diameter_mm": 3,
+          "type": "endmill",
+          "flutes": 2,
+          "flute_length_mm": 30,
+          "stick_out_mm": 35
+        },
+        "params": {
+          "doc_mm": 5,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["CHATTER_RISK", "TOOL_DEFLECTION"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-28",
+      "tier": "adversarial",
+      "name": "Thermal risk",
+      "description": "Tiny tool, resinous wood, no coolant - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 20,
+          "length_mm": 20,
+          "depth_mm": 8
+        },
+        "material": {
+          "id": "rosewood",
+          "type": "hardwood",
+          "hardness": "very-hard",
+          "resinous": true
+        },
+        "tool": {
+          "diameter_mm": 1.5,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 2,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 600,
+          "coolant": false
+        }
+      },
+      "expected": {
+        "decision": ["RED", "YELLOW"],
+        "rules_triggered_any": ["THERMAL_RISK", "RESINOUS_MATERIAL"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-29",
+      "tier": "adversarial",
+      "name": "Structural failure risk",
+      "description": "Extremely thin wall, deep pocket - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 50,
+          "length_mm": 50,
+          "depth_mm": 15,
+          "wall_thickness_mm": 0.5
+        },
+        "material": {
+          "id": "pine",
+          "type": "softwood",
+          "hardness": "soft"
+        },
+        "tool": {
+          "diameter_mm": 6,
+          "type": "endmill",
+          "flutes": 2
+        },
+        "params": {
+          "doc_mm": 3,
+          "woc_percent": 50,
+          "feed_rate_mm_min": 1000
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["STRUCTURAL_FAILURE", "WALL_TOO_THIN"],
+        "export_allowed": false
+      }
+    },
+    {
+      "id": "adversarial-30",
+      "tier": "adversarial",
+      "name": "Combined adversarial",
+      "description": "Multiple unsafe parameters - MUST BLOCK",
+      "input": {
+        "geometry": {
+          "type": "pocket",
+          "width_mm": 30,
+          "length_mm": 30,
+          "depth_mm": 30,
+          "wall_thickness_mm": 1
+        },
+        "material": {
+          "id": "ebony",
+          "type": "hardwood",
+          "hardness": "extreme"
+        },
+        "tool": {
+          "diameter_mm": 2,
+          "type": "endmill",
+          "flutes": 2,
+          "flute_length_mm": 10
+        },
+        "params": {
+          "doc_mm": 8,
+          "woc_percent": 80,
+          "feed_rate_mm_min": 1500
+        }
+      },
+      "expected": {
+        "decision": "RED",
+        "rules_triggered_any": ["MULTIPLE_UNSAFE", "COMBINED_ADVERSARIAL"],
+        "export_allowed": false
+      }
+    }
+  ]
+}

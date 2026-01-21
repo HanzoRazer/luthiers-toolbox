@@ -10,7 +10,9 @@ Updated: January 2025 (Phase 5 Part 2 - N.0 Integration)
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Post Processor Manager</h2>
+        <h2 class="text-sm font-semibold">
+          Post Processor Manager
+        </h2>
         <p class="text-[11px] text-gray-500">
           Create, edit, and manage custom CNC post-processor configurations
         </p>

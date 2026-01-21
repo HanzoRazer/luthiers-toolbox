@@ -5,12 +5,18 @@
   >
     <div class="flex items-center gap-2">
       <span class="font-semibold">Safety mode: {{ modeLabel }}</span>
-      <span class="text-gray-800" v-if="state?.set_by">
+      <span
+        v-if="state?.set_by"
+        class="text-gray-800"
+      >
         (set by {{ state.set_by }} at {{ state.set_at }})
       </span>
     </div>
     <div class="flex items-center gap-2">
-      <span class="text-gray-700" v-if="hint">
+      <span
+        v-if="hint"
+        class="text-gray-700"
+      >
         {{ hint }}
       </span>
       <button

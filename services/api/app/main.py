@@ -1179,6 +1179,18 @@ try:
 except ImportError:
     pass
 
+# Wave 22.1: Acoustics Ingest Audit Log (browse/detail endpoints for ingest events)
+try:
+    from .rmos.runs_v2.router_ingest_audit import router as acoustics_ingest_audit_router
+
+    app.include_router(
+        acoustics_ingest_audit_router,
+        prefix="/api/rmos/acoustics",
+        tags=["RMOS", "Acoustics", "Ingest Audit"],
+    )
+except ImportError as e:
+    _log.warning("Optional router unavailable: acoustics_ingest_audit_router (%s)", e)
+
 # =============================================================================
 # WAVE 23: SMART GUITAR TELEMETRY INGESTION
 # Manufacturing-only telemetry from Smart Guitar devices.
@@ -1223,6 +1235,19 @@ try:
     app.include_router(ai_context_router, tags=["AI Context (Legacy)"])
 except ImportError as e:
     _log.warning("Optional router unavailable: ai_context_router (%s)", e)
+
+
+# =============================================================================
+# WAVE 25: RMOS V1 VALIDATION PROTOCOL
+# 30-run validation harness with persistent logging for release gate.
+# Endpoints: GET /api/rmos/validation/scenarios, POST /run, POST /run-batch,
+#            POST /log, GET /summary, GET /sessions, GET /runs
+# =============================================================================
+try:
+    from .rmos.validation.router import router as rmos_validation_router
+    app.include_router(rmos_validation_router, tags=["RMOS", "Validation"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_validation_router (%s)", e)
 
 # =============================================================================
 # COMPAT LEGACY ROUTES (CI + legacy callers)

@@ -134,7 +134,9 @@ FUTURE ENHANCEMENTS:
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Pipeline Lab</h2>
+        <h2 class="text-sm font-semibold">
+          Pipeline Lab
+        </h2>
         <p class="text-[11px] text-gray-500">
           DXF → Preflight → Plan → Run → Export → Simulate
         </p>

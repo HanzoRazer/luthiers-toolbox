@@ -74,9 +74,15 @@ async function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="modal" @click.self="emit('close')">
+  <div
+    v-if="open"
+    class="modal"
+    @click.self="emit('close')"
+  >
     <div class="card">
-      <div class="title">Reject Selected Variants</div>
+      <div class="title">
+        Reject Selected Variants
+      </div>
       <div class="subtle">
         This will mark <strong>{{ total }}</strong> variant(s) as <strong>REJECTED</strong>.
       </div>
@@ -94,23 +100,47 @@ async function submit() {
 
       <label class="ctl">
         <span>Reason detail (optional)</span>
-        <input v-model="reasonDetail" placeholder="Short detail to apply to all…" />
+        <input
+          v-model="reasonDetail"
+          placeholder="Short detail to apply to all…"
+        >
       </label>
 
       <label class="ctl">
         <span>Operator note (optional)</span>
-        <textarea v-model="operatorNote" placeholder="Longer note (applies to all)…" />
+        <textarea
+          v-model="operatorNote"
+          placeholder="Longer note (applies to all)…"
+        />
       </label>
 
-      <div v-if="busy" class="subtle">
+      <div
+        v-if="busy"
+        class="subtle"
+      >
         Rejecting… {{ progress.done }} / {{ progress.total }}
       </div>
 
-      <div v-if="error" class="error">{{ error }}</div>
+      <div
+        v-if="error"
+        class="error"
+      >
+        {{ error }}
+      </div>
 
       <div class="row">
-        <button class="btn tiny secondary" :disabled="busy" @click="emit('close')">Cancel</button>
-        <button class="btn tiny danger" :disabled="!canSubmit" @click="submit">
+        <button
+          class="btn tiny secondary"
+          :disabled="busy"
+          @click="emit('close')"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn tiny danger"
+          :disabled="!canSubmit"
+          @click="submit"
+        >
           {{ busy ? "Rejecting…" : "Reject Selected" }}
         </button>
       </div>

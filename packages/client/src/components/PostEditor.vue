@@ -1,16 +1,40 @@
 <template>
-  <div class="modal-overlay" @click="$emit('close')">
-    <div class="modal-dialog" @click.stop>
+  <div
+    class="modal-overlay"
+    @click="$emit('close')"
+  >
+    <div
+      class="modal-dialog"
+      @click.stop
+    >
       <div class="dialog-header">
         <h2>{{ isEditMode ? 'Edit Post' : 'Create New Post' }}</h2>
-        <button @click="$emit('close')" class="btn-close">×</button>
+        <button
+          class="btn-close"
+          @click="$emit('close')"
+        >
+          ×
+        </button>
       </div>
 
       <div class="dialog-body">
-        <div v-if="loading" class="loading">Loading...</div>
-        <div v-if="error" class="error">{{ error }}</div>
+        <div
+          v-if="loading"
+          class="loading"
+        >
+          Loading...
+        </div>
+        <div
+          v-if="error"
+          class="error"
+        >
+          {{ error }}
+        </div>
 
-        <form v-if="!loading" @submit.prevent="handleSave">
+        <form
+          v-if="!loading"
+          @submit.prevent="handleSave"
+        >
           <div class="form-group">
             <label>Post ID *</label>
             <input 
@@ -20,7 +44,7 @@
               pattern="[A-Z0-9_]+"
               :disabled="isEditMode"
               required
-            />
+            >
             <small>Uppercase letters, numbers, and underscores only</small>
           </div>
 
@@ -31,7 +55,7 @@
               type="text" 
               placeholder="e.g., Haas VF-2 with Tool Changer"
               required
-            />
+            >
           </div>
 
           <div class="form-group">
@@ -46,11 +70,31 @@
           <div class="form-group">
             <label>Header Lines *</label>
             <div class="array-editor">
-              <div v-for="(line, i) in form.header" :key="`header-${i}`" class="array-item">
-                <input v-model="form.header[i]" type="text" placeholder="G-code line or comment" />
-                <button @click="removeHeaderLine(i)" type="button" class="btn-remove">×</button>
+              <div
+                v-for="(line, i) in form.header"
+                :key="`header-${i}`"
+                class="array-item"
+              >
+                <input
+                  v-model="form.header[i]"
+                  type="text"
+                  placeholder="G-code line or comment"
+                >
+                <button
+                  type="button"
+                  class="btn-remove"
+                  @click="removeHeaderLine(i)"
+                >
+                  ×
+                </button>
               </div>
-              <button @click="addHeaderLine" type="button" class="btn-add">+ Add Header Line</button>
+              <button
+                type="button"
+                class="btn-add"
+                @click="addHeaderLine"
+              >
+                + Add Header Line
+              </button>
             </div>
             <small>G-code lines or comments to insert at program start</small>
           </div>
@@ -58,11 +102,31 @@
           <div class="form-group">
             <label>Footer Lines *</label>
             <div class="array-editor">
-              <div v-for="(line, i) in form.footer" :key="`footer-${i}`" class="array-item">
-                <input v-model="form.footer[i]" type="text" placeholder="G-code line or comment" />
-                <button @click="removeFooterLine(i)" type="button" class="btn-remove">×</button>
+              <div
+                v-for="(line, i) in form.footer"
+                :key="`footer-${i}`"
+                class="array-item"
+              >
+                <input
+                  v-model="form.footer[i]"
+                  type="text"
+                  placeholder="G-code line or comment"
+                >
+                <button
+                  type="button"
+                  class="btn-remove"
+                  @click="removeFooterLine(i)"
+                >
+                  ×
+                </button>
               </div>
-              <button @click="addFooterLine" type="button" class="btn-add">+ Add Footer Line</button>
+              <button
+                type="button"
+                class="btn-add"
+                @click="addFooterLine"
+              >
+                + Add Footer Line
+              </button>
             </div>
             <small>G-code lines or comments to insert at program end</small>
           </div>
@@ -71,41 +135,90 @@
             <label>Metadata (Optional)</label>
             <div class="metadata-fields">
               <div class="metadata-row">
-                <input v-model="form.metadata.controller_family" type="text" placeholder="Controller family (e.g., grbl)" />
-                <input v-model="form.metadata.gcode_dialect" type="text" placeholder="G-code dialect (e.g., LinuxCNC)" />
+                <input
+                  v-model="form.metadata.controller_family"
+                  type="text"
+                  placeholder="Controller family (e.g., grbl)"
+                >
+                <input
+                  v-model="form.metadata.gcode_dialect"
+                  type="text"
+                  placeholder="G-code dialect (e.g., LinuxCNC)"
+                >
               </div>
               <div class="metadata-row">
                 <label class="checkbox-label">
-                  <input v-model="form.metadata.supports_arcs" type="checkbox" />
+                  <input
+                    v-model="form.metadata.supports_arcs"
+                    type="checkbox"
+                  >
                   Supports Arcs (G2/G3)
                 </label>
                 <label class="checkbox-label">
-                  <input v-model="form.metadata.has_tool_changer" type="checkbox" />
+                  <input
+                    v-model="form.metadata.has_tool_changer"
+                    type="checkbox"
+                  >
                   Has Tool Changer
                 </label>
               </div>
             </div>
           </div>
 
-          <div class="validation-messages" v-if="validationResult">
-            <div v-if="validationResult.errors.length > 0" class="errors">
+          <div
+            v-if="validationResult"
+            class="validation-messages"
+          >
+            <div
+              v-if="validationResult.errors.length > 0"
+              class="errors"
+            >
               <strong>Errors:</strong>
               <ul>
-                <li v-for="(err, i) in validationResult.errors" :key="`err-${i}`">{{ err }}</li>
+                <li
+                  v-for="(err, i) in validationResult.errors"
+                  :key="`err-${i}`"
+                >
+                  {{ err }}
+                </li>
               </ul>
             </div>
-            <div v-if="validationResult.warnings.length > 0" class="warnings">
+            <div
+              v-if="validationResult.warnings.length > 0"
+              class="warnings"
+            >
               <strong>Warnings:</strong>
               <ul>
-                <li v-for="(warn, i) in validationResult.warnings" :key="`warn-${i}`">{{ warn }}</li>
+                <li
+                  v-for="(warn, i) in validationResult.warnings"
+                  :key="`warn-${i}`"
+                >
+                  {{ warn }}
+                </li>
               </ul>
             </div>
           </div>
 
           <div class="dialog-actions">
-            <button @click="$emit('close')" type="button" class="btn-cancel">Cancel</button>
-            <button @click="handleValidate" type="button" class="btn-validate">Validate</button>
-            <button type="submit" class="btn-save" :disabled="saving">
+            <button
+              type="button"
+              class="btn-cancel"
+              @click="$emit('close')"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn-validate"
+              @click="handleValidate"
+            >
+              Validate
+            </button>
+            <button
+              type="submit"
+              class="btn-save"
+              :disabled="saving"
+            >
               {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }}
             </button>
           </div>
@@ -114,7 +227,11 @@
         <div class="token-helper">
           <h4>Available Tokens</h4>
           <div class="token-list">
-            <div v-for="(desc, token) in availableTokens" :key="token" class="token-item">
+            <div
+              v-for="(desc, token) in availableTokens"
+              :key="token"
+              class="token-item"
+            >
               <code>{{ formatToken(token) }}</code>
               <span>{{ desc }}</span>
             </div>

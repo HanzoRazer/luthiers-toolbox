@@ -31,11 +31,11 @@
           <div class="input-with-unit">
             <input 
               id="bodyLength" 
-              type="number" 
               v-model.number="dimensions.bodyLength" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Tip to tail along centerline</span>
@@ -46,11 +46,11 @@
           <div class="input-with-unit">
             <input 
               id="bodyWidthUpper" 
-              type="number" 
               v-model.number="dimensions.bodyWidthUpper" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Widest point above waist</span>
@@ -61,11 +61,11 @@
           <div class="input-with-unit">
             <input 
               id="bodyWidthLower" 
-              type="number" 
               v-model.number="dimensions.bodyWidthLower" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Widest point below waist</span>
@@ -76,11 +76,11 @@
           <div class="input-with-unit">
             <input 
               id="waistWidth" 
-              type="number" 
               v-model.number="dimensions.waistWidth" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Narrowest point (C-curves)</span>
@@ -91,11 +91,11 @@
           <div class="input-with-unit">
             <input 
               id="bodyDepth" 
-              type="number" 
               v-model.number="dimensions.bodyDepth" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Including top and back arch (if any)</span>
@@ -106,11 +106,11 @@
           <div class="input-with-unit">
             <input 
               id="scaleLength" 
-              type="number" 
               v-model.number="dimensions.scaleLength" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
           <span class="hint">Nut to bridge saddle</span>
@@ -127,11 +127,11 @@
           <div class="input-with-unit">
             <input 
               id="nutWidth" 
-              type="number" 
               v-model.number="dimensions.nutWidth" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
         </div>
@@ -141,11 +141,11 @@
           <div class="input-with-unit">
             <input 
               id="bridgeSpacing" 
-              type="number" 
               v-model.number="dimensions.bridgeSpacing" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">{{ currentUnit }}</span>
           </div>
         </div>
@@ -155,11 +155,11 @@
           <div class="input-with-unit">
             <input 
               id="fretCount" 
-              type="number" 
               v-model.number="dimensions.fretCount" 
+              type="number" 
               step="1"
               @input="handleChange"
-            />
+            >
             <span class="unit">frets</span>
           </div>
         </div>
@@ -169,11 +169,11 @@
           <div class="input-with-unit">
             <input 
               id="neckAngle" 
-              type="number" 
               v-model.number="dimensions.neckAngle" 
+              type="number" 
               step="0.1"
               @input="handleChange"
-            />
+            >
             <span class="unit">degrees</span>
           </div>
           <span class="hint">Set-neck tilt (0° for bolt-on)</span>
@@ -188,8 +188,8 @@
         <button 
           v-for="preset in presets" 
           :key="preset.id"
-          @click="loadPreset(preset.id)"
           class="preset-btn"
+          @click="loadPreset(preset.id)"
         >
           {{ preset.name }}
         </button>
@@ -217,31 +217,59 @@
 
     <!-- Actions -->
     <section class="form-section actions">
-      <button @click="generateAndExportDXF" class="btn-primary" :disabled="!hasValidDimensions || isGenerating">
+      <button
+        class="btn-primary"
+        :disabled="!hasValidDimensions || isGenerating"
+        @click="generateAndExportDXF"
+      >
         {{ isGenerating ? '⏳ Generating...' : '🎨 Generate Body Outline (DXF)' }}
       </button>
-      <button @click="generateAndExportSVG" class="btn-primary" :disabled="!hasValidDimensions || isGenerating">
+      <button
+        class="btn-primary"
+        :disabled="!hasValidDimensions || isGenerating"
+        @click="generateAndExportSVG"
+      >
         {{ isGenerating ? '⏳ Generating...' : '🖼️ Generate Body Outline (SVG)' }}
       </button>
-      <button @click="generateAndSendToCAM" class="btn-success" :disabled="!hasValidDimensions || isGenerating" style="margin-top: 8px;">
+      <button
+        class="btn-success"
+        :disabled="!hasValidDimensions || isGenerating"
+        style="margin-top: 8px;"
+        @click="generateAndSendToCAM"
+      >
         {{ isGenerating ? '⏳ Planning...' : '⚙️ Send to CAM (Generate Toolpath)' }}
       </button>
-      <button @click="exportJSON" class="btn-secondary">
+      <button
+        class="btn-secondary"
+        @click="exportJSON"
+      >
         💾 Save as JSON
       </button>
-      <button @click="exportCSV" class="btn-secondary">
+      <button
+        class="btn-secondary"
+        @click="exportCSV"
+      >
         📊 Export CSV
       </button>
-      <button @click="copyToClipboard" class="btn-secondary">
+      <button
+        class="btn-secondary"
+        @click="copyToClipboard"
+      >
         📋 Copy to Clipboard
       </button>
-      <button @click="clearAll" class="btn-danger">
+      <button
+        class="btn-danger"
+        @click="clearAll"
+      >
         🗑️ Clear All
       </button>
     </section>
 
     <!-- CAM Toolpath Statistics -->
-    <section v-if="camResults" class="form-section cam-results">
+    <section
+      v-if="camResults"
+      class="form-section cam-results"
+    >
       <h3>🔧 CAM Toolpath Statistics</h3>
       <div class="stats-grid">
         <div class="stat-item">
@@ -276,15 +304,31 @@
       </div>
 
       <div class="cam-actions">
-        <button @click="downloadGCode" class="btn-primary">
+        <button
+          class="btn-primary"
+          @click="downloadGCode"
+        >
           💾 Download G-code ({{ selectedPost }})
         </button>
-        <select v-model="selectedPost" class="post-selector">
-          <option value="GRBL">GRBL</option>
-          <option value="Mach3">Mach3</option>
-          <option value="Mach4">Mach4</option>
-          <option value="LinuxCNC">LinuxCNC</option>
-          <option value="PathPilot">PathPilot</option>
+        <select
+          v-model="selectedPost"
+          class="post-selector"
+        >
+          <option value="GRBL">
+            GRBL
+          </option>
+          <option value="Mach3">
+            Mach3
+          </option>
+          <option value="Mach4">
+            Mach4
+          </option>
+          <option value="LinuxCNC">
+            LinuxCNC
+          </option>
+          <option value="PathPilot">
+            PathPilot
+          </option>
         </select>
       </div>
 
@@ -295,19 +339,34 @@
     </section>
 
     <!-- Status -->
-    <div v-if="status" :class="['status-message', statusType]">
+    <div
+      v-if="status"
+      :class="['status-message', statusType]"
+    >
       {{ status }}
     </div>
 
     <!-- Visual Preview (Simple SVG) -->
     <section class="form-section preview">
       <h3>Preview (Top View)</h3>
-      <svg :viewBox="viewBox" class="body-preview">
+      <svg
+        :viewBox="viewBox"
+        class="body-preview"
+      >
         <!-- Background -->
-        <rect x="0" y="0" :width="svgWidth" :height="svgHeight" fill="#fafafa" />
+        <rect
+          x="0"
+          y="0"
+          :width="svgWidth"
+          :height="svgHeight"
+          fill="#fafafa"
+        />
         
         <!-- Simplified body outline (based on dimensions) -->
-        <g v-if="hasValidDimensions" transform="translate(250, 50)">
+        <g
+          v-if="hasValidDimensions"
+          transform="translate(250, 50)"
+        >
           <!-- Upper bout -->
           <ellipse 
             :cx="0" 
@@ -353,13 +412,25 @@
           />
           
           <!-- Dimension labels -->
-          <text x="10" :y="scaledBodyLength / 2" font-size="10" fill="#666">
+          <text
+            x="10"
+            :y="scaledBodyLength / 2"
+            font-size="10"
+            fill="#666"
+          >
             {{ dimensions.bodyLength }} {{ currentUnit }}
           </text>
         </g>
         
         <!-- Placeholder if no dimensions -->
-        <text v-else x="250" y="250" text-anchor="middle" font-size="14" fill="#999">
+        <text
+          v-else
+          x="250"
+          y="250"
+          text-anchor="middle"
+          font-size="14"
+          fill="#999"
+        >
           Enter dimensions to see preview
         </text>
       </svg>

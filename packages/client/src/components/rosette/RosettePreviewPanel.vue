@@ -2,19 +2,45 @@
   <div class="card">
     <div class="row">
       <h3>Preview</h3>
-      <button class="btn" @click="store.refreshPreview()" :disabled="store.previewLoading">
+      <button
+        class="btn"
+        :disabled="store.previewLoading"
+        @click="store.refreshPreview()"
+      >
         Refresh
       </button>
     </div>
-    <div v-if="store.previewError" class="err">{{ store.previewError }}</div>
-    <div v-if="store.preview?.warnings?.length" class="warn">
+    <div
+      v-if="store.previewError"
+      class="err"
+    >
+      {{ store.previewError }}
+    </div>
+    <div
+      v-if="store.preview?.warnings?.length"
+      class="warn"
+    >
       <div><strong>Preview warnings:</strong></div>
       <ul>
-        <li v-for="(w, i) in store.preview.warnings" :key="i">{{ w }}</li>
+        <li
+          v-for="(w, i) in store.preview.warnings"
+          :key="i"
+        >
+          {{ w }}
+        </li>
       </ul>
     </div>
-    <div class="svgWrap" v-if="store.preview?.svg" v-html="store.preview.svg"></div>
-    <div v-else class="empty">No preview yet.</div>
+    <div
+      v-if="store.preview?.svg"
+      class="svgWrap"
+      v-html="store.preview.svg"
+    />
+    <div
+      v-else
+      class="empty"
+    >
+      No preview yet.
+    </div>
   </div>
 </template>
 

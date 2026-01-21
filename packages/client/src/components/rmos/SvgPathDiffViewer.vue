@@ -26,7 +26,9 @@ const error = ref<string | null>(null);
 <template>
   <div class="diff-box">
     <div class="header">
-      <div class="title">SVG Comparison</div>
+      <div class="title">
+        SVG Comparison
+      </div>
       <div class="subtitle">
         <code>{{ leftAdvisoryId.slice(0, 12) }}...</code>
         vs
@@ -36,20 +38,24 @@ const error = ref<string | null>(null);
 
     <div class="diff-grid">
       <div class="diff-side">
-        <div class="side-label">Left</div>
+        <div class="side-label">
+          Left
+        </div>
         <SvgPreview
-          :runId="runId"
-          :advisoryId="leftAdvisoryId"
-          :apiBase="apiBase"
+          :run-id="runId"
+          :advisory-id="leftAdvisoryId"
+          :api-base="apiBase"
         />
       </div>
 
       <div class="diff-side">
-        <div class="side-label">Right</div>
+        <div class="side-label">
+          Right
+        </div>
         <SvgPreview
-          :runId="runId"
-          :advisoryId="rightAdvisoryId"
-          :apiBase="apiBase"
+          :run-id="runId"
+          :advisory-id="rightAdvisoryId"
+          :api-base="apiBase"
         />
       </div>
     </div>

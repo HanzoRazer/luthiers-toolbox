@@ -2,7 +2,9 @@
   <div class="space-y-3 border rounded-lg p-3">
     <header class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Multi-Ring Saw Batch Op</h2>
+        <h2 class="text-sm font-semibold">
+          Multi-Ring Saw Batch Op
+        </h2>
         <p class="text-xs text-gray-500">
           Configure tool & material, then preview risk and G-code.
         </p>
@@ -24,7 +26,7 @@
             v-model="localBatchOp.tool_id"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="block">
           Material
@@ -32,7 +34,7 @@
             v-model="localBatchOp.material"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="block">
           Workholding
@@ -40,7 +42,7 @@
             v-model="localBatchOp.workholding"
             type="text"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
       </div>
 
@@ -52,7 +54,7 @@
             type="number"
             step="0.01"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="block">
           Passes
@@ -60,7 +62,7 @@
             v-model.number="localBatchOp.passes"
             type="number"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="block">
           Radial step (mm)
@@ -69,7 +71,7 @@
             type="number"
             step="0.1"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
         <label class="block">
           Rings
@@ -77,12 +79,14 @@
             v-model.number="localBatchOp.num_rings"
             type="number"
             class="mt-1 w-full border rounded px-2 py-1"
-          />
+          >
         </label>
       </div>
 
       <div class="space-y-1">
-        <p class="font-semibold">Batch geometry</p>
+        <p class="font-semibold">
+          Batch geometry
+        </p>
         <p>Mode: circle_param</p>
         <p>Center: ({{ localBatchOp.base_circle.center_x_mm }}, {{ localBatchOp.base_circle.center_y_mm }})</p>
         <p>Base radius: {{ localBatchOp.base_circle.radius_mm }} mm</p>
@@ -93,17 +97,32 @@
       </div>
     </div>
 
-    <div v-if="preview" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+    <div
+      v-if="preview"
+      class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs"
+    >
       <div>
-        <h3 class="font-semibold mb-1">Slices / Rings Risk</h3>
+        <h3 class="font-semibold mb-1">
+          Slices / Rings Risk
+        </h3>
         <table class="w-full border-collapse">
           <thead>
             <tr class="border-b">
-              <th class="text-left p-1">Idx</th>
-              <th class="text-left p-1">Kind</th>
-              <th class="text-left p-1">Offset</th>
-              <th class="text-left p-1">Grade</th>
-              <th class="text-left p-1">Rim m/min</th>
+              <th class="text-left p-1">
+                Idx
+              </th>
+              <th class="text-left p-1">
+                Kind
+              </th>
+              <th class="text-left p-1">
+                Offset
+              </th>
+              <th class="text-left p-1">
+                Grade
+              </th>
+              <th class="text-left p-1">
+                Rim m/min
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -112,9 +131,15 @@
               :key="s.index"
               class="border-b last:border-0"
             >
-              <td class="p-1">{{ s.index }}</td>
-              <td class="p-1">{{ s.kind }}</td>
-              <td class="p-1">{{ s.offset_mm.toFixed(2) }}</td>
+              <td class="p-1">
+                {{ s.index }}
+              </td>
+              <td class="p-1">
+                {{ s.kind }}
+              </td>
+              <td class="p-1">
+                {{ s.offset_mm.toFixed(2) }}
+              </td>
               <td class="p-1">
                 <span
                   :class="[
@@ -122,21 +147,25 @@
                     s.risk_grade === 'RED'
                       ? 'bg-red-100 text-red-700'
                       : s.risk_grade === 'YELLOW'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-green-100 text-green-700',
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700',
                   ]"
                 >
                   {{ s.risk_grade }}
                 </span>
               </td>
-              <td class="p-1">{{ s.rim_speed_m_min.toFixed(1) }}</td>
+              <td class="p-1">
+                {{ s.rim_speed_m_min.toFixed(1) }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div>
-        <h3 class="font-semibold mb-1">G-code Preview</h3>
+        <h3 class="font-semibold mb-1">
+          G-code Preview
+        </h3>
         <textarea
           class="w-full h-48 border rounded px-2 py-1 font-mono text-[10px]"
           readonly
@@ -144,7 +173,10 @@
       </div>
     </div>
 
-    <p v-if="error" class="text-xs text-red-600">
+    <p
+      v-if="error"
+      class="text-xs text-red-600"
+    >
       {{ error }}
     </p>
   </div>

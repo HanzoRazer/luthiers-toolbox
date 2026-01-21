@@ -14,12 +14,19 @@
         <div class="template-preview">
           {{ template.icon }}
         </div>
-        <div class="template-name">{{ template.name }}</div>
-        <div class="template-desc">{{ template.description }}</div>
+        <div class="template-name">
+          {{ template.name }}
+        </div>
+        <div class="template-desc">
+          {{ template.description }}
+        </div>
       </button>
     </div>
 
-    <div class="template-info" v-if="selectedTemplateInfo">
+    <div
+      v-if="selectedTemplateInfo"
+      class="template-info"
+    >
       <h4>{{ selectedTemplateInfo.name }}</h4>
       <p>{{ selectedTemplateInfo.longDescription }}</p>
       <div class="template-specs">
@@ -36,7 +43,10 @@
           <strong>Strips:</strong> {{ selectedTemplateInfo.strips.length }} types
         </div>
       </div>
-      <button class="btn-apply" @click="applyTemplate">
+      <button
+        class="btn-apply"
+        @click="applyTemplate"
+      >
         Apply Template
       </button>
     </div>

@@ -17,7 +17,9 @@ Features:
   <div class="bridge-lab-view">
     <div class="lab-header">
       <h1>🌉 Bridge Lab</h1>
-      <p class="subtitle">Complete DXF → Preflight → Adaptive → Export → Simulate Workflow</p>
+      <p class="subtitle">
+        Complete DXF → Preflight → Adaptive → Export → Simulate Workflow
+      </p>
     </div>
 
     <div class="workflow-container">
@@ -30,14 +32,22 @@ Features:
 
         <BridgeCalculatorPanel @dxf-generated="onCalculatorDxfGenerated" />
 
-        <p v-if="calculatorStatus" class="calculator-status">{{ calculatorStatus }}</p>
+        <p
+          v-if="calculatorStatus"
+          class="calculator-status"
+        >
+          {{ calculatorStatus }}
+        </p>
       </div>
 
       <!-- Stage 1: DXF Preflight -->
       <div class="workflow-stage">
         <div class="stage-header">
           <h2>Stage 1: DXF Preflight</h2>
-          <span class="stage-badge" :class="{ active: currentStage === 1 }">1</span>
+          <span
+            class="stage-badge"
+            :class="{ active: currentStage === 1 }"
+          >1</span>
         </div>
         
         <CamBridgePreflightPanel 
@@ -73,10 +83,16 @@ Features:
       </div>
 
       <!-- Stage 2: Send to Adaptive -->
-      <div v-if="preflightPassed" class="workflow-stage">
+      <div
+        v-if="preflightPassed"
+        class="workflow-stage"
+      >
         <div class="stage-header">
           <h2>Stage 2: Generate Toolpath</h2>
-          <span class="stage-badge" :class="{ active: currentStage === 2 }">2</span>
+          <span
+            class="stage-badge"
+            :class="{ active: currentStage === 2 }"
+          >2</span>
         </div>
         
         <div class="adaptive-panel">
@@ -85,78 +101,122 @@ Features:
           <div class="param-grid">
             <div class="param-field">
               <label>Tool Diameter</label>
-              <input v-model.number="adaptiveParams.tool_d" type="number" step="0.1" />
+              <input
+                v-model.number="adaptiveParams.tool_d"
+                type="number"
+                step="0.1"
+              >
               <span class="unit">{{ adaptiveParams.units }}</span>
             </div>
             
             <div class="param-field">
               <label>Units</label>
               <select v-model="adaptiveParams.units">
-                <option value="mm">Millimeters</option>
-                <option value="inch">Inches</option>
+                <option value="mm">
+                  Millimeters
+                </option>
+                <option value="inch">
+                  Inches
+                </option>
               </select>
             </div>
             
             <div class="param-field">
               <label>Geometry Layer</label>
-              <input v-model="adaptiveParams.geometry_layer" type="text" />
+              <input
+                v-model="adaptiveParams.geometry_layer"
+                type="text"
+              >
             </div>
             
             <div class="param-field">
               <label>Stepover</label>
-              <input v-model.number="adaptiveParams.stepover" type="number" step="0.05" min="0.1" max="1.0" />
+              <input
+                v-model.number="adaptiveParams.stepover"
+                type="number"
+                step="0.05"
+                min="0.1"
+                max="1.0"
+              >
               <span class="unit">% of tool_d</span>
             </div>
             
             <div class="param-field">
               <label>Stepdown</label>
-              <input v-model.number="adaptiveParams.stepdown" type="number" step="0.1" />
+              <input
+                v-model.number="adaptiveParams.stepdown"
+                type="number"
+                step="0.1"
+              >
               <span class="unit">{{ adaptiveParams.units }}</span>
             </div>
             
             <div class="param-field">
               <label>Margin</label>
-              <input v-model.number="adaptiveParams.margin" type="number" step="0.1" />
+              <input
+                v-model.number="adaptiveParams.margin"
+                type="number"
+                step="0.1"
+              >
               <span class="unit">{{ adaptiveParams.units }}</span>
             </div>
             
             <div class="param-field">
               <label>Strategy</label>
               <select v-model="adaptiveParams.strategy">
-                <option value="Spiral">Spiral</option>
-                <option value="Lanes">Lanes</option>
+                <option value="Spiral">
+                  Spiral
+                </option>
+                <option value="Lanes">
+                  Lanes
+                </option>
               </select>
             </div>
             
             <div class="param-field">
               <label>Feed XY</label>
-              <input v-model.number="adaptiveParams.feed_xy" type="number" step="100" />
+              <input
+                v-model.number="adaptiveParams.feed_xy"
+                type="number"
+                step="100"
+              >
               <span class="unit">{{ adaptiveParams.units }}/min</span>
             </div>
             
             <div class="param-field">
               <label>Safe Z</label>
-              <input v-model.number="adaptiveParams.safe_z" type="number" step="0.5" />
+              <input
+                v-model.number="adaptiveParams.safe_z"
+                type="number"
+                step="0.5"
+              >
               <span class="unit">{{ adaptiveParams.units }}</span>
             </div>
             
             <div class="param-field">
               <label>Z Rough</label>
-              <input v-model.number="adaptiveParams.z_rough" type="number" step="0.5" />
+              <input
+                v-model.number="adaptiveParams.z_rough"
+                type="number"
+                step="0.5"
+              >
               <span class="unit">{{ adaptiveParams.units }}</span>
             </div>
           </div>
           
           <button 
-            @click="sendToAdaptive" 
-            class="btn-primary"
+            class="btn-primary" 
             :disabled="!dxfFile || adaptiveRunning"
+            @click="sendToAdaptive"
           >
             {{ adaptiveRunning ? 'Generating Toolpath...' : '🔄 Generate Adaptive Toolpath' }}
           </button>
           
           <!-- Toolpath Results -->
-          <div v-if="toolpathResult" class="toolpath-results">
+          <div
+            v-if="toolpathResult"
+            class="toolpath-results"
+          >
             <h4>Toolpath Generated</h4>
             <div class="stats-grid">
               <div class="stat-item">
@@ -191,10 +251,16 @@ Features:
       </div>
 
       <!-- Stage 3: Export G-code -->
-      <div v-if="toolpathResult" class="workflow-stage">
+      <div
+        v-if="toolpathResult"
+        class="workflow-stage"
+      >
         <div class="stage-header">
           <h2>Stage 3: Export G-code</h2>
-          <span class="stage-badge" :class="{ active: currentStage === 3 }">3</span>
+          <span
+            class="stage-badge"
+            :class="{ active: currentStage === 3 }"
+          >3</span>
         </div>
         
         <div class="export-panel">
@@ -203,7 +269,11 @@ Features:
           <div class="post-selector">
             <label>Select Post-Processor</label>
             <select v-model="selectedPostId">
-              <option v-for="post in availablePosts" :key="post.id" :value="post.id">
+              <option
+                v-for="post in availablePosts"
+                :key="post.id"
+                :value="post.id"
+              >
                 {{ post.name || post.id }}
               </option>
             </select>
@@ -212,55 +282,81 @@ Features:
           <div class="post-mode-selector">
             <label>Export Mode</label>
             <select v-model="postMode">
-              <option value="standard">Standard (Full G-code)</option>
-              <option value="dry_run">Dry Run (Rapid only)</option>
+              <option value="standard">
+                Standard (Full G-code)
+              </option>
+              <option value="dry_run">
+                Dry Run (Rapid only)
+              </option>
             </select>
           </div>
           
           <button 
-            @click="exportGcode" 
-            class="btn-primary"
+            class="btn-primary" 
             :disabled="exportRunning || !selectedPostId"
+            @click="exportGcode"
           >
             {{ exportRunning ? 'Exporting...' : '📤 Export G-code' }}
           </button>
           
-          <p v-if="exportedFilename" class="success-message">
+          <p
+            v-if="exportedFilename"
+            class="success-message"
+          >
             ✅ Exported: {{ exportedFilename }}
           </p>
         </div>
       </div>
 
       <!-- Stage 4: Simulate G-code -->
-      <div v-if="exportedGcode" class="workflow-stage">
+      <div
+        v-if="exportedGcode"
+        class="workflow-stage"
+      >
         <div class="stage-header">
           <h2>Stage 4: Simulate G-code</h2>
-          <span class="stage-badge" :class="{ active: currentStage === 4 }">4</span>
+          <span
+            class="stage-badge"
+            :class="{ active: currentStage === 4 }"
+          >4</span>
         </div>
         
         <div class="simulate-panel">
           <h3>G-code Simulation</h3>
           
-          <p class="help-text">Upload exported G-code file to verify toolpath</p>
+          <p class="help-text">
+            Upload exported G-code file to verify toolpath
+          </p>
           
           <div class="file-upload">
             <label class="upload-button">
               📁 Select G-code File
-              <input type="file" accept=".nc,.gcode,.ngc" @change="onGcodeFileChange" hidden>
+              <input
+                type="file"
+                accept=".nc,.gcode,.ngc"
+                hidden
+                @change="onGcodeFileChange"
+              >
             </label>
-            <span v-if="gcodeFile" class="file-name">{{ gcodeFile.name }}</span>
+            <span
+              v-if="gcodeFile"
+              class="file-name"
+            >{{ gcodeFile.name }}</span>
           </div>
           
           <button 
-            @click="simulateGcode" 
-            class="btn-primary"
+            class="btn-primary" 
             :disabled="!gcodeFile || simRunning"
+            @click="simulateGcode"
           >
             {{ simRunning ? 'Simulating...' : '▶️ Run Simulation' }}
           </button>
           
           <!-- Simulation Results -->
-          <div v-if="simResult" class="sim-results">
+          <div
+            v-if="simResult"
+            class="sim-results"
+          >
             <h4>Simulation Results</h4>
             <div class="stats-grid">
               <div class="stat-item">

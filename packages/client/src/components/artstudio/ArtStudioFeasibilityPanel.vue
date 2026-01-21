@@ -12,22 +12,34 @@
     </h3>
 
     <!-- No data state -->
-    <div v-if="!feasibility" class="feasibility-panel__empty">
+    <div
+      v-if="!feasibility"
+      class="feasibility-panel__empty"
+    >
       <p>Run feasibility check to see results.</p>
     </div>
 
     <!-- Results -->
     <template v-else>
       <!-- Global Risk Summary -->
-      <div v-if="globalRisk.risk !== 'none'" class="feasibility-panel__section">
+      <div
+        v-if="globalRisk.risk !== 'none'"
+        class="feasibility-panel__section"
+      >
         <h4>
-          <span class="risk-badge" :class="`risk-badge--${globalRisk.risk}`">
+          <span
+            class="risk-badge"
+            :class="`risk-badge--${globalRisk.risk}`"
+          >
             {{ riskLabel(globalRisk.risk) }}
           </span>
           Global Risk
         </h4>
         <ul class="feasibility-panel__list">
-          <li v-for="(msg, i) in globalRisk.messages" :key="'global-' + i">
+          <li
+            v-for="(msg, i) in globalRisk.messages"
+            :key="'global-' + i"
+          >
             {{ msg }}
           </li>
         </ul>
@@ -40,7 +52,10 @@
       >
         <h4>❌ Hard Failures ({{ hardFailures.length }})</h4>
         <ul class="feasibility-panel__list">
-          <li v-for="(fail, i) in hardFailures" :key="'fail-' + i">
+          <li
+            v-for="(fail, i) in hardFailures"
+            :key="'fail-' + i"
+          >
             {{ fail }}
           </li>
         </ul>
@@ -53,14 +68,20 @@
       >
         <h4>⚠️ Warnings ({{ warnings.length }})</h4>
         <ul class="feasibility-panel__list">
-          <li v-for="(warn, i) in warnings" :key="'warn-' + i">
+          <li
+            v-for="(warn, i) in warnings"
+            :key="'warn-' + i"
+          >
             {{ warn }}
           </li>
         </ul>
       </div>
 
       <!-- Per-Path Risks -->
-      <div v-if="pathRisks.length" class="feasibility-panel__section">
+      <div
+        v-if="pathRisks.length"
+        class="feasibility-panel__section"
+      >
         <h4>Path Risks ({{ pathRisks.length }})</h4>
         <table class="feasibility-panel__table">
           <thead>
@@ -71,16 +92,29 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="pr in pathRisks" :key="pr.pathId">
-              <td class="path-id">{{ truncateId(pr.pathId) }}</td>
+            <tr
+              v-for="pr in pathRisks"
+              :key="pr.pathId"
+            >
+              <td class="path-id">
+                {{ truncateId(pr.pathId) }}
+              </td>
               <td>
-                <span class="risk-badge" :class="`risk-badge--${pr.risk}`">
+                <span
+                  class="risk-badge"
+                  :class="`risk-badge--${pr.risk}`"
+                >
                   {{ riskLabel(pr.risk) }}
                 </span>
               </td>
               <td>
                 <ul class="issue-list">
-                  <li v-for="(msg, i) in pr.messages" :key="i">{{ msg }}</li>
+                  <li
+                    v-for="(msg, i) in pr.messages"
+                    :key="i"
+                  >
+                    {{ msg }}
+                  </li>
                 </ul>
               </td>
             </tr>
@@ -92,9 +126,9 @@
       <div
         v-if="
           !hardFailures.length &&
-          !warnings.length &&
-          !pathRisks.length &&
-          globalRisk.risk === 'none'
+            !warnings.length &&
+            !pathRisks.length &&
+            globalRisk.risk === 'none'
         "
         class="feasibility-panel__success"
       >

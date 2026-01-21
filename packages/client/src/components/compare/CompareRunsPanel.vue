@@ -26,25 +26,41 @@
       </div>
     </header>
 
-    <div v-if="error" class="error-banner">
+    <div
+      v-if="error"
+      class="error-banner"
+    >
       {{ error }}
     </div>
 
-    <div v-if="!comparisonData && !loading" class="empty-state">
+    <div
+      v-if="!comparisonData && !loading"
+      class="empty-state"
+    >
       <p>Select 2-4 jobs from the history table to compare.</p>
-      <p class="hint">Checkboxes will appear when jobs are loaded.</p>
+      <p class="hint">
+        Checkboxes will appear when jobs are loaded.
+      </p>
     </div>
 
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <div class="spinner" />
       <p>Loading comparison...</p>
     </div>
 
-    <div v-if="comparisonData" class="comparison-table-wrapper">
+    <div
+      v-if="comparisonData"
+      class="comparison-table-wrapper"
+    >
       <table class="comparison-table">
         <thead>
           <tr>
-            <th class="metric-name">Metric</th>
+            <th class="metric-name">
+              Metric
+            </th>
             <th
               v-for="(job, idx) in comparisonData.jobs"
               :key="job.run_id"
@@ -52,7 +68,10 @@
             >
               <div class="job-header">
                 <span class="job-name">{{ job.job_name || job.run_id.slice(0, 8) }}</span>
-                <span v-if="job.is_baseline" class="baseline-badge">Baseline</span>
+                <span
+                  v-if="job.is_baseline"
+                  class="baseline-badge"
+                >Baseline</span>
               </div>
               <div class="job-meta">
                 {{ job.machine_id }} · {{ job.post_id }}
@@ -61,8 +80,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(metric, key) in comparisonData.comparison" :key="key">
-            <td class="metric-name">{{ formatMetricName(key) }}</td>
+          <tr
+            v-for="(metric, key) in comparisonData.comparison"
+            :key="key"
+          >
+            <td class="metric-name">
+              {{ formatMetricName(key) }}
+            </td>
             <td
               v-for="(value, idx) in metric.values"
               :key="idx"
@@ -72,10 +96,16 @@
               }"
             >
               <div class="metric-value">
-                <span v-if="metric.winner === idx" class="winner-icon">🏆</span>
+                <span
+                  v-if="metric.winner === idx"
+                  class="winner-icon"
+                >🏆</span>
                 {{ formatValue(value, key) }}
               </div>
-              <div v-if="metric.direction && idx > 0 && typeof value === 'number'" class="delta">
+              <div
+                v-if="metric.direction && idx > 0 && typeof value === 'number'"
+                class="delta"
+              >
                 {{ formatDelta(value as number, metric.values[0] as number, metric.direction) }}
               </div>
             </td>
@@ -86,8 +116,8 @@
       <div class="actions-footer">
         <button
           class="secondary"
-          @click="setBaseline"
           :disabled="!comparisonData || comparisonData.jobs.length === 0"
+          @click="setBaseline"
         >
           Set Winner as Baseline
         </button>

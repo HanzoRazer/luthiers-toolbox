@@ -18,7 +18,9 @@ Features:
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-xs font-semibold text-gray-700">CAM Backplot</h3>
+        <h3 class="text-xs font-semibold text-gray-700">
+          CAM Backplot
+        </h3>
         <p class="text-[11px] text-gray-500">
           Visualize toolpath, feeds, envelope, and playhead
         </p>
@@ -130,12 +132,12 @@ Features:
       <div class="flex items-center gap-2 flex-1 min-w-[180px]">
         <span class="text-[10px] text-gray-500">Play</span>
         <input
+          v-model.number="playPercent"
           type="range"
           min="0"
           max="100"
-          v-model.number="playPercent"
           class="flex-1"
-        />
+        >
         <span class="text-[10px] text-gray-500">
           {{ visibleSegmentCount }}/{{ totalSegmentCount }}
         </span>
@@ -144,22 +146,34 @@ Features:
       <!-- Legend -->
       <div class="flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
         <div class="flex items-center gap-1">
-          <span class="inline-block w-3 h-[2px]" :style="{ background: cutColor }" />
+          <span
+            class="inline-block w-3 h-[2px]"
+            :style="{ background: cutColor }"
+          />
           <span>Cut</span>
         </div>
         <div class="flex items-center gap-1">
-          <span class="inline-block w-3 h-[2px]" :style="{ background: rapidColor }" />
+          <span
+            class="inline-block w-3 h-[2px]"
+            :style="{ background: rapidColor }"
+          />
           <span>Rapid</span>
         </div>
         <div class="flex items-center gap-1">
-          <span class="inline-block w-3 h-[2px]" :style="{ background: slowColor }" />
+          <span
+            class="inline-block w-3 h-[2px]"
+            :style="{ background: slowColor }"
+          />
           <span>Slow / feed floor</span>
         </div>
         <div
           v-if="simIssues && simIssues.length"
           class="flex items-center gap-1"
         >
-          <span class="inline-block w-2 h-2 rounded-full" :style="{ background: issueColor }" />
+          <span
+            class="inline-block w-2 h-2 rounded-full"
+            :style="{ background: issueColor }"
+          />
           <span>Issues</span>
         </div>
       </div>

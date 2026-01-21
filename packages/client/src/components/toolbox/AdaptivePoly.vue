@@ -2,7 +2,9 @@
   <div class="p-4 bg-white">
     <!-- Header -->
     <div class="mb-3">
-      <h2 class="text-base font-semibold text-gray-900">Adaptive Polygon Processor</h2>
+      <h2 class="text-base font-semibold text-gray-900">
+        Adaptive Polygon Processor
+      </h2>
       <p class="text-xs text-gray-600 mt-1">
         N17: Offset preview | N18: Spiral G-code generation
       </p>
@@ -19,7 +21,6 @@
           </label>
           <div class="flex gap-2">
             <button
-              @click="mode = 'preview'"
               :class="[
                 'flex-1 px-3 py-2 text-xs font-medium rounded border transition-colors',
                 mode === 'preview'
@@ -27,11 +28,11 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="mode = 'preview'"
             >
               📊 Preview (N17)
             </button>
             <button
-              @click="mode = 'spiral'"
               :class="[
                 'flex-1 px-3 py-2 text-xs font-medium rounded border transition-colors',
                 mode === 'spiral'
@@ -39,6 +40,7 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="mode = 'spiral'"
             >
               🌀 Spiral (N18)
             </button>
@@ -62,9 +64,9 @@
           <div class="flex items-center justify-between text-[10px] text-gray-500 mt-1">
             <span>{{ pointCount }} points</span>
             <button
-              @click="useDefaultPolygon"
               class="text-blue-600 hover:underline"
               :disabled="busy"
+              @click="useDefaultPolygon"
             >
               Use default rectangle
             </button>
@@ -84,7 +86,7 @@
               min="0.1"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -98,7 +100,7 @@
               :max="mode === 'preview' ? 90 : undefined"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
         </div>
 
@@ -109,7 +111,6 @@
           </label>
           <div class="flex gap-2">
             <button
-              @click="params.link_mode = 'arc'"
               :class="[
                 'flex-1 px-2 py-1.5 text-xs rounded border transition-colors',
                 params.link_mode === 'arc'
@@ -117,11 +118,11 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="params.link_mode = 'arc'"
             >
               Arc (G2/G3)
             </button>
             <button
-              @click="params.link_mode = 'linear'"
               :class="[
                 'flex-1 px-2 py-1.5 text-xs rounded border transition-colors',
                 params.link_mode === 'linear'
@@ -129,6 +130,7 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="params.link_mode = 'linear'"
             >
               Linear (G1)
             </button>
@@ -136,7 +138,10 @@
         </div>
 
         <!-- N18 Specific: Spiral Parameters -->
-        <div v-if="mode === 'spiral'" class="grid grid-cols-2 gap-3">
+        <div
+          v-if="mode === 'spiral'"
+          class="grid grid-cols-2 gap-3"
+        >
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">
               Feed Rate (mm/min)
@@ -148,7 +153,7 @@
               min="100"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -161,36 +166,46 @@
               max="0"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex gap-2">
           <button
-            @click="runProcessor"
             :disabled="busy || !isValidPolygon"
             class="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            @click="runProcessor"
           >
             {{ busy ? 'Processing...' : (mode === 'preview' ? 'Generate Preview' : 'Generate G-code') }}
           </button>
           <button
-            @click="clearResults"
             :disabled="busy"
             class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            @click="clearResults"
           >
             Clear
           </button>
         </div>
 
         <!-- Error Display -->
-        <div v-if="errorMessage" class="border border-red-200 rounded-lg p-3 bg-red-50">
-          <p class="text-xs font-medium text-red-900">⚠️ Error</p>
-          <p class="text-[11px] text-red-700 mt-1">{{ errorMessage }}</p>
+        <div
+          v-if="errorMessage"
+          class="border border-red-200 rounded-lg p-3 bg-red-50"
+        >
+          <p class="text-xs font-medium text-red-900">
+            ⚠️ Error
+          </p>
+          <p class="text-[11px] text-red-700 mt-1">
+            {{ errorMessage }}
+          </p>
         </div>
 
         <!-- Stats Display -->
-        <div v-if="previewResult" class="border border-blue-100 rounded-lg p-3 bg-blue-50">
+        <div
+          v-if="previewResult"
+          class="border border-blue-100 rounded-lg p-3 bg-blue-50"
+        >
           <h3 class="text-xs font-semibold text-blue-900 mb-2">
             ✓ Preview Generated (N17)
           </h3>
@@ -217,7 +232,10 @@
           </div>
         </div>
 
-        <div v-if="gcodeResult" class="border border-green-100 rounded-lg p-3 bg-green-50">
+        <div
+          v-if="gcodeResult"
+          class="border border-green-100 rounded-lg p-3 bg-green-50"
+        >
           <h3 class="text-xs font-semibold text-green-900 mb-2">
             ✓ G-code Generated {{ mode === 'spiral' ? '(N18)' : '(N17)' }}
           </h3>
@@ -239,22 +257,39 @@
         <!-- Preview Container -->
         <div class="border border-gray-300 rounded-lg bg-gray-50 h-[400px] overflow-auto">
           <!-- JSON Preview (N17) -->
-          <div v-if="mode === 'preview' && previewResult" class="p-3">
-            <h3 class="text-xs font-semibold text-gray-900 mb-2">Offset Rings Preview</h3>
+          <div
+            v-if="mode === 'preview' && previewResult"
+            class="p-3"
+          >
+            <h3 class="text-xs font-semibold text-gray-900 mb-2">
+              Offset Rings Preview
+            </h3>
             <pre class="text-[10px] font-mono text-gray-700 whitespace-pre-wrap">{{ JSON.stringify(previewResult, null, 2) }}</pre>
           </div>
 
           <!-- G-code Preview (N17 or N18) -->
-          <div v-if="gcodeResult" class="p-3">
-            <h3 class="text-xs font-semibold text-gray-900 mb-2">G-code Output</h3>
+          <div
+            v-if="gcodeResult"
+            class="p-3"
+          >
+            <h3 class="text-xs font-semibold text-gray-900 mb-2">
+              G-code Output
+            </h3>
             <pre class="text-[10px] font-mono text-gray-700 whitespace-pre-wrap">{{ gcodePreview }}</pre>
           </div>
 
           <!-- Empty State -->
-          <div v-if="!previewResult && !gcodeResult" class="flex items-center justify-center h-full text-gray-400">
+          <div
+            v-if="!previewResult && !gcodeResult"
+            class="flex items-center justify-center h-full text-gray-400"
+          >
             <div class="text-center">
-              <p class="text-sm">No results yet</p>
-              <p class="text-xs mt-1">Configure parameters and click Generate</p>
+              <p class="text-sm">
+                No results yet
+              </p>
+              <p class="text-xs mt-1">
+                Configure parameters and click Generate
+              </p>
             </div>
           </div>
         </div>
@@ -262,8 +297,8 @@
         <!-- Download Button -->
         <button
           v-if="gcodeResult"
-          @click="downloadGcode"
           class="w-full px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          @click="downloadGcode"
         >
           💾 Download G-code
         </button>

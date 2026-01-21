@@ -36,7 +36,7 @@ function parseTransferFunction(json: unknown): ParsedODS {
 
   const obj = json as Record<string, unknown>;
   let points: TransferFunctionPoint[] = [];
-  let metadata: ParsedODS["metadata"] = {};
+  const metadata: ParsedODS["metadata"] = {};
 
   // Format 1: Parallel Arrays
   if (Array.isArray(obj.frequencies) || Array.isArray(obj.freq)) {

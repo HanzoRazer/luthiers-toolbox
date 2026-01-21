@@ -1,30 +1,45 @@
 <template>
   <div class="compare-lab">
     <div class="flex items-center gap-3 mb-2">
-      <h2 id="compare-lab-title">Compare Lab (Dual Toolpath Diff)</h2>
+      <h2 id="compare-lab-title">
+        Compare Lab (Dual Toolpath Diff)
+      </h2>
       <CompareModeButton
         :baseline-id="baseline?.id || 'baseline'"
         :candidate-id="compare?.id || 'candidate'"
         aria-label="Back to Adaptive Lab"
-      >Back to Adaptive Lab</CompareModeButton>
+      >
+        Back to Adaptive Lab
+      </CompareModeButton>
     </div>
     <DualSvgDisplay
       :baseline="baseline"
       :candidate="compare"
       :diff="delta"
-      :opacityA="0.85"
-      :opacityB="0.85"
-      :diffMode="diffMode"
-      :syncViewports="true"
+      :opacity-a="0.85"
+      :opacity-b="0.85"
+      :diff-mode="diffMode"
+      :sync-viewports="true"
     />
-    <DiffModeToggle v-model="diffMode" :delta="delta" />
-    <ExportToolbar v-if="delta"
+    <DiffModeToggle
+      v-model="diffMode"
+      :delta="delta"
+    />
+    <ExportToolbar
+      v-if="delta"
       @export-dxf="exportDXF"
       @export-svg="exportSVG"
       @export-gcode="exportGcode"
     />
-    <div v-if="loading">Loading...</div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="loading">
+      Loading...
+    </div>
+    <div
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
     <MetricsDisplay :delta="delta" />
   </div>
 </template>

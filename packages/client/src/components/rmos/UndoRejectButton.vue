@@ -29,10 +29,19 @@ async function doClear() {
 
 <template>
   <div class="wrap">
-    <button class="btn tiny" :disabled="disabled || busy" @click="doClear">
+    <button
+      class="btn tiny"
+      :disabled="disabled || busy"
+      @click="doClear"
+    >
       {{ busy ? "Undo…" : "Undo Reject" }}
     </button>
-    <div v-if="error" class="err">{{ error }}</div>
+    <div
+      v-if="error"
+      class="err"
+    >
+      {{ error }}
+    </div>
   </div>
 </template>
 

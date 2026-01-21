@@ -2,7 +2,9 @@
   <div class="space-y-4 p-4">
     <header class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-sm font-semibold text-gray-900">CAM Risk Timeline</h1>
+        <h1 class="text-sm font-semibold text-gray-900">
+          CAM Risk Timeline
+        </h1>
         <p class="text-[11px] text-gray-600">
           View saved pipeline snapshots with lane / preset filters and jump back into PipelineLab.
         </p>
@@ -23,7 +25,10 @@
       <div class="flex flex-wrap items-end gap-3">
         <label class="flex flex-col gap-1">
           <span class="text-gray-600">Lane</span>
-          <select v-model="laneFilter" class="rounded border px-2 py-1">
+          <select
+            v-model="laneFilter"
+            class="rounded border px-2 py-1"
+          >
             <option value="rosette">Rosette</option>
             <option value="all">All lanes</option>
             <option
@@ -38,7 +43,10 @@
 
         <label class="flex flex-col gap-1">
           <span class="text-gray-600">Preset</span>
-          <select v-model="presetFilter" class="rounded border px-2 py-1 min-w-[140px]">
+          <select
+            v-model="presetFilter"
+            class="rounded border px-2 py-1 min-w-[140px]"
+          >
             <option value="all">All presets</option>
             <option
               v-for="preset in presetOptions"
@@ -52,7 +60,10 @@
 
         <label class="flex flex-col gap-1">
           <span class="text-gray-600">Window</span>
-          <select v-model.number="daysBack" class="rounded border px-2 py-1">
+          <select
+            v-model.number="daysBack"
+            class="rounded border px-2 py-1"
+          >
             <option :value="3">Last 3 days</option>
             <option :value="7">Last 7 days</option>
             <option :value="14">Last 14 days</option>
@@ -64,13 +75,13 @@
         <label class="flex flex-col gap-1">
           <span class="text-gray-600">Limit</span>
           <input
-            type="number"
             v-model.number="limit"
+            type="number"
             min="5"
             max="200"
             step="5"
             class="rounded border px-2 py-1 w-20"
-          />
+          >
         </label>
 
         <button
@@ -82,15 +93,29 @@
         </button>
       </div>
 
-      <div v-if="errorMsg" class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">
+      <div
+        v-if="errorMsg"
+        class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700"
+      >
         {{ errorMsg }}
       </div>
-      <div v-else-if="loading" class="text-gray-500">Loading reports…</div>
-      <div v-else-if="!reports.length" class="text-gray-500">
+      <div
+        v-else-if="loading"
+        class="text-gray-500"
+      >
+        Loading reports…
+      </div>
+      <div
+        v-else-if="!reports.length"
+        class="text-gray-500"
+      >
         No reports found for this window.
       </div>
 
-      <div v-if="presetTrends.length" class="grid gap-2 md:grid-cols-2">
+      <div
+        v-if="presetTrends.length"
+        class="grid gap-2 md:grid-cols-2"
+      >
         <div
           v-for="trend in presetTrends"
           :key="trend.preset"
@@ -107,17 +132,32 @@
       </div>
     </section>
 
-    <section v-if="reports.length" class="rounded border border-gray-200 bg-white">
+    <section
+      v-if="reports.length"
+      class="rounded border border-gray-200 bg-white"
+    >
       <div class="overflow-x-auto">
         <table class="min-w-full text-left text-[11px]">
           <thead class="border-b bg-gray-50 text-gray-600">
             <tr>
-              <th class="px-3 py-2">Created</th>
-              <th class="px-3 py-2">Lane</th>
-              <th class="px-3 py-2">Preset</th>
-              <th class="px-3 py-2">Job</th>
-              <th class="px-3 py-2">Summary</th>
-              <th class="px-3 py-2 text-right">Actions</th>
+              <th class="px-3 py-2">
+                Created
+              </th>
+              <th class="px-3 py-2">
+                Lane
+              </th>
+              <th class="px-3 py-2">
+                Preset
+              </th>
+              <th class="px-3 py-2">
+                Job
+              </th>
+              <th class="px-3 py-2">
+                Summary
+              </th>
+              <th class="px-3 py-2 text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +178,9 @@
                 <span class="font-mono text-[10px]">{{ report.preset ?? '—' }}</span>
               </td>
               <td class="px-3 py-2">
-                <div class="font-mono text-[10px]">{{ report.job_id ?? '—' }}</div>
+                <div class="font-mono text-[10px]">
+                  {{ report.job_id ?? '—' }}
+                </div>
               </td>
               <td class="px-3 py-2">
                 <div class="flex flex-wrap gap-2 text-gray-800">

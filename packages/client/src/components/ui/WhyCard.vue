@@ -47,24 +47,50 @@ const summaryText = computed(() => {
 </script>
 
 <template>
-  <div v-if="hasRules" class="why-card">
-    <button class="why-header" @click="expanded = !expanded" type="button">
+  <div
+    v-if="hasRules"
+    class="why-card"
+  >
+    <button
+      class="why-header"
+      type="button"
+      @click="expanded = !expanded"
+    >
       <span class="why-icon">{{ expanded ? '▾' : '▸' }}</span>
       <span class="why-title">Why {{ riskLevel }}?</span>
-      <span v-if="summaryText" class="why-summary">{{ summaryText }}</span>
+      <span
+        v-if="summaryText"
+        class="why-summary"
+      >{{ summaryText }}</span>
     </button>
 
-    <div v-if="expanded" class="why-body">
+    <div
+      v-if="expanded"
+      class="why-body"
+    >
       <ul class="rule-list">
-        <li v-for="r in rules" :key="r.rule_id" class="rule-item">
-          <span class="rule-pill" :data-level="r.level.toLowerCase()">{{ r.level }}</span>
+        <li
+          v-for="r in rules"
+          :key="r.rule_id"
+          class="rule-item"
+        >
+          <span
+            class="rule-pill"
+            :data-level="r.level.toLowerCase()"
+          >{{ r.level }}</span>
           <span class="rule-id">{{ r.rule_id }}</span>
           <span class="rule-summary">{{ r.summary }}</span>
-          <span v-if="r.operator_hint" class="rule-hint">💡 {{ r.operator_hint }}</span>
+          <span
+            v-if="r.operator_hint"
+            class="rule-hint"
+          >💡 {{ r.operator_hint }}</span>
         </li>
       </ul>
 
-      <div v-if="overrideReason" class="override-note">
+      <div
+        v-if="overrideReason"
+        class="override-note"
+      >
         <strong>Override reason:</strong> {{ overrideReason }}
       </div>
     </div>

@@ -2,7 +2,9 @@
   <div class="scale-designer">
     <!-- Header -->
     <div class="designer-header">
-      <h1 class="designer-title">🎸 Scale Length Designer</h1>
+      <h1 class="designer-title">
+        🎸 Scale Length Designer
+      </h1>
       <p class="designer-subtitle">
         Educational tool for understanding guitar scale length physics, string tension, and intonation compensation
       </p>
@@ -22,83 +24,168 @@
     </div>
 
     <!-- Tab 1: Scale Length Presets & Education -->
-    <div v-if="activeTab === 'presets'" class="tab-content">
+    <div
+      v-if="activeTab === 'presets'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Standard Scale Lengths</h2>
         <p>Click a card to explore how scale length affects string tension and tone</p>
       </div>
 
       <div class="scale-grid">
-        <div class="scale-card" @click="selectScale('fender')">
-          <div class="scale-name">Fender Scale</div>
-          <div class="scale-value">25.5" (648mm)</div>
+        <div
+          class="scale-card"
+          @click="selectScale('fender')"
+        >
+          <div class="scale-name">
+            Fender Scale
+          </div>
+          <div class="scale-value">
+            25.5" (648mm)
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Bright, snappy tone</div>
-            <div class="scale-trait">• Higher string tension</div>
-            <div class="scale-trait">• Strat, Tele, Jazzmaster</div>
+            <div class="scale-trait">
+              • Bright, snappy tone
+            </div>
+            <div class="scale-trait">
+              • Higher string tension
+            </div>
+            <div class="scale-trait">
+              • Strat, Tele, Jazzmaster
+            </div>
           </div>
         </div>
 
-        <div class="scale-card" @click="selectScale('gibson')">
-          <div class="scale-name">Gibson Scale</div>
-          <div class="scale-value">24.75" (629mm)</div>
+        <div
+          class="scale-card"
+          @click="selectScale('gibson')"
+        >
+          <div class="scale-name">
+            Gibson Scale
+          </div>
+          <div class="scale-value">
+            24.75" (629mm)
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Warm, fat tone</div>
-            <div class="scale-trait">• Easier bending</div>
-            <div class="scale-trait">• Les Paul, SG, 335</div>
+            <div class="scale-trait">
+              • Warm, fat tone
+            </div>
+            <div class="scale-trait">
+              • Easier bending
+            </div>
+            <div class="scale-trait">
+              • Les Paul, SG, 335
+            </div>
           </div>
         </div>
 
-        <div class="scale-card" @click="selectScale('prs')">
-          <div class="scale-name">PRS Scale</div>
-          <div class="scale-value">25.0" (635mm)</div>
+        <div
+          class="scale-card"
+          @click="selectScale('prs')"
+        >
+          <div class="scale-name">
+            PRS Scale
+          </div>
+          <div class="scale-value">
+            25.0" (635mm)
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Balanced compromise</div>
-            <div class="scale-trait">• Medium tension</div>
-            <div class="scale-trait">• PRS core models</div>
+            <div class="scale-trait">
+              • Balanced compromise
+            </div>
+            <div class="scale-trait">
+              • Medium tension
+            </div>
+            <div class="scale-trait">
+              • PRS core models
+            </div>
           </div>
         </div>
 
-        <div class="scale-card" @click="selectScale('short')">
-          <div class="scale-name">Short Scale</div>
-          <div class="scale-value">24.0" (610mm)</div>
+        <div
+          class="scale-card"
+          @click="selectScale('short')"
+        >
+          <div class="scale-name">
+            Short Scale
+          </div>
+          <div class="scale-value">
+            24.0" (610mm)
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Easy playability</div>
-            <div class="scale-trait">• Lower tension</div>
-            <div class="scale-trait">• Mustang, Jaguar</div>
+            <div class="scale-trait">
+              • Easy playability
+            </div>
+            <div class="scale-trait">
+              • Lower tension
+            </div>
+            <div class="scale-trait">
+              • Mustang, Jaguar
+            </div>
           </div>
         </div>
 
-        <div class="scale-card" @click="selectScale('baritone')">
-          <div class="scale-name">Baritone Scale</div>
-          <div class="scale-value">27.0" (686mm)</div>
+        <div
+          class="scale-card"
+          @click="selectScale('baritone')"
+        >
+          <div class="scale-name">
+            Baritone Scale
+          </div>
+          <div class="scale-value">
+            27.0" (686mm)
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Extended low range</div>
-            <div class="scale-trait">• Tight low strings</div>
-            <div class="scale-trait">• Drop A, B tuning</div>
+            <div class="scale-trait">
+              • Extended low range
+            </div>
+            <div class="scale-trait">
+              • Tight low strings
+            </div>
+            <div class="scale-trait">
+              • Drop A, B tuning
+            </div>
           </div>
         </div>
 
-        <div class="scale-card" @click="selectScale('multiscale')">
-          <div class="scale-name">Multi-Scale (Fanned)</div>
-          <div class="scale-value">25.5" - 27.0"</div>
+        <div
+          class="scale-card"
+          @click="selectScale('multiscale')"
+        >
+          <div class="scale-name">
+            Multi-Scale (Fanned)
+          </div>
+          <div class="scale-value">
+            25.5" - 27.0"
+          </div>
           <div class="scale-info">
-            <div class="scale-trait">• Ergonomic fanned frets</div>
-            <div class="scale-trait">• Optimized per string</div>
-            <div class="scale-trait">• Modern innovation</div>
+            <div class="scale-trait">
+              • Ergonomic fanned frets
+            </div>
+            <div class="scale-trait">
+              • Optimized per string
+            </div>
+            <div class="scale-trait">
+              • Modern innovation
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Why Scale Length Matters -->
       <div class="education-section">
-        <div class="edu-title">💡 Why Scale Length Matters for Innovation</div>
+        <div class="edu-title">
+          💡 Why Scale Length Matters for Innovation
+        </div>
         
         <div class="edu-card">
           <h3>The Physics: Mersenne's Law</h3>
           <p>String tension is determined by a precise mathematical relationship:</p>
           <div class="formula-box">
-            <div class="formula">T = (μ × (2 × L × f)²) ÷ 4</div>
+            <div class="formula">
+              T = (μ × (2 × L × f)²) ÷ 4
+            </div>
             <div class="formula-legend">
               <div><strong>T</strong> = Tension (lbs)</div>
               <div><strong>μ</strong> = Linear mass density (lb/in)</div>
@@ -116,19 +203,37 @@
           <h3>Real-World Examples</h3>
           <div class="example-grid">
             <div class="example-item">
-              <div class="example-scale">Gibson 24.75"</div>
-              <div class="example-tension">14.2 lbs</div>
-              <div class="example-note">High E string (.010")</div>
+              <div class="example-scale">
+                Gibson 24.75"
+              </div>
+              <div class="example-tension">
+                14.2 lbs
+              </div>
+              <div class="example-note">
+                High E string (.010")
+              </div>
             </div>
             <div class="example-item">
-              <div class="example-scale">PRS 25.0"</div>
-              <div class="example-tension">14.5 lbs</div>
-              <div class="example-note">+2.1% tension</div>
+              <div class="example-scale">
+                PRS 25.0"
+              </div>
+              <div class="example-tension">
+                14.5 lbs
+              </div>
+              <div class="example-note">
+                +2.1% tension
+              </div>
             </div>
             <div class="example-item">
-              <div class="example-scale">Fender 25.5"</div>
-              <div class="example-tension">15.1 lbs</div>
-              <div class="example-note">+6.3% tension</div>
+              <div class="example-scale">
+                Fender 25.5"
+              </div>
+              <div class="example-tension">
+                15.1 lbs
+              </div>
+              <div class="example-note">
+                +6.3% tension
+              </div>
             </div>
           </div>
           <p class="edu-note">
@@ -139,7 +244,10 @@
     </div>
 
     <!-- Tab 2: Tension Calculator -->
-    <div v-if="activeTab === 'tension'" class="tab-content">
+    <div
+      v-if="activeTab === 'tension'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>String Tension Calculator</h2>
         <p>Calculate tension for custom scale lengths and string gauges</p>
@@ -150,66 +258,130 @@
           <div class="input-group">
             <label>Scale Length</label>
             <div class="input-with-unit">
-              <input v-model.number="customScale" type="number" step="0.25" min="20" max="30">
+              <input
+                v-model.number="customScale"
+                type="number"
+                step="0.25"
+                min="20"
+                max="30"
+              >
               <select v-model="scaleUnit">
-                <option value="in">inches</option>
-                <option value="mm">mm</option>
+                <option value="in">
+                  inches
+                </option>
+                <option value="mm">
+                  mm
+                </option>
               </select>
             </div>
           </div>
 
           <div class="string-inputs">
             <h3>String Gauges (inches)</h3>
-            <div class="string-row" v-for="(string, idx) in strings" :key="idx">
-              <div class="string-label">{{ string.name }}</div>
-              <input v-model.number="string.gauge" type="number" step="0.001" min="0.008" max="0.070">
-              <div class="string-freq">{{ string.note }} ({{ string.freq }} Hz)</div>
-              <div class="string-tension" :class="getTensionClass(calculateTension(idx))">
+            <div
+              v-for="(string, idx) in strings"
+              :key="idx"
+              class="string-row"
+            >
+              <div class="string-label">
+                {{ string.name }}
+              </div>
+              <input
+                v-model.number="string.gauge"
+                type="number"
+                step="0.001"
+                min="0.008"
+                max="0.070"
+              >
+              <div class="string-freq">
+                {{ string.note }} ({{ string.freq }} Hz)
+              </div>
+              <div
+                class="string-tension"
+                :class="getTensionClass(calculateTension(idx))"
+              >
                 {{ calculateTension(idx).toFixed(1) }} lbs
               </div>
             </div>
           </div>
 
           <div class="preset-gauges">
-            <button @click="applyGaugeSet('light')" class="btn-gauge">Light (.009-.042)</button>
-            <button @click="applyGaugeSet('regular')" class="btn-gauge">Regular (.010-.046)</button>
-            <button @click="applyGaugeSet('medium')" class="btn-gauge">Medium (.011-.049)</button>
-            <button @click="applyGaugeSet('heavy')" class="btn-gauge">Heavy (.012-.053)</button>
-            <button @click="applyGaugeSet('baritone')" class="btn-gauge">Baritone (.013-.062)</button>
+            <button
+              class="btn-gauge"
+              @click="applyGaugeSet('light')"
+            >
+              Light (.009-.042)
+            </button>
+            <button
+              class="btn-gauge"
+              @click="applyGaugeSet('regular')"
+            >
+              Regular (.010-.046)
+            </button>
+            <button
+              class="btn-gauge"
+              @click="applyGaugeSet('medium')"
+            >
+              Medium (.011-.049)
+            </button>
+            <button
+              class="btn-gauge"
+              @click="applyGaugeSet('heavy')"
+            >
+              Heavy (.012-.053)
+            </button>
+            <button
+              class="btn-gauge"
+              @click="applyGaugeSet('baritone')"
+            >
+              Baritone (.013-.062)
+            </button>
           </div>
         </div>
 
         <div class="tension-summary">
           <div class="summary-card">
-            <div class="summary-label">Total Tension</div>
-            <div class="summary-value">{{ totalTension.toFixed(1) }} lbs</div>
+            <div class="summary-label">
+              Total Tension
+            </div>
+            <div class="summary-value">
+              {{ totalTension.toFixed(1) }} lbs
+            </div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">Average per String</div>
-            <div class="summary-value">{{ averageTension.toFixed(1) }} lbs</div>
+            <div class="summary-label">
+              Average per String
+            </div>
+            <div class="summary-value">
+              {{ averageTension.toFixed(1) }} lbs
+            </div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">Tension Range</div>
-            <div class="summary-value">{{ tensionRange.toFixed(1) }} lbs</div>
+            <div class="summary-label">
+              Tension Range
+            </div>
+            <div class="summary-value">
+              {{ tensionRange.toFixed(1) }} lbs
+            </div>
           </div>
         </div>
 
         <div class="tension-guide">
           <h3>Tension Guidelines</h3>
           <div class="guide-row too-loose">
-            <div class="guide-indicator"></div>
+            <div class="guide-indicator" />
             <div class="guide-text">
               <strong>Too Loose (&lt; 13 lbs):</strong> Floppy feel, poor intonation, fret buzz
             </div>
           </div>
           <div class="guide-row good">
-            <div class="guide-indicator"></div>
+            <div class="guide-indicator" />
             <div class="guide-text">
               <strong>Good (13-16 lbs):</strong> Comfortable, balanced, stable tuning
             </div>
           </div>
           <div class="guide-row too-tight">
-            <div class="guide-indicator"></div>
+            <div class="guide-indicator" />
             <div class="guide-text">
               <strong>Too Tight (&gt; 16 lbs):</strong> Hard to bend, high action required
             </div>
@@ -219,7 +391,10 @@
     </div>
 
     <!-- Tab 3: Intonation Compensation -->
-    <div v-if="activeTab === 'intonation'" class="tab-content">
+    <div
+      v-if="activeTab === 'intonation'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Intonation Compensation</h2>
         <p>Understanding the "dead zone" and why bridges aren't placed at the exact scale length</p>
@@ -241,8 +416,12 @@
 
         <div class="compensation-table">
           <div class="comp-header">
-            <div class="comp-title">Intonation Compensation Chart</div>
-            <div class="comp-subtitle">For 25.5" scale (Fender) with standard .010-.046 gauges</div>
+            <div class="comp-title">
+              Intonation Compensation Chart
+            </div>
+            <div class="comp-subtitle">
+              For 25.5" scale (Fender) with standard .010-.046 gauges
+            </div>
           </div>
 
           <div class="comp-grid">
@@ -307,7 +486,9 @@
         <div class="bridge-placement">
           <h3>Bridge Placement Formula</h3>
           <div class="placement-box">
-            <div class="formula">Bridge Center = Scale Length + (Low E Compensation ÷ 2)</div>
+            <div class="formula">
+              Bridge Center = Scale Length + (Low E Compensation ÷ 2)
+            </div>
             <div class="formula-example">
               Example: 25.5" + (0.25" ÷ 2) = <strong>25.625"</strong> from nut to bridge center
             </div>
@@ -327,28 +508,38 @@
           <div class="factor-list">
             <div class="factor-item">
               <strong>1. String Diameter</strong>
-              <div>Thicker strings have more stiffness, creating larger dead zones. Low E (.046") needs 
-              ~4× more compensation than High E (.010").</div>
+              <div>
+                Thicker strings have more stiffness, creating larger dead zones. Low E (.046") needs 
+                ~4× more compensation than High E (.010").
+              </div>
             </div>
             <div class="factor-item">
               <strong>2. String Structure</strong>
-              <div>Wound strings (G, D, A, Low E) have higher stiffness than plain strings (High E, B) 
-              due to the wrap wire adding rigidity.</div>
+              <div>
+                Wound strings (G, D, A, Low E) have higher stiffness than plain strings (High E, B) 
+                due to the wrap wire adding rigidity.
+              </div>
             </div>
             <div class="factor-item">
               <strong>3. Core Wire Composition</strong>
-              <div>Stainless steel cores are stiffer than nickel or phosphor bronze, requiring more 
-              compensation. Material matters!</div>
+              <div>
+                Stainless steel cores are stiffer than nickel or phosphor bronze, requiring more 
+                compensation. Material matters!
+              </div>
             </div>
             <div class="factor-item">
               <strong>4. String Action Height</strong>
-              <div>Higher action means more stretch when fretting, pulling the string sharper. Compensate 
-              by moving saddles back further.</div>
+              <div>
+                Higher action means more stretch when fretting, pulling the string sharper. Compensate 
+                by moving saddles back further.
+              </div>
             </div>
             <div class="factor-item">
               <strong>5. Fret Height</strong>
-              <div>Tall frets (like jumbos) require more stretch to fret cleanly, increasing effective 
-              length. Lower frets need less compensation.</div>
+              <div>
+                Tall frets (like jumbos) require more stretch to fret cleanly, increasing effective 
+                length. Lower frets need less compensation.
+              </div>
             </div>
           </div>
         </div>
@@ -370,7 +561,10 @@
     </div>
 
     <!-- Tab 4: Multi-Scale Innovation -->
-    <div v-if="activeTab === 'multiscale'" class="tab-content">
+    <div
+      v-if="activeTab === 'multiscale'"
+      class="tab-content"
+    >
       <div class="section-header">
         <h2>Multi-Scale (Fanned Fret) Innovation</h2>
         <p>Why modern guitars are moving beyond single scale lengths</p>
@@ -388,7 +582,9 @@
             </ul>
             <div class="example">
               <strong>Example: Baritone at 25.5" scale</strong>
-              <div class="calc-result problem">Low B string: 12.8 lbs (too floppy!)</div>
+              <div class="calc-result problem">
+                Low B string: 12.8 lbs (too floppy!)
+              </div>
             </div>
           </div>
 
@@ -402,7 +598,9 @@
             </ul>
             <div class="example">
               <strong>Same baritone with multi-scale:</strong>
-              <div class="calc-result solution">Low B string: 14.3 lbs (perfect!)</div>
+              <div class="calc-result solution">
+                Low B string: 14.3 lbs (perfect!)
+              </div>
             </div>
           </div>
         </div>
@@ -411,14 +609,26 @@
           <h3>Visual: How Fanned Frets Work</h3>
           <div class="fret-visualization">
             <div class="fret-line treble">
-              <div class="fret-label">Treble Side (High E)</div>
-              <div class="fret-visual">|———————————————————| 25.5" scale</div>
-              <div class="fret-tension">15.1 lbs tension</div>
+              <div class="fret-label">
+                Treble Side (High E)
+              </div>
+              <div class="fret-visual">
+                |———————————————————| 25.5" scale
+              </div>
+              <div class="fret-tension">
+                15.1 lbs tension
+              </div>
             </div>
             <div class="fret-line bass">
-              <div class="fret-label">Bass Side (Low E)</div>
-              <div class="fret-visual">|—————————————————————————| 27.0" scale</div>
-              <div class="fret-tension">14.8 lbs tension (with .046" gauge)</div>
+              <div class="fret-label">
+                Bass Side (Low E)
+              </div>
+              <div class="fret-visual">
+                |—————————————————————————| 27.0" scale
+              </div>
+              <div class="fret-tension">
+                14.8 lbs tension (with .046" gauge)
+              </div>
             </div>
           </div>
           <p class="diagram-note">
@@ -440,37 +650,49 @@
               <div>High E (.010")</div>
               <div>15.1 lbs</div>
               <div>15.1 lbs</div>
-              <div class="neutral">Same</div>
+              <div class="neutral">
+                Same
+              </div>
             </div>
             <div class="comparison-row">
               <div>B (.013")</div>
               <div>15.2 lbs</div>
               <div>15.4 lbs</div>
-              <div class="slight">+1.3%</div>
+              <div class="slight">
+                +1.3%
+              </div>
             </div>
             <div class="comparison-row">
               <div>G (.017")</div>
               <div>15.0 lbs</div>
               <div>15.6 lbs</div>
-              <div class="good">+4%</div>
+              <div class="good">
+                +4%
+              </div>
             </div>
             <div class="comparison-row">
               <div>D (.026")</div>
               <div>14.9 lbs</div>
               <div>16.0 lbs</div>
-              <div class="good">+7.4%</div>
+              <div class="good">
+                +7.4%
+              </div>
             </div>
             <div class="comparison-row">
               <div>A (.036")</div>
               <div>14.3 lbs</div>
               <div>15.8 lbs</div>
-              <div class="excellent">+10.5%</div>
+              <div class="excellent">
+                +10.5%
+              </div>
             </div>
             <div class="comparison-row">
               <div>Low E (.046")</div>
               <div>13.8 lbs</div>
               <div>15.7 lbs</div>
-              <div class="excellent">+13.8%</div>
+              <div class="excellent">
+                +13.8%
+              </div>
             </div>
           </div>
           <p class="comparison-note">
@@ -483,32 +705,48 @@
           <h3>Ergonomic Benefits</h3>
           <div class="benefit-grid">
             <div class="benefit-card">
-              <div class="benefit-icon">🤚</div>
-              <div class="benefit-title">Natural Hand Position</div>
+              <div class="benefit-icon">
+                🤚
+              </div>
+              <div class="benefit-title">
+                Natural Hand Position
+              </div>
               <div class="benefit-text">
                 Fanned frets follow the natural angle of your hand/wrist, reducing strain during 
                 extended playing sessions.
               </div>
             </div>
             <div class="benefit-card">
-              <div class="benefit-icon">🎯</div>
-              <div class="benefit-title">Better Intonation</div>
+              <div class="benefit-icon">
+                🎯
+              </div>
+              <div class="benefit-title">
+                Better Intonation
+              </div>
               <div class="benefit-text">
                 Longer bass scales reduce compensation percentage, making intonation more accurate 
                 across the entire fretboard.
               </div>
             </div>
             <div class="benefit-card">
-              <div class="benefit-icon">🔊</div>
-              <div class="benefit-title">Balanced Tone</div>
+              <div class="benefit-icon">
+                🔊
+              </div>
+              <div class="benefit-title">
+                Balanced Tone
+              </div>
               <div class="benefit-text">
                 Each string has optimal tension for its frequency range, creating a more balanced 
                 and articulate sound across all strings.
               </div>
             </div>
             <div class="benefit-card">
-              <div class="benefit-icon">⚡</div>
-              <div class="benefit-title">Extended Range</div>
+              <div class="benefit-icon">
+                ⚡
+              </div>
+              <div class="benefit-title">
+                Extended Range
+              </div>
               <div class="benefit-text">
                 Makes 7, 8, and 9-string guitars playable by ensuring low strings have enough tension 
                 for clarity and definition.
@@ -527,7 +765,10 @@
             Or go extreme: 28" baritone for drop G# tuning, 22" travel guitar for portability. 
             The math is your guide!
           </p>
-          <button @click="activeTab = 'tension'" class="btn-explore">
+          <button
+            class="btn-explore"
+            @click="activeTab = 'tension'"
+          >
             Explore Custom Scales in Tension Calculator →
           </button>
         </div>

@@ -2,7 +2,9 @@
   <div class="saw-batch-panel">
     <div class="panel-header">
       <h2>Saw Batch Operation</h2>
-      <p class="subtitle">Schedule multiple slices with batch-level optimization</p>
+      <p class="subtitle">
+        Schedule multiple slices with batch-level optimization
+      </p>
     </div>
 
     <div class="panel-content">
@@ -13,9 +15,18 @@
         <!-- Blade Selection -->
         <div class="form-group">
           <label>Saw Blade</label>
-          <select v-model="selectedBladeId" @change="onBladeChange">
-            <option value="">Select blade...</option>
-            <option v-for="blade in blades" :key="blade.blade_id" :value="blade.blade_id">
+          <select
+            v-model="selectedBladeId"
+            @change="onBladeChange"
+          >
+            <option value="">
+              Select blade...
+            </option>
+            <option
+              v-for="blade in blades"
+              :key="blade.blade_id"
+              :value="blade.blade_id"
+            >
               {{ blade.vendor }} {{ blade.model_code }} ({{ blade.diameter_mm }}mm)
             </option>
           </select>
@@ -25,96 +36,183 @@
         <div class="form-group">
           <label>Machine Profile</label>
           <select v-model="machineProfile">
-            <option value="bcam_router_2030">BCAM Router 2030</option>
-            <option value="syil_x7">SYIL X7</option>
-            <option value="tormach_1100mx">Tormach 1100MX</option>
+            <option value="bcam_router_2030">
+              BCAM Router 2030
+            </option>
+            <option value="syil_x7">
+              SYIL X7
+            </option>
+            <option value="tormach_1100mx">
+              Tormach 1100MX
+            </option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Material Family</label>
           <select v-model="materialFamily">
-            <option value="hardwood">Hardwood</option>
-            <option value="softwood">Softwood</option>
-            <option value="plywood">Plywood</option>
-            <option value="mdf">MDF</option>
+            <option value="hardwood">
+              Hardwood
+            </option>
+            <option value="softwood">
+              Softwood
+            </option>
+            <option value="plywood">
+              Plywood
+            </option>
+            <option value="mdf">
+              MDF
+            </option>
           </select>
         </div>
 
         <!-- Batch Parameters -->
         <div class="form-group">
           <label>Number of Slices</label>
-          <input type="number" v-model.number="numSlices" min="1" max="50" step="1" />
+          <input
+            v-model.number="numSlices"
+            type="number"
+            min="1"
+            max="50"
+            step="1"
+          >
         </div>
 
         <div class="form-group">
           <label>Slice Spacing (mm)</label>
-          <input type="number" v-model.number="sliceSpacing" step="1" min="1" />
-          <div class="help-text">Distance between slice start points</div>
+          <input
+            v-model.number="sliceSpacing"
+            type="number"
+            step="1"
+            min="1"
+          >
+          <div class="help-text">
+            Distance between slice start points
+          </div>
         </div>
 
         <div class="form-group">
           <label>Slice Length (mm)</label>
-          <input type="number" v-model.number="sliceLength" step="1" min="10" />
+          <input
+            v-model.number="sliceLength"
+            type="number"
+            step="1"
+            min="10"
+          >
         </div>
 
         <div class="form-group">
           <label>Start Position X (mm)</label>
-          <input type="number" v-model.number="startX" step="0.1" />
+          <input
+            v-model.number="startX"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>Start Position Y (mm)</label>
-          <input type="number" v-model.number="startY" step="0.1" />
+          <input
+            v-model.number="startY"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>Slice Orientation</label>
           <select v-model="orientation">
-            <option value="horizontal">Horizontal (along X)</option>
-            <option value="vertical">Vertical (along Y)</option>
+            <option value="horizontal">
+              Horizontal (along X)
+            </option>
+            <option value="vertical">
+              Vertical (along Y)
+            </option>
           </select>
         </div>
 
         <!-- Depth Parameters -->
         <div class="form-group">
           <label>Total Depth (mm)</label>
-          <input type="number" v-model.number="totalDepth" step="0.5" min="0.5" />
+          <input
+            v-model.number="totalDepth"
+            type="number"
+            step="0.5"
+            min="0.5"
+          >
         </div>
 
         <div class="form-group">
           <label>Depth Per Pass (mm)</label>
-          <input type="number" v-model.number="depthPerPass" step="0.5" min="0.5" />
+          <input
+            v-model.number="depthPerPass"
+            type="number"
+            step="0.5"
+            min="0.5"
+          >
         </div>
 
         <!-- Feeds & Speeds -->
         <div class="form-group">
           <label>RPM</label>
-          <input type="number" v-model.number="rpm" step="100" min="2000" max="6000" />
+          <input
+            v-model.number="rpm"
+            type="number"
+            step="100"
+            min="2000"
+            max="6000"
+          >
         </div>
 
         <div class="form-group">
           <label>Feed Rate (IPM)</label>
-          <input type="number" v-model.number="feedIpm" step="5" min="10" max="300" />
+          <input
+            v-model.number="feedIpm"
+            type="number"
+            step="5"
+            min="10"
+            max="300"
+          >
         </div>
 
         <div class="form-group">
           <label>Safe Z (mm)</label>
-          <input type="number" v-model.number="safeZ" step="0.5" min="1" />
+          <input
+            v-model.number="safeZ"
+            type="number"
+            step="0.5"
+            min="1"
+          >
         </div>
 
         <!-- Actions -->
         <div class="actions">
-          <button @click="validateBatch" :disabled="!canValidate" class="btn-primary">
+          <button
+            :disabled="!canValidate"
+            class="btn-primary"
+            @click="validateBatch"
+          >
             Validate Batch
           </button>
-          <button @click="mergeLearnedParams" :disabled="!canMerge" class="btn-secondary">
+          <button
+            :disabled="!canMerge"
+            class="btn-secondary"
+            @click="mergeLearnedParams"
+          >
             Apply Learned Overrides
           </button>
-          <button @click="generateBatchGcode" :disabled="!isValid" class="btn-primary">
+          <button
+            :disabled="!isValid"
+            class="btn-primary"
+            @click="generateBatchGcode"
+          >
             Generate Batch G-code
           </button>
-          <button @click="sendToJobLog" :disabled="!hasGcode" class="btn-success">
+          <button
+            :disabled="!hasGcode"
+            class="btn-success"
+            @click="sendToJobLog"
+          >
             Send Batch to JobLog
           </button>
         </div>
@@ -127,34 +225,61 @@
           <h3>Batch Statistics</h3>
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-label">Total Slices</div>
-              <div class="stat-value">{{ numSlices }}</div>
+              <div class="stat-label">
+                Total Slices
+              </div>
+              <div class="stat-value">
+                {{ numSlices }}
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Total Length</div>
-              <div class="stat-value">{{ totalLengthMm.toFixed(0) }} mm</div>
+              <div class="stat-label">
+                Total Length
+              </div>
+              <div class="stat-value">
+                {{ totalLengthMm.toFixed(0) }} mm
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Total Passes</div>
-              <div class="stat-value">{{ totalPasses }}</div>
+              <div class="stat-label">
+                Total Passes
+              </div>
+              <div class="stat-value">
+                {{ totalPasses }}
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Est. Time</div>
-              <div class="stat-value">{{ formatTime(estimatedTimeSec) }}</div>
+              <div class="stat-label">
+                Est. Time
+              </div>
+              <div class="stat-value">
+                {{ formatTime(estimatedTimeSec) }}
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Total Volume</div>
-              <div class="stat-value">{{ totalVolumeMm3.toFixed(0) }} mm³</div>
+              <div class="stat-label">
+                Total Volume
+              </div>
+              <div class="stat-value">
+                {{ totalVolumeMm3.toFixed(0) }} mm³
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Kerf Loss</div>
-              <div class="stat-value">{{ kerfLossMm3.toFixed(0) }} mm³</div>
+              <div class="stat-label">
+                Kerf Loss
+              </div>
+              <div class="stat-value">
+                {{ kerfLossMm3.toFixed(0) }} mm³
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Validation Results -->
-        <div v-if="validationResult" class="validation-results">
+        <div
+          v-if="validationResult"
+          class="validation-results"
+        >
           <h3>Validation Results</h3>
           <div :class="['validation-badge', validationResult.overall_result.toLowerCase()]">
             {{ validationResult.overall_result }}
@@ -165,7 +290,10 @@
         </div>
 
         <!-- Learned Parameters -->
-        <div v-if="mergedParams" class="learned-params">
+        <div
+          v-if="mergedParams"
+          class="learned-params"
+        >
           <h3>Learned Parameters Applied</h3>
           <div class="param-grid">
             <div class="param-item">
@@ -198,20 +326,44 @@
         <!-- SVG Preview -->
         <div class="svg-preview">
           <h3>Batch Path Preview</h3>
-          <svg :viewBox="svgViewBox" width="100%" height="400" class="preview-canvas">
+          <svg
+            :viewBox="svgViewBox"
+            width="100%"
+            height="400"
+            class="preview-canvas"
+          >
             <!-- Grid -->
             <defs>
-              <pattern id="batch-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+              <pattern
+                id="batch-grid"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 20 0 L 0 0 0 20"
+                  fill="none"
+                  stroke="#e0e0e0"
+                  stroke-width="0.5"
+                />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#batch-grid)" />
+            <rect
+              width="100%"
+              height="100%"
+              fill="url(#batch-grid)"
+            />
             
             <!-- Slice paths -->
-            <g v-for="(slice, i) in slicePaths" :key="i">
+            <g
+              v-for="(slice, i) in slicePaths"
+              :key="i"
+            >
               <line
-                :x1="slice.x1" :y1="slice.y1"
-                :x2="slice.x2" :y2="slice.y2"
+                :x1="slice.x1"
+                :y1="slice.y1"
+                :x2="slice.x2"
+                :y2="slice.y2"
                 :stroke="i === 0 ? '#2196F3' : '#64B5F6'"
                 stroke-width="2"
               />
@@ -224,36 +376,69 @@
             </g>
             
             <!-- Kerf boundaries (first slice) -->
-            <line v-if="slicePaths.length > 0 && selectedBlade"
-              :x1="slicePaths[0].x1" :y1="slicePaths[0].y1 + (selectedBlade.kerf_mm / 2)"
-              :x2="slicePaths[0].x2" :y2="slicePaths[0].y2 + (selectedBlade.kerf_mm / 2)"
-              stroke="#FF9800" stroke-width="1" stroke-dasharray="2,2" />
-            <line v-if="slicePaths.length > 0 && selectedBlade"
-              :x1="slicePaths[0].x1" :y1="slicePaths[0].y1 - (selectedBlade.kerf_mm / 2)"
-              :x2="slicePaths[0].x2" :y2="slicePaths[0].y2 - (selectedBlade.kerf_mm / 2)"
-              stroke="#FF9800" stroke-width="1" stroke-dasharray="2,2" />
+            <line
+              v-if="slicePaths.length > 0 && selectedBlade"
+              :x1="slicePaths[0].x1"
+              :y1="slicePaths[0].y1 + (selectedBlade.kerf_mm / 2)"
+              :x2="slicePaths[0].x2"
+              :y2="slicePaths[0].y2 + (selectedBlade.kerf_mm / 2)"
+              stroke="#FF9800"
+              stroke-width="1"
+              stroke-dasharray="2,2"
+            />
+            <line
+              v-if="slicePaths.length > 0 && selectedBlade"
+              :x1="slicePaths[0].x1"
+              :y1="slicePaths[0].y1 - (selectedBlade.kerf_mm / 2)"
+              :x2="slicePaths[0].x2"
+              :y2="slicePaths[0].y2 - (selectedBlade.kerf_mm / 2)"
+              stroke="#FF9800"
+              stroke-width="1"
+              stroke-dasharray="2,2"
+            />
           </svg>
           <div class="legend">
-            <span><span class="color-box" style="background: #2196F3;"></span> First slice</span>
-            <span><span class="color-box" style="background: #64B5F6;"></span> Other slices</span>
-            <span><span class="color-box" style="background: #FF9800;"></span> Kerf boundary</span>
+            <span><span
+              class="color-box"
+              style="background: #2196F3;"
+            /> First slice</span>
+            <span><span
+              class="color-box"
+              style="background: #64B5F6;"
+            /> Other slices</span>
+            <span><span
+              class="color-box"
+              style="background: #FF9800;"
+            /> Kerf boundary</span>
           </div>
         </div>
 
         <!-- G-code Preview -->
-        <div v-if="gcode" class="gcode-preview">
+        <div
+          v-if="gcode"
+          class="gcode-preview"
+        >
           <h3>G-code Preview (First 20 / Last 5 lines)</h3>
           <pre class="gcode-text">{{ gcodePreview }}</pre>
-          <button @click="downloadGcode" class="btn-secondary">
+          <button
+            class="btn-secondary"
+            @click="downloadGcode"
+          >
             Download Batch G-code
           </button>
         </div>
 
         <!-- Run Artifact Link -->
-        <div v-if="runId" class="run-artifact-link">
+        <div
+          v-if="runId"
+          class="run-artifact-link"
+        >
           <h3>Run Artifact</h3>
           <p>Job logged with Run ID: <code>{{ runId }}</code></p>
-          <router-link :to="`/rmos/runs?run_id=${runId}`" class="btn-primary">
+          <router-link
+            :to="`/rmos/runs?run_id=${runId}`"
+            class="btn-primary"
+          >
             View Run Artifact
           </router-link>
         </div>

@@ -89,7 +89,9 @@ FUTURE ENHANCEMENTS:
   <div class="p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Machines</h2>
+        <h2 class="text-sm font-semibold">
+          Machines
+        </h2>
         <p class="text-[11px] text-gray-500">
           Read-only machine profiles (alpha)
         </p>
@@ -97,11 +99,17 @@ FUTURE ENHANCEMENTS:
       <span class="text-[10px] text-gray-400">/machines</span>
     </div>
 
-    <div v-if="error" class="text-xs text-red-600">
+    <div
+      v-if="error"
+      class="text-xs text-red-600"
+    >
       {{ error }}
     </div>
 
-    <div v-if="machines.length" class="grid md:grid-cols-2 gap-3">
+    <div
+      v-if="machines.length"
+      class="grid md:grid-cols-2 gap-3"
+    >
       <div
         v-for="m in machines"
         :key="m.id"
@@ -112,16 +120,29 @@ FUTURE ENHANCEMENTS:
           <span class="text-[10px] text-gray-400">{{ m.id }}</span>
         </div>
         <ul class="space-y-0.5 text-gray-600">
-          <li v-if="m.max_feed_xy">max feed XY: {{ m.max_feed_xy }}</li>
-          <li v-if="m.rapid">rapid: {{ m.rapid }}</li>
-          <li v-if="m.accel">accel: {{ m.accel }}</li>
-          <li v-if="m.jerk">jerk: {{ m.jerk }}</li>
-          <li v-if="m.safe_z_default">safe Z: {{ m.safe_z_default }}</li>
+          <li v-if="m.max_feed_xy">
+            max feed XY: {{ m.max_feed_xy }}
+          </li>
+          <li v-if="m.rapid">
+            rapid: {{ m.rapid }}
+          </li>
+          <li v-if="m.accel">
+            accel: {{ m.accel }}
+          </li>
+          <li v-if="m.jerk">
+            jerk: {{ m.jerk }}
+          </li>
+          <li v-if="m.safe_z_default">
+            safe Z: {{ m.safe_z_default }}
+          </li>
         </ul>
       </div>
     </div>
 
-    <p v-else class="text-[11px] text-gray-500">
+    <p
+      v-else
+      class="text-[11px] text-gray-500"
+    >
       No machines found.
     </p>
   </div>

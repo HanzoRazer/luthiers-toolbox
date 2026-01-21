@@ -32,7 +32,10 @@
     </div>
 
     <!-- Summary bar + sparkline -->
-    <div v-if="entries.length" class="mb-2 flex flex-col gap-2">
+    <div
+      v-if="entries.length"
+      class="mb-2 flex flex-col gap-2"
+    >
       <div class="flex flex-wrap items-center gap-3">
         <div class="text-[11px] text-gray-700 flex flex-wrap gap-3">
           <span>
@@ -52,10 +55,10 @@
         <!-- Compare presets toggle -->
         <label class="flex items-center gap-1 text-[10px] text-gray-600 cursor-pointer">
           <input
-            type="checkbox"
             v-model="comparePresets"
+            type="checkbox"
             class="h-3 w-3"
-          />
+          >
           <span>Compare presets</span>
         </label>
       </div>
@@ -66,7 +69,11 @@
         class="flex items-center gap-2 text-[10px] text-gray-600"
       >
         <div class="flex items-center gap-1">
-          <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+          <svg
+            :width="sparkWidth"
+            :height="sparkHeight"
+            viewBox="0 0 60 20"
+          >
             <polyline
               v-if="addedSparkPath"
               :points="addedSparkPath"
@@ -78,7 +85,11 @@
           <span>Added trend</span>
         </div>
         <div class="flex items-center gap-1">
-          <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+          <svg
+            :width="sparkWidth"
+            :height="sparkHeight"
+            viewBox="0 0 60 20"
+          >
             <polyline
               v-if="removedSparkPath"
               :points="removedSparkPath"
@@ -102,7 +113,11 @@
           class="flex items-center gap-2"
         >
           <span class="font-semibold">{{ preset.name }}</span>
-          <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+          <svg
+            :width="sparkWidth"
+            :height="sparkHeight"
+            viewBox="0 0 60 20"
+          >
             <polyline
               v-if="preset.addedPath"
               :points="preset.addedPath"
@@ -111,7 +126,11 @@
               stroke-width="1.2"
             />
           </svg>
-          <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+          <svg
+            :width="sparkWidth"
+            :height="sparkHeight"
+            viewBox="0 0 60 20"
+          >
             <polyline
               v-if="preset.removedPath"
               :points="preset.removedPath"
@@ -160,7 +179,11 @@
         <div class="flex items-center gap-3 text-[10px]">
           <div class="flex items-center gap-1">
             <span class="font-semibold text-gray-700">Added:</span>
-            <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+            <svg
+              :width="sparkWidth"
+              :height="sparkHeight"
+              viewBox="0 0 60 20"
+            >
               <polyline
                 v-if="pairAddedOverlay.a"
                 :points="pairAddedOverlay.a"
@@ -177,18 +200,22 @@
               />
             </svg>
             <div class="flex items-center gap-1">
-              <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <div class="w-2 h-2 rounded-full bg-emerald-500" />
               <span class="text-gray-600">A</span>
             </div>
             <div class="flex items-center gap-1">
-              <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+              <div class="w-2 h-2 rounded-full bg-orange-500" />
               <span class="text-gray-600">B</span>
             </div>
           </div>
 
           <div class="flex items-center gap-1">
             <span class="font-semibold text-gray-700">Removed:</span>
-            <svg :width="sparkWidth" :height="sparkHeight" viewBox="0 0 60 20">
+            <svg
+              :width="sparkWidth"
+              :height="sparkHeight"
+              viewBox="0 0 60 20"
+            >
               <polyline
                 v-if="pairRemovedOverlay.a"
                 :points="pairRemovedOverlay.a"
@@ -205,11 +232,11 @@
               />
             </svg>
             <div class="flex items-center gap-1">
-              <div class="w-2 h-2 rounded-full bg-red-500"></div>
+              <div class="w-2 h-2 rounded-full bg-red-500" />
               <span class="text-gray-600">A</span>
             </div>
             <div class="flex items-center gap-1">
-              <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+              <div class="w-2 h-2 rounded-full bg-indigo-500" />
               <span class="text-gray-600">B</span>
             </div>
           </div>
@@ -264,22 +291,42 @@
       </div>
     </div>
 
-    <div v-else class="text-[11px] text-gray-500 italic">
+    <div
+      v-else
+      class="text-[11px] text-gray-500 italic"
+    >
       No compare history yet for this lane/job.
     </div>
 
     <!-- History table -->
-    <div v-if="entries.length" class="overflow-x-auto mt-2">
+    <div
+      v-if="entries.length"
+      class="overflow-x-auto mt-2"
+    >
       <table class="min-w-full text-[11px] text-left">
         <thead class="border-b bg-gray-50">
           <tr>
-            <th class="px-2 py-1 whitespace-nowrap">Time</th>
-            <th class="px-2 py-1 whitespace-nowrap">Baseline</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Base</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">Curr</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right text-emerald-700">+Add</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right text-rose-700">-Rem</th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">=Unch</th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Time
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap">
+              Baseline
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Base
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              Curr
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right text-emerald-700">
+              +Add
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right text-rose-700">
+              -Rem
+            </th>
+            <th class="px-2 py-1 whitespace-nowrap text-right">
+              =Unch
+            </th>
           </tr>
         </thead>
         <tbody>

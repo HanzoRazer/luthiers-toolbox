@@ -91,7 +91,9 @@ FUTURE ENHANCEMENTS:
   <div class="p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Posts</h2>
+        <h2 class="text-sm font-semibold">
+          Posts
+        </h2>
         <p class="text-[11px] text-gray-500">
           Read-only post presets (alpha)
         </p>
@@ -99,11 +101,17 @@ FUTURE ENHANCEMENTS:
       <span class="text-[10px] text-gray-400">/posts</span>
     </div>
 
-    <div v-if="error" class="text-xs text-red-600">
+    <div
+      v-if="error"
+      class="text-xs text-red-600"
+    >
       {{ error }}
     </div>
 
-    <div v-if="posts.length" class="grid md:grid-cols-2 gap-3">
+    <div
+      v-if="posts.length"
+      class="grid md:grid-cols-2 gap-3"
+    >
       <div
         v-for="p in posts"
         :key="p.id"
@@ -114,8 +122,12 @@ FUTURE ENHANCEMENTS:
           <span class="text-[10px] text-gray-400">{{ p.id }}</span>
         </div>
         <ul class="space-y-0.5 text-gray-600">
-          <li v-if="p.post">dialect: {{ p.post }}</li>
-          <li v-if="p.post_mode">mode: {{ p.post_mode }}</li>
+          <li v-if="p.post">
+            dialect: {{ p.post }}
+          </li>
+          <li v-if="p.post_mode">
+            mode: {{ p.post_mode }}
+          </li>
           <li v-if="p.line_numbers !== undefined">
             line numbers: {{ p.line_numbers ? 'on' : 'off' }}
           </li>
@@ -123,7 +135,10 @@ FUTURE ENHANCEMENTS:
       </div>
     </div>
 
-    <p v-else class="text-[11px] text-gray-500">
+    <p
+      v-else
+      class="text-[11px] text-gray-500"
+    >
       No posts found.
     </p>
   </div>

@@ -7,16 +7,34 @@
     <div class="controls">
       <label>
         Show last
-        <input type="number" v-model.number="limit" min="1" max="500" />
+        <input
+          v-model.number="limit"
+          type="number"
+          min="1"
+          max="500"
+        >
         jobs
       </label>
-      <button @click="loadHistory" :disabled="loading">Refresh</button>
+      <button
+        :disabled="loading"
+        @click="loadHistory"
+      >
+        Refresh
+      </button>
       <span v-if="loading">Loading...</span>
     </div>
 
-    <p v-if="error" class="error">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </p>
 
-    <table v-if="items.length" class="history-table">
+    <table
+      v-if="items.length"
+      class="history-table"
+    >
       <thead>
         <tr>
           <th>Job ID</th>
@@ -51,12 +69,17 @@
               {{ item.status }}
             </span>
           </td>
-          <td class="mono">{{ item.ring_id ?? '—' }}</td>
+          <td class="mono">
+            {{ item.ring_id ?? '—' }}
+          </td>
           <td>{{ item.material ?? '—' }}</td>
           <td>
             <!-- Safety + risk badge -->
             <div class="safety-cell">
-              <span v-if="item.safety_decision" class="safety-decision">
+              <span
+                v-if="item.safety_decision"
+                class="safety-decision"
+              >
                 {{ item.safety_decision }}
               </span>
               <span
@@ -65,7 +88,10 @@
               >
                 {{ item.safety_risk_level }}
               </span>
-              <span v-else class="badge badge-na">n/a</span>
+              <span
+                v-else
+                class="badge badge-na"
+              >n/a</span>
             </div>
           </td>
           <td>
@@ -75,7 +101,10 @@
             <span v-else>—</span>
           </td>
           <td @click.stop>
-            <button type="button" @click="downloadReport(item.job_id)">
+            <button
+              type="button"
+              @click="downloadReport(item.job_id)"
+            >
               PDF
             </button>
           </td>
@@ -83,7 +112,10 @@
       </tbody>
     </table>
 
-    <p v-else-if="!loading && !error" class="no-data">
+    <p
+      v-else-if="!loading && !error"
+      class="no-data"
+    >
       No CNC jobs found.
     </p>
   </div>

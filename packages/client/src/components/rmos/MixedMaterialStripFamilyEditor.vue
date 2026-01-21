@@ -3,17 +3,25 @@
     <!-- Header -->
     <div class="editor-header">
       <h2>Mixed-Material Strip Family Lab</h2>
-      <p class="subtitle">Create rosette strip families from curated templates or design custom combinations</p>
+      <p class="subtitle">
+        Create rosette strip families from curated templates or design custom combinations
+      </p>
     </div>
 
     <!-- Error Display -->
-    <div v-if="store.error" class="error-banner">
+    <div
+      v-if="store.error"
+      class="error-banner"
+    >
       {{ store.error }}
     </div>
 
     <!-- Loading Overlay -->
-    <div v-if="store.loading" class="loading-overlay">
-      <div class="spinner"></div>
+    <div
+      v-if="store.loading"
+      class="loading-overlay"
+    >
+      <div class="spinner" />
       <span>Loading...</span>
     </div>
 
@@ -21,10 +29,20 @@
       <!-- Left Panel: Template Library -->
       <div class="template-library">
         <h3>Template Library</h3>
-        <p class="library-hint">Click "Apply" to instantiate a template into your workspace</p>
+        <p class="library-hint">
+          Click "Apply" to instantiate a template into your workspace
+        </p>
         
-        <div v-if="store.templates.length === 0 && !store.loading" class="empty-state">
-          <button @click="store.fetchTemplates()" class="btn-primary">Load Templates</button>
+        <div
+          v-if="store.templates.length === 0 && !store.loading"
+          class="empty-state"
+        >
+          <button
+            class="btn-primary"
+            @click="store.fetchTemplates()"
+          >
+            Load Templates
+          </button>
         </div>
 
         <div class="template-grid">
@@ -56,9 +74,9 @@
             </div>
 
             <button 
-              @click="applyTemplate(tpl.id)" 
-              class="btn-apply"
+              class="btn-apply" 
               :disabled="store.loading"
+              @click="applyTemplate(tpl.id)"
             >
               Apply Template
             </button>
@@ -68,42 +86,83 @@
 
       <!-- Right Panel: Selected Family Editor -->
       <div class="family-editor">
-        <div v-if="!store.selected" class="editor-placeholder">
+        <div
+          v-if="!store.selected"
+          class="editor-placeholder"
+        >
           <p>Select a template to begin editing</p>
         </div>
 
-        <div v-else class="editor-content">
+        <div
+          v-else
+          class="editor-content"
+        >
           <h3>Editing: {{ workingFamily.name }}</h3>
 
           <!-- Basic Properties -->
           <div class="editor-section">
             <label>Name</label>
-            <input v-model="workingFamily.name" type="text" class="input-text" />
+            <input
+              v-model="workingFamily.name"
+              type="text"
+              class="input-text"
+            >
 
             <label>Default Width (mm)</label>
-            <input v-model.number="workingFamily.default_width_mm" type="number" step="0.1" class="input-text" />
+            <input
+              v-model.number="workingFamily.default_width_mm"
+              type="number"
+              step="0.1"
+              class="input-text"
+            >
 
             <label>Sequence</label>
-            <input v-model.number="workingFamily.sequence" type="number" class="input-text" />
+            <input
+              v-model.number="workingFamily.sequence"
+              type="number"
+              class="input-text"
+            >
 
             <label>Quality Lane</label>
-            <select v-model="workingFamily.lane" class="input-select">
-              <option value="experimental">Experimental</option>
-              <option value="tuned_v1">Tuned v1</option>
-              <option value="tuned_v2">Tuned v2</option>
-              <option value="safe">Safe</option>
-              <option value="archived">Archived</option>
+            <select
+              v-model="workingFamily.lane"
+              class="input-select"
+            >
+              <option value="experimental">
+                Experimental
+              </option>
+              <option value="tuned_v1">
+                Tuned v1
+              </option>
+              <option value="tuned_v2">
+                Tuned v2
+              </option>
+              <option value="safe">
+                Safe
+              </option>
+              <option value="archived">
+                Archived
+              </option>
             </select>
 
             <label>Description</label>
-            <textarea v-model="workingFamily.description" class="input-textarea" rows="3"></textarea>
+            <textarea
+              v-model="workingFamily.description"
+              class="input-textarea"
+              rows="3"
+            />
           </div>
 
           <!-- Materials Editor -->
           <div class="editor-section">
             <div class="section-header">
               <h4>Materials ({{ workingFamily.materials?.length || 0 }})</h4>
-              <button @click="addMaterial" class="btn-secondary">+ Add Material</button>
+              <button
+                class="btn-secondary"
+                @click="addMaterial"
+              >
+                + Add Material
+              </button>
             </div>
 
             <div 
@@ -113,51 +172,126 @@
             >
               <div class="material-header">
                 <span class="material-index">#{{ idx + 1 }}</span>
-                <button @click="removeMaterial(idx)" class="btn-remove">×</button>
+                <button
+                  class="btn-remove"
+                  @click="removeMaterial(idx)"
+                >
+                  ×
+                </button>
               </div>
 
               <div class="material-fields">
                 <label>Material Type</label>
-                <select v-model="mat.type" class="input-select">
-                  <option value="wood">Wood</option>
-                  <option value="metal">Metal</option>
-                  <option value="shell">Shell</option>
-                  <option value="paper">Paper</option>
-                  <option value="foil">Foil</option>
-                  <option value="charred">Charred</option>
-                  <option value="resin">Resin</option>
-                  <option value="composite">Composite</option>
+                <select
+                  v-model="mat.type"
+                  class="input-select"
+                >
+                  <option value="wood">
+                    Wood
+                  </option>
+                  <option value="metal">
+                    Metal
+                  </option>
+                  <option value="shell">
+                    Shell
+                  </option>
+                  <option value="paper">
+                    Paper
+                  </option>
+                  <option value="foil">
+                    Foil
+                  </option>
+                  <option value="charred">
+                    Charred
+                  </option>
+                  <option value="resin">
+                    Resin
+                  </option>
+                  <option value="composite">
+                    Composite
+                  </option>
                 </select>
 
                 <label>Species / Name</label>
-                <input v-model="mat.species" type="text" class="input-text" placeholder="e.g. Rosewood, Abalone, Copper" />
+                <input
+                  v-model="mat.species"
+                  type="text"
+                  class="input-text"
+                  placeholder="e.g. Rosewood, Abalone, Copper"
+                >
 
                 <label>Thickness (mm)</label>
-                <input v-model.number="mat.thickness_mm" type="number" step="0.01" class="input-text" />
+                <input
+                  v-model.number="mat.thickness_mm"
+                  type="number"
+                  step="0.01"
+                  class="input-text"
+                >
 
                 <label>Finish</label>
-                <input v-model="mat.finish" type="text" class="input-text" placeholder="e.g. polished, matte, oxidized" />
+                <input
+                  v-model="mat.finish"
+                  type="text"
+                  class="input-text"
+                  placeholder="e.g. polished, matte, oxidized"
+                >
 
                 <label>CAM Profile (optional)</label>
-                <input v-model="mat.cam_profile" type="text" class="input-text" placeholder="e.g. hardwood_fast, metal_slow" />
+                <input
+                  v-model="mat.cam_profile"
+                  type="text"
+                  class="input-text"
+                  placeholder="e.g. hardwood_fast, metal_slow"
+                >
 
                 <!-- Visual Properties -->
-                <details v-if="mat.visual" class="visual-details">
+                <details
+                  v-if="mat.visual"
+                  class="visual-details"
+                >
                   <summary>Visual Properties</summary>
                   <label>Base Color</label>
-                  <input v-model="mat.visual.base_color" type="color" class="input-color" />
+                  <input
+                    v-model="mat.visual.base_color"
+                    type="color"
+                    class="input-color"
+                  >
 
                   <label>Reflectivity (0-1)</label>
-                  <input v-model.number="mat.visual.reflectivity" type="number" step="0.1" min="0" max="1" class="input-text" />
+                  <input
+                    v-model.number="mat.visual.reflectivity"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    class="input-text"
+                  >
 
                   <label>Iridescence (0-1)</label>
-                  <input v-model.number="mat.visual.iridescence" type="number" step="0.1" min="0" max="1" class="input-text" />
+                  <input
+                    v-model.number="mat.visual.iridescence"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    class="input-text"
+                  >
 
                   <label>Texture Map URL</label>
-                  <input v-model="mat.visual.texture_map" type="text" class="input-text" placeholder="Optional texture URL" />
+                  <input
+                    v-model="mat.visual.texture_map"
+                    type="text"
+                    class="input-text"
+                    placeholder="Optional texture URL"
+                  >
 
                   <label>Burn Gradient (optional JSON)</label>
-                  <textarea v-model="(mat.visual as any).burn_gradient" class="input-textarea" rows="2" placeholder='{"start":"#000","end":"#8b4513"}'></textarea>
+                  <textarea
+                    v-model="(mat.visual as any).burn_gradient"
+                    class="input-textarea"
+                    rows="2"
+                    placeholder="{&quot;start&quot;:&quot;#000&quot;,&quot;end&quot;:&quot;#8b4513&quot;}"
+                  />
                 </details>
               </div>
             </div>
@@ -165,10 +299,17 @@
 
           <!-- Actions -->
           <div class="editor-actions">
-            <button @click="saveChanges" class="btn-primary" :disabled="store.loading">
+            <button
+              class="btn-primary"
+              :disabled="store.loading"
+              @click="saveChanges"
+            >
               Save Changes
             </button>
-            <button @click="cancelEdit" class="btn-secondary">
+            <button
+              class="btn-secondary"
+              @click="cancelEdit"
+            >
               Cancel
             </button>
           </div>

@@ -203,7 +203,12 @@ onMounted(() => {
       class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4"
     >
       {{ error }}
-      <button class="ml-2 underline" @click="error = null">Dismiss</button>
+      <button
+        class="ml-2 underline"
+        @click="error = null"
+      >
+        Dismiss
+      </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -211,16 +216,20 @@ onMounted(() => {
       <div class="space-y-4">
         <!-- Preset Selector -->
         <div class="bg-gray-50 rounded-lg p-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Load Preset</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-2">Load Preset</label>
           <div class="flex gap-2">
             <select
               v-model="selectedPreset"
               class="flex-1 border rounded px-3 py-2 text-sm"
             >
-              <option :value="null">— Select preset —</option>
-              <option v-for="p in presets" :key="p.name" :value="p.name">
+              <option :value="null">
+                — Select preset —
+              </option>
+              <option
+                v-for="p in presets"
+                :key="p.name"
+                :value="p.name"
+              >
                 {{ p.name }}
               </option>
             </select>
@@ -236,7 +245,9 @@ onMounted(() => {
 
         <!-- Pattern Type -->
         <div class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Pattern Type</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Pattern Type
+          </h3>
           <div class="grid grid-cols-5 gap-2">
             <button
               v-for="pt in patternTypes"
@@ -249,21 +260,29 @@ onMounted(() => {
               "
               @click="patternType = pt.value"
             >
-              <div class="text-2xl">{{ pt.icon }}</div>
-              <div class="text-xs mt-1">{{ pt.label }}</div>
+              <div class="text-2xl">
+                {{ pt.icon }}
+              </div>
+              <div class="text-xs mt-1">
+                {{ pt.label }}
+              </div>
             </button>
           </div>
         </div>
 
         <!-- Scale Length -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Scale Length</h3>
+          <h3 class="font-semibold text-gray-800">
+            Scale Length
+          </h3>
 
           <select
             v-model="selectedScalePreset"
             class="w-full border rounded px-3 py-2 text-sm"
           >
-            <option :value="null">Custom</option>
+            <option :value="null">
+              Custom
+            </option>
             <option
               v-for="s in COMMON_SCALE_LENGTHS"
               :key="s.name"
@@ -274,9 +293,7 @@ onMounted(() => {
           </select>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Scale Length (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Scale Length (mm)</label>
             <input
               v-model.number="scaleLength"
               type="number"
@@ -284,19 +301,19 @@ onMounted(() => {
               max="800"
               step="0.1"
               class="w-full border rounded px-3 py-2 text-sm"
-            />
+            >
           </div>
         </div>
 
         <!-- Fretboard Dimensions -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Fretboard Dimensions</h3>
+          <h3 class="font-semibold text-gray-800">
+            Fretboard Dimensions
+          </h3>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >Width at Nut (mm)</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">Width at Nut (mm)</label>
               <input
                 v-model.number="fretboardWidthNut"
                 type="number"
@@ -304,12 +321,10 @@ onMounted(() => {
                 max="60"
                 step="0.5"
                 class="w-full border rounded px-2 py-1 text-sm"
-              />
+              >
             </div>
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >Width at Body (mm)</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">Width at Body (mm)</label>
               <input
                 v-model.number="fretboardWidthBody"
                 type="number"
@@ -317,21 +332,19 @@ onMounted(() => {
                 max="75"
                 step="0.5"
                 class="w-full border rounded px-2 py-1 text-sm"
-              />
+              >
             </div>
           </div>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Number of Frets</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Number of Frets</label>
             <input
               v-model.number="numFrets"
               type="range"
               min="12"
               max="27"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ numFrets }} frets
             </div>
@@ -340,12 +353,12 @@ onMounted(() => {
 
         <!-- Inlay Settings -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Inlay Settings</h3>
+          <h3 class="font-semibold text-gray-800">
+            Inlay Settings
+          </h3>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Inlay Size (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Inlay Size (mm)</label>
             <input
               v-model.number="inlaySize"
               type="range"
@@ -353,21 +366,22 @@ onMounted(() => {
               max="15"
               step="0.5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ inlaySize.toFixed(1) }} mm
             </div>
           </div>
 
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="doubleAt12" type="checkbox" />
+            <input
+              v-model="doubleAt12"
+              type="checkbox"
+            >
             Double markers at 12th fret
           </label>
 
           <div v-if="doubleAt12">
-            <label class="block text-xs text-gray-600 mb-1"
-              >Double Spacing (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Double Spacing (mm)</label>
             <input
               v-model.number="doubleSpacing"
               type="number"
@@ -375,7 +389,7 @@ onMounted(() => {
               max="20"
               step="0.5"
               class="w-full border rounded px-2 py-1 text-sm"
-            />
+            >
           </div>
         </div>
       </div>
@@ -385,7 +399,9 @@ onMounted(() => {
         <!-- Fret Position Selector -->
         <div class="bg-white border rounded-lg p-4">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="font-semibold text-gray-800">Fret Positions</h3>
+            <h3 class="font-semibold text-gray-800">
+              Fret Positions
+            </h3>
             <div class="flex gap-2">
               <button
                 class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
@@ -435,9 +451,15 @@ onMounted(() => {
           <table class="w-full text-xs">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="py-1 px-2 text-left">Fret</th>
-                <th class="py-1 px-2 text-right">Position</th>
-                <th class="py-1 px-2 text-right">Spacing</th>
+                <th class="py-1 px-2 text-left">
+                  Fret
+                </th>
+                <th class="py-1 px-2 text-right">
+                  Position
+                </th>
+                <th class="py-1 px-2 text-right">
+                  Spacing
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -447,7 +469,9 @@ onMounted(() => {
                 class="border-b"
                 :class="selectedFrets.includes(pos.fret) ? 'bg-blue-50' : ''"
               >
-                <td class="py-1 px-2">{{ pos.fret }}</td>
+                <td class="py-1 px-2">
+                  {{ pos.fret }}
+                </td>
                 <td class="py-1 px-2 text-right font-mono">
                   {{ pos.position_mm.toFixed(2) }}
                 </td>
@@ -461,31 +485,35 @@ onMounted(() => {
 
         <!-- Export Options -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Export Options</h3>
+          <h3 class="font-semibold text-gray-800">
+            Export Options
+          </h3>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >DXF Version</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">DXF Version</label>
               <select
                 v-model="dxfVersion"
                 class="w-full border rounded px-2 py-1 text-sm"
               >
-                <option value="R12">R12 (Most Compatible)</option>
-                <option value="R2000">R2000</option>
-                <option value="R2010">R2010</option>
+                <option value="R12">
+                  R12 (Most Compatible)
+                </option>
+                <option value="R2000">
+                  R2000
+                </option>
+                <option value="R2010">
+                  R2010
+                </option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >Layer Prefix</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">Layer Prefix</label>
               <input
                 v-model="layerPrefix"
                 type="text"
                 class="w-full border rounded px-2 py-1 text-sm"
-              />
+              >
             </div>
           </div>
         </div>
@@ -513,7 +541,9 @@ onMounted(() => {
       <div class="space-y-4">
         <!-- SVG Preview -->
         <div class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Preview</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Preview
+          </h3>
 
           <div
             v-if="previewResult?.preview_svg"
@@ -530,8 +560,13 @@ onMounted(() => {
         </div>
 
         <!-- Inlay Summary -->
-        <div v-if="previewResult" class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Inlay Summary</h3>
+        <div
+          v-if="previewResult"
+          class="bg-white border rounded-lg p-4"
+        >
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Inlay Summary
+          </h3>
 
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -546,9 +581,7 @@ onMounted(() => {
             </div>
             <div>
               <span class="text-gray-600">Scale Length:</span>
-              <span class="ml-2 font-mono"
-                >{{ previewResult.result.scale_length_mm.toFixed(1) }} mm</span
-              >
+              <span class="ml-2 font-mono">{{ previewResult.result.scale_length_mm.toFixed(1) }} mm</span>
             </div>
             <div>
               <span class="text-gray-600">Frets:</span>
@@ -562,15 +595,25 @@ onMounted(() => {
           v-if="previewResult?.result.inlays?.length"
           class="bg-white border rounded-lg p-4 max-h-[300px] overflow-y-auto"
         >
-          <h3 class="font-semibold text-gray-800 mb-3">Inlay Details</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Inlay Details
+          </h3>
 
           <table class="w-full text-xs">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="py-1 px-2 text-left">Fret</th>
-                <th class="py-1 px-2 text-right">X (mm)</th>
-                <th class="py-1 px-2 text-right">Y (mm)</th>
-                <th class="py-1 px-2 text-center">Double</th>
+                <th class="py-1 px-2 text-left">
+                  Fret
+                </th>
+                <th class="py-1 px-2 text-right">
+                  X (mm)
+                </th>
+                <th class="py-1 px-2 text-right">
+                  Y (mm)
+                </th>
+                <th class="py-1 px-2 text-center">
+                  Double
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -579,7 +622,9 @@ onMounted(() => {
                 :key="idx"
                 class="border-b"
               >
-                <td class="py-1 px-2">{{ inlay.fret }}</td>
+                <td class="py-1 px-2">
+                  {{ inlay.fret }}
+                </td>
                 <td class="py-1 px-2 text-right font-mono">
                   {{ inlay.center_x_mm.toFixed(2) }}
                 </td>

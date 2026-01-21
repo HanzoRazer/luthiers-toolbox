@@ -31,7 +31,10 @@
             <span class="font-semibold">
               {{ job.meta.preset.name || "Custom" }}
             </span>
-            <span class="text-[9px] text-gray-700" v-if="job.meta.preset.source">
+            <span
+              v-if="job.meta.preset.source"
+              class="text-[9px] text-gray-700"
+            >
               ({{ job.meta.preset.source }})
             </span>
           </span>

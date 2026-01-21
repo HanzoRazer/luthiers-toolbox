@@ -21,7 +21,7 @@
               type="text"
               placeholder="Filter..."
               @input="debouncedLoad"
-            />
+            >
           </label>
           <label>
             <span>Batch Label</span>
@@ -30,16 +30,32 @@
               type="text"
               placeholder="Filter..."
               @input="debouncedLoad"
-            />
+            >
           </label>
         </div>
 
-        <div v-if="runsLoading" class="muted">Loading runs...</div>
-        <div v-else-if="runsError" class="error-box">{{ runsError }}</div>
-        <div v-else-if="!runsData?.runs?.length" class="muted">
+        <div
+          v-if="runsLoading"
+          class="muted"
+        >
+          Loading runs...
+        </div>
+        <div
+          v-else-if="runsError"
+          class="error-box"
+        >
+          {{ runsError }}
+        </div>
+        <div
+          v-else-if="!runsData?.runs?.length"
+          class="muted"
+        >
           No runs found. Import a viewer_pack in the Library.
         </div>
-        <div v-else class="runs-list">
+        <div
+          v-else
+          class="runs-list"
+        >
           <div
             v-for="run in runsData.runs"
             :key="run.run_id"
@@ -49,19 +65,38 @@
           >
             <div class="run-header">
               <span class="run-date">{{ formatDate(run.created_at_utc) }}</span>
-              <code class="run-status" :class="run.status.toLowerCase()">{{ run.status }}</code>
+              <code
+                class="run-status"
+                :class="run.status.toLowerCase()"
+              >{{ run.status }}</code>
             </div>
             <div class="run-meta">
-              <span v-if="run.session_id" class="run-session">{{ run.session_id }}</span>
-              <span v-if="run.batch_label" class="run-batch">{{ run.batch_label }}</span>
+              <span
+                v-if="run.session_id"
+                class="run-session"
+              >{{ run.session_id }}</span>
+              <span
+                v-if="run.batch_label"
+                class="run-batch"
+              >{{ run.batch_label }}</span>
             </div>
             <div class="run-stats">
               <span>{{ run.attachment_count }} files</span>
               <span v-if="run.viewer_pack_count">• {{ run.viewer_pack_count }} viewer packs</span>
             </div>
-            <div v-if="run.kinds_present.length" class="run-kinds">
-              <code v-for="k in run.kinds_present.slice(0, 4)" :key="k" class="kind-chip">{{ k }}</code>
-              <span v-if="run.kinds_present.length > 4" class="muted">+{{ run.kinds_present.length - 4 }}</span>
+            <div
+              v-if="run.kinds_present.length"
+              class="run-kinds"
+            >
+              <code
+                v-for="k in run.kinds_present.slice(0, 4)"
+                :key="k"
+                class="kind-chip"
+              >{{ k }}</code>
+              <span
+                v-if="run.kinds_present.length > 4"
+                class="muted"
+              >+{{ run.kinds_present.length - 4 }}</span>
             </div>
           </div>
 
@@ -83,10 +118,14 @@
           </div>
         </template>
         <template v-else-if="detailLoading">
-          <div class="muted">Loading run details...</div>
+          <div class="muted">
+            Loading run details...
+          </div>
         </template>
         <template v-else-if="detailError">
-          <div class="error-box">{{ detailError }}</div>
+          <div class="error-box">
+            {{ detailError }}
+          </div>
         </template>
         <template v-else-if="detailData">
           <h2>Run Details</h2>
@@ -103,18 +142,27 @@
               <span class="meta-label">Status:</span>
               <code :class="detailData.status.toLowerCase()">{{ detailData.status }}</code>
             </div>
-            <div v-if="detailData.session_id" class="meta-row">
+            <div
+              v-if="detailData.session_id"
+              class="meta-row"
+            >
               <span class="meta-label">Session:</span>
               <span>{{ detailData.session_id }}</span>
             </div>
-            <div v-if="detailData.batch_label" class="meta-row">
+            <div
+              v-if="detailData.batch_label"
+              class="meta-row"
+            >
               <span class="meta-label">Batch:</span>
               <span>{{ detailData.batch_label }}</span>
             </div>
           </div>
 
           <h3>Attachments ({{ detailData.attachment_count }})</h3>
-          <table class="tbl" v-if="detailData.attachments?.length">
+          <table
+            v-if="detailData.attachments?.length"
+            class="tbl"
+          >
             <thead>
               <tr>
                 <th>Filename</th>
@@ -124,10 +172,20 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="att in detailData.attachments" :key="att.sha256">
-                <td class="mono filename-cell" :title="att.filename ?? undefined">{{ att.filename }}</td>
+              <tr
+                v-for="att in detailData.attachments"
+                :key="att.sha256"
+              >
+                <td
+                  class="mono filename-cell"
+                  :title="att.filename ?? undefined"
+                >
+                  {{ att.filename }}
+                </td>
                 <td><code class="kind-badge">{{ att.kind }}</code></td>
-                <td class="mono">{{ formatSize(att.size_bytes ?? 0) }}</td>
+                <td class="mono">
+                  {{ formatSize(att.size_bytes ?? 0) }}
+                </td>
                 <td class="actions-cell">
                   <a
                     v-if="att.kind === 'viewer_pack'"
@@ -147,7 +205,12 @@
               </tr>
             </tbody>
           </table>
-          <div v-else class="muted">No attachments.</div>
+          <div
+            v-else
+            class="muted"
+          >
+            No attachments.
+          </div>
         </template>
       </section>
     </div>

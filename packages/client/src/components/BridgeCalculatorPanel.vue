@@ -6,48 +6,74 @@
         <p>Seed acoustic bridge geometry, visualize the saddle line, then export DXF directly into Bridge Lab.</p>
       </div>
       <label class="unit-toggle">
-        <input type="checkbox" v-model="isMetric" />
+        <input
+          v-model="isMetric"
+          type="checkbox"
+        >
         <span>Units: {{ unitLabel }}</span>
       </label>
     </div>
 
     <div class="preset-row">
       <select v-model="presetFamily">
-        <option v-for="family in familyPresets" :key="family.id" :value="family.id">
+        <option
+          v-for="family in familyPresets"
+          :key="family.id"
+          :value="family.id"
+        >
           {{ family.label }}
         </option>
       </select>
       <select v-model="gaugePresetId">
-        <option v-for="gauge in gaugePresets" :key="gauge.id" :value="gauge.id">
+        <option
+          v-for="gauge in gaugePresets"
+          :key="gauge.id"
+          :value="gauge.id"
+        >
           {{ gauge.label }}
         </option>
       </select>
       <select v-model="actionPresetId">
-        <option v-for="action in actionPresets" :key="action.id" :value="action.id">
+        <option
+          v-for="action in actionPresets"
+          :key="action.id"
+          :value="action.id"
+        >
           {{ action.label }}
         </option>
       </select>
-      <button class="btn" @click="applyPresets" :disabled="presetsLoading">
+      <button
+        class="btn"
+        :disabled="presetsLoading"
+        @click="applyPresets"
+      >
         {{ presetsLoading ? 'Loading presets…' : 'Apply Presets' }}
       </button>
     </div>
 
-    <p v-if="presetError" class="error-text">
+    <p
+      v-if="presetError"
+      class="error-text"
+    >
       ⚠️ {{ presetError }} — using fallback presets.
     </p>
 
     <div class="calc-grid">
       <section class="calc-card">
         <h4>Scale & Compensation</h4>
-        <div class="field" v-for="field in geometryFields" :key="field.key">
+        <div
+          v-for="field in geometryFields"
+          :key="field.key"
+          class="field"
+        >
           <label :for="field.key">{{ field.label }}</label>
           <div class="field-input">
             <input
               :id="field.key"
-              type="number"
               v-model.number="ui[field.key]"
+              type="number"
               :step="field.step"
-            />
+            >
             <span>{{ field.unit }}</span>
           </div>
         </div>
@@ -61,19 +87,74 @@
 
       <section class="calc-card preview-card">
         <h4>Preview (not to scale)</h4>
-        <svg :viewBox="svgViewBox" preserveAspectRatio="xMidYMid meet" class="preview">
-          <line :x1="0" :y1="-svgH/2" :x2="0" :y2="svgH/2" stroke="#cbd5f5" stroke-dasharray="2,2" stroke-width="0.3" />
-          <line :x1="scale" y1="-3" :x2="scale" y2="3" stroke="#94a3b8" stroke-width="0.4" />
-          <line :x1="treble.x" :y1="treble.y" :x2="bass.x" :y2="bass.y" stroke="#0ea5e9" stroke-width="0.7" />
-          <polygon :points="slotPolygonPoints" fill="rgba(14,165,233,0.2)" stroke="#0284c7" stroke-width="0.5" />
-          <circle :cx="treble.x" :cy="treble.y" r="0.8" fill="#0ea5e9" />
-          <circle :cx="bass.x" :cy="bass.y" r="0.8" fill="#0ea5e9" />
+        <svg
+          :viewBox="svgViewBox"
+          preserveAspectRatio="xMidYMid meet"
+          class="preview"
+        >
+          <line
+            :x1="0"
+            :y1="-svgH/2"
+            :x2="0"
+            :y2="svgH/2"
+            stroke="#cbd5f5"
+            stroke-dasharray="2,2"
+            stroke-width="0.3"
+          />
+          <line
+            :x1="scale"
+            y1="-3"
+            :x2="scale"
+            y2="3"
+            stroke="#94a3b8"
+            stroke-width="0.4"
+          />
+          <line
+            :x1="treble.x"
+            :y1="treble.y"
+            :x2="bass.x"
+            :y2="bass.y"
+            stroke="#0ea5e9"
+            stroke-width="0.7"
+          />
+          <polygon
+            :points="slotPolygonPoints"
+            fill="rgba(14,165,233,0.2)"
+            stroke="#0284c7"
+            stroke-width="0.5"
+          />
+          <circle
+            :cx="treble.x"
+            :cy="treble.y"
+            r="0.8"
+            fill="#0ea5e9"
+          />
+          <circle
+            :cx="bass.x"
+            :cy="bass.y"
+            r="0.8"
+            fill="#0ea5e9"
+          />
         </svg>
 
         <div class="action-row">
-          <button class="btn" @click="copyJSON">Copy JSON</button>
-          <button class="btn" @click="downloadSVG">Download SVG</button>
-          <button class="btn btn-export" :disabled="exporting" @click="exportDXF">
+          <button
+            class="btn"
+            @click="copyJSON"
+          >
+            Copy JSON
+          </button>
+          <button
+            class="btn"
+            @click="downloadSVG"
+          >
+            Download SVG
+          </button>
+          <button
+            class="btn btn-export"
+            :disabled="exporting"
+            @click="exportDXF"
+          >
             {{ exporting ? 'Exporting…' : 'Export DXF' }}
           </button>
         </div>
@@ -85,7 +166,12 @@
       <p>Treble endpoint uses (scale + Cₜ, -spread/2); bass endpoint uses (scale + Cᵦ, +spread/2). Slot polygon extends {{ ui.slotLength.toFixed(1) }} {{ unitLabel }} along the saddle line and {{ ui.slotWidth.toFixed(1) }} {{ unitLabel }} across.</p>
     </details>
 
-    <p v-if="statusMessage" class="status-text">{{ statusMessage }}</p>
+    <p
+      v-if="statusMessage"
+      class="status-text"
+    >
+      {{ statusMessage }}
+    </p>
   </div>
 </template>
 

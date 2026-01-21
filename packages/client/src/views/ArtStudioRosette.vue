@@ -39,7 +39,7 @@
             type="text"
             placeholder="e.g. OM_rosette_maple_001"
             class="w-full px-2 py-1 border rounded text-[11px]"
-          />
+          >
         </div>
 
         <div>
@@ -48,7 +48,9 @@
             v-model="form.preset"
             class="w-full px-2 py-1 border rounded text-[11px]"
           >
-            <option :value="''">(none)</option>
+            <option :value="''">
+              (none)
+            </option>
             <option
               v-for="p in presets"
               :key="p.name"
@@ -57,7 +59,10 @@
               {{ p.name }} · {{ p.pattern_type }} · {{ p.segments }} seg
             </option>
           </select>
-          <p class="text-[10px] text-gray-500 mt-0.5" v-if="selectedPresetDescription">
+          <p
+            v-if="selectedPresetDescription"
+            class="text-[10px] text-gray-500 mt-0.5"
+          >
             {{ selectedPresetDescription }}
           </p>
         </div>
@@ -68,9 +73,15 @@
             v-model="form.pattern_type"
             class="w-full px-2 py-1 border rounded text-[11px]"
           >
-            <option value="simple_ring">simple_ring (stub)</option>
-            <option value="herringbone">herringbone (stub)</option>
-            <option value="rope">rope (stub)</option>
+            <option value="simple_ring">
+              simple_ring (stub)
+            </option>
+            <option value="herringbone">
+              herringbone (stub)
+            </option>
+            <option value="rope">
+              rope (stub)
+            </option>
           </select>
         </div>
 
@@ -83,7 +94,7 @@
               min="8"
               max="720"
               class="w-full px-2 py-1 border rounded text-[11px]"
-            />
+            >
           </div>
           <div class="flex-1">
             <label class="block text-[11px] font-semibold mb-1">Inner radius</label>
@@ -92,7 +103,7 @@
               type="number"
               step="0.1"
               class="w-full px-2 py-1 border rounded text-[11px]"
-            />
+            >
           </div>
           <div class="flex-1">
             <label class="block text-[11px] font-semibold mb-1">Outer radius</label>
@@ -101,7 +112,7 @@
               type="number"
               step="0.1"
               class="w-full px-2 py-1 border rounded text-[11px]"
-            />
+            >
           </div>
         </div>
 
@@ -111,8 +122,12 @@
             v-model="form.units"
             class="w-full px-2 py-1 border rounded text-[11px]"
           >
-            <option value="mm">mm</option>
-            <option value="inch">inch</option>
+            <option value="mm">
+              mm
+            </option>
+            <option value="inch">
+              inch
+            </option>
           </select>
         </div>
 
@@ -133,7 +148,11 @@
           </button>
         </div>
 
-        <p v-if="statusMessage" class="text-[10px] mt-1" :class="statusClass">
+        <p
+          v-if="statusMessage"
+          class="text-[10px] mt-1"
+          :class="statusClass"
+        >
           {{ statusMessage }}
         </p>
       </div>
@@ -163,7 +182,10 @@
             class="border rounded bg-gray-50 flex items-center justify-center"
             style="height: 260px;"
           >
-            <div v-if="preview && preview.paths.length" class="w-full h-full">
+            <div
+              v-if="preview && preview.paths.length"
+              class="w-full h-full"
+            >
               <svg
                 :viewBox="svgViewBox"
                 preserveAspectRatio="xMidYMid meet"
@@ -191,32 +213,114 @@
                 </g>
               </svg>
             </div>
-            <svg v-else viewBox="-60 -60 120 120" class="w-full h-full" style="max-width: 240px; max-height: 240px;">
+            <svg
+              v-else
+              viewBox="-60 -60 120 120"
+              class="w-full h-full"
+              style="max-width: 240px; max-height: 240px;"
+            >
               <!-- Placeholder rosette graphic -->
               <defs>
-                <pattern id="herringbone" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                  <line x1="0" y1="0" x2="0" y2="8" stroke="#d1d5db" stroke-width="2"/>
+                <pattern
+                  id="herringbone"
+                  patternUnits="userSpaceOnUse"
+                  width="8"
+                  height="8"
+                  patternTransform="rotate(45)"
+                >
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="8"
+                    stroke="#d1d5db"
+                    stroke-width="2"
+                  />
                 </pattern>
               </defs>
               <!-- Outer ring -->
-              <circle cx="0" cy="0" r="50" fill="none" stroke="#9ca3af" stroke-width="0.5" stroke-dasharray="2,2"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="50"
+                fill="none"
+                stroke="#9ca3af"
+                stroke-width="0.5"
+                stroke-dasharray="2,2"
+              />
               <!-- Decorative band -->
-              <circle cx="0" cy="0" r="45" fill="none" stroke="#6b7280" stroke-width="8"/>
-              <circle cx="0" cy="0" r="45" fill="url(#herringbone)" opacity="0.3"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="45"
+                fill="none"
+                stroke="#6b7280"
+                stroke-width="8"
+              />
+              <circle
+                cx="0"
+                cy="0"
+                r="45"
+                fill="url(#herringbone)"
+                opacity="0.3"
+              />
               <!-- Middle ring -->
-              <circle cx="0" cy="0" r="35" fill="none" stroke="#9ca3af" stroke-width="0.5" stroke-dasharray="2,2"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="35"
+                fill="none"
+                stroke="#9ca3af"
+                stroke-width="0.5"
+                stroke-dasharray="2,2"
+              />
               <!-- Inner decorative -->
-              <circle cx="0" cy="0" r="30" fill="none" stroke="#6b7280" stroke-width="6"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="30"
+                fill="none"
+                stroke="#6b7280"
+                stroke-width="6"
+              />
               <!-- Center circle -->
-              <circle cx="0" cy="0" r="20" fill="none" stroke="#9ca3af" stroke-width="0.5" stroke-dasharray="2,2"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="20"
+                fill="none"
+                stroke="#9ca3af"
+                stroke-width="0.5"
+                stroke-dasharray="2,2"
+              />
               <!-- Radial segments (12 divisions) -->
               <g opacity="0.2">
-                <line v-for="i in 12" :key="i" x1="0" y1="0" :x2="Math.cos((i * 30 - 90) * Math.PI / 180) * 50" :y2="Math.sin((i * 30 - 90) * Math.PI / 180) * 50" stroke="#6b7280" stroke-width="0.3"/>
+                <line
+                  v-for="i in 12"
+                  :key="i"
+                  x1="0"
+                  y1="0"
+                  :x2="Math.cos((i * 30 - 90) * Math.PI / 180) * 50"
+                  :y2="Math.sin((i * 30 - 90) * Math.PI / 180) * 50"
+                  stroke="#6b7280"
+                  stroke-width="0.3"
+                />
               </g>
               <!-- Center dot -->
-              <circle cx="0" cy="0" r="2" fill="#9ca3af"/>
+              <circle
+                cx="0"
+                cy="0"
+                r="2"
+                fill="#9ca3af"
+              />
               <!-- Placeholder text -->
-              <text x="0" y="68" text-anchor="middle" class="fill-gray-400 text-[8px]" font-family="system-ui">
+              <text
+                x="0"
+                y="68"
+                text-anchor="middle"
+                class="fill-gray-400 text-[8px]"
+                font-family="system-ui"
+              >
                 Click "Preview Rosette" to generate
               </text>
             </svg>
@@ -237,16 +341,28 @@
             </button>
           </div>
 
-          <div v-if="jobsLoading" class="text-[10px] text-gray-500 italic">
+          <div
+            v-if="jobsLoading"
+            class="text-[10px] text-gray-500 italic"
+          >
             Loading jobs…
           </div>
-          <div v-else-if="jobsError" class="text-[10px] text-rose-600">
+          <div
+            v-else-if="jobsError"
+            class="text-[10px] text-rose-600"
+          >
             {{ jobsError }}
           </div>
-          <div v-else-if="!jobs.length" class="text-[10px] text-gray-500 italic">
+          <div
+            v-else-if="!jobs.length"
+            class="text-[10px] text-gray-500 italic"
+          >
             No saved rosette jobs yet.
           </div>
-          <div v-else class="max-h-48 overflow-auto space-y-1">
+          <div
+            v-else
+            class="max-h-48 overflow-auto space-y-1"
+          >
             <div
               v-for="job in jobs"
               :key="job.job_id"
