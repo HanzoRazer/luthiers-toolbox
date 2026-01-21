@@ -166,6 +166,23 @@ def translate_scenario_to_feasibility_input(scenario: Dict[str, Any]) -> Feasibi
     # Process properties
     coolant_enabled = params.get("coolant")
 
+    # === Schema v2.1: Extract edge pressure fields ===
+
+    # Floor thickness (remaining material below pocket)
+    floor_thickness_mm = geometry.get("floor_thickness_mm")
+
+    # Complex geometry detection (L-shapes, multiple islands, etc.)
+    island = geometry.get("island", {})
+    geometry_complex = None
+    if island:
+        island_type = island.get("type", "")
+        # L-shape, T-shape, or multiple islands = complex
+        if island_type in ("L-shape", "T-shape", "complex") or geometry.get("type") == "multi_pocket":
+            geometry_complex = True
+
+    # Feed override
+    feed_override_percent = params.get("feed_override_percent")
+
     # Build FeasibilityInput with v2 fields
     fi = FeasibilityInput(
         pipeline_id="rmos_validation_v1",
@@ -209,6 +226,11 @@ def translate_scenario_to_feasibility_input(scenario: Dict[str, Any]) -> Feasibi
         tool_flute_length_mm=tool_flute_length_mm,
         tool_stickout_mm=tool_stickout_mm,
         coolant_enabled=coolant_enabled,
+
+        # Schema v2.1 fields (edge pressure)
+        floor_thickness_mm=floor_thickness_mm,
+        geometry_complex=geometry_complex,
+        feed_override_percent=feed_override_percent,
     )
 
     return fi

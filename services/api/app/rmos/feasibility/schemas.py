@@ -82,6 +82,15 @@ class FeasibilityInput(BaseModel):
     # Process properties
     coolant_enabled: Optional[bool] = None  # air blast, mist, flood
 
+    # === Schema v2.1 fields (edge pressure detection) ===
+
+    # Geometry properties
+    floor_thickness_mm: Optional[float] = None  # remaining material below pocket
+    geometry_complex: Optional[bool] = None  # L-shapes, multiple islands, etc.
+
+    # Process overrides
+    feed_override_percent: Optional[float] = None  # 100 = normal, 150 = 50% faster
+
 
 class FeasibilityResult(BaseModel):
     """

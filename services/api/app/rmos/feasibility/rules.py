@@ -419,6 +419,76 @@ def rule_yellow_combined_edge_pressure(fi: FeasibilityInput) -> List[RuleHit]:
     return hits
 
 
+def rule_yellow_thin_floor(fi: FeasibilityInput) -> List[RuleHit]:
+    """F038: Thin floor — risk of punching through."""
+    hits: List[RuleHit] = []
+    if fi.floor_thickness_mm is not None:
+        if fi.floor_thickness_mm < 2.0:
+            hits.append(RuleHit(
+                "F038", "YELLOW",
+                f"Thin floor ({fi.floor_thickness_mm}mm) — risk of punching through; verify depth carefully",
+                constraint="floor_thickness_mm >= 2.0"
+            ))
+    return hits
+
+
+def rule_yellow_complex_geometry(fi: FeasibilityInput) -> List[RuleHit]:
+    """F039: Complex geometry — requires extra attention."""
+    hits: List[RuleHit] = []
+    if fi.geometry_complex is True:
+        hits.append(RuleHit(
+            "F039", "YELLOW",
+            "Complex geometry (L-shape, multiple islands) — verify toolpaths carefully",
+        ))
+    return hits
+
+
+def rule_yellow_feed_override(fi: FeasibilityInput) -> List[RuleHit]:
+    """F040: Feed override applied — operator has modified feeds."""
+    hits: List[RuleHit] = []
+    if fi.feed_override_percent is not None:
+        if fi.feed_override_percent > 120:
+            hits.append(RuleHit(
+                "F040", "YELLOW",
+                f"Feed override at {fi.feed_override_percent}% — elevated risk; monitor carefully",
+                constraint="feed_override_percent <= 120"
+            ))
+        elif fi.feed_override_percent < 80:
+            hits.append(RuleHit(
+                "F040", "YELLOW",
+                f"Feed override at {fi.feed_override_percent}% — unusually slow; verify settings",
+            ))
+    return hits
+
+
+def rule_red_severe_combined_pressure(fi: FeasibilityInput) -> List[RuleHit]:
+    """F041: Severe combined pressure — too many risk factors, block export."""
+    hits: List[RuleHit] = []
+    severe_factors = 0
+
+    # Count severe risk factors (use >= for boundary cases)
+    if fi.material_hardness in (MaterialHardness.HARD, MaterialHardness.VERY_HARD, MaterialHardness.EXTREME):
+        severe_factors += 1
+    if fi.geometry_depth_mm is not None and fi.tool_d > 0 and fi.geometry_depth_mm >= fi.tool_d * 3:
+        severe_factors += 1
+    if fi.stepover >= 0.6:
+        severe_factors += 1
+    if fi.stepdown >= 3:
+        severe_factors += 1
+    if fi.wall_thickness_mm is not None and fi.wall_thickness_mm <= 3:
+        severe_factors += 1
+    if fi.geometry_complex is True:
+        severe_factors += 1
+
+    # 3+ severe factors = RED (block export)
+    if severe_factors >= 3:
+        hits.append(RuleHit(
+            "F041", "RED",
+            f"Severe combined pressure ({severe_factors} risk factors) — unsafe without manual review",
+        ))
+    return hits
+
+
 def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     # Original RED rules (F001-F007)
@@ -441,8 +511,9 @@ def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits += rule_red_structural_wall_failure(fi)
     hits += rule_red_combined_adversarial(fi)
 
-    # Edge pressure RED rule (F033)
+    # Edge pressure RED rules (F033, F041)
     hits += rule_red_depth_exceeds_flute(fi)
+    hits += rule_red_severe_combined_pressure(fi)
 
     # YELLOW rules (F010-F013)
     hits += rule_yellow_tool_too_large(fi)
@@ -450,7 +521,7 @@ def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits += rule_yellow_stepdown_large(fi)
     hits += rule_yellow_loop_count_high(fi)
 
-    # Edge pressure YELLOW rules (F030-F037)
+    # Edge pressure YELLOW rules (F030-F040)
     hits += rule_yellow_deep_pocket(fi)
     hits += rule_yellow_hardwood_doc(fi)
     hits += rule_yellow_small_tool(fi)
@@ -458,4 +529,7 @@ def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits += rule_yellow_aggressive_stepover(fi)
     hits += rule_yellow_thin_remaining_wall(fi)
     hits += rule_yellow_combined_edge_pressure(fi)
+    hits += rule_yellow_thin_floor(fi)
+    hits += rule_yellow_complex_geometry(fi)
+    hits += rule_yellow_feed_override(fi)
     return hits
