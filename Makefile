@@ -170,3 +170,14 @@ viewer-pack-gate: viewer-pack-parity
 	@echo "=== Viewer Pack v1 Contract Gate ==="
 	@cd services/api && python -m pytest tests/test_viewer_pack_v1_ingestion_gate.py -v
 	@echo "=== Contract gate complete ==="
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Analyzer Ingest Smoke (local - requires tap_tone_pi sibling checkout)
+# ─────────────────────────────────────────────────────────────────────────────
+.PHONY: analyzer-smoke-local
+analyzer-smoke-local:
+	@python scripts/analyzer_ingest_smoke.py \
+	  --contracts-root ../tap_tone_pi/contracts \
+	  --chladni-dir   ../tap_tone_pi/out/DEMO/chladni \
+	  --phase2-dir    ../tap_tone_pi/runs_phase2/DEMO/session_0001 \
+	  --moe-dir       ../tap_tone_pi/out/DEMO/moe
