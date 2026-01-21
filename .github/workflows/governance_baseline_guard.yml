@@ -1,0 +1,21 @@
+name: Governance Baseline Guard
+
+on:
+  pull_request:
+    paths:
+      - "services/api/app/ci/fence_baseline.json"
+      - "services/api/app/ci/fence_patterns_baseline.json"
+
+jobs:
+  baseline-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for governance label
+        run: |
+          echo "PR labels:"
+          echo "${{ toJson(github.event.pull_request.labels) }}"
+
+          if ! echo '${{ toJson(github.event.pull_request.labels) }}' | grep -q '"governance"'; then
+            echo "::error::Baseline files may only be changed in a PR labeled 'governance'"
+            exit 1
+          fi
