@@ -1,0 +1,12 @@
+{
+  "name": "qrm-default",
+  "description": "QuadRemesher default preset for lutherie geometry",
+  "target_count": 30000,
+  "prioritize_quads": true,
+  "minimize_poles": true,
+  "adaptive": true,
+  "symmetry": "none",
+  "seed": 42,
+  "timeout_s": 300,
+  "notes": "Adjust target_count based on model complexity. Lutherie tops typically need 20k-50k faces."
+}

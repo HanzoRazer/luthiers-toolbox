@@ -1,0 +1,12 @@
+{
+  "name": "miq-default",
+  "description": "MIQ (Mixed-Integer Quadrangulation) default preset for lutherie geometry",
+  "target_density": 1.0,
+  "scale_hard_features": 1.0,
+  "smoothness": 0.2,
+  "singularity_opt": true,
+  "boundary_preservation": "strict",
+  "seed": 42,
+  "timeout_s": 300,
+  "notes": "MIQ produces mathematically optimal quad layouts. Good for topology-sensitive regions."
+}
