@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [toolbox-v0.32.0] - 2026-01-20
+
+### Art Studio Promotion Contracts & CAM Bridge
+
+**Focus:** Art Studio (Design-First Workflow)  
+**Type:** Contract + Orchestration release (non-execution)
+
+#### Added
+- Canonical approval-gated PromotionIntentV1 export:
+  - `GET /api/art/design-first-workflow/sessions/{session_id}/promotion_intent.json`
+- UI-friendly PromotionIntentV1 wrapper:
+  - `POST /api/art/design-first-workflow/sessions/{session_id}/promotion_intent_v1`
+- CAM orchestration bridge:
+  - `POST /api/art/design-first-workflow/sessions/{session_id}/promote_to_cam`
+- New orchestration artifact:
+  - `CamPromotionRequestV1` (idempotent, file-backed persistence)
+
+#### Changed
+- Frontend export URL preview updated to canonical design-first workflow route
+- Added UI button to copy a full GitHub Actions workflow for export + strict validation
+- Added UI button to promote approved intent to a queued CAM request
+
+#### Tests
+- Added pytest contract tests enforcing:
+  - Approval gating (403 for canonical export when not approved)
+  - Strict PromotionIntentV1 shape when approved
+  - Wrapper ok/blocked semantics
+  - Promotion idempotency (stable request ID)
+
+#### CI / Tooling
+- `make api-verify` runs scope checks, boundary checks, and API contract tests
+- CI runs `make api-verify` on push/PR
+
+#### Docs
+- Updated workflow integration docs with new section describing PromotionIntentV1 → CamPromotionRequestV1 bridge
+
+---
+
 ## [Unreleased]
 
 ### 🆕 Added

@@ -511,6 +511,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: design_first_workflow_router (%s)", e)
     design_first_workflow_router = None
 
+# Phase 33.0: CAM Promotion Bridge (orchestration-only; fenced from CAM engine)
+try:
+    from .art_studio.api.cam_promotion_routes import router as art_cam_promotion_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: art_cam_promotion_router (%s)", e)
+    art_cam_promotion_router = None
+
 # =============================================================================
 # WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
 # Implements governance contracts for server-side feasibility, artifact persistence
@@ -1037,6 +1044,9 @@ if art_workflow_router:
 # Bundle 32.7.0: Design-First Workflow Binding
 if design_first_workflow_router:
     app.include_router(design_first_workflow_router, tags=["Art Studio", "Design-First Workflow"])
+# Phase 33.0: CAM Promotion Bridge
+if art_cam_promotion_router:
+    app.include_router(art_cam_promotion_router, tags=["Art Studio", "CAM Promotion Bridge"])
 
 # Wave 16: Governance Code Bundle - Canonical Workflow + Run Artifacts (4)
 # Implements governance contracts:
