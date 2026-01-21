@@ -59,7 +59,11 @@ function icon(): string {
     :title="tooltip()"
     role="status"
   >
-    <span v-if="showIcon" class="icon" aria-hidden="true">{{ icon() }}</span>
+    <span
+      v-if="showIcon"
+      class="icon"
+      aria-hidden="true"
+    >{{ icon() }}</span>
     <span class="label">{{ normalized() }}</span>
   </span>
 </template>

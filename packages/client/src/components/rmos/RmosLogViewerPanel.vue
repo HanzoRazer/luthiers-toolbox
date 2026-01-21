@@ -1,5 +1,8 @@
 <template>
-  <div class="rmos-log-viewer-panel" ref="containerRef">
+  <div
+    ref="containerRef"
+    class="rmos-log-viewer-panel"
+  >
     <!-- Header with filters and controls -->
     <div class="header">
       <div class="title-row">
@@ -18,17 +21,17 @@
           <button
             class="btn icon"
             title="Jump to newest"
-            @click="jumpToNewest"
             :disabled="loading"
+            @click="jumpToNewest"
           >
-            <span class="icon-arrow-up"></span>
+            <span class="icon-arrow-up" />
           </button>
 
           <!-- Refresh -->
           <button
             class="btn"
-            @click="refresh"
             :disabled="loading"
+            @click="refresh"
           >
             {{ loading ? "Loading..." : "Refresh" }}
           </button>
@@ -37,26 +40,61 @@
 
       <!-- Filters -->
       <div class="filters">
-        <select v-model="filters.mode" @change="refresh">
-          <option value="">All modes</option>
-          <option value="art_studio">Art Studio</option>
-          <option value="saw">Saw</option>
-          <option value="router">Router</option>
+        <select
+          v-model="filters.mode"
+          @change="refresh"
+        >
+          <option value="">
+            All modes
+          </option>
+          <option value="art_studio">
+            Art Studio
+          </option>
+          <option value="saw">
+            Saw
+          </option>
+          <option value="router">
+            Router
+          </option>
         </select>
 
-        <select v-model="filters.status" @change="refresh">
-          <option value="">All statuses</option>
-          <option value="OK">OK</option>
-          <option value="BLOCKED">BLOCKED</option>
-          <option value="ERROR">ERROR</option>
+        <select
+          v-model="filters.status"
+          @change="refresh"
+        >
+          <option value="">
+            All statuses
+          </option>
+          <option value="OK">
+            OK
+          </option>
+          <option value="BLOCKED">
+            BLOCKED
+          </option>
+          <option value="ERROR">
+            ERROR
+          </option>
         </select>
 
-        <select v-model="filters.risk_level" @change="refresh">
-          <option value="">All risk levels</option>
-          <option value="GREEN">GREEN</option>
-          <option value="YELLOW">YELLOW</option>
-          <option value="RED">RED</option>
-          <option value="ERROR">ERROR</option>
+        <select
+          v-model="filters.risk_level"
+          @change="refresh"
+        >
+          <option value="">
+            All risk levels
+          </option>
+          <option value="GREEN">
+            GREEN
+          </option>
+          <option value="YELLOW">
+            YELLOW
+          </option>
+          <option value="RED">
+            RED
+          </option>
+          <option value="ERROR">
+            ERROR
+          </option>
         </select>
 
         <input
@@ -64,34 +102,59 @@
           placeholder="Tool ID"
           @keyup.enter="refresh"
           @input="onFilterInput"
-        />
+        >
 
         <!-- H2.8: Soft cap dropdown -->
-        <select v-model="softCapValue" class="cap-select" title="Auto-refresh cap">
-          <option :value="10">Cap: 10</option>
-          <option :value="25">Cap: 25</option>
-          <option :value="50">Cap: 50</option>
+        <select
+          v-model="softCapValue"
+          class="cap-select"
+          title="Auto-refresh cap"
+        >
+          <option :value="10">
+            Cap: 10
+          </option>
+          <option :value="25">
+            Cap: 25
+          </option>
+          <option :value="50">
+            Cap: 50
+          </option>
         </select>
 
         <!-- H2.10: Reset cap button -->
-        <button class="btn small" @click="resetCapForFilter" title="Reset cap to default">
+        <button
+          class="btn small"
+          title="Reset cap to default"
+          @click="resetCapForFilter"
+        >
           Reset
         </button>
       </div>
     </div>
 
     <!-- Error display -->
-    <div v-if="error" class="error-banner">
+    <div
+      v-if="error"
+      class="error-banner"
+    >
       {{ error }}
     </div>
 
     <!-- H2.7: Overflow indicator -->
-    <div v-if="overflowCount > 0" class="overflow-row" @click="jumpToNewest">
+    <div
+      v-if="overflowCount > 0"
+      class="overflow-row"
+      @click="jumpToNewest"
+    >
       +{{ overflowCount }} more runs available
     </div>
 
     <!-- Log entries table -->
-    <div class="table-container" ref="tableContainerRef" @scroll="onScroll">
+    <div
+      ref="tableContainerRef"
+      class="table-container"
+      @scroll="onScroll"
+    >
       <table class="log-table">
         <thead>
           <tr>
@@ -117,46 +180,91 @@
             }"
             @click="selectRun(entry)"
           >
-            <td class="time">{{ formatTime(entry.created_at_utc) }}</td>
-            <td class="run-id mono">{{ entry.run_id.slice(0, 16) }}...</td>
+            <td class="time">
+              {{ formatTime(entry.created_at_utc) }}
+            </td>
+            <td class="run-id mono">
+              {{ entry.run_id.slice(0, 16) }}...
+            </td>
             <td>{{ entry.mode }}</td>
             <td>{{ entry.tool_id || "-" }}</td>
-            <td class="status">{{ entry.status }}</td>
-            <td class="risk">{{ entry.risk_level }}</td>
-            <td class="score">{{ entry.score?.toFixed(2) ?? "-" }}</td>
+            <td class="status">
+              {{ entry.status }}
+            </td>
+            <td class="risk">
+              {{ entry.risk_level }}
+            </td>
+            <td class="score">
+              {{ entry.score?.toFixed(2) ?? "-" }}
+            </td>
           </tr>
 
           <!-- H2.3: Sentinel row -->
-          <tr v-if="hasMore || loadingMore" class="sentinel-row">
-            <td colspan="7" class="sentinel-cell">
+          <tr
+            v-if="hasMore || loadingMore"
+            class="sentinel-row"
+          >
+            <td
+              colspan="7"
+              class="sentinel-cell"
+            >
               <span v-if="loadingMore">Loading older...</span>
-              <span v-else-if="hasMore" @click="loadMore">Load more</span>
+              <span
+                v-else-if="hasMore"
+                @click="loadMore"
+              >Load more</span>
             </td>
           </tr>
-          <tr v-else-if="entries.length > 0" class="sentinel-row">
-            <td colspan="7" class="sentinel-cell end">End of list</td>
+          <tr
+            v-else-if="entries.length > 0"
+            class="sentinel-row"
+          >
+            <td
+              colspan="7"
+              class="sentinel-cell end"
+            >
+              End of list
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- H2.1: Load more button (fallback) -->
-    <div v-if="hasMore && !loadingMore" class="load-more-row">
-      <button class="btn" @click="loadMore" :disabled="loadingMore">
+    <div
+      v-if="hasMore && !loadingMore"
+      class="load-more-row"
+    >
+      <button
+        class="btn"
+        :disabled="loadingMore"
+        @click="loadMore"
+      >
         Load More
       </button>
     </div>
 
     <!-- Empty state -->
-    <div v-if="!loading && entries.length === 0" class="empty-state">
+    <div
+      v-if="!loading && entries.length === 0"
+      class="empty-state"
+    >
       No runs found for current filters.
     </div>
 
     <!-- Selected run details panel -->
-    <div v-if="selectedEntry" class="details-panel">
+    <div
+      v-if="selectedEntry"
+      class="details-panel"
+    >
       <div class="details-header">
         <h4>Run Details</h4>
-        <button class="btn small" @click="selectedEntry = null">Close</button>
+        <button
+          class="btn small"
+          @click="selectedEntry = null"
+        >
+          Close
+        </button>
       </div>
       <div class="details-content">
         <div><strong>Run ID:</strong> {{ selectedEntry.run_id }}</div>
@@ -167,7 +275,12 @@
         <div v-if="selectedEntry.warnings?.length">
           <strong>Warnings:</strong>
           <ul>
-            <li v-for="(w, i) in selectedEntry.warnings" :key="i">{{ w }}</li>
+            <li
+              v-for="(w, i) in selectedEntry.warnings"
+              :key="i"
+            >
+              {{ w }}
+            </li>
           </ul>
         </div>
       </div>

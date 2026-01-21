@@ -2,7 +2,9 @@
   <div class="cam-production">
     <div class="cam-header">
       <h2>⚙️ CAM Production</h2>
-      <p class="subtitle">CNC toolpath generation & export</p>
+      <p class="subtitle">
+        CNC toolpath generation & export
+      </p>
     </div>
 
     <!-- Sidebar Navigation -->
@@ -12,8 +14,8 @@
           v-for="tool in tools" 
           :key="tool.id"
           :class="{ active: activeTool === tool.id }"
-          @click="activeTool = tool.id"
           class="sidebar-btn"
+          @click="activeTool = tool.id"
         >
           <span class="icon">{{ tool.icon }}</span>
           <span class="label">{{ tool.label }}</span>
@@ -24,8 +26,13 @@
       <main class="cam-main">
         <!-- Pipeline Lab (Primary Workflow) -->
         <!-- <PipelineLabView v-if="activeTool === 'pipeline'" /> -->
-        <div v-if="activeTool === 'pipeline'" class="p-4 space-y-4">
-          <div class="text-gray-500">Pipeline Lab temporarily disabled (file corrupted)</div>
+        <div
+          v-if="activeTool === 'pipeline'"
+          class="p-4 space-y-4"
+        >
+          <div class="text-gray-500">
+            Pipeline Lab temporarily disabled (file corrupted)
+          </div>
           <PresetManagerPanel />
           <CompareRunsPanel />
         </div>

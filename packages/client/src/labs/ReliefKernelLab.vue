@@ -436,26 +436,40 @@ function selectComparison(name: string) {
 
 <template>
   <div class="p-4 max-w-6xl mx-auto space-y-4">
-    <h1 class="text-2xl font-bold">Relief Kernel Lab</h1>
+    <h1 class="text-2xl font-bold">
+      Relief Kernel Lab
+    </h1>
     <p class="text-sm text-gray-600">
-      Phase 24.6: Dynamic scallop optimizer<br/>
+      Phase 24.6: Dynamic scallop optimizer<br>
       Phase 24.7: Preset comparator (Safe/Standard/Aggressive)
     </p>
 
     <!-- Upload -->
     <div class="border rounded p-3 space-y-2">
       <label class="block text-sm font-medium">Heightmap (PNG/JPEG):</label>
-      <input type="file" accept="image/*" @change="onFileChange" />
+      <input
+        type="file"
+        accept="image/*"
+        @change="onFileChange"
+      >
       
       <!-- Units selector (before upload) -->
       <div class="flex items-center gap-2 text-xs">
         <span class="text-gray-600">Units:</span>
         <label class="flex items-center gap-1">
-          <input v-model="units" type="radio" value="mm" />
+          <input
+            v-model="units"
+            type="radio"
+            value="mm"
+          >
           <span>mm</span>
         </label>
         <label class="flex items-center gap-1">
-          <input v-model="units" type="radio" value="inch" />
+          <input
+            v-model="units"
+            type="radio"
+            value="inch"
+          >
           <span>inch</span>
         </label>
         <span class="text-gray-500 ml-2">(Set before uploading)</span>
@@ -463,7 +477,10 @@ function selectComparison(name: string) {
     </div>
 
     <!-- Parameters -->
-    <div v-if="map" class="grid grid-cols-4 gap-3 border rounded p-3">
+    <div
+      v-if="map"
+      class="grid grid-cols-4 gap-3 border rounded p-3"
+    >
       <div>
         <label class="block text-xs font-medium">Tool Ø ({{ map.units }})</label>
         <input 
@@ -471,7 +488,7 @@ function selectComparison(name: string) {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Step-down ({{ map.units }})</label>
@@ -480,7 +497,7 @@ function selectComparison(name: string) {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Scallop ({{ map.units }})</label>
@@ -489,7 +506,7 @@ function selectComparison(name: string) {
           type="number" 
           step="0.01"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       <div>
         <label class="block text-xs font-medium">Stock ({{ map.units }})</label>
@@ -498,7 +515,7 @@ function selectComparison(name: string) {
           type="number" 
           step="0.1"
           class="w-full border rounded px-2 py-1" 
-        />
+        >
       </div>
       
       <!-- Phase 24.6: Dynamic Scallop Control -->
@@ -508,94 +525,146 @@ function selectComparison(name: string) {
             v-model="useDynamicScallop" 
             type="checkbox" 
             class="align-middle" 
-          />
+          >
           <span>Use dynamic scallop (slope-aware spacing)</span>
         </label>
       </div>
     </div>
 
     <!-- Run Buttons -->
-    <div v-if="map" class="space-x-2">
+    <div
+      v-if="map"
+      class="space-x-2"
+    >
       <button 
-        @click="runFinish"
         class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+        @click="runFinish"
       >
         Generate Finishing
       </button>
       <button 
         v-if="result"
-        @click="runSimBridge"
         class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+        @click="runSimBridge"
       >
         Run Sim Bridge
       </button>
       <button 
         v-if="reliefSimBridgeOut"
-        @click="pushSnapshot"
         class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+        @click="pushSnapshot"
       >
         Push Snapshot to Timeline
       </button>
       
       <!-- Phase 24.7: Preset Comparison Button -->
       <button 
-        @click="runPresetComparison"
         :disabled="isComparing"
         class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50"
+        @click="runPresetComparison"
       >
         {{ isComparing ? "Comparing..." : "Run Preset Comparison" }}
       </button>
     </div>
 
     <!-- Phase 24.7: Comparison Results -->
-    <div v-if="comparisons.length > 0" class="border rounded p-3">
-      <h2 class="text-lg font-bold mb-2">Preset Comparison Results</h2>
+    <div
+      v-if="comparisons.length > 0"
+      class="border rounded p-3"
+    >
+      <h2 class="text-lg font-bold mb-2">
+        Preset Comparison Results
+      </h2>
       <table class="w-full text-xs border-collapse">
         <thead>
           <tr class="bg-gray-100">
-            <th class="border px-2 py-1">Preset</th>
-            <th class="border px-2 py-1">Time (s)</th>
-            <th class="border px-2 py-1">Risk</th>
-            <th class="border px-2 py-1">Thin Floor</th>
-            <th class="border px-2 py-1">High Load</th>
-            <th class="border px-2 py-1">Avg Floor (mm)</th>
-            <th class="border px-2 py-1">Min Floor (mm)</th>
-            <th class="border px-2 py-1">Max Load</th>
+            <th class="border px-2 py-1">
+              Preset
+            </th>
+            <th class="border px-2 py-1">
+              Time (s)
+            </th>
+            <th class="border px-2 py-1">
+              Risk
+            </th>
+            <th class="border px-2 py-1">
+              Thin Floor
+            </th>
+            <th class="border px-2 py-1">
+              High Load
+            </th>
+            <th class="border px-2 py-1">
+              Avg Floor (mm)
+            </th>
+            <th class="border px-2 py-1">
+              Min Floor (mm)
+            </th>
+            <th class="border px-2 py-1">
+              Max Load
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr 
             v-for="row in comparisons" 
             :key="row.name"
-            @click="selectComparison(row.name)"
             :class="{
               'bg-blue-50 cursor-pointer hover:bg-blue-100': selectedComparisonName === row.name,
               'hover:bg-gray-50 cursor-pointer': selectedComparisonName !== row.name
             }"
+            @click="selectComparison(row.name)"
           >
-            <td class="border px-2 py-1 font-medium">{{ row.name }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.est_time_s.toFixed(1) }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.risk_score.toFixed(2) }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.thin_floor_count }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.high_load_count }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.avg_floor_thickness.toFixed(2) }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.min_floor_thickness.toFixed(2) }}</td>
-            <td class="border px-2 py-1 text-right">{{ row.max_load_index.toFixed(2) }}</td>
+            <td class="border px-2 py-1 font-medium">
+              {{ row.name }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.est_time_s.toFixed(1) }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.risk_score.toFixed(2) }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.thin_floor_count }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.high_load_count }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.avg_floor_thickness.toFixed(2) }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.min_floor_thickness.toFixed(2) }}
+            </td>
+            <td class="border px-2 py-1 text-right">
+              {{ row.max_load_index.toFixed(2) }}
+            </td>
           </tr>
         </tbody>
       </table>
-      <p v-if="selectedComparisonName" class="text-xs text-gray-600 mt-2">
+      <p
+        v-if="selectedComparisonName"
+        class="text-xs text-gray-600 mt-2"
+      >
         Selected: <strong>{{ selectedComparisonName }}</strong>
       </p>
     </div>
 
     <!-- Canvas -->
-    <div v-if="map" class="border rounded p-2 bg-black">
-      <canvas ref="canvas" class="max-w-full h-auto"></canvas>
+    <div
+      v-if="map"
+      class="border rounded p-2 bg-black"
+    >
+      <canvas
+        ref="canvas"
+        class="max-w-full h-auto"
+      />
     </div>
 
     <!-- Results -->
-    <div v-if="result" class="text-xs border rounded p-3 space-y-1">
+    <div
+      v-if="result"
+      class="text-xs border rounded p-3 space-y-1"
+    >
       <div><strong>Moves:</strong> {{ result.moves.length }}</div>
       <div><strong>Length XY:</strong> {{ result.stats.length_xy.toFixed(2) }} mm</div>
       <div><strong>Time Est:</strong> {{ result.stats.est_time_s.toFixed(1) }} s</div>
@@ -603,7 +672,10 @@ function selectComparison(name: string) {
     </div>
 
     <!-- Sim Bridge Results (Phase 24.4) -->
-    <div v-if="reliefSimBridgeOut" class="text-xs border rounded p-3 space-y-1">
+    <div
+      v-if="reliefSimBridgeOut"
+      class="text-xs border rounded p-3 space-y-1"
+    >
       <h2 class="font-bold text-sm mb-2">
         Relief Sim Bridge Results (Risk: {{ reliefSimBridgeOut.risk_score.toFixed(2) }})
       </h2>
@@ -634,7 +706,10 @@ function selectComparison(name: string) {
     </div>
 
     <!-- Map Info -->
-    <div v-if="map" class="text-xs text-gray-600 mt-2">
+    <div
+      v-if="map"
+      class="text-xs text-gray-600 mt-2"
+    >
       <div><strong>Map:</strong> {{ map.width }}×{{ map.height }} cells</div>
       <div><strong>Z Range:</strong> {{ map.z_min.toFixed(2) }} to {{ map.z_max.toFixed(2) }} mm</div>
       <div><strong>Cell Size:</strong> {{ map.cell_size_xy.toFixed(2) }} mm</div>

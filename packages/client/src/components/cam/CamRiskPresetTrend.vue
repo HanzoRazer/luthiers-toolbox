@@ -1,6 +1,9 @@
 <template>
   <div class="w-full h-20 border rounded bg-white flex items-center px-2 py-1">
-    <div v-if="points.length === 0" class="text-[11px] text-gray-400">
+    <div
+      v-if="points.length === 0"
+      class="text-[11px] text-gray-400"
+    >
       No jobs to plot.
     </div>
 

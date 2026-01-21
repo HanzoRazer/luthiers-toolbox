@@ -3,7 +3,9 @@
     <header class="view-header">
       <div>
         <h1>CNC Production Hub</h1>
-        <p class="subtitle">Job history, comparison, and preset management</p>
+        <p class="subtitle">
+          Job history, comparison, and preset management
+        </p>
       </div>
     </header>
 
@@ -13,44 +15,82 @@
         <header class="panel-header">
           <h2>Job History</h2>
           <div class="filters">
-            <select v-model="filters.machine_id" @change="loadJobs">
-              <option value="">All Machines</option>
-              <option v-for="m in machines" :key="m" :value="m">{{ m }}</option>
+            <select
+              v-model="filters.machine_id"
+              @change="loadJobs"
+            >
+              <option value="">
+                All Machines
+              </option>
+              <option
+                v-for="m in machines"
+                :key="m"
+                :value="m"
+              >
+                {{ m }}
+              </option>
             </select>
-            <select v-model="filters.post_id" @change="loadJobs">
-              <option value="">All Posts</option>
-              <option v-for="p in posts" :key="p" :value="p">{{ p }}</option>
+            <select
+              v-model="filters.post_id"
+              @change="loadJobs"
+            >
+              <option value="">
+                All Posts
+              </option>
+              <option
+                v-for="p in posts"
+                :key="p"
+                :value="p"
+              >
+                {{ p }}
+              </option>
             </select>
             <label class="checkbox-label">
-              <input type="checkbox" v-model="filters.favorites_only" @change="loadJobs" />
+              <input
+                v-model="filters.favorites_only"
+                type="checkbox"
+                @change="loadJobs"
+              >
               Favorites Only
             </label>
           </div>
         </header>
 
-        <div v-if="loadingJobs" class="loading-state">
-          <div class="spinner"></div>
+        <div
+          v-if="loadingJobs"
+          class="loading-state"
+        >
+          <div class="spinner" />
           <p>Loading jobs...</p>
         </div>
 
-        <div v-else-if="jobsError" class="error-banner">
+        <div
+          v-else-if="jobsError"
+          class="error-banner"
+        >
           {{ jobsError }}
         </div>
 
-        <div v-else-if="jobs.length === 0" class="empty-state">
+        <div
+          v-else-if="jobs.length === 0"
+          class="empty-state"
+        >
           <p>No jobs found. Run a pipeline to create job history.</p>
         </div>
 
-        <table v-else class="jobs-table">
+        <table
+          v-else
+          class="jobs-table"
+        >
           <thead>
             <tr>
               <th>
                 <input
                   type="checkbox"
                   :checked="allSelected"
-                  @change="toggleSelectAll"
                   title="Select all"
-                />
+                  @change="toggleSelectAll"
+                >
               </th>
               <th>Job Name</th>
               <th>Machine</th>
@@ -63,16 +103,24 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="job in jobs" :key="job.run_id" :class="{ selected: isSelected(job.run_id) }">
+            <tr
+              v-for="job in jobs"
+              :key="job.run_id"
+              :class="{ selected: isSelected(job.run_id) }"
+            >
               <td>
                 <input
                   type="checkbox"
                   :checked="isSelected(job.run_id)"
                   @change="toggleSelection(job.run_id)"
-                />
+                >
               </td>
               <td>
-                <span v-if="job.baseline_id" class="baseline-badge" title="Baseline">📍</span>
+                <span
+                  v-if="job.baseline_id"
+                  class="baseline-badge"
+                  title="Baseline"
+                >📍</span>
                 {{ job.job_name || job.run_id.slice(0, 8) }}
               </td>
               <td>{{ job.machine_id || '—' }}</td>
@@ -84,13 +132,17 @@
               </td>
               <td>{{ formatDate(job.created_at) }}</td>
               <td>
-                <button class="icon-button" @click="viewDetails(job.run_id)" title="View details">
+                <button
+                  class="icon-button"
+                  title="View details"
+                  @click="viewDetails(job.run_id)"
+                >
                   📋
                 </button>
                 <button
                   class="icon-button"
-                  @click="toggleFavorite(job.run_id, !job.favorite)"
                   :title="job.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                  @click="toggleFavorite(job.run_id, !job.favorite)"
                 >
                   {{ job.favorite ? '⭐' : '☆' }}
                 </button>

@@ -1,17 +1,36 @@
 <template>
   <div class="post-selector">
     <label class="post-label">Post-Processor</label>
-    <select v-model="postId" class="post-select">
-      <option value="grbl">GRBL (Arduino/Hobby CNC)</option>
-      <option value="mach4">Mach4 (Industrial PC)</option>
-      <option value="linuxcnc">LinuxCNC (Open Source)</option>
-      <option value="pathpilot">PathPilot (Tormach)</option>
-      <option value="masso">MASSO (G3 Touch)</option>
+    <select
+      v-model="postId"
+      class="post-select"
+    >
+      <option value="grbl">
+        GRBL (Arduino/Hobby CNC)
+      </option>
+      <option value="mach4">
+        Mach4 (Industrial PC)
+      </option>
+      <option value="linuxcnc">
+        LinuxCNC (Open Source)
+      </option>
+      <option value="pathpilot">
+        PathPilot (Tormach)
+      </option>
+      <option value="masso">
+        MASSO (G3 Touch)
+      </option>
     </select>
-    <button @click="applyToAll" class="apply-btn">
+    <button
+      class="apply-btn"
+      @click="applyToAll"
+    >
       Apply to all CAM exports
     </button>
-    <span v-if="applied" class="applied-indicator">✓ Applied</span>
+    <span
+      v-if="applied"
+      class="applied-indicator"
+    >✓ Applied</span>
   </div>
 </template>
 

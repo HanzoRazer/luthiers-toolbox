@@ -12,5 +12,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <ManufacturingCandidateList :runId="props.runId" />
+  <ManufacturingCandidateList :run-id="props.runId" />
 </template>

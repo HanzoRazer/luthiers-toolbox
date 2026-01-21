@@ -121,24 +121,54 @@ watch(() => props.runId, () => refresh());
   <div class="variant-review-panel">
     <div class="panel-header">
       <div>
-        <h3 class="title">Variant Review</h3>
-        <p class="subtitle">Rate, note, and promote advisory variants for this run.</p>
+        <h3 class="title">
+          Variant Review
+        </h3>
+        <p class="subtitle">
+          Rate, note, and promote advisory variants for this run.
+        </p>
       </div>
-      <button class="btn btn-secondary" @click="refresh" :disabled="loading">
+      <button
+        class="btn btn-secondary"
+        :disabled="loading"
+        @click="refresh"
+      >
         {{ loading ? "Loading..." : "Refresh" }}
       </button>
     </div>
 
-    <div v-if="error" class="error-banner">
+    <div
+      v-if="error"
+      class="error-banner"
+    >
       {{ error }}
-      <button @click="error = null">&times;</button>
+      <button @click="error = null">
+        &times;
+      </button>
     </div>
 
-    <div v-if="loading && !items.length" class="loading">Loading variants...</div>
-    <div v-else-if="!items.length" class="empty">No advisory variants found for this run.</div>
+    <div
+      v-if="loading && !items.length"
+      class="loading"
+    >
+      Loading variants...
+    </div>
+    <div
+      v-else-if="!items.length"
+      class="empty"
+    >
+      No advisory variants found for this run.
+    </div>
 
-    <div v-else class="variant-grid">
-      <div v-for="v in items" :key="v.advisory_id" class="variant-card">
+    <div
+      v-else
+      class="variant-grid"
+    >
+      <div
+        v-for="v in items"
+        :key="v.advisory_id"
+        class="variant-card"
+      >
         <div class="card-header">
           <code class="advisory-id">{{ v.advisory_id.slice(0, 12) }}...</code>
           <span class="file-info">{{ v.filename }} - {{ formatSize(v.size_bytes) }}</span>
@@ -147,11 +177,14 @@ watch(() => props.runId, () => refresh());
         <!-- SVG Preview -->
         <SvgPreview
           v-if="v.mime === 'image/svg+xml'"
-          :runId="runId"
-          :advisoryId="v.advisory_id"
-          :apiBase="apiBase"
+          :run-id="runId"
+          :advisory-id="v.advisory_id"
+          :api-base="apiBase"
         />
-        <div v-else class="non-svg-blob">
+        <div
+          v-else
+          class="non-svg-blob"
+        >
           <span class="subtle">Non-SVG blob: {{ v.mime }}</span>
         </div>
 
@@ -163,11 +196,11 @@ watch(() => props.runId, () => refresh());
           </div>
 
           <textarea
-            class="notes-input"
             v-model="v.notes"
+            class="notes-input"
             placeholder="Review notes..."
             rows="3"
-          ></textarea>
+          />
 
           <div class="action-row">
             <button
@@ -187,7 +220,10 @@ watch(() => props.runId, () => refresh());
             </button>
           </div>
 
-          <div v-if="v.preview_blocked" class="preview-warning">
+          <div
+            v-if="v.preview_blocked"
+            class="preview-warning"
+          >
             Preview blocked: {{ v.preview_block_reason }}
           </div>
 

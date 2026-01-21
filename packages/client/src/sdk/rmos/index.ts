@@ -17,6 +17,11 @@ export type {
   SignedAttachment,
   ListRunsParams,
   ListRunsResponse,
+  AdvisoryExplanation,
+  ExplainRunResponse,
+  RunDiffResult,
+  AddOverrideRequest,
+  AddOverrideResponse,
 } from "./runs";
 
 export type {

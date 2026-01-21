@@ -127,62 +127,118 @@ async function save() {
     <div class="hdr">
       <div class="title">
         Review
-        <span class="meta" v-if="filename || mime">
+        <span
+          v-if="filename || mime"
+          class="meta"
+        >
           · {{ filename || "variant" }} <span v-if="mime">({{ mime }})</span>
         </span>
       </div>
-      <div class="statusPill" :data-status="computedStatus">
+      <div
+        class="statusPill"
+        :data-status="computedStatus"
+      >
         {{ computedStatus }}
       </div>
     </div>
 
     <div class="row">
       <label class="check">
-        <input type="checkbox" v-model="rejected" />
+        <input
+          v-model="rejected"
+          type="checkbox"
+        >
         Reject
       </label>
 
-      <div v-if="rejected" class="rejectBlock">
+      <div
+        v-if="rejected"
+        class="rejectBlock"
+      >
         <label class="lbl">Reason code</label>
-        <select class="sel" v-model="reasonCode">
-          <option :value="null">Select…</option>
-          <option v-for="r in reasonOptions" :key="r.code" :value="r.code">
+        <select
+          v-model="reasonCode"
+          class="sel"
+        >
+          <option :value="null">
+            Select…
+          </option>
+          <option
+            v-for="r in reasonOptions"
+            :key="r.code"
+            :value="r.code"
+          >
             {{ r.label }}
           </option>
         </select>
 
         <label class="lbl">Reason detail (optional)</label>
-        <input class="inp" v-model="reasonDetail" placeholder="Short detail…"/>
+        <input
+          v-model="reasonDetail"
+          class="inp"
+          placeholder="Short detail…"
+        >
 
         <label class="lbl">Operator note (optional)</label>
-        <textarea class="ta" v-model="operatorNote" rows="2" placeholder="Internal note…"/>
+        <textarea
+          v-model="operatorNote"
+          class="ta"
+          rows="2"
+          placeholder="Internal note…"
+        />
       </div>
     </div>
 
     <div class="row">
       <div class="col">
         <label class="lbl">Rating</label>
-        <select class="sel" v-model="rating">
-          <option :value="null">—</option>
-          <option :value="5">5</option>
-          <option :value="4">4</option>
-          <option :value="3">3</option>
-          <option :value="2">2</option>
-          <option :value="1">1</option>
+        <select
+          v-model="rating"
+          class="sel"
+        >
+          <option :value="null">
+            —
+          </option>
+          <option :value="5">
+            5
+          </option>
+          <option :value="4">
+            4
+          </option>
+          <option :value="3">
+            3
+          </option>
+          <option :value="2">
+            2
+          </option>
+          <option :value="1">
+            1
+          </option>
         </select>
       </div>
 
       <div class="col grow">
         <label class="lbl">Notes</label>
-        <input class="inp" v-model="notes" placeholder="Visible review note…"/>
+        <input
+          v-model="notes"
+          class="inp"
+          placeholder="Visible review note…"
+        >
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn primary" :disabled="!canSave" @click="save">
+      <button
+        class="btn primary"
+        :disabled="!canSave"
+        @click="save"
+      >
         {{ saving ? "Saving…" : "Save review" }}
       </button>
-      <div class="hint" v-if="rejected && reasonCode === null">
+      <div
+        v-if="rejected && reasonCode === null"
+        class="hint"
+      >
         Rejection requires a reason code.
       </div>
     </div>

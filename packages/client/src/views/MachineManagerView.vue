@@ -10,7 +10,9 @@ Updated: November 2025
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Machine Manager</h2>
+        <h2 class="text-sm font-semibold">
+          Machine Manager
+        </h2>
         <p class="text-[11px] text-gray-500">
           Inspect configured CNC machines, envelopes, and CAM defaults
         </p>
@@ -30,7 +32,7 @@ Updated: November 2025
               v-model="query"
               placeholder="Filter…"
               class="border rounded px-2 py-0.5 text-[10px] w-32"
-            />
+            >
             <button
               class="px-2 py-0.5 rounded border border-gray-300 text-[10px] disabled:opacity-50"
               :disabled="loading"
@@ -42,7 +44,10 @@ Updated: November 2025
           </div>
         </div>
 
-        <p v-if="error" class="text-[11px] text-red-600">
+        <p
+          v-if="error"
+          class="text-[11px] text-red-600"
+        >
           {{ error }}
         </p>
 
@@ -53,7 +58,10 @@ Updated: November 2025
           No machines configured yet.
         </div>
 
-        <ul v-else class="space-y-1 max-h-64 overflow-auto pr-1">
+        <ul
+          v-else
+          class="space-y-1 max-h-64 overflow-auto pr-1"
+        >
           <li
             v-for="m in filteredMachines"
             :key="m.id"
@@ -65,7 +73,10 @@ Updated: November 2025
               <div class="flex items-center justify-between gap-1">
                 <div class="truncate">
                   <span class="font-semibold">{{ m.name }}</span>
-                  <span v-if="m.controller" class="text-[10px] text-gray-500">
+                  <span
+                    v-if="m.controller"
+                    class="text-[10px] text-gray-500"
+                  >
                     · {{ m.controller }}
                   </span>
                 </div>
@@ -92,15 +103,24 @@ Updated: November 2025
           </span>
         </div>
 
-        <div v-if="!current" class="text-[11px] text-gray-500">
+        <div
+          v-if="!current"
+          class="text-[11px] text-gray-500"
+        >
           Select a machine from the list to inspect its limits and defaults.
         </div>
 
-        <div v-else class="space-y-3">
+        <div
+          v-else
+          class="space-y-3"
+        >
           <div>
             <div class="text-[11px] text-gray-700">
               <span class="font-semibold">{{ current.name }}</span>
-              <span v-if="current.controller" class="text-[10px] text-gray-500">
+              <span
+                v-if="current.controller"
+                class="text-[10px] text-gray-500"
+              >
                 · {{ current.controller }}
               </span>
             </div>

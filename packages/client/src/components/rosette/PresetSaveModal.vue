@@ -1,19 +1,43 @@
 <template>
-  <div v-if="open" class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Save preset">
+  <div
+    v-if="open"
+    class="modal-backdrop"
+    @click.self="emit('close')"
+  >
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Save preset"
+    >
       <div class="modal-header">
-        <div class="modal-title">Save Preset</div>
-        <button class="close-btn" type="button" @click="emit('close')" aria-label="Close">×</button>
+        <div class="modal-title">
+          Save Preset
+        </div>
+        <button
+          class="close-btn"
+          type="button"
+          aria-label="Close"
+          @click="emit('close')"
+        >
+          ×
+        </button>
       </div>
 
       <div class="modal-body">
         <!-- Dirty warning -->
-        <div v-if="mode === 'dirty'" class="warning">
+        <div
+          v-if="mode === 'dirty'"
+          class="warning"
+        >
           <strong>{{ presetName }}</strong> has unsaved changes.
         </div>
 
         <!-- New preset name input -->
-        <div v-if="showNameInput" class="name-input">
+        <div
+          v-if="showNameInput"
+          class="name-input"
+        >
           <label for="preset-name">New preset name</label>
           <input
             id="preset-name"
@@ -22,32 +46,54 @@
             type="text"
             placeholder="Enter name..."
             @keyup.enter="handleSaveNew"
-          />
+          >
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn cancel" type="button" @click="emit('close')">
+        <button
+          class="btn cancel"
+          type="button"
+          @click="emit('close')"
+        >
           Cancel
         </button>
 
         <template v-if="mode === 'dirty'">
-          <button class="btn secondary" type="button" @click="startSaveNew">
+          <button
+            class="btn secondary"
+            type="button"
+            @click="startSaveNew"
+          >
             Save as New
           </button>
-          <button class="btn primary" type="button" @click="handleOverwrite">
+          <button
+            class="btn primary"
+            type="button"
+            @click="handleOverwrite"
+          >
             Overwrite
           </button>
         </template>
 
         <template v-else-if="mode === 'new'">
-          <button class="btn primary" type="button" @click="handleSaveNew" :disabled="!newName.trim()">
+          <button
+            class="btn primary"
+            type="button"
+            :disabled="!newName.trim()"
+            @click="handleSaveNew"
+          >
             Save
           </button>
         </template>
 
         <template v-else-if="mode === 'saveNew'">
-          <button class="btn primary" type="button" @click="handleSaveNew" :disabled="!newName.trim()">
+          <button
+            class="btn primary"
+            type="button"
+            :disabled="!newName.trim()"
+            @click="handleSaveNew"
+          >
             Save as New
           </button>
         </template>

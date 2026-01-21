@@ -18,24 +18,39 @@
     </div>
 
     <!-- Tab 1: Startup Planning -->
-    <div v-if="activeTab === 'startup'" class="tab-content">
+    <div
+      v-if="activeTab === 'startup'"
+      class="tab-content"
+    >
       <h2>🚀 Startup Planning</h2>
       
       <div class="section">
         <h3>Equipment & Tools</h3>
         <div class="input-row">
           <label>CNC Router:</label>
-          <input v-model.number="startup.cncCost" type="number" step="1000">
+          <input
+            v-model.number="startup.cncCost"
+            type="number"
+            step="1000"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Hand Tools:</label>
-          <input v-model.number="startup.handTools" type="number" step="100">
+          <input
+            v-model.number="startup.handTools"
+            type="number"
+            step="100"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Workbenches:</label>
-          <input v-model.number="startup.workbenches" type="number" step="100">
+          <input
+            v-model.number="startup.workbenches"
+            type="number"
+            step="100"
+          >
           <span class="unit">$</span>
         </div>
       </div>
@@ -44,12 +59,20 @@
         <h3>Facilities</h3>
         <div class="input-row">
           <label>Workshop Rent (monthly):</label>
-          <input v-model.number="startup.rent" type="number" step="100">
+          <input
+            v-model.number="startup.rent"
+            type="number"
+            step="100"
+          >
           <span class="unit">$/mo</span>
         </div>
         <div class="input-row">
           <label>Utilities (monthly):</label>
-          <input v-model.number="startup.utilities" type="number" step="50">
+          <input
+            v-model.number="startup.utilities"
+            type="number"
+            step="50"
+          >
           <span class="unit">$/mo</span>
         </div>
       </div>
@@ -58,22 +81,39 @@
         <h3>Equipment Financing</h3>
         <div class="input-row">
           <label>Loan Amount:</label>
-          <input v-model.number="startup.loanAmount" type="number" step="1000">
+          <input
+            v-model.number="startup.loanAmount"
+            type="number"
+            step="1000"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Interest Rate (APR):</label>
-          <input v-model.number="startup.interestRate" type="number" step="0.1" min="0">
+          <input
+            v-model.number="startup.interestRate"
+            type="number"
+            step="0.1"
+            min="0"
+          >
           <span class="unit">%</span>
         </div>
         <div class="input-row">
           <label>Loan Term:</label>
-          <input v-model.number="startup.loanTermYears" type="number" step="1" min="1">
+          <input
+            v-model.number="startup.loanTermYears"
+            type="number"
+            step="1"
+            min="1"
+          >
           <span class="unit">years</span>
         </div>
         <div class="input-row">
           <label>Start Date:</label>
-          <input v-model="startup.loanStartDate" type="month">
+          <input
+            v-model="startup.loanStartDate"
+            type="month"
+          >
         </div>
       </div>
 
@@ -93,7 +133,10 @@
         </div>
       </div>
 
-      <div class="results" style="margin-top: 20px;">
+      <div
+        class="results"
+        style="margin-top: 20px;"
+      >
         <h3>Startup Summary</h3>
         <div class="result-item">
           <span>Total Equipment:</span>
@@ -113,8 +156,14 @@
         </div>
       </div>
 
-      <div class="amortization-section" v-if="showAmortization">
-        <button @click="showAmortization = !showAmortization" class="toggle-btn">
+      <div
+        v-if="showAmortization"
+        class="amortization-section"
+      >
+        <button
+          class="toggle-btn"
+          @click="showAmortization = !showAmortization"
+        >
           {{ showAmortization ? '▼' : '▶' }} Hide Amortization Schedule
         </button>
         <div class="amortization-table">
@@ -125,47 +174,79 @@
             <div>Interest</div>
             <div>Balance</div>
           </div>
-          <div v-for="payment in amortizationSchedule.slice(0, 12)" :key="payment.number" class="table-row">
+          <div
+            v-for="payment in amortizationSchedule.slice(0, 12)"
+            :key="payment.number"
+            class="table-row"
+          >
             <div>{{ payment.number }}</div>
             <div>{{ payment.date }}</div>
             <div>${{ payment.principal.toFixed(2) }}</div>
             <div>${{ payment.interest.toFixed(2) }}</div>
             <div>${{ payment.balance.toFixed(2) }}</div>
           </div>
-          <div v-if="amortizationSchedule.length > 12" class="table-row summary">
-            <div colspan="5">... {{ amortizationSchedule.length - 12 }} more payments ...</div>
+          <div
+            v-if="amortizationSchedule.length > 12"
+            class="table-row summary"
+          >
+            <div colspan="5">
+              ... {{ amortizationSchedule.length - 12 }} more payments ...
+            </div>
           </div>
         </div>
       </div>
-      <button v-else @click="showAmortization = true" class="toggle-btn">
+      <button
+        v-else
+        class="toggle-btn"
+        @click="showAmortization = true"
+      >
         ▶ Show Amortization Schedule ({{ amortizationSchedule.length }} payments)
       </button>
     </div>
 
     <!-- Tab 2: Instrument Costing -->
-    <div v-if="activeTab === 'costing'" class="tab-content">
+    <div
+      v-if="activeTab === 'costing'"
+      class="tab-content"
+    >
       <h2>🎸 Instrument Cost Calculator</h2>
       
       <div class="section">
         <h3>Materials</h3>
         <div class="input-row">
           <label>Wood (body, neck):</label>
-          <input v-model.number="costing.wood" type="number" step="10">
+          <input
+            v-model.number="costing.wood"
+            type="number"
+            step="10"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Hardware (tuners, bridge, etc):</label>
-          <input v-model.number="costing.hardware" type="number" step="10">
+          <input
+            v-model.number="costing.hardware"
+            type="number"
+            step="10"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Electronics (pickups, pots):</label>
-          <input v-model.number="costing.electronics" type="number" step="10">
+          <input
+            v-model.number="costing.electronics"
+            type="number"
+            step="10"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Finishing (paint, lacquer):</label>
-          <input v-model.number="costing.finishing" type="number" step="5">
+          <input
+            v-model.number="costing.finishing"
+            type="number"
+            step="5"
+          >
           <span class="unit">$</span>
         </div>
       </div>
@@ -174,22 +255,38 @@
         <h3>Labor</h3>
         <div class="input-row">
           <label>Your Hourly Rate:</label>
-          <input v-model.number="costing.hourlyRate" type="number" step="5">
+          <input
+            v-model.number="costing.hourlyRate"
+            type="number"
+            step="5"
+          >
           <span class="unit">$/hr</span>
         </div>
         <div class="input-row">
           <label>Build Hours:</label>
-          <input v-model.number="costing.buildHours" type="number" step="1">
+          <input
+            v-model.number="costing.buildHours"
+            type="number"
+            step="1"
+          >
           <span class="unit">hrs</span>
         </div>
         <div class="input-row">
           <label>Finishing Hours:</label>
-          <input v-model.number="costing.finishHours" type="number" step="1">
+          <input
+            v-model.number="costing.finishHours"
+            type="number"
+            step="1"
+          >
           <span class="unit">hrs</span>
         </div>
         <div class="input-row">
           <label>Setup Hours:</label>
-          <input v-model.number="costing.setupHours" type="number" step="0.5">
+          <input
+            v-model.number="costing.setupHours"
+            type="number"
+            step="0.5"
+          >
           <span class="unit">hrs</span>
         </div>
       </div>
@@ -219,19 +316,32 @@
     </div>
 
     <!-- Tab 3: Pricing Strategy -->
-    <div v-if="activeTab === 'pricing'" class="tab-content">
+    <div
+      v-if="activeTab === 'pricing'"
+      class="tab-content"
+    >
       <h2>🏷️ Pricing Strategy</h2>
       
       <div class="section">
         <h3>Target Pricing</h3>
         <div class="input-row">
           <label>Build Cost:</label>
-          <input v-model.number="pricing.buildCost" type="number" step="10">
+          <input
+            v-model.number="pricing.buildCost"
+            type="number"
+            step="10"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Desired Margin (%):</label>
-          <input v-model.number="pricing.margin" type="number" step="5" min="10" max="200">
+          <input
+            v-model.number="pricing.margin"
+            type="number"
+            step="5"
+            min="10"
+            max="200"
+          >
           <span class="unit">%</span>
         </div>
       </div>
@@ -254,24 +364,40 @@
     </div>
 
     <!-- Tab 4: Cash Flow -->
-    <div v-if="activeTab === 'cashflow'" class="tab-content">
+    <div
+      v-if="activeTab === 'cashflow'"
+      class="tab-content"
+    >
       <h2>💰 Cash Flow Projection</h2>
       
       <div class="section">
         <h3>Monthly Projections</h3>
         <div class="input-row">
           <label>Instruments Sold/Month:</label>
-          <input v-model.number="cashflow.unitsSold" type="number" step="1" min="0">
+          <input
+            v-model.number="cashflow.unitsSold"
+            type="number"
+            step="1"
+            min="0"
+          >
           <span class="unit">units</span>
         </div>
         <div class="input-row">
           <label>Average Sale Price:</label>
-          <input v-model.number="cashflow.avgPrice" type="number" step="100">
+          <input
+            v-model.number="cashflow.avgPrice"
+            type="number"
+            step="100"
+          >
           <span class="unit">$</span>
         </div>
         <div class="input-row">
           <label>Monthly Fixed Costs:</label>
-          <input v-model.number="cashflow.fixedCosts" type="number" step="100">
+          <input
+            v-model.number="cashflow.fixedCosts"
+            type="number"
+            step="100"
+          >
           <span class="unit">$</span>
         </div>
       </div>
@@ -286,7 +412,10 @@
           <span>Fixed Costs:</span>
           <strong>${{ cashflow.fixedCosts.toLocaleString() }}</strong>
         </div>
-        <div class="result-item" :class="{ profit: netIncome > 0, loss: netIncome < 0 }">
+        <div
+          class="result-item"
+          :class="{ profit: netIncome > 0, loss: netIncome < 0 }"
+        >
           <span>Net Income:</span>
           <strong>${{ netIncome.toLocaleString() }}</strong>
         </div>
@@ -294,24 +423,39 @@
     </div>
 
     <!-- Tab 5: Growth Planning -->
-    <div v-if="activeTab === 'growth'" class="tab-content">
+    <div
+      v-if="activeTab === 'growth'"
+      class="tab-content"
+    >
       <h2>📈 Growth Planning</h2>
       
       <div class="section">
         <h3>Scaling Scenarios</h3>
         <div class="input-row">
           <label>Current Monthly Output:</label>
-          <input v-model.number="growth.currentOutput" type="number" step="1">
+          <input
+            v-model.number="growth.currentOutput"
+            type="number"
+            step="1"
+          >
           <span class="unit">instruments</span>
         </div>
         <div class="input-row">
           <label>Target Monthly Output:</label>
-          <input v-model.number="growth.targetOutput" type="number" step="1">
+          <input
+            v-model.number="growth.targetOutput"
+            type="number"
+            step="1"
+          >
           <span class="unit">instruments</span>
         </div>
         <div class="input-row">
           <label>Hours per Instrument:</label>
-          <input v-model.number="growth.hoursPerUnit" type="number" step="1">
+          <input
+            v-model.number="growth.hoursPerUnit"
+            type="number"
+            step="1"
+          >
           <span class="unit">hrs</span>
         </div>
       </div>

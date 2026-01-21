@@ -27,11 +27,17 @@ Updated: November 2025
       </div>
     </div>
 
-    <div v-if="!ops || !ops.length" class="text-[11px] text-gray-500">
+    <div
+      v-if="!ops || !ops.length"
+      class="text-[11px] text-gray-500"
+    >
       No pipeline steps in this result.
     </div>
 
-    <div v-else class="space-y-2">
+    <div
+      v-else
+      class="space-y-2"
+    >
       <div class="flex flex-wrap gap-2">
         <button
           v-for="(op, idx) in ops"
@@ -53,13 +59,19 @@ Updated: November 2025
         </button>
       </div>
 
-      <div v-if="currentOp" class="border rounded p-2 bg-gray-50 space-y-1">
+      <div
+        v-if="currentOp"
+        class="border rounded p-2 bg-gray-50 space-y-1"
+      >
         <div class="flex items-center justify-between">
           <div class="text-[11px] text-gray-700">
             <span class="font-semibold">
               {{ currentOp.kind || 'op' }}
             </span>
-            <span v-if="currentOp.name" class="text-gray-500">
+            <span
+              v-if="currentOp.name"
+              class="text-gray-500"
+            >
               · {{ currentOp.name }}
             </span>
           </div>
@@ -75,19 +87,28 @@ Updated: November 2025
           <span class="font-mono">
             {{ currentOp.status || 'unknown' }}
           </span>
-          <span v-if="currentOp.error" class="text-rose-600">
+          <span
+            v-if="currentOp.error"
+            class="text-rose-600"
+          >
             — {{ currentOp.error }}
           </span>
         </div>
 
-        <details v-if="currentOp.summary" class="text-[10px] text-gray-500">
+        <details
+          v-if="currentOp.summary"
+          class="text-[10px] text-gray-500"
+        >
           <summary class="cursor-pointer">
             Summary
           </summary>
           <pre class="mt-1 bg-white border rounded p-2 whitespace-pre-wrap">{{ summaryText }}</pre>
         </details>
 
-        <details v-if="currentOp.result" class="text-[10px] text-gray-500">
+        <details
+          v-if="currentOp.result"
+          class="text-[10px] text-gray-500"
+        >
           <summary class="cursor-pointer">
             Result payload
           </summary>

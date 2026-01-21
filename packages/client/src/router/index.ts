@@ -185,6 +185,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/tools/AudioAnalyzerRunsLibrary.vue"),
   },
 
+  // Tools: Acoustics Ingest Audit Log (browse import events)
+  {
+    path: "/tools/audio-analyzer/ingest",
+    name: "AcousticsIngestEvents",
+    component: () => import("@/views/tools/AcousticsIngestEvents.vue"),
+  },
+
   // AI Images — Visual Analyzer (Production)
   {
     path: "/ai-images",

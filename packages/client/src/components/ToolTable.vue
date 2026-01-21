@@ -1,58 +1,190 @@
 <template>
-  <div class="p-4 space-y-4">b
-    <h2 class="text-xl font-bold">Tool Table</h2>
+  <div class="p-4 space-y-4">
+    b
+    <h2 class="text-xl font-bold">
+      Tool Table
+    </h2>
     <div class="flex items-center gap-3">
       <label class="text-sm">Machine
-        <select v-model="mid" @change="refresh" class="border rounded p-1 ml-2">
-          <option v-for="m in machines" :key="m.id" :value="m.id">{{ m.title }} ({{ m.id }})</option>
+        <select
+          v-model="mid"
+          class="border rounded p-1 ml-2"
+          @change="refresh"
+        >
+          <option
+            v-for="m in machines"
+            :key="m.id"
+            :value="m.id"
+          >{{ m.title }} ({{ m.id }})</option>
         </select>
       </label>
-      <button class="px-3 py-1 border rounded hover:bg-gray-100" @click="refresh">Refresh</button>
-      <a class="px-3 py-1 border rounded hover:bg-gray-100" :href="`/api/machines/tools/${mid}.csv`" download>Export CSV</a>
+      <button
+        class="px-3 py-1 border rounded hover:bg-gray-100"
+        @click="refresh"
+      >
+        Refresh
+      </button>
+      <a
+        class="px-3 py-1 border rounded hover:bg-gray-100"
+        :href="`/api/machines/tools/${mid}.csv`"
+        download
+      >Export CSV</a>
       <label class="px-3 py-1 border rounded cursor-pointer hover:bg-gray-100">
         Import CSV
-        <input type="file" class="hidden" @change="importCsv" accept=".csv">
+        <input
+          type="file"
+          class="hidden"
+          accept=".csv"
+          @change="importCsv"
+        >
       </label>
     </div>
     <div class="overflow-auto max-h-[480px] border rounded">
       <table class="min-w-full text-sm">
         <thead class="bg-gray-100 sticky top-0">
           <tr>
-            <th class="text-left p-2 border-b">T</th>
-            <th class="text-left p-2 border-b">Name</th>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-right p-2 border-b">Ø (mm)</th>
-            <th class="text-right p-2 border-b">Len (mm)</th>
-            <th class="text-left p-2 border-b">Holder</th>
-            <th class="text-right p-2 border-b">Len Offs</th>
-            <th class="text-right p-2 border-b">RPM</th>
-            <th class="text-right p-2 border-b">Feed</th>
-            <th class="text-right p-2 border-b">Plunge</th>
-            <th class="p-2 border-b"></th>
+            <th class="text-left p-2 border-b">
+              T
+            </th>
+            <th class="text-left p-2 border-b">
+              Name
+            </th>
+            <th class="text-left p-2 border-b">
+              Type
+            </th>
+            <th class="text-right p-2 border-b">
+              Ø (mm)
+            </th>
+            <th class="text-right p-2 border-b">
+              Len (mm)
+            </th>
+            <th class="text-left p-2 border-b">
+              Holder
+            </th>
+            <th class="text-right p-2 border-b">
+              Len Offs
+            </th>
+            <th class="text-right p-2 border-b">
+              RPM
+            </th>
+            <th class="text-right p-2 border-b">
+              Feed
+            </th>
+            <th class="text-right p-2 border-b">
+              Plunge
+            </th>
+            <th class="p-2 border-b" />
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(t,i) in tools" :key="i" class="hover:bg-gray-50">
-            <td class="p-2 border-b"><input type="number" class="w-16 border rounded p-1" v-model.number="t.t" /></td>
-            <td class="p-2 border-b"><input class="w-48 border rounded p-1" v-model="t.name" /></td>
-            <td class="p-2 border-b"><input class="w-20 border rounded p-1" v-model="t.type" /></td>
-            <td class="p-2 border-b text-right"><input type="number" step="0.01" class="w-24 border rounded p-1 text-right" v-model.number="t.dia_mm" /></td>
-            <td class="p-2 border-b text-right"><input type="number" step="0.01" class="w-24 border rounded p-1 text-right" v-model.number="t.len_mm" /></td>
-            <td class="p-2 border-b"><input class="w-24 border rounded p-1" v-model="t.holder" /></td>
-            <td class="p-2 border-b text-right"><input type="number" step="0.01" class="w-24 border rounded p-1 text-right" v-model.number="t.offset_len_mm" /></td>
-            <td class="p-2 border-b text-right"><input type="number" class="w-24 border rounded p-1 text-right" v-model.number="t.spindle_rpm" /></td>
-            <td class="p-2 border-b text-right"><input type="number" class="w-24 border rounded p-1 text-right" v-model.number="t.feed_mm_min" /></td>
-            <td class="p-2 border-b text-right"><input type="number" class="w-24 border rounded p-1 text-right" v-model.number="t.plunge_mm_min" /></td>
-            <td class="p-2 border-b"><button class="text-red-600 hover:underline" @click="rm(i)">Delete</button></td>
+          <tr
+            v-for="(t,i) in tools"
+            :key="i"
+            class="hover:bg-gray-50"
+          >
+            <td class="p-2 border-b">
+              <input
+                v-model.number="t.t"
+                type="number"
+                class="w-16 border rounded p-1"
+              >
+            </td>
+            <td class="p-2 border-b">
+              <input
+                v-model="t.name"
+                class="w-48 border rounded p-1"
+              >
+            </td>
+            <td class="p-2 border-b">
+              <input
+                v-model="t.type"
+                class="w-20 border rounded p-1"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.dia_mm"
+                type="number"
+                step="0.01"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.len_mm"
+                type="number"
+                step="0.01"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b">
+              <input
+                v-model="t.holder"
+                class="w-24 border rounded p-1"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.offset_len_mm"
+                type="number"
+                step="0.01"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.spindle_rpm"
+                type="number"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.feed_mm_min"
+                type="number"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b text-right">
+              <input
+                v-model.number="t.plunge_mm_min"
+                type="number"
+                class="w-24 border rounded p-1 text-right"
+              >
+            </td>
+            <td class="p-2 border-b">
+              <button
+                class="text-red-600 hover:underline"
+                @click="rm(i)"
+              >
+                Delete
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="flex items-center gap-2">
-      <button class="px-3 py-1 rounded bg-black text-white hover:bg-gray-800" @click="add">Add Tool</button>
-      <button class="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700" @click="save">Save All</button>
-      <span v-if="saved" class="text-green-700 text-sm">Saved ✓</span>
-      <span v-if="error" class="text-red-600 text-sm">{{ error }}</span>
+      <button
+        class="px-3 py-1 rounded bg-black text-white hover:bg-gray-800"
+        @click="add"
+      >
+        Add Tool
+      </button>
+      <button
+        class="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+        @click="save"
+      >
+        Save All
+      </button>
+      <span
+        v-if="saved"
+        class="text-green-700 text-sm"
+      >Saved ✓</span>
+      <span
+        v-if="error"
+        class="text-red-600 text-sm"
+      >{{ error }}</span>
     </div>
   </div>
 </template>

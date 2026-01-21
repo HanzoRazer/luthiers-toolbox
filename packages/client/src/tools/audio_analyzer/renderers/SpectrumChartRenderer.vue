@@ -5,26 +5,49 @@
       <span class="path">{{ entry.relpath }}</span>
       <div class="controls">
         <label class="toggle">
-          <input type="checkbox" v-model="showCoherence" />
+          <input
+            v-model="showCoherence"
+            type="checkbox"
+          >
           <span>Coherence</span>
         </label>
         <label class="toggle">
-          <input type="checkbox" v-model="logScale" />
+          <input
+            v-model="logScale"
+            type="checkbox"
+          >
           <span>Log Scale</span>
         </label>
-        <label v-if="parsedPeaks.length > 0" class="toggle">
-          <input type="checkbox" v-model="showPeaks" />
+        <label
+          v-if="parsedPeaks.length > 0"
+          class="toggle"
+        >
+          <input
+            v-model="showPeaks"
+            type="checkbox"
+          >
           <span>Peaks ({{ parsedPeaks.length }})</span>
         </label>
-        <button class="btn" @click="downloadChart">📷 PNG</button>
+        <button
+          class="btn"
+          @click="downloadChart"
+        >
+          📷 PNG
+        </button>
       </div>
     </div>
 
-    <div v-if="parseError" class="error">
+    <div
+      v-if="parseError"
+      class="error"
+    >
       <strong>Parse Error:</strong> {{ parseError }}
     </div>
-    <div v-else class="chart-container">
-      <canvas ref="chartCanvas"></canvas>
+    <div
+      v-else
+      class="chart-container"
+    >
+      <canvas ref="chartCanvas" />
     </div>
 
     <div class="stats">
@@ -32,7 +55,10 @@
         <strong>Peak:</strong> {{ peakFreq.toFixed(1) }} Hz @ {{ peakMag.toFixed(4) }}
       </span>
       <span><strong>Points:</strong> {{ dataPoints }}</span>
-      <span v-if="isDecimated" class="decimation-warning">
+      <span
+        v-if="isDecimated"
+        class="decimation-warning"
+      >
         ⚠️ Decimated from {{ originalRowCount }} points
       </span>
       <span v-if="freqRange"><strong>Range:</strong> {{ freqRange }}</span>

@@ -15,8 +15,13 @@
         <!-- Blade Selection -->
         <div class="form-group">
           <label>Saw Blade</label>
-          <select v-model="selectedBladeId" @change="onBladeChange">
-            <option value="">Select blade...</option>
+          <select
+            v-model="selectedBladeId"
+            @change="onBladeChange"
+          >
+            <option value="">
+              Select blade...
+            </option>
             <option
               v-for="blade in blades"
               :key="blade.blade_id"
@@ -27,7 +32,10 @@
               }}mm)
             </option>
           </select>
-          <div v-if="selectedBlade" class="blade-info">
+          <div
+            v-if="selectedBlade"
+            class="blade-info"
+          >
             Kerf: {{ selectedBlade.kerf_mm }}mm | Teeth:
             {{ selectedBlade.teeth }}
           </div>
@@ -37,9 +45,15 @@
         <div class="form-group">
           <label>Machine Profile</label>
           <select v-model="machineProfile">
-            <option value="bcam_router_2030">BCAM Router 2030</option>
-            <option value="syil_x7">SYIL X7</option>
-            <option value="tormach_1100mx">Tormach 1100MX</option>
+            <option value="bcam_router_2030">
+              BCAM Router 2030
+            </option>
+            <option value="syil_x7">
+              SYIL X7
+            </option>
+            <option value="tormach_1100mx">
+              Tormach 1100MX
+            </option>
           </select>
         </div>
 
@@ -47,109 +61,138 @@
         <div class="form-group">
           <label>Material Family</label>
           <select v-model="materialFamily">
-            <option value="hardwood">Hardwood</option>
-            <option value="softwood">Softwood</option>
-            <option value="plywood">Plywood</option>
-            <option value="mdf">MDF</option>
+            <option value="hardwood">
+              Hardwood
+            </option>
+            <option value="softwood">
+              Softwood
+            </option>
+            <option value="plywood">
+              Plywood
+            </option>
+            <option value="mdf">
+              MDF
+            </option>
           </select>
         </div>
 
         <!-- Geometry -->
         <div class="form-group">
           <label>Start X (mm)</label>
-          <input type="number" v-model.number="startX" step="0.1" />
+          <input
+            v-model.number="startX"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>Start Y (mm)</label>
-          <input type="number" v-model.number="startY" step="0.1" />
+          <input
+            v-model.number="startY"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>End X (mm)</label>
-          <input type="number" v-model.number="endX" step="0.1" />
+          <input
+            v-model.number="endX"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>End Y (mm)</label>
-          <input type="number" v-model.number="endY" step="0.1" />
+          <input
+            v-model.number="endY"
+            type="number"
+            step="0.1"
+          >
         </div>
 
         <div class="form-group">
           <label>Total Depth (mm)</label>
           <input
-            type="number"
             v-model.number="totalDepth"
+            type="number"
             step="0.5"
             min="0.5"
-          />
+          >
         </div>
 
         <div class="form-group">
           <label>Depth Per Pass (mm)</label>
           <input
-            type="number"
             v-model.number="depthPerPass"
+            type="number"
             step="0.5"
             min="0.5"
-          />
+          >
         </div>
 
         <!-- Feeds & Speeds -->
         <div class="form-group">
           <label>RPM</label>
           <input
-            type="number"
             v-model.number="rpm"
+            type="number"
             step="100"
             min="2000"
             max="6000"
-          />
+          >
         </div>
 
         <div class="form-group">
           <label>Feed Rate (IPM)</label>
           <input
-            type="number"
             v-model.number="feedIpm"
+            type="number"
             step="5"
             min="10"
             max="300"
-          />
+          >
         </div>
 
         <div class="form-group">
           <label>Safe Z (mm)</label>
-          <input type="number" v-model.number="safeZ" step="0.5" min="1" />
+          <input
+            v-model.number="safeZ"
+            type="number"
+            step="0.5"
+            min="1"
+          >
         </div>
 
         <!-- Actions -->
         <div class="actions">
           <button
-            @click="validateOperation"
             :disabled="!canValidate"
             class="btn-primary"
+            @click="validateOperation"
           >
             Validate Parameters
           </button>
           <button
-            @click="mergeLearnedParams"
             :disabled="!canMerge"
             class="btn-secondary"
+            @click="mergeLearnedParams"
           >
             Apply Learned Overrides
           </button>
           <button
-            @click="generateGcode"
             :disabled="!isValid"
             class="btn-primary"
+            @click="generateGcode"
           >
             Generate G-code
           </button>
           <button
-            @click="sendToJobLog"
             :disabled="!hasGcode"
             class="btn-success"
+            @click="sendToJobLog"
           >
             Send to JobLog
           </button>
@@ -159,7 +202,10 @@
       <!-- Right Column: Preview & Validation -->
       <div class="preview-section">
         <!-- Validation Results -->
-        <div v-if="validationResult" class="validation-results">
+        <div
+          v-if="validationResult"
+          class="validation-results"
+        >
           <h3>Validation Results</h3>
           <div
             :class="[
@@ -179,8 +225,8 @@
                 check.result === "OK"
                   ? "✓"
                   : check.result === "WARN"
-                  ? "⚠"
-                  : "✗"
+                    ? "⚠"
+                    : "✗"
               }}</span>
               <span class="check-name">{{ formatCheckName(String(key)) }}</span>
               <span class="check-message">{{ check.message }}</span>
@@ -189,7 +235,10 @@
         </div>
 
         <!-- Learned Parameters -->
-        <div v-if="mergedParams" class="learned-params">
+        <div
+          v-if="mergedParams"
+          class="learned-params"
+        >
           <h3>Learned Parameters Applied</h3>
           <div class="param-comparison">
             <div class="param-row">
@@ -223,7 +272,10 @@
         </div>
 
         <!-- G-code Preview -->
-        <div v-if="gcode" class="gcode-preview">
+        <div
+          v-if="gcode"
+          class="gcode-preview"
+        >
           <h3>G-code Preview</h3>
           <div class="preview-stats">
             <div class="stat">
@@ -240,18 +292,27 @@
             </div>
           </div>
           <pre class="gcode-text">{{ gcodePreview }}</pre>
-          <button @click="downloadGcode" class="btn-secondary">
+          <button
+            class="btn-secondary"
+            @click="downloadGcode"
+          >
             Download G-code
           </button>
         </div>
 
         <!-- Run Artifact Link -->
-        <div v-if="runId" class="run-artifact-link">
+        <div
+          v-if="runId"
+          class="run-artifact-link"
+        >
           <h3>Run Artifact</h3>
           <p>
             Job logged with Run ID: <code>{{ runId }}</code>
           </p>
-          <router-link :to="`/rmos/runs?run_id=${runId}`" class="btn-primary">
+          <router-link
+            :to="`/rmos/runs?run_id=${runId}`"
+            class="btn-primary"
+          >
             View Run Artifact
           </router-link>
         </div>
@@ -281,7 +342,11 @@
                 />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            <rect
+              width="100%"
+              height="100%"
+              fill="url(#grid)"
+            />
 
             <!-- Cut path -->
             <line
@@ -333,22 +398,26 @@
             />
           </svg>
           <div class="legend">
-            <span
-              ><span class="color-box" style="background: #2196f3"></span> Cut
-              path</span
-            >
-            <span
-              ><span class="color-box" style="background: #ff9800"></span> Kerf
-              boundary</span
-            >
-            <span
-              ><span class="color-box" style="background: #4caf50"></span>
-              Start</span
-            >
-            <span
-              ><span class="color-box" style="background: #f44336"></span>
-              End</span
-            >
+            <span><span
+              class="color-box"
+              style="background: #2196f3"
+            /> Cut
+              path</span>
+            <span><span
+              class="color-box"
+              style="background: #ff9800"
+            /> Kerf
+              boundary</span>
+            <span><span
+              class="color-box"
+              style="background: #4caf50"
+            />
+              Start</span>
+            <span><span
+              class="color-box"
+              style="background: #f44336"
+            />
+              End</span>
           </div>
         </div>
       </div>

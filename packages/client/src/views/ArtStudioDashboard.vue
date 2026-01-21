@@ -134,8 +134,8 @@ function getStatusColor(status: string): string {
         v-for="design in designs"
         :key="design.title"
         class="design-card"
-        @click="navigateTo(design.path)"
         :class="{ disabled: design.status === 'Coming Soon' }"
+        @click="navigateTo(design.path)"
       >
         <div class="card-header">
           <span class="icon">{{ design.icon }}</span>
@@ -150,7 +150,10 @@ function getStatusColor(status: string): string {
         <p>{{ design.description }}</p>
         <div class="card-footer">
           <span class="version">{{ design.version }}</span>
-          <span v-if="design.badge" class="new-badge">{{ design.badge }}</span>
+          <span
+            v-if="design.badge"
+            class="new-badge"
+          >{{ design.badge }}</span>
         </div>
       </div>
     </div>

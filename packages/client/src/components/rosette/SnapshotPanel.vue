@@ -2,38 +2,107 @@
   <div class="card">
     <div class="row">
       <h3>Snapshots</h3>
-      <button class="btn" @click="store.loadRecentSnapshots()" :disabled="store.snapshotsLoading">
+      <button
+        class="btn"
+        :disabled="store.snapshotsLoading"
+        @click="store.loadRecentSnapshots()"
+      >
         Refresh
       </button>
     </div>
     <div class="row">
-      <input class="input" v-model="name" placeholder="Snapshot name" />
-      <button class="btn primary" @click="save" :disabled="store.isRedBlocked">Save Snapshot</button>
+      <input
+        v-model="name"
+        class="input"
+        placeholder="Snapshot name"
+      >
+      <button
+        class="btn primary"
+        :disabled="store.isRedBlocked"
+        @click="save"
+      >
+        Save Snapshot
+      </button>
     </div>
-    <div v-if="store.isRedBlocked" class="hint-red">Saving disabled because feasibility is RED.</div>
-    <textarea class="input" v-model="notes" rows="2" placeholder="notes (optional)"></textarea>
-    <input class="input" v-model="tags" placeholder="tags (comma separated)" />
+    <div
+      v-if="store.isRedBlocked"
+      class="hint-red"
+    >
+      Saving disabled because feasibility is RED.
+    </div>
+    <textarea
+      v-model="notes"
+      class="input"
+      rows="2"
+      placeholder="notes (optional)"
+    />
+    <input
+      v-model="tags"
+      class="input"
+      placeholder="tags (comma separated)"
+    >
     <div class="row">
-      <input class="input" type="file" accept="application/json" @change="onFile" />
-      <button class="btn" @click="exportLast" :disabled="!store.lastSavedSnapshot">Export Last Saved</button>
-      <button class="btn" @click="scrollToCompare">Compare…</button>
+      <input
+        class="input"
+        type="file"
+        accept="application/json"
+        @change="onFile"
+      >
+      <button
+        class="btn"
+        :disabled="!store.lastSavedSnapshot"
+        @click="exportLast"
+      >
+        Export Last Saved
+      </button>
+      <button
+        class="btn"
+        @click="scrollToCompare"
+      >
+        Compare…
+      </button>
     </div>
-    <div v-if="store.snapshotsError" class="err">{{ store.snapshotsError }}</div>
-    <div class="list" v-if="store.snapshots?.length">
+    <div
+      v-if="store.snapshotsError"
+      class="err"
+    >
+      {{ store.snapshotsError }}
+    </div>
+    <div
+      v-if="store.snapshots?.length"
+      class="list"
+    >
       <div
-        class="snap"
-        :class="{ selected: store.selectedSnapshotId === s.snapshot_id }"
         v-for="s in store.snapshots"
         :key="s.snapshot_id"
+        class="snap"
+        :class="{ selected: store.selectedSnapshotId === s.snapshot_id }"
         @click="store.selectSnapshot(s.snapshot_id)"
       >
         <div class="left">
-          <div class="nm">{{ s.name }}</div>
-          <div class="meta">{{ s.snapshot_id }} - {{ new Date(s.updated_at).toLocaleString() }}</div>
+          <div class="nm">
+            {{ s.name }}
+          </div>
+          <div class="meta">
+            {{ s.snapshot_id }} - {{ new Date(s.updated_at).toLocaleString() }}
+          </div>
         </div>
-        <div class="actions" @click.stop>
-          <button class="btn" @click="store.loadSnapshot(s.snapshot_id)">Load</button>
-          <button class="btn" @click="store.exportSnapshot(s.snapshot_id)">Export</button>
+        <div
+          class="actions"
+          @click.stop
+        >
+          <button
+            class="btn"
+            @click="store.loadSnapshot(s.snapshot_id)"
+          >
+            Load
+          </button>
+          <button
+            class="btn"
+            @click="store.exportSnapshot(s.snapshot_id)"
+          >
+            Export
+          </button>
         </div>
       </div>
     </div>
@@ -42,12 +111,20 @@
       v-if="selectedSnapshot"
       :current="selectedSnapshot"
       :previous="previousSnapshot"
-      :onFocusWorstRing="focusWorstRing"
+      :on-focus-worst-ring="focusWorstRing"
     />
-    <div v-if="!store.snapshots?.length" class="empty">No snapshots yet.</div>
+    <div
+      v-if="!store.snapshots?.length"
+      class="empty"
+    >
+      No snapshots yet.
+    </div>
   </div>
 
-  <div id="snapshot-compare" style="margin-top: 12px;">
+  <div
+    id="snapshot-compare"
+    style="margin-top: 12px;"
+  >
     <SnapshotComparePanel />
   </div>
 </template>

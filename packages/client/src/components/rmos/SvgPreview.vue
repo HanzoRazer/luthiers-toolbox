@@ -63,13 +63,35 @@ watch(() => [props.runId, props.advisoryId], () => load(), { immediate: true });
 
 <template>
   <div class="svg-preview">
-    <div v-if="loading" class="subtle">Loading preview...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="blocked" class="warn">
+    <div
+      v-if="loading"
+      class="subtle"
+    >
+      Loading preview...
+    </div>
+    <div
+      v-else-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-else-if="blocked"
+      class="warn"
+    >
       Preview blocked ({{ blocked }}). Download is still available.
     </div>
-    <div v-else-if="svg" class="svg-container" v-html="svg"></div>
-    <div v-else class="subtle">No preview.</div>
+    <div
+      v-else-if="svg"
+      class="svg-container"
+      v-html="svg"
+    />
+    <div
+      v-else
+      class="subtle"
+    >
+      No preview.
+    </div>
   </div>
 </template>
 

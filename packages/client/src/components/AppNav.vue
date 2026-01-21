@@ -36,14 +36,28 @@
         </RouterLink>
 
         <!-- Saw Lab Dropdown -->
-        <div class="relative" @mouseenter="showSawMenu = true" @mouseleave="showSawMenu = false">
+        <div
+          class="relative"
+          @mouseenter="showSawMenu = true"
+          @mouseleave="showSawMenu = false"
+        >
           <button
             class="px-2 py-1 rounded hover:bg-gray-100 flex items-center gap-1"
             :class="{ 'bg-gray-900 text-white hover:bg-gray-900': isSawLabActive }"
           >
             Saw Lab
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <svg
+              class="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <div
@@ -99,14 +113,28 @@
         </RouterLink>
 
         <!-- Acoustics Dropdown -->
-        <div class="relative" @mouseenter="showAcousticsMenu = true" @mouseleave="showAcousticsMenu = false">
+        <div
+          class="relative"
+          @mouseenter="showAcousticsMenu = true"
+          @mouseleave="showAcousticsMenu = false"
+        >
           <button
             class="px-2 py-1 rounded hover:bg-gray-100 flex items-center gap-1"
             :class="{ 'bg-gray-900 text-white hover:bg-gray-900': isAcousticsActive }"
           >
             🎛️ Acoustics
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <svg
+              class="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <div
@@ -126,6 +154,13 @@
               active-class="bg-blue-50 text-blue-600"
             >
               Runs Browser
+            </RouterLink>
+            <RouterLink
+              to="/tools/audio-analyzer/ingest"
+              class="block px-3 py-1.5 hover:bg-gray-100"
+              active-class="bg-blue-50 text-blue-600"
+            >
+              Ingest Log
             </RouterLink>
             <RouterLink
               to="/tools/audio-analyzer"

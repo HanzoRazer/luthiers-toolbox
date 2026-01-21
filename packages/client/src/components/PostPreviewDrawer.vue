@@ -1,24 +1,43 @@
 <template>
-  <div v-if="open" class="fixed inset-0 z-40">
-    <div class="absolute inset-0 bg-black/30" @click="close"></div>
+  <div
+    v-if="open"
+    class="fixed inset-0 z-40"
+  >
+    <div
+      class="absolute inset-0 bg-black/30"
+      @click="close"
+    />
 
     <div class="absolute right-0 top-0 h-full w-full sm:w-[28rem] bg-white shadow-xl p-4 overflow-auto">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-lg font-semibold">Post Preview — {{ postId }}</h3>
-        <button class="px-3 py-1 border rounded" @click="close">Close</button>
+        <h3 class="text-lg font-semibold">
+          Post Preview — {{ postId }}
+        </h3>
+        <button
+          class="px-3 py-1 border rounded"
+          @click="close"
+        >
+          Close
+        </button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <div class="text-sm font-semibold mb-1">Header</div>
+          <div class="text-sm font-semibold mb-1">
+            Header
+          </div>
           <pre class="text-xs bg-slate-50 p-2 rounded">{{ header.join('\n') || '—' }}</pre>
         </div>
         <div>
-          <div class="text-sm font-semibold mb-1">Footer</div>
+          <div class="text-sm font-semibold mb-1">
+            Footer
+          </div>
           <pre class="text-xs bg-slate-50 p-2 rounded">{{ footer.join('\n') || '—' }}</pre>
         </div>
         <div>
-          <div class="text-sm font-semibold mb-1">Program Preview (first 20 lines)</div>
+          <div class="text-sm font-semibold mb-1">
+            Program Preview (first 20 lines)
+          </div>
           <pre class="text-xs bg-slate-50 p-2 rounded">{{ previewText }}</pre>
         </div>
       </div>

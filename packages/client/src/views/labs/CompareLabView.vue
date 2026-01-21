@@ -1,8 +1,20 @@
 <template>
   <div class="compare-lab-view">
     <div class="toolbar">
-      <label>Opacity A <input type="range" min="0" max="1" step="0.01" v-model.number="opacityA" /></label>
-      <label>Opacity B <input type="range" min="0" max="1" step="0.01" v-model.number="opacityB" /></label>
+      <label>Opacity A <input
+        v-model.number="opacityA"
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+      ></label>
+      <label>Opacity B <input
+        v-model.number="opacityB"
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+      ></label>
       <label>Diff Mode
         <select v-model="diffMode">
           <option value="none">None</option>
@@ -10,27 +22,55 @@
           <option value="delta">Delta Only</option>
         </select>
       </label>
-      <label><input type="checkbox" v-model="syncViewports" /> Sync Viewports</label>
+      <label><input
+        v-model="syncViewports"
+        type="checkbox"
+      > Sync Viewports</label>
       <span class="legend">
-        <span class="legend-item" style="color:blue">■ Baseline</span>
-        <span class="legend-item" style="color:green">■ Candidate</span>
-        <span class="legend-item" style="color:red">■ Removed</span>
-        <span class="legend-item" style="color:orange">■ Changed</span>
+        <span
+          class="legend-item"
+          style="color:blue"
+        >■ Baseline</span>
+        <span
+          class="legend-item"
+          style="color:green"
+        >■ Candidate</span>
+        <span
+          class="legend-item"
+          style="color:red"
+        >■ Removed</span>
+        <span
+          class="legend-item"
+          style="color:orange"
+        >■ Changed</span>
       </span>
     </div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <div
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
     <DualSvgDisplay
       :baseline="baseline"
       :candidate="candidate"
       :diff="diff"
-      :opacityA="opacityA"
-      :opacityB="opacityB"
-      :diffMode="diffMode"
-      :syncViewports="syncViewports"
+      :opacity-a="opacityA"
+      :opacity-b="opacityB"
+      :diff-mode="diffMode"
+      :sync-viewports="syncViewports"
       @render-error="onRenderError"
     />
-    <div v-if="renderError" class="render-error">{{ renderError }}</div>
-    <div class="metrics" v-if="diff">
+    <div
+      v-if="renderError"
+      class="render-error"
+    >
+      {{ renderError }}
+    </div>
+    <div
+      v-if="diff"
+      class="metrics"
+    >
       <h3>Delta Metrics</h3>
       <ul>
         <li>Time Δ: {{ diff.time?.toFixed(2) }} s</li>
@@ -39,17 +79,34 @@
       </ul>
     </div>
     <div class="export-drawer">
-      <button disabled>Export (coming soon)</button>
+      <button disabled>
+        Export (coming soon)
+      </button>
       <div class="export-options">
-        <label><input type="checkbox" checked disabled /> Baseline</label>
-        <label><input type="checkbox" checked disabled /> Candidate</label>
-        <label><input type="checkbox" disabled /> Diff/Overlays</label>
+        <label><input
+          type="checkbox"
+          checked
+          disabled
+        > Baseline</label>
+        <label><input
+          type="checkbox"
+          checked
+          disabled
+        > Candidate</label>
+        <label><input
+          type="checkbox"
+          disabled
+        > Diff/Overlays</label>
         <select disabled>
           <option>SVG</option>
           <option>DXF</option>
           <option>GCODE</option>
         </select>
-        <input type="text" disabled placeholder="Filename template preview..." />
+        <input
+          type="text"
+          disabled
+          placeholder="Filename template preview..."
+        >
       </div>
     </div>
   </div>

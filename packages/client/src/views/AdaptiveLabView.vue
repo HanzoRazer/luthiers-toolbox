@@ -118,7 +118,9 @@ FUTURE ENHANCEMENTS:
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Adaptive Lab</h2>
+        <h2 class="text-sm font-semibold">
+          Adaptive Lab
+        </h2>
         <p class="text-[11px] text-gray-500">
           Loops → Adaptive kernel → Toolpath preview
         </p>
@@ -131,7 +133,9 @@ FUTURE ENHANCEMENTS:
         <!-- DXF import -->
         <div class="border rounded-lg p-3 bg-white space-y-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">DXF → Loops</h3>
+            <h3 class="text-xs font-semibold text-gray-700">
+              DXF → Loops
+            </h3>
             <span class="text-[10px] text-gray-500">
               Plan from DXF
             </span>
@@ -140,18 +144,25 @@ FUTURE ENHANCEMENTS:
             <input
               type="file"
               accept=".dxf"
-              @change="onDxfChange"
               class="text-[11px]"
-            />
-            <select v-model="dxfUnits" class="border rounded px-2 py-1 text-[11px]">
-              <option value="mm">mm</option>
-              <option value="inch">inch</option>
+              @change="onDxfChange"
+            >
+            <select
+              v-model="dxfUnits"
+              class="border rounded px-2 py-1 text-[11px]"
+            >
+              <option value="mm">
+                mm
+              </option>
+              <option value="inch">
+                inch
+              </option>
             </select>
             <input
               v-model="dxfGeometryLayer"
               placeholder="geometry_layer (optional)"
               class="border rounded px-2 py-1 text-[11px] w-40"
-            />
+            >
             <button
               class="px-2 py-1 rounded bg-gray-900 text-white text-[11px] disabled:opacity-50"
               :disabled="!dxfFile || loadingDxf"
@@ -161,10 +172,16 @@ FUTURE ENHANCEMENTS:
               <span v-else>Importing…</span>
             </button>
           </div>
-          <p v-if="dxfError" class="text-[11px] text-red-600">
+          <p
+            v-if="dxfError"
+            class="text-[11px] text-red-600"
+          >
             {{ dxfError }}
           </p>
-          <p v-if="dxfDebug" class="text-[10px] text-gray-500 whitespace-pre-wrap">
+          <p
+            v-if="dxfDebug"
+            class="text-[10px] text-gray-500 whitespace-pre-wrap"
+          >
             {{ dxfDebug }}
           </p>
         </div>
@@ -172,7 +189,9 @@ FUTURE ENHANCEMENTS:
         <!-- Adaptive params + run -->
         <div class="border rounded-lg p-3 bg-white space-y-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">Adaptive Parameters</h3>
+            <h3 class="text-xs font-semibold text-gray-700">
+              Adaptive Parameters
+            </h3>
             <button
               class="px-2 py-1 rounded bg-gray-900 text-white text-[11px] disabled:opacity-50"
               :disabled="runningAdaptive"
@@ -187,49 +206,52 @@ FUTURE ENHANCEMENTS:
             <label class="flex flex-col gap-1">
               <span>Tool ⌀</span>
               <input
-                type="number"
                 v-model.number="toolD"
+                type="number"
                 step="0.1"
                 min="0.1"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Stepover (fraction)</span>
               <input
-                type="number"
                 v-model.number="stepover"
+                type="number"
                 step="0.01"
                 min="0.05"
                 max="0.9"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Stepdown</span>
               <input
-                type="number"
                 v-model.number="stepdown"
+                type="number"
                 step="0.1"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Margin</span>
               <input
-                type="number"
                 v-model.number="margin"
+                type="number"
                 step="0.1"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Strategy</span>
-              <select v-model="strategy" class="border rounded px-2 py-1">
+              <select
+                v-model="strategy"
+                class="border rounded px-2 py-1"
+              >
                 <option value="Spiral">Spiral</option>
                 <option value="Lanes">Lanes</option>
               </select>
@@ -238,35 +260,38 @@ FUTURE ENHANCEMENTS:
             <label class="flex flex-col gap-1">
               <span>Feed XY</span>
               <input
-                type="number"
                 v-model.number="feedXY"
+                type="number"
                 step="10"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Safe Z</span>
               <input
-                type="number"
                 v-model.number="safeZ"
+                type="number"
                 step="0.1"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
 
             <label class="flex flex-col gap-1">
               <span>Rough Z</span>
               <input
-                type="number"
                 v-model.number="zRough"
+                type="number"
                 step="0.1"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
           </div>
 
-          <p v-if="adaptiveError" class="text-[11px] text-red-600">
+          <p
+            v-if="adaptiveError"
+            class="text-[11px] text-red-600"
+          >
             {{ adaptiveError }}
           </p>
         </div>
@@ -274,7 +299,9 @@ FUTURE ENHANCEMENTS:
         <!-- Loops JSON editor -->
         <div class="border rounded-lg p-3 bg-white space-y-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">Loops JSON</h3>
+            <h3 class="text-xs font-semibold text-gray-700">
+              Loops JSON
+            </h3>
             <button
               class="px-2 py-1 rounded border border-gray-300 text-[11px]"
               @click="loadDemoLoops"
@@ -290,28 +317,30 @@ FUTURE ENHANCEMENTS:
         </div>
 
         <!-- Send to pipeline -->
-                <div class="border rounded-lg p-3 bg-white flex items-center justify-between text-[11px]">
-                  <div>
-                    <p class="font-semibold text-gray-700">Send to PipelineLab / CompareLab</p>
-                    <p class="text-gray-500">
-                      Persist loops snapshot locally to reopen in other labs.
-                    </p>
-                  </div>
-                  <div class="flex gap-2">
-                    <button
-                      class="px-3 py-1.5 rounded border border-gray-300 text-gray-800"
-                      @click="openCompareLab"
-                    >
-                      Open Compare Lab
-                    </button>
-                    <button
-                      class="px-3 py-1.5 rounded bg-gray-900 text-white"
-                      @click="sendToPipeline"
-                    >
-                      Open PipelineLab
-                    </button>
-                  </div>
-                </div>
+        <div class="border rounded-lg p-3 bg-white flex items-center justify-between text-[11px]">
+          <div>
+            <p class="font-semibold text-gray-700">
+              Send to PipelineLab / CompareLab
+            </p>
+            <p class="text-gray-500">
+              Persist loops snapshot locally to reopen in other labs.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button
+              class="px-3 py-1.5 rounded border border-gray-300 text-gray-800"
+              @click="openCompareLab"
+            >
+              Open Compare Lab
+            </button>
+            <button
+              class="px-3 py-1.5 rounded bg-gray-900 text-white"
+              @click="sendToPipeline"
+            >
+              Open PipelineLab
+            </button>
+          </div>
+        </div>
       </div>
 
       <CamBackplotViewer

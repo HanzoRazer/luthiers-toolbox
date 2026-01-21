@@ -3,16 +3,26 @@
     <div class="header">
       <span class="label">{{ entry.kind }}</span>
       <span class="path">{{ entry.relpath }}</span>
-      <button class="toggle-btn" @click="showRaw = !showRaw">
+      <button
+        class="toggle-btn"
+        @click="showRaw = !showRaw"
+      >
         {{ showRaw ? "📝 Rendered" : "📄 Raw" }}
       </button>
     </div>
 
     <div class="content">
-      <div v-if="showRaw" class="raw">
+      <div
+        v-if="showRaw"
+        class="raw"
+      >
         <pre>{{ rawText }}</pre>
       </div>
-      <div v-else class="rendered" v-html="renderedHtml"></div>
+      <div
+        v-else
+        class="rendered"
+        v-html="renderedHtml"
+      />
     </div>
   </div>
 </template>

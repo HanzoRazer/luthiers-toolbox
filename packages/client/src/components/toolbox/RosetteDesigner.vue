@@ -14,12 +14,12 @@
       <!-- LEFT: Visual Design Canvas (60%) -->
       <div class="canvas-panel">
         <RosetteCanvas 
-          :soundholeDiameter="dimensions.soundholeDiameter"
-          :rosetteWidth="dimensions.rosetteWidth"
-          :symmetryCount="dimensions.symmetryCount"
-          :showGrid="showGrid"
-          :initialSegments="segments"
-          @segmentsChanged="handleSegmentsChanged"
+          :soundhole-diameter="dimensions.soundholeDiameter"
+          :rosette-width="dimensions.rosetteWidth"
+          :symmetry-count="dimensions.symmetryCount"
+          :show-grid="showGrid"
+          :initial-segments="segments"
+          @segments-changed="handleSegmentsChanged"
         />
       </div>
 
@@ -31,22 +31,49 @@
           <div class="input-group">
             <label>
               Soundhole Diameter (mm):
-              <input v-model.number="dimensions.soundholeDiameter" type="number" step="1" min="50" max="120" />
+              <input
+                v-model.number="dimensions.soundholeDiameter"
+                type="number"
+                step="1"
+                min="50"
+                max="120"
+              >
             </label>
             <label>
               Rosette Width (mm):
-              <input v-model.number="dimensions.rosetteWidth" type="number" step="1" min="10" max="40" />
+              <input
+                v-model.number="dimensions.rosetteWidth"
+                type="number"
+                step="1"
+                min="10"
+                max="40"
+              >
             </label>
             <label>
               Channel Depth (mm):
-              <input v-model.number="dimensions.channelDepth" type="number" step="0.1" min="0.5" max="3" />
+              <input
+                v-model.number="dimensions.channelDepth"
+                type="number"
+                step="0.1"
+                min="0.5"
+                max="3"
+              >
             </label>
             <label>
               Radial Segments:
-              <input v-model.number="dimensions.symmetryCount" type="number" step="1" min="8" max="32" />
+              <input
+                v-model.number="dimensions.symmetryCount"
+                type="number"
+                step="1"
+                min="8"
+                max="32"
+              >
             </label>
             <label class="checkbox-label">
-              <input type="checkbox" v-model="showGrid" />
+              <input
+                v-model="showGrid"
+                type="checkbox"
+              >
               Show symmetry guides
             </label>
           </div>
@@ -55,33 +82,44 @@
         <!-- Pattern Templates Section -->
         <div class="control-section">
           <PatternTemplates 
-            :selectedTemplate="selectedTemplate"
-            @templateSelected="handleTemplateSelected"
-            @templateApplied="applyTemplate"
+            :selected-template="selectedTemplate"
+            @template-selected="handleTemplateSelected"
+            @template-applied="applyTemplate"
           />
         </div>
 
         <!-- Materials Section -->
         <div class="control-section">
           <MaterialPalette 
-            :selectedMaterial="selectedMaterial"
-            :stripWidth="currentStripWidth"
-            @materialSelected="handleMaterialSelected"
+            :selected-material="selectedMaterial"
+            :strip-width="currentStripWidth"
+            @material-selected="handleMaterialSelected"
           />
         </div>
 
         <!-- Export Section (De-emphasized) -->
         <div class="control-section export-section">
           <h4>📤 Export (Optional)</h4>
-          <p class="export-hint">Export pattern image for reference, or optional channel routing path for CNC.</p>
+          <p class="export-hint">
+            Export pattern image for reference, or optional channel routing path for CNC.
+          </p>
           <div class="export-buttons">
-            <button @click="exportPatternImage" class="btn-secondary">
+            <button
+              class="btn-secondary"
+              @click="exportPatternImage"
+            >
               📷 Pattern Image
             </button>
-            <button @click="exportDimensionSheet" class="btn-secondary">
+            <button
+              class="btn-secondary"
+              @click="exportDimensionSheet"
+            >
               📄 Dimension Sheet
             </button>
-            <button @click="exportChannelPath" class="btn-secondary">
+            <button
+              class="btn-secondary"
+              @click="exportChannelPath"
+            >
               🔧 Channel Path
             </button>
           </div>
@@ -90,7 +128,11 @@
     </div>
 
     <!-- Status Messages -->
-    <div v-if="status" class="status-bar" :class="statusClass">
+    <div
+      v-if="status"
+      class="status-bar"
+      :class="statusClass"
+    >
       {{ status }}
     </div>
   </div>

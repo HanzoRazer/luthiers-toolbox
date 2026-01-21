@@ -82,7 +82,7 @@ function overallRiskClass(risk: string | null): string {
           step="0.5"
           min="0"
           class="w-20 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-50"
-        />
+        >
         <button
           type="button"
           class="ml-auto rounded bg-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-600"
@@ -109,7 +109,10 @@ function overallRiskClass(risk: string | null): string {
           {{ store.gcode.loading ? "Analyzing G-code..." : "Explain G-code" }}
         </button>
 
-        <p v-if="store.gcode.lastError" class="text-xs text-red-400">
+        <p
+          v-if="store.gcode.lastError"
+          class="text-xs text-red-400"
+        >
           {{ store.gcode.lastError }}
         </p>
 
@@ -143,12 +146,18 @@ function overallRiskClass(risk: string | null): string {
             {{ line.line_number }}
           </span>
           <div class="flex-1 min-w-0">
-            <div class="text-slate-200 truncate" :title="line.raw">
+            <div
+              class="text-slate-200 truncate"
+              :title="line.raw"
+            >
               {{ line.raw || "(empty)" }}
             </div>
             <div :class="['text-[0.7rem]', riskClass(line.risk)]">
               → {{ line.explanation }}
-              <span v-if="line.risk" class="ml-1">[{{ line.risk }}]</span>
+              <span
+                v-if="line.risk"
+                class="ml-1"
+              >[{{ line.risk }}]</span>
             </div>
           </div>
         </div>

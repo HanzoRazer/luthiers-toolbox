@@ -1,7 +1,9 @@
 <template>
   <div class="panel">
     <h2>RMOS Operation E2E Panel</h2>
-    <p class="subtitle">Bundle 06: Minimal UI for testing Operation Lane endpoints</p>
+    <p class="subtitle">
+      Bundle 06: Minimal UI for testing Operation Lane endpoints
+    </p>
 
     <div class="grid">
       <div class="left">
@@ -10,38 +12,81 @@
           <div class="row">
             <label>Operation</label>
             <select v-model="operation">
-              <option value="saw_v1">Saw - v1</option>
-              <option value="cam_roughing_v1">CAM Roughing - v1</option>
+              <option value="saw_v1">
+                Saw - v1
+              </option>
+              <option value="cam_roughing_v1">
+                CAM Roughing - v1
+              </option>
             </select>
           </div>
 
           <div class="row">
             <label>X-Request-Id (optional)</label>
-            <input v-model="requestId" placeholder="leave blank to auto-generate" />
+            <input
+              v-model="requestId"
+              placeholder="leave blank to auto-generate"
+            >
           </div>
 
           <div class="row">
             <label>cam_intent_v1 (JSON)</label>
-            <textarea v-model="camIntentText" rows="10" spellcheck="false"></textarea>
+            <textarea
+              v-model="camIntentText"
+              rows="10"
+              spellcheck="false"
+            />
           </div>
 
           <div class="row">
             <label>feasibility (JSON)</label>
-            <textarea v-model="feasibilityText" rows="6" spellcheck="false"></textarea>
+            <textarea
+              v-model="feasibilityText"
+              rows="6"
+              spellcheck="false"
+            />
           </div>
 
           <div class="actions">
-            <button :disabled="busy" @click="onPlan">Plan</button>
-            <button :disabled="busy || !planRunId" @click="onExecute">Execute</button>
-            <button :disabled="busy || !lastRunId" @click="onExport">Export ZIP</button>
+            <button
+              :disabled="busy"
+              @click="onPlan"
+            >
+              Plan
+            </button>
+            <button
+              :disabled="busy || !planRunId"
+              @click="onExecute"
+            >
+              Execute
+            </button>
+            <button
+              :disabled="busy || !lastRunId"
+              @click="onExport"
+            >
+              Export ZIP
+            </button>
           </div>
 
           <div class="status">
-            <div v-if="busy">Working...</div>
-            <div v-if="lastRequestId"><strong>X-Request-Id:</strong> <code>{{ lastRequestId }}</code></div>
-            <div v-if="planRunId"><strong>Plan run_id:</strong> <code>{{ planRunId }}</code></div>
-            <div v-if="executeRunId"><strong>Execute run_id:</strong> <code>{{ executeRunId }}</code></div>
-            <div v-if="error" class="error"><strong>Error:</strong> {{ error }}</div>
+            <div v-if="busy">
+              Working...
+            </div>
+            <div v-if="lastRequestId">
+              <strong>X-Request-Id:</strong> <code>{{ lastRequestId }}</code>
+            </div>
+            <div v-if="planRunId">
+              <strong>Plan run_id:</strong> <code>{{ planRunId }}</code>
+            </div>
+            <div v-if="executeRunId">
+              <strong>Execute run_id:</strong> <code>{{ executeRunId }}</code>
+            </div>
+            <div
+              v-if="error"
+              class="error"
+            >
+              <strong>Error:</strong> {{ error }}
+            </div>
           </div>
         </div>
       </div>
@@ -49,24 +94,47 @@
       <div class="right">
         <!-- Response -->
         <div class="card">
-          <div class="title">Last Response</div>
-          <pre class="pre" v-if="lastResponse">{{ lastResponse }}</pre>
-          <div v-else class="empty">No response yet. Click Plan or Execute to test.</div>
+          <div class="title">
+            Last Response
+          </div>
+          <pre
+            v-if="lastResponse"
+            class="pre"
+          >{{ lastResponse }}</pre>
+          <div
+            v-else
+            class="empty"
+          >
+            No response yet. Click Plan or Execute to test.
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="card" v-if="history.length > 0">
-      <div class="title">History</div>
+    <div
+      v-if="history.length > 0"
+      class="card"
+    >
+      <div class="title">
+        History
+      </div>
       <div class="history-list">
-        <div v-for="(h, i) in history" :key="i" class="history-item">
+        <div
+          v-for="(h, i) in history"
+          :key="i"
+          class="history-item"
+        >
           <div class="history-header">
             <strong>{{ h.action }}</strong>
             <span class="timestamp">{{ h.timestamp }}</span>
           </div>
           <div class="history-meta">
             <code>{{ h.runId }}</code>
-            <span v-if="h.status" class="badge" :class="statusClass(h.status)">{{ h.status }}</span>
+            <span
+              v-if="h.status"
+              class="badge"
+              :class="statusClass(h.status)"
+            >{{ h.status }}</span>
           </div>
         </div>
       </div>

@@ -190,20 +190,23 @@ const canConvert = computed(
 
           <div class="file-input-wrapper">
             <input
-              type="file"
               id="photoInput"
+              type="file"
               accept="image/*"
-              @change="onFileSelected"
               style="display: none"
-            />
+              @change="onFileSelected"
+            >
             <Button
               label="Choose Image File"
               icon="pi pi-upload"
-              @click="triggerPhotoInput"
               :disabled="isUploading"
+              @click="triggerPhotoInput"
             />
 
-            <span v-if="selectedFile" class="file-name">
+            <span
+              v-if="selectedFile"
+              class="file-name"
+            >
               {{ selectedFile.name }}
             </span>
 
@@ -211,14 +214,20 @@ const canConvert = computed(
               v-if="selectedFile"
               icon="pi pi-times"
               class="p-button-text p-button-danger"
-              @click="clearFile"
               :disabled="isUploading"
+              @click="clearFile"
             />
           </div>
 
           <!-- Image Preview -->
-          <div v-if="previewUrl" class="image-preview">
-            <img :src="previewUrl" alt="Preview" />
+          <div
+            v-if="previewUrl"
+            class="image-preview"
+          >
+            <img
+              :src="previewUrl"
+              alt="Preview"
+            >
           </div>
         </div>
 
@@ -273,7 +282,10 @@ const canConvert = computed(
           </div>
 
           <!-- Ring Dimensions (conditional) -->
-          <div v-if="fitToRing" class="ring-settings">
+          <div
+            v-if="fitToRing"
+            class="ring-settings"
+          >
             <h4>Ring Dimensions</h4>
             <div class="settings-grid">
               <div class="field">
@@ -309,40 +321,61 @@ const canConvert = computed(
             icon="pi pi-cog"
             :loading="isUploading"
             :disabled="!canConvert"
-            @click="convertPhoto"
             class="p-button-lg"
+            @click="convertPhoto"
           />
         </div>
 
         <!-- Results Section -->
-        <div v-if="hasResults" class="results-section">
+        <div
+          v-if="hasResults"
+          class="results-section"
+        >
           <h3>4. Results</h3>
 
           <!-- Stats -->
-          <div v-if="stats" class="stats-grid">
+          <div
+            v-if="stats"
+            class="stats-grid"
+          >
             <div class="stat-card">
-              <i class="pi pi-chart-line"></i>
-              <div class="stat-value">{{ stats.contour_count }}</div>
-              <div class="stat-label">Contours</div>
+              <i class="pi pi-chart-line" />
+              <div class="stat-value">
+                {{ stats.contour_count }}
+              </div>
+              <div class="stat-label">
+                Contours
+              </div>
             </div>
 
             <div class="stat-card">
-              <i class="pi pi-circle"></i>
-              <div class="stat-value">{{ stats.total_points }}</div>
-              <div class="stat-label">Points</div>
+              <i class="pi pi-circle" />
+              <div class="stat-value">
+                {{ stats.total_points }}
+              </div>
+              <div class="stat-label">
+                Points
+              </div>
             </div>
 
             <div class="stat-card">
-              <i class="pi pi-arrows-h"></i>
-              <div class="stat-value">{{ stats.output_width_mm }}mm</div>
-              <div class="stat-label">Width</div>
+              <i class="pi pi-arrows-h" />
+              <div class="stat-value">
+                {{ stats.output_width_mm }}mm
+              </div>
+              <div class="stat-label">
+                Width
+              </div>
             </div>
           </div>
 
           <!-- SVG Preview -->
           <div class="svg-preview">
             <h4>SVG Preview</h4>
-            <div class="preview-box" v-html="svgContent"></div>
+            <div
+              class="preview-box"
+              v-html="svgContent"
+            />
           </div>
 
           <!-- Download Buttons -->
@@ -350,14 +383,14 @@ const canConvert = computed(
             <Button
               label="Download SVG"
               icon="pi pi-download"
-              @click="downloadSVG"
               class="p-button-success"
+              @click="downloadSVG"
             />
             <Button
               label="Download DXF"
               icon="pi pi-download"
-              @click="downloadDXF"
               class="p-button-success"
+              @click="downloadDXF"
             />
           </div>
         </div>

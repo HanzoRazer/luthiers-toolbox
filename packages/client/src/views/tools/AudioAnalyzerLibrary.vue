@@ -13,31 +13,49 @@
       <div class="import-form">
         <div class="import-row">
           <input
+            ref="fileInput"
             type="file"
             accept=".zip"
-            ref="fileInput"
             @change="onFileChange"
-          />
-          <button class="btn" :disabled="!selectedFile || importing" @click="doImport">
+          >
+          <button
+            class="btn"
+            :disabled="!selectedFile || importing"
+            @click="doImport"
+          >
             {{ importing ? "Importing..." : "Import" }}
           </button>
         </div>
         <div class="import-options">
           <label>
             <span>Session ID (optional)</span>
-            <input v-model="sessionId" type="text" placeholder="session_abc123" />
+            <input
+              v-model="sessionId"
+              type="text"
+              placeholder="session_abc123"
+            >
           </label>
           <label>
             <span>Batch Label (optional)</span>
-            <input v-model="batchLabel" type="text" placeholder="batch_001" />
+            <input
+              v-model="batchLabel"
+              type="text"
+              placeholder="batch_001"
+            >
           </label>
         </div>
-        <div v-if="importResult" class="import-result">
+        <div
+          v-if="importResult"
+          class="import-result"
+        >
           Imported <code>{{ importResult.run_id }}</code> —
           {{ importResult.attachments_written }} written,
           {{ importResult.attachments_deduped }} deduped
         </div>
-        <div v-if="importError" class="import-error">
+        <div
+          v-if="importError"
+          class="import-error"
+        >
           {{ importError }}
         </div>
       </div>
@@ -46,9 +64,22 @@
     <!-- Facets Panel -->
     <section class="card">
       <h2>Facets</h2>
-      <div v-if="facetsLoading" class="muted">Loading facets...</div>
-      <div v-else-if="facetsError" class="import-error">{{ facetsError }}</div>
-      <div v-else class="facets-grid">
+      <div
+        v-if="facetsLoading"
+        class="muted"
+      >
+        Loading facets...
+      </div>
+      <div
+        v-else-if="facetsError"
+        class="import-error"
+      >
+        {{ facetsError }}
+      </div>
+      <div
+        v-else
+        class="facets-grid"
+      >
         <div class="facet-group">
           <h3>Kind</h3>
           <div class="facet-chips">
@@ -86,19 +117,38 @@
     <!-- Recent Panel -->
     <section class="card">
       <h2>Recent</h2>
-      <div v-if="recentLoading" class="muted">Loading...</div>
-      <div v-else-if="recentError" class="import-error">{{ recentError }}</div>
-      <div v-else-if="!recentData?.entries?.length" class="muted">
+      <div
+        v-if="recentLoading"
+        class="muted"
+      >
+        Loading...
+      </div>
+      <div
+        v-else-if="recentError"
+        class="import-error"
+      >
+        {{ recentError }}
+      </div>
+      <div
+        v-else-if="!recentData?.entries?.length"
+        class="muted"
+      >
         No recent attachments. Import a viewer_pack to get started.
       </div>
-      <div v-else class="recent-list">
+      <div
+        v-else
+        class="recent-list"
+      >
         <div
           v-for="entry in recentData.entries"
           :key="entry.sha256"
           class="recent-item"
         >
           <div class="recent-info">
-            <span class="recent-filename" :title="entry.filename">{{ entry.filename }}</span>
+            <span
+              class="recent-filename"
+              :title="entry.filename"
+            >{{ entry.filename }}</span>
             <code class="kind-badge">{{ entry.kind }}</code>
             <span class="recent-meta">{{ formatSize(entry.size_bytes) }}</span>
           </div>
@@ -133,20 +183,39 @@
     <section class="card wide">
       <h2>Browse Attachments</h2>
       <div class="filter-bar">
-        <span v-if="kindFilter || mimeFilter" class="active-filters">
+        <span
+          v-if="kindFilter || mimeFilter"
+          class="active-filters"
+        >
           Filters:
           <code v-if="kindFilter">kind={{ kindFilter }}</code>
           <code v-if="mimeFilter">mime={{ mimeFilter }}</code>
-          <button class="btn-clear" @click="clearFilters">Clear</button>
+          <button
+            class="btn-clear"
+            @click="clearFilters"
+          >Clear</button>
         </span>
         <span class="browse-count">
           Showing {{ browseData?.count ?? 0 }} of {{ browseData?.total_in_index ?? 0 }}
         </span>
       </div>
 
-      <div v-if="browseLoading" class="muted">Loading...</div>
-      <div v-else-if="browseError" class="import-error">{{ browseError }}</div>
-      <table v-else class="tbl">
+      <div
+        v-if="browseLoading"
+        class="muted"
+      >
+        Loading...
+      </div>
+      <div
+        v-else-if="browseError"
+        class="import-error"
+      >
+        {{ browseError }}
+      </div>
+      <table
+        v-else
+        class="tbl"
+      >
         <thead>
           <tr>
             <th>Filename</th>
@@ -158,8 +227,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="entry in browseData?.entries" :key="entry.sha256">
-            <td class="mono filename-cell" :title="entry.filename">{{ entry.filename }}</td>
+          <tr
+            v-for="entry in browseData?.entries"
+            :key="entry.sha256"
+          >
+            <td
+              class="mono filename-cell"
+              :title="entry.filename"
+            >
+              {{ entry.filename }}
+            </td>
             <td><code class="kind-badge">{{ entry.kind }}</code></td>
             <td>
               <span
@@ -170,10 +247,17 @@
               >
                 {{ getValidationLabel(entry) }}
               </span>
-              <span v-else class="validation-na">—</span>
+              <span
+                v-else
+                class="validation-na"
+              >—</span>
             </td>
-            <td class="mono">{{ entry.mime }}</td>
-            <td class="mono">{{ formatSize(entry.size_bytes) }}</td>
+            <td class="mono">
+              {{ entry.mime }}
+            </td>
+            <td class="mono">
+              {{ formatSize(entry.size_bytes) }}
+            </td>
             <td class="actions-cell">
               <a
                 v-if="isViewerPack(entry)"
@@ -195,7 +279,10 @@
       </table>
 
       <!-- Pagination -->
-      <div class="pagination" v-if="browseData">
+      <div
+        v-if="browseData"
+        class="pagination"
+      >
         <button
           class="btn"
           :disabled="!browseData.next_cursor"

@@ -19,7 +19,9 @@ Features:
 
 <template>
   <div class="p-4 space-y-4">
-    <h1 class="text-2xl font-bold">Finish Planner</h1>
+    <h1 class="text-2xl font-bold">
+      Finish Planner
+    </h1>
     
     <div class="flex gap-2 flex-wrap">
       <button 
@@ -34,66 +36,120 @@ Features:
     </div>
 
     <!-- Summary Tab -->
-    <div v-if="tab === 'Summary'" class="space-y-4">
+    <div
+      v-if="tab === 'Summary'"
+      class="space-y-4"
+    >
       <p class="opacity-80 text-sm">
         Load a finish schedule JSON to summarize coats, cure time, and materials.
       </p>
       
       <input 
         type="file" 
-        @change="onFile" 
         accept=".json" 
         class="border p-2 rounded w-full max-w-md" 
-      />
+        @change="onFile" 
+      >
       
-      <div v-if="summary" class="space-y-4">
+      <div
+        v-if="summary"
+        class="space-y-4"
+      >
         <div class="grid md:grid-cols-3 gap-4">
           <div class="p-4 border rounded bg-blue-50">
-            <div class="text-3xl font-bold text-blue-600">{{ summary.total_coats }}</div>
-            <div class="text-sm opacity-70">Total Coats</div>
+            <div class="text-3xl font-bold text-blue-600">
+              {{ summary.total_coats }}
+            </div>
+            <div class="text-sm opacity-70">
+              Total Coats
+            </div>
           </div>
           
           <div class="p-4 border rounded bg-green-50">
-            <div class="text-3xl font-bold text-green-600">{{ summary.cure_hours }}</div>
-            <div class="text-sm opacity-70">Cure Hours</div>
+            <div class="text-3xl font-bold text-green-600">
+              {{ summary.cure_hours }}
+            </div>
+            <div class="text-sm opacity-70">
+              Cure Hours
+            </div>
           </div>
           
           <div class="p-4 border rounded bg-purple-50">
-            <div class="text-3xl font-bold text-purple-600">{{ summary.total_days.toFixed(1) }}</div>
-            <div class="text-sm opacity-70">Total Days</div>
+            <div class="text-3xl font-bold text-purple-600">
+              {{ summary.total_days.toFixed(1) }}
+            </div>
+            <div class="text-sm opacity-70">
+              Total Days
+            </div>
           </div>
         </div>
 
-        <div v-if="summary.steps.length" class="space-y-2">
-          <h3 class="font-semibold text-lg">Schedule Breakdown</h3>
+        <div
+          v-if="summary.steps.length"
+          class="space-y-2"
+        >
+          <h3 class="font-semibold text-lg">
+            Schedule Breakdown
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full border-collapse">
               <thead>
                 <tr class="bg-gray-100">
-                  <th class="border p-2 text-left">Step</th>
-                  <th class="border p-2 text-left">Finish Type</th>
-                  <th class="border p-2 text-center">Coats</th>
-                  <th class="border p-2 text-center">Cure Hours</th>
-                  <th class="border p-2 text-left">Notes</th>
+                  <th class="border p-2 text-left">
+                    Step
+                  </th>
+                  <th class="border p-2 text-left">
+                    Finish Type
+                  </th>
+                  <th class="border p-2 text-center">
+                    Coats
+                  </th>
+                  <th class="border p-2 text-center">
+                    Cure Hours
+                  </th>
+                  <th class="border p-2 text-left">
+                    Notes
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(step, idx) in summary.steps" :key="idx">
-                  <td class="border p-2">{{ idx + 1 }}</td>
-                  <td class="border p-2">{{ step.type || 'N/A' }}</td>
-                  <td class="border p-2 text-center">{{ step.coats || 1 }}</td>
-                  <td class="border p-2 text-center">{{ step.cure_hours || 0 }}</td>
-                  <td class="border p-2 text-sm opacity-70">{{ step.notes || '—' }}</td>
+                <tr
+                  v-for="(step, idx) in summary.steps"
+                  :key="idx"
+                >
+                  <td class="border p-2">
+                    {{ idx + 1 }}
+                  </td>
+                  <td class="border p-2">
+                    {{ step.type || 'N/A' }}
+                  </td>
+                  <td class="border p-2 text-center">
+                    {{ step.coats || 1 }}
+                  </td>
+                  <td class="border p-2 text-center">
+                    {{ step.cure_hours || 0 }}
+                  </td>
+                  <td class="border p-2 text-sm opacity-70">
+                    {{ step.notes || '—' }}
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <div v-if="summary.materials.length" class="space-y-2">
-          <h3 class="font-semibold text-lg">Materials Used</h3>
+        <div
+          v-if="summary.materials.length"
+          class="space-y-2"
+        >
+          <h3 class="font-semibold text-lg">
+            Materials Used
+          </h3>
           <ul class="list-disc list-inside text-sm space-y-1">
-            <li v-for="(material, idx) in summary.materials" :key="idx">
+            <li
+              v-for="(material, idx) in summary.materials"
+              :key="idx"
+            >
               {{ material }}
             </li>
           </ul>
@@ -102,14 +158,22 @@ Features:
     </div>
 
     <!-- Calculator Tab -->
-    <div v-else-if="tab === 'Calculator'" class="space-y-4">
-      <h3 class="font-semibold text-lg">Finish Schedule Calculator</h3>
+    <div
+      v-else-if="tab === 'Calculator'"
+      class="space-y-4"
+    >
+      <h3 class="font-semibold text-lg">
+        Finish Schedule Calculator
+      </h3>
       
       <div class="grid md:grid-cols-2 gap-4">
         <div class="space-y-3">
           <label class="flex flex-col">
             <span class="text-sm font-medium mb-1">Finish Type</span>
-            <select v-model="calc.finishType" class="border p-2 rounded">
+            <select
+              v-model="calc.finishType"
+              class="border p-2 rounded"
+            >
               <option value="nitrocellulose">Nitrocellulose Lacquer</option>
               <option value="polyurethane">Polyurethane</option>
               <option value="polyester">Polyester</option>
@@ -126,7 +190,7 @@ Features:
               type="number" 
               min="1"
               class="border p-2 rounded" 
-            />
+            >
           </label>
 
           <label class="flex flex-col">
@@ -136,19 +200,21 @@ Features:
               type="number" 
               step="0.5"
               class="border p-2 rounded" 
-            />
+            >
           </label>
 
           <button 
-            @click="calculateFinish" 
-            class="w-full px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            class="w-full px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors" 
+            @click="calculateFinish"
           >
             Calculate Schedule
           </button>
         </div>
 
         <div class="space-y-2">
-          <h4 class="font-medium">Recommended Settings</h4>
+          <h4 class="font-medium">
+            Recommended Settings
+          </h4>
           <div class="p-4 bg-gray-50 rounded text-sm space-y-2">
             <div v-if="calc.finishType === 'nitrocellulose'">
               <p><strong>Nitrocellulose Lacquer</strong></p>
@@ -175,11 +241,16 @@ Features:
               <p>Final cure: 1 week</p>
             </div>
             <div v-else>
-              <p class="opacity-70">Select a finish type for recommendations</p>
+              <p class="opacity-70">
+                Select a finish type for recommendations
+              </p>
             </div>
           </div>
 
-          <div v-if="calcResult" class="p-4 bg-green-50 rounded space-y-1">
+          <div
+            v-if="calcResult"
+            class="p-4 bg-green-50 rounded space-y-1"
+          >
             <p><strong>Total Coats:</strong> {{ calcResult.total_coats }}</p>
             <p><strong>Total Cure Time:</strong> {{ calcResult.total_hours }} hours ({{ calcResult.total_days.toFixed(1) }} days)</p>
             <p><strong>Finish Type:</strong> {{ calcResult.finish_type }}</p>
@@ -189,13 +260,18 @@ Features:
     </div>
 
     <!-- Docs Tab -->
-    <div v-else-if="tab === 'Docs'" class="space-y-4">
-      <p class="opacity-80 text-sm">Embedded quick help for guitar finishing techniques.</p>
+    <div
+      v-else-if="tab === 'Docs'"
+      class="space-y-4"
+    >
+      <p class="opacity-80 text-sm">
+        Embedded quick help for guitar finishing techniques.
+      </p>
       <iframe 
         :src="docsSrc" 
         class="w-full border rounded" 
         style="height:60vh;"
-      ></iframe>
+      />
     </div>
   </div>
 </template>

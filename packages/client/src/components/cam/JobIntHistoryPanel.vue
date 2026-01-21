@@ -5,7 +5,9 @@
   <div class="flex flex-col h-full text-xs gap-3">
     <header class="flex items-center justify-between">
       <div>
-        <h3 class="text-xs font-semibold">Job Intelligence History</h3>
+        <h3 class="text-xs font-semibold">
+          Job Intelligence History
+        </h3>
         <p class="text-[11px] text-gray-500">
           Recent pipeline runs with sim time, energy, and deviation.
         </p>
@@ -78,7 +80,7 @@
             type="text"
             class="border rounded px-2 py-1"
             placeholder="haas_vf2, shopbot, ..."
-          />
+          >
         </label>
 
         <label class="flex flex-col gap-1">
@@ -88,7 +90,7 @@
             type="text"
             class="border rounded px-2 py-1"
             placeholder="haas_ngc, grbl, ..."
-          />
+          >
         </label>
 
         <div class="flex flex-col gap-1 mt-1">
@@ -97,7 +99,7 @@
               v-model="filters.helical_only"
               type="checkbox"
               class="w-3 h-3"
-            />
+            >
             <span>Helical only</span>
           </label>
 
@@ -106,7 +108,7 @@
               v-model="filters.favorites_only"
               type="checkbox"
               class="w-3 h-3"
-            />
+            >
             <span>⭐ Favorites only</span>
           </label>
         </div>
@@ -118,7 +120,7 @@
             v-model="filters.favorites_only"
             type="checkbox"
             class="w-3 h-3"
-          />
+          >
           <span>⭐ Favorites only</span>
         </label>
       </div>
@@ -151,14 +153,30 @@
     <!-- Table -->
     <section class="flex-1 border rounded-lg overflow-hidden flex flex-col">
       <div class="border-b bg-slate-50 px-2 py-1 text-[11px] font-semibold flex">
-        <div class="w-[22%]">Job</div>
-        <div class="w-[12%]">Machine</div>
-        <div class="w-[12%]">Post</div>
-        <div class="w-[9%] text-center">Helical</div>
-        <div class="w-[12%] text-right">Time</div>
-        <div class="w-[9%] text-right">Issues</div>
-        <div class="w-[9%] text-right">Max dev</div>
-        <div class="w-[15%] text-right pr-1">Actions</div>
+        <div class="w-[22%]">
+          Job
+        </div>
+        <div class="w-[12%]">
+          Machine
+        </div>
+        <div class="w-[12%]">
+          Post
+        </div>
+        <div class="w-[9%] text-center">
+          Helical
+        </div>
+        <div class="w-[12%] text-right">
+          Time
+        </div>
+        <div class="w-[9%] text-right">
+          Issues
+        </div>
+        <div class="w-[9%] text-right">
+          Max dev
+        </div>
+        <div class="w-[15%] text-right pr-1">
+          Actions
+        </div>
       </div>
 
       <div class="flex-1 overflow-auto">
@@ -172,13 +190,16 @@
               <button
                 type="button"
                 class="text-[12px] leading-none"
-                @click.stop="toggleFavorite(entry)"
                 :title="entry.favorite ? 'Unmark favorite' : 'Mark as favorite'"
+                @click.stop="toggleFavorite(entry)"
               >
                 <span v-if="entry.favorite">⭐</span>
                 <span v-else>☆</span>
               </button>
-              <div class="truncate flex-1 cursor-pointer" @click="selectEntry(entry)">
+              <div
+                class="truncate flex-1 cursor-pointer"
+                @click="selectEntry(entry)"
+              >
                 <div class="font-semibold">
                   {{ entry.job_name || "(unnamed job)" }}
                 </div>
@@ -229,8 +250,8 @@
             <button
               type="button"
               class="px-2 py-1 rounded border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px]"
-              @click.stop="openCloneModal(entry)"
               title="Clone as preset (B19)"
+              @click.stop="openCloneModal(entry)"
             >
               📋 Clone
             </button>
@@ -274,7 +295,10 @@
       </div>
     </section>
 
-    <p v-if="errorMessage" class="text-[11px] text-rose-600">
+    <p
+      v-if="errorMessage"
+      class="text-[11px] text-rose-600"
+    >
       {{ errorMessage }}
     </p>
 
@@ -286,7 +310,9 @@
     >
       <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
         <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
-          <h3 class="text-sm font-semibold">📋 Clone Job as Preset (B19)</h3>
+          <h3 class="text-sm font-semibold">
+            📋 Clone Job as Preset (B19)
+          </h3>
           <button
             type="button"
             class="text-gray-400 hover:text-gray-600 text-lg leading-none"
@@ -297,10 +323,15 @@
         </div>
 
         <div class="p-4">
-          <div v-if="selectedEntry" class="flex flex-col gap-3 text-xs">
+          <div
+            v-if="selectedEntry"
+            class="flex flex-col gap-3 text-xs"
+          >
             <!-- Source Job Info -->
             <div class="p-3 bg-slate-50 rounded border">
-              <div class="font-semibold mb-2">Source Job</div>
+              <div class="font-semibold mb-2">
+                Source Job
+              </div>
               <div class="grid grid-cols-2 gap-2 text-[11px]">
                 <div><span class="text-gray-500">Job:</span> {{ selectedEntry.job_name || '(unnamed)' }}</div>
                 <div><span class="text-gray-500">Run ID:</span> <span class="font-mono">{{ selectedEntry.run_id }}</span></div>
@@ -320,7 +351,7 @@
                   type="text"
                   class="border rounded px-2 py-1"
                   placeholder="e.g., Helical Pocket - VF2 - GRBL"
-                />
+                >
               </label>
 
               <label class="flex flex-col gap-1">
@@ -329,13 +360,16 @@
                   v-model="cloneForm.description"
                   class="border rounded px-2 py-1 h-16"
                   placeholder="Optional description of this preset..."
-                ></textarea>
+                />
               </label>
 
               <div class="grid grid-cols-2 gap-2">
                 <label class="flex flex-col gap-1">
                   <span class="font-semibold">Preset Kind</span>
-                  <select v-model="cloneForm.kind" class="border rounded px-2 py-1">
+                  <select
+                    v-model="cloneForm.kind"
+                    class="border rounded px-2 py-1"
+                  >
                     <option value="cam">CAM</option>
                     <option value="combo">Combo (CAM + Export)</option>
                   </select>
@@ -348,7 +382,7 @@
                     type="text"
                     class="border rounded px-2 py-1"
                     placeholder="helical, production, test"
-                  />
+                  >
                   <span class="text-[10px] text-gray-500">Comma-separated</span>
                 </label>
               </div>
@@ -356,14 +390,18 @@
 
             <!-- CAM Parameters Preview (from job) -->
             <div class="p-3 bg-blue-50 rounded border border-blue-200">
-              <div class="font-semibold mb-2">CAM Parameters (auto-filled from job)</div>
+              <div class="font-semibold mb-2">
+                CAM Parameters (auto-filled from job)
+              </div>
               <div class="grid grid-cols-2 gap-2 text-[11px]">
                 <div><span class="text-gray-600">Machine:</span> {{ selectedEntry.machine_id || 'Not specified' }}</div>
                 <div><span class="text-gray-600">Post:</span> {{ selectedEntry.post_id || 'Not specified' }}</div>
                 <div><span class="text-gray-600">Strategy:</span> {{ cloneForm.cam_params?.strategy || 'Spiral (default)' }}</div>
                 <div><span class="text-gray-600">Helical:</span> {{ selectedEntry.use_helical ? 'Enabled' : 'Disabled' }}</div>
               </div>
-              <p class="text-[10px] text-blue-700 mt-2">ℹ Full CAM params will be loaded from job detail on save</p>
+              <p class="text-[10px] text-blue-700 mt-2">
+                ℹ Full CAM params will be loaded from job detail on save
+              </p>
             </div>
 
             <!-- Actions -->
@@ -378,18 +416,27 @@
               <button
                 type="button"
                 class="px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                @click="executeClone"
                 :disabled="!cloneForm.name || cloning"
+                @click="executeClone"
               >
                 {{ cloning ? '⏳ Cloning...' : '📋 Create Preset' }}
               </button>
             </div>
 
             <!-- Success/Error Messages -->
-            <div v-if="cloneSuccess" class="p-2 bg-green-50 border border-green-200 rounded text-green-700 text-[11px]">
-              ✅ Preset created successfully! <a :href="`#/lab/preset-hub`" class="underline">View in Preset Hub →</a>
+            <div
+              v-if="cloneSuccess"
+              class="p-2 bg-green-50 border border-green-200 rounded text-green-700 text-[11px]"
+            >
+              ✅ Preset created successfully! <a
+                :href="`#/lab/preset-hub`"
+                class="underline"
+              >View in Preset Hub →</a>
             </div>
-            <div v-if="cloneError" class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-[11px]">
+            <div
+              v-if="cloneError"
+              class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-[11px]"
+            >
               ❌ {{ cloneError }}
             </div>
           </div>

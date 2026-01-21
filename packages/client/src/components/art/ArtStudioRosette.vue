@@ -149,7 +149,12 @@ onMounted(() => {
       class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4"
     >
       {{ error }}
-      <button class="ml-2 underline" @click="error = null">Dismiss</button>
+      <button
+        class="ml-2 underline"
+        @click="error = null"
+      >
+        Dismiss
+      </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -157,16 +162,20 @@ onMounted(() => {
       <div class="space-y-4">
         <!-- Preset Selector -->
         <div class="bg-gray-50 rounded-lg p-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Load Preset</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-2">Load Preset</label>
           <div class="flex gap-2">
             <select
               v-model="selectedPreset"
               class="flex-1 border rounded px-3 py-2 text-sm"
             >
-              <option :value="null">— Select preset —</option>
-              <option v-for="p in presets" :key="p.name" :value="p.name">
+              <option :value="null">
+                — Select preset —
+              </option>
+              <option
+                v-for="p in presets"
+                :key="p.name"
+                :value="p.name"
+              >
                 {{ p.name }}
               </option>
             </select>
@@ -182,12 +191,12 @@ onMounted(() => {
 
         <!-- Basic Dimensions -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Dimensions</h3>
+          <h3 class="font-semibold text-gray-800">
+            Dimensions
+          </h3>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Soundhole Diameter (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Soundhole Diameter (mm)</label>
             <input
               v-model.number="soundholeDiameter"
               type="range"
@@ -195,16 +204,14 @@ onMounted(() => {
               max="150"
               step="0.5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ soundholeDiameter.toFixed(1) }} mm
             </div>
           </div>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Central Band Width (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Central Band Width (mm)</label>
             <input
               v-model.number="centralBand"
               type="range"
@@ -212,16 +219,14 @@ onMounted(() => {
               max="20"
               step="0.5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ centralBand.toFixed(1) }} mm
             </div>
           </div>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Channel Depth (mm)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Channel Depth (mm)</label>
             <input
               v-model.number="channelDepth"
               type="range"
@@ -229,7 +234,7 @@ onMounted(() => {
               max="4.0"
               step="0.1"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ channelDepth.toFixed(1) }} mm
             </div>
@@ -239,7 +244,9 @@ onMounted(() => {
         <!-- Inner Purfling -->
         <div class="bg-white border rounded-lg p-4">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="font-semibold text-gray-800">Inner Purfling</h3>
+            <h3 class="font-semibold text-gray-800">
+              Inner Purfling
+            </h3>
             <button
               class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
               @click="addPurflingBand('inner')"
@@ -272,7 +279,7 @@ onMounted(() => {
               max="10"
               step="0.1"
               class="w-20 border rounded px-2 py-1 text-sm"
-            />
+            >
             <span class="text-xs text-gray-500">mm</span>
             <button
               v-if="innerPurfling.length > 0"
@@ -293,7 +300,9 @@ onMounted(() => {
         <!-- Outer Purfling -->
         <div class="bg-white border rounded-lg p-4">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="font-semibold text-gray-800">Outer Purfling</h3>
+            <h3 class="font-semibold text-gray-800">
+              Outer Purfling
+            </h3>
             <button
               class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
               @click="addPurflingBand('outer')"
@@ -326,7 +335,7 @@ onMounted(() => {
               max="10"
               step="0.1"
               class="w-20 border rounded px-2 py-1 text-sm"
-            />
+            >
             <span class="text-xs text-gray-500">mm</span>
             <button
               v-if="outerPurfling.length > 0"
@@ -346,35 +355,36 @@ onMounted(() => {
 
         <!-- Export Options -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Export Options</h3>
+          <h3 class="font-semibold text-gray-800">
+            Export Options
+          </h3>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >Center X (mm)</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">Center X (mm)</label>
               <input
                 v-model.number="centerX"
                 type="number"
                 step="0.1"
                 class="w-full border rounded px-2 py-1 text-sm"
-              />
+              >
             </div>
             <div>
-              <label class="block text-xs text-gray-600 mb-1"
-                >Center Y (mm)</label
-              >
+              <label class="block text-xs text-gray-600 mb-1">Center Y (mm)</label>
               <input
                 v-model.number="centerY"
                 type="number"
                 step="0.1"
                 class="w-full border rounded px-2 py-1 text-sm"
-              />
+              >
             </div>
           </div>
 
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="includePurflingRings" type="checkbox" />
+            <input
+              v-model="includePurflingRings"
+              type="checkbox"
+            >
             Include individual purfling ring circles
           </label>
         </div>
@@ -402,7 +412,9 @@ onMounted(() => {
       <div class="space-y-4">
         <!-- SVG Preview -->
         <div class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Preview</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Preview
+          </h3>
 
           <div
             v-if="previewResult?.preview_svg"
@@ -418,19 +430,28 @@ onMounted(() => {
         </div>
 
         <!-- Results Table -->
-        <div v-if="previewResult" class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Channel Dimensions</h3>
+        <div
+          v-if="previewResult"
+          class="bg-white border rounded-lg p-4"
+        >
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Channel Dimensions
+          </h3>
 
           <table class="w-full text-sm">
             <tbody>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Soundhole Radius</td>
+                <td class="py-2 text-gray-600">
+                  Soundhole Radius
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ previewResult.result.soundhole_radius_mm.toFixed(2) }} mm
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Channel Inner Radius</td>
+                <td class="py-2 text-gray-600">
+                  Channel Inner Radius
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{
                     previewResult.result.channel_inner_radius_mm.toFixed(2)
@@ -439,7 +460,9 @@ onMounted(() => {
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Channel Outer Radius</td>
+                <td class="py-2 text-gray-600">
+                  Channel Outer Radius
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{
                     previewResult.result.channel_outer_radius_mm.toFixed(2)
@@ -448,13 +471,17 @@ onMounted(() => {
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Channel Width</td>
+                <td class="py-2 text-gray-600">
+                  Channel Width
+                </td>
                 <td class="py-2 text-right font-mono font-bold">
                   {{ previewResult.result.channel_width_mm.toFixed(2) }} mm
                 </td>
               </tr>
               <tr>
-                <td class="py-2 text-gray-600">Channel Depth</td>
+                <td class="py-2 text-gray-600">
+                  Channel Depth
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ previewResult.result.channel_depth_mm.toFixed(2) }} mm
                 </td>
@@ -468,7 +495,9 @@ onMounted(() => {
           v-if="previewResult?.result.stack?.length"
           class="bg-white border rounded-lg p-4"
         >
-          <h3 class="font-semibold text-gray-800 mb-3">Stack Breakdown</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Stack Breakdown
+          </h3>
 
           <div class="space-y-2">
             <div

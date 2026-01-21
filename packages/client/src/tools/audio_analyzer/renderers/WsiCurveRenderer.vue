@@ -5,42 +5,73 @@
       <span class="path">{{ entry.relpath }}</span>
       <div class="controls">
         <label class="toggle">
-          <input type="checkbox" v-model="showCohMean" />
+          <input
+            v-model="showCohMean"
+            type="checkbox"
+          >
           <span>coh_mean</span>
         </label>
         <label class="toggle">
-          <input type="checkbox" v-model="showPhaseDisorder" />
+          <input
+            v-model="showPhaseDisorder"
+            type="checkbox"
+          >
           <span>phase_disorder</span>
         </label>
         <label class="toggle">
-          <input type="checkbox" v-model="shadeAdmissible" />
+          <input
+            v-model="shadeAdmissible"
+            type="checkbox"
+          >
           <span>Admissible shading</span>
         </label>
-        <button class="btn" @click="downloadChart">📷 PNG</button>
+        <button
+          class="btn"
+          @click="downloadChart"
+        >
+          📷 PNG
+        </button>
       </div>
     </div>
 
-    <div v-if="parseError" class="error">
+    <div
+      v-if="parseError"
+      class="error"
+    >
       <strong>Parse Error:</strong> {{ parseError }}
     </div>
-    <div v-else class="chart-container">
-      <canvas ref="chartCanvas"></canvas>
+    <div
+      v-else
+      class="chart-container"
+    >
+      <canvas ref="chartCanvas" />
     </div>
 
     <div class="stats">
       <span v-if="rows.length > 0"><strong>Rows:</strong> {{ rows.length }}</span>
       <span v-if="freqRange"><strong>Range:</strong> {{ freqRange }}</span>
       <span v-if="maxWsiHz !== null"><strong>Max WSI:</strong> {{ maxWsi.toFixed(3) }} @ {{ maxWsiHz.toFixed(1) }} Hz</span>
-      <span v-if="selectedNearest !== null" class="selected">
+      <span
+        v-if="selectedNearest !== null"
+        class="selected"
+      >
         <strong>Nearest:</strong> {{ selectedNearest.freq_hz.toFixed(2) }} Hz → wsi {{ selectedNearest.wsi.toFixed(3) }}
       </span>
-      <span v-if="selectedNearest !== null" class="selected muted">
+      <span
+        v-if="selectedNearest !== null"
+        class="selected muted"
+      >
         (exporter fields; nearest sample)
       </span>
     </div>
 
-    <details class="raw" v-if="rows.length > 0">
-      <summary class="raw-summary">Raw rows (first 25)</summary>
+    <details
+      v-if="rows.length > 0"
+      class="raw"
+    >
+      <summary class="raw-summary">
+        Raw rows (first 25)
+      </summary>
       <pre class="raw-pre">{{ rawPreview }}</pre>
     </details>
   </div>

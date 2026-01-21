@@ -116,7 +116,10 @@ function clearAll() {
 </script>
 
 <template>
-  <div class="panel" v-if="(store.historyStack?.length ?? 0) > 0">
+  <div
+    v-if="(store.historyStack?.length ?? 0) > 0"
+    class="panel"
+  >
     <div class="hdr">
       <div
         class="title"
@@ -132,8 +135,15 @@ function clearAll() {
       >
         1–5
       </div>
-      <div class="meta">{{ store.historyStack.length }} saved</div>
-      <button class="miniBtn" type="button" @click="clearAll" title="Clear undo history">
+      <div class="meta">
+        {{ store.historyStack.length }} saved
+      </div>
+      <button
+        class="miniBtn"
+        type="button"
+        title="Clear undo history"
+        @click="clearAll"
+      >
         Clear
       </button>
     </div>
@@ -144,23 +154,33 @@ function clearAll() {
         :key="i"
         :class="['row', { hotkeyFlash: isHotkeyHighlighted(i) }]"
         type="button"
-        @click="revertTo(it.idxFromTop)"
         :title="'Revert to: ' + it.label + ' (' + it.paramsLabel + ')'"
+        @click="revertTo(it.idxFromTop)"
       >
         <span class="dot" />
         <span class="txt">
           <span class="k">{{ it.label }}</span>
           <span class="v">{{ it.paramsLabel }}</span>
-          <span class="t" :title="it.abs">{{ it.age }}</span>
+          <span
+            class="t"
+            :title="it.abs"
+          >{{ it.age }}</span>
         </span>
       </button>
     </div>
   </div>
 
-  <div class="panel empty" v-else>
+  <div
+    v-else
+    class="panel empty"
+  >
     <div class="hdr">
-      <div class="title">History</div>
-      <div class="meta">No edits yet</div>
+      <div class="title">
+        History
+      </div>
+      <div class="meta">
+        No edits yet
+      </div>
     </div>
   </div>
 </template>

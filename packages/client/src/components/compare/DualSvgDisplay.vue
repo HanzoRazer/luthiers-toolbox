@@ -13,25 +13,38 @@
 <template>
   <div class="dual-svg-display">
     <!-- B22.8: Disabled reason banner -->
-    <div v-if="diffDisabledReason" class="diff-disabled-banner">
+    <div
+      v-if="diffDisabledReason"
+      class="diff-disabled-banner"
+    >
       <span class="warning-icon">⚠</span>
       <span>Diff disabled: {{ diffDisabledReason }}</span>
     </div>
 
     <!-- B22.8: Loading skeleton -->
-    <div v-if="isComputingDiff" class="skeleton-container">
+    <div
+      v-if="isComputingDiff"
+      class="skeleton-container"
+    >
       <div class="skeleton-pane left">
-        <div class="skeleton-shimmer"></div>
-        <p class="skeleton-label">Computing diff...</p>
+        <div class="skeleton-shimmer" />
+        <p class="skeleton-label">
+          Computing diff...
+        </p>
       </div>
       <div class="skeleton-pane right">
-        <div class="skeleton-shimmer"></div>
-        <p class="skeleton-label">Computing diff...</p>
+        <div class="skeleton-shimmer" />
+        <p class="skeleton-label">
+          Computing diff...
+        </p>
       </div>
     </div>
 
     <!-- Normal display when not computing -->
-    <div v-else class="svg-panes-container">
+    <div
+      v-else
+      class="svg-panes-container"
+    >
       <div class="svg-pane left">
         <h4>Baseline</h4>
         <PanZoomSvg
@@ -39,11 +52,16 @@
           :moves="baseline?.moves"
           :color="'blue'"
           :opacity="opacityA"
-          :syncState="syncViewports ? sharedViewport : null"
+          :sync-state="syncViewports ? sharedViewport : null"
           @update-viewport="(v: any) => updateViewport('left', v)"
           @render-error="$emit('render-error', $event)"
         />
-        <div v-else class="placeholder">No valid baseline data</div>
+        <div
+          v-else
+          class="placeholder"
+        >
+          No valid baseline data
+        </div>
       </div>
       <div class="svg-pane right">
         <h4>Candidate</h4>
@@ -52,72 +70,114 @@
           :moves="candidate?.moves"
           :color="'green'"
           :opacity="opacityB"
-          :syncState="syncViewports ? sharedViewport : null"
+          :sync-state="syncViewports ? sharedViewport : null"
           @update-viewport="(v: any) => updateViewport('right', v)"
           @render-error="$emit('render-error', $event)"
         />
-        <div v-else class="placeholder">No valid candidate data</div>
+        <div
+          v-else
+          class="placeholder"
+        >
+          No valid candidate data
+        </div>
       </div>
     </div>
     
-    <div v-if="diffMode !== 'none' && diff && !isComputingDiff" class="overlay-pane">
+    <div
+      v-if="diffMode !== 'none' && diff && !isComputingDiff"
+      class="overlay-pane"
+    >
       <div class="diff-toolbar">
         <!-- B22.8: Disable mode toggles when overlay disabled -->
         <label :title="overlayDisabled ? `Diff disabled: ${diffDisabledReason || ''}` : ''">
           <input 
-            type="radio" 
             v-model="localDiffMode" 
+            type="radio" 
             value="overlay"
             :disabled="overlayDisabled"
-          /> Overlay
+          > Overlay
         </label>
         <label :title="overlayDisabled ? `Diff disabled: ${diffDisabledReason || ''}` : ''">
           <input 
-            type="radio" 
             v-model="localDiffMode" 
+            type="radio" 
             value="delta"
             :disabled="overlayDisabled"
-          /> Delta Only
+          > Delta Only
         </label>
         <span class="legend">
-          <span class="legend-item"><span class="legend-color add"></span> Additions</span>
-          <span class="legend-item"><span class="legend-color remove"></span> Removals</span>
+          <span class="legend-item"><span class="legend-color add" /> Additions</span>
+          <span class="legend-item"><span class="legend-color remove" /> Removals</span>
         </span>
       </div>
       <h4>Diff Overlay</h4>
-      <svg :width="width" :height="height">
-        <g v-if="localDiffMode === 'overlay' && diff.overlay_svg" v-html="diff.overlay_svg"></g>
+      <svg
+        :width="width"
+        :height="height"
+      >
+        <g
+          v-if="localDiffMode === 'overlay' && diff.overlay_svg"
+          v-html="diff.overlay_svg"
+        />
         <g v-else-if="localDiffMode === 'delta'">
-          <polyline v-if="diff.additions && diff.additions.length > 1"
+          <polyline
+            v-if="diff.additions && diff.additions.length > 1"
             :points="toPoints(diff.additions)"
-            stroke="#2ecc40" stroke-width="2.5" fill="none" stroke-opacity="0.95" />
-          <polyline v-if="diff.removals && diff.removals.length > 1"
+            stroke="#2ecc40"
+            stroke-width="2.5"
+            fill="none"
+            stroke-opacity="0.95"
+          />
+          <polyline
+            v-if="diff.removals && diff.removals.length > 1"
             :points="toPoints(diff.removals)"
-            stroke="#ff4136" stroke-width="2.5" fill="none" stroke-opacity="0.95" />
+            stroke="#ff4136"
+            stroke-width="2.5"
+            fill="none"
+            stroke-opacity="0.95"
+          />
         </g>
       </svg>
     </div>
     
     <!-- B22.8 skeleton: Layer controls panel -->
-    <div v-if="layers && layers.length > 0 && !isComputingDiff" class="compare-layers-panel">
-      <h4 class="layers-title">Layers</h4>
+    <div
+      v-if="layers && layers.length > 0 && !isComputingDiff"
+      class="compare-layers-panel"
+    >
+      <h4 class="layers-title">
+        Layers
+      </h4>
       <ul class="layers-list">
-        <li v-for="layer in layers" :key="layer.id" class="layer-item">
+        <li
+          v-for="layer in layers"
+          :key="layer.id"
+          class="layer-item"
+        >
           <label class="layer-label">
             <input
               type="checkbox"
               :checked="layer.enabled"
-              @change="onLayerToggle(layer)"
               class="layer-checkbox"
-            />
+              @change="onLayerToggle(layer)"
+            >
             <span class="layer-name">{{ layer.id }}</span>
-            <span v-if="layer.hasDiff" class="layer-badge layer-badge-diff">
+            <span
+              v-if="layer.hasDiff"
+              class="layer-badge layer-badge-diff"
+            >
               diff
             </span>
-            <span v-if="!layer.inLeft" class="layer-badge layer-badge-missing">
+            <span
+              v-if="!layer.inLeft"
+              class="layer-badge layer-badge-missing"
+            >
               not in left
             </span>
-            <span v-if="!layer.inRight" class="layer-badge layer-badge-missing">
+            <span
+              v-if="!layer.inRight"
+              class="layer-badge layer-badge-missing"
+            >
               not in right
             </span>
           </label>

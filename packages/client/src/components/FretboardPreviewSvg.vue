@@ -17,10 +17,18 @@
     />
 
     <!-- Fretboard outline -->
-    <path :d="fretboardOutline" fill="#654321" stroke="#333" stroke-width="2" />
+    <path
+      :d="fretboardOutline"
+      fill="#654321"
+      stroke="#333"
+      stroke-width="2"
+    />
 
     <!-- Fret slots with risk coloring -->
-    <g v-for="toolpath in toolpaths" :key="toolpath.fret_number">
+    <g
+      v-for="toolpath in toolpaths"
+      :key="toolpath.fret_number"
+    >
       <rect
         :x="margin + toolpath.position_mm * scale"
         :y="margin + (centerY - (toolpath.width_mm * scale) / 2)"
@@ -99,7 +107,10 @@
     />
 
     <!-- Risk legend (if enabled) -->
-    <g v-if="showRiskLegend" transform="translate(10, 10)">
+    <g
+      v-if="showRiskLegend"
+      transform="translate(10, 10)"
+    >
       <rect
         x="0"
         y="0"
@@ -111,16 +122,46 @@
       />
 
       <!-- GREEN -->
-      <circle cx="15" cy="15" r="5" :fill="RISK_COLORS.GREEN" />
-      <text x="25" y="19" font-size="12" fill="#fff">Safe</text>
+      <circle
+        cx="15"
+        cy="15"
+        r="5"
+        :fill="RISK_COLORS.GREEN"
+      />
+      <text
+        x="25"
+        y="19"
+        font-size="12"
+        fill="#fff"
+      >Safe</text>
 
       <!-- YELLOW -->
-      <circle cx="15" cy="35" r="5" :fill="RISK_COLORS.YELLOW" />
-      <text x="25" y="39" font-size="12" fill="#fff">Caution</text>
+      <circle
+        cx="15"
+        cy="35"
+        r="5"
+        :fill="RISK_COLORS.YELLOW"
+      />
+      <text
+        x="25"
+        y="39"
+        font-size="12"
+        fill="#fff"
+      >Caution</text>
 
       <!-- RED -->
-      <circle cx="15" cy="55" r="5" :fill="RISK_COLORS.RED" />
-      <text x="25" y="59" font-size="12" fill="#fff">Warning</text>
+      <circle
+        cx="15"
+        cy="55"
+        r="5"
+        :fill="RISK_COLORS.RED"
+      />
+      <text
+        x="25"
+        y="59"
+        font-size="12"
+        fill="#fff"
+      >Warning</text>
     </g>
   </svg>
 </template>

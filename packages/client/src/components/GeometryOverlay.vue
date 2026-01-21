@@ -1,40 +1,95 @@
 <template>
   <div class="space-y-3">
     <!-- Post-Processor Chooser -->
-    <PostChooser v-model="selectedPosts" @preview="openPreview"/>
+    <PostChooser
+      v-model="selectedPosts"
+      @preview="openPreview"
+    />
 
     <!-- Geometry Overlay -->
     <div class="p-3 border rounded space-y-2">
-      <h3 class="text-base font-semibold">Geometry Overlay (DXF/SVG parity)</h3>
+      <h3 class="text-base font-semibold">
+        Geometry Overlay (DXF/SVG parity)
+      </h3>
 
       <div class="flex flex-wrap gap-2 items-center">
-        <button class="px-3 py-1 border rounded" @click="checkParity">Check Parity</button>
+        <button
+          class="px-3 py-1 border rounded"
+          @click="checkParity"
+        >
+          Check Parity
+        </button>
         <span v-if="report"><b>RMS:</b> {{ report.rms_error_mm }} mm · <b>Max:</b> {{ report.max_error_mm }} mm · <b>Pass:</b> {{ report.pass }}</span>
 
-        <span class="mx-2"></span>
+        <span class="mx-2" />
 
         <!-- Units toggle -->
         <div class="ml-2">
           <span class="text-sm mr-1">Units:</span>
-          <button class="px-2 py-1 border rounded" :class="units==='mm' ? 'bg-gray-100' : ''" @click="setUnits('mm')">mm (G21)</button>
-          <button class="px-2 py-1 border rounded" :class="units==='inch' ? 'bg-gray-100' : ''" @click="setUnits('inch')">inch (G20)</button>
+          <button
+            class="px-2 py-1 border rounded"
+            :class="units==='mm' ? 'bg-gray-100' : ''"
+            @click="setUnits('mm')"
+          >
+            mm (G21)
+          </button>
+          <button
+            class="px-2 py-1 border rounded"
+            :class="units==='inch' ? 'bg-gray-100' : ''"
+            @click="setUnits('inch')"
+          >
+            inch (G20)
+          </button>
         </div>
 
-        <span class="mx-2"></span>
+        <span class="mx-2" />
 
         <!-- Export buttons -->
-        <button class="px-3 py-1 border rounded" @click="exportDXF">Export DXF</button>
-        <button class="px-3 py-1 border rounded" @click="exportSVG">Export SVG</button>
-        <button class="px-3 py-1 border rounded" @click="exportGcode">Export G-code</button>
-        <button class="px-3 py-1 border rounded bg-blue-50" @click="exportBundle">Export Bundle (ZIP)</button>
-        <button class="px-3 py-1 border rounded bg-green-50" @click="exportMultiPostBundle">Export Multi-Post Bundle (ZIP)</button>
+        <button
+          class="px-3 py-1 border rounded"
+          @click="exportDXF"
+        >
+          Export DXF
+        </button>
+        <button
+          class="px-3 py-1 border rounded"
+          @click="exportSVG"
+        >
+          Export SVG
+        </button>
+        <button
+          class="px-3 py-1 border rounded"
+          @click="exportGcode"
+        >
+          Export G-code
+        </button>
+        <button
+          class="px-3 py-1 border rounded bg-blue-50"
+          @click="exportBundle"
+        >
+          Export Bundle (ZIP)
+        </button>
+        <button
+          class="px-3 py-1 border rounded bg-green-50"
+          @click="exportMultiPostBundle"
+        >
+          Export Multi-Post Bundle (ZIP)
+        </button>
       </div>
 
-      <canvas ref="cv" style="width:100%;height:360px;border:1px solid #e5e7eb;border-radius:8px;"></canvas>
+      <canvas
+        ref="cv"
+        style="width:100%;height:360px;border:1px solid #e5e7eb;border-radius:8px;"
+      />
     </div>
 
     <!-- Post Preview Drawer -->
-    <PostPreviewDrawer v-model="drawerOpen" :post-id="previewPostId" :gcode="gcode" :units="units"/>
+    <PostPreviewDrawer
+      v-model="drawerOpen"
+      :post-id="previewPostId"
+      :gcode="gcode"
+      :units="units"
+    />
   </div>
 </template>
 

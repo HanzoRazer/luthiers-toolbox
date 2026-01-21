@@ -1,7 +1,9 @@
 <template>
   <div class="p-4 space-y-3">
     <header class="flex flex-col gap-1">
-      <h2 class="text-lg font-semibold">Relief Risk Timeline</h2>
+      <h2 class="text-lg font-semibold">
+        Relief Risk Timeline
+      </h2>
       <p class="text-xs text-gray-500">
         Filter recorded jobs by preset personality to study how Safe / Standard / Aggressive
         behave on real parts.
@@ -18,11 +20,21 @@
           v-model="presetFilter"
           class="border rounded px-2 py-1 text-xs"
         >
-          <option value="Any">Any</option>
-          <option value="Safe">Safe</option>
-          <option value="Standard">Standard</option>
-          <option value="Aggressive">Aggressive</option>
-          <option value="Custom">Custom</option>
+          <option value="Any">
+            Any
+          </option>
+          <option value="Safe">
+            Safe
+          </option>
+          <option value="Standard">
+            Standard
+          </option>
+          <option value="Aggressive">
+            Aggressive
+          </option>
+          <option value="Custom">
+            Custom
+          </option>
         </select>
       </div>
 
@@ -32,15 +44,24 @@
           v-model="pipelineFilter"
           class="border rounded px-2 py-1 text-xs"
         >
-          <option value="Any">Any</option>
-          <option value="artstudio_relief_v16">Art Studio Relief</option>
-          <option value="relief_kernel_lab">Relief Kernel Lab</option>
+          <option value="Any">
+            Any
+          </option>
+          <option value="artstudio_relief_v16">
+            Art Studio Relief
+          </option>
+          <option value="relief_kernel_lab">
+            Relief Kernel Lab
+          </option>
         </select>
       </div>
 
       <!-- Compare toggle -->
       <label class="flex items-center gap-2 ml-2">
-        <input type="checkbox" v-model="comparePrev" />
+        <input
+          v-model="comparePrev"
+          type="checkbox"
+        >
         <span>Compare with previous window</span>
       </label>
 
@@ -102,7 +123,10 @@
 
     <!-- Comparison against previous window -->
     <section v-if="comparePrev">
-      <CamRiskCompareBars :curr="summary" :prev="summaryPrev" />
+      <CamRiskCompareBars
+        :curr="summary"
+        :prev="summaryPrev"
+      />
       <p class="mt-1 text-[10px] text-gray-500">
         Previous window is auto-derived as the same length immediately before the current date range.
         If no date range is set, comparison is disabled.

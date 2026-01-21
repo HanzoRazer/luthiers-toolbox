@@ -1,5 +1,8 @@
 <template>
-  <button class="compare-mode-btn" @click="goToCompareLab">
+  <button
+    class="compare-mode-btn"
+    @click="goToCompareLab"
+  >
     <slot>Compare in Lab</slot>
   </button>
 </template>

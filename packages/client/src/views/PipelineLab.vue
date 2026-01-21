@@ -2,7 +2,9 @@
   <div class="pipeline-lab">
     <div class="header">
       <h1>🔧 Pipeline Lab</h1>
-      <p class="subtitle">Blueprint → CAM Complete Workflow (Phase 3.2)</p>
+      <p class="subtitle">
+        Blueprint → CAM Complete Workflow (Phase 3.2)
+      </p>
     </div>
 
     <!-- Stage Progress Tracker -->
@@ -13,55 +15,97 @@
         class="stage-item"
         :class="{ active: currentStage === idx, completed: currentStage > idx }"
       >
-        <div class="stage-number">{{ idx + 1 }}</div>
-        <div class="stage-label">{{ stage }}</div>
+        <div class="stage-number">
+          {{ idx + 1 }}
+        </div>
+        <div class="stage-label">
+          {{ stage }}
+        </div>
       </div>
     </div>
 
     <!-- Stage 1: DXF Upload -->
-    <div v-if="currentStage === 0" class="stage-panel">
+    <div
+      v-if="currentStage === 0"
+      class="stage-panel"
+    >
       <h2>📁 Stage 1: Upload DXF Blueprint</h2>
       
       <div 
         class="drop-zone"
+        :class="{ dragging: isDragging }"
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
-        :class="{ dragging: isDragging }"
       >
         <div v-if="!dxfFile">
-          <div class="upload-icon">📄</div>
+          <div class="upload-icon">
+            📄
+          </div>
           <p>Drag & drop DXF file here</p>
-          <p class="or-text">or</p>
+          <p class="or-text">
+            or
+          </p>
           <label class="upload-button">
             Browse Files
-            <input type="file" accept=".dxf" @change="handleFileSelect" hidden>
+            <input
+              type="file"
+              accept=".dxf"
+              hidden
+              @change="handleFileSelect"
+            >
           </label>
         </div>
-        <div v-else class="file-info">
-          <div class="file-icon">✅</div>
+        <div
+          v-else
+          class="file-info"
+        >
+          <div class="file-icon">
+            ✅
+          </div>
           <div>
             <h3>{{ dxfFile.name }}</h3>
             <p>{{ formatFileSize(dxfFile.size) }}</p>
           </div>
-          <button @click="clearFile" class="clear-button">✕</button>
+          <button
+            class="clear-button"
+            @click="clearFile"
+          >
+            ✕
+          </button>
         </div>
       </div>
 
-      <div v-if="dxfFile" class="action-buttons">
-        <button @click="runPreflight" class="btn btn-primary" :disabled="preflightRunning">
+      <div
+        v-if="dxfFile"
+        class="action-buttons"
+      >
+        <button
+          class="btn btn-primary"
+          :disabled="preflightRunning"
+          @click="runPreflight"
+        >
           {{ preflightRunning ? '⏳ Checking...' : '🔍 Run Preflight Check' }}
         </button>
       </div>
     </div>
 
     <!-- Stage 2: Preflight Results -->
-    <div v-if="currentStage === 1" class="stage-panel">
+    <div
+      v-if="currentStage === 1"
+      class="stage-panel"
+    >
       <h2>🔍 Stage 2: Preflight Validation</h2>
       
-      <div v-if="preflightReport" class="preflight-results">
+      <div
+        v-if="preflightReport"
+        class="preflight-results"
+      >
         <!-- Status Badge -->
-        <div class="status-badge" :class="preflightReport.passed ? 'passed' : 'failed'">
+        <div
+          class="status-badge"
+          :class="preflightReport.passed ? 'passed' : 'failed'"
+        >
           <span class="status-icon">{{ preflightReport.passed ? '✅' : '❌' }}</span>
           <span class="status-text">{{ preflightReport.passed ? 'PASSED' : 'FAILED' }}</span>
         </div>
@@ -69,25 +113,44 @@
         <!-- Summary Stats -->
         <div class="summary-grid">
           <div class="stat-card error">
-            <div class="stat-value">{{ preflightReport.summary.errors }}</div>
-            <div class="stat-label">ERRORS</div>
+            <div class="stat-value">
+              {{ preflightReport.summary.errors }}
+            </div>
+            <div class="stat-label">
+              ERRORS
+            </div>
           </div>
           <div class="stat-card warning">
-            <div class="stat-value">{{ preflightReport.summary.warnings }}</div>
-            <div class="stat-label">WARNINGS</div>
+            <div class="stat-value">
+              {{ preflightReport.summary.warnings }}
+            </div>
+            <div class="stat-label">
+              WARNINGS
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ preflightReport.summary.info }}</div>
-            <div class="stat-label">INFO</div>
+            <div class="stat-value">
+              {{ preflightReport.summary.info }}
+            </div>
+            <div class="stat-label">
+              INFO
+            </div>
           </div>
           <div class="stat-card neutral">
-            <div class="stat-value">{{ preflightReport.total_entities }}</div>
-            <div class="stat-label">ENTITIES</div>
+            <div class="stat-value">
+              {{ preflightReport.total_entities }}
+            </div>
+            <div class="stat-label">
+              ENTITIES
+            </div>
           </div>
         </div>
 
         <!-- Issues List -->
-        <div v-if="preflightReport.issues.length > 0" class="issues-section">
+        <div
+          v-if="preflightReport.issues.length > 0"
+          class="issues-section"
+        >
           <h3>Issues ({{ preflightReport.issues.length }})</h3>
           <div 
             v-for="(issue, idx) in preflightReport.issues" 
@@ -98,17 +161,28 @@
             <div class="issue-header">
               <span class="issue-badge">{{ issue.severity }}</span>
               <span class="issue-category">[{{ issue.category }}]</span>
-              <span v-if="issue.layer" class="issue-layer">Layer: {{ issue.layer }}</span>
+              <span
+                v-if="issue.layer"
+                class="issue-layer"
+              >Layer: {{ issue.layer }}</span>
             </div>
-            <div class="issue-message">{{ issue.message }}</div>
-            <div v-if="issue.suggestion" class="issue-suggestion">
+            <div class="issue-message">
+              {{ issue.message }}
+            </div>
+            <div
+              v-if="issue.suggestion"
+              class="issue-suggestion"
+            >
               💡 {{ issue.suggestion }}
             </div>
           </div>
         </div>
 
         <!-- Entity Stats -->
-        <div v-if="preflightReport.stats.entity_types" class="entity-stats">
+        <div
+          v-if="preflightReport.stats.entity_types"
+          class="entity-stats"
+        >
           <h3>Entity Types</h3>
           <div class="entity-grid">
             <div 
@@ -124,13 +198,16 @@
 
         <!-- Actions -->
         <div class="action-buttons">
-          <button @click="downloadHTMLReport" class="btn btn-secondary">
+          <button
+            class="btn btn-secondary"
+            @click="downloadHTMLReport"
+          >
             📄 Download HTML Report
           </button>
           <button 
-            @click="currentStage = 2" 
-            class="btn btn-primary"
+            class="btn btn-primary" 
             :disabled="preflightReport.summary.errors > 0"
+            @click="currentStage = 2"
           >
             {{ preflightReport.summary.errors > 0 ? '❌ Fix Errors First' : '➡️ Continue to Reconstruction' }}
           </button>
@@ -139,32 +216,56 @@
     </div>
 
     <!-- Stage 3: Contour Reconstruction -->
-    <div v-if="currentStage === 2" class="stage-panel">
+    <div
+      v-if="currentStage === 2"
+      class="stage-panel"
+    >
       <h2>🔗 Stage 3: Contour Reconstruction</h2>
       
       <div class="reconstruction-controls">
         <div class="control-group">
           <label>Layer Name</label>
-          <input v-model="reconstructionParams.layer_name" type="text" placeholder="Contours">
+          <input
+            v-model="reconstructionParams.layer_name"
+            type="text"
+            placeholder="Contours"
+          >
         </div>
         <div class="control-group">
           <label>Tolerance (mm)</label>
-          <input v-model.number="reconstructionParams.tolerance" type="number" step="0.05" min="0.05" max="1.0">
+          <input
+            v-model.number="reconstructionParams.tolerance"
+            type="number"
+            step="0.05"
+            min="0.05"
+            max="1.0"
+          >
         </div>
         <div class="control-group">
           <label>Min Loop Points</label>
-          <input v-model.number="reconstructionParams.min_loop_points" type="number" min="3">
+          <input
+            v-model.number="reconstructionParams.min_loop_points"
+            type="number"
+            min="3"
+          >
         </div>
       </div>
 
       <div class="action-buttons">
-        <button @click="runReconstruction" class="btn btn-primary" :disabled="reconstructionRunning">
+        <button
+          class="btn btn-primary"
+          :disabled="reconstructionRunning"
+          @click="runReconstruction"
+        >
           {{ reconstructionRunning ? '⏳ Reconstructing...' : '🔗 Reconstruct Contours' }}
         </button>
       </div>
 
       <!-- Reconstruction Results -->
-      <div v-if="reconstructionResult" class="reconstruction-results">
+      <div
+        v-if="reconstructionResult"
+        class="reconstruction-results"
+      >
         <div class="status-badge passed">
           <span class="status-icon">✅</span>
           <span class="status-text">{{ reconstructionResult.message }}</span>
@@ -172,28 +273,50 @@
 
         <div class="summary-grid">
           <div class="stat-card neutral">
-            <div class="stat-value">{{ reconstructionResult.loops.length }}</div>
-            <div class="stat-label">LOOPS FOUND</div>
+            <div class="stat-value">
+              {{ reconstructionResult.loops.length }}
+            </div>
+            <div class="stat-label">
+              LOOPS FOUND
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ reconstructionResult.stats.lines_found }}</div>
-            <div class="stat-label">LINES</div>
+            <div class="stat-value">
+              {{ reconstructionResult.stats.lines_found }}
+            </div>
+            <div class="stat-label">
+              LINES
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ reconstructionResult.stats.splines_found }}</div>
-            <div class="stat-label">SPLINES</div>
+            <div class="stat-value">
+              {{ reconstructionResult.stats.splines_found }}
+            </div>
+            <div class="stat-label">
+              SPLINES
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ reconstructionResult.stats.edges_built }}</div>
-            <div class="stat-label">EDGES</div>
+            <div class="stat-value">
+              {{ reconstructionResult.stats.edges_built }}
+            </div>
+            <div class="stat-label">
+              EDGES
+            </div>
           </div>
         </div>
 
         <!-- Warnings -->
-        <div v-if="reconstructionResult.warnings.length > 0" class="warnings-section">
+        <div
+          v-if="reconstructionResult.warnings.length > 0"
+          class="warnings-section"
+        >
           <h3>⚠️ Warnings</h3>
           <ul>
-            <li v-for="(warning, idx) in reconstructionResult.warnings" :key="idx">
+            <li
+              v-for="(warning, idx) in reconstructionResult.warnings"
+              :key="idx"
+            >
               {{ warning }}
             </li>
           </ul>
@@ -202,18 +325,33 @@
         <!-- Loop Info -->
         <div class="loops-section">
           <h3>Extracted Loops</h3>
-          <div v-for="(loop, idx) in reconstructionResult.loops" :key="idx" class="loop-card">
+          <div
+            v-for="(loop, idx) in reconstructionResult.loops"
+            :key="idx"
+            class="loop-card"
+          >
             <div class="loop-header">
               <strong>Loop {{ idx + 1 }}</strong>
-              <span v-if="idx === reconstructionResult.outer_loop_idx" class="badge-outer">OUTER</span>
-              <span v-else class="badge-island">ISLAND</span>
+              <span
+                v-if="idx === reconstructionResult.outer_loop_idx"
+                class="badge-outer"
+              >OUTER</span>
+              <span
+                v-else
+                class="badge-island"
+              >ISLAND</span>
             </div>
-            <div class="loop-info">Points: {{ loop.pts.length }}</div>
+            <div class="loop-info">
+              Points: {{ loop.pts.length }}
+            </div>
           </div>
         </div>
 
         <div class="action-buttons">
-          <button @click="currentStage = 3" class="btn btn-primary">
+          <button
+            class="btn btn-primary"
+            @click="currentStage = 3"
+          >
             ➡️ Continue to Adaptive Pocket
           </button>
         </div>
@@ -221,26 +359,50 @@
     </div>
 
     <!-- Stage 4: Adaptive Pocket Parameters -->
-    <div v-if="currentStage === 3" class="stage-panel">
+    <div
+      v-if="currentStage === 3"
+      class="stage-panel"
+    >
       <h2>⚙️ Stage 4: Adaptive Pocket Toolpath</h2>
       
       <div class="params-grid">
         <div class="control-group">
           <label>Tool Diameter (mm)</label>
-          <input v-model.number="adaptiveParams.tool_d" type="number" step="0.5" min="1">
+          <input
+            v-model.number="adaptiveParams.tool_d"
+            type="number"
+            step="0.5"
+            min="1"
+          >
         </div>
         <div class="control-group">
           <label>Stepover (%)</label>
-          <input v-model.number="stepoverPercent" type="number" step="5" min="10" max="100">
+          <input
+            v-model.number="stepoverPercent"
+            type="number"
+            step="5"
+            min="10"
+            max="100"
+          >
           <small>{{ adaptiveParams.stepover.toFixed(2) }} of tool diameter</small>
         </div>
         <div class="control-group">
           <label>Stepdown (mm)</label>
-          <input v-model.number="adaptiveParams.stepdown" type="number" step="0.5" min="0.5">
+          <input
+            v-model.number="adaptiveParams.stepdown"
+            type="number"
+            step="0.5"
+            min="0.5"
+          >
         </div>
         <div class="control-group">
           <label>Margin (mm)</label>
-          <input v-model.number="adaptiveParams.margin" type="number" step="0.1" min="0">
+          <input
+            v-model.number="adaptiveParams.margin"
+            type="number"
+            step="0.1"
+            min="0"
+          >
         </div>
         <div class="control-group">
           <label>Strategy</label>
@@ -251,18 +413,30 @@
         </div>
         <div class="control-group">
           <label>Feed XY (mm/min)</label>
-          <input v-model.number="adaptiveParams.feed_xy" type="number" step="100" min="100">
+          <input
+            v-model.number="adaptiveParams.feed_xy"
+            type="number"
+            step="100"
+            min="100"
+          >
         </div>
       </div>
 
       <div class="action-buttons">
-        <button @click="generateToolpath" class="btn btn-primary" :disabled="toolpathRunning">
+        <button
+          class="btn btn-primary"
+          :disabled="toolpathRunning"
+          @click="generateToolpath"
+        >
           {{ toolpathRunning ? '⏳ Generating...' : '⚡ Generate Toolpath' }}
         </button>
       </div>
 
       <!-- Toolpath Results -->
-      <div v-if="toolpathResult" class="toolpath-results">
+      <div
+        v-if="toolpathResult"
+        class="toolpath-results"
+      >
         <div class="status-badge passed">
           <span class="status-icon">✅</span>
           <span class="status-text">Toolpath Generated</span>
@@ -270,28 +444,50 @@
 
         <div class="summary-grid">
           <div class="stat-card neutral">
-            <div class="stat-value">{{ toolpathResult.stats.length_mm.toFixed(1) }}</div>
-            <div class="stat-label">LENGTH (mm)</div>
+            <div class="stat-value">
+              {{ toolpathResult.stats.length_mm.toFixed(1) }}
+            </div>
+            <div class="stat-label">
+              LENGTH (mm)
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ toolpathResult.stats.time_min.toFixed(2) }}</div>
-            <div class="stat-label">TIME (min)</div>
+            <div class="stat-value">
+              {{ toolpathResult.stats.time_min.toFixed(2) }}
+            </div>
+            <div class="stat-label">
+              TIME (min)
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ toolpathResult.moves.length }}</div>
-            <div class="stat-label">MOVES</div>
+            <div class="stat-value">
+              {{ toolpathResult.moves.length }}
+            </div>
+            <div class="stat-label">
+              MOVES
+            </div>
           </div>
           <div class="stat-card info">
-            <div class="stat-value">{{ (toolpathResult.stats.volume_mm3 / 1000).toFixed(1) }}</div>
-            <div class="stat-label">VOLUME (cm³)</div>
+            <div class="stat-value">
+              {{ (toolpathResult.stats.volume_mm3 / 1000).toFixed(1) }}
+            </div>
+            <div class="stat-label">
+              VOLUME (cm³)
+            </div>
           </div>
         </div>
 
         <div class="action-buttons">
-          <button @click="downloadJSON" class="btn btn-secondary">
+          <button
+            class="btn btn-secondary"
+            @click="downloadJSON"
+          >
             📥 Download JSON
           </button>
-          <button @click="exportGCode" class="btn btn-primary">
+          <button
+            class="btn btn-primary"
+            @click="exportGCode"
+          >
             📄 Export G-code
           </button>
         </div>
@@ -300,16 +496,26 @@
 
     <!-- Navigation -->
     <div class="navigation-buttons">
-      <button v-if="currentStage > 0" @click="currentStage--" class="btn btn-secondary">
+      <button
+        v-if="currentStage > 0"
+        class="btn btn-secondary"
+        @click="currentStage--"
+      >
         ⬅️ Previous Stage
       </button>
-      <button @click="resetPipeline" class="btn btn-secondary">
+      <button
+        class="btn btn-secondary"
+        @click="resetPipeline"
+      >
         🔄 Reset Pipeline
       </button>
     </div>
 
     <!-- Blueprint → Adaptive Preset (Phase 27.0) -->
-    <div class="stage-panel" style="margin-top: 40px; border: 2px solid #9C27B0;">
+    <div
+      class="stage-panel"
+      style="margin-top: 40px; border: 2px solid #9C27B0;"
+    >
       <h2>🎨 Blueprint → Adaptive Preset (Phase 27.0)</h2>
       <p class="stage-description">
         Upload a blueprint image and run one-click Blueprint → Adaptive pipeline directly.
@@ -319,99 +525,160 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
         <!-- File Upload -->
         <div>
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;">📄 Blueprint Image</h3>
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">
+            📄 Blueprint Image
+          </h3>
           <input
             type="file"
             accept="image/*"
             style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
             @change="onBlueprintPresetFileChange"
-          />
-          <div v-if="blueprintPresetFile" style="margin-top: 10px; color: #4CAF50;">
+          >
+          <div
+            v-if="blueprintPresetFile"
+            style="margin-top: 10px; color: #4CAF50;"
+          >
             ✅ {{ blueprintPresetFile.name }}
           </div>
         </div>
 
         <!-- Tool Configuration -->
         <div>
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;">🔧 Tool Configuration</h3>
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">
+            🔧 Tool Configuration
+          </h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Tool Ø (mm)</span>
-              <input type="number" step="0.1" v-model.number="blueprintCfg.tool_d" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.tool_d"
+                type="number"
+                step="0.1"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Stepover</span>
-              <input type="number" step="0.05" v-model.number="blueprintCfg.stepover" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.stepover"
+                type="number"
+                step="0.05"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Stepdown</span>
-              <input type="number" step="0.1" v-model.number="blueprintCfg.stepdown" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.stepdown"
+                type="number"
+                step="0.1"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Margin</span>
-              <input type="number" step="0.1" v-model.number="blueprintCfg.margin" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.margin"
+                type="number"
+                step="0.1"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Safe Z</span>
-              <input type="number" step="0.1" v-model.number="blueprintCfg.safe_z" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.safe_z"
+                type="number"
+                step="0.1"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column;">
               <span style="font-size: 0.9em; color: #666;">Z Rough</span>
-              <input type="number" step="0.1" v-model.number="blueprintCfg.z_rough" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.z_rough"
+                type="number"
+                step="0.1"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
             <label style="display: flex; flex-direction: column; grid-column: span 2;">
               <span style="font-size: 0.9em; color: #666;">Feed XY</span>
-              <input type="number" step="10" v-model.number="blueprintCfg.feed_xy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              <input
+                v-model.number="blueprintCfg.feed_xy"
+                type="number"
+                step="10"
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+              >
             </label>
           </div>
         </div>
 
         <!-- Actions -->
         <div>
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;">⚡ Actions</h3>
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">
+            ⚡ Actions
+          </h3>
           <div style="display: flex; flex-direction: column; gap: 10px;">
             <button
               class="btn btn-primary"
               :disabled="!blueprintPresetFile || runningBlueprintPipeline"
-              @click="runBlueprintPresetPipeline"
               style="width: 100%;"
+              @click="runBlueprintPresetPipeline"
             >
               {{ runningBlueprintPipeline ? '⏳ Running...' : '🚀 Run Blueprint → Adaptive' }}
             </button>
             <button
               class="btn"
               :disabled="!blueprintPipelineResponse"
-              @click="sendToArtStudio"
               style="width: 100%; background: #9C27B0; color: white;"
+              @click="sendToArtStudio"
             >
               🎨 Send to Art Studio
             </button>
           </div>
-          <div v-if="lastArtStudioExport" style="margin-top: 10px; font-size: 0.9em; color: #4CAF50;">
+          <div
+            v-if="lastArtStudioExport"
+            style="margin-top: 10px; font-size: 0.9em; color: #4CAF50;"
+          >
             ✅ Sent {{ lastArtStudioExport }}
           </div>
-          <div v-if="blueprintPresetError" style="margin-top: 10px; padding: 10px; background: #ffebee; border-radius: 4px; color: #c62828; font-size: 0.9em;">
+          <div
+            v-if="blueprintPresetError"
+            style="margin-top: 10px; padding: 10px; background: #ffebee; border-radius: 4px; color: #c62828; font-size: 0.9em;"
+          >
             ❌ {{ blueprintPresetError }}
           </div>
         </div>
 
         <!-- Stats -->
         <div v-if="blueprintPipelineStats">
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;">📊 Stats</h3>
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">
+            📊 Stats
+          </h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em;">
             <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
               <span style="color: #666;">Moves:</span>
               <strong style="display: block; font-size: 1.2em; margin-top: 5px;">{{ blueprintPipelineStats.move_count }}</strong>
             </div>
-            <div v-if="blueprintPipelineStats.length_mm" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+            <div
+              v-if="blueprintPipelineStats.length_mm"
+              style="padding: 10px; background: #f5f5f5; border-radius: 4px;"
+            >
               <span style="color: #666;">Length:</span>
               <strong style="display: block; font-size: 1.2em; margin-top: 5px;">{{ blueprintPipelineStats.length_mm }} mm</strong>
             </div>
-            <div v-if="blueprintPipelineStats.area_mm2" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+            <div
+              v-if="blueprintPipelineStats.area_mm2"
+              style="padding: 10px; background: #f5f5f5; border-radius: 4px;"
+            >
               <span style="color: #666;">Area:</span>
               <strong style="display: block; font-size: 1.2em; margin-top: 5px;">{{ blueprintPipelineStats.area_mm2 }} mm²</strong>
             </div>
-            <div v-if="blueprintPipelineStats.time_s" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+            <div
+              v-if="blueprintPipelineStats.time_s"
+              style="padding: 10px; background: #f5f5f5; border-radius: 4px;"
+            >
               <span style="color: #666;">Time:</span>
               <strong style="display: block; font-size: 1.2em; margin-top: 5px;">{{ blueprintPipelineStats.time_s }} s</strong>
             </div>
@@ -420,7 +687,9 @@
 
         <!-- Toolpath Preview -->
         <div style="grid-column: span 2;">
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;">🔍 Toolpath Preview</h3>
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">
+            🔍 Toolpath Preview
+          </h3>
           <div style="width: 100%; height: 300px; background: #1a1a1a; border-radius: 8px; position: relative; overflow: hidden;">
             <svg
               v-if="previewSegments.length"
@@ -437,11 +706,17 @@
                 stroke-width="0.4"
               />
             </svg>
-            <div v-else style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9em;">
+            <div
+              v-else
+              style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9em;"
+            >
               Run Blueprint → Adaptive to see toolpath
             </div>
           </div>
-          <div v-if="previewSegments.length" style="margin-top: 10px; text-align: center; font-size: 0.9em; color: #666;">
+          <div
+            v-if="previewSegments.length"
+            style="margin-top: 10px; text-align: center; font-size: 0.9em; color: #666;"
+          >
             {{ previewSegments.length }} segments
           </div>
         </div>

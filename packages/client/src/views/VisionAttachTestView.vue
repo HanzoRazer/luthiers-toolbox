@@ -27,7 +27,11 @@ function handleClose() {
     <h1>Vision Attach Widget Test</h1>
     <p>This is a test page for the VisionAttachToRunWidget component.</p>
 
-    <button v-if="!showWidget" @click="showWidget = true" class="show-btn">
+    <button
+      v-if="!showWidget"
+      class="show-btn"
+      @click="showWidget = true"
+    >
       Show Widget
     </button>
 

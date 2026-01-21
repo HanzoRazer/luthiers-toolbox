@@ -2,7 +2,9 @@
   <div class="rmos-log-viewer max-w-5xl mx-auto p-4 space-y-4">
     <!-- Header -->
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold">RMOS AI Log Viewer</h2>
+      <h2 class="text-xl font-semibold">
+        RMOS AI Log Viewer
+      </h2>
       <div class="text-xs text-gray-500">
         Filter by run_id, tool_id, or material_id
       </div>
@@ -11,59 +13,55 @@
     <!-- Filters -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1"
-          >Run ID</label
-        >
+        <label class="block text-xs font-medium text-gray-600 mb-1">Run ID</label>
         <input
           v-model="filters.runId"
           type="text"
           class="w-full border rounded px-2 py-1 text-sm"
           placeholder="run_id (optional)"
-        />
+        >
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1"
-          >Tool ID</label
-        >
+        <label class="block text-xs font-medium text-gray-600 mb-1">Tool ID</label>
         <input
           v-model="filters.toolId"
           type="text"
           class="w-full border rounded px-2 py-1 text-sm"
           placeholder="tool_id (optional)"
-        />
+        >
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1"
-          >Material ID</label
-        >
+        <label class="block text-xs font-medium text-gray-600 mb-1">Material ID</label>
         <input
           v-model="filters.materialId"
           type="text"
           class="w-full border rounded px-2 py-1 text-sm"
           placeholder="material_id (optional)"
-        />
+        >
       </div>
 
       <div class="flex flex-col space-y-2">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1"
-            >View</label
-          >
+          <label class="block text-xs font-medium text-gray-600 mb-1">View</label>
           <select
             v-model="filters.view"
             class="w-full border rounded px-2 py-1 text-sm"
           >
-            <option value="attempts">Attempts</option>
-            <option value="runs">Runs</option>
+            <option value="attempts">
+              Attempts
+            </option>
+            <option value="runs">
+              Runs
+            </option>
           </select>
         </div>
 
         <button
           class="w-full text-sm border rounded px-2 py-1 bg-gray-900 text-white hover:bg-gray-800"
-          @click="loadLogs"
           :disabled="loading"
+          @click="loadLogs"
         >
           <span v-if="!loading">Refresh</span>
           <span v-else>Loading...</span>
@@ -72,7 +70,10 @@
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="text-sm text-red-600">
+    <div
+      v-if="error"
+      class="text-sm text-red-600"
+    >
       {{ error }}
     </div>
 
@@ -86,21 +87,43 @@
 
     <!-- Attempts table -->
     <div v-if="!loading && logs.length > 0 && filters.view === 'attempts'">
-      <h3 class="text-sm font-semibold mb-2">Attempts ({{ logs.length }})</h3>
+      <h3 class="text-sm font-semibold mb-2">
+        Attempts ({{ logs.length }})
+      </h3>
       <div class="overflow-x-auto">
         <table class="min-w-full text-xs border">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-2 py-1 border">Time</th>
-              <th class="px-2 py-1 border">Run ID</th>
-              <th class="px-2 py-1 border">Attempt</th>
-              <th class="px-2 py-1 border">Mode</th>
-              <th class="px-2 py-1 border">Tool</th>
-              <th class="px-2 py-1 border">Material</th>
-              <th class="px-2 py-1 border">Engine</th>
-              <th class="px-2 py-1 border">Score</th>
-              <th class="px-2 py-1 border">Risk</th>
-              <th class="px-2 py-1 border">Acceptable</th>
+              <th class="px-2 py-1 border">
+                Time
+              </th>
+              <th class="px-2 py-1 border">
+                Run ID
+              </th>
+              <th class="px-2 py-1 border">
+                Attempt
+              </th>
+              <th class="px-2 py-1 border">
+                Mode
+              </th>
+              <th class="px-2 py-1 border">
+                Tool
+              </th>
+              <th class="px-2 py-1 border">
+                Material
+              </th>
+              <th class="px-2 py-1 border">
+                Engine
+              </th>
+              <th class="px-2 py-1 border">
+                Score
+              </th>
+              <th class="px-2 py-1 border">
+                Risk
+              </th>
+              <th class="px-2 py-1 border">
+                Acceptable
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -149,26 +172,53 @@
 
     <!-- Runs table -->
     <div v-if="!loading && logs.length > 0 && filters.view === 'runs'">
-      <h3 class="text-sm font-semibold mb-2">Runs ({{ logs.length }})</h3>
+      <h3 class="text-sm font-semibold mb-2">
+        Runs ({{ logs.length }})
+      </h3>
       <div class="overflow-x-auto">
         <table class="min-w-full text-xs border">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-2 py-1 border">Time</th>
-              <th class="px-2 py-1 border">Run ID</th>
-              <th class="px-2 py-1 border">Mode</th>
-              <th class="px-2 py-1 border">Tool</th>
-              <th class="px-2 py-1 border">Material</th>
-              <th class="px-2 py-1 border">Engine</th>
-              <th class="px-2 py-1 border">Attempts</th>
-              <th class="px-2 py-1 border">Max</th>
-              <th class="px-2 py-1 border">Score</th>
-              <th class="px-2 py-1 border">Risk</th>
-              <th class="px-2 py-1 border">Success</th>
+              <th class="px-2 py-1 border">
+                Time
+              </th>
+              <th class="px-2 py-1 border">
+                Run ID
+              </th>
+              <th class="px-2 py-1 border">
+                Mode
+              </th>
+              <th class="px-2 py-1 border">
+                Tool
+              </th>
+              <th class="px-2 py-1 border">
+                Material
+              </th>
+              <th class="px-2 py-1 border">
+                Engine
+              </th>
+              <th class="px-2 py-1 border">
+                Attempts
+              </th>
+              <th class="px-2 py-1 border">
+                Max
+              </th>
+              <th class="px-2 py-1 border">
+                Score
+              </th>
+              <th class="px-2 py-1 border">
+                Risk
+              </th>
+              <th class="px-2 py-1 border">
+                Success
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in logs" :key="`run-${row.run_id}-${row.timestamp}`">
+            <tr
+              v-for="row in logs"
+              :key="`run-${row.run_id}-${row.timestamp}`"
+            >
               <td class="px-2 py-1 border whitespace-nowrap">
                 {{ prettyTime(row.timestamp) }}
               </td>

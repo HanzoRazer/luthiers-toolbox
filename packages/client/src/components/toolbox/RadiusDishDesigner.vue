@@ -1,14 +1,26 @@
 <template>
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold">Radius Dish Designer</h1>
+      <h1 class="text-2xl font-bold">
+        Radius Dish Designer
+      </h1>
       <div class="flex items-center gap-2 text-sm">
         <span class="opacity-70">Guides:</span>
-        <a class="underline" href="/radius_dish/Acoustic_Guitar_Radius_Explained.pdf" target="_blank" rel="noopener">
+        <a
+          class="underline"
+          href="/radius_dish/Acoustic_Guitar_Radius_Explained.pdf"
+          target="_blank"
+          rel="noopener"
+        >
           Radius Explained (PDF)
         </a>
         <span>·</span>
-        <a class="underline" href="/radius_dish/Router_Trammel_Radius_Dish_Guide.pdf" target="_blank" rel="noopener">
+        <a
+          class="underline"
+          href="/radius_dish/Router_Trammel_Radius_Dish_Guide.pdf"
+          target="_blank"
+          rel="noopener"
+        >
           Router Trammel Guide (PDF)
         </a>
       </div>
@@ -27,10 +39,15 @@
     </div>
 
     <!-- Design Tab -->
-    <div v-if="tab === 'Design'" class="space-y-4">
+    <div
+      v-if="tab === 'Design'"
+      class="space-y-4"
+    >
       <div class="grid md:grid-cols-2 gap-4">
         <div class="space-y-2">
-          <h3 class="font-semibold text-lg">Radius Selection</h3>
+          <h3 class="font-semibold text-lg">
+            Radius Selection
+          </h3>
           <p class="text-sm opacity-80">
             Choose radius for archtop guitar tops/backs. 15ft (4572mm) is more curved, 25ft (7620mm) is flatter.
           </p>
@@ -38,26 +55,28 @@
           <div class="space-y-2">
             <label class="flex items-center gap-2">
               <input 
-                type="radio" 
                 v-model="selectedRadius" 
+                type="radio" 
                 value="15ft"
                 class="form-radio"
-              />
+              >
               <span>15 ft (4572 mm) - Traditional Archtop</span>
             </label>
             <label class="flex items-center gap-2">
               <input 
-                type="radio" 
                 v-model="selectedRadius" 
+                type="radio" 
                 value="25ft"
                 class="form-radio"
-              />
+              >
               <span>25 ft (7620 mm) - Shallow Arch</span>
             </label>
           </div>
 
           <div class="mt-4 p-4 bg-gray-50 rounded">
-            <h4 class="font-medium mb-2">Current Selection:</h4>
+            <h4 class="font-medium mb-2">
+              Current Selection:
+            </h4>
             <p><strong>Radius:</strong> {{ selectedRadius === '15ft' ? '15 feet (4572 mm)' : '25 feet (7620 mm)' }}</p>
             <p class="text-sm opacity-70 mt-1">
               {{ selectedRadius === '15ft' 
@@ -68,34 +87,39 @@
         </div>
 
         <div class="space-y-2">
-          <h3 class="font-semibold text-lg">Preview</h3>
-          <div class="border rounded p-4 bg-white" style="min-height: 300px;">
+          <h3 class="font-semibold text-lg">
+            Preview
+          </h3>
+          <div
+            class="border rounded p-4 bg-white"
+            style="min-height: 300px;"
+          >
             <img 
               :src="`/radius_dish/Radius_Arc_${selectedRadius}.svg`" 
               :alt="`Radius Arc ${selectedRadius}`"
               class="w-full h-auto"
               style="max-height: 400px; object-fit: contain;"
-            />
+            >
           </div>
         </div>
       </div>
 
       <div class="flex gap-2 flex-wrap">
         <button 
-          @click="downloadDXF" 
-          class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors" 
+          @click="downloadDXF"
         >
           Download DXF for CAM
         </button>
         <button 
-          @click="downloadGCode" 
-          class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
+          class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors" 
+          @click="downloadGCode"
         >
           Download G-code (GRBL)
         </button>
         <button 
-          @click="viewSVG" 
-          class="px-4 py-2 rounded border hover:bg-gray-50 transition-colors"
+          class="px-4 py-2 rounded border hover:bg-gray-50 transition-colors" 
+          @click="viewSVG"
         >
           View SVG in Gallery
         </button>
@@ -103,10 +127,15 @@
     </div>
 
     <!-- Calculator Tab -->
-    <div v-else-if="tab === 'Calculator'" class="space-y-4">
+    <div
+      v-else-if="tab === 'Calculator'"
+      class="space-y-4"
+    >
       <div class="grid md:grid-cols-2 gap-4">
         <div class="space-y-4">
-          <h3 class="font-semibold text-lg">Dish Depth Calculator</h3>
+          <h3 class="font-semibold text-lg">
+            Dish Depth Calculator
+          </h3>
           <p class="text-sm opacity-80">
             Calculate the depth of dish for a given width and radius.
           </p>
@@ -120,12 +149,15 @@
                 step="0.125"
                 class="border p-2 rounded" 
                 placeholder="e.g., 16"
-              />
+              >
             </label>
 
             <label class="flex flex-col">
               <span class="text-sm font-medium mb-1">Radius (feet)</span>
-              <select v-model.number="calc.radius" class="border p-2 rounded">
+              <select
+                v-model.number="calc.radius"
+                class="border p-2 rounded"
+              >
                 <option :value="15">15 ft (4572 mm)</option>
                 <option :value="25">25 ft (7620 mm)</option>
                 <option :value="12">12 ft (3658 mm) - Custom</option>
@@ -134,8 +166,8 @@
             </label>
 
             <button 
-              @click="calculateDepth" 
-              class="w-full px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              class="w-full px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors" 
+              @click="calculateDepth"
             >
               Calculate Depth
             </button>
@@ -143,8 +175,13 @@
         </div>
 
         <div class="space-y-2">
-          <h3 class="font-semibold text-lg">Results</h3>
-          <div v-if="calcResult" class="p-4 bg-gray-50 rounded space-y-2">
+          <h3 class="font-semibold text-lg">
+            Results
+          </h3>
+          <div
+            v-if="calcResult"
+            class="p-4 bg-gray-50 rounded space-y-2"
+          >
             <div>
               <strong>Dish Width:</strong> {{ calcResult.width_in }} inches ({{ calcResult.width_mm }} mm)
             </div>
@@ -156,11 +193,14 @@
             </div>
             <div class="text-sm opacity-70 mt-3">
               <strong>Formula:</strong> depth = R - √(R² - (W/2)²)
-              <br/>
+              <br>
               Where R = radius, W = width
             </div>
           </div>
-          <div v-else class="p-4 bg-gray-50 rounded text-sm opacity-70">
+          <div
+            v-else
+            class="p-4 bg-gray-50 rounded text-sm opacity-70"
+          >
             Enter values and click Calculate to see results.
           </div>
         </div>
@@ -168,12 +208,19 @@
     </div>
 
     <!-- CNC Setup Tab -->
-    <div v-else-if="tab === 'CNC Setup'" class="space-y-4">
-      <h3 class="font-semibold text-lg">CNC Machining Instructions</h3>
+    <div
+      v-else-if="tab === 'CNC Setup'"
+      class="space-y-4"
+    >
+      <h3 class="font-semibold text-lg">
+        CNC Machining Instructions
+      </h3>
       
       <div class="space-y-3">
         <div class="p-4 border rounded">
-          <h4 class="font-medium mb-2">1. Material Setup</h4>
+          <h4 class="font-medium mb-2">
+            1. Material Setup
+          </h4>
           <ul class="list-disc list-inside text-sm space-y-1 opacity-80">
             <li>Mount blank securely to spoilboard with screws or T-track clamps</li>
             <li>Ensure material is flat and level</li>
@@ -182,7 +229,9 @@
         </div>
 
         <div class="p-4 border rounded">
-          <h4 class="font-medium mb-2">2. Tool Selection</h4>
+          <h4 class="font-medium mb-2">
+            2. Tool Selection
+          </h4>
           <ul class="list-disc list-inside text-sm space-y-1 opacity-80">
             <li>Bit: 1/2" or 3/4" ball nose router bit</li>
             <li>Speed: 12,000-18,000 RPM (depending on material)</li>
@@ -192,7 +241,9 @@
         </div>
 
         <div class="p-4 border rounded">
-          <h4 class="font-medium mb-2">3. G-code Configuration</h4>
+          <h4 class="font-medium mb-2">
+            3. G-code Configuration
+          </h4>
           <ul class="list-disc list-inside text-sm space-y-1 opacity-80">
             <li>Machine: GRBL-compatible (Arduino-based CNC)</li>
             <li>Units: Inches (G20)</li>
@@ -202,7 +253,9 @@
         </div>
 
         <div class="p-4 border rounded bg-yellow-50">
-          <h4 class="font-medium mb-2">⚠️ Safety Notes</h4>
+          <h4 class="font-medium mb-2">
+            ⚠️ Safety Notes
+          </h4>
           <ul class="list-disc list-inside text-sm space-y-1">
             <li>Always run air cuts first (Z above workpiece) to verify toolpath</li>
             <li>Use dust collection - routing generates significant dust</li>
@@ -214,8 +267,8 @@
 
       <div class="mt-4">
         <button 
-          @click="downloadGCode" 
-          class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
+          class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors" 
+          @click="downloadGCode"
         >
           Download G-code ({{ selectedRadius }})
         </button>
@@ -223,12 +276,19 @@
     </div>
 
     <!-- Docs Tab -->
-    <div v-else-if="tab === 'Docs'" class="space-y-4">
-      <h3 class="font-semibold text-lg">Documentation & Theory</h3>
+    <div
+      v-else-if="tab === 'Docs'"
+      class="space-y-4"
+    >
+      <h3 class="font-semibold text-lg">
+        Documentation & Theory
+      </h3>
       
       <div class="grid md:grid-cols-2 gap-4">
         <div class="p-4 border rounded">
-          <h4 class="font-medium mb-2">📄 Acoustic Guitar Radius Explained</h4>
+          <h4 class="font-medium mb-2">
+            📄 Acoustic Guitar Radius Explained
+          </h4>
           <p class="text-sm opacity-80 mb-3">
             Comprehensive guide to radius arches in acoustic guitar construction. 
             Covers theory, measurements, and acoustic impact.
@@ -243,7 +303,9 @@
         </div>
 
         <div class="p-4 border rounded">
-          <h4 class="font-medium mb-2">🛠️ Router Trammel Guide</h4>
+          <h4 class="font-medium mb-2">
+            🛠️ Router Trammel Guide
+          </h4>
           <p class="text-sm opacity-80 mb-3">
             Step-by-step instructions for building and using a router trammel 
             to create radius dishes by hand (alternative to CNC).
@@ -259,7 +321,9 @@
       </div>
 
       <div class="mt-4 p-4 bg-gray-50 rounded">
-        <h4 class="font-medium mb-2">Quick Reference</h4>
+        <h4 class="font-medium mb-2">
+          Quick Reference
+        </h4>
         <div class="text-sm space-y-2 opacity-80">
           <p><strong>15 ft radius:</strong> Traditional carved archtop guitars (Gibson L-5, Super 400)</p>
           <p><strong>25 ft radius:</strong> Flatter arch, easier for beginners, modern jazz guitars</p>

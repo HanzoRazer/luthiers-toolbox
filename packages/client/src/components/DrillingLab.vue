@@ -4,10 +4,17 @@
     <div class="lab-header">
       <h2>🔩 Drilling Lab</h2>
       <div class="header-actions">
-        <button @click="exportGCode" class="btn-primary" :disabled="holes.length === 0">
+        <button
+          class="btn-primary"
+          :disabled="holes.length === 0"
+          @click="exportGCode"
+        >
           <span class="icon">📥</span> Export G-Code
         </button>
-        <button @click="clearAll" class="btn-secondary">
+        <button
+          class="btn-secondary"
+          @click="clearAll"
+        >
           <span class="icon">🗑️</span> Clear
         </button>
       </div>
@@ -21,13 +28,16 @@
         <section class="panel-section">
           <h3>Tool Setup</h3>
           <div class="tool-type-selector">
-            <label v-for="tool in toolTypes" :key="tool.value">
+            <label
+              v-for="tool in toolTypes"
+              :key="tool.value"
+            >
               <input
-                type="radio"
                 v-model="params.toolType"
+                type="radio"
                 :value="tool.value"
                 @change="updatePreview"
-              />
+              >
               <span>{{ tool.label }}</span>
             </label>
           </div>
@@ -35,34 +45,34 @@
           <div class="form-group">
             <label>Tool Diameter (mm)</label>
             <input
-              type="number"
               v-model.number="params.toolDiameter"
+              type="number"
               step="0.1"
               min="0.1"
               @input="updatePreview"
-            />
+            >
           </div>
 
           <div class="form-group">
             <label>Spindle RPM</label>
             <input
-              type="number"
               v-model.number="params.spindleRpm"
+              type="number"
               step="100"
               min="100"
               @input="updatePreview"
-            />
+            >
           </div>
 
           <div class="form-group">
             <label>Feed Rate (mm/min)</label>
             <input
-              type="number"
               v-model.number="params.feedRate"
+              type="number"
               step="10"
               min="10"
               @input="updatePreview"
-            />
+            >
           </div>
         </section>
 
@@ -70,38 +80,47 @@
         <section class="panel-section">
           <h3>Cycle Type</h3>
           <div class="cycle-selector">
-            <label v-for="cycle in cycleTypes" :key="cycle.value">
+            <label
+              v-for="cycle in cycleTypes"
+              :key="cycle.value"
+            >
               <input
-                type="radio"
                 v-model="params.cycle"
+                type="radio"
                 :value="cycle.value"
                 @change="updatePreview"
-              />
+              >
               <span>{{ cycle.label }}</span>
               <small>{{ cycle.description }}</small>
             </label>
           </div>
 
-          <div v-if="params.cycle === 'G83'" class="form-group">
+          <div
+            v-if="params.cycle === 'G83'"
+            class="form-group"
+          >
             <label>Peck Depth (mm)</label>
             <input
-              type="number"
               v-model.number="params.peckDepth"
+              type="number"
               step="1"
               min="1"
               @input="updatePreview"
-            />
+            >
           </div>
 
-          <div v-if="params.cycle === 'G84'" class="form-group">
+          <div
+            v-if="params.cycle === 'G84'"
+            class="form-group"
+          >
             <label>Thread Pitch (mm)</label>
             <input
-              type="number"
               v-model.number="params.threadPitch"
+              type="number"
               step="0.1"
               min="0.1"
               @input="updatePreview"
-            />
+            >
           </div>
         </section>
 
@@ -111,134 +130,259 @@
           <div class="form-group">
             <label>Hole Depth (mm, negative)</label>
             <input
-              type="number"
               v-model.number="params.depth"
+              type="number"
               step="1"
               max="0"
               @input="updatePreview"
-            />
+            >
           </div>
 
           <div class="form-group">
             <label>Retract Plane (mm)</label>
             <input
-              type="number"
               v-model.number="params.retract"
+              type="number"
               step="1"
               min="0"
               @input="updatePreview"
-            />
+            >
           </div>
 
           <div class="form-group">
             <label>Safe Z (mm)</label>
             <input
-              type="number"
               v-model.number="params.safeZ"
+              type="number"
               step="1"
               min="0"
               @input="updatePreview"
-            />
+            >
           </div>
         </section>
 
         <!-- Pattern Generator -->
         <section class="panel-section">
           <h3>Pattern Generator</h3>
-          <select v-model="patternType" class="pattern-selector">
-            <option value="manual">Manual (Click Canvas)</option>
-            <option value="linear">Linear Array</option>
-            <option value="circular">Circular Pattern</option>
-            <option value="grid">Grid Array</option>
-            <option value="csv">CSV Import</option>
+          <select
+            v-model="patternType"
+            class="pattern-selector"
+          >
+            <option value="manual">
+              Manual (Click Canvas)
+            </option>
+            <option value="linear">
+              Linear Array
+            </option>
+            <option value="circular">
+              Circular Pattern
+            </option>
+            <option value="grid">
+              Grid Array
+            </option>
+            <option value="csv">
+              CSV Import
+            </option>
           </select>
 
           <!-- Linear Pattern -->
-          <div v-if="patternType === 'linear'" class="pattern-controls">
+          <div
+            v-if="patternType === 'linear'"
+            class="pattern-controls"
+          >
             <div class="form-group">
               <label>Direction</label>
               <select v-model="linearPattern.direction">
-                <option value="x">Horizontal (X)</option>
-                <option value="y">Vertical (Y)</option>
+                <option value="x">
+                  Horizontal (X)
+                </option>
+                <option value="y">
+                  Vertical (Y)
+                </option>
               </select>
             </div>
             <div class="form-group">
               <label>Start Position</label>
               <div class="input-group">
-                <input type="number" v-model.number="linearPattern.startX" step="1" placeholder="X" />
-                <input type="number" v-model.number="linearPattern.startY" step="1" placeholder="Y" />
+                <input
+                  v-model.number="linearPattern.startX"
+                  type="number"
+                  step="1"
+                  placeholder="X"
+                >
+                <input
+                  v-model.number="linearPattern.startY"
+                  type="number"
+                  step="1"
+                  placeholder="Y"
+                >
               </div>
             </div>
             <div class="form-group">
               <label>Spacing (mm)</label>
-              <input type="number" v-model.number="linearPattern.spacing" step="1" min="1" />
+              <input
+                v-model.number="linearPattern.spacing"
+                type="number"
+                step="1"
+                min="1"
+              >
             </div>
             <div class="form-group">
               <label>Count</label>
-              <input type="number" v-model.number="linearPattern.count" step="1" min="1" />
+              <input
+                v-model.number="linearPattern.count"
+                type="number"
+                step="1"
+                min="1"
+              >
             </div>
-            <button @click="generateLinearPattern" class="btn-generate">Generate</button>
+            <button
+              class="btn-generate"
+              @click="generateLinearPattern"
+            >
+              Generate
+            </button>
           </div>
 
           <!-- Circular Pattern -->
-          <div v-if="patternType === 'circular'" class="pattern-controls">
+          <div
+            v-if="patternType === 'circular'"
+            class="pattern-controls"
+          >
             <div class="form-group">
               <label>Center Position</label>
               <div class="input-group">
-                <input type="number" v-model.number="circularPattern.centerX" step="1" placeholder="X" />
-                <input type="number" v-model.number="circularPattern.centerY" step="1" placeholder="Y" />
+                <input
+                  v-model.number="circularPattern.centerX"
+                  type="number"
+                  step="1"
+                  placeholder="X"
+                >
+                <input
+                  v-model.number="circularPattern.centerY"
+                  type="number"
+                  step="1"
+                  placeholder="Y"
+                >
               </div>
             </div>
             <div class="form-group">
               <label>Radius (mm)</label>
-              <input type="number" v-model.number="circularPattern.radius" step="1" min="1" />
+              <input
+                v-model.number="circularPattern.radius"
+                type="number"
+                step="1"
+                min="1"
+              >
             </div>
             <div class="form-group">
               <label>Count</label>
-              <input type="number" v-model.number="circularPattern.count" step="1" min="3" />
+              <input
+                v-model.number="circularPattern.count"
+                type="number"
+                step="1"
+                min="3"
+              >
             </div>
             <div class="form-group">
               <label>Start Angle (°)</label>
-              <input type="number" v-model.number="circularPattern.startAngle" step="1" />
+              <input
+                v-model.number="circularPattern.startAngle"
+                type="number"
+                step="1"
+              >
             </div>
-            <button @click="generateCircularPattern" class="btn-generate">Generate</button>
+            <button
+              class="btn-generate"
+              @click="generateCircularPattern"
+            >
+              Generate
+            </button>
           </div>
 
           <!-- Grid Pattern -->
-          <div v-if="patternType === 'grid'" class="pattern-controls">
+          <div
+            v-if="patternType === 'grid'"
+            class="pattern-controls"
+          >
             <div class="form-group">
               <label>Start Position</label>
               <div class="input-group">
-                <input type="number" v-model.number="gridPattern.startX" step="1" placeholder="X" />
-                <input type="number" v-model.number="gridPattern.startY" step="1" placeholder="Y" />
+                <input
+                  v-model.number="gridPattern.startX"
+                  type="number"
+                  step="1"
+                  placeholder="X"
+                >
+                <input
+                  v-model.number="gridPattern.startY"
+                  type="number"
+                  step="1"
+                  placeholder="Y"
+                >
               </div>
             </div>
             <div class="form-group">
               <label>Spacing</label>
               <div class="input-group">
-                <input type="number" v-model.number="gridPattern.spacingX" step="1" placeholder="X" />
-                <input type="number" v-model.number="gridPattern.spacingY" step="1" placeholder="Y" />
+                <input
+                  v-model.number="gridPattern.spacingX"
+                  type="number"
+                  step="1"
+                  placeholder="X"
+                >
+                <input
+                  v-model.number="gridPattern.spacingY"
+                  type="number"
+                  step="1"
+                  placeholder="Y"
+                >
               </div>
             </div>
             <div class="form-group">
               <label>Grid Size</label>
               <div class="input-group">
-                <input type="number" v-model.number="gridPattern.countX" step="1" min="1" placeholder="Cols" />
-                <input type="number" v-model.number="gridPattern.countY" step="1" min="1" placeholder="Rows" />
+                <input
+                  v-model.number="gridPattern.countX"
+                  type="number"
+                  step="1"
+                  min="1"
+                  placeholder="Cols"
+                >
+                <input
+                  v-model.number="gridPattern.countY"
+                  type="number"
+                  step="1"
+                  min="1"
+                  placeholder="Rows"
+                >
               </div>
             </div>
-            <button @click="generateGridPattern" class="btn-generate">Generate</button>
+            <button
+              class="btn-generate"
+              @click="generateGridPattern"
+            >
+              Generate
+            </button>
           </div>
 
           <!-- CSV Import -->
-          <div v-if="patternType === 'csv'" class="pattern-controls">
+          <div
+            v-if="patternType === 'csv'"
+            class="pattern-controls"
+          >
             <textarea
               v-model="csvInput"
               rows="6"
               placeholder="x,y&#10;10,10&#10;30,10&#10;50,10"
               class="csv-input"
-            ></textarea>
-            <button @click="importCsv" class="btn-generate">Import CSV</button>
+            />
+            <button
+              class="btn-generate"
+              @click="importCsv"
+            >
+              Import CSV
+            </button>
             <small class="hint">Format: x,y (one hole per line)</small>
           </div>
         </section>
@@ -254,16 +398,21 @@
               @click="selectHole(index)"
             >
               <input
-                type="checkbox"
                 v-model="hole.enabled"
+                type="checkbox"
                 @click.stop
                 @change="updatePreview"
-              />
+              >
               <div class="hole-info">
                 <strong>H{{ index + 1 }}</strong>
                 <small>X{{ hole.x.toFixed(1) }} Y{{ hole.y.toFixed(1) }}</small>
               </div>
-              <button @click.stop="removeHole(index)" class="btn-remove">✕</button>
+              <button
+                class="btn-remove"
+                @click.stop="removeHole(index)"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </section>
@@ -271,12 +420,26 @@
         <!-- Post Processor -->
         <section class="panel-section">
           <h3>Post Processor</h3>
-          <select v-model="params.postId" class="post-selector" @change="updatePreview">
-            <option value="GRBL">GRBL (Expanded)</option>
-            <option value="LinuxCNC">LinuxCNC (Modal)</option>
-            <option value="Mach4">Mach4 (Modal)</option>
-            <option value="PathPilot">PathPilot (Modal)</option>
-            <option value="Haas">Haas (Modal)</option>
+          <select
+            v-model="params.postId"
+            class="post-selector"
+            @change="updatePreview"
+          >
+            <option value="GRBL">
+              GRBL (Expanded)
+            </option>
+            <option value="LinuxCNC">
+              LinuxCNC (Modal)
+            </option>
+            <option value="Mach4">
+              Mach4 (Modal)
+            </option>
+            <option value="PathPilot">
+              PathPilot (Modal)
+            </option>
+            <option value="Haas">
+              Haas (Modal)
+            </option>
           </select>
         </section>
       </div>
@@ -289,7 +452,7 @@
           height="600"
           @click="onCanvasClick"
           @mousemove="onCanvasHover"
-        ></canvas>
+        />
 
         <!-- Stats Overlay -->
         <div class="stats-overlay">
@@ -307,11 +470,21 @@
     </div>
 
     <!-- G-Code Preview (Collapsible) -->
-    <div class="bottom-panel" :class="{ collapsed: gcodeCollapsed }">
-      <div class="panel-header" @click="gcodeCollapsed = !gcodeCollapsed">
+    <div
+      class="bottom-panel"
+      :class="{ collapsed: gcodeCollapsed }"
+    >
+      <div
+        class="panel-header"
+        @click="gcodeCollapsed = !gcodeCollapsed"
+      >
         <h3>G-Code Preview</h3>
         <div class="panel-actions">
-          <button @click.stop="copyGCode" class="btn-icon" title="Copy to clipboard">
+          <button
+            class="btn-icon"
+            title="Copy to clipboard"
+            @click.stop="copyGCode"
+          >
             📋
           </button>
           <button class="btn-icon toggle">
@@ -319,7 +492,10 @@
           </button>
         </div>
       </div>
-      <div v-if="!gcodeCollapsed" class="gcode-content">
+      <div
+        v-if="!gcodeCollapsed"
+        class="gcode-content"
+      >
         <pre>{{ gcodePreview }}</pre>
       </div>
     </div>

@@ -14,18 +14,29 @@ function cls(level: string) {
 </script>
 
 <template>
-  <div class="toast-host" aria-live="polite" aria-relevant="additions removals">
+  <div
+    class="toast-host"
+    aria-live="polite"
+    aria-relevant="additions removals"
+  >
     <div
       v-for="t in items"
       :key="t.id"
       class="toast"
       :class="cls(t.level)"
       role="status"
-      @click="toastStore.dismiss(t.id)"
       :title="t.detail || 'Click to dismiss'"
+      @click="toastStore.dismiss(t.id)"
     >
-      <div class="msg">{{ t.message }}</div>
-      <div v-if="t.detail" class="detail">{{ t.detail }}</div>
+      <div class="msg">
+        {{ t.message }}
+      </div>
+      <div
+        v-if="t.detail"
+        class="detail"
+      >
+        {{ t.detail }}
+      </div>
     </div>
   </div>
 </template>

@@ -8,24 +8,40 @@
       <div class="header-actions">
         <button 
           class="primary" 
-          @click="compare" 
-          :disabled="selectedIds.length < 2 || selectedIds.length > 4 || comparing"
+          :disabled="selectedIds.length < 2 || selectedIds.length > 4 || comparing" 
+          @click="compare"
         >
           {{ comparing ? 'Comparing…' : `Compare ${selectedIds.length} Jobs` }}
         </button>
-        <button class="secondary" @click="clearSelection" :disabled="selectedIds.length === 0">
+        <button
+          class="secondary"
+          :disabled="selectedIds.length === 0"
+          @click="clearSelection"
+        >
           Clear
         </button>
-        <button class="refresh" @click="refreshJobs" :disabled="loading">
+        <button
+          class="refresh"
+          :disabled="loading"
+          @click="refreshJobs"
+        >
           {{ loading ? 'Loading…' : 'Refresh' }}
         </button>
       </div>
     </div>
 
-    <p v-if="error" class="error">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </p>
 
     <!-- Job Selection List -->
-    <div class="job-list" v-if="!comparisonResult">
+    <div
+      v-if="!comparisonResult"
+      class="job-list"
+    >
       <div 
         v-for="job in jobs" 
         :key="job.run_id" 
@@ -34,11 +50,11 @@
       >
         <label class="checkbox-label">
           <input 
-            type="checkbox" 
+            v-model="selectedIds" 
+            type="checkbox"
             :value="job.run_id"
-            v-model="selectedIds"
             :disabled="selectedIds.length >= 4 && !selectedIds.includes(job.run_id)"
-          />
+          >
           <div class="job-info">
             <div class="job-name">{{ job.job_name || job.run_id }}</div>
             <div class="job-meta">
@@ -46,7 +62,10 @@
               <span>{{ job.material || '—' }}</span>
               <span>{{ job.post_id || '—' }}</span>
               <span v-if="job.sim_time_s">{{ formatTime(job.sim_time_s) }}</span>
-              <span v-if="job.sim_issue_count !== undefined" :class="issueClass(job.sim_issue_count)">
+              <span
+                v-if="job.sim_issue_count !== undefined"
+                :class="issueClass(job.sim_issue_count)"
+              >
                 {{ job.sim_issue_count }} issues
               </span>
             </div>
@@ -54,20 +73,33 @@
         </label>
       </div>
 
-      <p v-if="!loading && jobs.length === 0" class="empty">
+      <p
+        v-if="!loading && jobs.length === 0"
+        class="empty"
+      >
         No jobs found. Run some adaptive pocket or pipeline operations first.
       </p>
     </div>
 
     <!-- Comparison Table -->
-    <div v-if="comparisonResult" class="comparison-view">
+    <div
+      v-if="comparisonResult"
+      class="comparison-view"
+    >
       <div class="comparison-header">
         <h4>Comparison Results</h4>
         <div class="comparison-actions">
-          <button class="secondary" @click="exportCsv" :disabled="exporting">
+          <button
+            class="secondary"
+            :disabled="exporting"
+            @click="exportCsv"
+          >
             {{ exporting ? 'Exporting…' : 'Export CSV' }}
           </button>
-          <button class="secondary" @click="backToSelection">
+          <button
+            class="secondary"
+            @click="backToSelection"
+          >
             ← Back to Selection
           </button>
         </div>
@@ -78,98 +110,161 @@
           <thead>
             <tr>
               <th>Metric</th>
-              <th v-for="(job, idx) in comparisonResult.jobs" :key="job.run_id">
+              <th
+                v-for="(job, idx) in comparisonResult.jobs"
+                :key="job.run_id"
+              >
                 Job {{ idx + 1 }}
-                <div class="job-id">{{ job.job_name || job.run_id.slice(0, 8) }}</div>
+                <div class="job-id">
+                  {{ job.job_name || job.run_id.slice(0, 8) }}
+                </div>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="metric-name">Machine</td>
-              <td v-for="(val, idx) in comparisonResult.comparison.machine?.values" :key="idx">
+              <td class="metric-name">
+                Machine
+              </td>
+              <td
+                v-for="(val, idx) in comparisonResult.comparison.machine?.values"
+                :key="idx"
+              >
                 {{ val }}
               </td>
             </tr>
             <tr>
-              <td class="metric-name">Material</td>
-              <td v-for="(val, idx) in comparisonResult.comparison.material?.values" :key="idx">
+              <td class="metric-name">
+                Material
+              </td>
+              <td
+                v-for="(val, idx) in comparisonResult.comparison.material?.values"
+                :key="idx"
+              >
                 {{ val }}
               </td>
             </tr>
             <tr>
-              <td class="metric-name">Post Processor</td>
-              <td v-for="(val, idx) in comparisonResult.comparison.post?.values" :key="idx">
+              <td class="metric-name">
+                Post Processor
+              </td>
+              <td
+                v-for="(val, idx) in comparisonResult.comparison.post?.values"
+                :key="idx"
+              >
                 {{ val }}
               </td>
             </tr>
             <tr v-if="comparisonResult.comparison.predicted_time_s">
-              <td class="metric-name">Predicted Time</td>
+              <td class="metric-name">
+                Predicted Time
+              </td>
               <td 
                 v-for="(val, idx) in comparisonResult.comparison.predicted_time_s.values" 
                 :key="idx"
                 :class="winnerClass(idx, comparisonResult.comparison.predicted_time_s.winner)"
               >
                 {{ val !== null ? formatTime(val) : '—' }}
-                <span v-if="idx === comparisonResult.comparison.predicted_time_s.winner" class="winner-badge">✓</span>
+                <span
+                  v-if="idx === comparisonResult.comparison.predicted_time_s.winner"
+                  class="winner-badge"
+                >✓</span>
               </td>
             </tr>
             <tr v-if="comparisonResult.comparison.energy_j">
-              <td class="metric-name">Energy (J)</td>
+              <td class="metric-name">
+                Energy (J)
+              </td>
               <td 
                 v-for="(val, idx) in comparisonResult.comparison.energy_j.values" 
                 :key="idx"
                 :class="winnerClass(idx, comparisonResult.comparison.energy_j.winner)"
               >
                 {{ val !== null ? val.toFixed(1) : '—' }}
-                <span v-if="idx === comparisonResult.comparison.energy_j.winner" class="winner-badge">✓</span>
+                <span
+                  v-if="idx === comparisonResult.comparison.energy_j.winner"
+                  class="winner-badge"
+                >✓</span>
               </td>
             </tr>
             <tr v-if="comparisonResult.comparison.move_count">
-              <td class="metric-name">Move Count</td>
+              <td class="metric-name">
+                Move Count
+              </td>
               <td 
                 v-for="(val, idx) in comparisonResult.comparison.move_count.values" 
                 :key="idx"
                 :class="winnerClass(idx, comparisonResult.comparison.move_count.winner)"
               >
                 {{ val !== null ? val : '—' }}
-                <span v-if="idx === comparisonResult.comparison.move_count.winner" class="winner-badge">✓</span>
+                <span
+                  v-if="idx === comparisonResult.comparison.move_count.winner"
+                  class="winner-badge"
+                >✓</span>
               </td>
             </tr>
             <tr v-if="comparisonResult.comparison.issue_count">
-              <td class="metric-name">Issue Count</td>
+              <td class="metric-name">
+                Issue Count
+              </td>
               <td 
                 v-for="(val, idx) in comparisonResult.comparison.issue_count.values" 
                 :key="idx"
                 :class="winnerClass(idx, comparisonResult.comparison.issue_count.winner)"
               >
                 {{ val !== null ? val : '—' }}
-                <span v-if="idx === comparisonResult.comparison.issue_count.winner" class="winner-badge">✓</span>
+                <span
+                  v-if="idx === comparisonResult.comparison.issue_count.winner"
+                  class="winner-badge"
+                >✓</span>
               </td>
             </tr>
             <tr v-if="comparisonResult.comparison.max_deviation_pct">
-              <td class="metric-name">Max Deviation (%)</td>
+              <td class="metric-name">
+                Max Deviation (%)
+              </td>
               <td 
                 v-for="(val, idx) in comparisonResult.comparison.max_deviation_pct.values" 
                 :key="idx"
                 :class="winnerClass(idx, comparisonResult.comparison.max_deviation_pct.winner)"
               >
                 {{ val !== null ? val.toFixed(2) : '—' }}
-                <span v-if="idx === comparisonResult.comparison.max_deviation_pct.winner" class="winner-badge">✓</span>
+                <span
+                  v-if="idx === comparisonResult.comparison.max_deviation_pct.winner"
+                  class="winner-badge"
+                >✓</span>
               </td>
             </tr>
             <tr>
-              <td class="metric-name">Notes</td>
-              <td v-for="(val, idx) in comparisonResult.comparison.notes?.values" :key="idx" class="notes-cell">
+              <td class="metric-name">
+                Notes
+              </td>
+              <td
+                v-for="(val, idx) in comparisonResult.comparison.notes?.values"
+                :key="idx"
+                class="notes-cell"
+              >
                 {{ val || '—' }}
               </td>
             </tr>
             <tr>
-              <td class="metric-name">Tags</td>
-              <td v-for="(val, idx) in comparisonResult.comparison.tags?.values" :key="idx">
+              <td class="metric-name">
+                Tags
+              </td>
+              <td
+                v-for="(val, idx) in comparisonResult.comparison.tags?.values"
+                :key="idx"
+              >
                 <span v-if="val.length === 0">—</span>
-                <span v-else class="tag-list">
-                  <span v-for="tag in val" :key="tag" class="tag">#{{ tag }}</span>
+                <span
+                  v-else
+                  class="tag-list"
+                >
+                  <span
+                    v-for="tag in val"
+                    :key="tag"
+                    class="tag"
+                  >#{{ tag }}</span>
                 </span>
               </td>
             </tr>

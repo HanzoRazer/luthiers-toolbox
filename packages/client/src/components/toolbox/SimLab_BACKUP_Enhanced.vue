@@ -3,12 +3,19 @@
     <!-- Header -->
     <div class="header">
       <h2 class="title">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        <svg
+          class="icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+        >
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
         </svg>
         SimLab — Animated G-code Playback
       </h2>
-      <div class="subtitle">Visualize, validate, and analyze toolpaths in real-time</div>
+      <div class="subtitle">
+        Visualize, validate, and analyze toolpaths in real-time
+      </div>
     </div>
 
     <!-- Controls Panel -->
@@ -16,8 +23,8 @@
       <div class="control-group">
         <label class="control-label">Safe Z</label>
         <input 
-          type="number" 
           v-model.number="safeZ" 
+          type="number" 
           step="0.1" 
           class="control-input"
           title="Minimum safe Z height for rapids"
@@ -27,17 +34,24 @@
 
       <div class="control-group">
         <label class="control-label">Units</label>
-        <select v-model="units" class="control-select">
-          <option value="mm">Millimeters</option>
-          <option value="inch">Inches</option>
+        <select
+          v-model="units"
+          class="control-select"
+        >
+          <option value="mm">
+            Millimeters
+          </option>
+          <option value="inch">
+            Inches
+          </option>
         </select>
       </div>
 
       <div class="control-group">
         <label class="control-label">Feed XY</label>
         <input 
-          type="number" 
           v-model.number="feedXY" 
+          type="number" 
           step="100" 
           class="control-input"
           title="XY feedrate"
@@ -48,8 +62,8 @@
       <div class="control-group">
         <label class="control-label">Feed Z</label>
         <input 
-          type="number" 
           v-model.number="feedZ" 
+          type="number" 
           step="50" 
           class="control-input"
           title="Z plunge feedrate"
@@ -63,13 +77,22 @@
       <div class="section-header">
         <label class="section-title">G-code Input</label>
         <div class="section-actions">
-          <button @click="loadSample" class="btn-secondary btn-sm">
+          <button
+            class="btn-secondary btn-sm"
+            @click="loadSample"
+          >
             Load Sample
           </button>
-          <button @click="clearCode" class="btn-secondary btn-sm">
+          <button
+            class="btn-secondary btn-sm"
+            @click="clearCode"
+          >
             Clear
           </button>
-          <button @click="pasteFromClipboard" class="btn-secondary btn-sm">
+          <button
+            class="btn-secondary btn-sm"
+            @click="pasteFromClipboard"
+          >
             📋 Paste
           </button>
         </div>
@@ -79,7 +102,7 @@
         class="gcode-textarea"
         placeholder="Paste G-code here or load a sample..."
         spellcheck="false"
-      ></textarea>
+      />
       <div class="gcode-stats">
         {{ gcode.split('\n').length }} lines
       </div>
@@ -87,65 +110,133 @@
 
     <!-- Simulation Actions -->
     <div class="action-row">
-      <button @click="runSimulation" class="btn-primary" :disabled="isSimulating || !gcode.trim()">
+      <button
+        class="btn-primary"
+        :disabled="isSimulating || !gcode.trim()"
+        @click="runSimulation"
+      >
         <span v-if="!isSimulating">▶ Run Simulation</span>
         <span v-else>⏳ Simulating...</span>
       </button>
-      <button @click="exportCSV" class="btn-secondary" :disabled="!simulationData">
+      <button
+        class="btn-secondary"
+        :disabled="!simulationData"
+        @click="exportCSV"
+      >
         📥 Export CSV
       </button>
-      <button @click="copyToClipboard" class="btn-secondary" :disabled="!simulationData">
+      <button
+        class="btn-secondary"
+        :disabled="!simulationData"
+        @click="copyToClipboard"
+      >
         📋 Copy Summary
       </button>
     </div>
 
     <!-- Summary Cards -->
-    <div v-if="summary" class="summary-grid">
+    <div
+      v-if="summary"
+      class="summary-grid"
+    >
       <div class="summary-card">
-        <div class="summary-label">Total XY Distance</div>
-        <div class="summary-value">{{ summary.total_xy_mm?.toFixed(2) || '0.00' }} mm</div>
+        <div class="summary-label">
+          Total XY Distance
+        </div>
+        <div class="summary-value">
+          {{ summary.total_xy_mm?.toFixed(2) || '0.00' }} mm
+        </div>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Total Z Distance</div>
-        <div class="summary-value">{{ summary.total_z_mm?.toFixed(2) || '0.00' }} mm</div>
+        <div class="summary-label">
+          Total Z Distance
+        </div>
+        <div class="summary-value">
+          {{ summary.total_z_mm?.toFixed(2) || '0.00' }} mm
+        </div>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Estimated Time</div>
-        <div class="summary-value">{{ summary.est_minutes?.toFixed(2) || '0.00' }} min</div>
+        <div class="summary-label">
+          Estimated Time
+        </div>
+        <div class="summary-value">
+          {{ summary.est_minutes?.toFixed(2) || '0.00' }} min
+        </div>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Move Count</div>
-        <div class="summary-value">{{ summary.move_count || 0 }}</div>
+        <div class="summary-label">
+          Move Count
+        </div>
+        <div class="summary-value">
+          {{ summary.move_count || 0 }}
+        </div>
       </div>
-      <div class="summary-card" :class="safety?.safe ? 'safe' : 'unsafe'">
-        <div class="summary-label">Safety Status</div>
+      <div
+        class="summary-card"
+        :class="safety?.safe ? 'safe' : 'unsafe'"
+      >
+        <div class="summary-label">
+          Safety Status
+        </div>
         <div class="summary-value">
           {{ safety?.safe ? '✓ SAFE' : '⚠ ISSUES' }}
         </div>
       </div>
-      <div class="summary-card" :class="issues.length > 0 ? 'warning' : ''">
-        <div class="summary-label">Issues</div>
-        <div class="summary-value">{{ issues.length }}</div>
+      <div
+        class="summary-card"
+        :class="issues.length > 0 ? 'warning' : ''"
+      >
+        <div class="summary-label">
+          Issues
+        </div>
+        <div class="summary-value">
+          {{ issues.length }}
+        </div>
       </div>
     </div>
 
     <!-- Issues Panel -->
-    <div v-if="issues.length > 0" class="issues-panel">
+    <div
+      v-if="issues.length > 0"
+      class="issues-panel"
+    >
       <div class="panel-header">
         <span class="panel-title">⚠ Safety Issues ({{ issues.length }})</span>
-        <button @click="showIssuesDetail = !showIssuesDetail" class="btn-link">
+        <button
+          class="btn-link"
+          @click="showIssuesDetail = !showIssuesDetail"
+        >
           {{ showIssuesDetail ? 'Hide' : 'Show' }} Details
         </button>
       </div>
-      <div v-if="showIssuesDetail" class="issues-list">
-        <div v-for="issue in issues" :key="issue.index" class="issue-item" :class="issue.severity">
-          <div class="issue-badge">{{ issue.severity?.toUpperCase() }}</div>
-          <div class="issue-content">
-            <div class="issue-type">{{ issue.type }}</div>
-            <div class="issue-msg">{{ issue.msg }}</div>
-            <div class="issue-meta">Move #{{ issue.index }} | Line {{ issue.line }}</div>
+      <div
+        v-if="showIssuesDetail"
+        class="issues-list"
+      >
+        <div
+          v-for="issue in issues"
+          :key="issue.index"
+          class="issue-item"
+          :class="issue.severity"
+        >
+          <div class="issue-badge">
+            {{ issue.severity?.toUpperCase() }}
           </div>
-          <button @click="jumpToMove(issue.index)" class="btn-link">
+          <div class="issue-content">
+            <div class="issue-type">
+              {{ issue.type }}
+            </div>
+            <div class="issue-msg">
+              {{ issue.msg }}
+            </div>
+            <div class="issue-meta">
+              Move #{{ issue.index }} | Line {{ issue.line }}
+            </div>
+          </div>
+          <button
+            class="btn-link"
+            @click="jumpToMove(issue.index)"
+          >
             Jump to move
           </button>
         </div>
@@ -153,27 +244,44 @@
     </div>
 
     <!-- Playback Controls -->
-    <div v-if="moves.length > 0" class="playback-section">
+    <div
+      v-if="moves.length > 0"
+      class="playback-section"
+    >
       <div class="playback-controls">
-        <button @click="togglePlayback" class="btn-playback">
+        <button
+          class="btn-playback"
+          @click="togglePlayback"
+        >
           <span v-if="!isPlaying">▶</span>
           <span v-else>⏸</span>
         </button>
-        <button @click="resetPlayback" class="btn-secondary btn-sm">
+        <button
+          class="btn-secondary btn-sm"
+          @click="resetPlayback"
+        >
           ⏮ Reset
         </button>
-        <button @click="stepBackward" class="btn-secondary btn-sm" :disabled="currentFrame === 0">
+        <button
+          class="btn-secondary btn-sm"
+          :disabled="currentFrame === 0"
+          @click="stepBackward"
+        >
           ⏪
         </button>
-        <button @click="stepForward" class="btn-secondary btn-sm" :disabled="currentFrame >= moves.length - 1">
+        <button
+          class="btn-secondary btn-sm"
+          :disabled="currentFrame >= moves.length - 1"
+          @click="stepForward"
+        >
           ⏩
         </button>
         
         <div class="speed-control">
           <label class="speed-label">Speed</label>
           <input 
-            type="range" 
             v-model.number="playbackSpeed" 
+            type="range" 
             min="0.1" 
             max="10" 
             step="0.1" 
@@ -185,8 +293,8 @@
 
       <div class="scrubber-section">
         <input 
-          type="range" 
           v-model.number="currentFrame" 
+          type="range" 
           min="0" 
           :max="moves.length - 1" 
           class="scrubber"
@@ -213,33 +321,53 @@
         @mousemove="onCanvasMouseMove"
         @mouseup="onCanvasMouseUp"
         @wheel="onCanvasWheel"
-      ></canvas>
+      />
       <div class="canvas-overlay">
         <div class="canvas-legend">
           <div class="legend-item">
-            <span class="legend-color rapid"></span>
+            <span class="legend-color rapid" />
             <span>G0 (Rapid)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-color feed"></span>
+            <span class="legend-color feed" />
             <span>G1 (Feed)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-color arc"></span>
+            <span class="legend-color arc" />
             <span>G2/G3 (Arc)</span>
           </div>
         </div>
         <div class="canvas-controls">
-          <button @click="resetView" class="btn-canvas">Reset View</button>
-          <button @click="fitToCanvas" class="btn-canvas">Fit</button>
-          <button @click="toggleGrid" class="btn-canvas">Grid {{ showGrid ? 'On' : 'Off' }}</button>
+          <button
+            class="btn-canvas"
+            @click="resetView"
+          >
+            Reset View
+          </button>
+          <button
+            class="btn-canvas"
+            @click="fitToCanvas"
+          >
+            Fit
+          </button>
+          <button
+            class="btn-canvas"
+            @click="toggleGrid"
+          >
+            Grid {{ showGrid ? 'On' : 'Off' }}
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Current Move Info -->
-    <div v-if="currentMove" class="move-info-panel">
-      <div class="move-info-header">Current Move</div>
+    <div
+      v-if="currentMove"
+      class="move-info-panel"
+    >
+      <div class="move-info-header">
+        Current Move
+      </div>
       <div class="move-info-grid">
         <div class="move-info-item">
           <span class="move-info-label">Command:</span>

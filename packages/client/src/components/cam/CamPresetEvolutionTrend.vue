@@ -7,9 +7,16 @@
         Preset Evolution Trend — {{ modeLabel }}
       </div>
       <div class="flex items-center gap-2">
-        <select v-model="bucketMode" class="border rounded px-2 py-1 text-[11px]">
-          <option value="week">Week</option>
-          <option value="version">Version</option>
+        <select
+          v-model="bucketMode"
+          class="border rounded px-2 py-1 text-[11px]"
+        >
+          <option value="week">
+            Week
+          </option>
+          <option value="version">
+            Version
+          </option>
         </select>
         <button
           type="button"
@@ -21,18 +28,46 @@
       </div>
     </div>
 
-    <div v-if="points.A.length === 0" class="text-[11px] text-gray-500">
+    <div
+      v-if="points.A.length === 0"
+      class="text-[11px] text-gray-500"
+    >
       Not enough data to plot.
     </div>
 
-    <div v-else class="w-full h-48">
-      <svg class="w-full h-full" viewBox="0 0 100 60" preserveAspectRatio="none">
+    <div
+      v-else
+      class="w-full h-48"
+    >
+      <svg
+        class="w-full h-full"
+        viewBox="0 0 100 60"
+        preserveAspectRatio="none"
+      >
         <!-- Plot area box -->
-        <rect x="8" y="6" width="86" height="46" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.4" />
+        <rect
+          x="8"
+          y="6"
+          width="86"
+          height="46"
+          fill="#ffffff"
+          stroke="#e5e7eb"
+          stroke-width="0.4"
+        />
 
         <!-- Y grid lines -->
-        <g v-for="(gy, i) in yGridLines" :key="'y'+i">
-          <line :x1="8" :x2="94" :y1="gy" :y2="gy" stroke="#f1f5f9" stroke-width="0.3" />
+        <g
+          v-for="(gy, i) in yGridLines"
+          :key="'y'+i"
+        >
+          <line
+            :x1="8"
+            :x2="94"
+            :y1="gy"
+            :y2="gy"
+            stroke="#f1f5f9"
+            stroke-width="0.3"
+          />
         </g>
 
         <!-- A line (blue) -->
@@ -53,29 +88,91 @@
         />
 
         <!-- Last point markers -->
-        <circle v-if="lastA" :cx="lastA.x" :cy="lastA.y" r="1.1" fill="#1d4ed8" />
-        <circle v-if="lastB" :cx="lastB.x" :cy="lastB.y" r="1.1" fill="#be123c" />
+        <circle
+          v-if="lastA"
+          :cx="lastA.x"
+          :cy="lastA.y"
+          r="1.1"
+          fill="#1d4ed8"
+        />
+        <circle
+          v-if="lastB"
+          :cx="lastB.x"
+          :cy="lastB.y"
+          r="1.1"
+          fill="#be123c"
+        />
 
         <!-- X labels -->
-        <g v-for="(t, idx) in tickLabels" :key="'t'+idx">
-          <text :x="t.x" y="56.3" text-anchor="middle" font-size="2.1" fill="#6b7280">
+        <g
+          v-for="(t, idx) in tickLabels"
+          :key="'t'+idx"
+        >
+          <text
+            :x="t.x"
+            y="56.3"
+            text-anchor="middle"
+            font-size="2.1"
+            fill="#6b7280"
+          >
             {{ t.label }}
           </text>
         </g>
 
         <!-- Y labels -->
-        <g v-for="(ly, idx) in yLabelObjs" :key="'ly'+idx">
-          <text x="5.8" :y="ly.y" text-anchor="end" font-size="2.1" fill="#6b7280">{{ ly.text }}</text>
+        <g
+          v-for="(ly, idx) in yLabelObjs"
+          :key="'ly'+idx"
+        >
+          <text
+            x="5.8"
+            :y="ly.y"
+            text-anchor="end"
+            font-size="2.1"
+            fill="#6b7280"
+          >{{ ly.text }}</text>
         </g>
 
         <!-- Legend -->
         <g>
-          <rect x="8" y="2.5" width="86" height="3.5" fill="transparent" />
-          <circle cx="14" cy="4.2" r="0.9" fill="#2563eb" />
-          <text x="16.5" y="4.7" font-size="2.4" fill="#1f2937">A risk</text>
-          <circle cx="30" cy="4.2" r="0.9" fill="#e11d48" />
-          <text x="32.5" y="4.7" font-size="2.4" fill="#1f2937">B risk</text>
-          <text x="88" y="4.7" font-size="2.2" text-anchor="end" :fill="deltaColor">
+          <rect
+            x="8"
+            y="2.5"
+            width="86"
+            height="3.5"
+            fill="transparent"
+          />
+          <circle
+            cx="14"
+            cy="4.2"
+            r="0.9"
+            fill="#2563eb"
+          />
+          <text
+            x="16.5"
+            y="4.7"
+            font-size="2.4"
+            fill="#1f2937"
+          >A risk</text>
+          <circle
+            cx="30"
+            cy="4.2"
+            r="0.9"
+            fill="#e11d48"
+          />
+          <text
+            x="32.5"
+            y="4.7"
+            font-size="2.4"
+            fill="#1f2937"
+          >B risk</text>
+          <text
+            x="88"
+            y="4.7"
+            font-size="2.2"
+            text-anchor="end"
+            :fill="deltaColor"
+          >
             Δ (B−A): {{ lastDeltaStr }}
           </text>
         </g>

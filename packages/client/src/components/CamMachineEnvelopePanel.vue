@@ -29,7 +29,10 @@ Features:
           v-model="selectedId"
           class="border rounded px-2 py-1 text-[11px] w-44"
         >
-          <option disabled value="">
+          <option
+            disabled
+            value=""
+          >
             Select machine…
           </option>
           <option
@@ -52,21 +55,32 @@ Features:
       </button>
     </div>
 
-    <p v-if="error" class="text-[11px] text-red-600">
+    <p
+      v-if="error"
+      class="text-[11px] text-red-600"
+    >
       {{ error }}
     </p>
 
-    <div v-if="current" class="space-y-1">
+    <div
+      v-if="current"
+      class="space-y-1"
+    >
       <div class="text-[11px] text-gray-700">
         <span class="font-semibold">{{ current.name }}</span>
-        <span v-if="current.controller" class="text-[10px] text-gray-500">
+        <span
+          v-if="current.controller"
+          class="text-[10px] text-gray-500"
+        >
           · {{ current.controller }}
         </span>
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-[10px] text-gray-500">
         <div>
-          <div class="uppercase text-gray-400">Envelope X/Y</div>
+          <div class="uppercase text-gray-400">
+            Envelope X/Y
+          </div>
           <div>
             X: {{ fmt(current.limits?.min_x) }} → {{ fmt(current.limits?.max_x) }}
             {{ units }}
@@ -77,7 +91,9 @@ Features:
           </div>
         </div>
         <div>
-          <div class="uppercase text-gray-400">Envelope Z</div>
+          <div class="uppercase text-gray-400">
+            Envelope Z
+          </div>
           <div>
             Z: {{ fmt(current.limits?.min_z) }} → {{ fmt(current.limits?.max_z) }}
             {{ units }}
@@ -120,7 +136,10 @@ Features:
         </p>
       </div>
 
-      <p class="text-[10px] text-gray-500" v-else>
+      <p
+        v-else
+        class="text-[10px] text-gray-500"
+      >
         No CAM defaults defined for this machine. Manual values in BridgeLab will be used.
       </p>
 
@@ -129,7 +148,10 @@ Features:
       </p>
     </div>
 
-    <p v-else-if="!loading && !error" class="text-[11px] text-gray-500">
+    <p
+      v-else-if="!loading && !error"
+      class="text-[11px] text-gray-500"
+    >
       No machines loaded. Click Reload to fetch from
       <span class="font-mono">/cam/machines</span>.
     </p>

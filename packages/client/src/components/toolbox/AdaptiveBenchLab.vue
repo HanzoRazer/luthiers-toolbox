@@ -1,7 +1,9 @@
 <template>
   <div class="adaptive-bench-lab">
     <h2>Adaptive Benchmark Lab (N16)</h2>
-    <p class="subtitle">Performance profiling for adaptive spiral algorithms • Trochoidal corner visualization</p>
+    <p class="subtitle">
+      Performance profiling for adaptive spiral algorithms • Trochoidal corner visualization
+    </p>
 
     <div class="lab-grid">
       <!-- Left: Parameters & Controls -->
@@ -12,11 +14,21 @@
           <h4>Geometry</h4>
           <label>
             Width (mm):
-            <input type="number" v-model.number="width" step="10" min="10" />
+            <input
+              v-model.number="width"
+              type="number"
+              step="10"
+              min="10"
+            >
           </label>
           <label>
             Height (mm):
-            <input type="number" v-model.number="height" step="10" min="10" />
+            <input
+              v-model.number="height"
+              type="number"
+              step="10"
+              min="10"
+            >
           </label>
         </div>
 
@@ -24,11 +36,21 @@
           <h4>Tool</h4>
           <label>
             Tool Diameter (mm):
-            <input type="number" v-model.number="toolDia" step="0.5" min="1" />
+            <input
+              v-model.number="toolDia"
+              type="number"
+              step="0.5"
+              min="1"
+            >
           </label>
           <label>
             Stepover (mm):
-            <input type="number" v-model.number="stepover" step="0.1" min="0.1" />
+            <input
+              v-model.number="stepover"
+              type="number"
+              step="0.1"
+              min="0.1"
+            >
           </label>
         </div>
 
@@ -36,7 +58,12 @@
           <h4>Spiral Options</h4>
           <label>
             Corner Fillet (mm):
-            <input type="number" v-model.number="cornerFillet" step="0.1" min="0" />
+            <input
+              v-model.number="cornerFillet"
+              type="number"
+              step="0.1"
+              min="0"
+            >
           </label>
         </div>
 
@@ -44,11 +71,21 @@
           <h4>Trochoid Options</h4>
           <label>
             Loop Pitch (mm):
-            <input type="number" v-model.number="loopPitch" step="0.1" min="0.1" />
+            <input
+              v-model.number="loopPitch"
+              type="number"
+              step="0.1"
+              min="0.1"
+            >
           </label>
           <label>
             Amplitude (mm):
-            <input type="number" v-model.number="amplitude" step="0.1" min="0" />
+            <input
+              v-model.number="amplitude"
+              type="number"
+              step="0.1"
+              min="0"
+            >
           </label>
         </div>
 
@@ -56,18 +93,35 @@
           <h4>Benchmark</h4>
           <label>
             Runs:
-            <input type="number" v-model.number="benchRuns" step="10" min="1" />
+            <input
+              v-model.number="benchRuns"
+              type="number"
+              step="10"
+              min="1"
+            >
           </label>
         </div>
 
         <div class="actions">
-          <button @click="generateSpiral" :disabled="loading" class="btn-primary">
+          <button
+            :disabled="loading"
+            class="btn-primary"
+            @click="generateSpiral"
+          >
             {{ loading ? 'Generating...' : 'Generate Spiral' }}
           </button>
-          <button @click="generateTrochoid" :disabled="loading" class="btn-primary">
+          <button
+            :disabled="loading"
+            class="btn-primary"
+            @click="generateTrochoid"
+          >
             {{ loading ? 'Generating...' : 'Generate Trochoid' }}
           </button>
-          <button @click="runBenchmark" :disabled="loading" class="btn-secondary">
+          <button
+            :disabled="loading"
+            class="btn-secondary"
+            @click="runBenchmark"
+          >
             {{ loading ? 'Running...' : 'Run Benchmark' }}
           </button>
         </div>
@@ -77,35 +131,64 @@
       <div class="output-panel">
         <h3>Visualization</h3>
 
-        <div v-if="error" class="error-banner">
+        <div
+          v-if="error"
+          class="error-banner"
+        >
           <strong>⚠️ Error:</strong> {{ error }}
         </div>
 
-        <div v-if="svgContent" class="svg-viewer" v-html="svgContent"></div>
+        <div
+          v-if="svgContent"
+          class="svg-viewer"
+          v-html="svgContent"
+        />
 
-        <div v-if="benchResult" class="bench-results">
+        <div
+          v-if="benchResult"
+          class="bench-results"
+        >
           <h4>Benchmark Results</h4>
           <div class="stats-grid">
             <div class="stat">
-              <div class="stat-label">Total Time</div>
-              <div class="stat-value">{{ benchResult.total_ms.toFixed(2) }} ms</div>
+              <div class="stat-label">
+                Total Time
+              </div>
+              <div class="stat-value">
+                {{ benchResult.total_ms.toFixed(2) }} ms
+              </div>
             </div>
             <div class="stat">
-              <div class="stat-label">Average Time</div>
-              <div class="stat-value">{{ benchResult.avg_ms.toFixed(3) }} ms</div>
+              <div class="stat-label">
+                Average Time
+              </div>
+              <div class="stat-value">
+                {{ benchResult.avg_ms.toFixed(3) }} ms
+              </div>
             </div>
             <div class="stat">
-              <div class="stat-label">Runs</div>
-              <div class="stat-value">{{ benchResult.runs }}</div>
+              <div class="stat-label">
+                Runs
+              </div>
+              <div class="stat-value">
+                {{ benchResult.runs }}
+              </div>
             </div>
             <div class="stat">
-              <div class="stat-label">Geometry</div>
-              <div class="stat-value">{{ benchResult.width }}×{{ benchResult.height }} mm</div>
+              <div class="stat-label">
+                Geometry
+              </div>
+              <div class="stat-value">
+                {{ benchResult.width }}×{{ benchResult.height }} mm
+              </div>
             </div>
           </div>
         </div>
 
-        <div v-if="!svgContent && !benchResult && !error" class="placeholder">
+        <div
+          v-if="!svgContent && !benchResult && !error"
+          class="placeholder"
+        >
           <p>Select an action to visualize spiral or trochoid paths, or run performance benchmark.</p>
         </div>
       </div>

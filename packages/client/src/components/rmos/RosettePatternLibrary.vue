@@ -1,7 +1,9 @@
 <template>
   <div class="border rounded-lg p-3 space-y-2 text-xs">
     <div class="flex items-center justify-between">
-      <h2 class="text-sm font-semibold">Rosette Pattern Library</h2>
+      <h2 class="text-sm font-semibold">
+        Rosette Pattern Library
+      </h2>
       <button
         class="border rounded px-2 py-1 hover:bg-gray-100"
         @click="createQuickPattern"
@@ -10,14 +12,23 @@
       </button>
     </div>
 
-    <div v-if="store.loading" class="text-gray-500">
+    <div
+      v-if="store.loading"
+      class="text-gray-500"
+    >
       Loading patterns…
     </div>
-    <div v-else-if="store.patterns.length === 0" class="text-gray-500">
+    <div
+      v-else-if="store.patterns.length === 0"
+      class="text-gray-500"
+    >
       No patterns yet.
     </div>
 
-    <ul v-else class="divide-y">
+    <ul
+      v-else
+      class="divide-y"
+    >
       <li
         v-for="p in store.patterns"
         :key="p.id"
@@ -40,7 +51,10 @@
       </li>
     </ul>
 
-    <p v-if="store.error" class="text-red-600">
+    <p
+      v-if="store.error"
+      class="text-red-600"
+    >
       {{ store.error }}
     </p>
   </div>

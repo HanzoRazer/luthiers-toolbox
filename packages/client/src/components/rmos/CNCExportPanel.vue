@@ -10,26 +10,26 @@
         <div class="material-options">
           <label>
             <input
+              v-model="material"
               type="radio"
               value="hardwood"
-              v-model="material"
-            />
+            >
             Hardwood
           </label>
           <label>
             <input
+              v-model="material"
               type="radio"
               value="softwood"
-              v-model="material"
-            />
+            >
             Softwood
           </label>
           <label>
             <input
+              v-model="material"
               type="radio"
               value="composite"
-              v-model="material"
-            />
+            >
             Composite
           </label>
         </div>
@@ -39,15 +39,24 @@
         <h3>Jig Origin</h3>
         <label>
           Origin X (mm)
-          <input type="number" v-model.number="jigOriginX" />
+          <input
+            v-model.number="jigOriginX"
+            type="number"
+          >
         </label>
         <label>
           Origin Y (mm)
-          <input type="number" v-model.number="jigOriginY" />
+          <input
+            v-model.number="jigOriginY"
+            type="number"
+          >
         </label>
         <label>
           Rotation (deg)
-          <input type="number" v-model.number="jigRotation" />
+          <input
+            v-model.number="jigRotation"
+            type="number"
+          >
         </label>
       </div>
     </div>
@@ -80,19 +89,22 @@
       <button
         v-if="cncExport && cncExport.job_id"
         type="button"
-        @click="onDownloadReport"
         class="download-pdf-btn"
+        @click="onDownloadReport"
       >
         Download Operator PDF
       </button>
     </div>
 
-    <div v-if="cncExport" class="results">
+    <div
+      v-if="cncExport"
+      class="results"
+    >
       <h3>Export Summary</h3>
       <p>
-        <strong>Job ID:</strong> {{ cncExport.job_id }}<br />
-        <strong>Ring ID:</strong> {{ cncExport.ring_id }}<br />
-        <strong>Toolpath segments:</strong> {{ cncExport.toolpaths.length }}<br />
+        <strong>Job ID:</strong> {{ cncExport.job_id }}<br>
+        <strong>Ring ID:</strong> {{ cncExport.ring_id }}<br>
+        <strong>Toolpath segments:</strong> {{ cncExport.toolpaths.length }}<br>
         <strong>Estimated runtime:</strong>
         {{ cncExport.simulation.estimated_runtime_sec.toFixed(1) }} s
         ({{ cncExport.simulation.passes }} pass<span v-if="cncExport.simulation.passes !== 1">es</span>)
@@ -100,13 +112,16 @@
 
       <h3>Safety</h3>
       <p>
-        <strong>Decision:</strong> {{ cncExport.safety.decision }}<br />
-        <strong>Risk level:</strong> {{ cncExport.safety.risk_level }}<br />
+        <strong>Decision:</strong> {{ cncExport.safety.decision }}<br>
+        <strong>Risk level:</strong> {{ cncExport.safety.risk_level }}<br>
         <strong>Override required:</strong>
         {{ cncExport.safety.requires_override ? 'Yes' : 'No' }}
       </p>
       <ul v-if="cncExport.safety.reasons && cncExport.safety.reasons.length">
-        <li v-for="(reason, idx) in cncExport.safety.reasons" :key="idx">
+        <li
+          v-for="(reason, idx) in cncExport.safety.reasons"
+          :key="idx"
+        >
           {{ reason }}
         </li>
       </ul>
@@ -133,7 +148,10 @@
       </div>
     </div>
 
-    <p v-else class="no-export">
+    <p
+      v-else
+      class="no-export"
+    >
       No CNC export yet. Generate slices for a ring, configure material & jig,
       then click "Export CNC".
     </p>

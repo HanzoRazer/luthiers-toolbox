@@ -3,10 +3,10 @@
     :width="width"
     :height="height"
     tabindex="0"
+    :style="{ cursor: dragging ? 'grabbing' : 'grab', background: '#fff' }"
     @mousedown="onMouseDown"
     @wheel.prevent="onWheel"
     @keydown="onKeyDown"
-    :style="{ cursor: dragging ? 'grabbing' : 'grab', background: '#fff' }"
   >
     <g :transform="transform">
       <polyline

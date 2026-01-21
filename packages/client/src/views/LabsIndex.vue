@@ -11,7 +11,7 @@
         type="text" 
         placeholder="🔍 Search labs..." 
         class="search-input"
-      />
+      >
       <div class="filter-tags">
         <button 
           v-for="tag in tags" 
@@ -31,11 +31,17 @@
         class="lab-card"
         @click="$router.push(lab.route)"
       >
-        <div class="lab-icon">{{ lab.icon }}</div>
+        <div class="lab-icon">
+          {{ lab.icon }}
+        </div>
         <h3>{{ lab.name }}</h3>
         <p>{{ lab.description }}</p>
         <div class="lab-meta">
-          <span v-for="tag in lab.tags" :key="tag" class="tag">{{ tag }}</span>
+          <span
+            v-for="tag in lab.tags"
+            :key="tag"
+            class="tag"
+          >{{ tag }}</span>
           <span class="module-badge">{{ lab.module }}</span>
         </div>
       </div>

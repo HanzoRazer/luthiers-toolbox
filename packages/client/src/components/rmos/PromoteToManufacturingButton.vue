@@ -72,11 +72,25 @@ async function promote() {
 
 <template>
   <div class="promote-box">
-    <button class="btn promote" :disabled="promoting" @click="promote">
+    <button
+      class="btn promote"
+      :disabled="promoting"
+      @click="promote"
+    >
       {{ promoting ? "Promoting..." : "Promote to Manufacturing" }}
     </button>
-    <div v-if="error" class="feedback error">{{ error }}</div>
-    <div v-if="success" class="feedback success">{{ success }}</div>
+    <div
+      v-if="error"
+      class="feedback error"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-if="success"
+      class="feedback success"
+    >
+      {{ success }}
+    </div>
   </div>
 </template>
 

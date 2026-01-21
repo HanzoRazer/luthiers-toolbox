@@ -1,23 +1,35 @@
 <template>
   <div class="relative w-full h-[480px] bg-black/90 rounded-lg overflow-hidden">
-    <canvas ref="canvasEl" class="w-full h-full block"></canvas>
+    <canvas
+      ref="canvasEl"
+      class="w-full h-full block"
+    />
 
     <!-- HUD -->
     <div class="absolute top-2 left-2 text-[10px] text-white/90 space-y-1 pointer-events-none">
       <div class="px-2 py-1 bg-white/10 rounded">
-        <div class="font-semibold">3D Backplot</div>
+        <div class="font-semibold">
+          3D Backplot
+        </div>
         <div v-if="metrics">
           <div>t = {{ (metrics.total_time_s).toFixed(2) }} s</div>
           <div>E = {{ (metrics.total_energy_j).toFixed(0) }} J</div>
           <div>P<sub>peak</sub> = {{ (metrics.peak_power_w).toFixed(0) }} W</div>
         </div>
-        <div v-else>no metrics (click "Simulate")</div>
+        <div v-else>
+          no metrics (click "Simulate")
+        </div>
       </div>
       <div class="px-2 py-1 bg-white/10 rounded">
-        <div class="font-semibold">Color Map</div>
+        <div class="font-semibold">
+          Color Map
+        </div>
         <div>{{ colorMode === 'feed' ? 'Feed speed' : 'Power' }}</div>
         <div class="flex gap-1 mt-1">
-          <span class="inline-block w-10 h-2" :style="{ background: gradientCss }"></span>
+          <span
+            class="inline-block w-10 h-2"
+            :style="{ background: gradientCss }"
+          />
           <span class="opacity-80">low → high</span>
         </div>
       </div>
@@ -25,16 +37,23 @@
 
     <!-- Controls -->
     <div class="absolute top-2 right-2 flex gap-2">
-      <button class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
-              @click="toggleAxes">
+      <button
+        class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
+        @click="toggleAxes"
+      >
         {{ showAxes ? 'Hide Axes' : 'Show Axes' }}
       </button>
-      <button class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
-              @click="toggleMode">
+      <button
+        class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
+        @click="toggleMode"
+      >
         Mode: {{ colorMode === 'feed' ? 'Feed' : 'Power' }}
       </button>
-      <button class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
-              title="Fit view" @click="fitView">
+      <button
+        class="px-2 py-1 rounded text-[10px] bg-white/10 text-white hover:bg-white/20"
+        title="Fit view"
+        @click="fitView"
+      >
         Fit
       </button>
     </div>

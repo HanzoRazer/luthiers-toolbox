@@ -1,7 +1,9 @@
 <template>
   <div class="border rounded-lg p-3 space-y-2 text-xs">
     <header class="flex items-center justify-between">
-      <h2 class="text-sm font-semibold">JobLog</h2>
+      <h2 class="text-sm font-semibold">
+        JobLog
+      </h2>
       <button
         class="border rounded px-2 py-1 hover:bg-gray-100"
         :disabled="store.loading"
@@ -11,15 +13,24 @@
       </button>
     </header>
 
-    <p v-if="store.error" class="text-red-600">
+    <p
+      v-if="store.error"
+      class="text-red-600"
+    >
       {{ store.error }}
     </p>
 
-    <div v-if="store.entries.length === 0 && !store.loading" class="text-gray-500">
+    <div
+      v-if="store.entries.length === 0 && !store.loading"
+      class="text-gray-500"
+    >
       No joblog entries yet.
     </div>
 
-    <div v-else class="space-y-1 max-h-64 overflow-y-auto">
+    <div
+      v-else
+      class="space-y-1 max-h-64 overflow-y-auto"
+    >
       <div
         v-for="entry in store.entries"
         :key="entry.id"

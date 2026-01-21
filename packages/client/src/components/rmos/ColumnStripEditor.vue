@@ -8,7 +8,12 @@
       and families.
     </p>
     <ul>
-      <li v-for="n in 3" :key="n">Strip {{ n }} (stub)</li>
+      <li
+        v-for="n in 3"
+        :key="n"
+      >
+        Strip {{ n }} (stub)
+      </li>
     </ul>
   </div>
 </template>

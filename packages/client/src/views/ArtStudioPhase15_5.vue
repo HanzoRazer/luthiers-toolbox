@@ -65,67 +65,152 @@ async function run(){
 
 <template>
   <div class="p-6 space-y-4">
-    <h1 class="text-xl font-bold">Art Studio — Phase 15.5 (Post Presets + Lead-in/out + CRC-ready)</h1>
+    <h1 class="text-xl font-bold">
+      Art Studio — Phase 15.5 (Post Presets + Lead-in/out + CRC-ready)
+    </h1>
 
     <div class="border rounded p-3 space-y-2">
-      <div class="text-sm font-semibold">Preset</div>
-      <select v-model="presetName" class="border rounded px-2 py-1">
-        <option v-for="(cfg, name) in presets" :key="name" :value="name">{{ name }}</option>
+      <div class="text-sm font-semibold">
+        Preset
+      </div>
+      <select
+        v-model="presetName"
+        class="border rounded px-2 py-1"
+      >
+        <option
+          v-for="(cfg, name) in presets"
+          :key="name"
+          :value="name"
+        >
+          {{ name }}
+        </option>
       </select>
     </div>
 
     <div class="border rounded p-3 space-y-2">
-      <div class="text-sm font-semibold">Contour (polyline, closed)</div>
-      <textarea v-model="poly" class="w-full h-28 border rounded p-2 font-mono text-xs"></textarea>
+      <div class="text-sm font-semibold">
+        Contour (polyline, closed)
+      </div>
+      <textarea
+        v-model="poly"
+        class="w-full h-28 border rounded p-2 font-mono text-xs"
+      />
       <div class="flex flex-wrap gap-4 text-sm items-center">
-        <label>Z cut</label><input v-model.number="zCut" type="number" step="0.1" class="border rounded px-2 py-1 w-24" />
-        <label>Feed</label><input v-model.number="feed" type="number" step="10" class="border rounded px-2 py-1 w-24" />
-        <label>Safe Z</label><input v-model.number="planeZ" type="number" step="0.5" class="border rounded px-2 py-1 w-24" />
+        <label>Z cut</label><input
+          v-model.number="zCut"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <label>Feed</label><input
+          v-model.number="feed"
+          type="number"
+          step="10"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <label>Safe Z</label><input
+          v-model.number="planeZ"
+          type="number"
+          step="0.5"
+          class="border rounded px-2 py-1 w-24"
+        >
       </div>
     </div>
 
     <div class="border rounded p-3 space-y-2">
-      <div class="text-sm font-semibold">Lead-in/out & CRC</div>
+      <div class="text-sm font-semibold">
+        Lead-in/out & CRC
+      </div>
       <div class="flex flex-wrap gap-6 text-sm items-center">
         <label class="inline-flex items-center gap-2">
           <span>Lead</span>
-          <select v-model="leadType" class="border rounded px-2 py-1">
+          <select
+            v-model="leadType"
+            class="border rounded px-2 py-1"
+          >
             <option value="none">None</option>
             <option value="tangent">Tangent</option>
             <option value="arc">Arc</option>
           </select>
         </label>
-        <label>Lead length</label><input v-model.number="leadLen" type="number" step="0.1" class="border rounded px-2 py-1 w-24" />
-        <label>Lead radius</label><input v-model.number="leadR" type="number" step="0.1" class="border rounded px-2 py-1 w-24" />
+        <label>Lead length</label><input
+          v-model.number="leadLen"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <label>Lead radius</label><input
+          v-model.number="leadR"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-24"
+        >
         <label class="inline-flex items-center gap-2">
           <span>CRC</span>
-          <select v-model="crcMode" class="border rounded px-2 py-1">
+          <select
+            v-model="crcMode"
+            class="border rounded px-2 py-1"
+          >
             <option value="none">None</option>
             <option value="left">G41 (Left)</option>
             <option value="right">G42 (Right)</option>
           </select>
         </label>
-        <label>D#</label><input v-model.number="dNum" type="number" step="1" class="border rounded px-2 py-1 w-20" />
-        <label>CRC diameter</label><input v-model.number="crcDia" type="number" step="0.01" class="border rounded px-2 py-1 w-28" />
+        <label>D#</label><input
+          v-model.number="dNum"
+          type="number"
+          step="1"
+          class="border rounded px-2 py-1 w-20"
+        >
+        <label>CRC diameter</label><input
+          v-model.number="crcDia"
+          type="number"
+          step="0.01"
+          class="border rounded px-2 py-1 w-28"
+        >
       </div>
     </div>
 
     <div class="border rounded p-3 space-y-2">
-      <div class="text-sm font-semibold">Corner smoothing</div>
+      <div class="text-sm font-semibold">
+        Corner smoothing
+      </div>
       <div class="flex flex-wrap gap-6 text-sm items-center">
-        <label>Fillet radius</label><input v-model.number="filletR" type="number" step="0.05" class="border rounded px-2 py-1 w-28" />
-        <label>Min corner angle (°)</label><input v-model.number="filletAng" type="number" step="1" class="border rounded px-2 py-1 w-28" />
-        <button class="rounded px-3 py-1 border" @click="run">Generate</button>
+        <label>Fillet radius</label><input
+          v-model.number="filletR"
+          type="number"
+          step="0.05"
+          class="border rounded px-2 py-1 w-28"
+        >
+        <label>Min corner angle (°)</label><input
+          v-model.number="filletAng"
+          type="number"
+          step="1"
+          class="border rounded px-2 py-1 w-28"
+        >
+        <button
+          class="rounded px-3 py-1 border"
+          @click="run"
+        >
+          Generate
+        </button>
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="border rounded p-2 bg-white">
-        <div class="text-xs font-semibold mb-1">3D Preview</div>
-        <ToolpathPreview3D :spans="spans3d" :height="420" />
+        <div class="text-xs font-semibold mb-1">
+          3D Preview
+        </div>
+        <ToolpathPreview3D
+          :spans="spans3d"
+          :height="420"
+        />
       </div>
       <div class="border rounded p-2 bg-white">
-        <div class="text-xs font-semibold mb-1">G-code</div>
+        <div class="text-xs font-semibold mb-1">
+          G-code
+        </div>
         <pre class="text-xs overflow-auto max-h-[420px] whitespace-pre-wrap">{{ gcode }}</pre>
       </div>
     </div>

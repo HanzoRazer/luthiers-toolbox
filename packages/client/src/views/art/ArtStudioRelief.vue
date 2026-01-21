@@ -487,7 +487,10 @@ function handleIssueFocusRequest(payload: { index: number; issue: SimIssue }) {
           Reload Lab preset
         </button>
 
-        <p v-if="activePresetName" class="text-xs text-gray-500">
+        <p
+          v-if="activePresetName"
+          class="text-xs text-gray-500"
+        >
           Active preset:
           <span class="font-semibold">{{ activePresetName }}</span>
         </p>
@@ -584,16 +587,16 @@ function handleIssueFocusRequest(payload: { index: number; issue: SimIssue }) {
           <button
             type="button"
             class="border rounded px-2 py-0.5 bg-white hover:bg-gray-100"
-            @click="cancelNoteEditor"
             :disabled="noteSaving"
+            @click="cancelNoteEditor"
           >
             Cancel
           </button>
           <button
             type="button"
             class="border rounded px-2 py-0.5 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300"
-            @click="saveNote"
             :disabled="noteSaving"
+            @click="saveNote"
           >
             {{ noteSaving ? "Saving…" : "Save note" }}
           </button>
@@ -622,7 +625,7 @@ function handleIssueFocusRequest(payload: { index: number; issue: SimIssue }) {
               v-model="showToolpath"
               type="checkbox"
               class="align-middle"
-            />
+            >
             <span>Show toolpath</span>
           </label>
         </div>
@@ -630,17 +633,17 @@ function handleIssueFocusRequest(payload: { index: number; issue: SimIssue }) {
 
       <div class="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <CamBackplotViewer
+          v-model:show-toolpath="showToolpath"
           :loops="backplotLoops"
           :moves="backplotMoves"
           :overlays="backplotOverlays"
-          v-model:showToolpath="showToolpath"
           :focus-point="focusPoint"
           :focus-zoom="0.4"
         />
 
         <CamIssuesList
+          v-model:selected-index="selectedIssueIndex"
           :issues="simIssues"
-          v-model:selectedIndex="selectedIssueIndex"
           title="Simulation Issues"
           @focus-request="handleIssueFocusRequest"
         />

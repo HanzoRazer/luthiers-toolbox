@@ -2,7 +2,9 @@
   <div class="saw-contour-panel">
     <div class="panel-header">
       <h2>Saw Contour Operation</h2>
-      <p class="subtitle">Curved paths for rosettes and binding with radius validation</p>
+      <p class="subtitle">
+        Curved paths for rosettes and binding with radius validation
+      </p>
     </div>
 
     <div class="panel-content">
@@ -13,13 +15,25 @@
         <!-- Blade Selection -->
         <div class="form-group">
           <label>Saw Blade</label>
-          <select v-model="selectedBladeId" @change="onBladeChange">
-            <option value="">Select blade...</option>
-            <option v-for="blade in blades" :key="blade.blade_id" :value="blade.blade_id">
+          <select
+            v-model="selectedBladeId"
+            @change="onBladeChange"
+          >
+            <option value="">
+              Select blade...
+            </option>
+            <option
+              v-for="blade in blades"
+              :key="blade.blade_id"
+              :value="blade.blade_id"
+            >
               {{ blade.vendor }} {{ blade.model_code }} ({{ blade.diameter_mm }}mm)
             </option>
           </select>
-          <div v-if="selectedBlade" class="blade-info">
+          <div
+            v-if="selectedBlade"
+            class="blade-info"
+          >
             Min radius: {{ (selectedBlade.diameter_mm / 2).toFixed(1) }}mm | Kerf: {{ selectedBlade.kerf_mm }}mm
           </div>
         </div>
@@ -28,29 +42,52 @@
         <div class="form-group">
           <label>Machine Profile</label>
           <select v-model="machineProfile">
-            <option value="bcam_router_2030">BCAM Router 2030</option>
-            <option value="syil_x7">SYIL X7</option>
-            <option value="tormach_1100mx">Tormach 1100MX</option>
+            <option value="bcam_router_2030">
+              BCAM Router 2030
+            </option>
+            <option value="syil_x7">
+              SYIL X7
+            </option>
+            <option value="tormach_1100mx">
+              Tormach 1100MX
+            </option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Material Family</label>
           <select v-model="materialFamily">
-            <option value="hardwood">Hardwood</option>
-            <option value="softwood">Softwood</option>
-            <option value="plywood">Plywood</option>
-            <option value="mdf">MDF</option>
+            <option value="hardwood">
+              Hardwood
+            </option>
+            <option value="softwood">
+              Softwood
+            </option>
+            <option value="plywood">
+              Plywood
+            </option>
+            <option value="mdf">
+              MDF
+            </option>
           </select>
         </div>
 
         <!-- Contour Type -->
         <div class="form-group">
           <label>Contour Type</label>
-          <select v-model="contourType" @change="updateContourPath">
-            <option value="arc">Arc Segment</option>
-            <option value="circle">Full Circle</option>
-            <option value="rosette">Rosette Pattern</option>
+          <select
+            v-model="contourType"
+            @change="updateContourPath"
+          >
+            <option value="arc">
+              Arc Segment
+            </option>
+            <option value="circle">
+              Full Circle
+            </option>
+            <option value="rosette">
+              Rosette Pattern
+            </option>
           </select>
         </div>
 
@@ -58,30 +95,63 @@
         <div v-if="contourType === 'arc'">
           <div class="form-group">
             <label>Center X (mm)</label>
-            <input type="number" v-model.number="centerX" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerX"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Center Y (mm)</label>
-            <input type="number" v-model.number="centerY" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerY"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Radius (mm)</label>
-            <input type="number" v-model.number="radius" step="1" min="1" @input="updateContourPath" />
-            <div v-if="radiusValidation" :class="['validation-hint', radiusValidation.status]">
+            <input
+              v-model.number="radius"
+              type="number"
+              step="1"
+              min="1"
+              @input="updateContourPath"
+            >
+            <div
+              v-if="radiusValidation"
+              :class="['validation-hint', radiusValidation.status]"
+            >
               {{ radiusValidation.message }}
             </div>
           </div>
 
           <div class="form-group">
             <label>Start Angle (degrees)</label>
-            <input type="number" v-model.number="startAngle" step="15" min="0" max="360" @input="updateContourPath" />
+            <input
+              v-model.number="startAngle"
+              type="number"
+              step="15"
+              min="0"
+              max="360"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>End Angle (degrees)</label>
-            <input type="number" v-model.number="endAngle" step="15" min="0" max="360" @input="updateContourPath" />
+            <input
+              v-model.number="endAngle"
+              type="number"
+              step="15"
+              min="0"
+              max="360"
+              @input="updateContourPath"
+            >
           </div>
         </div>
 
@@ -89,18 +159,37 @@
         <div v-if="contourType === 'circle'">
           <div class="form-group">
             <label>Center X (mm)</label>
-            <input type="number" v-model.number="centerX" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerX"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Center Y (mm)</label>
-            <input type="number" v-model.number="centerY" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerY"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Radius (mm)</label>
-            <input type="number" v-model.number="radius" step="1" min="1" @input="updateContourPath" />
-            <div v-if="radiusValidation" :class="['validation-hint', radiusValidation.status]">
+            <input
+              v-model.number="radius"
+              type="number"
+              step="1"
+              min="1"
+              @input="updateContourPath"
+            >
+            <div
+              v-if="radiusValidation"
+              :class="['validation-hint', radiusValidation.status]"
+            >
               {{ radiusValidation.message }}
             </div>
           </div>
@@ -110,72 +199,147 @@
         <div v-if="contourType === 'rosette'">
           <div class="form-group">
             <label>Center X (mm)</label>
-            <input type="number" v-model.number="centerX" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerX"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Center Y (mm)</label>
-            <input type="number" v-model.number="centerY" step="0.1" @input="updateContourPath" />
+            <input
+              v-model.number="centerY"
+              type="number"
+              step="0.1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Outer Radius (mm)</label>
-            <input type="number" v-model.number="outerRadius" step="1" min="1" @input="updateContourPath" />
+            <input
+              v-model.number="outerRadius"
+              type="number"
+              step="1"
+              min="1"
+              @input="updateContourPath"
+            >
           </div>
 
           <div class="form-group">
             <label>Inner Radius (mm)</label>
-            <input type="number" v-model.number="innerRadius" step="1" min="1" @input="updateContourPath" />
-            <div v-if="radiusValidation" :class="['validation-hint', radiusValidation.status]">
+            <input
+              v-model.number="innerRadius"
+              type="number"
+              step="1"
+              min="1"
+              @input="updateContourPath"
+            >
+            <div
+              v-if="radiusValidation"
+              :class="['validation-hint', radiusValidation.status]"
+            >
               {{ radiusValidation.message }}
             </div>
           </div>
 
           <div class="form-group">
             <label>Number of Petals</label>
-            <input type="number" v-model.number="petalCount" step="1" min="3" max="24" @input="updateContourPath" />
+            <input
+              v-model.number="petalCount"
+              type="number"
+              step="1"
+              min="3"
+              max="24"
+              @input="updateContourPath"
+            >
           </div>
         </div>
 
         <!-- Depth Parameters -->
         <div class="form-group">
           <label>Total Depth (mm)</label>
-          <input type="number" v-model.number="totalDepth" step="0.5" min="0.5" />
+          <input
+            v-model.number="totalDepth"
+            type="number"
+            step="0.5"
+            min="0.5"
+          >
         </div>
 
         <div class="form-group">
           <label>Depth Per Pass (mm)</label>
-          <input type="number" v-model.number="depthPerPass" step="0.5" min="0.5" />
+          <input
+            v-model.number="depthPerPass"
+            type="number"
+            step="0.5"
+            min="0.5"
+          >
         </div>
 
         <!-- Feeds & Speeds -->
         <div class="form-group">
           <label>RPM</label>
-          <input type="number" v-model.number="rpm" step="100" min="2000" max="6000" />
+          <input
+            v-model.number="rpm"
+            type="number"
+            step="100"
+            min="2000"
+            max="6000"
+          >
         </div>
 
         <div class="form-group">
           <label>Feed Rate (IPM)</label>
-          <input type="number" v-model.number="feedIpm" step="5" min="10" max="300" />
+          <input
+            v-model.number="feedIpm"
+            type="number"
+            step="5"
+            min="10"
+            max="300"
+          >
         </div>
 
         <div class="form-group">
           <label>Safe Z (mm)</label>
-          <input type="number" v-model.number="safeZ" step="0.5" min="1" />
+          <input
+            v-model.number="safeZ"
+            type="number"
+            step="0.5"
+            min="1"
+          >
         </div>
 
         <!-- Actions -->
         <div class="actions">
-          <button @click="validateContour" :disabled="!canValidate" class="btn-primary">
+          <button
+            :disabled="!canValidate"
+            class="btn-primary"
+            @click="validateContour"
+          >
             Validate Contour
           </button>
-          <button @click="mergeLearnedParams" :disabled="!canMerge" class="btn-secondary">
+          <button
+            :disabled="!canMerge"
+            class="btn-secondary"
+            @click="mergeLearnedParams"
+          >
             Apply Learned Overrides
           </button>
-          <button @click="generateGcode" :disabled="!isValid" class="btn-primary">
+          <button
+            :disabled="!isValid"
+            class="btn-primary"
+            @click="generateGcode"
+          >
             Generate G-code
           </button>
-          <button @click="sendToJobLog" :disabled="!hasGcode" class="btn-success">
+          <button
+            :disabled="!hasGcode"
+            class="btn-success"
+            @click="sendToJobLog"
+          >
             Send to JobLog
           </button>
         </div>
@@ -184,7 +348,10 @@
       <!-- Right Column: Preview & Validation -->
       <div class="preview-section">
         <!-- Radius Validation -->
-        <div v-if="radiusValidation" class="radius-validation">
+        <div
+          v-if="radiusValidation"
+          class="radius-validation"
+        >
           <h3>Radius Validation</h3>
           <div :class="['validation-badge', radiusValidation.status]">
             {{ radiusValidation.status.toUpperCase() }}
@@ -209,14 +376,20 @@
         </div>
 
         <!-- Validation Results -->
-        <div v-if="validationResult" class="validation-results">
+        <div
+          v-if="validationResult"
+          class="validation-results"
+        >
           <h3>Full Validation Results</h3>
           <div :class="['validation-badge', validationResult.overall_result.toLowerCase()]">
             {{ validationResult.overall_result }}
           </div>
           <div class="validation-checks">
-            <div v-for="(check, key) in validationResult.checks" :key="key" 
-                 :class="['check-item', check.result.toLowerCase()]">
+            <div
+              v-for="(check, key) in validationResult.checks"
+              :key="key" 
+              :class="['check-item', check.result.toLowerCase()]"
+            >
               <span class="check-icon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
               <span class="check-name">{{ formatCheckName(String(key)) }}</span>
               <span class="check-message">{{ check.message }}</span>
@@ -225,7 +398,10 @@
         </div>
 
         <!-- Learned Parameters -->
-        <div v-if="mergedParams" class="learned-params">
+        <div
+          v-if="mergedParams"
+          class="learned-params"
+        >
           <h3>Learned Parameters Applied</h3>
           <div class="param-comparison">
             <div class="param-row">
@@ -250,7 +426,10 @@
         </div>
 
         <!-- Path Statistics -->
-        <div v-if="pathStats" class="path-stats">
+        <div
+          v-if="pathStats"
+          class="path-stats"
+        >
           <h3>Path Statistics</h3>
           <div class="stats-grid">
             <div class="stat-item">
@@ -275,14 +454,33 @@
         <!-- SVG Preview -->
         <div class="svg-preview">
           <h3>Contour Preview</h3>
-          <svg :viewBox="svgViewBox" width="100%" height="400" class="preview-canvas">
+          <svg
+            :viewBox="svgViewBox"
+            width="100%"
+            height="400"
+            class="preview-canvas"
+          >
             <!-- Grid -->
             <defs>
-              <pattern id="contour-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+              <pattern
+                id="contour-grid"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 20 0 L 0 0 0 20"
+                  fill="none"
+                  stroke="#e0e0e0"
+                  stroke-width="0.5"
+                />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#contour-grid)" />
+            <rect
+              width="100%"
+              height="100%"
+              fill="url(#contour-grid)"
+            />
             
             <!-- Contour path -->
             <path
@@ -294,8 +492,18 @@
             />
             
             <!-- Center marker -->
-            <circle :cx="centerX" :cy="centerY" r="3" fill="#F44336" />
-            <text :x="centerX + 8" :y="centerY + 5" font-size="12" fill="#666">Center</text>
+            <circle
+              :cx="centerX"
+              :cy="centerY"
+              r="3"
+              fill="#F44336"
+            />
+            <text
+              :x="centerX + 8"
+              :y="centerY + 5"
+              font-size="12"
+              fill="#666"
+            >Center</text>
             
             <!-- Radius indicator -->
             <line
@@ -318,26 +526,47 @@
             >R={{ radius }}</text>
           </svg>
           <div class="legend">
-            <span><span class="color-box" style="background: #2196F3;"></span> Cut path</span>
-            <span><span class="color-box" style="background: #F44336;"></span> Center</span>
-            <span><span class="color-box" style="background: #9C27B0;"></span> Radius</span>
+            <span><span
+              class="color-box"
+              style="background: #2196F3;"
+            /> Cut path</span>
+            <span><span
+              class="color-box"
+              style="background: #F44336;"
+            /> Center</span>
+            <span><span
+              class="color-box"
+              style="background: #9C27B0;"
+            /> Radius</span>
           </div>
         </div>
 
         <!-- G-code Preview -->
-        <div v-if="gcode" class="gcode-preview">
+        <div
+          v-if="gcode"
+          class="gcode-preview"
+        >
           <h3>G-code Preview</h3>
           <pre class="gcode-text">{{ gcodePreview }}</pre>
-          <button @click="downloadGcode" class="btn-secondary">
+          <button
+            class="btn-secondary"
+            @click="downloadGcode"
+          >
             Download G-code
           </button>
         </div>
 
         <!-- Run Artifact Link -->
-        <div v-if="runId" class="run-artifact-link">
+        <div
+          v-if="runId"
+          class="run-artifact-link"
+        >
           <h3>Run Artifact</h3>
           <p>Job logged with Run ID: <code>{{ runId }}</code></p>
-          <router-link :to="`/rmos/runs?run_id=${runId}`" class="btn-primary">
+          <router-link
+            :to="`/rmos/runs?run_id=${runId}`"
+            class="btn-primary"
+          >
             View Run Artifact
           </router-link>
         </div>

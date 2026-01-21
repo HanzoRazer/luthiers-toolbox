@@ -74,17 +74,25 @@ function formatDate(iso: string): string {
         >
           Open
         </router-link>
-        <button class="btn" @click="handleDownload" title="Download run as JSON">
+        <button
+          class="btn"
+          title="Download run as JSON"
+          @click="handleDownload"
+        >
           Download JSON
         </button>
-        <button class="btn" @click="setAsA" title="Set as run A for comparison">
+        <button
+          class="btn"
+          title="Set as run A for comparison"
+          @click="setAsA"
+        >
           Set as A
         </button>
         <button
           class="btn btn-primary"
-          @click="diffWithLastSelected"
           :disabled="!canDiff"
           :title="canDiff ? 'Compare with last selected run' : 'Select another run first'"
+          @click="diffWithLastSelected"
         >
           Diff with last selected
         </button>
@@ -132,30 +140,48 @@ function formatDate(iso: string): string {
     </section>
 
     <!-- Feasibility -->
-    <section v-if="artifact.feasibility" class="info-section">
+    <section
+      v-if="artifact.feasibility"
+      class="info-section"
+    >
       <h4>Feasibility</h4>
       <pre class="code-block">{{ JSON.stringify(artifact.feasibility, null, 2) }}</pre>
     </section>
 
     <!-- Drift -->
-    <section v-if="artifact.drift_detected" class="info-section drift-warning">
+    <section
+      v-if="artifact.drift_detected"
+      class="info-section drift-warning"
+    >
       <h4>⚠️ Drift Detected</h4>
       <p>{{ artifact.drift_summary || "Configuration drift detected from parent run." }}</p>
     </section>
 
     <!-- Gate Decision -->
-    <section v-if="artifact.gate_decision" class="info-section">
+    <section
+      v-if="artifact.gate_decision"
+      class="info-section"
+    >
       <h4>Gate Decision</h4>
-      <div class="gate-badge" :class="artifact.gate_decision.toLowerCase()">
+      <div
+        class="gate-badge"
+        :class="artifact.gate_decision.toLowerCase()"
+      >
         {{ artifact.gate_decision }}
       </div>
     </section>
 
     <!-- Attachments -->
-    <section v-if="artifact.attachments?.length" class="info-section">
+    <section
+      v-if="artifact.attachments?.length"
+      class="info-section"
+    >
       <h4>Attachments ({{ artifact.attachments.length }})</h4>
       <ul class="attachment-list">
-        <li v-for="att in artifact.attachments" :key="att.sha256">
+        <li
+          v-for="att in artifact.attachments"
+          :key="att.sha256"
+        >
           <span class="att-kind">{{ att.kind }}</span>
           <span class="att-name">{{ att.filename }}</span>
           <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
@@ -165,19 +191,33 @@ function formatDate(iso: string): string {
 
     <!-- Advisory Blobs -->
     <section class="info-section">
-      <AdvisoryBlobBrowser :runId="artifact.run_id" apiBase="/api" />
+      <AdvisoryBlobBrowser
+        :run-id="artifact.run_id"
+        api-base="/api"
+      />
     </section>
 
     <!-- Notes / Errors -->
-    <section v-if="artifact.notes" class="info-section">
+    <section
+      v-if="artifact.notes"
+      class="info-section"
+    >
       <h4>Notes</h4>
       <p>{{ artifact.notes }}</p>
     </section>
 
-    <section v-if="artifact.errors?.length" class="info-section error-section">
+    <section
+      v-if="artifact.errors?.length"
+      class="info-section error-section"
+    >
       <h4>Errors</h4>
       <ul>
-        <li v-for="(err, i) in artifact.errors" :key="i">{{ err }}</li>
+        <li
+          v-for="(err, i) in artifact.errors"
+          :key="i"
+        >
+          {{ err }}
+        </li>
       </ul>
     </section>
   </aside>

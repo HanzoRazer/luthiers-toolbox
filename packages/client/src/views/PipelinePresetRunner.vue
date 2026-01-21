@@ -71,7 +71,9 @@ async function runPreset() {
 <template>
   <div class="pipeline-preset-runner">
     <h1>Pipeline Preset Runner</h1>
-    <p class="subtitle">Run saved pipeline presets by ID</p>
+    <p class="subtitle">
+      Run saved pipeline presets by ID
+    </p>
 
     <div class="form-group">
       <label for="preset-id">Preset ID:</label>
@@ -81,16 +83,28 @@ async function runPreset() {
         type="text"
         placeholder="e.g., bridge_pocket_6"
         :disabled="running"
-      />
+      >
     </div>
 
-    <button @click="runPreset" :disabled="running || !presetId.trim()" class="primary">
+    <button
+      :disabled="running || !presetId.trim()"
+      class="primary"
+      @click="runPreset"
+    >
       {{ running ? 'Running...' : 'Run Pipeline' }}
     </button>
 
-    <div v-if="error" class="error-message">{{ error }}</div>
+    <div
+      v-if="error"
+      class="error-message"
+    >
+      {{ error }}
+    </div>
 
-    <div v-if="result" class="result-section">
+    <div
+      v-if="result"
+      class="result-section"
+    >
       <h3>Result</h3>
       <pre>{{ prettyResult }}</pre>
     </div>

@@ -17,7 +17,7 @@ Updated: November 2025
           v-model="query"
           placeholder="Filter presets…"
           class="border rounded px-2 py-0.5 text-[10px] w-32"
-        />
+        >
         <button
           class="px-2 py-0.5 rounded border border-gray-300 text-[10px] disabled:opacity-50"
           :disabled="loading"
@@ -29,7 +29,10 @@ Updated: November 2025
       </div>
     </div>
 
-    <p v-if="error" class="text-[11px] text-red-600">
+    <p
+      v-if="error"
+      class="text-[11px] text-red-600"
+    >
       {{ error }}
     </p>
 
@@ -40,7 +43,10 @@ Updated: November 2025
       No presets. Save one from Bridge Lab to see it here.
     </div>
 
-    <ul v-else class="space-y-1 max-h-52 overflow-auto pr-1">
+    <ul
+      v-else
+      class="space-y-1 max-h-52 overflow-auto pr-1"
+    >
       <li
         v-for="preset in filteredPresets"
         :key="preset.id"

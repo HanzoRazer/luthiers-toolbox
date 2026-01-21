@@ -583,3 +583,151 @@ export async function downloadManufacturingCandidateZip(
   const b = await response.blob();
   return { blob: b, requestId: reqId(response) };
 }
+
+// ---------------------------------------------------------------------------
+// Advisory Explanation (On-Demand AI Explain)
+// ---------------------------------------------------------------------------
+
+export type AdvisoryExplanation = {
+  summary: string;
+  operator_notes?: string[] | null;
+  suggested_actions?: string[] | null;
+  disclaimer?: string | null;
+};
+
+export type ExplainRunResponse = {
+  run_id: string;
+  explanation: AdvisoryExplanation | null;
+  cached?: boolean;
+};
+
+/**
+ * Generate (or retrieve cached) advisory explanation for a run.
+ * @param runId - Run ID
+ * @param force - If true, regenerate even if cached explanation exists
+ */
+export async function explainRun(
+  runId: string,
+  force = false,
+  opts?: ApiFetchOptions
+): Promise<ExplainRunResponse & { requestId: string }> {
+  const url = force
+    ? `/rmos/runs/${enc(runId)}/explain?force=true`
+    : `/rmos/runs/${enc(runId)}/explain`;
+  const { data, response } = await postRaw<ExplainRunResponse>(url, {}, opts);
+  return { ...data, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Operator Pack Download
+// ---------------------------------------------------------------------------
+
+/**
+ * Download operator pack ZIP for a run.
+ * Note: This returns a blob, not JSON.
+ */
+export async function downloadOperatorPack(
+  runId: string,
+  opts?: ApiFetchOptions
+): Promise<{ blob: Blob; requestId: string }> {
+  const { response } = await getRaw<unknown>(
+    `/rmos/runs_v2/${enc(runId)}/operator-pack`,
+    opts
+  );
+  const b = await response.blob();
+  return { blob: b, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Compare Two Runs
+// ---------------------------------------------------------------------------
+
+export type RunDiffResult = {
+  run_a: string;
+  run_b: string;
+  decision?: {
+    before?: { risk_level?: string; block_reason?: string };
+    after?: { risk_level?: string; block_reason?: string };
+  };
+  feasibility?: {
+    rules_added?: string[];
+    rules_removed?: string[];
+  };
+  params?: Record<string, { a: unknown; b: unknown }>;
+  severity: "CRITICAL" | "WARNING" | "INFO" | "NONE";
+  diffs: Array<{
+    field: string;
+    a_value: unknown;
+    b_value: unknown;
+    severity: "CRITICAL" | "WARNING" | "INFO";
+    message?: string;
+  }>;
+  summary: string;
+};
+
+/**
+ * Compare two runs (diff endpoint).
+ */
+export async function compareRuns(
+  runIdA: string,
+  runIdB: string,
+  opts?: ApiFetchOptions
+): Promise<RunDiffResult & { requestId: string }> {
+  const { data, response } = await getRaw<RunDiffResult>(
+    `/rmos/runs_v2/compare/${enc(runIdA)}/${enc(runIdB)}`,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Override Attachment (for YELLOW/RED runs)
+// ---------------------------------------------------------------------------
+
+export type AddOverrideRequest = {
+  reason: string;
+  operator?: string | null;
+};
+
+export type AddOverrideResponse = {
+  run_id: string;
+  attachment_id: string;
+  sha256: string;
+  kind: string;
+};
+
+/**
+ * Add an override attachment to a YELLOW/RED run (required for operator pack).
+ */
+export async function addOverride(
+  runId: string,
+  payload: AddOverrideRequest,
+  opts?: ApiFetchOptions
+): Promise<AddOverrideResponse & { requestId: string }> {
+  const { data, response } = await postRaw<AddOverrideResponse>(
+    `/rmos/runs_v2/${enc(runId)}/override`,
+    payload,
+    opts
+  );
+  return { ...data, requestId: reqId(response) };
+}
+
+// ---------------------------------------------------------------------------
+// Raw Attachment Download by SHA256
+// ---------------------------------------------------------------------------
+
+/**
+ * Download an attachment by its SHA256 hash.
+ * Note: Returns a blob, not JSON.
+ */
+export async function downloadAttachment(
+  sha256: string,
+  opts?: ApiFetchOptions
+): Promise<{ blob: Blob; requestId: string }> {
+  const { response } = await getRaw<unknown>(
+    `/rmos/runs_v2/attachments/${enc(sha256)}`,
+    opts
+  );
+  const b = await response.blob();
+  return { blob: b, requestId: reqId(response) };
+}

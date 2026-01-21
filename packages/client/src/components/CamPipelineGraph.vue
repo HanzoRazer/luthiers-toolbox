@@ -1,12 +1,17 @@
 <template>
   <div class="p-3 border rounded-lg space-y-2">
     <div class="flex items-center justify-between">
-      <h4 class="text-xs font-semibold text-gray-700">Pipeline Graph</h4>
+      <h4 class="text-xs font-semibold text-gray-700">
+        Pipeline Graph
+      </h4>
       <span class="text-[10px] text-gray-500">{{ ops.length }} stage(s)</span>
     </div>
 
     <div class="flex items-center flex-wrap gap-3">
-      <template v-for="(op, idx) in ops" :key="idx">
+      <template
+        v-for="(op, idx) in ops"
+        :key="idx"
+      >
         <div
           class="w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-mono border"
           :class="nodeClass(op)"
@@ -14,21 +19,24 @@
         >
           {{ shortLabel(op.kind) }}
         </div>
-        <div v-if="idx < ops.length - 1" class="w-6 h-px bg-gray-300 mx-1" />
+        <div
+          v-if="idx < ops.length - 1"
+          class="w-6 h-px bg-gray-300 mx-1"
+        />
       </template>
     </div>
 
     <div class="flex flex-wrap gap-3 text-[10px] text-gray-600">
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+        <span class="w-3 h-3 rounded-full bg-emerald-500" />
         <span>OK</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+        <span class="w-3 h-3 rounded-full bg-rose-500" />
         <span>Failed</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400"></span>
+        <span class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400" />
         <span>Pending/Not run</span>
       </div>
     </div>

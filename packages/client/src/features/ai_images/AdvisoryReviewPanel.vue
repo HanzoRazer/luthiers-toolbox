@@ -190,7 +190,10 @@ onMounted(loadPending);
     <!-- Header -->
     <div class="panel-header">
       <h2>🔍 Review Queue</h2>
-      <div class="stats" v-if="stats">
+      <div
+        v-if="stats"
+        class="stats"
+      >
         <span class="stat pending">{{ stats.pending }} pending</span>
         <span class="stat approved">{{ stats.approved }} approved</span>
         <span class="stat rejected">{{ stats.rejected }} rejected</span>
@@ -198,45 +201,71 @@ onMounted(loadPending);
     </div>
 
     <!-- Bulk Actions -->
-    <div class="bulk-actions" v-if="pendingAssets.length > 0">
+    <div
+      v-if="pendingAssets.length > 0"
+      class="bulk-actions"
+    >
       <label class="select-all">
         <input 
           type="checkbox" 
           :checked="allSelected"
           @change="toggleSelectAll"
-        />
+        >
         Select All
       </label>
-      <div class="action-buttons" v-if="hasSelection">
-        <button class="btn approve" @click="handleBulkApprove">
+      <div
+        v-if="hasSelection"
+        class="action-buttons"
+      >
+        <button
+          class="btn approve"
+          @click="handleBulkApprove"
+        >
           ✓ Approve Selected ({{ selectedIds.size }})
         </button>
-        <button class="btn reject" @click="handleBulkReject">
+        <button
+          class="btn reject"
+          @click="handleBulkReject"
+        >
           ✗ Reject Selected
         </button>
       </div>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="error-banner">
+    <div
+      v-if="error"
+      class="error-banner"
+    >
       {{ error }}
-      <button @click="error = null">×</button>
+      <button @click="error = null">
+        ×
+      </button>
     </div>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="loading">
-      <span class="spinner"></span>
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      <span class="spinner" />
       Loading pending assets...
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="pendingAssets.length === 0" class="empty-state">
+    <div
+      v-else-if="pendingAssets.length === 0"
+      class="empty-state"
+    >
       <span class="icon">✨</span>
       <p>No assets pending review</p>
     </div>
 
     <!-- Asset List -->
-    <div v-else class="asset-list">
+    <div
+      v-else
+      class="asset-list"
+    >
       <div 
         v-for="asset in pendingAssets" 
         :key="asset.id"
@@ -248,13 +277,19 @@ onMounted(loadPending);
             type="checkbox"
             :checked="selectedIds.has(asset.id)"
             @change="toggleSelect(asset.id)"
-          />
+          >
         </label>
 
-        <img :src="asset.imageUrl" :alt="asset.prompt" class="thumbnail" />
+        <img
+          :src="asset.imageUrl"
+          :alt="asset.prompt"
+          class="thumbnail"
+        >
 
         <div class="asset-info">
-          <div class="prompt">{{ asset.prompt }}</div>
+          <div class="prompt">
+            {{ asset.prompt }}
+          </div>
           <div class="meta">
             <span class="provider">{{ asset.provider }}</span>
             <span class="category">{{ asset.category }}</span>
@@ -263,13 +298,25 @@ onMounted(loadPending);
         </div>
 
         <div class="asset-actions">
-          <button class="btn approve" @click="handleApprove(asset.id)" title="Approve">
+          <button
+            class="btn approve"
+            title="Approve"
+            @click="handleApprove(asset.id)"
+          >
             ✓
           </button>
-          <button class="btn reject" @click="openRejectModal(asset.id)" title="Reject">
+          <button
+            class="btn reject"
+            title="Reject"
+            @click="openRejectModal(asset.id)"
+          >
             ✗
           </button>
-          <button class="btn attach" @click="openAttachModal(asset.id)" title="Attach to Run">
+          <button
+            class="btn attach"
+            title="Attach to Run"
+            @click="openAttachModal(asset.id)"
+          >
             📎
           </button>
         </div>
@@ -277,20 +324,29 @@ onMounted(loadPending);
     </div>
 
     <!-- Reject Modal -->
-    <div v-if="showRejectModal" class="modal-overlay" @click.self="showRejectModal = false">
+    <div
+      v-if="showRejectModal"
+      class="modal-overlay"
+      @click.self="showRejectModal = false"
+    >
       <div class="modal">
         <h3>Reject Asset</h3>
         <textarea 
           v-model="rejectionReason"
           placeholder="Enter rejection reason..."
           rows="3"
-        ></textarea>
+        />
         <div class="modal-actions">
-          <button class="btn cancel" @click="showRejectModal = false">Cancel</button>
+          <button
+            class="btn cancel"
+            @click="showRejectModal = false"
+          >
+            Cancel
+          </button>
           <button 
             class="btn reject" 
-            @click="confirmReject"
             :disabled="!rejectionReason.trim()"
+            @click="confirmReject"
           >
             Reject
           </button>
@@ -299,20 +355,29 @@ onMounted(loadPending);
     </div>
 
     <!-- Attach Modal -->
-    <div v-if="showAttachModal" class="modal-overlay" @click.self="showAttachModal = false">
+    <div
+      v-if="showAttachModal"
+      class="modal-overlay"
+      @click.self="showAttachModal = false"
+    >
       <div class="modal">
         <h3>Attach to Run</h3>
         <input 
           v-model="targetRunId"
           placeholder="Enter Run ID..."
           type="text"
-        />
+        >
         <div class="modal-actions">
-          <button class="btn cancel" @click="showAttachModal = false">Cancel</button>
+          <button
+            class="btn cancel"
+            @click="showAttachModal = false"
+          >
+            Cancel
+          </button>
           <button 
             class="btn primary" 
-            @click="confirmAttach"
             :disabled="!targetRunId.trim()"
+            @click="confirmAttach"
           >
             Attach
           </button>

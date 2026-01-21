@@ -1,13 +1,22 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="$emit('update:modelValue', false)"></div>
+  <div
+    v-if="modelValue"
+    class="fixed inset-0 z-50"
+  >
+    <div
+      class="absolute inset-0 bg-black/40"
+      @click="$emit('update:modelValue', false)"
+    />
     <div class="absolute inset-0 sm:inset-8 bg-white rounded-xl shadow-xl flex flex-col">
       <!-- Header -->
       <div class="px-4 py-3 border-b flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Compare Settings: Baseline vs Recommendation</h3>
+        <h3 class="text-lg font-semibold">
+          Compare Settings: Baseline vs Recommendation
+        </h3>
         <button 
           class="px-3 py-1 border rounded hover:bg-gray-100" 
-          @click="$emit('update:modelValue', false)">
+          @click="$emit('update:modelValue', false)"
+        >
           Close
         </button>
       </div>

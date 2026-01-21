@@ -1,5 +1,8 @@
 <template>
-  <div class="metrics" v-if="delta">
+  <div
+    v-if="delta"
+    class="metrics"
+  >
     <h3>Delta Metrics</h3>
     <ul>
       <li>Time Δ: {{ delta.time?.toFixed(2) }} s</li>

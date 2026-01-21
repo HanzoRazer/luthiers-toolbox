@@ -332,12 +332,28 @@ watch(selectedRunId, (v) => {
     <!-- Header -->
     <div class="widget-header">
       <h3>Vision &rarr; Attach to Run</h3>
-      <button class="close-btn" @click="emit('close')" title="Close">&times;</button>
+      <button
+        class="close-btn"
+        title="Close"
+        @click="emit('close')"
+      >
+        &times;
+      </button>
     </div>
 
     <!-- Messages -->
-    <div v-if="error" class="message error">{{ error }}</div>
-    <div v-if="successMessage" class="message success">{{ successMessage }}</div>
+    <div
+      v-if="error"
+      class="message error"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-if="successMessage"
+      class="message success"
+    >
+      {{ successMessage }}
+    </div>
 
     <!-- Generation Section -->
     <section class="section">
@@ -348,7 +364,7 @@ watch(selectedRunId, (v) => {
           v-model="prompt"
           placeholder="Describe the image you want to generate..."
           rows="3"
-        ></textarea>
+        />
       </div>
 
       <div class="form-row-inline">
@@ -368,17 +384,27 @@ watch(selectedRunId, (v) => {
         <div class="form-field">
           <label>Count</label>
           <select v-model="numImages">
-            <option :value="1">1</option>
-            <option :value="2">2</option>
-            <option :value="4">4</option>
+            <option :value="1">
+              1
+            </option>
+            <option :value="2">
+              2
+            </option>
+            <option :value="4">
+              4
+            </option>
           </select>
         </div>
 
         <div class="form-field">
           <label>Quality</label>
           <select v-model="quality">
-            <option value="standard">Standard</option>
-            <option value="hd">HD</option>
+            <option value="standard">
+              Standard
+            </option>
+            <option value="hd">
+              HD
+            </option>
           </select>
         </div>
       </div>
@@ -394,7 +420,10 @@ watch(selectedRunId, (v) => {
     </section>
 
     <!-- Assets Section -->
-    <section class="section" v-if="generatedAssets.length > 0">
+    <section
+      v-if="generatedAssets.length > 0"
+      class="section"
+    >
       <h4>2. Select Asset</h4>
       <div class="assets-grid">
         <div
@@ -410,29 +439,50 @@ watch(selectedRunId, (v) => {
               :alt="asset.filename"
               loading="lazy"
               @error="($event.target as HTMLImageElement).src = '/placeholder.svg'"
-            />
+            >
           </div>
           <div class="asset-info">
-            <div class="asset-filename" :title="asset.filename">
+            <div
+              class="asset-filename"
+              :title="asset.filename"
+            >
               {{ truncate(asset.filename, 20) }}
             </div>
             <div class="asset-meta">
-              <span class="sha" :title="asset.sha256">
+              <span
+                class="sha"
+                :title="asset.sha256"
+              >
                 {{ asset.sha256.slice(0, 8) }}...
               </span>
               <span class="provider">{{ asset.provider }}</span>
             </div>
           </div>
-          <div v-if="selectedAssetSha === asset.sha256" class="check-badge">&#10003;</div>
+          <div
+            v-if="selectedAssetSha === asset.sha256"
+            class="check-badge"
+          >
+            &#10003;
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Run Selection Section -->
-    <section class="section" v-if="selectedAssetSha">
+    <section
+      v-if="selectedAssetSha"
+      class="section"
+    >
       <div class="step-header">
         <h4>3. Select Run</h4>
-        <button class="btn" type="button" :disabled="isLoadingRuns" @click="loadRuns">Refresh</button>
+        <button
+          class="btn"
+          type="button"
+          :disabled="isLoadingRuns"
+          @click="loadRuns"
+        >
+          Refresh
+        </button>
       </div>
 
       <!-- Search + Create row -->
@@ -443,25 +493,57 @@ watch(selectedRunId, (v) => {
           placeholder="Search runs (id / event_type)…"
           :disabled="isLoadingRuns"
           @keydown.enter.prevent="loadRuns"
-        />
-        <button class="btn" type="button" :disabled="isLoadingRuns" @click="loadRuns">Search</button>
-        <button class="btn primary" type="button" :disabled="isLoadingRuns" @click="createAndSelectRun">
+        >
+        <button
+          class="btn"
+          type="button"
+          :disabled="isLoadingRuns"
+          @click="loadRuns"
+        >
+          Search
+        </button>
+        <button
+          class="btn primary"
+          type="button"
+          :disabled="isLoadingRuns"
+          @click="createAndSelectRun"
+        >
           + Create Run
         </button>
       </div>
 
       <!-- Empty state message -->
-      <div v-if="runs.length === 0 && !isLoadingRuns" class="empty-hint">
+      <div
+        v-if="runs.length === 0 && !isLoadingRuns"
+        class="empty-hint"
+      >
         No runs available.
-        <div class="hint-tip">Tip: click <strong>+ Create Run</strong> to start a <code>vision_image_review</code> run.</div>
+        <div class="hint-tip">
+          Tip: click <strong>+ Create Run</strong> to start a <code>vision_image_review</code> run.
+        </div>
       </div>
 
       <!-- Run dropdown selector -->
-      <div v-else-if="runs.length > 0" class="run-selector">
+      <div
+        v-else-if="runs.length > 0"
+        class="run-selector"
+      >
         <label class="form-label">Recent runs</label>
-        <select v-model="selectedRunId" class="run-select">
-          <option :value="null" disabled>Select a run...</option>
-          <option v-for="run in runs" :key="run.run_id" :value="run.run_id">
+        <select
+          v-model="selectedRunId"
+          class="run-select"
+        >
+          <option
+            :value="null"
+            disabled
+          >
+            Select a run...
+          </option>
+          <option
+            v-for="run in runs"
+            :key="run.run_id"
+            :value="run.run_id"
+          >
             {{ run.run_id.slice(0, 16) }}... {{ run.event_type ? `• ${run.event_type}` : "" }}
           </option>
         </select>
@@ -476,13 +558,21 @@ watch(selectedRunId, (v) => {
           >
             Load more
           </button>
-          <div v-else class="runs-count">Showing {{ runs.length }} run(s)</div>
+          <div
+            v-else
+            class="runs-count"
+          >
+            Showing {{ runs.length }} run(s)
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Attach Action -->
-    <section class="section action-section" v-if="selectedAssetSha && selectedRunId">
+    <section
+      v-if="selectedAssetSha && selectedRunId"
+      class="section action-section"
+    >
       <h4>4. Attach</h4>
       <div class="attach-summary">
         <div class="summary-item">
@@ -502,8 +592,15 @@ watch(selectedRunId, (v) => {
         <span v-if="isAttaching">Attaching...</span>
         <span v-else>Attach &amp; Review</span>
       </button>
-      <div v-if="successMessage && !autoNavigate && lastAttached" class="success-actions">
-        <button class="btn" type="button" @click="goToReview(lastAttached.runId)">
+      <div
+        v-if="successMessage && !autoNavigate && lastAttached"
+        class="success-actions"
+      >
+        <button
+          class="btn"
+          type="button"
+          @click="goToReview(lastAttached.runId)"
+        >
           Go to Review
         </button>
       </div>

@@ -1,54 +1,122 @@
 <template>
   <div class="p-3 space-y-3 border rounded">
-    <h3 class="text-lg font-semibold">Adaptive Pocket Lab</h3>
+    <h3 class="text-lg font-semibold">
+      Adaptive Pocket Lab
+    </h3>
 
     <div class="grid md:grid-cols-3 gap-3">
       <div class="space-y-2">
         <label class="block text-sm font-medium">Tool Ø (mm)</label>
-        <input v-model.number="toolD" type="number" step="0.1" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="toolD"
+          type="number"
+          step="0.1"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Step-over (%)</label>
-        <input v-model.number="stepoverPct" type="number" step="1" min="5" max="95" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="stepoverPct"
+          type="number"
+          step="1"
+          min="5"
+          max="95"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Step-down (mm)</label>
-        <input v-model.number="stepdown" type="number" step="0.1" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="stepdown"
+          type="number"
+          step="0.1"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Margin (mm)</label>
-        <input v-model.number="margin" type="number" step="0.1" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="margin"
+          type="number"
+          step="0.1"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Strategy</label>
-        <select v-model="strategy" class="border px-2 py-1 rounded w-full">
+        <select
+          v-model="strategy"
+          class="border px-2 py-1 rounded w-full"
+        >
           <option>Spiral</option>
           <option>Lanes</option>
         </select>
         
         <label class="block text-sm font-medium">Corner Radius Min (mm) <span class="text-xs text-gray-500">L.2</span></label>
-        <input v-model.number="cornerRadiusMin" type="number" step="0.1" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="cornerRadiusMin"
+          type="number"
+          step="0.1"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Slowdown Feed (%) <span class="text-xs text-gray-500">L.2</span></label>
-        <input v-model.number="slowdownFeedPct" type="number" step="5" min="30" max="100" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="slowdownFeedPct"
+          type="number"
+          step="5"
+          min="30"
+          max="100"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" v-model="climb" />
+          <input
+            v-model="climb"
+            type="checkbox"
+          >
           <span>Climb milling</span>
         </label>
         
         <label class="block text-sm font-medium">Feed XY (mm/min)</label>
-        <input v-model.number="feedXY" type="number" step="100" class="border px-2 py-1 rounded w-full"/>
+        <input
+          v-model.number="feedXY"
+          type="number"
+          step="100"
+          class="border px-2 py-1 rounded w-full"
+        >
         
         <label class="block text-sm font-medium">Units</label>
-        <select v-model="units" class="border px-2 py-1 rounded w-full">
-          <option value="mm">mm (G21)</option>
-          <option value="inch">inch (G20)</option>
+        <select
+          v-model="units"
+          class="border px-2 py-1 rounded w-full"
+        >
+          <option value="mm">
+            mm (G21)
+          </option>
+          <option value="inch">
+            inch (G20)
+          </option>
         </select>
         
         <!-- M.1 Machine Selector -->
         <label class="block text-sm font-medium mt-2">Machine Profile</label>
-        <select v-model="machineId" class="border px-2 py-1 rounded w-full">
-          <option v-for="m in machines" :key="m.id" :value="m.id">{{ m.title }}</option>
-          <option value="">(Custom from knobs)</option>
+        <select
+          v-model="machineId"
+          class="border px-2 py-1 rounded w-full"
+        >
+          <option
+            v-for="m in machines"
+            :key="m.id"
+            :value="m.id"
+          >
+            {{ m.title }}
+          </option>
+          <option value="">
+            (Custom from knobs)
+          </option>
         </select>
-        <div v-if="selMachine" class="text-xs text-gray-500 mt-1">
+        <div
+          v-if="selMachine"
+          class="text-xs text-gray-500 mt-1"
+        >
           Feed {{ selMachine.limits.feed_xy }} mm/min · 
           Accel {{ selMachine.limits.accel }} mm/s² · 
           Jerk {{ selMachine.limits.jerk }} mm/s³ · 
@@ -57,69 +125,162 @@
         
         <!-- M.1.1 Machine Editor & Compare Buttons -->
         <div class="flex gap-2 mt-2">
-          <button class="px-2 py-1 text-sm border rounded hover:bg-gray-50" @click="openMachineEditor" :disabled="!selMachine">
+          <button
+            class="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+            :disabled="!selMachine"
+            @click="openMachineEditor"
+          >
             Edit Machine
           </button>
-          <button class="px-2 py-1 text-sm border rounded hover:bg-gray-50" @click="compareMachinesFunc" :disabled="!moves.length">
+          <button
+            class="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+            :disabled="!moves.length"
+            @click="compareMachinesFunc"
+          >
             Compare Machines
           </button>
         </div>
         
         <label class="block text-sm font-medium mt-2">Post-Processor</label>
-        <select v-model="postId" class="border px-2 py-1 rounded w-full">
-          <option v-for="p in posts" :key="p" :value="p">{{ p }}</option>
+        <select
+          v-model="postId"
+          class="border px-2 py-1 rounded w-full"
+        >
+          <option
+            v-for="p in posts"
+            :key="p"
+            :value="p"
+          >
+            {{ p }}
+          </option>
         </select>
 
         <div class="flex gap-2 mt-2">
-          <button class="px-2 py-1 border rounded" @click="savePresetForPost(postId)">Save preset</button>
-          <button class="px-2 py-1 border rounded" @click="loadPresetForPost(postId)">Load preset</button>
-          <button class="px-2 py-1 border rounded" @click="resetPresetForPost(postId)">Reset</button>
+          <button
+            class="px-2 py-1 border rounded"
+            @click="savePresetForPost(postId)"
+          >
+            Save preset
+          </button>
+          <button
+            class="px-2 py-1 border rounded"
+            @click="loadPresetForPost(postId)"
+          >
+            Load preset
+          </button>
+          <button
+            class="px-2 py-1 border rounded"
+            @click="resetPresetForPost(postId)"
+          >
+            Reset
+          </button>
         </div>
 
         <label class="block text-sm font-medium mt-2">Adaptive Feed Mode <span class="text-xs text-gray-500">Override</span></label>
-        <select v-model="afMode" class="border px-2 py-1 rounded w-full">
-          <option value="inherit">Inherit from post</option>
-          <option value="comment">Comment mode</option>
-          <option value="inline_f">Inline F</option>
-          <option value="mcode">M-code</option>
+        <select
+          v-model="afMode"
+          class="border px-2 py-1 rounded w-full"
+        >
+          <option value="inherit">
+            Inherit from post
+          </option>
+          <option value="comment">
+            Comment mode
+          </option>
+          <option value="inline_f">
+            Inline F
+          </option>
+          <option value="mcode">
+            M-code
+          </option>
         </select>
         
-        <div v-if="afMode === 'inline_f'" class="pl-4">
+        <div
+          v-if="afMode === 'inline_f'"
+          class="pl-4"
+        >
           <label class="block text-xs">Min feed (mm/min)</label>
-          <input v-model.number="afInlineMinF" type="number" step="50" class="border px-2 py-1 rounded w-full"/>
+          <input
+            v-model.number="afInlineMinF"
+            type="number"
+            step="50"
+            class="border px-2 py-1 rounded w-full"
+          >
         </div>
         
-        <div v-if="afMode === 'mcode'" class="pl-4 grid grid-cols-2 gap-2">
+        <div
+          v-if="afMode === 'mcode'"
+          class="pl-4 grid grid-cols-2 gap-2"
+        >
           <div>
             <label class="block text-xs">M-code start</label>
-            <input v-model="afMStart" type="text" class="border px-2 py-1 rounded w-full" placeholder="M52 P"/>
+            <input
+              v-model="afMStart"
+              type="text"
+              class="border px-2 py-1 rounded w-full"
+              placeholder="M52 P"
+            >
           </div>
           <div>
             <label class="block text-xs">M-code end</label>
-            <input v-model="afMEnd" type="text" class="border px-2 py-1 rounded w-full" placeholder="M52 P100"/>
+            <input
+              v-model="afMEnd"
+              type="text"
+              class="border px-2 py-1 rounded w-full"
+              placeholder="M52 P100"
+            >
           </div>
         </div>
         
         <div class="flex gap-2 pt-2 flex-wrap">
-          <button class="px-3 py-1 border rounded bg-blue-50" @click="plan">Plan</button>
-          <button class="px-3 py-1 border rounded bg-purple-50" @click="previewNc" :disabled="!moves.length">Preview NC</button>
-          <button class="px-3 py-1 border rounded" @click="openCompare" :disabled="!moves.length" aria-label="Open compare modes">Compare modes</button>
+          <button
+            class="px-3 py-1 border rounded bg-blue-50"
+            @click="plan"
+          >
+            Plan
+          </button>
+          <button
+            class="px-3 py-1 border rounded bg-purple-50"
+            :disabled="!moves.length"
+            @click="previewNc"
+          >
+            Preview NC
+          </button>
+          <button
+            class="px-3 py-1 border rounded"
+            :disabled="!moves.length"
+            aria-label="Open compare modes"
+            @click="openCompare"
+          >
+            Compare modes
+          </button>
           <CompareModeButton
             v-if="moves.length"
             :baseline-id="jobName || 'baseline'"
             :candidate-id="'candidate'"
             class="ml-2"
             aria-label="Go to Compare Lab"
-          >Compare in Lab</CompareModeButton>
-          <button class="px-3 py-1 border rounded bg-green-50" @click="exportProgram" :disabled="!moves.length" aria-label="Export G-code">Export G-code</button>
+          >
+            Compare in Lab
+          </CompareModeButton>
+          <button
+            class="px-3 py-1 border rounded bg-green-50"
+            :disabled="!moves.length"
+            aria-label="Export G-code"
+            @click="exportProgram"
+          >
+            Export G-code
+          </button>
         </div>
         
         <div class="space-y-2 pt-2 border-t">
           <div class="flex items-center gap-2">
             <label class="text-sm font-medium">Job name:</label>
-            <input v-model="jobName" 
+            <input
+              v-model="jobName" 
               placeholder="e.g., LP_top_pocket_R3" 
-              class="border px-2 py-1 rounded w-56 text-sm"/>
+              class="border px-2 py-1 rounded w-56 text-sm"
+            >
             <span class="text-xs text-gray-500">(optional filename stem)</span>
           </div>
           
@@ -127,78 +288,167 @@
             <div class="flex items-center gap-2">
               <label class="text-sm font-medium">Export modes:</label>
               <label class="text-xs flex items-center gap-1">
-                <input type="checkbox" v-model="exportModes.comment" class="w-3 h-3"/>
+                <input
+                  v-model="exportModes.comment"
+                  type="checkbox"
+                  class="w-3 h-3"
+                >
                 comment
               </label>
               <label class="text-xs flex items-center gap-1">
-                <input type="checkbox" v-model="exportModes.inline_f" class="w-3 h-3"/>
+                <input
+                  v-model="exportModes.inline_f"
+                  type="checkbox"
+                  class="w-3 h-3"
+                >
                 inline_f
               </label>
               <label class="text-xs flex items-center gap-1">
-                <input type="checkbox" v-model="exportModes.mcode" class="w-3 h-3"/>
+                <input
+                  v-model="exportModes.mcode"
+                  type="checkbox"
+                  class="w-3 h-3"
+                >
                 mcode
               </label>
             </div>
-            <button class="px-3 py-1 border rounded bg-orange-50" @click="batchExport" :disabled="!moves.length">
+            <button
+              class="px-3 py-1 border rounded bg-orange-50"
+              :disabled="!moves.length"
+              @click="batchExport"
+            >
               Batch Export (subset ZIP)
             </button>
           </div>
         </div>
         
         <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">HUD Overlays (L.2)</h3>
+          <h3 class="font-semibold text-sm">
+            HUD Overlays (L.2)
+          </h3>
           <div class="flex items-center gap-2">
-            <input v-model="showTight" type="checkbox" id="showTight" class="w-4 h-4"/>
-            <label for="showTight" class="text-sm">🔴 Tight Radius</label>
+            <input
+              id="showTight"
+              v-model="showTight"
+              type="checkbox"
+              class="w-4 h-4"
+            >
+            <label
+              for="showTight"
+              class="text-sm"
+            >🔴 Tight Radius</label>
           </div>
           <div class="flex items-center gap-2">
-            <input v-model="showSlow" type="checkbox" id="showSlow" class="w-4 h-4"/>
-            <label for="showSlow" class="text-sm">🟠 Slowdown Zone</label>
+            <input
+              id="showSlow"
+              v-model="showSlow"
+              type="checkbox"
+              class="w-4 h-4"
+            >
+            <label
+              for="showSlow"
+              class="text-sm"
+            >🟠 Slowdown Zone</label>
           </div>
           <div class="flex items-center gap-2">
-            <input v-model="showFillets" type="checkbox" id="showFillets" class="w-4 h-4"/>
-            <label for="showFillets" class="text-sm">🟢 Fillets</label>
+            <input
+              id="showFillets"
+              v-model="showFillets"
+              type="checkbox"
+              class="w-4 h-4"
+            >
+            <label
+              for="showFillets"
+              class="text-sm"
+            >🟢 Fillets</label>
           </div>
         </div>
         
         <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">Trochoids (L.3)</h3>
+          <h3 class="font-semibold text-sm">
+            Trochoids (L.3)
+          </h3>
           <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" v-model="useTrochoids" />
+            <input
+              v-model="useTrochoids"
+              type="checkbox"
+            >
             <span>Use trochoids</span>
           </label>
           
-          <div v-if="useTrochoids" class="grid grid-cols-2 gap-2 pl-4">
+          <div
+            v-if="useTrochoids"
+            class="grid grid-cols-2 gap-2 pl-4"
+          >
             <div>
               <label class="block text-xs">Trochoid radius (mm)</label>
-              <input v-model.number="trochoidRadius" type="number" step="0.1" min="0.3" class="border px-2 py-1 rounded w-full"/>
+              <input
+                v-model.number="trochoidRadius"
+                type="number"
+                step="0.1"
+                min="0.3"
+                class="border px-2 py-1 rounded w-full"
+              >
             </div>
             <div>
               <label class="block text-xs">Trochoid pitch (mm)</label>
-              <input v-model.number="trochoidPitch" type="number" step="0.1" min="0.6" class="border px-2 py-1 rounded w-full"/>
+              <input
+                v-model.number="trochoidPitch"
+                type="number"
+                step="0.1"
+                min="0.6"
+                class="border px-2 py-1 rounded w-full"
+              >
             </div>
           </div>
         </div>
         
         <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">Jerk-Aware Time (L.3)</h3>
+          <h3 class="font-semibold text-sm">
+            Jerk-Aware Time (L.3)
+          </h3>
           <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" v-model="jerkAware" />
+            <input
+              v-model="jerkAware"
+              type="checkbox"
+            >
             <span>Jerk-aware time</span>
           </label>
           
-          <div v-if="jerkAware" class="grid grid-cols-2 gap-2 pl-4">
+          <div
+            v-if="jerkAware"
+            class="grid grid-cols-2 gap-2 pl-4"
+          >
             <div>
               <label class="block text-xs">Accel (mm/s²)</label>
-              <input v-model.number="machineAccel" type="number" step="10" min="100" class="border px-2 py-1 rounded w-full"/>
+              <input
+                v-model.number="machineAccel"
+                type="number"
+                step="10"
+                min="100"
+                class="border px-2 py-1 rounded w-full"
+              >
             </div>
             <div>
               <label class="block text-xs">Jerk (mm/s³)</label>
-              <input v-model.number="machineJerk" type="number" step="100" min="100" class="border px-2 py-1 rounded w-full"/>
+              <input
+                v-model.number="machineJerk"
+                type="number"
+                step="100"
+                min="100"
+                class="border px-2 py-1 rounded w-full"
+              >
             </div>
             <div class="col-span-2">
               <label class="block text-xs">Corner tol (mm)</label>
-              <input v-model.number="cornerTol" type="number" step="0.05" min="0.05" max="1.0" class="border px-2 py-1 rounded w-full"/>
+              <input
+                v-model.number="cornerTol"
+                type="number"
+                step="0.05"
+                min="0.05"
+                max="1.0"
+                class="border px-2 py-1 rounded w-full"
+              >
             </div>
           </div>
         </div>
@@ -206,16 +456,22 @@
         <!-- M.2: Optimize for Machine -->
         <div class="mt-4 border rounded-xl p-3 bg-gradient-to-br from-blue-50 to-indigo-50">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-sm">Optimize for Machine</h3>
+            <h3 class="font-semibold text-sm">
+              Optimize for Machine
+            </h3>
             <div class="flex gap-2">
-              <button class="px-3 py-1 text-sm border rounded bg-white hover:bg-gray-50 disabled:opacity-50" 
-                      @click="runWhatIf" 
-                      :disabled="!moves.length || !machineId">
+              <button
+                class="px-3 py-1 text-sm border rounded bg-white hover:bg-gray-50 disabled:opacity-50" 
+                :disabled="!moves.length || !machineId" 
+                @click="runWhatIf"
+              >
                 Run What-If
               </button>
-              <button class="px-3 py-1 text-sm border rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" 
-                      @click="openCompareSettings" 
-                      :disabled="!optOut">
+              <button
+                class="px-3 py-1 text-sm border rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" 
+                :disabled="!optOut" 
+                @click="openCompareSettings"
+              >
                 Compare Settings
               </button>
             </div>
@@ -225,37 +481,80 @@
             <div>
               <label class="block mb-1">Feed (mm/min)</label>
               <div class="flex gap-1">
-                <input type="number" v-model.number="optFeedLo" class="border px-1 py-1 rounded w-full text-xs"/>
-                <input type="number" v-model.number="optFeedHi" class="border px-1 py-1 rounded w-full text-xs"/>
+                <input
+                  v-model.number="optFeedLo"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
+                <input
+                  v-model.number="optFeedHi"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
               </div>
             </div>
             <div>
               <label class="block mb-1">Stepover (0..1)</label>
               <div class="flex gap-1">
-                <input type="number" step="0.01" v-model.number="optStpLo" class="border px-1 py-1 rounded w-full text-xs"/>
-                <input type="number" step="0.01" v-model.number="optStpHi" class="border px-1 py-1 rounded w-full text-xs"/>
+                <input
+                  v-model.number="optStpLo"
+                  type="number"
+                  step="0.01"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
+                <input
+                  v-model.number="optStpHi"
+                  type="number"
+                  step="0.01"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
               </div>
             </div>
             <div>
               <label class="block mb-1">RPM</label>
               <div class="flex gap-1">
-                <input type="number" v-model.number="optRpmLo" class="border px-1 py-1 rounded w-full text-xs"/>
-                <input type="number" v-model.number="optRpmHi" class="border px-1 py-1 rounded w-full text-xs"/>
+                <input
+                  v-model.number="optRpmLo"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
+                <input
+                  v-model.number="optRpmHi"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
               </div>
             </div>
             <div>
               <label class="block mb-1">Flutes</label>
-              <input type="number" v-model.number="optFlutes" class="border px-1 py-1 rounded w-full text-xs"/>
+              <input
+                v-model.number="optFlutes"
+                type="number"
+                class="border px-1 py-1 rounded w-full text-xs"
+              >
             </div>
             <div>
               <label class="block mb-1">Chipload (mm)</label>
-              <input type="number" step="0.005" v-model.number="optChip" class="border px-1 py-1 rounded w-full text-xs"/>
+              <input
+                v-model.number="optChip"
+                type="number"
+                step="0.005"
+                class="border px-1 py-1 rounded w-full text-xs"
+              >
             </div>
             <div>
               <label class="block mb-1">Grid (F×S)</label>
               <div class="flex gap-1">
-                <input type="number" v-model.number="optGridF" class="border px-1 py-1 rounded w-full text-xs"/>
-                <input type="number" v-model.number="optGridS" class="border px-1 py-1 rounded w-full text-xs"/>
+                <input
+                  v-model.number="optGridF"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
+                <input
+                  v-model.number="optGridS"
+                  type="number"
+                  class="border px-1 py-1 rounded w-full text-xs"
+                >
               </div>
             </div>
           </div>
@@ -263,41 +562,79 @@
           <!-- M.3 Chipload enforcement controls -->
           <div class="flex items-center gap-3 mt-2 text-xs">
             <label class="flex items-center gap-1">
-              <input type="checkbox" v-model="enforceChip">
+              <input
+                v-model="enforceChip"
+                type="checkbox"
+              >
               <span>Enforce chipload</span>
             </label>
             <label class="flex items-center gap-1">
               <span>Tolerance (mm/tooth)</span>
-              <input type="number" step="0.005" v-model.number="chipTol" class="border px-2 py-1 rounded w-20" :disabled="!enforceChip"/>
+              <input
+                v-model.number="chipTol"
+                type="number"
+                step="0.005"
+                class="border px-2 py-1 rounded w-20"
+                :disabled="!enforceChip"
+              >
             </label>
           </div>
 
-          <div v-if="optOut" class="mt-3 grid md:grid-cols-3 gap-2 text-xs">
+          <div
+            v-if="optOut"
+            class="mt-3 grid md:grid-cols-3 gap-2 text-xs"
+          >
             <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">Baseline</div>
+              <div class="font-medium mb-1">
+                Baseline
+              </div>
               <div><b>Time:</b> {{ optOut.baseline.time_s }} s</div>
-              <div class="text-gray-600">Passes: {{ optOut.baseline.passes }}</div>
-              <div class="text-gray-600">Hops: {{ optOut.baseline.hop_count }}</div>
+              <div class="text-gray-600">
+                Passes: {{ optOut.baseline.passes }}
+              </div>
+              <div class="text-gray-600">
+                Hops: {{ optOut.baseline.hop_count }}
+              </div>
             </div>
             <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">Recommended</div>
+              <div class="font-medium mb-1">
+                Recommended
+              </div>
               <ul class="space-y-0.5">
                 <li><b>Feed:</b> {{ optOut.opt.best.feed_mm_min }} mm/min</li>
                 <li><b>Stepover:</b> {{ (optOut.opt.best.stepover*100).toFixed(1) }}%</li>
                 <li><b>RPM:</b> {{ optOut.opt.best.rpm }}</li>
                 <li><b>Time:</b> {{ optOut.opt.best.time_s }} s</li>
               </ul>
-              <button class="mt-2 px-2 py-1 border rounded text-xs bg-blue-600 text-white hover:bg-blue-700" 
-                      @click="applyRecommendation">
+              <button
+                class="mt-2 px-2 py-1 border rounded text-xs bg-blue-600 text-white hover:bg-blue-700" 
+                @click="applyRecommendation"
+              >
                 Apply to Job
               </button>
             </div>
             <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">Sensitivity (near best)</div>
+              <div class="font-medium mb-1">
+                Sensitivity (near best)
+              </div>
               <table class="w-full mt-1">
-                <thead><tr><th class="text-left">Feed</th><th class="text-left">Stp%</th><th class="text-left">Time</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th class="text-left">
+                      Feed
+                    </th><th class="text-left">
+                      Stp%
+                    </th><th class="text-left">
+                      Time
+                    </th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <tr v-for="n in optOut.opt.neighbors.slice(0,4)" :key="n.feed_mm_min+'-'+n.stepover" class="text-xs">
+                  <tr
+                    v-for="n in optOut.opt.neighbors.slice(0,4)"
+                    :key="n.feed_mm_min+'-'+n.stepover"
+                    class="text-xs"
+                  >
                     <td>{{ n.feed_mm_min }}</td>
                     <td>{{ (n.stepover*100).toFixed(0) }}</td>
                     <td>{{ n.time_s }}s</td>
@@ -311,31 +648,53 @@
         <!-- M.3: Energy & Heat -->
         <div class="mt-4 border rounded-xl p-3">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-sm">Energy & Heat</h3>
+            <h3 class="font-semibold text-sm">
+              Energy & Heat
+            </h3>
             <div class="flex items-center gap-2">
-              <select v-model="materialId" class="border px-2 py-1 rounded text-xs">
-                <option value="maple_hard">Maple (hard)</option>
-                <option value="mahogany">Mahogany</option>
-                <option value="al_6061">Al 6061</option>
-                <option value="custom">Custom</option>
+              <select
+                v-model="materialId"
+                class="border px-2 py-1 rounded text-xs"
+              >
+                <option value="maple_hard">
+                  Maple (hard)
+                </option>
+                <option value="mahogany">
+                  Mahogany
+                </option>
+                <option value="al_6061">
+                  Al 6061
+                </option>
+                <option value="custom">
+                  Custom
+                </option>
               </select>
-              <button class="px-3 py-1 border rounded text-xs bg-emerald-600 text-white hover:bg-emerald-700" 
-                      @click="runEnergy" 
-                      :disabled="!moves.length">
+              <button
+                class="px-3 py-1 border rounded text-xs bg-emerald-600 text-white hover:bg-emerald-700" 
+                :disabled="!moves.length" 
+                @click="runEnergy"
+              >
                 Compute
               </button>
-              <button class="px-3 py-1 border rounded text-xs bg-white hover:bg-gray-50" 
-                      @click="exportEnergyCsv" 
-                      :disabled="!energyOut">
+              <button
+                class="px-3 py-1 border rounded text-xs bg-white hover:bg-gray-50" 
+                :disabled="!energyOut" 
+                @click="exportEnergyCsv"
+              >
                 Export CSV
               </button>
             </div>
           </div>
 
-          <div v-if="energyOut" class="mt-3 grid md:grid-cols-3 gap-3">
+          <div
+            v-if="energyOut"
+            class="mt-3 grid md:grid-cols-3 gap-3"
+          >
             <!-- Totals Card -->
             <div class="border rounded p-2 text-sm bg-white">
-              <div class="font-medium mb-2">Totals</div>
+              <div class="font-medium mb-2">
+                Totals
+              </div>
               <div>Volume: <b>{{ energyOut.totals.volume_mm3.toFixed(0) }} mm³</b></div>
               <div>Energy: <b>{{ energyOut.totals.energy_j.toFixed(1) }} J</b></div>
               <div class="mt-2 text-xs text-gray-600">
@@ -348,23 +707,37 @@
 
             <!-- Heat Partition Bar -->
             <div class="border rounded p-2 bg-white">
-              <div class="text-sm font-medium mb-2">Heat Partition</div>
+              <div class="text-sm font-medium mb-2">
+                Heat Partition
+              </div>
               <div class="w-full h-5 bg-slate-100 rounded overflow-hidden flex">
-                <div :style="{width: chipPct+'%'}" class="bg-amber-400" :title="`Chip: ${chipPct.toFixed(1)}%`"></div>
-                <div :style="{width: toolPct+'%'}" class="bg-rose-400" :title="`Tool: ${toolPct.toFixed(1)}%`"></div>
-                <div :style="{width: workPct+'%'}" class="bg-emerald-400" :title="`Work: ${workPct.toFixed(1)}%`"></div>
+                <div
+                  :style="{width: chipPct+'%'}"
+                  class="bg-amber-400"
+                  :title="`Chip: ${chipPct.toFixed(1)}%`"
+                />
+                <div
+                  :style="{width: toolPct+'%'}"
+                  class="bg-rose-400"
+                  :title="`Tool: ${toolPct.toFixed(1)}%`"
+                />
+                <div
+                  :style="{width: workPct+'%'}"
+                  class="bg-emerald-400"
+                  :title="`Work: ${workPct.toFixed(1)}%`"
+                />
               </div>
               <div class="text-xs mt-2 flex gap-3">
                 <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-amber-400 inline-block rounded"></i>
+                  <i class="w-3 h-3 bg-amber-400 inline-block rounded" />
                   chip {{ chipPct.toFixed(0) }}%
                 </span>
                 <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-rose-400 inline-block rounded"></i>
+                  <i class="w-3 h-3 bg-rose-400 inline-block rounded" />
                   tool {{ toolPct.toFixed(0) }}%
                 </span>
                 <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-emerald-400 inline-block rounded"></i>
+                  <i class="w-3 h-3 bg-emerald-400 inline-block rounded" />
                   work {{ workPct.toFixed(0) }}%
                 </span>
               </div>
@@ -372,9 +745,19 @@
 
             <!-- Cumulative Energy Chart -->
             <div class="border rounded p-2 bg-white">
-              <div class="text-sm font-medium mb-2">Cumulative Energy</div>
-              <svg viewBox="0 0 300 120" class="w-full h-28">
-                <polyline :points="energyPolyline" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <div class="text-sm font-medium mb-2">
+                Cumulative Energy
+              </div>
+              <svg
+                viewBox="0 0 300 120"
+                class="w-full h-28"
+              >
+                <polyline
+                  :points="energyPolyline"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
               </svg>
             </div>
           </div>
@@ -384,57 +767,65 @@
       <!-- M.3 Heat over Time Card -->
       <div class="border rounded-lg p-4 bg-white shadow-sm">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold">Heat over Time</h2>
+          <h2 class="text-lg font-semibold">
+            Heat over Time
+          </h2>
           <div class="space-y-2">
             <div class="flex gap-2">
               <button
-                @click="runHeatTS"
                 class="px-3 py-1 rounded bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!planOut?.moves || !materialId || !profileId"
+                @click="runHeatTS"
               >
                 Compute
               </button>
               <button
-                @click="exportThermalReport"
                 class="px-3 py-1 rounded border border-purple-600 text-purple-600 text-sm hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!planOut?.moves"
                 title="Export Thermal Report (Markdown)"
+                @click="exportThermalReport"
               >
                 Export Report (MD)
               </button>
             </div>
             <label class="text-xs flex items-center gap-2">
-              <input type="checkbox" v-model="includeCsvLinks">
+              <input
+                v-model="includeCsvLinks"
+                type="checkbox"
+              >
               Include CSV download links in report
             </label>
             <div class="flex gap-2">
               <button
-                @click="exportThermalBundle"
                 class="px-3 py-1 rounded border border-blue-600 text-blue-600 text-sm hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!planOut?.moves"
                 title="Export Thermal Bundle (MD + moves.json ZIP)"
+                @click="exportThermalBundle"
               >
                 Export Bundle (ZIP)
               </button>
               <button
-                @click="logCurrentRun()"
                 class="px-3 py-1 rounded border border-green-600 text-green-600 text-sm hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!planOut?.moves"
                 title="Log this plan to database"
+                @click="logCurrentRun()"
               >
                 Log Plan
               </button>
               <button
-                @click="trainOverrides"
                 class="px-3 py-1 rounded border border-orange-600 text-orange-600 text-sm hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!profileId"
                 title="Train feed overrides from logged runs"
+                @click="trainOverrides"
               >
                 Train Overrides
               </button>
             </div>
             <label class="text-xs flex items-center gap-2">
-              <input type="checkbox" v-model="adoptOverrides">
+              <input
+                v-model="adoptOverrides"
+                type="checkbox"
+              >
               Adopt learned feed overrides
             </label>
             
@@ -443,8 +834,8 @@
               <div class="flex items-center gap-3">
                 <label class="text-xs flex items-center gap-2">
                   <input 
-                    type="checkbox" 
                     v-model="liveLearnApplied" 
+                    type="checkbox" 
                     :disabled="!sessionOverrideFactor"
                     title="Apply session-only feed override from measured runtime"
                   >
@@ -459,27 +850,27 @@
                 </span>
                 <button
                   v-if="sessionOverrideFactor"
-                  @click="() => { liveLearnApplied = false; sessionOverrideFactor = null; measuredSeconds = null }"
                   class="text-xs px-2 py-0.5 rounded border border-gray-400 text-gray-600 hover:bg-gray-50"
                   title="Reset session override"
+                  @click="() => { liveLearnApplied = false; sessionOverrideFactor = null; measuredSeconds = null }"
                 >
                   Reset
                 </button>
               </div>
               <div class="flex items-center gap-2">
                 <input 
+                  v-model.number="measuredSeconds" 
                   type="number" 
                   step="0.1" 
-                  v-model.number="measuredSeconds" 
                   placeholder="Actual sec"
                   class="px-2 py-1 border rounded text-xs w-28"
                   title="Enter measured runtime in seconds"
-                />
+                >
                 <button
-                  @click="logCurrentRun(measuredSeconds ?? undefined)"
                   class="px-3 py-1 rounded border border-amber-600 text-amber-600 text-xs hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   :disabled="!planOut?.moves || !measuredSeconds"
                   title="Log plan with measured runtime (computes session override)"
+                  @click="logCurrentRun(measuredSeconds ?? undefined)"
                 >
                   Log with actual time
                 </button>
@@ -488,42 +879,89 @@
           </div>
         </div>
         
-        <div v-if="heatTS" class="space-y-3">
+        <div
+          v-if="heatTS"
+          class="space-y-3"
+        >
           <!-- Summary -->
           <div class="grid grid-cols-3 gap-3 text-sm p-2 bg-purple-50 rounded">
             <div>
-              <div class="text-xs text-gray-600">Total Time</div>
-              <div class="font-medium">{{ heatTS.total_s?.toFixed(1) || 0 }} s</div>
+              <div class="text-xs text-gray-600">
+                Total Time
+              </div>
+              <div class="font-medium">
+                {{ heatTS.total_s?.toFixed(1) || 0 }} s
+              </div>
             </div>
             <div>
-              <div class="text-xs text-gray-600">Peak Chip Power</div>
-              <div class="font-medium">{{ Math.max(...(heatTS.p_chip || [0])).toFixed(1) }} W</div>
+              <div class="text-xs text-gray-600">
+                Peak Chip Power
+              </div>
+              <div class="font-medium">
+                {{ Math.max(...(heatTS.p_chip || [0])).toFixed(1) }} W
+              </div>
             </div>
             <div>
-              <div class="text-xs text-gray-600">Peak Tool Power</div>
-              <div class="font-medium">{{ Math.max(...(heatTS.p_tool || [0])).toFixed(1) }} W</div>
+              <div class="text-xs text-gray-600">
+                Peak Tool Power
+              </div>
+              <div class="font-medium">
+                {{ Math.max(...(heatTS.p_tool || [0])).toFixed(1) }} W
+              </div>
             </div>
           </div>
 
           <!-- Power Chart -->
           <div class="border rounded p-2 bg-white">
-            <div class="text-sm font-medium mb-2">Power over Time</div>
-            <svg viewBox="0 0 300 120" class="w-full h-32">
-              <polyline :points="tsPolyline('p_chip')" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.9"/>
-              <polyline :points="tsPolyline('p_tool')" fill="none" stroke="#ef4444" stroke-width="2" opacity="0.9"/>
-              <polyline :points="tsPolyline('p_work')" fill="none" stroke="#14b8a6" stroke-width="2" opacity="0.9"/>
+            <div class="text-sm font-medium mb-2">
+              Power over Time
+            </div>
+            <svg
+              viewBox="0 0 300 120"
+              class="w-full h-32"
+            >
+              <polyline
+                :points="tsPolyline('p_chip')"
+                fill="none"
+                stroke="#f59e0b"
+                stroke-width="2"
+                opacity="0.9"
+              />
+              <polyline
+                :points="tsPolyline('p_tool')"
+                fill="none"
+                stroke="#ef4444"
+                stroke-width="2"
+                opacity="0.9"
+              />
+              <polyline
+                :points="tsPolyline('p_work')"
+                fill="none"
+                stroke="#14b8a6"
+                stroke-width="2"
+                opacity="0.9"
+              />
             </svg>
             <div class="text-xs mt-2 flex items-center gap-3">
               <span class="flex items-center gap-1">
-                <i class="inline-block w-3 h-3 rounded" style="background:#f59e0b"></i>
+                <i
+                  class="inline-block w-3 h-3 rounded"
+                  style="background:#f59e0b"
+                />
                 Chip heat
               </span>
               <span class="flex items-center gap-1">
-                <i class="inline-block w-3 h-3 rounded" style="background:#ef4444"></i>
+                <i
+                  class="inline-block w-3 h-3 rounded"
+                  style="background:#ef4444"
+                />
                 Tool heat
               </span>
               <span class="flex items-center gap-1">
-                <i class="inline-block w-3 h-3 rounded" style="background:#14b8a6"></i>
+                <i
+                  class="inline-block w-3 h-3 rounded"
+                  style="background:#14b8a6"
+                />
                 Work heat
               </span>
             </div>
@@ -535,19 +973,34 @@
         <!-- M.1.1 Bottleneck Map Toggle -->
         <div class="flex items-center gap-4 mb-2">
           <label class="text-sm flex items-center gap-2">
-            <input type="checkbox" v-model="showBottleneckMap"> Bottleneck Map
+            <input
+              v-model="showBottleneckMap"
+              type="checkbox"
+            > Bottleneck Map
           </label>
-          <div class="text-xs text-gray-600 flex items-center gap-3" v-if="showBottleneckMap">
+          <div
+            v-if="showBottleneckMap"
+            class="text-xs text-gray-600 flex items-center gap-3"
+          >
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#f59e0b"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#f59e0b"
+              />
               feed cap
             </span>
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#14b8a6"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#14b8a6"
+              />
               accel
             </span>
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#ec4899"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#ec4899"
+              />
               jerk
             </span>
           </div>
@@ -555,39 +1008,74 @@
           <!-- M.3 Export Bottleneck CSV -->
           <button
             v-if="showBottleneckMap && planOut?.moves"
-            @click="exportBottleneckCsv"
             class="ml-auto px-3 py-1 rounded bg-slate-600 text-white text-xs hover:bg-slate-700"
+            @click="exportBottleneckCsv"
           >
             Export CSV
           </button>
           
           <!-- M.3 Bottleneck Pie Chart -->
-          <div class="ml-auto border rounded p-2 bg-white" v-if="showBottleneckMap && planOut?.stats?.caps">
-            <div class="text-sm font-medium mb-1">Bottleneck Share</div>
-            <svg viewBox="0 0 120 120" class="w-28 h-28 mx-auto">
+          <div
+            v-if="showBottleneckMap && planOut?.stats?.caps"
+            class="ml-auto border rounded p-2 bg-white"
+          >
+            <div class="text-sm font-medium mb-1">
+              Bottleneck Share
+            </div>
+            <svg
+              viewBox="0 0 120 120"
+              class="w-28 h-28 mx-auto"
+            >
               <g transform="translate(60,60)">
-                <template v-for="(s, i) in capsPie" :key="i">
-                  <path :d="arcPath(i)" :fill="s.color" :title="s.label + ': ' + Math.round(s.pct*100) + '%'"/>
+                <template
+                  v-for="(s, i) in capsPie"
+                  :key="i"
+                >
+                  <path
+                    :d="arcPath(i)"
+                    :fill="s.color"
+                    :title="s.label + ': ' + Math.round(s.pct*100) + '%'"
+                  />
                 </template>
-                <circle cx="0" cy="0" r="26" fill="#fff"/>
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="26"
+                  fill="#fff"
+                />
               </g>
             </svg>
             <div class="text-xs mt-2 grid grid-cols-2 gap-1">
-              <div v-for="s in capsPie" :key="s.label" class="flex items-center gap-1">
-                <i class="inline-block w-3 h-3 rounded" :style="{background: s.color}"></i>
+              <div
+                v-for="s in capsPie"
+                :key="s.label"
+                class="flex items-center gap-1"
+              >
+                <i
+                  class="inline-block w-3 h-3 rounded"
+                  :style="{background: s.color}"
+                />
                 <span>{{ s.label }} {{ Math.round(s.pct*100) }}%</span>
               </div>
             </div>
           </div>
         </div>
         
-        <canvas ref="cv" class="w-full h-[420px] border rounded bg-gray-50"></canvas>
-        <div class="text-sm mt-2 p-2 bg-slate-100 rounded" v-if="stats">
+        <canvas
+          ref="cv"
+          class="w-full h-[420px] border rounded bg-gray-50"
+        />
+        <div
+          v-if="stats"
+          class="text-sm mt-2 p-2 bg-slate-100 rounded"
+        >
           <div class="grid grid-cols-2 gap-2">
             <div><b>Length:</b> {{ stats.length_mm }} mm</div>
             <div><b>Area:</b> {{ stats.area_mm2 }} mm²</div>
             <div><b>Time (Classic):</b> {{ stats.time_s_classic }} s ({{ (stats.time_s_classic/60).toFixed(1) }} min)</div>
-            <div v-if="stats.time_s_jerk !== null"><b>Time (Jerk):</b> {{ stats.time_s_jerk }} s ({{ (stats.time_s_jerk/60).toFixed(1) }} min)</div>
+            <div v-if="stats.time_s_jerk !== null">
+              <b>Time (Jerk):</b> {{ stats.time_s_jerk }} s ({{ (stats.time_s_jerk/60).toFixed(1) }} min)
+            </div>
             <div><b>Moves:</b> {{ stats.move_count }}</div>
             <div><b>Volume:</b> {{ stats.volume_mm3 }} mm³</div>
             <div><b>Tight Segments:</b> {{ stats.tight_segments || 0 }}</div>
@@ -595,19 +1083,31 @@
           </div>
           <div class="mt-2 flex items-center gap-3 text-xs text-gray-600">
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#0ea5e9"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#0ea5e9"
+              />
               Normal speed
             </span>
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#f59e0b"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#f59e0b"
+              />
               Moderate slowdown
             </span>
             <span class="flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#ef4444"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#ef4444"
+              />
               Heavy slowdown
             </span>
             <span class="ml-4 flex items-center gap-1">
-              <span class="inline-block w-3 h-3 rounded" style="background:#7c3aed"></span>
+              <span
+                class="inline-block w-3 h-3 rounded"
+                style="background:#7c3aed"
+              />
               Trochoid arcs
             </span>
           </div>
@@ -615,22 +1115,38 @@
       </div>
     </div>
     
-  <!-- NC Preview Drawer -->
-  <PreviewNcDrawer :open="ncOpen" :gcodeText="ncText" @close="ncOpen = false" />
-  <CompareAfModes v-model="compareOpen" :requestBody="buildBaseExportBody()" @make-default="handleMakeDefault" />
+    <!-- NC Preview Drawer -->
+    <PreviewNcDrawer
+      :open="ncOpen"
+      :gcode-text="ncText"
+      @close="ncOpen = false"
+    />
+    <CompareAfModes
+      v-model="compareOpen"
+      :request-body="buildBaseExportBody()"
+      @make-default="handleMakeDefault"
+    />
   
-  <!-- M.1.1 Machine Editor & Compare Modals -->
-  <MachineEditorModal v-model="machineEditorOpen" :profile="selMachine" @saved="onMachineSaved" />
-  <CompareMachines v-model="compareMachinesOpen" :machines="machines" :body="buildBaseExportBody()" />
+    <!-- M.1.1 Machine Editor & Compare Modals -->
+    <MachineEditorModal
+      v-model="machineEditorOpen"
+      :profile="selMachine"
+      @saved="onMachineSaved"
+    />
+    <CompareMachines
+      v-model="compareMachinesOpen"
+      :machines="machines"
+      :body="buildBaseExportBody()"
+    />
   
-  <!-- M.3 Compare Settings Modal -->
-  <CompareSettings 
-    v-model="compareSettingsOpen" 
-    :baselineNc="compareData.baselineNc" 
-    :optNc="compareData.optNc" 
-    :baselineTime="compareData.tb" 
-    :optTime="compareData.topt" 
-  />
+    <!-- M.3 Compare Settings Modal -->
+    <CompareSettings 
+      v-model="compareSettingsOpen" 
+      :baseline-nc="compareData.baselineNc" 
+      :opt-nc="compareData.optNc" 
+      :baseline-time="compareData.tb" 
+      :opt-time="compareData.topt" 
+    />
   </div>
 </template>
 

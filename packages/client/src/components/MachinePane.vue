@@ -2,20 +2,36 @@
   <div class="border rounded-md">
     <div class="p-2 border-b flex gap-2 items-center bg-gray-50">
       <span class="text-sm font-semibold">{{ slot }}</span>
-      <select v-model="pid" class="border px-2 py-1 rounded grow">
-        <option :value="''">(none)</option>
-        <option v-for="m in machines" :key="m.id" :value="m.id">{{ m.title }}</option>
+      <select
+        v-model="pid"
+        class="border px-2 py-1 rounded grow"
+      >
+        <option :value="''">
+          (none)
+        </option>
+        <option
+          v-for="m in machines"
+          :key="m.id"
+          :value="m.id"
+        >
+          {{ m.title }}
+        </option>
       </select>
       <button 
         class="px-2 py-1 text-xs border rounded hover:bg-white disabled:opacity-50" 
-        @click="run" 
-        :disabled="!pid || loading"
+        :disabled="!pid || loading" 
+        @click="run"
       >
         {{ loading ? '...' : 'Run' }}
       </button>
     </div>
-    <div class="p-3 text-sm" v-if="stats">
-      <div class="font-semibold mb-2">{{ selectedMachine?.title }}</div>
+    <div
+      v-if="stats"
+      class="p-3 text-sm"
+    >
+      <div class="font-semibold mb-2">
+        {{ selectedMachine?.title }}
+      </div>
       <div class="grid gap-1">
         <div class="flex justify-between">
           <span class="text-gray-600">Classic:</span>
@@ -25,29 +41,43 @@
           <span class="text-gray-600">Jerk-aware:</span>
           <b>{{ stats.time_s_jerk }} s</b>
         </div>
-        <div v-if="stats.time_s_jerk && stats.time_s_classic" class="flex justify-between text-xs text-gray-500">
+        <div
+          v-if="stats.time_s_jerk && stats.time_s_classic"
+          class="flex justify-between text-xs text-gray-500"
+        >
           <span>Speedup:</span>
           <span>{{ (stats.time_s_classic / stats.time_s_jerk).toFixed(2) }}x</span>
         </div>
       </div>
       
       <div class="mt-3 pt-3 border-t">
-        <div class="text-xs font-semibold mb-1 text-gray-600">Bottlenecks (Caps)</div>
+        <div class="text-xs font-semibold mb-1 text-gray-600">
+          Bottlenecks (Caps)
+        </div>
         <div class="grid grid-cols-2 gap-1 text-xs">
           <div class="flex items-center gap-1">
-            <span class="inline-block w-3 h-3 rounded" style="background:#f59e0b"></span>
+            <span
+              class="inline-block w-3 h-3 rounded"
+              style="background:#f59e0b"
+            />
             Feed: {{ stats.caps.feed_cap }}
           </div>
           <div class="flex items-center gap-1">
-            <span class="inline-block w-3 h-3 rounded" style="background:#14b8a6"></span>
+            <span
+              class="inline-block w-3 h-3 rounded"
+              style="background:#14b8a6"
+            />
             Accel: {{ stats.caps.accel }}
           </div>
           <div class="flex items-center gap-1">
-            <span class="inline-block w-3 h-3 rounded" style="background:#ec4899"></span>
+            <span
+              class="inline-block w-3 h-3 rounded"
+              style="background:#ec4899"
+            />
             Jerk: {{ stats.caps.jerk }}
           </div>
           <div class="flex items-center gap-1">
-            <span class="inline-block w-3 h-3 rounded bg-gray-300"></span>
+            <span class="inline-block w-3 h-3 rounded bg-gray-300" />
             None: {{ stats.caps.none }}
           </div>
         </div>
@@ -58,7 +88,10 @@
         <div>Moves: {{ stats.move_count }}</div>
       </div>
     </div>
-    <div class="p-3 text-sm text-gray-500" v-else-if="!pid">
+    <div
+      v-else-if="!pid"
+      class="p-3 text-sm text-gray-500"
+    >
       Select a machine and click Run
     </div>
   </div>

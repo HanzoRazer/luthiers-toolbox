@@ -5,62 +5,83 @@
     <h1>RMOS CNC Job Detail</h1>
 
     <p class="back-link">
-      <router-link to="/rmos/cnc-history">← Back to CNC History</router-link>
+      <router-link to="/rmos/cnc-history">
+        ← Back to CNC History
+      </router-link>
     </p>
 
-    <p v-if="loading">Loading job...</p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="loading">
+      Loading job...
+    </p>
+    <p
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </p>
 
-    <div v-if="job" class="job-layout">
+    <div
+      v-if="job"
+      class="job-layout"
+    >
       <section class="card">
         <h2>Job Summary</h2>
         <p>
-          <strong>Job ID:</strong> <span class="mono">{{ job.job_id }}</span><br />
+          <strong>Job ID:</strong> <span class="mono">{{ job.job_id }}</span><br>
           <strong>Status:</strong>
-          <span :class="['badge', statusClass(job.status)]">{{ job.status }}</span><br />
-          <strong>Ring ID:</strong> {{ job.ring_id ?? '—' }}<br />
-          <strong>Material:</strong> {{ job.material ?? '—' }}<br />
-          <strong>Pattern ID:</strong> {{ job.pattern_id ?? '—' }}<br />
+          <span :class="['badge', statusClass(job.status)]">{{ job.status }}</span><br>
+          <strong>Ring ID:</strong> {{ job.ring_id ?? '—' }}<br>
+          <strong>Material:</strong> {{ job.material ?? '—' }}<br>
+          <strong>Pattern ID:</strong> {{ job.pattern_id ?? '—' }}<br>
           <strong>Created:</strong>
           <span v-if="job.created_at">{{ formatDate(job.created_at) }}</span>
           <span v-else>—</span>
         </p>
       </section>
 
-      <section class="card" v-if="job.safety">
+      <section
+        v-if="job.safety"
+        class="card"
+      >
         <h2>Safety</h2>
         <p>
-          <strong>Decision:</strong> {{ job.safety.decision }}<br />
+          <strong>Decision:</strong> {{ job.safety.decision }}<br>
           <strong>Risk level:</strong>
           <span
             :class="['badge', riskClass(job.safety.risk_level)]"
           >
             {{ job.safety.risk_level }}
-          </span><br />
+          </span><br>
           <strong>Override required:</strong>
           {{ job.safety.requires_override ? 'Yes' : 'No' }}
         </p>
         <div v-if="job.safety.reasons && job.safety.reasons.length">
           <h3>Safety Notes</h3>
           <ul>
-            <li v-for="(reason, idx) in job.safety.reasons" :key="idx">
+            <li
+              v-for="(reason, idx) in job.safety.reasons"
+              :key="idx"
+            >
               {{ reason }}
             </li>
           </ul>
         </div>
       </section>
 
-      <section class="card" v-if="job.simulation || job.toolpath_stats">
+      <section
+        v-if="job.simulation || job.toolpath_stats"
+        class="card"
+      >
         <h2>Toolpath & Runtime</h2>
 
         <p v-if="job.toolpath_stats">
-          <strong>Segments:</strong> {{ job.toolpath_stats.segment_count }}<br />
+          <strong>Segments:</strong> {{ job.toolpath_stats.segment_count }}<br>
           <strong>Origin (mm):</strong>
           <span v-if="job.toolpath_stats.origin_x_mm != null">
             X = {{ job.toolpath_stats.origin_x_mm.toFixed(2) }},
             Y = {{ job.toolpath_stats.origin_y_mm?.toFixed(2) ?? '—' }}
           </span>
-          <span v-else>—</span><br />
+          <span v-else>—</span><br>
           <strong>Rotation (deg):</strong>
           <span v-if="job.toolpath_stats.rotation_deg != null">
             {{ job.toolpath_stats.rotation_deg.toFixed(1) }}
@@ -70,17 +91,20 @@
 
         <p v-if="job.simulation">
           <strong>Estimated runtime:</strong>
-          {{ job.simulation.estimated_runtime_sec.toFixed(1) }} s<br />
-          <strong>Passes:</strong> {{ job.simulation.passes }}<br />
+          {{ job.simulation.estimated_runtime_sec.toFixed(1) }} s<br>
+          <strong>Passes:</strong> {{ job.simulation.passes }}<br>
           <strong>Max feed:</strong>
-          {{ job.simulation.max_feed_mm_per_min.toFixed(0) }} mm/min<br />
+          {{ job.simulation.max_feed_mm_per_min.toFixed(0) }} mm/min<br>
           <strong>Envelope OK:</strong> {{ job.simulation.envelope_ok ? 'Yes' : 'No' }}
         </p>
       </section>
 
       <section class="card">
         <h2>Operator Report</h2>
-        <p class="note" v-if="!job?.operator_report_md">
+        <p
+          v-if="!job?.operator_report_md"
+          class="note"
+        >
           No operator report stored for this job.
         </p>
 
@@ -89,7 +113,7 @@
           v-else
           class="report-html"
           v-html="operatorReportHtml"
-        ></div>
+        />
 
         <button
           v-if="job?.job_id"

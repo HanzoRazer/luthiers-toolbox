@@ -106,7 +106,9 @@ FUTURE ENHANCEMENTS:
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-sm font-semibold">Pipeline Lab</h3>
+        <h3 class="text-sm font-semibold">
+          Pipeline Lab
+        </h3>
         <p class="text-[11px] text-gray-500">
           DXF → Preflight → Plan → Run → Export → Simulate
         </p>
@@ -121,41 +123,51 @@ FUTURE ENHANCEMENTS:
       <input
         type="file"
         accept=".dxf"
-        @change="onFileChange"
         class="text-xs"
-      />
+        @change="onFileChange"
+      >
 
       <label class="inline-flex items-center space-x-1 text-xs">
         <span>Tool ⌀</span>
         <input
-          type="number"
           v-model.number="toolDia"
+          type="number"
           step="0.1"
           min="0.1"
           class="w-16 border rounded px-1 py-0.5 text-[11px]"
-        />
+        >
         <span>mm</span>
       </label>
 
-      <select v-model="units" class="border rounded px-2 py-1 text-xs">
-        <option value="mm">mm</option>
-        <option value="inch">inch</option>
+      <select
+        v-model="units"
+        class="border rounded px-2 py-1 text-xs"
+      >
+        <option value="mm">
+          mm
+        </option>
+        <option value="inch">
+          inch
+        </option>
       </select>
 
       <input
         v-model="machineId"
         placeholder="machine_id"
         class="border rounded px-2 py-1 text-[11px] w-32"
-      />
+      >
 
       <input
         v-model="postId"
         placeholder="post_id"
         class="border rounded px-2 py-1 text-[11px] w-32"
-      />
+      >
 
       <label class="inline-flex items-center space-x-1 text-xs">
-        <input type="checkbox" v-model="bridgeProfile" />
+        <input
+          v-model="bridgeProfile"
+          type="checkbox"
+        >
         <span>Bridge profile</span>
       </label>
 
@@ -168,7 +180,10 @@ FUTURE ENHANCEMENTS:
         <span v-else>Running…</span>
       </button>
 
-      <span v-if="summary" class="text-[11px] text-gray-600">
+      <span
+        v-if="summary"
+        class="text-[11px] text-gray-600"
+      >
         {{ summaryLabel }}
       </span>
     </div>
@@ -176,16 +191,25 @@ FUTURE ENHANCEMENTS:
     <!-- H7.2: optional strict mode -->
     <div class="flex items-center gap-3 text-xs mt-1">
       <label class="inline-flex items-center gap-2">
-        <input type="checkbox" v-model="strictNormalize" />
+        <input
+          v-model="strictNormalize"
+          type="checkbox"
+        >
         <span>Strict CAM intent normalize</span>
       </label>
-      <span v-if="normalizationIssues.length" class="text-[11px] text-amber-600">
+      <span
+        v-if="normalizationIssues.length"
+        class="text-[11px] text-amber-600"
+      >
         Normalize issues: {{ normalizationIssues.length }}
       </span>
     </div>
 
     <!-- H7.2: show issues (non-breaking) -->
-    <details v-if="normalizationIssues.length" class="mt-2 text-xs">
+    <details
+      v-if="normalizationIssues.length"
+      class="mt-2 text-xs"
+    >
       <summary class="cursor-pointer text-amber-700 hover:underline">
         CAM intent normalization issues ({{ normalizationIssues.length }})
       </summary>
@@ -195,16 +219,30 @@ FUTURE ENHANCEMENTS:
           :key="idx"
           class="p-2 border border-amber-200 rounded-lg bg-amber-50"
         >
-          <div class="font-semibold text-[11px] text-amber-800">{{ entry.path }}</div>
+          <div class="font-semibold text-[11px] text-amber-800">
+            {{ entry.path }}
+          </div>
           <ul class="mt-1 ml-4 list-disc text-[11px] text-amber-700">
-            <li v-for="(iss, j) in entry.issues" :key="j">
-              <span v-if="iss.code" class="font-mono">[{{ iss.code }}]</span>
+            <li
+              v-for="(iss, j) in entry.issues"
+              :key="j"
+            >
+              <span
+                v-if="iss.code"
+                class="font-mono"
+              >[{{ iss.code }}]</span>
               {{ iss.message }}
-              <span v-if="iss.path" class="opacity-70"> ({{ iss.path }})</span>
+              <span
+                v-if="iss.path"
+                class="opacity-70"
+              > ({{ iss.path }})</span>
             </li>
           </ul>
         </div>
-        <div v-if="normalizationIssues.length > 50" class="text-[11px] text-gray-500">
+        <div
+          v-if="normalizationIssues.length > 50"
+          class="text-[11px] text-gray-500"
+        >
           Showing first 50 issue groups...
         </div>
       </div>
@@ -216,10 +254,12 @@ FUTURE ENHANCEMENTS:
         <span class="font-semibold">Preset:</span>
         <select
           v-model="selectedPresetId"
-          @change="selectedPresetId && applyPreset(selectedPresetId)"
           class="border rounded px-2 py-1 text-[11px] min-w-[140px]"
+          @change="selectedPresetId && applyPreset(selectedPresetId)"
         >
-          <option :value="null">None</option>
+          <option :value="null">
+            None
+          </option>
           <option
             v-for="preset in presets"
             :key="preset.id"
@@ -228,7 +268,10 @@ FUTURE ENHANCEMENTS:
             {{ preset.name }}
           </option>
         </select>
-        <span v-if="selectedPreset" class="text-gray-500">
+        <span
+          v-if="selectedPreset"
+          class="text-gray-500"
+        >
           ({{ selectedPreset.units }},
           {{ selectedPreset.machine_id || 'no machine' }},
           {{ selectedPreset.post_id || 'no post' }})
@@ -240,12 +283,12 @@ FUTURE ENHANCEMENTS:
           v-model="newPresetName"
           placeholder="New preset name"
           class="border rounded px-2 py-1 text-[11px] w-40"
-        />
+        >
         <input
           v-model="newPresetDesc"
           placeholder="Description (optional)"
           class="border rounded px-2 py-1 text-[11px] w-48"
-        />
+        >
         <button
           class="px-2 py-1 rounded bg-gray-800 text-white text-[11px]"
           @click="savePreset"
@@ -257,30 +300,54 @@ FUTURE ENHANCEMENTS:
 
     <!-- Preset inspector -->
     <div class="mt-2 grid md:grid-cols-2 gap-3 text-[11px]">
-      <div v-if="inspectorMachine" class="border rounded-lg p-2 bg-white">
+      <div
+        v-if="inspectorMachine"
+        class="border rounded-lg p-2 bg-white"
+      >
         <div class="flex items-center justify-between mb-1">
           <span class="font-semibold text-gray-700">Machine</span>
           <span class="text-[10px] text-gray-400">{{ inspectorMachine.id }}</span>
         </div>
-        <p class="text-gray-800">{{ inspectorMachine.name }}</p>
+        <p class="text-gray-800">
+          {{ inspectorMachine.name }}
+        </p>
         <ul class="mt-1 space-y-0.5 text-gray-600">
-          <li v-if="inspectorMachine.max_feed_xy">max feed XY: {{ inspectorMachine.max_feed_xy }}</li>
-          <li v-if="inspectorMachine.rapid">rapid: {{ inspectorMachine.rapid }}</li>
-          <li v-if="inspectorMachine.accel">accel: {{ inspectorMachine.accel }}</li>
-          <li v-if="inspectorMachine.jerk">jerk: {{ inspectorMachine.jerk }}</li>
-          <li v-if="inspectorMachine.safe_z_default">safe Z: {{ inspectorMachine.safe_z_default }}</li>
+          <li v-if="inspectorMachine.max_feed_xy">
+            max feed XY: {{ inspectorMachine.max_feed_xy }}
+          </li>
+          <li v-if="inspectorMachine.rapid">
+            rapid: {{ inspectorMachine.rapid }}
+          </li>
+          <li v-if="inspectorMachine.accel">
+            accel: {{ inspectorMachine.accel }}
+          </li>
+          <li v-if="inspectorMachine.jerk">
+            jerk: {{ inspectorMachine.jerk }}
+          </li>
+          <li v-if="inspectorMachine.safe_z_default">
+            safe Z: {{ inspectorMachine.safe_z_default }}
+          </li>
         </ul>
       </div>
 
-      <div v-if="inspectorPost" class="border rounded-lg p-2 bg-white">
+      <div
+        v-if="inspectorPost"
+        class="border rounded-lg p-2 bg-white"
+      >
         <div class="flex items-center justify-between mb-1">
           <span class="font-semibold text-gray-700">Post</span>
           <span class="text-[10px] text-gray-400">{{ inspectorPost.id }}</span>
         </div>
-        <p class="text-gray-800">{{ inspectorPost.name }}</p>
+        <p class="text-gray-800">
+          {{ inspectorPost.name }}
+        </p>
         <ul class="mt-1 space-y-0.5 text-gray-600">
-          <li v-if="inspectorPost.post">dialect: {{ inspectorPost.post }}</li>
-          <li v-if="inspectorPost.post_mode">mode: {{ inspectorPost.post_mode }}</li>
+          <li v-if="inspectorPost.post">
+            dialect: {{ inspectorPost.post }}
+          </li>
+          <li v-if="inspectorPost.post_mode">
+            mode: {{ inspectorPost.post_mode }}
+          </li>
           <li v-if="inspectorPost.line_numbers !== undefined">
             line numbers: {{ inspectorPost.line_numbers ? 'on' : 'off' }}
           </li>
@@ -289,12 +356,18 @@ FUTURE ENHANCEMENTS:
     </div>
 
     <!-- Error -->
-    <p v-if="error" class="text-xs text-red-600">
+    <p
+      v-if="error"
+      class="text-xs text-red-600"
+    >
       {{ error }}
     </p>
 
     <!-- Results + graph -->
-    <div v-if="results && results.length" class="space-y-3 mt-2">
+    <div
+      v-if="results && results.length"
+      class="space-y-3 mt-2"
+    >
       <CamPipelineGraph :results="results" />
 
       <!-- Per-op cards -->
@@ -317,7 +390,10 @@ FUTURE ENHANCEMENTS:
               </span>
             </div>
 
-            <p v-if="op.error" class="text-[11px] text-rose-700">
+            <p
+              v-if="op.error"
+              class="text-[11px] text-rose-700"
+            >
               {{ op.error }}
             </p>
 

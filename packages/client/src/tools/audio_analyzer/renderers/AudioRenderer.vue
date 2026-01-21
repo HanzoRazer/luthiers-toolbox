@@ -1,13 +1,26 @@
 <template>
   <div class="audio-renderer">
-    <div v-if="audioUrl" class="player">
-      <audio ref="audioEl" :src="audioUrl" controls preload="metadata" />
+    <div
+      v-if="audioUrl"
+      class="player"
+    >
+      <audio
+        ref="audioEl"
+        :src="audioUrl"
+        controls
+        preload="metadata"
+      />
       <div class="info">
         <span class="label">{{ entry.kind }}</span>
         <span class="size">{{ formatBytes(entry.bytes) }}</span>
       </div>
     </div>
-    <div v-else class="error">Unable to create audio playback</div>
+    <div
+      v-else
+      class="error"
+    >
+      Unable to create audio playback
+    </div>
   </div>
 </template>
 

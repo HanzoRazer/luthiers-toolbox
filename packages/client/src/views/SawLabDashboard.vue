@@ -2,30 +2,50 @@
   <div class="saw-lab-dashboard min-h-screen bg-gray-50 p-6">
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Saw Lab Dashboard</h1>
-      <p class="text-gray-600">Real-time CNC monitoring with risk classification</p>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        Saw Lab Dashboard
+      </h1>
+      <p class="text-gray-600">
+        Real-time CNC monitoring with risk classification
+      </p>
     </div>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-        <div class="text-sm text-gray-600 mb-1">Total Runs</div>
-        <div class="text-2xl font-bold text-gray-900">{{ dashboard?.total_runs || 0 }}</div>
+        <div class="text-sm text-gray-600 mb-1">
+          Total Runs
+        </div>
+        <div class="text-2xl font-bold text-gray-900">
+          {{ dashboard?.total_runs || 0 }}
+        </div>
       </div>
       
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-        <div class="text-sm text-gray-600 mb-1">Green (Safe)</div>
-        <div class="text-2xl font-bold text-green-700">{{ riskCounts.green }}</div>
+        <div class="text-sm text-gray-600 mb-1">
+          Green (Safe)
+        </div>
+        <div class="text-2xl font-bold text-green-700">
+          {{ riskCounts.green }}
+        </div>
       </div>
       
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-amber-500">
-        <div class="text-sm text-gray-600 mb-1">Yellow + Orange</div>
-        <div class="text-2xl font-bold text-amber-700">{{ riskCounts.yellow + riskCounts.orange }}</div>
+        <div class="text-sm text-gray-600 mb-1">
+          Yellow + Orange
+        </div>
+        <div class="text-2xl font-bold text-amber-700">
+          {{ riskCounts.yellow + riskCounts.orange }}
+        </div>
       </div>
       
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-rose-500">
-        <div class="text-sm text-gray-600 mb-1">Red (Danger)</div>
-        <div class="text-2xl font-bold text-rose-700">{{ riskCounts.red }}</div>
+        <div class="text-sm text-gray-600 mb-1">
+          Red (Danger)
+        </div>
+        <div class="text-2xl font-bold text-rose-700">
+          {{ riskCounts.red }}
+        </div>
       </div>
     </div>
 
@@ -34,9 +54,9 @@
       <div class="flex flex-wrap gap-4 items-center">
         <!-- Refresh Button -->
         <button
-          @click="loadDashboard"
           :disabled="loading"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          @click="loadDashboard"
         >
           <span v-if="loading">⏳ Loading...</span>
           <span v-else>🔄 Refresh</span>
@@ -47,13 +67,21 @@
           <label class="text-sm text-gray-700">Show:</label>
           <select
             v-model="limit"
-            @change="loadDashboard"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            @change="loadDashboard"
           >
-            <option :value="10">10 runs</option>
-            <option :value="25">25 runs</option>
-            <option :value="50">50 runs</option>
-            <option :value="100">100 runs</option>
+            <option :value="10">
+              10 runs
+            </option>
+            <option :value="25">
+              25 runs
+            </option>
+            <option :value="50">
+              50 runs
+            </option>
+            <option :value="100">
+              100 runs
+            </option>
           </select>
         </div>
 
@@ -64,12 +92,24 @@
             v-model="riskFilter"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All</option>
-            <option value="green">Green</option>
-            <option value="yellow">Yellow</option>
-            <option value="orange">Orange</option>
-            <option value="red">Red</option>
-            <option value="unknown">Unknown</option>
+            <option value="all">
+              All
+            </option>
+            <option value="green">
+              Green
+            </option>
+            <option value="yellow">
+              Yellow
+            </option>
+            <option value="orange">
+              Orange
+            </option>
+            <option value="red">
+              Red
+            </option>
+            <option value="unknown">
+              Unknown
+            </option>
           </select>
         </div>
 
@@ -80,44 +120,70 @@
             v-model="statusFilter"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="running">Running</option>
-            <option value="completed">Completed</option>
-            <option value="error">Error</option>
+            <option value="all">
+              All
+            </option>
+            <option value="pending">
+              Pending
+            </option>
+            <option value="running">
+              Running
+            </option>
+            <option value="completed">
+              Completed
+            </option>
+            <option value="error">
+              Error
+            </option>
           </select>
         </div>
 
         <!-- Last Updated -->
-        <div v-if="lastUpdated" class="ml-auto text-sm text-gray-500">
+        <div
+          v-if="lastUpdated"
+          class="ml-auto text-sm text-gray-500"
+        >
           Updated: {{ formatTime(lastUpdated) }}
         </div>
       </div>
     </div>
 
     <!-- Error Message -->
-    <div v-if="error" class="bg-rose-100 border border-rose-400 text-rose-700 px-4 py-3 rounded-lg mb-6">
+    <div
+      v-if="error"
+      class="bg-rose-100 border border-rose-400 text-rose-700 px-4 py-3 rounded-lg mb-6"
+    >
       <strong>Error:</strong> {{ error }}
     </div>
 
     <!-- Empty State -->
-    <div v-if="!loading && filteredRuns.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
-      <div class="text-6xl mb-4">📊</div>
-      <h3 class="text-xl font-semibold text-gray-900 mb-2">No Runs Found</h3>
+    <div
+      v-if="!loading && filteredRuns.length === 0"
+      class="bg-white rounded-lg shadow p-12 text-center"
+    >
+      <div class="text-6xl mb-4">
+        📊
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        No Runs Found
+      </h3>
       <p class="text-gray-600 mb-4">
         {{ dashboard?.runs.length === 0 ? 'No job runs in the system yet.' : 'No runs match your current filters.' }}
       </p>
       <button
         v-if="riskFilter !== 'all' || statusFilter !== 'all'"
-        @click="clearFilters"
         class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+        @click="clearFilters"
       >
         Clear Filters
       </button>
     </div>
 
     <!-- Run Cards Grid -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div
+      v-else
+      class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+    >
       <div
         v-for="run in filteredRuns"
         :key="run.run_id"
@@ -128,7 +194,10 @@
         <div class="p-4 border-b border-gray-200">
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1 min-w-0">
-              <h3 class="text-sm font-mono text-gray-600 truncate" :title="run.run_id">
+              <h3
+                class="text-sm font-mono text-gray-600 truncate"
+                :title="run.run_id"
+              >
                 {{ run.run_id }}
               </h3>
               <div class="text-xs text-gray-500 mt-1">
@@ -171,7 +240,10 @@
               <span class="text-gray-500 w-24">Material:</span>
               <span class="font-medium text-gray-900">{{ run.material_family }}</span>
             </div>
-            <div v-if="run.blade_id" class="flex items-center gap-2">
+            <div
+              v-if="run.blade_id"
+              class="flex items-center gap-2"
+            >
               <span class="text-gray-500 w-24">Blade:</span>
               <span class="font-medium text-gray-900">{{ run.blade_id }}</span>
             </div>
@@ -181,7 +253,10 @@
           <div class="pt-2 border-t border-gray-100">
             <div class="flex items-center justify-between mb-1">
               <span class="text-sm text-gray-600">Risk Score</span>
-              <span class="text-lg font-bold" :class="riskScoreColor(run.risk_score)">
+              <span
+                class="text-lg font-bold"
+                :class="riskScoreColor(run.risk_score)"
+              >
                 {{ run.risk_score.toFixed(2) }}
               </span>
             </div>
@@ -190,7 +265,7 @@
                 class="h-2 rounded-full transition-all"
                 :class="riskBarClass(run.risk_bucket.id)"
                 :style="{ width: `${run.risk_score * 100}%` }"
-              ></div>
+              />
             </div>
             <div class="text-xs text-gray-500 mt-1">
               {{ run.risk_bucket.description }}
@@ -198,29 +273,42 @@
           </div>
 
           <!-- Metrics (if telemetry available) -->
-          <div v-if="run.has_telemetry && run.metrics" class="pt-2 border-t border-gray-100">
-            <div class="text-xs text-gray-600 mb-2 font-semibold">Telemetry Metrics</div>
+          <div
+            v-if="run.has_telemetry && run.metrics"
+            class="pt-2 border-t border-gray-100"
+          >
+            <div class="text-xs text-gray-600 mb-2 font-semibold">
+              Telemetry Metrics
+            </div>
             <div class="grid grid-cols-2 gap-2 text-xs">
               <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">Avg Load</div>
+                <div class="text-gray-500">
+                  Avg Load
+                </div>
                 <div class="font-semibold text-gray-900">
                   {{ run.metrics.avg_spindle_load_pct?.toFixed(1) || 'N/A' }}%
                 </div>
               </div>
               <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">Max Load</div>
+                <div class="text-gray-500">
+                  Max Load
+                </div>
                 <div class="font-semibold text-gray-900">
                   {{ run.metrics.max_spindle_load_pct?.toFixed(1) || 'N/A' }}%
                 </div>
               </div>
               <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">Avg RPM</div>
+                <div class="text-gray-500">
+                  Avg RPM
+                </div>
                 <div class="font-semibold text-gray-900">
                   {{ run.metrics.avg_rpm?.toFixed(0) || 'N/A' }}
                 </div>
               </div>
               <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">Vibration</div>
+                <div class="text-gray-500">
+                  Vibration
+                </div>
                 <div class="font-semibold text-gray-900">
                   {{ run.metrics.avg_vibration_rms?.toFixed(2) || 'N/A' }} mm/s
                 </div>
@@ -232,7 +320,10 @@
           </div>
 
           <!-- No Telemetry Message -->
-          <div v-else class="pt-2 border-t border-gray-100 text-center">
+          <div
+            v-else
+            class="pt-2 border-t border-gray-100 text-center"
+          >
             <div class="text-sm text-gray-500 py-2">
               ℹ️ No telemetry data available
             </div>
@@ -242,15 +333,15 @@
         <!-- Card Footer -->
         <div class="p-3 bg-gray-50 border-t border-gray-200 flex gap-2">
           <button
-            @click="openRunDetail(run)"
             class="flex-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            @click="openRunDetail(run)"
           >
             📊 View Details
           </button>
           <button
             v-if="run.has_telemetry && run.metrics"
-            @click="openRiskActions(run)"
             class="flex-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+            @click="openRiskActions(run)"
           >
             ⚙️ Risk Actions
           </button>
@@ -259,10 +350,19 @@
     </div>
 
     <!-- Empty State -->
-    <div v-if="filteredRuns.length === 0 && !loading" class="bg-white rounded-lg shadow p-12 text-center">
-      <div class="text-gray-400 text-6xl mb-4">🪚</div>
-      <h3 class="text-xl font-semibold text-gray-900 mb-2">No Saw Runs Found</h3>
-      <p class="text-gray-600">{{ error ? 'Error loading data. Try refreshing.' : 'No runs match your filters.' }}</p>
+    <div
+      v-if="filteredRuns.length === 0 && !loading"
+      class="bg-white rounded-lg shadow p-12 text-center"
+    >
+      <div class="text-gray-400 text-6xl mb-4">
+        🪚
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        No Saw Runs Found
+      </h3>
+      <p class="text-gray-600">
+        {{ error ? 'Error loading data. Try refreshing.' : 'No runs match your filters.' }}
+      </p>
     </div>
   </div>
 
@@ -277,12 +377,16 @@
         <!-- Modal Header -->
         <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">Run Details</h2>
-            <p class="text-sm text-gray-600">{{ selectedRun.run_id }}</p>
+            <h2 class="text-2xl font-bold text-gray-900">
+              Run Details
+            </h2>
+            <p class="text-sm text-gray-600">
+              {{ selectedRun.run_id }}
+            </p>
           </div>
           <button
-            @click="closeRunDetail"
             class="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+            @click="closeRunDetail"
           >
             ×
           </button>
@@ -294,37 +398,52 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-semibold text-gray-600">Created At</label>
-              <p class="text-gray-900">{{ formatDateTime(selectedRun.created_at) }}</p>
+              <p class="text-gray-900">
+                {{ formatDateTime(selectedRun.created_at) }}
+              </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Status</label>
               <p>
-                <span class="px-2 py-1 rounded text-sm" :class="statusBadgeClass(selectedRun.status)">
+                <span
+                  class="px-2 py-1 rounded text-sm"
+                  :class="statusBadgeClass(selectedRun.status)"
+                >
                   {{ selectedRun.status }}
                 </span>
               </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Operation</label>
-              <p class="text-gray-900">{{ selectedRun.op_type }}</p>
+              <p class="text-gray-900">
+                {{ selectedRun.op_type }}
+              </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Machine</label>
-              <p class="text-gray-900">{{ selectedRun.machine_profile }}</p>
+              <p class="text-gray-900">
+                {{ selectedRun.machine_profile }}
+              </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Material</label>
-              <p class="text-gray-900">{{ selectedRun.material_family }}</p>
+              <p class="text-gray-900">
+                {{ selectedRun.material_family }}
+              </p>
             </div>
             <div v-if="selectedRun.blade_id">
               <label class="text-sm font-semibold text-gray-600">Blade</label>
-              <p class="text-gray-900">{{ selectedRun.blade_id }}</p>
+              <p class="text-gray-900">
+                {{ selectedRun.blade_id }}
+              </p>
             </div>
           </div>
 
           <!-- Risk Assessment -->
           <div class="bg-gray-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Risk Assessment</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              Risk Assessment
+            </h3>
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <span class="text-gray-700">Risk Level</span>
@@ -337,7 +456,10 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-700">Risk Score</span>
-                <span class="text-lg font-bold" :class="riskScoreColor(selectedRun.risk_score)">
+                <span
+                  class="text-lg font-bold"
+                  :class="riskScoreColor(selectedRun.risk_score)"
+                >
                   {{ selectedRun.risk_score.toFixed(3) }}
                 </span>
               </div>
@@ -346,48 +468,67 @@
                   class="h-3 rounded-full transition-all"
                   :class="riskBarClass(selectedRun.risk_bucket.id)"
                   :style="{ width: `${selectedRun.risk_score * 100}%` }"
-                ></div>
+                />
               </div>
-              <p class="text-sm text-gray-600 italic">{{ selectedRun.risk_bucket.description }}</p>
+              <p class="text-sm text-gray-600 italic">
+                {{ selectedRun.risk_bucket.description }}
+              </p>
             </div>
           </div>
 
           <!-- Telemetry Metrics -->
-          <div v-if="selectedRun.has_telemetry && selectedRun.metrics" class="bg-blue-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Telemetry Metrics</h3>
+          <div
+            v-if="selectedRun.has_telemetry && selectedRun.metrics"
+            class="bg-blue-50 rounded-lg p-4"
+          >
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              Telemetry Metrics
+            </h3>
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Average Spindle Load</div>
+                <div class="text-sm text-gray-600">
+                  Average Spindle Load
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ selectedRun.metrics.avg_spindle_load_pct?.toFixed(1) }}%
                 </div>
               </div>
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Max Spindle Load</div>
+                <div class="text-sm text-gray-600">
+                  Max Spindle Load
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ selectedRun.metrics.max_spindle_load_pct?.toFixed(1) }}%
                 </div>
               </div>
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Average RPM</div>
+                <div class="text-sm text-gray-600">
+                  Average RPM
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ selectedRun.metrics.avg_rpm?.toFixed(0) }}
                 </div>
               </div>
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Max RPM</div>
+                <div class="text-sm text-gray-600">
+                  Max RPM
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ (selectedRun.metrics as any).max_rpm?.toFixed(0) }}
                 </div>
               </div>
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Average Feed Rate</div>
+                <div class="text-sm text-gray-600">
+                  Average Feed Rate
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ selectedRun.metrics.avg_feed_mm_min?.toFixed(0) }} mm/min
                 </div>
               </div>
               <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">Vibration (RMS)</div>
+                <div class="text-sm text-gray-600">
+                  Vibration (RMS)
+                </div>
                 <div class="text-2xl font-bold text-gray-900">
                   {{ selectedRun.metrics.avg_vibration_rms?.toFixed(2) }} mm/s
                 </div>
@@ -399,24 +540,48 @@
           </div>
 
           <!-- Lane Scale History -->
-          <div v-if="selectedRun.lane_scale_history.length > 0" class="bg-purple-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Lane Scale History</h3>
+          <div
+            v-if="selectedRun.lane_scale_history.length > 0"
+            class="bg-purple-50 rounded-lg p-4"
+          >
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              Lane Scale History
+            </h3>
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-300">
                 <thead>
                   <tr class="bg-white">
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">Timestamp</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">Scale</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">Source</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">Reason</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
+                      Timestamp
+                    </th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
+                      Scale
+                    </th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
+                      Source
+                    </th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
+                      Reason
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                  <tr v-for="(hist, idx) in selectedRun.lane_scale_history" :key="idx">
-                    <td class="px-3 py-2 text-sm text-gray-900">{{ formatDateTime((hist as any).timestamp || hist.ts) }}</td>
-                    <td class="px-3 py-2 text-sm font-semibold text-gray-900">{{ hist.lane_scale.toFixed(2) }}</td>
-                    <td class="px-3 py-2 text-sm text-gray-600">{{ hist.source }}</td>
-                    <td class="px-3 py-2 text-sm text-gray-600">{{ (hist as any).meta?.reason || 'N/A' }}</td>
+                  <tr
+                    v-for="(hist, idx) in selectedRun.lane_scale_history"
+                    :key="idx"
+                  >
+                    <td class="px-3 py-2 text-sm text-gray-900">
+                      {{ formatDateTime((hist as any).timestamp || hist.ts) }}
+                    </td>
+                    <td class="px-3 py-2 text-sm font-semibold text-gray-900">
+                      {{ hist.lane_scale.toFixed(2) }}
+                    </td>
+                    <td class="px-3 py-2 text-sm text-gray-600">
+                      {{ hist.source }}
+                    </td>
+                    <td class="px-3 py-2 text-sm text-gray-600">
+                      {{ (hist as any).meta?.reason || 'N/A' }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -427,15 +592,15 @@
         <!-- Modal Footer -->
         <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
           <button
-            @click="closeRunDetail"
             class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+            @click="closeRunDetail"
           >
             Close
           </button>
           <button
             v-if="selectedRun.has_telemetry && selectedRun.metrics"
-            @click="openRiskActions(selectedRun)"
             class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+            @click="openRiskActions(selectedRun)"
           >
             ⚙️ Risk Actions
           </button>
@@ -455,12 +620,16 @@
         <!-- Modal Header -->
         <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">Risk Actions</h2>
-            <p class="text-sm text-gray-600">{{ riskActionsRun.run_id }}</p>
+            <h2 class="text-2xl font-bold text-gray-900">
+              Risk Actions
+            </h2>
+            <p class="text-sm text-gray-600">
+              {{ riskActionsRun.run_id }}
+            </p>
           </div>
           <button
-            @click="closeRiskActions"
             class="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+            @click="closeRiskActions"
           >
             ×
           </button>
@@ -470,10 +639,14 @@
         <div class="p-6 space-y-6">
           <!-- Current Status -->
           <div class="bg-gray-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Current Status</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              Current Status
+            </h3>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <div class="text-sm text-gray-600">Risk Level</div>
+                <div class="text-sm text-gray-600">
+                  Risk Level
+                </div>
                 <span
                   class="inline-block px-3 py-1 rounded-full text-sm font-semibold mt-1"
                   :class="riskBadgeClass(riskActionsRun.risk_bucket.id)"
@@ -482,8 +655,13 @@
                 </span>
               </div>
               <div>
-                <div class="text-sm text-gray-600">Risk Score</div>
-                <div class="text-2xl font-bold mt-1" :class="riskScoreColor(riskActionsRun.risk_score)">
+                <div class="text-sm text-gray-600">
+                  Risk Score
+                </div>
+                <div
+                  class="text-2xl font-bold mt-1"
+                  :class="riskScoreColor(riskActionsRun.risk_score)"
+                >
                   {{ riskActionsRun.risk_score.toFixed(3) }}
                 </div>
               </div>
@@ -492,48 +670,70 @@
 
           <!-- Recommended Actions -->
           <div class="bg-blue-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">💡 Recommended Actions</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              💡 Recommended Actions
+            </h3>
             <div class="space-y-3">
-              <div v-for="(action, idx) in computedActions" :key="idx" class="bg-white rounded-lg p-4 border-l-4" :class="action.severity === 'critical' ? 'border-rose-500' : action.severity === 'warning' ? 'border-amber-500' : 'border-blue-500'">
+              <div
+                v-for="(action, idx) in computedActions"
+                :key="idx"
+                class="bg-white rounded-lg p-4 border-l-4"
+                :class="action.severity === 'critical' ? 'border-rose-500' : action.severity === 'warning' ? 'border-amber-500' : 'border-blue-500'"
+              >
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
-                    <div class="font-semibold text-gray-900 mb-1">{{ action.title }}</div>
-                    <p class="text-sm text-gray-600 mb-2">{{ action.description }}</p>
-                    <div v-if="action.suggested_override" class="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                    <div class="font-semibold text-gray-900 mb-1">
+                      {{ action.title }}
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">
+                      {{ action.description }}
+                    </p>
+                    <div
+                      v-if="action.suggested_override"
+                      class="text-xs font-mono bg-gray-100 px-2 py-1 rounded"
+                    >
                       Suggested: {{ action.suggested_override }}
                     </div>
                   </div>
                   <button
                     v-if="action.action_type === 'apply_override'"
-                    @click="applyOverride(action)"
                     class="ml-3 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                    @click="applyOverride(action)"
                   >
                     Apply
                   </button>
                 </div>
               </div>
-              <div v-if="computedActions.length === 0" class="text-center py-4 text-gray-500">
+              <div
+                v-if="computedActions.length === 0"
+                class="text-center py-4 text-gray-500"
+              >
                 ✅ No actions required - operation within safe parameters
               </div>
             </div>
           </div>
 
           <!-- Override Confirmation -->
-          <div v-if="pendingOverride" class="bg-amber-50 border border-amber-300 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-amber-900 mb-2">⚠️ Confirm Override</h3>
+          <div
+            v-if="pendingOverride"
+            class="bg-amber-50 border border-amber-300 rounded-lg p-4"
+          >
+            <h3 class="text-lg font-semibold text-amber-900 mb-2">
+              ⚠️ Confirm Override
+            </h3>
             <p class="text-sm text-amber-800 mb-3">
               Apply {{ pendingOverride.suggested_override }} to future operations with similar conditions?
             </p>
             <div class="flex gap-3">
               <button
-                @click="confirmApplyOverride"
                 class="flex-1 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors"
+                @click="confirmApplyOverride"
               >
                 ✓ Confirm
               </button>
               <button
-                @click="cancelOverride"
                 class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+                @click="cancelOverride"
               >
                 Cancel
               </button>
@@ -544,8 +744,8 @@
         <!-- Modal Footer -->
         <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end">
           <button
-            @click="closeRiskActions"
             class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+            @click="closeRiskActions"
           >
             Close
           </button>

@@ -117,21 +117,46 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="run-details-panel" v-if="runId">
+  <div
+    v-if="runId"
+    class="run-details-panel"
+  >
     <div class="panel-header">
       <h3>Run Details</h3>
-      <button class="close-btn" @click="$emit('close')" title="Close (Esc)">
+      <button
+        class="close-btn"
+        title="Close (Esc)"
+        @click="$emit('close')"
+      >
         &times;
       </button>
     </div>
 
-    <div v-if="loading" class="loading">Loading...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      Loading...
+    </div>
 
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div
+      v-else-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
 
-    <div v-else-if="details" class="panel-content">
+    <div
+      v-else-if="details"
+      class="panel-content"
+    >
       <!-- Copy feedback toast -->
-      <div v-if="copyFeedback" class="copy-feedback">{{ copyFeedback }}</div>
+      <div
+        v-if="copyFeedback"
+        class="copy-feedback"
+      >
+        {{ copyFeedback }}
+      </div>
 
       <!-- Header with status -->
       <div class="detail-header">
@@ -141,18 +166,39 @@ onUnmounted(() => {
 
       <!-- Copy buttons -->
       <div class="copy-buttons">
-        <button @click="copyRunId" title="Copy run_id (c)">Copy run_id</button>
-        <button @click="copyJson" title="Copy full JSON">Copy JSON</button>
-        <button @click="copyCurl" title="Copy cURL command">Copy cURL</button>
+        <button
+          title="Copy run_id (c)"
+          @click="copyRunId"
+        >
+          Copy run_id
+        </button>
+        <button
+          title="Copy full JSON"
+          @click="copyJson"
+        >
+          Copy JSON
+        </button>
+        <button
+          title="Copy cURL command"
+          @click="copyCurl"
+        >
+          Copy cURL
+        </button>
       </div>
 
       <!-- Risk level -->
       <div class="detail-row">
         <span class="label">Risk Level:</span>
-        <span class="risk-badge" :style="{ backgroundColor: riskColor }">
+        <span
+          class="risk-badge"
+          :style="{ backgroundColor: riskColor }"
+        >
           {{ details.decision?.risk_level || 'UNKNOWN' }}
         </span>
-        <span v-if="details.decision?.score !== null" class="score">
+        <span
+          v-if="details.decision?.score !== null"
+          class="score"
+        >
           Score: {{ details.decision.score?.toFixed(1) }}
         </span>
       </div>
@@ -172,17 +218,26 @@ onUnmounted(() => {
       </div>
 
       <!-- Warnings -->
-      <div v-if="details.decision?.warnings?.length" class="warnings-section">
+      <div
+        v-if="details.decision?.warnings?.length"
+        class="warnings-section"
+      >
         <h4>Warnings</h4>
         <ul>
-          <li v-for="(warning, idx) in details.decision.warnings" :key="idx">
+          <li
+            v-for="(warning, idx) in details.decision.warnings"
+            :key="idx"
+          >
             {{ warning }}
           </li>
         </ul>
       </div>
 
       <!-- Block reason -->
-      <div v-if="details.decision?.block_reason" class="block-reason">
+      <div
+        v-if="details.decision?.block_reason"
+        class="block-reason"
+      >
         <h4>Block Reason</h4>
         <p>{{ details.decision.block_reason }}</p>
       </div>
@@ -206,7 +261,10 @@ onUnmounted(() => {
       </div>
 
       <!-- Meta -->
-      <div v-if="Object.keys(details.meta || {}).length" class="json-section">
+      <div
+        v-if="Object.keys(details.meta || {}).length"
+        class="json-section"
+      >
         <h4>Metadata</h4>
         <pre>{{ JSON.stringify(details.meta, null, 2) }}</pre>
       </div>

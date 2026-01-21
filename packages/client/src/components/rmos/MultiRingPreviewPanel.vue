@@ -4,13 +4,21 @@
   <div class="multi-ring-preview">
     <h2>Multi-Ring Preview (Summary)</h2>
 
-    <button @click="onRefresh" :disabled="loading">
+    <button
+      :disabled="loading"
+      @click="onRefresh"
+    >
       Refresh Preview
     </button>
 
-    <p v-if="loading">Building preview...</p>
+    <p v-if="loading">
+      Building preview...
+    </p>
 
-    <div v-if="preview && preview.rings.length" class="summary-table">
+    <div
+      v-if="preview && preview.rings.length"
+      class="summary-table"
+    >
       <table>
         <thead>
           <tr>
@@ -22,7 +30,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="ring in preview.rings" :key="ring.ring_id">
+          <tr
+            v-for="ring in preview.rings"
+            :key="ring.ring_id"
+          >
             <td>{{ ring.ring_id }}</td>
             <td>{{ ring.radius_mm.toFixed(2) }}</td>
             <td>{{ ring.width_mm.toFixed(2) }}</td>

@@ -3,9 +3,14 @@
     <div class="header-row">
       <div class="title-block">
         <h2>RMOS Analytics Dashboard</h2>
-        <p class="subtitle">Patterns • Materials • Jobs • Advanced Signals</p>
+        <p class="subtitle">
+          Patterns • Materials • Jobs • Advanced Signals
+        </p>
       </div>
-      <div class="summary-card" v-if="summaryReady">
+      <div
+        v-if="summaryReady"
+        class="summary-card"
+      >
         <div class="summary-item">
           <span class="k">Dur Anom:</span>
           <span class="v">{{ durationAnomalies.length }}</span>
@@ -14,9 +19,15 @@
           <span class="k">Succ Anom:</span>
           <span class="v">{{ successAnomalies.length }}</span>
         </div>
-        <div class="summary-item" v-if="riskResult">
+        <div
+          v-if="riskResult"
+          class="summary-item"
+        >
           <span class="k">Risk:</span>
-          <span class="v" :class="riskClass(riskResult.risk_score)">{{ (riskResult.risk_score*100).toFixed(0) }}%</span>
+          <span
+            class="v"
+            :class="riskClass(riskResult.risk_score)"
+          >{{ (riskResult.risk_score*100).toFixed(0) }}%</span>
         </div>
       </div>
     </div>
@@ -24,9 +35,21 @@
     <!-- Core Panels -->
     <section class="panel">
       <h3>Pattern Complexity</h3>
-      <div v-if="loading.complexity" class="loading">Loading...</div>
-      <div v-else class="grid">
-        <div v-for="(val,key) in complexity" :key="key" class="grid-item">
+      <div
+        v-if="loading.complexity"
+        class="loading"
+      >
+        Loading...
+      </div>
+      <div
+        v-else
+        class="grid"
+      >
+        <div
+          v-for="(val,key) in complexity"
+          :key="key"
+          class="grid-item"
+        >
           <span class="label">{{ key }}</span>
           <span class="value">{{ val }}</span>
         </div>
@@ -35,9 +58,21 @@
 
     <section class="panel">
       <h3>Material Efficiency</h3>
-      <div v-if="loading.efficiency" class="loading">Loading...</div>
-      <div v-else class="grid">
-        <div v-for="(m,idx) in materialEfficiency" :key="idx" class="grid-item">
+      <div
+        v-if="loading.efficiency"
+        class="loading"
+      >
+        Loading...
+      </div>
+      <div
+        v-else
+        class="grid"
+      >
+        <div
+          v-for="(m,idx) in materialEfficiency"
+          :key="idx"
+          class="grid-item"
+        >
           <span class="label">{{ m.material }}</span>
           <span class="value">{{ formatPct(m.efficiency) }}</span>
         </div>
@@ -46,9 +81,21 @@
 
     <section class="panel">
       <h3>Job Status Distribution</h3>
-      <div v-if="loading.status" class="loading">Loading...</div>
-      <div v-else class="grid">
-        <div v-for="(val,key) in statusDist" :key="key" class="grid-item">
+      <div
+        v-if="loading.status"
+        class="loading"
+      >
+        Loading...
+      </div>
+      <div
+        v-else
+        class="grid"
+      >
+        <div
+          v-for="(val,key) in statusDist"
+          :key="key"
+          class="grid-item"
+        >
           <span class="label">{{ key }}</span>
           <span class="value">{{ val }}</span>
         </div>
@@ -57,9 +104,21 @@
 
     <section class="panel">
       <h3>Success Rate Trends</h3>
-      <div v-if="loading.success" class="loading">Loading...</div>
-      <div v-else class="trend">
-        <div v-for="(pt,idx) in successTrend" :key="idx" class="trend-point">
+      <div
+        v-if="loading.success"
+        class="loading"
+      >
+        Loading...
+      </div>
+      <div
+        v-else
+        class="trend"
+      >
+        <div
+          v-for="(pt,idx) in successTrend"
+          :key="idx"
+          class="trend-point"
+        >
           <span>{{ pt.date }}: {{ formatPct(pt.success_rate) }}</span>
         </div>
       </div>
@@ -68,25 +127,62 @@
     <!-- Advanced Panels -->
     <section class="panel">
       <h3>Correlation Heatmap</h3>
-      <div v-if="loading.correlation" class="loading">Loading correlations...</div>
-      <div v-else-if="!correlation || correlation.matrix.length === 0" class="empty">No correlation data</div>
-      <div v-else class="heatmap">
+      <div
+        v-if="loading.correlation"
+        class="loading"
+      >
+        Loading correlations...
+      </div>
+      <div
+        v-else-if="!correlation || correlation.matrix.length === 0"
+        class="empty"
+      >
+        No correlation data
+      </div>
+      <div
+        v-else
+        class="heatmap"
+      >
         <div class="heatmap-row header">
-          <div class="cell header-cell"></div>
-          <div v-for="(name,idx) in correlation.features" :key="'h_'+idx" class="cell header-cell">{{ name }}</div>
+          <div class="cell header-cell" />
+          <div
+            v-for="(name,idx) in correlation.features"
+            :key="'h_'+idx"
+            class="cell header-cell"
+          >
+            {{ name }}
+          </div>
         </div>
-        <div v-for="(row,ri) in correlation.matrix" :key="'r_'+ri" class="heatmap-row">
-          <div class="cell header-cell">{{ correlation.features[ri] }}</div>
-          <div v-for="(val,ci) in row" :key="ri+'_'+ci" class="cell" :style="{ backgroundColor: heatColor(val) }" :title="heatTitle(ri, ci, val)">
+        <div
+          v-for="(row,ri) in correlation.matrix"
+          :key="'r_'+ri"
+          class="heatmap-row"
+        >
+          <div class="cell header-cell">
+            {{ correlation.features[ri] }}
+          </div>
+          <div
+            v-for="(val,ci) in row"
+            :key="ri+'_'+ci"
+            class="cell"
+            :style="{ backgroundColor: heatColor(val) }"
+            :title="heatTitle(ri, ci, val)"
+          >
             {{ val.toFixed(2) }}
           </div>
         </div>
         <div class="legend">
           <span class="legend-title">Correlation Legend</span>
           <div class="legend-bar">
-            <div class="legend-stop neg">-1</div>
-            <div class="legend-stop mid">0</div>
-            <div class="legend-stop pos">+1</div>
+            <div class="legend-stop neg">
+              -1
+            </div>
+            <div class="legend-stop mid">
+              0
+            </div>
+            <div class="legend-stop pos">
+              +1
+            </div>
           </div>
           <span class="legend-notes">Blue=inverse • White=neutral • Red=direct</span>
         </div>
@@ -98,10 +194,24 @@
       <div class="alerts">
         <div class="alerts-group">
           <h4>Duration</h4>
-          <div v-if="loading.anomDurations" class="loading">Loading...</div>
-          <div v-else-if="!durationAnomalies.length" class="empty">No duration anomalies</div>
+          <div
+            v-if="loading.anomDurations"
+            class="loading"
+          >
+            Loading...
+          </div>
+          <div
+            v-else-if="!durationAnomalies.length"
+            class="empty"
+          >
+            No duration anomalies
+          </div>
           <ul v-else>
-            <li v-for="(a,idx) in durationAnomalies" :key="'d_'+idx" :class="severityClass(a.z_score)">
+            <li
+              v-for="(a,idx) in durationAnomalies"
+              :key="'d_'+idx"
+              :class="severityClass(a.z_score)"
+            >
               <span class="badge">z={{ a.z_score.toFixed(2) }}</span>
               <span>#{{ a.job_id }} — {{ a.job_type }} — {{ a.duration_min.toFixed(1) }}m</span>
             </li>
@@ -109,10 +219,24 @@
         </div>
         <div class="alerts-group">
           <h4>Success</h4>
-          <div v-if="loading.anomSuccess" class="loading">Loading...</div>
-          <div v-else-if="!successAnomalies.length" class="empty">No success anomalies</div>
+          <div
+            v-if="loading.anomSuccess"
+            class="loading"
+          >
+            Loading...
+          </div>
+          <div
+            v-else-if="!successAnomalies.length"
+            class="empty"
+          >
+            No success anomalies
+          </div>
           <ul v-else>
-            <li v-for="(a,idx) in successAnomalies" :key="'s_'+idx" :class="severityClass(a.z_score)">
+            <li
+              v-for="(a,idx) in successAnomalies"
+              :key="'s_'+idx"
+              :class="severityClass(a.z_score)"
+            >
               <span class="badge">z={{ a.z_score.toFixed(2) }}</span>
               <span>{{ a.window_start }} → {{ a.window_end }} — {{ formatPct(a.success_rate) }}</span>
             </li>
@@ -126,22 +250,51 @@
       <div class="risk-form">
         <label>
           Job Type
-          <input v-model="riskForm.jobType" placeholder="e.g. Pocket" />
+          <input
+            v-model="riskForm.jobType"
+            placeholder="e.g. Pocket"
+          >
         </label>
         <label>
           Material
-          <input v-model="riskForm.material" placeholder="e.g. Maple" />
+          <input
+            v-model="riskForm.material"
+            placeholder="e.g. Maple"
+          >
         </label>
         <label>
           Tool Ø (mm)
-          <input type="number" v-model.number="riskForm.toolDiameter" min="1" step="0.1" />
+          <input
+            v-model.number="riskForm.toolDiameter"
+            type="number"
+            min="1"
+            step="0.1"
+          >
         </label>
-        <button @click="predictRisk" :disabled="loading.predict">Predict</button>
+        <button
+          :disabled="loading.predict"
+          @click="predictRisk"
+        >
+          Predict
+        </button>
       </div>
-      <div v-if="loading.predict" class="loading">Predicting...</div>
-      <div v-else-if="riskResult" class="risk-result" :class="riskClass(riskResult.risk_score)">
-        <div class="risk-score">Risk: {{ (riskResult.risk_score*100).toFixed(0) }}%</div>
-        <div class="risk-advice">{{ riskResult.advice }}</div>
+      <div
+        v-if="loading.predict"
+        class="loading"
+      >
+        Predicting...
+      </div>
+      <div
+        v-else-if="riskResult"
+        class="risk-result"
+        :class="riskClass(riskResult.risk_score)"
+      >
+        <div class="risk-score">
+          Risk: {{ (riskResult.risk_score*100).toFixed(0) }}%
+        </div>
+        <div class="risk-advice">
+          {{ riskResult.advice }}
+        </div>
       </div>
     </section>
   </div>

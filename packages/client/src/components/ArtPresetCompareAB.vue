@@ -2,19 +2,30 @@
   <div class="preset-compare-ab">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Preset A/B Compare</h2>
-      <button @click="$router.back()" class="btn-secondary">
+      <h2 class="text-2xl font-bold text-gray-900">
+        Preset A/B Compare
+      </h2>
+      <button
+        class="btn-secondary"
+        @click="$router.back()"
+      >
         ← Back to Tuning Tree
       </button>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="loader"></div>
+    <div
+      v-if="loading"
+      class="flex justify-center py-12"
+    >
+      <div class="loader" />
     </div>
 
     <!-- Comparison Grid -->
-    <div v-else class="grid grid-cols-2 gap-6">
+    <div
+      v-else
+      class="grid grid-cols-2 gap-6"
+    >
       <!-- Column A -->
       <div class="preset-column border-2 border-blue-500 rounded-lg p-6 bg-blue-50">
         <div class="flex items-center gap-3 mb-4">
@@ -22,35 +33,65 @@
           <span :class="`badge badge-${presetA?.health_color}`">
             {{ presetA?.health_color?.toUpperCase() }}
           </span>
-          <span class="text-2xl" :title="`Trend: ${presetA?.trend_direction}`">
+          <span
+            class="text-2xl"
+            :title="`Trend: ${presetA?.trend_direction}`"
+          >
             {{ getTrendIcon(presetA?.trend_direction) }}
           </span>
         </div>
         
-        <h3 class="text-xl font-semibold mb-2">{{ presetA?.preset_name }}</h3>
-        <p class="text-sm text-gray-600 mb-4">ID: {{ presetA?.preset_id }}</p>
+        <h3 class="text-xl font-semibold mb-2">
+          {{ presetA?.preset_name }}
+        </h3>
+        <p class="text-sm text-gray-600 mb-4">
+          ID: {{ presetA?.preset_id }}
+        </p>
 
         <!-- Lineage -->
-        <div v-if="presetA?.parent_name" class="mb-4 p-3 bg-white rounded border">
-          <p class="text-xs text-gray-500">Parent:</p>
-          <p class="text-sm font-medium">{{ presetA.parent_name }}</p>
-          <p class="text-xs text-gray-600 mt-1">{{ presetA.diff_summary }}</p>
-          <p class="text-xs text-gray-500 italic mt-1">{{ presetA.rationale }}</p>
+        <div
+          v-if="presetA?.parent_name"
+          class="mb-4 p-3 bg-white rounded border"
+        >
+          <p class="text-xs text-gray-500">
+            Parent:
+          </p>
+          <p class="text-sm font-medium">
+            {{ presetA.parent_name }}
+          </p>
+          <p class="text-xs text-gray-600 mt-1">
+            {{ presetA.diff_summary }}
+          </p>
+          <p class="text-xs text-gray-500 italic mt-1">
+            {{ presetA.rationale }}
+          </p>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
           <div class="stat-card">
-            <p class="stat-label">Jobs</p>
-            <p class="stat-value">{{ presetA?.job_count }}</p>
+            <p class="stat-label">
+              Jobs
+            </p>
+            <p class="stat-value">
+              {{ presetA?.job_count }}
+            </p>
           </div>
           <div class="stat-card">
-            <p class="stat-label">Risks</p>
-            <p class="stat-value text-yellow-600">{{ presetA?.risk_count }}</p>
+            <p class="stat-label">
+              Risks
+            </p>
+            <p class="stat-value text-yellow-600">
+              {{ presetA?.risk_count }}
+            </p>
           </div>
           <div class="stat-card">
-            <p class="stat-label">Critical</p>
-            <p class="stat-value text-red-600">{{ presetA?.critical_count }}</p>
+            <p class="stat-label">
+              Critical
+            </p>
+            <p class="stat-value text-red-600">
+              {{ presetA?.critical_count }}
+            </p>
           </div>
         </div>
 
@@ -68,8 +109,8 @@
 
         <!-- Geometry Link -->
         <button 
-          @click="navigateToRosetteCompare(presetA?.preset_id, 'A')"
           class="mt-4 w-full btn-primary"
+          @click="navigateToRosetteCompare(presetA?.preset_id, 'A')"
         >
           View Geometry Runs →
         </button>
@@ -82,35 +123,65 @@
           <span :class="`badge badge-${presetB?.health_color}`">
             {{ presetB?.health_color?.toUpperCase() }}
           </span>
-          <span class="text-2xl" :title="`Trend: ${presetB?.trend_direction}`">
+          <span
+            class="text-2xl"
+            :title="`Trend: ${presetB?.trend_direction}`"
+          >
             {{ getTrendIcon(presetB?.trend_direction) }}
           </span>
         </div>
         
-        <h3 class="text-xl font-semibold mb-2">{{ presetB?.preset_name }}</h3>
-        <p class="text-sm text-gray-600 mb-4">ID: {{ presetB?.preset_id }}</p>
+        <h3 class="text-xl font-semibold mb-2">
+          {{ presetB?.preset_name }}
+        </h3>
+        <p class="text-sm text-gray-600 mb-4">
+          ID: {{ presetB?.preset_id }}
+        </p>
 
         <!-- Lineage -->
-        <div v-if="presetB?.parent_name" class="mb-4 p-3 bg-white rounded border">
-          <p class="text-xs text-gray-500">Parent:</p>
-          <p class="text-sm font-medium">{{ presetB.parent_name }}</p>
-          <p class="text-xs text-gray-600 mt-1">{{ presetB.diff_summary }}</p>
-          <p class="text-xs text-gray-500 italic mt-1">{{ presetB.rationale }}</p>
+        <div
+          v-if="presetB?.parent_name"
+          class="mb-4 p-3 bg-white rounded border"
+        >
+          <p class="text-xs text-gray-500">
+            Parent:
+          </p>
+          <p class="text-sm font-medium">
+            {{ presetB.parent_name }}
+          </p>
+          <p class="text-xs text-gray-600 mt-1">
+            {{ presetB.diff_summary }}
+          </p>
+          <p class="text-xs text-gray-500 italic mt-1">
+            {{ presetB.rationale }}
+          </p>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
           <div class="stat-card">
-            <p class="stat-label">Jobs</p>
-            <p class="stat-value">{{ presetB?.job_count }}</p>
+            <p class="stat-label">
+              Jobs
+            </p>
+            <p class="stat-value">
+              {{ presetB?.job_count }}
+            </p>
           </div>
           <div class="stat-card">
-            <p class="stat-label">Risks</p>
-            <p class="stat-value text-yellow-600">{{ presetB?.risk_count }}</p>
+            <p class="stat-label">
+              Risks
+            </p>
+            <p class="stat-value text-yellow-600">
+              {{ presetB?.risk_count }}
+            </p>
           </div>
           <div class="stat-card">
-            <p class="stat-label">Critical</p>
-            <p class="stat-value text-red-600">{{ presetB?.critical_count }}</p>
+            <p class="stat-label">
+              Critical
+            </p>
+            <p class="stat-value text-red-600">
+              {{ presetB?.critical_count }}
+            </p>
           </div>
         </div>
 
@@ -128,8 +199,8 @@
 
         <!-- Geometry Link -->
         <button 
-          @click="navigateToRosetteCompare(presetB?.preset_id, 'B')"
           class="mt-4 w-full btn-primary bg-purple-600 hover:bg-purple-700"
+          @click="navigateToRosetteCompare(presetB?.preset_id, 'B')"
         >
           View Geometry Runs →
         </button>
@@ -137,24 +208,44 @@
     </div>
 
     <!-- Comparison Summary -->
-    <div v-if="!loading" class="mt-6 p-6 bg-gray-50 rounded-lg border">
-      <h3 class="text-lg font-bold mb-4">Comparison Summary</h3>
+    <div
+      v-if="!loading"
+      class="mt-6 p-6 bg-gray-50 rounded-lg border"
+    >
+      <h3 class="text-lg font-bold mb-4">
+        Comparison Summary
+      </h3>
       <div class="grid grid-cols-3 gap-4">
         <div>
-          <p class="text-sm text-gray-600">Job Count Δ</p>
-          <p :class="getComparisonClass(jobDelta)" class="text-xl font-bold">
+          <p class="text-sm text-gray-600">
+            Job Count Δ
+          </p>
+          <p
+            :class="getComparisonClass(jobDelta)"
+            class="text-xl font-bold"
+          >
             {{ jobDelta > 0 ? '+' : '' }}{{ jobDelta }}
           </p>
         </div>
         <div>
-          <p class="text-sm text-gray-600">Risk Count Δ</p>
-          <p :class="getComparisonClass(riskDelta, true)" class="text-xl font-bold">
+          <p class="text-sm text-gray-600">
+            Risk Count Δ
+          </p>
+          <p
+            :class="getComparisonClass(riskDelta, true)"
+            class="text-xl font-bold"
+          >
             {{ riskDelta > 0 ? '+' : '' }}{{ riskDelta }}
           </p>
         </div>
         <div>
-          <p class="text-sm text-gray-600">Avg Length Δ</p>
-          <p :class="getComparisonClass(lengthDelta)" class="text-xl font-bold">
+          <p class="text-sm text-gray-600">
+            Avg Length Δ
+          </p>
+          <p
+            :class="getComparisonClass(lengthDelta)"
+            class="text-xl font-bold"
+          >
             {{ lengthDelta > 0 ? '+' : '' }}{{ lengthDelta.toFixed(1) }} mm
           </p>
         </div>

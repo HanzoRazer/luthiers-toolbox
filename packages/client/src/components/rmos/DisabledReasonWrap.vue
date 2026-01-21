@@ -1,5 +1,8 @@
 <template>
-  <span class="disabled-reason-wrap" :title="reason">
+  <span
+    class="disabled-reason-wrap"
+    :title="reason"
+  >
     <slot />
   </span>
 </template>

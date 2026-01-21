@@ -1,7 +1,9 @@
 <template>
   <div class="polygon-offset-lab">
     <h2>Polygon Offset (N17)</h2>
-    <p class="subtitle">Robust polygon offsetting with pyclipper • Arc linkers (G2/G3) • Feed management</p>
+    <p class="subtitle">
+      Robust polygon offsetting with pyclipper • Arc linkers (G2/G3) • Feed management
+    </p>
 
     <div class="lab-grid">
       <!-- Left: Parameters -->
@@ -12,7 +14,11 @@
           <h4>Geometry</h4>
           <label>
             Polygon (test square):
-            <textarea v-model="polygonStr" rows="4" placeholder="[[0,0], [100,0], [100,60], [0,60]]"></textarea>
+            <textarea
+              v-model="polygonStr"
+              rows="4"
+              placeholder="[[0,0], [100,0], [100,60], [0,60]]"
+            />
           </label>
         </div>
 
@@ -20,14 +26,27 @@
           <h4>Tool</h4>
           <label>
             Tool Diameter (mm):
-            <input type="number" v-model.number="toolDia" step="0.5" min="1" />
+            <input
+              v-model.number="toolDia"
+              type="number"
+              step="0.5"
+              min="1"
+            >
           </label>
           <label>
             Stepover (mm):
-            <input type="number" v-model.number="stepover" step="0.1" min="0.1" />
+            <input
+              v-model.number="stepover"
+              type="number"
+              step="0.1"
+              min="0.1"
+            >
           </label>
           <label>
-            <input type="checkbox" v-model="inward" /> Inward (pocketing)
+            <input
+              v-model="inward"
+              type="checkbox"
+            > Inward (pocketing)
           </label>
         </div>
 
@@ -43,7 +62,12 @@
           </label>
           <label>
             Arc Tolerance (mm):
-            <input type="number" v-model.number="arcTolerance" step="0.05" min="0.05" />
+            <input
+              v-model.number="arcTolerance"
+              type="number"
+              step="0.05"
+              min="0.05"
+            >
           </label>
         </div>
 
@@ -58,7 +82,12 @@
           </label>
           <label v-if="linkMode === 'arc'">
             Link Radius (mm):
-            <input type="number" v-model.number="linkRadius" step="0.1" min="0.1" />
+            <input
+              v-model.number="linkRadius"
+              type="number"
+              step="0.1"
+              min="0.1"
+            >
           </label>
         </div>
 
@@ -66,19 +95,39 @@
           <h4>Feeds & Speeds</h4>
           <label>
             Feed (mm/min):
-            <input type="number" v-model.number="feed" step="100" min="100" />
+            <input
+              v-model.number="feed"
+              type="number"
+              step="100"
+              min="100"
+            >
           </label>
           <label v-if="linkMode === 'arc'">
             Arc Feed (mm/min, optional):
-            <input type="number" v-model.number="feedArc" step="100" min="0" />
+            <input
+              v-model.number="feedArc"
+              type="number"
+              step="100"
+              min="0"
+            >
           </label>
           <label v-if="linkMode === 'arc'">
             Feed Floor (mm/min, optional):
-            <input type="number" v-model.number="feedFloor" step="50" min="0" />
+            <input
+              v-model.number="feedFloor"
+              type="number"
+              step="50"
+              min="0"
+            >
           </label>
           <label v-if="linkMode === 'line'">
             Spindle RPM:
-            <input type="number" v-model.number="spindle" step="1000" min="1000" />
+            <input
+              v-model.number="spindle"
+              type="number"
+              step="1000"
+              min="1000"
+            >
           </label>
         </div>
 
@@ -86,15 +135,28 @@
           <h4>Depth</h4>
           <label>
             Z Depth (mm):
-            <input type="number" v-model.number="z" step="0.5" />
+            <input
+              v-model.number="z"
+              type="number"
+              step="0.5"
+            >
           </label>
           <label>
             Safe Z (mm):
-            <input type="number" v-model.number="safeZ" step="1" min="0" />
+            <input
+              v-model.number="safeZ"
+              type="number"
+              step="1"
+              min="0"
+            >
           </label>
         </div>
 
-        <button @click="generate" :disabled="loading" class="btn-primary">
+        <button
+          :disabled="loading"
+          class="btn-primary"
+          @click="generate"
+        >
           {{ loading ? 'Generating...' : 'Generate G-code' }}
         </button>
       </div>
@@ -103,20 +165,42 @@
       <div class="output-panel">
         <h3>G-code Preview</h3>
         
-        <div v-if="error" class="error-banner">
+        <div
+          v-if="error"
+          class="error-banner"
+        >
           <strong>⚠️ Error:</strong> {{ error }}
         </div>
 
-        <div v-if="gcode" class="gcode-preview">
+        <div
+          v-if="gcode"
+          class="gcode-preview"
+        >
           <pre>{{ gcodePreview }}</pre>
         </div>
 
-        <div v-if="gcode" class="actions">
-          <button @click="download" class="btn-secondary">Download</button>
-          <button @click="copy" class="btn-secondary">Copy</button>
+        <div
+          v-if="gcode"
+          class="actions"
+        >
+          <button
+            class="btn-secondary"
+            @click="download"
+          >
+            Download
+          </button>
+          <button
+            class="btn-secondary"
+            @click="copy"
+          >
+            Copy
+          </button>
         </div>
 
-        <div v-if="stats" class="stats">
+        <div
+          v-if="stats"
+          class="stats"
+        >
           <h4>Statistics</h4>
           <div><b>Passes:</b> {{ stats.passes }}</div>
           <div><b>Total Lines:</b> {{ stats.lines }}</div>

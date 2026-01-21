@@ -1,11 +1,20 @@
 <template>
   <div class="p-3 space-y-3">
-    <h3 class="text-lg font-bold">SimLab - Arcs + Modal HUD + Time Scrub (Patch I1.2)</h3>
+    <h3 class="text-lg font-bold">
+      SimLab - Arcs + Modal HUD + Time Scrub (Patch I1.2)
+    </h3>
     <div class="flex gap-3 flex-wrap items-center">
-      <button @click="runSim" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        @click="runSim"
+      >
         Run Simulation
       </button>
-      <button @click="downloadCSV" :disabled="!moves.length" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">
+      <button
+        :disabled="!moves.length"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+        @click="downloadCSV"
+      >
         Export CSV
       </button>
       <div class="ml-auto text-xs bg-slate-50 border rounded px-2 py-1">
@@ -18,9 +27,12 @@
       rows="8" 
       class="w-full border rounded p-2 font-mono text-xs" 
       placeholder="Paste G-code here (supports G2/G3 arcs)..."
-    ></textarea>
+    />
     
-    <div v-if="summary" class="text-sm grid grid-cols-3 gap-2">
+    <div
+      v-if="summary"
+      class="text-sm grid grid-cols-3 gap-2"
+    >
       <div><b>Total XY (mm):</b> {{ summary.total_xy.toFixed(2) }}</div>
       <div><b>Total Z (mm):</b> {{ summary.total_z.toFixed(2) }}</div>
       <div><b>ETA (s):</b> {{ summary.est_seconds.toFixed(2) }}</div>
@@ -28,17 +40,17 @@
     
     <div class="flex items-center gap-3">
       <button 
-        @click="togglePlay" 
-        :disabled="!moves.length"
+        :disabled="!moves.length" 
         class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+        @click="togglePlay"
       >
         {{ playing ? 'Pause' : 'Play' }}
       </button>
       <label class="flex items-center gap-2">
         Speed × 
         <input 
-          type="number" 
           v-model.number="speed" 
+          type="number" 
           min="0.1" 
           max="10" 
           step="0.1" 
@@ -46,12 +58,12 @@
         >
       </label>
       <input 
+        v-model.number="tCursor" 
         type="range" 
         min="0" 
         :max="timelineMax" 
-        v-model.number="tCursor" 
-        @input="drawFrame" 
-        class="flex-1"
+        class="flex-1" 
+        @input="drawFrame"
       >
       <span class="text-xs">{{ tCursor.toFixed(2) }}s / {{ timelineMax.toFixed(2) }}s</span>
     </div>
@@ -59,12 +71,20 @@
     <canvas 
       ref="cv" 
       style="width:100%; height:360px; border:1px solid #e5e7eb; border-radius:8px; background:#fff"
-    ></canvas>
+    />
     
-    <div v-if="issues.length" class="p-2 border rounded text-sm bg-yellow-50">
+    <div
+      v-if="issues.length"
+      class="p-2 border rounded text-sm bg-yellow-50"
+    >
       <b>Issues ({{ issues.length }}):</b>
       <ul class="list-disc pl-6">
-        <li v-for="(it,idx) in issues" :key="idx">[{{ it.type }}] - {{ it.msg || 'see move' }}</li>
+        <li
+          v-for="(it,idx) in issues"
+          :key="idx"
+        >
+          [{{ it.type }}] - {{ it.msg || 'see move' }}
+        </li>
       </ul>
     </div>
   </div>

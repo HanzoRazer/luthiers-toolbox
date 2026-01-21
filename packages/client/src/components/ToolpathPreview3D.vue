@@ -50,5 +50,8 @@ watch(()=>props.spans, async (v)=>{ const THREE = await import('three'); draw(TH
 </script>
 
 <template>
-  <div ref="el" class="w-full border rounded overflow-hidden"></div>
+  <div
+    ref="el"
+    class="w-full border rounded overflow-hidden"
+  />
 </template>

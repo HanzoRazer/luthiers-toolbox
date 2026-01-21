@@ -9,22 +9,46 @@
         <div class="params">
           <label>
             Width (mm):
-            <input v-model.number="spiral.width" type="number" step="1" />
+            <input
+              v-model.number="spiral.width"
+              type="number"
+              step="1"
+            >
           </label>
           <label>
             Height (mm):
-            <input v-model.number="spiral.height" type="number" step="1" />
+            <input
+              v-model.number="spiral.height"
+              type="number"
+              step="1"
+            >
           </label>
           <label>
             Step (mm):
-            <input v-model.number="spiral.step" type="number" step="0.1" />
+            <input
+              v-model.number="spiral.step"
+              type="number"
+              step="0.1"
+            >
           </label>
-          <button @click="plotSpiral" :disabled="loadingSpiral">
+          <button
+            :disabled="loadingSpiral"
+            @click="plotSpiral"
+          >
             {{ loadingSpiral ? 'Plotting...' : 'Plot Spiral' }}
           </button>
         </div>
-        <div v-if="spiralError" class="error">{{ spiralError }}</div>
-        <div v-if="spiralSvg" class="svg-container" v-html="spiralSvg" />
+        <div
+          v-if="spiralError"
+          class="error"
+        >
+          {{ spiralError }}
+        </div>
+        <div
+          v-if="spiralSvg"
+          class="svg-container"
+          v-html="spiralSvg"
+        />
       </div>
 
       <!-- Trochoid Preview -->
@@ -33,19 +57,35 @@
         <div class="params">
           <label>
             Width (mm):
-            <input v-model.number="trochoid.width" type="number" step="1" />
+            <input
+              v-model.number="trochoid.width"
+              type="number"
+              step="1"
+            >
           </label>
           <label>
             Height (mm):
-            <input v-model.number="trochoid.height" type="number" step="1" />
+            <input
+              v-model.number="trochoid.height"
+              type="number"
+              step="1"
+            >
           </label>
           <label>
             Pitch (mm):
-            <input v-model.number="trochoid.pitch" type="number" step="0.1" />
+            <input
+              v-model.number="trochoid.pitch"
+              type="number"
+              step="0.1"
+            >
           </label>
           <label>
             Amplitude (mm):
-            <input v-model.number="trochoid.amp" type="number" step="0.1" />
+            <input
+              v-model.number="trochoid.amp"
+              type="number"
+              step="0.1"
+            >
           </label>
           <label>
             Direction:
@@ -54,12 +94,24 @@
               <option value="y">Vertical</option>
             </select>
           </label>
-          <button @click="plotTrochoid" :disabled="loadingTrochoid">
+          <button
+            :disabled="loadingTrochoid"
+            @click="plotTrochoid"
+          >
             {{ loadingTrochoid ? 'Plotting...' : 'Plot Trochoid' }}
           </button>
         </div>
-        <div v-if="trochoidError" class="error">{{ trochoidError }}</div>
-        <div v-if="trochoidSvg" class="svg-container" v-html="trochoidSvg" />
+        <div
+          v-if="trochoidError"
+          class="error"
+        >
+          {{ trochoidError }}
+        </div>
+        <div
+          v-if="trochoidSvg"
+          class="svg-container"
+          v-html="trochoidSvg"
+        />
       </div>
     </div>
   </div>

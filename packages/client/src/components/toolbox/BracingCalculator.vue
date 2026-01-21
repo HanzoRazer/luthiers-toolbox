@@ -2,7 +2,9 @@
   <div class="bracing-calculator">
     <h3>Bracing Calculator</h3>
     <p>Structural mass estimation and glue area analysis</p>
-    <p class="coming-soon">Component implementation in progress...</p>
+    <p class="coming-soon">
+      Component implementation in progress...
+    </p>
   </div>
 </template>
 

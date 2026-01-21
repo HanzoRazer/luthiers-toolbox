@@ -15,103 +15,404 @@
 
     <!-- Display (shared across all tabs) -->
     <div class="display-container">
-      <div class="expression">{{ expression || '\u00A0' }}</div>
-      <div class="display">{{ display }}</div>
+      <div class="expression">
+        {{ expression || '\u00A0' }}
+      </div>
+      <div class="display">
+        {{ display }}
+      </div>
     </div>
 
     <!-- Tab Content -->
     <div class="tab-content">
       <!-- BASIC TAB -->
-      <div v-if="activeTab === 'Basic'" class="calculator-grid basic-grid">
-        <button class="btn btn-clear" @click="clear">C</button>
-        <button class="btn btn-operator" @click="backspace">⌫</button>
-        <button class="btn btn-operator" @click="appendOperator('%')">%</button>
-        <button class="btn btn-operator" @click="appendOperator('÷')">÷</button>
+      <div
+        v-if="activeTab === 'Basic'"
+        class="calculator-grid basic-grid"
+      >
+        <button
+          class="btn btn-clear"
+          @click="clear"
+        >
+          C
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="backspace"
+        >
+          ⌫
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('%')"
+        >
+          %
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('÷')"
+        >
+          ÷
+        </button>
         
-        <button class="btn btn-number" @click="appendNumber('7')">7</button>
-        <button class="btn btn-number" @click="appendNumber('8')">8</button>
-        <button class="btn btn-number" @click="appendNumber('9')">9</button>
-        <button class="btn btn-operator" @click="appendOperator('×')">×</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('7')"
+        >
+          7
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('8')"
+        >
+          8
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('9')"
+        >
+          9
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('×')"
+        >
+          ×
+        </button>
         
-        <button class="btn btn-number" @click="appendNumber('4')">4</button>
-        <button class="btn btn-number" @click="appendNumber('5')">5</button>
-        <button class="btn btn-number" @click="appendNumber('6')">6</button>
-        <button class="btn btn-operator" @click="appendOperator('−')">−</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('4')"
+        >
+          4
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('5')"
+        >
+          5
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('6')"
+        >
+          6
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('−')"
+        >
+          −
+        </button>
         
-        <button class="btn btn-number" @click="appendNumber('1')">1</button>
-        <button class="btn btn-number" @click="appendNumber('2')">2</button>
-        <button class="btn btn-number" @click="appendNumber('3')">3</button>
-        <button class="btn btn-operator" @click="appendOperator('+')">+</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('1')"
+        >
+          1
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('2')"
+        >
+          2
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('3')"
+        >
+          3
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('+')"
+        >
+          +
+        </button>
         
-        <button class="btn btn-number" @click="toggleSign">±</button>
-        <button class="btn btn-number" @click="appendNumber('0')">0</button>
-        <button class="btn btn-number" @click="appendNumber('.')">.</button>
-        <button class="btn btn-equals" @click="calculate">=</button>
+        <button
+          class="btn btn-number"
+          @click="toggleSign"
+        >
+          ±
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('0')"
+        >
+          0
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('.')"
+        >
+          .
+        </button>
+        <button
+          class="btn btn-equals"
+          @click="calculate"
+        >
+          =
+        </button>
       </div>
 
       <!-- SCIENTIFIC TAB -->
-      <div v-else-if="activeTab === 'Scientific'" class="calculator-grid scientific-grid">
+      <div
+        v-else-if="activeTab === 'Scientific'"
+        class="calculator-grid scientific-grid"
+      >
         <div class="mode-toggles">
           <label class="toggle">
-            <input type="radio" v-model="angleMode" value="deg" />
+            <input
+              v-model="angleMode"
+              type="radio"
+              value="deg"
+            >
             <span>DEG</span>
           </label>
           <label class="toggle">
-            <input type="radio" v-model="angleMode" value="rad" />
+            <input
+              v-model="angleMode"
+              type="radio"
+              value="rad"
+            >
             <span>RAD</span>
           </label>
-          <button class="btn-small" @click="showHistory = !showHistory">History</button>
+          <button
+            class="btn-small"
+            @click="showHistory = !showHistory"
+          >
+            History
+          </button>
         </div>
 
-        <button class="btn btn-function" @click="appendFunction('sin(')">sin</button>
-        <button class="btn btn-function" @click="appendFunction('cos(')">cos</button>
-        <button class="btn btn-function" @click="appendFunction('tan(')">tan</button>
-        <button class="btn btn-function" @click="appendFunction('ln(')">ln</button>
-        <button class="btn btn-function" @click="appendFunction('log(')">log</button>
-        <button class="btn btn-function" @click="appendFunction('sqrt(')">√</button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('sin(')"
+        >
+          sin
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('cos(')"
+        >
+          cos
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('tan(')"
+        >
+          tan
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('ln(')"
+        >
+          ln
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('log(')"
+        >
+          log
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('sqrt(')"
+        >
+          √
+        </button>
 
-        <button class="btn btn-operator" @click="appendOperator('^')">^</button>
-        <button class="btn btn-operator" @click="appendOperator('(')">(</button>
-        <button class="btn btn-operator" @click="appendOperator(')')">)</button>
-        <button class="btn btn-function" @click="appendNumber('π')">π</button>
-        <button class="btn btn-function" @click="appendNumber('e')">e</button>
-        <button class="btn btn-function" @click="appendFunction('!')">!</button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('^')"
+        >
+          ^
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('(')"
+        >
+          (
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator(')')"
+        >
+          )
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendNumber('π')"
+        >
+          π
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendNumber('e')"
+        >
+          e
+        </button>
+        <button
+          class="btn btn-function"
+          @click="appendFunction('!')"
+        >
+          !
+        </button>
 
-        <button class="btn btn-clear" @click="clear">C</button>
-        <button class="btn btn-operator" @click="backspace">⌫</button>
-        <button class="btn btn-operator" @click="appendOperator('%')">%</button>
-        <button class="btn btn-operator" @click="appendOperator('÷')">÷</button>
-        <button class="btn btn-number" @click="appendNumber('7')">7</button>
-        <button class="btn btn-number" @click="appendNumber('8')">8</button>
+        <button
+          class="btn btn-clear"
+          @click="clear"
+        >
+          C
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="backspace"
+        >
+          ⌫
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('%')"
+        >
+          %
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('÷')"
+        >
+          ÷
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('7')"
+        >
+          7
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('8')"
+        >
+          8
+        </button>
 
-        <button class="btn btn-number" @click="appendNumber('9')">9</button>
-        <button class="btn btn-operator" @click="appendOperator('×')">×</button>
-        <button class="btn btn-number" @click="appendNumber('4')">4</button>
-        <button class="btn btn-number" @click="appendNumber('5')">5</button>
-        <button class="btn btn-number" @click="appendNumber('6')">6</button>
-        <button class="btn btn-operator" @click="appendOperator('−')">−</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('9')"
+        >
+          9
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('×')"
+        >
+          ×
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('4')"
+        >
+          4
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('5')"
+        >
+          5
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('6')"
+        >
+          6
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('−')"
+        >
+          −
+        </button>
 
-        <button class="btn btn-number" @click="appendNumber('1')">1</button>
-        <button class="btn btn-number" @click="appendNumber('2')">2</button>
-        <button class="btn btn-number" @click="appendNumber('3')">3</button>
-        <button class="btn btn-operator" @click="appendOperator('+')">+</button>
-        <button class="btn btn-number" @click="toggleSign">±</button>
-        <button class="btn btn-number" @click="appendNumber('0')">0</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('1')"
+        >
+          1
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('2')"
+        >
+          2
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('3')"
+        >
+          3
+        </button>
+        <button
+          class="btn btn-operator"
+          @click="appendOperator('+')"
+        >
+          +
+        </button>
+        <button
+          class="btn btn-number"
+          @click="toggleSign"
+        >
+          ±
+        </button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('0')"
+        >
+          0
+        </button>
 
-        <button class="btn btn-number" @click="appendNumber('.')">.</button>
-        <button class="btn btn-equals" @click="calculate">=</button>
+        <button
+          class="btn btn-number"
+          @click="appendNumber('.')"
+        >
+          .
+        </button>
+        <button
+          class="btn btn-equals"
+          @click="calculate"
+        >
+          =
+        </button>
 
-        <div v-if="showHistory" class="history-dropdown">
-          <div class="history-title">History</div>
-          <div v-for="(item, i) in history" :key="i" class="history-item" @click="loadHistory(item)">
+        <div
+          v-if="showHistory"
+          class="history-dropdown"
+        >
+          <div class="history-title">
+            History
+          </div>
+          <div
+            v-for="(item, i) in history"
+            :key="i"
+            class="history-item"
+            @click="loadHistory(item)"
+          >
             {{ item }}
           </div>
-          <div v-if="history.length === 0" class="history-empty">No history yet</div>
+          <div
+            v-if="history.length === 0"
+            class="history-empty"
+          >
+            No history yet
+          </div>
         </div>
       </div>
 
       <!-- CONVERTER TAB -->
-      <div v-else-if="activeTab === 'Converter'" class="converter-content">
+      <div
+        v-else-if="activeTab === 'Converter'"
+        class="converter-content"
+      >
         <div class="converter-tabs">
           <button 
             v-for="cat in converterCategories" 
@@ -127,69 +428,155 @@
         <div class="converter-main">
           <div class="converter-input-group">
             <input 
-              type="number" 
               v-model.number="convertFrom.value" 
-              @input="updateConversion"
+              type="number" 
               class="converter-input"
               placeholder="0"
-            />
-            <select v-model="convertFrom.unit" @change="updateConversion" class="converter-select">
-              <option v-for="unit in getUnitsForType(converterType)" :key="unit.key" :value="unit.key">
+              @input="updateConversion"
+            >
+            <select
+              v-model="convertFrom.unit"
+              class="converter-select"
+              @change="updateConversion"
+            >
+              <option
+                v-for="unit in getUnitsForType(converterType)"
+                :key="unit.key"
+                :value="unit.key"
+              >
                 {{ unit.label }}
               </option>
             </select>
           </div>
 
           <div class="converter-swap">
-            <button @click="swapUnits" class="btn-swap">↕</button>
+            <button
+              class="btn-swap"
+              @click="swapUnits"
+            >
+              ↕
+            </button>
           </div>
 
           <div class="converter-input-group">
             <input 
-              type="number" 
               v-model.number="convertTo.value" 
+              type="number" 
               readonly
               class="converter-input"
-            />
-            <select v-model="convertTo.unit" @change="updateConversion" class="converter-select">
-              <option v-for="unit in getUnitsForType(converterType)" :key="unit.key" :value="unit.key">
+            >
+            <select
+              v-model="convertTo.unit"
+              class="converter-select"
+              @change="updateConversion"
+            >
+              <option
+                v-for="unit in getUnitsForType(converterType)"
+                :key="unit.key"
+                :value="unit.key"
+              >
                 {{ unit.label }}
               </option>
             </select>
           </div>
 
           <!-- Fraction Input (for Length only) -->
-          <div v-if="converterType === 'Length'" class="fraction-input">
-            <div class="fraction-label">Fraction Input:</div>
+          <div
+            v-if="converterType === 'Length'"
+            class="fraction-input"
+          >
+            <div class="fraction-label">
+              Fraction Input:
+            </div>
             <div class="fraction-fields">
-              <input type="number" v-model.number="fraction.whole" @input="updateFromFraction" class="fraction-field" placeholder="2" />
+              <input
+                v-model.number="fraction.whole"
+                type="number"
+                class="fraction-field"
+                placeholder="2"
+                @input="updateFromFraction"
+              >
               <span class="fraction-sep">+</span>
-              <input type="number" v-model.number="fraction.num" @input="updateFromFraction" class="fraction-field" placeholder="7" />
+              <input
+                v-model.number="fraction.num"
+                type="number"
+                class="fraction-field"
+                placeholder="7"
+                @input="updateFromFraction"
+              >
               <span class="fraction-sep">/</span>
-              <input type="number" v-model.number="fraction.denom" @input="updateFromFraction" class="fraction-field" placeholder="16" />
+              <input
+                v-model.number="fraction.denom"
+                type="number"
+                class="fraction-field"
+                placeholder="16"
+                @input="updateFromFraction"
+              >
               <span class="fraction-unit">inches</span>
             </div>
-            <div class="fraction-result">= {{ fractionToDecimal() }}" = {{ fractionToMM() }} mm</div>
+            <div class="fraction-result">
+              = {{ fractionToDecimal() }}" = {{ fractionToMM() }} mm
+            </div>
           </div>
 
           <!-- Quick Presets -->
           <div class="quick-presets">
-            <div class="preset-label">Common Measurements:</div>
+            <div class="preset-label">
+              Common Measurements:
+            </div>
             <div class="preset-buttons">
-              <button @click="applyPreset('1/16', 'in')" class="btn-preset">1/16"</button>
-              <button @click="applyPreset('1/32', 'in')" class="btn-preset">1/32"</button>
-              <button @click="applyPreset('1/64', 'in')" class="btn-preset">1/64"</button>
-              <button @click="applyPreset('0.010', 'in')" class="btn-preset">.010" (String)</button>
-              <button @click="applyPreset('0.046', 'in')" class="btn-preset">.046" (String)</button>
-              <button @click="applyPreset('25.5', 'in')" class="btn-preset">25.5"</button>
-              <button @click="applyPreset('24.75', 'in')" class="btn-preset">24.75"</button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('1/16', 'in')"
+              >
+                1/16"
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('1/32', 'in')"
+              >
+                1/32"
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('1/64', 'in')"
+              >
+                1/64"
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('0.010', 'in')"
+              >
+                .010" (String)
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('0.046', 'in')"
+              >
+                .046" (String)
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('25.5', 'in')"
+              >
+                25.5"
+              </button>
+              <button
+                class="btn-preset"
+                @click="applyPreset('24.75', 'in')"
+              >
+                24.75"
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- WOODWORK TAB -->
-      <div v-else-if="activeTab === 'Woodwork'" class="woodwork-content">
+      <div
+        v-else-if="activeTab === 'Woodwork'"
+        class="woodwork-content"
+      >
         <div class="woodwork-tabs">
           <button 
             v-for="cat in woodworkCategories" 
@@ -203,81 +590,153 @@
         </div>
 
         <!-- Board Feet Calculator -->
-        <div v-if="woodworkType === 'Board Feet'" class="woodwork-panel">
+        <div
+          v-if="woodworkType === 'Board Feet'"
+          class="woodwork-panel"
+        >
           <h3>📏 Board Feet Calculator</h3>
           <div class="input-row">
             <label>Length (in):</label>
-            <input type="number" v-model.number="boardFeet.length" @input="calculateBoardFeet" />
+            <input
+              v-model.number="boardFeet.length"
+              type="number"
+              @input="calculateBoardFeet"
+            >
           </div>
           <div class="input-row">
             <label>Width (in):</label>
-            <input type="number" v-model.number="boardFeet.width" @input="calculateBoardFeet" />
+            <input
+              v-model.number="boardFeet.width"
+              type="number"
+              @input="calculateBoardFeet"
+            >
           </div>
           <div class="input-row">
             <label>Thickness (in):</label>
-            <input type="number" v-model.number="boardFeet.thickness" @input="calculateBoardFeet" />
+            <input
+              v-model.number="boardFeet.thickness"
+              type="number"
+              @input="calculateBoardFeet"
+            >
           </div>
           <div class="result-box">
-            <div class="result-label">Board Feet:</div>
-            <div class="result-value">{{ boardFeetResult.toFixed(2) }} BF</div>
+            <div class="result-label">
+              Board Feet:
+            </div>
+            <div class="result-value">
+              {{ boardFeetResult.toFixed(2) }} BF
+            </div>
           </div>
           <div class="input-row">
             <label>Price ($/BF):</label>
-            <input type="number" v-model.number="boardFeet.pricePerBF" @input="calculateBoardFeet" />
+            <input
+              v-model.number="boardFeet.pricePerBF"
+              type="number"
+              @input="calculateBoardFeet"
+            >
           </div>
           <div class="result-box">
-            <div class="result-label">Total Cost:</div>
-            <div class="result-value">${{ (boardFeetResult * boardFeet.pricePerBF).toFixed(2) }}</div>
+            <div class="result-label">
+              Total Cost:
+            </div>
+            <div class="result-value">
+              ${{ (boardFeetResult * boardFeet.pricePerBF).toFixed(2) }}
+            </div>
           </div>
         </div>
 
         <!-- Wood Volume/Weight -->
-        <div v-if="woodworkType === 'Volume'" class="woodwork-panel">
+        <div
+          v-if="woodworkType === 'Volume'"
+          class="woodwork-panel"
+        >
           <h3>🌲 Wood Volume & Weight</h3>
           <div class="input-row">
             <label>Length (mm):</label>
-            <input type="number" v-model.number="woodVolume.length" @input="calculateWoodWeight" />
+            <input
+              v-model.number="woodVolume.length"
+              type="number"
+              @input="calculateWoodWeight"
+            >
           </div>
           <div class="input-row">
             <label>Width (mm):</label>
-            <input type="number" v-model.number="woodVolume.width" @input="calculateWoodWeight" />
+            <input
+              v-model.number="woodVolume.width"
+              type="number"
+              @input="calculateWoodWeight"
+            >
           </div>
           <div class="input-row">
             <label>Thickness (mm):</label>
-            <input type="number" v-model.number="woodVolume.thickness" @input="calculateWoodWeight" />
+            <input
+              v-model.number="woodVolume.thickness"
+              type="number"
+              @input="calculateWoodWeight"
+            >
           </div>
           <div class="input-row">
             <label>Species:</label>
-            <select v-model="woodVolume.species" @change="calculateWoodWeight">
-              <option v-for="(density, name) in woodSpecies" :key="name" :value="name">
+            <select
+              v-model="woodVolume.species"
+              @change="calculateWoodWeight"
+            >
+              <option
+                v-for="(density, name) in woodSpecies"
+                :key="name"
+                :value="name"
+              >
                 {{ name }} (ρ={{ density }} g/cm³)
               </option>
             </select>
           </div>
           <div class="result-box">
-            <div class="result-label">Volume:</div>
-            <div class="result-value">{{ woodVolumeResult.toFixed(1) }} cm³</div>
+            <div class="result-label">
+              Volume:
+            </div>
+            <div class="result-value">
+              {{ woodVolumeResult.toFixed(1) }} cm³
+            </div>
           </div>
           <div class="result-box">
-            <div class="result-label">Weight:</div>
-            <div class="result-value">{{ woodWeightResult.toFixed(1) }} g</div>
+            <div class="result-label">
+              Weight:
+            </div>
+            <div class="result-value">
+              {{ woodWeightResult.toFixed(1) }} g
+            </div>
           </div>
         </div>
 
         <!-- Miter Angles -->
-        <div v-if="woodworkType === 'Angles'" class="woodwork-panel">
+        <div
+          v-if="woodworkType === 'Angles'"
+          class="woodwork-panel"
+        >
           <h3>📐 Miter/Bevel Angle Calculator</h3>
           <div class="input-row">
             <label>Rise (mm):</label>
-            <input type="number" v-model.number="miterAngle.rise" @input="calculateMiterAngle" />
+            <input
+              v-model.number="miterAngle.rise"
+              type="number"
+              @input="calculateMiterAngle"
+            >
           </div>
           <div class="input-row">
             <label>Run (mm):</label>
-            <input type="number" v-model.number="miterAngle.run" @input="calculateMiterAngle" />
+            <input
+              v-model.number="miterAngle.run"
+              type="number"
+              @input="calculateMiterAngle"
+            >
           </div>
           <div class="result-box">
-            <div class="result-label">Angle:</div>
-            <div class="result-value">{{ miterAngleResult.toFixed(2) }}°</div>
+            <div class="result-label">
+              Angle:
+            </div>
+            <div class="result-value">
+              {{ miterAngleResult.toFixed(2) }}°
+            </div>
           </div>
           <div class="helper-text">
             Common uses: Neck angle (0.5-3°), Headstock angle (12-17°), Bridge ramp

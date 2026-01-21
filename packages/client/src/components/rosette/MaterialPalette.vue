@@ -2,7 +2,10 @@
   <div class="material-palette">
     <div class="palette-header">
       <h3>🪵 Wood Species</h3>
-      <button class="btn-small" @click="showAll = !showAll">
+      <button
+        class="btn-small"
+        @click="showAll = !showAll"
+      >
         {{ showAll ? 'Show Common' : 'Show All' }}
       </button>
     </div>
@@ -13,20 +16,31 @@
         :key="wood.id"
         :class="['material-swatch', { active: selectedMaterial === wood.id }]"
         :style="{ background: wood.color, color: wood.textColor }"
-        @click="selectMaterial(wood.id)"
         :title="`${wood.name} - ${wood.availability}`"
+        @click="selectMaterial(wood.id)"
       >
-        <div class="swatch-name">{{ wood.name }}</div>
-        <div class="swatch-grain" :style="{ opacity: wood.grain === 'figured' ? 0.3 : 0.1 }">
+        <div class="swatch-name">
+          {{ wood.name }}
+        </div>
+        <div
+          class="swatch-grain"
+          :style="{ opacity: wood.grain === 'figured' ? 0.3 : 0.1 }"
+        >
           {{ wood.grain === 'figured' ? '≈≈≈' : '|||' }}
         </div>
       </button>
     </div>
 
-    <div class="material-info" v-if="selectedWoodInfo">
+    <div
+      v-if="selectedWoodInfo"
+      class="material-info"
+    >
       <div class="info-row">
         <strong>{{ selectedWoodInfo.name }}</strong>
-        <span class="badge" :class="`badge-${selectedWoodInfo.availability}`">
+        <span
+          class="badge"
+          :class="`badge-${selectedWoodInfo.availability}`"
+        >
           {{ selectedWoodInfo.availability }}
         </span>
       </div>

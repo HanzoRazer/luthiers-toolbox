@@ -32,39 +32,86 @@ function label(d: RiskLevel) {
 <template>
   <div class="pop">
     <div class="head">
-      <div class="title">Decision history</div>
-      <div class="sub" v-if="currentDecision">
+      <div class="title">
+        Decision history
+      </div>
+      <div
+        v-if="currentDecision"
+        class="sub"
+      >
         Current: <span class="mono">{{ currentDecision }}</span>
       </div>
-      <div class="sub" v-else>
+      <div
+        v-else
+        class="sub"
+      >
         Current: <span class="mono">NEEDS_DECISION</span>
       </div>
     </div>
 
-    <div class="current" v-if="currentDecision">
+    <div
+      v-if="currentDecision"
+      class="current"
+    >
       <div class="row">
         <span class="pill">{{ label(currentDecision) }}</span>
-        <span class="muted" v-if="currentBy || currentAt">
+        <span
+          v-if="currentBy || currentAt"
+          class="muted"
+        >
           <span v-if="currentBy">{{ currentBy }}</span><span v-if="currentBy && currentAt"> · </span><span v-if="currentAt">{{ fmtTs(currentAt) }}</span>
         </span>
       </div>
-      <div class="note" v-if="currentNote">{{ currentNote }}</div>
-      <div class="note muted" v-else>No note.</div>
+      <div
+        v-if="currentNote"
+        class="note"
+      >
+        {{ currentNote }}
+      </div>
+      <div
+        v-else
+        class="note muted"
+      >
+        No note.
+      </div>
     </div>
 
-    <div class="list" v-if="items && items.length">
-      <div class="item" v-for="(it, idx) in items" :key="idx">
+    <div
+      v-if="items && items.length"
+      class="list"
+    >
+      <div
+        v-for="(it, idx) in items"
+        :key="idx"
+        class="item"
+      >
         <div class="row">
           <span class="pill">{{ label(it.decision) }}</span>
-          <span class="muted" v-if="it.decided_by || it.decided_at_utc">
+          <span
+            v-if="it.decided_by || it.decided_at_utc"
+            class="muted"
+          >
             <span v-if="it.decided_by">{{ it.decided_by }}</span><span v-if="it.decided_by && it.decided_at_utc"> · </span><span v-if="it.decided_at_utc">{{ fmtTs(it.decided_at_utc) }}</span>
           </span>
         </div>
-        <div class="note" v-if="it.note">{{ it.note }}</div>
-        <div class="note muted" v-else>No note.</div>
+        <div
+          v-if="it.note"
+          class="note"
+        >
+          {{ it.note }}
+        </div>
+        <div
+          v-else
+          class="note muted"
+        >
+          No note.
+        </div>
       </div>
     </div>
-    <div class="muted" v-else>
+    <div
+      v-else
+      class="muted"
+    >
       No history yet (first decision will populate it).
     </div>
   </div>

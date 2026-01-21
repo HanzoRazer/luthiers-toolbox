@@ -63,9 +63,15 @@ async function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="modal" @click.self="emit('close')">
+  <div
+    v-if="open"
+    class="modal"
+    @click.self="emit('close')"
+  >
     <div class="card">
-      <div class="title">Bulk Decision</div>
+      <div class="title">
+        Bulk Decision
+      </div>
       <div class="subtle">
         Apply one decision to <strong>{{ total }}</strong> candidate(s).
       </div>
@@ -81,15 +87,38 @@ async function submit() {
 
       <label class="ctl">
         <span>Note (optional)</span>
-        <textarea v-model="note" placeholder="Applies to all selected…" />
+        <textarea
+          v-model="note"
+          placeholder="Applies to all selected…"
+        />
       </label>
 
-      <div v-if="busy" class="subtle">Saving… {{ doneCount }} / {{ total }}</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div
+        v-if="busy"
+        class="subtle"
+      >
+        Saving… {{ doneCount }} / {{ total }}
+      </div>
+      <div
+        v-if="error"
+        class="error"
+      >
+        {{ error }}
+      </div>
 
       <div class="row">
-        <button class="btn tiny secondary" :disabled="busy" @click="emit('close')">Cancel</button>
-        <button class="btn tiny" :disabled="!canSubmit" @click="submit">
+        <button
+          class="btn tiny secondary"
+          :disabled="busy"
+          @click="emit('close')"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn tiny"
+          :disabled="!canSubmit"
+          @click="submit"
+        >
           {{ busy ? "Applying…" : "Apply" }}
         </button>
       </div>

@@ -3,14 +3,23 @@
     <header class="diff-header">
       <div>
         <h3>Diff Summary</h3>
-        <p class="hint">Baseline: {{ diff?.baseline_name || '—' }}</p>
+        <p class="hint">
+          Baseline: {{ diff?.baseline_name || '—' }}
+        </p>
       </div>
-      <button class="ghost" @click="exportOverlay" :disabled="!canExport || exporting">
+      <button
+        class="ghost"
+        :disabled="!canExport || exporting"
+        @click="exportOverlay"
+      >
         {{ exporting ? 'Exporting…' : 'Export JSON Overlay' }}
       </button>
     </header>
 
-    <div v-if="diff" class="summary-grid">
+    <div
+      v-if="diff"
+      class="summary-grid"
+    >
       <div class="summary-card">
         <span class="label">Baseline Segments</span>
         <strong>{{ diff.summary.segments_baseline }}</strong>
@@ -37,14 +46,21 @@
       </div>
     </div>
 
-    <div class="segment-table" v-if="diff && diff.segments.length">
+    <div
+      v-if="diff && diff.segments.length"
+      class="segment-table"
+    >
       <header class="segment-header">
         <span>Status</span>
         <span>Type</span>
         <span>Length</span>
         <span>Path Index</span>
       </header>
-      <div v-for="segment in diff.segments" :key="segment.id" class="segment-row">
+      <div
+        v-for="segment in diff.segments"
+        :key="segment.id"
+        class="segment-row"
+      >
         <span :class="segment.status">{{ segment.status }}</span>
         <span>{{ segment.type }}</span>
         <span>{{ segment.length.toFixed(2) }} mm</span>
@@ -52,7 +68,12 @@
       </div>
     </div>
 
-    <p v-else class="hint">Select a baseline to see the detailed diff.</p>
+    <p
+      v-else
+      class="hint"
+    >
+      Select a baseline to see the detailed diff.
+    </p>
   </section>
 </template>
 

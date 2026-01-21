@@ -248,7 +248,12 @@ onMounted(() => {
       class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4"
     >
       {{ error }}
-      <button class="ml-2 underline" @click="error = null">Dismiss</button>
+      <button
+        class="ml-2 underline"
+        @click="error = null"
+      >
+        Dismiss
+      </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,9 +265,7 @@ onMounted(() => {
 
         <!-- Preset Quick-Apply -->
         <div class="bg-gray-50 rounded-lg p-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Quick Presets</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-2">Quick Presets</label>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="p in presets"
@@ -278,7 +281,9 @@ onMounted(() => {
 
         <!-- Profile Type -->
         <div class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Profile Type</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Profile Type
+          </h3>
           <div class="grid grid-cols-2 gap-2">
             <button
               v-for="pt in profileTypes"
@@ -291,15 +296,21 @@ onMounted(() => {
               "
               @click="profileType = pt.value"
             >
-              <div class="font-medium text-sm">{{ pt.label }}</div>
-              <div class="text-xs text-gray-500">{{ pt.desc }}</div>
+              <div class="font-medium text-sm">
+                {{ pt.label }}
+              </div>
+              <div class="text-xs text-gray-500">
+                {{ pt.desc }}
+              </div>
             </button>
           </div>
         </div>
 
         <!-- Dimensions -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Dimensions</h3>
+          <h3 class="font-semibold text-gray-800">
+            Dimensions
+          </h3>
 
           <div>
             <label class="block text-xs text-gray-600 mb-1">Width (mm)</label>
@@ -310,7 +321,7 @@ onMounted(() => {
               max="30"
               step="0.5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ width.toFixed(1) }} mm
             </div>
@@ -325,7 +336,7 @@ onMounted(() => {
               max="20"
               step="0.5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ height.toFixed(1) }} mm
             </div>
@@ -340,7 +351,7 @@ onMounted(() => {
               max="500"
               step="5"
               class="w-full"
-            />
+            >
             <div class="text-sm text-gray-700 text-right">
               {{ length.toFixed(0) }} mm
             </div>
@@ -349,22 +360,28 @@ onMounted(() => {
 
         <!-- Wood Selection -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Wood Type</h3>
+          <h3 class="font-semibold text-gray-800">
+            Wood Type
+          </h3>
 
           <select
             v-model="selectedWood"
             class="w-full border rounded px-3 py-2 text-sm"
           >
-            <option :value="null">Custom</option>
-            <option v-for="w in COMMON_WOODS" :key="w.name" :value="w.name">
+            <option :value="null">
+              Custom
+            </option>
+            <option
+              v-for="w in COMMON_WOODS"
+              :key="w.name"
+              :value="w.name"
+            >
               {{ w.name }} ({{ w.density }} kg/m³)
             </option>
           </select>
 
           <div>
-            <label class="block text-xs text-gray-600 mb-1"
-              >Density (kg/m³)</label
-            >
+            <label class="block text-xs text-gray-600 mb-1">Density (kg/m³)</label>
             <input
               v-model.number="density"
               type="number"
@@ -372,48 +389,68 @@ onMounted(() => {
               max="1200"
               step="10"
               class="w-full border rounded px-3 py-2 text-sm"
-            />
+            >
           </div>
         </div>
 
         <!-- Single Brace Results -->
-        <div v-if="singleResult" class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Section Properties</h3>
+        <div
+          v-if="singleResult"
+          class="bg-white border rounded-lg p-4"
+        >
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Section Properties
+          </h3>
 
           <table class="w-full text-sm">
             <tbody>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Cross-Section Area</td>
+                <td class="py-2 text-gray-600">
+                  Cross-Section Area
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ singleResult.section.area_mm2.toFixed(2) }} mm²
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Centroid Height</td>
+                <td class="py-2 text-gray-600">
+                  Centroid Height
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ singleResult.section.centroid_y_mm.toFixed(2) }} mm
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Moment of Inertia</td>
+                <td class="py-2 text-gray-600">
+                  Moment of Inertia
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ singleResult.section.inertia_mm4.toFixed(1) }} mm⁴
                 </td>
               </tr>
               <tr class="border-b">
-                <td class="py-2 text-gray-600">Section Modulus</td>
+                <td class="py-2 text-gray-600">
+                  Section Modulus
+                </td>
                 <td class="py-2 text-right font-mono">
                   {{ singleResult.section.section_modulus_mm3.toFixed(1) }} mm³
                 </td>
               </tr>
               <tr class="border-b bg-amber-50">
-                <td class="py-2 text-gray-700 font-medium">Mass</td>
+                <td class="py-2 text-gray-700 font-medium">
+                  Mass
+                </td>
                 <td class="py-2 text-right font-mono font-bold">
                   {{ singleResult.mass_grams.toFixed(2) }} g
                 </td>
               </tr>
-              <tr v-if="singleResult.stiffness_estimate" class="bg-blue-50">
-                <td class="py-2 text-gray-700 font-medium">Stiffness Index</td>
+              <tr
+                v-if="singleResult.stiffness_estimate"
+                class="bg-blue-50"
+              >
+                <td class="py-2 text-gray-700 font-medium">
+                  Stiffness Index
+                </td>
                 <td class="py-2 text-right font-mono font-bold">
                   {{ singleResult.stiffness_estimate.toFixed(0) }}
                 </td>
@@ -433,7 +470,9 @@ onMounted(() => {
 
       <!-- Middle Panel: Batch List -->
       <div class="space-y-4">
-        <h2 class="text-lg font-semibold text-gray-800">Bracing Set</h2>
+        <h2 class="text-lg font-semibold text-gray-800">
+          Bracing Set
+        </h2>
 
         <!-- Batch Name -->
         <div class="bg-gray-50 rounded-lg p-4">
@@ -443,11 +482,14 @@ onMounted(() => {
             type="text"
             class="w-full border rounded px-3 py-2 text-sm"
             placeholder="X-Brace Set"
-          />
+          >
         </div>
 
         <!-- Brace List -->
-        <div v-if="braces.length > 0" class="space-y-2">
+        <div
+          v-if="braces.length > 0"
+          class="space-y-2"
+        >
           <div
             v-for="brace in braces"
             :key="brace.id"
@@ -458,7 +500,7 @@ onMounted(() => {
                 v-model="brace.name"
                 type="text"
                 class="font-medium text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none"
-              />
+              >
               <button
                 class="text-red-500 hover:text-red-700 text-sm"
                 @click="removeBrace(brace.id)"
@@ -489,7 +531,7 @@ onMounted(() => {
                   v-model.number="brace.length_mm"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
               <div>
                 <label class="text-gray-500">Width (mm)</label>
@@ -497,7 +539,7 @@ onMounted(() => {
                   v-model.number="brace.width_mm"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
               <div>
                 <label class="text-gray-500">Height (mm)</label>
@@ -505,7 +547,7 @@ onMounted(() => {
                   v-model.number="brace.height_mm"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
             </div>
 
@@ -517,7 +559,7 @@ onMounted(() => {
                   v-model.number="brace.x_mm"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
               <div>
                 <label class="text-gray-500">Y</label>
@@ -525,7 +567,7 @@ onMounted(() => {
                   v-model.number="brace.y_mm"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
               <div>
                 <label class="text-gray-500">Angle (°)</label>
@@ -533,7 +575,7 @@ onMounted(() => {
                   v-model.number="brace.angle_deg"
                   type="number"
                   class="w-full border rounded px-1 py-0.5"
-                />
+                >
               </div>
             </div>
 
@@ -543,9 +585,7 @@ onMounted(() => {
               class="mt-2 text-xs bg-gray-50 rounded p-2"
             >
               <span class="text-gray-600">Mass:</span>
-              <span class="font-mono ml-1"
-                >{{ brace.result.mass_grams.toFixed(2) }}g</span
-              >
+              <span class="font-mono ml-1">{{ brace.result.mass_grams.toFixed(2) }}g</span>
               <span class="mx-2 text-gray-300">|</span>
               <span class="text-gray-600">Stiffness:</span>
               <span class="font-mono ml-1">{{
@@ -559,7 +599,9 @@ onMounted(() => {
           v-else
           class="bg-gray-100 rounded-lg p-8 text-center text-gray-400"
         >
-          <div class="text-4xl mb-2">📦</div>
+          <div class="text-4xl mb-2">
+            📦
+          </div>
           <div>No braces added yet</div>
           <div class="text-xs mt-1">
             Use the calculator on the left, then click "Add to Batch"
@@ -580,18 +622,27 @@ onMounted(() => {
 
       <!-- Right Panel: Batch Results & Export -->
       <div class="space-y-4">
-        <h2 class="text-lg font-semibold text-gray-800">Results & Export</h2>
+        <h2 class="text-lg font-semibold text-gray-800">
+          Results & Export
+        </h2>
 
         <!-- Batch Summary -->
-        <div v-if="batchResult" class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Batch Summary</h3>
+        <div
+          v-if="batchResult"
+          class="bg-white border rounded-lg p-4"
+        >
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Batch Summary
+          </h3>
 
           <div class="grid grid-cols-2 gap-4">
             <div class="bg-amber-50 rounded-lg p-4 text-center">
               <div class="text-2xl font-bold text-amber-700">
                 {{ batchResult.total_mass_grams.toFixed(1) }}
               </div>
-              <div class="text-xs text-amber-600 mt-1">Total Mass (grams)</div>
+              <div class="text-xs text-amber-600 mt-1">
+                Total Mass (grams)
+              </div>
             </div>
             <div class="bg-blue-50 rounded-lg p-4 text-center">
               <div class="text-2xl font-bold text-blue-700">
@@ -610,7 +661,9 @@ onMounted(() => {
 
         <!-- Export Options -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
-          <h3 class="font-semibold text-gray-800">Export Options</h3>
+          <h3 class="font-semibold text-gray-800">
+            Export Options
+          </h3>
 
           <div>
             <label class="block text-xs text-gray-600 mb-1">DXF Version</label>
@@ -618,19 +671,31 @@ onMounted(() => {
               v-model="dxfVersion"
               class="w-full border rounded px-3 py-2 text-sm"
             >
-              <option value="R12">R12 (Most Compatible)</option>
-              <option value="R2000">R2000</option>
-              <option value="R2010">R2010</option>
+              <option value="R12">
+                R12 (Most Compatible)
+              </option>
+              <option value="R2000">
+                R2000
+              </option>
+              <option value="R2010">
+                R2010
+              </option>
             </select>
           </div>
 
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="includeCenterlines" type="checkbox" />
+            <input
+              v-model="includeCenterlines"
+              type="checkbox"
+            >
             Include centerlines
           </label>
 
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="includeLabels" type="checkbox" />
+            <input
+              v-model="includeLabels"
+              type="checkbox"
+            >
             Include labels
           </label>
         </div>
@@ -646,35 +711,55 @@ onMounted(() => {
 
         <!-- Profile Diagram -->
         <div class="bg-white border rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Profile Reference</h3>
+          <h3 class="font-semibold text-gray-800 mb-3">
+            Profile Reference
+          </h3>
 
           <div class="grid grid-cols-2 gap-4 text-center text-xs">
             <div class="bg-gray-50 rounded p-2">
-              <div class="text-lg mb-1">▬</div>
+              <div class="text-lg mb-1">
+                ▬
+              </div>
               <div>Rectangular</div>
-              <div class="text-gray-500">Max stiffness</div>
+              <div class="text-gray-500">
+                Max stiffness
+              </div>
             </div>
             <div class="bg-gray-50 rounded p-2">
-              <div class="text-lg mb-1">▲</div>
+              <div class="text-lg mb-1">
+                ▲
+              </div>
               <div>Triangular</div>
-              <div class="text-gray-500">Good stiffness/weight</div>
+              <div class="text-gray-500">
+                Good stiffness/weight
+              </div>
             </div>
             <div class="bg-gray-50 rounded p-2">
-              <div class="text-lg mb-1">⌓</div>
+              <div class="text-lg mb-1">
+                ⌓
+              </div>
               <div>Parabolic</div>
-              <div class="text-gray-500">Classic tone</div>
+              <div class="text-gray-500">
+                Classic tone
+              </div>
             </div>
             <div class="bg-gray-50 rounded p-2">
-              <div class="text-lg mb-1">⌢</div>
+              <div class="text-lg mb-1">
+                ⌢
+              </div>
               <div>Scalloped</div>
-              <div class="text-gray-500">Flexible ends</div>
+              <div class="text-gray-500">
+                Flexible ends
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Formula Reference -->
         <div class="bg-gray-50 rounded-lg p-4 text-xs text-gray-600">
-          <h4 class="font-semibold mb-2">Section Properties</h4>
+          <h4 class="font-semibold mb-2">
+            Section Properties
+          </h4>
           <ul class="space-y-1">
             <li><strong>I</strong> = Moment of Inertia (mm⁴)</li>
             <li><strong>S</strong> = Section Modulus = I / c (mm³)</li>

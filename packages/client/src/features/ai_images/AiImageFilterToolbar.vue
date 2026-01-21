@@ -146,7 +146,7 @@ function handleClearFilters(): void {
         placeholder="Search prompts..."
         :value="store.filters.search ?? ''"
         @input="handleSearchInput"
-      />
+      >
       <span class="search-icon">🔍</span>
     </div>
 
@@ -241,9 +241,15 @@ function handleClearFilters(): void {
     </div>
 
     <!-- Active Filters -->
-    <div v-if="hasActiveFilters" class="active-filters">
+    <div
+      v-if="hasActiveFilters"
+      class="active-filters"
+    >
       <span class="filter-count">{{ activeFilterCount }} active</span>
-      <button class="clear-btn" @click="handleClearFilters">
+      <button
+        class="clear-btn"
+        @click="handleClearFilters"
+      >
         Clear all
       </button>
     </div>

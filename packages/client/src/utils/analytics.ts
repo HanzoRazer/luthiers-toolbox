@@ -21,7 +21,7 @@ interface PostHogConfig {
 }
 */
 
-let posthogInstance: any = null
+const posthogInstance: any = null
 
 export function initPostHog() {
   // PostHog disabled in development mode
@@ -362,7 +362,7 @@ export function disableAnalytics() {
   // GA4 opt-out
   const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID
   if (measurementId) {
-    ;(window as any)[`ga-disable-${measurementId}`] = true
+    (window as any)[`ga-disable-${measurementId}`] = true
   }
 
   console.log('Analytics disabled')
@@ -379,7 +379,7 @@ export function enableAnalytics() {
   // GA4 opt-in
   const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID
   if (measurementId) {
-    ;(window as any)[`ga-disable-${measurementId}`] = false
+    (window as any)[`ga-disable-${measurementId}`] = false
   }
 
   console.log('Analytics enabled')

@@ -42,20 +42,32 @@ function statusClass(status: string): string {
   <div
     class="run-row"
     :class="{ selected }"
-    @click="emit('select')"
     role="button"
     tabindex="0"
+    @click="emit('select')"
     @keydown.enter="emit('select')"
   >
-    <div class="run-id" :title="run.run_id">
+    <div
+      class="run-id"
+      :title="run.run_id"
+    >
       {{ run.run_id.slice(0, 12) }}…
     </div>
-    <div class="run-status" :class="statusClass(run.status)">
+    <div
+      class="run-status"
+      :class="statusClass(run.status)"
+    >
       {{ run.status }}
     </div>
-    <div class="run-event">{{ run.event_type }}</div>
-    <div class="run-tool">{{ run.tool_id || "—" }}</div>
-    <div class="run-date">{{ formatDate(run.created_at_utc) }}</div>
+    <div class="run-event">
+      {{ run.event_type }}
+    </div>
+    <div class="run-tool">
+      {{ run.tool_id || "—" }}
+    </div>
+    <div class="run-date">
+      {{ formatDate(run.created_at_utc) }}
+    </div>
   </div>
 </template>
 

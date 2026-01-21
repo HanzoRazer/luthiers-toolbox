@@ -14,3 +14,4 @@
 export * as cam from "./cam/cam";
 export * as artDesignFirstWorkflow from "./artDesignFirstWorkflow";
 export * as rmosAcoustics from "./rmosAcoustics";
+export * as rmosAcousticsIngest from "./rmosAcousticsIngest";

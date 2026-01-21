@@ -234,8 +234,12 @@ watch(runId, () => {
   <div class="page">
     <div class="hdr">
       <div>
-        <div class="title">Variants & Review</div>
-        <div class="subtle">Run: <code>{{ runId }}</code></div>
+        <div class="title">
+          Variants & Review
+        </div>
+        <div class="subtle">
+          Run: <code>{{ runId }}</code>
+        </div>
       </div>
 
       <div class="toolbar">
@@ -267,46 +271,85 @@ watch(runId, () => {
           </select>
         </label>
 
-        <button class="btn tiny secondary" @click="load">Refresh</button>
+        <button
+          class="btn tiny secondary"
+          @click="load"
+        >
+          Refresh
+        </button>
       </div>
     </div>
 
-    <div v-if="loading" class="subtle">Loading variants…</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div
+      v-if="loading"
+      class="subtle"
+    >
+      Loading variants…
+    </div>
+    <div
+      v-else-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
 
-    <div v-else class="grid">
+    <div
+      v-else
+      class="grid"
+    >
       <!-- LEFT: Variant list -->
       <div class="panel">
-        <div class="panelTitle">Variants ({{ filteredSorted.length }})</div>
+        <div class="panelTitle">
+          Variants ({{ filteredSorted.length }})
+        </div>
 
-        <div v-if="!filteredSorted.length" class="empty">
-          <div class="subtle">No variants match current filters.</div>
-          <button class="btn tiny" @click="statusFilter = 'ALL'; riskFilter = 'ALL'; sortBy = 'CREATED_DESC'">
+        <div
+          v-if="!filteredSorted.length"
+          class="empty"
+        >
+          <div class="subtle">
+            No variants match current filters.
+          </div>
+          <button
+            class="btn tiny"
+            @click="statusFilter = 'ALL'; riskFilter = 'ALL'; sortBy = 'CREATED_DESC'"
+          >
             Reset filters
           </button>
         </div>
 
-        <div v-else class="list">
+        <div
+          v-else
+          class="list"
+        >
           <!-- Bulk action bar -->
-          <div v-if="selectedIds.size > 0" class="bulkBar">
+          <div
+            v-if="selectedIds.size > 0"
+            class="bulkBar"
+          >
             <div class="bulkInfo">
               <strong>{{ selectedIds.size }}</strong> selected
-              <button class="btn tiny secondary" @click="clearSelection">Clear</button>
+              <button
+                class="btn tiny secondary"
+                @click="clearSelection"
+              >
+                Clear
+              </button>
             </div>
             <div class="bulkActions">
               <button
                 class="btn tiny primary"
                 :disabled="bulkBusy || !selectedPromotableIds.length"
-                @click="bulkPromoteOpen = true"
                 title="Promote selected variants to manufacturing candidates"
+                @click="bulkPromoteOpen = true"
               >
                 Promote Selected ({{ selectedPromotableIds.length }})
               </button>
               <button
                 class="btn tiny danger"
                 :disabled="bulkBusy || !selectedNonRejectedIds.length"
-                @click="bulkRejectOpen = true"
                 title="Rejects selected variants (applies one reason code to all)"
+                @click="bulkRejectOpen = true"
               >
                 Reject Selected ({{ selectedNonRejectedIds.length }})
               </button>
@@ -321,7 +364,7 @@ watch(runId, () => {
                 :checked="selectedIds.size === filteredSorted.length && filteredSorted.length > 0"
                 :indeterminate="selectedIds.size > 0 && selectedIds.size < filteredSorted.length"
                 @change="selectedIds.size === filteredSorted.length ? clearSelection() : selectAll()"
-              />
+              >
               <span class="small subtle">Select all ({{ filteredSorted.length }})</span>
             </label>
           </div>
@@ -334,17 +377,25 @@ watch(runId, () => {
             :title="variantHoverTitle(v)"
             @click="selected = v.advisory_id"
           >
-            <div class="rowCheck" @click.stop>
+            <div
+              class="rowCheck"
+              @click.stop
+            >
               <input
                 type="checkbox"
                 :checked="selectedIds.has(v.advisory_id)"
                 @change="toggleSelected(v.advisory_id)"
-              />
+              >
             </div>
             <div class="rowMain">
               <div class="rowTop">
-                <div class="mono">{{ v.advisory_id.slice(0, 12) }}…</div>
-                <VariantStatusBadge :status="deriveStatus(v)" :risk="(v.risk_level ?? 'UNKNOWN') as any" />
+                <div class="mono">
+                  {{ v.advisory_id.slice(0, 12) }}…
+                </div>
+                <VariantStatusBadge
+                  :status="deriveStatus(v)"
+                  :risk="(v.risk_level ?? 'UNKNOWN') as any"
+                />
               </div>
 
               <div class="rowMeta">
@@ -357,7 +408,12 @@ watch(runId, () => {
             </div>
 
             <div class="rowActions">
-              <button class="btn tiny secondary" @click.stop="pickCompare(v.advisory_id)">Pick</button>
+              <button
+                class="btn tiny secondary"
+                @click.stop="pickCompare(v.advisory_id)"
+              >
+                Pick
+              </button>
             </div>
           </button>
         </div>
@@ -371,48 +427,75 @@ watch(runId, () => {
       </div>
 
       <!-- RIGHT: Selected variant actions -->
-      <div class="panel" v-if="selected">
-        <div class="panelTitle">Selected Variant</div>
+      <div
+        v-if="selected"
+        class="panel"
+      >
+        <div class="panelTitle">
+          Selected Variant
+        </div>
 
         <div class="rowActionsInline">
-          <PromoteToManufacturingButton :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
-          <RejectVariantButton :runId="runId" :advisoryId="selected" @rejected="load" />
+          <PromoteToManufacturingButton
+            :run-id="runId"
+            :advisory-id="selected"
+            api-base="/api/rmos"
+          />
+          <RejectVariantButton
+            :run-id="runId"
+            :advisory-id="selected"
+            @rejected="load"
+          />
           <UndoRejectButton
             v-if="selectedIsRejected"
-            :runId="runId"
-            :advisoryId="selected"
+            :run-id="runId"
+            :advisory-id="selected"
             @cleared="load"
           />
         </div>
 
         <div class="spacer" />
-        <VariantNotes :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
+        <VariantNotes
+          :run-id="runId"
+          :advisory-id="selected"
+          api-base="/api/rmos"
+        />
 
         <div class="spacer" />
-        <PromptLineageViewer :runId="runId" :advisoryId="selected" apiBase="/api/rmos" />
+        <PromptLineageViewer
+          :run-id="runId"
+          :advisory-id="selected"
+          api-base="/api/rmos"
+        />
       </div>
 
       <!-- Compare -->
-      <div class="panel wide" v-if="compareReady">
+      <div
+        v-if="compareReady"
+        class="panel wide"
+      >
         <SvgPathDiffViewer
-          :runId="runId"
-          :leftAdvisoryId="compareLeft!"
-          :rightAdvisoryId="compareRight!"
-          apiBase="/api/rmos"
+          :run-id="runId"
+          :left-advisory-id="compareLeft!"
+          :right-advisory-id="compareRight!"
+          api-base="/api/rmos"
         />
       </div>
 
       <!-- Manufacturing candidates -->
       <div class="panel wide">
-        <ManufacturingCandidateList :runId="runId" :currentOperator="currentOperator" />
+        <ManufacturingCandidateList
+          :run-id="runId"
+          :current-operator="currentOperator"
+        />
       </div>
     </div>
 
     <!-- Bulk Reject Modal -->
     <BulkRejectModal
       :open="bulkRejectOpen"
-      :runId="runId"
-      :advisoryIds="selectedNonRejectedIds"
+      :run-id="runId"
+      :advisory-ids="selectedNonRejectedIds"
       @close="bulkRejectOpen = false"
       @done="bulkRejectOpen = false; load(); clearSelection();"
     />
@@ -420,10 +503,10 @@ watch(runId, () => {
     <!-- Bulk Promote Modal -->
     <BulkPromoteModal
       :open="bulkPromoteOpen"
-      :runId="runId"
-      :advisoryIds="selectedPromotableIds"
-      :riskById="riskById"
-      :apiBase="apiBase"
+      :run-id="runId"
+      :advisory-ids="selectedPromotableIds"
+      :risk-by-id="riskById"
+      :api-base="apiBase"
       @close="bulkPromoteOpen = false"
       @done="bulkPromoteOpen = false; load(); clearSelection();"
     />

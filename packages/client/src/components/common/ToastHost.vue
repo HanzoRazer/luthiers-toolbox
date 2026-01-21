@@ -29,7 +29,11 @@ function onClose(id: number) {
     class="fixed inset-x-0 bottom-0 z-50 flex justify-center pointer-events-none px-4 pb-4"
   >
     <div class="w-full max-w-sm space-y-2 pointer-events-auto">
-      <TransitionGroup name="toast-fade" tag="div" class="space-y-2">
+      <TransitionGroup
+        name="toast-fade"
+        tag="div"
+        class="space-y-2"
+      >
         <div
           v-for="toast in toasts"
           :key="toast.id"
@@ -38,10 +42,10 @@ function onClose(id: number) {
             toast.variant === 'success'
               ? 'border-emerald-300 dark:border-emerald-600'
               : toast.variant === 'error'
-              ? 'border-red-300 dark:border-red-600'
-              : toast.variant === 'warning'
-              ? 'border-amber-300 dark:border-amber-600'
-              : 'border-gray-200 dark:border-gray-600',
+                ? 'border-red-300 dark:border-red-600'
+                : toast.variant === 'warning'
+                  ? 'border-amber-300 dark:border-amber-600'
+                  : 'border-gray-200 dark:border-gray-600',
           ]"
         >
           <!-- Status dot -->
@@ -51,10 +55,10 @@ function onClose(id: number) {
               toast.variant === 'success'
                 ? 'bg-emerald-500'
                 : toast.variant === 'error'
-                ? 'bg-red-500'
-                : toast.variant === 'warning'
-                ? 'bg-amber-500'
-                : 'bg-blue-500',
+                  ? 'bg-red-500'
+                  : toast.variant === 'warning'
+                    ? 'bg-amber-500'
+                    : 'bg-blue-500',
             ]"
           />
 

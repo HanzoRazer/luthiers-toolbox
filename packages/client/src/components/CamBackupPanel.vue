@@ -2,15 +2,23 @@
   <div class="cam-backup-panel">
     <div class="header">
       <h3>CAM Backups</h3>
-      <button @click="snapshotNow" :disabled="loading">
+      <button
+        :disabled="loading"
+        @click="snapshotNow"
+      >
         {{ loading ? 'Creating...' : '📸 Snapshot Now' }}
       </button>
     </div>
 
-    <p class="subtitle">Automatic daily backups (14-day retention)</p>
+    <p class="subtitle">
+      Automatic daily backups (14-day retention)
+    </p>
 
     <!-- Backup List -->
-    <div v-if="backups.length > 0" class="backup-list">
+    <div
+      v-if="backups.length > 0"
+      class="backup-list"
+    >
       <table>
         <thead>
           <tr>
@@ -20,11 +28,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="backup in backups" :key="backup.name">
+          <tr
+            v-for="backup in backups"
+            :key="backup.name"
+          >
             <td>{{ formatDate(backup.name) }}</td>
             <td>{{ formatSize(backup.size_bytes) }}</td>
             <td>
-              <a :href="`/api/cam/backup/download/${backup.name}`" download>
+              <a
+                :href="`/api/cam/backup/download/${backup.name}`"
+                download
+              >
                 💾 Download
               </a>
             </td>
@@ -33,11 +47,17 @@
       </table>
     </div>
 
-    <div v-else-if="!loading" class="empty-state">
+    <div
+      v-else-if="!loading"
+      class="empty-state"
+    >
       <p>No backups found. Click "Snapshot Now" to create your first backup.</p>
     </div>
 
-    <div v-if="loading" class="loading">
+    <div
+      v-if="loading"
+      class="loading"
+    >
       <p>Loading...</p>
     </div>
   </div>

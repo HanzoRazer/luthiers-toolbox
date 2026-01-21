@@ -1,20 +1,30 @@
 <template>
-  <div v-if="open" class="preview-drawer-overlay" @click.self="$emit('close')">
+  <div
+    v-if="open"
+    class="preview-drawer-overlay"
+    @click.self="$emit('close')"
+  >
     <div class="preview-drawer">
       <!-- Header -->
       <div class="drawer-header">
         <h3>NC Preview</h3>
-        <button class="close-btn" @click="$emit('close')" aria-label="Close preview">✕</button>
+        <button
+          class="close-btn"
+          aria-label="Close preview"
+          @click="$emit('close')"
+        >
+          ✕
+        </button>
       </div>
 
       <!-- Legend -->
       <div class="legend">
         <span class="legend-item">
-          <span class="legend-box yellow"></span>
+          <span class="legend-box yellow" />
           FEED_HINT zones (adaptive slowdown)
         </span>
         <span class="legend-item">
-          <span class="legend-box purple"></span>
+          <span class="legend-box purple" />
           Trochoid arcs
         </span>
       </div>

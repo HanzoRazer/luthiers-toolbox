@@ -67,8 +67,14 @@ watch(
         class="border rounded px-2 py-1 text-xs bg-white"
         @change="onSelect"
       >
-        <option :value="null">— none —</option>
-        <option v-for="preset in presets" :key="preset.id" :value="preset.id">
+        <option :value="null">
+          — none —
+        </option>
+        <option
+          v-for="preset in presets"
+          :key="preset.id"
+          :value="preset.id"
+        >
           {{ preset.name }}
         </option>
       </select>
@@ -83,7 +89,10 @@ watch(
       </button>
     </div>
 
-    <div v-if="error" class="text-[11px] text-red-600">
+    <div
+      v-if="error"
+      class="text-[11px] text-red-600"
+    >
       {{ error }}
     </div>
   </div>

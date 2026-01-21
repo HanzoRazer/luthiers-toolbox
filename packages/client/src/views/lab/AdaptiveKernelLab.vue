@@ -25,46 +25,46 @@
             <input
               type="file"
               accept=".dxf"
-              @change="onDxfFileChange"
               class="block w-full text-[10px]"
-            />
+              @change="onDxfFileChange"
+            >
 
             <div class="grid grid-cols-2 gap-1 text-[10px]">
               <label class="flex flex-col">
                 <span class="text-gray-600">Tool Ø (mm)</span>
                 <input
+                  v-model.number="toolDxf.tool_d"
                   type="number"
                   step="0.1"
-                  v-model.number="toolDxf.tool_d"
                   class="border rounded px-1 py-0.5"
-                />
+                >
               </label>
               <label class="flex flex-col">
                 <span class="text-gray-600">Stepdown</span>
                 <input
+                  v-model.number="toolDxf.stepdown"
                   type="number"
                   step="0.1"
-                  v-model.number="toolDxf.stepdown"
                   class="border rounded px-1 py-0.5"
-                />
+                >
               </label>
               <label class="flex flex-col">
                 <span class="text-gray-600">Stepover</span>
                 <input
+                  v-model.number="toolDxf.stepover"
                   type="number"
                   step="0.05"
-                  v-model.number="toolDxf.stepover"
                   class="border rounded px-1 py-0.5"
-                />
+                >
               </label>
               <label class="flex flex-col">
                 <span class="text-gray-600">Z rough</span>
                 <input
+                  v-model.number="toolDxf.z_rough"
                   type="number"
                   step="0.1"
-                  v-model.number="toolDxf.z_rough"
                   class="border rounded px-1 py-0.5"
-                />
+                >
               </label>
             </div>
 
@@ -78,7 +78,10 @@
               <span v-else>Running…</span>
             </button>
 
-            <div v-if="dxfError" class="mt-1 text-[10px] text-red-600">
+            <div
+              v-if="dxfError"
+              class="mt-1 text-[10px] text-red-600"
+            >
               {{ dxfError }}
             </div>
           </div>
@@ -112,7 +115,10 @@
         </div>
 
         <!-- Stats -->
-        <div v-if="planStats" class="border rounded bg-slate-50 p-2 text-[10px] space-y-0.5">
+        <div
+          v-if="planStats"
+          class="border rounded bg-slate-50 p-2 text-[10px] space-y-0.5"
+        >
           <div class="font-semibold text-gray-900 text-[11px] mb-1">
             Plan stats
           </div>
@@ -161,8 +167,13 @@
         </div>
 
         <!-- Raw JSON toggle -->
-        <details v-if="lastPlan" class="mt-1 text-[10px]">
-          <summary class="cursor-pointer text-gray-600">Raw plan JSON</summary>
+        <details
+          v-if="lastPlan"
+          class="mt-1 text-[10px]"
+        >
+          <summary class="cursor-pointer text-gray-600">
+            Raw plan JSON
+          </summary>
           <pre class="mt-1 max-h-48 overflow-auto bg-slate-900 text-slate-100 rounded p-2">
 {{ JSON.stringify(lastPlan, null, 2) }}
           </pre>

@@ -1,16 +1,35 @@
 <template>
   <div class="p-3 border rounded space-y-2">
     <div class="flex items-center justify-between">
-      <h3 class="text-base font-semibold">Post-Processors</h3>
-      <button class="px-3 py-1 border rounded" @click="resetToDefaults">Reset</button>
+      <h3 class="text-base font-semibold">
+        Post-Processors
+      </h3>
+      <button
+        class="px-3 py-1 border rounded"
+        @click="resetToDefaults"
+      >
+        Reset
+      </button>
     </div>
 
     <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-2">
-      <label v-for="p in posts" :key="p.id" class="flex items-center gap-2 border rounded px-2 py-1">
-        <input type="checkbox" :value="p.id" v-model="selectedIds" @change="persist"/>
+      <label
+        v-for="p in posts"
+        :key="p.id"
+        class="flex items-center gap-2 border rounded px-2 py-1"
+      >
+        <input
+          v-model="selectedIds"
+          type="checkbox"
+          :value="p.id"
+          @change="persist"
+        >
         <span class="font-medium">{{ p.id }}</span>
         <span class="text-xs text-gray-500 truncate">· {{ p.title || p.id }}</span>
-        <button class="ml-auto text-xs underline" @click.prevent="$emit('preview', p.id)">Preview</button>
+        <button
+          class="ml-auto text-xs underline"
+          @click.prevent="$emit('preview', p.id)"
+        >Preview</button>
       </label>
     </div>
 

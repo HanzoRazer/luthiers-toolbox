@@ -1,7 +1,22 @@
 <template>
-  <div class="diff-mode-toggle" v-if="delta" role="radiogroup" aria-label="Diff display mode">
-    <label><input type="radio" v-model="modelValue" value="overlay" :aria-checked="modelValue === 'overlay'" /> Overlay</label>
-    <label><input type="radio" v-model="modelValue" value="delta" :aria-checked="modelValue === 'delta'" /> Delta Only</label>
+  <div
+    v-if="delta"
+    class="diff-mode-toggle"
+    role="radiogroup"
+    aria-label="Diff display mode"
+  >
+    <label><input
+      v-model="modelValue"
+      type="radio"
+      value="overlay"
+      :aria-checked="modelValue === 'overlay'"
+    > Overlay</label>
+    <label><input
+      v-model="modelValue"
+      type="radio"
+      value="delta"
+      :aria-checked="modelValue === 'delta'"
+    > Delta Only</label>
   </div>
 </template>
 <script setup lang="ts">

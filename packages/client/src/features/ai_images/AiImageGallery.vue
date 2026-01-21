@@ -385,17 +385,41 @@ onMounted(async () => {
   <div class="wrap">
     <div class="top">
       <div class="controls">
-        <input v-model="prompt" class="input" placeholder="Prompt…" />
-        <select v-model="provider" class="select">
-          <option value="openai">openai</option>
-          <option value="stub">stub</option>
+        <input
+          v-model="prompt"
+          class="input"
+          placeholder="Prompt…"
+        >
+        <select
+          v-model="provider"
+          class="select"
+        >
+          <option value="openai">
+            openai
+          </option>
+          <option value="stub">
+            stub
+          </option>
         </select>
-        <select v-model="numImages" class="select">
-          <option :value="1">1</option>
-          <option :value="2">2</option>
-          <option :value="3">3</option>
+        <select
+          v-model="numImages"
+          class="select"
+        >
+          <option :value="1">
+            1
+          </option>
+          <option :value="2">
+            2
+          </option>
+          <option :value="3">
+            3
+          </option>
         </select>
-        <button class="btn primary" :disabled="!canGenerate" @click="doGenerate">
+        <button
+          class="btn primary"
+          :disabled="!canGenerate"
+          @click="doGenerate"
+        >
           {{ isGenerating ? "Generating…" : "Generate" }}
         </button>
 
@@ -409,34 +433,78 @@ onMounted(async () => {
           Open Review
         </button>
 
-        <select v-model="selectedRunId" class="select" @change="refreshVariants">
-          <option :value="null">Select run…</option>
-          <option v-for="r in runs" :key="r.run_id" :value="r.run_id">
+        <select
+          v-model="selectedRunId"
+          class="select"
+          @change="refreshVariants"
+        >
+          <option :value="null">
+            Select run…
+          </option>
+          <option
+            v-for="r in runs"
+            :key="r.run_id"
+            :value="r.run_id"
+          >
             {{ r.run_id }}
           </option>
         </select>
       </div>
 
-      <div v-if="error" class="toast err">{{ error }}</div>
-      <div v-if="success" class="toast ok">{{ success }}</div>
+      <div
+        v-if="error"
+        class="toast err"
+      >
+        {{ error }}
+      </div>
+      <div
+        v-if="success"
+        class="toast ok"
+      >
+        {{ success }}
+      </div>
 
       <!-- micro-follow: run context actions -->
-      <div class="runActions" v-if="selectedRunId">
-        <button class="btn small" type="button" @click="goToRunReview(selectedRunId)">
+      <div
+        v-if="selectedRunId"
+        class="runActions"
+      >
+        <button
+          class="btn small"
+          type="button"
+          @click="goToRunReview(selectedRunId)"
+        >
           Open Review
         </button>
-        <button class="btn small" type="button" @click="refreshVariants">
+        <button
+          class="btn small"
+          type="button"
+          @click="refreshVariants"
+        >
           Refresh Variants
         </button>
         <span class="mono small muted">run: {{ selectedRunId }}</span>
       </div>
     </div>
 
-    <div class="grid" v-if="generatedAssets.length">
-      <div v-for="a in generatedAssets" :key="(a as any).sha256 || (a as any).url" class="card">
-        <img v-if="(a as any).url" class="img" :src="(a as any).url" />
+    <div
+      v-if="generatedAssets.length"
+      class="grid"
+    >
+      <div
+        v-for="a in generatedAssets"
+        :key="(a as any).sha256 || (a as any).url"
+        class="card"
+      >
+        <img
+          v-if="(a as any).url"
+          class="img"
+          :src="(a as any).url"
+        >
         <div class="meta">
-          <div class="mono small">{{ (a as any).sha256 || "—" }}</div>
+          <div class="mono small">
+            {{ (a as any).sha256 || "—" }}
+          </div>
 
           <div class="rowBtns">
             <button
@@ -467,23 +535,33 @@ onMounted(async () => {
             </button>
           </div>
 
-          <div class="badges" v-if="_variantForAsset(a)">
+          <div
+            v-if="_variantForAsset(a)"
+            class="badges"
+          >
             <span
               class="badge"
               :data-b="(_variantForAsset(a)?.status ?? 'NEW')"
               :title="(_variantForAsset(a) as any)?.risk_level ? `Risk: ${(_variantForAsset(a) as any)?.risk_level}` : 'Risk: —'"
             >{{ _variantForAsset(a)?.status }}</span>
             <span
-              class="badge warn"
               v-if="_variantForAsset(a)?.rejected"
+              class="badge warn"
               data-b="REJECTED"
               :title="rejectionHover(_variantForAsset(a))"
             >REJECTED</span>
-            <span class="badge" v-if="_variantForAsset(a)?.promoted" data-b="PROMOTED">PROMOTED</span>
+            <span
+              v-if="_variantForAsset(a)?.promoted"
+              class="badge"
+              data-b="PROMOTED"
+            >PROMOTED</span>
           </div>
 
           <!-- micro-follow: per-asset quick reject/promote surface -->
-          <div class="assetOps" v-if="selectedRunId && _advisoryIdForAsset(a)">
+          <div
+            v-if="selectedRunId && _advisoryIdForAsset(a)"
+            class="assetOps"
+          >
             <div class="row">
               <button
                 class="btn small primary"
@@ -496,9 +574,9 @@ onMounted(async () => {
               </button>
 
               <button
+                v-if="_variantForAsset(a)?.rejected"
                 class="btn small"
                 type="button"
-                v-if="_variantForAsset(a)?.rejected"
                 :disabled="!!canUndoReject(_variantForAsset(a)) || !!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
                 :title="canUndoReject(_variantForAsset(a)) || 'Clear rejection (Undo Reject)'"
                 @click="undoReject(_advisoryIdForAsset(a)!)"
@@ -509,23 +587,38 @@ onMounted(async () => {
               <select
                 class="select small"
                 :disabled="!!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
-                @change="(ev:any) => { const v = ev?.target?.value as RejectReasonCode; if (v) quickReject(_advisoryIdForAsset(a)!, v); ev.target.value=''; }"
                 title="Reject this variant (records reason code)"
+                @change="(ev:any) => { const v = ev?.target?.value as RejectReasonCode; if (v) quickReject(_advisoryIdForAsset(a)!, v); ev.target.value=''; }"
               >
-                <option value="">Quick Reject…</option>
-                <option value="GEOMETRY_UNSAFE">GEOMETRY_UNSAFE</option>
-                <option value="TEXT_REQUIRES_OUTLINE">TEXT_REQUIRES_OUTLINE</option>
-                <option value="AESTHETIC">AESTHETIC</option>
-                <option value="DUPLICATE">DUPLICATE</option>
-                <option value="OTHER">OTHER</option>
+                <option value="">
+                  Quick Reject…
+                </option>
+                <option value="GEOMETRY_UNSAFE">
+                  GEOMETRY_UNSAFE
+                </option>
+                <option value="TEXT_REQUIRES_OUTLINE">
+                  TEXT_REQUIRES_OUTLINE
+                </option>
+                <option value="AESTHETIC">
+                  AESTHETIC
+                </option>
+                <option value="DUPLICATE">
+                  DUPLICATE
+                </option>
+                <option value="OTHER">
+                  OTHER
+                </option>
               </select>
             </div>
           </div>
 
-          <div v-if="openReviewFor === (_variantForAsset(a)?.advisory_id ?? null)" class="reviewSlot">
+          <div
+            v-if="openReviewFor === (_variantForAsset(a)?.advisory_id ?? null)"
+            class="reviewSlot"
+          >
             <VariantReviewPanel
-              :runId="String(selectedRunId)"
-              :advisoryId="String(_variantForAsset(a)?.advisory_id)"
+              :run-id="String(selectedRunId)"
+              :advisory-id="String(_variantForAsset(a)?.advisory_id)"
               :filename="(_variantForAsset(a)?.filename ?? null) as any"
               :mime="(_variantForAsset(a)?.mime ?? null) as any"
               :initial="_variantForAsset(a) as any"
@@ -537,7 +630,10 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div v-else class="empty">
+    <div
+      v-else
+      class="empty"
+    >
       Generate images to begin.
     </div>
   </div>

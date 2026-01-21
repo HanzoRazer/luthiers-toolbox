@@ -1,6 +1,8 @@
 <template>
   <div class="preset-manager-panel">
-    <p class="text-sm text-gray-500">Preset Manager Panel - Stub component</p>
+    <p class="text-sm text-gray-500">
+      Preset Manager Panel - Stub component
+    </p>
   </div>
 </template>
 

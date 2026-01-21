@@ -19,7 +19,9 @@ const store = useRmosRunsStore();
         <h1>Run Artifacts</h1>
         <p class="subtitle">
           Browse and inspect RMOS manufacturing run artifacts.
-          <router-link to="/rmos/runs/diff">Open Diff Viewer →</router-link>
+          <router-link to="/rmos/runs/diff">
+            Open Diff Viewer →
+          </router-link>
         </p>
       </div>
     </header>

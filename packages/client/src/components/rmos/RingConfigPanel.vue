@@ -8,35 +8,56 @@
       <p>No ring selected. Click "Add Ring" above.</p>
     </div>
 
-    <div v-else class="form">
+    <div
+      v-else
+      class="form"
+    >
       <label>
         Radius (mm)
-        <input type="number" v-model.number="currentRing.radius_mm" />
+        <input
+          v-model.number="currentRing.radius_mm"
+          type="number"
+        >
       </label>
 
       <label>
         Width (mm)
-        <input type="number" v-model.number="currentRing.width_mm" />
+        <input
+          v-model.number="currentRing.width_mm"
+          type="number"
+        >
       </label>
 
       <label>
         Tile length (mm)
-        <input type="number" v-model.number="currentRing.tile_length_mm" />
+        <input
+          v-model.number="currentRing.tile_length_mm"
+          type="number"
+        >
       </label>
 
       <label>
         Kerf (mm)
-        <input type="number" v-model.number="currentRing.kerf_mm" />
+        <input
+          v-model.number="currentRing.kerf_mm"
+          type="number"
+        >
       </label>
 
       <label>
         Herringbone angle (deg)
-        <input type="number" v-model.number="currentRing.herringbone_angle_deg" />
+        <input
+          v-model.number="currentRing.herringbone_angle_deg"
+          type="number"
+        >
       </label>
 
       <label>
         Twist angle (deg)
-        <input type="number" v-model.number="currentRing.twist_angle_deg" />
+        <input
+          v-model.number="currentRing.twist_angle_deg"
+          type="number"
+        >
       </label>
     </div>
   </div>

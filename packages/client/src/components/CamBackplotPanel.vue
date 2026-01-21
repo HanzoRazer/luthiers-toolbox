@@ -11,12 +11,16 @@
           class="px-2 py-1 rounded text-[11px] border"
           :class="mode==='2d' ? 'bg-gray-900 text-white' : 'bg-white'"
           @click="mode='2d'"
-        >2D</button>
+        >
+          2D
+        </button>
         <button
           class="px-2 py-1 rounded text-[11px] border"
           :class="mode==='3d' ? 'bg-gray-900 text-white' : 'bg-white'"
           @click="mode='3d'"
-        >3D</button>
+        >
+          3D
+        </button>
       </div>
     </div>
 

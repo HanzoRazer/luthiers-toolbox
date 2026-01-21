@@ -3,26 +3,53 @@
     <div class="header">
       <span class="label">{{ entry.kind }}</span>
       <span class="rows">{{ rows.length }} rows × {{ columns.length }} cols</span>
-      <button class="copy-btn" @click="copyToClipboard">📋 Copy</button>
+      <button
+        class="copy-btn"
+        @click="copyToClipboard"
+      >
+        📋 Copy
+      </button>
     </div>
 
     <div class="table-container">
       <table v-if="rows.length > 0">
         <thead>
           <tr>
-            <th v-for="(col, i) in columns" :key="i">{{ col }}</th>
+            <th
+              v-for="(col, i) in columns"
+              :key="i"
+            >
+              {{ col }}
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, ri) in displayRows" :key="ri">
-            <td v-for="(cell, ci) in row" :key="ci" :title="cell">{{ cell }}</td>
+          <tr
+            v-for="(row, ri) in displayRows"
+            :key="ri"
+          >
+            <td
+              v-for="(cell, ci) in row"
+              :key="ci"
+              :title="cell"
+            >
+              {{ cell }}
+            </td>
           </tr>
         </tbody>
       </table>
-      <div v-else class="empty">No data</div>
+      <div
+        v-else
+        class="empty"
+      >
+        No data
+      </div>
     </div>
 
-    <div v-if="rows.length > maxDisplayRows" class="truncation-notice">
+    <div
+      v-if="rows.length > maxDisplayRows"
+      class="truncation-notice"
+    >
       Showing {{ maxDisplayRows }} of {{ rows.length }} rows
     </div>
   </div>

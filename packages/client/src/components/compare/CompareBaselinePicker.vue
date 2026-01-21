@@ -3,9 +3,15 @@
     <header class="picker-header">
       <div>
         <h3>Baselines</h3>
-        <p class="hint">Select or capture a baseline snapshot for comparison.</p>
+        <p class="hint">
+          Select or capture a baseline snapshot for comparison.
+        </p>
       </div>
-      <button class="ghost" @click="loadBaselines" :disabled="loading">
+      <button
+        class="ghost"
+        :disabled="loading"
+        @click="loadBaselines"
+      >
         {{ loading ? 'Refreshing…' : 'Refresh' }}
       </button>
     </header>
@@ -16,27 +22,34 @@
         class="text-input"
         type="text"
         placeholder="Search by name or tag"
-      />
+      >
       <div class="save-group">
         <input
           v-model="newBaselineName"
           class="text-input"
           type="text"
           placeholder="Baseline name"
-        />
+        >
         <textarea
           v-model="newBaselineNotes"
           class="text-input"
           rows="2"
           placeholder="Notes (optional)"
         />
-        <button class="primary" @click="saveBaseline" :disabled="saveDisabled">
+        <button
+          class="primary"
+          :disabled="saveDisabled"
+          @click="saveBaseline"
+        >
           {{ saving ? 'Saving…' : 'Save Current Geometry' }}
         </button>
       </div>
     </div>
 
-    <div class="baseline-list" v-if="filteredBaselines.length">
+    <div
+      v-if="filteredBaselines.length"
+      class="baseline-list"
+    >
       <article
         v-for="baseline in filteredBaselines"
         :key="baseline.id"
@@ -48,10 +61,20 @@
           <strong>{{ baseline.name }}</strong>
           <span class="created">{{ formatDate(baseline.created_at) }}</span>
         </div>
-        <p class="baseline-meta" v-if="baseline.description">{{ baseline.description }}</p>
+        <p
+          v-if="baseline.description"
+          class="baseline-meta"
+        >
+          {{ baseline.description }}
+        </p>
       </article>
     </div>
-    <p v-else class="hint">No baselines yet. Save one using the form above.</p>
+    <p
+      v-else
+      class="hint"
+    >
+      No baselines yet. Save one using the form above.
+    </p>
   </section>
 </template>
 

@@ -6,25 +6,45 @@
     </div>
 
     <!-- Tool Selection by Phase -->
-    <div v-if="!activeTool" class="design-grid">
+    <div
+      v-if="!activeTool"
+      class="design-grid"
+    >
       <!-- Phase 1: Body Foundation -->
       <div class="design-category">
         <h3>🏗️ Phase 1: Body Foundation</h3>
-        <p class="phase-desc">Start here - create the body shape and structural design</p>
+        <p class="phase-desc">
+          Start here - create the body shape and structural design
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('body-outline')">
-            <div class="tool-icon">🎸</div>
+          <div
+            class="tool-card"
+            @click="selectTool('body-outline')"
+          >
+            <div class="tool-icon">
+              🎸
+            </div>
             <h4>Body Outline Generator</h4>
             <p>Parametric guitar body shapes (Acoustic/Electric/Classical/Bass)</p>
             <span class="tool-badge">FOUNDATION</span>
           </div>
-          <div class="tool-card" @click="selectTool('bracing')">
-            <div class="tool-icon">🏗️</div>
+          <div
+            class="tool-card"
+            @click="selectTool('bracing')"
+          >
+            <div class="tool-icon">
+              🏗️
+            </div>
             <h4>Bracing Calculator</h4>
             <p>Structural mass estimation and glue area analysis</p>
           </div>
-          <div class="tool-card" @click="selectTool('archtop')">
-            <div class="tool-icon">🎻</div>
+          <div
+            class="tool-card"
+            @click="selectTool('archtop')"
+          >
+            <div class="tool-icon">
+              🎻
+            </div>
             <h4>Archtop Calculator</h4>
             <p>Top/back carving radii with Math API and SVG preview</p>
           </div>
@@ -34,30 +54,57 @@
       <!-- Phase 2: Neck & Fretboard -->
       <div class="design-category">
         <h3>🎯 Phase 2: Neck & Fretboard</h3>
-        <p class="phase-desc">Design the neck profile and fretboard geometry</p>
+        <p class="phase-desc">
+          Design the neck profile and fretboard geometry
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('neck')">
-            <div class="tool-icon">🎸</div>
+          <div
+            class="tool-card"
+            @click="selectTool('neck')"
+          >
+            <div class="tool-icon">
+              🎸
+            </div>
             <h4>Neck Generator</h4>
             <p>Parametric Les Paul C-profile neck with fretboard taper</p>
           </div>
-          <div class="tool-card" @click="selectTool('scale-length')">
-            <div class="tool-icon">📏</div>
+          <div
+            class="tool-card"
+            @click="selectTool('scale-length')"
+          >
+            <div class="tool-icon">
+              📏
+            </div>
             <h4>Scale Length Designer</h4>
             <p>Interactive tension calculator and intonation compensation</p>
           </div>
-          <div class="tool-card" @click="selectTool('radius')">
-            <div class="tool-icon">📏</div>
+          <div
+            class="tool-card"
+            @click="selectTool('radius')"
+          >
+            <div class="tool-icon">
+              📏
+            </div>
             <h4>Radius Dish Designer</h4>
             <p>Basic radius dish calculations and CNC setup</p>
           </div>
-          <div class="tool-card" @click="selectTool('radius-enhanced')">
-            <div class="tool-icon">🥏</div>
+          <div
+            class="tool-card"
+            @click="selectTool('radius-enhanced')"
+          >
+            <div class="tool-icon">
+              🥏
+            </div>
             <h4>Enhanced Radius Dish</h4>
             <p>Design new dishes OR measure existing radii</p>
           </div>
-          <div class="tool-card" @click="selectTool('compound-radius')">
-            <div class="tool-icon">📐</div>
+          <div
+            class="tool-card"
+            @click="selectTool('compound-radius')"
+          >
+            <div class="tool-icon">
+              📐
+            </div>
             <h4>Compound Radius</h4>
             <p>Fretboard compound radius visualization (12"→16")</p>
           </div>
@@ -67,10 +114,17 @@
       <!-- Phase 3: Bridge & Setup -->
       <div class="design-category">
         <h3>🌉 Phase 3: Bridge & Setup</h3>
-        <p class="phase-desc">Calculate bridge compensation and setup measurements</p>
+        <p class="phase-desc">
+          Calculate bridge compensation and setup measurements
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('bridge')">
-            <div class="tool-icon">🌉</div>
+          <div
+            class="tool-card"
+            @click="selectTool('bridge')"
+          >
+            <div class="tool-icon">
+              🌉
+            </div>
             <h4>Bridge Calculator</h4>
             <p>Saddle compensation with family presets and DXF export</p>
           </div>
@@ -80,15 +134,27 @@
       <!-- Phase 4: Hardware & Electronics -->
       <div class="design-category">
         <h3>🔌 Phase 4: Hardware & Electronics</h3>
-        <p class="phase-desc">Plan electronics cavity and wiring layouts</p>
+        <p class="phase-desc">
+          Plan electronics cavity and wiring layouts
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('hardware')">
-            <div class="tool-icon">🔌</div>
+          <div
+            class="tool-card"
+            @click="selectTool('hardware')"
+          >
+            <div class="tool-icon">
+              🔌
+            </div>
             <h4>Hardware Layout</h4>
             <p>Electronics cavity positioning with DXF export</p>
           </div>
-          <div class="tool-card" @click="selectTool('wiring')">
-            <div class="tool-icon">⚡</div>
+          <div
+            class="tool-card"
+            @click="selectTool('wiring')"
+          >
+            <div class="tool-icon">
+              ⚡
+            </div>
             <h4>Wiring Workbench</h4>
             <p>Treble bleed calculator and switch validation</p>
           </div>
@@ -98,10 +164,17 @@
       <!-- Phase 5: Decorative Details -->
       <div class="design-category">
         <h3>🌹 Phase 5: Decorative Details</h3>
-        <p class="phase-desc">Add decorative rosette patterns</p>
+        <p class="phase-desc">
+          Add decorative rosette patterns
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('rosette')">
-            <div class="tool-icon">🌹</div>
+          <div
+            class="tool-card"
+            @click="selectTool('rosette')"
+          >
+            <div class="tool-icon">
+              🌹
+            </div>
             <h4>Rosette Designer</h4>
             <p>Parametric soundhole rosette with DXF/G-code export</p>
           </div>
@@ -111,15 +184,27 @@
       <!-- Phase 6: Finishing -->
       <div class="design-category">
         <h3>🎨 Phase 6: Finishing</h3>
-        <p class="phase-desc">Plan finishing schedule and costs</p>
+        <p class="phase-desc">
+          Plan finishing schedule and costs
+        </p>
         <div class="tool-cards">
-          <div class="tool-card" @click="selectTool('finish')">
-            <div class="tool-icon">🎨</div>
+          <div
+            class="tool-card"
+            @click="selectTool('finish')"
+          >
+            <div class="tool-icon">
+              🎨
+            </div>
             <h4>Finish Planner</h4>
             <p>Finish schedule generator with cost estimation</p>
           </div>
-          <div class="tool-card" @click="selectTool('finishing')">
-            <div class="tool-icon">🎨</div>
+          <div
+            class="tool-card"
+            @click="selectTool('finishing')"
+          >
+            <div class="tool-icon">
+              🎨
+            </div>
             <h4>Finishing Guide</h4>
             <p>Workflow planning (varnish, french polish, nitro, poly, oil)</p>
           </div>
@@ -128,9 +213,15 @@
     </div>
 
     <!-- Active Tool Display -->
-    <div v-else class="active-tool">
+    <div
+      v-else
+      class="active-tool"
+    >
       <div class="tool-toolbar">
-        <button @click="activeTool = null" class="back-btn">
+        <button
+          class="back-btn"
+          @click="activeTool = null"
+        >
           ← Back to Guitar Design Tools
         </button>
         <h3>{{ getToolTitle(activeTool) }}</h3>

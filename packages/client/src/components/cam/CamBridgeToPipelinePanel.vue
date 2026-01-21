@@ -1,6 +1,8 @@
 <template>
   <div class="border rounded p-3 bg-gray-50">
-    <h3 class="text-sm font-semibold mb-2">Save as Pipeline Preset</h3>
+    <h3 class="text-sm font-semibold mb-2">
+      Save as Pipeline Preset
+    </h3>
 
     <div class="space-y-2 text-xs">
       <div>
@@ -10,7 +12,7 @@
           type="text"
           placeholder="e.g., Bridge Pocket (6-pin)"
           class="w-full border rounded px-2 py-1"
-        />
+        >
       </div>
 
       <div>
@@ -20,7 +22,7 @@
           type="text"
           placeholder="e.g., GRBL"
           class="w-full border rounded px-2 py-1"
-        />
+        >
       </div>
 
       <div>
@@ -30,24 +32,35 @@
           type="text"
           placeholder="e.g., router_1"
           class="w-full border rounded px-2 py-1"
-        />
+        >
       </div>
 
       <button
         type="button"
         :disabled="!canSave || saving"
-        @click="savePreset"
         class="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        @click="savePreset"
       >
         {{ saving ? "Saving..." : "Save preset" }}
       </button>
 
-      <p v-if="error" class="text-red-600 text-xs">{{ error }}</p>
-      <p v-if="success" class="text-green-600 text-xs">
+      <p
+        v-if="error"
+        class="text-red-600 text-xs"
+      >
+        {{ error }}
+      </p>
+      <p
+        v-if="success"
+        class="text-green-600 text-xs"
+      >
         ✓ Saved as preset ID: {{ successId }}
       </p>
 
-      <details v-if="canSave" class="mt-3">
+      <details
+        v-if="canSave"
+        class="mt-3"
+      >
         <summary class="cursor-pointer text-gray-600 text-xs">
           Preview Spec
         </summary>

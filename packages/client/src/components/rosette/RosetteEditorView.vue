@@ -2,7 +2,10 @@
   <div class="wrap">
     <PatternLibraryPanel />
     <div class="mid">
-      <div class="toolbar" v-if="store.problematicRingIndices.length > 0">
+      <div
+        v-if="store.problematicRingIndices.length > 0"
+        class="toolbar"
+      >
         <button
           class="jump-btn"
           type="button"
@@ -31,9 +34,9 @@
           {{ store.jumpSeverity === "RED_ONLY" ? "RED only" : "RED+YELLOW" }}
         </button>
         <div
+          v-if="store.totalRingCount > 0"
           class="jump-hud"
           :class="{ pulse: hudPulse }"
-          v-if="store.totalRingCount > 0"
         >
           <span class="pill">
             {{ store.jumpSeverity === "RED_ONLY" ? "Filter: RED only" : "Filter: RED+YELLOW" }}
@@ -41,13 +44,23 @@
           <span class="pill">
             RED rings: {{ store.redRingCount }} / {{ store.totalRingCount }}
           </span>
-          <span class="pill" v-if="store.jumpRingPosition.total > 0">
+          <span
+            v-if="store.jumpRingPosition.total > 0"
+            class="pill"
+          >
             Focus: {{ store.jumpRingPosition.pos || "—" }} / {{ store.jumpRingPosition.total }}
           </span>
           <!-- Bundle 32.3.8: HUD help tooltip -->
-          <span class="hud-help" tabindex="0" aria-label="Jump hotkeys help">
+          <span
+            class="hud-help"
+            tabindex="0"
+            aria-label="Jump hotkeys help"
+          >
             ?
-            <span class="hud-tooltip" role="tooltip">
+            <span
+              class="hud-tooltip"
+              role="tooltip"
+            >
               <div class="tt-title">Jump hotkeys</div>
               <div class="tt-row"><kbd>[</kbd> Prev problem</div>
               <div class="tt-row"><kbd>]</kbd> Next problem</div>
@@ -92,12 +105,17 @@
       </div>
 
       <!-- Bundle 32.4.0: Ring Nudge Section -->
-      <div class="ring-nudge-section" v-if="store.currentParams?.ring_params?.length">
-        <div class="nudge-title">Ring Widths</div>
+      <div
+        v-if="store.currentParams?.ring_params?.length"
+        class="ring-nudge-section"
+      >
+        <div class="nudge-title">
+          Ring Widths
+        </div>
         <div
-          class="ring-row"
           v-for="(ring, idx) in store.currentParams.ring_params"
           :key="idx"
+          class="ring-row"
           :data-ring-index="idx"
           :class="{ focused: store.focusedRingIndex === idx }"
         >
@@ -110,28 +128,36 @@
               title="Shrink width by 0.10 mm"
               :disabled="store.isRedBlocked"
               @click="store.nudgeRingWidth(idx, -0.1)"
-            >−0.10</button>
+            >
+              −0.10
+            </button>
             <button
               class="mini"
               type="button"
               title="Grow width by 0.10 mm"
               :disabled="store.isRedBlocked"
               @click="store.nudgeRingWidth(idx, 0.1)"
-            >+0.10</button>
+            >
+              +0.10
+            </button>
             <button
               class="mini dist"
               type="button"
               title="Shrink width, distribute to neighbors"
               :disabled="store.isRedBlocked"
               @click="store.nudgeRingWidthDistribute(idx, -0.1)"
-            >−0.10↔</button>
+            >
+              −0.10↔
+            </button>
             <button
               class="mini dist"
               type="button"
               title="Grow width, distribute to neighbors"
               :disabled="store.isRedBlocked"
               @click="store.nudgeRingWidthDistribute(idx, 0.1)"
-            >+0.10↔</button>
+            >
+              +0.10↔
+            </button>
           </div>
         </div>
       </div>
@@ -140,7 +166,7 @@
       <div class="historyWrap">
         <HistoryStackPanel
           :highlight-idx-from-top="historyHotkeyFlash"
-          @hoverHint="showHintFromHover"
+          @hover-hint="showHintFromHover"
           @reverted="(idx) => {
             flashHistoryIdx(idx);
             const labels = store.getRecentHistoryLabels(5);
@@ -156,12 +182,23 @@
         />
 
         <!-- Bundle 32.4.15: Keyboard hint overlay -->
-        <div v-if="showHistoryHotkeyHint && hasHistory" class="hotkeyHint" role="note">
-          <div class="hotkeyHintTitle">Keyboard tip</div>
+        <div
+          v-if="showHistoryHotkeyHint && hasHistory"
+          class="hotkeyHint"
+          role="note"
+        >
+          <div class="hotkeyHintTitle">
+            Keyboard tip
+          </div>
           <div class="hotkeyHintBody">
             Try <b>1–5</b> to revert history (1 = newest)
           </div>
-          <button class="hotkeyHintClose" type="button" @click="() => hideHint(true)" aria-label="Dismiss">
+          <button
+            class="hotkeyHintClose"
+            type="button"
+            aria-label="Dismiss"
+            @click="() => hideHint(true)"
+          >
             ✕
           </button>
         </div>

@@ -2,43 +2,78 @@
   <section class="calc-debug">
     <h3>Calculator Debug</h3>
 
-    <form class="calc-debug__form" @submit.prevent="onEvaluate">
+    <form
+      class="calc-debug__form"
+      @submit.prevent="onEvaluate"
+    >
       <div class="form-row">
         <label>Tool ID</label>
-        <input v-model="toolId" type="text" placeholder="e.g., ENDMILL-6MM" />
+        <input
+          v-model="toolId"
+          type="text"
+          placeholder="e.g., ENDMILL-6MM"
+        >
       </div>
 
       <div class="form-row">
         <label>Material ID</label>
-        <input v-model="materialId" type="text" placeholder="e.g., MAPLE" />
+        <input
+          v-model="materialId"
+          type="text"
+          placeholder="e.g., MAPLE"
+        >
       </div>
 
       <div class="form-row">
         <label>Tool Kind</label>
         <select v-model="toolKind">
-          <option value="router_bit">Router Bit</option>
-          <option value="saw_blade">Saw Blade</option>
+          <option value="router_bit">
+            Router Bit
+          </option>
+          <option value="saw_blade">
+            Saw Blade
+          </option>
         </select>
       </div>
 
       <div class="form-row">
         <label>Feed (mm/min)</label>
-        <input v-model.number="feedMmMin" type="number" min="0" step="100" />
+        <input
+          v-model.number="feedMmMin"
+          type="number"
+          min="0"
+          step="100"
+        >
       </div>
 
       <div class="form-row">
         <label>RPM</label>
-        <input v-model.number="rpm" type="number" min="0" step="500" />
+        <input
+          v-model.number="rpm"
+          type="number"
+          min="0"
+          step="500"
+        >
       </div>
 
       <div class="form-row">
         <label>Depth of Cut (mm)</label>
-        <input v-model.number="docMm" type="number" min="0" step="0.5" />
+        <input
+          v-model.number="docMm"
+          type="number"
+          min="0"
+          step="0.5"
+        >
       </div>
 
       <div class="form-row">
         <label>Width of Cut (mm)</label>
-        <input v-model.number="wocMm" type="number" min="0" step="0.5" />
+        <input
+          v-model.number="wocMm"
+          type="number"
+          min="0"
+          step="0.5"
+        >
       </div>
 
       <details class="tool-params">
@@ -50,22 +85,39 @@
             type="number"
             min="0"
             step="0.5"
-          />
+          >
         </div>
         <div class="form-row">
           <label>Flutes / Teeth</label>
-          <input v-model.number="fluteCount" type="number" min="1" max="100" />
+          <input
+            v-model.number="fluteCount"
+            type="number"
+            min="1"
+            max="100"
+          >
         </div>
       </details>
 
-      <button type="submit" class="evaluate-btn" :disabled="loading">
+      <button
+        type="submit"
+        class="evaluate-btn"
+        :disabled="loading"
+      >
         {{ loading ? "Evaluating..." : "Evaluate Cut" }}
       </button>
     </form>
 
-    <div v-if="error" class="calc-debug__error">❌ {{ error }}</div>
+    <div
+      v-if="error"
+      class="calc-debug__error"
+    >
+      ❌ {{ error }}
+    </div>
 
-    <div v-if="result" class="calc-debug__result">
+    <div
+      v-if="result"
+      class="calc-debug__result"
+    >
       <h4>
         Result
         <span
@@ -76,34 +128,61 @@
       </h4>
 
       <!-- Warnings & Failures -->
-      <div v-if="result.hard_failures.length" class="result-failures">
+      <div
+        v-if="result.hard_failures.length"
+        class="result-failures"
+      >
         <strong>❌ Hard Failures:</strong>
         <ul>
-          <li v-for="f in result.hard_failures" :key="f">{{ f }}</li>
+          <li
+            v-for="f in result.hard_failures"
+            :key="f"
+          >
+            {{ f }}
+          </li>
         </ul>
       </div>
 
-      <div v-if="result.warnings.length" class="result-warnings">
+      <div
+        v-if="result.warnings.length"
+        class="result-warnings"
+      >
         <strong>⚠ Warnings:</strong>
         <ul>
-          <li v-for="w in result.warnings" :key="w">{{ w }}</li>
+          <li
+            v-for="w in result.warnings"
+            :key="w"
+          >
+            {{ w }}
+          </li>
         </ul>
       </div>
 
       <!-- Calculator outputs -->
       <div class="result-cards">
-        <div v-if="result.chipload" class="result-card">
+        <div
+          v-if="result.chipload"
+          class="result-card"
+        >
           <h5>Chipload</h5>
           <p class="value">
             {{ result.chipload.chipload_mm?.toFixed(4) ?? "N/A" }} mm
           </p>
-          <p class="status" :class="result.chipload.in_range ? 'ok' : 'warn'">
+          <p
+            class="status"
+            :class="result.chipload.in_range ? 'ok' : 'warn'"
+          >
             {{ result.chipload.in_range ? "✓ In Range" : "⚠ Out of Range" }}
           </p>
-          <p class="message">{{ result.chipload.message }}</p>
+          <p class="message">
+            {{ result.chipload.message }}
+          </p>
         </div>
 
-        <div v-if="result.bite_per_tooth" class="result-card">
+        <div
+          v-if="result.bite_per_tooth"
+          class="result-card"
+        >
           <h5>Bite per Tooth</h5>
           <p class="value">
             {{ result.bite_per_tooth.bite_mm?.toFixed(4) ?? "N/A" }} mm
@@ -116,30 +195,53 @@
               result.bite_per_tooth.in_range ? "✓ In Range" : "⚠ Out of Range"
             }}
           </p>
-          <p class="message">{{ result.bite_per_tooth.message }}</p>
+          <p class="message">
+            {{ result.bite_per_tooth.message }}
+          </p>
         </div>
 
-        <div v-if="result.heat" class="result-card">
+        <div
+          v-if="result.heat"
+          class="result-card"
+        >
           <h5>Heat Risk</h5>
-          <p class="value">{{ (result.heat.heat_risk * 100).toFixed(0) }}%</p>
-          <p class="status" :class="heatClass(result.heat.category)">
+          <p class="value">
+            {{ (result.heat.heat_risk * 100).toFixed(0) }}%
+          </p>
+          <p
+            class="status"
+            :class="heatClass(result.heat.category)"
+          >
             {{ result.heat.category }}
           </p>
-          <p class="message">{{ result.heat.message }}</p>
+          <p class="message">
+            {{ result.heat.message }}
+          </p>
         </div>
 
-        <div v-if="result.deflection" class="result-card">
+        <div
+          v-if="result.deflection"
+          class="result-card"
+        >
           <h5>Deflection</h5>
           <p class="value">
             {{ result.deflection.deflection_mm?.toFixed(4) ?? "N/A" }} mm
           </p>
-          <p class="status" :class="riskClass(result.deflection.risk)">
+          <p
+            class="status"
+            :class="riskClass(result.deflection.risk)"
+          >
             {{ result.deflection.risk }}
           </p>
-          <p class="message">{{ result.deflection.message }}</p>
+          <p class="message">
+            {{ result.deflection.message }}
+          </p>
         </div>
 
-        <div v-if="result.rim_speed" class="result-card">
+        <div
+          v-if="result.rim_speed"
+          class="result-card"
+        >
           <h5>Rim Speed</h5>
           <p class="value">
             {{
@@ -157,18 +259,28 @@
                 : "❌ EXCEEDS MAX"
             }}
           </p>
-          <p class="message">{{ result.rim_speed.message }}</p>
+          <p class="message">
+            {{ result.rim_speed.message }}
+          </p>
         </div>
 
-        <div v-if="result.kickback" class="result-card">
+        <div
+          v-if="result.kickback"
+          class="result-card"
+        >
           <h5>Kickback Risk</h5>
           <p class="value">
             {{ (result.kickback.risk_score * 100).toFixed(0) }}%
           </p>
-          <p class="status" :class="kickbackClass(result.kickback.category)">
+          <p
+            class="status"
+            :class="kickbackClass(result.kickback.category)"
+          >
             {{ result.kickback.category }}
           </p>
-          <p class="message">{{ result.kickback.message }}</p>
+          <p class="message">
+            {{ result.kickback.message }}
+          </p>
         </div>
       </div>
 

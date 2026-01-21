@@ -22,55 +22,55 @@
           <input
             type="file"
             accept="image/*"
-            @change="onHeightmapChange"
             class="mt-1 block w-full text-[10px]"
-          />
+            @change="onHeightmapChange"
+          >
 
           <div class="grid grid-cols-2 gap-1 text-[10px] mt-1">
             <label class="flex flex-col">
               <span class="text-gray-600">Tool Ø (mm)</span>
               <input
+                v-model.number="cfg.tool_d"
                 type="number"
                 step="0.1"
-                v-model.number="cfg.tool_d"
                 class="border rounded px-1 py-0.5"
-              />
+              >
             </label>
             <label class="flex flex-col">
               <span class="text-gray-600">Stepover</span>
               <input
+                v-model.number="cfg.stepover"
                 type="number"
                 step="0.05"
-                v-model.number="cfg.stepover"
                 class="border rounded px-1 py-0.5"
-              />
+              >
             </label>
             <label class="flex flex-col">
               <span class="text-gray-600">Stepdown</span>
               <input
+                v-model.number="cfg.stepdown"
                 type="number"
                 step="0.05"
-                v-model.number="cfg.stepdown"
                 class="border rounded px-1 py-0.5"
-              />
+              >
             </label>
             <label class="flex flex-col">
               <span class="text-gray-600">Max depth</span>
               <input
+                v-model.number="cfg.max_depth"
                 type="number"
                 step="0.1"
-                v-model.number="cfg.max_depth"
                 class="border rounded px-1 py-0.5"
-              />
+              >
             </label>
             <label class="flex flex-col">
               <span class="text-gray-600">Scallop (mm)</span>
               <input
+                v-model.number="cfg.scallop_mm"
                 type="number"
                 step="0.05"
-                v-model.number="cfg.scallop_mm"
                 class="border rounded px-1 py-0.5"
-              />
+              >
             </label>
           </div>
 
@@ -84,11 +84,17 @@
             <span v-else>Running…</span>
           </button>
 
-          <div v-if="error" class="mt-1 text-[10px] text-red-600">
+          <div
+            v-if="error"
+            class="mt-1 text-[10px] text-red-600"
+          >
             {{ error }}
           </div>
 
-          <div v-if="stats" class="mt-2 text-[10px] space-y-0.5">
+          <div
+            v-if="stats"
+            class="mt-2 text-[10px] space-y-0.5"
+          >
             <div class="font-semibold text-gray-900 text-[11px]">
               Plan stats
             </div>
@@ -144,7 +150,10 @@
           </div>
         </div>
 
-        <details v-if="plan" class="mt-1 text-[10px]">
+        <details
+          v-if="plan"
+          class="mt-1 text-[10px]"
+        >
           <summary class="cursor-pointer text-gray-600">
             Raw plan JSON
           </summary>

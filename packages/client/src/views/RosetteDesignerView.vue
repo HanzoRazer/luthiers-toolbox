@@ -5,16 +5,27 @@
     <h1>Rosette Designer (Scaffolding)</h1>
 
     <div class="status-bar">
-      <button @click="onAddRing">Add Ring</button>
-      <button :disabled="!hasRing || loading" @click="onSegment">
+      <button @click="onAddRing">
+        Add Ring
+      </button>
+      <button
+        :disabled="!hasRing || loading"
+        @click="onSegment"
+      >
         Segment Ring
       </button>
-      <button :disabled="!hasSegmentation || loading" @click="onGenerateSlices">
+      <button
+        :disabled="!hasSegmentation || loading"
+        @click="onGenerateSlices"
+      >
         Generate Slices
       </button>
 
       <span v-if="loading">Working...</span>
-      <span v-if="error" class="error">Error: {{ error }}</span>
+      <span
+        v-if="error"
+        class="error"
+      >Error: {{ error }}</span>
     </div>
 
     <div class="layout">
@@ -25,7 +36,7 @@
 
       <div class="center-panel">
         <TilePreviewCanvas />
-        <hr />
+        <hr>
         <MultiRingPreviewPanel />
       </div>
 
@@ -38,7 +49,7 @@ SliceBatch:
 {{ sliceBatch }}
         </pre>
 
-        <hr />
+        <hr>
 
         <CNCExportPanel />
       </div>

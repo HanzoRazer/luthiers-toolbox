@@ -2,7 +2,9 @@
   <div class="art-studio-unified">
     <div class="header">
       <h2>🎨 Art Studio</h2>
-      <p class="subtitle">Visual design tools for guitar decorative elements</p>
+      <p class="subtitle">
+        Visual design tools for guitar decorative elements
+      </p>
     </div>
 
     <!-- Tabs: Domain-based -->
@@ -23,16 +25,25 @@
         v-if="activeTab === 'rosette'" 
         @update:geometry="handleRosetteGeometryUpdate"
       />
-      <div v-else-if="activeTab === 'headstock'" class="placeholder">
+      <div
+        v-else-if="activeTab === 'headstock'"
+        class="placeholder"
+      >
         <h3>🎸 Headstock Design</h3>
         <p>Logo and inlay artwork design tools (Coming soon)</p>
       </div>
-      <div v-else-if="activeTab === 'relief'" class="placeholder">
+      <div
+        v-else-if="activeTab === 'relief'"
+        class="placeholder"
+      >
         <h3>🗿 Relief Carving</h3>
         <p>3D relief pattern design from images (Coming soon)</p>
       </div>
       <!-- Phase 27.0 + 27.1 + 27.2: Compare Mode tab -->
-      <div v-else-if="activeTab === 'compare'" class="compare-content">
+      <div
+        v-else-if="activeTab === 'compare'"
+        class="compare-content"
+      >
         <RosetteComparePanel
           :current-geometry="rosetteGeometry"
           :job-id="compareJobId"

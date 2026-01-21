@@ -1,12 +1,23 @@
 <template>
   <div class="wf-panel">
     <div class="wf-header">
-      <div class="wf-title">Design-First Workflow</div>
-      <div class="wf-pill" :data-state="state">{{ state || "—" }}</div>
+      <div class="wf-title">
+        Design-First Workflow
+      </div>
+      <div
+        class="wf-pill"
+        :data-state="state"
+      >
+        {{ state || "—" }}
+      </div>
     </div>
 
     <!-- Log Viewer split pane drawer (Bundle 32.7.4 + 32.7.5) -->
-    <SideDrawer :open="logDrawerOpen" :title="drawerTitle" @close="closeDrawer">
+    <SideDrawer
+      :open="logDrawerOpen"
+      :title="drawerTitle"
+      @close="closeDrawer"
+    >
       <template #actions>
         <button
           class="btn ghost"
@@ -16,7 +27,13 @@
         >
           {{ isPinned ? "📌" : "📍" }}
         </button>
-        <button class="btn ghost" @click="openLogsNewTab" title="Open in new tab">↗</button>
+        <button
+          class="btn ghost"
+          title="Open in new tab"
+          @click="openLogsNewTab"
+        >
+          ↗
+        </button>
       </template>
       <iframe
         v-if="logDrawerOpen && logsUrl"
@@ -26,33 +43,53 @@
     </SideDrawer>
 
     <div class="wf-actions">
-      <button :disabled="busy" @click="ensure" class="btn">
+      <button
+        :disabled="busy"
+        class="btn"
+        @click="ensure"
+      >
         {{ hasSession ? "Restart" : "Start" }}
       </button>
-      <button :disabled="busy || !hasSession" @click="toReview" class="btn">
+      <button
+        :disabled="busy || !hasSession"
+        class="btn"
+        @click="toReview"
+      >
         Review
       </button>
-      <button :disabled="busy || !hasSession" @click="approve" class="btn">
+      <button
+        :disabled="busy || !hasSession"
+        class="btn"
+        @click="approve"
+      >
         Approve
       </button>
-      <button :disabled="busy || !hasSession" @click="reject" class="btn ghost">
+      <button
+        :disabled="busy || !hasSession"
+        class="btn ghost"
+        @click="reject"
+      >
         Reject
       </button>
-      <button :disabled="busy || !hasSession" @click="reopen" class="btn ghost">
+      <button
+        :disabled="busy || !hasSession"
+        class="btn ghost"
+        @click="reopen"
+      >
         Reopen
       </button>
       <button
         :disabled="busy || !canIntent"
-        @click="intent"
         class="btn primary"
+        @click="intent"
       >
         Get CAM Handoff Intent
       </button>
       <button
         :disabled="busy || !canIntent"
-        @click="promoteToCam"
         class="btn"
         title="Phase 33.0: Promote to downstream CAM request (does NOT execute)"
+        @click="promoteToCam"
       >
         Promote to CAM Request
       </button>
@@ -60,109 +97,184 @@
 
     <!-- Download overrides (Bundle 32.8.4.2) -->
     <div class="overrides">
-      <div class="ovTitle">Download overrides</div>
+      <div class="ovTitle">
+        Download overrides
+      </div>
 
-      <select v-model="overrideToolId" class="sel" title="Override tool_id">
-        <option v-for="o in TOOL_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      <select
+        v-model="overrideToolId"
+        class="sel"
+        title="Override tool_id"
+      >
+        <option
+          v-for="o in TOOL_OPTIONS"
+          :key="o.id"
+          :value="o.id"
+        >
+          {{ o.label }}
+        </option>
       </select>
 
-      <select v-model="overrideMaterialId" class="sel" title="Override material_id">
-        <option v-for="o in MATERIAL_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      <select
+        v-model="overrideMaterialId"
+        class="sel"
+        title="Override material_id"
+      >
+        <option
+          v-for="o in MATERIAL_OPTIONS"
+          :key="o.id"
+          :value="o.id"
+        >
+          {{ o.label }}
+        </option>
       </select>
 
-      <select v-model="overrideMachineProfileId" class="sel" title="Override machine_profile_id">
-        <option v-for="o in MACHINE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      <select
+        v-model="overrideMachineProfileId"
+        class="sel"
+        title="Override machine_profile_id"
+      >
+        <option
+          v-for="o in MACHINE_OPTIONS"
+          :key="o.id"
+          :value="o.id"
+        >
+          {{ o.label }}
+        </option>
       </select>
 
-      <select v-model="overrideCamProfileId" class="sel" title="Override requested_cam_profile_id">
-        <option v-for="o in CAM_PROFILE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      <select
+        v-model="overrideCamProfileId"
+        class="sel"
+        title="Override requested_cam_profile_id"
+      >
+        <option
+          v-for="o in CAM_PROFILE_OPTIONS"
+          :key="o.id"
+          :value="o.id"
+        >
+          {{ o.label }}
+        </option>
       </select>
 
-      <select v-model="overrideRiskTolerance" class="sel" title="Override risk_tolerance">
-        <option v-for="o in RISK_TOLERANCE_OPTIONS" :key="o.id" :value="o.id">{{ o.label }}</option>
+      <select
+        v-model="overrideRiskTolerance"
+        class="sel"
+        title="Override risk_tolerance"
+      >
+        <option
+          v-for="o in RISK_TOLERANCE_OPTIONS"
+          :key="o.id"
+          :value="o.id"
+        >
+          {{ o.label }}
+        </option>
       </select>
 
-      <button class="btn ghost" @click="clearOverrides" title="Clear overrides">
+      <button
+        class="btn ghost"
+        title="Clear overrides"
+        @click="clearOverrides"
+      >
         Clear
       </button>
     </div>
 
     <!-- Export URL Preview (Bundle 32.8.4.5 + 32.8.4.8) -->
-    <div v-if="hasSession" class="export-url-preview">
-      <div class="export-url-label">Export URL</div>
+    <div
+      v-if="hasSession"
+      class="export-url-preview"
+    >
+      <div class="export-url-label">
+        Export URL
+      </div>
       <input
         type="text"
         class="export-url-input"
         :value="exportUrlPreview"
         readonly
         @click="($event.target as HTMLInputElement)?.select()"
-      />
-      <button class="btn ghost" @click="copyExportUrl" title="Copy URL to clipboard">
+      >
+      <button
+        class="btn ghost"
+        title="Copy URL to clipboard"
+        @click="copyExportUrl"
+      >
         Copy URL
       </button>
       <button
         class="btn ghost"
-        @click="copyExportPowerShell"
         :disabled="!exportUrlPreview"
         title="Copy PowerShell Invoke-WebRequest command (downloads JSON to a file)"
+        @click="copyExportPowerShell"
       >
         Copy PowerShell
       </button>
       <button
         class="btn ghost"
-        @click="copyExportPython"
         :disabled="!exportUrlPreview"
         title="Copy Python requests snippet (downloads JSON to a file)"
+        @click="copyExportPython"
       >
         Copy Python
       </button>
       <button
         class="btn ghost"
-        @click="copyExportNode"
         :disabled="!exportUrlPreview"
         title="Copy Node 18+ fetch snippet (downloads JSON to a file)"
+        @click="copyExportNode"
       >
         Copy Node
       </button>
       <button
         class="btn ghost"
-        @click="copyExportGitHubActionsStep"
         :disabled="!exportUrlPreview"
         title="Copy GitHub Actions step YAML (curl + artifact upload)"
+        @click="copyExportGitHubActionsStep"
       >
         Copy GHA
       </button>
       <button
         class="btn ghost"
-        @click="copyExportGitHubActionsJob"
         :disabled="!exportUrlPreview"
         title="Copy full GitHub Actions job YAML (checkout + auth + download + upload)"
+        @click="copyExportGitHubActionsJob"
       >
         Copy GHA Job
       </button>
       <button
         class="btn ghost"
-        @click="copyExportGitHubActionsWorkflow"
         :disabled="!exportUrlPreview"
         title="Copy complete GitHub Actions workflow file (.yml)"
+        @click="copyExportGitHubActionsWorkflow"
       >
         Copy GHA Workflow
       </button>
       <button
         class="btn ghost"
-        @click="copyGitHubActionsWorkflowFile"
         :disabled="!exportUrlPreview"
         title="Copy a complete GitHub Actions workflow with filename instructions"
+        @click="copyGitHubActionsWorkflowFile"
       >
         Copy GH Workflow (File-Ready)
       </button>
     </div>
 
-    <div v-if="err" class="wf-error">{{ err }}</div>
+    <div
+      v-if="err"
+      class="wf-error"
+    >
+      {{ err }}
+    </div>
 
     <!-- History -->
-    <div v-if="session?.history?.length" class="wf-history">
-      <div class="wf-history-title">History ({{ session.history.length }})</div>
+    <div
+      v-if="session?.history?.length"
+      class="wf-history"
+    >
+      <div class="wf-history-title">
+        History ({{ session.history.length }})
+      </div>
       <div
         v-for="(evt, idx) in session.history.slice().reverse().slice(0, 5)"
         :key="idx"
@@ -172,21 +284,62 @@
         <span class="wf-event-transition">
           {{ evt.from_state }} → {{ evt.to_state }}
         </span>
-        <span v-if="evt.note" class="wf-event-note">{{ evt.note }}</span>
+        <span
+          v-if="evt.note"
+          class="wf-event-note"
+        >{{ evt.note }}</span>
       </div>
     </div>
 
     <!-- Last Intent Preview -->
-    <div v-if="lastIntent" class="wf-intent-preview">
-      <div class="wf-intent-title">Last Promotion Intent</div>
+    <div
+      v-if="lastIntent"
+      class="wf-intent-preview"
+    >
+      <div class="wf-intent-title">
+        Last Promotion Intent
+      </div>
       <pre class="wf-intent-json">{{ JSON.stringify(lastIntent, null, 2) }}</pre>
       <div class="wf-intent-actions">
-        <button class="btn ghost" @click="copyIntent">Copy JSON</button>
-        <button class="btn ghost" @click="copySessionId">Copy Session ID</button>
-        <button class="btn ghost" @click="copyIntentCurl" title="Copy cURL for promotion intent">Copy cURL</button>
-        <button class="btn ghost" @click="openInLogViewer" title="Open Log Viewer filtered to this run">Open logs</button>
-        <button class="btn ghost" @click="downloadIntent" title="Download intent as JSON file">Download intent</button>
-        <button class="btn ghost" @click="clearIntent">Clear</button>
+        <button
+          class="btn ghost"
+          @click="copyIntent"
+        >
+          Copy JSON
+        </button>
+        <button
+          class="btn ghost"
+          @click="copySessionId"
+        >
+          Copy Session ID
+        </button>
+        <button
+          class="btn ghost"
+          title="Copy cURL for promotion intent"
+          @click="copyIntentCurl"
+        >
+          Copy cURL
+        </button>
+        <button
+          class="btn ghost"
+          title="Open Log Viewer filtered to this run"
+          @click="openInLogViewer"
+        >
+          Open logs
+        </button>
+        <button
+          class="btn ghost"
+          title="Download intent as JSON file"
+          @click="downloadIntent"
+        >
+          Download intent
+        </button>
+        <button
+          class="btn ghost"
+          @click="clearIntent"
+        >
+          Clear
+        </button>
       </div>
     </div>
 

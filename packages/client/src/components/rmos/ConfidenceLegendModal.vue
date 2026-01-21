@@ -4,17 +4,35 @@
       class="legend-btn"
       type="button"
       aria-label="Confidence legend"
-      @click="open = true"
       title="Confidence legend"
+      @click="open = true"
     >
       ?
     </button>
 
-    <div v-if="open" class="modal-backdrop" @click.self="open = false">
-      <div class="modal" role="dialog" aria-modal="true" aria-label="Confidence legend">
+    <div
+      v-if="open"
+      class="modal-backdrop"
+      @click.self="open = false"
+    >
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Confidence legend"
+      >
         <div class="modal-header">
-          <div class="modal-title">Confidence legend</div>
-          <button class="close-btn" type="button" @click="open = false" aria-label="Close">×</button>
+          <div class="modal-title">
+            Confidence legend
+          </div>
+          <button
+            class="close-btn"
+            type="button"
+            aria-label="Close"
+            @click="open = false"
+          >
+            ×
+          </button>
         </div>
 
         <div class="modal-body">
@@ -22,21 +40,30 @@
             <h4>Levels</h4>
 
             <div class="row">
-              <span class="badge" data-level="HIGH">HIGH</span>
+              <span
+                class="badge"
+                data-level="HIGH"
+              >HIGH</span>
               <div class="text">
                 No hot rings (|Δ| &lt; 0.15mm), no pattern changes, warnings not worse.
               </div>
             </div>
 
             <div class="row">
-              <span class="badge" data-level="MED">MED</span>
+              <span
+                class="badge"
+                data-level="MED"
+              >MED</span>
               <div class="text">
                 Minor diffs (≤2 hot rings, ≤1 pattern change, warnings +2 max).
               </div>
             </div>
 
             <div class="row">
-              <span class="badge" data-level="LOW">LOW</span>
+              <span
+                class="badge"
+                data-level="LOW"
+              >LOW</span>
               <div class="text">
                 Significant differences, or no compare result yet.
               </div>
@@ -45,9 +72,15 @@
 
           <section class="section">
             <h4>Trend</h4>
-            <div class="trend-row"><strong>↑</strong> Improved vs previous compare</div>
-            <div class="trend-row"><strong>→</strong> Unchanged vs previous compare</div>
-            <div class="trend-row"><strong>↓</strong> Decreased vs previous compare</div>
+            <div class="trend-row">
+              <strong>↑</strong> Improved vs previous compare
+            </div>
+            <div class="trend-row">
+              <strong>→</strong> Unchanged vs previous compare
+            </div>
+            <div class="trend-row">
+              <strong>↓</strong> Decreased vs previous compare
+            </div>
           </section>
 
           <section class="section">
@@ -60,7 +93,13 @@
         </div>
 
         <div class="modal-footer">
-          <button class="ok-btn" type="button" @click="open = false">OK</button>
+          <button
+            class="ok-btn"
+            type="button"
+            @click="open = false"
+          >
+            OK
+          </button>
         </div>
       </div>
     </div>

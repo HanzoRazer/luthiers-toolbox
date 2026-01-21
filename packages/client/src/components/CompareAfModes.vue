@@ -1,24 +1,59 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="$emit('update:modelValue', false)"></div>
+  <div
+    v-if="modelValue"
+    class="fixed inset-0 z-50"
+  >
+    <div
+      class="absolute inset-0 bg-black/40"
+      @click="$emit('update:modelValue', false)"
+    />
     <div class="absolute inset-0 sm:inset-y-6 sm:inset-x-6 bg-white rounded-xl shadow-xl flex flex-col">
       <div class="px-4 py-3 border-b flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Compare Adaptive-Feed Modes</h3>
+        <h3 class="text-lg font-semibold">
+          Compare Adaptive-Feed Modes
+        </h3>
         <div class="flex items-center gap-2">
-          <button class="px-3 py-1 border rounded bg-orange-50" @click="batchExportFromModal">Batch (ZIP)</button>
-          <button class="px-3 py-1 border rounded" @click="$emit('update:modelValue', false)">Close</button>
+          <button
+            class="px-3 py-1 border rounded bg-orange-50"
+            @click="batchExportFromModal"
+          >
+            Batch (ZIP)
+          </button>
+          <button
+            class="px-3 py-1 border rounded"
+            @click="$emit('update:modelValue', false)"
+          >
+            Close
+          </button>
         </div>
       </div>
 
       <div class="grow grid md:grid-cols-3 gap-0">
-        <PreviewPane title="FEED_HINT comments" mode="comment" :text="commentText" @make-default="makeDefault" />
-        <PreviewPane title="Inline F overrides" mode="inline_f" :text="inlineText" @make-default="makeDefault" />
-        <PreviewPane title="M-code wrapper" mode="mcode" :text="mcodeText" @make-default="makeDefault" />
+        <PreviewPane
+          title="FEED_HINT comments"
+          mode="comment"
+          :text="commentText"
+          @make-default="makeDefault"
+        />
+        <PreviewPane
+          title="Inline F overrides"
+          mode="inline_f"
+          :text="inlineText"
+          @make-default="makeDefault"
+        />
+        <PreviewPane
+          title="M-code wrapper"
+          mode="mcode"
+          :text="mcodeText"
+          @make-default="makeDefault"
+        />
       </div>
 
       <div class="px-4 py-2 text-xs text-gray-500 border-t flex items-center justify-between">
         <div>FEED_HINT regions are highlighted. Use Export after choosing your preferred mode.</div>
-        <div class="text-right text-xs text-gray-400">Tip: Use Copy on any pane to copy NC to clipboard.</div>
+        <div class="text-right text-xs text-gray-400">
+          Tip: Use Copy on any pane to copy NC to clipboard.
+        </div>
       </div>
     </div>
   </div>
@@ -50,7 +85,7 @@ async function refresh(){
     })
     return await r.text()
   }
-  ;[commentText.value, inlineText.value, mcodeText.value] = await Promise.all([
+  [commentText.value, inlineText.value, mcodeText.value] = await Promise.all([
     fetchNC('comment'), fetchNC('inline_f'), fetchNC('mcode')
   ])
 }

@@ -4,13 +4,22 @@
     <div class="hub-header">
       <div class="header-content">
         <h1>🎛️ Preset Hub</h1>
-        <p class="subtitle">Unified CAM, Export, and Neck preset management</p>
+        <p class="subtitle">
+          Unified CAM, Export, and Neck preset management
+        </p>
       </div>
       <div class="header-actions">
-        <button @click="showCreateModal = true" class="btn-primary">
+        <button
+          class="btn-primary"
+          @click="showCreateModal = true"
+        >
           <span class="icon">➕</span> New Preset
         </button>
-        <button @click="refreshPresets" class="btn-secondary" :disabled="loading">
+        <button
+          class="btn-secondary"
+          :disabled="loading"
+          @click="refreshPresets"
+        >
           <span class="icon">🔄</span> Refresh
         </button>
       </div>
@@ -21,12 +30,15 @@
       <button
         v-for="tab in tabs"
         :key="tab.kind"
-        @click="activeTab = tab.kind"
         :class="['tab-button', { active: activeTab === tab.kind }]"
+        @click="activeTab = tab.kind"
       >
         <span class="tab-icon">{{ tab.icon }}</span>
         <span class="tab-label">{{ tab.label }}</span>
-        <span v-if="getTabCount(tab.kind) > 0" class="tab-badge">
+        <span
+          v-if="getTabCount(tab.kind) > 0"
+          class="tab-badge"
+        >
           {{ getTabCount(tab.kind) }}
         </span>
       </button>
@@ -42,15 +54,22 @@
             type="text"
             placeholder="Search presets..."
             class="search-input"
-          />
+          >
         </label>
       </div>
       <div class="filter-group">
         <label>
           <span class="icon">🏷️</span>
-          <select v-model="selectedTag" class="tag-filter">
+          <select
+            v-model="selectedTag"
+            class="tag-filter"
+          >
             <option value="">All Tags</option>
-            <option v-for="tag in availableTags" :key="tag" :value="tag">
+            <option
+              v-for="tag in availableTags"
+              :key="tag"
+              :value="tag"
+            >
               {{ tag }}
             </option>
           </select>
@@ -59,24 +78,42 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <div class="spinner" />
       <p>Loading presets...</p>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredPresets.length === 0" class="empty-state">
-      <div class="empty-icon">📦</div>
+    <div
+      v-else-if="filteredPresets.length === 0"
+      class="empty-state"
+    >
+      <div class="empty-icon">
+        📦
+      </div>
       <h3>No presets found</h3>
-      <p v-if="activeTab === 'all'">Create your first preset to get started</p>
-      <p v-else>No {{ activeTab }} presets available</p>
-      <button @click="showCreateModal = true" class="btn-primary">
+      <p v-if="activeTab === 'all'">
+        Create your first preset to get started
+      </p>
+      <p v-else>
+        No {{ activeTab }} presets available
+      </p>
+      <button
+        class="btn-primary"
+        @click="showCreateModal = true"
+      >
         Create Preset
       </button>
     </div>
 
     <!-- Presets Grid -->
-    <div v-else class="presets-grid">
+    <div
+      v-else
+      class="presets-grid"
+    >
       <div
         v-for="preset in filteredPresets"
         :key="preset.id"
@@ -86,34 +123,58 @@
         <!-- Card Header -->
         <div class="card-header">
           <div class="card-title-row">
-            <h3 class="card-title">{{ preset.name }}</h3>
-            <span class="kind-badge" :class="[`kind-${preset.kind}`]">
+            <h3 class="card-title">
+              {{ preset.name }}
+            </h3>
+            <span
+              class="kind-badge"
+              :class="[`kind-${preset.kind}`]"
+            >
               {{ preset.kind.toUpperCase() }}
             </span>
           </div>
-          <p v-if="preset.description" class="card-description">
+          <p
+            v-if="preset.description"
+            class="card-description"
+          >
             {{ preset.description }}
           </p>
         </div>
 
         <!-- Card Metadata -->
         <div class="card-metadata">
-          <div v-if="preset.machine_id" class="metadata-item">
+          <div
+            v-if="preset.machine_id"
+            class="metadata-item"
+          >
             <span class="icon">🔧</span>
             <span>{{ preset.machine_id }}</span>
           </div>
-          <div v-if="preset.post_id" class="metadata-item">
+          <div
+            v-if="preset.post_id"
+            class="metadata-item"
+          >
             <span class="icon">📝</span>
             <span>{{ preset.post_id }}</span>
           </div>
-          <div v-if="preset.units" class="metadata-item">
+          <div
+            v-if="preset.units"
+            class="metadata-item"
+          >
             <span class="icon">📏</span>
             <span>{{ preset.units }}</span>
           </div>
-          <div v-if="preset.tags && preset.tags.length > 0" class="metadata-item tags">
+          <div
+            v-if="preset.tags && preset.tags.length > 0"
+            class="metadata-item tags"
+          >
             <span class="icon">🏷️</span>
             <div class="tag-list">
-              <span v-for="tag in preset.tags" :key="tag" class="tag">{{ tag }}</span>
+              <span
+                v-for="tag in preset.tags"
+                :key="tag"
+                class="tag"
+              >{{ tag }}</span>
             </div>
           </div>
         </div>
@@ -127,27 +188,55 @@
         >
           <span class="icon">🔗</span>
           <span class="lineage-text">Cloned from job {{ preset.job_source_id.slice(0, 8) }}...</span>
-          <span class="tooltip-hint" title="Hover to see job details">ℹ️</span>
+          <span
+            class="tooltip-hint"
+            title="Hover to see job details"
+          >ℹ️</span>
         </div>
 
         <!-- Card Actions -->
         <div class="card-actions">
-          <button @click="useInPipelineLab(preset)" class="action-btn" title="Use in PipelineLab">
+          <button
+            class="action-btn"
+            title="Use in PipelineLab"
+            @click="useInPipelineLab(preset)"
+          >
             <span class="icon">⚙️</span>
           </button>
-          <button @click="useInCompareLab(preset)" class="action-btn" title="Use in CompareLab">
+          <button
+            class="action-btn"
+            title="Use in CompareLab"
+            @click="useInCompareLab(preset)"
+          >
             <span class="icon">🔬</span>
           </button>
-          <button @click="useInNeckLab(preset)" class="action-btn" title="Use in NeckLab" v-if="preset.kind === 'neck' || preset.kind === 'combo'">
+          <button
+            v-if="preset.kind === 'neck' || preset.kind === 'combo'"
+            class="action-btn"
+            title="Use in NeckLab"
+            @click="useInNeckLab(preset)"
+          >
             <span class="icon">🎸</span>
           </button>
-          <button @click="clonePreset(preset)" class="action-btn" title="Clone">
+          <button
+            class="action-btn"
+            title="Clone"
+            @click="clonePreset(preset)"
+          >
             <span class="icon">📋</span>
           </button>
-          <button @click="editPreset(preset)" class="action-btn" title="Edit">
+          <button
+            class="action-btn"
+            title="Edit"
+            @click="editPreset(preset)"
+          >
             <span class="icon">✏️</span>
           </button>
-          <button @click="deletePreset(preset)" class="action-btn danger" title="Delete">
+          <button
+            class="action-btn danger"
+            title="Delete"
+            @click="deletePreset(preset)"
+          >
             <span class="icon">🗑️</span>
           </button>
         </div>
@@ -156,57 +245,106 @@
 
     <!-- Create/Edit Modal -->
     <Teleport to="body">
-      <div v-if="showCreateModal || editingPreset" class="modal-overlay" @click.self="closeModal">
+      <div
+        v-if="showCreateModal || editingPreset"
+        class="modal-overlay"
+        @click.self="closeModal"
+      >
         <div class="modal-content">
           <div class="modal-header">
             <h2>{{ editingPreset ? 'Edit Preset' : 'Create New Preset' }}</h2>
-            <button @click="closeModal" class="close-btn">✕</button>
+            <button
+              class="close-btn"
+              @click="closeModal"
+            >
+              ✕
+            </button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="savePreset">
               <!-- Basic Info -->
               <div class="form-group">
                 <label>Name <span class="required">*</span></label>
-                <input v-model="formData.name" type="text" required class="form-input" />
+                <input
+                  v-model="formData.name"
+                  type="text"
+                  required
+                  class="form-input"
+                >
               </div>
 
               <div class="form-group">
                 <label>Kind <span class="required">*</span></label>
-                <select v-model="formData.kind" required class="form-input">
-                  <option value="cam">CAM</option>
-                  <option value="export">Export</option>
-                  <option value="neck">Neck</option>
-                  <option value="combo">Combo</option>
+                <select
+                  v-model="formData.kind"
+                  required
+                  class="form-input"
+                >
+                  <option value="cam">
+                    CAM
+                  </option>
+                  <option value="export">
+                    Export
+                  </option>
+                  <option value="neck">
+                    Neck
+                  </option>
+                  <option value="combo">
+                    Combo
+                  </option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Description</label>
-                <textarea v-model="formData.description" class="form-input" rows="3"></textarea>
+                <textarea
+                  v-model="formData.description"
+                  class="form-input"
+                  rows="3"
+                />
               </div>
 
               <div class="form-group">
                 <label>Tags (comma-separated)</label>
-                <input v-model="tagsInput" type="text" placeholder="roughing, adaptive, baseline" class="form-input" />
+                <input
+                  v-model="tagsInput"
+                  type="text"
+                  placeholder="roughing, adaptive, baseline"
+                  class="form-input"
+                >
               </div>
 
               <!-- Machine/Post (for CAM presets) -->
-              <div v-if="formData.kind === 'cam' || formData.kind === 'combo'" class="form-section">
+              <div
+                v-if="formData.kind === 'cam' || formData.kind === 'combo'"
+                class="form-section"
+              >
                 <h3>Machine & Post</h3>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Machine ID</label>
-                    <input v-model="formData.machine_id" type="text" class="form-input" />
+                    <input
+                      v-model="formData.machine_id"
+                      type="text"
+                      class="form-input"
+                    >
                   </div>
                   <div class="form-group">
                     <label>Post ID</label>
-                    <input v-model="formData.post_id" type="text" class="form-input" />
+                    <input
+                      v-model="formData.post_id"
+                      type="text"
+                      class="form-input"
+                    >
                   </div>
                 </div>
               </div>
 
               <!-- Export Template (for export presets) -->
-              <div v-if="formData.kind === 'export' || formData.kind === 'combo'" class="form-section">
+              <div
+                v-if="formData.kind === 'export' || formData.kind === 'combo'"
+                class="form-section"
+              >
                 <h3>Export Settings</h3>
                 <div class="form-group">
                   <label>Filename Template</label>
@@ -215,7 +353,7 @@
                     type="text"
                     placeholder="{preset}__{post}__{date}.nc"
                     class="form-input"
-                  />
+                  >
                   <small class="help-text">
                     Tokens: {preset}, {machine}, {post}, {neck_profile}, {neck_section}, {date}
                   </small>
@@ -224,8 +362,18 @@
 
               <!-- Action Buttons -->
               <div class="modal-actions">
-                <button type="button" @click="closeModal" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary" :disabled="saving">
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  @click="closeModal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="btn-primary"
+                  :disabled="saving"
+                >
                   {{ saving ? 'Saving...' : (editingPreset ? 'Update' : 'Create') }}
                 </button>
               </div>
@@ -265,25 +413,43 @@
           </div>
           <div class="tooltip-row">
             <span class="label">Helical:</span>
-            <span class="value" :class="currentJobDetails.use_helical ? 'success' : 'neutral'">
+            <span
+              class="value"
+              :class="currentJobDetails.use_helical ? 'success' : 'neutral'"
+            >
               {{ currentJobDetails.use_helical ? 'Yes' : 'No' }}
             </span>
           </div>
-          <div v-if="currentJobDetails.sim_time_s != null" class="tooltip-row">
+          <div
+            v-if="currentJobDetails.sim_time_s != null"
+            class="tooltip-row"
+          >
             <span class="label">Cycle Time:</span>
             <span class="value">{{ formatTime(currentJobDetails.sim_time_s) }}</span>
           </div>
-          <div v-if="currentJobDetails.sim_energy_j != null" class="tooltip-row">
+          <div
+            v-if="currentJobDetails.sim_energy_j != null"
+            class="tooltip-row"
+          >
             <span class="label">Energy:</span>
             <span class="value">{{ formatEnergy(currentJobDetails.sim_energy_j) }}</span>
           </div>
-          <div v-if="currentJobDetails.sim_issue_count != null" class="tooltip-row">
+          <div
+            v-if="currentJobDetails.sim_issue_count != null"
+            class="tooltip-row"
+          >
             <span class="label">Issues:</span>
-            <span class="value" :class="currentJobDetails.sim_issue_count === 0 ? 'success' : 'warning'">
+            <span
+              class="value"
+              :class="currentJobDetails.sim_issue_count === 0 ? 'success' : 'warning'"
+            >
               {{ currentJobDetails.sim_issue_count }}
             </span>
           </div>
-          <div v-if="currentJobDetails.sim_max_dev_pct != null" class="tooltip-row">
+          <div
+            v-if="currentJobDetails.sim_max_dev_pct != null"
+            class="tooltip-row"
+          >
             <span class="label">Max Deviation:</span>
             <span class="value">{{ currentJobDetails.sim_max_dev_pct.toFixed(1) }}%</span>
           </div>
@@ -293,7 +459,10 @@
           </div>
         </div>
         <div class="tooltip-footer">
-          <button @click="viewJobInHistory(currentJobDetails.run_id)" class="tooltip-link">
+          <button
+            class="tooltip-link"
+            @click="viewJobInHistory(currentJobDetails.run_id)"
+          >
             View in Job History →
           </button>
         </div>

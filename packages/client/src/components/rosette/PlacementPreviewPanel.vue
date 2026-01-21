@@ -1,17 +1,33 @@
 <template>
   <div class="panel">
     <div class="hdr">
-      <div class="title">Placement Preview</div>
-      <div class="sub">Host-agnostic ornament placement</div>
+      <div class="title">
+        Placement Preview
+      </div>
+      <div class="sub">
+        Host-agnostic ornament placement
+      </div>
     </div>
 
     <!-- PRESETS -->
     <div class="presets">
       <label>Presets</label>
       <div class="presetRow">
-        <select v-model="selectedPresetId" @change="applySelectedPreset">
-          <option disabled value="">— Select preset —</option>
-          <option v-for="p in presets" :key="p.id" :value="p.id">
+        <select
+          v-model="selectedPresetId"
+          @change="applySelectedPreset"
+        >
+          <option
+            disabled
+            value=""
+          >
+            — Select preset —
+          </option>
+          <option
+            v-for="p in presets"
+            :key="p.id"
+            :value="p.id"
+          >
             {{ p.name }}
           </option>
         </select>
@@ -25,7 +41,10 @@
           ★
         </button>
 
-        <button class="ghost" @click="savePreset">
+        <button
+          class="ghost"
+          @click="savePreset"
+        >
           Save
         </button>
 
@@ -45,29 +64,53 @@
         <div class="row">
           <label>Host surface</label>
           <select v-model="host.kind">
-            <option value="rect">Rect</option>
-            <option value="circle">Circle</option>
-            <option value="polygon">Polygon</option>
+            <option value="rect">
+              Rect
+            </option>
+            <option value="circle">
+              Circle
+            </option>
+            <option value="polygon">
+              Polygon
+            </option>
           </select>
         </div>
 
-        <div v-if="host.kind === 'rect'" class="row2">
+        <div
+          v-if="host.kind === 'rect'"
+          class="row2"
+        >
           <div>
             <label>Width (mm)</label>
-            <input type="number" v-model.number="host.width_mm" />
+            <input
+              v-model.number="host.width_mm"
+              type="number"
+            >
           </div>
           <div>
             <label>Height (mm)</label>
-            <input type="number" v-model.number="host.height_mm" />
+            <input
+              v-model.number="host.height_mm"
+              type="number"
+            >
           </div>
         </div>
 
-        <div v-if="host.kind === 'circle'" class="row">
+        <div
+          v-if="host.kind === 'circle'"
+          class="row"
+        >
           <label>Radius (mm)</label>
-          <input type="number" v-model.number="host.radius_mm" />
+          <input
+            v-model.number="host.radius_mm"
+            type="number"
+          >
         </div>
 
-        <div v-if="host.kind === 'polygon'" class="row">
+        <div
+          v-if="host.kind === 'polygon'"
+          class="row"
+        >
           <label>Polygon (mm)</label>
           <textarea
             v-model="polygonText"
@@ -76,56 +119,92 @@
           />
         </div>
 
-        <div class="sep"></div>
+        <div class="sep" />
 
         <div class="row2">
           <div>
             <label>Scale</label>
-            <input type="number" step="0.05" v-model.number="placement.scale" />
+            <input
+              v-model.number="placement.scale"
+              type="number"
+              step="0.05"
+            >
           </div>
           <div>
             <label>Rotate (deg)</label>
-            <input type="number" v-model.number="placement.rotate_deg" />
+            <input
+              v-model.number="placement.rotate_deg"
+              type="number"
+            >
           </div>
         </div>
 
         <div class="row2">
           <div>
             <label>Offset X</label>
-            <input type="number" v-model.number="placement.translate_x_mm" />
+            <input
+              v-model.number="placement.translate_x_mm"
+              type="number"
+            >
           </div>
           <div>
             <label>Offset Y</label>
-            <input type="number" v-model.number="placement.translate_y_mm" />
+            <input
+              v-model.number="placement.translate_y_mm"
+              type="number"
+            >
           </div>
         </div>
 
         <div class="row checkbox">
-          <input id="clip" type="checkbox" v-model="placement.clip_to_host" />
+          <input
+            id="clip"
+            v-model="placement.clip_to_host"
+            type="checkbox"
+          >
           <label for="clip">Clip to host</label>
         </div>
 
         <div class="row actions">
-          <button @click="runPreview" :disabled="loading">
+          <button
+            :disabled="loading"
+            @click="runPreview"
+          >
             {{ loading ? "Rendering…" : "Render Preview" }}
           </button>
-          <button class="ghost" @click="resetDefaults">
+          <button
+            class="ghost"
+            @click="resetDefaults"
+          >
             Reset
           </button>
         </div>
 
-        <div v-if="err" class="err">{{ err }}</div>
+        <div
+          v-if="err"
+          class="err"
+        >
+          {{ err }}
+        </div>
       </div>
 
       <!-- PREVIEW -->
       <div class="preview">
         <div class="previewHdr">
-          <div class="k">SVG Preview</div>
-          <div class="v" v-if="lastUpdated">
+          <div class="k">
+            SVG Preview
+          </div>
+          <div
+            v-if="lastUpdated"
+            class="v"
+          >
             Updated {{ lastUpdated }}
           </div>
         </div>
-        <div class="svgBox" v-html="svg"></div>
+        <div
+          class="svgBox"
+          v-html="svg"
+        />
       </div>
     </div>
 

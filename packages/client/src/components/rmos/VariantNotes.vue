@@ -80,7 +80,9 @@ watch(
 
 <template>
   <div class="notes-box">
-    <div class="title">Rating + Notes</div>
+    <div class="title">
+      Rating + Notes
+    </div>
 
     <div class="rating-row">
       <label>Rating:</label>
@@ -92,14 +94,24 @@ watch(
       placeholder="Operator notes for this variant..."
       rows="3"
       class="notes-input"
-    ></textarea>
+    />
 
     <div class="action-row">
-      <button class="btn" :disabled="saving" @click="save">
+      <button
+        class="btn"
+        :disabled="saving"
+        @click="save"
+      >
         {{ saving ? "Saving..." : "Save Review" }}
       </button>
-      <span v-if="error" class="feedback error">{{ error }}</span>
-      <span v-if="saved" class="feedback success">Saved!</span>
+      <span
+        v-if="error"
+        class="feedback error"
+      >{{ error }}</span>
+      <span
+        v-if="saved"
+        class="feedback success"
+      >Saved!</span>
     </div>
   </div>
 </template>

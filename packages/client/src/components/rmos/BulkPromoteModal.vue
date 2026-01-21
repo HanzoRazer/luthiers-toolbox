@@ -86,35 +86,77 @@ async function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="modal" @click.self="emit('close')">
+  <div
+    v-if="open"
+    class="modal"
+    @click.self="emit('close')"
+  >
     <div class="card">
-      <div class="title">Promote Selected → Manufacturing Candidates</div>
+      <div class="title">
+        Promote Selected → Manufacturing Candidates
+      </div>
 
       <div class="subtle">
         This will promote <strong>{{ total }}</strong> variant(s) into manufacturing candidates.
       </div>
 
       <div class="summary">
-        <div class="pill">GREEN: <strong>{{ riskCounts.GREEN }}</strong></div>
-        <div class="pill warn">YELLOW: <strong>{{ riskCounts.YELLOW }}</strong></div>
-        <div class="pill danger">RED: <strong>{{ riskCounts.RED }}</strong></div>
-        <div class="pill">UNKNOWN: <strong>{{ riskCounts.UNKNOWN }}</strong></div>
-        <div class="pill">ERROR: <strong>{{ riskCounts.ERROR }}</strong></div>
+        <div class="pill">
+          GREEN: <strong>{{ riskCounts.GREEN }}</strong>
+        </div>
+        <div class="pill warn">
+          YELLOW: <strong>{{ riskCounts.YELLOW }}</strong>
+        </div>
+        <div class="pill danger">
+          RED: <strong>{{ riskCounts.RED }}</strong>
+        </div>
+        <div class="pill">
+          UNKNOWN: <strong>{{ riskCounts.UNKNOWN }}</strong>
+        </div>
+        <div class="pill">
+          ERROR: <strong>{{ riskCounts.ERROR }}</strong>
+        </div>
       </div>
 
-      <label v-if="hasNonGreen" class="ack">
-        <input type="checkbox" v-model="acknowledgedRisk" />
+      <label
+        v-if="hasNonGreen"
+        class="ack"
+      >
+        <input
+          v-model="acknowledgedRisk"
+          type="checkbox"
+        >
         <span>
           I acknowledge some selections are not GREEN (YELLOW/RED/UNKNOWN/ERROR) and I still want to promote them.
         </span>
       </label>
 
-      <div v-if="busy" class="subtle">Promoting… {{ doneCount }} / {{ total }}</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div
+        v-if="busy"
+        class="subtle"
+      >
+        Promoting… {{ doneCount }} / {{ total }}
+      </div>
+      <div
+        v-if="error"
+        class="error"
+      >
+        {{ error }}
+      </div>
 
       <div class="row">
-        <button class="btn tiny secondary" :disabled="busy" @click="emit('close')">Cancel</button>
-        <button class="btn tiny" :disabled="!canSubmit" @click="submit">
+        <button
+          class="btn tiny secondary"
+          :disabled="busy"
+          @click="emit('close')"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn tiny"
+          :disabled="!canSubmit"
+          @click="submit"
+        >
           {{ busy ? "Promoting…" : "Promote Selected" }}
         </button>
       </div>

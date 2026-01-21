@@ -79,46 +79,101 @@ async function doSend(){
 
 <template>
   <div class="p-6 space-y-4">
-    <h1 class="text-xl font-bold">Art Studio — Preview Infill</h1>
+    <h1 class="text-xl font-bold">
+      Art Studio — Preview Infill
+    </h1>
 
     <div class="flex flex-wrap gap-3 text-sm items-center">
       <label>Project:</label>
-      <input v-model="projectId" class="border rounded px-2 py-1"/>
+      <input
+        v-model="projectId"
+        class="border rounded px-2 py-1"
+      >
       <label>Target:</label>
-      <select v-model="projectTarget" class="border rounded px-2 py-1">
+      <select
+        v-model="projectTarget"
+        class="border rounded px-2 py-1"
+      >
         <option>Body</option><option>Headstock</option><option>Rosette</option>
       </select>
-      <button class="ml-4 rounded-lg px-3 py-1 border hover:shadow" @click="doSend">Send to Project</button>
+      <button
+        class="ml-4 rounded-lg px-3 py-1 border hover:shadow"
+        @click="doSend"
+      >
+        Send to Project
+      </button>
     </div>
 
     <div class="border rounded p-3 space-y-2">
-      <div class="font-semibold text-sm">Flat‑clear options</div>
-      <label><input type="checkbox" v-model="flatClear" @change="flatClear && refreshPreview()"> Enable</label>
+      <div class="font-semibold text-sm">
+        Flat‑clear options
+      </div>
+      <label><input
+        v-model="flatClear"
+        type="checkbox"
+        @change="flatClear && refreshPreview()"
+      > Enable</label>
       <div class="flex flex-wrap gap-4 items-center text-sm">
         <label>Mode:</label>
-        <select v-model="flatMode" class="border rounded px-2 py-1">
-          <option value="raster">Raster</option>
-          <option value="contour">Contour</option>
+        <select
+          v-model="flatMode"
+          class="border rounded px-2 py-1"
+        >
+          <option value="raster">
+            Raster
+          </option>
+          <option value="contour">
+            Contour
+          </option>
         </select>
         <template v-if="flatMode==='raster'">
           <label>Angle (deg):</label>
-          <input v-model.number="rasterAngle" type="number" class="border rounded px-2 py-1 w-20"/>
+          <input
+            v-model.number="rasterAngle"
+            type="number"
+            class="border rounded px-2 py-1 w-20"
+          >
         </template>
         <label>Step‑over (mm):</label>
-        <input v-model.number="stepOver" type="number" class="border rounded px-2 py-1 w-24"/>
+        <input
+          v-model.number="stepOver"
+          type="number"
+          class="border rounded px-2 py-1 w-24"
+        >
         <label>Approx stroke width (mm):</label>
-        <input v-model.number="approxStrokeWidth" type="number" class="border rounded px-2 py-1 w-24"/>
-        <button class="rounded-lg px-3 py-1 border hover:shadow" @click="refreshPreview" :disabled="!flatClear || isPreviewing">
+        <input
+          v-model.number="approxStrokeWidth"
+          type="number"
+          class="border rounded px-2 py-1 w-24"
+        >
+        <button
+          class="rounded-lg px-3 py-1 border hover:shadow"
+          :disabled="!flatClear || isPreviewing"
+          @click="refreshPreview"
+        >
           {{ isPreviewing ? 'Previewing…' : 'Preview infill' }}
         </button>
       </div>
-      <p class="text-xs opacity-60">Tip: provide explicit regions if you have them; else we infer from centerlines + approx stroke width.</p>
+      <p class="text-xs opacity-60">
+        Tip: provide explicit regions if you have them; else we infer from centerlines + approx stroke width.
+      </p>
     </div>
 
-    <div v-if="previewSvg" class="border rounded p-3 bg-white">
-      <div class="text-sm font-semibold mb-2">Preview</div>
-      <div v-html="previewSvg" class="max-h-[520px] overflow-auto border rounded"></div>
-      <div v-if="previewStats" class="mt-2 text-xs opacity-70">
+    <div
+      v-if="previewSvg"
+      class="border rounded p-3 bg-white"
+    >
+      <div class="text-sm font-semibold mb-2">
+        Preview
+      </div>
+      <div
+        class="max-h-[520px] overflow-auto border rounded"
+        v-html="previewSvg"
+      />
+      <div
+        v-if="previewStats"
+        class="mt-2 text-xs opacity-70"
+      >
         <span>Total spans: {{ previewStats.total_spans || 0 }}</span> ·
         <span>Total length (est.): {{ (previewStats.total_len || 0).toFixed(1) }} mm</span>
       </div>

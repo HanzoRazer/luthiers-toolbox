@@ -5,14 +5,24 @@
         v-for="tool in tools" 
         :key="tool.id"
         :class="{ active: activeTool === tool.id }"
-        @click="activeTool = tool.id"
         :title="tool.label"
+        @click="activeTool = tool.id"
       >
         {{ tool.icon }}
       </button>
-      <div class="toolbar-divider"></div>
-      <button @click="clearCanvas" title="Clear canvas">🗑️</button>
-      <button @click="undoLast" title="Undo last">↶</button>
+      <div class="toolbar-divider" />
+      <button
+        title="Clear canvas"
+        @click="clearCanvas"
+      >
+        🗑️
+      </button>
+      <button
+        title="Undo last"
+        @click="undoLast"
+      >
+        ↶
+      </button>
     </div>
     
     <div 

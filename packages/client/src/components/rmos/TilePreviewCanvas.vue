@@ -14,7 +14,10 @@
         {{ segmentation.tile_count }} tiles
       </p>
       <ul>
-        <li v-for="tile in segmentation.tiles" :key="tile.tile_index">
+        <li
+          v-for="tile in segmentation.tiles"
+          :key="tile.tile_index"
+        >
           Tile {{ tile.tile_index }}:
           [{{ tile.theta_start_deg.toFixed(1) }}°
           → {{ tile.theta_end_deg.toFixed(1) }}°]

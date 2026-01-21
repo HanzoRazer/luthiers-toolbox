@@ -83,17 +83,29 @@ function copyGcode() {
 
 <template>
   <div class="p-6 space-y-6">
-    <h1 class="text-xl font-bold">Phase 16.1 — Helical Z‑Ramping <span class="text-sm font-normal text-gray-600">(Production Safety Enabled)</span></h1>
+    <h1 class="text-xl font-bold">
+      Phase 16.1 — Helical Z‑Ramping <span class="text-sm font-normal text-gray-600">(Production Safety Enabled)</span>
+    </h1>
     
     <!-- Safety Validation Parameters -->
     <section class="border rounded p-4 bg-blue-50 space-y-3">
-      <h2 class="text-sm font-bold text-blue-900">Safety Validation Parameters</h2>
+      <h2 class="text-sm font-bold text-blue-900">
+        Safety Validation Parameters
+      </h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         <label class="flex items-center gap-2">Tool Ø (mm)
-          <input v-model.number="form.tool_diameter_mm" type="number" step="0.1" class="border rounded px-2 py-1 w-24"/>
+          <input
+            v-model.number="form.tool_diameter_mm"
+            type="number"
+            step="0.1"
+            class="border rounded px-2 py-1 w-24"
+          >
         </label>
         <label class="flex items-center gap-2">Material
-          <select v-model="form.material" class="border rounded px-2 py-1">
+          <select
+            v-model="form.material"
+            class="border rounded px-2 py-1"
+          >
             <option value="hardwood">Hardwood</option>
             <option value="softwood">Softwood</option>
             <option value="plywood">Plywood</option>
@@ -103,7 +115,12 @@ function copyGcode() {
           </select>
         </label>
         <label class="flex items-center gap-2">RPM
-          <input v-model.number="form.spindle_rpm" type="number" step="1000" class="border rounded px-2 py-1 w-24"/>
+          <input
+            v-model.number="form.spindle_rpm"
+            type="number"
+            step="1000"
+            class="border rounded px-2 py-1 w-24"
+          >
         </label>
       </div>
       <p class="text-xs text-blue-800">
@@ -113,51 +130,123 @@ function copyGcode() {
 
     <!-- Helical Parameters -->
     <section class="border rounded p-4 bg-white space-y-3">
-      <h2 class="text-sm font-bold">Helical Parameters</h2>
+      <h2 class="text-sm font-bold">
+        Helical Parameters
+      </h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         <label class="flex items-center gap-2">Preset
-          <select v-model="form.post_preset" class="border rounded px-2 py-1">
+          <select
+            v-model="form.post_preset"
+            class="border rounded px-2 py-1"
+          >
             <option value="GRBL">GRBL</option>
             <option value="Mach3">Mach3</option>
             <option value="Haas">Haas (R-mode, G4 S)</option>
             <option value="Marlin">Marlin</option>
           </select>
         </label>
-        <label class="flex items-center gap-2">CX <input v-model.number="form.cx" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">CY <input v-model.number="form.cy" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Radius <input v-model.number="form.radius_mm" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
+        <label class="flex items-center gap-2">CX <input
+          v-model.number="form.cx"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">CY <input
+          v-model.number="form.cy"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Radius <input
+          v-model.number="form.radius_mm"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
         <label class="flex items-center gap-2">Dir
-          <select v-model="form.direction" class="border rounded px-2 py-1">
+          <select
+            v-model="form.direction"
+            class="border rounded px-2 py-1"
+          >
             <option value="CCW">CCW (G3)</option>
             <option value="CW">CW (G2)</option>
           </select>
         </label>
-        <label class="flex items-center gap-2">Plane Z <input v-model.number="form.plane_z_mm" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Start Z <input v-model.number="form.start_z_mm" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Target Z <input v-model.number="form.z_target_mm" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Pitch/rev <input v-model.number="form.pitch_mm_per_rev" type="number" step="0.1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Feed XY <input v-model.number="form.feed_xy_mm_min" type="number" step="1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2">Max arc ° <input v-model.number="form.max_arc_degrees" type="number" step="1" class="border rounded px-2 py-1 w-28"/></label>
-        <label class="flex items-center gap-2"><input type="checkbox" v-model="form.ij_mode"/> IJ mode</label>
-        <label class="flex items-center gap-2"><input type="checkbox" v-model="form.safe_rapid"/> Safe rapid</label>
+        <label class="flex items-center gap-2">Plane Z <input
+          v-model.number="form.plane_z_mm"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Start Z <input
+          v-model.number="form.start_z_mm"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Target Z <input
+          v-model.number="form.z_target_mm"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Pitch/rev <input
+          v-model.number="form.pitch_mm_per_rev"
+          type="number"
+          step="0.1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Feed XY <input
+          v-model.number="form.feed_xy_mm_min"
+          type="number"
+          step="1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2">Max arc ° <input
+          v-model.number="form.max_arc_degrees"
+          type="number"
+          step="1"
+          class="border rounded px-2 py-1 w-28"
+        ></label>
+        <label class="flex items-center gap-2"><input
+          v-model="form.ij_mode"
+          type="checkbox"
+        > IJ mode</label>
+        <label class="flex items-center gap-2"><input
+          v-model="form.safe_rapid"
+          type="checkbox"
+        > Safe rapid</label>
       </div>
       <p class="text-xs text-gray-600">
         Preset notes: <b>Haas</b> uses <code>R</code>-mode arcs and <code>G4 S</code> (seconds).
         Others default to <code>I,J</code> and <code>G4 P</code> (milliseconds).
       </p>
-      <button class="border rounded px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50" :disabled="busy" @click="runHelix">
+      <button
+        class="border rounded px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50"
+        :disabled="busy"
+        @click="runHelix"
+      >
         {{ busy ? 'Generating...' : 'Generate Helical Toolpath' }}
       </button>
     </section>
 
     <!-- Safety Warnings (if any) -->
-    <section v-if="warnings.length > 0" class="border-2 border-yellow-500 rounded p-4 bg-yellow-50 space-y-2">
+    <section
+      v-if="warnings.length > 0"
+      class="border-2 border-yellow-500 rounded p-4 bg-yellow-50 space-y-2"
+    >
       <h2 class="text-sm font-bold text-yellow-900 flex items-center gap-2">
         <span class="text-2xl">⚠️</span>
         Safety Warnings ({{ warnings.length }})
       </h2>
       <ul class="list-disc list-inside space-y-1 text-sm text-yellow-900">
-        <li v-for="(warning, idx) in warnings" :key="idx" class="leading-relaxed">{{ warning }}</li>
+        <li
+          v-for="(warning, idx) in warnings"
+          :key="idx"
+          class="leading-relaxed"
+        >
+          {{ warning }}
+        </li>
       </ul>
       <p class="text-xs text-yellow-800 mt-3 pt-3 border-t border-yellow-300">
         <b>⚡ Action Required:</b> Review warnings above before running G-code on your machine. 
@@ -166,32 +255,53 @@ function copyGcode() {
     </section>
 
     <!-- Statistics -->
-    <section v-if="stats" class="border rounded p-4 bg-green-50 space-y-2">
-      <h2 class="text-sm font-bold text-green-900">Toolpath Statistics</h2>
+    <section
+      v-if="stats"
+      class="border rounded p-4 bg-green-50 space-y-2"
+    >
+      <h2 class="text-sm font-bold text-green-900">
+        Toolpath Statistics
+      </h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-green-900">
         <div><b>Revolutions:</b> {{ stats.revolutions }}</div>
         <div><b>Segments:</b> {{ stats.segments }}</div>
         <div><b>Length:</b> {{ stats.length_mm }} mm</div>
         <div><b>Time:</b> {{ stats.time_s }} s ({{ (stats.time_s / 60).toFixed(1) }} min)</div>
-        <div v-if="stats.chipload_mm"><b>Chipload:</b> {{ stats.chipload_mm }} mm/tooth</div>
+        <div v-if="stats.chipload_mm">
+          <b>Chipload:</b> {{ stats.chipload_mm }} mm/tooth
+        </div>
         <div><b>Engagement:</b> {{ stats.engagement_angle_avg }}°</div>
         <div><b>Arc Mode:</b> {{ stats.arc_mode }}</div>
         <div><b>Post:</b> {{ stats.post_preset }}</div>
       </div>
-      <div v-if="stats.warning_count > 0" class="text-xs text-yellow-700 pt-2 border-t border-green-200">
+      <div
+        v-if="stats.warning_count > 0"
+        class="text-xs text-yellow-700 pt-2 border-t border-green-200"
+      >
         ⚠️ {{ stats.warning_count }} warning(s) detected - see above for details
       </div>
     </section>
 
     <!-- G-code Output -->
-    <section v-if="gcode" class="border rounded p-4 bg-gray-50 space-y-2">
-      <h2 class="text-sm font-bold">G-code Output</h2>
+    <section
+      v-if="gcode"
+      class="border rounded p-4 bg-gray-50 space-y-2"
+    >
+      <h2 class="text-sm font-bold">
+        G-code Output
+      </h2>
       <pre class="text-xs bg-white p-3 border rounded max-h-96 overflow-auto font-mono">{{ gcode }}</pre>
       <div class="flex gap-2">
-        <button @click="copyGcode" class="border rounded px-3 py-1 text-xs bg-white hover:bg-gray-100">
+        <button
+          class="border rounded px-3 py-1 text-xs bg-white hover:bg-gray-100"
+          @click="copyGcode"
+        >
           📋 Copy to Clipboard
         </button>
-        <button @click="downloadGcode" class="border rounded px-3 py-1 text-xs bg-white hover:bg-gray-100">
+        <button
+          class="border rounded px-3 py-1 text-xs bg-white hover:bg-gray-100"
+          @click="downloadGcode"
+        >
           💾 Download .nc File
         </button>
       </div>

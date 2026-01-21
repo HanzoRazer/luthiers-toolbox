@@ -1,7 +1,9 @@
 <template>
   <div class="cam-essentials-lab">
     <h1>CAM Essentials Lab</h1>
-    <p class="subtitle">N10 Essential CAM operations for CNC guitar lutherie</p>
+    <p class="subtitle">
+      N10 Essential CAM operations for CNC guitar lutherie
+    </p>
 
     <div class="operations-grid">
       <!-- Roughing Operation -->
@@ -15,33 +17,64 @@
         <div class="params">
           <div class="param-row">
             <label>Width (mm):</label>
-            <input v-model.number="roughing.width" type="number" step="0.1" />
+            <input
+              v-model.number="roughing.width"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Height (mm):</label>
-            <input v-model.number="roughing.height" type="number" step="0.1" />
+            <input
+              v-model.number="roughing.height"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Stepdown (mm):</label>
-            <input v-model.number="roughing.stepdown" type="number" step="0.1" />
+            <input
+              v-model.number="roughing.stepdown"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Feed (mm/min):</label>
-            <input v-model.number="roughing.feed" type="number" step="10" />
+            <input
+              v-model.number="roughing.feed"
+              type="number"
+              step="10"
+            >
           </div>
           <div class="param-row">
             <label>Post:</label>
             <select v-model="roughing.post">
-              <option value="GRBL">GRBL</option>
-              <option value="Mach4">Mach4</option>
-              <option value="LinuxCNC">LinuxCNC</option>
-              <option value="PathPilot">PathPilot</option>
-              <option value="MASSO">MASSO</option>
+              <option value="GRBL">
+                GRBL
+              </option>
+              <option value="Mach4">
+                Mach4
+              </option>
+              <option value="LinuxCNC">
+                LinuxCNC
+              </option>
+              <option value="PathPilot">
+                PathPilot
+              </option>
+              <option value="MASSO">
+                MASSO
+              </option>
             </select>
           </div>
         </div>
         
-        <button @click="exportRoughing" class="export-btn">Export G-code</button>
+        <button
+          class="export-btn"
+          @click="exportRoughing"
+        >
+          Export G-code
+        </button>
       </div>
 
       <!-- Drilling Operation -->
@@ -56,29 +89,57 @@
           <div class="param-row">
             <label>Cycle:</label>
             <select v-model="drilling.cycle">
-              <option value="G81">G81 (Simple)</option>
-              <option value="G83">G83 (Peck)</option>
+              <option value="G81">
+                G81 (Simple)
+              </option>
+              <option value="G83">
+                G83 (Peck)
+              </option>
             </select>
           </div>
           <div class="param-row">
             <label>Depth (mm):</label>
-            <input v-model.number="drilling.depth" type="number" step="0.1" />
+            <input
+              v-model.number="drilling.depth"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Feed (mm/min):</label>
-            <input v-model.number="drilling.feed" type="number" step="10" />
+            <input
+              v-model.number="drilling.feed"
+              type="number"
+              step="10"
+            >
           </div>
-          <div class="param-row" v-if="drilling.cycle === 'G83'">
+          <div
+            v-if="drilling.cycle === 'G83'"
+            class="param-row"
+          >
             <label>Peck Depth (mm):</label>
-            <input v-model.number="drilling.peck_q" type="number" step="0.1" />
+            <input
+              v-model.number="drilling.peck_q"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Holes (JSON):</label>
-            <textarea v-model="drilling.holesJson" rows="3" placeholder='[{"x":10,"y":10},{"x":20,"y":10}]'></textarea>
+            <textarea
+              v-model="drilling.holesJson"
+              rows="3"
+              placeholder="[{&quot;x&quot;:10,&quot;y&quot;:10},{&quot;x&quot;:20,&quot;y&quot;:10}]"
+            />
           </div>
         </div>
         
-        <button @click="exportDrilling" class="export-btn">Export G-code</button>
+        <button
+          class="export-btn"
+          @click="exportDrilling"
+        >
+          Export G-code
+        </button>
       </div>
 
       <!-- Drill Pattern Operation -->
@@ -93,9 +154,15 @@
           <div class="param-row">
             <label>Pattern:</label>
             <select v-model="pattern.type">
-              <option value="grid">Grid</option>
-              <option value="circle">Circle</option>
-              <option value="line">Line</option>
+              <option value="grid">
+                Grid
+              </option>
+              <option value="circle">
+                Circle
+              </option>
+              <option value="line">
+                Line
+              </option>
             </select>
           </div>
           
@@ -103,19 +170,35 @@
           <template v-if="pattern.type === 'grid'">
             <div class="param-row">
               <label>Rows:</label>
-              <input v-model.number="pattern.grid.rows" type="number" min="1" />
+              <input
+                v-model.number="pattern.grid.rows"
+                type="number"
+                min="1"
+              >
             </div>
             <div class="param-row">
               <label>Columns:</label>
-              <input v-model.number="pattern.grid.cols" type="number" min="1" />
+              <input
+                v-model.number="pattern.grid.cols"
+                type="number"
+                min="1"
+              >
             </div>
             <div class="param-row">
               <label>X Spacing (mm):</label>
-              <input v-model.number="pattern.grid.dx" type="number" step="0.1" />
+              <input
+                v-model.number="pattern.grid.dx"
+                type="number"
+                step="0.1"
+              >
             </div>
             <div class="param-row">
               <label>Y Spacing (mm):</label>
-              <input v-model.number="pattern.grid.dy" type="number" step="0.1" />
+              <input
+                v-model.number="pattern.grid.dy"
+                type="number"
+                step="0.1"
+              >
             </div>
           </template>
           
@@ -123,15 +206,27 @@
           <template v-if="pattern.type === 'circle'">
             <div class="param-row">
               <label>Count:</label>
-              <input v-model.number="pattern.circle.count" type="number" min="1" />
+              <input
+                v-model.number="pattern.circle.count"
+                type="number"
+                min="1"
+              >
             </div>
             <div class="param-row">
               <label>Radius (mm):</label>
-              <input v-model.number="pattern.circle.radius" type="number" step="0.1" />
+              <input
+                v-model.number="pattern.circle.radius"
+                type="number"
+                step="0.1"
+              >
             </div>
             <div class="param-row">
               <label>Start Angle (°):</label>
-              <input v-model.number="pattern.circle.start_angle_deg" type="number" step="1" />
+              <input
+                v-model.number="pattern.circle.start_angle_deg"
+                type="number"
+                step="1"
+              >
             </div>
           </template>
           
@@ -139,29 +234,54 @@
           <template v-if="pattern.type === 'line'">
             <div class="param-row">
               <label>Count:</label>
-              <input v-model.number="pattern.line.count" type="number" min="1" />
+              <input
+                v-model.number="pattern.line.count"
+                type="number"
+                min="1"
+              >
             </div>
             <div class="param-row">
               <label>X Increment (mm):</label>
-              <input v-model.number="pattern.line.dx" type="number" step="0.1" />
+              <input
+                v-model.number="pattern.line.dx"
+                type="number"
+                step="0.1"
+              >
             </div>
             <div class="param-row">
               <label>Y Increment (mm):</label>
-              <input v-model.number="pattern.line.dy" type="number" step="0.1" />
+              <input
+                v-model.number="pattern.line.dy"
+                type="number"
+                step="0.1"
+              >
             </div>
           </template>
           
           <div class="param-row">
             <label>Depth (mm):</label>
-            <input v-model.number="pattern.depth" type="number" step="0.1" />
+            <input
+              v-model.number="pattern.depth"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Feed (mm/min):</label>
-            <input v-model.number="pattern.feed" type="number" step="10" />
+            <input
+              v-model.number="pattern.feed"
+              type="number"
+              step="10"
+            >
           </div>
         </div>
         
-        <button @click="exportPattern" class="export-btn">Export G-code</button>
+        <button
+          class="export-btn"
+          @click="exportPattern"
+        >
+          Export G-code
+        </button>
       </div>
 
       <!-- Bi-Arc Contour -->
@@ -175,19 +295,36 @@
         <div class="params">
           <div class="param-row">
             <label>Points (JSON):</label>
-            <textarea v-model="biarc.pathJson" rows="4" placeholder='[{"x":0,"y":0},{"x":50,"y":0},{"x":50,"y":30}]'></textarea>
+            <textarea
+              v-model="biarc.pathJson"
+              rows="4"
+              placeholder="[{&quot;x&quot;:0,&quot;y&quot;:0},{&quot;x&quot;:50,&quot;y&quot;:0},{&quot;x&quot;:50,&quot;y&quot;:30}]"
+            />
           </div>
           <div class="param-row">
             <label>Depth (mm):</label>
-            <input v-model.number="biarc.depth" type="number" step="0.1" />
+            <input
+              v-model.number="biarc.depth"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Feed (mm/min):</label>
-            <input v-model.number="biarc.feed" type="number" step="10" />
+            <input
+              v-model.number="biarc.feed"
+              type="number"
+              step="10"
+            >
           </div>
         </div>
         
-        <button @click="exportBiarc" class="export-btn">Export G-code</button>
+        <button
+          class="export-btn"
+          @click="exportBiarc"
+        >
+          Export G-code
+        </button>
       </div>
 
       <!-- Probe Patterns (N09) -->
@@ -202,41 +339,88 @@
           <div class="param-row">
             <label>Pattern:</label>
             <select v-model="probe.pattern">
-              <option value="corner_outside">Corner (Outside)</option>
-              <option value="corner_inside">Corner (Inside)</option>
-              <option value="boss_circular">Boss (Circular)</option>
-              <option value="hole_circular">Hole (Circular)</option>
-              <option value="surface_z">Surface Z</option>
+              <option value="corner_outside">
+                Corner (Outside)
+              </option>
+              <option value="corner_inside">
+                Corner (Inside)
+              </option>
+              <option value="boss_circular">
+                Boss (Circular)
+              </option>
+              <option value="hole_circular">
+                Hole (Circular)
+              </option>
+              <option value="surface_z">
+                Surface Z
+              </option>
             </select>
           </div>
           <div class="param-row">
             <label>Probe Feed (mm/min):</label>
-            <input v-model.number="probe.feed_probe" type="number" step="10" />
+            <input
+              v-model.number="probe.feed_probe"
+              type="number"
+              step="10"
+            >
           </div>
           <div class="param-row">
             <label>Safe Z (mm):</label>
-            <input v-model.number="probe.safe_z" type="number" step="0.5" />
+            <input
+              v-model.number="probe.safe_z"
+              type="number"
+              step="0.5"
+            >
           </div>
-          <div class="param-row" v-if="probe.pattern.includes('circular')">
+          <div
+            v-if="probe.pattern.includes('circular')"
+            class="param-row"
+          >
             <label>Est. Diameter (mm):</label>
-            <input v-model.number="probe.diameter" type="number" step="1" />
+            <input
+              v-model.number="probe.diameter"
+              type="number"
+              step="1"
+            >
           </div>
           <div class="param-row">
             <label>Work Offset:</label>
             <select v-model="probe.work_offset">
-              <option value="1">G54 (1)</option>
-              <option value="2">G55 (2)</option>
-              <option value="3">G56 (3)</option>
-              <option value="4">G57 (4)</option>
-              <option value="5">G58 (5)</option>
-              <option value="6">G59 (6)</option>
+              <option value="1">
+                G54 (1)
+              </option>
+              <option value="2">
+                G55 (2)
+              </option>
+              <option value="3">
+                G56 (3)
+              </option>
+              <option value="4">
+                G57 (4)
+              </option>
+              <option value="5">
+                G58 (5)
+              </option>
+              <option value="6">
+                G59 (6)
+              </option>
             </select>
           </div>
         </div>
         
         <div class="button-group">
-          <button @click="exportProbeGcode" class="export-btn half">Export G-code</button>
-          <button @click="exportProbeSVG" class="export-btn half secondary">Export Setup Sheet</button>
+          <button
+            class="export-btn half"
+            @click="exportProbeGcode"
+          >
+            Export G-code
+          </button>
+          <button
+            class="export-btn half secondary"
+            @click="exportProbeSVG"
+          >
+            Export Setup Sheet
+          </button>
         </div>
       </div>
 
@@ -252,34 +436,74 @@
           <div class="param-row">
             <label>Strategy:</label>
             <select v-model="retract.strategy">
-              <option value="direct">Direct (G0)</option>
-              <option value="ramped">Ramped (Linear)</option>
-              <option value="helical">Helical (Spiral)</option>
+              <option value="direct">
+                Direct (G0)
+              </option>
+              <option value="ramped">
+                Ramped (Linear)
+              </option>
+              <option value="helical">
+                Helical (Spiral)
+              </option>
             </select>
           </div>
           <div class="param-row">
             <label>Current Z (mm):</label>
-            <input v-model.number="retract.current_z" type="number" step="0.1" />
+            <input
+              v-model.number="retract.current_z"
+              type="number"
+              step="0.1"
+            >
           </div>
           <div class="param-row">
             <label>Safe Z (mm):</label>
-            <input v-model.number="retract.safe_z" type="number" step="0.5" />
+            <input
+              v-model.number="retract.safe_z"
+              type="number"
+              step="0.5"
+            >
           </div>
-          <div class="param-row" v-if="retract.strategy === 'ramped'">
+          <div
+            v-if="retract.strategy === 'ramped'"
+            class="param-row"
+          >
             <label>Ramp Feed (mm/min):</label>
-            <input v-model.number="retract.ramp_feed" type="number" step="10" />
+            <input
+              v-model.number="retract.ramp_feed"
+              type="number"
+              step="10"
+            >
           </div>
-          <div class="param-row" v-if="retract.strategy === 'helical'">
+          <div
+            v-if="retract.strategy === 'helical'"
+            class="param-row"
+          >
             <label>Helix Radius (mm):</label>
-            <input v-model.number="retract.helix_radius" type="number" step="0.5" />
+            <input
+              v-model.number="retract.helix_radius"
+              type="number"
+              step="0.5"
+            >
           </div>
-          <div class="param-row" v-if="retract.strategy === 'helical'">
+          <div
+            v-if="retract.strategy === 'helical'"
+            class="param-row"
+          >
             <label>Pitch (mm/rev):</label>
-            <input v-model.number="retract.helix_pitch" type="number" step="0.1" />
+            <input
+              v-model.number="retract.helix_pitch"
+              type="number"
+              step="0.1"
+            >
           </div>
         </div>
         
-        <button @click="exportRetractGcode" class="export-btn">Export Sample G-code</button>
+        <button
+          class="export-btn"
+          @click="exportRetractGcode"
+        >
+          Export Sample G-code
+        </button>
       </div>
     </div>
 

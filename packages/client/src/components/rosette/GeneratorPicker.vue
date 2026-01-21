@@ -2,31 +2,79 @@
   <div class="card">
     <div class="row">
       <h3>Generator</h3>
-      <button class="btn" @click="store.loadGenerators()" :disabled="store.generatorsLoading">
+      <button
+        class="btn"
+        :disabled="store.generatorsLoading"
+        @click="store.loadGenerators()"
+      >
         Refresh
       </button>
     </div>
-    <div v-if="store.generatorsError" class="err">{{ store.generatorsError }}</div>
+    <div
+      v-if="store.generatorsError"
+      class="err"
+    >
+      {{ store.generatorsError }}
+    </div>
     <label class="lbl">Generator Key</label>
-    <select v-model="store.selectedGeneratorKey" class="input">
-      <option v-for="g in store.generators" :key="g.generator_key" :value="g.generator_key">
+    <select
+      v-model="store.selectedGeneratorKey"
+      class="input"
+    >
+      <option
+        v-for="g in store.generators"
+        :key="g.generator_key"
+        :value="g.generator_key"
+      >
         {{ g.name }} - {{ g.generator_key }}
       </option>
     </select>
-    <div class="hint" v-if="selectedDesc">
-      <div class="small">{{ selectedDesc.description }}</div>
+    <div
+      v-if="selectedDesc"
+      class="hint"
+    >
+      <div class="small">
+        {{ selectedDesc.description }}
+      </div>
     </div>
     <label class="lbl">Generator Params (JSON)</label>
-    <textarea class="input mono" v-model="paramsJson" rows="6"></textarea>
+    <textarea
+      v-model="paramsJson"
+      class="input mono"
+      rows="6"
+    />
     <div class="row">
-      <button class="btn primary" @click="applyParamsJson">Apply Params</button>
-      <button class="btn" @click="store.generateSpecFromGenerator()">Generate Spec</button>
-      <button class="btn" @click="store.refreshPreview()">Preview</button>
+      <button
+        class="btn primary"
+        @click="applyParamsJson"
+      >
+        Apply Params
+      </button>
+      <button
+        class="btn"
+        @click="store.generateSpecFromGenerator()"
+      >
+        Generate Spec
+      </button>
+      <button
+        class="btn"
+        @click="store.refreshPreview()"
+      >
+        Preview
+      </button>
     </div>
-    <div v-if="store.generatorWarnings?.length" class="warn">
+    <div
+      v-if="store.generatorWarnings?.length"
+      class="warn"
+    >
       <div><strong>Generator warnings:</strong></div>
       <ul>
-        <li v-for="(w, i) in store.generatorWarnings" :key="i">{{ w }}</li>
+        <li
+          v-for="(w, i) in store.generatorWarnings"
+          :key="i"
+        >
+          {{ w }}
+        </li>
       </ul>
     </div>
   </div>

@@ -1,24 +1,28 @@
 <template>
-  <section class="svg-viewer" v-if="hasGeometry">
+  <section
+    v-if="hasGeometry"
+    class="svg-viewer"
+  >
     <header class="viewer-header">
       <div>
         <h3>SVG Dual Display</h3>
-        <p class="hint">Baseline vs Current overlay with quick stats.</p>
+        <p class="hint">
+          Baseline vs Current overlay with quick stats.
+        </p>
       </div>
       <div class="header-actions">
-        <div class="stats" v-if="diff">
-          <span
-            >Δ Added: <strong>{{ diff.summary.added }}</strong></span
-          >
-          <span
-            >Δ Removed: <strong>{{ diff.summary.removed }}</strong></span
-          >
+        <div
+          v-if="diff"
+          class="stats"
+        >
+          <span>Δ Added: <strong>{{ diff.summary.added }}</strong></span>
+          <span>Δ Removed: <strong>{{ diff.summary.removed }}</strong></span>
         </div>
         <button
           class="export-btn"
-          @click="onExportDiffReport"
           :disabled="exporting || !diff"
           title="Export comparison screenshots as ZIP"
+          @click="onExportDiffReport"
         >
           <span v-if="exporting">Exporting…</span>
           <span v-else>📦 Export Diff Report</span>
@@ -26,9 +30,14 @@
       </div>
     </header>
 
-    <div class="canvases" ref="canvasesContainer">
+    <div
+      ref="canvasesContainer"
+      class="canvases"
+    >
       <div class="canvas">
-        <p class="label">Baseline</p>
+        <p class="label">
+          Baseline
+        </p>
         <svg
           ref="baselineSvgRef"
           :viewBox="viewBox"
@@ -47,7 +56,9 @@
         </svg>
       </div>
       <div class="canvas">
-        <p class="label">Current</p>
+        <p class="label">
+          Current
+        </p>
         <svg
           ref="currentSvgRef"
           :viewBox="viewBox"
@@ -66,7 +77,9 @@
         </svg>
       </div>
       <div class="canvas">
-        <p class="label">Diff Overlay</p>
+        <p class="label">
+          Diff Overlay
+        </p>
         <svg
           ref="diffSvgRef"
           :viewBox="viewBox"
@@ -99,7 +112,12 @@
       </div>
     </div>
   </section>
-  <p v-else class="hint">Load geometry to preview the SVG overlay.</p>
+  <p
+    v-else
+    class="hint"
+  >
+    Load geometry to preview the SVG overlay.
+  </p>
 </template>
 
 <script setup lang="ts">

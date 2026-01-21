@@ -1,7 +1,9 @@
 <template>
   <div class="p-4 space-y-4">
     <div class="bg-white rounded shadow-sm p-4">
-      <h2 class="text-lg font-semibold mb-2">Risk Preset A/B Comparison</h2>
+      <h2 class="text-lg font-semibold mb-2">
+        Risk Preset A/B Comparison
+      </h2>
       <p class="text-sm text-gray-600 mb-4">
         Compare two presets side-by-side in the same pipeline and date range.
       </p>
@@ -28,7 +30,7 @@
             v-model="fromDate"
             type="date"
             class="px-2 py-1 border rounded text-[11px] bg-white"
-          />
+          >
         </label>
         <label class="flex items-center gap-2">
           <span class="text-gray-700">To:</span>
@@ -36,7 +38,7 @@
             v-model="toDate"
             type="date"
             class="px-2 py-1 border rounded text-[11px] bg-white"
-          />
+          >
         </label>
 
         <!-- Preset A -->
@@ -107,29 +109,49 @@
       <div class="grid grid-cols-2 gap-4 mb-4">
         <!-- Card A -->
         <div class="border rounded p-3 bg-blue-50">
-          <div class="text-xs font-bold mb-1">Preset A: {{ presetA }}</div>
-          <div class="text-xs text-gray-600">Jobs: {{ summaryA.jobsCount }}</div>
-          <div class="text-xs text-gray-600">Avg Risk: {{ summaryA.avgRisk }}</div>
-          <div class="text-xs text-gray-600">Critical: {{ summaryA.totalCritical }}</div>
+          <div class="text-xs font-bold mb-1">
+            Preset A: {{ presetA }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Jobs: {{ summaryA.jobsCount }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Avg Risk: {{ summaryA.avgRisk }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Critical: {{ summaryA.totalCritical }}
+          </div>
         </div>
 
         <!-- Card B -->
         <div class="border rounded p-3 bg-green-50">
-          <div class="text-xs font-bold mb-1">Preset B: {{ presetB }}</div>
-          <div class="text-xs text-gray-600">Jobs: {{ summaryB.jobsCount }}</div>
-          <div class="text-xs text-gray-600">Avg Risk: {{ summaryB.avgRisk }}</div>
-          <div class="text-xs text-gray-600">Critical: {{ summaryB.totalCritical }}</div>
+          <div class="text-xs font-bold mb-1">
+            Preset B: {{ presetB }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Jobs: {{ summaryB.jobsCount }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Avg Risk: {{ summaryB.avgRisk }}
+          </div>
+          <div class="text-xs text-gray-600">
+            Critical: {{ summaryB.totalCritical }}
+          </div>
         </div>
       </div>
 
       <!-- Trend sparklines -->
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="border rounded p-2 bg-white">
-          <div class="text-xs font-semibold mb-1">Preset A Trend</div>
+          <div class="text-xs font-semibold mb-1">
+            Preset A Trend
+          </div>
           <CamRiskPresetTrend :jobs="jobsA" />
         </div>
         <div class="border rounded p-2 bg-white">
-          <div class="text-xs font-semibold mb-1">Preset B Trend</div>
+          <div class="text-xs font-semibold mb-1">
+            Preset B Trend
+          </div>
           <CamRiskPresetTrend :jobs="jobsB" />
         </div>
       </div>
@@ -137,9 +159,9 @@
       <!-- Evolution Trendline (Phase 26.6) -->
       <section class="mb-4">
         <CamPresetEvolutionTrend
-          :jobsA="jobsA"
-          :jobsB="jobsB"
-          :initialBucketMode="bucketMode"
+          :jobs-a="jobsA"
+          :jobs-b="jobsB"
+          :initial-bucket-mode="bucketMode"
           @export-series-csv="handleSeriesCsv"
         />
       </section>
@@ -147,11 +169,15 @@
       <!-- Job lists -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <div class="text-sm font-semibold mb-2">Preset A Jobs</div>
+          <div class="text-sm font-semibold mb-2">
+            Preset A Jobs
+          </div>
           <CamRiskJobList :jobs="jobsA" />
         </div>
         <div>
-          <div class="text-sm font-semibold mb-2">Preset B Jobs</div>
+          <div class="text-sm font-semibold mb-2">
+            Preset B Jobs
+          </div>
           <CamRiskJobList :jobs="jobsB" />
         </div>
       </div>

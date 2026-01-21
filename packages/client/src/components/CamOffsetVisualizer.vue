@@ -3,9 +3,15 @@
     <div class="flex items-center justify-between px-3 py-2 border-b">
       <div class="text-xs text-gray-600">
         <span class="font-semibold">Offset Preview</span>
-        <span v-if="meta" class="ml-2">passes: {{ meta.count }}</span>
+        <span
+          v-if="meta"
+          class="ml-2"
+        >passes: {{ meta.count }}</span>
       </div>
-      <div v-if="bbox" class="text-[10px] text-gray-500">
+      <div
+        v-if="bbox"
+        class="text-[10px] text-gray-500"
+      >
         bbox: [{{ fmt(bbox.minx) }}, {{ fmt(bbox.miny) }}] → [{{ fmt(bbox.maxx) }}, {{ fmt(bbox.maxy) }}]
       </div>
     </div>
@@ -21,26 +27,71 @@
       >
         <!-- tiny toolbar -->
         <div class="absolute right-2 top-2 z-10 flex gap-1">
-          <button class="px-2 py-1 text-[11px] border rounded bg-white" @click="zoomBy(1.2)">+</button>
-          <button class="px-2 py-1 text-[11px] border rounded bg-white" @click="zoomBy(1/1.2)">−</button>
-          <button class="px-2 py-1 text-[11px] border rounded bg-white" @click="resetView">Reset</button>
-          <button class="px-2 py-1 text-[11px] border rounded bg-white" @click="exportSvg()">SVG</button>
+          <button
+            class="px-2 py-1 text-[11px] border rounded bg-white"
+            @click="zoomBy(1.2)"
+          >
+            +
+          </button>
+          <button
+            class="px-2 py-1 text-[11px] border rounded bg-white"
+            @click="zoomBy(1/1.2)"
+          >
+            −
+          </button>
+          <button
+            class="px-2 py-1 text-[11px] border rounded bg-white"
+            @click="resetView"
+          >
+            Reset
+          </button>
+          <button
+            class="px-2 py-1 text-[11px] border rounded bg-white"
+            @click="exportSvg()"
+          >
+            SVG
+          </button>
         </div>
-        <svg :viewBox="viewBox" class="w-full h-full" ref="svgRef" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          ref="svgRef"
+          :viewBox="viewBox"
+          class="w-full h-full"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <!-- faint grid -->
-          <g v-if="bbox" opacity="0.25">
-            <line :x1="0" :y1="vh/2" :x2="vw" :y2="vh/2" stroke="lightgray" stroke-width="0.5"/>
-            <line :x1="vw/2" :y1="0" :x2="vw/2" :y2="vh" stroke="lightgray" stroke-width="0.5"/>
+          <g
+            v-if="bbox"
+            opacity="0.25"
+          >
+            <line
+              :x1="0"
+              :y1="vh/2"
+              :x2="vw"
+              :y2="vh/2"
+              stroke="lightgray"
+              stroke-width="0.5"
+            />
+            <line
+              :x1="vw/2"
+              :y1="0"
+              :x2="vw/2"
+              :y2="vh"
+              stroke="lightgray"
+              stroke-width="0.5"
+            />
           </g>
 
           <!-- world transform -->
           <g :transform="worldTransform">
             <!-- passes -->
-            <g v-for="(p, i) in normalized" :key="i"
-               @pointerenter="setHover(i)"
-               @pointerleave="setHover(null)"
-               @click="setSelect(i)"
-               style="cursor: crosshair">
+            <g
+              v-for="(p, i) in normalized"
+              :key="i"
+              style="cursor: crosshair"
+              @pointerenter="setHover(i)"
+              @pointerleave="setHover(null)"
+              @click="setSelect(i)"
+            >
               <polyline
                 :points="toPolyline(p)"
                 :stroke="strokeFor(i)"
@@ -51,14 +102,19 @@
           </g>
         </svg>
         <!-- tooltip -->
-        <div v-if="tooltip.visible" class="pointer-events-none absolute text-[11px] bg-white/95 border rounded px-2 py-1 shadow z-20"
-             :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }">
+        <div
+          v-if="tooltip.visible"
+          class="pointer-events-none absolute text-[11px] bg-white/95 border rounded px-2 py-1 shadow z-20"
+          :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+        >
           <div v-if="hoverIdx !== null && passStats && passStats[hoverIdx]">
             <div><span class="font-semibold">Pass {{ passStats[hoverIdx].idx }}</span></div>
             <div>Pts: {{ passStats[hoverIdx].pts }}</div>
             <div>Len: {{ passStats[hoverIdx].length.toFixed(2) }} {{ units }}</div>
           </div>
-          <div v-else>pass</div>
+          <div v-else>
+            pass
+          </div>
         </div>
       </div>
     </div>

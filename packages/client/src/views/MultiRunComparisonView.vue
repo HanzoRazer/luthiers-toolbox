@@ -2,10 +2,12 @@
   <div class="p-6 space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold">Multi-Run Comparison</h1>
+      <h1 class="text-3xl font-bold">
+        Multi-Run Comparison
+      </h1>
       <button 
-        @click="fetchPresets" 
-        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" 
+        @click="fetchPresets"
       >
         🔄 Refresh Presets
       </button>
@@ -13,7 +15,9 @@
 
     <!-- Preset Selector -->
     <div class="bg-white border rounded-lg p-4">
-      <h2 class="text-xl font-semibold mb-3">Select Presets to Compare</h2>
+      <h2 class="text-xl font-semibold mb-3">
+        Select Presets to Compare
+      </h2>
       <p class="text-sm text-gray-600 mb-4">
         Choose at least 2 presets that were cloned from JobInt runs (B19). Only presets with job lineage can be compared.
       </p>
@@ -26,31 +30,41 @@
           :class="{'bg-blue-50 border-blue-300': selectedPresetIds.includes(preset.id)}"
         >
           <input 
+            v-model="selectedPresetIds" 
             type="checkbox" 
-            :value="preset.id" 
-            v-model="selectedPresetIds"
+            :value="preset.id"
             class="mt-1"
-          />
+          >
           <div class="flex-1">
             <p class="font-medium text-sm">{{ preset.name }}</p>
             <p class="text-xs text-gray-500">{{ preset.kind }}</p>
-            <p class="text-xs text-gray-400" v-if="preset.job_source_id">
+            <p
+              v-if="preset.job_source_id"
+              class="text-xs text-gray-400"
+            >
               Job: {{ preset.job_source_id.slice(0, 8) }}...
             </p>
           </div>
         </label>
       </div>
 
-      <div v-if="presetsWithLineage.length === 0" class="text-center py-8 text-gray-500">
-        <p class="mb-2">📭 No presets with job lineage found</p>
-        <p class="text-sm">Clone jobs as presets using B19 feature in JobInt view</p>
+      <div
+        v-if="presetsWithLineage.length === 0"
+        class="text-center py-8 text-gray-500"
+      >
+        <p class="mb-2">
+          📭 No presets with job lineage found
+        </p>
+        <p class="text-sm">
+          Clone jobs as presets using B19 feature in JobInt view
+        </p>
       </div>
 
       <div class="flex items-center gap-4 mt-4">
         <button 
-          @click="runComparison"
           :disabled="selectedPresetIds.length < 2 || loading"
           class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="runComparison"
         >
           {{ loading ? '⏳ Analyzing...' : '🔍 Compare Runs' }}
         </button>
@@ -59,8 +73,8 @@
         </span>
         <button 
           v-if="selectedPresetIds.length > 0"
-          @click="selectedPresetIds = []"
           class="text-sm text-gray-600 hover:text-gray-800 underline"
+          @click="selectedPresetIds = []"
         >
           Clear selection
         </button>
@@ -68,32 +82,48 @@
     </div>
 
     <!-- Error Message -->
-    <div v-if="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded text-red-700">
+    <div
+      v-if="errorMessage"
+      class="p-4 bg-red-50 border border-red-200 rounded text-red-700"
+    >
       {{ errorMessage }}
     </div>
 
     <!-- Comparison Results -->
-    <div v-if="comparisonResult" class="space-y-6">
+    <div
+      v-if="comparisonResult"
+      class="space-y-6"
+    >
       <!-- Summary Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Runs Compared</p>
-          <p class="text-2xl font-bold">{{ comparisonResult.runs.length }}</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Runs Compared
+          </p>
+          <p class="text-2xl font-bold">
+            {{ comparisonResult.runs.length }}
+          </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Time</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Time
+          </p>
           <p class="text-2xl font-bold">
             {{ comparisonResult.avg_time_s ? comparisonResult.avg_time_s.toFixed(1) : 'N/A' }}s
           </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Energy</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Energy
+          </p>
           <p class="text-2xl font-bold">
             {{ comparisonResult.avg_energy_j ? comparisonResult.avg_energy_j.toFixed(0) : 'N/A' }}J
           </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Moves</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Moves
+          </p>
           <p class="text-2xl font-bold">
             {{ comparisonResult.avg_move_count || 'N/A' }}
           </p>
@@ -101,11 +131,18 @@
       </div>
 
       <!-- Trends -->
-      <div v-if="comparisonResult.time_trend || comparisonResult.energy_trend" class="bg-white border rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-3">📈 Performance Trends</h3>
+      <div
+        v-if="comparisonResult.time_trend || comparisonResult.energy_trend"
+        class="bg-white border rounded-lg p-4"
+      >
+        <h3 class="text-lg font-semibold mb-3">
+          📈 Performance Trends
+        </h3>
         <div class="grid md:grid-cols-2 gap-4">
           <div v-if="comparisonResult.time_trend">
-            <p class="text-sm font-medium text-gray-700 mb-1">Time Trend:</p>
+            <p class="text-sm font-medium text-gray-700 mb-1">
+              Time Trend:
+            </p>
             <span 
               class="inline-block px-3 py-1 rounded text-sm font-medium"
               :class="{
@@ -115,11 +152,13 @@
               }"
             >
               {{ comparisonResult.time_trend === 'improving' ? '✅ Improving' : 
-                 comparisonResult.time_trend === 'degrading' ? '⚠️ Degrading' : '➡️ Stable' }}
+                comparisonResult.time_trend === 'degrading' ? '⚠️ Degrading' : '➡️ Stable' }}
             </span>
           </div>
           <div v-if="comparisonResult.energy_trend">
-            <p class="text-sm font-medium text-gray-700 mb-1">Energy Trend:</p>
+            <p class="text-sm font-medium text-gray-700 mb-1">
+              Energy Trend:
+            </p>
             <span 
               class="inline-block px-3 py-1 rounded text-sm font-medium"
               :class="{
@@ -129,17 +168,26 @@
               }"
             >
               {{ comparisonResult.energy_trend === 'improving' ? '✅ Improving' : 
-                 comparisonResult.energy_trend === 'degrading' ? '⚠️ Degrading' : '➡️ Stable' }}
+                comparisonResult.energy_trend === 'degrading' ? '⚠️ Degrading' : '➡️ Stable' }}
             </span>
           </div>
         </div>
       </div>
 
       <!-- Recommendations -->
-      <div v-if="comparisonResult.recommendations.length > 0" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-3">💡 Recommendations</h3>
+      <div
+        v-if="comparisonResult.recommendations.length > 0"
+        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
+      >
+        <h3 class="text-lg font-semibold mb-3">
+          💡 Recommendations
+        </h3>
         <ul class="space-y-2">
-          <li v-for="(rec, idx) in comparisonResult.recommendations" :key="idx" class="text-sm">
+          <li
+            v-for="(rec, idx) in comparisonResult.recommendations"
+            :key="idx"
+            class="text-sm"
+          >
             {{ rec }}
           </li>
         </ul>
@@ -147,7 +195,9 @@
 
       <!-- Detailed Run Comparison Table -->
       <div class="bg-white border rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-3">📊 Detailed Run Comparison</h3>
+        <h3 class="text-lg font-semibold mb-3">
+          📊 Detailed Run Comparison
+        </h3>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -189,10 +239,16 @@
               >
                 <td class="px-4 py-3 text-sm font-medium">
                   {{ run.preset_name }}
-                  <span v-if="run.preset_id === comparisonResult.best_run_id" class="ml-2 text-green-600">
+                  <span
+                    v-if="run.preset_id === comparisonResult.best_run_id"
+                    class="ml-2 text-green-600"
+                  >
                     🏆 Best
                   </span>
-                  <span v-if="run.preset_id === comparisonResult.worst_run_id" class="ml-2 text-red-600">
+                  <span
+                    v-if="run.preset_id === comparisonResult.worst_run_id"
+                    class="ml-2 text-red-600"
+                  >
                     ⚠️ Worst
                   </span>
                 </td>
@@ -212,7 +268,10 @@
                   >
                     {{ run.sim_issue_count }}
                   </span>
-                  <span v-else class="text-gray-400">0</span>
+                  <span
+                    v-else
+                    class="text-gray-400"
+                  >0</span>
                 </td>
                 <td class="px-4 py-3 text-sm">
                   {{ run.strategy || 'N/A' }}
@@ -221,7 +280,10 @@
                   {{ run.feed_xy ? run.feed_xy.toFixed(0) : 'N/A' }}
                 </td>
                 <td class="px-4 py-3 text-sm">
-                  <div v-if="run.efficiency_score !== null && run.efficiency_score !== undefined" class="flex items-center gap-2">
+                  <div
+                    v-if="run.efficiency_score !== null && run.efficiency_score !== undefined"
+                    class="flex items-center gap-2"
+                  >
                     <div class="w-16 bg-gray-200 rounded-full h-2">
                       <div 
                         class="h-2 rounded-full"
@@ -231,11 +293,14 @@
                           'bg-red-500': run.efficiency_score < 40
                         }"
                         :style="{width: `${run.efficiency_score}%`}"
-                      ></div>
+                      />
                     </div>
                     <span class="text-xs font-medium">{{ run.efficiency_score.toFixed(0) }}/100</span>
                   </div>
-                  <span v-else class="text-gray-400">N/A</span>
+                  <span
+                    v-else
+                    class="text-gray-400"
+                  >N/A</span>
                 </td>
               </tr>
             </tbody>
@@ -245,11 +310,19 @@
 
       <!-- Time Comparison Chart -->
       <div class="bg-white border rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-3">📉 Time Comparison</h3>
-        <div class="h-64" v-if="chartData.labels.length > 0">
-          <canvas ref="timeChartCanvas"></canvas>
+        <h3 class="text-lg font-semibold mb-3">
+          📉 Time Comparison
+        </h3>
+        <div
+          v-if="chartData.labels.length > 0"
+          class="h-64"
+        >
+          <canvas ref="timeChartCanvas" />
         </div>
-        <p v-else class="text-center text-gray-500 py-8">
+        <p
+          v-else
+          class="text-center text-gray-500 py-8"
+        >
           No time data available for charting
         </p>
       </div>
@@ -257,14 +330,14 @@
       <!-- Actions -->
       <div class="flex gap-4">
         <button 
-          @click="exportComparisonCSV"
           class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          @click="exportComparisonCSV"
         >
           📥 Export as CSV
         </button>
         <button 
-          @click="resetComparison"
           class="px-4 py-2 border rounded hover:bg-gray-50"
+          @click="resetComparison"
         >
           🔄 New Comparison
         </button>

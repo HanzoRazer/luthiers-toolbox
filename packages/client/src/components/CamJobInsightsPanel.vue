@@ -6,12 +6,18 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading">
+    <div
+      v-if="loading"
+      class="loading"
+    >
       <p>Analyzing job...</p>
     </div>
 
     <!-- Analysis Results -->
-    <div v-else-if="insights" class="insights">
+    <div
+      v-else-if="insights"
+      class="insights"
+    >
       <!-- Job Info -->
       <div class="info-section">
         <h4>{{ insights.job_name }}</h4>
@@ -36,7 +42,10 @@
       <div class="metrics-grid">
         <div class="metric-card">
           <h5>Review Threshold</h5>
-          <div class="percentage" :class="{ warn: insights.review_pct >= 80 }">
+          <div
+            class="percentage"
+            :class="{ warn: insights.review_pct >= 80 }"
+          >
             {{ insights.review_pct }}%
           </div>
           <p>{{ insights.review_pct < 80 ? 'Below threshold' : 'At or over threshold' }}</p>
@@ -44,7 +53,10 @@
         
         <div class="metric-card">
           <h5>Critical Gate</h5>
-          <div class="percentage" :class="{ error: insights.gate_pct >= 100 }">
+          <div
+            class="percentage"
+            :class="{ error: insights.gate_pct >= 100 }"
+          >
             {{ insights.gate_pct }}%
           </div>
           <p>{{ insights.gate_pct < 100 ? 'Below gate' : 'Exceeds gate' }}</p>
@@ -52,7 +64,10 @@
       </div>
 
       <!-- Time Difference -->
-      <div v-if="insights.time_diff_pct !== 0" class="time-diff">
+      <div
+        v-if="insights.time_diff_pct !== 0"
+        class="time-diff"
+      >
         <p>
           Time difference: 
           <strong :class="{ error: Math.abs(insights.time_diff_pct) > 20 }">
@@ -70,7 +85,10 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-state">
+    <div
+      v-else-if="error"
+      class="error-state"
+    >
       <p>{{ error }}</p>
     </div>
   </div>

@@ -57,15 +57,27 @@ function cancel() {
 </script>
 
 <template>
-  <button class="btn tiny danger" :disabled="disabled" @click="open = true">
+  <button
+    class="btn tiny danger"
+    :disabled="disabled"
+    @click="open = true"
+  >
     Reject
   </button>
 
   <Teleport to="body">
-    <div v-if="open" class="modal" @click.self="cancel">
+    <div
+      v-if="open"
+      class="modal"
+      @click.self="cancel"
+    >
       <div class="card">
-        <div class="title">Reject Variant</div>
-        <div class="subtle mono">{{ advisoryId }}</div>
+        <div class="title">
+          Reject Variant
+        </div>
+        <div class="subtle mono">
+          {{ advisoryId }}
+        </div>
 
         <label class="ctl">
           <span>Reason</span>
@@ -84,7 +96,7 @@ function cancel() {
             v-model="reasonDetail"
             placeholder="Short detail for the rejection…"
             maxlength="500"
-          />
+          >
         </label>
 
         <label class="ctl">
@@ -96,13 +108,26 @@ function cancel() {
           />
         </label>
 
-        <div v-if="error" class="error">{{ error }}</div>
+        <div
+          v-if="error"
+          class="error"
+        >
+          {{ error }}
+        </div>
 
         <div class="row">
-          <button class="btn tiny secondary" :disabled="saving" @click="cancel">
+          <button
+            class="btn tiny secondary"
+            :disabled="saving"
+            @click="cancel"
+          >
             Cancel
           </button>
-          <button class="btn tiny danger" :disabled="!canSubmit" @click="submit">
+          <button
+            class="btn tiny danger"
+            :disabled="!canSubmit"
+            @click="submit"
+          >
             {{ saving ? "Rejecting…" : "Confirm Reject" }}
           </button>
         </div>

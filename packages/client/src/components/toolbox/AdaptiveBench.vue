@@ -2,7 +2,9 @@
   <div class="adaptive-bench">
     <!-- Header -->
     <div class="mb-3">
-      <h2 class="text-base font-semibold text-gray-900">Adaptive Kernel Benchmark</h2>
+      <h2 class="text-base font-semibold text-gray-900">
+        Adaptive Kernel Benchmark
+      </h2>
       <p class="text-xs text-gray-600 mt-1">
         Compare offset spiral vs trochoid corner strategies for rectangular pockets
       </p>
@@ -19,7 +21,6 @@
           </label>
           <div class="flex gap-2">
             <button
-              @click="mode = 'spiral'"
               :class="[
                 'flex-1 px-3 py-2 text-xs font-medium rounded border transition-colors',
                 mode === 'spiral'
@@ -27,11 +28,11 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="mode = 'spiral'"
             >
               🌀 Spiral
             </button>
             <button
-              @click="mode = 'trochoid'"
               :class="[
                 'flex-1 px-3 py-2 text-xs font-medium rounded border transition-colors',
                 mode === 'trochoid'
@@ -39,6 +40,7 @@
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               ]"
               :disabled="busy"
+              @click="mode = 'trochoid'"
             >
               🔄 Trochoid
             </button>
@@ -61,7 +63,7 @@
               min="10"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -74,7 +76,7 @@
               min="10"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
         </div>
 
@@ -91,7 +93,7 @@
               min="0.1"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div v-if="mode === 'spiral'">
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -104,7 +106,7 @@
               min="0.1"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div v-if="mode === 'trochoid'">
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -117,7 +119,7 @@
               min="0.1"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
         </div>
 
@@ -134,7 +136,7 @@
               min="0"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
           <div v-if="mode === 'trochoid'">
             <label class="block text-xs font-medium text-gray-700 mb-1">
@@ -148,48 +150,62 @@
               max="1"
               class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               :disabled="busy"
-            />
+            >
           </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex gap-2">
           <button
-            @click="runBenchmark"
             :disabled="busy"
             class="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            @click="runBenchmark"
           >
             {{ busy ? 'Running...' : 'Run Benchmark' }}
           </button>
           <button
-            @click="clearResults"
             :disabled="busy"
             class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            @click="clearResults"
           >
             Clear
           </button>
         </div>
 
         <!-- Info Display -->
-        <div v-if="svgResult" class="border border-blue-100 rounded-lg p-3 bg-blue-50">
+        <div
+          v-if="svgResult"
+          class="border border-blue-100 rounded-lg p-3 bg-blue-50"
+        >
           <h3 class="text-xs font-semibold text-blue-900 mb-2">
             ✓ {{ mode === 'spiral' ? 'Spiral' : 'Trochoid' }} Generated
           </h3>
           <div class="text-[11px] text-blue-700">
             <p>Pocket: {{ params.width }}×{{ params.height }} mm</p>
             <p>Tool: Ø{{ params.tool_dia }} mm</p>
-            <p v-if="mode === 'spiral'">Stepover: {{ params.stepover }} mm</p>
-            <p v-if="mode === 'trochoid'">Pitch: {{ params.loop_pitch }} mm</p>
+            <p v-if="mode === 'spiral'">
+              Stepover: {{ params.stepover }} mm
+            </p>
+            <p v-if="mode === 'trochoid'">
+              Pitch: {{ params.loop_pitch }} mm
+            </p>
           </div>
         </div>
 
         <!-- Error Display -->
-        <div v-if="errorMessage" class="border border-red-200 rounded-lg p-3 bg-red-50">
+        <div
+          v-if="errorMessage"
+          class="border border-red-200 rounded-lg p-3 bg-red-50"
+        >
           <div class="flex items-start gap-2">
             <span class="text-red-600 text-xs">⚠️</span>
             <div class="flex-1">
-              <p class="text-xs font-medium text-red-900">Error</p>
-              <p class="text-[11px] text-red-700 mt-1">{{ errorMessage }}</p>
+              <p class="text-xs font-medium text-red-900">
+                Error
+              </p>
+              <p class="text-[11px] text-red-700 mt-1">
+                {{ errorMessage }}
+              </p>
             </div>
           </div>
         </div>
@@ -203,30 +219,54 @@
           </label>
           <button
             v-if="svgResult"
-            @click="downloadSVG"
             class="px-2 py-1 text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline"
+            @click="downloadSVG"
           >
             Download SVG
           </button>
         </div>
         
         <!-- SVG Container -->
-        <div class="border border-gray-300 rounded-lg bg-white overflow-hidden" style="height: 500px;">
-          <div v-if="svgResult" class="w-full h-full p-4 overflow-auto" v-html="svgResult" />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+        <div
+          class="border border-gray-300 rounded-lg bg-white overflow-hidden"
+          style="height: 500px;"
+        >
+          <div
+            v-if="svgResult"
+            class="w-full h-full p-4 overflow-auto"
+            v-html="svgResult"
+          />
+          <div
+            v-else
+            class="w-full h-full flex items-center justify-center text-gray-400 text-xs"
+          >
             <div class="text-center">
-              <svg class="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg
+                class="w-16 h-16 mx-auto mb-2 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
               <p>No preview available</p>
-              <p class="text-[10px] mt-1">Configure parameters and run benchmark</p>
+              <p class="text-[10px] mt-1">
+                Configure parameters and run benchmark
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Mode Comparison Hint -->
         <div class="mt-2 text-[10px] text-gray-500 border-t border-gray-200 pt-2">
-          <p class="font-medium text-gray-700 mb-1">💡 Kernel Tuning Tip:</p>
+          <p class="font-medium text-gray-700 mb-1">
+            💡 Kernel Tuning Tip:
+          </p>
           <p>
             {{ mode === 'spiral' 
               ? 'Spiral mode: Best for open pockets with gradual depth changes. Adjust stepover for balance between speed and surface finish.'

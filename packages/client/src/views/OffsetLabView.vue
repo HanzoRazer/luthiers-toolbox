@@ -2,8 +2,12 @@
   <div class="p-4 space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-sm font-semibold">Offset Lab</h2>
-        <p class="text-[11px] text-gray-500">Preview pyclipper inward offsets → SVG</p>
+        <h2 class="text-sm font-semibold">
+          Offset Lab
+        </h2>
+        <p class="text-[11px] text-gray-500">
+          Preview pyclipper inward offsets → SVG
+        </p>
       </div>
       <span class="text-[10px] text-gray-400">/lab/offset</span>
     </div>
@@ -13,33 +17,65 @@
       <div class="space-y-3">
         <div class="border rounded-lg p-3 bg-white space-y-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">Input Polygon</h3>
-            <button class="px-2 py-1 rounded border text-[11px]" @click="loadRect(40,30)">Load 40×30 rectangle</button>
+            <h3 class="text-xs font-semibold text-gray-700">
+              Input Polygon
+            </h3>
+            <button
+              class="px-2 py-1 rounded border text-[11px]"
+              @click="loadRect(40,30)"
+            >
+              Load 40×30 rectangle
+            </button>
           </div>
-          <textarea v-model="polyJson" class="w-full h-40 border rounded px-2 py-1 text-[11px] font-mono" spellcheck="false"/>
-          <p class="text-[10px] text-gray-500">Format: [[x,y], [x,y], ...] (closed optional)</p>
+          <textarea
+            v-model="polyJson"
+            class="w-full h-40 border rounded px-2 py-1 text-[11px] font-mono"
+            spellcheck="false"
+          />
+          <p class="text-[10px] text-gray-500">
+            Format: [[x,y], [x,y], ...] (closed optional)
+          </p>
         </div>
 
         <div class="border rounded-lg p-3 bg-white space-y-2">
           <div class="grid grid-cols-2 gap-2 text-[11px]">
             <label class="flex flex-col gap-1">
               <span>Units</span>
-              <select v-model="units" class="border rounded px-2 py-1">
+              <select
+                v-model="units"
+                class="border rounded px-2 py-1"
+              >
                 <option value="mm">mm</option>
                 <option value="inch">inch</option>
               </select>
             </label>
             <label class="flex flex-col gap-1">
               <span>Tool ⌀</span>
-              <input type="number" v-model.number="toolDia" step="0.1" min="0.1" class="border rounded px-2 py-1"/>
+              <input
+                v-model.number="toolDia"
+                type="number"
+                step="0.1"
+                min="0.1"
+                class="border rounded px-2 py-1"
+              >
             </label>
             <label class="flex flex-col gap-1">
               <span>Stepover (0–1)</span>
-              <input type="number" v-model.number="stepover" step="0.05" min="0.05" max="0.95" class="border rounded px-2 py-1"/>
+              <input
+                v-model.number="stepover"
+                type="number"
+                step="0.05"
+                min="0.05"
+                max="0.95"
+                class="border rounded px-2 py-1"
+              >
             </label>
             <label class="flex flex-col gap-1">
               <span>Link mode</span>
-              <select v-model="linkMode" class="border rounded px-2 py-1">
+              <select
+                v-model="linkMode"
+                class="border rounded px-2 py-1"
+              >
                 <option value="arc">Arc</option>
                 <option value="linear">Linear</option>
               </select>
@@ -53,7 +89,7 @@
                 v-model="presetName"
                 placeholder="e.g. OM_Hog_Offset"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
             <label class="flex flex-col gap-1">
               <span>Machine ID</span>
@@ -61,7 +97,7 @@
                 v-model="machineId"
                 placeholder="e.g. haas_vf2"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
             <label class="flex flex-col gap-1">
               <span>Post ID</span>
@@ -69,56 +105,117 @@
                 v-model="postId"
                 placeholder="e.g. haas_ngc"
                 class="border rounded px-2 py-1"
-              />
+              >
             </label>
           </div>
 
           <div class="flex gap-2">
-            <button class="px-3 py-1.5 rounded bg-gray-900 text-white text-[11px]" @click="preview">Preview offsets</button>
-            <button class="px-3 py-1.5 rounded border text-[11px]" @click="getGcode">Get G-code</button>
-            <button class="px-3 py-1.5 rounded border text-[11px]" :disabled="!passes?.length" @click="exportSvg">Export SVG</button>
-            <button class="px-3 py-1.5 rounded border text-[11px]" :disabled="!gcode" @click="downloadGcode">Download G-code</button>
+            <button
+              class="px-3 py-1.5 rounded bg-gray-900 text-white text-[11px]"
+              @click="preview"
+            >
+              Preview offsets
+            </button>
+            <button
+              class="px-3 py-1.5 rounded border text-[11px]"
+              @click="getGcode"
+            >
+              Get G-code
+            </button>
+            <button
+              class="px-3 py-1.5 rounded border text-[11px]"
+              :disabled="!passes?.length"
+              @click="exportSvg"
+            >
+              Export SVG
+            </button>
+            <button
+              class="px-3 py-1.5 rounded border text-[11px]"
+              :disabled="!gcode"
+              @click="downloadGcode"
+            >
+              Download G-code
+            </button>
           </div>
 
-          <p v-if="err" class="text-[11px] text-red-600">{{ err }}</p>
+          <p
+            v-if="err"
+            class="text-[11px] text-red-600"
+          >
+            {{ err }}
+          </p>
         </div>
 
         <!-- Pass list -->
-        <div v-if="passStats?.length" class="border rounded-lg p-3 bg-white space-y-2">
+        <div
+          v-if="passStats?.length"
+          class="border rounded-lg p-3 bg-white space-y-2"
+        >
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">Passes</h3>
+            <h3 class="text-xs font-semibold text-gray-700">
+              Passes
+            </h3>
             <span class="text-[10px] text-gray-500">{{ passStats.length }} total</span>
           </div>
           <div class="max-h-40 overflow-auto text-[11px]">
             <table class="w-full">
               <thead>
                 <tr class="text-left text-gray-500">
-                  <th class="px-1 py-1">#</th>
-                  <th class="px-1 py-1">Pts</th>
-                  <th class="px-1 py-1">Len ({{ units }})</th>
+                  <th class="px-1 py-1">
+                    #
+                  </th>
+                  <th class="px-1 py-1">
+                    Pts
+                  </th>
+                  <th class="px-1 py-1">
+                    Len ({{ units }})
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(p,i) in passStats" :key="i"
-                    class="hover:bg-gray-50 cursor-pointer"
-                    @mouseenter="hoverIdx = i"
-                    @mouseleave="hoverIdx = null"
-                    @click="selectedIdx = i">
-                  <td class="px-1 py-1">{{ p.idx }}</td>
-                  <td class="px-1 py-1">{{ p.pts }}</td>
-                  <td class="px-1 py-1">{{ p.length.toFixed(2) }}</td>
+                <tr
+                  v-for="(p,i) in passStats"
+                  :key="i"
+                  class="hover:bg-gray-50 cursor-pointer"
+                  @mouseenter="hoverIdx = i"
+                  @mouseleave="hoverIdx = null"
+                  @click="selectedIdx = i"
+                >
+                  <td class="px-1 py-1">
+                    {{ p.idx }}
+                  </td>
+                  <td class="px-1 py-1">
+                    {{ p.pts }}
+                  </td>
+                  <td class="px-1 py-1">
+                    {{ p.length.toFixed(2) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <div v-if="gcode" class="border rounded-lg p-3 bg-white space-y-2">
+        <div
+          v-if="gcode"
+          class="border rounded-lg p-3 bg-white space-y-2"
+        >
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">G-code</h3>
-            <button class="px-2 py-1 rounded border text-[11px]" @click="gcode=''">Clear</button>
+            <h3 class="text-xs font-semibold text-gray-700">
+              G-code
+            </h3>
+            <button
+              class="px-2 py-1 rounded border text-[11px]"
+              @click="gcode=''"
+            >
+              Clear
+            </button>
           </div>
-          <textarea readonly :value="gcode" class="w-full h-48 border rounded px-2 py-1 text-[11px] font-mono"></textarea>
+          <textarea
+            readonly
+            :value="gcode"
+            class="w-full h-48 border rounded px-2 py-1 text-[11px] font-mono"
+          />
         </div>
       </div>
 
