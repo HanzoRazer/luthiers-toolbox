@@ -1,30 +1,8 @@
 {
   "imports": [
-    "external_boundary|app/art_studio/prompts/__init__.py|32|modes|Analyzer internals (tap_tone.*, modes.*) are forbidden in ToolBox.",
-    "saw_lab_encapsulation|app/saw_lab/batch_router.py|1434|app.rmos.run_artifacts.store|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/batch_router.py|2197|app.services.saw_lab_gcode_emit_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/batch_router.py|2226|app.services.saw_lab_gcode_emit_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/batch_router.py|39|app.services.saw_lab_metrics_trends_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|16|app.services.saw_lab_compare_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|17|app.services.saw_lab_batch_lookup_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|18|app.services.saw_lab_decision_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|19|app.services.saw_lab_decision_lookup_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|20|app.services.saw_lab_toolpaths_from_decision_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/compare_router.py|21|app.services.saw_lab_toolpaths_lookup_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra.",
-    "saw_lab_encapsulation|app/saw_lab/saw_lab_toolpaths_from_decision_service.py|159|app.saw_lab_run_service|Saw Lab imports must stay within saw_lab, runs_v2, CamIntent envelope, and shared infra."
+    "external_boundary|app/art_studio/prompts/__init__.py|32|modes|Analyzer internals (tap_tone.*, modes.*) are forbidden in ToolBox."
   ],
   "symbols": [
-    "artifact_authority|app/cam/routers/drilling/pattern_router.py|154|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/drilling/pattern_router.py|219|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/drilling/pattern_router.py|244|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/drilling/pattern_router.py|47|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|191|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|242|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|270|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|327|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|364|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|392|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
-    "artifact_authority|app/cam/routers/rosette/cam_router.py|52|RunArtifact|Importing RunArtifact is restricted (use dicts or TYPE_CHECKING only).",
     "artifact_authority|app/cam/routers/toolpath/biarc_router.py|123|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
     "artifact_authority|app/cam/routers/toolpath/biarc_router.py|170|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
     "artifact_authority|app/cam/routers/toolpath/biarc_router.py|208|RunArtifact()|Direct RunArtifact() construction is restricted to runs_v2 store/schemas.",
