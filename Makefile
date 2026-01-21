@@ -106,8 +106,8 @@ api-test:
 	@echo "🧪 Running API tests (pytest)"
 	cd services/api && python -m pytest -q tests/ app/tests/
 
-# Alias: api-verify depends on api-test
-api-verify: api-test
+# Alias: api-verify runs all gates (fences + scope + tests)
+api-verify: check-art-studio-scope check-boundaries api-test
 	@echo "✅ api-verify complete"
 
 .PHONY: start-api

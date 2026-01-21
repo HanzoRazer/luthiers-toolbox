@@ -1,0 +1,79 @@
+name: Governance Baseline Diff Report
+
+on:
+  pull_request:
+    paths:
+      - "services/api/app/ci/fence_baseline.json"
+      - "services/api/app/ci/fence_patterns_baseline.json"
+
+jobs:
+  baseline-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for base file reads)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Extract base and head baseline files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/baseline_diff
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          # Imports baseline
+          if git cat-file -e "${BASE_SHA}:services/api/app/ci/fence_baseline.json" 2>/dev/null; then
+            git show "${BASE_SHA}:services/api/app/ci/fence_baseline.json" > reports/baseline_diff/base_fence_baseline.json
+          else
+            echo '{"version":1,"imports":[],"symbols":[]}' > reports/baseline_diff/base_fence_baseline.json
+          fi
+          git show "${HEAD_SHA}:services/api/app/ci/fence_baseline.json" > reports/baseline_diff/head_fence_baseline.json
+
+          # Patterns baseline
+          if git cat-file -e "${BASE_SHA}:services/api/app/ci/fence_patterns_baseline.json" 2>/dev/null; then
+            git show "${BASE_SHA}:services/api/app/ci/fence_patterns_baseline.json" > reports/baseline_diff/base_fence_patterns_baseline.json
+          else
+            echo '{"version":1,"patterns":[]}' > reports/baseline_diff/base_fence_patterns_baseline.json
+          fi
+          git show "${HEAD_SHA}:services/api/app/ci/fence_patterns_baseline.json" > reports/baseline_diff/head_fence_patterns_baseline.json
+
+      - name: Render Markdown report
+        run: |
+          python scripts/governance/render_fence_baseline_delta.py \
+            --base-imports reports/baseline_diff/base_fence_baseline.json \
+            --head-imports reports/baseline_diff/head_fence_baseline.json \
+            --base-patterns reports/baseline_diff/base_fence_patterns_baseline.json \
+            --head-patterns reports/baseline_diff/head_fence_patterns_baseline.json \
+            --out reports/baseline_diff/fence_baseline_diff_report.md \
+            --limit 80
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fence_baseline_diff_report
+          path: reports/baseline_diff/fence_baseline_diff_report.md
+
+      - name: Comment report on PR (governance label only)
+        if: contains(toJson(github.event.pull_request.labels), '"governance"')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const bodyRaw = fs.readFileSync('reports/baseline_diff/fence_baseline_diff_report.md', 'utf8');
+            // Keep comment under GitHub limits; truncate if needed.
+            const max = 60000;
+            const body = bodyRaw.length > max ? bodyRaw.slice(0, max) + "\n\n… _(truncated)_\n" : bodyRaw;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
