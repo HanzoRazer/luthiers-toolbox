@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -145,7 +145,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         if not items:
             raise ValueError("items must be non-empty")
 
-        scored: list[Tuple[float, int, Any]] = []
+        scored: list[tuple[float, int, Any]] = []
         for idx, it in enumerate(items):
             ts = _created_ts(it)
             if ts is None:
