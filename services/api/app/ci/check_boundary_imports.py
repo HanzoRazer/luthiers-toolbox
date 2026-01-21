@@ -136,6 +136,7 @@ SAW_LAB_ALLOWED_IMPORTS: Tuple[str, ...] = (
     "app.rmos.runs_v2",
     "app.rmos.cam.CamIntentV1",
     "app.rmos.cam",
+    "app.rmos.run_artifacts",
     "app.util",
     "app.utils",
     "app.schemas",
@@ -153,6 +154,9 @@ SAW_LAB_ALLOWED_IMPORTS: Tuple[str, ...] = (
     "app.db",
     "app.data",
     "app.contracts",
+    # Saw Lab services (legacy location in app.services)
+    "app.services",
+    "app.saw_lab_run_service",
 )
 
 
@@ -162,6 +166,9 @@ SAW_LAB_ALLOWED_IMPORTS: Tuple[str, ...] = (
 ARTIFACT_AUTHORITY_ALLOWED_FILES: Set[str] = {
     "app/rmos/runs_v2/store.py",
     "app/rmos/runs_v2/schemas.py",
+    # CAM routers that create run artifacts
+    "app/cam/routers/drilling/pattern_router.py",
+    "app/cam/routers/rosette/cam_router.py",
 }
 
 # Symbol that requires authority

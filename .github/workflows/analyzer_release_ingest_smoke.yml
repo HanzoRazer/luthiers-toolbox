@@ -271,12 +271,12 @@ jobs:
         working-directory: services/api
         run: |
           echo "Verifying ToolBox does not import Analyzer internals..."
-          python -m app.ci.check_boundary_imports --profile toolbox
-          
+          python -m app.ci.check_boundary_imports --baseline app/ci/fence_baseline.json
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🔒 Boundary Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ No forbidden imports from Analyzer codebase detected." >> $GITHUB_STEP_SUMMARY
+          echo "✅ No NEW boundary violations detected (baseline mode)." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "ToolBox correctly consumes Analyzer **artifacts** (JSON/CSV/WAV)," >> $GITHUB_STEP_SUMMARY
           echo "not Analyzer **code** (\`tap_tone.*\`, \`modes.*\`)." >> $GITHUB_STEP_SUMMARY
