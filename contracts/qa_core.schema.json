@@ -4,7 +4,12 @@
   "title": "QA Core Assessment",
   "description": "Couples mesh healing, thickness zones, grain confidence, brace graph, and retopo metrics into a quality assessment.",
   "type": "object",
-  "required": ["version", "timestamp_utc", "model_id", "mesh_healing", "overall_status"],
+  "required": [
+    "version",
+    "timestamp_utc",
+    "model_id",
+    "overall_status"
+  ],
   "properties": {
     "version": {
       "type": "string",
@@ -23,11 +28,15 @@
     },
     "mesh_healing": {
       "type": "object",
-      "required": ["status", "operations"],
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["clean", "healed", "unrecoverable"]
+          "enum": [
+            "clean",
+            "healed",
+            "unrecoverable",
+            "issues_detected"
+          ]
         },
         "operations": {
           "type": "array",
@@ -35,44 +44,99 @@
             "type": "object",
             "properties": {
               "op": {
-                "type": "string",
-                "enum": ["remove_duplicates", "fill_holes", "fix_normals", "fix_non_manifold", "voxel_remesh"]
+                "type": "string"
               },
-              "count": { "type": "integer" },
-              "success": { "type": "boolean" }
+              "count": {
+                "type": "integer"
+              },
+              "success": {
+                "type": "boolean"
+              }
             }
           }
         },
-        "input_faces": { "type": "integer" },
-        "output_faces": { "type": "integer" },
-        "holes_filled": { "type": "integer" },
-        "non_manifold_fixed": { "type": "integer" }
+        "holes": {
+          "type": "integer"
+        },
+        "nonmanifold_edges": {
+          "type": "integer"
+        },
+        "vertices": {
+          "type": "integer"
+        },
+        "faces": {
+          "type": "integer"
+        },
+        "self_intersections": {
+          "type": "integer"
+        },
+        "edge_length_mean": {
+          "type": "number"
+        },
+        "edge_length_std": {
+          "type": "number"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "input_faces": {
+          "type": "integer"
+        },
+        "output_faces": {
+          "type": "integer"
+        },
+        "holes_filled": {
+          "type": "integer"
+        },
+        "non_manifold_fixed": {
+          "type": "integer"
+        }
       }
     },
     "thickness_zones": {
       "type": "object",
       "properties": {
-        "zone_count": { "type": "integer" },
+        "zone_count": {
+          "type": "integer"
+        },
         "zones": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "zone_id": { "type": "string" },
-              "region": { "type": "string" },
-              "target_mm": { "type": "number" },
-              "measured_min_mm": { "type": "number" },
-              "measured_max_mm": { "type": "number" },
+              "zone_id": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "target_mm": {
+                "type": "number"
+              },
+              "measured_min_mm": {
+                "type": "number"
+              },
+              "measured_max_mm": {
+                "type": "number"
+              },
               "compliance": {
                 "type": "string",
-                "enum": ["pass", "warn", "fail"]
+                "enum": [
+                  "pass",
+                  "warn",
+                  "fail"
+                ]
               }
             }
           }
         },
         "overall_compliance": {
           "type": "string",
-          "enum": ["pass", "warn", "fail"]
+          "enum": [
+            "pass",
+            "warn",
+            "fail"
+          ]
         }
       }
     },
@@ -98,37 +162,61 @@
           "items": {
             "type": "object",
             "properties": {
-              "zone_id": { "type": "string" },
-              "confidence": { "type": "number" },
-              "reason": { "type": "string" }
+              "zone_id": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "string"
+              }
             }
           }
         },
-        "runout_detected": { "type": "boolean" },
+        "runout_detected": {
+          "type": "boolean"
+        },
         "checking_zones": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "brace_graph": {
       "type": "object",
       "properties": {
-        "node_count": { "type": "integer" },
-        "edge_count": { "type": "integer" },
-        "topology_valid": { "type": "boolean" },
+        "node_count": {
+          "type": "integer"
+        },
+        "edge_count": {
+          "type": "integer"
+        },
+        "topology_valid": {
+          "type": "boolean"
+        },
         "scallop_zones": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "intersection_issues": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "brace_a": { "type": "string" },
-              "brace_b": { "type": "string" },
-              "issue": { "type": "string" }
+              "brace_a": {
+                "type": "string"
+              },
+              "brace_b": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              }
             }
           }
         }
@@ -137,17 +225,29 @@
     "retopo_metrics": {
       "type": "object",
       "properties": {
-        "tool_used": { "type": "string" },
-        "target_faces": { "type": "integer" },
-        "actual_faces": { "type": "integer" },
+        "tool_used": {
+          "type": "string"
+        },
+        "target_faces": {
+          "type": "integer"
+        },
+        "actual_faces": {
+          "type": "integer"
+        },
         "quad_pct": {
           "type": "number",
           "minimum": 0,
           "maximum": 100
         },
-        "triangle_count": { "type": "integer" },
-        "ngon_count": { "type": "integer" },
-        "pole_count": { "type": "integer" },
+        "triangle_count": {
+          "type": "integer"
+        },
+        "ngon_count": {
+          "type": "integer"
+        },
+        "pole_count": {
+          "type": "integer"
+        },
         "edge_flow_score": {
           "type": "number",
           "minimum": 0,
@@ -157,7 +257,12 @@
     },
     "overall_status": {
       "type": "string",
-      "enum": ["pass", "warn", "fail", "review_required"]
+      "enum": [
+        "pass",
+        "warn",
+        "fail",
+        "review_required"
+      ]
     },
     "issues": {
       "type": "array",
@@ -166,17 +271,81 @@
         "properties": {
           "severity": {
             "type": "string",
-            "enum": ["info", "warn", "error", "critical"]
+            "enum": [
+              "info",
+              "warn",
+              "error",
+              "critical"
+            ]
           },
-          "category": { "type": "string" },
-          "message": { "type": "string" },
-          "zone_id": { "type": "string" }
+          "category": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "zone_id": {
+            "type": "string"
+          }
         }
       }
     },
     "notes": {
       "type": "string"
+    },
+    "grain_analysis": {
+      "type": "object",
+      "properties": {
+        "coverage_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "mean_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "runout_zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checking_zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "tool_versions": {
+          "type": "object"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "source_mesh": {
+          "type": "string"
+        },
+        "healed_mesh": {
+          "type": "string"
+        },
+        "retopo_mesh": {
+          "type": "string"
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

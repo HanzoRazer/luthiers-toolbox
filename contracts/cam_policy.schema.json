@@ -4,7 +4,12 @@
   "title": "CAM Policy Constraints",
   "description": "Per-region manufacturing constraints derived from grain/brace/thickness coupling.",
   "type": "object",
-  "required": ["version", "timestamp_utc", "model_id", "regions"],
+  "required": [
+    "version",
+    "timestamp_utc",
+    "model_id",
+    "regions"
+  ],
   "properties": {
     "version": {
       "type": "string",
@@ -25,20 +30,41 @@
     "global_defaults": {
       "type": "object",
       "properties": {
-        "stepdown_max_mm": { "type": "number", "minimum": 0 },
-        "stepover_max_pct": { "type": "number", "minimum": 0, "maximum": 100 },
-        "feed_rate_max_mm_min": { "type": "number", "minimum": 0 },
+        "stepdown_max_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stepover_max_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "feed_rate_max_mm_min": {
+          "type": "number",
+          "minimum": 0
+        },
         "spindle_rpm_range": {
           "type": "object",
           "properties": {
-            "min": { "type": "integer" },
-            "max": { "type": "integer" }
+            "min": {
+              "type": "integer"
+            },
+            "max": {
+              "type": "integer"
+            }
           }
         },
-        "min_tool_diameter_mm": { "type": "number", "minimum": 0 },
+        "min_tool_diameter_mm": {
+          "type": "number",
+          "minimum": 0
+        },
         "default_cut_direction": {
           "type": "string",
-          "enum": ["climb", "conventional", "adaptive"]
+          "enum": [
+            "climb",
+            "conventional",
+            "adaptive"
+          ]
         }
       }
     },
@@ -46,9 +72,14 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["region_id", "type"],
+        "required": [
+          "region_id",
+          "type"
+        ],
         "properties": {
-          "region_id": { "type": "string" },
+          "region_id": {
+            "type": "string"
+          },
           "type": {
             "type": "string",
             "enum": [
@@ -67,32 +98,61 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["polygon", "circle", "bbox", "mesh_faces"]
+                "enum": [
+                  "polygon",
+                  "circle",
+                  "bbox",
+                  "mesh_faces"
+                ]
               },
               "coordinates": {
                 "type": "array",
-                "items": { "type": "number" }
+                "items": {
+                  "type": "number"
+                }
               },
               "face_ids": {
                 "type": "array",
-                "items": { "type": "integer" }
+                "items": {
+                  "type": "integer"
+                }
               }
             }
           },
           "constraints": {
             "type": "object",
             "properties": {
-              "stepdown_max_mm": { "type": "number" },
-              "stepover_max_pct": { "type": "number" },
-              "feed_rate_max_mm_min": { "type": "number" },
-              "feed_rate_min_mm_min": { "type": "number" },
-              "spindle_rpm_max": { "type": "integer" },
-              "spindle_rpm_min": { "type": "integer" },
-              "min_tool_diameter_mm": { "type": "number" },
-              "max_tool_diameter_mm": { "type": "number" },
+              "stepdown_max_mm": {
+                "type": "number"
+              },
+              "stepover_max_pct": {
+                "type": "number"
+              },
+              "feed_rate_max_mm_min": {
+                "type": "number"
+              },
+              "feed_rate_min_mm_min": {
+                "type": "number"
+              },
+              "spindle_rpm_max": {
+                "type": "integer"
+              },
+              "spindle_rpm_min": {
+                "type": "integer"
+              },
+              "min_tool_diameter_mm": {
+                "type": "number"
+              },
+              "max_tool_diameter_mm": {
+                "type": "number"
+              },
               "cut_direction": {
                 "type": "string",
-                "enum": ["climb", "conventional", "adaptive"]
+                "enum": [
+                  "climb",
+                  "conventional",
+                  "adaptive"
+                ]
               },
               "dwell_ms": {
                 "type": "integer",
@@ -100,7 +160,12 @@
               },
               "coolant": {
                 "type": "string",
-                "enum": ["none", "mist", "flood", "air"]
+                "enum": [
+                  "none",
+                  "mist",
+                  "flood",
+                  "air"
+                ]
               }
             }
           },
@@ -110,13 +175,39 @@
           },
           "source_field": {
             "type": "string",
-            "enum": ["grain_field", "brace_graph", "thickness_map", "manual", "inherited"]
+            "enum": [
+              "grain_field",
+              "brace_graph",
+              "thickness_map",
+              "manual",
+              "inherited"
+            ]
           },
           "priority": {
             "type": "integer",
             "minimum": 1,
             "maximum": 10,
             "description": "Higher priority overrides lower when regions overlap"
+          },
+          "stepdown_max_mm": {
+            "type": "number"
+          },
+          "stepover_max_pct": {
+            "type": "number"
+          },
+          "feed_rate_max_mm_min": {
+            "type": "number"
+          },
+          "min_tool_diameter_mm": {
+            "type": "number"
+          },
+          "cut_direction": {
+            "type": "string",
+            "enum": [
+              "climb",
+              "conventional",
+              "adaptive"
+            ]
           }
         }
       }
@@ -126,18 +217,32 @@
       "description": "Absolute no-machining regions",
       "items": {
         "type": "object",
-        "required": ["zone_id", "reason"],
+        "required": [
+          "zone_id",
+          "reason"
+        ],
         "properties": {
-          "zone_id": { "type": "string" },
+          "zone_id": {
+            "type": "string"
+          },
           "geometry": {
             "type": "object",
             "properties": {
-              "type": { "type": "string" },
-              "coordinates": { "type": "array" }
+              "type": {
+                "type": "string"
+              },
+              "coordinates": {
+                "type": "array"
+              }
             }
           },
-          "reason": { "type": "string" },
-          "override_allowed": { "type": "boolean", "default": false }
+          "reason": {
+            "type": "string"
+          },
+          "override_allowed": {
+            "type": "boolean",
+            "default": false
+          }
         }
       }
     },
@@ -146,11 +251,19 @@
       "items": {
         "type": "object",
         "properties": {
-          "region_id": { "type": "string" },
-          "note": { "type": "string" },
+          "region_id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
           "severity": {
             "type": "string",
-            "enum": ["info", "caution", "warning"]
+            "enum": [
+              "info",
+              "caution",
+              "warning"
+            ]
           }
         }
       }
@@ -158,15 +271,54 @@
     "metadata": {
       "type": "object",
       "properties": {
-        "generated_by": { "type": "string" },
+        "generated_by": {
+          "type": "string"
+        },
         "coupling_sources": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "machine_profile": { "type": "string" },
-        "material": { "type": "string" }
+        "machine_profile": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "coupling_flags": {
+      "type": "object",
+      "properties": {
+        "grain_coupled": {
+          "type": "boolean"
+        },
+        "brace_coupled": {
+          "type": "boolean"
+        },
+        "thickness_coupled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string"
+        },
+        "runner": {
+          "type": "string"
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
