@@ -1,0 +1,58 @@
+name: mesh-pipeline-ci
+
+on:
+  pull_request:
+    paths:
+      - "services/api/app/fields/**"
+      - "services/api/app/retopo/**"
+      - "contracts/qa_core.schema.json"
+      - "contracts/cam_policy.schema.json"
+      - "contracts/schema_registry.json"
+      - "examples/retopo/**"
+      - "presets/retopo/**"
+      - "scripts/validate_schemas.py"
+  push:
+    branches: ["main"]
+    paths:
+      - "services/api/app/fields/**"
+      - "services/api/app/retopo/**"
+      - "contracts/qa_core.schema.json"
+      - "contracts/cam_policy.schema.json"
+
+jobs:
+  demo-and-validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema
+          # Install minimal API deps for import resolution
+          pip install pydantic fastapi
+      
+      - name: Run example (QRM preset)
+        run: bash examples/retopo/run.sh qrm
+      
+      - name: Run example (MIQ preset)
+        run: bash examples/retopo/run.sh miq
+      
+      - name: Validate scaffold outputs
+        run: python scripts/validate_schemas.py --out-root examples/retopo
+      
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mesh-pipeline-outputs
+          path: examples/retopo/out_*/
+          retention-days: 7
