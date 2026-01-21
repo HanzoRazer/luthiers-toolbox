@@ -28,7 +28,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # Feasibility engine
 from ..feasibility.engine import compute_feasibility
-from ..feasibility.schemas import FeasibilityInput, RiskLevel
+from ..feasibility.schemas import FeasibilityInput, RiskLevel, MaterialHardness
 
 
 SCENARIOS_FILE = Path(__file__).parent / "scenarios_v1.json"
@@ -69,16 +69,33 @@ def load_scenarios(path: Path = SCENARIOS_FILE) -> List[Dict[str, Any]]:
     return data.get("scenarios", [])
 
 
+def _parse_material_hardness(hardness_str: Optional[str]) -> Optional[MaterialHardness]:
+    """Convert scenario hardness string to MaterialHardness enum."""
+    if hardness_str is None:
+        return None
+    mapping = {
+        "soft": MaterialHardness.SOFT,
+        "medium": MaterialHardness.MEDIUM,
+        "medium-hard": MaterialHardness.HARD,  # Treat medium-hard as hard
+        "hard": MaterialHardness.HARD,
+        "very-hard": MaterialHardness.VERY_HARD,
+        "extreme": MaterialHardness.EXTREME,
+    }
+    return mapping.get(hardness_str.lower(), MaterialHardness.UNKNOWN)
+
+
 def translate_scenario_to_feasibility_input(scenario: Dict[str, Any]) -> FeasibilityInput:
     """
     Translate high-level scenario input to FeasibilityInput for the engine.
 
     This maps scenario concepts (geometry, material, tool, params) to the
     CAM-focused FeasibilityInput schema.
+
+    Schema v2: Now passes material/geometry/tool properties for adversarial detection.
     """
     inp = scenario.get("input", {})
     geometry = inp.get("geometry", {})
-    material = inp.get("material") or {}
+    material = inp.get("material") or {}  # Handle None material
     tool = inp.get("tool", {})
     params = inp.get("params", {})
 
@@ -124,7 +141,32 @@ def translate_scenario_to_feasibility_input(scenario: Dict[str, Any]) -> Feasibi
         pockets = geometry.get("pockets", [])
         loop_count = len(pockets) if pockets else 1
 
-    # Build FeasibilityInput
+    # === Schema v2: Extract adversarial detection fields ===
+
+    # Material properties
+    material_id = material.get("id") if material else None
+    material_hardness = _parse_material_hardness(material.get("hardness")) if material else None
+    material_thickness_mm = material.get("thickness_mm") if material else None
+    material_resinous = material.get("resinous") if material else None
+
+    # Handle missing material (adversarial-25)
+    if not material or material_id is None:
+        # Explicitly mark as unknown for F024 to catch
+        material_hardness = MaterialHardness.UNKNOWN
+
+    # Geometry dimensions
+    geometry_width_mm = width if width != 50 or geometry.get("width_mm") is not None else None
+    geometry_length_mm = length if length != 50 or geometry.get("length_mm") is not None else None
+    geometry_depth_mm = depth
+
+    # Tool properties
+    tool_flute_length_mm = tool.get("flute_length_mm")
+    tool_stickout_mm = tool.get("stick_out_mm")
+
+    # Process properties
+    coolant_enabled = params.get("coolant")
+
+    # Build FeasibilityInput with v2 fields
     fi = FeasibilityInput(
         pipeline_id="rmos_validation_v1",
         post_id="GRBL",
@@ -154,6 +196,19 @@ def translate_scenario_to_feasibility_input(scenario: Dict[str, Any]) -> Feasibi
             "y_max": length,
         },
         smallest_feature_mm=smallest_feature,
+
+        # Schema v2 fields
+        material_id=material_id,
+        material_hardness=material_hardness,
+        material_thickness_mm=material_thickness_mm,
+        material_resinous=material_resinous,
+        geometry_width_mm=geometry_width_mm,
+        geometry_length_mm=geometry_length_mm,
+        geometry_depth_mm=geometry_depth_mm,
+        wall_thickness_mm=wall_thickness,
+        tool_flute_length_mm=tool_flute_length_mm,
+        tool_stickout_mm=tool_stickout_mm,
+        coolant_enabled=coolant_enabled,
     )
 
     return fi

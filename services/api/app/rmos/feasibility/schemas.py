@@ -15,10 +15,22 @@ class RiskLevel(str, Enum):
     ERROR = "ERROR"
 
 
+class MaterialHardness(str, Enum):
+    """Material hardness classification for DOC/feed validation."""
+    SOFT = "soft"
+    MEDIUM = "medium"
+    HARD = "hard"
+    VERY_HARD = "very-hard"
+    EXTREME = "extreme"
+    UNKNOWN = "unknown"
+
+
 class FeasibilityInput(BaseModel):
     """
     Deterministic, minimal input for feasibility. Must be stable and hashable.
     Do not include timestamps or non-deterministic fields.
+
+    Schema v2: Extended with material/geometry/tool fields for adversarial detection.
     """
 
     # identity / context
@@ -48,6 +60,27 @@ class FeasibilityInput(BaseModel):
     entity_count: Optional[int] = None
     bbox: Optional[Dict[str, float]] = None  # {x_min,y_min,x_max,y_max}
     smallest_feature_mm: Optional[float] = None  # optional (can be None for MVP)
+
+    # === Schema v2 fields (adversarial detection) ===
+
+    # Material properties
+    material_id: Optional[str] = None  # e.g., "maple", "pine", "ebony"
+    material_hardness: Optional[MaterialHardness] = None  # soft/medium/hard/very-hard/extreme
+    material_thickness_mm: Optional[float] = None  # stock thickness
+    material_resinous: Optional[bool] = None  # true for rosewood, pine sap pockets, etc.
+
+    # Geometry dimensions (explicit, not just bbox)
+    geometry_width_mm: Optional[float] = None  # pocket/slot width
+    geometry_length_mm: Optional[float] = None  # pocket/slot length
+    geometry_depth_mm: Optional[float] = None  # target cutting depth
+    wall_thickness_mm: Optional[float] = None  # thinnest wall in geometry
+
+    # Tool properties
+    tool_flute_length_mm: Optional[float] = None  # cutting length
+    tool_stickout_mm: Optional[float] = None  # total extension from collet
+
+    # Process properties
+    coolant_enabled: Optional[bool] = None  # air blast, mist, flood
 
 
 class FeasibilityResult(BaseModel):
