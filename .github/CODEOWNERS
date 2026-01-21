@@ -1,0 +1,11 @@
+# -------------------------------------------------
+# Governance-owned architecture & boundary baselines
+# -------------------------------------------------
+
+# Fence baselines (imports + patterns)
+services/api/app/ci/fence_baseline.json         @toolbox-governance
+services/api/app/ci/fence_patterns_baseline.json @toolbox-governance
+
+# Architecture / boundary enforcement scripts
+services/api/app/ci/**                          @toolbox-governance
+scripts/architecture/**                         @toolbox-governance
