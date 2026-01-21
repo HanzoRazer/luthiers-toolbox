@@ -54,20 +54,19 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
 
     # Ensure execution exists (avoid completing phantom IDs)
     ex = runs_store.get_run(req.batch_execution_artifact_id)
-    if ex is None:
+    if not isinstance(ex, dict):
         raise HTTPException(status_code=404, detail="execution artifact not found")
 
     # Guardrails:
     # - do not allow completion if already aborted
     # - do not allow double completion
-    # - require at least one job log to exist for this execution
-    def _items(res: Any) -> list:
-        if isinstance(res, dict):
-            v = res.get("items")
-            return v if isinstance(v, list) else []
-        return res if isinstance(res, list) else []
+    # - latest job log must be qualifying (non-ABORTED with work metrics)
 
     def _parent_id(art: Any) -> Optional[str]:
+        # RunArtifact Pydantic model path
+        pid = getattr(art, "parent_id", None)
+        if pid:
+            return str(pid)
         if isinstance(art, dict):
             return str(art.get("parent_id") or art.get("parent_artifact_id") or "") or None
         meta = getattr(art, "meta", None)
@@ -77,6 +76,10 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         return None
 
     def _payload(art: Any) -> Dict[str, Any]:
+        # RunArtifact Pydantic model path
+        p = getattr(art, "payload", None)
+        if isinstance(p, dict):
+            return p
         if isinstance(art, dict):
             p = art.get("payload") or art.get("data") or {}
             return p if isinstance(p, dict) else {}
@@ -86,44 +89,22 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         """
         Best-effort extraction of a creation timestamp.
 
-        Supports:
-        - RunArtifact Pydantic models with `created_at_utc: datetime`
-        - Dict-based artifacts (tests / serialized forms)
-        - datetime objects
-        - numeric epoch seconds
-        - ISO-8601 strings (with or without 'Z')
-
-        Returns:
-            Unix timestamp in seconds, or None if unavailable.
+        Runtime: RunArtifact Pydantic models expose `created_at_utc: datetime`
+        Tests/fixtures may use dicts with various timestamp fields.
         """
-        # 1) Pydantic RunArtifact (authoritative runtime path)
         created = getattr(art, "created_at_utc", None)
         if isinstance(created, datetime):
             return created.timestamp()
 
-        # 2) Dict-based fallbacks (tests / serialized artifacts)
         if isinstance(art, dict):
-            for key in (
-                "created_at_utc",
-                "created_utc",
-                "created_at",
-                "created",
-                "timestamp",
-                "ts",
-            ):
+            for key in ("created_at_utc", "created_utc", "created_at", "created", "timestamp", "ts"):
                 v = art.get(key)
                 if v is None:
                     continue
-
-                # datetime
                 if isinstance(v, datetime):
                     return v.timestamp()
-
-                # numeric epoch
                 if isinstance(v, (int, float)):
                     return float(v)
-
-                # ISO-8601 string
                 if isinstance(v, str) and v.strip():
                     s = v.strip()
                     if s.endswith("Z"):
@@ -132,7 +113,6 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
                         return datetime.fromisoformat(s).timestamp()
                     except Exception:
                         continue
-
         return None
 
     def _latest_by_ts_then_order(items: list[Any]) -> Any:
@@ -158,39 +138,27 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
             # Max by (second-resolution timestamp, insertion index)
             return max(scored, key=lambda t: (t[0], t[1]))[2]
 
-        # No parseable timestamps → deterministic fallback to last item
+        # No parseable timestamps -> deterministic fallback to last item
         return items[-1]
 
-    # Prefer filtered lists; tolerate older store signatures
-    try:
-        aborts = _items(
-            runs_store.list_runs_filtered(
-                session_id=req.session_id,
-                batch_label=req.batch_label,
-                kind="saw_batch_execution_abort",
-                limit=5000,
-            )
-        )
-        completes = _items(
-            runs_store.list_runs_filtered(
-                session_id=req.session_id,
-                batch_label=req.batch_label,
-                kind="saw_batch_execution_complete",
-                limit=5000,
-            )
-        )
-        job_logs = _items(
-            runs_store.list_runs_filtered(
-                session_id=req.session_id,
-                batch_label=req.batch_label,
-                kind="saw_batch_job_log",
-                limit=5000,
-            )
-        )
-    except TypeError:
-        aborts = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
-        completes = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
-        job_logs = _items(runs_store.list_runs_filtered(session_id=req.session_id, batch_label=req.batch_label))
+    aborts = runs_store.list_runs_filtered(
+        session_id=req.session_id,
+        batch_label=req.batch_label,
+        kind="saw_batch_execution_abort",
+        limit=5000,
+    )
+    completes = runs_store.list_runs_filtered(
+        session_id=req.session_id,
+        batch_label=req.batch_label,
+        kind="saw_batch_execution_complete",
+        limit=5000,
+    )
+    job_logs = runs_store.list_runs_filtered(
+        session_id=req.session_id,
+        batch_label=req.batch_label,
+        kind="saw_batch_job_log",
+        limit=5000,
+    )
 
     for a in aborts:
         if _parent_id(a) == str(req.batch_execution_artifact_id):
@@ -201,10 +169,6 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
             raise HTTPException(status_code=409, detail="execution already completed")
 
     # Prerequisite (tight): the LATEST job log for this execution must be QUALIFYING.
-    # Qualifying means:
-    #   - parented to this execution
-    #   - payload.status != "ABORTED"
-    #   - payload.metrics indicates work (yield or time > 0)
     def _metrics_indicate_work(m: Any) -> bool:
         if not isinstance(m, dict):
             return False
@@ -225,13 +189,9 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
 
         return (parts_ok + parts_scrap) > 0 or cut_time_s > 0.0 or total_time_s > 0.0
 
-    # Select job logs that belong to THIS execution
     exec_logs = [jl for jl in job_logs if _parent_id(jl) == str(req.batch_execution_artifact_id)]
     if not exec_logs:
-        raise HTTPException(
-            status_code=409,
-            detail="execution has no job logs; cannot complete",
-        )
+        raise HTTPException(status_code=409, detail="execution has no job logs; cannot complete")
 
     # Determine the latest log deterministically.
     # Uses second-resolution timestamps with insertion order as tie-breaker.
@@ -241,18 +201,11 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     p = _payload(latest_log)
     status = p.get("status")
     if isinstance(status, str) and status.upper() == "ABORTED":
-        raise HTTPException(
-            status_code=409,
-            detail="latest job log indicates ABORTED; cannot complete",
-        )
+        raise HTTPException(status_code=409, detail="latest job log indicates ABORTED; cannot complete")
     metrics = p.get("metrics")
     if not _metrics_indicate_work(metrics):
-        raise HTTPException(
-            status_code=409,
-            detail="latest job log lacks work metrics; cannot complete",
-        )
+        raise HTTPException(status_code=409, detail="latest job log lacks work metrics; cannot complete")
 
-    # Convert checklist pydantic model to dict if provided
     checklist_dict = req.checklist.model_dump() if req.checklist else None
 
     from .execution_complete_service import write_execution_complete_artifact
