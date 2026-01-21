@@ -298,6 +298,127 @@ def rule_yellow_loop_count_high(fi: FeasibilityInput, max_loops: int = 1000) -> 
     return hits
 
 
+# =============================================================================
+# YELLOW rules — Edge Pressure Detection (F030-F039)
+# =============================================================================
+
+def rule_yellow_deep_pocket(fi: FeasibilityInput) -> List[RuleHit]:
+    """F030: Deep pocket warning — depth > 2x tool diameter."""
+    hits: List[RuleHit] = []
+    if fi.geometry_depth_mm is not None and fi.tool_d > 0:
+        depth_ratio = fi.geometry_depth_mm / fi.tool_d
+        if depth_ratio > 2:
+            hits.append(RuleHit(
+                "F030", "YELLOW",
+                f"Deep pocket: depth ({fi.geometry_depth_mm}mm) is {depth_ratio:.1f}x tool diameter; requires care",
+                constraint=f"geometry_depth_mm <= {fi.tool_d * 2}"
+            ))
+    return hits
+
+
+def rule_yellow_hardwood_doc(fi: FeasibilityInput) -> List[RuleHit]:
+    """F031: Moderate DOC in hardwood — not dangerous but warrants attention."""
+    hits: List[RuleHit] = []
+    if fi.material_hardness in (MaterialHardness.HARD, MaterialHardness.VERY_HARD, MaterialHardness.EXTREME):
+        # DOC > tool_d in hardwood is aggressive (F020 catches > 1.5x)
+        if fi.stepdown > fi.tool_d * 0.5 and fi.stepdown <= fi.tool_d * 1.5:
+            hits.append(RuleHit(
+                "F031", "YELLOW",
+                f"DOC ({fi.stepdown}mm) is aggressive for {fi.material_hardness.value} material; consider lighter passes",
+                constraint=f"stepdown <= {fi.tool_d * 0.5:.1f}"
+            ))
+    return hits
+
+
+def rule_yellow_small_tool(fi: FeasibilityInput) -> List[RuleHit]:
+    """F032: Small tool warning — increased breakage risk."""
+    hits: List[RuleHit] = []
+    if fi.tool_d < 2.0:
+        hits.append(RuleHit(
+            "F032", "YELLOW",
+            f"Small tool ({fi.tool_d}mm) — higher breakage risk; use conservative feeds/speeds",
+        ))
+    return hits
+
+
+def rule_red_depth_exceeds_flute(fi: FeasibilityInput) -> List[RuleHit]:
+    """F033: Depth exceeds flute length — tool damage risk (RED)."""
+    hits: List[RuleHit] = []
+    if fi.tool_flute_length_mm is not None and fi.geometry_depth_mm is not None:
+        if fi.geometry_depth_mm > fi.tool_flute_length_mm:
+            hits.append(RuleHit(
+                "F033", "RED",
+                f"Pocket depth ({fi.geometry_depth_mm}mm) exceeds flute length ({fi.tool_flute_length_mm}mm); shank will contact material",
+                constraint=f"geometry_depth_mm <= {fi.tool_flute_length_mm}"
+            ))
+    return hits
+
+
+def rule_yellow_narrow_slot(fi: FeasibilityInput) -> List[RuleHit]:
+    """F034: Narrow slot — high aspect ratio."""
+    hits: List[RuleHit] = []
+    if fi.strategy == "slot" and fi.geometry_width_mm is not None and fi.geometry_depth_mm is not None:
+        aspect_ratio = fi.geometry_depth_mm / fi.geometry_width_mm
+        if aspect_ratio > 2:
+            hits.append(RuleHit(
+                "F034", "YELLOW",
+                f"Narrow slot: depth:width ratio ({aspect_ratio:.1f}:1) is high; chip evacuation may be difficult",
+            ))
+    return hits
+
+
+def rule_yellow_aggressive_stepover(fi: FeasibilityInput) -> List[RuleHit]:
+    """F035: Aggressive stepover — high tool engagement."""
+    hits: List[RuleHit] = []
+    if fi.stepover > 0.7 and fi.strategy != "slot":
+        hits.append(RuleHit(
+            "F035", "YELLOW",
+            f"Stepover ({fi.stepover*100:.0f}%) is aggressive; consider lighter passes for finish quality",
+            constraint="stepover <= 0.7"
+        ))
+    return hits
+
+
+def rule_yellow_thin_remaining_wall(fi: FeasibilityInput) -> List[RuleHit]:
+    """F036: Thin wall warning — fragile but not structural failure risk."""
+    hits: List[RuleHit] = []
+    if fi.wall_thickness_mm is not None:
+        # F028 catches < 1mm as RED; this catches 1-2mm as YELLOW
+        if 1.0 <= fi.wall_thickness_mm < 2.0:
+            hits.append(RuleHit(
+                "F036", "YELLOW",
+                f"Thin wall ({fi.wall_thickness_mm}mm) — handle with care; reduce feeds near edges",
+                constraint="wall_thickness_mm >= 2.0"
+            ))
+    return hits
+
+
+def rule_yellow_combined_edge_pressure(fi: FeasibilityInput) -> List[RuleHit]:
+    """F037: Multiple edge conditions combined — elevated risk."""
+    hits: List[RuleHit] = []
+    edge_factors = 0
+
+    # Count edge pressure factors
+    if fi.material_hardness in (MaterialHardness.HARD, MaterialHardness.VERY_HARD):
+        edge_factors += 1
+    if fi.geometry_depth_mm is not None and fi.tool_d > 0 and fi.geometry_depth_mm > fi.tool_d * 2:
+        edge_factors += 1
+    if fi.stepover > 0.5:
+        edge_factors += 1
+    if fi.stepdown > 2:
+        edge_factors += 1
+    if fi.wall_thickness_mm is not None and fi.wall_thickness_mm < 3:
+        edge_factors += 1
+
+    # 2+ edge factors = YELLOW combined warning
+    if edge_factors >= 2:
+        hits.append(RuleHit(
+            "F037", "YELLOW",
+            f"Multiple edge conditions detected ({edge_factors} factors); elevated risk — proceed carefully",
+        ))
+    return hits
+
+
 def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     # Original RED rules (F001-F007)
@@ -320,9 +441,21 @@ def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits += rule_red_structural_wall_failure(fi)
     hits += rule_red_combined_adversarial(fi)
 
+    # Edge pressure RED rule (F033)
+    hits += rule_red_depth_exceeds_flute(fi)
+
     # YELLOW rules (F010-F013)
     hits += rule_yellow_tool_too_large(fi)
     hits += rule_yellow_feed_z_gt_feed_xy(fi)
     hits += rule_yellow_stepdown_large(fi)
     hits += rule_yellow_loop_count_high(fi)
+
+    # Edge pressure YELLOW rules (F030-F037)
+    hits += rule_yellow_deep_pocket(fi)
+    hits += rule_yellow_hardwood_doc(fi)
+    hits += rule_yellow_small_tool(fi)
+    hits += rule_yellow_narrow_slot(fi)
+    hits += rule_yellow_aggressive_stepover(fi)
+    hits += rule_yellow_thin_remaining_wall(fi)
+    hits += rule_yellow_combined_edge_pressure(fi)
     return hits
