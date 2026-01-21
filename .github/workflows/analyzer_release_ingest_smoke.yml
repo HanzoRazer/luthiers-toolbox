@@ -267,19 +267,20 @@ jobs:
           # Install only what's needed for boundary check
           pip install pydantic
 
-      - name: Run boundary import check
+      - name: Run all boundary fence checks
         working-directory: services/api
         run: |
-          echo "Verifying ToolBox does not import Analyzer internals..."
-          python -m app.ci.check_boundary_imports --baseline app/ci/fence_baseline.json
+          echo "Running all boundary fence checks (imports + patterns)..."
+          python -m app.ci.check_all_fences
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🔒 Boundary Check" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Boundary Fence Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ No NEW boundary violations detected (baseline mode)." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "ToolBox correctly consumes Analyzer **artifacts** (JSON/CSV/WAV)," >> $GITHUB_STEP_SUMMARY
-          echo "not Analyzer **code** (\`tap_tone.*\`, \`modes.*\`)." >> $GITHUB_STEP_SUMMARY
+          echo "**Fences enforced:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Import-based: external_boundary, rmos_cam, ai_sandbox, saw_lab, artifact_authority" >> $GITHUB_STEP_SUMMARY
+          echo "- Pattern-based: operation_lane, frontend_sdk, legacy_deprecation" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Artifact Schema Compatibility Check
