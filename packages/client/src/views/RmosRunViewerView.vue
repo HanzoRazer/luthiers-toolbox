@@ -17,9 +17,16 @@ import { useRoute, useRouter } from "vue-router";
 import { fetchRun, downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
 import { explainRule } from "@/lib/feasibilityRuleRegistry";
 import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
+import RiskBadge from "@/components/ui/RiskBadge.vue";
+import OverrideBanner from "@/components/ui/OverrideBanner.vue";
+import WhyPanel from "@/components/rmos/WhyPanel.vue";
 
 const route = useRoute();
 const router = useRouter();
+
+// UX polish: toggles
+const showWhy = ref(false);
+const showEmpty = ref(false);
 
 const run = ref<RunArtifactDetail | null>(null);
 const loading = ref(false);
@@ -48,6 +55,29 @@ const overrideAttachment = computed(() => {
   const atts = run.value?.attachments || [];
   if (!Array.isArray(atts)) return null;
   return atts.find((a: any) => a?.kind === "override") ?? null;
+});
+
+// UX polish: computed flags for hide-empty
+const hasWarnings = computed(() => (run.value?.feasibility?.warnings?.length ?? 0) > 0);
+const hasAttachments = computed(() => (run.value?.attachments?.length ?? 0) > 0);
+const hasHashes = computed(() => {
+  return !!(run.value?.request_hash || run.value?.toolpaths_hash || run.value?.gcode_hash || 
+            run.value?.geometry_hash || run.value?.config_fingerprint);
+});
+
+// Explanation object for WhyPanel
+const explanation = computed(() => {
+  if (!hasExplainability.value) return null;
+  return {
+    risk_level: riskLevel.value,
+    summary: `${triggeredRuleIds.value.length} feasibility rule(s) triggered`,
+    triggered_rules: triggeredRules.value.map(r => ({
+      rule_id: r.rule_id,
+      level: r.level,
+      summary: r.summary
+    })),
+    override_reason: overrideAttachment.value ? "Override recorded" : undefined
+  };
 });
 
 // Parent run for "Compare with Parent" button
@@ -199,8 +229,12 @@ async function downloadAttachment(att: any) {
           &larr; Back to Runs
         </button>
         <h1>Run Viewer</h1>
+        <RiskBadge v-if="run" :level="riskLevel" size="md" />
       </div>
       <div class="header-actions" v-if="run">
+        <button class="btn btn-why" @click="showWhy = !showWhy">
+          {{ showWhy ? 'Hide Why' : 'Why?' }}
+        </button>
         <button class="btn" @click="handleDownload">Download JSON</button>
         <button class="btn btn-success" @click="downloadOperatorPack" :disabled="loading">
           Operator Pack (.zip)
@@ -240,6 +274,24 @@ async function downloadAttachment(att: any) {
           <span class="badge mode" v-if="run.workflow_mode">{{ run.workflow_mode }}</span>
         </div>
       </section>
+
+      <!-- Override Banner (always visible when override exists) -->
+      <OverrideBanner
+        v-if="overrideAttachment"
+        reason="Override recorded for this run"
+        :override-artifact="overrideAttachment"
+      />
+
+      <!-- Why Panel (toggled) -->
+      <WhyPanel v-if="showWhy" :explanation="explanation" />
+
+      <!-- Show empty sections toggle -->
+      <div class="show-empty-toggle">
+        <label>
+          <input type="checkbox" v-model="showEmpty" />
+          Show empty sections
+        </label>
+      </div>
 
       <!-- Gate Decision (Risk Level) -->
       <section v-if="run.gate_decision || run.feasibility" class="decision-section">
@@ -357,7 +409,7 @@ async function downloadAttachment(att: any) {
       </section>
 
       <!-- Hashes -->
-      <section class="info-section">
+      <section v-if="hasHashes || showEmpty" class="info-section">
         <h2>Hashes</h2>
         <div class="hash-grid">
           <div v-if="run.request_hash">
@@ -393,7 +445,7 @@ async function downloadAttachment(att: any) {
       </section>
 
       <!-- Attachments -->
-      <section class="info-section">
+      <section v-if="hasAttachments || showEmpty" class="info-section">
         <h2>Attachments ({{ run.attachments?.length || 0 }})</h2>
         <div v-if="run.attachments?.length" class="attachment-list">
           <div v-for="att in run.attachments" :key="att.sha256" class="attachment-item">
@@ -1069,4 +1121,33 @@ async function downloadAttachment(att: any) {
   font-size: 0.875rem;
   color: #9ca3af;
 }
+
+/* UX polish styles */
+.btn-why {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+}
+
+.btn-why:hover {
+  background: #e5e7eb;
+}
+
+.show-empty-toggle {
+  margin: 0.75rem 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.show-empty-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.show-empty-toggle input {
+  cursor: pointer;
+}
+
 </style>

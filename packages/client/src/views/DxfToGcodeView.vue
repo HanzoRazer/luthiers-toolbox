@@ -84,58 +84,61 @@
 
     <!-- Result -->
     <div v-if="result" class="result-section">
-      <!-- Risk Banner (prominent, top-of-section) -->
-      <div class="risk-banner" :class="result.decision?.risk_level?.toLowerCase()">
-        <span class="risk-label">{{ result.decision?.risk_level || 'N/A' }}</span>
-        <span class="risk-text" v-if="result.decision?.risk_level === 'GREEN'">Ready to run</span>
-        <span class="risk-text" v-else-if="result.decision?.risk_level === 'YELLOW'">Review warnings below</span>
-        <span class="risk-text" v-else>Check details</span>
+      <!-- Risk Banner with RiskBadge component -->
+      <div class="result-header-row">
+        <div class="result-header-left">
+          <h3 class="result-title">Result</h3>
+          <RiskBadge :level="riskLevel" size="md" />
+        </div>
+        <div class="result-header-actions">
+          <button @click="copyRunId" class="copy-btn" title="Copy Run ID">Copy</button>
+          <button
+            v-if="canViewRun"
+            class="btn-link"
+            @click="viewRunNewTab"
+            title="Open canonical RMOS run record"
+          >
+            View Run <span class="ext" aria-hidden="true">↗</span>
+          </button>
+          <button class="btn-why" @click="showWhy = !showWhy">
+            {{ showWhy ? 'Hide Why' : 'Why?' }}
+          </button>
+        </div>
       </div>
 
       <div class="result-meta">
         <span class="run-id">Run: {{ result.run_id }}</span>
-        <button @click="copyRunId" class="copy-btn" title="Copy Run ID">Copy</button>
-        <button
-          v-if="canViewRun"
-          class="btn-link"
-          @click="viewRunNewTab"
-          title="Open canonical RMOS run record"
-        >
-          View Run <span class="ext" aria-hidden="true">↗</span>
-        </button>
         <span v-if="!result.rmos_persisted" class="not-persisted">RMOS not persisted</span>
       </div>
 
-      <div v-if="result.decision?.warnings?.length" class="warnings">
+      <!-- Override Banner (always visible when override exists) -->
+      <OverrideBanner
+        :reason="result.override_reason || overrideArtifact?.reason"
+        :override-artifact="overrideArtifact"
+      />
+
+      <!-- Why Panel (toggled) -->
+      <WhyPanel v-if="showWhy" :explanation="explanation" />
+
+      <!-- Show empty sections toggle -->
+      <div class="show-empty-toggle">
+        <label>
+          <input type="checkbox" v-model="showEmpty" />
+          Show empty sections
+        </label>
+      </div>
+
+      <div v-if="hasWarnings || showEmpty" class="warnings">
         <strong>Warnings:</strong>
-        <ul>
-          <li v-for="(w, i) in result.decision.warnings" :key="i">{{ w }}</li>
-        </ul>
+        <template v-if="hasWarnings">
+          <ul>
+            <li v-for="(w, i) in result.decision.warnings" :key="i">{{ w }}</li>
+          </ul>
+        </template>
+        <div v-else class="empty-hint">No warnings.</div>
       </div>
 
-      <!-- Phase 3.3: Explainability - Why YELLOW/RED? -->
-      <div v-if="hasExplainability" class="explain-card">
-        <div class="explain-header">
-          <h3>Why this is {{ riskLevel }}</h3>
-          <div v-if="explainSummary" class="explain-summary">{{ explainSummary }}</div>
-        </div>
 
-        <ul class="explain-list">
-          <li v-for="r in triggeredRules" :key="r.rule_id" class="explain-item">
-            <span class="rule-pill" :data-level="r.level">{{ r.level }}</span>
-            <span class="rule-id">{{ r.rule_id }}</span>
-            <span class="rule-summary">{{ r.summary }}</span>
-            <span v-if="r.operator_hint" class="rule-hint">{{ r.operator_hint }}</span>
-          </li>
-        </ul>
-
-        <div v-if="riskLevel === 'YELLOW' && !hasOverrideAttachment" class="explain-hint">
-          Operator Pack requires an override for YELLOW runs.
-        </div>
-        <div v-if="hasOverrideAttachment" class="explain-hint explain-hint-ok">
-          Override recorded (see operator pack for override.json).
-        </div>
-      </div>
 
       <!-- Run-to-run compare (minimal operator UI) -->
       <div class="compare-shell" v-if="hasCompare || compareError">
@@ -326,8 +329,15 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { explainRule } from '@/lib/feasibilityRuleRegistry'
+import RiskBadge from '@/components/ui/RiskBadge.vue'
+import OverrideBanner from '@/components/ui/OverrideBanner.vue'
+import WhyPanel from '@/components/rmos/WhyPanel.vue'
 
 const router = useRouter()
+
+// UX polish: toggles
+const showWhy = ref(false)
+const showEmpty = ref(false)
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isDragOver = ref(false)
@@ -371,6 +381,33 @@ const canDownloadOperatorPack = computed(() => {
 })
 
 const riskLevel = computed(() => String(result.value?.decision?.risk_level || '').toUpperCase())
+
+// UX polish: computed flags for hide-empty
+const hasWarnings = computed(() => (result.value?.decision?.warnings?.length ?? 0) > 0)
+const hasAttachments = computed(() => (result.value?.attachments?.length ?? 0) > 0)
+
+// Explanation object for WhyPanel
+const explanation = computed(() => {
+  if (!hasExplainability.value) return null
+  return {
+    risk_level: riskLevel.value,
+    summary: explainSummary.value || undefined,
+    triggered_rules: triggeredRules.value.map(r => ({
+      rule_id: r.rule_id,
+      level: r.level,
+      summary: r.summary
+    })),
+    override_reason: result.value?.override_reason || undefined
+  }
+})
+
+// Override artifact for OverrideBanner
+const overrideArtifact = computed(() => {
+  const atts = result.value?.attachments || []
+  if (!Array.isArray(atts)) return null
+  return atts.find((a: any) => a?.kind === 'override') ?? null
+})
+
 const hasOverrideAttachment = computed(() => {
   const atts = result.value?.attachments || []
   return Array.isArray(atts) && atts.some((a: any) => a?.kind === 'override')
@@ -1608,6 +1645,71 @@ h1 {
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+
+/* UX polish: result header row */
+.result-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.result-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.result-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-why {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.btn-why:hover {
+  background: #e5e7eb;
+}
+
+.show-empty-toggle {
+  margin: 0.75rem 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.show-empty-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.show-empty-toggle input {
+  cursor: pointer;
+}
+
+.empty-hint {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-style: italic;
 }
 
 </style>
