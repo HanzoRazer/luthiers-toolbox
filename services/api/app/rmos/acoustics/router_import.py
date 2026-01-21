@@ -9,12 +9,20 @@ import zipfile
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
 from .schemas_manifest_v1 import TapToneBundleManifestV1
 from .importer import import_acoustics_bundle
 from .persist_glue import persist_import_plan, ValidationSummary
+from .ingest_audit import (
+    log_ingest_event,
+    generate_event_id,
+    compute_bundle_sha256,
+    create_accepted_record,
+    create_rejected_record,
+    create_error_record,
+)
 
 router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
@@ -174,6 +182,7 @@ def _validate_package_layout_or_400(package_root: Path) -> None:
 
 @router.post("/import-zip", response_model=ImportResponse)
 async def import_acoustics_zip(
+    request: Request,
     file: UploadFile = File(..., description="Zip containing manifest.json + attachments/..."),
     session_id: Optional[str] = Form(default=None),
     batch_label: Optional[str] = Form(default=None),
@@ -192,15 +201,58 @@ async def import_acoustics_zip(
     
     Set ACOUSTICS_ALLOW_MISSING_VALIDATION_REPORT=true/1 for legacy packs
     (missing report allowed → UNKNOWN state, but passed=false still rejects).
+    
+    All import attempts are logged to the ingest audit log for operational traceability.
     """
+    # Generate audit event ID upfront
+    event_id = generate_event_id()
+    request_id = request.headers.get("X-Request-Id")
+    client_ip = request.client.host if request.client else None
+    filename = file.filename
+    
     # Read into memory (acceptable for typical bundles; you can stream later if needed)
     data = await file.read()
+    bundle_size = len(data) if data else 0
+    bundle_sha256 = compute_bundle_sha256(data) if data else None
+    
     if not data:
+        # Log the error and re-raise
+        log_ingest_event(create_error_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            rejection_reason="empty_upload",
+            rejection_message="Empty upload.",
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
         raise HTTPException(status_code=400, detail="Empty upload.")
 
     # Validate the pack BEFORE any persistence
     allow_missing = ALLOW_MISSING_VALIDATION_REPORT
-    validation_report = _extract_validation_report_from_zip(data, allow_missing_report=allow_missing)
+    try:
+        validation_report = _extract_validation_report_from_zip(data, allow_missing_report=allow_missing)
+    except HTTPException as e:
+        # Log rejection and re-raise
+        detail = e.detail if isinstance(e.detail, dict) else {"message": str(e.detail)}
+        log_ingest_event(create_rejected_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            bundle_sha256=bundle_sha256,
+            rejection_reason=detail.get("reason", "validation_failed"),
+            rejection_message=detail.get("message", str(e.detail)),
+            errors_count=detail.get("errors_count"),
+            warnings_count=detail.get("warnings_count"),
+            error_excerpt=detail.get("report_excerpt", []),
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
+        raise
     
     # Convert to persist layer type (avoiding Pydantic model in dataclass context)
     validation_summary: Optional[ValidationSummary] = None
@@ -211,7 +263,26 @@ async def import_acoustics_zip(
             warnings_count=validation_report.warnings_count,
         )
 
-    tmpdir = _extract_zip_to_tempdir(data)
+    tmpdir = None
+    try:
+        tmpdir = _extract_zip_to_tempdir(data)
+    except HTTPException as e:
+        # Log error and re-raise
+        detail = e.detail if isinstance(e.detail, dict) else {"message": str(e.detail)}
+        log_ingest_event(create_error_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            bundle_sha256=bundle_sha256,
+            rejection_reason=detail.get("error", "extraction_failed"),
+            rejection_message=detail.get("message", str(e.detail)),
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
+        raise
+    
     try:
         package_root = tmpdir
         _validate_package_layout_or_400(package_root)
@@ -230,6 +301,24 @@ async def import_acoustics_zip(
             validation_summary=validation_summary,
         )
 
+        # Log successful import
+        log_ingest_event(create_accepted_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            bundle_sha256=plan.run_meta.get("bundle_sha256") or bundle_sha256,
+            bundle_id=plan.run_meta.get("bundle_id"),
+            manifest_event_type=plan.run_meta.get("event_type"),
+            manifest_tool_id=plan.run_meta.get("tool_id"),
+            run_id=res.run_id,
+            attachments_written=res.attachments_written,
+            attachments_deduped=res.attachments_deduped,
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
+
         # Return useful indexing fields
         return ImportResponse(
             run_id=res.run_id,
@@ -241,8 +330,40 @@ async def import_acoustics_zip(
             bundle_id=plan.run_meta.get("bundle_id"),
             bundle_sha256=plan.run_meta.get("bundle_sha256"),
         )
+    except HTTPException as e:
+        # Log layout/manifest errors
+        detail = e.detail if isinstance(e.detail, dict) else {"message": str(e.detail)}
+        log_ingest_event(create_error_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            bundle_sha256=bundle_sha256,
+            rejection_reason="import_failed",
+            rejection_message=detail.get("message", str(e.detail)),
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
+        raise
+    except Exception as e:
+        # Log unexpected errors
+        log_ingest_event(create_error_record(
+            event_id=event_id,
+            session_id=session_id,
+            batch_label=batch_label,
+            filename=filename,
+            bundle_sha256=bundle_sha256,
+            rejection_reason="unexpected_error",
+            rejection_message=str(e),
+            bundle_size_bytes=bundle_size,
+            request_id=request_id,
+            client_ip=client_ip,
+        ))
+        raise HTTPException(status_code=500, detail=f"Import failed: {e!s}")
     finally:
-        shutil.rmtree(tmpdir, ignore_errors=True)
+        if tmpdir:
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 @router.post("/import-path", response_model=ImportResponse)

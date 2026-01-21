@@ -1179,6 +1179,20 @@ try:
 except ImportError:
     pass
 
+# Ingest Audit Router (Bundle 1: Evidence QA Gate)
+# Endpoints: GET /ingest-events, GET /ingest-events/counts, GET /ingest-events/{event_id}
+# Provides operational traceability for all acoustics import attempts.
+try:
+    from .rmos.acoustics.router_ingest_audit import router as ingest_audit_router
+
+    app.include_router(
+        ingest_audit_router,
+        prefix="/api/rmos/acoustics",
+        tags=["RMOS", "Acoustics", "Ingest Audit"],
+    )
+except ImportError as e:
+    _log.warning("Optional router unavailable: ingest_audit_router (%s)", e)
+
 # =============================================================================
 # WAVE 23: SMART GUITAR TELEMETRY INGESTION
 # Manufacturing-only telemetry from Smart Guitar devices.
