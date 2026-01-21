@@ -33,6 +33,10 @@ try:
         ListWorkflowSessionsResponse,
         WorkflowSessionSummary,
     )
+    from app.art_studio.schemas.cam_promotion_request import (
+        CamPromotionRequestV1,
+        CamPromotionResponse,
+    )
     from app.art_studio.services.design_first_workflow_service import (
         build_promotion_intent,
         build_promotion_intent_v1,
@@ -44,6 +48,10 @@ try:
     from app.art_studio.stores.design_first_workflow_store import (
         delete_session as store_delete_session,
         list_recent,
+    )
+    from app.art_studio.services.cam_promotion_service import (
+        create_or_get_promotion_request,
+        get_promotion_request,
     )
 except ImportError:
     from art_studio.schemas.workflow_design_first import (
@@ -61,6 +69,10 @@ except ImportError:
         ListWorkflowSessionsResponse,
         WorkflowSessionSummary,
     )
+    from art_studio.schemas.cam_promotion_request import (
+        CamPromotionRequestV1,
+        CamPromotionResponse,
+    )
     from art_studio.services.design_first_workflow_service import (
         build_promotion_intent,
         build_promotion_intent_v1,
@@ -72,6 +84,10 @@ except ImportError:
     from art_studio.stores.design_first_workflow_store import (
         delete_session as store_delete_session,
         list_recent,
+    )
+    from art_studio.services.cam_promotion_service import (
+        create_or_get_promotion_request,
+        get_promotion_request,
     )
 
 
@@ -329,3 +345,78 @@ async def workflow_delete(session_id: str) -> DeleteWorkflowSessionResponse:
     if not ok:
         raise HTTPException(status_code=404, detail="design_first_session_not_found")
     return DeleteWorkflowSessionResponse(ok=True, session_id=session_id)
+
+
+# ==========================================================================
+# Phase 33.0: CAM Promotion Request Endpoint
+# ==========================================================================
+
+
+@router.post(
+    "/sessions/{session_id}/promote_to_cam",
+    response_model=CamPromotionResponse,
+)
+async def workflow_promote_to_cam(
+    session_id: str,
+    cam_profile_id: Optional[str] = Query(None, description="Requested CAM profile ID"),
+) -> CamPromotionResponse:
+    """
+    Promote an approved session to a CAM request.
+    
+    Phase 33.0: Creates a downstream-safe CAM promotion request artifact.
+    
+    This does NOT:
+      - Execute CAM or toolpath generation
+      - Generate G-code
+      - Create manufacturing authority or runs
+    
+    It only creates a handoff object that downstream CAM consumers may pick up.
+    
+    Idempotency: Re-promoting the same intent returns the same request ID.
+    
+    Returns:
+      - ok=True + request: Promotion request created/retrieved
+      - ok=False + blocked_reason: Session not approved or other gate failure
+    """
+    try:
+        session = get_session(session_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="design_first_session_not_found")
+    
+    # Gate: Only APPROVED sessions can promote
+    if session.state != DesignFirstState.APPROVED:
+        return CamPromotionResponse(ok=False, blocked_reason="workflow_not_approved")
+    
+    # Build the canonical v1 intent
+    try:
+        intent = build_promotion_intent_v1(
+            session=session,
+            requested_cam_profile_id=cam_profile_id,
+        )
+    except ValueError as e:
+        return CamPromotionResponse(ok=False, blocked_reason=str(e))
+    
+    # Gate: Must be v1 intent
+    if intent.intent_version != "v1":
+        return CamPromotionResponse(ok=False, blocked_reason="unsupported_intent_version")
+    
+    # Create or retrieve promotion request (idempotent)
+    request = create_or_get_promotion_request(intent)
+    
+    return CamPromotionResponse(ok=True, request=request)
+
+
+@router.get(
+    "/cam-promotion/requests/{request_id}",
+    response_model=CamPromotionRequestV1,
+)
+async def get_cam_promotion_request(request_id: str) -> CamPromotionRequestV1:
+    """
+    Get a CAM promotion request by ID.
+    
+    Returns 404 if request not found.
+    """
+    request = get_promotion_request(request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="promotion_request_not_found")
+    return request

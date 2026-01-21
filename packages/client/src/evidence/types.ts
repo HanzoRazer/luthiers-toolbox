@@ -92,6 +92,14 @@ export type ViewerPackManifestV1 = {
 // NormalizedPack — internal unified model (both schemas map to this)
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type ValidationReport = {
+  passed: boolean;
+  errors: Array<{ path: string; message: string }>;
+  warnings: Array<{ path: string; message: string }>;
+  schema_id?: string;
+  validated_at?: string;
+};
+
 export type NormalizedFileEntry = {
   relpath: string;
   kind: EvidenceFileKind | string;
@@ -109,6 +117,8 @@ export type NormalizedPack = {
   interpretation?: string;
   bundle_sha256?: string;
   files: NormalizedFileEntry[];
+  /** Validation report extracted from validation_report.json (if present) */
+  validation?: ValidationReport;
   /** Resolve file bytes by relpath */
   resolveFile: (relpath: string) => Uint8Array | null;
 };

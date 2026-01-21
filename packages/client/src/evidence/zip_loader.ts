@@ -7,6 +7,7 @@ import type {
   NormalizedPack,
   NormalizedFileEntry,
   EvidenceFileKind,
+  ValidationReport,
 } from "./types";
 import {
   validateEvidenceManifestV1,
@@ -42,7 +43,8 @@ async function tryReadZipFileBytes(zip: JSZip, path: string): Promise<Uint8Array
 
 function normalizeFromEvidenceManifest(
   manifest: EvidenceManifestV1,
-  bytesByPath: Map<string, Uint8Array>
+  bytesByPath: Map<string, Uint8Array>,
+  validation?: ValidationReport
 ): NormalizedPack {
   const files: NormalizedFileEntry[] = manifest.files.map((f) => ({
     relpath: f.path,
@@ -61,6 +63,7 @@ function normalizeFromEvidenceManifest(
     interpretation: undefined,
     bundle_sha256: undefined,
     files,
+    validation,
     resolveFile(relpath: string) {
       return bytesByPath.get(relpath) ?? null;
     },
@@ -73,7 +76,8 @@ function normalizeFromEvidenceManifest(
 
 function normalizeFromViewerPack(
   manifest: ViewerPackManifestV1,
-  bytesByPath: Map<string, Uint8Array>
+  bytesByPath: Map<string, Uint8Array>,
+  validation?: ValidationReport
 ): NormalizedPack {
   const files: NormalizedFileEntry[] = manifest.files.map((f) => ({
     relpath: f.relpath,
@@ -92,6 +96,7 @@ function normalizeFromViewerPack(
     interpretation: manifest.interpretation,
     bundle_sha256: manifest.bundle_sha256,
     files,
+    validation,
     resolveFile(relpath: string) {
       return bytesByPath.get(relpath) ?? null;
     },
@@ -145,6 +150,29 @@ function guessMime(kind: string, relpath: string): string {
 // Main Loader: Auto-detects schema, normalizes to NormalizedPack
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Try to extract and parse validation_report.json from ZIP root.
+ * Returns undefined if not present or invalid.
+ */
+async function tryLoadValidationReport(zip: JSZip): Promise<ValidationReport | undefined> {
+  const validationBytes = await tryReadZipFileBytes(zip, "validation_report.json");
+  if (!validationBytes) return undefined;
+
+  try {
+    const json = JSON.parse(decodeUtf8(validationBytes));
+    // Normalize to our type shape
+    return {
+      passed: !!json.passed,
+      errors: Array.isArray(json.errors) ? json.errors : [],
+      warnings: Array.isArray(json.warnings) ? json.warnings : [],
+      schema_id: json.schema_id,
+      validated_at: json.validated_at,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 export async function loadNormalizedPack(file: File): Promise<NormalizedPack> {
   const ab = await file.arrayBuffer();
   const zip = await JSZip.loadAsync(ab);
@@ -167,6 +195,9 @@ export async function loadNormalizedPack(file: File): Promise<NormalizedPack> {
   const manifestJson = JSON.parse(decodeUtf8(manifestBytes));
   const schema = detectSchema(manifestJson);
 
+  // Try to load validation report
+  const validation = await tryLoadValidationReport(zip);
+
   // Gather file bytes by relpath
   const bytesByPath = new Map<string, Uint8Array>();
 
@@ -176,7 +207,7 @@ export async function loadNormalizedPack(file: File): Promise<NormalizedPack> {
       const bytes = await tryReadZipFileBytes(zip, f.relpath);
       if (bytes) bytesByPath.set(f.relpath, bytes);
     }
-    return normalizeFromViewerPack(manifest, bytesByPath);
+    return normalizeFromViewerPack(manifest, bytesByPath, validation);
   }
 
   if (schema === "toolbox_evidence_manifest_v1") {
@@ -185,7 +216,7 @@ export async function loadNormalizedPack(file: File): Promise<NormalizedPack> {
       const bytes = await tryReadZipFileBytes(zip, f.path);
       if (bytes) bytesByPath.set(f.path, bytes);
     }
-    return normalizeFromEvidenceManifest(manifest, bytesByPath);
+    return normalizeFromEvidenceManifest(manifest, bytesByPath, validation);
   }
 
   throw new Error(`Unsupported or unrecognized manifest schema. Expected viewer_pack_v1 or toolbox_evidence_manifest_v1.`);

@@ -96,6 +96,20 @@ PYBADGE
 test-api:
 	cd services/api && pytest tests/ -v
 
+# ------------------------------------------------------------------
+# API verification (Phase 32.0 contract tests included automatically)
+# ------------------------------------------------------------------
+.PHONY: api-test api-verify
+
+# Runs the full API test suite (includes Phase 32.0 contract tests in app/tests)
+api-test:
+	@echo "🧪 Running API tests (pytest)"
+	cd services/api && python -m pytest -q tests/ app/tests/
+
+# Alias: api-verify depends on api-test
+api-verify: api-test
+	@echo "✅ api-verify complete"
+
 .PHONY: start-api
 start-api:
 	cd services/api && python -m uvicorn app.main:app --reload --port $(API_PORT)

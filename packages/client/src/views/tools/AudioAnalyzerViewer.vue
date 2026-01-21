@@ -44,6 +44,47 @@
         </div>
       </div>
 
+      <!-- Validation Report -->
+      <div class="card validation-card" :class="validationStatusClass">
+        <h2>
+          <span class="validation-icon">{{ validationIcon }}</span>
+          Validation Report
+        </h2>
+        <div v-if="!pack.validation" class="validation-unknown">
+          <p>No validation_report.json found in pack.</p>
+          <p class="muted">Legacy packs may not include validation data.</p>
+        </div>
+        <div v-else class="validation-content">
+          <div class="validation-status">
+            <span class="validation-badge" :class="{ pass: pack.validation.passed, fail: !pack.validation.passed }">
+              {{ pack.validation.passed ? "PASS" : "FAIL" }}
+            </span>
+          </div>
+          <div class="kv">
+            <div><span>errors</span><code>{{ pack.validation.errors.length }}</code></div>
+            <div><span>warnings</span><code>{{ pack.validation.warnings.length }}</code></div>
+            <div v-if="pack.validation.schema_id"><span>schema_id</span><code>{{ pack.validation.schema_id }}</code></div>
+            <div v-if="pack.validation.validated_at"><span>validated_at</span><code>{{ pack.validation.validated_at }}</code></div>
+          </div>
+          <details v-if="pack.validation.errors.length > 0" class="validation-details">
+            <summary>Errors ({{ pack.validation.errors.length }})</summary>
+            <ul class="validation-list">
+              <li v-for="(e, i) in pack.validation.errors" :key="'err-' + i">
+                <code>{{ e.path }}</code>: {{ e.message }}
+              </li>
+            </ul>
+          </details>
+          <details v-if="pack.validation.warnings.length > 0" class="validation-details">
+            <summary>Warnings ({{ pack.validation.warnings.length }})</summary>
+            <ul class="validation-list">
+              <li v-for="(w, i) in pack.validation.warnings" :key="'warn-' + i">
+                <code>{{ w.path }}</code>: {{ w.message }}
+              </li>
+            </ul>
+          </details>
+        </div>
+      </div>
+
       <!-- File List -->
       <div class="card">
         <h2>Files</h2>
@@ -230,6 +271,17 @@ const pack = shallowRef<NormalizedPack | null>(null);
 const err = ref<string>("");
 const activePath = ref<string>("");
 const kindFilter = ref<string>("");
+
+// Validation display computed properties
+const validationStatusClass = computed(() => {
+  if (!pack.value?.validation) return "validation-unknown";
+  return pack.value.validation.passed ? "validation-pass" : "validation-fail";
+});
+
+const validationIcon = computed(() => {
+  if (!pack.value?.validation) return "❓";
+  return pack.value.validation.passed ? "✅" : "❌";
+});
 
 /**
  * GOVERNANCE NOTE — READ BEFORE MODIFYING
@@ -944,5 +996,94 @@ onMounted(async () => {
 
 .debug-tbl tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* Validation Panel Styles */
+.validation-card {
+  border-left: 4px solid #888;
+}
+
+.validation-card.validation-pass {
+  border-left-color: #10b981;
+}
+
+.validation-card.validation-fail {
+  border-left-color: #ef4444;
+}
+
+.validation-card.validation-unknown {
+  border-left-color: #6b7280;
+}
+
+.validation-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.validation-icon {
+  font-size: 1.2rem;
+}
+
+.validation-unknown {
+  color: #9ca3af;
+}
+
+.validation-unknown .muted {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.validation-status {
+  margin-bottom: 0.75rem;
+}
+
+.validation-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.validation-badge.pass {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.validation-badge.fail {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.validation-details {
+  margin-top: 0.75rem;
+}
+
+.validation-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.validation-list {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.validation-list li {
+  margin-bottom: 0.25rem;
+}
+
+.validation-list code {
+  color: #fbbf24;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
 }
 </style>

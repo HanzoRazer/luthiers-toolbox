@@ -14,31 +14,29 @@ def test_execution_complete_endpoint_writes_complete_artifact(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_job_log":
-            return {
-                "items": [
-                    {
-                        "id": "jl_old",
-                        "kind": kind,
-                        "parent_id": "exec1",
-                        "created_utc": "2026-01-19T04:00:00Z",
-                        "payload": {
-                            "status": "OK",
-                            "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0},
-                        },
+            return [
+                {
+                    "id": "jl_old",
+                    "kind": kind,
+                    "parent_id": "exec1",
+                    "created_utc": "2026-01-19T04:00:00Z",
+                    "payload": {
+                        "status": "OK",
+                        "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0},
                     },
-                    {
-                        "id": "jl_new",
-                        "kind": kind,
-                        "parent_id": "exec1",
-                        "created_utc": "2026-01-19T04:10:00Z",
-                        "payload": {
-                            "status": "OK",
-                            "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 12.0},
-                        },
+                },
+                {
+                    "id": "jl_new",
+                    "kind": kind,
+                    "parent_id": "exec1",
+                    "created_utc": "2026-01-19T04:10:00Z",
+                    "payload": {
+                        "status": "OK",
+                        "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 12.0},
                     },
-                ]
-            }
-        return {"items": []}
+                },
+            ]
+        return []
 
     def _fake_store_artifact(**kwargs):
         assert kwargs["kind"] == "saw_batch_execution_complete"
@@ -117,21 +115,19 @@ def test_execution_complete_without_checklist(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_job_log":
-            return {
-                "items": [
-                    {
-                        "id": "jl2",
-                        "kind": kind,
-                        "parent_id": "exec2",
-                        "created_utc": "2026-01-19T05:00:00Z",
-                        "payload": {
-                            "status": "OK",
-                            "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 5.0},
-                        },
-                    }
-                ]
-            }
-        return {"items": []}
+            return [
+                {
+                    "id": "jl2",
+                    "kind": kind,
+                    "parent_id": "exec2",
+                    "created_utc": "2026-01-19T05:00:00Z",
+                    "payload": {
+                        "status": "OK",
+                        "metrics": {"parts_ok": 1, "parts_scrap": 0, "cut_time_s": 5.0},
+                    },
+                }
+            ]
+        return []
 
     def _fake_store_artifact(**kwargs):
         payload = kwargs["payload"]
@@ -168,10 +164,10 @@ def test_execution_complete_409_when_execution_already_aborted(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_execution_abort":
-            return {"items": [{"id": "ab1", "kind": kind, "parent_id": "exec3"}]}
+            return [{"id": "ab1", "kind": kind, "parent_id": "exec3"}]
         if kind == "saw_batch_execution_complete":
-            return {"items": []}
-        return {"items": []}
+            return []
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
@@ -199,10 +195,10 @@ def test_execution_complete_409_when_execution_already_completed(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_execution_abort":
-            return {"items": []}
+            return []
         if kind == "saw_batch_execution_complete":
-            return {"items": [{"id": "c1", "kind": kind, "parent_id": "exec4"}]}
-        return {"items": []}
+            return [{"id": "c1", "kind": kind, "parent_id": "exec4"}]
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
@@ -231,8 +227,8 @@ def test_execution_complete_409_when_no_job_logs(monkeypatch):
         # No job logs returned for this session/batch
         kind = kwargs.get("kind")
         if kind in ("saw_batch_execution_abort", "saw_batch_execution_complete", "saw_batch_job_log"):
-            return {"items": []}
-        return {"items": []}
+            return []
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
@@ -262,22 +258,20 @@ def test_execution_complete_409_when_job_log_not_qualifying(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_execution_abort":
-            return {"items": []}
+            return []
         if kind == "saw_batch_execution_complete":
-            return {"items": []}
+            return []
         if kind == "saw_batch_job_log":
             # Non-qualifying: ABORTED status OR metrics show no work
-            return {
-                "items": [
-                    {
-                        "id": "jl_bad",
-                        "kind": kind,
-                        "parent_id": "exec_bad",
-                        "payload": {"status": "ABORTED", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
-                    }
-                ]
-            }
-        return {"items": []}
+            return [
+                {
+                    "id": "jl_bad",
+                    "kind": kind,
+                    "parent_id": "exec_bad",
+                    "payload": {"status": "ABORTED", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
+                }
+            ]
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
@@ -307,30 +301,28 @@ def test_execution_complete_409_when_latest_job_log_not_qualifying(monkeypatch):
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_execution_abort":
-            return {"items": []}
+            return []
         if kind == "saw_batch_execution_complete":
-            return {"items": []}
+            return []
         if kind == "saw_batch_job_log":
             # Old log qualifies (has work metrics), new log does NOT (zero metrics)
-            return {
-                "items": [
-                    {
-                        "id": "jl_old_good",
-                        "kind": kind,
-                        "parent_id": "exec_latest_test",
-                        "created_utc": "2026-01-20T10:00:00Z",
-                        "payload": {"status": "OK", "metrics": {"parts_ok": 5, "parts_scrap": 0}},
-                    },
-                    {
-                        "id": "jl_new_bad",
-                        "kind": kind,
-                        "parent_id": "exec_latest_test",
-                        "created_utc": "2026-01-20T11:00:00Z",
-                        "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
-                    },
-                ]
-            }
-        return {"items": []}
+            return [
+                {
+                    "id": "jl_old_good",
+                    "kind": kind,
+                    "parent_id": "exec_latest_test",
+                    "created_utc": "2026-01-20T10:00:00Z",
+                    "payload": {"status": "OK", "metrics": {"parts_ok": 5, "parts_scrap": 0}},
+                },
+                {
+                    "id": "jl_new_bad",
+                    "kind": kind,
+                    "parent_id": "exec_latest_test",
+                    "created_utc": "2026-01-20T11:00:00Z",
+                    "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0}},
+                },
+            ]
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)
@@ -362,32 +354,30 @@ def test_execution_complete_uses_insertion_order_when_timestamps_collide(monkeyp
     def _fake_list_runs_filtered(**kwargs):
         kind = kwargs.get("kind")
         if kind == "saw_batch_execution_abort":
-            return {"items": []}
+            return []
         if kind == "saw_batch_execution_complete":
-            return {"items": []}
+            return []
         if kind == "saw_batch_job_log":
             # Same second timestamps; last one should be treated as "latest"
             t = datetime(2026, 1, 19, 4, 10, 0, tzinfo=timezone.utc)
-            return {
-                "items": [
-                    {
-                        "id": "jl_earlier_in_list",
-                        "kind": kind,
-                        "parent_id": "exec_collide",
-                        "created_at_utc": t,
-                        "payload": {"status": "OK", "metrics": {"parts_ok": 1, "parts_scrap": 0}},
-                    },
-                    {
-                        "id": "jl_later_in_list",
-                        "kind": kind,
-                        "parent_id": "exec_collide",
-                        "created_at_utc": t,
-                        # Make latest non-qualifying to prove we pick by insertion order
-                        "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0}},
-                    },
-                ]
-            }
-        return {"items": []}
+            return [
+                {
+                    "id": "jl_earlier_in_list",
+                    "kind": kind,
+                    "parent_id": "exec_collide",
+                    "created_at_utc": t,
+                    "payload": {"status": "OK", "metrics": {"parts_ok": 1, "parts_scrap": 0}},
+                },
+                {
+                    "id": "jl_later_in_list",
+                    "kind": kind,
+                    "parent_id": "exec_collide",
+                    "created_at_utc": t,
+                    # Make latest non-qualifying to prove we pick by insertion order
+                    "payload": {"status": "OK", "metrics": {"parts_ok": 0, "parts_scrap": 0, "cut_time_s": 0.0}},
+                },
+            ]
+        return []
 
     monkeypatch.setattr(runs_store, "get_run", _fake_get_run)
     monkeypatch.setattr(runs_store, "list_runs_filtered", _fake_list_runs_filtered)

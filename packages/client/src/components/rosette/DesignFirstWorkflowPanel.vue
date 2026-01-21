@@ -48,6 +48,14 @@
       >
         Get CAM Handoff Intent
       </button>
+      <button
+        :disabled="busy || !canIntent"
+        @click="promoteToCam"
+        class="btn"
+        title="Phase 33.0: Promote to downstream CAM request (does NOT execute)"
+      >
+        Promote to CAM Request
+      </button>
     </div>
 
     <!-- Download overrides (Bundle 32.8.4.2) -->
@@ -447,6 +455,51 @@ async function intent() {
   if (payload) {
     toast.info("Intent payload ready. Use Log Viewer / CAM lane to consume.");
     console.log("[ArtStudio] CAM handoff intent:", payload);
+  }
+}
+
+// ==========================================================================
+// Phase 33.0: Promote to CAM Request
+// ==========================================================================
+
+async function promoteToCam() {
+  const sid = wf.sessionId;
+  if (!sid) {
+    toast.error("No session available");
+    return;
+  }
+  
+  try {
+    const base = _baseUrl();
+    const camProfileId = overrideCamProfileId.value || undefined;
+    const params = new URLSearchParams();
+    if (camProfileId) params.set("cam_profile_id", camProfileId);
+    
+    const url = `${base}/art/design-first-workflow/sessions/${encodeURIComponent(sid)}/promote_to_cam${params.toString() ? "?" + params.toString() : ""}`;
+    
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      toast.error(`Promotion failed: ${errData.detail || resp.statusText}`);
+      return;
+    }
+    
+    const data = await resp.json();
+    
+    if (!data.ok) {
+      toast.warning(`Promotion blocked: ${data.blocked_reason || "unknown"}`);
+      return;
+    }
+    
+    const requestId = data.request?.promotion_request_id;
+    toast.success(`CAM promotion request created: ${requestId?.slice(0, 8) || "OK"}…`);
+    console.log("[ArtStudio] CAM promotion request:", data.request);
+  } catch (e: any) {
+    toast.error(`Promotion error: ${e.message || e}`);
   }
 }
 

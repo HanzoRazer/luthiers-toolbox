@@ -44,6 +44,10 @@ export type AttachmentMetaEntry = {
   last_seen_at_utc: string;
   ref_count: number;
   attachment_url?: string;
+  // Validation report fields (viewer_pack only)
+  validation_passed?: boolean;
+  validation_errors?: number;
+  validation_warnings?: number;
 };
 
 export type BrowseParams = {
