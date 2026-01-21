@@ -291,5 +291,180 @@ from app.art_studio.services.design_snapshot_store import DesignSnapshotStore
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** December 19, 2025
+## PromotionIntentV1 → CamPromotionRequestV1 Bridge (Phase 32.0 / 33.0)
+
+This section documents the **promotion-layer artifacts** added in Phase 32.0 and Phase 33.0.
+These artifacts are **layered on top of** the original design-first workflow and **do not replace**
+the underlying workflow state machine described earlier in this document.
+
+Art Studio remains an **ornamental authoring and orchestration system**.
+It does not execute CAM, generate toolpaths, or make manufacturing decisions.
+
+---
+
+### Why this bridge exists
+
+The design-first workflow culminates in an **APPROVED** session.
+At that point, downstream systems need a **stable, automation-safe handoff** that:
+
+- Is versioned and strictly validated
+- Can be consumed by CI and external tooling
+- Does not grant manufacturing authority
+
+Phase 32.0 and 33.0 introduce two explicit artifacts to satisfy this need.
+
+---
+
+### Phase 32.0 — PromotionIntentV1 (Canonical Intent Export)
+
+**PromotionIntentV1** is the canonical, strict representation of approved ornamental intent.
+
+It is:
+- Versioned (`intent_version: "v1"`)
+- Approval-gated
+- Deterministic
+- Safe for CI and automation
+
+#### Canonical export endpoint (hard-gated)
+
+```
+GET /api/art/design-first-workflow/sessions/{session_id}/promotion_intent.json
+```
+
+- Returns raw `PromotionIntentV1`
+- Returns **403** if the session is not `APPROVED`
+- Intended for CI, automation, and downstream orchestration
+
+#### UI wrapper endpoint (ergonomic)
+
+```
+POST /api/art/design-first-workflow/sessions/{session_id}/promotion_intent_v1
+```
+
+Returns:
+```
+{ ok, intent?, blocked_reason? }
+```
+
+- Never throws
+- Used by UI for gating and messaging
+- Does not change the canonical contract
+
+This split is intentional:
+- **Automation** uses the canonical `.json` export
+- **UI** uses the wrapper
+
+---
+
+### Phase 33.0 — CamPromotionRequestV1 (CAM Orchestration Bridge)
+
+**CamPromotionRequestV1** represents a **queued request** for downstream CAM systems
+to prepare work based on an approved intent.
+
+It is an orchestration artifact only.
+
+#### Promotion endpoint
+
+```
+POST /api/art/design-first-workflow/sessions/{session_id}/promote_to_cam
+```
+
+Returns:
+```
+{ ok, request?, blocked_reason? }
+```
+
+- If session not approved → `{ ok:false, blocked_reason }`
+- If approved → `{ ok:true, request: CamPromotionRequestV1 }`
+
+#### Key properties
+
+- `promotion_request_version: "v1"`
+- `promotion_request_id` (UUID)
+- `session_id`
+- Embedded `intent: PromotionIntentV1` (traceability)
+- `design_fingerprint`, `feasibility_fingerprint`
+- `status: "QUEUED"`
+
+This artifact **does not**:
+- Execute CAM
+- Generate toolpaths
+- Generate G-code
+- Decide manufacturability
+
+---
+
+### Idempotency contract
+
+Re-promoting the same intent must not create duplicate requests.
+
+Phase 33.0 enforces idempotency using a stable fingerprint key:
+
+```
+key = "{design_fingerprint}:{feasibility_fingerprint}"
+```
+
+If a request already exists for that key, the same
+`promotion_request_id` is returned.
+
+This allows safe retries from UI and CI.
+
+---
+
+### Persistence (release-safe)
+
+Promotion requests are stored as file-backed JSON under the Art Studio data root:
+
+```
+art_studio/
+  cam_promotion/
+    requests/{promotion_request_id}.json
+    index.json
+```
+
+This approach is:
+- Auditable
+- Deterministic
+- Safe for early releases
+
+Database backing may be added later **without changing the external contract**.
+
+---
+
+### Fencing and scope rules
+
+The promotion bridge lives under:
+
+```
+services/api/app/art_studio/**
+```
+
+It must remain fenced from CAM engine internals:
+
+- ✅ Allowed: schemas, workflow orchestration, persistence, API wrappers
+- ❌ Disallowed: imports from `app.cam` or `app.cam_core`, toolpath logic, execution logic
+
+If a change cannot be expressed as **ornamental intent** or **orchestration metadata**,
+it does not belong in Art Studio.
+
+---
+
+### Test and release gate
+
+These promotion artifacts are enforced by contract tests:
+
+- Phase 32.0: PromotionIntentV1 export contract tests
+- Phase 33.0: CAM promotion bridge tests (including idempotency)
+
+Release gate:
+
+```
+make api-verify
+```
+
+CI must run `make api-verify` on push and pull requests to prevent drift.
+
+---
+
+**Document Version:** 1.1
+**Last Updated:** January 20, 2026
