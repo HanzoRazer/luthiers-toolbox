@@ -1250,6 +1250,15 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_validation_router (%s)", e)
 
 # =============================================================================
+# WAVE 22.2: RUN LOGS (Audit Surface)
+# =============================================================================
+try:
+    from .rmos.logs.router import router as rmos_run_logs_router
+    app.include_router(rmos_run_logs_router, tags=["RMOS", "Run Logs"])
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_run_logs_router (%s)", e)
+
+# =============================================================================
 # COMPAT LEGACY ROUTES (CI + legacy callers)
 # Canonical remains /api/*; compat mounts are hidden from OpenAPI.
 # Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.
