@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "services/**"
-      - "client/**"
+      - "packages/**"
       - "scripts/**"
       - ".github/workflows/**"
   workflow_dispatch:
@@ -26,7 +26,7 @@ jobs:
       - name: Run architecture scan
         run: |
           python scripts/architecture/scan_architecture.py \
-            --targets services/api/app client/src \
+            --targets services/api/app packages/client/src \
             --out reports/architecture_scan.json
 
       - name: Upload scan artifact
@@ -34,3 +34,27 @@ jobs:
         with:
           name: architecture_scan
           path: reports/architecture_scan.json
+
+  fence-checks:
+    name: Fence Checks (Blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify baseline files exist
+        run: |
+          test -f services/api/app/ci/fence_baseline.json
+          test -f services/api/app/ci/fence_patterns_baseline.json
+
+      - name: Run fence checks (ratchet mode)
+        working-directory: services/api
+        run: |
+          python -m app.ci.check_all_fences
