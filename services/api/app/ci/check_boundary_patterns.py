@@ -121,9 +121,23 @@ def _repo_root_from_cwd() -> Path:
     raise RuntimeError("Could not locate services/api root (missing app/). Run from services/api.")
 
 
+def _true_repo_root() -> Path:
+    """Find the actual repository root (where .git or pyproject.toml is)."""
+    cwd = Path.cwd().resolve()
+    for p in [cwd] + list(cwd.parents):
+        if (p / ".git").exists() or (p / "pyproject.toml").exists():
+            return p
+    # Fallback: assume services/api is two levels deep
+    return _repo_root_from_cwd().parent.parent
+
+
 def _relpath(path: Path) -> str:
-    """Convert path to stable relative string for baseline keys."""
-    root = _repo_root_from_cwd()
+    """Convert path to stable relative string for baseline keys.
+
+    Uses the TRUE repo root (not services/api) as the base so that
+    paths like packages/client/... are properly relativized.
+    """
+    root = _true_repo_root()
     try:
         return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
     except Exception:
