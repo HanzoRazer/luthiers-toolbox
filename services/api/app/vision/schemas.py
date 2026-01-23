@@ -33,3 +33,19 @@ class VisionAsset(BaseModel):
 class VisionGenerateResponse(BaseModel):
     assets: List[VisionAsset]
     request_id: str = Field("", description="X-Request-Id header value (if available)")
+
+
+class VisionPromptPreviewRequest(BaseModel):
+    prompt: str = Field(..., min_length=1)
+    style: Optional[str] = Field(None, description="Photography style (optional)")
+    include_variations: bool = Field(False, description="Reserved for future use")
+
+
+class VisionPromptPreviewResponse(BaseModel):
+    raw_prompt: str
+    engineered_prompt: str
+    photography_style: Optional[str] = None
+
+
+class VisionVocabularyResponse(BaseModel):
+    vocabulary: Dict[str, List[str]]
