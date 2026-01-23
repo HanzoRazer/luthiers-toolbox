@@ -1,0 +1,63 @@
+name: deprecation-sunset-guard
+
+on:
+  pull_request:
+    paths:
+      - "services/api/app/**"
+      - "services/api/app/ci/deprecation_registry.json"
+  push:
+    branches: [main]
+  schedule:
+    # Run daily at 9am UTC to catch newly overdue routes
+    - cron: "0 9 * * *"
+
+jobs:
+  check-sunsets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check deprecation sunsets
+        working-directory: services/api
+        run: |
+          python -m app.ci.check_deprecation_sunset --upcoming 30
+
+  # Require governance label for registry changes
+  registry-change-guard:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if registry was modified
+        id: check-registry
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "deprecation_registry.json"; then
+            echo "modified=true" >> $GITHUB_OUTPUT
+          else
+            echo "modified=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Require governance label for registry changes
+        if: steps.check-registry.outputs.modified == 'true'
+        run: |
+          # Check if PR has 'governance' label
+          LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels -q '.labels[].name')
+          if echo "$LABELS" | grep -q "governance"; then
+            echo "✅ Governance label present - registry change allowed"
+          else
+            echo "❌ ERROR: Changes to deprecation_registry.json require 'governance' label"
+            echo ""
+            echo "This ensures sunset date extensions are intentional and reviewed."
+            echo "Add the 'governance' label to this PR to proceed."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
