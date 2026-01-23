@@ -4,11 +4,16 @@ CAM Fret Slots Schemas
 Pydantic models for fret slot CAM export operations.
 
 Phase E Implementation (December 2025)
+PATCH-001: Add intonation_model for explicit 12-TET default + opt-in custom ratios (January 2026)
 """
 
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field, model_validator
+from typing import List, Optional, Dict, Any, Literal
 from enum import Enum
+
+
+# Intonation model choice - explicit default preserves existing behavior
+IntonationModel = Literal["equal_temperament_12", "custom_ratios"]
 
 
 class PostProcessor(str, Enum):
@@ -47,7 +52,51 @@ class FretSlotExportRequest(BaseModel):
     # Optional overrides
     feed_rate_mmpm: Optional[float] = Field(None, description="Override feed rate")
     plunge_rate_mmpm: Optional[float] = Field(None, description="Override plunge rate")
-    
+
+    # PATCH-001: Intonation model selection
+    # Default preserves existing behavior: compute_fret_positions_mm() (12-TET)
+    intonation_model: IntonationModel = Field(
+        default="equal_temperament_12",
+        description="Fret position calculation model. Default 12-TET for standard guitars.",
+    )
+
+    # PATCH-001: Ratio-based fret placement (opt-in only)
+    # If intonation_model == "custom_ratios", caller must provide:
+    #   - ratio_set_id (maps to known tables), OR
+    #   - ratios[] (explicit per-fret frequency ratios, length == fret_count)
+    #
+    # Ratio semantics:
+    #   ratios[n-1] = frequency_ratio for fret n relative to open string
+    #   position = scale_length * (1 - 1/ratio)
+    ratio_set_id: Optional[str] = Field(
+        default=None,
+        description="Named ratio set (JUST_MAJOR, PYTHAGOREAN, MEANTONE). Only used when intonation_model=custom_ratios.",
+    )
+    ratios: Optional[List[float]] = Field(
+        default=None,
+        description="Explicit per-fret frequency ratios (len == fret_count). Only used when intonation_model=custom_ratios.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_intonation(self):
+        """Validate custom_ratios requirements."""
+        if self.intonation_model != "custom_ratios":
+            return self
+
+        # custom_ratios requires ratio_set_id or ratios[]
+        if not self.ratio_set_id and not self.ratios:
+            raise ValueError("custom_ratios requires ratio_set_id or ratios[]")
+
+        # Validate explicit ratios if provided
+        if self.ratios is not None:
+            if len(self.ratios) != self.fret_count:
+                raise ValueError(f"ratios[] must have len == fret_count ({self.fret_count}), got {len(self.ratios)}")
+            for i, r in enumerate(self.ratios):
+                if r <= 1.0:
+                    raise ValueError(f"ratios[{i}] must be > 1.0 for fretted notes, got {r}")
+
+        return self
+
     class Config:
         schema_extra = {
             "example": {
@@ -59,6 +108,7 @@ class FretSlotExportRequest(BaseModel):
                 "end_radius_mm": 304.8,
                 "slot_depth_mm": 3.0,
                 "post_processor": "GRBL",
+                "intonation_model": "equal_temperament_12",
             }
         }
 

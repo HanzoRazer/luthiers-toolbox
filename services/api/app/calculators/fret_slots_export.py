@@ -4,6 +4,7 @@ Fret Slots Export Calculator
 Generates G-code for fret slot cutting with multiple post-processor support.
 
 Phase E Implementation (December 2025)
+PATCH-001: Add intonation_model for explicit 12-TET default + opt-in custom ratios (January 2026)
 
 Supported Post-Processors:
 - GRBL (default)
@@ -13,6 +14,10 @@ Supported Post-Processors:
 - MASSO
 - Fanuc
 - Haas
+
+Intonation Models (PATCH-001):
+- equal_temperament_12 (default): Standard 12-TET fret positions
+- custom_ratios: User-provided per-fret ratios or named ratio set
 """
 
 from __future__ import annotations
@@ -30,6 +35,10 @@ from ..schemas.cam_fret_slots import (
     FretSlotExportResponse,
     FretSlotData,
     ExportStatistics,
+)
+from .alternative_temperaments import (
+    get_ratio_set,
+    compute_fret_positions_from_ratios_mm,
 )
 
 
@@ -129,13 +138,20 @@ POST_TEMPLATES: Dict[PostProcessor, PostTemplate] = {
 def compute_slot_geometry(
     spec: FretboardSpec,
     slot_depth_mm: float = 3.0,
+    fret_positions: Optional[List[float]] = None,
 ) -> List[FretSlotData]:
     """
     Compute geometry for all fret slots.
     
+    Args:
+        spec: Fretboard specification
+        slot_depth_mm: Depth of fret slots
+        fret_positions: Pre-computed fret positions (optional). If None, uses 12-TET.
+    
     Returns list of FretSlotData with positions and dimensions.
     """
-    fret_positions = compute_fret_positions_mm(spec.scale_length_mm, spec.fret_count)
+    if fret_positions is None:
+        fret_positions = compute_fret_positions_mm(spec.scale_length_mm, spec.fret_count)
     slots: List[FretSlotData] = []
     
     for i, pos in enumerate(fret_positions):
@@ -275,18 +291,127 @@ def generate_gcode(
     return "\n".join(lines), stats
 
 
+# =============================================================================
+# PATCH-001: Manufacturability Validation
+# =============================================================================
+
+def validate_fret_positions_for_machining(
+    fret_positions_mm: List[float],
+    scale_length_mm: float,
+    slot_width_mm: float,
+    nut_margin_mm: float = 1.0,
+    heel_margin_mm: float = 1.0,
+    min_spacing_factor: float = 1.25,
+) -> List[str]:
+    """
+    Temperament-agnostic manufacturability checks.
+    
+    Returns list of warning/error messages. Empty list = valid.
+    
+    Checks:
+      - positions are within bounds (0 < pos < scale_length)
+      - adjacent frets are not too close for the declared slot width
+      - first fret is not too close to nut
+      - last fret is not too close to bridge
+    
+    Args:
+        fret_positions_mm: List of fret positions from nut
+        scale_length_mm: Total scale length
+        slot_width_mm: Width of fret slot (kerf)
+        nut_margin_mm: Minimum distance from nut to first fret
+        heel_margin_mm: Minimum distance from last fret to scale end
+        min_spacing_factor: Multiplier for slot_width to determine min spacing
+    
+    Returns:
+        List of error messages (empty if valid)
+    """
+    errors: List[str] = []
+    
+    if not fret_positions_mm:
+        errors.append("No fret positions computed")
+        return errors
+    
+    # Bounds check: 0 < fret < scale_length
+    for i, p in enumerate(fret_positions_mm):
+        if p <= 0.0:
+            errors.append(f"Fret {i+1} position ({p:.4f}mm) is <= 0")
+        if p >= scale_length_mm:
+            errors.append(f"Fret {i+1} position ({p:.4f}mm) exceeds scale length ({scale_length_mm}mm)")
+    
+    # Minimum spacing check
+    min_spacing_mm = max(0.25, slot_width_mm * min_spacing_factor)
+    for i in range(1, len(fret_positions_mm)):
+        spacing = fret_positions_mm[i] - fret_positions_mm[i - 1]
+        if spacing < min_spacing_mm:
+            errors.append(
+                f"Frets {i} and {i+1} too close ({spacing:.3f}mm). "
+                f"Min required: {min_spacing_mm:.3f}mm for slot_width={slot_width_mm}mm"
+            )
+    
+    # Edge margin checks
+    if fret_positions_mm[0] < nut_margin_mm:
+        errors.append(f"First fret too close to nut ({fret_positions_mm[0]:.4f}mm < {nut_margin_mm}mm)")
+    
+    remaining = scale_length_mm - fret_positions_mm[-1]
+    if remaining < heel_margin_mm:
+        errors.append(f"Last fret too close to bridge ({remaining:.4f}mm < {heel_margin_mm}mm)")
+    
+    return errors
+
+
 def export_fret_slots(
     request: FretSlotExportRequest,
 ) -> FretSlotExportResponse:
     """
     Main export function for fret slot G-code.
     
+    PATCH-001: Now supports intonation_model selection:
+      - equal_temperament_12 (default): Standard 12-TET fret positions
+      - custom_ratios: Uses provided ratios[] or ratio_set_id
+    
     Args:
         request: FretSlotExportRequest with all parameters
     
     Returns:
         FretSlotExportResponse with G-code and metadata
+    
+    Raises:
+        ValueError: If custom_ratios configuration is invalid
     """
+    # PATCH-001: Compute fret positions based on intonation model
+    if request.intonation_model == "equal_temperament_12":
+        # Default: use canonical 12-TET calculation
+        fret_positions = compute_fret_positions_mm(
+            scale_length_mm=request.scale_length_mm,
+            fret_count=request.fret_count,
+        )
+    else:
+        # custom_ratios: use provided ratios or named ratio set
+        if request.ratios is not None:
+            ratios = request.ratios
+        else:
+            # ratio_set_id provided
+            ratios = get_ratio_set(
+                ratio_set_id=request.ratio_set_id or "",
+                fret_count=request.fret_count,
+            )
+        
+        fret_positions = compute_fret_positions_from_ratios_mm(
+            scale_length_mm=request.scale_length_mm,
+            ratios=ratios,
+        )
+    
+    # PATCH-001: Manufacturability validation (temperament-agnostic)
+    machining_errors = validate_fret_positions_for_machining(
+        fret_positions_mm=fret_positions,
+        scale_length_mm=request.scale_length_mm,
+        slot_width_mm=request.slot_width_mm,
+    )
+    if machining_errors:
+        raise ValueError(
+            f"Fret positions failed manufacturability checks: {'; '.join(machining_errors)}"
+        )
+    
     # Build FretboardSpec
     spec = FretboardSpec(
         nut_width_mm=request.nut_width_mm,
@@ -297,8 +422,8 @@ def export_fret_slots(
         end_radius_mm=request.end_radius_mm,
     )
     
-    # Compute slot geometry
-    slots = compute_slot_geometry(spec, request.slot_depth_mm)
+    # Compute slot geometry using pre-computed fret positions
+    slots = compute_slot_geometry(spec, request.slot_depth_mm, fret_positions=fret_positions)
     
     # Determine feed rates
     feed_rate = request.feed_rate_mmpm or 1500.0
@@ -315,6 +440,13 @@ def export_fret_slots(
     
     # Build response
     warnings: List[str] = []
+    
+    # PATCH-001: Add intonation model warning for custom ratios
+    if request.intonation_model == "custom_ratios":
+        warnings.append(
+            f"Using custom ratios (intonation_model=custom_ratios). "
+            f"Verify fret positions are correct for your application."
+        )
     
     # Add warnings for edge cases
     if request.slot_depth_mm > 4.0:
