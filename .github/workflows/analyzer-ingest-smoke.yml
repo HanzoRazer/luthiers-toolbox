@@ -46,6 +46,7 @@ jobs:
           repository: ${{ env.ANALYZER_REPO }}
           ref: ${{ env.ANALYZER_REF }}
           path: analyzer
+          token: ${{ secrets.ANALYZER_REPO_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
