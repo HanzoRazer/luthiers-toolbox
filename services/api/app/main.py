@@ -271,9 +271,12 @@ from .art_studio.inlay_router import router as art_studio_inlay_router
 from .routers.art.root_art_router import router as root_art_router
 
 # =============================================================================
-# SMART GUITAR TEMPERAMENTS (1 router) - Wave 6
+# MUSIC AXIS (Option C) - Replaces Smart Guitar Temperaments
 # =============================================================================
-from .routers.temperament_router import router as temperament_router
+from .routers.music import router as music_router
+from .routers.legacy import router as legacy_redirects_router
+# NOTE: temperament_router removed - now at /api/music/temperament/*
+#       Legacy redirects handle /api/smart-guitar/temperaments/* -> /api/music/temperament/*
 
 # =============================================================================
 # WAVE 7: CALCULATOR SUITE + FRET SLOTS CAM + BRIDGE CALCULATOR + FRET DESIGN (4 routers)
@@ -870,12 +873,20 @@ app.include_router(
     root_art_router, tags=["Art Studio", "Root"]
 )  # → /api/art/* (prefix built-in)
 
-# Smart Guitar Temperaments (1) - Wave 6
+# Music Axis (Option C) - Global temperament/tuning endpoints
 app.include_router(
-    temperament_router,
-    prefix="/api/smart-guitar",
-    tags=["Smart Guitar", "Temperaments"],
-)
+    music_router,
+    prefix="/api/music",
+    tags=["Music", "Temperaments"],
+)  # -> /api/music/temperament/*
+
+# Legacy 308 Redirects (Option C backward compatibility)
+app.include_router(
+    legacy_redirects_router,
+    prefix="/api",
+    tags=["Legacy", "Deprecated"],
+    include_in_schema=False,
+)  # -> /api/smart-guitar/temperaments/* redirects to /api/music/temperament/*
 
 # Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
 app.include_router(calculators_router, prefix="/api", tags=["Calculators"])

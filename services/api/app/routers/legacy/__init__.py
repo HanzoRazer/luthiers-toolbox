@@ -18,6 +18,7 @@ from fastapi import APIRouter
 from .guitar_legacy_router import router as guitar_legacy_router
 from .smart_guitar_legacy_router import router as smart_guitar_legacy_router
 from .guitar_model_redirects import router as guitar_model_redirects_router
+from .temperament_legacy_router import router as temperament_legacy_router
 
 router = APIRouter(tags=["Legacy", "Deprecated"])
 
@@ -28,5 +29,9 @@ router.include_router(smart_guitar_legacy_router)
 # Mount 308 redirect handlers for removed legacy guitar model routers
 # These catch /api/guitar/{model}/cam/{model}/* → /api/cam/guitar/{model}/*
 router.include_router(guitar_model_redirects_router)
+
+# Mount temperament legacy redirects
+# /temperaments/* → /api/music/temperament/*
+router.include_router(temperament_legacy_router)
 
 __all__ = ["router"]
