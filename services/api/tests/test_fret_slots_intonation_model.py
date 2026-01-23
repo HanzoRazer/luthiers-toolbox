@@ -13,6 +13,18 @@ from app.schemas.cam_fret_slots import FretSlotExportRequest
 from app.calculators.fret_slots_export import export_fret_slots
 
 
+def _base_req_kwargs():
+    """Base kwargs for FretSlotExportRequest tests."""
+    return {
+        "scale_length_mm": 648.0,
+        "fret_count": 22,
+        "nut_width_mm": 42.0,
+        "heel_width_mm": 56.0,
+        "slot_depth_mm": 2.0,
+        "slot_width_mm": 0.6,
+    }
+
+
 def test_fret_slots_default_12tet_calls_compute_fret_positions_mm():
     """Verifies default behavior is unchanged: equal_temperament_12 uses compute_fret_positions_mm()."""
     with patch("app.calculators.fret_slots_export.compute_fret_positions_mm") as mock_12tet:
@@ -142,3 +154,23 @@ def test_fret_slots_ratio_set_rejected_when_not_per_fret_list():
     assert "does not provide per-fret ratios" in msg
     assert "observed length=0" in msg
     assert "length == fret_count (22)" in msg
+
+
+def test_ratio_set_rejection_includes_template_hint_in_dev_mode(monkeypatch):
+    """In dev/test mode, error message should suggest the ratios_template.json path.
+
+    Keep this out of production unless explicitly in dev/test/DEBUG.
+    """
+    monkeypatch.setenv("APP_ENV", "test")
+
+    request = FretSlotExportRequest(
+        **_base_req_kwargs(),
+        intonation_model="custom_ratios",
+        ratio_set_id="JUST_MAJOR",
+    )
+
+    with pytest.raises(ValueError) as ei:
+        export_fret_slots(request)
+
+    msg = str(ei.value)
+    assert "docs/tests/ratios_template.json" in msg
