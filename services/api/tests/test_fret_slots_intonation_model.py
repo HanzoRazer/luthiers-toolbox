@@ -111,3 +111,34 @@ def test_fret_slots_ratios_must_be_greater_than_one():
             intonation_model="custom_ratios",
             ratios=[1.0, 1.12, 1.19],  # First ratio is exactly 1.0 (invalid)
         )
+
+
+def test_fret_slots_ratio_set_rejected_when_not_per_fret_list():
+    """Verifies ratio_set_id is rejected at CAM export - must provide explicit ratios[].
+
+    Named ratio sets (JUST_MAJOR, PYTHAGOREAN, MEANTONE) are scale-degree-based
+    and require musical context. CAM export requires explicit per-fret ratios
+    to prevent accidental key-locked fretboards.
+    """
+    # Schema allows ratio_set_id, but export rejects it
+    request = FretSlotExportRequest(
+        scale_length_mm=648.0,
+        fret_count=22,
+        nut_width_mm=42.0,
+        heel_width_mm=56.0,
+        slot_depth_mm=2.0,
+        slot_width_mm=0.6,
+        intonation_model="custom_ratios",
+        ratio_set_id="JUST_MAJOR",  # Named set, not per-fret list
+        # ratios not provided
+    )
+
+    with pytest.raises(ValueError) as ei:
+        export_fret_slots(request)
+
+    msg = str(ei.value)
+    # Assert the error message is explicit and actionable
+    assert "ratio_set_id='JUST_MAJOR'" in msg
+    assert "does not provide per-fret ratios" in msg
+    assert "observed length=0" in msg
+    assert "length == fret_count (22)" in msg

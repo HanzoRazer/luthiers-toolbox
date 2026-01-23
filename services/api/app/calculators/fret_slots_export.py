@@ -17,7 +17,7 @@ Supported Post-Processors:
 
 Intonation Models (PATCH-001):
 - equal_temperament_12 (default): Standard 12-TET fret positions
-- custom_ratios: User-provided per-fret ratios or named ratio set
+- custom_ratios: REQUIRES explicit per-fret ratios[] (ratio_set_id is rejected)
 """
 
 from __future__ import annotations
@@ -386,16 +386,25 @@ def export_fret_slots(
             fret_count=request.fret_count,
         )
     else:
-        # custom_ratios: use provided ratios or named ratio set
+        # custom_ratios: REQUIRES explicit per-fret ratios for CAM export
+        # Named ratio sets (JUST_MAJOR, etc.) are scale-degree-based, not per-fret
+        # CAM export requires explicit ratios to prevent musical-context misuse
         if request.ratios is not None:
             ratios = request.ratios
-        else:
-            # ratio_set_id provided
-            ratios = get_ratio_set(
-                ratio_set_id=request.ratio_set_id or "",
-                fret_count=request.fret_count,
+        elif request.ratio_set_id:
+            # Reject ratio_set_id without explicit ratios - forces caller to expand
+            observed_len = len(request.ratios) if request.ratios is not None else 0
+            raise ValueError(
+                f"ratio_set_id='{request.ratio_set_id}' does not provide per-fret ratios "
+                f"required for CAM export (observed length={observed_len}). "
+                f"Provide explicit ratios[] with length == fret_count ({request.fret_count})."
             )
-        
+        else:
+            # Schema validation should prevent this, but guard anyway
+            raise ValueError(
+                "custom_ratios requires ratios[] for CAM export"
+            )
+
         fret_positions = compute_fret_positions_from_ratios_mm(
             scale_length_mm=request.scale_length_mm,
             ratios=ratios,
