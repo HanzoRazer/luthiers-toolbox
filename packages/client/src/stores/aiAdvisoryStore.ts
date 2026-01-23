@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { requestAdvisory, AIContextPacket } from "./api";
+import { requestAdvisory, AIContextPacket } from "@/components/ai/aiAdvisoryApi";
 
 export const useAiAdvisoryStore = defineStore("aiAdvisory", {
   state: () => ({

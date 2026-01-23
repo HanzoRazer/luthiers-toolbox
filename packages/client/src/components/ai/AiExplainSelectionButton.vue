@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ExplainButtonInputs, AiRunState } from "./types";
+import type { ExplainButtonInputs, AiRunState } from "./aiButtonTypes";
 import { computeDisabledReason, selectionSummary } from "./helpers";
 
 const props = defineProps<{

@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAiAdvisoryStore } from "./store";
+import { useAiAdvisoryStore } from "@/stores/aiAdvisoryStore";
 const store = useAiAdvisoryStore();
 </script>
 

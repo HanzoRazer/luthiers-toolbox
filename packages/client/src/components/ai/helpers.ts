@@ -1,4 +1,4 @@
-import type { ExplainButtonInputs } from "./types";
+import type { ExplainButtonInputs } from "./aiButtonTypes";
 
 export function computeDisabledReason(inputs: ExplainButtonInputs): string | null {
   if (inputs.disabledOverride) return inputs.disabledOverride;
