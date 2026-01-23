@@ -567,6 +567,15 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_runs_v2_query_router (%s)", e)
     rmos_runs_v2_query_router = None
 
+# RMOS AI Advisory Router (CLI integration with ai-integrator)
+try:
+    from .rmos.ai_advisory.router import router as rmos_ai_advisory_router
+
+    _log.info("RMOS AI Advisory router: CLI integration enabled")
+except ImportError as e:
+    _log.warning("Optional router unavailable: rmos_ai_advisory_router (%s)", e)
+    rmos_ai_advisory_router = None
+
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
 # =============================================================================
@@ -1075,6 +1084,10 @@ if rmos_runs_v2_exports_router:
 if rmos_runs_v2_query_router:
     app.include_router(rmos_runs_v2_query_router, prefix="/api/rmos", tags=["RMOS", "Runs v2 Query"])
 
+# RMOS AI Advisory Router (CLI integration with ai-integrator)
+if rmos_ai_advisory_router:
+    app.include_router(rmos_ai_advisory_router, prefix="/api/rmos", tags=["RMOS", "AI Advisory"])
+
 # Wave 17: Workflow Sessions (SQLite persistence layer)
 if workflow_sessions_router:
     app.include_router(workflow_sessions_router, tags=["Workflow", "Sessions"])
@@ -1253,7 +1266,7 @@ except ImportError as e:
 # WAVE 22.2: RUN LOGS (Audit Surface)
 # =============================================================================
 try:
-    from .rmos.logs.router import router as rmos_run_logs_router
+    from .rmos.run_logs.router import router as rmos_run_logs_router
     app.include_router(rmos_run_logs_router, tags=["RMOS", "Run Logs"])
 except ImportError as e:
     _log.warning("Optional router unavailable: rmos_run_logs_router (%s)", e)
