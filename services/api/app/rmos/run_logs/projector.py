@@ -6,9 +6,10 @@ This is a lossy transformation by design - the log is an audit surface, not a so
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from ..runs_v2.schemas import RunArtifact
+if TYPE_CHECKING:
+    from ..runs_v2.schemas import RunArtifact
 from .schemas import (
     RunLogEntry,
     InputSummary,

@@ -14,7 +14,7 @@
  */
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchRun, downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
+import { downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
 import { explainRule } from "@/lib/feasibilityRuleRegistry";
 import { runs as rmosRuns } from "@/sdk/rmos";
 import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
@@ -81,7 +81,7 @@ async function loadRun() {
   loading.value = true;
   error.value = null;
   try {
-    run.value = await fetchRun(runId.value);
+    run.value = await rmosRuns.getRun(runId.value) as RunArtifactDetail;
   } catch (e: any) {
     error.value = e.message || "Failed to load run";
     run.value = null;
