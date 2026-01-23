@@ -22,8 +22,9 @@ def _index_path(data_root: Path) -> Path:
 
 
 def _key_for(intent: PromotionIntentV1) -> str:
-    # Idempotency key: stable across re-promote calls
-    return f"{intent.design_fingerprint}:{intent.feasibility_fingerprint}"
+    # Idempotency key: stable across re-promote calls for the SAME session.
+    # Includes session_id so different sessions with same design get separate requests.
+    return f"{intent.session_id}:{intent.design_fingerprint}:{intent.feasibility_fingerprint}"
 
 
 def _load_index(path: Path) -> Dict[str, str]:
@@ -90,3 +91,20 @@ def create_or_get_promotion_request(intent: PromotionIntentV1) -> CamPromotionRe
     idx[key] = request_id
     _save_index(idx_path, idx)
     return req
+
+
+def get_promotion_request(request_id: str) -> Optional[CamPromotionRequestV1]:
+    """
+    Get a CAM promotion request by ID.
+    
+    Returns None if not found.
+    """
+    data_root = resolve_art_studio_data_root()
+    p = _request_path(data_root, request_id)
+    if not p.exists():
+        return None
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        return CamPromotionRequestV1.model_validate(raw)
+    except (json.JSONDecodeError, ValidationError):
+        return None

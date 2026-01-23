@@ -6,6 +6,7 @@ import pytest
 def _make_input(**overrides):
     """Factory for a minimal, deterministic FeasibilityInput."""
     from app.rmos.feasibility import FeasibilityInput
+    from app.rmos.feasibility.schemas import MaterialHardness
 
     base = FeasibilityInput(
         # Identity / context
@@ -32,6 +33,8 @@ def _make_input(**overrides):
         entity_count=5,
         bbox={"x_min": 0.0, "y_min": 0.0, "x_max": 100.0, "y_max": 50.0},
         smallest_feature_mm=None,
+        # Material (required by F024 for adversarial detection)
+        material_hardness=MaterialHardness.MEDIUM,
     )
 
     data = base.model_dump()

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.rmos.feasibility.schemas import MaterialHardness
+
 
 class TestRuleRegistry:
     """Test rule_registry.py is authoritative and complete."""
@@ -73,6 +75,7 @@ class TestRuleHitWithId:
             climb=True,
             smoothing=0,
             margin=0,
+            material_hardness=MaterialHardness.MEDIUM,
         )
         hits = all_rules(fi)
 
@@ -103,6 +106,7 @@ class TestFeasibilityResultWithRulesTriggered:
             climb=True,
             smoothing=0,
             margin=0,
+            material_hardness=MaterialHardness.MEDIUM,
         )
         result = compute_feasibility(fi)
 
@@ -128,6 +132,7 @@ class TestFeasibilityResultWithRulesTriggered:
             climb=True,
             smoothing=0,
             margin=0,
+            material_hardness=MaterialHardness.MEDIUM,
         )
         result = compute_feasibility(fi)
 

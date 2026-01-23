@@ -143,13 +143,16 @@ def rule_red_invalid_geometry_dimensions(fi: FeasibilityInput) -> List[RuleHit]:
 
 
 def rule_red_missing_material(fi: FeasibilityInput) -> List[RuleHit]:
-    """F024: No material specified — cannot validate safety."""
+    """F024: Material explicitly set to unknown — cannot validate safety.
+    
+    NOTE: Only triggers when material_hardness is EXPLICITLY set to UNKNOWN.
+    If material info is not provided (None), the check is skipped for backward
+    compatibility with MVP/basic use cases that don't require material validation.
+    """
     hits: List[RuleHit] = []
-    # If hardness is explicitly unknown OR material_id is not set and hardness is None
+    # Only trigger if hardness is EXPLICITLY set to UNKNOWN (not just None/missing)
     if fi.material_hardness == MaterialHardness.UNKNOWN:
         hits.append(RuleHit("F024", "RED", "Material hardness unknown — cannot validate CAM parameters"))
-    elif fi.material_id is None and fi.material_hardness is None:
-        hits.append(RuleHit("F024", "RED", "No material specified — safety validation requires material info"))
     return hits
 
 

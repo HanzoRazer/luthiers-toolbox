@@ -233,3 +233,35 @@ def build_promotion_intent_v1(
             feasibility=session.feasibility,
         ),
     )
+
+
+def build_promotion_intent_v1_for_session_id(
+    session_id: str,
+    *,
+    requested_cam_profile_id: str | None = None,
+    context_refs: dict[str, str] | None = None,
+    risk_tolerance: str | None = None,
+):
+    """
+    Build a v1 PromotionIntent payload by session ID.
+    
+    This is a convenience wrapper around build_promotion_intent_v1 that:
+      1. Loads the session by ID
+      2. Validates the session is APPROVED
+      3. Builds and returns the PromotionIntentV1
+    
+    Raises:
+        KeyError: If session not found
+        PermissionError: If session is not approved
+    """
+    sess = get_session(session_id)
+    
+    if sess.state != DesignFirstState.APPROVED:
+        raise PermissionError("workflow_not_approved")
+    
+    return build_promotion_intent_v1(
+        session=sess,
+        requested_cam_profile_id=requested_cam_profile_id,
+        context_refs=context_refs,
+        risk_tolerance=risk_tolerance,
+    )
