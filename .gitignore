@@ -385,3 +385,14 @@ services/api/services/
 # Local test artifacts
 services/api/exports/
 services/api/test.dxf
+
+# ------------------------------------------
+# Cloned Repos (submodules managed separately)
+# ------------------------------------------
+ai-integrator/
+
+# ------------------------------------------
+# Runtime Data Directories
+# ------------------------------------------
+services/api/app/data/
+examples/retopo/out_*/
