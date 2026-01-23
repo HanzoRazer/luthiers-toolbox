@@ -155,7 +155,7 @@ class BasicSVGVectorizer:
                 match = re.search(r'([\d.]+)', value_str)
                 if match:
                     numeric_dims.append(float(match.group(1)) * scale_factor)
-            except:
+            except (ValueError, AttributeError):
                 pass
         
         if not numeric_dims:

@@ -377,7 +377,7 @@ class StableDiffusionClient(ImageClient):
                     import json
                     try:
                         info = json.loads(info)
-                    except:
+                    except (ValueError, json.JSONDecodeError):
                         info = {}
 
                 return ImageResponse(

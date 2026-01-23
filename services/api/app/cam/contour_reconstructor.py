@@ -371,7 +371,7 @@ def sample_spline(spline_entity, max_segments: int = 50, max_error_mm: float = 0
             try:
                 p = spline_entity.point(t)
                 points.append((p.x, p.y))
-            except:
+            except (AttributeError, RuntimeError):
                 pass
         return points if points else [(0, 0), (1, 1)]  # Dummy fallback
 

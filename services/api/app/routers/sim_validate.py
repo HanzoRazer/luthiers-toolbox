@@ -54,12 +54,12 @@ class ModalState:
         elif c.startswith('F'):
             try:
                 self.F = float(c[1:])
-            except:
+            except (ValueError, IndexError):
                 pass
         elif c.startswith('S'):
             try:
                 self.S = float(c[1:])
-            except:
+            except (ValueError, IndexError):
                 pass
 
 

@@ -393,7 +393,7 @@ class TopologyValidator:
                             coords_str = error_reason.split("[")[1].split("]")[0]
                             x, y = map(float, coords_str.split(","))
                             intersection_point = (x, y)
-                        except:
+                        except (ValueError, IndexError):
                             pass
                     
                     # Try buffer(0) repair
@@ -533,7 +533,7 @@ class TopologyValidator:
                     poly = Polygon(points)
                     if poly.is_valid:
                         shapely_polys.append((entity, poly))
-            except:
+            except (ValueError, AttributeError):
                 pass
         
         # Check for overlaps (O(n²) - expensive!)

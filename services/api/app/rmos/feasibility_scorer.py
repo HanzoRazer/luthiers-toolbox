@@ -435,5 +435,5 @@ def _estimate_cut_time(design: RosetteParamSpec, ctx: RmosContext) -> float:
         feed_rate_mm_per_min = 1200.0  # Typical feed rate
         time_minutes = total_path_mm / feed_rate_mm_per_min
         return round(time_minutes * 60, 2)  # Convert to seconds
-    except:
+    except (ZeroDivisionError, AttributeError, TypeError):
         return 300.0  # 5-minute default

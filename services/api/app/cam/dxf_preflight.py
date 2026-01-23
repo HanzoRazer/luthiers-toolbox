@@ -587,7 +587,7 @@ class DXFPreflight:
                         min_y = min(min_y, bbox.extmin.y)
                         max_x = max(max_x, bbox.extmax.x)
                         max_y = max(max_y, bbox.extmax.y)
-                except:
+                except (AttributeError, TypeError):
                     pass
         
         if min_x == float('inf'):

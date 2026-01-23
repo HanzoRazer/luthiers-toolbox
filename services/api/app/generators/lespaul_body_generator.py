@@ -210,7 +210,7 @@ class LesPaulDXFReader:
             try:
                 for pt in entity.flattening(0.01):  # High resolution
                     points.append((pt.x, pt.y))
-            except:
+            except (AttributeError, RuntimeError):
                 pass
         
         return points

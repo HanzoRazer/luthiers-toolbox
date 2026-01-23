@@ -47,7 +47,7 @@ def _parse_svg_polylines(svg: str) -> List[List[Tuple[float,float]]]:
                 x, y = parts
             try:
                 pts.append((float(x), float(y)))
-            except:
+            except (ValueError, TypeError):
                 pass
         if pts: pl.append(pts)
     return pl
