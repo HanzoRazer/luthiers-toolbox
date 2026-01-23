@@ -45,6 +45,10 @@ const triggeredRules = computed(() => {
 
 const hasExplainability = computed(() => triggeredRuleIds.value.length > 0);
 
+const riskLevel = computed(() => {
+  return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
+});
+
 // Auto-open Why on YELLOW/RED when explainability exists; close for GREEN/UNKNOWN.
 watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
   if (!run.value) return;
@@ -52,9 +56,6 @@ watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
   showWhy.value = rl === "YELLOW" || rl === "RED";
 }, { immediate: true });
 
-const riskLevel = computed(() => {
-  return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
-});
 
 const overrideAttachment = computed(() => {
   const atts = run.value?.attachments || [];

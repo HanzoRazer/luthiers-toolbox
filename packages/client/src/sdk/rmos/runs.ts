@@ -29,6 +29,7 @@ export type RunArtifact = RunArtifactLite & {
   outputs?: RunOutputs;
   provenance?: RunProvenance;
   meta?: Record<string, unknown>;
+  attachments?: unknown[];
 };
 
 export type RunDecision = {
