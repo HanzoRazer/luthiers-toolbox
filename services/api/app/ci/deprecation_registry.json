@@ -1,0 +1,130 @@
+{
+  "$schema": "./deprecation_registry.schema.json",
+  "version": 1,
+  "description": "Registry of deprecated routes with sunset dates. CI enforces removal.",
+  "updated": "2026-01-23",
+  "routes": [
+    {
+      "id": "guitar-legacy-redirects",
+      "description": "Legacy guitar model route redirects (archtop, om, strat, smart)",
+      "module": "app.routers.legacy.guitar_legacy_router",
+      "old_prefix": "/api/guitar/{model}/cam/{model}/*",
+      "new_prefix": "/api/cam/guitar/{model}/*",
+      "deprecated_date": "2025-12-01",
+      "sunset_date": "2026-03-01",
+      "status": "deprecated",
+      "removal_pr": null,
+      "notes": "308 redirects active. Remove after frontend migration confirmed."
+    },
+    {
+      "id": "smart-guitar-legacy-redirects",
+      "description": "Legacy smart guitar route redirects",
+      "module": "app.routers.legacy.smart_guitar_legacy_router",
+      "old_prefix": "/api/smart-guitar/*",
+      "new_prefix": "/api/instruments/guitar/smart/*",
+      "deprecated_date": "2025-12-01",
+      "sunset_date": "2026-03-01",
+      "status": "deprecated",
+      "removal_pr": null,
+      "notes": "308 redirects active."
+    },
+    {
+      "id": "temperament-legacy-redirects",
+      "description": "Legacy temperament route redirects",
+      "module": "app.routers.legacy.temperament_legacy_router",
+      "old_prefix": "/api/smart-guitar/temperaments/*",
+      "new_prefix": "/api/music/temperament/*",
+      "deprecated_date": "2026-01-23",
+      "sunset_date": "2026-04-01",
+      "status": "deprecated",
+      "removal_pr": null,
+      "notes": "308 redirects active. Created during Option C migration."
+    },
+    {
+      "id": "compat-geometry",
+      "description": "Legacy /geometry/* compat mount",
+      "module": "app.routers.geometry_router",
+      "old_prefix": "/geometry/*",
+      "new_prefix": "/api/geometry/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "notes": "Hidden from OpenAPI. Long-standing compat route."
+    },
+    {
+      "id": "compat-tooling",
+      "description": "Legacy /tooling/* compat mount",
+      "module": "app.routers.tooling_router",
+      "old_prefix": "/tooling/*",
+      "new_prefix": "/api/tooling/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "notes": "Hidden from OpenAPI."
+    },
+    {
+      "id": "compat-material",
+      "description": "Legacy /material/* compat mount",
+      "module": "app.routers.material_router",
+      "old_prefix": "/material/*",
+      "new_prefix": "/api/material/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "notes": "Hidden from OpenAPI."
+    },
+    {
+      "id": "compat-machine",
+      "description": "Legacy /machine/* compat mount",
+      "module": "app.routers.machine_router",
+      "old_prefix": "/machine/*",
+      "new_prefix": "/api/machine/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "notes": "Hidden from OpenAPI."
+    },
+    {
+      "id": "compat-feeds",
+      "description": "Legacy /feeds/* compat mount",
+      "module": "app.routers.feeds_router",
+      "old_prefix": "/feeds/*",
+      "new_prefix": "/api/feeds/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "notes": "Hidden from OpenAPI."
+    },
+    {
+      "id": "compat-sim",
+      "description": "Legacy /sim/* compat mount",
+      "module": "app.routers.cam_sim_router",
+      "old_prefix": "/sim/*",
+      "new_prefix": "/api/sim/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "removal_action": "Remove _include_compat_router call in main.py",
+      "notes": "Hidden from OpenAPI. Router file stays, only compat mount removed."
+    },
+    {
+      "id": "compat-cam",
+      "description": "Legacy /cam/* compat mount",
+      "module": "app.cam.routers",
+      "old_prefix": "/cam/*",
+      "new_prefix": "/api/cam/*",
+      "deprecated_date": "2025-06-01",
+      "sunset_date": "2026-06-01",
+      "status": "compat",
+      "removal_pr": null,
+      "removal_action": "Remove _include_compat_router call in main.py",
+      "notes": "Hidden from OpenAPI. High-traffic legacy path. Router file stays."
+    }
+  ]
+}
