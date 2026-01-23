@@ -486,3 +486,121 @@ def list_temperament_systems() -> List[Dict]:
         for t in TemperamentSystem
         if t != TemperamentSystem.CUSTOM
     ]
+
+
+# =============================================================================
+# PATCH-001: CAM Export Helpers (Per-Fret Ratio Support)
+# =============================================================================
+
+# Named ratio sets available for CAM export (per-fret ratios only)
+# These are different from scale-degree ratios used by /fret/staggered
+NAMED_RATIO_SETS: Dict[str, str] = {
+    "JUST_MAJOR": "Just Intonation (Major) - per-fret ratios",
+    "PYTHAGOREAN": "Pythagorean tuning - per-fret ratios",
+    "MEANTONE": "Quarter-comma Meantone - per-fret ratios",
+}
+
+
+def get_ratio_set(ratio_set_id: str, fret_count: int = 22) -> List[float]:
+    """
+    Return a per-fret ratio list for CAM fret placement.
+
+    IMPORTANT:
+      For CAM fret placement we need a per-fret ratio list (len == fret_count):
+        ratios[n-1] = freq_ratio at fret n relative to open
+
+      This function generates per-fret ratios by extending the scale-degree
+      ratios across octaves.
+
+    Args:
+        ratio_set_id: Named ratio set (JUST_MAJOR, PYTHAGOREAN, MEANTONE)
+        fret_count: Number of frets to generate ratios for
+
+    Returns:
+        List of frequency ratios, one per fret
+
+    Raises:
+        ValueError: If ratio_set_id is unknown
+    """
+    key = (ratio_set_id or "").strip().upper()
+
+    # Select the appropriate ratio table
+    if key in ("JUST_MAJOR", "JUST_MAJOR_RATIOS"):
+        base_ratios = JUST_MAJOR_RATIOS
+    elif key in ("PYTHAGOREAN", "PYTHAGOREAN_RATIOS"):
+        base_ratios = PYTHAGOREAN_RATIOS
+    elif key in ("MEANTONE", "MEANTONE_RATIOS"):
+        base_ratios = MEANTONE_RATIOS
+    else:
+        raise ValueError(
+            f"Unknown ratio_set_id: {ratio_set_id}. "
+            f"Available: {list(NAMED_RATIO_SETS.keys())}"
+        )
+
+    # Generate per-fret ratios by extending across octaves
+    per_fret_ratios: List[float] = []
+    for fret in range(1, fret_count + 1):
+        semitone = fret % 12
+        if semitone == 0:
+            semitone = 12
+        octave = (fret - 1) // 12
+
+        ratio_tuple = base_ratios.get(semitone, (1, 1))
+        ratio_float = ratio_to_float(ratio_tuple) * (2 ** octave)
+        per_fret_ratios.append(ratio_float)
+
+    return per_fret_ratios
+
+
+def compute_fret_positions_from_ratios_mm(
+    scale_length_mm: float,
+    ratios: List[float],
+) -> List[float]:
+    """
+    Convert frequency ratios to fret positions (distance from nut, mm).
+
+    This is the canonical function for converting a per-fret ratio list
+    to manufacturable fret positions.
+
+    Contract:
+      - ratios is per-fret: ratios[n-1] corresponds to fret n
+      - each ratio must be > 1.0 (fretted note is higher than open)
+      - output positions must strictly increase (physically valid)
+
+    Args:
+        scale_length_mm: Scale length in millimeters
+        ratios: Per-fret frequency ratios (len == fret_count)
+
+    Returns:
+        List of fret positions in mm from nut
+
+    Raises:
+        ValueError: If inputs are invalid or produce invalid geometry
+    """
+    if scale_length_mm <= 0:
+        raise ValueError("scale_length_mm must be > 0")
+    if not ratios:
+        raise ValueError("ratios must be non-empty")
+
+    positions: List[float] = []
+    for i, r in enumerate(ratios):
+        if r <= 1.0:
+            raise ValueError(f"ratios[{i}] must be > 1.0, got {r}")
+        # position = L * (1 - 1/ratio)
+        pos = scale_length_mm * (1.0 - (1.0 / r))
+        positions.append(pos)
+
+    # Monotonic check: fret positions must strictly increase
+    for i in range(1, len(positions)):
+        if positions[i] <= positions[i - 1]:
+            raise ValueError(
+                f"ratios produce non-increasing fret positions at fret {i+1}: "
+                f"{positions[i-1]:.4f}mm -> {positions[i]:.4f}mm"
+            )
+
+    return positions
+
+
+def list_named_ratio_sets() -> Dict[str, str]:
+    """List available named ratio sets for CAM export."""
+    return NAMED_RATIO_SETS.copy()
