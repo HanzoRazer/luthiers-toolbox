@@ -696,3 +696,9 @@ def demo():
 
 if __name__ == "__main__":
     demo()
+
+# =============================================================================
+# BACKWARD COMPATIBILITY RE-EXPORT
+# Import from canonical app.vision.prompt_engine for the new PromptPreview API
+# =============================================================================
+from app.vision.prompt_engine import *  # noqa: F401,F403

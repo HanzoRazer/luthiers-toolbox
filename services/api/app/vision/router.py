@@ -18,7 +18,9 @@ from pydantic import BaseModel
 
 from app.ai.transport import get_image_client
 from app.rmos.runs_v2.attachments import put_bytes_attachment
-from app.vision.schemas import VisionAsset, VisionGenerateRequest, VisionGenerateResponse
+from app.vision.vocabulary import as_dict as vision_vocabulary
+from app.vision.prompt_engine import engineer_guitar_prompt
+from app.vision.schemas import (VisionAsset, VisionGenerateRequest, VisionGenerateResponse, VisionPromptPreviewRequest, VisionPromptPreviewResponse, VisionVocabularyResponse)
 
 router = APIRouter(prefix="/api/vision", tags=["Vision"])
 
@@ -131,3 +133,30 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
         )
 
     return VisionGenerateResponse(assets=assets, request_id=request_id)
+
+
+@router.get("/vocabulary", response_model=VisionVocabularyResponse)
+def get_vocabulary() -> VisionVocabularyResponse:
+    """Return vocabulary lists for UI dropdowns."""
+    return VisionVocabularyResponse(vocabulary=vision_vocabulary())
+
+
+@router.post("/prompt", response_model=VisionPromptPreviewResponse)
+def preview_prompt(payload: VisionPromptPreviewRequest) -> VisionPromptPreviewResponse:
+    """Return an engineered prompt preview (no generation)."""
+    p = engineer_guitar_prompt(payload.prompt, style=payload.style)
+    return VisionPromptPreviewResponse(
+        raw_prompt=p.raw_prompt,
+        engineered_prompt=p.engineered_prompt,
+        photography_style=p.photography_style,
+    )
+
+
+@router.post("/feedback")
+def feedback() -> Dict[str, Any]:
+    """Deprecated endpoint.
+
+    Frontend should use RMOS advisory review/promote as the governance path.
+    This endpoint remains for backward compatibility but does not affect routing.
+    """
+    return {"ok": True, "message": "feedback endpoint deprecated; use RMOS review/promote"}

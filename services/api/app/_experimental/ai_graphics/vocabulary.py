@@ -1732,3 +1732,9 @@ def demo():
 
 if __name__ == "__main__":
     demo()
+
+# =============================================================================
+# BACKWARD COMPATIBILITY RE-EXPORT
+# Import from canonical app.vision.vocabulary for the new minimal API
+# =============================================================================
+from app.vision.vocabulary import *  # noqa: F401,F403
