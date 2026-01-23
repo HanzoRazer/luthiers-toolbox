@@ -1,9 +1,48 @@
 # Router Inventory and Deprecation Plan
 
-> Generated: 2025-12-21  
-> Total Routers: 100  
-> Total Endpoints: 561  
+> Generated: 2025-12-21
+> **Updated: 2026-01-23**
+> Total Routers: 114
+> Total Endpoints: ~600
 > Wave 20: Option C API Restructuring
+
+---
+
+## Status Update (2026-01-23)
+
+### Completed Deprecations
+
+All 5 deprecated routers from the original plan have been removed:
+
+| Router | Removed | Replacement | Legacy Redirect |
+|--------|---------|-------------|-----------------|
+| archtop_router.py | YES | instruments/guitar/archtop_* | legacy/guitar_legacy_router.py |
+| om_router.py | YES | instruments/guitar/om_* | legacy/guitar_legacy_router.py |
+| stratocaster_router.py | YES | instruments/guitar/stratocaster_* | legacy/guitar_legacy_router.py |
+| smart_guitar_router.py | YES | instruments/guitar/smart_* | legacy/smart_guitar_legacy_router.py |
+| temperament_router.py | YES | music/temperament_router.py | legacy/temperament_legacy_router.py |
+
+### Governance Structure
+
+Self-executing removal enforcement is now active:
+
+- **Registry**: services/api/app/ci/deprecation_registry.json
+- **CI Check**: python -m app.ci.check_deprecation_sunset
+- **Workflow**: .github/workflows/deprecation_sunset_guard.yml
+
+CI fails when routes exceed their sunset date. Requires governance label to extend.
+
+### Pending Patches
+
+- **PATCH-001**: Archtop/Smart Guitar design issues (see docs/PENDING_PATCHES.md)
+
+### Sunset Schedule
+
+| Route Category | Sunset Date | Status |
+|----------------|-------------|--------|
+| Guitar legacy redirects | 2026-03-01 | Active |
+| Temperament legacy redirects | 2026-04-01 | Active |
+| Compat mounts (/geometry, /cam, etc.) | 2026-06-01 | Active |
 
 ---
 
