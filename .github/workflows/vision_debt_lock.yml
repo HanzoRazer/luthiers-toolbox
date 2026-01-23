@@ -1,0 +1,24 @@
+name: vision-debt-lock
+
+on:
+  pull_request:
+    paths:
+      - "services/api/app/**"
+      - "ci/guard_no_legacy_vision_imports.sh"
+      - ".github/workflows/vision_debt_lock.yml"
+  push:
+    branches: [ main ]
+    paths:
+      - "services/api/app/**"
+      - "ci/guard_no_legacy_vision_imports.sh"
+      - ".github/workflows/vision_debt_lock.yml"
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run legacy vision import guard
+        run: |
+          chmod +x ci/guard_no_legacy_vision_imports.sh
+          ci/guard_no_legacy_vision_imports.sh
