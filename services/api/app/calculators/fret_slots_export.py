@@ -22,7 +22,9 @@ Intonation Models (PATCH-001):
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from math import sqrt
 from enum import Enum
@@ -394,10 +396,27 @@ def export_fret_slots(
         elif request.ratio_set_id:
             # Reject ratio_set_id without explicit ratios - forces caller to expand
             observed_len = len(request.ratios) if request.ratios is not None else 0
+            
+            # Dev-mode suggestion: point to the canonical template for per-fret ratios.
+            # We keep this out of production logs/messages unless explicitly in dev/test.
+            hint = ""
+            env = (os.getenv("APP_ENV") or os.getenv("ENV") or "").strip().lower()
+            debug = (os.getenv("DEBUG") or "").strip().lower() in ("1", "true", "yes", "on")
+            if env in ("dev", "development", "test") or debug:
+                # Resolve relative to repo layout when running from services/api
+                # (non-fatal; if path doesn't exist we still provide a stable suggestion)
+                template_rel = "docs/tests/ratios_template.json"
+                template_abs = str(Path(__file__).resolve().parents[3] / "docs" / "tests" / "ratios_template.json")
+                hint = (
+                    f" See template: '{template_rel}' "
+                    f"(or absolute: '{template_abs}')."
+                )
+            
             raise ValueError(
                 f"ratio_set_id='{request.ratio_set_id}' does not provide per-fret ratios "
                 f"required for CAM export (observed length={observed_len}). "
                 f"Provide explicit ratios[] with length == fret_count ({request.fret_count})."
+                f"{hint}"
             )
         else:
             # Schema validation should prevent this, but guard anyway
