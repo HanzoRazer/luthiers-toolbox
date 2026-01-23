@@ -99,7 +99,7 @@ try:
     try:
         store.delete(test_pattern_id)
         print(f"✓ Cleaned up existing test pattern")
-    except:
+    except (KeyError, FileNotFoundError):
         pass
     
     # Create a test rosette pattern

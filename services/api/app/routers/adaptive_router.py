@@ -725,7 +725,7 @@ def plan(body: PlanIn) -> PlanOut:
     if body.machine_profile_id:
         try:
             profile = get_profile(body.machine_profile_id)
-        except:
+        except (KeyError, FileNotFoundError, ValueError):
             profile = None
     
     # Classic time estimate (fallback to machine params if no profile)

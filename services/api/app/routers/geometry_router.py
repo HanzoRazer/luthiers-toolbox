@@ -395,7 +395,7 @@ def _dxf_to_segments(dxf_bytes:bytes)->List[Dict[str,Any]]:
         else:
             if mode in ('LINE','ARC'):
                 try: cur[code] = float(val)
-                except: cur[code] = val
+                except (ValueError, TypeError): cur[code] = val
     return ents
 
 @router.post("/import")
