@@ -22,23 +22,51 @@ def load_registry(contracts_root: Path) -> Dict[Tuple[str, str], dict]:
         raise FileNotFoundError(f"Missing registry: {reg_path}")
     data = json.loads(reg_path.read_text(encoding="utf-8"))
     index: Dict[Tuple[str, str], dict] = {}
-    for ent in data.get("schemas", []):
-        sid, ver, fp = ent["schema_id"], ent["version"], ent["file"]
-        schema_path = (contracts_root.parent / Path(fp).name) if not Path(fp).is_absolute() else Path(fp)
+    schemas = data.get("schemas", {})
+    # Handle both dict format (keyed by schema_id) and list format
+    if isinstance(schemas, dict):
+        items = [(k, v) for k, v in schemas.items()]
+    else:
+        items = [(ent["schema_id"], ent) for ent in schemas]
+    for sid, ent in items:
+        ver = ent["version"]
+        fp = ent.get("path") or ent["file"]
+        schema_path = contracts_root.parent / fp if not Path(fp).is_absolute() else Path(fp)
         if not schema_path.exists():
             schema_path = contracts_root / "schemas" / Path(fp).name
         if not schema_path.exists():
             raise FileNotFoundError(f"Schema not found: {fp}")
-        index[(sid, ver)] = json.loads(schema_path.read_text(encoding="utf-8"))
+        schema_content = json.loads(schema_path.read_text(encoding="utf-8"))
+        index[(sid, ver)] = schema_content
+        # Also key by schema_version_const if present
+        if "schema_version_const" in ent:
+            index[(sid, ent["schema_version_const"])] = schema_content
     return index
 
 def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
+# Aliases for schema_id inference from schema_version
+_SCHEMA_ALIASES = {
+    "measurement_manifest": "manifest",
+}
+
+def _infer_schema_id(schema_version: str) -> str:
+    """Infer schema_id from schema_version const like 'phase2_session_meta_v1'."""
+    # Strip trailing version: phase2_session_meta_v1 -> phase2_session_meta
+    if "_v" in schema_version:
+        return schema_version.rsplit("_v", 1)[0]
+    return ""
+
 def validate_doc(doc: dict, reg: Dict[Tuple[str, str], dict]) -> List[str]:
     sid = str(doc.get("schema_id") or "")
     ver = str(doc.get("schema_version") or "")
     errs: List[str] = []
+    # If no schema_id, try to infer from schema_version
+    if not sid and ver:
+        sid = _infer_schema_id(ver)
+    # Apply aliases
+    sid = _SCHEMA_ALIASES.get(sid, sid)
     if not sid or not ver:
         return [f"missing schema_id/version: {sid}/{ver}"]
     key = (sid, ver)
