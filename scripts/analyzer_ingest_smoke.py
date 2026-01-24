@@ -51,6 +51,17 @@ _SCHEMA_ALIASES = {
     "measurement_manifest": "manifest",
 }
 
+def _normalize_version(v: str) -> str:
+    """Normalize version: 1.0 -> 1.0.0, but leave version consts unchanged."""
+    if not v or not v[0].isdigit():
+        return v
+    parts = v.split(".")
+    if not all(p.isdigit() for p in parts):
+        return v
+    while len(parts) < 3:
+        parts.append("0")
+    return ".".join(parts[:3])
+
 def _infer_schema_id(schema_version: str) -> str:
     """Infer schema_id from schema_version const like 'phase2_session_meta_v1'."""
     # Strip trailing version: phase2_session_meta_v1 -> phase2_session_meta
@@ -69,6 +80,8 @@ def validate_doc(doc: dict, reg: Dict[Tuple[str, str], dict]) -> List[str]:
     sid = _SCHEMA_ALIASES.get(sid, sid)
     if not sid or not ver:
         return [f"missing schema_id/version: {sid}/{ver}"]
+    # Normalize version (1.0 -> 1.0.0)
+    ver = _normalize_version(ver)
     key = (sid, ver)
     if key not in reg:
         return [f"no schema for ({sid}, {ver}) in registry"]
@@ -95,8 +108,8 @@ def main() -> int:
 
     targets = [
         chladni_dir / "chladni_run.json",
-        phase2_dir  / "ods_snapshot.json",
-        phase2_dir  / "wolf_candidates.json",
+        phase2_dir  / "derived" / "ods_snapshot.json",
+        phase2_dir  / "derived" / "wolf_candidates.json",
         moe_dir     / "moe_result.json",
     ]
 
