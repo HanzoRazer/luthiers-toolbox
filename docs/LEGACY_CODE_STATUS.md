@@ -11,7 +11,7 @@
 |----------|-------|--------|
 | **Legacy Lane Endpoints** | 17 | UTILITY lane, awaiting OPERATION promotion |
 | **Deprecated Routers** | 5 | Superseded by Option C, awaiting removal |
-| **Consolidation Candidates** | 10 | Duplicate/overlapping routers |
+| **Consolidation Candidates** | ~~10~~ **17** | 17 routers → 6 (4,203 lines, ~2,500 savings) |
 | **Critical TODOs (P1)** | ~~5~~ **0** | ✅ All P1 stubs resolved (2026-01-26) |
 | **Incomplete Features (P2)** | ~~5~~ **0** | ✅ All P2 features completed (2026-01-26) |
 | **Enhancement TODOs (P3)** | ~~3~~ **2** | 1 fixed, 2 remain (ML optimization, non-blocking) |
@@ -80,15 +80,18 @@ These routers have `"Legacy"` tag for usage monitoring:
 | Compare Legacy | 5 | compare, lab, risk_aggregate, risk_bucket_detail, risk_bucket_export |
 | Rosette Legacy | 2 | rosette_pattern, art_studio_rosette |
 
-### Consolidation Candidates
+### Consolidation Candidates (17 routers → 6)
 
-| Group | Current Routers | Target | Lines Saved |
-|-------|-----------------|--------|-------------|
-| Pipeline | 5 routers | 2 routers | ~300 |
-| Calculators | 2 routers | 1 router | ~280 |
-| Posts | 2 routers | 1 router | ~100 |
-| Machines | 2 routers | 1 router | ~85 |
-| Simulation | 2 routers | 1 router | ~38 |
+**Audited 2026-01-26** — Actual counts higher than originally documented.
+
+| Group | Current | Target | Lines | Routers |
+|-------|---------|--------|-------|---------|
+| Pipeline | 5 | 2 | 1,792 | `pipeline_router`, `pipeline_presets_router`, `cam_pipeline_preset_run_router`, `cam_pipeline_router`, `pipeline_preset_router` |
+| Calculators | 2 | 1 | 829 | `calculators_router`, `ltb_calculator_router` |
+| Posts | 3 | 1 | 837 | `post_router`, `cam_post_v155_router`, `posts_router` |
+| Machines | 3 | 1 | 392 | `machines_tools_router`, `machine_router`, `machines_router` |
+| Simulation | 4 | 1 | 353 | `sim_metrics_router`, `cam_simulate_router`, `gcode_sim_router`, `cam_sim_router` |
+| **Total** | **17** | **6** | **4,203** | Potential savings: ~2,500+ lines |
 
 ---
 
@@ -254,8 +257,8 @@ curl http://localhost:8000/api/governance/stats
 
 | Task | Effort | Impact |
 |------|--------|--------|
-| Consolidate pipeline routers (5 → 2) | Medium | Maintainability |
-| Consolidate calculator routers (2 → 1) | Low | Maintainability |
+| Consolidate pipeline routers (5 → 2, 1,792 lines) | Medium | ~1,200 lines saved |
+| Consolidate calculator routers (2 → 1, 829 lines) | Low | ~400 lines saved |
 | Update frontend legacy API calls (8) | Medium | Clean slate |
 
 ### Medium-term (Next Quarter)
