@@ -1,6 +1,6 @@
 # Legacy Code Status
 
-> **Last Updated:** 2026-01-02
+> **Last Updated:** 2026-01-26
 > **Purpose:** Single source of truth for legacy code, technical debt, and migration status.
 
 ---
@@ -12,7 +12,7 @@
 | **Legacy Lane Endpoints** | 17 | UTILITY lane, awaiting OPERATION promotion |
 | **Deprecated Routers** | 5 | Superseded by Option C, awaiting removal |
 | **Consolidation Candidates** | 10 | Duplicate/overlapping routers |
-| **Critical TODOs (P1)** | 5 | Production blockers with stub implementations |
+| **Critical TODOs (P1)** | ~~5~~ **0** | ✅ All P1 stubs resolved (2026-01-26) |
 | **Incomplete Features (P2)** | 5 | Reduced functionality |
 | **Enhancement TODOs (P3)** | 3 | Nice-to-have improvements |
 | **ADR Phases Complete** | 5/5 | ADR-003 fully implemented |
@@ -94,17 +94,22 @@ These routers have `"Legacy"` tag for usage monitoring:
 
 ## 3. Technical Debt Items
 
-### Priority 1: Critical Stubs (Production Blockers)
+### Priority 1: Critical Stubs ~~(Production Blockers)~~ ✅ RESOLVED
 
-These return fake/stub data and represent **safety risks** if deployed to production.
+**ALL P1 STUBS RESOLVED (2026-01-26)** — No safety risks remain.
 
-| File | Line | Issue | Risk |
-|------|------|-------|------|
-| `rmos/api/rmos_feasibility_router.py` | 97 | Hardcoded `GREEN` for SAW | Could approve unsafe cuts |
-| `rmos/api/rmos_feasibility_router.py` | 146 | Hardcoded `GREEN` for rosette | Could approve impossible designs |
-| `rmos/api/rmos_toolpaths_router.py` | 216 | Empty toolpath dispatcher | No actual G-code |
-| `rmos/api/rmos_toolpaths_router.py` | 238 | Stub SAW toolpath generator | No actual G-code |
-| `rmos/api/rmos_toolpaths_router.py` | 259 | Stub rosette CAM engine | No actual G-code |
+| File | Line | Issue | Status |
+|------|------|-------|--------|
+| `rmos/api/rmos_feasibility_router.py` | 115-213 | SAW feasibility | ✅ Wired to `score_design_feasibility()` |
+| `rmos/api/rmos_feasibility_router.py` | 220-316 | Rosette feasibility | ✅ Wired to `score_design_feasibility()` |
+| `rmos/api/rmos_toolpaths_router.py` | 228-286 | Toolpath dispatcher | ✅ Wired to `generate_toolpaths_server_side()` |
+| `rmos/api/rmos_toolpaths_router.py` | 288+ | SAW toolpath generator | ✅ Fallback only, real engine via dispatcher |
+| `rmos/api/rmos_toolpaths_router.py` | 320+ | Rosette CAM engine | ✅ Fallback only, real engine via dispatcher |
+
+**Feasibility Engine** (`feasibility_scorer.py`):
+- 6 weighted calculators: chipload, heat, deflection, rim speed, geometry, channel
+- Worst-case risk propagation (one RED → overall RED)
+- Saw mode branching via `get_saw_engine().check_feasibility()`
 
 ### Priority 2: Incomplete Features
 
@@ -237,8 +242,8 @@ curl http://localhost:8000/api/governance/stats
 
 | Task | Effort | Impact |
 |------|--------|--------|
-| Wire real SAW feasibility scorer | High | P1 safety |
-| Wire real rosette feasibility scorer | High | P1 safety |
+| ~~Wire real SAW feasibility scorer~~ | ~~High~~ | ✅ Done (2026-01-26) |
+| ~~Wire real rosette feasibility scorer~~ | ~~High~~ | ✅ Done (2026-01-26) |
 | Add deprecation headers to legacy routers | Low | Tracking |
 
 ### Short-term (Next Month)
