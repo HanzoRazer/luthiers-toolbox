@@ -1,8 +1,16 @@
 # Developer Handoff: Luthiers-ToolBox Repository
 
-**Version:** 1.9.0
-**Date:** 2026-01-16
+**Version:** 1.9.1
+**Date:** 2026-01-26
 **Purpose:** Guide a developer into assuming work on the ToolBox repository
+
+> ⚠️ **Technical Debt Update (2026-01-26)**
+>
+> The P1/P2 issues mentioned in this document have been **resolved**:
+> - P1 Critical Stubs (feasibility, toolpaths): ✅ All wired to real engines
+> - P2 Incomplete Features (DXF, compare, spacing): ✅ All completed
+>
+> See `docs/LEGACY_CODE_STATUS.md` for current technical debt status.
 
 ---
 
