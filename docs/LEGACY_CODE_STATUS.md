@@ -13,7 +13,7 @@
 | **Deprecated Routers** | 5 | Superseded by Option C, awaiting removal |
 | **Consolidation Candidates** | 10 | Duplicate/overlapping routers |
 | **Critical TODOs (P1)** | ~~5~~ **0** | ✅ All P1 stubs resolved (2026-01-26) |
-| **Incomplete Features (P2)** | 5 | Reduced functionality |
+| **Incomplete Features (P2)** | ~~5~~ **0** | ✅ All P2 features completed (2026-01-26) |
 | **Enhancement TODOs (P3)** | 3 | Nice-to-have improvements |
 | **ADR Phases Complete** | 5/5 | ADR-003 fully implemented |
 | **RMOS Operations Bundles** | 17/17 | E2E bundle implementation complete |
@@ -111,15 +111,17 @@ These routers have `"Legacy"` tag for usage monitoring:
 - Worst-case risk propagation (one RED → overall RED)
 - Saw mode branching via `get_saw_engine().check_feasibility()`
 
-### Priority 2: Incomplete Features
+### Priority 2: Incomplete Features ~~(5)~~ ✅ RESOLVED
 
-| File | Line | Issue | Impact |
+**ALL P2 FEATURES COMPLETED (2026-01-26)**
+
+| File | Line | Issue | Status |
 |------|------|-------|--------|
-| `toolpath/dxf_exporter.py` | 133 | LINE entities, not LWPOLYLINE | R14/R18 DXF compat |
-| `rmos/context.py` | 282-283 | Empty string spacing arrays | Fretboard calcs incomplete |
-| `util/compare_automation_helpers.py` | 89 | Stub compare engine | Compare Lab incomplete |
-| `util/compare_automation_helpers.py` | 41 | Stub storage lookup | Cannot retrieve baselines |
-| `rmos/context_adapter.py` | 273 | Stub DXF parser | Blueprint import limited |
+| `toolpath/dxf_exporter.py` | 126+ | DXF entity type | ✅ Now emits LWPOLYLINE via `_write_entities_lwpolyline()` |
+| `rmos/context.py` | 282-287 | String spacing | ✅ Calls `compute_edge_margin_spacing_mm()` |
+| `util/compare_automation_helpers.py` | 116-147 | Compare engine | ✅ Uses `annotate_geometries_with_colors()` |
+| `util/compare_automation_helpers.py` | 37-86 | Storage lookup | ✅ `load_svg_by_id()` checks file system + baselines |
+| `rmos/context_adapter.py` | 270-286 | DXF parser | ✅ Uses `load_dxf_geometry_by_path()` with R12 parser |
 
 ### Priority 3: Enhancements
 
@@ -260,7 +262,7 @@ curl http://localhost:8000/api/governance/stats
 |------|--------|--------|
 | Remove deprecated instrument routers | Low | -1,908 lines |
 | Migrate session-scoped toolpaths to OPERATION | High | Full governance |
-| Complete DXF LWPOLYLINE support | Medium | Compatibility |
+| ~~Complete DXF LWPOLYLINE support~~ | ~~Medium~~ | ✅ Done (2026-01-26) |
 
 ---
 
