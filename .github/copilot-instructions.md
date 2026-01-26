@@ -1,7 +1,7 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-20
+> **Last Updated:** 2026-01-25
 
 ## ⚡ Quick Start
 
@@ -40,6 +40,7 @@ make check-boundaries                                    # All architectural fen
 8. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
 9. **Architectural Fences**: Check [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) before cross-domain imports – CI-enforced
 10. **Vue Components**: Use `<script setup lang="ts">` – state in Pinia stores (`packages/client/src/stores/`)
+11. **Golden Snapshots**: Never update `tests/golden/*.nc` files casually – they represent manufacturing intent
 
 ## 📁 Key Paths
 
@@ -265,6 +266,50 @@ def test_roughing():
 # pytest tests/ -v -m "cam or helical"  # Multiple markers
 ```
 
+### Test Isolation Pattern
+
+Use `tmp_path` and `monkeypatch` to isolate file storage in tests:
+
+```python
+@pytest.fixture()
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    """Create test client with isolated storage directories."""
+    runs_dir = tmp_path / "runs" / "rmos"
+    atts_dir = tmp_path / "run_attachments"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    atts_dir.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(atts_dir))
+
+    # Reset store singleton if present
+    try:
+        import app.rmos.runs_v2.store as store_mod
+        store_mod._default_store = None
+    except Exception:
+        pass
+
+    from app.main import app
+    return TestClient(app)
+```
+
+### Golden Snapshot Policy
+
+⚠️ **Never update `tests/golden/*.nc` casually.** Golden G-code represents manufacturing intent.
+
+Update only when:
+1. You intentionally changed CAM logic, feeds/speeds, or post-processing
+2. You understand and accept the resulting G-code differences
+3. The change is reviewed as a **manufacturing behavior change**
+
+```bash
+# Regenerate golden snapshot (intentional changes only)
+cd services/api
+python scripts/regenerate_mvp_golden_gcode.py
+git add tests/golden/mvp_rect_with_island__grbl.nc
+git commit -m "Update MVP GRBL golden gcode (intentional CAM change)"
+```
+
 ### Feature Flags
 
 ```python
@@ -296,6 +341,8 @@ SAW_LAB_DECISION_INTEL_ENABLED=true          # Decision Intelligence advisory on
 | Module-level `os.makedirs()` | Use lazy directory creation (Docker crashes)        |
 | Direct `RunArtifact()`       | Use `validate_and_persist()` from store             |
 | Frontend raw `fetch()`       | Import from `@/sdk/endpoints`                       |
+| Test uses real file paths    | Use `tmp_path` + `monkeypatch.setenv()` for isolation |
+| Store singleton not reset    | Set `store_mod._default_store = None` in test fixture |
 
 ## 🛠️ Essential CLI Commands
 
@@ -351,6 +398,71 @@ from tap_tone.measurement import perform_analysis
 const response = await fetch("/api/cam/roughing/gcode", {...});
 ```
 
+## 🏭 Product Family Architecture
+
+This repository is the **Golden Master** for the Luthier's ToolBox product family. Features are extracted to standalone products using the **Lean Extraction Strategy**.
+
+### Product Tiers
+
+| Tier | Repository | Description | Target Market |
+|------|------------|-------------|---------------|
+| **Express** | `ltb-express` | Design-focused tools | Hobbyists, guitar players |
+| **Pro** | `ltb-pro` | Full CAM workstation | Professional luthiers |
+| **Enterprise** | `ltb-enterprise` | Complete shop OS | Guitar businesses |
+
+### Standalone Designers (Micro-Products)
+
+| Product | Repository | Source Module |
+|---------|------------|---------------|
+| Parametric Guitar | `ltb-parametric-guitar` | `generators/body_outline/` |
+| Neck Designer | `ltb-neck-designer` | `generators/neck/`, `routers/neck_router.py` |
+| Headstock Designer | `ltb-headstock-designer` | `art_studio/headstock/` |
+| Fingerboard Designer | `ltb-fingerboard-designer` | `calculators/fret_calculator.py`, `routers/temperament_router.py` |
+| Bridge Designer | `ltb-bridge-designer` | `calculators/bridge/`, `routers/bridge_router.py` |
+| Blueprint Reader | `blueprint-reader` | `vision/`, `art_studio/blueprint/` |
+
+### Lean Extraction Strategy
+
+All spin-off repos follow **clean slate extraction** – no template stubs, only implemented code:
+
+```bash
+# Extraction workflow
+1. Identify feature in Golden Master (this repo)
+2. Copy specific files/components needed
+3. Strip unnecessary features (downgrade to edition tier)
+4. Adapt imports (remove cross-domain dependencies)
+5. Test extraction
+6. Commit with clear feature description
+```
+
+### Cross-Repo Boundaries
+
+| Rule | Description |
+|------|-------------|
+| **No Golden Master imports** | Spin-offs must NOT import from `luthiers-toolbox` at runtime |
+| **Artifact contracts only** | Share data via JSON/DXF files, not code dependencies |
+| **Edition flag** | Each product returns `{"edition": "EXPRESS"}` from `/health` |
+| **Independent CI** | Each repo has its own GitHub Actions, not shared workflows |
+
+### Feature Extraction Checklist
+
+When extracting a feature to a spin-off product:
+
+- [ ] Identify all source files in Golden Master
+- [ ] Check for cross-domain imports (use `python -m app.ci.check_boundary_imports`)
+- [ ] Copy only necessary dependencies
+- [ ] Update `requirements.txt` / `package.json` for minimal deps
+- [ ] Adapt API prefixes if needed (standalone may use `/api/` directly)
+- [ ] Add edition-specific feature gates if applicable
+- [ ] Test in isolation (no Golden Master running)
+- [ ] Document extraction in spin-off's README
+
+### Related Documentation
+
+- [MASTER_SEGMENTATION_STRATEGY.md](../docs/products/MASTER_SEGMENTATION_STRATEGY.md) – Full segmentation plan
+- [PRODUCT_REPO_SETUP.md](../PRODUCT_REPO_SETUP.md) – Repo creation workflow
+- [EXPRESS_EXTRACTION_GUIDE.md](../EXPRESS_EXTRACTION_GUIDE.md) – Express edition extraction
+
 ## 📚 References
 
 - [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) – Architectural boundaries (8 profiles)
@@ -358,6 +470,8 @@ const response = await fetch("/api/cam/roughing/gcode", {...});
 - [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
+- [services/api/tests/README.md](../services/api/tests/README.md) – Golden snapshot policy
+- [services/api/pytest.ini](../services/api/pytest.ini) – Test markers and configuration
 
 ## 📝 Task Guidelines
 

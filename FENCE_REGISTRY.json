@@ -2,7 +2,7 @@
   "$schema": "https://luthiers-toolbox.dev/schemas/fence-registry-v1.json",
   "version": "1.0.0",
   "repo_name": "luthiers-toolbox",
-  "last_updated": "2026-01-08",
+  "last_updated": "2026-01-26",
   "description": "Architectural boundary enforcement registry for Luthier's ToolBox",
   
   "profiles": {
@@ -20,6 +20,16 @@
           "prefix": "modes.",
           "reason": "Analyzer modal analysis - external dependency",
           "alternative": "Consume analysis results via artifacts"
+        },
+        {
+          "prefix": "app._experimental.ai_graphics.",
+          "reason": "DEPRECATED: Legacy AI graphics module scheduled for deletion",
+          "alternative": "Use app.ai.transport for AI clients, app.vision for domain logic"
+        },
+        {
+          "prefix": "_experimental.ai_graphics.",
+          "reason": "DEPRECATED: Legacy AI graphics module scheduled for deletion",
+          "alternative": "Use app.ai.transport for AI clients, app.vision for domain logic"
         }
       ],
       "enforcement_script": "services/api/app/ci/check_boundary_imports.py --profile toolbox",
