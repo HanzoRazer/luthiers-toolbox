@@ -417,15 +417,15 @@ def generate_rosette_with_feasibility(
     Returns:
         AIRosetteOutput with everything needed
     """
-    # Import AI generator (from experimental zone - allowed for data intake)
+    # AI Generator Import
+    # DEPRECATED: _experimental.ai_graphics is scheduled for removal.
+    # TODO: Migrate to app.ai.transport when rosette AI generation is promoted.
+    # For now, stub fallback ensures deterministic behavior without AI.
+    RosetteAIGenerator = None
     try:
         from app._experimental.ai_graphics.rosette_generator import RosetteAIGenerator
     except ImportError:
-        try:
-            from _experimental.ai_graphics.rosette_generator import RosetteAIGenerator
-        except ImportError:
-            # Stub generator for testing
-            RosetteAIGenerator = None
+        pass  # Use stub fallback below
     
     # Generate pattern
     if RosetteAIGenerator:
