@@ -1,8 +1,17 @@
 # Luthier's ToolBox - System Evaluation Executive Summary
 
-> **Purpose**: Comprehensive technical evaluation for re-review after system changes  
-> **Version**: 1.0.0 | **Date**: December 20, 2025  
+> **Purpose**: Comprehensive technical evaluation for re-review after system changes
+> **Version**: 1.0.0 | **Date**: December 20, 2025
 > **Scope**: Full-stack CAD/CAM system for CNC guitar lutherie
+
+> ⚠️ **OUTDATED (2026-01-26)**: Technical debt sections in this document are stale.
+>
+> **Resolved since this evaluation:**
+> - RMOS Feasibility Engine: No longer stub scorers — wired to real `score_design_feasibility()`
+> - 9 broken routers: All fixed
+> - P1/P2 stubs: All resolved
+>
+> See `docs/LEGACY_CODE_STATUS.md` for current status.
 
 ---
 
