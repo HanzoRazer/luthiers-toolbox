@@ -1,20 +1,31 @@
 # Technical Debt Handoff - December 2025
 
+> ⚠️ **SUPERSEDED (2026-01-26)**: This handoff document is now outdated.
+>
+> **All P1 and P2 issues listed below have been resolved.**
+> - P1 Critical Stubs: ✅ All 5 wired to real engines
+> - P2 Incomplete Features: ✅ All 5 completed
+> - P3 Enhancements: 1 of 3 fixed, 2 remain (non-blocking)
+>
+> See `docs/LEGACY_CODE_STATUS.md` for current status.
+
 **Generated:** December 21, 2025
-**Status:** Manual resolution required
+**Status:** ~~Manual resolution required~~ **RESOLVED**
 **Source:** Analysis of inline TODOs and stray planning files
 
 ---
 
 ## Executive Summary
 
-10 inline TODOs remain as technical debt across the codebase. The 9 previously broken routers have been fixed. Two stray planning files should be deleted.
+~~10 inline TODOs remain as technical debt across the codebase.~~ **All critical items resolved as of January 2026.** The 9 previously broken routers have been fixed. Two stray planning files should be deleted.
 
 ---
 
-## Priority 1: Critical Stubs (Production Blockers)
+## Priority 1: Critical Stubs (Production Blockers) — ✅ ALL RESOLVED
 
-These return fake/stub data and represent **safety risks** if deployed to production.
+~~These return fake/stub data and represent **safety risks** if deployed to production.~~
+
+**RESOLVED 2026-01-26**: All P1 stubs now wired to real engines via `score_design_feasibility()` and `generate_toolpaths_server_side()`.
 
 ### 1.1 SAW Feasibility Scorer
 - **File:** `services/api/app/rmos/api/rmos_feasibility_router.py`
@@ -60,9 +71,11 @@ TODO: Wire to real rosette CAM engine.
 
 ---
 
-## Priority 2: Incomplete Features (Reduced Functionality)
+## Priority 2: Incomplete Features (Reduced Functionality) — ✅ ALL RESOLVED
 
-These features exist but don't fully work.
+~~These features exist but don't fully work.~~
+
+**RESOLVED 2026-01-26**: All P2 features now fully implemented.
 
 ### 2.1 DXF LWPOLYLINE Export
 - **File:** `services/api/app/toolpath/dxf_exporter.py`
@@ -127,9 +140,11 @@ TODO: Implement real storage lookup:
 
 ---
 
-## Priority 3: Enhancements (Nice-to-Have)
+## Priority 3: Enhancements (Nice-to-Have) — 1 of 3 RESOLVED
 
 System works without these but would benefit from them.
+
+**Update 2026-01-26**: Item 3.3 (Tool ID Extraction) now resolved - uses `run.meta.blade_id`. Items 3.1 and 3.2 remain as non-blocking enhancements.
 
 ### 3.1 Blade-Specific RPM Limits
 - **File:** `services/api/app/cam_core/saw_lab/saw_blade_validator.py`
@@ -196,12 +211,12 @@ The following "broken router" comments (lines 114-168) are **stale** and should 
 
 ## Quick Reference
 
-| Priority | Count | Action |
-|----------|-------|--------|
-| P1 Critical | 3 | Wire real implementations before production |
-| P2 Incomplete | 5 | Complete when feature is needed |
-| P3 Enhancement | 3 | Implement when time permits |
-| Cleanup | 7 | Remove stale comments + 1 file |
+| Priority | Count | Action | Status (2026-01-26) |
+|----------|-------|--------|---------------------|
+| P1 Critical | ~~3~~ 0 | ~~Wire real implementations before production~~ | ✅ RESOLVED |
+| P2 Incomplete | ~~5~~ 0 | ~~Complete when feature is needed~~ | ✅ RESOLVED |
+| P3 Enhancement | ~~3~~ 2 | Implement when time permits | 1 fixed, 2 remain |
+| Cleanup | 7 | Remove stale comments + 1 file | Pending |
 
 ---
 
