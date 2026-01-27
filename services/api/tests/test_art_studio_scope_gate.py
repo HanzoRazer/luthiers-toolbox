@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "ci"))
 
 from check_art_studio_scope import (
+    DEFAULT_TARGETS,
     FORBIDDEN_PATTERNS,
     Finding,
     _detect_frontend_targets,
@@ -210,29 +211,23 @@ from app.toolpath.gcode import create_toolpath  # No allow - should be caught
 
 
 class TestFrontendDetection:
-    """Test frontend structure detection - disabled as frontend scanning is disabled."""
+    """Test frontend structure detection."""
 
-    @pytest.mark.skip(
-        reason="Frontend scanning disabled in scope gate v2 - too many false positives"
-    )
     def test_detect_monorepo_structure(self):
-        """Should detect packages/client/src structure."""
+        """Monorepo layout (packages/client/src) takes the ALT path."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "packages" / "client" / "src").mkdir(parents=True)
             targets = _detect_frontend_targets(root)
-            assert any("packages/client/src" in t for t in targets)
+            assert "services/api/app/art_studio" in targets
 
-    @pytest.mark.skip(
-        reason="Frontend scanning disabled in scope gate v2 - too many false positives"
-    )
     def test_detect_flat_structure(self):
-        """Should use default targets for flat structure."""
+        """Flat layout (no packages/client/src) uses DEFAULT_TARGETS."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "client" / "src").mkdir(parents=True)
             targets = _detect_frontend_targets(root)
-            assert any("client/src" in t for t in targets)
+            assert targets == DEFAULT_TARGETS
 
 
 class TestFindingDataclass:

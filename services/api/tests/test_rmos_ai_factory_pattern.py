@@ -63,45 +63,6 @@ def test_factory_returns_callable_not_json():
         pytest.fail(f"Generator invocation failed: {e}")
 
 
-def test_generator_from_experimental_shim_also_works():
-    """
-    Verify that the deprecated _experimental.ai_core shim still works.
-    
-    This ensures backward compatibility during the migration period.
-    Once shims are removed (Wave 21), this test should be deleted.
-    """
-    import warnings
-    from typing import Any
-    
-    # Expect deprecation warning
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        
-        from app._experimental.ai_core import make_candidate_generator_for_request
-        
-        # Should have triggered deprecation warning
-        assert len(w) == 1, f"Should emit exactly one deprecation warning, got {len(w)}"
-        assert issubclass(w[0].category, DeprecationWarning)
-        assert "deprecated" in str(w[0].message).lower()
-        assert "app.rmos.ai" in str(w[0].message)
-    
-    # Factory should still work
-    try:
-        from app.rmos.models import SearchBudgetSpec
-        
-        ctx: Any = {"material_palette": "walnut_maple"}
-        budget: Any = SearchBudgetSpec(max_attempts=5, deterministic=True)
-    except (ImportError, AttributeError, TypeError) as e:
-        pytest.skip(f"Could not import RMOS types for test: {e}")
-    
-    generator = make_candidate_generator_for_request(
-        ctx=ctx,
-        budget=budget,
-    )
-    
-    assert callable(generator), "Shim should preserve factory pattern"
-
-
 def test_canonical_location_is_app_rmos_ai():
     """
     Verify that the canonical import resolves to app.rmos.ai module.

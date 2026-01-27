@@ -63,15 +63,21 @@ def coerce_to_rosette_spec(raw: Dict[str, Any]) -> RosetteParamSpec:
     if "rings" in merged and isinstance(merged["rings"], list):
         merged["ring_count"] = len(merged["rings"])
 
+    # Filter to only fields the model accepts (RosetteParamSpec may have
+    # extra="forbid", so unknown keys cause ValidationError).
+    known_fields = set(RosetteParamSpec.model_fields.keys())
+    filtered = {k: v for k, v in merged.items() if k in known_fields}
+
     try:
-        return RosetteParamSpec.model_validate(merged)
+        return RosetteParamSpec.model_validate(filtered)
     except Exception:
-        # If validation fails, try with just the defaults
+        # If validation fails, try with just the known defaults
+        safe_defaults = {k: v for k, v in defaults.items() if k in known_fields}
         try:
-            return RosetteParamSpec.model_validate(defaults)
+            return RosetteParamSpec.model_validate(safe_defaults)
         except Exception:
             # Last resort: return with whatever we can construct
-            return RosetteParamSpec(**defaults)
+            return RosetteParamSpec(**safe_defaults)
 
 
 __all__ = [
