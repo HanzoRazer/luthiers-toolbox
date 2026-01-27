@@ -4,7 +4,7 @@ AI Platform Image Client - Canonical Transport Layer
 This module provides HTTP transport for Image Generation APIs.
 Handles DALL-E, Stable Diffusion, and stub providers.
 
-PROMOTED FROM: _experimental/ai_graphics/image_transport.py
+Canonical AI image transport client.
 DATE: December 2025
 
 INVARIANTS:

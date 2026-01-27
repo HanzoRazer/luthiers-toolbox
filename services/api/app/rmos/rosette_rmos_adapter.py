@@ -417,43 +417,20 @@ def generate_rosette_with_feasibility(
     Returns:
         AIRosetteOutput with everything needed
     """
-    # AI Generator Import
-    # DEPRECATED: _experimental.ai_graphics is scheduled for removal.
-    # TODO: Migrate to app.ai.transport when rosette AI generation is promoted.
-    # For now, stub fallback ensures deterministic behavior without AI.
-    RosetteAIGenerator = None
-    try:
-        from app._experimental.ai_graphics.rosette_generator import RosetteAIGenerator
-    except ImportError:
-        pass  # Use stub fallback below
-    
-    # Generate pattern
-    if RosetteAIGenerator:
-        generator = RosetteAIGenerator()
-        result = generator.generate(
-            request=prompt,
-            style=style,
-            complexity=complexity,
-            colors=colors,
-        )
-        
-        if not result.success or not result.formula:
-            raise ValueError(f"AI generation failed: {result.error}")
-        
-        formula = result.formula.to_pattern_generator_format()
-    else:
-        # Fallback stub formula for testing
-        formula = {
-            "name": f"Stub: {prompt[:30]}",
-            "rows": [
-                {"black": 1, "white": 3},
-                {"black": 2, "white": 2},
-                {"black": 1, "white": 3},
-            ],
-            "column_sequence": [1, 2, 3, 2, 1],
-            "strip_thickness_mm": 0.6,
-            "chip_length_mm": 1.6,
-        }
+    # Deterministic stub formula.
+    # AI-assisted generation is not yet promoted to canonical.
+    # When ready, integrate via app.ai.transport + HTTP API.
+    formula = {
+        "name": f"Stub: {prompt[:30]}",
+        "rows": [
+            {"black": 1, "white": 3},
+            {"black": 2, "white": 2},
+            {"black": 1, "white": 3},
+        ],
+        "column_sequence": [1, 2, 3, 2, 1],
+        "strip_thickness_mm": 0.6,
+        "chip_length_mm": 1.6,
+    }
     
     # Convert to RMOS spec
     rosette_spec = matrix_formula_to_rosette_spec(
@@ -461,15 +438,10 @@ def generate_rosette_with_feasibility(
         soundhole_diameter_mm=soundhole_diameter_mm,
     )
     
-    # Generate visualization
+    # SVG visualization placeholder.
+    # pattern_visualizer was in legacy _experimental module.
+    # Re-implement in app.vision when needed.
     svg = None
-    try:
-        from app._experimental.ai_graphics.services.pattern_visualizer import render_svg_pattern
-        svg = render_svg_pattern(formula, scale=15)
-    except ImportError:
-        pass
-    except Exception:
-        pass
     
     # Build output
     output = AIRosetteOutput(

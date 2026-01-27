@@ -1,7 +1,7 @@
 """app.vision.prompt_engine
 
 Canonical prompt engineering for guitar image generation.
-Moved from app._experimental.ai_graphics.prompt_engine (trimmed for Release A.1).
+Prompt construction for guitar image analysis.
 
 Governance note:
 - This module may *expand user input into descriptive photography language*.

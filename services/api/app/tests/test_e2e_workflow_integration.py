@@ -10,7 +10,6 @@ Tests the complete chain:
 5. Approve the design
 6. Request and store toolpaths
 7. Verify run artifact chain in database
-8. Attach advisory asset and verify
 
 Run standalone:
     python -m tests.test_e2e_workflow_integration
@@ -61,9 +60,6 @@ def test_db():
     from app.db.base import Base
     from app.workflow.db.models import WorkflowSessionRow
     from app.rmos.runs_v2.db.models import RunArtifactRow, AdvisoryAttachmentRow
-    from app._experimental.ai_graphics.db.models import (
-        AiSessionRow, AiSuggestionRow, AiFingerprintRow, AiImageAssetRow
-    )
     
     # Create all tables
     Base.metadata.create_all(engine)
@@ -459,146 +455,6 @@ class TestEndToEndWorkflowIntegration:
             "toolpaths_artifact": toolpaths_reloaded,
         }
     
-    def test_advisory_attachment(self, db_session):
-        """Test attaching an advisory asset to a run artifact."""
-        from app.rmos.runs_v2.db.store import DbRunArtifactStore
-        from app.rmos.runs_v2.schemas import (
-            RunArtifact,
-            Hashes,
-            RunDecision,
-            AdvisoryInputRef,
-        )
-        from app._experimental.ai_graphics.db.store import DbAiImageAssetStore
-        
-        run_store = DbRunArtifactStore()
-        image_store = DbAiImageAssetStore()
-        
-        print("\n📎 Testing advisory attachment...")
-        
-        # Create a run artifact
-        run_id = str(uuid4())
-        artifact = RunArtifact(
-            run_id=run_id,
-            mode="router",
-            tool_id="router:6mm",
-            status="OK",
-            request_summary={"test": True},
-            feasibility={"score": 80},
-            decision=RunDecision(risk_level="GREEN", score=80.0),
-            hashes=Hashes(feasibility_sha256="a" * 64),
-        )
-        
-        run_store.put(db_session, artifact)
-        db_session.flush()
-        print(f"   ✅ Created run artifact: {run_id[:8]}...")
-        
-        # Create an AI image asset
-        asset_id = str(uuid4())
-        image_asset = {
-            "id": asset_id,
-            "prompt": "Classical guitar rosette with herringbone pattern",
-            "provider": "dall-e-3",
-            "quality": "hd",
-            "size": "1024x1024",
-            "status": "approved",
-            "cost": 0.08,
-            "category": "rosette",
-            "image_url": "https://example.com/image.png",
-        }
-        
-        image_store.put(db_session, image_asset)
-        db_session.flush()
-        print(f"   ✅ Created image asset: {asset_id[:8]}...")
-        
-        # Attach image to run
-        advisory_ref = AdvisoryInputRef(
-            advisory_id=asset_id,
-            kind="explanation",
-            engine_id="dall-e-3",
-            engine_version="3.0",
-        )
-        
-        updated = run_store.attach_advisory(db_session, run_id, advisory_ref)
-        db_session.flush()
-        assert len(updated.advisory_inputs) == 1
-        assert updated.advisory_inputs[0].advisory_id == asset_id
-        print(f"   ✅ Advisory attached to run")
-        
-        # Verify via get_advisories_for_run
-        advisories = run_store.get_advisories_for_run(db_session, run_id)
-        assert len(advisories) == 1
-        assert advisories[0].advisory_id == asset_id
-        print(f"   ✅ Advisory retrieval verified")
-        
-        # Verify via get_runs_for_advisory
-        runs = run_store.get_runs_for_advisory(db_session, asset_id)
-        assert run_id in runs
-        print(f"   ✅ Reverse lookup verified")
-        
-        # Attach image to run in image store
-        attached = image_store.attach_to_run(db_session, asset_id, run_id)
-        assert attached is not None
-        assert attached["attached_to_run_id"] == run_id
-        print(f"   ✅ Image attachment verified")
-        
-        print("\n   🎉 Advisory attachment test passed!")
-    
-    def test_ai_session_persistence(self, db_session):
-        """Test AI session fingerprint persistence."""
-        from app._experimental.ai_graphics.db.store import DbAiSessionStore
-        
-        session_store = DbAiSessionStore()
-        
-        print("\n🧠 Testing AI session persistence...")
-        
-        session_id = f"test-session-{uuid4().hex[:8]}"
-        
-        # Create session
-        state = session_store.get_or_create(db_session, session_id)
-        assert state["session_id"] == session_id
-        print(f"   ✅ Session created: {session_id}")
-        
-        # Mark fingerprints as explored
-        fingerprints = [
-            (100.0, 85.0, (2.5, 3.0, 2.0)),
-            (95.0, 80.0, (2.0, 2.5, 1.8)),
-            (105.0, 90.0, (3.0, 3.5, 2.5)),
-        ]
-        
-        session_store.mark_explored(db_session, session_id, fingerprints)
-        db_session.flush()
-        print(f"   ✅ Marked {len(fingerprints)} fingerprints as explored")
-        
-        # Check exploration status
-        assert session_store.is_explored(db_session, session_id, fingerprints[0])
-        assert session_store.is_explored(db_session, session_id, fingerprints[1])
-        assert not session_store.is_explored(db_session, session_id, (99.0, 84.0, (2.5,)))
-        print(f"   ✅ Exploration lookup working")
-        
-        # Add suggestions to history
-        for i, fp in enumerate(fingerprints):
-            session_store.add_suggestion(
-                db_session,
-                session_id,
-                suggestion_id=f"sugg-{i}",
-                overall_score=80 + i * 5,
-                risk_bucket="GREEN" if i < 2 else "YELLOW",
-            )
-        db_session.flush()
-        print(f"   ✅ Added {len(fingerprints)} suggestions to history")
-        
-        # Verify history
-        history = session_store.get_history(db_session, session_id)
-        assert len(history) == 3
-        print(f"   ✅ History retrieval verified")
-        
-        # List active sessions
-        active = session_store.list_active(db_session, limit=10)
-        assert any(s["session_id"] == session_id for s in active)
-        print(f"   ✅ Active session listing verified")
-        
-        print("\n   🎉 AI session persistence test passed!")
-    
     def test_run_artifact_queries(self, db_session):
         """Test various run artifact query patterns."""
         from app.rmos.runs_v2.db.store import DbRunArtifactStore
@@ -702,9 +558,6 @@ def run_standalone():
         from app.db.base import Base
         from app.workflow.db.models import WorkflowSessionRow
         from app.rmos.runs_v2.db.models import RunArtifactRow, AdvisoryAttachmentRow
-        from app._experimental.ai_graphics.db.models import (
-            AiSessionRow, AiSuggestionRow, AiFingerprintRow, AiImageAssetRow
-        )
         
         # Create tables
         Base.metadata.create_all(engine)
