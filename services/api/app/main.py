@@ -61,17 +61,14 @@ from .governance.metrics_router import router as metrics_router
 
 
 # =============================================================================
-# COMPAT LEGACY ROUTES FLAG
-# Canonical API paths are /api/*. Legacy/compat routes (/cam/*, /geometry/*, etc.)
-# are mounted for CI backwards compatibility but hidden from OpenAPI.
-# Set ENABLE_COMPAT_LEGACY_ROUTES=false once CI workflows are migrated.
+# LOGGING
 # =============================================================================
 import os
 
 _log = logging.getLogger(__name__)
-ENABLE_COMPAT_LEGACY_ROUTES = os.getenv(
-    "ENABLE_COMPAT_LEGACY_ROUTES", "true"
-).lower() in ("1", "true", "yes")
+# ENABLE_COMPAT_LEGACY_ROUTES: REMOVED (January 2026)
+# All frontend callers migrated to canonical /api/* paths.
+# Compat mounts deleted. See deprecation_registry.json for audit trail.
 
 
 # =============================================================================
@@ -274,9 +271,9 @@ from .routers.art.root_art_router import router as root_art_router
 # MUSIC AXIS (Option C) - Replaces Smart Guitar Temperaments
 # =============================================================================
 from .routers.music import router as music_router
-from .routers.legacy import router as legacy_redirects_router
-# NOTE: temperament_router removed - now at /api/music/temperament/*
-#       Legacy redirects handle /api/smart-guitar/temperaments/* -> /api/music/temperament/*
+# legacy_redirects_router: REMOVED (January 2026)
+# Legacy 308 redirects for smart-guitar/temperaments had zero frontend consumers.
+# See deprecation_registry.json for audit trail.
 
 # =============================================================================
 # WAVE 7: CALCULATOR SUITE + FRET SLOTS CAM + BRIDGE CALCULATOR + FRET DESIGN (4 routers)
@@ -694,27 +691,7 @@ def _startup_db_migrations() -> None:
     run_migrations_on_startup()
 
 
-# =============================================================================
-# COMPAT ROUTE HELPER
-# =============================================================================
 
-
-def _include_compat_router(app, router, prefix: str, *, name: str) -> None:
-    """
-    Mount legacy/compat routes to keep CI + older callers working.
-    These are intentionally hidden from OpenAPI to prevent new usage.
-    """
-    if not router:
-        return
-    try:
-        app.include_router(router, prefix=prefix, include_in_schema=False)
-        _log.warning(
-            "Compat routes enabled: %s mounted at %s (hidden from OpenAPI)",
-            name,
-            prefix,
-        )
-    except Exception as e:
-        _log.warning("Compat route mount failed: %s at %s (%s)", name, prefix, e)
 
 
 # =============================================================================
@@ -876,13 +853,8 @@ app.include_router(
     tags=["Music", "Temperaments"],
 )  # -> /api/music/temperament/*
 
-# Legacy 308 Redirects (Option C backward compatibility)
-app.include_router(
-    legacy_redirects_router,
-    prefix="/api",
-    tags=["Legacy", "Deprecated"],
-    include_in_schema=False,
-)  # -> /api/smart-guitar/temperaments/* redirects to /api/music/temperament/*
+# Legacy 308 Redirects: REMOVED (January 2026)
+# All legacy redirect routers deleted. Zero frontend consumers remain.
 
 # Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
 app.include_router(calculators_router, prefix="/api", tags=["Calculators"])
@@ -1278,58 +1250,10 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_run_logs_router (%s)", e)
 
 # =============================================================================
-# COMPAT LEGACY ROUTES (CI + legacy callers)
-# Canonical remains /api/*; compat mounts are hidden from OpenAPI.
-# Disable with ENABLE_COMPAT_LEGACY_ROUTES=false once workflows migrated.
+# COMPAT LEGACY ROUTES: REMOVED (January 2026)
+# All frontend callers migrated to canonical /api/* paths.
+# 19 compat mounts deleted. See deprecation_registry.json for audit trail.
 # =============================================================================
-if ENABLE_COMPAT_LEGACY_ROUTES:
-    # Core routers used by CI workflows
-    _include_compat_router(app, geometry_router, "/geometry", name="geometry_router")
-    _include_compat_router(app, tooling_router, "/tooling", name="tooling_router")
-    _include_compat_router(
-        app, adaptive_router, "", name="adaptive_router"
-    )  # Router has /cam/pocket/adaptive prefix internally
-    _include_compat_router(app, material_router, "/material", name="material_router")
-    _include_compat_router(app, machine_router, "/machine", name="machine_router")
-    _include_compat_router(app, feeds_router, "/feeds", name="feeds_router")
-    _include_compat_router(app, sim_router, "/sim", name="sim_router")
-
-    # Consolidated CAM (Wave 18) - covers /cam/pocket/adaptive/*, /cam/polygon_offset.nc, etc.
-    if cam_router:
-        _include_compat_router(app, cam_router, "/cam", name="cam_router")
-
-    # Individual CAM subsystem routers (if CI hits them directly)
-    _include_compat_router(app, cam_opt_router, "/cam/opt", name="cam_opt_router")
-    _include_compat_router(
-        app, cam_metrics_router, "/cam/metrics", name="cam_metrics_router"
-    )
-    _include_compat_router(app, cam_logs_router, "/cam/logs", name="cam_logs_router")
-    _include_compat_router(app, cam_learn_router, "/cam/learn", name="cam_learn_router")
-    _include_compat_router(
-        app, cam_vcarve_router, "/cam/vcarve", name="cam_vcarve_router"
-    )
-    _include_compat_router(
-        app, cam_relief_router, "/cam/relief", name="cam_relief_router"
-    )
-    _include_compat_router(
-        app, cam_helical_router, "/cam/helical", name="cam_helical_router"
-    )
-    _include_compat_router(
-        app, cam_simulate_router, "/cam/simulate", name="cam_simulate_router"
-    )
-    _include_compat_router(
-        app, gcode_backplot_router, "/cam/backplot", name="gcode_backplot_router"
-    )
-
-    # Bridge calculator and DXF preflight (legacy paths without /api prefix)
-    _include_compat_router(
-        app, bridge_router, "", name="bridge_router"
-    )  # → /cam/bridge/*
-    _include_compat_router(
-        app, dxf_preflight_router, "", name="dxf_preflight_router"
-    )  # → /dxf/preflight/*
-else:
-    _log.info("Compat legacy routes disabled (ENABLE_COMPAT_LEGACY_ROUTES=false)")
 
 # =============================================================================
 # META / INTROSPECTION

@@ -31,7 +31,7 @@ class TestHelicalEntry:
     def test_helical_entry_basic(self, api_client, sample_helical_params):
         """Test basic helical entry generation."""
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=sample_helical_params
         )
         
@@ -50,7 +50,7 @@ class TestHelicalEntry:
     def test_helical_entry_statistics(self, api_client, sample_helical_params):
         """Test helical entry statistics."""
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=sample_helical_params
         )
         
@@ -79,7 +79,7 @@ class TestHelicalEntry:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -102,7 +102,7 @@ class TestHelicalEntry:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -137,7 +137,7 @@ class TestHelicalArcInterpolation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -162,7 +162,7 @@ class TestHelicalArcInterpolation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -176,7 +176,7 @@ class TestHelicalArcInterpolation:
     def test_arc_center_offsets(self, api_client, sample_helical_params):
         """Test arc moves have I/J center offsets."""
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=sample_helical_params
         )
         
@@ -211,7 +211,7 @@ class TestHelicalFeedRates:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -229,7 +229,7 @@ class TestHelicalFeedRates:
         params["feed_z"] = 1000.0
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -246,7 +246,7 @@ class TestHelicalFeedRates:
         params["feed_z"] = 200.0
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -274,7 +274,7 @@ class TestHelicalGcodeExport:
         params["post_id"] = "GRBL"
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry_gcode",
+            "/api/cam/toolpath/helical_entry_gcode",
             json=params
         )
         
@@ -294,7 +294,7 @@ class TestHelicalGcodeExport:
         params["post_id"] = "Mach4"
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry_gcode",
+            "/api/cam/toolpath/helical_entry_gcode",
             json=params
         )
         
@@ -309,7 +309,7 @@ class TestHelicalGcodeExport:
         params["post_id"] = "GRBL"
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry_gcode",
+            "/api/cam/toolpath/helical_entry_gcode",
             json=params
         )
         
@@ -340,7 +340,7 @@ class TestHelicalValidation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -357,7 +357,7 @@ class TestHelicalValidation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -374,7 +374,7 @@ class TestHelicalValidation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -392,7 +392,7 @@ class TestHelicalValidation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -407,7 +407,7 @@ class TestHelicalValidation:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -435,7 +435,7 @@ class TestHelicalGeometry:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -461,7 +461,7 @@ class TestHelicalGeometry:
         }
         
         response = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=params
         )
         
@@ -497,7 +497,7 @@ class TestHelicalIntegration:
         }
         
         plan_resp = api_client.post(
-            "/cam/toolpath/helical_entry",
+            "/api/cam/toolpath/helical_entry",
             json=plan_params
         )
         
@@ -514,7 +514,7 @@ class TestHelicalIntegration:
         gcode_params["post_id"] = "GRBL"
         
         gcode_resp = api_client.post(
-            "/cam/toolpath/helical_entry_gcode",
+            "/api/cam/toolpath/helical_entry_gcode",
             json=gcode_params
         )
         

@@ -34,7 +34,7 @@ class TestGeometryImport:
         """Test importing simple JSON geometry."""
         # Send geometry nested under "geometry" key (FastAPI Body(embed=True))
         response = api_client.post(
-            "/geometry/import",
+            "/api/geometry/import",
             json={"geometry": sample_geometry_simple}
         )
         
@@ -48,7 +48,7 @@ class TestGeometryImport:
     def test_import_json_with_arcs(self, api_client, sample_geometry_with_arcs):
         """Test importing JSON geometry with arc segments."""
         response = api_client.post(
-            "/geometry/import",
+            "/api/geometry/import",
             json={"geometry": sample_geometry_with_arcs}
         )
         
@@ -69,7 +69,7 @@ class TestGeometryImport:
     def test_import_invalid_format(self, api_client):
         """Test error handling for invalid input."""
         response = api_client.post(
-            "/geometry/import",
+            "/api/geometry/import",
             json={}  # No geometry or file
         )
         
@@ -78,7 +78,7 @@ class TestGeometryImport:
     def test_import_malformed_json(self, api_client):
         """Test error handling for malformed geometry."""
         response = api_client.post(
-            "/geometry/import",
+            "/api/geometry/import",
             json={"geometry": {"invalid": "structure"}}  # Missing required fields
         )
         
@@ -100,7 +100,7 @@ class TestParityChecking:
         gcode = "G21 G90\nG0 X0 Y0\nG1 X100 Y0 F1200\nG1 X100 Y60\nG1 X0 Y60\nG1 X0 Y0\nM30"
         
         response = api_client.post(
-            "/geometry/parity",
+            "/api/geometry/parity",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": gcode,
@@ -120,7 +120,7 @@ class TestParityChecking:
         gcode = "G21 G90\nG0 X0 Y0\nG1 X90 Y0 F1200\nG1 X90 Y60\nG1 X0 Y60\nG1 X0 Y0\nM30"
         
         response = api_client.post(
-            "/geometry/parity",
+            "/api/geometry/parity",
             json={
                 "geometry": sample_geometry_simple,  # 100x60
                 "gcode": gcode,  # 90x60 toolpath
@@ -140,7 +140,7 @@ class TestParityChecking:
         gcode = "G21 G90\nG0 X0 Y0\nG1 X100 Y0 F1200\nG1 X100 Y60\nG1 X0 Y60\nG1 X0 Y0\nM30"
         
         response = api_client.post(
-            "/geometry/parity",
+            "/api/geometry/parity",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": gcode,
@@ -168,7 +168,7 @@ class TestGeometryExport:
     def test_export_dxf(self, api_client, sample_geometry_simple):
         """Test DXF export."""
         response = api_client.post(
-            "/geometry/export?fmt=dxf",
+            "/api/geometry/export?fmt=dxf",
             json={
                 "geometry": sample_geometry_simple,
                 "post_id": "GRBL"
@@ -188,7 +188,7 @@ class TestGeometryExport:
     def test_export_svg(self, api_client, sample_geometry_simple):
         """Test SVG export."""
         response = api_client.post(
-            "/geometry/export?fmt=svg",
+            "/api/geometry/export?fmt=svg",
             json={
                 "geometry": sample_geometry_simple,
                 "post_id": "GRBL"
@@ -206,7 +206,7 @@ class TestGeometryExport:
     def test_export_unit_conversion(self, api_client, sample_geometry_simple):
         """Test export with unit conversion (mm → inch)."""
         response = api_client.post(
-            "/geometry/export",
+            "/api/geometry/export",
             json={
                 "geometry": sample_geometry_simple,
                 "format": "dxf",
@@ -235,7 +235,7 @@ class TestBundleExport:
     def test_export_bundle_single_post(self, api_client, sample_geometry_simple):
         """Test single-post bundle (DXF + SVG + NC)."""
         response = api_client.post(
-            "/geometry/export_bundle",
+            "/api/geometry/export_bundle",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": "G21\nG90\nG0 X0 Y0\nM30\n",
@@ -262,7 +262,7 @@ class TestBundleExport:
     def test_export_bundle_multi_post(self, api_client, sample_geometry_simple):
         """Test multi-post bundle (multiple NC files)."""
         response = api_client.post(
-            "/geometry/export_bundle_multi",
+            "/api/geometry/export_bundle_multi",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": "G21\nG90\nG0 X0 Y0\nM30\n",
@@ -286,7 +286,7 @@ class TestBundleExport:
     def test_export_bundle_with_unit_conversion(self, api_client, sample_geometry_simple):
         """Test bundle export with unit conversion."""
         response = api_client.post(
-            "/geometry/export_bundle",
+            "/api/geometry/export_bundle",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": "G21\nG90\nG0 X100 Y60\nM30\n",
@@ -317,7 +317,7 @@ class TestGeometryErrorHandling:
     def test_export_invalid_post_id(self, api_client, sample_geometry_simple):
         """Test graceful handling of invalid post-processor ID."""
         response = api_client.post(
-            "/geometry/export_bundle",
+            "/api/geometry/export_bundle",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": "G90\\nM30\\n",
@@ -331,7 +331,7 @@ class TestGeometryErrorHandling:
     def test_export_missing_geometry(self, api_client):
         """Test error for missing geometry."""
         response = api_client.post(
-            "/geometry/export",
+            "/api/geometry/export",
             json={
                 "format": "dxf"
                 # Missing geometry field
@@ -343,7 +343,7 @@ class TestGeometryErrorHandling:
     def test_export_empty_paths(self, api_client):
         """Test handling of geometry with no paths."""
         response = api_client.post(
-            "/geometry/export",
+            "/api/geometry/export",
             json={
                 "geometry": {"units": "mm", "paths": []},
                 "format": "dxf"
@@ -356,7 +356,7 @@ class TestGeometryErrorHandling:
     def test_parity_missing_tolerance(self, api_client, sample_geometry_simple):
         """Test parity check with missing tolerance."""
         response = api_client.post(
-            "/geometry/parity",
+            "/api/geometry/parity",
             json={
                 "design": sample_geometry_simple,
                 "toolpath": sample_geometry_simple
@@ -382,7 +382,7 @@ class TestGeometryIntegration:
         """Test import → export roundtrip preserves geometry."""
         # Import JSON (endpoint accepts direct geometry or nested in "geometry" key)
         import_resp = api_client.post(
-            "/geometry/import",
+            "/api/geometry/import",
             json={"geometry": sample_geometry_simple}
         )
         assert import_resp.status_code == 200
@@ -394,7 +394,7 @@ class TestGeometryIntegration:
         
         # Export DXF
         export_resp = api_client.post(
-            "/geometry/export",
+            "/api/geometry/export",
             json={
                 "geometry": imported,
                 "format": "dxf",
@@ -411,7 +411,7 @@ class TestGeometryIntegration:
         """Test complete multi-post export workflow."""
         # Generate bundle for 3 machines
         response = api_client.post(
-            "/geometry/export_bundle_multi",
+            "/api/geometry/export_bundle_multi",
             json={
                 "geometry": sample_geometry_simple,
                 "gcode": "G21\nG90\nG0 X50 Y30\nG1 Z-3 F400\nM30\n",

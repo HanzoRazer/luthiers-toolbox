@@ -417,7 +417,7 @@ async function importFromDxf () {
     }
     form.append('auto_scale', 'true')
 
-    const resp = await fetch('/cam/plan_from_dxf', {
+    const resp = await fetch('/api/cam/plan_from_dxf', {
       method: 'POST',
       body: form
     })

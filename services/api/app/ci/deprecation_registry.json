@@ -1,8 +1,8 @@
 {
   "$schema": "./deprecation_registry.schema.json",
   "version": 1,
-  "description": "Registry of deprecated routes with sunset dates. CI enforces removal.",
-  "updated": "2026-01-23",
+  "description": "Registry of deprecated routes. All entries RESOLVED as of 2026-01-27.",
+  "updated": "2026-01-27",
   "routes": [
     {
       "id": "guitar-legacy-redirects",
@@ -12,9 +12,10 @@
       "new_prefix": "/api/cam/guitar/{model}/*",
       "deprecated_date": "2025-12-01",
       "sunset_date": "2026-03-01",
-      "status": "deprecated",
-      "removal_pr": null,
-      "notes": "308 redirects active. Remove after frontend migration confirmed."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Legacy redirect router deleted (routers/legacy/). Zero frontend consumers.",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "smart-guitar-legacy-redirects",
@@ -24,9 +25,10 @@
       "new_prefix": "/api/instruments/guitar/smart/*",
       "deprecated_date": "2025-12-01",
       "sunset_date": "2026-03-01",
-      "status": "deprecated",
-      "removal_pr": null,
-      "notes": "308 redirects active."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Legacy redirect router deleted (routers/legacy/). Zero frontend consumers.",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "temperament-legacy-redirects",
@@ -36,9 +38,10 @@
       "new_prefix": "/api/music/temperament/*",
       "deprecated_date": "2026-01-23",
       "sunset_date": "2026-04-01",
-      "status": "deprecated",
-      "removal_pr": null,
-      "notes": "308 redirects active. Created during Option C migration."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Legacy redirect router deleted (routers/legacy/). Zero frontend consumers. Canonical: /api/music/temperament/*",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-geometry",
@@ -48,9 +51,10 @@
       "new_prefix": "/api/geometry/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
-      "notes": "Hidden from OpenAPI. Long-standing compat route."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-tooling",
@@ -60,9 +64,10 @@
       "new_prefix": "/api/tooling/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
-      "notes": "Hidden from OpenAPI."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-material",
@@ -72,9 +77,10 @@
       "new_prefix": "/api/material/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
-      "notes": "Hidden from OpenAPI."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-machine",
@@ -84,9 +90,10 @@
       "new_prefix": "/api/machine/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
-      "notes": "Hidden from OpenAPI."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-feeds",
@@ -96,9 +103,10 @@
       "new_prefix": "/api/feeds/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
-      "notes": "Hidden from OpenAPI."
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-sim",
@@ -108,10 +116,11 @@
       "new_prefix": "/api/sim/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
       "removal_action": "Remove _include_compat_router call in main.py",
-      "notes": "Hidden from OpenAPI. Router file stays, only compat mount removed."
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     },
     {
       "id": "compat-cam",
@@ -121,10 +130,11 @@
       "new_prefix": "/api/cam/*",
       "deprecated_date": "2025-06-01",
       "sunset_date": "2026-06-01",
-      "status": "compat",
-      "removal_pr": null,
+      "status": "removed",
+      "removal_pr": "direct-commit-2026-01-27",
       "removal_action": "Remove _include_compat_router call in main.py",
-      "notes": "Hidden from OpenAPI. High-traffic legacy path. Router file stays."
+      "notes": "Compat mount removed from main.py. Frontend callers migrated to /api/* canonical paths. Router files retained (canonical mount only).",
+      "removed_date": "2026-01-27"
     }
   ]
 }

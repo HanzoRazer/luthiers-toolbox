@@ -28,7 +28,7 @@ class TestBridgeHealth:
     
     def test_health_check(self, api_client):
         """Test bridge calculator health endpoint."""
-        response = api_client.get("/cam/bridge/health")
+        response = api_client.get("/api/cam/bridge/health")
         
         assert response.status_code == 200
         result = response.json()
@@ -47,7 +47,7 @@ class TestBridgePresets:
     
     def test_get_presets(self, api_client):
         """Test retrieving all presets."""
-        response = api_client.get("/cam/bridge/presets")
+        response = api_client.get("/api/cam/bridge/presets")
         
         assert response.status_code == 200
         result = response.json()
@@ -73,7 +73,7 @@ class TestBridgePresets:
             
     def test_preset_families_include_common_guitars(self, api_client):
         """Test that common guitar types are included."""
-        response = api_client.get("/cam/bridge/presets")
+        response = api_client.get("/api/cam/bridge/presets")
         result = response.json()
         
         family_ids = [f["id"] for f in result["families"]]
@@ -84,7 +84,7 @@ class TestBridgePresets:
         
     def test_preset_gauges_valid(self, api_client):
         """Test that gauge presets have valid data."""
-        response = api_client.get("/cam/bridge/presets")
+        response = api_client.get("/api/cam/bridge/presets")
         result = response.json()
         
         if "gauges" in result and len(result["gauges"]) > 0:
@@ -101,7 +101,7 @@ class TestBridgePresets:
                 
     def test_preset_actions_valid(self, api_client):
         """Test that action presets have valid data."""
-        response = api_client.get("/cam/bridge/presets")
+        response = api_client.get("/api/cam/bridge/presets")
         result = response.json()
         
         if "actions" in result and len(result["actions"]) > 0:
@@ -152,7 +152,7 @@ class TestBridgeDxfExport:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -187,7 +187,7 @@ class TestBridgeDxfExport:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={
                 "geometry": geometry,
                 "filename": "custom_bridge"
@@ -224,7 +224,7 @@ class TestBridgeDxfExport:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -257,7 +257,7 @@ class TestBridgeDxfExport:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -280,7 +280,7 @@ class TestBridgeGeometryValidation:
     def test_missing_required_fields(self, api_client):
         """Test error for missing required geometry fields."""
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={
                 "geometry": {
                     "units": "mm",
@@ -315,7 +315,7 @@ class TestBridgeGeometryValidation:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -346,7 +346,7 @@ class TestBridgeGeometryValidation:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -375,7 +375,7 @@ class TestBridgeGeometryValidation:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -416,7 +416,7 @@ class TestBridgeCompensation:
             }
             
             response = api_client.post(
-                "/cam/bridge/export_dxf",
+                "/api/cam/bridge/export_dxf",
                 json={"geometry": geometry}
             )
             
@@ -446,7 +446,7 @@ class TestBridgeCompensation:
         }
         
         response = api_client.post(
-            "/cam/bridge/export_dxf",
+            "/api/cam/bridge/export_dxf",
             json={"geometry": geometry}
         )
         
@@ -465,7 +465,7 @@ class TestBridgeIntegration:
     def test_complete_bridge_workflow(self, api_client):
         """Test complete bridge design and export workflow."""
         # 1. Get presets
-        presets_resp = api_client.get("/cam/bridge/presets")
+        presets_resp = api_client.get("/api/cam/bridge/presets")
         assert presets_resp.status_code == 200
         presets = presets_resp.json()
         
@@ -495,7 +495,7 @@ class TestBridgeIntegration:
             
             # 4. Export DXF
             export_resp = api_client.post(
-                "/cam/bridge/export_dxf",
+                "/api/cam/bridge/export_dxf",
                 json={
                     "geometry": geometry,
                     "filename": "les_paul_bridge"

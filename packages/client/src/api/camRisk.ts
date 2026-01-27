@@ -96,7 +96,7 @@ export interface CamRiskTimelineQuery {
  * Called after simulation to log risk analytics.
  */
 export async function postRiskReport(report: RiskReportIn): Promise<RiskReportOut> {
-  const response = await fetch('/cam/jobs/risk_report', {
+  const response = await fetch('/api/cam/jobs/risk_report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(report)

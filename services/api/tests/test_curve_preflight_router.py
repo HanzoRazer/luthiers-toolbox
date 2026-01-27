@@ -14,7 +14,7 @@ def test_curve_preflight_closed_polyline(api_client):
         "tolerance_mm": 0.2,
         "layer": "CURVE",
     }
-    response = api_client.post("/dxf/preflight/curve_report", json=body)
+    response = api_client.post("/api/dxf/preflight/curve_report", json=body)
     assert response.status_code == 200
     data = response.json()
     assert data["cam_ready"] is True
@@ -36,7 +36,7 @@ def test_curve_preflight_open_polyline_warns(api_client):
         "tolerance_mm": 0.05,
         "layer": "CUT_LAYER",
     }
-    response = api_client.post("/dxf/preflight/curve_report", json=body)
+    response = api_client.post("/api/dxf/preflight/curve_report", json=body)
     assert response.status_code == 200
     data = response.json()
     assert data["cam_ready"] is False
@@ -59,7 +59,7 @@ def test_curve_preflight_duplicate_detection(api_client):
         "tolerance_mm": 0.1,
         "layer": "CURVE",
     }
-    response = api_client.post("/dxf/preflight/curve_report", json=body)
+    response = api_client.post("/api/dxf/preflight/curve_report", json=body)
     assert response.status_code == 200
     data = response.json()
     assert data["warnings_count"] >= 1
