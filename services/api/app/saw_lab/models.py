@@ -34,13 +34,28 @@ class SawContext(BaseModel):
     """
     blade_diameter_mm: float = Field(default=254.0, ge=100.0, le=600.0)
     blade_kerf_mm: float = Field(default=3.0, ge=1.0, le=10.0)
+    blade_thickness_mm: float = Field(
+        default=2.5, ge=0.5, le=8.0,
+        description="Blade body plate thickness (not kerf). Controls stiffness and deflection."
+    )
     tooth_count: int = Field(default=24, ge=10, le=120)
-    max_rpm: int = Field(default=5000, ge=1000, le=10000)
+    max_rpm: int = Field(
+        default=5000, ge=1000, le=10000,
+        description="C-axis rotational speed. Blade rotates on the C-axis; X/Y/Z are linear."
+    )
     arbor_size_mm: float = Field(default=25.4, ge=10.0, le=50.0)
     material_id: Optional[str] = None
     stock_thickness_mm: float = Field(default=25.0, ge=1.0, le=150.0)
     feed_rate_mm_per_min: float = Field(default=3000.0, ge=100.0, le=20000.0)
     use_dust_collection: bool = True
+    machine_power_kw: float = Field(
+        default=3.0, ge=0.5, le=20.0,
+        description="Spindle motor power in kW. Used for power feasibility check."
+    )
+    blade_youngs_modulus_gpa: float = Field(
+        default=200.0, ge=100.0, le=250.0,
+        description="Blade steel Young modulus in GPa. Carbon steel ~200, HSS ~210."
+    )
 
 
 class SawDesign(BaseModel):
@@ -133,3 +148,15 @@ class MaterialProperties(BaseModel):
     burn_tendency: float = Field(default=0.5, ge=0.0, le=1.0)
     tearout_tendency: float = Field(default=0.5, ge=0.0, le=1.0)
     hardness_scale: float = Field(default=0.5, ge=0.0, le=1.0)
+    specific_cutting_energy_j_per_mm3: float = Field(
+        default=30.0, ge=5.0, le=200.0,
+        description="Energy to remove 1 mm3 of material. Softwood ~15, hardwood ~40, MDF ~25."
+    )
+    thermal_conductivity_w_per_mk: float = Field(
+        default=0.15, ge=0.05, le=1.5,
+        description="Thermal conductivity W/(m K). Wood across grain ~0.1-0.2."
+    )
+    specific_heat_capacity_j_per_kgk: float = Field(
+        default=1700.0, ge=500.0, le=3000.0,
+        description="Specific heat J/(kg K). Dry wood ~1200, wet wood ~2500."
+    )

@@ -488,6 +488,65 @@ def _find_setup_ops(
     return []
 
 
+def _extract_base_context(
+    spec: Optional[Dict[str, Any]],
+    plan_artifact_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Extract base machining context from spec/plan artifacts.
+
+    Reads actual spindle_rpm, feed_rate, and doc from the spec items
+    or plan payload rather than using hardcoded nominal values.
+
+    Falls back to conservative defaults if artifacts are unavailable.
+    """
+    # Conservative defaults (only used if spec/plan have no values)
+    rpm = 3000.0
+    feed = 600.0
+    doc = 3.0
+
+    # Try to read from spec payload
+    if spec and isinstance(spec, dict):
+        spec_payload = spec.get("payload") or spec.get("data") or {}
+        if isinstance(spec_payload, dict):
+            items = spec_payload.get("items") or spec_payload.get("operations") or []
+            if isinstance(items, list) and items:
+                first_item = items[0] if isinstance(items[0], dict) else {}
+                # Look for machining parameters in the first spec item
+                rpm = float(first_item.get("spindle_rpm") or first_item.get("max_rpm") or rpm)
+                feed = float(first_item.get("feed_rate_mmpm") or first_item.get("feed_rate_mm_per_min") or feed)
+                doc = float(first_item.get("doc_mm") or first_item.get("depth_of_cut_mm") or doc)
+
+            # Also check top-level context in spec
+            ctx = spec_payload.get("context") or {}
+            if isinstance(ctx, dict):
+                rpm = float(ctx.get("spindle_rpm") or ctx.get("max_rpm") or rpm)
+                feed = float(ctx.get("feed_rate_mmpm") or ctx.get("feed_rate_mm_per_min") or feed)
+                doc = float(ctx.get("doc_mm") or doc)
+
+    # Try to read from plan artifact
+    if plan_artifact_id:
+        try:
+            from app.rmos.runs_v2.store import get_run
+            plan = get_run(plan_artifact_id)
+            if plan and isinstance(plan, dict):
+                plan_payload = plan.get("payload") or plan.get("data") or {}
+                if isinstance(plan_payload, dict):
+                    plan_ctx = plan_payload.get("context") or plan_payload.get("saw_context") or {}
+                    if isinstance(plan_ctx, dict):
+                        rpm = float(plan_ctx.get("spindle_rpm") or plan_ctx.get("max_rpm") or rpm)
+                        feed = float(plan_ctx.get("feed_rate_mmpm") or plan_ctx.get("feed_rate_mm_per_min") or feed)
+                        doc = float(plan_ctx.get("doc_mm") or doc)
+        except Exception:
+            pass  # Plan lookup is best-effort
+
+    return {
+        "spindle_rpm": rpm,
+        "feed_rate_mmpm": feed,
+        "doc_mm": doc,
+    }
+
+
 def _apply_patch_to_context_patch(
     base_context: Dict[str, Any], applied_multipliers: Dict[str, float]
 ) -> Dict[str, Any]:
@@ -578,12 +637,8 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
                     ),
                 }
 
-                # Build a sample context patch (base values are nominal)
-                base_context = {
-                    "spindle_rpm": 3000.0,
-                    "feed_rate_mmpm": 600.0,
-                    "doc_mm": 3.0,
-                }
+                # Extract base values from spec/plan artifacts (not hardcoded)
+                base_context = _extract_base_context(spec, req.batch_plan_artifact_id)
                 applied_context_patch = _apply_patch_to_context_patch(
                     base_context, applied_multipliers
                 )
