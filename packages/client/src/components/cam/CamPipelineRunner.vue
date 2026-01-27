@@ -584,7 +584,7 @@ const summaryLabel = computed(() => {
 
 onMounted(async () => {
   try {
-    const resp = await fetch('/cam/pipeline/presets')
+    const resp = await fetch('/api/cam/pipeline/presets')
     if (!resp.ok) return
     const data = await resp.json() as PipelinePreset[]
     presets.value = data
@@ -684,7 +684,7 @@ async function runPipeline () {
 
     form.append('pipeline', JSON.stringify(pipelineNormalized))
 
-    const resp = await fetch('/cam/pipeline/run', {
+    const resp = await fetch('/api/cam/pipeline/run', {
       method: 'POST',
       body: form
     })
@@ -776,7 +776,7 @@ async function savePreset () {
       machine_id: machineId.value,
       post_id: postId.value
     }
-    const resp = await fetch('/cam/pipeline/presets', {
+    const resp = await fetch('/api/cam/pipeline/presets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

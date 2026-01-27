@@ -31,7 +31,7 @@ class TestAdaptivePocketPlanning:
     def test_plan_simple_pocket_spiral(self, api_client, sample_pocket_loops):
         """Test spiral strategy for simple rectangular pocket."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],  # Just outer boundary
                 "units": "mm",
@@ -68,7 +68,7 @@ class TestAdaptivePocketPlanning:
     def test_plan_simple_pocket_lanes(self, api_client, sample_pocket_loops):
         """Test lanes strategy for simple rectangular pocket."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "units": "mm",
@@ -95,7 +95,7 @@ class TestAdaptivePocketPlanning:
     def test_plan_pocket_with_island(self, api_client, sample_pocket_loops):
         """Test pocket with island (L.1 robust offsetting)."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": sample_pocket_loops,  # Outer + island
                 "units": "mm",
@@ -130,7 +130,7 @@ class TestAdaptivePocketPlanning:
         
         for stepover in [0.3, 0.45, 0.6]:
             response = api_client.post(
-                "/cam/pocket/adaptive/plan",
+                "/api/cam/pocket/adaptive/plan",
                 json={
                     "loops": [sample_pocket_loops[0]],
                     "tool_d": 6.0,
@@ -162,7 +162,7 @@ class TestAdaptiveGcodeGeneration:
     def test_gcode_export_grbl(self, api_client, sample_pocket_loops):
         """Test G-code export with GRBL post-processor."""
         response = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -192,7 +192,7 @@ class TestAdaptiveGcodeGeneration:
     def test_gcode_export_mach4(self, api_client, sample_pocket_loops):
         """Test G-code export with Mach4 post-processor."""
         response = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -215,7 +215,7 @@ class TestAdaptiveGcodeGeneration:
     def test_gcode_climb_vs_conventional(self, api_client, sample_pocket_loops):
         """Test climb vs conventional milling direction."""
         climb_resp = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -225,7 +225,7 @@ class TestAdaptiveGcodeGeneration:
         )
         
         conv_resp = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -253,7 +253,7 @@ class TestAdaptiveSimulation:
     def test_sim_basic(self, api_client, sample_pocket_loops):
         """Test basic simulation endpoint."""
         response = api_client.post(
-            "/cam/pocket/adaptive/sim",
+            "/api/cam/pocket/adaptive/sim",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -279,7 +279,7 @@ class TestAdaptiveSimulation:
     def test_sim_with_island(self, api_client, sample_pocket_loops):
         """Test simulation with island handling."""
         response = api_client.post(
-            "/cam/pocket/adaptive/sim",
+            "/api/cam/pocket/adaptive/sim",
             json={
                 "loops": sample_pocket_loops,  # Outer + island
                 "tool_d": 6.0,
@@ -306,7 +306,7 @@ class TestAdaptiveValidation:
     def test_invalid_tool_diameter(self, api_client, sample_pocket_loops):
         """Test error for invalid tool diameter."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": -5.0,  # Invalid (negative)
@@ -319,7 +319,7 @@ class TestAdaptiveValidation:
     def test_invalid_stepover(self, api_client, sample_pocket_loops):
         """Test error for invalid stepover."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -332,7 +332,7 @@ class TestAdaptiveValidation:
     def test_missing_loops(self, api_client):
         """Test error for missing boundary loops."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [],  # Empty
                 "tool_d": 6.0,
@@ -345,7 +345,7 @@ class TestAdaptiveValidation:
     def test_invalid_strategy(self, api_client, sample_pocket_loops):
         """Test error for invalid strategy."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -358,7 +358,7 @@ class TestAdaptiveValidation:
     def test_invalid_post_id(self, api_client, sample_pocket_loops):
         """Test error for invalid post-processor ID."""
         response = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -381,7 +381,7 @@ class TestAdaptiveStatistics:
     def test_stats_length_calculation(self, api_client, sample_pocket_loops):
         """Test path length calculation."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -399,7 +399,7 @@ class TestAdaptiveStatistics:
     def test_stats_area_calculation(self, api_client, sample_pocket_loops):
         """Test area calculation."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -416,7 +416,7 @@ class TestAdaptiveStatistics:
     def test_stats_time_estimation(self, api_client, sample_pocket_loops):
         """Test time estimation."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -434,7 +434,7 @@ class TestAdaptiveStatistics:
     def test_stats_volume_calculation(self, api_client, sample_pocket_loops):
         """Test volume calculation with depth."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,
@@ -467,7 +467,7 @@ class TestAdaptiveIntegration:
         """Test complete adaptive pocket workflow."""
         # 1. Plan toolpath
         plan_resp = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": sample_pocket_loops,
                 "tool_d": 6.0,
@@ -480,7 +480,7 @@ class TestAdaptiveIntegration:
         
         # 2. Generate G-code
         gcode_resp = api_client.post(
-            "/cam/pocket/adaptive/gcode",
+            "/api/cam/pocket/adaptive/gcode",
             json={
                 "loops": sample_pocket_loops,
                 "tool_d": 6.0,
@@ -499,7 +499,7 @@ class TestAdaptiveIntegration:
     def test_multi_depth_passes(self, api_client, sample_pocket_loops):
         """Test multi-pass pocketing with depth."""
         response = api_client.post(
-            "/cam/pocket/adaptive/plan",
+            "/api/cam/pocket/adaptive/plan",
             json={
                 "loops": [sample_pocket_loops[0]],
                 "tool_d": 6.0,

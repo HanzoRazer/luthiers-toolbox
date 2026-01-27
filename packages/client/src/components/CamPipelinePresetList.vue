@@ -114,7 +114,7 @@ async function loadPresets () {
   error.value = null
 
   try {
-    const resp = await fetch('/cam/pipeline/presets')
+    const resp = await fetch('/api/cam/pipeline/presets')
     if (!resp.ok) {
       const text = await resp.text()
       throw new Error(text || `HTTP ${resp.status}`)

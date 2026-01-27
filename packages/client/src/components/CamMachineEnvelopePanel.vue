@@ -220,7 +220,7 @@ async function loadMachines () {
   error.value = null
 
   try {
-    const resp = await fetch('/cam/machines')
+    const resp = await fetch('/api/cam/machines')
     if (!resp.ok) {
       const text = await resp.text()
       throw new Error(text || `HTTP ${resp.status}`)
