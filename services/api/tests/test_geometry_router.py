@@ -202,25 +202,6 @@ class TestGeometryExport:
         svg_content = response.content.decode('utf-8')
         assert "<svg" in svg_content or "<?xml" in svg_content
         
-    @pytest.mark.skip(reason="Unit conversion happens at geometry level, not export level")
-    def test_export_unit_conversion(self, api_client, sample_geometry_simple):
-        """Test export with unit conversion (mm → inch)."""
-        response = api_client.post(
-            "/api/geometry/export",
-            json={
-                "geometry": sample_geometry_simple,
-                "format": "dxf",
-                "target_units": "inch"
-            }
-        )
-        
-        assert response.status_code == 200
-        dxf_content = response.content.decode('utf-8')
-        
-        # Verify G20 (inch mode) in metadata or coordinates are scaled
-        # 100mm should become ~3.937 inch
-        assert "3.937" in dxf_content or "G20" in dxf_content
-
 
 # =============================================================================
 # BUNDLE EXPORT TESTS
