@@ -178,12 +178,58 @@ def apply_approved_tuning_to_plan_payload(
     result["applied_decision_artifact_id"] = advisory.get("decision_artifact_id")
     result["applied_tuning"] = tuning
 
-    # Apply multipliers to setups if present
-    # This is a simplified example - actual application would depend on payload structure
+    # Apply tuning multipliers to machining parameters
+    multipliers = tuning.get("multipliers") or tuning
+    rpm_mul = float(multipliers.get("rpm_mul", 1.0))
+    feed_mul = float(multipliers.get("feed_mul", 1.0))
+    doc_mul = float(multipliers.get("doc_mul", 1.0))
+
+    # Apply to top-level context fields (SawContext shape)
+    if "spindle_rpm" in result or "max_rpm" in result:
+        rpm_key = "spindle_rpm" if "spindle_rpm" in result else "max_rpm"
+        original_rpm = float(result.get(rpm_key, 0))
+        if original_rpm > 0:
+            result[rpm_key] = round(original_rpm * rpm_mul, 1)
+            result.setdefault("tuning_originals", {})[rpm_key] = original_rpm
+
+    if "feed_rate_mmpm" in result or "feed_rate_mm_per_min" in result:
+        feed_key = "feed_rate_mmpm" if "feed_rate_mmpm" in result else "feed_rate_mm_per_min"
+        original_feed = float(result.get(feed_key, 0))
+        if original_feed > 0:
+            result[feed_key] = round(original_feed * feed_mul, 1)
+            result.setdefault("tuning_originals", {})[feed_key] = original_feed
+
+    if "doc_mm" in result or "stock_thickness_mm" in result:
+        doc_key = "doc_mm" if "doc_mm" in result else "stock_thickness_mm"
+        original_doc = float(result.get(doc_key, 0))
+        if original_doc > 0:
+            result[doc_key] = round(original_doc * doc_mul, 3)
+            result.setdefault("tuning_originals", {})[doc_key] = original_doc
+
+    # Apply to nested setups if present
     if "setups" in result and isinstance(result["setups"], list):
         for setup in result["setups"]:
-            if isinstance(setup, dict):
-                # Store applied tuning reference
-                setup["tuning_ref"] = advisory.get("decision_artifact_id")
+            if not isinstance(setup, dict):
+                continue
+            setup["tuning_ref"] = advisory.get("decision_artifact_id")
+
+            # Apply multipliers to setup-level parameters
+            for rpm_key in ("spindle_rpm", "max_rpm", "rpm"):
+                if rpm_key in setup:
+                    orig = float(setup[rpm_key])
+                    setup[rpm_key] = round(orig * rpm_mul, 1)
+                    setup.setdefault("tuning_originals", {})[rpm_key] = orig
+
+            for feed_key in ("feed_rate_mmpm", "feed_rate_mm_per_min", "feed_rate"):
+                if feed_key in setup:
+                    orig = float(setup[feed_key])
+                    setup[feed_key] = round(orig * feed_mul, 1)
+                    setup.setdefault("tuning_originals", {})[feed_key] = orig
+
+            for doc_key in ("doc_mm", "depth_of_cut_mm"):
+                if doc_key in setup:
+                    orig = float(setup[doc_key])
+                    setup[doc_key] = round(orig * doc_mul, 3)
+                    setup.setdefault("tuning_originals", {})[doc_key] = orig
 
     return result

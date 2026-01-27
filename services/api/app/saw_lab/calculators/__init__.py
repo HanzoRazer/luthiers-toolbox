@@ -2,11 +2,13 @@
 Saw Lab 2.0 - Calculators Package
 
 Provides feasibility calculators for saw blade operations:
-    - saw_heat: Heat buildup calculations
-    - saw_deflection: Blade deflection analysis
+    - saw_heat: Thermodynamic heat buildup model
+    - saw_deflection: Beam theory blade deflection
     - saw_rimspeed: Rim speed safety checks
     - saw_bite_load: Tooth bite load analysis
     - saw_kickback: Kickback risk evaluation
+    - saw_cutting_force: C-axis force decomposition and power check
+    - saw_blade_dynamics: Critical speed and vibration mode analysis
 
 All calculators follow the same interface:
     - calculate(design, ctx) -> SawCalculatorResult
@@ -28,6 +30,8 @@ from .saw_deflection import SawDeflectionCalculator
 from .saw_rimspeed import SawRimSpeedCalculator
 from .saw_bite_load import SawBiteLoadCalculator
 from .saw_kickback import SawKickbackCalculator
+from .saw_cutting_force import SawCuttingForceCalculator
+from .saw_blade_dynamics import SawBladeDynamicsCalculator
 
 
 class FeasibilityCalculatorBundle:
@@ -46,12 +50,15 @@ class FeasibilityCalculatorBundle:
     """
     
     # Calculator weights for aggregation
+    # 7 calculators: force/dynamics are physics-critical, so weighted accordingly
     WEIGHTS = {
-        "heat": 0.20,
-        "deflection": 0.15,
-        "rim_speed": 0.20,
-        "bite_load": 0.25,
-        "kickback": 0.20,
+        "heat": 0.15,
+        "deflection": 0.12,
+        "rim_speed": 0.13,
+        "bite_load": 0.15,
+        "kickback": 0.15,
+        "cutting_force": 0.18,    # Power overload = hard stop
+        "blade_dynamics": 0.12,   # Resonance avoidance
     }
     
     def __init__(self):
@@ -61,6 +68,8 @@ class FeasibilityCalculatorBundle:
             "rim_speed": SawRimSpeedCalculator(),
             "bite_load": SawBiteLoadCalculator(),
             "kickback": SawKickbackCalculator(),
+            "cutting_force": SawCuttingForceCalculator(),
+            "blade_dynamics": SawBladeDynamicsCalculator(),
         }
     
     def evaluate(
@@ -189,4 +198,6 @@ __all__ = [
     "SawRimSpeedCalculator",
     "SawBiteLoadCalculator",
     "SawKickbackCalculator",
+    "SawCuttingForceCalculator",
+    "SawBladeDynamicsCalculator",
 ]
