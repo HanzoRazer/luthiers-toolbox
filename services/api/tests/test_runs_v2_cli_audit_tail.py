@@ -91,24 +91,12 @@ def audit_setup(tmp_path, monkeypatch):
 
 def test_cli_audit_tail_exits_zero(audit_setup):
     """CLI audit tail command exits with code 0."""
-    runs_dir = audit_setup["runs_dir"]
+    # Call main() directly to avoid subprocess startup overhead,
+    # which can timeout under full-suite load.
+    from app.rmos.runs_v2.cli_audit import main
 
-    # Run the CLI as a subprocess
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m", "app.rmos.runs_v2.cli_audit",
-            "tail",
-            "--lines", "5",
-        ],
-        cwd=str(Path(__file__).parent.parent),  # services/api
-        env=_get_subprocess_env(runs_dir),
-        capture_output=True,
-        text=True,
-        timeout=10,
-    )
-
-    assert result.returncode == 0, f"CLI failed with: {result.stderr}"
+    rc = main(["tail", "--lines", "5"])
+    assert rc == 0
 
 
 def test_cli_audit_tail_shows_lines(audit_setup):
