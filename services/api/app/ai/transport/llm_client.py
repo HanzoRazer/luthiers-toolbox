@@ -4,7 +4,7 @@ AI Platform LLM Client - Canonical Transport Layer
 This module provides HTTP transport for LLM API calls.
 It handles authentication, retries, timeouts, and raw request/response.
 
-PROMOTED FROM: _experimental/ai_graphics/services/llm_client.py
+Canonical LLM transport client.
 DATE: December 2025
 
 INVARIANTS:

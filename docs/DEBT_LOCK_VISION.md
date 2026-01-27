@@ -1,25 +1,26 @@
-# Vision Stack Debt Lock (Micro Patch)
+# Vision Stack Debt Lock — RESOLVED
 
-This patch intentionally **locks down legacy vision paths** to prevent further drift.
+**Status:** RESOLVED (January 27, 2026)
 
-## What this does
+The `_experimental/ai_graphics/` folder has been **deleted entirely**.
 
-1. Marks legacy modules as **deprecated / slated for removal**
-2. Adds a CI guard that **fails builds** if new code imports legacy paths
+## What was done
 
-## Rationale
+1. Migrated `rosette_rmos_adapter.py` to deterministic stub (no AI import)
+2. Removed `teaching_routes` mount from `main.py`
+3. Deleted orphan `test_dalle_advisory.py`
+4. Cleaned `_experimental` imports from `test_e2e_workflow_integration.py`
+5. Deleted `_experimental/ai_graphics/` folder (30 files)
+6. Cleaned legacy breadcrumb comments from canonical modules
+7. Updated CI guard to zero-baseline mode (no exceptions)
 
-The canonical vision stack is now:
-- app.vision.router
-- app.ai.transport.image_client
+## Canonical vision stack
+
+- `app.vision.router` — Vision domain endpoints
+- `app.ai.transport.image_client` — AI provider abstraction
 - RMOS CAS for storage
 
-Legacy modules under:
-- app._experimental.ai_graphics
+## Defense-in-depth
 
-are retained **only for backward compatibility** and must not receive new usage.
-
-## Policy
-
-> No new imports of `app._experimental.ai_graphics.*` are permitted,
-> except for explicit re-export shims marked `# DEPRECATED`.
+The CI guard (`ci/guard_no_legacy_vision_imports.sh`) and FENCE_REGISTRY
+forbidden import rules remain active to prevent re-introduction.

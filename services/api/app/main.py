@@ -467,11 +467,7 @@ except ImportError as e:
     _log.warning("Optional router unavailable: advisory_blob_router (%s)", e)
     advisory_blob_router = None
 
-try:
-    from ._experimental.ai_graphics.api.teaching_routes import router as teaching_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: teaching_router (%s)", e)
-    teaching_router = None
+# teaching_router: REMOVED (legacy _experimental module deleted)
 
 # =============================================================================
 # WAVE 15: ART STUDIO CORE COMPLETION - Bundle 31.0 (5 routers)
@@ -1046,8 +1042,7 @@ if advisory_blob_router:
     app.include_router(
         advisory_blob_router, tags=["Advisory", "Blobs"]
     )  # Router has /api/advisory/blobs prefix internally
-if teaching_router:
-    app.include_router(teaching_router, tags=["Teaching Loop", "Training"])
+# teaching_router: REMOVED (legacy _experimental module deleted)
 
 # Wave 15: Art Studio Core Completion (5)
 # Note: These routers have their own prefix defined (e.g., /api/art/patterns)

@@ -1,9 +1,7 @@
 """app.vision.vocabulary
 
 Canonical vocabulary for guitar image prompting.
-Moved from app._experimental.ai_graphics.vocabulary.
-
-This module is pure data/helpers (no IO).
+Pure data/helpers for guitar image prompting vocabulary (no IO).
 """
 
 from __future__ import annotations
