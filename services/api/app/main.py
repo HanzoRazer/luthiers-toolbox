@@ -240,6 +240,12 @@ except ImportError as e:
     smart_guitar_router = None
 
 try:
+    from .sandboxes.smart_guitar.cam_router import router as smart_guitar_cam_router
+except ImportError as e:
+    _log.warning("Optional router unavailable: smart_guitar_cam_router (%s)", e)
+    smart_guitar_cam_router = None
+
+try:
     from .routers.om_router import router as om_router
 except ImportError as e:
     _log.warning("Optional router unavailable: om_router (%s)", e)
@@ -1076,6 +1082,15 @@ if workflow_sessions_router:
 #             export, monitoring, pipeline, utility
 if cam_router:
     app.include_router(cam_router, prefix="/api/cam", tags=["CAM Consolidated"])
+
+# Smart Guitar CAM Router (Sandbox)
+# Full pipeline: SmartGuitarSpec → SmartCamPlan → ResolvedGeometry → G-code
+if smart_guitar_cam_router:
+    app.include_router(
+        smart_guitar_cam_router,
+        prefix="/api/cam/smart-guitar",
+        tags=["CAM", "Smart Guitar"]
+    )
 
 # Phase 5: Consolidated Art Studio rosette routes
 # These provide the new organized endpoints alongside legacy routes for transition
