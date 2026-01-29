@@ -121,6 +121,9 @@ Stratocaster/
 !services/api/app/db/migrations/
 !services/api/app/db/migrations/**
 templates/
+# But allow Smart Guitar DXF templates
+!services/api/app/sandboxes/smart_guitar/templates/
+!services/api/app/sandboxes/smart_guitar/templates/**
 /tools/
 assets_staging/
 blueprint-reader/
