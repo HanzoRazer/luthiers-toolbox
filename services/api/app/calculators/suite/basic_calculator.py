@@ -50,19 +50,21 @@ class Operation(Enum):
 class CalculatorState:
     """
     Calculator internal state.
-    
+
     Models a standard calculator's memory:
     - display: Current number being entered/displayed
     - accumulator: Running result from previous operations
     - pending_op: Operation waiting to be applied
     - just_evaluated: True if equals was just pressed (for chain operations)
     - error: Error message if something went wrong
+    - memory: Memory register for M+, M-, MR, MC functions
     """
     display: str = '0'
     accumulator: Optional[float] = None
     pending_op: Operation = Operation.NONE
     just_evaluated: bool = False
     error: Optional[str] = None
+    memory: float = 0.0  # Memory register
     
     @property
     def display_value(self) -> float:
@@ -104,17 +106,20 @@ class BasicCalculator:
     def digit(self, d: int) -> 'BasicCalculator':
         """
         Enter a digit (0-9).
-        
+
         Args:
             d: Single digit 0-9
-            
+
         Returns:
             self for chaining
         """
         if not 0 <= d <= 9:
             return self
-        
+
         self._clear_error()
+        # Clear constant flag when entering new number
+        if hasattr(self, '_is_constant'):
+            self._is_constant = False
         
         # After equals, start fresh number
         if self.state.just_evaluated:
@@ -309,27 +314,84 @@ class BasicCalculator:
     def sqrt(self) -> 'BasicCalculator':
         """Square root."""
         self._clear_error()
-        
+
         value = self.state.display_value
-        
+
         if value < 0:
             self.state.error = "Cannot take square root of negative number"
             return self
-        
+
         result = math.sqrt(value)
         self.state.display = self._format_result(result)
         self.state.just_evaluated = True
-        
-        self._history.append(f"√{value} = {result}")
-        
+
+        self._history.append(f"sqrt({value}) = {result}")
+
         return self
-    
+
+    # =========================================================================
+    # MEMORY FUNCTIONS (M+, M-, MR, MC)
+    # =========================================================================
+
+    def memory_add(self) -> 'BasicCalculator':
+        """Add display value to memory (M+)."""
+        self._clear_error()
+        self.state.memory += self.state.display_value
+        self._history.append(f"M+ {self.state.display_value} (M={self.state.memory})")
+        return self
+
+    def memory_subtract(self) -> 'BasicCalculator':
+        """Subtract display value from memory (M-)."""
+        self._clear_error()
+        self.state.memory -= self.state.display_value
+        self._history.append(f"M- {self.state.display_value} (M={self.state.memory})")
+        return self
+
+    def memory_recall(self) -> 'BasicCalculator':
+        """Recall memory value to display (MR)."""
+        self._clear_error()
+        self.state.display = self._format_result(self.state.memory)
+        self.state.just_evaluated = True
+        self._history.append(f"MR = {self.state.memory}")
+        return self
+
+    def memory_clear(self) -> 'BasicCalculator':
+        """Clear memory (MC)."""
+        self._clear_error()
+        self.state.memory = 0.0
+        self._history.append("MC")
+        return self
+
+    def memory_store(self) -> 'BasicCalculator':
+        """Store display value to memory (MS), replacing current memory."""
+        self._clear_error()
+        self.state.memory = self.state.display_value
+        self._history.append(f"MS = {self.state.memory}")
+        return self
+
+    @property
+    def memory(self) -> float:
+        """Get current memory value."""
+        return self.state.memory
+
+    @property
+    def has_memory(self) -> bool:
+        """True if memory contains a non-zero value."""
+        return self.state.memory != 0.0
+
     # =========================================================================
     # CLEAR / RESET
     # =========================================================================
     
     def clear(self) -> 'BasicCalculator':
-        """Clear all (C)."""
+        """Clear all (C) - preserves memory."""
+        saved_memory = self.state.memory
+        self.state = CalculatorState()
+        self.state.memory = saved_memory
+        return self
+
+    def clear_all(self) -> 'BasicCalculator':
+        """Clear everything including memory."""
         self.state = CalculatorState()
         return self
     

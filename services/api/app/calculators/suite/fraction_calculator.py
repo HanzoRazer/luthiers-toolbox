@@ -488,6 +488,9 @@ class FractionCalculator(BasicCalculator):
         """Get display string (fraction or decimal based on mode)."""
         if self.state.error:
             return "Error"
+        # Check if showing a constant (pi, e, etc.) - show decimal
+        if hasattr(self, '_is_constant') and self._is_constant:
+            return self.state.display
         if self._fraction_mode:
             return self.display_fraction
         return self.state.display
