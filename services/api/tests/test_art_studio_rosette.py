@@ -8,10 +8,27 @@ Tests cover:
 - DXF export with circles for soundhole/channel
 - Preset listing and retrieval
 - SVG preview generation
+
+NOTE (January 2026 - Legacy Router Cleanup):
+The rosette channel calculation HTTP API at /api/art-studio/rosette/* was removed.
+The endpoints were consolidated to /api/art/rosette/* with a different schema:
+- OLD: soundhole_diameter_mm, central_band_mm, inner_purfling, outer_purfling
+- NEW: pattern_type, segments, inner_radius, outer_radius
+
+The calculator facade (app.calculators.rosette_calc) still works and is tested
+in TestRosetteCalculator. The HTTP endpoint tests in TestRosetteRouter are
+skipped until a decision is made about exposing the channel calculation API.
 """
 
 import pytest
 from fastapi.testclient import TestClient
+
+# Skip reason for router tests - API schema changed
+_ROUTER_SKIP_REASON = (
+    "Rosette channel calculation API removed in January 2026 consolidation. "
+    "Endpoint moved to /api/art/rosette/* with different schema (pattern_type, "
+    "segments, inner_radius, outer_radius). Calculator facade still available."
+)
 
 
 @pytest.fixture
@@ -92,6 +109,7 @@ class TestRosetteCalculator:
         assert preset.soundhole_diameter_mm == 100.0
 
 
+@pytest.mark.skip(reason=_ROUTER_SKIP_REASON)
 class TestRosetteRouter:
     """Tests for rosette router endpoints."""
 
@@ -192,6 +210,7 @@ class TestRosetteRouter:
         assert "preview_svg" in data
 
 
+@pytest.mark.skip(reason=_ROUTER_SKIP_REASON)
 class TestRosetteDXFExport:
     """Tests for rosette DXF export functionality."""
 
