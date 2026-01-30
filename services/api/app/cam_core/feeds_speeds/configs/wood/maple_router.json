@@ -1,0 +1,25 @@
+{
+  "material": "maple",
+  "presets": {
+    "upcut_1_4:roughing": {
+      "rpm": 18000,
+      "feed_mm_min": 2500,
+      "stepdown_mm": 3.0,
+      "stepover_mm": 2.0,
+      "strategy": "adaptive",
+      "finish_quality": "semi",
+      "max_chipload_mm": 0.06,
+      "recommended_chipload_mm": 0.03
+    },
+    "upcut_1_4:finishing": {
+      "rpm": 18000,
+      "feed_mm_min": 900,
+      "stepdown_mm": 0.5,
+      "stepover_mm": 0.3,
+      "strategy": "parallel",
+      "finish_quality": "finish",
+      "max_chipload_mm": 0.02,
+      "recommended_chipload_mm": 0.01
+    }
+  }
+}

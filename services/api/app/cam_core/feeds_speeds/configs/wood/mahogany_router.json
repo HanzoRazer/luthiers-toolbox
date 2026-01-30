@@ -1,0 +1,25 @@
+{
+  "material": "mahogany",
+  "presets": {
+    "downcut_1_4:roughing": {
+      "rpm": 16500,
+      "feed_mm_min": 2200,
+      "stepdown_mm": 2.5,
+      "stepover_mm": 1.8,
+      "strategy": "adaptive",
+      "finish_quality": "semi",
+      "max_chipload_mm": 0.05,
+      "recommended_chipload_mm": 0.028
+    },
+    "downcut_1_4:finishing": {
+      "rpm": 16500,
+      "feed_mm_min": 700,
+      "stepdown_mm": 0.4,
+      "stepover_mm": 0.25,
+      "strategy": "contour",
+      "finish_quality": "finish",
+      "max_chipload_mm": 0.018,
+      "recommended_chipload_mm": 0.009
+    }
+  }
+}
