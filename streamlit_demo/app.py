@@ -64,8 +64,7 @@ page = st.sidebar.radio(
     [
         "Home",
         "Blueprint Reader",
-        "Rosette Builder",
-        "Headstock Art",
+        "Art Studio",
         "Guitar Designer",
         "Calculator Suite",
     ]
@@ -447,12 +446,50 @@ def show_home():
     st.info("Select a tool from the sidebar to get started.")
 
 
+def show_art_studio():
+    """Art Studio - consolidated design tools."""
+    st.title("Art Studio")
+    st.markdown("Design tools for rosettes, headstocks, inlays, and more")
+
+    # Create tabs for different art tools
+    tab_rosette, tab_headstock, tab_inlay = st.tabs(["Rosette Builder", "Headstock Art", "Inlay Designer"])
+
+    with tab_rosette:
+        show_rosette_builder()
+
+    with tab_headstock:
+        show_headstock_art()
+
+    with tab_inlay:
+        show_inlay_designer()
+
+
+def show_inlay_designer():
+    """Inlay Designer tab within Art Studio."""
+    st.markdown("### Inlay Designer")
+    st.markdown("Design custom inlays for fretboards and headstocks")
+
+    st.info("Coming soon: AI-assisted inlay pattern generation")
+
+    # Placeholder controls
+    col1, col2 = st.columns(2)
+    with col1:
+        inlay_type = st.selectbox("Inlay Type", ["Fret Markers", "Headstock Logo", "Pickguard", "Custom"])
+        material = st.selectbox("Material", ["Mother of Pearl", "Abalone", "Wood", "Acrylic"])
+    with col2:
+        position = st.selectbox("Position", ["12th Fret", "Headstock Center", "Full Fretboard"])
+        style = st.selectbox("Style", ["Dots", "Blocks", "Custom Shape", "Text/Logo"])
+
+    st.markdown("---")
+    st.markdown("*Full inlay design functionality available in the Vue client at `/art-studio`*")
+
+
 def show_rosette_builder():
-    """Rosette Builder page."""
+    """Rosette Builder tab within Art Studio."""
     import io
     from PIL import Image
 
-    st.title("Rosette Pattern Builder")
+    st.markdown("### Rosette Pattern Builder")
     st.markdown("Traditional matrix patterns from the masters")
 
     # Import toolbox modules
@@ -600,10 +637,10 @@ def show_rosette_builder():
 
 
 def show_headstock_art():
-    """Headstock Art Generator page."""
+    """Headstock Art tab within Art Studio."""
     import io
 
-    st.title("Headstock Art Generator")
+    st.markdown("### Headstock Art Generator")
     st.markdown("AI-powered inlay design visualization")
 
     # Import toolbox modules
@@ -2138,10 +2175,8 @@ if page == "Home":
     show_home()
 elif page == "Blueprint Reader":
     show_blueprint_reader()
-elif page == "Rosette Builder":
-    show_rosette_builder()
-elif page == "Headstock Art":
-    show_headstock_art()
+elif page == "Art Studio":
+    show_art_studio()
 elif page == "Guitar Designer":
     show_guitar_designer()
 elif page == "Calculator Suite":
