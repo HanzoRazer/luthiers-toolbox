@@ -895,6 +895,23 @@ PRESET_MATRICES: Dict[str, MatrixFormula] = {
         chip_length_mm=1.7,
         notes="Three-color gradient. Transitions dark to light to medium."
     ),
+
+    "german_tricolor_rope_6x11": MatrixFormula(
+        name="German Tricolor Rope",
+        rows=[
+            {"red": 3, "white": 2, "green": 2},
+            {"red": 2, "white": 3, "green": 2},
+            {"red": 2, "white": 2, "green": 3},
+            {"red": 2, "white": 2, "green": 3},
+            {"red": 2, "white": 3, "green": 2},
+            {"red": 3, "white": 2, "green": 2},
+        ],
+        column_sequence=[1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1],
+        strip_width_mm=0.8,
+        strip_thickness_mm=0.5,
+        chip_length_mm=1.6,
+        notes="German tricolor twisted rope (Seil) pattern. Red, white, green dyed veneers. Classic Central European lutherie tradition."
+    ),
 }
 
 
