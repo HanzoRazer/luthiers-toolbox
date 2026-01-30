@@ -460,6 +460,16 @@ HEADSTOCK_TEMPLATES: Dict[str, Dict] = {
         "tuner_style": "black Grover tuners",
         "description": "Eastern dragon on Flying V - ultimate shred guitar",
     },
+    "dragon_dreadnought": {
+        "name": "Dragon Dreadnought",
+        "style": "acoustic",
+        "headstock_wood": "ebony",
+        "inlay_design": "dragon",
+        "inlay_material": "abalone",
+        "tuner_style": "gold open-gear butterbean tuners",
+        "description": "Eastern dragon on dreadnought acoustic - dramatic showpiece",
+        "additional_details": "Sinuous Eastern/Chinese dragon with four claws, flowing whiskers and mane, detailed scales in iridescent abalone. The dragon coils gracefully across the headstock. Martin-style headstock shape with dramatic custom inlay.",
+    },
     "acoustic_vine": {
         "name": "Acoustic Vine",
         "style": "acoustic",
