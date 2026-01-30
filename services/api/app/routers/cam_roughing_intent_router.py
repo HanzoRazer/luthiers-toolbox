@@ -1,7 +1,20 @@
 # services/api/app/routers/cam_roughing_intent_router.py
+"""
+CAM Roughing Intent Router (H7.2)
+
+Intent-native endpoint that accepts CamIntentV1, normalizes it,
+and returns structured JSON with G-code and normalization issues.
+
+Response format:
+{
+    "gcode": "G90\nG0 Z5.000\n...",
+    "issues": [{"code": "...", "message": "...", "path": "..."}],
+    "status": "OK" | "OK_WITH_ISSUES"
+}
+"""
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -11,21 +24,8 @@ from app.observability.metrics import (
     cam_roughing_gcode_intent_strict_reject_total,
 )
 
-# TODO: Update these imports once CamIntentV1 and normalize_cam_intent_v1 are available
 # Canonical intent envelope (H7.1): app.rmos.cam.CamIntentV1
-# Possible locations:
-#   from app.rmos.cam import CamIntentV1, normalize_cam_intent_v1
-#   from app.rmos.cam.intent import CamIntentV1, normalize_cam_intent_v1
-try:
-    from app.rmos.cam import CamIntentV1, normalize_cam_intent_v1
-except ImportError:
-    try:
-        from app.rmos.cam.intent import CamIntentV1, normalize_cam_intent_v1  # type: ignore
-    except ImportError:
-        # Stub until intent schema is available
-        CamIntentV1 = Dict[str, Any]  # type: ignore
-        def normalize_cam_intent_v1(intent):  # type: ignore
-            return intent, []
+from app.rmos.cam import CamIntentV1, CamIntentIssue, normalize_cam_intent_v1
 
 # Existing roughing implementation (consolidated CAM router)
 # We will reuse the same generation logic to avoid drift.
@@ -35,9 +35,18 @@ from app.cam.routers.toolpath.roughing_router import roughing_gcode as _legacy_r
 router = APIRouter(prefix="/cam", tags=["CAM", "Intent"])
 
 
-class NormalizeResponse(BaseModel):
-    intent: Dict[str, Any]
-    issues: List[Dict[str, Any]]
+class IssueOut(BaseModel):
+    """Normalization issue output."""
+    code: str
+    message: str
+    path: str = ""
+
+
+class RoughingIntentResponse(BaseModel):
+    """Response from roughing intent endpoint."""
+    gcode: str
+    issues: List[IssueOut]
+    status: Literal["OK", "OK_WITH_ISSUES"]
 
 
 def _issues_summary(issues: List[Any]) -> Tuple[str, str]:
@@ -62,22 +71,30 @@ def _issues_summary(issues: List[Any]) -> Tuple[str, str]:
     return has_issues, severity
 
 
-@router.post("/roughing/gcode_intent")
+@router.post("/roughing/gcode_intent", response_model=RoughingIntentResponse)
 async def roughing_gcode_intent(
     request: Request,
     intent: CamIntentV1,
     strict: bool = False,
-):
+) -> RoughingIntentResponse:
     """
     Intent-native roughing endpoint.
 
     - Accepts CamIntentV1
     - Normalizes via normalize_cam_intent_v1
     - Reuses legacy roughing generator to keep output identical
+    - Returns structured JSON with G-code and normalization issues
     - Emits metrics for adoption tracking
 
     Query:
-      strict=true -> reject if normalizer emits issues
+      strict=true -> reject (422) if normalizer emits issues
+
+    Response:
+      {
+        "gcode": "G90\\nG0 Z5.000\\n...",
+        "issues": [{"code": "...", "message": "...", "path": "..."}],
+        "status": "OK" | "OK_WITH_ISSUES"
+      }
     """
     # Normalize
     normalized_intent, issues = normalize_cam_intent_v1(intent)
@@ -89,29 +106,26 @@ async def roughing_gcode_intent(
         labels={"strict": strict_lbl, "has_issues": has_issues, "severity": severity},
     )
 
+    # Convert issues to output format
+    issues_out = [
+        IssueOut(code=i.code, message=i.message, path=i.path)
+        for i in issues
+    ]
+
     if strict and issues:
         cam_roughing_gcode_intent_strict_reject_total.inc(
             labels={"severity": severity},
         )
-        # Convert issues to dicts for JSON serialization
-        issues_dicts = []
-        for i in issues:
-            if isinstance(i, dict):
-                issues_dicts.append(i)
-            elif hasattr(i, "model_dump"):
-                issues_dicts.append(i.model_dump())
-            elif hasattr(i, "dict"):
-                issues_dicts.append(i.dict())
-            else:
-                issues_dicts.append({"message": str(i)})
         raise HTTPException(
             status_code=422,
-            detail={"message": "Strict mode reject: intent normalization produced issues", "issues": issues_dicts},
+            detail={
+                "error": "CAM_INTENT_NORMALIZATION_ISSUES",
+                "issues": [i.model_dump() for i in issues_out],
+            },
         )
 
     # Convert normalized intent -> legacy payload shape
     # Convention: keep envelope stable, mode-specific fields inside `design`.
-    # Legacy roughing endpoint expects a JSON dict payload.
     if isinstance(normalized_intent, dict):
         design = normalized_intent.get("design")
         context = normalized_intent.get("context", {})
@@ -119,7 +133,7 @@ async def roughing_gcode_intent(
     else:
         design = getattr(normalized_intent, "design", None)
         context = getattr(normalized_intent, "context", {}) or {}
-        units = getattr(normalized_intent, "units", "mm")
+        units = str(getattr(normalized_intent, "units", "mm"))
 
     if not isinstance(design, dict):
         raise HTTPException(status_code=400, detail="CamIntentV1.design must be an object for roughing")
@@ -144,10 +158,22 @@ async def roughing_gcode_intent(
     # Consolidated signature: roughing_gcode(req: RoughReq) -> Response
     try:
         rough_req = RoughReq(**legacy_design)
-        return _legacy_roughing_handler(rough_req)
+        response = _legacy_roughing_handler(rough_req)
+
+        # Extract G-code from response body
+        gcode = response.body.decode("utf-8") if hasattr(response, "body") else str(response)
+
+        return RoughingIntentResponse(
+            gcode=gcode,
+            issues=issues_out,
+            status="OK_WITH_ISSUES" if issues else "OK",
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g., safety blocks)
+        raise
     except Exception as e:
         # If handler fails, return a structured error but metrics still counted
         raise HTTPException(
             status_code=422,
-            detail={"message": f"Roughing generation failed: {e}", "issues": []},
+            detail={"error": "ROUGHING_GENERATION_FAILED", "message": str(e), "issues": []},
         )
