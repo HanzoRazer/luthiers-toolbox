@@ -46,7 +46,7 @@ pipelines/*/*.py (legacy math implementations)
 
 from . import bracing_router
 from . import svg  # AI-powered SVG generation (Option 2 architecture)
-from . import rosette_router
+# REMOVED: rosette_router consolidated into /api/art/rosette (January 2026)
 from . import inlay_router
 from . import vcarve_router
 from . import relief_router
@@ -54,7 +54,7 @@ from . import prompts  # CNC prompt library (create, transform, optimize, valida
 
 __all__ = [
     "bracing_router",
-    "rosette_router",
+    # "rosette_router",  # REMOVED: consolidated
     "inlay_router",
     "vcarve_router",
     "relief_router",

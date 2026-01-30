@@ -157,16 +157,17 @@ from .rmos.api_constraint_profiles import router as rmos_profiles_router
 from .rmos.api_profile_history import router as rmos_history_router
 
 # =============================================================================
-# CAM SUBSYSTEM (8 routers)
+# CAM SUBSYSTEM (4 routers - legacy routes removed January 2026)
 # Note: cam_preview_router broken - needs rmos.context
 # Note: adaptive_poly_gcode_router broken - needs routers.util
 # =============================================================================
-from .routers.cam_vcarve_router import router as cam_vcarve_router
+# REMOVED: Consolidated into /api/cam/toolpath/* (January 2026)
+# from .routers.cam_vcarve_router import router as cam_vcarve_router
+# from .routers.cam_relief_v160_router import router as cam_relief_router
+# from .routers.cam_svg_v160_router import router as cam_svg_router
+# from .routers.cam_helical_v161_router import router as cam_helical_router
 from .routers.cam_post_v155_router import router as cam_post_v155_router
 from .routers.cam_smoke_v155_router import router as cam_smoke_v155_router
-from .routers.cam_relief_v160_router import router as cam_relief_router
-from .routers.cam_svg_v160_router import router as cam_svg_router
-from .routers.cam_helical_v161_router import router as cam_helical_router
 from .routers.gcode_backplot_router import router as gcode_backplot_router
 from .routers.adaptive_preview_router import router as adaptive_preview_router
 
@@ -244,10 +245,12 @@ from .routers.neck_generator_router import router as neck_generator_router
 from .cad.api import dxf_router as cad_dxf_router
 
 # =============================================================================
-# ROSETTE SYSTEM (2 routers) - Wave 5
+# ROSETTE SYSTEM (0 routers) - Wave 5 - REMOVED January 2026
+# Legacy routers consolidated into /api/art/rosette and /api/cam/rosette
 # =============================================================================
-from .routers.rosette_pattern_router import router as rosette_pattern_router
-from .art_studio.rosette_router import router as art_studio_rosette_router
+# REMOVED: Consolidated into /api/art/rosette/pattern (January 2026)
+# from .routers.rosette_pattern_router import router as rosette_pattern_router
+# from .art_studio.rosette_router import router as art_studio_rosette_router
 
 # ART STUDIO BRACING & INLAY ROUTERS
 from .art_studio.bracing_router import router as art_studio_bracing_router
@@ -268,7 +271,8 @@ from .routers.music import router as music_router
 # Consolidated into calculators_consolidated_router:
 # from .routers.calculators_router import router as calculators_router
 from .routers.calculators_consolidated_router import router as calculators_consolidated_router
-from .routers.cam_fret_slots_router import router as cam_fret_slots_router
+# REMOVED: Consolidated into /api/cam/fret_slots (January 2026)
+# from .routers.cam_fret_slots_router import router as cam_fret_slots_router
 from .routers.bridge_router import router as bridge_router
 from .routers.fret_router import router as fret_router
 
@@ -299,7 +303,8 @@ except ImportError as e:
 from .routers.cam_roughing_intent_router import (
     router as cam_roughing_intent_router,
 )  # H7.2.2.1
-from .routers.compare_router import router as legacy_compare_router
+# REMOVED: Consolidated into /api/compare (January 2026)
+# from .routers.compare_router import router as legacy_compare_router
 from .routers.dxf_preflight_router import router as dxf_preflight_router
 
 try:
@@ -311,13 +316,15 @@ from .routers.neck_router import router as neck_router
 from .routers.parametric_guitar_router import router as parametric_guitar_router
 
 # =============================================================================
-# WAVE 10: INSTRUMENT + COMPARE LAB + DRILLING + RISK + LEARN + BACKUP (8 routers)
+# WAVE 10: INSTRUMENT + DRILLING + RISK + LEARN + BACKUP (6 routers)
 # =============================================================================
 from .routers.instrument_router import router as instrument_router
-from .routers.compare_lab_router import router as compare_lab_router
+# REMOVED: Consolidated into /api/compare/lab (January 2026)
+# from .routers.compare_lab_router import router as compare_lab_router
 # REMOVED: Consolidated into /api/cam/drilling (January 2026)
 # from .routers.drilling_router import router as drilling_router
-from .routers.cam_risk_router import router as cam_risk_router
+# REMOVED: Consolidated into /api/cam/risk (January 2026)
+# from .routers.cam_risk_router import router as cam_risk_router
 from .routers.job_risk_router import router as job_risk_router
 
 try:
@@ -360,25 +367,28 @@ from .routers.cam_settings_router import router as cam_settings_router
 from .routers.job_intelligence_router import router as job_intelligence_router
 
 # =============================================================================
-# WAVE 12: CAM EXTENSIONS + COMPARE RISK + FRET EXPORT + POLYGON (8 routers)
+# WAVE 12: CAM EXTENSIONS + POLYGON (4 routers - legacy removed January 2026)
 # =============================================================================
 from .routers.cam_adaptive_benchmark_router import (
     router as cam_adaptive_benchmark_router,
 )
-from .routers.cam_fret_slots_export_router import router as cam_fret_slots_export_router
-from .routers.cam_risk_aggregate_router import router as cam_risk_aggregate_router
-from .routers.compare_risk_aggregate_router import (
-    router as compare_risk_aggregate_router,
-)
-from .routers.compare_risk_bucket_detail_router import (
-    router as compare_risk_bucket_detail_router,
-)
+# REMOVED: Consolidated into /api/cam/fret_slots (January 2026)
+# from .routers.cam_fret_slots_export_router import router as cam_fret_slots_export_router
+# REMOVED: Consolidated into /api/cam/risk (January 2026)
+# from .routers.cam_risk_aggregate_router import router as cam_risk_aggregate_router
+# REMOVED: Consolidated into /api/compare/risk (January 2026)
+# from .routers.compare_risk_aggregate_router import (
+#     router as compare_risk_aggregate_router,
+# )
+# from .routers.compare_risk_bucket_detail_router import (
+#     router as compare_risk_bucket_detail_router,
+# )
 from .routers.polygon_offset_router import router as polygon_offset_router
 from .routers.job_insights_router import router as job_insights_router
 from .routers.pipeline_preset_router import router as pipeline_preset_router
 
 # =============================================================================
-# WAVE 13 (FINAL): ART PRESETS + CAM UTILITIES + COMPARE + MONITOR (10 routers)
+# WAVE 13 (FINAL): ART PRESETS + CAM UTILITIES + COMPARE + MONITOR (9 routers)
 # =============================================================================
 from .routers.art_presets_router import router as art_presets_router
 from .routers.cam_compare_diff_router import router as cam_compare_diff_router
@@ -390,9 +400,10 @@ from .routers.cam_polygon_offset_router import router as cam_polygon_offset_rout
 # Consolidated into simulation_consolidated_router:
 # from .routers.cam_simulate_router import router as cam_simulate_router
 from .routers.compare_automation_router import router as compare_automation_router
-from .routers.compare_risk_bucket_export_router import (
-    router as compare_risk_bucket_export_router,
-)
+# REMOVED: Consolidated into /api/compare/risk (January 2026)
+# from .routers.compare_risk_bucket_export_router import (
+#     router as compare_risk_bucket_export_router,
+# )
 from .routers.health_router import router as health_router_ext
 from .routers.live_monitor_drilldown_api import router as live_monitor_router
 
@@ -714,25 +725,18 @@ app.include_router(rmos_ai_router, prefix="/api/rmos", tags=["RMOS AI"])
 app.include_router(rmos_profiles_router, prefix="/api/rmos", tags=["RMOS Profiles"])
 app.include_router(rmos_history_router, prefix="/api/rmos", tags=["RMOS History"])
 
-# CAM Subsystem (8) - Legacy routes, consolidated equivalents in Wave 18
-app.include_router(
-    cam_vcarve_router, prefix="/api/cam/vcarve", tags=["V-Carve", "Legacy"]
-)  # → /api/cam/toolpath/vcarve
+# CAM Subsystem (4) - Legacy routes removed January 2026
+# REMOVED: Legacy CAM routers - use consolidated /api/cam/* paths
+# cam_vcarve_router → /api/cam/toolpath/vcarve
+# cam_relief_router → /api/cam/relief
+# cam_svg_router → /api/cam/export
+# cam_helical_router → /api/cam/toolpath/helical
 app.include_router(
     cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"]
 )  # No consolidated equivalent
 app.include_router(
     cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"]
 )  # No consolidated equivalent
-app.include_router(
-    cam_relief_router, prefix="/api/cam/relief", tags=["Relief Carving", "Legacy"]
-)  # → /api/cam/relief (proxy)
-app.include_router(
-    cam_svg_router, prefix="/api/cam/svg", tags=["SVG Export", "Legacy"]
-)  # → /api/cam/export
-app.include_router(
-    cam_helical_router, prefix="/api/cam/helical", tags=["Helical Ramping", "Legacy"]
-)  # → /api/cam/toolpath/helical
 app.include_router(
     gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"]
 )  # No consolidated equivalent
@@ -812,15 +816,10 @@ app.include_router(
 # CAD Engine (1) - Wave 4
 app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 
-# Rosette System (2) - Wave 5 - Legacy, see Wave 18 consolidated + Art Studio routes
-app.include_router(
-    rosette_pattern_router,
-    prefix="/api/rosette",
-    tags=["Rosette", "Patterns", "Legacy"],
-)  # → /api/cam/rosette or /api/art/rosette
-app.include_router(
-    art_studio_rosette_router, prefix="/api", tags=["Rosette", "Art Studio", "Legacy"]
-)  # → /api/art/rosette (v2)
+# Rosette System - Legacy routes REMOVED January 2026
+# See Wave 18 consolidated CAM routes + Art Studio v2 routes
+# rosette_pattern_router → /api/art/rosette/pattern
+# art_studio_rosette_router → /api/art/rosette (v2)
 
 # Art Studio Bracing & Inlay Routers
 app.include_router(
@@ -843,14 +842,10 @@ app.include_router(
 # Legacy 308 Redirects: REMOVED (January 2026)
 # All legacy redirect routers deleted. Zero frontend consumers remain.
 
-# Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
+# Wave 7: Calculator Suite + Bridge Calculator + Fret Design (3)
 # Consolidated calculator router (CAM + Math + Luthier)
 app.include_router(calculators_consolidated_router, prefix="/api/calculators", tags=["Calculators"])
-app.include_router(
-    cam_fret_slots_router,
-    prefix="/api/cam/fret_slots",
-    tags=["CAM", "Fret Slots", "Legacy"],
-)  # → /api/cam/fret_slots (proxy)
+# REMOVED: cam_fret_slots_router → /api/cam/fret_slots (consolidated)
 app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
 app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
 
@@ -888,9 +883,7 @@ if ai_cam_router:
 app.include_router(
     cam_roughing_intent_router, prefix="/api", tags=["CAM", "Intent"]
 )  # H7.2.2.1
-app.include_router(
-    legacy_compare_router, prefix="", tags=["Compare", "Baselines", "Legacy"]
-)  # Router has /api/compare prefix (LEGACY - use consolidated at Wave 19)
+# REMOVED: legacy_compare_router → /api/compare (consolidated Wave 19)
 app.include_router(dxf_preflight_router, prefix="/api", tags=["DXF", "Preflight"])
 if joblog_router:
     app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
@@ -899,17 +892,13 @@ app.include_router(
     parametric_guitar_router, prefix="/api", tags=["Guitar", "Parametric"]
 )
 
-# Wave 10: Instrument + Compare Lab + Drilling + Risk + Learn + Backup (8)
+# Wave 10: Instrument + Risk + Learn + Backup (5)
 app.include_router(
     instrument_router, prefix="", tags=["Instrument"]
 )  # Router has /api/instrument prefix
-app.include_router(
-    compare_lab_router, prefix="", tags=["Compare", "Lab", "Legacy"]
-)  # Router has /api/compare/lab prefix → consolidated /api/compare/lab
-# drilling_router → /api/cam/drilling (consolidated)
-app.include_router(
-    cam_risk_router, prefix="", tags=["CAM", "Risk", "Legacy"]
-)  # Router has /api/cam/risk prefix → /api/cam/risk (consolidated)
+# REMOVED: compare_lab_router → /api/compare/lab (consolidated)
+# REMOVED: drilling_router → /api/cam/drilling (consolidated)
+# REMOVED: cam_risk_router → /api/cam/risk (consolidated)
 app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
 if learn_router:
     app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
@@ -939,29 +928,21 @@ app.include_router(
     job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"]
 )
 
-# Wave 12: CAM Extensions + Compare Risk + Fret Export + Polygon (8)
+# Wave 12: CAM Extensions + Polygon (4 - legacy removed January 2026)
 app.include_router(
     cam_adaptive_benchmark_router, prefix="/api", tags=["CAM", "Benchmark"]
 )
-app.include_router(
-    cam_fret_slots_export_router, prefix="", tags=["CAM", "Fret Export", "Legacy"]
-)  # Router has /api/cam/fret_slots prefix → proxy
-app.include_router(
-    cam_risk_aggregate_router, prefix="", tags=["CAM", "Risk", "Legacy"]
-)  # Router has /api/cam/jobs prefix → /api/cam/risk
-app.include_router(
-    compare_risk_aggregate_router, prefix="", tags=["Compare", "Risk", "Legacy"]
-)  # Router has /api/compare prefix → consolidated
-app.include_router(
-    compare_risk_bucket_detail_router, prefix="", tags=["Compare", "Risk", "Legacy"]
-)  # Router has /api/compare prefix → consolidated
+# REMOVED: cam_fret_slots_export_router → /api/cam/fret_slots (consolidated)
+# REMOVED: cam_risk_aggregate_router → /api/cam/risk (consolidated)
+# REMOVED: compare_risk_aggregate_router → /api/compare/risk (consolidated)
+# REMOVED: compare_risk_bucket_detail_router → /api/compare/risk (consolidated)
 app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 app.include_router(
     job_insights_router, prefix="", tags=["Jobs", "Insights"]
 )  # Router has /api/cam/job_log prefix
 app.include_router(pipeline_preset_router, prefix="/api", tags=["Pipeline", "Presets"])
 
-# Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (10)
+# Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (9)
 app.include_router(art_presets_router, prefix="/api", tags=["Art", "Presets"])
 app.include_router(cam_compare_diff_router, prefix="/api", tags=["CAM", "Compare"])
 app.include_router(cam_dxf_adaptive_router, prefix="/api", tags=["CAM", "DXF"])
@@ -974,9 +955,7 @@ app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polyg
 app.include_router(
     compare_automation_router, prefix="/api", tags=["Compare", "Automation"]
 )
-app.include_router(
-    compare_risk_bucket_export_router, prefix="", tags=["Compare", "Export", "Legacy"]
-)  # Router has /api/compare prefix → consolidated
+# REMOVED: compare_risk_bucket_export_router → /api/compare/risk (consolidated)
 app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
 app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 
