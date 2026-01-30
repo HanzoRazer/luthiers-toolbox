@@ -216,9 +216,17 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         
         if row is None:
             return None
-        
+
         return self._row_to_dict(row)
-    
+
+    def get(self, job_id: str) -> Optional[Dict[str, Any]]:
+        """Alias for get_job() for interface compatibility."""
+        return self.get_job(job_id)
+
+    def list(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Alias for get_all() for interface compatibility."""
+        return self.get_all(limit=limit, offset=offset)
+
     def list_rosette_cnc_exports(self, limit: int = 50) -> List[Dict[str, Any]]:
         """
         Return the most recent rosette CNC export jobs (limited).
