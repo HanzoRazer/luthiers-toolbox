@@ -287,48 +287,56 @@ class SawBladeValidator:
     ) -> ValidationResult:
         """
         Check if RPM is within safe range.
-        
-        Uses universal limits + blade-specific recommendations if available.
+
+        Uses blade-specific limits if available, otherwise falls back to universal limits.
         """
-        # TODO: Add blade-specific RPM limits to SawBladeSpec model
-        # For now, use universal limits
-        
-        if rpm < self.limits.RPM_MIN_UNIVERSAL:
+        # Use blade-specific limits if available, otherwise universal
+        rpm_min = blade.rpm_min if blade.rpm_min is not None else self.limits.RPM_MIN_UNIVERSAL
+        rpm_max = blade.rpm_max if blade.rpm_max is not None else self.limits.RPM_MAX_UNIVERSAL
+        has_blade_limits = blade.rpm_min is not None or blade.rpm_max is not None
+
+        if rpm < rpm_min:
             return ValidationResult(
                 level=ValidationLevel.ERROR,
-                message=f"RPM {rpm:.0f} is too low (min {self.limits.RPM_MIN_UNIVERSAL})",
+                message=f"RPM {rpm:.0f} is too low (min {rpm_min})",
                 details={
                     "rpm": rpm,
-                    "min_rpm": self.limits.RPM_MIN_UNIVERSAL,
+                    "min_rpm": rpm_min,
+                    "source": "blade_spec" if has_blade_limits else "universal",
                     "reason": "Insufficient cutting speed, risk of burning"
                 }
             )
-        
-        if rpm > self.limits.RPM_MAX_UNIVERSAL:
+
+        if rpm > rpm_max:
             return ValidationResult(
                 level=ValidationLevel.ERROR,
-                message=f"RPM {rpm:.0f} exceeds safe limit (max {self.limits.RPM_MAX_UNIVERSAL})",
+                message=f"RPM {rpm:.0f} exceeds safe limit (max {rpm_max})",
                 details={
                     "rpm": rpm,
-                    "max_rpm": self.limits.RPM_MAX_UNIVERSAL,
+                    "max_rpm": rpm_max,
+                    "source": "blade_spec" if has_blade_limits else "universal",
                     "reason": "Excessive blade speed, risk of failure"
                 }
             )
-        
-        if rpm > self.limits.RPM_WARN_HIGH:
+
+        # Warn if approaching upper limit (within 10% of max)
+        warn_threshold = rpm_max * 0.85
+        if rpm > warn_threshold:
             return ValidationResult(
                 level=ValidationLevel.WARN,
-                message=f"RPM {rpm:.0f} is high (> {self.limits.RPM_WARN_HIGH} recommended)",
+                message=f"RPM {rpm:.0f} is high (> {warn_threshold:.0f} recommended)",
                 details={
                     "rpm": rpm,
-                    "warn_rpm": self.limits.RPM_WARN_HIGH,
+                    "warn_rpm": warn_threshold,
+                    "max_rpm": rpm_max,
+                    "source": "blade_spec" if has_blade_limits else "universal",
                     "recommendation": "Verify blade is rated for high RPM"
                 }
             )
-        
+
         return ValidationResult(
             level=ValidationLevel.OK,
-            message=f"RPM {rpm:.0f} is within safe range"
+            message=f"RPM {rpm:.0f} is within safe range ({rpm_min}-{rpm_max})"
         )
     
     def _check_feed_rate(

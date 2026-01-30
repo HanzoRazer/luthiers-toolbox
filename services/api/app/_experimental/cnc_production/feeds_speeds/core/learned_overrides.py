@@ -110,7 +110,7 @@ class LearnedOverridesStore:
         
         # Initialize storage if not exists
         if not self.storage_path.exists():
-            self._save_lanes([])
+            self._save_lanes({})
         
         if not self.audit_path.exists():
             self._save_audit([])
@@ -123,11 +123,15 @@ class LearnedOverridesStore:
         """Load lanes from JSON storage."""
         if not self.storage_path.exists():
             return {}
-        
+
         try:
             with open(self.storage_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return data.get('lanes', {})
+                lanes = data.get('lanes', {})
+                # Handle legacy format where lanes was a list instead of dict
+                if isinstance(lanes, list):
+                    return {}
+                return lanes
         except Exception as e:
             print(f"Error loading learned overrides: {e}")
             return {}

@@ -46,11 +46,14 @@ from .models import (
 
 from ..joblog.models import SawRunRecord, SawTelemetryRecord
 from ..joblog.storage import get_run, get_telemetry
+from ..feeds_speeds.core.learned_overrides import (
+    get_learned_overrides_store,
+    LaneKey,
+    OverrideSource,
+)
 
 
-# Stub for learned overrides integration
-# In a full implementation, this would connect to your feeds/speeds system
-def apply_lane_scale_stub(
+def apply_lane_scale(
     tool_id: str,
     material: str,
     mode: str,
@@ -60,14 +63,11 @@ def apply_lane_scale_stub(
     meta: dict
 ) -> None:
     """
-    Stub for applying lane scale to learned overrides system.
-    
-    In production, this would:
-    1. Load current learned_overrides.json
-    2. Update entry for (tool_id, material, mode, machine_profile)
-    3. Write audit log entry
-    4. Save updated overrides
-    
+    Apply lane scale to learned overrides system.
+
+    Updates the lane scale for the (tool_id, material, mode, machine_profile) tuple
+    and writes an audit log entry.
+
     Args:
         tool_id: Tool/blade identifier
         material: Material family
@@ -77,9 +77,41 @@ def apply_lane_scale_stub(
         source: Source of adjustment ("telemetry", "manual", etc.)
         meta: Additional metadata (run_id, risk_score, etc.)
     """
-    # TODO: Wire to actual learned overrides system when available
-    # For now, this is a no-op stub that allows testing without dependencies
-    pass
+    store = get_learned_overrides_store()
+
+    lane_key = LaneKey(
+        tool_id=tool_id,
+        material=material,
+        mode=mode,
+        machine_profile=machine_profile,
+    )
+
+    # Map source string to OverrideSource enum
+    source_map = {
+        "telemetry": OverrideSource.AUTO_LEARN,
+        "manual": OverrideSource.MANUAL,
+        "operator": OverrideSource.OPERATOR_OVERRIDE,
+    }
+    override_source = source_map.get(source, OverrideSource.AUTO_LEARN)
+
+    # Build reason string from metadata
+    reason_parts = []
+    if meta.get("run_id"):
+        reason_parts.append(f"run_id={meta['run_id']}")
+    if meta.get("risk_score") is not None:
+        reason_parts.append(f"risk={meta['risk_score']:.2f}")
+    if meta.get("delta") is not None:
+        reason_parts.append(f"delta={meta['delta']:+.3f}")
+    if meta.get("prev_scale") is not None:
+        reason_parts.append(f"prev={meta['prev_scale']:.3f}")
+    reason = "; ".join(reason_parts) if reason_parts else "Telemetry-based adjustment"
+
+    store.update_lane_scale(
+        lane_key=lane_key,
+        lane_scale=lane_scale,
+        source=override_source,
+        reason=reason,
+    )
 
 
 def compute_lane_metrics(telem: SawTelemetryRecord) -> LaneMetrics:
@@ -312,7 +344,7 @@ def ingest_run_telemetry(
     
     # Apply if requested
     if apply and delta != 0:
-        apply_lane_scale_stub(
+        apply_lane_scale(
             tool_id=tool_id,
             material=material,
             mode=mode,
