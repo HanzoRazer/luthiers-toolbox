@@ -62,7 +62,7 @@ def _issues_summary(issues: List[Any]) -> Tuple[str, str]:
     return has_issues, severity
 
 
-@router.post("/roughing_gcode_intent")
+@router.post("/roughing/gcode_intent")
 async def roughing_gcode_intent(
     request: Request,
     intent: CamIntentV1,
@@ -112,18 +112,38 @@ async def roughing_gcode_intent(
     # Convert normalized intent -> legacy payload shape
     # Convention: keep envelope stable, mode-specific fields inside `design`.
     # Legacy roughing endpoint expects a JSON dict payload.
-    design = getattr(normalized_intent, "design", None)
-    if design is None:
-        # could be dict style intent, depends on your model; handle both safely:
-        design = normalized_intent.get("design") if isinstance(normalized_intent, dict) else None
+    if isinstance(normalized_intent, dict):
+        design = normalized_intent.get("design")
+        context = normalized_intent.get("context", {})
+        units = normalized_intent.get("units", "mm")
+    else:
+        design = getattr(normalized_intent, "design", None)
+        context = getattr(normalized_intent, "context", {}) or {}
+        units = getattr(normalized_intent, "units", "mm")
 
     if not isinstance(design, dict):
         raise HTTPException(status_code=400, detail="CamIntentV1.design must be an object for roughing")
 
+    # Map intent field names to RoughReq field names
+    # Intent uses: width_mm, height_mm, depth_mm, stepdown_mm, stepover_mm
+    # RoughReq expects: width, height, stepdown, stepover, feed
+    legacy_design = {
+        "width": design.get("width_mm") or design.get("width"),
+        "height": design.get("height_mm") or design.get("height"),
+        "stepdown": design.get("stepdown_mm") or design.get("stepdown"),
+        "stepover": design.get("stepover_mm") or design.get("stepover"),
+        "feed": context.get("feed_rate") or design.get("feed") or 1000.0,
+        "units": units,
+    }
+    # Pass through optional fields if present
+    for opt_field in ["safe_z", "post", "post_mode", "machine_id", "rpm", "program_no"]:
+        if opt_field in design:
+            legacy_design[opt_field] = design[opt_field]
+
     # Reuse consolidated handler by calling it directly (same behavior, no duplication)
     # Consolidated signature: roughing_gcode(req: RoughReq) -> Response
     try:
-        rough_req = RoughReq(**design)
+        rough_req = RoughReq(**legacy_design)
         return _legacy_roughing_handler(rough_req)
     except Exception as e:
         # If handler fails, return a structured error but metrics still counted
