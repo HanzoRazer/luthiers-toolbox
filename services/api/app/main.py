@@ -130,12 +130,15 @@ _root_logger.setLevel(logging.INFO)
 # =============================================================================
 # CORE ROUTERS (11 routers)
 # =============================================================================
-from .routers.cam_sim_router import router as sim_router
+# Consolidated: sim routers → simulation_consolidated_router
+# from .routers.cam_sim_router import router as sim_router
+from .routers.simulation_consolidated_router import router as simulation_router
 from .routers.feeds_router import router as feeds_router
 from .routers.geometry_router import router as geometry_router
 from .routers.tooling_router import router as tooling_router
 from .routers.adaptive_router import router as adaptive_router
-from .routers.machine_router import router as machine_router
+# Consolidated: machine_router → machines_consolidated_router
+# from .routers.machine_router import router as machine_router
 from .routers.cam_opt_router import router as cam_opt_router
 from .routers.material_router import router as material_router
 from .routers.cam_metrics_router import router as cam_metrics_router
@@ -193,11 +196,15 @@ except ImportError as e:
 from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
 
 # =============================================================================
-# MACHINE & POST CONFIGURATION (3 routers)
+# MACHINE & POST CONFIGURATION (2 routers - consolidated)
 # =============================================================================
-from .routers.machines_router import router as machines_router
-from .routers.machines_tools_router import router as machines_tools_router
-from .routers.posts_router import router as posts_router
+from .routers.machines_consolidated_router import router as machines_consolidated_router
+# Consolidated into machines_consolidated_router:
+# from .routers.machines_router import router as machines_router
+# from .routers.machines_tools_router import router as machines_tools_router
+# Consolidated posts router (combines posts_router + post_router)
+from .routers.posts_consolidated_router import router as posts_consolidated_router
+# from .routers.posts_router import router as posts_router
 
 # =============================================================================
 # INSTRUMENT GEOMETRY (1 router)
@@ -218,38 +225,12 @@ from .saw_lab.compare_router import router as saw_compare_router
 from .saw_lab.__init_router__ import router as saw_batch_router
 
 # =============================================================================
-# SPECIALTY MODULES - Guitar-specific calculators (4 routers)
-# Optional: these may be missing in minimal deployments
+# DEPRECATED: Guitar-specific routers (removed - modules deleted)
+# These routers were removed as part of legacy code cleanup.
+# See: docs/LEGACY_CODE_STATUS.md
+# Removed routers: archtop_router, stratocaster_router, smart_guitar_router,
+#                  smart_guitar_cam_router, om_router
 # =============================================================================
-try:
-    from .routers.archtop_router import router as archtop_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: archtop_router (%s)", e)
-    archtop_router = None
-
-try:
-    from .routers.stratocaster_router import router as stratocaster_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: stratocaster_router (%s)", e)
-    stratocaster_router = None
-
-try:
-    from .routers.smart_guitar_router import router as smart_guitar_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: smart_guitar_router (%s)", e)
-    smart_guitar_router = None
-
-try:
-    from .sandboxes.smart_guitar.cam_router import router as smart_guitar_cam_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: smart_guitar_cam_router (%s)", e)
-    smart_guitar_cam_router = None
-
-try:
-    from .routers.om_router import router as om_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: om_router (%s)", e)
-    om_router = None
 
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
@@ -284,7 +265,9 @@ from .routers.music import router as music_router
 # =============================================================================
 # WAVE 7: CALCULATOR SUITE + FRET SLOTS CAM + BRIDGE CALCULATOR + FRET DESIGN (4 routers)
 # =============================================================================
-from .routers.calculators_router import router as calculators_router
+# Consolidated into calculators_consolidated_router:
+# from .routers.calculators_router import router as calculators_router
+from .routers.calculators_consolidated_router import router as calculators_consolidated_router
 from .routers.cam_fret_slots_router import router as cam_fret_slots_router
 from .routers.bridge_router import router as bridge_router
 from .routers.fret_router import router as fret_router
@@ -297,7 +280,8 @@ from .routers.strip_family_router import router as strip_family_router
 from .routers.rmos_patterns_router import router as rmos_patterns_router
 from .routers.rmos_saw_ops_router import router as rmos_saw_ops_router
 from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # H7.1.2
-from .routers.sim_metrics_router import router as sim_metrics_router
+# Consolidated into simulation_consolidated_router:
+# from .routers.sim_metrics_router import router as sim_metrics_router
 from .routers.retract_router import router as retract_router
 from .routers.rosette_photo_router import router as rosette_photo_router
 
@@ -360,7 +344,8 @@ except ImportError as e:
     _log.warning("Optional router unavailable: advanced_analytics_router (%s)", e)
     advanced_analytics_router = None
 from .routers.probe_router import router as probe_router
-from .routers.ltb_calculator_router import router as ltb_calculator_router
+# Consolidated into calculators_consolidated_router:
+# from .routers.ltb_calculator_router import router as ltb_calculator_router
 
 try:
     from .routers.dashboard_router import router as dashboard_router
@@ -399,7 +384,8 @@ from .routers.cam_pipeline_preset_run_router import (
     router as cam_pipeline_preset_run_router,
 )
 from .routers.cam_polygon_offset_router import router as cam_polygon_offset_router
-from .routers.cam_simulate_router import router as cam_simulate_router
+# Consolidated into simulation_consolidated_router:
+# from .routers.cam_simulate_router import router as cam_simulate_router
 from .routers.compare_automation_router import router as compare_automation_router
 from .routers.compare_risk_bucket_export_router import (
     router as compare_risk_bucket_export_router,
@@ -705,12 +691,14 @@ def _startup_db_migrations() -> None:
 # =============================================================================
 
 # Core CAM (11)
-app.include_router(sim_router, prefix="/api/sim", tags=["Simulation"])
+# Consolidated simulation router (combines cam_sim, cam_simulate, sim_metrics)
+app.include_router(simulation_router, prefix="/api/cam/sim", tags=["CAM Simulation"])
 app.include_router(feeds_router, prefix="/api/feeds", tags=["Feeds & Speeds"])
 app.include_router(geometry_router, prefix="/api/geometry", tags=["Geometry"])
 app.include_router(tooling_router, prefix="/api/tooling", tags=["Tooling"])
 app.include_router(adaptive_router, prefix="/api", tags=["Adaptive Pocketing"])
-app.include_router(machine_router, prefix="/api/machine", tags=["Machine"])
+# Consolidated into machines_consolidated_router:
+# app.include_router(machine_router, prefix="/api/machine", tags=["Machine"])
 app.include_router(cam_opt_router, prefix="/api/cam/opt", tags=["CAM Optimization"])
 app.include_router(material_router, prefix="/api/material", tags=["Materials"])
 app.include_router(cam_metrics_router, prefix="/api/cam/metrics", tags=["CAM Metrics"])
@@ -771,12 +759,16 @@ app.include_router(
     tags=["Blueprint CAM Bridge"],
 )
 
-# Machine & Post Configuration (3)
-app.include_router(machines_router, prefix="/api/machines", tags=["Machines"])
+# Machine & Post Configuration (2 - consolidated)
+# Consolidated router: combines machine_router, machines_router, machines_tools_router
 app.include_router(
-    machines_tools_router, prefix="/api/machines/tools", tags=["Machine Tools"]
+    machines_consolidated_router, prefix="/api/machines", tags=["Machines"]
 )
-app.include_router(posts_router, prefix="/api/posts", tags=["Post Processors"])
+# Old registrations consolidated:
+# app.include_router(machines_router, prefix="/api/machines", tags=["Machines"])
+# app.include_router(machines_tools_router, prefix="/api/machines/tools", tags=["Machine Tools"])
+# Consolidated posts router (CRUD for post definitions)
+app.include_router(posts_consolidated_router, prefix="/api/posts", tags=["Post Processors"])
 
 # Instrument Geometry (1)
 app.include_router(
@@ -802,23 +794,9 @@ except Exception:
     # Do not block boot if Saw Lab is partially disabled in a deployment
     pass
 
-# Specialty Modules (4) - optional
-if archtop_router:
-    app.include_router(
-        archtop_router, prefix="/api/guitar/archtop", tags=["Guitar", "Archtop"]
-    )
-if stratocaster_router:
-    app.include_router(
-        stratocaster_router,
-        prefix="/api/guitar/stratocaster",
-        tags=["Guitar", "Stratocaster"],
-    )
-if smart_guitar_router:
-    app.include_router(
-        smart_guitar_router, prefix="/api/guitar/smart", tags=["Guitar", "Smart Guitar"]
-    )
-if om_router:
-    app.include_router(om_router, prefix="/api/guitar/om", tags=["Guitar", "OM"])
+# DEPRECATED: Specialty Modules (removed)
+# archtop_router, stratocaster_router, smart_guitar_router, om_router were removed
+# See: docs/LEGACY_CODE_STATUS.md
 
 # G-Code Generators (2)
 app.include_router(
@@ -863,7 +841,8 @@ app.include_router(
 # All legacy redirect routers deleted. Zero frontend consumers remain.
 
 # Wave 7: Calculator Suite + Fret Slots CAM + Bridge Calculator + Fret Design (4)
-app.include_router(calculators_router, prefix="/api", tags=["Calculators"])
+# Consolidated calculator router (CAM + Math + Luthier)
+app.include_router(calculators_consolidated_router, prefix="/api/calculators", tags=["Calculators"])
 app.include_router(
     cam_fret_slots_router,
     prefix="/api/cam/fret_slots",
@@ -884,7 +863,8 @@ app.include_router(
 app.include_router(
     rmos_cam_intent_router, prefix="/api", tags=["RMOS", "CAM"]
 )  # H7.1.2
-app.include_router(sim_metrics_router, prefix="/api", tags=["CAM", "Simulation"])
+# Consolidated into simulation_consolidated_router:
+# app.include_router(sim_metrics_router, prefix="/api", tags=["CAM", "Simulation"])
 app.include_router(
     retract_router, prefix="/api/cam/retract", tags=["CAM", "Retract Patterns"]
 )
@@ -945,9 +925,10 @@ if advanced_analytics_router:
         advanced_analytics_router, prefix="/api", tags=["Analytics", "Advanced"]
     )
 app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
-app.include_router(
-    ltb_calculator_router, prefix="", tags=["Calculator", "LTB"]
-)  # Router has /api/calculators prefix
+# Consolidated into calculators_consolidated_router:
+# app.include_router(
+#     ltb_calculator_router, prefix="", tags=["Calculator", "LTB"]
+# )  # Router has /api/calculators prefix
 if dashboard_router:
     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
@@ -988,7 +969,8 @@ app.include_router(
     cam_pipeline_preset_run_router, prefix="/api", tags=["CAM", "Pipeline"]
 )
 app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
-app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
+# Consolidated into simulation_consolidated_router:
+# app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
 app.include_router(
     compare_automation_router, prefix="/api", tags=["Compare", "Automation"]
 )
@@ -1083,14 +1065,8 @@ if workflow_sessions_router:
 if cam_router:
     app.include_router(cam_router, prefix="/api/cam", tags=["CAM Consolidated"])
 
-# Smart Guitar CAM Router (Sandbox)
-# Full pipeline: SmartGuitarSpec → SmartCamPlan → ResolvedGeometry → G-code
-if smart_guitar_cam_router:
-    app.include_router(
-        smart_guitar_cam_router,
-        prefix="/api/cam/smart-guitar",
-        tags=["CAM", "Smart Guitar"]
-    )
+# DEPRECATED: Smart Guitar CAM Router (Sandbox) - removed
+# See: docs/LEGACY_CODE_STATUS.md
 
 # Phase 5: Consolidated Art Studio rosette routes
 # These provide the new organized endpoints alongside legacy routes for transition
