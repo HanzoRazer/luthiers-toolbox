@@ -912,6 +912,34 @@ PRESET_MATRICES: Dict[str, MatrixFormula] = {
         chip_length_mm=1.6,
         notes="German tricolor twisted rope (Seil) pattern. Red, white, green dyed veneers. Classic Central European lutherie tradition."
     ),
+
+    # =========================================================================
+    # SIMPLE / BEGINNER PATTERNS
+    # =========================================================================
+    "simple_trapezoid_2x1": MatrixFormula(
+        name="Simple Trapezoid",
+        rows=[
+            {"cherry": 1, "mahogany": 1},
+        ],
+        column_sequence=[1, 1, 1, 1, 1, 1, 1, 1],
+        strip_width_mm=3.0,
+        strip_thickness_mm=0.6,
+        chip_length_mm=6.0,
+        notes="Simple alternating trapezoidal segments. Cherry and mahogany. Beginner-friendly, minimal cuts."
+    ),
+
+    "simple_alternating_2x8": MatrixFormula(
+        name="Simple Alternating",
+        rows=[
+            {"light": 1, "dark": 0},
+            {"light": 0, "dark": 1},
+        ],
+        column_sequence=[1, 2, 1, 2, 1, 2, 1, 2],
+        strip_width_mm=2.5,
+        strip_thickness_mm=0.6,
+        chip_length_mm=5.0,
+        notes="Basic alternating light/dark pattern. Any two contrasting woods. Simplest rosette design."
+    ),
 }
 
 
