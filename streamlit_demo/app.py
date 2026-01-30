@@ -63,6 +63,7 @@ page = st.sidebar.radio(
     "Select Tool",
     [
         "Home",
+        "Blueprint Reader",
         "Rosette Builder",
         "Headstock Art",
         "Guitar Designer",
@@ -73,6 +74,326 @@ page = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Demo Version**")
 st.sidebar.markdown("Built with Streamlit")
+
+
+def show_blueprint_reader():
+    """Blueprint Reader - Import/Export DXF with vectorization."""
+    import io
+    import tempfile
+    from PIL import Image
+    import numpy as np
+
+    st.title("Blueprint Reader")
+    st.markdown("Import images/PDFs, vectorize geometry, export DXF")
+
+    # Check for OpenCV
+    try:
+        import cv2
+        CV2_AVAILABLE = True
+    except ImportError:
+        CV2_AVAILABLE = False
+        st.warning("OpenCV not installed. Install with: pip install opencv-python")
+
+    # Check for ezdxf
+    try:
+        import ezdxf
+        EZDXF_AVAILABLE = True
+    except ImportError:
+        EZDXF_AVAILABLE = False
+        st.warning("ezdxf not installed. Install with: pip install ezdxf")
+
+    # Tabs for Import and Export
+    tab_import, tab_export = st.tabs(["Import & Vectorize", "DXF Viewer"])
+
+    with tab_import:
+        st.markdown("### Upload Blueprint")
+        st.markdown("Supported: PNG, JPG, PDF")
+
+        uploaded_file = st.file_uploader(
+            "Choose a file",
+            type=["png", "jpg", "jpeg", "pdf"],
+            key="blueprint_upload"
+        )
+
+        if uploaded_file is not None:
+            # Display uploaded image
+            file_bytes = uploaded_file.read()
+            file_ext = uploaded_file.name.split(".")[-1].lower()
+
+            # Handle PDF
+            if file_ext == "pdf":
+                try:
+                    from pdf2image import convert_from_bytes
+                    images = convert_from_bytes(file_bytes, dpi=150)
+                    if images:
+                        pil_image = images[0]
+                        st.image(pil_image, caption="PDF Page 1", use_container_width=True)
+                    else:
+                        st.error("Could not extract images from PDF")
+                        pil_image = None
+                except ImportError:
+                    st.error("pdf2image not installed. Install with: pip install pdf2image")
+                    pil_image = None
+            else:
+                pil_image = Image.open(io.BytesIO(file_bytes))
+                st.image(pil_image, caption=uploaded_file.name, use_container_width=True)
+
+            if pil_image and CV2_AVAILABLE:
+                st.markdown("---")
+                st.markdown("### Vectorization Settings")
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    canny_low = st.slider("Canny Low Threshold", 10, 200, 50)
+                    canny_high = st.slider("Canny High Threshold", 50, 300, 150)
+                with col2:
+                    min_area = st.slider("Min Contour Area (px)", 10, 1000, 100)
+                    scale_factor = st.number_input("Scale Factor", 0.1, 10.0, 1.0, 0.1)
+
+                if st.button("Vectorize", type="primary"):
+                    with st.spinner("Processing..."):
+                        # Convert PIL to OpenCV format
+                        img_array = np.array(pil_image)
+                        if len(img_array.shape) == 3:
+                            img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                        else:
+                            img_cv = img_array
+
+                        # Preprocess
+                        if len(img_cv.shape) == 3:
+                            gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+                        else:
+                            gray = img_cv
+                        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                        enhanced = clahe.apply(blurred)
+
+                        # Edge detection
+                        edges = cv2.Canny(enhanced, canny_low, canny_high)
+                        kernel = np.ones((3, 3), np.uint8)
+                        edges = cv2.dilate(edges, kernel, iterations=1)
+
+                        # Find contours
+                        contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+                        # Filter and simplify
+                        valid_contours = []
+                        for contour in contours:
+                            area = cv2.contourArea(contour)
+                            if area >= min_area:
+                                epsilon = 0.01 * cv2.arcLength(contour, True)
+                                approx = cv2.approxPolyDP(contour, epsilon, True)
+                                valid_contours.append(approx)
+
+                        # Draw results on image
+                        result_img = img_cv.copy()
+                        cv2.drawContours(result_img, valid_contours, -1, (0, 255, 0), 2)
+
+                        # Convert back to RGB for display
+                        result_rgb = cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB)
+
+                        # Store in session state
+                        st.session_state['vectorized_contours'] = valid_contours
+                        st.session_state['vectorized_image'] = result_rgb
+                        st.session_state['image_shape'] = img_cv.shape
+                        st.session_state['scale_factor'] = scale_factor
+
+                    st.success(f"Found {len(valid_contours)} contours")
+
+                # Display results if available
+                if 'vectorized_image' in st.session_state:
+                    st.markdown("---")
+                    st.markdown("### Vectorization Result")
+
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.image(st.session_state['vectorized_image'], caption="Detected Contours (green)")
+
+                    with col2:
+                        contours = st.session_state['vectorized_contours']
+                        st.metric("Contours Found", len(contours))
+                        total_points = sum(len(c) for c in contours)
+                        st.metric("Total Points", total_points)
+
+                    # Export options
+                    st.markdown("### Export")
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        if EZDXF_AVAILABLE and st.button("Export DXF"):
+                            # Create DXF
+                            doc = ezdxf.new("R2010")
+                            msp = doc.modelspace()
+
+                            # Convert pixels to mm (assuming 96 DPI)
+                            dpi = 96
+                            mm_per_px = 25.4 / dpi * st.session_state['scale_factor']
+
+                            for contour in contours:
+                                points = [(p[0][0] * mm_per_px, p[0][1] * mm_per_px) for p in contour]
+                                if len(points) >= 3:
+                                    msp.add_lwpolyline(points, close=True)
+
+                            # Save to bytes
+                            dxf_buffer = io.StringIO()
+                            doc.write(dxf_buffer)
+                            dxf_bytes = dxf_buffer.getvalue()
+
+                            st.download_button(
+                                "Download DXF",
+                                dxf_bytes,
+                                file_name="blueprint_export.dxf",
+                                mime="application/dxf"
+                            )
+
+                    with col2:
+                        # Export as SVG
+                        if st.button("Export SVG"):
+                            shape = st.session_state['image_shape']
+                            height, width = shape[:2]
+                            scale = st.session_state['scale_factor']
+
+                            svg_lines = [
+                                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">',
+                                '<style>.contour { fill: none; stroke: #333; stroke-width: 1; }</style>'
+                            ]
+                            for contour in contours:
+                                points_str = " ".join([f"{p[0][0]},{p[0][1]}" for p in contour])
+                                svg_lines.append(f'<polygon class="contour" points="{points_str}"/>')
+                            svg_lines.append('</svg>')
+
+                            st.download_button(
+                                "Download SVG",
+                                "\n".join(svg_lines),
+                                file_name="blueprint_export.svg",
+                                mime="image/svg+xml"
+                            )
+
+                    with col3:
+                        # Export as JSON
+                        import json
+                        if st.button("Export JSON"):
+                            export_data = {
+                                "contours": [
+                                    [[int(p[0][0]), int(p[0][1])] for p in c]
+                                    for c in contours
+                                ],
+                                "scale_factor": st.session_state['scale_factor'],
+                                "image_size": list(st.session_state['image_shape'][:2])
+                            }
+                            st.download_button(
+                                "Download JSON",
+                                json.dumps(export_data, indent=2),
+                                file_name="blueprint_export.json",
+                                mime="application/json"
+                            )
+
+    with tab_export:
+        st.markdown("### DXF File Viewer")
+        st.markdown("Upload a DXF file to view its contents")
+
+        dxf_file = st.file_uploader(
+            "Choose a DXF file",
+            type=["dxf"],
+            key="dxf_upload"
+        )
+
+        if dxf_file is not None and EZDXF_AVAILABLE:
+            dxf_bytes = dxf_file.read()
+
+            try:
+                # Parse DXF
+                doc = ezdxf.read(io.StringIO(dxf_bytes.decode('utf-8', errors='ignore')))
+                msp = doc.modelspace()
+
+                # Collect entities
+                entities = list(msp)
+                entity_types = {}
+                for e in entities:
+                    etype = e.dxftype()
+                    entity_types[etype] = entity_types.get(etype, 0) + 1
+
+                col1, col2 = st.columns([1, 2])
+
+                with col1:
+                    st.markdown("#### DXF Info")
+                    st.markdown(f"**Version:** {doc.dxfversion}")
+                    st.markdown(f"**Entities:** {len(entities)}")
+
+                    st.markdown("#### Entity Types")
+                    for etype, count in sorted(entity_types.items()):
+                        st.markdown(f"- {etype}: {count}")
+
+                    st.markdown("#### Layers")
+                    for layer in doc.layers:
+                        st.markdown(f"- {layer.dxf.name}")
+
+                with col2:
+                    st.markdown("#### Preview")
+                    # Simple preview - draw entities to image
+                    from PIL import Image, ImageDraw
+
+                    # Collect all points to determine bounds
+                    all_points = []
+                    for e in entities:
+                        if e.dxftype() == 'LWPOLYLINE':
+                            for p in e.get_points():
+                                all_points.append((p[0], p[1]))
+                        elif e.dxftype() == 'LINE':
+                            all_points.append((e.dxf.start.x, e.dxf.start.y))
+                            all_points.append((e.dxf.end.x, e.dxf.end.y))
+                        elif e.dxftype() == 'CIRCLE':
+                            all_points.append((e.dxf.center.x - e.dxf.radius, e.dxf.center.y))
+                            all_points.append((e.dxf.center.x + e.dxf.radius, e.dxf.center.y))
+
+                    if all_points:
+                        xs = [p[0] for p in all_points]
+                        ys = [p[1] for p in all_points]
+                        min_x, max_x = min(xs), max(xs)
+                        min_y, max_y = min(ys), max(ys)
+
+                        width = max_x - min_x
+                        height = max_y - min_y
+
+                        # Create preview image
+                        img_w, img_h = 600, 500
+                        padding = 20
+                        scale_x = (img_w - 2*padding) / width if width > 0 else 1
+                        scale_y = (img_h - 2*padding) / height if height > 0 else 1
+                        scale = min(scale_x, scale_y)
+
+                        img = Image.new("RGB", (img_w, img_h), "#f5f5f0")
+                        draw = ImageDraw.Draw(img)
+
+                        def transform(x, y):
+                            tx = (x - min_x) * scale + padding
+                            ty = img_h - ((y - min_y) * scale + padding)
+                            return (tx, ty)
+
+                        # Draw entities
+                        for e in entities:
+                            if e.dxftype() == 'LWPOLYLINE':
+                                points = [transform(p[0], p[1]) for p in e.get_points()]
+                                if len(points) >= 2:
+                                    draw.polygon(points, outline="#333", fill=None)
+                            elif e.dxftype() == 'LINE':
+                                p1 = transform(e.dxf.start.x, e.dxf.start.y)
+                                p2 = transform(e.dxf.end.x, e.dxf.end.y)
+                                draw.line([p1, p2], fill="#333", width=1)
+                            elif e.dxftype() == 'CIRCLE':
+                                cx, cy = transform(e.dxf.center.x, e.dxf.center.y)
+                                r = e.dxf.radius * scale
+                                draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline="#333")
+
+                        st.image(img, caption="DXF Preview")
+
+                        # Show dimensions
+                        st.info(f"Dimensions: {width:.1f} x {height:.1f} units")
+                    else:
+                        st.warning("No drawable entities found")
+
+            except Exception as e:
+                st.error(f"Error reading DXF: {e}")
 
 
 def show_home():
@@ -1815,6 +2136,8 @@ def show_luthier_calculator():
 # Route to the correct page
 if page == "Home":
     show_home()
+elif page == "Blueprint Reader":
+    show_blueprint_reader()
 elif page == "Rosette Builder":
     show_rosette_builder()
 elif page == "Headstock Art":
