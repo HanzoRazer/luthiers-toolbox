@@ -45,6 +45,18 @@ from .image_client import (
     set_image_client,
 )
 
+from .vision_client import (
+    VisionClient,
+    VisionConfig,
+    VisionProvider,
+    VisionResponse,
+    VisionClientError,
+    VisionAuthError,
+    VisionParseError,
+    get_vision_client,
+    set_vision_client,
+)
+
 __all__ = [
     # LLM Client
     "LLMClient",
@@ -66,4 +78,14 @@ __all__ = [
     "ImageClientError",
     "get_image_client",
     "set_image_client",
+    # Vision Client
+    "VisionClient",
+    "VisionConfig",
+    "VisionProvider",
+    "VisionResponse",
+    "VisionClientError",
+    "VisionAuthError",
+    "VisionParseError",
+    "get_vision_client",
+    "set_vision_client",
 ]
