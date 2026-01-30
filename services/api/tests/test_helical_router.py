@@ -1,5 +1,5 @@
 """
-Test suite for cam_helical_v161_router.py (Art Studio v16.1 - Helical Ramping)
+Test suite for helical ramping functionality (Wave 18 CAM Aggregator)
 
 Tests coverage for:
 - Helical entry toolpath generation
@@ -10,7 +10,12 @@ Tests coverage for:
 - Parameter validation
 
 Part of P3.1 - Test Coverage to 80% (A_N roadmap requirement)
-Focus: cam_helical_v161_router.py (Art Studio v16.1 feature)
+Endpoint: POST /api/cam/toolpath/helical_entry
+Source: app/cam/routers/toolpath/helical_router.py
+
+History:
+- Originally: cam_helical_v161_router.py (Art Studio v16.1)
+- January 2026: Consolidated into Wave 18 CAM Aggregator
 """
 
 import pytest
@@ -525,4 +530,4 @@ class TestHelicalIntegration:
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--cov=app.routers.cam_helical_v161_router", "--cov-report=term-missing"])
+    pytest.main([__file__, "-v", "--cov=app.cam.routers.toolpath.helical_router", "--cov-report=term-missing"])
