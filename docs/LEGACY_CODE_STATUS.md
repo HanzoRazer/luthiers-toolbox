@@ -308,6 +308,37 @@ curl http://localhost:8000/api/governance/stats
 
 ---
 
+## 10. Architectural Notes
+
+### Rosette Pattern API Duality (Intentional)
+
+Two separate APIs serve different purposes and should NOT be consolidated without careful consideration:
+
+| API | Purpose | Operations | Storage |
+|-----|---------|------------|---------|
+| `/api/rosette-patterns` | User's custom pattern library | Full CRUD | SQLite |
+| `/api/art/rosette/pattern/patterns` | Read-only preset catalog + generation | GET only | JSON file |
+
+**Why two APIs exist:**
+
+```
+User Workflow:
+1. Browse preset catalog ──────► /api/art/rosette/pattern (read-only presets)
+2. Generate from preset ───────► /api/art/rosette/pattern/generate_*
+3. Save as custom pattern ─────► /api/rosette-patterns (CRUD - user's library)
+4. Load/edit/delete saved ─────► /api/rosette-patterns (CRUD operations)
+```
+
+**Future unification options (if needed):**
+
+1. **Keep both** (current) - Works, clear separation, no effort
+2. **Add CRUD to Art Studio v2** - Add `/api/art/rosette/pattern/user-patterns` endpoints, migrate frontend, deprecate legacy
+3. **Unified pattern management** - New `/api/patterns` with `source: "preset"|"user"|"system"` field
+
+**Decision:** Address when needed. Current arrangement is functional and semantically correct.
+
+---
+
 ### 2026-01-03: Adaptive Pocket CI Fixes
 
 **Fixed Adaptive Pocket (API) workflow - now passing:**
