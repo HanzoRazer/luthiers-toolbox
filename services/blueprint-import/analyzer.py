@@ -96,7 +96,18 @@ class BlueprintAnalyzer:
         try:
             # Encode image as base64
             image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-            
+
+            # Detect media type from filename extension
+            ext = filename.lower().split('.')[-1] if '.' in filename else 'png'
+            media_type_map = {
+                'png': 'image/png',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'gif': 'image/gif',
+                'webp': 'image/webp',
+            }
+            detected_media_type = media_type_map.get(ext, 'image/png')
+
             prompt = """Analyze this construction blueprint image and provide detailed measurement information:
 
 1. Identify ALL visible dimensions and measurements on the blueprint
@@ -161,7 +172,7 @@ Provide your response in JSON format:
                                 "type": "image",
                                 "source": {
                                     "type": "base64",
-                                    "media_type": "image/png",
+                                    "media_type": detected_media_type,
                                     "data": image_b64,
                                 },
                             },
