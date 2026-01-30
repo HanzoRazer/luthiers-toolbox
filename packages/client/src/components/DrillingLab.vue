@@ -810,7 +810,7 @@ async function generateGCodePreview() {
       thread_pitch: params.value.cycle === 'G84' ? params.value.threadPitch : undefined
     }
 
-    const response = await fetch('/api/cam/drill/gcode', {
+    const response = await fetch('/api/cam/drilling/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -847,7 +847,7 @@ async function exportGCode() {
       thread_pitch: params.value.cycle === 'G84' ? params.value.threadPitch : undefined
     }
 
-    const response = await fetch('/api/cam/drill/gcode/download', {
+    const response = await fetch('/api/cam/drilling/gcode/download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

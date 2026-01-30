@@ -610,7 +610,7 @@ async function exportGcode() {
   currentStage.value = 3
   
   try {
-    const response = await fetch('/api/cam/roughing_gcode', {
+    const response = await fetch('/api/cam/toolpath/roughing/gcode', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
