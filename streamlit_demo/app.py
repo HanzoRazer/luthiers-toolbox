@@ -458,8 +458,331 @@ def show_guitar_designer():
     import json
     from PIL import Image, ImageDraw
 
-    st.title("Guitar Body Designer")
-    st.markdown("Parametric body outlines and templates")
+    st.title("Guitar Designer")
+    st.markdown("Body outlines, fret calculations, and templates")
+
+    # Create tabs for different design tools
+    tab_body, tab_frets = st.tabs(["Body Designer", "Fret Calculator"])
+
+    with tab_frets:
+        show_fret_calculator()
+
+    with tab_body:
+        show_body_designer()
+
+
+def show_fret_calculator():
+    """Fret Calculator tab within Guitar Designer."""
+    import io
+    import json
+    from PIL import Image, ImageDraw
+
+    st.markdown("### Fret Position Calculator")
+    st.markdown("Calculate fret positions using the equal-tempered 12th root of 2 formula")
+
+    # Import fret math
+    try:
+        from app.instrument_geometry.neck.fret_math import (
+            compute_fret_positions_mm,
+            compute_fret_spacing_mm,
+            compute_multiscale_fret_positions_mm,
+            SCALE_LENGTHS_MM,
+        )
+        FRET_MODULES_LOADED = True
+    except ImportError as e:
+        st.error(f"Could not load fret modules: {e}")
+        return
+
+    # Sidebar controls
+    st.sidebar.markdown("### Fret Calculator Settings")
+
+    # Scale length presets
+    scale_presets = {
+        "Fender (25.5\")": 648.0,
+        "Gibson (24.75\")": 628.65,
+        "PRS (25\")": 635.0,
+        "Classical (25.6\")": 650.0,
+        "Parlor (24\")": 609.6,
+        "Baritone (27\")": 685.8,
+        "Bass (34\")": 863.6,
+        "Short Bass (30\")": 762.0,
+        "Mandolin (13.75\")": 349.25,
+        "Custom": 0.0,
+    }
+
+    preset = st.sidebar.selectbox("Scale Length Preset", list(scale_presets.keys()))
+
+    if preset == "Custom":
+        scale_length = st.sidebar.number_input(
+            "Scale Length (mm)",
+            min_value=200.0, max_value=1000.0,
+            value=648.0, step=1.0
+        )
+    else:
+        scale_length = scale_presets[preset]
+        st.sidebar.info(f"{scale_length:.2f} mm")
+
+    fret_count = st.sidebar.slider("Number of Frets", 12, 36, 22)
+
+    # Fan fret option
+    fan_fret = st.sidebar.checkbox("Multiscale (Fan Fret)")
+
+    if fan_fret:
+        st.sidebar.markdown("#### Multiscale Settings")
+        bass_scale = st.sidebar.number_input(
+            "Bass Scale (mm)", min_value=500.0, max_value=1000.0,
+            value=686.0, step=1.0
+        )
+        treble_scale = st.sidebar.number_input(
+            "Treble Scale (mm)", min_value=400.0, max_value=900.0,
+            value=scale_length, step=1.0
+        )
+        perp_fret = st.sidebar.slider("Perpendicular Fret", 0, fret_count, 7)
+        string_count = st.sidebar.slider("String Count", 4, 12, 6)
+    else:
+        bass_scale = scale_length
+        treble_scale = scale_length
+        perp_fret = 0
+        string_count = 6
+
+    # Calculate fret positions
+    if fan_fret:
+        fret_data = compute_multiscale_fret_positions_mm(
+            bass_scale_mm=bass_scale,
+            treble_scale_mm=treble_scale,
+            fret_count=fret_count,
+            string_count=string_count,
+            perpendicular_fret=perp_fret,
+        )
+        # Extract bass and treble positions from FanFretPoint objects
+        positions_bass = [fret_data[i][0].x_mm for i in range(fret_count)]
+        positions_treble = [fret_data[i][-1].x_mm for i in range(fret_count)]
+    else:
+        positions = compute_fret_positions_mm(scale_length, fret_count)
+        spacings = compute_fret_spacing_mm(scale_length, fret_count)
+
+    # Main content
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        # Visual fretboard diagram
+        st.markdown("#### Fretboard Diagram")
+
+        # Create fretboard image
+        fb_width = 700
+        fb_height = 150
+        img = Image.new("RGB", (fb_width, fb_height), "#f5f5f0")
+        draw = ImageDraw.Draw(img)
+
+        # Draw fretboard
+        fb_left = 50
+        fb_right = fb_width - 30
+        fb_top = 30
+        fb_bottom = fb_height - 30
+        fb_length = fb_right - fb_left
+
+        # Fretboard background (rosewood color)
+        draw.rectangle([fb_left, fb_top, fb_right, fb_bottom], fill="#3d2314", outline="#1a0f08")
+
+        # Draw nut
+        draw.rectangle([fb_left - 5, fb_top, fb_left, fb_bottom], fill="#fffef0", outline="#333")
+
+        # Draw frets
+        if fan_fret:
+            # Fan fret visualization
+            for i in range(fret_count):
+                bass_pos = positions_bass[i]
+                treble_pos = positions_treble[i]
+                # Scale to image
+                bass_x = fb_left + (bass_pos / bass_scale) * fb_length * 0.9
+                treble_x = fb_left + (treble_pos / treble_scale) * fb_length * 0.9
+                # Draw angled fret
+                fret_color = "#ffd700" if i + 1 == perp_fret else "#c0c0c0"
+                draw.line([(bass_x, fb_bottom - 5), (treble_x, fb_top + 5)],
+                          fill=fret_color, width=2)
+        else:
+            # Standard frets
+            for i, pos in enumerate(positions):
+                x = fb_left + (pos / scale_length) * fb_length * 0.9
+                # Highlight 12th fret (octave)
+                fret_color = "#ffd700" if (i + 1) == 12 else "#c0c0c0"
+                fret_width = 3 if (i + 1) == 12 else 2
+                draw.line([(x, fb_top + 5), (x, fb_bottom - 5)],
+                          fill=fret_color, width=fret_width)
+
+        # Draw position markers (dots)
+        marker_frets = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24]
+        double_dot_frets = [12, 24]
+
+        if not fan_fret:
+            for fret in marker_frets:
+                if fret <= fret_count:
+                    # Calculate position between frets
+                    if fret == 1:
+                        prev_pos = 0
+                    else:
+                        prev_pos = positions[fret - 2]
+                    curr_pos = positions[fret - 1]
+                    mid_pos = (prev_pos + curr_pos) / 2
+                    x = fb_left + (mid_pos / scale_length) * fb_length * 0.9
+                    y = (fb_top + fb_bottom) / 2
+
+                    if fret in double_dot_frets:
+                        # Double dot
+                        draw.ellipse([x - 4, y - 20, x + 4, y - 12], fill="#fffef0")
+                        draw.ellipse([x - 4, y + 12, x + 4, y + 20], fill="#fffef0")
+                    else:
+                        # Single dot
+                        draw.ellipse([x - 5, y - 5, x + 5, y + 5], fill="#fffef0")
+
+        # Draw strings
+        for i in range(string_count):
+            y = fb_top + 10 + i * ((fb_bottom - fb_top - 20) / (string_count - 1))
+            string_width = 1 if i < string_count // 2 else 2
+            draw.line([(fb_left, y), (fb_right - 10, y)], fill="#d4af37", width=string_width)
+
+        # Add scale info
+        draw.text((fb_left, 5), f"Scale: {scale_length:.1f}mm ({scale_length/25.4:.2f}\")",
+                  fill="#333")
+        if fan_fret:
+            draw.text((fb_left + 200, 5),
+                      f"Bass: {bass_scale:.1f}mm | Treble: {treble_scale:.1f}mm | Perp: F{perp_fret}",
+                      fill="#666")
+
+        st.image(img, use_container_width=True)
+
+    with col2:
+        st.markdown("#### Quick Reference")
+        if fan_fret:
+            st.metric("Bass Scale", f"{bass_scale:.1f} mm")
+            st.metric("Treble Scale", f"{treble_scale:.1f} mm")
+            diff = bass_scale - treble_scale
+            st.metric("Scale Difference", f"{diff:.1f} mm")
+        else:
+            st.metric("Scale Length", f"{scale_length:.1f} mm")
+            st.metric("12th Fret", f"{positions[11]:.2f} mm")
+            st.metric("Half Scale", f"{scale_length / 2:.2f} mm")
+
+    # Fret position table
+    st.markdown("---")
+    st.markdown("#### Fret Position Table")
+
+    if fan_fret:
+        # Multiscale table
+        table_data = []
+        for i in range(fret_count):
+            bass_pos = positions_bass[i]
+            treble_pos = positions_treble[i]
+            angle = fret_data[i][0].angle_deg
+            is_perp = "Yes" if fret_data[i][0].is_perpendicular else ""
+            table_data.append({
+                "Fret": i + 1,
+                "Bass (mm)": f"{bass_pos:.3f}",
+                "Treble (mm)": f"{treble_pos:.3f}",
+                "Diff (mm)": f"{bass_pos - treble_pos:.3f}",
+                "Angle": f"{angle:.2f}deg",
+                "Perp": is_perp,
+            })
+        st.dataframe(table_data, use_container_width=True, hide_index=True)
+    else:
+        # Standard fret table
+        table_data = []
+        for i, (pos, spacing) in enumerate(zip(positions, spacings)):
+            table_data.append({
+                "Fret": i + 1,
+                "From Nut (mm)": f"{pos:.3f}",
+                "From Nut (in)": f"{pos / 25.4:.4f}",
+                "Spacing (mm)": f"{spacing:.3f}",
+                "To Bridge (mm)": f"{scale_length - pos:.3f}",
+            })
+        st.dataframe(table_data, use_container_width=True, hide_index=True)
+
+    # Downloads
+    st.markdown("---")
+    st.markdown("#### Export")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        # JSON export
+        if fan_fret:
+            export_data = {
+                "type": "multiscale",
+                "bass_scale_mm": bass_scale,
+                "treble_scale_mm": treble_scale,
+                "perpendicular_fret": perp_fret,
+                "string_count": string_count,
+                "fret_count": fret_count,
+                "frets": [
+                    {
+                        "fret": i + 1,
+                        "bass_mm": positions_bass[i],
+                        "treble_mm": positions_treble[i],
+                        "angle_deg": fret_data[i][0].angle_deg,
+                    }
+                    for i in range(fret_count)
+                ]
+            }
+        else:
+            export_data = {
+                "type": "standard",
+                "scale_length_mm": scale_length,
+                "scale_length_inches": scale_length / 25.4,
+                "fret_count": fret_count,
+                "frets": [
+                    {
+                        "fret": i + 1,
+                        "from_nut_mm": pos,
+                        "from_nut_inches": pos / 25.4,
+                        "spacing_mm": spacings[i],
+                        "to_bridge_mm": scale_length - pos,
+                    }
+                    for i, pos in enumerate(positions)
+                ]
+            }
+
+        st.download_button(
+            "Download JSON",
+            json.dumps(export_data, indent=2),
+            file_name="fret_positions.json",
+            mime="application/json"
+        )
+
+    with col2:
+        # CSV export
+        if fan_fret:
+            csv_lines = ["Fret,Bass (mm),Treble (mm),Angle (deg)"]
+            for i in range(fret_count):
+                csv_lines.append(f"{i+1},{positions_bass[i]:.3f},{positions_treble[i]:.3f},{fret_data[i][0].angle_deg:.2f}")
+        else:
+            csv_lines = ["Fret,From Nut (mm),From Nut (in),Spacing (mm),To Bridge (mm)"]
+            for i, (pos, spacing) in enumerate(zip(positions, spacings)):
+                csv_lines.append(f"{i+1},{pos:.3f},{pos/25.4:.4f},{spacing:.3f},{scale_length-pos:.3f}")
+
+        st.download_button(
+            "Download CSV",
+            "\n".join(csv_lines),
+            file_name="fret_positions.csv",
+            mime="text/csv"
+        )
+
+    with col3:
+        # Download diagram
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format="PNG")
+        st.download_button(
+            "Download Diagram",
+            img_buffer.getvalue(),
+            file_name="fretboard_diagram.png",
+            mime="image/png"
+        )
+
+
+def show_body_designer():
+    """Body Designer tab within Guitar Designer."""
+    import io
+    import json
+    from PIL import Image, ImageDraw
 
     # Import toolbox modules
     try:
