@@ -1,10 +1,29 @@
 # Router Inventory and Deprecation Plan
 
 > Generated: 2025-12-21
-> **Updated: 2026-01-23**
-> Total Routers: 114
-> Total Endpoints: ~600
+> **Updated: 2026-01-30**
+> Total Routers: **~95** (down from 114 after legacy cleanup)
+> Total Endpoints: **727** (down from ~600 estimate)
 > Wave 20: Option C API Restructuring
+
+---
+
+## Status Update (2026-01-30)
+
+### Phase 2+3 Legacy Cleanup COMPLETE
+
+**19 legacy router files deleted** (~4,000 lines removed):
+
+| Category | Count | Routers Deleted |
+|----------|-------|-----------------|
+| CAM Legacy | 12 | `cam_vcarve_router`, `cam_relief_v160_router`, `cam_svg_v160_router`, `cam_helical_v161_router`, `cam_fret_slots_router`, `cam_fret_slots_export_router`, `cam_risk_router`, `cam_risk_aggregate_router`, `cam_drill_pattern_router`, `cam_roughing_router`, `cam_biarc_router`, `drilling_router` |
+| Compare Legacy | 5 | `compare_router`, `compare_lab_router`, `compare_risk_aggregate_router`, `compare_risk_bucket_detail_router`, `compare_risk_bucket_export_router` |
+| Rosette Legacy | 2 | `rosette_pattern_router`, `art_studio/rosette_router` |
+
+**All functionality preserved via:**
+- `/api/cam/*` - Wave 18 consolidated CAM aggregator
+- `/api/compare/*` - Wave 19 consolidated Compare aggregator
+- `/api/art/rosette/*` - Art Studio v2 routes
 
 ---
 
@@ -69,16 +88,16 @@ CI fails when routes exceed their sunset date. Requires governance label to exte
 | `dxf_plan_router.py` | `services/api/app/routers/dxf_plan_router.py` | 526 | `/cam` | **KEEP** |
 | `cam_metrics_router.py` | `services/api/app/routers/cam_metrics_router.py` | 640 | `/cam/metrics` | **KEEP** |
 | `cam_settings_router.py` | `services/api/app/routers/cam_settings_router.py` | 265 | `/cam/settings` | **KEEP** |
-| `cam_helical_v161_router.py` | `services/api/app/routers/cam_helical_v161_router.py` | 247 | `/cam/toolpath` | **KEEP** |
+| `cam_helical_v161_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/toolpath/helical` |
 | `cam_post_v155_router.py` | `services/api/app/routers/cam_post_v155_router.py` | 362 | `/api/cam_gcode` | **KEEP** |
-| `cam_risk_aggregate_router.py` | `services/api/app/routers/cam_risk_aggregate_router.py` | 373 | `/api/cam/jobs` | **KEEP** |
-| `cam_risk_router.py` | `services/api/app/routers/cam_risk_router.py` | 165 | `/api/cam/risk` | **KEEP** |
+| `cam_risk_aggregate_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/risk` |
+| `cam_risk_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/risk` |
 | `cam_drill_router.py` | `services/api/app/routers/cam_drill_router.py` | 143 | `/cam/drill` | **KEEP** |
-| `cam_drill_pattern_router.py` | `services/api/app/routers/cam_drill_pattern_router.py` | 198 | `/cam/drill/pattern` | **KEEP** |
-| `cam_relief_router.py` | `services/api/app/routers/cam_relief_router.py` | 168 | `/cam/relief` | **KEEP** |
-| `cam_roughing_router.py` | `services/api/app/routers/cam_roughing_router.py` | 108 | `/cam/roughing` | **KEEP** |
-| `cam_vcarve_router.py` | `services/api/app/routers/cam_vcarve_router.py` | 135 | `/api/cam_vcarve` | **KEEP** |
-| `cam_biarc_router.py` | `services/api/app/routers/cam_biarc_router.py` | 122 | `/cam/biarc` | **KEEP** |
+| `cam_drill_pattern_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/drilling/pattern` |
+| `cam_relief_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/relief` |
+| `cam_roughing_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/toolpath/roughing` |
+| `cam_vcarve_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/toolpath/vcarve` |
+| `cam_biarc_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/toolpath/biarc` |
 | `cam_opt_router.py` | `services/api/app/routers/cam_opt_router.py` | 111 | `/cam/opt` | **KEEP** |
 | `polygon_offset_router.py` | `services/api/app/routers/polygon_offset_router.py` | 177 | `/cam` | **KEEP** |
 | `cam_polygon_offset_router.py` | `services/api/app/routers/cam_polygon_offset_router.py` | 91 | - | ⚠️ **REVIEW** - Duplicate? |
@@ -119,14 +138,14 @@ CI fails when routes exceed their sunset date. Requires governance label to exte
 | `music/temperament_router.py` | `services/api/app/routers/music/temperament_router.py` | 350 | `/api/music/temperament` | ✅ **NEW** |
 | `legacy/__init__.py` | `services/api/app/routers/legacy/__init__.py` | - | - | ✅ **NEW** - 308 redirects |
 
-### Fretboard & Neck (5 routers)
+### Fretboard & Neck (3 routers - 2 deleted)
 
 | Router | Path | Lines | Prefix | Status |
 |--------|------|-------|--------|--------|
 | `fret_router.py` | `services/api/app/routers/fret_router.py` | 696 | `/fret` | **KEEP** |
 | `neck_router.py` | `services/api/app/routers/neck_router.py` | 472 | `/neck` | **KEEP** |
-| `cam_fret_slots_router.py` | `services/api/app/routers/cam_fret_slots_router.py` | 383 | - | **KEEP** |
-| `cam_fret_slots_export_router.py` | `services/api/app/routers/cam_fret_slots_export_router.py` | 133 | `/api/cam/fret_slots` | **KEEP** |
+| `cam_fret_slots_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/fret_slots` |
+| `cam_fret_slots_export_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/cam/fret_slots` |
 | `bridge_router.py` | `services/api/app/routers/bridge_router.py` | 359 | `/cam/bridge` | **KEEP** |
 
 ### DXF & Preflight (3 routers)
@@ -148,25 +167,25 @@ CI fails when routes exceed their sunset date. Requires governance label to exte
 | `saw_gcode_router.py` | `services/api/app/routers/saw_gcode_router.py` | 132 | `/saw_gcode` | **KEEP** |
 | `dashboard_router.py` | `services/api/app/routers/dashboard_router.py` | 271 | `/dashboard/saw` | **KEEP** |
 
-### Rosette & Art Studio (4 routers)
+### Rosette & Art Studio (2 routers - 2 deleted)
 
 | Router | Path | Lines | Prefix | Status |
 |--------|------|-------|--------|--------|
-| `art_studio_rosette_router.py` | `services/api/app/routers/art_studio_rosette_router.py` | 613 | - | **KEEP** |
-| `rosette_pattern_router.py` | `services/api/app/routers/rosette_pattern_router.py` | 360 | - | **KEEP** |
+| `art_studio_rosette_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/art/rosette` |
+| `rosette_pattern_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/art/rosette/pattern` |
 | `rosette_photo_router.py` | `services/api/app/routers/rosette_photo_router.py` | 321 | `/cam/rosette` | **KEEP** |
 | `rmos_patterns_router.py` | `services/api/app/routers/rmos_patterns_router.py` | 117 | `/rosette-patterns` | **KEEP** |
 
-### Compare Lab (7 routers)
+### Compare Lab (2 routers - 5 deleted)
 
 | Router | Path | Lines | Prefix | Status |
 |--------|------|-------|--------|--------|
-| `compare_router.py` | `services/api/app/routers/compare_router.py` | 123 | `/api/compare` | **KEEP** |
-| `compare_lab_router.py` | `services/api/app/routers/compare_lab_router.py` | 96 | `/api/compare/lab` | **KEEP** |
+| `compare_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/compare` |
+| `compare_lab_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/compare/lab` |
 | `compare_automation_router.py` | `services/api/app/routers/compare_automation_router.py` | 71 | `/compare` | **KEEP** |
-| `compare_risk_aggregate_router.py` | `services/api/app/routers/compare_risk_aggregate_router.py` | 47 | `/api/compare` | **KEEP** |
-| `compare_risk_bucket_detail_router.py` | `services/api/app/routers/compare_risk_bucket_detail_router.py` | 61 | `/api/compare` | **KEEP** |
-| `compare_risk_bucket_export_router.py` | `services/api/app/routers/compare_risk_bucket_export_router.py` | 112 | `/api/compare` | **KEEP** |
+| `compare_risk_aggregate_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/compare/risk` |
+| `compare_risk_bucket_detail_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/compare/risk` |
+| `compare_risk_bucket_export_router.py` | - | - | - | 🗑️ **DELETED** (2026-01-30) → `/api/compare/risk` |
 | `cam_compare_diff_router.py` | `services/api/app/routers/cam_compare_diff_router.py` | 58 | - | **KEEP** |
 
 ### Presets & Pipeline (5 routers)
@@ -368,12 +387,13 @@ cam_simulate_router.py (72 lines)  /cam
 
 | Category | Count |
 |----------|-------|
-| Total routers | 100 |
-| Total endpoints | 561 |
-| Ready for deprecation | 5 (1,908 lines) |
-| Consolidation candidates | 10 (1,540 lines) |
+| Total routers | **~95** (down from 114) |
+| Total endpoints | **727** (down from 804) |
+| ~~Ready for deprecation~~ | ~~5 (1,908 lines)~~ ✅ Done |
+| ~~Consolidation candidates~~ | ~~10 (1,540 lines)~~ ✅ Done |
 | Option C new routers | 12 |
-| **Net after cleanup** | ~85 routers |
+| Legacy routers deleted | **19** (~4,000 lines) |
+| **Net after cleanup** | **~95 routers** |
 
 ---
 

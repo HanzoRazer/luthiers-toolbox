@@ -1,9 +1,9 @@
 # Luthier's ToolBox Router Roadmap
 
-**Last Updated:** 2026-01-03
-**Total Routers:** ~116 working routers organized across 22 waves
-**Status:** All previously-broken routers (9) fixed; 84 phantom imports removed
-**Governance:** Legacy routes tagged for deprecation tracking (see Canonical vs Legacy section)  
+**Last Updated:** 2026-01-30
+**Total Routers:** **~95** working routers organized across 22 waves (down from 116)
+**Status:** All previously-broken routers (9) fixed; 84 phantom imports removed; **19 legacy routers deleted**
+**Governance:** Legacy routes removed (2026-01-30) - all migrated to consolidated aggregators  
 
 This document maps all FastAPI routers in the Luthier's ToolBox API, organized by deployment waves. Each wave represents a feature rollout with related routers grouped for easier navigation and understanding.
 
@@ -25,55 +25,52 @@ This document maps all FastAPI routers in the Luthier's ToolBox API, organized b
 
 ## Canonical vs Legacy Lanes
 
-> **Updated 2025-12-27**: All legacy routes now have `"Legacy"` tag for governance tracking.
+> **Updated 2026-01-30**: All legacy routes have been **DELETED** - migrated to consolidated aggregators.
 
-The API has evolved through consolidation phases. Legacy routes remain mounted for backwards compatibility but are marked for eventual deprecation. The governance middleware tracks usage of Legacy-tagged routes.
+The API has evolved through consolidation phases. As of 2026-01-30, all 19 legacy-tagged routers have been removed. Their functionality is now served by the consolidated Wave 18 (CAM) and Wave 19 (Compare) aggregators.
 
-### CAM Routes
+### CAM Routes - ✅ MIGRATED (Legacy Deleted 2026-01-30)
 
-| Legacy Route | Prefix | Canonical Replacement | Notes |
-|--------------|--------|----------------------|-------|
-| `cam_vcarve_router` | `/api/cam/vcarve` | `/api/cam/toolpath/vcarve` | Wave 18 consolidated |
-| `cam_relief_router` | `/api/cam/relief` | `/api/cam/relief` | Proxy (same code) |
-| `cam_helical_router` | `/api/cam/helical` | `/api/cam/toolpath/helical` | Wave 18 consolidated |
-| `cam_svg_router` | `/api/cam/svg` | `/api/cam/export` | Wave 18 consolidated |
-| `cam_fret_slots_router` | `/api/cam/fret_slots` | `/api/cam/fret_slots` | Proxy (same code) |
-| `cam_fret_slots_export_router` | `/api/cam/fret_slots` | `/api/cam/fret_slots` | Proxy (same code) |
-| `cam_drill_pattern_router` | `/api/cam/drilling/pattern` | `/api/cam/drilling/pattern` | Wave 18 consolidated |
-| `cam_roughing_router` | `/api/cam/roughing` | `/api/cam/toolpath/roughing` | Wave 18 consolidated |
-| `drilling_router` | `/api/cam/drilling` | `/api/cam/drilling` | Wave 18 consolidated |
-| `cam_risk_router` | `/api/cam/risk` | `/api/cam/risk` | Wave 18 consolidated |
-| `cam_risk_aggregate_router` | `/api/cam/jobs` | `/api/cam/risk` | Wave 18 consolidated |
-| `cam_biarc_router` | `/api/cam/biarc` | `/api/cam/toolpath/biarc` | Wave 18 consolidated |
+| Former Legacy Route | Now Served By |
+|--------------------|---------------|
+| `cam_vcarve_router` | `/api/cam/toolpath/vcarve` |
+| `cam_relief_router` | `/api/cam/relief` |
+| `cam_helical_router` | `/api/cam/toolpath/helical` |
+| `cam_svg_router` | `/api/cam/export` |
+| `cam_fret_slots_router` | `/api/cam/fret_slots` |
+| `cam_fret_slots_export_router` | `/api/cam/fret_slots` |
+| `cam_drill_pattern_router` | `/api/cam/drilling/pattern` |
+| `cam_roughing_router` | `/api/cam/toolpath/roughing` |
+| `drilling_router` | `/api/cam/drilling` |
+| `cam_risk_router` | `/api/cam/risk` |
+| `cam_risk_aggregate_router` | `/api/cam/risk` |
+| `cam_biarc_router` | `/api/cam/toolpath/biarc` |
 
-### Compare Routes
+### Compare Routes - ✅ MIGRATED (Legacy Deleted 2026-01-30)
 
-| Legacy Route | Prefix | Canonical Replacement | Notes |
-|--------------|--------|----------------------|-------|
-| `legacy_compare_router` | `/api/compare` | `/api/compare` | Wave 19 consolidated |
-| `compare_lab_router` | `/api/compare/lab` | `/api/compare/lab` | Wave 19 consolidated |
-| `compare_risk_aggregate_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
-| `compare_risk_bucket_detail_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
-| `compare_risk_bucket_export_router` | `/api/compare` | `/api/compare/risk` | Wave 19 consolidated |
+| Former Legacy Route | Now Served By |
+|--------------------|---------------|
+| `compare_router` | `/api/compare` |
+| `compare_lab_router` | `/api/compare/lab` |
+| `compare_risk_aggregate_router` | `/api/compare/risk` |
+| `compare_risk_bucket_detail_router` | `/api/compare/risk` |
+| `compare_risk_bucket_export_router` | `/api/compare/risk` |
 
-### Rosette Routes
+### Rosette Routes - ✅ MIGRATED (Legacy Deleted 2026-01-30)
 
-| Legacy Route | Prefix | Canonical Replacement | Notes |
-|--------------|--------|----------------------|-------|
-| `rosette_pattern_router` | `/api/rosette` | `/api/cam/rosette` or `/api/art/rosette` | Multi-lane |
-| `art_studio_rosette_router` | `/api/art-studio/rosette` | `/api/art/rosette` | Art Studio v2 |
+| Former Legacy Route | Now Served By |
+|--------------------|---------------|
+| `rosette_pattern_router` | `/api/art/rosette/pattern` |
+| `art_studio_rosette_router` | `/api/art/rosette` |
 
 ### Governance Integration
 
-Legacy routes are tracked by:
-1. **FastAPI Tags**: All legacy routes have `"Legacy"` in their tags array
-2. **Endpoint Middleware**: `EndpointGovernanceMiddleware` detects `"Legacy"` tag and records hits
-3. **Metrics**: Usage stats available at `/api/governance/stats`
+With all legacy routes removed, the governance middleware now monitors:
+1. **Canonical routes only** - All traffic uses consolidated aggregators
+2. **Endpoint Middleware**: `EndpointGovernanceMiddleware` tracks all requests
+3. **Metrics**: Stats available at `/api/governance/stats`
 
-To migrate off legacy routes:
-1. Check governance stats for zero/low usage
-2. Update frontend to use canonical endpoints
-3. Remove legacy mount from `main.py`
+**No migration needed** - all frontend has been updated to use canonical paths.
 
 ---
 
@@ -583,17 +580,18 @@ Routers in `_experimental`, `art_studio`, `rmos.api`, and `workflow` are typical
 ```
 Core CAM:                          11 routers
 RMOS + Specialty (Waves 1–6):      12 routers
-Feature Expansion (Waves 7–13):    49 routers
+Feature Expansion (Waves 7–13):    ~35 routers (14 legacy deleted)
 Intelligence (Waves 14–15):         9 routers
 Governance & Sessions (Waves 16–17):  8 routers
-Consolidation (Waves 18–19):        5 routers
+Consolidation (Waves 18–19):        5 routers (serve all deleted routes)
 Run Orchestration & Acoustics (Waves 20–22):  4 routers
 Meta / Introspection:               3 routers
 ────────────────────────────────────────
-TOTAL WORKING:                     ~116 routers
+TOTAL WORKING:                     ~95 routers (down from 116)
 
 Previously Broken (Now Fixed):      9 routers
 Phantom Imports (Removed):         84 routers
+Legacy Routers (Deleted 2026-01-30): 19 routers (~4,000 lines)
 ```
 
 ---
@@ -747,6 +745,29 @@ from rmos.pipeline import (
 ---
 
 ## Change Log
+
+### 2026-01-30: Phase 2+3 Legacy Router Cleanup
+
+**19 legacy routers deleted** (~4,000 lines removed):
+
+| Category | Routers Deleted | Canonical Replacement |
+|----------|-----------------|----------------------|
+| CAM (12) | vcarve, relief, svg, helical, fret_slots, fret_slots_export, risk, risk_aggregate, drill_pattern, roughing, biarc, drilling | `/api/cam/*` (Wave 18) |
+| Compare (5) | compare, lab, risk_aggregate, risk_bucket_detail, risk_bucket_export | `/api/compare/*` (Wave 19) |
+| Rosette (2) | rosette_pattern, art_studio_rosette | `/api/art/rosette/*` |
+
+**Route count:** 804 → 727 (77 routes removed across Phase 1-3)
+
+**Files deleted:**
+- `cam_vcarve_router.py`, `cam_relief_v160_router.py`, `cam_svg_v160_router.py`
+- `cam_helical_v161_router.py`, `cam_fret_slots_router.py`, `cam_fret_slots_export_router.py`
+- `cam_risk_router.py`, `cam_risk_aggregate_router.py`, `cam_drill_pattern_router.py`
+- `cam_roughing_router.py`, `cam_biarc_router.py`, `drilling_router.py`
+- `compare_router.py`, `compare_lab_router.py`, `compare_risk_aggregate_router.py`
+- `compare_risk_bucket_detail_router.py`, `compare_risk_bucket_export_router.py`
+- `rosette_pattern_router.py`, `art_studio/rosette_router.py`
+
+---
 
 ### 2026-01-03: Adaptive Pocket CI Fixes
 

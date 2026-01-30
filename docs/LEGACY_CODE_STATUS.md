@@ -10,13 +10,15 @@
 | Category | Count | Status |
 |----------|-------|--------|
 | **Legacy Lane Endpoints** | 17 | UTILITY lane, awaiting OPERATION promotion |
-| **Deprecated Routers** | 5 | Superseded by Option C, awaiting removal |
-| **Consolidation Candidates** | ~~10~~ **17** | 17 routers → 6 (4,203 lines, ~2,500 savings) |
+| **Deprecated Routers** | ~~5~~ **0** | ✅ Superseded by Option C, **removed** |
+| **Legacy Routers Deleted** | **19** | ✅ Deleted 2026-01-30 (~4,000 lines removed) |
+| **Consolidation Candidates** | ~~17~~ **6** | ✅ 17 routers → 6 (completed via CAM/Compare consolidation) |
 | **Critical TODOs (P1)** | ~~5~~ **0** | ✅ All P1 stubs resolved (2026-01-26) |
 | **Incomplete Features (P2)** | ~~5~~ **0** | ✅ All P2 features completed (2026-01-26) |
 | **Enhancement TODOs (P3)** | ~~3~~ **0** | ✅ All P3 items resolved (2026-01-30) |
 | **ADR Phases Complete** | 5/5 | ADR-003 fully implemented |
 | **RMOS Operations Bundles** | 17/17 | E2E bundle implementation complete |
+| **Route Count** | **727** | Down from 804 (Phase 1) → 790 (Phase 2) → 727 (Phase 3) |
 
 ---
 
@@ -70,28 +72,29 @@ These endpoints produce G-code but bypass governance. Track usage via `/api/gove
 
 **Total deprecated lines: 1,908**
 
-### Legacy Tagged Routers (Governance Tracking)
+### Legacy Tagged Routers (Governance Tracking) ✅ REMOVED
 
-These routers have `"Legacy"` tag for usage monitoring:
+**All 19 legacy-tagged routers removed on 2026-01-30.**
 
-| Category | Count | Routers |
-|----------|-------|---------|
-| CAM Legacy | 12 | vcarve, relief, helical, svg, fret_slots, drill_pattern, roughing, drilling, risk, biarc |
-| Compare Legacy | 5 | compare, lab, risk_aggregate, risk_bucket_detail, risk_bucket_export |
-| Rosette Legacy | 2 | rosette_pattern, art_studio_rosette |
+| Category | Removed | Former Routers | Canonical Replacement |
+|----------|---------|----------------|----------------------|
+| CAM Legacy | 12 | vcarve, relief, helical, svg, fret_slots, drill_pattern, roughing, drilling, risk, biarc, fret_slots_export, risk_aggregate | `/api/cam/*` (consolidated Wave 18) |
+| Compare Legacy | 5 | compare, lab, risk_aggregate, risk_bucket_detail, risk_bucket_export | `/api/compare/*` (consolidated Wave 19) |
+| Rosette Legacy | 2 | rosette_pattern, art_studio_rosette | `/api/art/rosette/*` (Art Studio v2) |
 
-### Consolidation Candidates (17 routers → 6)
+### Consolidation Candidates ✅ COMPLETED
 
-**Audited 2026-01-26** — Actual counts higher than originally documented.
+**Original target: 17 routers → 6. Now complete via Wave 18/19 consolidation.**
 
-| Group | Current | Target | Lines | Routers |
-|-------|---------|--------|-------|---------|
-| Pipeline | 5 | 2 | 1,792 | `pipeline_router`, `pipeline_presets_router`, `cam_pipeline_preset_run_router`, `cam_pipeline_router`, `pipeline_preset_router` |
-| Calculators | 2 | 1 | 829 | `calculators_router`, `ltb_calculator_router` |
-| Posts | 3 | 1 | 837 | `post_router`, `cam_post_v155_router`, `posts_router` |
-| Machines | 3 | 1 | 392 | `machines_tools_router`, `machine_router`, `machines_router` |
-| Simulation | 4 | 1 | 353 | `sim_metrics_router`, `cam_simulate_router`, `gcode_sim_router`, `cam_sim_router` |
-| **Total** | **17** | **6** | **4,203** | Potential savings: ~2,500+ lines |
+| Group | Status | Notes |
+|-------|--------|-------|
+| Pipeline | ✅ Consolidated | Pipeline presets merged |
+| Calculators | ✅ Consolidated | `calculators_consolidated_router` |
+| Posts | ✅ Consolidated | `posts_consolidated_router` |
+| Machines | ✅ Consolidated | `machines_consolidated_router` |
+| Simulation | ✅ Consolidated | `simulation_consolidated_router` |
+| CAM | ✅ Consolidated | Wave 18 `cam_router` aggregator |
+| Compare | ✅ Consolidated | Wave 19 `compare_router` aggregator |
 
 ---
 
@@ -249,55 +252,56 @@ curl http://localhost:8000/api/governance/stats
 
 ## 8. Migration Roadmap
 
-### Immediate (Next Sprint)
+### Completed (2026-01-30)
+
+| Task | Status | Impact |
+|------|--------|--------|
+| ~~Wire real SAW feasibility scorer~~ | ✅ Done (2026-01-26) | Safety enforcement |
+| ~~Wire real rosette feasibility scorer~~ | ✅ Done (2026-01-26) | Safety enforcement |
+| ~~Consolidate pipeline routers~~ | ✅ Done | Cleaner codebase |
+| ~~Consolidate calculator routers~~ | ✅ Done | Cleaner codebase |
+| ~~Update frontend legacy API calls~~ | ✅ Done (2026-01-30) | Clean slate |
+| ~~Remove deprecated instrument routers~~ | ✅ Done | -1,908 lines |
+| ~~Delete legacy CAM/Compare/Rosette routers~~ | ✅ Done (2026-01-30) | -4,000 lines |
+| ~~Complete DXF LWPOLYLINE support~~ | ✅ Done (2026-01-26) | CAD compliance |
+
+### Remaining (Low Priority)
 
 | Task | Effort | Impact |
 |------|--------|--------|
-| ~~Wire real SAW feasibility scorer~~ | ~~High~~ | ✅ Done (2026-01-26) |
-| ~~Wire real rosette feasibility scorer~~ | ~~High~~ | ✅ Done (2026-01-26) |
-| Add deprecation headers to legacy routers | Low | Tracking |
-
-### Short-term (Next Month)
-
-| Task | Effort | Impact |
-|------|--------|--------|
-| Consolidate pipeline routers (5 → 2, 1,792 lines) | Medium | ~1,200 lines saved |
-| Consolidate calculator routers (2 → 1, 829 lines) | Low | ~400 lines saved |
-| Update frontend legacy API calls (8) | Medium | Clean slate |
-
-### Medium-term (Next Quarter)
-
-| Task | Effort | Impact |
-|------|--------|--------|
-| Remove deprecated instrument routers | Low | -1,908 lines |
-| Migrate session-scoped toolpaths to OPERATION | High | Full governance |
-| ~~Complete DXF LWPOLYLINE support~~ | ~~Medium~~ | ✅ Done (2026-01-26) |
+| Migrate session-scoped toolpaths to OPERATION | Medium | Full governance |
+| Remove `useRosettePatternStore` legacy path | Low | Only needed if CRUD functionality added to v2 |
 
 ---
 
 ## 9. Change Log
 
-### 2026-01-30: Aggressive Legacy Cleanup (Phase 2)
+### 2026-01-30: Aggressive Legacy Cleanup (Phase 2+3) - COMPLETE
 
-**Frontend migrated to canonical API paths:**
+**Phase 1 (earlier):** Frontend migrated to canonical API paths (804 → 790 routes)
 
-| Component | Old Path | New Path |
-|-----------|----------|----------|
-| DrillingLab.vue | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
-| CAMEssentialsLab.vue | `/api/cam/roughing/gcode` | `/api/cam/toolpath/roughing/gcode` |
-| CAMEssentialsLab.vue | `/api/cam/biarc/gcode` | `/api/cam/toolpath/biarc/gcode` |
-| BridgeLabView.vue | `/api/cam/roughing_gcode` | `/api/cam/toolpath/roughing/gcode` |
+**Phase 2:** Remove legacy router registrations from main.py
 
-**Legacy routers removed from main.py (served by consolidated CAM router):**
+**Phase 3:** Delete legacy router files (~4,000 lines removed)
 
-| Router | Old Mount | Consolidated Equivalent |
-|--------|-----------|------------------------|
-| `cam_drill_pattern_router` | `/api/cam/drill/pattern` | `/api/cam/drilling/pattern` |
-| `cam_roughing_router` | `/api/cam/roughing` | `/api/cam/toolpath/roughing` |
-| `cam_biarc_router` | `/api/cam/biarc` | `/api/cam/toolpath/biarc` |
-| `drilling_router` | `/api/cam/drilling/drill` | `/api/cam/drilling` |
+**19 Legacy Router Files Deleted:**
 
-**Route count:** 804 → 790 (14 routes removed)
+| Category | Routers Deleted | Canonical Replacement |
+|----------|-----------------|----------------------|
+| CAM Legacy (12) | vcarve, relief_v160, svg_v160, helical_v161, fret_slots, risk, fret_slots_export, risk_aggregate, drill_pattern, roughing, biarc, drilling | `/api/cam/*` (Wave 18 aggregator) |
+| Compare Legacy (5) | compare, compare_lab, compare_risk_aggregate, compare_risk_bucket_detail, compare_risk_bucket_export | `/api/compare/*` (Wave 19 aggregator) |
+| Rosette Legacy (2) | rosette_pattern, art_studio/rosette | `/api/art/rosette/*` (Art Studio v2) |
+
+**Supporting Changes:**
+- `art_studio/__init__.py` - Removed `rosette_router` import
+- `cam_roughing_intent_router.py` - Updated to use consolidated roughing router
+
+**Route Count Progression:**
+- 804 routes (before Phase 1)
+- 790 routes (after Phase 1 - frontend migration)
+- 727 routes (after Phase 2+3 - router deletion)
+
+**Total Lines Removed:** ~4,000 lines
 
 **Note:** `useRosettePatternStore.ts` intentionally kept at `/api/rosette-patterns`
 (CRUD for custom patterns ≠ v2 preset patterns endpoint).
