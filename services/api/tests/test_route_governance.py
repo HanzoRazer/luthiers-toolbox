@@ -276,14 +276,13 @@ class TestOpenAPIPathSnapshot:
 
 # Routers that are grandfathered (pre-cleanup) or have legitimate exceptions
 # NOTE: When you fix a router, REMOVE IT from this list to enable enforcement
+# NOTE: Routers deleted in Phase 2+3 (January 2026): cam_drill_pattern_router.py
 FORTRAN_RULE_EXCEPTIONS = {
     # Grandfathered routers with remaining inline math (lower priority cleanup)
     # TODO: Extract sine wave math to geometry module
     "adaptive_preview_router.py",
     # TODO: Extract neck angle math to instrument_geometry
     "archtop_router.py",
-    # TODO: Extract circle pattern math to geometry/arc_utils
-    "cam_drill_pattern_router.py",
     # TODO: Extract remaining arc tessellation to cam/biarc_math
     "cam_post_v155_router.py",
     "cam_post_v160_router.py",
