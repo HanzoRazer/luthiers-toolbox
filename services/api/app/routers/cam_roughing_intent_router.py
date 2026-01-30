@@ -27,9 +27,9 @@ except ImportError:
         def normalize_cam_intent_v1(intent):  # type: ignore
             return intent, []
 
-# Existing roughing implementation (legacy JSON payload route)
+# Existing roughing implementation (consolidated CAM router)
 # We will reuse the same generation logic to avoid drift.
-from app.routers.cam_roughing_router import roughing_gcode as _legacy_roughing_handler
+from app.cam.routers.toolpath.roughing_router import roughing_gcode as _legacy_roughing_handler, RoughReq
 
 
 router = APIRouter(prefix="/cam", tags=["CAM", "Intent"])
@@ -120,12 +120,13 @@ async def roughing_gcode_intent(
     if not isinstance(design, dict):
         raise HTTPException(status_code=400, detail="CamIntentV1.design must be an object for roughing")
 
-    # Reuse legacy handler by calling it directly (same behavior, no duplication)
-    # Legacy signature: roughing_gcode(payload: dict) -> Response/Text
+    # Reuse consolidated handler by calling it directly (same behavior, no duplication)
+    # Consolidated signature: roughing_gcode(req: RoughReq) -> Response
     try:
-        return await _legacy_roughing_handler(design)  # type: ignore[arg-type]
+        rough_req = RoughReq(**design)
+        return _legacy_roughing_handler(rough_req)
     except Exception as e:
-        # If legacy handler fails, return a structured error but metrics still counted
+        # If handler fails, return a structured error but metrics still counted
         raise HTTPException(
             status_code=422,
             detail={"message": f"Roughing generation failed: {e}", "issues": []},
