@@ -389,29 +389,44 @@ async def generate_and_plan_cam(request: GuitarDesignRequest) -> Dict[str, Any]:
         stepdown = 2.0  # 2mm per pass
         margin = 0.8  # 0.8mm clearance from boundary
         strategy = "Spiral"  # Continuous spiral toolpath
-        smoothing = 0.3  # Arc tolerance
+        smoothing_radius = 0.3  # Arc smoothing radius
+        corner_radius_min = 1.5  # Minimum corner fillet radius
+        target_stepover = stepover  # Stepover as ratio (0.3-0.7)
         feed_xy = 1200  # mm/min cutting feed
+        slowdown_feed_pct = 60.0  # 60% feed in tight areas (range: 20-80)
         safe_z = 5.0  # Safe retract height
         z_rough = -2.0  # Cutting depth (negative)
-        
+
+        # Convert outline to proper loop format (list of points, not dict)
+        loop_pts = outline
+
         # Plan adaptive pocket
-        path_pts = plan_adaptive_l2(
-            loops=[loop],
+        result = plan_adaptive_l2(
+            loops=[loop_pts],
             tool_d=tool_d,
             stepover=stepover,
             stepdown=stepdown,
             margin=margin,
             strategy=strategy,
-            smoothing=smoothing
+            smoothing_radius=smoothing_radius,
+            corner_radius_min=corner_radius_min,
+            target_stepover=target_stepover,
+            feed_xy=feed_xy,
+            slowdown_feed_pct=slowdown_feed_pct
         )
-        
+
+        raw_path = result.get("path", [])
+
+        # Filter path to only (x, y) tuples - L2 may include arc dicts
+        path_pts = [pt for pt in raw_path if isinstance(pt, (list, tuple)) and len(pt) == 2]
+
         # Convert to toolpath moves
         moves = to_toolpath(
             path_pts=path_pts,
-            safe_z=safe_z,
-            z_rough=z_rough,
             feed_xy=feed_xy,
-            climb=True
+            z_rough=z_rough,
+            safe_z=safe_z,
+            lead_r=0.0
         )
         
         # Calculate statistics
