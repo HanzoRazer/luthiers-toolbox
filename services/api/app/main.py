@@ -293,8 +293,9 @@ try:
 except ImportError as e:
     _log.warning("Optional router unavailable: ai_cam_router (%s)", e)
     ai_cam_router = None
-from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
-from .routers.cam_roughing_router import router as cam_roughing_router
+# REMOVED: Consolidated into /api/cam/* (January 2026)
+# from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
+# from .routers.cam_roughing_router import router as cam_roughing_router
 from .routers.cam_roughing_intent_router import (
     router as cam_roughing_intent_router,
 )  # H7.2.2.1
@@ -314,7 +315,8 @@ from .routers.parametric_guitar_router import router as parametric_guitar_router
 # =============================================================================
 from .routers.instrument_router import router as instrument_router
 from .routers.compare_lab_router import router as compare_lab_router
-from .routers.drilling_router import router as drilling_router
+# REMOVED: Consolidated into /api/cam/drilling (January 2026)
+# from .routers.drilling_router import router as drilling_router
 from .routers.cam_risk_router import router as cam_risk_router
 from .routers.job_risk_router import router as job_risk_router
 
@@ -353,7 +355,8 @@ except ImportError as e:
     _log.warning("Optional router unavailable: dashboard_router (%s)", e)
     dashboard_router = None
 from .routers.cam_settings_router import router as cam_settings_router
-from .routers.cam_biarc_router import router as cam_biarc_router
+# REMOVED: Consolidated into /api/cam/toolpath/biarc (January 2026)
+# from .routers.cam_biarc_router import router as cam_biarc_router
 from .routers.job_intelligence_router import router as job_intelligence_router
 
 # =============================================================================
@@ -875,12 +878,13 @@ app.include_router(
 # Wave 9: AI-CAM + Drill/Roughing + Compare + DXF Preflight + JobLog + Neck (8)
 if ai_cam_router:
     app.include_router(ai_cam_router, prefix="/api", tags=["AI-CAM"])
-app.include_router(
-    cam_drill_pattern_router, prefix="/api", tags=["CAM", "Drill Patterns", "Legacy"]
-)  # → /api/cam/drilling/pattern
-app.include_router(
-    cam_roughing_router, prefix="/api", tags=["CAM", "Roughing", "Legacy"]
-)  # → /api/cam/toolpath/roughing
+# =============================================================================
+# LEGACY ROUTERS REMOVED (January 2026)
+# Consolidated CAM router at /api/cam/ now provides these canonical paths.
+# See: docs/LEGACY_CODE_STATUS.md
+# =============================================================================
+# cam_drill_pattern_router → /api/cam/drilling/pattern (consolidated)
+# cam_roughing_router → /api/cam/toolpath/roughing (consolidated)
 app.include_router(
     cam_roughing_intent_router, prefix="/api", tags=["CAM", "Intent"]
 )  # H7.2.2.1
@@ -902,9 +906,7 @@ app.include_router(
 app.include_router(
     compare_lab_router, prefix="", tags=["Compare", "Lab", "Legacy"]
 )  # Router has /api/compare/lab prefix → consolidated /api/compare/lab
-app.include_router(
-    drilling_router, prefix="/api/cam/drilling", tags=["CAM", "Drilling", "Legacy"]
-)  # → /api/cam/drilling (consolidated)
+# drilling_router → /api/cam/drilling (consolidated)
 app.include_router(
     cam_risk_router, prefix="", tags=["CAM", "Risk", "Legacy"]
 )  # Router has /api/cam/risk prefix → /api/cam/risk (consolidated)
@@ -932,9 +934,7 @@ app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
 if dashboard_router:
     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
-app.include_router(
-    cam_biarc_router, prefix="/api", tags=["CAM", "Biarc", "Legacy"]
-)  # → /api/cam/toolpath/biarc
+# cam_biarc_router → /api/cam/toolpath/biarc (consolidated)
 app.include_router(
     job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"]
 )

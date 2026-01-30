@@ -1,6 +1,6 @@
 # Legacy Code Status
 
-> **Last Updated:** 2026-01-26
+> **Last Updated:** 2026-01-30
 > **Purpose:** Single source of truth for legacy code, technical debt, and migration status.
 
 ---
@@ -198,18 +198,22 @@ These routers have `"Legacy"` tag for usage monitoring:
 
 ## 6. Frontend Legacy Usage
 
-### Current Legacy API Calls (8 usages in 4 files)
+### Current Legacy API Calls (2 usages in 1 file) ✅ MOSTLY MIGRATED
 
-| File | Line | Legacy Path | Canonical Path |
-|------|------|-------------|----------------|
-| `DrillingLab.vue` | 637 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
-| `DrillingLab.vue` | 674 | `/api/cam/drill/gcode/download` | `/api/cam/drilling/gcode/download` |
-| `CAMEssentialsLab.vue` | 364 | `/api/cam/roughing/gcode` | `/api/cam/toolpath/roughing/gcode` |
-| `CAMEssentialsLab.vue` | 388 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
-| `CAMEssentialsLab.vue` | 451 | `/api/cam/biarc/gcode` | `/api/cam/toolpath/biarc/gcode` |
-| `useRosettePatternStore.ts` | 21 | `/api/rosette-patterns` | `/api/art/rosette/pattern/patterns` |
-| `useRosettePatternStore.ts` | 35 | `/api/rosette-patterns` | `/api/art/rosette/pattern/patterns` |
-| `BridgeLabView.vue` | 517 | `/api/cam/roughing_gcode` | `/api/cam/toolpath/roughing/gcode` |
+**Migrated (2026-01-30):** 6 usages updated to canonical paths.
+
+| File | Line | Legacy Path | Canonical Path | Status |
+|------|------|-------------|----------------|--------|
+| `DrillingLab.vue` | 813 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` | ✅ Migrated |
+| `DrillingLab.vue` | 850 | `/api/cam/drill/gcode/download` | `/api/cam/drilling/gcode/download` | ✅ Migrated |
+| `CAMEssentialsLab.vue` | 588 | `/api/cam/roughing/gcode` | `/api/cam/toolpath/roughing/gcode` | ✅ Migrated |
+| `CAMEssentialsLab.vue` | 612 | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` | ✅ Migrated |
+| `CAMEssentialsLab.vue` | 675 | `/api/cam/biarc/gcode` | `/api/cam/toolpath/biarc/gcode` | ✅ Migrated |
+| `BridgeLabView.vue` | 613 | `/api/cam/roughing_gcode` | `/api/cam/toolpath/roughing/gcode` | ✅ Migrated |
+| `useRosettePatternStore.ts` | 21+ | `/api/rosette-patterns` | N/A (CRUD, not preset) | ⏸️ Kept |
+
+**Note:** `useRosettePatternStore.ts` uses CRUD operations for custom patterns, which is different
+from the v2 preset pattern endpoints. This legacy path remains intentionally.
 
 ### CI Gate
 
@@ -217,7 +221,7 @@ These routers have `"Legacy"` tag for usage monitoring:
 # Check legacy usage
 python -m app.ci.legacy_usage_gate \
   --roots "../../packages/client/src" "../../packages/sdk/src" \
-  --budget 10  # Currently 8 usages, budget 10
+  --budget 10  # Currently 2 usages (rosette-patterns), budget 10
 ```
 
 ---
@@ -272,6 +276,33 @@ curl http://localhost:8000/api/governance/stats
 ---
 
 ## 9. Change Log
+
+### 2026-01-30: Aggressive Legacy Cleanup (Phase 2)
+
+**Frontend migrated to canonical API paths:**
+
+| Component | Old Path | New Path |
+|-----------|----------|----------|
+| DrillingLab.vue | `/api/cam/drill/gcode` | `/api/cam/drilling/gcode` |
+| CAMEssentialsLab.vue | `/api/cam/roughing/gcode` | `/api/cam/toolpath/roughing/gcode` |
+| CAMEssentialsLab.vue | `/api/cam/biarc/gcode` | `/api/cam/toolpath/biarc/gcode` |
+| BridgeLabView.vue | `/api/cam/roughing_gcode` | `/api/cam/toolpath/roughing/gcode` |
+
+**Legacy routers removed from main.py (served by consolidated CAM router):**
+
+| Router | Old Mount | Consolidated Equivalent |
+|--------|-----------|------------------------|
+| `cam_drill_pattern_router` | `/api/cam/drill/pattern` | `/api/cam/drilling/pattern` |
+| `cam_roughing_router` | `/api/cam/roughing` | `/api/cam/toolpath/roughing` |
+| `cam_biarc_router` | `/api/cam/biarc` | `/api/cam/toolpath/biarc` |
+| `drilling_router` | `/api/cam/drilling/drill` | `/api/cam/drilling` |
+
+**Route count:** 804 → 790 (14 routes removed)
+
+**Note:** `useRosettePatternStore.ts` intentionally kept at `/api/rosette-patterns`
+(CRUD for custom patterns ≠ v2 preset patterns endpoint).
+
+---
 
 ### 2026-01-03: Adaptive Pocket CI Fixes
 

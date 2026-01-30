@@ -585,7 +585,7 @@ const retract = ref({
 // Export Functions
 async function exportRoughing() {
   try {
-    const response = await fetch('/api/cam/roughing/gcode', {
+    const response = await fetch('/api/cam/toolpath/roughing/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(roughing.value)
@@ -609,7 +609,7 @@ async function exportDrilling() {
       post: 'GRBL'
     }
     
-    const response = await fetch('/api/cam/drill/gcode', {
+    const response = await fetch('/api/cam/drilling/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -646,7 +646,7 @@ async function exportPattern() {
       post: 'GRBL'
     }
     
-    const url = `/api/cam/drill/pattern/gcode?${new URLSearchParams(drillParams as any).toString()}`
+    const url = `/api/cam/drilling/pattern/gcode?${new URLSearchParams(drillParams as any).toString()}`
     
     const response = await fetch(url, {
       method: 'POST',
@@ -672,7 +672,7 @@ async function exportBiarc() {
       post: 'GRBL'
     }
     
-    const response = await fetch('/api/cam/biarc/gcode', {
+    const response = await fetch('/api/cam/toolpath/biarc/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
