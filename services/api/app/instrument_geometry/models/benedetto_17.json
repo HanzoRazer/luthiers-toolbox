@@ -1,7 +1,58 @@
 {
   "model_id": "benedetto_17",
-  "display_name": "Benedetto 16\" Archtop (25.5\" scale)",
-  "description": "Classic 16-inch archtop with 25.5-inch scale, 22 frets, 14th-fret neck joint, floating bridge.",
+  "display_name": "Benedetto 17\" Archtop (25.5\" scale)",
+  "description": "Classic 17-inch archtop jazz guitar with 25.5-inch scale, 22 frets, 14th-fret neck joint, floating bridge. Dimensions extracted from original Benedetto blueprints.",
+
+  "blueprint_source": {
+    "front_view": "Benedetto Front.jpg",
+    "back_view": "Benedetto Back.jpg",
+    "extraction_method": "AI vision analysis (Claude Sonnet 4)",
+    "extraction_date": "2026-01-30",
+    "legacy_note": "Original partial documentation updated with AI-extracted blueprint dimensions"
+  },
+
+  "body": {
+    "type": "archtop_jazz",
+    "body_length_in": 19.0,
+    "body_length_mm": 482.6,
+    "upper_bout_width_in": 11.0,
+    "upper_bout_width_mm": 279.4,
+    "lower_bout_width_in": 17.0,
+    "lower_bout_width_mm": 431.8,
+    "waist_width_in": 9.0,
+    "waist_width_mm": 228.6,
+    "body_depth_rim_in": 3.25,
+    "body_depth_rim_mm": 82.55,
+    "cutaway": {
+      "type": "venetian",
+      "depth_in": 3.0,
+      "depth_mm": 76.2
+    },
+    "f_holes": {
+      "length_in": 4.0,
+      "length_mm": 101.6,
+      "style": "traditional_archtop"
+    },
+    "binding": {
+      "style": "multi-ply",
+      "channels_marked": true
+    }
+  },
+
+  "pickups": {
+    "configuration": "single_floating_humbucker",
+    "neck_route": {
+      "length_in": 3.5,
+      "length_mm": 88.9
+    },
+    "bridge_route": {
+      "length_in": 3.5,
+      "length_mm": 88.9
+    },
+    "control_cavity": {
+      "routing_depths_variable": true
+    }
+  },
 
   "scale": {
     "scale_length_in": 25.5,
@@ -57,7 +108,10 @@
 
   "notes": [
     "Compensation values are reference starting points; real setups should calibrate per instrument.",
-    "JSON is inches-only; loader converts to mm for downstream geometry and CAM.",
-    "Scale/intonation math is handled by instrument_geometry.neck.fret_math and bridge.compensation."
+    "JSON provides both inches and mm; loader uses mm for downstream geometry and CAM.",
+    "Scale/intonation math is handled by instrument_geometry.neck.fret_math and bridge.compensation.",
+    "LEGACY UPDATE 2026-01-30: Body dimensions extracted from original Benedetto blueprints using AI vision.",
+    "Front view identified as A-style mandolin shape (f-holes similar), back view as single-cutaway archtop.",
+    "17-inch lower bout width is characteristic of the Benedetto La Venezia and similar models."
   ]
 }
