@@ -14,7 +14,7 @@
 | **Consolidation Candidates** | ~~10~~ **17** | 17 routers → 6 (4,203 lines, ~2,500 savings) |
 | **Critical TODOs (P1)** | ~~5~~ **0** | ✅ All P1 stubs resolved (2026-01-26) |
 | **Incomplete Features (P2)** | ~~5~~ **0** | ✅ All P2 features completed (2026-01-26) |
-| **Enhancement TODOs (P3)** | ~~3~~ **2** | 1 fixed, 2 remain (ML optimization, non-blocking) |
+| **Enhancement TODOs (P3)** | ~~3~~ **0** | ✅ All P3 items resolved (2026-01-30) |
 | **ADR Phases Complete** | 5/5 | ADR-003 fully implemented |
 | **RMOS Operations Bundles** | 17/17 | E2E bundle implementation complete |
 
@@ -126,15 +126,15 @@ These routers have `"Legacy"` tag for usage monitoring:
 | `util/compare_automation_helpers.py` | 37-86 | Storage lookup | ✅ `load_svg_by_id()` checks file system + baselines |
 | `rmos/context_adapter.py` | 270-286 | DXF parser | ✅ Uses `load_dxf_geometry_by_path()` with R12 parser |
 
-### Priority 3: Enhancements ~~(3)~~ → 2
+### Priority 3: Enhancements ~~(3)~~ ✅ RESOLVED
 
 | File | Line | Issue | Status |
 |------|------|-------|--------|
-| `cam_core/saw_lab/saw_blade_validator.py` | 293 | Generic RPM limits | ⚠️ Still TODO - uses universal limits |
-| `_experimental/cnc_production/learn/live_learn_ingestor.py` | 80 | Learned overrides not wired | ⚠️ Still stub - `pass` no-op |
+| `cam_core/saw_lab/saw_blade_validator.py` | 293 | Generic RPM limits | ✅ Fixed - uses blade-specific rpm_min/rpm_max if available |
+| `_experimental/cnc_production/learn/live_learn_ingestor.py` | 80 | Learned overrides not wired | ✅ Fixed - wired to LearnedOverridesStore |
 | `_experimental/cnc_production/learn/saw_live_learn_dashboard.py` | 184 | tool_id returns None | ✅ Fixed - uses `run.meta.blade_id` |
 
-**Note:** Remaining P3 items are in `_experimental/` - nice-to-have for ML optimization, not blockers.
+**All P3 items resolved (2026-01-30)**
 
 ---
 

@@ -47,6 +47,11 @@ class SawBladeSpec(BaseModel):
     # Application
     application: Optional[str] = Field(None, description="Rip, crosscut, combo, specialty")
     material_family: Optional[str] = Field(None, description="Hardwood, softwood, plywood, etc.")
+
+    # Operating limits (manufacturer specs)
+    rpm_min: Optional[int] = Field(None, description="Minimum RPM (manufacturer spec)")
+    rpm_max: Optional[int] = Field(None, description="Maximum RPM (manufacturer spec)")
+    max_feed_ipm: Optional[float] = Field(None, description="Maximum feed rate in IPM")
     
     # Metadata
     source: Optional[str] = Field(None, description="PDF filename or manual entry")
