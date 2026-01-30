@@ -66,6 +66,7 @@ page = st.sidebar.radio(
         "Blueprint Reader",
         "Art Studio",
         "Guitar Designer",
+        "CNC Studio",
         "Calculator Suite",
     ]
 )
@@ -2170,6 +2171,95 @@ def show_luthier_calculator():
             """)
 
 
+def show_cnc_studio():
+    """CNC Studio - CAM, toolpaths, and G-code generation."""
+    st.title("CNC Studio")
+    st.markdown("Computer-aided manufacturing for guitar building")
+
+    # Create tabs for different CNC tools
+    tab_saw, tab_toolpath, tab_gcode = st.tabs(["Saw Lab", "Toolpaths", "G-code Export"])
+
+    with tab_saw:
+        st.markdown("### CNC Saw Lab")
+        st.markdown("Precision cutting operations for guitar components")
+
+        # Saw operation types
+        operation = st.selectbox(
+            "Operation Type",
+            ["Fret Slot Cutting", "Binding Channel", "Kerfing Cuts", "Body Outline", "Custom"]
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            blade_width = st.number_input("Blade/Bit Width (mm)", 0.5, 10.0, 0.6, 0.1)
+            cut_depth = st.number_input("Cut Depth (mm)", 0.5, 20.0, 2.0, 0.5)
+        with col2:
+            feed_rate = st.number_input("Feed Rate (mm/min)", 100, 5000, 1000, 100)
+            spindle_rpm = st.number_input("Spindle RPM", 5000, 25000, 12000, 1000)
+
+        st.markdown("---")
+        st.info("Full Saw Lab functionality available in the Vue client at `/saw-lab`")
+
+    with tab_toolpath:
+        st.markdown("### Toolpath Generation")
+        st.markdown("Generate toolpaths from DXF geometry")
+
+        strategy = st.selectbox(
+            "Machining Strategy",
+            ["Profile (Outline)", "Pocket (Area Clear)", "Adaptive (HSM)", "V-Carve", "Drill"]
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            tool_diameter = st.number_input("Tool Diameter (mm)", 0.5, 25.0, 6.0, 0.5)
+            stepover = st.slider("Stepover %", 10, 90, 45)
+        with col2:
+            stepdown = st.number_input("Stepdown (mm)", 0.5, 10.0, 2.0, 0.5)
+            finish_pass = st.checkbox("Include Finish Pass", value=True)
+
+        if st.button("Generate Toolpath"):
+            st.warning("Upload a DXF file in Blueprint Reader first, then generate toolpaths")
+
+        st.markdown("---")
+        st.info("Full toolpath generation available via `/api/cam/adaptive` endpoint")
+
+    with tab_gcode:
+        st.markdown("### G-code Export")
+        st.markdown("Export toolpaths to machine-ready G-code")
+
+        post_processor = st.selectbox(
+            "Post Processor",
+            ["GRBL (Shapeoko, X-Carve)", "LinuxCNC", "Mach3/Mach4", "Fanuc", "Custom"]
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            units = st.radio("Units", ["mm", "inches"])
+            safe_z = st.number_input("Safe Z Height", 5.0, 50.0, 10.0)
+        with col2:
+            coolant = st.checkbox("Coolant (M8/M9)")
+            spindle_control = st.checkbox("Spindle On/Off (M3/M5)", value=True)
+
+        st.markdown("---")
+
+        # Sample G-code preview
+        with st.expander("Sample G-code Header"):
+            st.code(f"""
+; Luthier's Toolbox G-code Export
+; Post: {post_processor}
+; Units: {units}
+G90 ; Absolute positioning
+G21 ; Metric units (mm)
+G17 ; XY plane
+G54 ; Work coordinate system
+M3 S12000 ; Spindle on
+G0 Z{safe_z} ; Safe Z
+; --- Toolpath starts ---
+            """, language="gcode")
+
+        st.info("Full G-code export available via `/api/cam/gcode` endpoint")
+
+
 # Route to the correct page
 if page == "Home":
     show_home()
@@ -2179,5 +2269,7 @@ elif page == "Art Studio":
     show_art_studio()
 elif page == "Guitar Designer":
     show_guitar_designer()
+elif page == "CNC Studio":
+    show_cnc_studio()
 elif page == "Calculator Suite":
     show_calculators()
