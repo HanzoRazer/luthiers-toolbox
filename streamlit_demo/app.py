@@ -138,6 +138,89 @@ def show_blueprint_reader():
                 pil_image = Image.open(io.BytesIO(file_bytes))
                 st.image(pil_image, caption=uploaded_file.name, use_container_width=True)
 
+            # AI Analysis Section
+            if pil_image:
+                st.markdown("---")
+                st.markdown("### AI Blueprint Analysis")
+
+                # Check for vision client
+                try:
+                    from app.ai.transport.vision_client import get_vision_client
+                    vision_client = get_vision_client(provider="openai")
+                    AI_AVAILABLE = vision_client.is_configured
+                except ImportError:
+                    AI_AVAILABLE = False
+                    vision_client = None
+
+                if not AI_AVAILABLE:
+                    st.warning("OpenAI API key not configured. AI analysis disabled.")
+                else:
+                    analysis_type = st.selectbox(
+                        "Analysis Type",
+                        ["Guitar Body Shape", "Blueprint Dimensions", "Component Identification", "Custom Query"]
+                    )
+
+                    custom_prompt = None
+                    if analysis_type == "Custom Query":
+                        custom_prompt = st.text_area("Enter your question about this image:")
+
+                    if st.button("Analyze with AI", type="secondary"):
+                        with st.spinner("Analyzing image with GPT-4o Vision..."):
+                            # Build prompt based on analysis type
+                            prompts = {
+                                "Guitar Body Shape": """Analyze this guitar blueprint/image and identify:
+1. The guitar body style (e.g., Les Paul, Stratocaster, Dreadnought, Classical, etc.)
+2. Key shape characteristics (cutaways, curves, waist dimensions)
+3. Approximate dimensions if visible
+4. Any unique design features
+Format as a structured summary.""",
+                                "Blueprint Dimensions": """Extract all visible dimensions from this blueprint:
+1. List all measurements with their units
+2. Identify scale indicators if present
+3. Note any reference points or datum lines
+4. Flag any unclear or partially visible dimensions
+Format as a table where possible.""",
+                                "Component Identification": """Identify all guitar components visible in this image:
+1. Body parts (top, back, sides, binding)
+2. Hardware locations (bridge, pickups, controls)
+3. Neck attachment area
+4. Any routing patterns or cavities
+List each component with its location.""",
+                            }
+
+                            prompt = custom_prompt if analysis_type == "Custom Query" else prompts[analysis_type]
+
+                            if prompt:
+                                try:
+                                    # Convert PIL image to bytes
+                                    img_buffer = io.BytesIO()
+                                    pil_image.save(img_buffer, format='PNG')
+                                    img_bytes = img_buffer.getvalue()
+
+                                    response = vision_client.analyze(
+                                        image_bytes=img_bytes,
+                                        prompt=prompt,
+                                        response_format="text",
+                                        detail="high"
+                                    )
+
+                                    st.session_state['ai_analysis'] = response.content
+                                    st.success("Analysis complete!")
+                                except Exception as e:
+                                    st.error(f"AI analysis failed: {e}")
+                            else:
+                                st.warning("Please enter a query for custom analysis.")
+
+                # Display AI analysis results
+                if 'ai_analysis' in st.session_state:
+                    st.markdown("#### Analysis Results")
+                    st.markdown(st.session_state['ai_analysis'])
+
+                    # Option to clear
+                    if st.button("Clear Analysis"):
+                        del st.session_state['ai_analysis']
+                        st.rerun()
+
             if pil_image and CV2_AVAILABLE:
                 st.markdown("---")
                 st.markdown("### Vectorization Settings")
