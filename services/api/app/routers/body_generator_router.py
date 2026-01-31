@@ -33,7 +33,6 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from ..generators.lespaul_body_generator import (
-    LesPaulBodyGenerator,
     LesPaulDXFReader,
     LesPaulGCodeGenerator,
     TOOLS,
@@ -214,39 +213,36 @@ def generate_body_gcode_from_dxf(
         )
 
     # Parse DXF
-    reader = LesPaulDXFReader()
-    body_data = reader.read_dxf(tmp_path)
+    reader = LesPaulDXFReader(filepath=tmp_path)
+    reader.load()
 
-    # Create generator
-    generator = LesPaulBodyGenerator(
-        body_data=body_data,
-        machine_config=machine_cfg,
+    # Create G-code generator
+    gcode_gen = LesPaulGCodeGenerator(
+        reader=reader,
+        machine=machine_cfg,
         stock_thickness_in=stock_thickness_in,
     )
 
-    # Generate toolpaths
-    toolpaths = generator.generate_toolpaths()
-
-    # Convert to G-code
-    gcode_gen = LesPaulGCodeGenerator(machine_cfg)
-    raw_gcode = gcode_gen.generate(toolpaths, job_name=job_name)
+    # Generate G-code
+    raw_gcode = gcode_gen.generate_full_program(program_name=job_name)
 
     # Apply post-processor
     gcode = inject_post_header(raw_gcode, post_id)
     gcode = inject_post_footer(gcode, post_id)
 
-    # Collect stats
+    # Collect stats from generator
+    gen_stats = gcode_gen.get_stats()
     stats = {
-        "tool_changes": len(toolpaths),
-        "operations": [tp.get("operation", "unknown") for tp in toolpaths],
-        "estimated_time_min": gcode_gen.estimate_time(toolpaths),
+        "cut_distance_in": gen_stats.get("cut_distance_in", 0),
+        "rapid_distance_in": gen_stats.get("rapid_distance_in", 0),
+        "estimated_time_min": gen_stats.get("cut_time_min", 0),
         "line_count": len(gcode.splitlines()),
     }
 
     # Body dimensions
     body_size = {
-        "width_in": body_data.get("width", 0),
-        "height_in": body_data.get("height", 0),
+        "width_in": reader.body_outline.width if reader.body_outline else 0,
+        "height_in": reader.body_outline.height if reader.body_outline else 0,
         "thickness_in": stock_thickness_in,
     }
 
