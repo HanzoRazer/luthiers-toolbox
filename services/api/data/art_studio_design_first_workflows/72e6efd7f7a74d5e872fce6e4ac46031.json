@@ -1,0 +1,27 @@
+{
+  "session_id": "72e6efd7f7a74d5e872fce6e4ac46031",
+  "mode": "design_first",
+  "state": "draft",
+  "created_at": "2026-01-27T08:30:49.300232",
+  "updated_at": "2026-01-27T08:30:49.300277",
+  "design": {
+    "outer_diameter_mm": 110.0,
+    "inner_diameter_mm": 90.0,
+    "ring_params": [
+      {
+        "ring_index": 0,
+        "width_mm": 2.0,
+        "pattern_type": "SOLID",
+        "tile_length_mm": null
+      }
+    ]
+  },
+  "feasibility": {
+    "overall_score": 0.92,
+    "risk_bucket": "GREEN",
+    "material_efficiency": 0.88,
+    "estimated_cut_time_min": 12.5,
+    "warnings": []
+  },
+  "history": []
+}
