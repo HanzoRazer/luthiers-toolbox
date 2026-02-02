@@ -399,3 +399,15 @@ ai-integrator/
 # ------------------------------------------
 services/api/app/data/
 examples/retopo/out_*/
+
+# ------------------------------------------
+# Runtime Data & Attachments
+# ------------------------------------------
+exports/
+services/api/data/run_attachments/
+services/api/data/telemetry/
+*.jpg
+*.jpeg
+*.png
+!services/api/static/**/*.png
+!services/api/static/**/*.jpg

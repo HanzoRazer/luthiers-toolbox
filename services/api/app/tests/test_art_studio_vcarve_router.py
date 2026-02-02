@@ -1,7 +1,15 @@
 # services/api/app/tests/test_art_studio_vcarve_router.py
 
 """
-Smoke tests for Art Studio VCarve Router (Wave 1).
+Smoke tests for Art Studio VCarve Router.
+
+NOTE: The legacy /api/art-studio/vcarve/* endpoints were deleted on 2026-01-30
+as part of the legacy router cleanup (see ROUTER_MAP.md). 
+
+V-carve functionality is now available via the consolidated CAM router:
+    - POST /api/cam/toolpath/vcarve/preview_infill
+
+These tests are skipped until migrated to the canonical endpoint.
 """
 
 from __future__ import annotations
@@ -21,6 +29,14 @@ SAMPLE_SVG = """
 """.strip()
 
 
+# Legacy endpoint deleted 2026-01-30 - see ROUTER_MAP.md
+LEGACY_ENDPOINT_SKIP = pytest.mark.skip(
+    reason="Legacy /api/art-studio/vcarve/* endpoint deleted 2026-01-30. "
+           "Use /api/cam/toolpath/vcarve/preview_infill instead."
+)
+
+
+@LEGACY_ENDPOINT_SKIP
 def test_vcarve_preview_smoke():
     """Test /vcarve/preview returns valid stats."""
     r = client.post(
@@ -33,6 +49,7 @@ def test_vcarve_preview_smoke():
     assert data["stats"]["polyline_count"] >= 1
 
 
+@LEGACY_ENDPOINT_SKIP
 def test_vcarve_gcode_smoke():
     """Test /vcarve/gcode returns valid G-code."""
     r = client.post(
@@ -53,6 +70,7 @@ def test_vcarve_gcode_smoke():
     assert "M30" in data["gcode"]  # program end
 
 
+@LEGACY_ENDPOINT_SKIP
 def test_vcarve_preview_empty_svg():
     """Test that empty SVG returns 400 error."""
     r = client.post(

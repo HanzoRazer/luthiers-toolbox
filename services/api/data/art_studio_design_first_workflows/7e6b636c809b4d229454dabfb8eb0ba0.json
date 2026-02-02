@@ -1,0 +1,44 @@
+{
+  "session_id": "7e6b636c809b4d229454dabfb8eb0ba0",
+  "mode": "design_first",
+  "state": "approved",
+  "created_at": "2026-01-27T08:30:49.355917",
+  "updated_at": "2026-01-27T08:30:49.415508",
+  "design": {
+    "outer_diameter_mm": 110.0,
+    "inner_diameter_mm": 90.0,
+    "ring_params": [
+      {
+        "ring_index": 0,
+        "width_mm": 2.0,
+        "pattern_type": "SOLID",
+        "tile_length_mm": null
+      }
+    ]
+  },
+  "feasibility": {
+    "overall_score": 0.92,
+    "risk_bucket": "GREEN",
+    "material_efficiency": 0.88,
+    "estimated_cut_time_min": 12.5,
+    "warnings": []
+  },
+  "history": [
+    {
+      "ts": "2026-01-27T08:30:49.385700",
+      "actor": "pytest",
+      "action": "transition",
+      "from_state": "draft",
+      "to_state": "in_review",
+      "note": null
+    },
+    {
+      "ts": "2026-01-27T08:30:49.415486",
+      "actor": "pytest",
+      "action": "transition",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "note": null
+    }
+  ]
+}

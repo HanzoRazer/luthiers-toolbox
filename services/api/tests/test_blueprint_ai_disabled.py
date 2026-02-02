@@ -1,38 +1,47 @@
 """Test blueprint AI routes return 503 when AI dependencies/keys are missing."""
+import io
 import os
+from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 
-def _dummy_pdf_bytes() -> bytes:
-    # Minimal-ish PDF header to satisfy content checks.
-    return b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n"
+def _valid_png_bytes() -> bytes:
+    """Create minimal valid PNG (1x1 pixel) to pass file validation."""
+    from PIL import Image
+    
+    img = Image.new("RGB", (1, 1), color="red")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return buf.read()
 
 
-def test_blueprint_analyze_returns_503_when_ai_keys_missing(monkeypatch):
+@pytest.fixture
+def client_no_ai_keys():
+    """Create test client with AI keys cleared."""
+    env_patch = {
+        "EMERGENT_LLM_KEY": "",
+        "ANTHROPIC_API_KEY": "",
+    }
+    with patch.dict(os.environ, env_patch, clear=False):
+        from app.main import app
+        yield TestClient(app)
+
+
+def test_blueprint_analyze_returns_503_when_ai_keys_missing(client_no_ai_keys):
     """Blueprint analyze should return 503 when AI keys are not configured."""
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("EMERGENT_LLM_KEY", raising=False)
-
-    from app.main import app
-
-    client = TestClient(app)
-    resp = client.post(
+    resp = client_no_ai_keys.post(
         "/api/blueprint/analyze",
-        files={"file": ("test.pdf", _dummy_pdf_bytes(), "application/pdf")},
+        files={"file": ("test.png", _valid_png_bytes(), "image/png")},
     )
     assert resp.status_code == 503
     data = resp.json()
     assert data.get("detail", {}).get("error") == "AI_DISABLED"
 
 
-def test_blueprint_health_is_200_even_when_ai_disabled(monkeypatch):
+def test_blueprint_health_is_200_even_when_ai_disabled(client_no_ai_keys):
     """Blueprint health endpoint should still work even when AI is disabled."""
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("EMERGENT_LLM_KEY", raising=False)
-
-    from app.main import app
-
-    client = TestClient(app)
-    resp = client.get("/api/blueprint/health")
+    resp = client_no_ai_keys.get("/api/blueprint/health")
     assert resp.status_code == 200
