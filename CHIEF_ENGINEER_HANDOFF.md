@@ -390,15 +390,17 @@ The plan as written targets 6.3/10 weighted. Reaching 7.0+ would require additio
 
 Before the receiving team begins work:
 
-- [ ] All 15 questions in Section 7 have written answers
+- [x] All 15 questions in Section 7 have initial answers — see Section 10 (5 RESOLVED, 10 OPEN)
+- [ ] 10 OPEN questions resolved with product owner (see Section 10 resolution table)
 - [ ] `pytest` runs green on current HEAD (establish baseline)
 - [ ] `npm run build` succeeds on current HEAD (establish baseline)
 - [ ] Team has read `REMEDIATION_PLAN.md` (detailed technical implementation)
 - [ ] Team has read `luthiers-toolbox-design-review-factcheck.md` (verified numbers)
 - [ ] Staging environment is available (or risk acceptance for direct-to-main)
-- [ ] Domain expert identified for safety-critical PR reviews (Q6, Q11)
-- [ ] Cross-repo consumers identified and notified (Q13)
-- [ ] Ship date / milestone confirmed (Q14)
+- [x] Domain expert identified for safety-critical PR reviews (Q6, Q11) — product owner is domain expert
+- [x] Cross-repo consumers identified and notified (Q13) — ToolBox is consumer, not provider; low risk
+- [ ] Ship date / milestone confirmed (Q14) — OPEN
+- [ ] Docker client Dockerfile updated from `client/` to `packages/client/` (required before WP-0)
 
 ---
 
@@ -413,4 +415,179 @@ Before the receiving team begins work:
 
 ---
 
-*This handoff is designed to be self-contained. A competent engineering team should be able to read these four documents, answer the 15 questions, and begin execution without further input from the original developer.*
+## 10. Q&A Response Log (from Product Owner, 2026-02-05)
+
+Answers provided by the project owner. Questions marked **RESOLVED** have actionable answers. Questions marked **OPEN** require the owner's direct input before the receiving team can execute the affected work package.
+
+### Architecture & Scope
+
+**Q1. What is the shipped product boundary?** — OPEN
+
+*Owner assessment:* Core shipped product is CNC G-code generation for guitar lutherie. Secondary systems identified:
+- Smart Guitar IoT backend (depends on `sg-spec` from GitHub)
+- Acoustic analysis integration (`tap_tone_pi` artifacts)
+- Rosette Art Studio
+- Blueprint AI reader
+
+**Action required:** Owner must declare which secondaries are in-scope vs. R&D. This is a **gate for WP-2** (API reduction) — the cull target changes if "all of it" is the answer.
+
+---
+
+**Q2. Is there a second frontend consumer of the API?** — OPEN
+
+*Owner assessment:* Three known entry points:
+- `packages/client/` (Vue 3 SPA) — canonical frontend
+- `client/` (190 files) — stale pre-monorepo duplicate
+- `streamlit_demo/` (2,358-line app.py) — separate entry point, zero config references
+
+**Action required:** Owner must confirm: (a) Is Streamlit demo actively used by anyone? (b) Is there a mobile app, CLI tool, or external integration consuming the API? If no to both, WP-0 deletes Streamlit and the stale `client/`.
+
+---
+
+**Q3. Is `client/` vs `packages/client/` fully understood?** — RESOLVED
+
+*Owner assessment:* `client/` is a stale pre-monorepo copy. `pnpm-workspace.yaml` only references `packages/*`. Docker client Dockerfile references `client/` (legacy path).
+
+**Resolution:** Verify no CI workflow or deployment script references `client/` directly, then delete in WP-0. The Docker client Dockerfile at `docker/client/Dockerfile` copies from `client/` — this must be updated to `packages/client/` before deletion.
+
+---
+
+### Safety & CNC
+
+**Q4. Has unsafe G-code ever been generated in production?** — OPEN
+
+*Owner assessment:* No incident reports found in the codebase. RMOS feasibility scoring with risk bucketing (GREEN/YELLOW/RED) exists. However, 97 bare `except:` blocks and 1,622 `except Exception` blocks could theoretically mask safety gate failures.
+
+**Action required:** Owner must confirm whether generated G-code has been run on real machines and whether unexpected behavior was ever observed. This determines whether WP-1 is "fix before shipping" or "fix before anyone uses it."
+
+---
+
+**Q5. Is simulation mandatory before G-code export?** — RESOLVED
+
+*Owner assessment:* Simulation exists at `/api/cam/sim` but there is no enforcement gate blocking export without simulation. Users can skip straight to download.
+
+**Resolution:** Simulation is available but not mandatory. The `@safety_critical` decorator proposed in WP-1 could add a mandatory simulation flag. Receiving team should propose a simulation gate in WP-1 scope.
+
+---
+
+**Q6. Who validates feeds-and-speeds correctness?** — OPEN
+
+*Owner assessment:* The codebase has sophisticated chipload physics, tool deflection, and material property calculations. The owner is the domain expert (single-developer project, builds guitars).
+
+**Action required:** Owner must confirm whether these calculations have been validated against real cuts on real machines. Mathematical correctness does not guarantee operational safety (spindle runout, rigidity, coolant vary by machine).
+
+---
+
+### Operations & Deployment
+
+**Q7. What is the actual test coverage percentage?** — OPEN
+
+*Owner assessment:* `coverage.json` exists but is empty. 262 test files with ~45K LOC against ~265K production Python LOC. README claims "100% Coverage" — confirmed misleading.
+
+**Action required:** Run `cd services/api && pytest --cov=app --cov-report=term-missing` and record the actual number. This determines whether WP-3 (god-object decomposition) can proceed safely or needs test backfill first. Can be done immediately after Docker restart.
+
+---
+
+**Q8. What is the production deployment target?** — RESOLVED
+
+*Owner assessment:* Two deployment paths confirmed:
+- Railway cloud (`railway.toml`, `railway.json` exist)
+- Local Docker (`docker-compose.yml`, `docker-compose.production.yml`)
+
+**Resolution:** Primary targets are Railway and local Docker. No Raspberry Pi or bare-metal deployment. This confirms lazy-loading (WP-2) is feasible and the health endpoint (WP-6) should target both environments.
+
+---
+
+**Q9. How many active users does this system have?** — OPEN
+
+*Owner assessment:* Cannot determine from codebase alone. The 2-week route instrumentation (WP-2.1) would answer this empirically.
+
+**Action required:** Owner must confirm whether this is deployed with external users or still in development/private use. If zero external users, the remediation can be aggressive (break APIs freely, no deprecation periods needed).
+
+---
+
+### Process & Resources
+
+**Q10. Is there a staging environment?** — OPEN
+
+*Owner assessment:* No explicit staging configuration found. `docker-compose.production.yml` exists but no staging equivalent.
+
+**Action required:** Owner must confirm whether a staging environment exists or if changes go direct to main/production. Without staging, each WP carries higher risk. The team may need to create a staging branch or environment before beginning WP-2.
+
+---
+
+**Q11. Does the team have CNC/lutherie domain knowledge?** — RESOLVED
+
+*Owner assessment:* Yes. Single-developer project — the owner is the domain expert with deep manufacturing knowledge (fret math, chipload physics, multi-post G-code).
+
+**Resolution:** The owner must review all PRs touching safety-critical paths (feasibility scoring, G-code generation, feeds/speeds). No one else has the domain knowledge to validate these changes. This is a **bottleneck risk** for WP-1 and WP-3 in safety modules.
+
+---
+
+**Q12. What is the rollback strategy?** — OPEN
+
+*Owner assessment:* Git-based. No explicit rollback documentation found.
+
+**Action required:** Owner must confirm whether `main` has branch protection rules and whether a bad merge can be reverted within minutes. If no protections exist, the receiving team should add branch protection before beginning WP-2.
+
+---
+
+**Q13. Are there cross-repo consumers that depend on specific API shapes?** — RESOLVED
+
+*Owner assessment:*
+- `sg-spec` — ToolBox depends ON it (not reverse)
+- `tap_tone_pi` — ToolBox consumes artifacts FROM it via RMOS acoustics import
+- No evidence of other repos importing FROM ToolBox
+
+**Resolution:** Cross-repo risk is low. ToolBox is a consumer, not a provider. WP-2 route culling can proceed without notifying external teams. The `tap_tone_pi` integration path should be verified after WP-2 completes.
+
+---
+
+### Prioritization
+
+**Q14. What is the ship date or milestone this remediation is targeting?** — OPEN
+
+*Owner presented three options:*
+- **2 weeks:** WP-0 + partial WP-1 + README fix only
+- **6 weeks:** WP-0 through WP-2 (structural cleanup complete)
+- **12 weeks:** All 6 WPs (full remediation)
+
+**Action required:** Owner must select a timeline. This determines team size and which WPs to execute.
+
+---
+
+**Q15. Is the score target 6.3/10 (plan outcome) or higher?** — OPEN
+
+*Owner assessment:* 6.3/10 is the plan's projected outcome. Reaching 7.0+ would require scoping additional work: design system, Storybook, Repository pattern, integration test suite.
+
+**Action required:** Owner must confirm whether 6.3/10 is acceptable or if a Phase 2 plan targeting 7.0+ should be scoped.
+
+---
+
+### Resolution Summary
+
+| # | Question | Status | Blocks WP |
+|---|----------|--------|-----------|
+| Q1 | Shipped product boundary | **OPEN** | WP-2 |
+| Q2 | Second frontend consumer | **OPEN** | WP-0, WP-2 |
+| Q3 | `client/` vs `packages/client/` | RESOLVED | — |
+| Q4 | Unsafe G-code ever generated | **OPEN** | WP-1 priority |
+| Q5 | Simulation mandatory | RESOLVED | — |
+| Q6 | Feeds/speeds validated on real cuts | **OPEN** | WP-1 safety scope |
+| Q7 | Actual test coverage | **OPEN** | WP-3 |
+| Q8 | Production deployment target | RESOLVED | — |
+| Q9 | Active users | **OPEN** | WP-2 aggressiveness |
+| Q10 | Staging environment | **OPEN** | All WPs (risk level) |
+| Q11 | Domain knowledge | RESOLVED | — |
+| Q12 | Rollback strategy | **OPEN** | All WPs (risk level) |
+| Q13 | Cross-repo consumers | RESOLVED | — |
+| Q14 | Ship date | **OPEN** | All WPs (scope) |
+| Q15 | Score target | **OPEN** | Phase 2 scoping |
+
+**5 of 15 resolved. 10 require the product owner's direct answer.**
+
+The receiving team can begin **WP-0** (dead code purge) and **WP-1 Tier 1A** (bare `except:` elimination) immediately — these are blocked by zero open questions. All other WPs have at least one open dependency.
+
+---
+
+*This handoff is designed to be self-contained. A competent engineering team should be able to read these four documents, review the Q&A log, resolve the 10 open questions with the product owner, and begin execution without further input from the original developer.*
