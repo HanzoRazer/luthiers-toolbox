@@ -726,13 +726,15 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rosette_compare_router (%s)", e)
     rosette_compare_router = None
 
-try:
-    from .art_studio.api.rosette_pattern_routes import (
-        router as rosette_pattern_router_v2,
-    )
-except ImportError as e:
-    _log.warning("Optional router unavailable: rosette_pattern_router_v2 (%s)", e)
-    rosette_pattern_router_v2 = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage (duplicates /api/cam/rosette/patterns)
+# try:
+#     from .art_studio.api.rosette_pattern_routes import (
+#         router as rosette_pattern_router_v2,
+#     )
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rosette_pattern_router_v2 (%s)", e)
+#     rosette_pattern_router_v2 = None
+rosette_pattern_router_v2 = None
 
 # =============================================================================
 # WAVE 19: COMPARE ROUTER CONSOLIDATION
@@ -1234,10 +1236,11 @@ if cam_router:
 # WP-2 2026-02-06: DISABLED - zero frontend usage
 # if rosette_compare_router:
 #     app.include_router(rosette_compare_router, tags=["Art Studio", "Rosette Compare"])
-if rosette_pattern_router_v2:
-    app.include_router(
-        rosette_pattern_router_v2, tags=["Art Studio", "Rosette Patterns v2"]
-    )
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if rosette_pattern_router_v2:
+#     app.include_router(
+#         rosette_pattern_router_v2, tags=["Art Studio", "Rosette Patterns v2"]
+#     )
 
 # Wave 19: Compare Router Consolidation
 # This aggregator provides organized compare endpoints at /api/compare/<category>/<operation>
