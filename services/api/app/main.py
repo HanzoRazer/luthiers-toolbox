@@ -175,7 +175,9 @@ rmos_history_router = None
 # from .routers.cam_svg_v160_router import router as cam_svg_router
 # from .routers.cam_helical_v161_router import router as cam_helical_router
 from .routers.cam_post_v155_router import router as cam_post_v155_router
-from .routers.cam_smoke_v155_router import router as cam_smoke_v155_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (deep audit)
+# from .routers.cam_smoke_v155_router import router as cam_smoke_v155_router
+cam_smoke_v155_router = None
 from .routers.gcode_backplot_router import router as gcode_backplot_router
 from .routers.adaptive_preview_router import router as adaptive_preview_router
 
@@ -431,9 +433,11 @@ job_intelligence_router = None
 # =============================================================================
 # WAVE 12: CAM EXTENSIONS + POLYGON (4 routers - legacy removed January 2026)
 # =============================================================================
-from .routers.cam_adaptive_benchmark_router import (
-    router as cam_adaptive_benchmark_router,
-)
+# WP-2 2026-02-06: DISABLED - zero frontend usage (deep audit)
+# from .routers.cam_adaptive_benchmark_router import (
+#     router as cam_adaptive_benchmark_router,
+# )
+cam_adaptive_benchmark_router = None
 # REMOVED: Consolidated into /api/cam/fret_slots (January 2026)
 # from .routers.cam_fret_slots_export_router import router as cam_fret_slots_export_router
 # REMOVED: Consolidated into /api/cam/risk (January 2026)
@@ -828,9 +832,10 @@ if rmos_history_router:
 app.include_router(
     cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"]
 )  # No consolidated equivalent
-app.include_router(
-    cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"]
-)  # No consolidated equivalent
+if cam_smoke_v155_router:
+    app.include_router(
+        cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"]
+    )  # No consolidated equivalent
 app.include_router(
     gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"]
 )  # No consolidated equivalent
@@ -1050,9 +1055,10 @@ if job_intelligence_router:
     )
 
 # Wave 12: CAM Extensions + Polygon (4 - legacy removed January 2026)
-app.include_router(
-    cam_adaptive_benchmark_router, prefix="/api", tags=["CAM", "Benchmark"]
-)
+if cam_adaptive_benchmark_router:
+    app.include_router(
+        cam_adaptive_benchmark_router, prefix="/api", tags=["CAM", "Benchmark"]
+    )
 # REMOVED: cam_fret_slots_export_router → /api/cam/fret_slots (consolidated)
 # REMOVED: cam_risk_aggregate_router → /api/cam/risk (consolidated)
 # REMOVED: compare_risk_aggregate_router → /api/compare/risk (consolidated)
