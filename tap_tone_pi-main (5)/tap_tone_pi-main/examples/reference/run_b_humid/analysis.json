@@ -1,0 +1,20 @@
+{
+  "schema_version": "analysis_v1",
+  "label": "humid_24h",
+  "sample_rate": 48000,
+  "dominant_hz": 182.0,
+  "peaks": [
+    {"freq_hz": 182.0, "magnitude": 0.79, "label": "Mode 1"},
+    {"freq_hz": 305.5, "magnitude": 0.54, "label": "Mode 2"},
+    {"freq_hz": 489.0, "magnitude": 0.38, "label": "Mode 3"}
+  ],
+  "rms": 0.031,
+  "clipped": false,
+  "confidence": 0.89,
+  "ts_utc": "2026-01-16T14:45:00Z",
+  "environment": {
+    "temp_c": 22.0,
+    "rh_pct": 65.0
+  },
+  "notes": "After 24h exposure at 65% RH humidity chamber"
+}

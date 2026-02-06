@@ -1,0 +1,22 @@
+name: logic-creep-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  no-logic-creep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check for forbidden imports
+        run: |
+          set -e
+          echo "Scanning for forbidden advisory imports and ToolBox coupling"
+          ! grep -RInE "(advisory|ToolBox|services/api/app)" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=node_modules . || (echo "Forbidden references found" && exit 1)
+      - name: Enforce write scope
+        run: |
+          set -e
+          echo "Ensuring writes are scoped to modes/, schemas/, docs/, examples/, ci/"
+          echo "This is a placeholder; integrate with your CI policy as needed."

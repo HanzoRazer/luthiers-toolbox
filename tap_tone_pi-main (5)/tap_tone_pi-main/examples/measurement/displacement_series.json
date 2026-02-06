@@ -1,0 +1,7 @@
+{
+  "artifact_type": "displacement_series",
+  "unit": "mm",
+  "sample_rate_hz": 20,
+  "ts_utc_start": "2025-12-29T00:00:00Z",
+  "data": [[0.0, 0.0], [0.05, 0.03], [0.1, 0.06]]
+}

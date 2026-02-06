@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/phase2_session_meta.schema.json",
+  "title": "Phase2SessionMeta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "created_at_utc", "phase", "channel_roles"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "phase2_session_meta_v1" },
+    "phase": { "type": "integer", "const": 2 },
+    "created_at_utc": {
+      "type": "string",
+      "description": "ISO-8601 UTC timestamp"
+    },
+    "operator": { "type": "string" },
+    "instrument_id": { "type": "string" },
+    "build_stage": { "type": "string" },
+    "notes": { "type": "string" },
+
+    "channel_roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ch0", "ch1"],
+      "properties": {
+        "ch0": { "type": "string", "enum": ["reference"] },
+        "ch1": { "type": "string", "enum": ["roving"] }
+      }
+    },
+
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sample_rate_hz": { "type": "integer", "minimum": 8000 },
+        "seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "window": { "type": "string", "enum": ["hann", "hamming", "blackman", "rect"] },
+        "fft_n": { "type": "integer", "minimum": 256 }
+      }
+    },
+
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "temp_c": { "type": "number" },
+        "humidity_rh": { "type": "number" }
+      }
+    }
+  }
+}

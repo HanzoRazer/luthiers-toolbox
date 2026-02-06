@@ -1,0 +1,9 @@
+{
+  "artifact_type": "manifest",
+  "ts_utc": "2025-12-28T01:02:03Z",
+  "rig": {"fixture":"3-point","span_mm":400},
+  "artifacts":[
+    {"path":"examples/measurement/tap_tone.json","sha256":"deadbeef","size":200},
+    {"path":"examples/measurement/bending_test.json","sha256":"deadbeef","size":180}
+  ]
+}

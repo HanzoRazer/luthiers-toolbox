@@ -1,0 +1,17 @@
+{
+  "port": "COM4",
+  "baud": 115200,
+  "timeout_s": 0.2,
+  "unit": "N",
+  "parse": {
+    "kind": "csv_idx",
+    "index": 0
+  },
+  "calibration": {
+    "kind": "linear",
+    "a": 1.00,
+    "b": 0.00
+  },
+  "sample_rate_hz": 50,
+  "duration_s": 10
+}

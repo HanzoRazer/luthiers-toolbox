@@ -260,7 +260,9 @@ from .routers.art.root_art_router import router as root_art_router
 # =============================================================================
 # MUSIC AXIS (Option C) - Replaces Smart Guitar Temperaments
 # =============================================================================
-from .routers.music import router as music_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (9 routes)
+# from .routers.music import router as music_router
+music_router = None
 # legacy_redirects_router: REMOVED (January 2026)
 # Legacy 308 redirects for smart-guitar/temperaments had zero frontend consumers.
 # See deprecation_registry.json for audit trail.
@@ -327,11 +329,14 @@ from .routers.instrument_router import router as instrument_router
 # from .routers.cam_risk_router import router as cam_risk_router
 from .routers.job_risk_router import router as job_risk_router
 
-try:
-    from .routers.learn_router import router as learn_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: learn_router (%s)", e)
-    learn_router = None
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+# try:
+#     from .routers.learn_router import router as learn_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: learn_router (%s)", e)
+#     learn_router = None
+learn_router = None
+
 try:
     from .routers.learned_overrides_router import router as learned_overrides_router
 except ImportError as e:
@@ -342,6 +347,13 @@ from .routers.cam_backup_router import router as cam_backup_router
 # =============================================================================
 # WAVE 11: ANALYTICS + PROBE + LTB CALCULATOR + CAM TOOLS (8 routers)
 # =============================================================================
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+# try:
+#     from .routers.dashboard_router import router as dashboard_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: dashboard_router (%s)", e)
+#     dashboard_router = None
+dashboard_router = None
 try:
     from .routers.analytics_router import router as analytics_router
 except ImportError as e:
@@ -356,11 +368,12 @@ from .routers.probe_router import router as probe_router
 # Consolidated into calculators_consolidated_router:
 # from .routers.ltb_calculator_router import router as ltb_calculator_router
 
-try:
-    from .routers.dashboard_router import router as dashboard_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: dashboard_router (%s)", e)
-    dashboard_router = None
+# WP-2 2026-02-06: dashboard_router disabled above - no frontend usage detected
+# try:
+#     from .routers.dashboard_router import router as dashboard_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: dashboard_router (%s)", e)
+#     dashboard_router = None
 from .routers.cam_settings_router import router as cam_settings_router
 # REMOVED: Consolidated into /api/cam/toolpath/biarc (January 2026)
 # from .routers.cam_biarc_router import router as cam_biarc_router
@@ -842,11 +855,13 @@ app.include_router(
 )  # → /api/art/* (prefix built-in)
 
 # Music Axis (Option C) - Global temperament/tuning endpoints
-app.include_router(
-    music_router,
-    prefix="/api/music",
-    tags=["Music", "Temperaments"],
-)  # -> /api/music/temperament/*
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if music_router:
+    app.include_router(
+        music_router,
+        prefix="/api/music",
+        tags=["Music", "Temperaments"],
+    )  # -> /api/music/temperament/*
 
 # Legacy 308 Redirects: REMOVED (January 2026)
 # All legacy redirect routers deleted. Zero frontend consumers remain.
@@ -1171,11 +1186,12 @@ except ImportError as e:
 # Manufacturing-only telemetry from Smart Guitar devices.
 # Enforces boundary contract: NO player/pedagogy data allowed.
 # =============================================================================
-try:
-    from .smart_guitar_telemetry import telemetry_router as sg_telemetry_router
-    app.include_router(sg_telemetry_router, prefix="/api/telemetry", tags=["Smart Guitar", "Telemetry"])
-except ImportError as e:
-    _log.warning("Optional router unavailable: sg_telemetry_router (%s)", e)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (8 routes)
+# try:
+#     from .smart_guitar_telemetry import telemetry_router as sg_telemetry_router
+#     app.include_router(sg_telemetry_router, prefix="/api/telemetry", tags=["Smart Guitar", "Telemetry"])
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: sg_telemetry_router (%s)", e)
 
 # =============================================================================
 # WAVE 24: COST ATTRIBUTION

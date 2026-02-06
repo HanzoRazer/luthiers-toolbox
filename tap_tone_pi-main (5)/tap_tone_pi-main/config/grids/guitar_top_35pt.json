@@ -1,0 +1,61 @@
+{
+  "$schema": "../docs/schemas/geometry.schema.json",
+  "description": "Example 5x7 grid for guitar soundboard ODS measurement",
+  "instrument": "guitar_top",
+  "origin": {
+    "description": "Bridge saddle centerpoint",
+    "x": 0,
+    "y": 0
+  },
+  "unit": "mm",
+  "reference_mic": {
+    "description": "Fixed microphone position (channel 0)",
+    "x": -50,
+    "y": 100,
+    "z": 30
+  },
+  "points": [
+    {"id": "A1", "x": -80, "y": 20},
+    {"id": "A2", "x": -40, "y": 20},
+    {"id": "A3", "x": 0, "y": 20},
+    {"id": "A4", "x": 40, "y": 20},
+    {"id": "A5", "x": 80, "y": 20},
+    
+    {"id": "B1", "x": -80, "y": 60},
+    {"id": "B2", "x": -40, "y": 60},
+    {"id": "B3", "x": 0, "y": 60},
+    {"id": "B4", "x": 40, "y": 60},
+    {"id": "B5", "x": 80, "y": 60},
+    
+    {"id": "C1", "x": -80, "y": 100},
+    {"id": "C2", "x": -40, "y": 100},
+    {"id": "C3", "x": 0, "y": 100},
+    {"id": "C4", "x": 40, "y": 100},
+    {"id": "C5", "x": 80, "y": 100},
+    
+    {"id": "D1", "x": -80, "y": 140},
+    {"id": "D2", "x": -40, "y": 140},
+    {"id": "D3", "x": 0, "y": 140},
+    {"id": "D4", "x": 40, "y": 140},
+    {"id": "D5", "x": 80, "y": 140},
+    
+    {"id": "E1", "x": -80, "y": 180},
+    {"id": "E2", "x": -40, "y": 180},
+    {"id": "E3", "x": 0, "y": 180},
+    {"id": "E4", "x": 40, "y": 180},
+    {"id": "E5", "x": 80, "y": 180},
+    
+    {"id": "F1", "x": -80, "y": 220},
+    {"id": "F2", "x": -40, "y": 220},
+    {"id": "F3", "x": 0, "y": 220},
+    {"id": "F4", "x": 40, "y": 220},
+    {"id": "F5", "x": 80, "y": 220},
+    
+    {"id": "G1", "x": -80, "y": 260},
+    {"id": "G2", "x": -40, "y": 260},
+    {"id": "G3", "x": 0, "y": 260},
+    {"id": "G4", "x": 40, "y": 260},
+    {"id": "G5", "x": 80, "y": 260}
+  ],
+  "notes": "35-point grid covering lower bout. Row A near bridge, row G near soundhole. 40mm spacing."
+}

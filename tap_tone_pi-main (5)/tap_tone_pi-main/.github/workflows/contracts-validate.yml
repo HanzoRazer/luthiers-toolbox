@@ -1,0 +1,80 @@
+# Contract Schema Validation — Validate output artifacts against contracts/schemas
+#
+# This workflow validates any JSON artifacts in out/ against the contract schemas.
+# Part of the CI minimum bar defined in GOVERNANCE.md §8.
+
+name: contracts-validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "contracts/schemas/**"
+      - "scripts/validate_schemas.py"
+      - "out/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "contracts/schemas/**"
+      - "scripts/validate_schemas.py"
+  workflow_dispatch:  # Allow manual runs
+
+jobs:
+  validate-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: Validate contract schemas are well-formed
+        run: |
+          python - << 'PY'
+          import json
+          from pathlib import Path
+
+          schemas = list(Path('contracts/schemas').glob('*.schema.json'))
+          if not schemas:
+              raise SystemExit("No contract schemas found in contracts/schemas/")
+
+          for schema_path in schemas:
+              try:
+                  data = json.loads(schema_path.read_text())
+                  assert '$schema' in data, f"Missing $schema in {schema_path}"
+                  print(f"✅ {schema_path.name}")
+              except Exception as e:
+                  raise SystemExit(f"❌ {schema_path}: {e}")
+
+          print(f"\n✅ Validated {len(schemas)} contract schemas")
+          PY
+
+      - name: Validate example artifacts (if present)
+        run: |
+          if [ -d "examples/measurement" ]; then
+            echo "Validating example artifacts..."
+            python scripts/validate_schemas.py \
+              --out-root examples/measurement \
+              --schemas-root contracts/schemas || true
+          else
+            echo "No examples/measurement directory found, skipping."
+          fi
+
+      - name: Validate output artifacts (if present)
+        run: |
+          if [ -d "out" ]; then
+            echo "Validating output artifacts..."
+            python scripts/validate_schemas.py \
+              --out-root out \
+              --schemas-root contracts/schemas
+          else
+            echo "No out/ directory found, skipping."
+          fi
