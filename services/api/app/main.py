@@ -890,7 +890,8 @@ app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry
 # Saw Lab (3)
 if saw_debug_router:
     app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
-app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 app.include_router(
     saw_batch_router
 )  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
@@ -1045,8 +1046,9 @@ if probe_router:
 # app.include_router(
 #     ltb_calculator_router, prefix="", tags=["Calculator", "LTB"]
 # )  # Router has /api/calculators prefix
-if dashboard_router:
-    app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if dashboard_router:
+#     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
 # cam_biarc_router → /api/cam/toolpath/biarc (consolidated)
 if job_intelligence_router:
@@ -1185,10 +1187,12 @@ if cam_router:
 
 # Phase 5: Consolidated Art Studio rosette routes
 # These provide the new organized endpoints alongside legacy routes for transition
-if rosette_jobs_router:
-    app.include_router(rosette_jobs_router, tags=["Art Studio", "Rosette Jobs"])
-if rosette_compare_router:
-    app.include_router(rosette_compare_router, tags=["Art Studio", "Rosette Compare"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if rosette_jobs_router:
+#     app.include_router(rosette_jobs_router, tags=["Art Studio", "Rosette Jobs"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if rosette_compare_router:
+#     app.include_router(rosette_compare_router, tags=["Art Studio", "Rosette Compare"])
 if rosette_pattern_router_v2:
     app.include_router(
         rosette_pattern_router_v2, tags=["Art Studio", "Rosette Patterns v2"]
@@ -1313,7 +1317,8 @@ if rmos_acoustics_router:
 # =============================================================================
 try:
     from .cost_attribution import cost_router
-    app.include_router(cost_router, tags=["Cost Attribution"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(cost_router, tags=["Cost Attribution"])
 except ImportError as e:
     _log.warning("Optional router unavailable: cost_router (%s)", e)
 
@@ -1329,7 +1334,8 @@ except ImportError as e:
 # =============================================================================
 try:
     from .ai_context_adapter.routes import router as ai_context_adapter_router
-    app.include_router(ai_context_adapter_router, tags=["AI Context"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(ai_context_adapter_router, tags=["AI Context"])
 except ImportError as e:
     _log.warning("Optional router unavailable: ai_context_adapter_router (%s)", e)
 
