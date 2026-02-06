@@ -52,7 +52,9 @@ from .middleware.deprecation import DeprecationHeadersMiddleware
 
 # AI availability (for health endpoint)
 from .ai.availability import get_ai_status
-from .meta.router_truth_routes import router as routing_truth_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
+# from .meta.router_truth_routes import router as routing_truth_router
+routing_truth_router = None
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
@@ -391,7 +393,9 @@ try:
 except ImportError as e:
     _log.warning("Optional router unavailable: learned_overrides_router (%s)", e)
     learned_overrides_router = None
-from .routers.cam_backup_router import router as cam_backup_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (3 routes)
+# from .routers.cam_backup_router import router as cam_backup_router
+cam_backup_router = None
 
 # =============================================================================
 # WAVE 11: ANALYTICS + PROBE + LTB CALCULATOR + CAM TOOLS (8 routers)
@@ -427,7 +431,9 @@ probe_router = None
 # except ImportError as e:
 #     _log.warning("Optional router unavailable: dashboard_router (%s)", e)
 #     dashboard_router = None
-from .routers.cam_settings_router import router as cam_settings_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (3 routes)
+# from .routers.cam_settings_router import router as cam_settings_router
+cam_settings_router = None
 # REMOVED: Consolidated into /api/cam/toolpath/biarc (January 2026)
 # from .routers.cam_biarc_router import router as cam_biarc_router
 # WP-2 2026-02-06: DISABLED - zero frontend usage
@@ -465,7 +471,9 @@ pipeline_preset_router = None
 # WAVE 13 (FINAL): ART PRESETS + CAM UTILITIES + COMPARE + MONITOR (9 routers)
 # =============================================================================
 from .routers.art_presets_router import router as art_presets_router
-from .routers.cam_compare_diff_router import router as cam_compare_diff_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
+# from .routers.cam_compare_diff_router import router as cam_compare_diff_router
+cam_compare_diff_router = None
 # WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
 # from .routers.cam_dxf_adaptive_router import router as cam_dxf_adaptive_router
 cam_dxf_adaptive_router = None
@@ -1050,7 +1058,8 @@ if learned_overrides_router:
     app.include_router(
         learned_overrides_router, prefix="/api", tags=["Feeds", "Learned"]
     )
-app.include_router(cam_backup_router, prefix="/api", tags=["CAM", "Backup"])
+if cam_backup_router:
+    app.include_router(cam_backup_router, prefix="/api", tags=["CAM", "Backup"])
 
 # Wave 11: Analytics + Probe + LTB Calculator + CAM Tools (8)
 if analytics_router:
@@ -1068,7 +1077,8 @@ if probe_router:
 # WP-2 2026-02-06: DISABLED - zero frontend usage
 # if dashboard_router:
 #     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
-app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
+if cam_settings_router:
+    app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
 # cam_biarc_router → /api/cam/toolpath/biarc (consolidated)
 if job_intelligence_router:
     app.include_router(
@@ -1095,7 +1105,8 @@ if pipeline_preset_router:
 
 # Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (9)
 app.include_router(art_presets_router, prefix="/api", tags=["Art", "Presets"])
-app.include_router(cam_compare_diff_router, prefix="/api", tags=["CAM", "Compare"])
+if cam_compare_diff_router:
+    app.include_router(cam_compare_diff_router, prefix="/api", tags=["CAM", "Compare"])
 # WP-2 2026-02-06: DISABLED - zero frontend usage
 if cam_dxf_adaptive_router:
     app.include_router(cam_dxf_adaptive_router, prefix="/api", tags=["CAM", "DXF"])
@@ -1409,7 +1420,8 @@ except ImportError as e:
 # META / INTROSPECTION
 # =============================================================================
 # Routing truth endpoint for confirming what's actually mounted after deploy
-app.include_router(routing_truth_router, tags=["_meta"])
+if routing_truth_router:
+    app.include_router(routing_truth_router, tags=["_meta"])
 
 # Governance stats endpoint (H5.1) - measure legacy/shadow usage before deletions
 if governance_router:
