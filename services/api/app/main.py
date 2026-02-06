@@ -952,9 +952,11 @@ app.include_router(
 app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 # Consolidated into simulation_consolidated_router:
 # app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
-app.include_router(
-    compare_automation_router, prefix="/api", tags=["Compare", "Automation"]
-)
+# NOTE: compare_automation_router disabled - route duplicated by compare_router (Wave 19)
+# Disabled: 2026-02-05 (WP-2: API Surface Reduction)
+# app.include_router(
+#     compare_automation_router, prefix="/api", tags=["Compare", "Automation"]
+# )
 # REMOVED: compare_risk_bucket_export_router → /api/compare/risk (consolidated)
 app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
 app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
@@ -1012,8 +1014,11 @@ if rmos_feasibility_router:
     app.include_router(rmos_feasibility_router, tags=["RMOS", "Feasibility"])
 if rmos_toolpaths_router:
     app.include_router(rmos_toolpaths_router, tags=["RMOS", "Toolpaths"])
-if rmos_runs_api_router:
-    app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
+# NOTE: rmos_runs_api_router disabled - routes duplicated by rmos_runs_router (v2)
+# Unique endpoint /runs/{run_id}/download should be added to v2 if needed
+# Disabled: 2026-02-05 (WP-2: API Surface Reduction)
+# if rmos_runs_api_router:
+#     app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
 if rmos_workflow_router:
     app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
 
