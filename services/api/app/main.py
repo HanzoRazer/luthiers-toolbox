@@ -660,13 +660,16 @@ except ImportError as e:
     rmos_runs_v2_query_router = None
 
 # RMOS AI Advisory Router (CLI integration with ai-integrator)
-try:
-    from .rmos.ai_advisory.router import router as rmos_ai_advisory_router
-
-    _log.info("RMOS AI Advisory router: CLI integration enabled")
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_ai_advisory_router (%s)", e)
-    rmos_ai_advisory_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage (3 routes)
+# Frontend uses /ai/advisories/request but router is mounted at /api/rmos/advisories/request
+# try:
+#     from .rmos.ai_advisory.router import router as rmos_ai_advisory_router
+#
+#     _log.info("RMOS AI Advisory router: CLI integration enabled")
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_ai_advisory_router (%s)", e)
+#     rmos_ai_advisory_router = None
+rmos_ai_advisory_router = None
 
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
@@ -1176,8 +1179,9 @@ if rmos_runs_v2_query_router:
     app.include_router(rmos_runs_v2_query_router, prefix="/api/rmos", tags=["RMOS", "Runs v2 Query"])
 
 # RMOS AI Advisory Router (CLI integration with ai-integrator)
-if rmos_ai_advisory_router:
-    app.include_router(rmos_ai_advisory_router, prefix="/api/rmos", tags=["RMOS", "AI Advisory"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if rmos_ai_advisory_router:
+#     app.include_router(rmos_ai_advisory_router, prefix="/api/rmos", tags=["RMOS", "AI Advisory"])
 
 # Wave 17: Workflow Sessions (SQLite persistence layer)
 if workflow_sessions_router:
