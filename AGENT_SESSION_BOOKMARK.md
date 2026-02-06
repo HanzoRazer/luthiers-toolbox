@@ -141,3 +141,34 @@ ls -la server/
 ---
 
 *Updated 2026-02-05: All 15 questions resolved. Ready for WP execution.*
+
+## WP Execution Log (2026-02-05)
+
+| WP | Task | Status | Commit |
+|----|------|--------|--------|
+| WP-0 | Delete `streamlit_demo/` | ✅ Already gitignored | N/A (not tracked) |
+| WP-0 | Delete `client/` | ✅ Already deleted | Prior commits |
+| WP-0 | Delete `__ARCHIVE__/` | ✅ Doesn't exist | N/A |
+| WP-0 | Delete `server/` | ✅ Doesn't exist | N/A |
+| WP-0 | Delete backup files | ✅ Already removed | `8cb578b` |
+| WP-1 1A | Fix bare `except:` | ✅ Already fixed | `fa8d1e2` |
+| WP-1 1B | Security fix (token expiry) | ✅ Fixed | `db208c0` |
+| WP-4 | Fix README coverage claims | ✅ Fixed | `37a5fdd` |
+| WP-X | Archive `__REFERENCE__/` | ⏳ Pending | — |
+
+### Key Findings
+
+1. **WP-0 was mostly complete** — Dead code already removed in prior commits
+2. **WP-1 Tier 1A was complete** — All 97 bare `except:` fixed in `fa8d1e2`
+3. **WP-1 Tier 1B** — Fixed critical security bypass in override token expiry
+4. **WP-4** — Fixed false 100% coverage claims in README
+
+### Remaining Work
+
+- **`__REFERENCE__/`**: 5,324 files still need external archival before deletion
+- **Test coverage**: 36% actual (target should be higher before ship)
+- **Remaining `except Exception`**: 232 in CAM/RMOS code (non-blocking for now)
+
+---
+
+*Execution Log Updated: 2026-02-05*
