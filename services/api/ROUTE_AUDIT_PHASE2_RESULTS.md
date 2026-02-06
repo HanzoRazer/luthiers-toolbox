@@ -3,10 +3,10 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 265
+**Current Route Count:** 259
 **Target:** <300
-**Reduction Achieved:** 265 routes (50%)
-**Target Achieved:** Yes (35 under target)
+**Reduction Achieved:** 271 routes (51%)
+**Target Achieved:** Yes (41 under target)
 
 ---
 
@@ -118,6 +118,11 @@
 | Router | Prefix | Status |
 |--------|--------|--------|
 | `cam_post_v155_router` | `/api/cam/post` | DISABLED (frontend uses /api/cam/posts, not /api/cam/post) |
+
+### Batch 19 - 1 router, -6 routes (Feeds tooling path mismatch)
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `feeds_router` | `/api/feeds/tooling/*` | DISABLED (frontend uses /api/feeds/learned/*, not /api/feeds/tooling/*) |
 
 ### Batch 16 - 6 sub-routers, -8 routes (RMOS runs batch endpoints)
 | Router | Prefix | Status |
@@ -256,10 +261,11 @@ cd packages/client && npm run type-check
 | Batch 16 | 6 | 8 |
 | Batch 17 | 1 | 6 |
 | Batch 18 | 1 | 2 |
-| **Total** | **61** | **265** |
+| Batch 19 | 1 | 6 |
+| **Total** | **62** | **271** |
 
-**Route Reduction: 530 → 265 (50% reduction)**
-**Target <300: ACHIEVED (35 under target)**
+**Route Reduction: 530 → 259 (51% reduction)**
+**Target <300: ACHIEVED (41 under target)**
 
 ---
 
