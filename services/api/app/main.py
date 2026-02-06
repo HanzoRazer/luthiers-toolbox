@@ -137,7 +137,9 @@ _root_logger.setLevel(logging.INFO)
 # Consolidated: sim routers → simulation_consolidated_router
 # from .routers.cam_sim_router import router as sim_router
 from .routers.simulation_consolidated_router import router as simulation_router
-from .routers.feeds_router import router as feeds_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (frontend uses /api/feeds/learned/*, not /api/feeds/tooling/*)
+# from .routers.feeds_router import router as feeds_router
+feeds_router = None
 from .routers.geometry_router import router as geometry_router
 from .routers.tooling_router import router as tooling_router
 from .routers.adaptive_router import router as adaptive_router
@@ -825,7 +827,8 @@ def _startup_db_migrations() -> None:
 # Core CAM (11)
 # Consolidated simulation router (combines cam_sim, cam_simulate, sim_metrics)
 app.include_router(simulation_router, prefix="/api/cam/sim", tags=["CAM Simulation"])
-app.include_router(feeds_router, prefix="/api/feeds", tags=["Feeds & Speeds"])
+if feeds_router:
+    app.include_router(feeds_router, prefix="/api/feeds", tags=["Feeds & Speeds"])
 app.include_router(geometry_router, prefix="/api/geometry", tags=["Geometry"])
 app.include_router(tooling_router, prefix="/api/tooling", tags=["Tooling"])
 app.include_router(adaptive_router, prefix="/api", tags=["Adaptive Pocketing"])
