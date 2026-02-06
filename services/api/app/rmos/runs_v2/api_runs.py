@@ -1295,6 +1295,11 @@ def delete_run_endpoint(
 
 # =============================================================================
 # Variant Review, Rating, and Promotion (Product Bundle)
+# WP-2 2026-02-05: Duplicates of advisory_router.py endpoints removed.
+# Canonical endpoints are in advisory_router.py:
+# - POST /{run_id}/advisory/{advisory_id}/review
+# - POST /{run_id}/advisory/{advisory_id}/promote
+# The list_variants endpoint is unique here.
 # =============================================================================
 
 from .schemas_variant_review import (
@@ -1336,59 +1341,61 @@ def get_advisory_variants(run_id: str):
     return list_variants(run_id)
 
 
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/review",
-    response_model=AdvisoryVariantReviewRecord,
-)
-def post_advisory_variant_review(
-    run_id: str,
-    advisory_id: str,
-    payload: AdvisoryVariantReviewRequest,
-    request: Request,
-):
-    """
-    Save rating and notes for an advisory variant.
+# WP-2 2026-02-05: Commented out - duplicate of advisory_router.py endpoints
+# @router.post(
+#     "/{run_id}/advisory/{advisory_id}/review",
+#     response_model=AdvisoryVariantReviewRecord,
+# )
+# def post_advisory_variant_review(
+#     run_id: str,
+#     advisory_id: str,
+#     payload: AdvisoryVariantReviewRequest,
+#     request: Request,
+# ):
+#     """
+#     Save rating and notes for an advisory variant.
+#
+#     This stores the review in RunArtifact.advisory_reviews.
+#     The advisory blob itself is never mutated.
+#
+#     Rating: 1-5 stars (optional)
+#     Notes: Free-form review text (optional, max 4000 chars)
+#
+#     User identity extracted from x-user-id header.
+#     """
+#     return save_review(run_id, advisory_id, payload, request)
 
-    This stores the review in RunArtifact.advisory_reviews.
-    The advisory blob itself is never mutated.
 
-    Rating: 1-5 stars (optional)
-    Notes: Free-form review text (optional, max 4000 chars)
-
-    User identity extracted from x-user-id header.
-    """
-    return save_review(run_id, advisory_id, payload, request)
-
-
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/promote", response_model=PromoteVariantResponse
-)
-def post_promote_advisory_variant(
-    run_id: str,
-    advisory_id: str,
-    payload: PromoteVariantRequest,
-    principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
-):
-    """
-    Promote an advisory variant to a manufacturing candidate.
-
-    Requires authenticated user with role: admin, operator, or engineer.
-    Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
-
-    SVG bind-time policy:
-    - BLOCK: script, foreignObject, image elements
-    - ALLOW + YELLOW: text elements (requires outline conversion)
-    - ALLOW + GREEN: path/geometry only
-
-    Non-SVG files get ALLOW + YELLOW with lower score.
-
-    Promotion is recorded in manufacturing_candidates list on the run.
-
-    Returns 401 if not authenticated.
-    Returns 403 if role insufficient.
-    Returns 409 if already promoted.
-    """
-    return promote_variant(run_id, advisory_id, payload, principal)
+# WP-2 2026-02-05: Commented out - duplicate of advisory_router.py endpoints
+# @router.post(
+#     "/{run_id}/advisory/{advisory_id}/promote", response_model=PromoteVariantResponse
+# )
+# def post_promote_advisory_variant(
+#     run_id: str,
+#     advisory_id: str,
+#     payload: PromoteVariantRequest,
+#     principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
+# ):
+#     """
+#     Promote an advisory variant to a manufacturing candidate.
+#
+#     Requires authenticated user with role: admin, operator, or engineer.
+#     Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
+#
+#     SVG bind-time policy:
+#     - BLOCK: script, foreignObject, image elements
+#     - ALLOW + YELLOW: text elements (requires outline conversion)
+#     - ALLOW + GREEN: path/geometry only
+#
+#     Non-SVG files get ALLOW + YELLOW with lower score.
+#
+#     Promotion is recorded in manufacturing_candidates list on the run.
+#
+#     Returns 401 if not authenticated.
+#     Returns 403 if role insufficient.
+#     Returns 409 if already promoted.
+#     """
+#     return promote_variant(run_id, advisory_id, payload, principal)
 
 
 @router.post(
@@ -1487,174 +1494,15 @@ def post_bulk_promote_advisory_variants(
 
 
 # =============================================================================
-# Variant Rejection (Product Bundle)
+# WP-2 2026-02-05: DUPLICATE BLOCKS REMOVED
+# The following sections were accidentally duplicated (copy-paste error).
+# The canonical endpoints are in the "Variant Review, Rating, and Promotion"
+# section at lines ~1296-1445.
 # =============================================================================
 
-from .schemas_advisory_reject import (
-    RejectVariantRequest,
-    AdvisoryVariantRejectionRecord,
-)
-from .advisory_variant_state import write_rejection, clear_rejection
-
-
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/reject",
-    response_model=AdvisoryVariantRejectionRecord,
-    summary="Reject an advisory variant with a reason code.",
-)
-def post_reject_advisory_variant(
-    run_id: str,
-    advisory_id: str,
-    payload: RejectVariantRequest,
-):
-    """
-    Reject an advisory variant with a structured reason code.
-
-    This creates an explicit rejection record separate from the immutable
-    RunArtifact. Rejection records are stored in a simple per-run directory
-    structure for easy debugging and audit.
-
-    Reason codes (tight vocabulary):
-    - GEOMETRY_UNSAFE: Contains unsafe geometry for CNC
-    - TEXT_REQUIRES_OUTLINE: Text elements need outline conversion
-    - AESTHETIC: Rejected for aesthetic reasons
-    - DUPLICATE: Duplicate of another variant
-    - OTHER: Other reason (use reason_detail for specifics)
-
-    Optional fields:
-    - reason_detail: Short clarification (max 500 chars)
-    - operator_note: Longer note for audit trail (max 2000 chars)
-
-    Rejecting an already-rejected variant overwrites the previous rejection.
-    """
-    return write_rejection(run_id=run_id, advisory_id=advisory_id, req=payload)
-
-
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/unreject",
-    response_model=dict,
-    summary="Undo rejection of an advisory variant (clear rejection record).",
-)
-def post_unreject_advisory_variant(run_id: str, advisory_id: str):
-    """
-    Clear/undo a rejection for an advisory variant.
-
-    This removes the rejection record, returning the variant to its
-    previous status (NEW or REVIEWED depending on whether it has ratings/notes).
-
-    Returns:
-    - run_id: The run ID
-    - advisory_id: The advisory ID
-    - cleared: True if a rejection was cleared, False if none existed
-    """
-    existed = clear_rejection(run_id=run_id, advisory_id=advisory_id)
-    return {"run_id": run_id, "advisory_id": advisory_id, "cleared": existed}
-
-
-# =============================================================================
-# Bulk Promote (Product Bundle)
-# =============================================================================
-
-from .schemas_variant_review import (
-    BulkPromoteRequest,
-    BulkPromoteResponse,
-)
-from .variant_review_service import bulk_promote_variants
-
-
-@router.post("/{run_id}/advisory/bulk-promote", response_model=BulkPromoteResponse)
-def post_bulk_promote_advisory_variants(
-    run_id: str,
-    payload: BulkPromoteRequest,
-    principal: Principal = Depends(require_roles("admin", "operator", "engineer")),
-):
-    """
-    Bulk-promote multiple advisory variants to manufacturing candidates.
-
-    Requires authenticated user with role: admin, operator, or engineer.
-    Auth via JWT Bearer token, session cookie, or x-user-role header (dev mode).
-
-    Each variant is evaluated against the SVG bind-time policy:
-    - BLOCK: script, foreignObject, image elements
-    - ALLOW + YELLOW: text elements (requires outline conversion)
-    - ALLOW + GREEN: path/geometry only
-
-    Processing continues on individual failures to maximize throughput.
-
-    Returns aggregate statistics:
-    - total: Number of advisory IDs submitted
-    - succeeded: Number successfully promoted
-    - failed: Number that failed (not found, already promoted, etc.)
-    - blocked: Number blocked by bind-time policy
-
-    Also returns per-item results with decision, risk_level, and any error.
-    """
-    return bulk_promote_variants(run_id, payload, principal)
-
-
-# =============================================================================
-# Variant Rejection (Product Bundle)
-# =============================================================================
-
-from .schemas_advisory_reject import (
-    RejectVariantRequest,
-    AdvisoryVariantRejectionRecord,
-)
-from .advisory_variant_state import write_rejection, clear_rejection
-
-
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/reject",
-    response_model=AdvisoryVariantRejectionRecord,
-    summary="Reject an advisory variant with a reason code.",
-)
-def post_reject_advisory_variant(
-    run_id: str,
-    advisory_id: str,
-    payload: RejectVariantRequest,
-):
-    """
-    Reject an advisory variant with a structured reason code.
-
-    This creates an explicit rejection record separate from the immutable
-    RunArtifact. Rejection records are stored in a simple per-run directory
-    structure for easy debugging and audit.
-
-    Reason codes (tight vocabulary):
-    - GEOMETRY_UNSAFE: Contains unsafe geometry for CNC
-    - TEXT_REQUIRES_OUTLINE: Text elements need outline conversion
-    - AESTHETIC: Rejected for aesthetic reasons
-    - DUPLICATE: Duplicate of another variant
-    - OTHER: Other reason (use reason_detail for specifics)
-
-    Optional fields:
-    - reason_detail: Short clarification (max 500 chars)
-    - operator_note: Longer note for audit trail (max 2000 chars)
-
-    Rejecting an already-rejected variant overwrites the previous rejection.
-    """
-    return write_rejection(run_id=run_id, advisory_id=advisory_id, req=payload)
-
-
-@router.post(
-    "/{run_id}/advisory/{advisory_id}/unreject",
-    response_model=dict,
-    summary="Undo rejection of an advisory variant (clear rejection record).",
-)
-def post_unreject_advisory_variant(run_id: str, advisory_id: str):
-    """
-    Clear/undo a rejection for an advisory variant.
-
-    This removes the rejection record, returning the variant to its
-    previous status (NEW or REVIEWED depending on whether it has ratings/notes).
-
-    Returns:
-    - run_id: The run ID
-    - advisory_id: The advisory ID
-    - cleared: True if a rejection was cleared, False if none existed
-    """
-    existed = clear_rejection(run_id=run_id, advisory_id=advisory_id)
-    return {"run_id": run_id, "advisory_id": advisory_id, "cleared": existed}
+# NOTE: Removed duplicate "Variant Rejection (Product Bundle)" section x2
+# NOTE: Removed duplicate "Bulk Promote (Product Bundle)" section x1
+# Total: 8 duplicate routes removed
 
 
 # =============================================================================
