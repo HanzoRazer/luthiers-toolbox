@@ -3,10 +3,10 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 306
+**Current Route Count:** 298
 **Target:** <300
-**Reduction Achieved:** 224 routes (42%)
-**Note:** analytics_router re-enabled after frontend path fix
+**Reduction Achieved:** 232 routes (44%)
+**Target Achieved:** Yes (2 under target)
 
 ---
 
@@ -171,14 +171,15 @@ These routers have confirmed frontend usage and must be retained:
 
 ---
 
-## Status
+## Target Achieved
 
-Current: 306 routes
+Current: 298 routes
 Target: <300
-Gap: 6 routes
+Under target by: 2 routes
 
-**Note:** Rather than disabling analytics_router, we fixed the frontend
-path mismatch so analytics functionality now works correctly.
+**Changes:**
+1. Fixed AnalyticsDashboard.vue API paths (analytics now works)
+2. Disabled 4 more zero-usage routers (batch 14)
 
 ### Remaining Options:
 
@@ -225,7 +226,8 @@ cd packages/client && npm run type-check
 | Batch 11 | 1 | 3 |
 | Batch 12 | 3 | 3 |
 | Batch 13 | 0 | 0 | (frontend fix, router re-enabled)
-| **Total** | **48** | **224** |
+| Batch 14 | 4 | 8 |
+| **Total** | **52** | **232** |
 
-**Route Reduction: 530 → 306 (42% reduction)**
-**Analytics: FIXED** (frontend now calls correct paths)
+**Route Reduction: 530 → 298 (44% reduction)**
+**Target <300: ACHIEVED**
