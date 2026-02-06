@@ -591,3 +591,73 @@ The receiving team can begin **WP-0** (dead code purge) and **WP-1 Tier 1A** (ba
 ---
 
 *This handoff is designed to be self-contained. A competent engineering team should be able to read these four documents, review the Q&A log, resolve the 10 open questions with the product owner, and begin execution without further input from the original developer.*
+
+---
+
+## 11. FINAL RESOLUTION — ALL QUESTIONS ANSWERED (2026-02-05)
+
+### Resolution Summary — COMPLETE
+
+| # | Question | Status | Final Answer |
+|---|----------|--------|--------------|
+| Q1 | Shipped product boundary | ✅ RESOLVED | Tiered by marketing. Owner's version: Smart Guitar + Audio Analyzer. |
+| Q2 | Second frontend consumer | ✅ RESOLVED | None. `streamlit_demo/` unused (Vue is superset). Delete both. |
+| Q3 | `client/` vs `packages/client/` | ✅ RESOLVED | `client/` is stale. Safe to delete. |
+| Q4 | Unsafe G-code ever generated | ✅ RESOLVED | No — never live tested on real CNC machines. |
+| Q5 | Simulation mandatory | ✅ RESOLVED | By marketing tier (feature flag). |
+| Q6 | Feeds/speeds validated | ✅ RESOLVED | Awaiting live test — pre-production. |
+| Q7 | Actual test coverage | ✅ RESOLVED | **36%** (measured). README "100%" claims are false. |
+| Q8 | Production deployment target | ✅ RESOLVED | Railway + Docker local. |
+| Q9 | Active users | ✅ RESOLVED | **Zero** — pre-production. Aggressive cleanup OK. |
+| Q10 | Staging environment | ✅ RESOLVED | N/A — main branch IS staging. |
+| Q11 | Domain knowledge | ✅ RESOLVED | Owner is domain expert. |
+| Q12 | Rollback strategy | ✅ RESOLVED | Git-based. |
+| Q13 | Cross-repo consumers | ✅ RESOLVED | Low risk — ToolBox is consumer, not provider. |
+| Q14 | Ship date | ✅ RESOLVED | **March 02, 2026** (to testers). |
+| Q15 | Score target | ✅ RESOLVED | **7.0/10** (revised from 6.3). |
+
+**15 of 15 resolved. ✅ ALL QUESTIONS ANSWERED.**
+
+---
+
+### Key Decisions
+
+**Product Strategy:**
+- Pre-production status: No live CNC tests, no external users
+- Marketing tiers established AFTER cleanup reaches 7.0/10
+- Tier repos exist with code: `ltb-express`, `ltb-pro`, `ltb-enterprise`
+
+**streamlit_demo/ Evaluation:**
+- Vue frontend is complete superset — all features exist with MORE functionality
+- **Decision:** Safe to delete, no unique code to preserve
+
+**__REFERENCE__/ Decision (Rule 5 Conflict):**
+- Option C selected: Archive externally, then delete
+- Timing: AFTER other WP fixes (WP-0 confirmed items, WP-1, WP-4)
+- Contains 5,324 files of historical reference
+
+**Confirmed WP-0 Deletions:**
+| Item | Status |
+|------|--------|
+| `streamlit_demo/` | ✅ DELETE |
+| `client/` | ✅ DELETE |
+| `__ARCHIVE__/` | ⏳ VERIFY FIRST |
+| `__REFERENCE__/` | ⏳ DEFERRED (archive first) |
+| `server/` | ⏳ VERIFY FIRST |
+
+---
+
+### Updated Timeline (March 02, 2026 Ship)
+
+| Week | Dates | Focus |
+|------|-------|-------|
+| 1 | Feb 5-12 | WP-0 (dead code) + WP-1 Tier 1A |
+| 2 | Feb 12-19 | WP-4 (docs/README) + WP-1 Tier 1B |
+| 3 | Feb 19-26 | WP-5 (Quick Cut) + polish |
+| 4 | Feb 26-Mar 2 | Buffer + __REFERENCE__ archive + ship |
+
+---
+
+*Handoff complete. All questions answered. Team can begin WP execution immediately.*
+
+*Updated: 2026-02-05*
