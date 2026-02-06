@@ -403,11 +403,15 @@ from .routers.cam_backup_router import router as cam_backup_router
 #     _log.warning("Optional router unavailable: dashboard_router (%s)", e)
 #     dashboard_router = None
 dashboard_router = None
-try:
-    from .routers.analytics_router import router as analytics_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: analytics_router (%s)", e)
-    analytics_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage (19 routes)
+# /api/patterns/* (6), /api/materials/* (6), /api/jobs/* (7) have no frontend callers
+# Frontend AnalyticsDashboard uses non-existent /api/analytics/* paths
+# try:
+#     from .routers.analytics_router import router as analytics_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: analytics_router (%s)", e)
+#     analytics_router = None
+analytics_router = None
 try:
     from .routers.advanced_analytics_router import router as advanced_analytics_router
 except ImportError as e:
