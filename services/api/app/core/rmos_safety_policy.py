@@ -214,14 +214,14 @@ def consume_override_token(token: str, action: str) -> Tuple[bool, str]:
     if ov.action != action:
         return False, f"Override token is not valid for action '{action}'."
 
-    # Expiry check
+    # Expiry check - fail closed on malformed dates (security: never skip validation)
     if ov.expires_at:
         try:
             exp = datetime.fromisoformat(ov.expires_at)
             if datetime.utcnow() > exp:
                 return False, "Override token has expired."
-        except Exception:
-            pass
+        except ValueError:
+            return False, "Override token has malformed expiry date."
 
     ov.used = True
     _override_tokens[token] = ov
