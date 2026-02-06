@@ -15,7 +15,9 @@ from fastapi import APIRouter
 from .baselines import router as baselines_router
 from .risk import router as risk_router
 from .lab import router as lab_router
-from .automation import router as automation_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .automation import router as automation_router
+automation_router = None
 
 compare_router = APIRouter()
 
@@ -23,6 +25,7 @@ compare_router = APIRouter()
 compare_router.include_router(baselines_router, tags=["Compare Baselines"])
 compare_router.include_router(risk_router, tags=["Compare Risk"])
 compare_router.include_router(lab_router, prefix="/lab", tags=["Compare Lab"])
-compare_router.include_router(automation_router, tags=["Compare Automation"])
+if automation_router:
+    compare_router.include_router(automation_router, tags=["Compare Automation"])
 
 __all__ = ["compare_router"]
