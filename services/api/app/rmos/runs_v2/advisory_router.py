@@ -276,6 +276,9 @@ def promote(run_id: str, advisory_id: str) -> PromoteVariantResponse:
     - Must not be rejected
     - Must be reviewed (not NEW)
     """
+    from uuid import uuid4
+    from .schemas_manufacturing import ManufacturingCandidate
+    
     run = get_run(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="RUN_NOT_FOUND")
@@ -296,19 +299,43 @@ def promote(run_id: str, advisory_id: str) -> PromoteVariantResponse:
     if status == "NEW":
         raise HTTPException(status_code=409, detail="PROMOTE_BLOCKED: must review first")
 
+    # Create manufacturing candidate
+    now = _now_utc_iso()
+    candidate_id = f"mc_{uuid4().hex[:12]}"
+    cand = ManufacturingCandidate(
+        candidate_id=candidate_id,
+        advisory_id=advisory_id,
+        status="PROPOSED",
+        label=None,
+        note=None,
+        created_at_utc=now,
+        created_by="system",
+        updated_at_utc=now,
+        updated_by="system",
+    )
+    
+    # Add candidate to run
+    candidates = list(run.manufacturing_candidates or [])
+    candidates.append(cand)
+
     # Mark as promoted
     ref_dict["status"] = "PROMOTED"
     ref_dict["promoted"] = True
+    ref_dict["promoted_candidate_id"] = candidate_id
     ref_dict["rejected"] = False  # Defensive: ensure rejected is strictly boolean False
-    ref_dict["updated_at_utc"] = _now_utc_iso()
+    ref_dict["updated_at_utc"] = now
 
     refs[idx] = AdvisoryInputRef(**{k: v for k, v in ref_dict.items() if k in AdvisoryInputRef.model_fields})
-    run_copy = run.model_copy(update={"advisory_inputs": refs})
+    run_copy = run.model_copy(update={
+        "advisory_inputs": refs,
+        "manufacturing_candidates": candidates,
+        "source_advisory_id": advisory_id,
+    })
     update_run(run_copy)
 
     return PromoteVariantResponse(
         run_id=run_id,
         advisory_id=advisory_id,
         promoted=True,
-        promoted_candidate_id=ref_dict.get("promoted_candidate_id"),
+        promoted_candidate_id=candidate_id,
     )
