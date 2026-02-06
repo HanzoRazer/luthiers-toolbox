@@ -6,8 +6,8 @@ from fastapi import APIRouter, Query
 
 from .batch_timeline import BatchTimelinePorts, build_batch_timeline, get_batch_progress
 
-
-router = APIRouter(prefix="/runs", tags=["runs"])
+# WP-2 2026-02-06: Removed prefix="/runs" - parent router already has /runs prefix
+router = APIRouter(tags=["runs"])
 
 
 def _ports() -> BatchTimelinePorts:

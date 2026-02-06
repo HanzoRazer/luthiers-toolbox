@@ -7,8 +7,8 @@ from starlette.responses import Response
 
 from .audit_export import AuditExportPorts, build_batch_audit_zip
 
-
-router = APIRouter(prefix="/runs", tags=["runs"])
+# WP-2 2026-02-06: Removed prefix="/runs" - parent router already has /runs prefix
+router = APIRouter(tags=["runs"])
 
 
 def _ports() -> AuditExportPorts:
