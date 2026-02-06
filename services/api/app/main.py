@@ -893,9 +893,10 @@ if saw_debug_router:
     app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
 # WP-2 2026-02-06: DISABLED - zero frontend usage
 # app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
-app.include_router(
-    saw_batch_router
-)  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(
+#     saw_batch_router
+# )  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
 
 # Saw Lab Decision Intelligence (Option A)
 try:
@@ -1081,7 +1082,8 @@ app.include_router(cam_dxf_adaptive_router, prefix="/api", tags=["CAM", "DXF"])
 app.include_router(
     cam_pipeline_preset_run_router, prefix="/api", tags=["CAM", "Pipeline"]
 )
-app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 # Consolidated into simulation_consolidated_router:
 # app.include_router(cam_simulate_router, prefix="/api", tags=["CAM", "Simulate"])
 # NOTE: compare_automation_router disabled - route duplicated by compare_router (Wave 19)
