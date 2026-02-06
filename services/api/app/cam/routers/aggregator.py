@@ -51,10 +51,12 @@ except ImportError:
     drilling_router = None
 
 # Phase 3.5: Simulation
-try:
-    from .simulation import router as simulation_router
-except ImportError:
-    simulation_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .simulation import router as simulation_router
+# except ImportError:
+#     simulation_router = None
+simulation_router = None
 
 # Phase 3.6: Export
 # WP-2 2026-02-06: DISABLED - duplicates legacy routes at /api/cam_gcode, /api/cam/svg, etc.
