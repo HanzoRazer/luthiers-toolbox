@@ -12,10 +12,10 @@ from app.services.art_presets_store import (
     list_presets,
 )
 
-try:  # pragma: no cover - optional rosette lane
-    from app.routers.art_studio_rosette_router import router as rosette_router
-except Exception:
-    rosette_router = None
+# NOTE: Legacy rosette router removed - canonical routes now in:
+# - app.art_studio.api.rosette_jobs_routes (mounted at /api/art/rosette)
+# - app.art_studio.api.rosette_compare_routes (mounted at /api/art/rosette/compare)
+# Removal date: 2026-02-05 (WP-2: API Surface Reduction)
 
 try:  # pragma: no cover - optional adaptive lane
     from app.routers.art.adaptive_router import router as adaptive_router  # type: ignore
@@ -28,9 +28,6 @@ except Exception:  # noqa: BLE001
     relief_router = None
 
 router = APIRouter(prefix="/api/art", tags=["art"])
-
-if rosette_router is not None:
-    router.include_router(rosette_router, prefix="/rosette")
 
 if adaptive_router is not None:
     router.include_router(adaptive_router, prefix="/adaptive")
