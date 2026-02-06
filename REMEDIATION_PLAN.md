@@ -525,3 +525,73 @@ Phase 5 is done when:
 Phase 6 is done when:
 - [ ] `/api/health/detailed` returns feature load status
 - [ ] Zero silent `pass` blocks in main.py router registration
+
+---
+
+## UPDATED: Final Timeline and Scope (2026-02-05)
+
+### Owner Decisions
+
+All 15 questions from the Chief Engineer Handoff have been answered:
+
+| Decision | Answer |
+|----------|--------|
+| **Ship date** | March 02, 2026 (to testers) |
+| **Target score** | 7.0/10 (revised from 6.3) |
+| **Project status** | Pre-production (no live CNC tests, no external users) |
+| **Actual test coverage** | 36% (measured) |
+| **Product strategy** | Marketing tiers AFTER cleanup; tier repos exist with code |
+
+### Updated WP-0 Scope
+
+**Confirmed deletions:**
+- `streamlit_demo/` — Vue frontend is complete superset, no unique code
+- `client/` — Stale duplicate of `packages/client/`
+
+**Pending verification:**
+- `__ARCHIVE__/` — Check contents before deletion
+- `server/` — Check contents before deletion
+- Backup files — Confirm no imports reference them
+
+**Deferred (Option C):**
+- `__REFERENCE__/` — Archive externally AFTER other WP fixes complete
+- Contains 5,324 files of historical reference material
+- Rule 5 in copilot-instructions.md will be updated after archive
+
+### 4-Week Execution Timeline
+
+| Week | Dates | Focus | Exit Criteria |
+|------|-------|-------|---------------|
+| **1** | Feb 5-12 | WP-0 (confirmed items) + WP-1 Tier 1A | `streamlit_demo/`, `client/` deleted; bare `except:` count = 0 |
+| **2** | Feb 12-19 | WP-4 (docs/README) + WP-1 Tier 1B | README accurate; safety-critical exceptions hardened |
+| **3** | Feb 19-26 | WP-5 (Quick Cut) + WP-0 (verify items) | Quick Cut flow works; `__ARCHIVE__/`, `server/` verified |
+| **4** | Feb 26-Mar 2 | `__REFERENCE__/` archive + polish + ship | External archive complete; 7.0/10 score achieved |
+
+### Score Projection Update
+
+| Category | Current | After Plan | Target |
+|----------|---------|------------|--------|
+| Purpose Clarity | 5 | 7 | 7+ |
+| User Fit | 4 | 6 | 7+ |
+| Usability | 3 | 6 | 7+ |
+| Reliability | 4 | 6 | 7+ |
+| Maintainability | 3 | 6 | 7+ |
+| Safety | 5 | 8 | 8+ |
+| **Weighted Average** | **4.7** | **6.3** | **7.0** |
+
+To reach 7.0 (vs. plan's 6.3):
+- Quick Cut onboarding must be exceptional
+- Documentation must be developer-friendly
+- README must accurately represent the project
+
+### Pre-Production Advantages
+
+Since the system is pre-production with zero external users:
+- ✅ Aggressive API route culling (no deprecation periods needed)
+- ✅ Breaking changes allowed (no backward compatibility concerns)
+- ✅ Test coverage can be honest (36%, not fake 100%)
+- ✅ Dead code deletion without consumer audit
+
+---
+
+*Updated: 2026-02-05 — All owner decisions incorporated*

@@ -1,13 +1,13 @@
 # Luthier's Tool Box – AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI. **All geometry in mm. DXF R12 (AC1009).**
-> **Last Updated:** 2026-01-25
+> **Last Updated:** 2026-02-05
 
 ## ⚡ Quick Start
 
 ```bash
 # Backend (FastAPI on :8000)
-cd services/api && uvicorn app.main:app --reload --port 8000
+cd services/api && python -m uvicorn app.main:app --reload --port 8000
 
 # Frontend (Vue on :5173, proxies /api → :8000)
 cd packages/client && npm run dev
@@ -22,6 +22,7 @@ cd services/api && pytest tests/ -v -m "cam or helical"  # Multiple markers
 cd packages/client && npm run test                       # Vitest unit tests
 make smoke-helix-posts                                   # Helical post-processor smoke test
 make check-boundaries                                    # All architectural fence checks (run before PR)
+make api-verify                                          # Full verification: scope + boundaries + tests
 ```
 
 ### Pytest Markers (from `services/api/pytest.ini`)
@@ -34,7 +35,7 @@ make check-boundaries                                    # All architectural fen
 2. **DXF**: R12 format (AC1009) with closed LWPolylines – never newer versions
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
-5. **DO NOT MODIFY**: `__REFERENCE__/` directory, legacy archives (`Guitar Design HTML app/`, `ToolBox_*`)
+5. **DO NOT MODIFY**: `__REFERENCE__/` directory, legacy archives (`Guitar Design HTML app/`, `ToolBox_*`) — **NOTE (2026-02-05):** `__REFERENCE__/` is scheduled for external archival and deletion after WP-0/WP-1/WP-4 complete. See `CHIEF_ENGINEER_HANDOFF.md` Section 11.
 6. **Request IDs**: All API responses MUST include `X-Request-Id` header
 7. **Machine Profiles**: Use IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
 8. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
@@ -46,7 +47,7 @@ make check-boundaries                                    # All architectural fen
 
 | Area                | Path                                                     |
 | ------------------- | -------------------------------------------------------- |
-| API Entry           | `services/api/app/main.py` – ~116 routers                |
+| API Entry           | `services/api/app/main.py` – ~95 routers (19 legacy deleted Jan 2026) |
 | CAM Algorithms      | `services/api/app/cam/` – pocketing, helical, biarc      |
 | RMOS Orchestration  | `services/api/app/rmos/` – workflow, CAM intent          |
 | Runs v2 Store       | `services/api/app/rmos/runs_v2/` – artifacts, attachments|
@@ -55,7 +56,7 @@ make check-boundaries                                    # All architectural fen
 | CAM Intent Schema   | `services/api/app/rmos/cam/schemas_intent.py`            |
 | Frontend SDK        | `packages/client/src/sdk/endpoints/` – typed helpers     |
 | Post Configs        | `services/api/app/data/posts/*.json` – grbl, mach4, etc. |
-| CI Workflows        | `.github/workflows/` – 40 workflow files                 |
+| CI Workflows        | `.github/workflows/` – ~50 workflow files                |
 | Pinia Stores        | `packages/client/src/stores/` – frontend state           |
 | Shared Utils        | `packages/shared/` – cross-package types/utilities       |
 | CI Boundary Checks  | `services/api/app/ci/` – boundary enforcement scripts    |
@@ -64,7 +65,7 @@ make check-boundaries                                    # All architectural fen
 
 **Monorepo Structure:**
 
-- `services/api/` – FastAPI backend (~116 routers in `app/main.py`)
+- `services/api/` – FastAPI backend (~95 routers in `app/main.py`, post-consolidation)
 - `packages/client/` – Vue 3 SPA with Pinia stores
 - `packages/shared/` – Cross-package types/utilities
 - `projects/rmos/` – Rosette Manufacturing OS documentation
@@ -324,8 +325,8 @@ SAW_LAB_DECISION_INTEL_ENABLED=true          # Decision Intelligence advisory on
 ## 🗺️ API Surface
 
 - **Canonical**: `/api/cam/toolpath/*`, `/api/cam/drilling/*`, `/api/rmos/*`, `/api/art/*`
-- **Legacy** (tagged `"Legacy"`): Check `/api/governance/stats` before removal
-- See [ROUTER_MAP.md](../ROUTER_MAP.md) for 116-router organization
+- **Legacy routes removed** (January 2026): 19 routers deleted, all migrated to consolidated aggregators
+- See [ROUTER_MAP.md](../ROUTER_MAP.md) for ~95-router organization
 
 ## ⚠️ Common Pitfalls
 
@@ -343,6 +344,8 @@ SAW_LAB_DECISION_INTEL_ENABLED=true          # Decision Intelligence advisory on
 | Frontend raw `fetch()`       | Import from `@/sdk/endpoints`                       |
 | Test uses real file paths    | Use `tmp_path` + `monkeypatch.setenv()` for isolation |
 | Store singleton not reset    | Set `store_mod._default_store = None` in test fixture |
+| Python run as script         | Use `python -m app.module` not `python app/module.py` |
+| Machine profile not found    | Use IDs from `machine_profiles.json` (e.g. `GRBL_3018_Default`) |
 
 ## 🛠️ Essential CLI Commands
 
@@ -365,6 +368,7 @@ make smoke-helix-posts        # Test helical ramping with all post presets
 make test-api                 # Run API smoke tests
 make check-art-studio-scope   # Art Studio ornament-authority scope gate
 make viewer-pack-gate         # Full viewer pack v1 contract gate
+make api-verify               # Full verification (scope + boundaries + tests)
 ```
 
 ## 🎸 Module Awareness
@@ -377,7 +381,43 @@ make viewer-pack-gate         # Full viewer pack v1 contract gate
 | **Saw Lab**    | Reference implementation for governed operations        | `saw_lab/batch_router.py`                 |
 | **RMOS**       | Manufacturing orchestration system                      | `rmos/`, `/api/rmos/*` routes             |
 
-## 🚨 Red Flags (Immediate Rejection)
+## � Active Remediation (Feb 2026)
+
+The codebase is undergoing structured cleanup. See `CHIEF_ENGINEER_HANDOFF.md` and `REMEDIATION_PLAN.md` for full details.
+
+### Work Package Status
+
+| WP | Focus | Priority | Status |
+|----|-------|----------|--------|
+| WP-0 | Dead code purge | P0 | Pending (delete `__ARCHIVE__/`, `__REFERENCE__/`, stale `client/`, `streamlit_demo/`) |
+| WP-1 | Exception hardening | P0 | Pending (97 bare `except:`, 278 safety-critical `except Exception`) |
+| WP-2 | API surface reduction | P1 | Pending (1,060 → <300 routes target) |
+| WP-3 | God-object decomposition | P1 | Pending (30 Python + 25 Vue files over size limits) |
+| WP-4 | Documentation triage | P1 | Pending (685 → ≤50 markdown files) |
+| WP-5 | Quick Cut onboarding | P2 | Not started |
+
+### Safety-Critical Exception Handling
+
+**Never use broad exception handlers in safety modules.** These paths control CNC machinery:
+
+```python
+# ❌ WRONG in safety-critical paths (feasibility/, gates/, cam/, calculators/)
+except Exception:
+    return fallback_value  # Masks bugs that could produce unsafe G-code
+
+# ✅ CORRECT: Specific exceptions, fail-closed
+except (ValueError, KeyError) as e:
+    logger.error(f"Failed: {e}")
+    raise  # Let caller handle — never swallow in safety paths
+```
+
+**Affected modules (verified counts):**
+- `rmos/` — 197 `except Exception` blocks
+- `cam/` — 35 blocks
+- `saw_lab/` — 32 blocks
+- `calculators/` — 14 blocks
+
+## �🚨 Red Flags (Immediate Rejection)
 
 ```python
 # ❌ RMOS importing CAM execution
@@ -391,6 +431,13 @@ artifact = RunArtifact(run_id="xyz", ...)  # Bypasses validation!
 
 # ❌ External repo import
 from tap_tone.measurement import perform_analysis
+# ❌ Bare except (catches SystemExit, KeyboardInterrupt — always wrong)
+except:
+    pass
+
+# ❌ Broad except in safety paths (masks bugs in CNC code generation)
+except Exception:
+    return default_value  # In rmos/, cam/, saw_lab/, calculators/
 ```
 
 ```typescript
@@ -466,7 +513,7 @@ When extracting a feature to a spin-off product:
 ## 📚 References
 
 - [FENCE_REGISTRY.json](../FENCE_REGISTRY.json) – Architectural boundaries (8 profiles)
-- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~116 routers)
+- [ROUTER_MAP.md](../ROUTER_MAP.md) – Router organization (~95 routers)
 - [docs/ENDPOINT_TRUTH_MAP.md](../docs/ENDPOINT_TRUTH_MAP.md) – API surface + lane classifications
 - [docs/BOUNDARY_RULES.md](../docs/BOUNDARY_RULES.md) – Import boundaries (CI-enforced)
 - [packages/client/src/sdk/endpoints/README.md](../packages/client/src/sdk/endpoints/README.md) – SDK patterns
