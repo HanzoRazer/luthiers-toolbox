@@ -1,0 +1,7 @@
+# CODEOWNERS for tap_tone_pi
+
+# Require schema-owner review for any contract changes
+/contracts/** @acoustics-team @measurement-team @chladni-team
+
+# Require owner review for canonical shared utilities (WAV I/O, manifest utils)
+/modes/_shared/** @acoustics-team @measurement-team

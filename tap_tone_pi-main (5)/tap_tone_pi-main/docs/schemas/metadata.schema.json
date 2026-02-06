@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tap-tone/schemas/metadata.schema.json",
+  "title": "Tap Tone Session Metadata (metadata.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "created_utc", "tool", "capture_defaults"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Artifact schema version (e.g., 0.1.0)."
+    },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "git_commit": { "type": ["string", "null"] }
+      }
+    },
+    "operator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional instrument/build identifiers (instrument_id, build_stage, model, etc.)."
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional environment notes (room, temp, noise, fixture)."
+    },
+    "capture_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_rate", "channels", "seconds"],
+      "properties": {
+        "device": { "type": ["integer", "null"] },
+        "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 384000 },
+        "channels": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "seconds": { "type": "number", "minimum": 0.05, "maximum": 60.0 }
+      }
+    },
+    "analysis_defaults": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional analysis params (highpass_hz, peak bounds, etc.)."
+    }
+  }
+}

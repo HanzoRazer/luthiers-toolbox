@@ -1,0 +1,55 @@
+name: Bending Stiffness Bundle Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-bending-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: Generate sample bundle
+        run: |
+          python scripts/bending_stiffness_mode.py \
+            --out ./out \
+            --specimen-id CI_S1 \
+            --material-role top \
+            --wood-species spruce \
+            --grain-orientation longitudinal \
+            --span-mm 400 \
+            --pair 5,0.2 --pair 10,0.41 --pair 15,0.62 --pair 20,0.83 \
+            --method three_point_bending \
+            --units-length mm \
+            --units-force N
+
+      - name: Validate analysis JSON against schema
+        run: |
+          LATEST=$(ls -dt out/bend_* | head -n 1)
+          echo "Validating bundle at: $LATEST"
+          python - << 'PY' "$LATEST"
+          import sys, json
+          from pathlib import Path
+          from jsonschema import validate
+          bundle = Path(sys.argv[1])
+          schema_path = Path("schemas/bending_stiffness.schema.json")
+          data_path = bundle/"analysis"/"bending_stiffness.json"
+          schema = json.loads(schema_path.read_text())
+          data = json.loads(data_path.read_text())
+          validate(instance=data, schema=schema)
+          print("✓", str(data_path), "valid against", str(schema_path))
+          PY

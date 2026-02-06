@@ -1,0 +1,6 @@
+{
+  "artifact_type":"tap_tone",
+  "sample_rate":44100,
+  "duration_s":4.0,
+  "peaks":{"A0":{"freq_hz":102.0,"amp":12.3},"T11":{"freq_hz":175.0,"amp":9.8}}
+}

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/schema_registry.json",
+  "title": "tap_tone_pi Schema Registry",
+  "description": "Canonical registry of all output contract schemas with version tracking and ownership.",
+  "registry_version": "1.0.0",
+  "updated": "2026-01-01T00:00:00Z",
+
+  "schemas": {
+    "phase2_grid": {
+      "file": "phase2_grid.schema.json",
+      "path": "contracts/phase2_grid.schema.json",
+      "version": "1.0.0",
+      "schema_version_const": "phase2_grid_v1",
+      "status": "stable",
+      "owner": "acoustics-team",
+      "description": "Grid definition with point coordinates for roving ODS measurement"
+    },
+
+    "phase2_session_meta": {
+      "file": "phase2_session_meta.schema.json",
+      "path": "contracts/phase2_session_meta.schema.json",
+      "version": "1.0.0",
+      "schema_version_const": "phase2_session_meta_v1",
+      "status": "stable",
+      "owner": "acoustics-team",
+      "description": "Session-level metadata including operator, channel roles, environment"
+    },
+
+    "phase2_point_capture_meta": {
+      "file": "phase2_point_capture_meta.schema.json",
+      "path": "contracts/phase2_point_capture_meta.schema.json",
+      "version": "1.0.0",
+      "schema_version_const": "phase2_point_capture_meta_v1",
+      "status": "stable",
+      "owner": "acoustics-team",
+      "description": "Per-point capture metadata including device info, sample rate, excitation type"
+    },
+
+    "phase2_ods_snapshot": {
+      "file": "phase2_ods_snapshot.schema.json",
+      "path": "contracts/phase2_ods_snapshot.schema.json",
+      "version": "2.0.0",
+      "schema_version_const": "phase2_ods_snapshot_v2",
+      "status": "stable",
+      "owner": "acoustics-team",
+      "description": "ODS transfer function snapshot with H_mag, H_phase_deg, coherence arrays per point"
+    },
+
+    "phase2_wolf_candidates": {
+      "file": "phase2_wolf_candidates.schema.json",
+      "path": "contracts/phase2_wolf_candidates.schema.json",
+      "version": "2.0.0",
+      "schema_version_const": "phase2_wolf_candidates_v2",
+      "status": "stable",
+      "owner": "acoustics-team",
+      "description": "Wolf stress index candidates with per-candidate top_points and admissibility flags"
+    },
+
+    "tap_peaks": {
+      "file": "tap_peaks.schema.json",
+      "path": "contracts/schemas/tap_peaks.schema.json",
+      "version": "1.0.0",
+      "status": "stable",
+      "owner": "measurement-team",
+      "description": "FFT peak detection results from tap recordings with WAV provenance"
+    },
+
+    "moe_result": {
+      "file": "moe_result.schema.json",
+      "path": "contracts/schemas/moe_result.schema.json",
+      "version": "1.0.0",
+      "status": "stable",
+      "owner": "measurement-team",
+      "description": "Static bending modulus of elasticity (MOE) calculation results"
+    },
+
+    "manifest": {
+      "file": "manifest.schema.json",
+      "path": "contracts/schemas/manifest.schema.json",
+      "version": "1.0.0",
+      "status": "stable",
+      "owner": "measurement-team",
+      "description": "Run manifest with artifact list and SHA256 hashes for integrity"
+    },
+
+    "chladni_run": {
+      "file": "chladni_run.schema.json",
+      "path": "contracts/schemas/chladni_run.schema.json",
+      "version": "1.0.0",
+      "status": "stable",
+      "owner": "chladni-team",
+      "description": "Chladni pattern run index with peaks, patterns, and image provenance"
+    }
+  },
+
+  "owners": {
+    "acoustics-team": {
+      "description": "Phase 2 ODS, coherence, wolf metrics",
+      "schemas": [
+        "phase2_grid",
+        "phase2_session_meta",
+        "phase2_point_capture_meta",
+        "phase2_ods_snapshot",
+        "phase2_wolf_candidates"
+      ]
+    },
+    "measurement-team": {
+      "description": "Phase 1 tap peaks, bending MOE, manifests",
+      "schemas": ["tap_peaks", "moe_result", "manifest"]
+    },
+    "chladni-team": {
+      "description": "Chladni pattern analysis and mesh integration",
+      "schemas": ["chladni_run"]
+    }
+  },
+
+  "policies": {
+    "version_bump": {
+      "patch": "self-approve",
+      "minor": "owner-review",
+      "major": "adr-plus-owner-signoff"
+    },
+    "no_extra_fields": true
+  }
+}

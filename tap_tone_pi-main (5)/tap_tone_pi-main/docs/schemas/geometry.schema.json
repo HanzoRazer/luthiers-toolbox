@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tap-tone/schemas/geometry.schema.json",
+  "title": "Tap Tone Geometry (geometry.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["coordinate_system", "units", "origin", "microphones"],
+  "properties": {
+    "coordinate_system": {
+      "type": "string",
+      "description": "Named coordinate frame (e.g., instrument_body)."
+    },
+    "units": { "type": "string", "enum": ["mm", "cm", "m", "in"] },
+    "origin": {
+      "type": "string",
+      "description": "Human-readable origin label (e.g., bridge_center)."
+    },
+    "microphones": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/mic_pose" }
+    }
+  },
+  "$defs": {
+    "mic_pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "position": {
+          "type": "array",
+          "description": "Position [x,y,z] in declared units.",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" }
+        },
+        "orientation_deg": {
+          "type": "array",
+          "description": "Optional orientation vector or Euler-like tuple; convention must be documented in metadata.json if used.",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" }
+        },
+        "estimated": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if position/orientation is estimated."
+        }
+      }
+    }
+  }
+}

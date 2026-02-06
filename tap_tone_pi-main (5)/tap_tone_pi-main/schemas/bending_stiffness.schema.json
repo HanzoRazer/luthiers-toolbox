@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthiers-toolbox.local/schemas/bending_stiffness.schema.json",
+  "title": "Bending Stiffness Test Result (Measurement-Only) v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "test", "specimen", "fixture", "readings", "results", "provenance"],
+
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "created_at_utc"],
+      "properties": {
+        "name": { "const": "bending_stiffness" },
+        "version": { "enum": ["1.0", "1.1"] },
+        "created_at_utc": { "type": "string", "minLength": 10 }
+      }
+    },
+
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["test_id", "method", "units"],
+      "properties": {
+        "test_id": { "type": "string", "minLength": 6, "maxLength": 128 },
+        "method": {
+          "type": "string",
+          "enum": ["three_point_bending", "cantilever"],
+          "description": "Fixture method. EI formula depends on method."
+        },
+        "units": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["length", "force"],
+          "properties": {
+            "length": { "type": "string", "enum": ["mm", "in"] },
+            "force": { "type": "string", "enum": ["N", "lbf"] }
+          }
+        },
+        "notes": { "type": "string", "maxLength": 20000 }
+      }
+    },
+
+    "specimen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["specimen_id", "material_role"],
+      "properties": {
+        "specimen_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "material_role": { "type": "string", "enum": ["top", "back", "brace_stock", "unknown"] },
+        "wood_species": { "type": "string", "maxLength": 128 },
+        "grain_orientation": {
+          "type": "string",
+          "enum": ["longitudinal", "cross", "unknown"],
+          "description": "Direction of bending relative to grain."
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "length_mm": { "type": "number", "minimum": 0 },
+            "width_mm": { "type": "number", "minimum": 0 },
+            "thickness_mm": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["span_mm"],
+      "properties": {
+        "span_mm": { "type": "number", "minimum": 0, "description": "Support span (three-point) or effective length (cantilever)." },
+        "support_type": { "type": "string", "enum": ["roller", "knife_edge", "flat", "unknown"] },
+        "load_nose_radius_mm": { "type": "number", "minimum": 0 },
+        "dial_indicator_resolution_mm": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "readings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["csv_relpath", "rows"],
+      "properties": {
+        "csv_relpath": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["load", "deflection"],
+            "properties": {
+              "load": { "type": "number" },
+              "deflection": { "type": "number" }
+            }
+          }
+        },
+        "replicates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["csv_relpath", "rows"],
+            "properties": {
+              "csv_relpath": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "rows": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["load", "deflection"],
+                  "properties": {
+                    "load": { "type": "number" },
+                    "deflection": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k_force_per_deflection"],
+      "properties": {
+        "k_force_per_deflection": {
+          "type": "number",
+          "description": "Slope of load vs deflection in base units (N/mm if SI)."
+        },
+        "k_r2": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ei_n_mm2": {
+          "type": "number",
+          "description": "Optional derived EI in N*mm^2 (SI). Present only when computable."
+        },
+        "ei_method_assumptions": { "type": "string", "maxLength": 2000 },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 500 },
+          "maxItems": 200
+        },
+        "uncertainty": { "$ref": "#/$defs/UncertaintyBlock" }
+      }
+    },
+
+    "calibration": { "$ref": "#/$defs/CalibrationBlock" },
+
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool_id", "tool_version", "captured_at_utc"],
+      "properties": {
+        "tool_id": { "type": "string", "const": "tap_tone_pi" },
+        "tool_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "operator": { "type": "string", "maxLength": 128 },
+        "device_id": { "type": "string", "maxLength": 128 },
+        "captured_at_utc": { "type": "string", "minLength": 10 }
+      }
+    }
+  },
+
+  "$defs": {
+    "UncertaintyBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "inputs", "k", "ci_level"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["replicates_normal_approx", "replicates_t_approx", "quantization_only"],
+          "description": "How uncertainty was computed. Conservative defaults recommended."
+        },
+        "ci_level": {
+          "type": "number",
+          "enum": [0.9, 0.95, 0.99],
+          "description": "Confidence interval level (e.g. 0.95 = 95% CI)."
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dial_resolution_mm"],
+          "properties": {
+            "dial_resolution_mm": { "type": "number", "minimum": 0 },
+            "load_resolution_force": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Optional load resolution in the same force units as readings."
+            },
+            "replicates": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "k": { "$ref": "#/$defs/UncertainValue" },
+        "ei_n_mm2": { "$ref": "#/$defs/UncertainValue" }
+      }
+    },
+
+    "UncertainValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mean", "std", "se", "ci_low", "ci_high", "n"],
+      "properties": {
+        "mean": { "type": "number" },
+        "std": { "type": "number", "minimum": 0 },
+        "se": { "type": "number", "minimum": 0 },
+        "ci_low": { "type": "number" },
+        "ci_high": { "type": "number" },
+        "n": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "CalibrationBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dial", "load_cell", "standard_specimen"],
+      "properties": {
+        "session_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional pointer to session-level calibration capsule.",
+          "required": ["session_id", "session_calibration_relpath"],
+          "properties": {
+            "session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "session_calibration_relpath": { "type": "string", "minLength": 1, "maxLength": 512 }
+          }
+        },
+        "dial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["zeroed", "zeroed_at_utc"],
+          "properties": {
+            "zeroed": { "type": "boolean" },
+            "zeroed_at_utc": { "type": "string", "minLength": 10 },
+            "method": {
+              "type": "string",
+              "enum": ["manual_zero", "tare_block", "other"]
+            },
+            "notes": { "type": "string", "maxLength": 1000 }
+          }
+        },
+
+        "load_cell": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "calibration_date_utc"],
+          "properties": {
+            "present": { "type": "boolean" },
+            "calibration_date_utc": {
+              "type": "string",
+              "minLength": 10,
+              "description": "ISO date or datetime when the load cell was last calibrated. Use UTC."
+            },
+            "calibration_provider": { "type": "string", "maxLength": 200 },
+            "certificate_id": { "type": "string", "maxLength": 200 },
+            "notes": { "type": "string", "maxLength": 1000 }
+          }
+        },
+
+        "standard_specimen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["used", "specimen_id"],
+          "properties": {
+            "used": { "type": "boolean" },
+            "specimen_id": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "ID of your shop 'known standard' strip/plate used to sanity-check the rig."
+            },
+            "expected_k": {
+              "type": "number",
+              "description": "Optional expected k in your force/deflection units (measurement-only reference)."
+            },
+            "observed_k": {
+              "type": "number",
+              "description": "Optional observed k from a standard check on this session."
+            },
+            "tolerance": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Optional acceptable absolute deviation in k units."
+            },
+            "pass": { "type": "boolean" },
+            "notes": { "type": "string", "maxLength": 1000 }
+          }
+        }
+      }
+    }
+  }
+}
+

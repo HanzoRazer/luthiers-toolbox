@@ -1,0 +1,56 @@
+# WAV I/O Guardrail — Prevent scipy.io.wavfile outside canonical module
+#
+# This workflow fails if `wavfile.read` or `wavfile.write` appears in any Python
+# file except the canonical `modes/_shared/wav_io.py`.
+
+name: wav-io-guard
+
+on:
+  push:
+    paths:
+      - "**.py"
+  pull_request:
+    paths:
+      - "**.py"
+
+jobs:
+  check-wav-io:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for unauthorized wavfile usage
+        shell: bash
+        run: |
+          echo "Scanning for scipy.io.wavfile usage outside canonical module..."
+          
+          # Pattern: wavfile.read or wavfile.write
+          # Exclude: modes/_shared/wav_io.py (canonical module)
+          
+          violations=$(grep -rn --include="*.py" \
+            -e "wavfile\.read" \
+            -e "wavfile\.write" \
+            -e "from scipy.io import wavfile" \
+            . \
+            | grep -v "modes/_shared/wav_io.py" \
+            | grep -v "__pycache__" \
+            | grep -v ".pyc" \
+            || true)
+          
+          if [ -n "$violations" ]; then
+            echo ""
+            echo "❌ ERROR: Direct wavfile usage found outside canonical module!"
+            echo ""
+            echo "Violations:"
+            echo "$violations"
+            echo ""
+            echo "All WAV I/O must go through: modes/_shared/wav_io.py"
+            echo ""
+            echo "Use one of:"
+            echo "  from modes._shared.wav_io import read_wav_mono, read_wav_2ch"
+            echo "  from modes._shared.wav_io import write_wav_mono, write_wav_2ch"
+            echo ""
+            exit 1
+          fi
+          
+          echo "✅ No unauthorized wavfile usage found."

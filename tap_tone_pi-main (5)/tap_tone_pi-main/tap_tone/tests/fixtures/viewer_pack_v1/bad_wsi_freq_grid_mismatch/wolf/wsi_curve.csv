@@ -1,0 +1,4 @@
+freq_hz,wsi,loc,grad,phase_disorder,coh_mean,admissible
+100.0,0.1,0.0,0.0,0.0,0.1,true
+250.0,0.2,0.0,0.0,0.0,0.2,true
+300.0,0.15,0.0,0.0,0.0,0.15,true

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tap_peaks.schema.json",
+  "title": "Tap Peaks Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_id": { "const": "tap_peaks" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+
+    "artifact_type": { "const": "chladni_peaks" },
+    "created_utc": { "type": "string", "format": "date-time" },
+
+    "wav_path": { "type": "string", "minLength": 1 },
+    "wav_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+
+    "fs_hz": { "type": "number", "exclusiveMinimum": 0 },
+    "band_hz": {
+      "type": "array",
+      "items": { "type": "number", "minimum": 0 },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "prominence_rel": { "type": "number", "minimum": 0 },
+    "peaks_hz": {
+      "type": "array",
+      "items": { "type": "number", "exclusiveMinimum": 0 },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schema_id", "schema_version",
+    "artifact_type", "wav_path", "wav_sha256",
+    "fs_hz", "band_hz", "peaks_hz"
+  ]
+}

@@ -1,0 +1,136 @@
+name: phase2-validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/phase2/**'
+      - 'scripts/phase2_slice.py'
+      - 'contracts/phase2_*.schema.json'
+      - 'docs/phase2/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/phase2/**'
+      - 'scripts/phase2_slice.py'
+      - 'contracts/phase2_*.schema.json'
+      - 'docs/phase2/**'
+
+jobs:
+  validate-phase2-schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: Validate Phase 2 schemas are well-formed
+        run: |
+          python - << 'PY'
+          import json
+          from pathlib import Path
+
+          schemas = list(Path('contracts').glob('phase2_*.schema.json'))
+          if not schemas:
+              raise SystemExit("No Phase 2 schemas found in contracts/")
+
+          for schema_path in schemas:
+              try:
+                  data = json.loads(schema_path.read_text())
+                  assert '$schema' in data, f"Missing $schema in {schema_path}"
+                  assert 'properties' in data, f"Missing properties in {schema_path}"
+                  print(f"OK: {schema_path.name}")
+              except Exception as e:
+                  raise SystemExit(f"FAIL: {schema_path}: {e}")
+
+          print(f"Validated {len(schemas)} Phase 2 schemas")
+          PY
+
+  check-phase2-docs-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check docs updated with code changes
+        run: |
+          # Get changed files in this PR/push
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+
+          # Check if phase2 code changed
+          CODE_CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E '^scripts/phase2' || true)
+          SCHEMA_CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E '^contracts/phase2_' || true)
+          DOCS_CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E '^docs/phase2' || true)
+
+          echo "Code changed: $CODE_CHANGED"
+          echo "Schema changed: $SCHEMA_CHANGED"
+          echo "Docs changed: $DOCS_CHANGED"
+
+          # Warn if code changed but no docs/schema update
+          if [ -n "$CODE_CHANGED" ] && [ -z "$SCHEMA_CHANGED" ] && [ -z "$DOCS_CHANGED" ]; then
+            echo "::warning::Phase 2 code changed but no schema or docs update detected. Consider updating contracts/ or docs/phase2/ if behavior changed."
+          fi
+
+          # Always pass - this is advisory
+          exit 0
+
+  validate-provenance-exports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy scipy
+
+      - name: Check provenance functions exist
+        run: |
+          python - << 'PY'
+          import sys
+          sys.path.insert(0, 'scripts')
+
+          try:
+              from phase2.dsp import get_dsp_provenance, DSP_ALGO_VERSION
+              from phase2.metrics import get_metrics_provenance, METRICS_ALGO_VERSION
+
+              dsp_prov = get_dsp_provenance()
+              assert 'algo_id' in dsp_prov, "Missing algo_id in DSP provenance"
+              assert 'algo_version' in dsp_prov, "Missing algo_version in DSP provenance"
+              assert 'scipy_version' in dsp_prov, "Missing scipy_version in DSP provenance"
+              print(f"OK: DSP provenance v{DSP_ALGO_VERSION}")
+
+              metrics_prov = get_metrics_provenance()
+              assert 'algo_id' in metrics_prov, "Missing algo_id in metrics provenance"
+              assert 'algo_version' in metrics_prov, "Missing algo_version in metrics provenance"
+              print(f"OK: Metrics provenance v{METRICS_ALGO_VERSION}")
+
+              print("All provenance exports validated")
+          except ImportError as e:
+              raise SystemExit(f"Import error: {e}")
+          except AssertionError as e:
+              raise SystemExit(f"Provenance validation failed: {e}")
+          PY
