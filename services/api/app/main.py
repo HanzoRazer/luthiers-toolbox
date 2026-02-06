@@ -514,11 +514,14 @@ except ImportError as e:
     design_first_workflow_router = None
 
 # Phase 33.0: CAM Promotion Bridge (orchestration-only; fenced from CAM engine)
-try:
-    from .art_studio.api.cam_promotion_routes import router as art_cam_promotion_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: art_cam_promotion_router (%s)", e)
-    art_cam_promotion_router = None
+# WP-2 2026-02-05: DISABLED - superseded by design_first_workflow_routes.py
+# The workflow router includes the same promote_to_cam endpoint with more features.
+# try:
+#     from .art_studio.api.cam_promotion_routes import router as art_cam_promotion_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: art_cam_promotion_router (%s)", e)
+#     art_cam_promotion_router = None
+art_cam_promotion_router = None
 
 # =============================================================================
 # WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
@@ -1195,12 +1198,14 @@ try:
 except ImportError as e:
     _log.warning("Optional router unavailable: ai_context_adapter_router (%s)", e)
 
-# Legacy ai_context (more complex envelope) - can be removed once adapter is stable
-try:
-    from .ai_context.routes import router as ai_context_router
-    app.include_router(ai_context_router, tags=["AI Context (Legacy)"])
-except ImportError as e:
-    _log.warning("Optional router unavailable: ai_context_router (%s)", e)
+# Legacy ai_context (more complex envelope) - DISABLED WP-2 2026-02-05
+# The ai_context_adapter provides the same /health endpoint.
+# Uncomment if legacy envelope format is needed.
+# try:
+#     from .ai_context.routes import router as ai_context_router
+#     app.include_router(ai_context_router, tags=["AI Context (Legacy)"])
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: ai_context_router (%s)", e)
 
 
 # =============================================================================

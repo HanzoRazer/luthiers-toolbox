@@ -958,43 +958,44 @@ def get_execution_by_decision(
     }
 
 
-@router.get("/executions/by-decision")
-def list_executions_by_decision(
-    batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
-    limit: int = Query(50, ge=1, le=500, description="Max results to return"),
-) -> List[Dict[str, Any]]:
-    """
-    List all execution artifacts for a given decision, newest first.
-
-    Returns list of execution artifacts with id, kind, status, index_meta.
-    """
-    executions = query_executions_by_decision(batch_decision_artifact_id)[:limit]
-
-    results = []
-    for ex in executions:
-        payload = ex.get("payload", {})
-        index_meta = ex.get("index_meta") or {}
-        index_meta.setdefault(
-            "parent_batch_decision_artifact_id",
-            payload.get("batch_decision_artifact_id") or batch_decision_artifact_id,
-        )
-        index_meta.setdefault("batch_label", payload.get("batch_label"))
-        index_meta.setdefault("session_id", payload.get("session_id"))
-        index_meta.setdefault("tool_kind", "saw_lab")
-        index_meta.setdefault("kind_group", "batch")
-
-        results.append(
-            {
-                "artifact_id": ex.get("artifact_id"),
-                "id": ex.get("artifact_id"),
-                "kind": ex.get("kind", "saw_batch_execution"),
-                "status": ex.get("status", "OK"),
-                "created_utc": ex.get("created_utc"),
-                "index_meta": index_meta,
-            }
-        )
-
-    return results
+# WP-2 2026-02-05: DUPLICATE - superseded by executions_by_decision at line ~2696
+# @router.get("/executions/by-decision")
+# def list_executions_by_decision(
+#     batch_decision_artifact_id: str = Query(..., description="Decision artifact ID"),
+#     limit: int = Query(50, ge=1, le=500, description="Max results to return"),
+# ) -> List[Dict[str, Any]]:
+#     """
+#     List all execution artifacts for a given decision, newest first.
+#
+#     Returns list of execution artifacts with id, kind, status, index_meta.
+#     """
+#     executions = query_executions_by_decision(batch_decision_artifact_id)[:limit]
+#
+#     results = []
+#     for ex in executions:
+#         payload = ex.get("payload", {})
+#         index_meta = ex.get("index_meta") or {}
+#         index_meta.setdefault(
+#             "parent_batch_decision_artifact_id",
+#             payload.get("batch_decision_artifact_id") or batch_decision_artifact_id,
+#         )
+#         index_meta.setdefault("batch_label", payload.get("batch_label"))
+#         index_meta.setdefault("session_id", payload.get("session_id"))
+#         index_meta.setdefault("tool_kind", "saw_lab")
+#         index_meta.setdefault("kind_group", "batch")
+#
+#         results.append(
+#             {
+#                 "artifact_id": ex.get("artifact_id"),
+#                 "id": ex.get("artifact_id"),
+#                 "kind": ex.get("kind", "saw_batch_execution"),
+#                 "status": ex.get("status", "OK"),
+#                 "created_utc": ex.get("created_utc"),
+#                 "index_meta": index_meta,
+#             }
+#         )
+#
+#     return results
 
 
 @router.get("/executions")
@@ -1514,40 +1515,41 @@ class LearningEventApprovalResponse(BaseModel):
     approved_by: str
 
 
-@router.post("/learning-events/approve", response_model=LearningEventApprovalResponse)
-def approve_learning_event(
-    learning_event_artifact_id: str = Query(
-        ..., description="Learning event to approve/reject"
-    ),
-    policy_decision: str = Query(..., description="ACCEPT or REJECT"),
-    approved_by: str = Query(..., description="Approver name"),
-    reason: str = Query("", description="Approval reason"),
-) -> LearningEventApprovalResponse:
-    """
-    Approve or reject a learning event.
-
-    Sets policy_decision field on the event artifact.
-    """
-    event = get_artifact(learning_event_artifact_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Learning event not found")
-
-    # Update the event payload with the decision
-    payload = event.get("payload", {})
-    payload["policy_decision"] = policy_decision
-    payload["approved_by"] = approved_by
-    payload["approval_reason"] = reason
-
-    # Update in place (in-memory store allows this)
-    from app.saw_lab.store import _batch_artifacts
-
-    _batch_artifacts[learning_event_artifact_id]["payload"] = payload
-
-    return LearningEventApprovalResponse(
-        learning_event_artifact_id=learning_event_artifact_id,
-        policy_decision=policy_decision,
-        approved_by=approved_by,
-    )
+# WP-2 2026-02-05: DUPLICATE - superseded by approve_learning_event at line ~2308
+# @router.post("/learning-events/approve", response_model=LearningEventApprovalResponse)
+# def approve_learning_event(
+#     learning_event_artifact_id: str = Query(
+#         ..., description="Learning event to approve/reject"
+#     ),
+#     policy_decision: str = Query(..., description="ACCEPT or REJECT"),
+#     approved_by: str = Query(..., description="Approver name"),
+#     reason: str = Query("", description="Approval reason"),
+# ) -> LearningEventApprovalResponse:
+#     """
+#     Approve or reject a learning event.
+#
+#     Sets policy_decision field on the event artifact.
+#     """
+#     event = get_artifact(learning_event_artifact_id)
+#     if not event:
+#         raise HTTPException(status_code=404, detail="Learning event not found")
+#
+#     # Update the event payload with the decision
+#     payload = event.get("payload", {})
+#     payload["policy_decision"] = policy_decision
+#     payload["approved_by"] = approved_by
+#     payload["approval_reason"] = reason
+#
+#     # Update in place (in-memory store allows this)
+#     from app.saw_lab.store import _batch_artifacts
+#
+#     _batch_artifacts[learning_event_artifact_id]["payload"] = payload
+#
+#     return LearningEventApprovalResponse(
+#         learning_event_artifact_id=learning_event_artifact_id,
+#         policy_decision=policy_decision,
+#         approved_by=approved_by,
+#     )
 
 
 @router.get("/learning-events/by-execution")
@@ -2490,165 +2492,167 @@ def list_executions_with_learning(
 
 # ---------------------------------------------------------------------------
 # Alternative Metrics Rollup Endpoints (different path format)
+# WP-2 2026-02-05: DISABLED - These are duplicates of endpoints at lines ~2057-2187
+# The earlier implementations are canonical.
 # ---------------------------------------------------------------------------
 
 
-@router.get("/metrics/rollup/by-execution")
-def get_metrics_rollup_by_execution_alt(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
-) -> Dict[str, Any]:
-    """
-    Compute metrics rollup preview for an execution (alternative path).
-
-    Returns aggregated metrics from all job logs.
-    """
-    execution = get_artifact(batch_execution_artifact_id)
-    if not execution:
-        raise HTTPException(status_code=404, detail="Execution not found")
-
-    logs = query_job_logs_by_execution(batch_execution_artifact_id)
-
-    # Aggregate metrics
-    total_cut_time = 0.0
-    total_setup_time = 0.0
-    parts_ok = 0
-    parts_scrap = 0
-    burn_events = 0
-    tearout_events = 0
-    kickback_events = 0
-
-    for log in logs:
-        metrics = log.get("payload", {}).get("metrics", {})
-        total_cut_time += metrics.get("cut_time_s", 0.0)
-        total_setup_time += metrics.get("setup_time_s", 0.0)
-        parts_ok += metrics.get("parts_ok", 0)
-        parts_scrap += metrics.get("parts_scrap", 0)
-        if metrics.get("burn"):
-            burn_events += 1
-        if metrics.get("tearout"):
-            tearout_events += 1
-        if metrics.get("kickback"):
-            kickback_events += 1
-
-    parts_total = parts_ok + parts_scrap
-    yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
-
-    return {
-        "batch_execution_artifact_id": batch_execution_artifact_id,
-        "log_count": len(logs),
-        "times": {
-            "total_cut_time_s": total_cut_time,
-            "total_setup_time_s": total_setup_time,
-            "total_time_s": total_cut_time + total_setup_time,
-        },
-        "yield": {
-            "parts_ok": parts_ok,
-            "parts_scrap": parts_scrap,
-            "parts_total": parts_total,
-            "yield_pct": round(yield_pct, 2),
-        },
-        "events": {
-            "burn_events": burn_events,
-            "tearout_events": tearout_events,
-            "kickback_events": kickback_events,
-        },
-    }
-
-
-@router.post("/metrics/rollup/by-execution")
-def persist_metrics_rollup_by_execution_alt(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
-) -> Dict[str, Any]:
-    """
-    Persist metrics rollup artifact for an execution (alternative path).
-
-    Creates and stores a rollup artifact with aggregated metrics.
-    """
-    execution = get_artifact(batch_execution_artifact_id)
-    if not execution:
-        raise HTTPException(status_code=404, detail="Execution not found")
-
-    # Compute metrics same as GET
-    logs = query_job_logs_by_execution(batch_execution_artifact_id)
-
-    total_cut_time = 0.0
-    total_setup_time = 0.0
-    parts_ok = 0
-    parts_scrap = 0
-    burn_events = 0
-    tearout_events = 0
-    kickback_events = 0
-
-    for log in logs:
-        metrics = log.get("payload", {}).get("metrics", {})
-        total_cut_time += metrics.get("cut_time_s", 0.0)
-        total_setup_time += metrics.get("setup_time_s", 0.0)
-        parts_ok += metrics.get("parts_ok", 0)
-        parts_scrap += metrics.get("parts_scrap", 0)
-        if metrics.get("burn"):
-            burn_events += 1
-        if metrics.get("tearout"):
-            tearout_events += 1
-        if metrics.get("kickback"):
-            kickback_events += 1
-
-    parts_total = parts_ok + parts_scrap
-    yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
-
-    decision_id = execution.get("payload", {}).get("batch_decision_artifact_id")
-
-    rollup_payload = {
-        "batch_execution_artifact_id": batch_execution_artifact_id,
-        "parent_batch_decision_artifact_id": decision_id,
-        "log_count": len(logs),
-        "metrics": {
-            "cut_time_s": total_cut_time,
-            "setup_time_s": total_setup_time,
-            "total_time_s": total_cut_time + total_setup_time,
-            "parts_ok": parts_ok,
-            "parts_scrap": parts_scrap,
-            "parts_total": parts_total,
-            "yield_pct": round(yield_pct, 2),
-        },
-        "events": {
-            "burn_events": burn_events,
-            "tearout_events": tearout_events,
-            "kickback_events": kickback_events,
-        },
-    }
-
-    rollup_id = store_artifact(
-        kind="saw_batch_execution_rollup",
-        payload=rollup_payload,
-        parent_id=batch_execution_artifact_id,
-    )
-
-    return {
-        "artifact_id": rollup_id,
-        "kind": "saw_batch_execution_rollup",
-        "payload": rollup_payload,
-    }
+# @router.get("/metrics/rollup/by-execution")
+# def get_metrics_rollup_by_execution_alt(
+#     batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+# ) -> Dict[str, Any]:
+#     """
+#     Compute metrics rollup preview for an execution (alternative path).
+#
+#     Returns aggregated metrics from all job logs.
+#     """
+#     execution = get_artifact(batch_execution_artifact_id)
+#     if not execution:
+#         raise HTTPException(status_code=404, detail="Execution not found")
+#
+#     logs = query_job_logs_by_execution(batch_execution_artifact_id)
+#
+#     # Aggregate metrics
+#     total_cut_time = 0.0
+#     total_setup_time = 0.0
+#     parts_ok = 0
+#     parts_scrap = 0
+#     burn_events = 0
+#     tearout_events = 0
+#     kickback_events = 0
+#
+#     for log in logs:
+#         metrics = log.get("payload", {}).get("metrics", {})
+#         total_cut_time += metrics.get("cut_time_s", 0.0)
+#         total_setup_time += metrics.get("setup_time_s", 0.0)
+#         parts_ok += metrics.get("parts_ok", 0)
+#         parts_scrap += metrics.get("parts_scrap", 0)
+#         if metrics.get("burn"):
+#             burn_events += 1
+#         if metrics.get("tearout"):
+#             tearout_events += 1
+#         if metrics.get("kickback"):
+#             kickback_events += 1
+#
+#     parts_total = parts_ok + parts_scrap
+#     yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
+#
+#     return {
+#         "batch_execution_artifact_id": batch_execution_artifact_id,
+#         "log_count": len(logs),
+#         "times": {
+#             "total_cut_time_s": total_cut_time,
+#             "total_setup_time_s": total_setup_time,
+#             "total_time_s": total_cut_time + total_setup_time,
+#         },
+#         "yield": {
+#             "parts_ok": parts_ok,
+#             "parts_scrap": parts_scrap,
+#             "parts_total": parts_total,
+#             "yield_pct": round(yield_pct, 2),
+#         },
+#         "events": {
+#             "burn_events": burn_events,
+#             "tearout_events": tearout_events,
+#             "kickback_events": kickback_events,
+#         },
+#     }
 
 
-@router.get("/metrics/rollup/alias")
-def get_metrics_rollup_alias(
-    batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
-) -> List[Dict[str, Any]]:
-    """
-    List all metrics rollup artifacts for an execution (alias lookup).
-    """
-    rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
+# @router.post("/metrics/rollup/by-execution")
+# def persist_metrics_rollup_by_execution_alt(
+#     batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+# ) -> Dict[str, Any]:
+#     """
+#     Persist metrics rollup artifact for an execution (alternative path).
+#
+#     Creates and stores a rollup artifact with aggregated metrics.
+#     """
+#     execution = get_artifact(batch_execution_artifact_id)
+#     if not execution:
+#         raise HTTPException(status_code=404, detail="Execution not found")
+#
+#     # Compute metrics same as GET
+#     logs = query_job_logs_by_execution(batch_execution_artifact_id)
+#
+#     total_cut_time = 0.0
+#     total_setup_time = 0.0
+#     parts_ok = 0
+#     parts_scrap = 0
+#     burn_events = 0
+#     tearout_events = 0
+#     kickback_events = 0
+#
+#     for log in logs:
+#         metrics = log.get("payload", {}).get("metrics", {})
+#         total_cut_time += metrics.get("cut_time_s", 0.0)
+#         total_setup_time += metrics.get("setup_time_s", 0.0)
+#         parts_ok += metrics.get("parts_ok", 0)
+#         parts_scrap += metrics.get("parts_scrap", 0)
+#         if metrics.get("burn"):
+#             burn_events += 1
+#         if metrics.get("tearout"):
+#             tearout_events += 1
+#         if metrics.get("kickback"):
+#             kickback_events += 1
+#
+#     parts_total = parts_ok + parts_scrap
+#     yield_pct = (parts_ok / parts_total * 100) if parts_total > 0 else 0.0
+#
+#     decision_id = execution.get("payload", {}).get("batch_decision_artifact_id")
+#
+#     rollup_payload = {
+#         "batch_execution_artifact_id": batch_execution_artifact_id,
+#         "parent_batch_decision_artifact_id": decision_id,
+#         "log_count": len(logs),
+#         "metrics": {
+#             "cut_time_s": total_cut_time,
+#             "setup_time_s": total_setup_time,
+#             "total_time_s": total_cut_time + total_setup_time,
+#             "parts_ok": parts_ok,
+#             "parts_scrap": parts_scrap,
+#             "parts_total": parts_total,
+#             "yield_pct": round(yield_pct, 2),
+#         },
+#         "events": {
+#             "burn_events": burn_events,
+#             "tearout_events": tearout_events,
+#             "kickback_events": kickback_events,
+#         },
+#     }
+#
+#     rollup_id = store_artifact(
+#         kind="saw_batch_execution_rollup",
+#         payload=rollup_payload,
+#         parent_id=batch_execution_artifact_id,
+#     )
+#
+#     return {
+#         "artifact_id": rollup_id,
+#         "kind": "saw_batch_execution_rollup",
+#         "payload": rollup_payload,
+#     }
 
-    return [
-        {
-            "artifact_id": r.get("artifact_id"),
-            "id": r.get("artifact_id"),
-            "kind": r.get("kind"),
-            "created_utc": r.get("created_utc"),
-            "payload": r.get("payload", {}),
-        }
-        for r in rollups
-    ]
+
+# @router.get("/metrics/rollup/alias")
+# def get_metrics_rollup_alias(
+#     batch_execution_artifact_id: str = Query(..., description="Execution artifact ID"),
+# ) -> List[Dict[str, Any]]:
+#     """
+#     List all metrics rollup artifacts for an execution (alias lookup).
+#     """
+#     rollups = query_metrics_rollups_by_execution(batch_execution_artifact_id)
+#
+#     return [
+#         {
+#             "artifact_id": r.get("artifact_id"),
+#             "id": r.get("artifact_id"),
+#             "kind": r.get("kind"),
+#             "created_utc": r.get("created_utc"),
+#             "payload": r.get("payload", {}),
+#         }
+#         for r in rollups
+#     ]
 
 
 @router.get("/toolpaths/by-decision", response_model=BatchToolpathsByDecisionResponse)
