@@ -334,15 +334,15 @@ const summaryReady = computed(() => !loading.value.anomDurations && !loading.val
 
 function formatPct(p:number){ return `${(p*100).toFixed(1)}%` }
 
-// Fetchers (align with router paths)
-async function fetchComplexity(){ try{ const r = await fetch('/api/analytics/pattern/complexity'); if(r.ok) complexity.value = await r.json() } finally { loading.value.complexity=false } }
-async function fetchEfficiency(){ try{ const r = await fetch('/api/analytics/material/efficiency'); if(r.ok) materialEfficiency.value = await r.json() } finally { loading.value.efficiency=false } }
-async function fetchStatus(){ try{ const r = await fetch('/api/analytics/job/status_distribution'); if(r.ok) statusDist.value = await r.json() } finally { loading.value.status=false } }
-async function fetchSuccess(){ try{ const r = await fetch('/api/analytics/job/success_trends'); if(r.ok) successTrend.value = await r.json() } finally { loading.value.success=false } }
-async function fetchCorrelation(){ try{ const r = await fetch('/api/analytics/advanced/correlation'); if(r.ok) correlation.value = await r.json(); else correlation.value={features:[],matrix:[]} } finally { loading.value.correlation=false } }
-async function fetchDurationAnomalies(){ try{ const r = await fetch('/api/analytics/advanced/anomalies/durations'); durationAnomalies.value = r.ok ? await r.json() : [] } finally { loading.value.anomDurations=false } }
-async function fetchSuccessAnomalies(){ try{ const r = await fetch('/api/analytics/advanced/anomalies/success'); successAnomalies.value = r.ok ? await r.json() : [] } finally { loading.value.anomSuccess=false } }
-async function predictRisk(){ try{ loading.value.predict=true; const r = await fetch('/api/analytics/advanced/predict',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(riskForm.value) }); riskResult.value = r.ok? await r.json(): { risk_score:0, advice:'No prediction available'} } finally { loading.value.predict=false } }
+// Fetchers (aligned with actual router paths - WP-2 fix 2026-02-06)
+async function fetchComplexity(){ try{ const r = await fetch('/api/patterns/complexity'); if(r.ok) complexity.value = await r.json() } finally { loading.value.complexity=false } }
+async function fetchEfficiency(){ try{ const r = await fetch('/api/materials/efficiency'); if(r.ok) materialEfficiency.value = await r.json() } finally { loading.value.efficiency=false } }
+async function fetchStatus(){ try{ const r = await fetch('/api/jobs/status'); if(r.ok) statusDist.value = await r.json() } finally { loading.value.status=false } }
+async function fetchSuccess(){ try{ const r = await fetch('/api/jobs/success-trends'); if(r.ok) successTrend.value = await r.json() } finally { loading.value.success=false } }
+async function fetchCorrelation(){ try{ const r = await fetch('/api/advanced/correlation'); if(r.ok) correlation.value = await r.json(); else correlation.value={features:[],matrix:[]} } finally { loading.value.correlation=false } }
+async function fetchDurationAnomalies(){ try{ const r = await fetch('/api/advanced/anomalies/durations'); durationAnomalies.value = r.ok ? await r.json() : [] } finally { loading.value.anomDurations=false } }
+async function fetchSuccessAnomalies(){ try{ const r = await fetch('/api/advanced/anomalies/success'); successAnomalies.value = r.ok ? await r.json() : [] } finally { loading.value.anomSuccess=false } }
+async function predictRisk(){ try{ loading.value.predict=true; const r = await fetch('/api/advanced/predict',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(riskForm.value) }); riskResult.value = r.ok? await r.json(): { risk_score:0, advice:'No prediction available'} } finally { loading.value.predict=false } }
 
 // Helpers
 function heatColor(val:number){ const v=Math.max(-1,Math.min(1,val)); const r=v>0?Math.round(255*v):0; const b=v<0?Math.round(255*-v):0; const g=255-Math.round(255*Math.abs(v)); return `rgb(${r},${g},${b})` }
