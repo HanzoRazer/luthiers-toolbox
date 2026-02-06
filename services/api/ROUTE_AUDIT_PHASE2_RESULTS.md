@@ -3,13 +3,14 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 321
+**Current Route Count:** 309
 **Target:** <300
-**Reduction Achieved:** 209 routes (39%)
+**Reduction Achieved:** 221 routes (42%)
+**Gap to Target:** 10 routes
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 42 Routers
+## DISABLED (Zero Frontend Usage) - 45 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -86,6 +87,19 @@
 |--------|--------|--------|
 | `decision_intelligence_router` | `/api/saw/decision-intel` | DISABLED |
 
+### Batch 10 - 4 routers, -9 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `dxf_plan_router` | `/api/dxf/plan` | DISABLED |
+| `polygon_offset_router` | `/api/polygon/*` | DISABLED |
+| `gcode_backplot_router` | `/api/cam/backplot` | DISABLED |
+| `adaptive_preview_router` | `/api/cam/adaptive-preview` | DISABLED |
+
+### Batch 11 (Commit ded759e) - 1 router, -3 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `rmos_ai_advisory_router` | `/api/rmos/advisories/*` | DISABLED (path mismatch with frontend) |
+
 ---
 
 ## Previously Disabled (WP-2 earlier work)
@@ -138,9 +152,9 @@ These routers have confirmed frontend usage and must be retained:
 
 ## Next Steps to Reach <300
 
-Current: 321 routes
+Current: 309 routes
 Target: <300
-Gap: 21 routes
+Gap: 10 routes
 
 ### Remaining Options:
 
@@ -183,6 +197,8 @@ cd packages/client && npm run type-check
 | Batch 7 | 1 | 6 |
 | Batch 8 | 2 | 60 |
 | Batch 9 | 1 | 4 |
-| **Total** | **39** | **209** |
+| Batch 10 | 4 | 9 |
+| Batch 11 | 1 | 3 |
+| **Total** | **45** | **221** |
 
-**Route Reduction: 530 → 321 (39% reduction)**
+**Route Reduction: 530 → 309 (42% reduction)**
