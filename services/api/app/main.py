@@ -56,7 +56,9 @@ from .meta.router_truth_routes import router as routing_truth_router
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
-from .governance.governance_router import router as governance_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .governance.governance_router import router as governance_router
+governance_router = None
 from .governance.metrics_router import router as metrics_router
 
 
@@ -556,11 +558,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: art_generators_router (%s)", e)
     art_generators_router = None
 
-try:
-    from .art_studio.api.preview_routes import router as art_preview_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: art_preview_router (%s)", e)
-    art_preview_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .art_studio.api.preview_routes import router as art_preview_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: art_preview_router (%s)", e)
+#     art_preview_router = None
+art_preview_router = None
 
 try:
     from .art_studio.api.snapshot_routes import router as art_snapshots_router
@@ -600,17 +604,21 @@ art_cam_promotion_router = None
 # WAVE 16: GOVERNANCE CODE BUNDLE - Canonical Workflow + Run Artifacts (4 routers)
 # Implements governance contracts for server-side feasibility, artifact persistence
 # =============================================================================
-try:
-    from .rmos.api.rmos_feasibility_router import router as rmos_feasibility_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_feasibility_router (%s)", e)
-    rmos_feasibility_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .rmos.api.rmos_feasibility_router import router as rmos_feasibility_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_feasibility_router (%s)", e)
+#     rmos_feasibility_router = None
+rmos_feasibility_router = None
 
-try:
-    from .rmos.api.rmos_toolpaths_router import router as rmos_toolpaths_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_toolpaths_router (%s)", e)
-    rmos_toolpaths_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .rmos.api.rmos_toolpaths_router import router as rmos_toolpaths_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_toolpaths_router (%s)", e)
+#     rmos_toolpaths_router = None
+rmos_toolpaths_router = None
 
 try:
     from .rmos.api.rmos_runs_router import router as rmos_runs_api_router
@@ -625,11 +633,13 @@ except ImportError as e:
     rmos_workflow_router = None
 
 # MVP Wrapper: RMOS-wrapped DXF -> GRBL golden path
-try:
-    from .rmos.mvp_wrapper import router as rmos_mvp_wrapper_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_mvp_wrapper_router (%s)", e)
-    rmos_mvp_wrapper_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .rmos.mvp_wrapper import router as rmos_mvp_wrapper_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_mvp_wrapper_router (%s)", e)
+#     rmos_mvp_wrapper_router = None
+rmos_mvp_wrapper_router = None
 
 # RMOS Runs v2 Operator Pack Export
 try:
@@ -1191,13 +1201,15 @@ if compare_router:
 # Adds run artifact persistence for Art Studio feasibility + snapshots
 # Plus enhanced RMOS logs API with runs_v2 integration
 # =============================================================================
-try:
-    from .art_studio.api.rosette_feasibility_routes import (
-        router as art_feasibility_router,
-    )
-except ImportError as e:
-    _log.warning("Optional router unavailable: art_feasibility_router (%s)", e)
-    art_feasibility_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from .art_studio.api.rosette_feasibility_routes import (
+#         router as art_feasibility_router,
+#     )
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: art_feasibility_router (%s)", e)
+#     art_feasibility_router = None
+art_feasibility_router = None
 
 try:
     from .art_studio.api.rosette_snapshot_routes import router as art_snapshot_router
@@ -1361,7 +1373,8 @@ except ImportError as e:
 app.include_router(routing_truth_router, tags=["_meta"])
 
 # Governance stats endpoint (H5.1) - measure legacy/shadow usage before deletions
-app.include_router(governance_router, prefix="/api", tags=["Governance"])
+if governance_router:
+    app.include_router(governance_router, prefix="/api", tags=["Governance"])
 
 # Prometheus metrics endpoint (H5.2) - no prefix, accessible at /metrics
 app.include_router(metrics_router)
