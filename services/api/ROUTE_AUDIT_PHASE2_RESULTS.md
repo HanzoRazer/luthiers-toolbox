@@ -3,10 +3,10 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 267
+**Current Route Count:** 265
 **Target:** <300
-**Reduction Achieved:** 263 routes (50%)
-**Target Achieved:** Yes (33 under target)
+**Reduction Achieved:** 265 routes (50%)
+**Target Achieved:** Yes (35 under target)
 
 ---
 
@@ -113,6 +113,11 @@
 | Router | Prefix | Status |
 |--------|--------|--------|
 |  |  | DISABLED (duplicates /api/cam/rosette/patterns) |
+
+### Batch 18 - 1 router, -2 routes (CAM post processor path mismatch)
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `cam_post_v155_router` | `/api/cam/post` | DISABLED (frontend uses /api/cam/posts, not /api/cam/post) |
 
 ### Batch 16 - 6 sub-routers, -8 routes (RMOS runs batch endpoints)
 | Router | Prefix | Status |
@@ -250,10 +255,11 @@ cd packages/client && npm run type-check
 | Batch 15 | 1 | 17 |
 | Batch 16 | 6 | 8 |
 | Batch 17 | 1 | 6 |
-| **Total** | **60** | **263** |
+| Batch 18 | 1 | 2 |
+| **Total** | **61** | **265** |
 
-**Route Reduction: 530 → 267 (50% reduction)**
-**Target <300: ACHIEVED**
+**Route Reduction: 530 → 265 (50% reduction)**
+**Target <300: ACHIEVED (35 under target)**
 
 ---
 

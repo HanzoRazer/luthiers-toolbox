@@ -176,7 +176,9 @@ rmos_history_router = None
 # from .routers.cam_relief_v160_router import router as cam_relief_router
 # from .routers.cam_svg_v160_router import router as cam_svg_router
 # from .routers.cam_helical_v161_router import router as cam_helical_router
-from .routers.cam_post_v155_router import router as cam_post_v155_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (frontend uses /api/cam/posts, not /api/cam/post)
+# from .routers.cam_post_v155_router import router as cam_post_v155_router
+cam_post_v155_router = None
 # WP-2 2026-02-06: DISABLED - zero frontend usage (deep audit)
 # from .routers.cam_smoke_v155_router import router as cam_smoke_v155_router
 cam_smoke_v155_router = None
@@ -852,9 +854,10 @@ if rmos_history_router:
 # cam_relief_router → /api/cam/relief
 # cam_svg_router → /api/cam/export
 # cam_helical_router → /api/cam/toolpath/helical
-app.include_router(
-    cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"]
-)  # No consolidated equivalent
+if cam_post_v155_router:
+    app.include_router(
+        cam_post_v155_router, prefix="/api/cam/post", tags=["Post Processor"]
+    )  # No consolidated equivalent
 if cam_smoke_v155_router:
     app.include_router(
         cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"]
