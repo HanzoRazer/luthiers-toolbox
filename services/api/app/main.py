@@ -140,7 +140,9 @@ from .routers.adaptive_router import router as adaptive_router
 # Consolidated: machine_router → machines_consolidated_router
 # from .routers.machine_router import router as machine_router
 from .routers.cam_opt_router import router as cam_opt_router
-from .routers.material_router import router as material_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (3 routes)
+# from .routers.material_router import router as material_router
+material_router = None
 from .routers.cam_metrics_router import router as cam_metrics_router
 from .routers.cam_logs_router import router as cam_logs_router
 from .routers.cam_learn_router import router as cam_learn_router
@@ -236,13 +238,18 @@ from .saw_lab.__init_router__ import router as saw_batch_router
 # =============================================================================
 # G-CODE GENERATORS (2 routers) - Wave 3
 # =============================================================================
-from .routers.body_generator_router import router as body_generator_router
-from .routers.neck_generator_router import router as neck_generator_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (16 routes)
+# from .routers.body_generator_router import router as body_generator_router
+# from .routers.neck_generator_router import router as neck_generator_router
+body_generator_router = None
+neck_generator_router = None
 
 # =============================================================================
 # CAD ENGINE (1 router) - Wave 4
 # =============================================================================
-from .cad.api import dxf_router as cad_dxf_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (7 routes)
+# from .cad.api import dxf_router as cad_dxf_router
+cad_dxf_router = None
 
 # =============================================================================
 # ROSETTE SYSTEM (0 routers) - Wave 5 - REMOVED January 2026
@@ -253,8 +260,12 @@ from .cad.api import dxf_router as cad_dxf_router
 # from .art_studio.rosette_router import router as art_studio_rosette_router
 
 # ART STUDIO BRACING & INLAY ROUTERS
-from .art_studio.bracing_router import router as art_studio_bracing_router
-from .art_studio.inlay_router import router as art_studio_inlay_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (5 routes)
+# from .art_studio.bracing_router import router as art_studio_bracing_router
+art_studio_bracing_router = None
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (7 routes)
+# from .art_studio.inlay_router import router as art_studio_inlay_router
+art_studio_inlay_router = None
 from .routers.art.root_art_router import router as root_art_router
 
 # =============================================================================
@@ -523,11 +534,13 @@ except ImportError as e:
 art_workflow_router = None
 
 # Bundle 32.7.0: Design-First Workflow Binding
-try:
-    from .art_studio.api.design_first_workflow_routes import router as design_first_workflow_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: design_first_workflow_router (%s)", e)
-    design_first_workflow_router = None
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (10 routes)
+# try:
+#     from .art_studio.api.design_first_workflow_routes import router as design_first_workflow_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: design_first_workflow_router (%s)", e)
+#     design_first_workflow_router = None
+design_first_workflow_router = None
 
 # Phase 33.0: CAM Promotion Bridge (orchestration-only; fenced from CAM engine)
 # WP-2 2026-02-05: DISABLED - superseded by design_first_workflow_routes.py
@@ -736,7 +749,9 @@ app.include_router(adaptive_router, prefix="/api", tags=["Adaptive Pocketing"])
 # Consolidated into machines_consolidated_router:
 # app.include_router(machine_router, prefix="/api/machine", tags=["Machine"])
 app.include_router(cam_opt_router, prefix="/api/cam/opt", tags=["CAM Optimization"])
-app.include_router(material_router, prefix="/api/material", tags=["Materials"])
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if material_router:
+    app.include_router(material_router, prefix="/api/material", tags=["Materials"])
 app.include_router(cam_metrics_router, prefix="/api/cam/metrics", tags=["CAM Metrics"])
 app.include_router(cam_logs_router, prefix="/api/cam/logs", tags=["CAM Logs"])
 app.include_router(cam_learn_router, prefix="/api/cam/learn", tags=["CAM Learning"])
@@ -828,15 +843,20 @@ except Exception:
 # See: docs/LEGACY_CODE_STATUS.md
 
 # G-Code Generators (2)
-app.include_router(
-    body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"]
-)
-app.include_router(
-    neck_generator_router, prefix="/api/cam/neck", tags=["G-Code Generators", "Neck"]
-)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if body_generator_router:
+    app.include_router(
+        body_generator_router, prefix="/api/cam/body", tags=["G-Code Generators", "Body"]
+    )
+if neck_generator_router:
+    app.include_router(
+        neck_generator_router, prefix="/api/cam/neck", tags=["G-Code Generators", "Neck"]
+    )
 
 # CAD Engine (1) - Wave 4
-app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if cad_dxf_router:
+    app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 
 # Rosette System - Legacy routes REMOVED January 2026
 # See Wave 18 consolidated CAM routes + Art Studio v2 routes
@@ -844,12 +864,16 @@ app.include_router(cad_dxf_router, prefix="/api/cad", tags=["CAD", "DXF"])
 # art_studio_rosette_router → /api/art/rosette (v2)
 
 # Art Studio Bracing & Inlay Routers
-app.include_router(
-    art_studio_bracing_router, prefix="/api", tags=["Art Studio", "Bracing"]
-)  # → /api/art-studio/bracing/*
-app.include_router(
-    art_studio_inlay_router, prefix="/api", tags=["Art Studio", "Inlay"]
-)  # → /api/art-studio/inlay/*
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if art_studio_bracing_router:
+    app.include_router(
+        art_studio_bracing_router, prefix="/api", tags=["Art Studio", "Bracing"]
+    )  # → /api/art-studio/bracing/*
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+if art_studio_inlay_router:
+    app.include_router(
+        art_studio_inlay_router, prefix="/api", tags=["Art Studio", "Inlay"]
+    )  # → /api/art-studio/inlay/*
 app.include_router(
     root_art_router, tags=["Art Studio", "Root"]
 )  # → /api/art/* (prefix built-in)
@@ -1124,11 +1148,13 @@ except ImportError as e:
 # WAVE 21: ACOUSTICS BUNDLE IMPORT
 # Tap tone measurement bundle ingestion from workstation/field captures
 # =============================================================================
-try:
-    from .rmos.acoustics.router import router as rmos_acoustics_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_acoustics_router (%s)", e)
-    rmos_acoustics_router = None
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (19 routes)
+# try:
+#     from .rmos.acoustics.router import router as rmos_acoustics_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_acoustics_router (%s)", e)
+#     rmos_acoustics_router = None
+rmos_acoustics_router = None
 
 # Wave 20: Art Studio Run Orchestration (3)
 if art_feasibility_router:
@@ -1158,28 +1184,30 @@ if rmos_acoustics_router:
 #            GET/HEAD /attachments/{sha256}, POST /attachments/{sha256}/signed_url,
 #            GET /runs/{run_id}/attachments, GET /index/attachment_meta/{sha256}/exists
 # This is the authoritative attachment router with no-path disclosure + signed URLs.
-try:
-    from .rmos.runs_v2.acoustics_router import router as runs_v2_acoustics_router
-
-    app.include_router(
-        runs_v2_acoustics_router,
-        prefix="/api/rmos/acoustics",
-        tags=["RMOS", "Acoustics"],
-    )
-except ImportError:
-    pass
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+# try:
+#     from .rmos.runs_v2.acoustics_router import router as runs_v2_acoustics_router
+#
+#     app.include_router(
+#         runs_v2_acoustics_router,
+#         prefix="/api/rmos/acoustics",
+#         tags=["RMOS", "Acoustics"],
+#     )
+# except ImportError:
+#     pass
 
 # Wave 22.1: Acoustics Ingest Audit Log (browse/detail endpoints for ingest events)
-try:
-    from .rmos.runs_v2.router_ingest_audit import router as acoustics_ingest_audit_router
-
-    app.include_router(
-        acoustics_ingest_audit_router,
-        prefix="/api/rmos/acoustics",
-        tags=["RMOS", "Acoustics", "Ingest Audit"],
-    )
-except ImportError as e:
-    _log.warning("Optional router unavailable: acoustics_ingest_audit_router (%s)", e)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected
+# try:
+#     from .rmos.runs_v2.router_ingest_audit import router as acoustics_ingest_audit_router
+#
+#     app.include_router(
+#         acoustics_ingest_audit_router,
+#         prefix="/api/rmos/acoustics",
+#         tags=["RMOS", "Acoustics", "Ingest Audit"],
+#     )
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: acoustics_ingest_audit_router (%s)", e)
 
 # =============================================================================
 # WAVE 23: SMART GUITAR TELEMETRY INGESTION
@@ -1236,20 +1264,22 @@ except ImportError as e:
 # Endpoints: GET /api/rmos/validation/scenarios, POST /run, POST /run-batch,
 #            POST /log, GET /summary, GET /sessions, GET /runs
 # =============================================================================
-try:
-    from .rmos.validation.router import router as rmos_validation_router
-    app.include_router(rmos_validation_router, tags=["RMOS", "Validation"])
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_validation_router (%s)", e)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (9 routes)
+# try:
+#     from .rmos.validation.router import router as rmos_validation_router
+#     app.include_router(rmos_validation_router, tags=["RMOS", "Validation"])
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_validation_router (%s)", e)
 
 # =============================================================================
 # WAVE 22.2: RUN LOGS (Audit Surface)
 # =============================================================================
-try:
-    from .rmos.run_logs.router import router as rmos_run_logs_router
-    app.include_router(rmos_run_logs_router, tags=["RMOS", "Run Logs"])
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_run_logs_router (%s)", e)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (5 routes)
+# try:
+#     from .rmos.run_logs.router import router as rmos_run_logs_router
+#     app.include_router(rmos_run_logs_router, tags=["RMOS", "Run Logs"])
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_run_logs_router (%s)", e)
 
 # =============================================================================
 # COMPAT LEGACY ROUTES: REMOVED (January 2026)
