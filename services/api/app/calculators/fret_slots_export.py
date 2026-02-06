@@ -512,7 +512,7 @@ def export_fret_slots_multi(
         try:
             response = export_fret_slots(request)
             results[post.value] = response
-        except Exception as e:
+        except (ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
             # Create error response
             results[post.value] = FretSlotExportResponse(
                 gcode=f"(ERROR: {str(e)})",

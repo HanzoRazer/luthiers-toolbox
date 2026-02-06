@@ -236,6 +236,8 @@ async def preview_fret_slot_cam(request: FretSlotPreviewRequest):
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise  # WP-1: pass through
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -318,12 +320,12 @@ async def cam_preview_health():
     
     try:
         from ..calculators.fret_slots_cam import generate_fret_slot_cam
-    except Exception:
+    except ImportError:
         phase_c_ok = False
     
     try:
         from ..rmos.feasibility_fusion import evaluate_feasibility
-    except Exception:
+    except ImportError:
         phase_d_ok = False
     
     status = "healthy" if (phase_c_ok and phase_d_ok) else "degraded"

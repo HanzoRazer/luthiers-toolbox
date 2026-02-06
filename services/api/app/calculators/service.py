@@ -178,8 +178,8 @@ class CalculatorService:
                 except AttributeError:
                     # Registry method not available - use defaults
                     pass
-                except Exception as e:
-                    # Log unexpected errors but continue with defaults
+                except (KeyError, TypeError) as e:
+                    # WP-1: narrowed from except Exception
                     print(f"Warning: Failed to get empirical limits: {type(e).__name__}: {e}")
                     pass
             
@@ -202,7 +202,7 @@ class CalculatorService:
                 "chipload_mm": round(chipload_mm, 4),
                 "warning": warning
             }
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             import traceback
             print(f"ERROR in check_chipload_feasibility: {type(e).__name__}: {e}")
             traceback.print_exc()
@@ -239,7 +239,7 @@ class CalculatorService:
                 "heat_index": round(heat_index, 2),
                 "warning": warning
             }
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             return {"score": 50.0, "warning": f"Heat calculation error: {str(e)}"}
     
     def check_tool_deflection(
@@ -279,7 +279,7 @@ class CalculatorService:
                 "deflection_mm": round(deflection_mm, 4),
                 "warning": warning
             }
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             return {"score": 50.0, "warning": f"Deflection calculation error: {str(e)}"}
     
     def check_rim_speed(
@@ -309,7 +309,7 @@ class CalculatorService:
                             min_rpm = speed_clamp.get("min_rpm", 12000)
                             max_rpm = speed_clamp.get("max_rpm", 24000)
                             spindle_rpm = (min_rpm + max_rpm) // 2
-                except Exception:
+                except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
                     pass  # Fall back to default
             
             # Rim speed = π * diameter * RPM / 1000 (convert mm to m)
@@ -331,7 +331,7 @@ class CalculatorService:
                 "rim_speed_m_per_min": round(rim_speed_m_per_min, 2),
                 "warning": warning
             }
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             return {"score": 50.0, "warning": f"Rim speed calculation error: {str(e)}"}
     
     def check_geometry_complexity(
@@ -375,7 +375,7 @@ class CalculatorService:
                 "complexity_index": round(complexity_index, 2),
                 "warning": warning
             }
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             return {"score": 50.0, "warning": f"Complexity calculation error: {str(e)}"}
     
     def compute_bom(
@@ -412,7 +412,7 @@ class CalculatorService:
                 estimated_waste_percent=round(waste_percent, 2),
                 notes=notes
             )
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError) as e:
             return RmosBomResult(
                 material_required_mm2=0.0,
                 tool_ids=[],

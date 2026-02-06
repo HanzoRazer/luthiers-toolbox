@@ -264,6 +264,8 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
             },
         }
 
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
     except Exception as e:
         # Create ERROR artifact
         run_id = create_run_id()
@@ -386,6 +388,8 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
             },
         }
 
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
     except Exception as e:
         # Create ERROR artifact
         run_id = create_run_id()

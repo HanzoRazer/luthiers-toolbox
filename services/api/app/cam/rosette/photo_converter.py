@@ -842,7 +842,7 @@ class BatchProcessor:
             job.result = result
             job.status = "complete"
             
-        except Exception as e:
+        except (ValueError, TypeError, IOError, OSError) as e:
             job.status = "error"
             job.error_message = str(e)
         

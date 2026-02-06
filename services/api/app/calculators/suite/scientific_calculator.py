@@ -820,7 +820,7 @@ class ScientificCalculator(FractionCalculator):
         except ValueError as e:
             self.state.error = f"Math error: {e}"
             return 0.0
-        except Exception as e:
+        except (TypeError, OverflowError, ArithmeticError) as e:  # WP-1
             self.state.error = f"Error: {str(e)}"
             return 0.0
 
