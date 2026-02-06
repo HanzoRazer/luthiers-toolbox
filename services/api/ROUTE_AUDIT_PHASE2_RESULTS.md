@@ -3,13 +3,13 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 414
+**Current Route Count:** 321
 **Target:** <300
-**Reduction Achieved:** 116 routes (22%)
+**Reduction Achieved:** 209 routes (39%)
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 25 Routers
+## DISABLED (Zero Frontend Usage) - 42 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -53,6 +53,38 @@
 |--------|--------|--------|
 | `simulation_router` (CAM) | `/api/cam/simulation` | DISABLED |
 | `automation_router` (Compare) | `/api/compare/automation` | DISABLED |
+
+### Batch 5 (Commit 962dc9a) - 2 routers, -4 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `cam_smoke_v155_router` | `/api/cam/smoke` | DISABLED |
+| `cam_adaptive_benchmark_router` | `/api/bench` | DISABLED |
+
+### Batch 6 (Commit 61a2925) - 6 routers, -19 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `cost_router` | `/api/cost` | DISABLED |
+| `dashboard_router` | `/api/dashboard` | DISABLED |
+| `ai_context_adapter_router` | `/api/ai-context` | DISABLED |
+| `saw_compare_router` | `/api/saw/compare` | DISABLED |
+| `rosette_jobs_router` | `/api/rosette/jobs` | DISABLED |
+| `rosette_compare_router` | `/api/rosette/compare` | DISABLED |
+
+### Batch 7 (Commit 5ed1f0f) - 1 router, -6 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `legacy_dxf_exports_router` | (Legacy DXF Exports) | DISABLED |
+
+### Batch 8 (Commit 0323223) - 2 routers, -60 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `saw_batch_router` | `/api/saw/batch/*` | DISABLED (14 subrouters) |
+| `cam_polygon_offset_router` | `/api/cam/polygon/offset` | DISABLED |
+
+### Batch 9 (Commit 6b3775f) - 1 router, -4 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `decision_intelligence_router` | `/api/saw/decision-intel` | DISABLED |
 
 ---
 
@@ -101,29 +133,28 @@ These routers have confirmed frontend usage and must be retained:
 | RMOS | `/api/rmos/*` | 40+ | KEEP |
 | Art Studio | `/api/art/*` | 50+ | KEEP |
 | Compare | `/api/compare/*` | 20+ | KEEP |
-| Saw Lab | `/api/saw/*` | 10+ | KEEP |
 
 ---
 
 ## Next Steps to Reach <300
 
-Current: 414 routes
+Current: 321 routes
 Target: <300
-Gap: ~114 routes
+Gap: 21 routes
 
-### Option A: Deep Endpoint Audit
-Audit individual endpoints within high-usage routers (RMOS, CAM, Art Studio) to find:
-- Duplicate endpoints
-- Legacy endpoints superseded by new implementations
-- Rarely-used endpoints that can be consolidated
+### Remaining Options:
 
-### Option B: Consolidate Remaining Legacy Routers
-Several routers still have duplicate functionality:
-- Legacy `simulation_router` vs new CAM simulation in aggregator
-- Multiple art_studio routers with overlapping functionality
+1. **Endpoint Deduplication in CAM Aggregator**
+   - Some CAM subrouters may have overlapping endpoints with legacy routes
 
-### Option C: Feature Flag Low-Usage Endpoints
-Keep endpoints but gate them behind feature flags for gradual deprecation.
+2. **RMOS Workflow Router Audit**
+   - 17 routes under `/api/rmos/workflow` - verify all are used
+
+3. **Art Studio Pattern Consolidation**
+   - Multiple art pattern endpoints may be redundant
+
+4. **Feature Flag Approach**
+   - Gate remaining rarely-used endpoints behind flags for future deprecation
 
 ---
 
@@ -147,6 +178,11 @@ cd packages/client && npm run type-check
 | Batch 2 | 14 | 68 |
 | Batch 3 | 6 | 8 |
 | Batch 4 | 2 | 3 |
-| **Total** | **27** | **116** |
+| Batch 5 | 2 | 4 |
+| Batch 6 | 6 | 19 |
+| Batch 7 | 1 | 6 |
+| Batch 8 | 2 | 60 |
+| Batch 9 | 1 | 4 |
+| **Total** | **39** | **209** |
 
-**Route Reduction: 530 → 414 (22% reduction)**
+**Route Reduction: 530 → 321 (39% reduction)**
