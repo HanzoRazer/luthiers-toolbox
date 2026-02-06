@@ -93,6 +93,14 @@ def run_with_candidate(client: TestClient):
     )
     assert link_req.status_code == 200, f"Failed to link advisory: {link_req.text}"
 
+    # Review the advisory (required before promoting)
+    review_req = client.post(
+        f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/review",
+        headers=OPERATOR_HEADERS,
+        json={"status": "REVIEWED", "rejected": False, "rating": 5, "notes": "test review"},
+    )
+    assert review_req.status_code == 200, f"Failed to review: {review_req.text}"
+
     # Promote to create a manufacturing candidate
     promote_req = client.post(
         f"/api/rmos/runs/{run_id}/advisory/{advisory_id}/promote",
@@ -102,7 +110,7 @@ def run_with_candidate(client: TestClient):
     assert promote_req.status_code == 200, f"Failed to promote: {promote_req.text}"
 
     data = promote_req.json()
-    candidate_id = data.get("manufactured_candidate_id")
+    candidate_id = data.get("promoted_candidate_id") or data.get("manufactured_candidate_id")
     assert candidate_id, f"No candidate_id in response: {data}"
 
     return {
