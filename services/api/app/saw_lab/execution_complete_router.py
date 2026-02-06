@@ -111,7 +111,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
                         s = s[:-1] + "+00:00"
                     try:
                         return datetime.fromisoformat(s).timestamp()
-                    except Exception:
+                    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                         continue
         return None
 
@@ -175,13 +175,13 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
         try:
             parts_ok = int(m.get("parts_ok") or 0)
             parts_scrap = int(m.get("parts_scrap") or 0)
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             parts_ok, parts_scrap = 0, 0
 
         def _f(key: str) -> float:
             try:
                 return float(m.get(key) or 0.0)
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 return 0.0
 
         cut_time_s = _f("cut_time_s")

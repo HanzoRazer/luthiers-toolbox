@@ -299,7 +299,7 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
             first = items[0]
             if isinstance(first, dict) and first.get("material_id"):
                 material_id = str(first.get("material_id"))
-    except Exception:
+    except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         material_id = None
 
     ops = []
@@ -406,7 +406,7 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                     advisory=decision_intel_advisory,
                 )
                 tuning_applied = bool(payload.get("tuning_applied"))
-    except Exception:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         # Never block planning on intelligence lookup
         decision_intel_advisory = None
         tuning_applied = False
@@ -537,7 +537,7 @@ def _extract_base_context(
                         rpm = float(plan_ctx.get("spindle_rpm") or plan_ctx.get("max_rpm") or rpm)
                         feed = float(plan_ctx.get("feed_rate_mmpm") or plan_ctx.get("feed_rate_mm_per_min") or feed)
                         doc = float(plan_ctx.get("doc_mm") or doc)
-        except Exception:
+        except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             pass  # Plan lookup is best-effort
 
     return {
@@ -642,7 +642,7 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
                 applied_context_patch = _apply_patch_to_context_patch(
                     base_context, applied_multipliers
                 )
-        except Exception:
+        except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             # Never fail the decision due to advisory lookup errors
             pass
 
@@ -1233,7 +1233,7 @@ def log_batch_job(
             batch_label=execution.get("batch_label"),
             tool_kind="saw",
         )
-    except Exception:
+    except (ImportError, RuntimeError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         pass
 
     # Optionally create metrics rollup
@@ -1499,7 +1499,7 @@ def _store_rollup_for_query(
                 ),
             },
         )
-    except Exception:
+    except (ImportError, OSError, RuntimeError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         # Graceful fallback if runs artifact store not available
         pass
 

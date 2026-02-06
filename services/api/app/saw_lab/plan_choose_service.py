@@ -98,5 +98,5 @@ def find_latest_plan_choose(
         candidates.sort(key=_ts, reverse=True)
         return candidates[0]
 
-    except Exception:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError):  # WP-1: narrowed from except Exception
         return None

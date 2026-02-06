@@ -15,7 +15,7 @@ _RE_FLOAT = re.compile(r"([-+]?\d+(?:\.\d+)?)")
 def _to_float(s: str) -> Optional[float]:
     try:
         return float(s)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return None
 
 
@@ -126,7 +126,7 @@ def _read_attachment_meta(sha256: str) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(meta_path.read_text(encoding="utf-8"))
-    except Exception:
+    except (IOError, OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return {}
 
 
@@ -388,7 +388,7 @@ def validate_toolpaths_artifact_static(
                 if meta:
                     out["summary"]["attachment_meta"] = meta
                 return out
-            except Exception as e:
+            except (IOError, OSError, FileNotFoundError, ValueError, UnicodeDecodeError) as e:  # WP-1: narrowed from except Exception
                 return {
                     "ok": False,
                     "errors": [f"failed to read gcode attachment: {sha}: {type(e).__name__}: {e}"],

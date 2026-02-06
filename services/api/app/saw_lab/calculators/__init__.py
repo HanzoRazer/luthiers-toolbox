@@ -105,7 +105,7 @@ class FeasibilityCalculatorBundle:
                 if result.warning:
                     warnings.append(result.warning)
                     
-            except Exception as e:
+            except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
                 # Calculator failed - add warning and default score
                 warnings.append(f"{name} calculator error: {str(e)}")
                 calculator_results[name] = SawCalculatorResult(

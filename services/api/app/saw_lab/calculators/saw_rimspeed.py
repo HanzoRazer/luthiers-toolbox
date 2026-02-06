@@ -95,7 +95,7 @@ class SawRimSpeedCalculator:
                 }
             )
             
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
             return SawCalculatorResult(
                 calculator_name="rim_speed",
                 score=50.0,

@@ -54,5 +54,5 @@ def get_latest_approved_delta_advisory(
                 "note": "Found approved tuning delta. Use /stamp-plan-link to apply.",
             }
         return None
-    except Exception:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         return None
