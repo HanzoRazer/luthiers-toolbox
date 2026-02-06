@@ -28,7 +28,7 @@ try:
     import pyclipper
 
     HAVE_PYCLIPPER = True
-except Exception:
+except ImportError:
     HAVE_PYCLIPPER = False
 
 try:
@@ -38,7 +38,7 @@ try:
     from shapely.ops import unary_union
 
     HAVE_SHAPELY = True
-except Exception:
+except ImportError:
     HAVE_SHAPELY = False
 
 # Imports for /gcode OPERATION endpoint

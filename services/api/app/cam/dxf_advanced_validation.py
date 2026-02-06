@@ -424,7 +424,7 @@ class TopologyValidator:
                         repair_suggestion="Remove entity or increase size"
                     ))
             
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 self.issues.append(TopologyIssue(
                     severity=Severity.ERROR,
                     message=f"Failed to validate geometry on layer '{entity.dxf.layer}': {str(e)}",
@@ -473,7 +473,7 @@ class TopologyValidator:
                 # buffer(0) didn't fix it
                 return "Complex topology error - manual repair required in CAD software"
         
-        except Exception as e:
+        except (ValueError, TypeError) as e:
             return f"Manual repair required in CAD software ({str(e)})"
     
     def check_line_segments(self) -> List[TopologyIssue]:

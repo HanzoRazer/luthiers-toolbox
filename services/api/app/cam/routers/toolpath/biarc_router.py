@@ -202,6 +202,8 @@ def biarc_gcode(req: BiarcReq) -> Response:
 
         return resp
 
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
     except Exception as e:
         # Create ERROR artifact
         run_id = create_run_id()

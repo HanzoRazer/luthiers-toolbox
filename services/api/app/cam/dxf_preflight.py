@@ -382,7 +382,7 @@ class DXFPreflight:
                 self.msp = self.doc.modelspace()
             finally:
                 os.unlink(tmp_path)
-        except Exception as e:
+        except (IOError, OSError, ValueError) as e:
             self.issues.append(Issue(
                 severity=Severity.ERROR,
                 message=f"Failed to read DXF file: {str(e)}",

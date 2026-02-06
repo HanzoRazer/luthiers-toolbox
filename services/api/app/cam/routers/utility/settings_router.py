@@ -119,7 +119,7 @@ def get_settings_summary() -> Dict[str, Any]:
         from ....services.machine_store import MachineStore
         ms = MachineStore()
         machines_count = len(ms.list_all())
-    except Exception:
+    except (ImportError, OSError):
         pass  # gracefully fallback to 0
 
     # Try loading from PostStore (may not exist yet)
@@ -127,14 +127,14 @@ def get_settings_summary() -> Dict[str, Any]:
         from ....services.post_store import PostStore
         ps = PostStore()
         posts_count = len(ps.list_all())
-    except Exception:
+    except (ImportError, OSError):
         pass  # gracefully fallback to 0
 
     # PipelinePresetStore should always exist
     try:
         pps = PipelinePresetStore()
         pipeline_presets_count = len(pps.list_all())
-    except Exception:
+    except (ImportError, OSError):
         pass  # gracefully fallback to 0
 
     return {
@@ -166,7 +166,7 @@ async def cam_settings_export() -> Dict[str, Any]:
         from ....services.machine_store import MachineStore
         m_store = MachineStore()
         machines = list(m_store.list_all() or [])
-    except Exception:
+    except (ImportError, OSError):
         machines = []
 
     # Posts
@@ -174,14 +174,14 @@ async def cam_settings_export() -> Dict[str, Any]:
         from ....services.post_store import PostStore
         p_store = PostStore()
         posts = list(p_store.list_all() or [])
-    except Exception:
+    except (ImportError, OSError):
         posts = []
 
     # Presets
     try:
         pps = PipelinePresetStore()
         presets = list(pps.list_all() or [])
-    except Exception:
+    except (ImportError, OSError):
         presets = []
 
     return {
@@ -233,7 +233,7 @@ async def cam_settings_import(
                 report["imported"]["machines"] += 1
             except Exception as exc:
                 add_error("machine", m.id, exc)
-    except Exception as exc:
+    except (ImportError, OSError) as exc:
         add_error("machine_store", "_", exc)
 
     # --- Posts ---
@@ -251,7 +251,7 @@ async def cam_settings_import(
                 report["imported"]["posts"] += 1
             except Exception as exc:
                 add_error("post", p.id, exc)
-    except Exception as exc:
+    except (ImportError, OSError) as exc:
         add_error("post_store", "_", exc)
 
     # --- Presets ---
@@ -268,7 +268,7 @@ async def cam_settings_import(
                 report["imported"]["pipeline_presets"] += 1
             except Exception as exc:
                 add_error("pipeline_preset", pr.id or pr.name, exc)
-    except Exception as exc:
+    except (ImportError, OSError) as exc:
         add_error("preset_store", "_", exc)
 
     return report

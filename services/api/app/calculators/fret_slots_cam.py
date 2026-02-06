@@ -172,7 +172,7 @@ def generate_fret_slot_toolpaths(
                     # Use maple_hard as reference (most common neck material)
                     maple = woods["species"].get("maple_hard", {})
                     reference_density = maple.get("density_kg_m3", 700.0)
-            except Exception:
+            except (ImportError, KeyError, TypeError, AttributeError):  # WP-1
                 pass  # Fall back to hardcoded 700.0
             
             density_factor = reference_density / context.materials.density_kg_m3
@@ -286,7 +286,7 @@ def _generate_fan_fret_toolpaths(
                 if woods and "species" in woods:
                     maple = woods["species"].get("maple_hard", {})
                     reference_density = maple.get("density_kg_m3", 700.0)
-            except Exception:
+            except (ImportError, KeyError, TypeError, AttributeError):  # WP-1
                 pass  # Fall back to hardcoded 700.0
             
             density_factor = reference_density / context.materials.density_kg_m3

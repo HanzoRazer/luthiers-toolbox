@@ -363,7 +363,7 @@ def sample_spline(spline_entity, max_segments: int = 50, max_error_mm: float = 0
         
         return points
     
-    except Exception as e:
+    except (AttributeError, RuntimeError, TypeError, ValueError) as e:
         # Fallback: Linear sampling with fixed segments
         points = []
         for i in range(max_segments + 1):
@@ -617,7 +617,7 @@ def reconstruct_contours_from_dxf(
             msp = doc.modelspace()
         finally:
             os.unlink(tmp_path)
-    except Exception as e:
+    except (IOError, OSError, ValueError) as e:
         warnings.append(f"Failed to read DXF: {e}")
         return ReconstructionResult(loops=[], warnings=warnings)
     

@@ -544,6 +544,6 @@ def get_scale_from_registry(scale_id: str = "fender_25_5", edition: str = "expre
         if scales and "scales" in scales:
             scale_data = scales["scales"].get(scale_id, {})
             return scale_data.get("length_mm", 647.7)
-    except Exception:
+    except (ImportError, KeyError, TypeError, AttributeError):  # WP-1
         pass  # Fall back to default
     return 647.7  # Fender 25.5" default

@@ -55,7 +55,7 @@ async def simulate_gcode_upload(
     """
     try:
         text = (await file.read()).decode("utf-8", errors="ignore")
-    except Exception as exc:
+    except (UnicodeDecodeError, IOError) as exc:
         raise HTTPException(status_code=400, detail=f"Failed to read file: {exc}") from exc
 
     moves = _parse_gcode_lines(text)
