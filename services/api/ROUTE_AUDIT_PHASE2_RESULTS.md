@@ -3,14 +3,14 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 273
+**Current Route Count:** 267
 **Target:** <300
-**Reduction Achieved:** 257 routes (48%)
-**Target Achieved:** Yes (27 under target)
+**Reduction Achieved:** 263 routes (50%)
+**Target Achieved:** Yes (33 under target)
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 55 Routers
+## DISABLED (Zero Frontend Usage) - 56 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -108,6 +108,11 @@
 | `rmos_cam_intent_router` | `/api/rmos/cam/intent/normalize` | DISABLED |
 
 
+
+### Batch 17 - 1 router, -6 routes (Art Studio rosette patterns duplicate)
+| Router | Prefix | Status |
+|--------|--------|--------|
+|  |  | DISABLED (duplicates /api/cam/rosette/patterns) |
 
 ### Batch 16 - 6 sub-routers, -8 routes (RMOS runs batch endpoints)
 | Router | Prefix | Status |
@@ -244,9 +249,10 @@ cd packages/client && npm run type-check
 | Batch 14 | 4 | 8 |
 | Batch 15 | 1 | 17 |
 | Batch 16 | 6 | 8 |
-| **Total** | **59** | **257** |
+| Batch 17 | 1 | 6 |
+| **Total** | **60** | **263** |
 
-**Route Reduction: 530 → 273 (48% reduction)**
+**Route Reduction: 530 → 267 (50% reduction)**
 **Target <300: ACHIEVED**
 
 ---
