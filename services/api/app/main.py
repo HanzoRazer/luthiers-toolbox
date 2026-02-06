@@ -154,9 +154,13 @@ from .routers.cam_learn_router import router as cam_learn_router
 from .rmos import rmos_router
 
 # Phase B+C: AI Search + Profile Management (3 routers)
-from .rmos.api_ai_routes import router as rmos_ai_router
-from .rmos.api_constraint_profiles import router as rmos_profiles_router
-from .rmos.api_profile_history import router as rmos_history_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (audit: ROUTE_AUDIT_PHASE2_RESULTS.md)
+# from .rmos.api_ai_routes import router as rmos_ai_router
+# from .rmos.api_constraint_profiles import router as rmos_profiles_router
+# from .rmos.api_profile_history import router as rmos_history_router
+rmos_ai_router = None
+rmos_profiles_router = None
+rmos_history_router = None
 
 # =============================================================================
 # CAM SUBSYSTEM (4 routers - legacy routes removed January 2026)
@@ -227,7 +231,9 @@ from .routers.registry_router import router as registry_router
 # SAW LAB (3 routers)
 # Note: saw_blade/gcode/validate/telemetry routers broken - need cam_core
 # =============================================================================
-from .saw_lab.debug_router import router as saw_debug_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (audit: ROUTE_AUDIT_PHASE2_RESULTS.md)
+# from .saw_lab.debug_router import router as saw_debug_router
+saw_debug_router = None
 from .saw_lab.compare_router import router as saw_compare_router
 from .saw_lab.__init_router__ import router as saw_batch_router
 
@@ -287,7 +293,9 @@ music_router = None
 # =============================================================================
 # Consolidated into calculators_consolidated_router:
 # from .routers.calculators_router import router as calculators_router
-from .routers.calculators_consolidated_router import router as calculators_consolidated_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (audit: ROUTE_AUDIT_PHASE2_RESULTS.md)
+# from .routers.calculators_consolidated_router import router as calculators_consolidated_router
+calculators_consolidated_router = None
 # REMOVED: Consolidated into /api/cam/fret_slots (January 2026)
 # from .routers.cam_fret_slots_router import router as cam_fret_slots_router
 from .routers.bridge_router import router as bridge_router
@@ -766,9 +774,12 @@ app.include_router(cam_learn_router, prefix="/api/cam/learn", tags=["CAM Learnin
 
 # RMOS 2.0 (4 routers)
 app.include_router(rmos_router, prefix="/api/rmos", tags=["RMOS"])
-app.include_router(rmos_ai_router, prefix="/api/rmos", tags=["RMOS AI"])
-app.include_router(rmos_profiles_router, prefix="/api/rmos", tags=["RMOS Profiles"])
-app.include_router(rmos_history_router, prefix="/api/rmos", tags=["RMOS History"])
+if rmos_ai_router:
+    app.include_router(rmos_ai_router, prefix="/api/rmos", tags=["RMOS AI"])
+if rmos_profiles_router:
+    app.include_router(rmos_profiles_router, prefix="/api/rmos", tags=["RMOS Profiles"])
+if rmos_history_router:
+    app.include_router(rmos_history_router, prefix="/api/rmos", tags=["RMOS History"])
 
 # CAM Subsystem (4) - Legacy routes removed January 2026
 # REMOVED: Legacy CAM routers - use consolidated /api/cam/* paths
@@ -833,7 +844,8 @@ if instrument_geometry_router:
 app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry"])
 
 # Saw Lab (3)
-app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
+if saw_debug_router:
+    app.include_router(saw_debug_router, prefix="/api/saw/debug", tags=["Saw Lab", "Debug"])
 app.include_router(saw_compare_router)  # Saw Lab Compare (includes /api/saw prefix)
 app.include_router(
     saw_batch_router
@@ -902,7 +914,8 @@ if music_router:
 
 # Wave 7: Calculator Suite + Bridge Calculator + Fret Design (3)
 # Consolidated calculator router (CAM + Math + Luthier)
-app.include_router(calculators_consolidated_router, prefix="/api/calculators", tags=["Calculators"])
+if calculators_consolidated_router:
+    app.include_router(calculators_consolidated_router, prefix="/api/calculators", tags=["Calculators"])
 # REMOVED: cam_fret_slots_router → /api/cam/fret_slots (consolidated)
 app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
 app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
