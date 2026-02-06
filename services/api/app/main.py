@@ -899,13 +899,14 @@ if saw_debug_router:
 # )  # Saw Lab Batch Workflow (includes /api/saw/batch prefix)
 
 # Saw Lab Decision Intelligence (Option A)
-try:
-    from app.saw_lab import include_decision_intel_router
-
-    include_decision_intel_router(app)
-except Exception:
-    # Do not block boot if Saw Lab is partially disabled in a deployment
-    pass
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# try:
+#     from app.saw_lab import include_decision_intel_router
+#
+#     include_decision_intel_router(app)
+# except Exception:
+#     # Do not block boot if Saw Lab is partially disabled in a deployment
+#     pass
 
 # DEPRECATED: Specialty Modules (removed)
 # archtop_router, stratocaster_router, smart_guitar_router, om_router were removed
