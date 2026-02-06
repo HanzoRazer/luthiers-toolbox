@@ -3,10 +3,10 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 306
+**Current Route Count:** 287
 **Target:** <300
-**Reduction Achieved:** 224 routes (42%)
-**Gap to Target:** 7 routes
+**Reduction Achieved:** 243 routes (46%)
+**Target Achieved:** Yes (13 under)
 
 ---
 
@@ -107,6 +107,16 @@
 | `cam_dxf_adaptive_router` | `/api/cam/dxf_adaptive_plan_run` | DISABLED |
 | `rmos_cam_intent_router` | `/api/rmos/cam/intent/normalize` | DISABLED |
 
+
+
+### Batch 13 - 1 router, -19 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| \ | \, \, \ | DISABLED |
+
+Note: Frontend AnalyticsDashboard.vue calls non-existent \ paths.
+The actual \ routes (\, \, \) have zero frontend usage.
+
 ---
 
 ## Previously Disabled (WP-2 earlier work)
@@ -157,11 +167,11 @@ These routers have confirmed frontend usage and must be retained:
 
 ---
 
-## Next Steps to Reach <300
+## Target Achieved
 
-Current: 306 routes
+Current: 287 routes
 Target: <300
-Gap: 7 routes
+Under target by: 13 routes
 
 ### Remaining Options:
 
@@ -207,6 +217,8 @@ cd packages/client && npm run type-check
 | Batch 10 | 4 | 9 |
 | Batch 11 | 1 | 3 |
 | Batch 12 | 3 | 3 |
-| **Total** | **48** | **224** |
+| Batch 13 | 1 | 19 |
+| **Total** | **49** | **243** |
 
-**Route Reduction: 530 → 306 (42% reduction)**
+**Route Reduction: 530 → 287 (46% reduction)**
+**Target <300: ACHIEVED**
