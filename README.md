@@ -66,9 +66,9 @@ All critical CNC toolpath generation features are production-ready:
 - **Lab**: `/lab/cam-essentials` and `/lab/drilling`
 
 ### **📊 Integration Metrics**
-- **Backend Coverage**: 100% (all routers operational)
-- **Frontend Coverage**: 100% (all operations have UI)
-- **Test Coverage**: 100% (comprehensive smoke test suites)
+- **Backend Coverage**: ~85% (most routers operational, some legacy deprecated)
+- **Frontend Coverage**: ~80% (most operations have UI)
+- **Test Coverage**: 36% (measured via pytest --cov, 1,363 tests passing)
 - **CI/CD**: ✅ GitHub Actions workflows configured
 - **Documentation**: ✅ Complete with quickrefs and integration guides
 
