@@ -3,14 +3,14 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 281
+**Current Route Count:** 273
 **Target:** <300
-**Reduction Achieved:** 249 routes (47%)
-**Target Achieved:** Yes (19 under target)
+**Reduction Achieved:** 257 routes (48%)
+**Target Achieved:** Yes (27 under target)
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 49 Routers
+## DISABLED (Zero Frontend Usage) - 55 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -108,6 +108,16 @@
 | `rmos_cam_intent_router` | `/api/rmos/cam/intent/normalize` | DISABLED |
 
 
+
+### Batch 16 - 6 sub-routers, -8 routes (RMOS runs batch endpoints)
+| Router | Prefix | Status |
+|--------|--------|--------|
+|  | ,  | DISABLED |
+|  |  | DISABLED |
+|  |  | DISABLED |
+|  |  | DISABLED |
+|  |  | DISABLED |
+|  | ,  | DISABLED |
 
 ### Batch 15 - 1 router, -17 routes
 | Router | Prefix | Status |
@@ -233,9 +243,10 @@ cd packages/client && npm run type-check
 | Batch 13 | 0 | 0 | (frontend fix, router re-enabled)
 | Batch 14 | 4 | 8 |
 | Batch 15 | 1 | 17 |
-| **Total** | **53** | **249** |
+| Batch 16 | 6 | 8 |
+| **Total** | **59** | **257** |
 
-**Route Reduction: 530 → 281 (47% reduction)**
+**Route Reduction: 530 → 273 (48% reduction)**
 **Target <300: ACHIEVED**
 
 ---
