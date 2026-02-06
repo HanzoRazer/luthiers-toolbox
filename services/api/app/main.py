@@ -836,21 +836,24 @@ if cam_smoke_v155_router:
     app.include_router(
         cam_smoke_v155_router, prefix="/api/cam/smoke", tags=["Smoke Tests"]
     )  # No consolidated equivalent
-app.include_router(
-    gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"]
-)  # No consolidated equivalent
-app.include_router(
-    adaptive_preview_router,
-    prefix="/api/cam/adaptive-preview",
-    tags=["Adaptive Preview"],
-)  # No consolidated equivalent
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(
+#     gcode_backplot_router, prefix="/api/cam/backplot", tags=["G-Code Backplot"]
+# )  # No consolidated equivalent
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(
+#     adaptive_preview_router,
+#     prefix="/api/cam/adaptive-preview",
+#     tags=["Adaptive Preview"],
+# )  # No consolidated equivalent
 
 # Pipeline (2)
 if pipeline_presets_router:
     app.include_router(
         pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"]
     )
-app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
 # Legacy DXF Exports (1) - Migrated from ./server, routes at /exports/*
 # WP-2 2026-02-06: DISABLED - zero frontend usage, legacy
@@ -1068,7 +1071,8 @@ if cam_adaptive_benchmark_router:
 # REMOVED: cam_risk_aggregate_router → /api/cam/risk (consolidated)
 # REMOVED: compare_risk_aggregate_router → /api/compare/risk (consolidated)
 # REMOVED: compare_risk_bucket_detail_router → /api/compare/risk (consolidated)
-app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
 if job_insights_router:
     app.include_router(
         job_insights_router, prefix="", tags=["Jobs", "Insights"]
