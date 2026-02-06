@@ -560,6 +560,106 @@ def test_high_load_limits_directives():
 
 ---
 
+---
+
+## Appendix A: Intervention Intensity Scale
+
+| ID | AttentionAction |
+|-----|--------|
+| `I0_NONE` | Do nothing |
+| `I1_POINT` | INSPECT |
+| `I2_REVIEW` | REVIEW |
+| `I3_COMPARE` | COMPARE |
+| `I4_DECIDE` | DECIDE / CONFIRM |
+| `I5_INTERVENE` | INTERVENE / ABORT (safety only) |
+
+---
+
+## Appendix B: UWSM Gate Constraints (Quick Reference)
+
+UWSM dimensions constrain intensity:
+
+- High `cognitive_load_sensitivity` → max 1 directive
+- `initiative_tolerance=user_led` → suggest only after user request
+- Low `guidance_density` → minimal explanation
+
+---
+
+## Appendix C: Mode → Allowed Outputs
+
+| Mode | Allowed Outputs |
+|----|----------------|
+| M0 | Diagnostic `AgentEventV1` only |
+| M1 | `AttentionDirectiveV1` |
+| M2 | Directive + Analyzer Attention commands |
+
+---
+
+## Appendix D: Moment → Default Action (Quick Reference)
+
+| Moment | Default Action |
+|------|----------------|
+| FIRST_SIGNAL | INSPECT |
+| HESITATION | INSPECT |
+| OVERLOAD | REVIEW |
+| DECISION_REQUIRED | DECIDE |
+| FINDING | REVIEW |
+| ERROR | REVIEW |
+
+---
+
+## Appendix E: One-Trace Onboarding Rule
+
+**Rule ID:** `POLICY_FTUE_ONE_TRACE_v1`
+
+If:
+- FIRST_SIGNAL
+- First-time user
+- Analyzer supports attention commands
+
+Then:
+- `hide_all_except(primary_panel)`
+- `focus_trace(primary_trace)`
+- Emit directive explaining *what to watch*
+
+---
+
+## Appendix F: Safety Rules
+
+- Never emit more than one critical directive at once
+- Never override explicit user dismissal
+- Never escalate urgency without new evidence
+- Never act without capability confirmation
+
+---
+
+## Appendix G: Diagnostic Output Format
+
+Every decision emits an internal diagnostic record:
+
+```json
+{
+  "moment": "OVERLOAD",
+  "uwsm_snapshot": "...",
+  "selected_action": "REVIEW",
+  "mode": "M1",
+  "suppressed_actions": ["COMPARE"],
+  "rule_id": "POLICY_OVERLOAD_REVIEW_v1"
+}
+```
+
+---
+
+## Appendix H: Non-Goals
+
+- **No learning** — UWSM lives elsewhere
+- **No personalization updates** — handled by UWSM updater
+- **No tool orchestration** — tools are autonomous
+
+This document defines **decision policy only**.
+
+---
+
 **Document Version:** 1.0.0
 **Last Updated:** 2026-02-06
 **See Also:** [UWSM_UPDATE_RULES_V1.md](UWSM_UPDATE_RULES_V1.md), [EVENT_MOMENTS_CATALOG_V1.md](EVENT_MOMENTS_CATALOG_V1.md)
