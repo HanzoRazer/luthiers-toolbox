@@ -500,11 +500,14 @@ except ImportError as e:
     _log.warning("Optional router unavailable: art_snapshots_router (%s)", e)
     art_snapshots_router = None
 
-try:
-    from .art_studio.api.workflow_routes import router as art_workflow_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: art_workflow_router (%s)", e)
-    art_workflow_router = None
+# WP-2 2026-02-06: DISABLED - superseded by /api/rmos/workflow (canonical)
+# Legacy Art Studio workflow routes. All frontend uses RMOS workflow via SDK.
+# try:
+#     from .art_studio.api.workflow_routes import router as art_workflow_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: art_workflow_router (%s)", e)
+#     art_workflow_router = None
+art_workflow_router = None
 
 # Bundle 32.7.0: Design-First Workflow Binding
 try:
@@ -583,12 +586,15 @@ except ImportError as e:
 
 # =============================================================================
 # WAVE 17: WORKFLOW SESSIONS (SQLite persistence layer)
+# WP-2 2026-02-06: DISABLED - standalone workflow superseded by /api/rmos/workflow
+# Frontend SDK only uses /rmos/workflow/sessions (rmos_workflow_router).
 # =============================================================================
-try:
-    from .workflow.sessions.routes import router as workflow_sessions_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: workflow_sessions_router (%s)", e)
-    workflow_sessions_router = None
+# try:
+#     from .workflow.sessions.routes import router as workflow_sessions_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: workflow_sessions_router (%s)", e)
+#     workflow_sessions_router = None
+workflow_sessions_router = None
 
 # =============================================================================
 # WAVE 18: CAM ROUTER CONSOLIDATION (Phase 5+6)

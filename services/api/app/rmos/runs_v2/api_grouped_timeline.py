@@ -6,8 +6,8 @@ from fastapi import APIRouter, Query
 
 from .batch_grouped_timeline import GroupedTimelinePorts, build_grouped_timeline
 
-
-router = APIRouter(prefix="/runs", tags=["runs"])
+# WP-2 2026-02-06: Removed prefix="/runs" - parent router already has /runs prefix
+router = APIRouter(tags=["runs"])
 
 
 @router.get("/batch-timeline-grouped")
