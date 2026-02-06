@@ -202,7 +202,9 @@ except ImportError as e:
     _log.warning("Optional router unavailable: blueprint_router (%s)", e)
     blueprint_router = None
 
-from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.blueprint_cam_bridge import router as blueprint_cam_bridge_router
+blueprint_cam_bridge_router = None
 
 # =============================================================================
 # MACHINE & POST CONFIGURATION (2 routers - consolidated)
@@ -298,13 +300,19 @@ music_router = None
 calculators_consolidated_router = None
 # REMOVED: Consolidated into /api/cam/fret_slots (January 2026)
 # from .routers.cam_fret_slots_router import router as cam_fret_slots_router
-from .routers.bridge_router import router as bridge_router
-from .routers.fret_router import router as fret_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.bridge_router import router as bridge_router
+bridge_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.fret_router import router as fret_router
+fret_router = None
 
 # =============================================================================
 # WAVE 8: PRESETS + RMOS EXTENSIONS + CAM TOOLS (7 routers)
 # =============================================================================
-from .routers.unified_presets_router import router as unified_presets_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.unified_presets_router import router as unified_presets_router
+unified_presets_router = None
 from .routers.strip_family_router import router as strip_family_router
 # WP-2 2026-02-06: DISABLED - no frontend usage detected (5 routes)
 # from .routers.rmos_patterns_router import router as rmos_patterns_router
@@ -316,7 +324,9 @@ from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # 
 # Consolidated into simulation_consolidated_router:
 # from .routers.sim_metrics_router import router as sim_metrics_router
 from .routers.retract_router import router as retract_router
-from .routers.rosette_photo_router import router as rosette_photo_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.rosette_photo_router import router as rosette_photo_router
+rosette_photo_router = None
 
 # =============================================================================
 # WAVE 9: AI-CAM + DRILL/ROUGHING + COMPARE + DXF PREFLIGHT + JOBLOG + NECK (8 routers)
@@ -329,9 +339,11 @@ except ImportError as e:
 # REMOVED: Consolidated into /api/cam/* (January 2026)
 # from .routers.cam_drill_pattern_router import router as cam_drill_pattern_router
 # from .routers.cam_roughing_router import router as cam_roughing_router
-from .routers.cam_roughing_intent_router import (
-    router as cam_roughing_intent_router,
-)  # H7.2.2.1
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.cam_roughing_intent_router import (
+#     router as cam_roughing_intent_router,
+# )  # H7.2.2.1
+cam_roughing_intent_router = None
 # REMOVED: Consolidated into /api/compare (January 2026)
 # from .routers.compare_router import router as legacy_compare_router
 from .routers.dxf_preflight_router import router as dxf_preflight_router
@@ -342,7 +354,9 @@ except ImportError as e:
     _log.warning("Optional router unavailable: joblog_router (%s)", e)
     joblog_router = None
 from .routers.neck_router import router as neck_router
-from .routers.parametric_guitar_router import router as parametric_guitar_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.parametric_guitar_router import router as parametric_guitar_router
+parametric_guitar_router = None
 
 # =============================================================================
 # WAVE 10: INSTRUMENT + DRILLING + RISK + LEARN + BACKUP (6 routers)
@@ -354,7 +368,9 @@ from .routers.instrument_router import router as instrument_router
 # from .routers.drilling_router import router as drilling_router
 # REMOVED: Consolidated into /api/cam/risk (January 2026)
 # from .routers.cam_risk_router import router as cam_risk_router
-from .routers.job_risk_router import router as job_risk_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.job_risk_router import router as job_risk_router
+job_risk_router = None
 
 # WP-2 2026-02-06: DISABLED - no frontend usage detected
 # try:
@@ -391,7 +407,9 @@ try:
 except ImportError as e:
     _log.warning("Optional router unavailable: advanced_analytics_router (%s)", e)
     advanced_analytics_router = None
-from .routers.probe_router import router as probe_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.probe_router import router as probe_router
+probe_router = None
 # Consolidated into calculators_consolidated_router:
 # from .routers.ltb_calculator_router import router as ltb_calculator_router
 
@@ -404,7 +422,9 @@ from .routers.probe_router import router as probe_router
 from .routers.cam_settings_router import router as cam_settings_router
 # REMOVED: Consolidated into /api/cam/toolpath/biarc (January 2026)
 # from .routers.cam_biarc_router import router as cam_biarc_router
-from .routers.job_intelligence_router import router as job_intelligence_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.job_intelligence_router import router as job_intelligence_router
+job_intelligence_router = None
 
 # =============================================================================
 # WAVE 12: CAM EXTENSIONS + POLYGON (4 routers - legacy removed January 2026)
@@ -424,8 +444,12 @@ from .routers.cam_adaptive_benchmark_router import (
 #     router as compare_risk_bucket_detail_router,
 # )
 from .routers.polygon_offset_router import router as polygon_offset_router
-from .routers.job_insights_router import router as job_insights_router
-from .routers.pipeline_preset_router import router as pipeline_preset_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.job_insights_router import router as job_insights_router
+job_insights_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.pipeline_preset_router import router as pipeline_preset_router
+pipeline_preset_router = None
 
 # =============================================================================
 # WAVE 13 (FINAL): ART PRESETS + CAM UTILITIES + COMPARE + MONITOR (9 routers)
@@ -444,15 +468,19 @@ from .routers.compare_automation_router import router as compare_automation_rout
 # from .routers.compare_risk_bucket_export_router import (
 #     router as compare_risk_bucket_export_router,
 # )
-from .routers.health_router import router as health_router_ext
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.health_router import router as health_router_ext
+health_router_ext = None
 from .routers.live_monitor_drilldown_api import router as live_monitor_router
 
 # =============================================================================
 # CNC PRODUCTION (1 router)
 # =============================================================================
-from .routers.cnc_production.compare_jobs_router import (
-    router as cnc_compare_jobs_router,
-)
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# from .routers.cnc_production.compare_jobs_router import (
+#     router as cnc_compare_jobs_router,
+# )
+cnc_compare_jobs_router = None
 
 # =============================================================================
 # WAVE 14: VISION ENGINE + RMOS RUNS (2 routers)
@@ -817,11 +845,12 @@ if blueprint_router:
     app.include_router(
         blueprint_router, prefix="/api"
     )  # Router has /blueprint prefix internally
-app.include_router(
-    blueprint_cam_bridge_router,
-    prefix="/api/blueprint/cam",
-    tags=["Blueprint CAM Bridge"],
-)
+if blueprint_cam_bridge_router:
+    app.include_router(
+        blueprint_cam_bridge_router,
+        prefix="/api/blueprint/cam",
+        tags=["Blueprint CAM Bridge"],
+    )
 
 # Machine & Post Configuration (2 - consolidated)
 # Consolidated router: combines machine_router, machines_router, machines_tools_router
@@ -917,11 +946,14 @@ if music_router:
 if calculators_consolidated_router:
     app.include_router(calculators_consolidated_router, prefix="/api/calculators", tags=["Calculators"])
 # REMOVED: cam_fret_slots_router → /api/cam/fret_slots (consolidated)
-app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
-app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
+if bridge_router:
+    app.include_router(bridge_router, prefix="/api", tags=["CAM", "Bridge Calculator"])
+if fret_router:
+    app.include_router(fret_router, prefix="/api", tags=["Fret Design"])
 
 # Wave 8: Presets + RMOS Extensions + CAM Tools (7)
-app.include_router(unified_presets_router, prefix="/api", tags=["Presets", "Unified"])
+if unified_presets_router:
+    app.include_router(unified_presets_router, prefix="/api", tags=["Presets", "Unified"])
 app.include_router(
     strip_family_router, prefix="/api/rmos", tags=["RMOS", "Strip Families"]
 )
@@ -939,9 +971,10 @@ app.include_router(
 app.include_router(
     retract_router, prefix="/api/cam/retract", tags=["CAM", "Retract Patterns"]
 )
-app.include_router(
-    rosette_photo_router, prefix="/api", tags=["Rosette", "Photo Import"]
-)
+if rosette_photo_router:
+    app.include_router(
+        rosette_photo_router, prefix="/api", tags=["Rosette", "Photo Import"]
+    )
 
 # Wave 9: AI-CAM + Drill/Roughing + Compare + DXF Preflight + JobLog + Neck (8)
 if ai_cam_router:
@@ -953,17 +986,19 @@ if ai_cam_router:
 # =============================================================================
 # cam_drill_pattern_router → /api/cam/drilling/pattern (consolidated)
 # cam_roughing_router → /api/cam/toolpath/roughing (consolidated)
-app.include_router(
-    cam_roughing_intent_router, prefix="/api", tags=["CAM", "Intent"]
-)  # H7.2.2.1
+if cam_roughing_intent_router:
+    app.include_router(
+        cam_roughing_intent_router, prefix="/api", tags=["CAM", "Intent"]
+    )  # H7.2.2.1
 # REMOVED: legacy_compare_router → /api/compare (consolidated Wave 19)
 app.include_router(dxf_preflight_router, prefix="/api", tags=["DXF", "Preflight"])
 if joblog_router:
     app.include_router(joblog_router, prefix="/api", tags=["JobLog", "Telemetry"])
 app.include_router(neck_router, prefix="/api", tags=["Neck", "Generator"])
-app.include_router(
-    parametric_guitar_router, prefix="/api", tags=["Guitar", "Parametric"]
-)
+if parametric_guitar_router:
+    app.include_router(
+        parametric_guitar_router, prefix="/api", tags=["Guitar", "Parametric"]
+    )
 
 # Wave 10: Instrument + Risk + Learn + Backup (5)
 app.include_router(
@@ -972,7 +1007,8 @@ app.include_router(
 # REMOVED: compare_lab_router → /api/compare/lab (consolidated)
 # REMOVED: drilling_router → /api/cam/drilling (consolidated)
 # REMOVED: cam_risk_router → /api/cam/risk (consolidated)
-app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
+if job_risk_router:
+    app.include_router(job_risk_router, prefix="/api", tags=["Jobs", "Risk"])
 if learn_router:
     app.include_router(learn_router, prefix="/api", tags=["Learn", "Telemetry"])
 if learned_overrides_router:
@@ -988,7 +1024,8 @@ if advanced_analytics_router:
     app.include_router(
         advanced_analytics_router, prefix="/api", tags=["Analytics", "Advanced"]
     )
-app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
+if probe_router:
+    app.include_router(probe_router, prefix="/api", tags=["Probe", "Touch-off"])
 # Consolidated into calculators_consolidated_router:
 # app.include_router(
 #     ltb_calculator_router, prefix="", tags=["Calculator", "LTB"]
@@ -997,9 +1034,10 @@ if dashboard_router:
     app.include_router(dashboard_router, prefix="/api", tags=["Dashboard"])
 app.include_router(cam_settings_router, prefix="/api", tags=["CAM", "Settings"])
 # cam_biarc_router → /api/cam/toolpath/biarc (consolidated)
-app.include_router(
-    job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"]
-)
+if job_intelligence_router:
+    app.include_router(
+        job_intelligence_router, prefix="/api", tags=["Jobs", "Intelligence"]
+    )
 
 # Wave 12: CAM Extensions + Polygon (4 - legacy removed January 2026)
 app.include_router(
@@ -1010,10 +1048,12 @@ app.include_router(
 # REMOVED: compare_risk_aggregate_router → /api/compare/risk (consolidated)
 # REMOVED: compare_risk_bucket_detail_router → /api/compare/risk (consolidated)
 app.include_router(polygon_offset_router, prefix="/api", tags=["CAM", "Polygon"])
-app.include_router(
-    job_insights_router, prefix="", tags=["Jobs", "Insights"]
-)  # Router has /api/cam/job_log prefix
-app.include_router(pipeline_preset_router, prefix="/api", tags=["Pipeline", "Presets"])
+if job_insights_router:
+    app.include_router(
+        job_insights_router, prefix="", tags=["Jobs", "Insights"]
+    )  # Router has /api/cam/job_log prefix
+if pipeline_preset_router:
+    app.include_router(pipeline_preset_router, prefix="/api", tags=["Pipeline", "Presets"])
 
 # Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (9)
 app.include_router(art_presets_router, prefix="/api", tags=["Art", "Presets"])
@@ -1031,13 +1071,15 @@ app.include_router(cam_polygon_offset_router, prefix="/api", tags=["CAM", "Polyg
 #     compare_automation_router, prefix="/api", tags=["Compare", "Automation"]
 # )
 # REMOVED: compare_risk_bucket_export_router → /api/compare/risk (consolidated)
-app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
+if health_router_ext:
+    app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
 app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 
 # CNC Production (1)
-app.include_router(
-    cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CNC Production"]
-)
+if cnc_compare_jobs_router:
+    app.include_router(
+        cnc_compare_jobs_router, prefix="/api/cnc/compare", tags=["CNC Production"]
+    )
 
 # Wave 14: Vision Engine + RMOS Runs + Advisory (3)
 # Note: runs_v2/api_runs.py has prefix="/runs", so mount at /api/rmos → /api/rmos/runs
