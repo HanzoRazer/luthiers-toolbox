@@ -47,6 +47,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Changed
+
+#### **WP-2: API Surface Reduction** - 2026-02-06
+Major API cleanup reducing route count by 51% to improve maintainability and startup performance.
+
+**Summary:**
+- Routes reduced: 530 → 259 (271 routes removed)
+- Routers disabled: 62
+- Target <300: Achieved (41 under target)
+- Tests: 982 passing, 0 regressions
+
+**Methodology:**
+- Grep audit across `packages/client/src/**/*.{ts,vue}` for frontend usage
+- Zero-usage routers disabled with `# WP-2 2026-02-06: DISABLED` markers
+- Path mismatches identified (e.g., frontend uses `/api/cam/posts` but router exposed `/api/cam/post`)
+
+**Key Disabled Router Groups:**
+- RMOS: workflow, profiles, history, AI, feasibility, toolpaths (6 routers)
+- Saw Lab: batch sub-routers, debug, compare (8 routers)
+- CAM: post processor, smoke tests, backplot, adaptive preview (6 routers)
+- Art Studio: rosette patterns v2, preview, feasibility (4 routers)
+- Calculators, Jobs, Presets, Governance (12+ routers)
+
+**Documentation:**
+- Full audit trail: `services/api/ROUTE_AUDIT_PHASE2_RESULTS.md`
+- All disabled routers retain code for future re-enablement
+
+**Compatibility:** No frontend-facing changes. All disabled routes had zero frontend usage.
+
+---
+
 ### 🆕 Added
 
 #### **CNC Saw Lab Execution Completion** - 2026-01-19
