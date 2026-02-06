@@ -21,16 +21,22 @@ from fastapi import APIRouter
 # Each category __init__.py exports a 'router' that combines its endpoints
 
 # Phase 3.1: Utility
-try:
-    from .utility import router as utility_router
-except ImportError:
-    utility_router = None
+# WP-2 2026-02-06: DISABLED - duplicated at legacy paths /api/cam/settings, /api/cam/backup, etc.
+# Frontend uses legacy paths, not /api/cam/utility/*
+# try:
+#     from .utility import router as utility_router
+# except ImportError:
+#     utility_router = None
+utility_router = None
 
 # Phase 3.2: Monitoring
-try:
-    from .monitoring import router as monitoring_router
-except ImportError:
-    monitoring_router = None
+# WP-2 2026-02-06: DISABLED - duplicated at legacy path /api/cam/metrics
+# Frontend uses legacy paths, not /api/cam/monitoring/*
+# try:
+#     from .monitoring import router as monitoring_router
+# except ImportError:
+#     monitoring_router = None
+monitoring_router = None
 
 # Phase 3.3: Toolpath
 try:
@@ -51,10 +57,13 @@ except ImportError:
     simulation_router = None
 
 # Phase 3.6: Export
-try:
-    from .export import router as export_router
-except ImportError:
-    export_router = None
+# WP-2 2026-02-06: DISABLED - duplicates legacy routes at /api/cam_gcode, /api/cam/svg, etc.
+# Frontend uses legacy paths, not /api/cam/export/*
+# try:
+#     from .export import router as export_router
+# except ImportError:
+#     export_router = None
+export_router = None
 
 # Phase 3.7: Relief
 try:

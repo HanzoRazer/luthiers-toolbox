@@ -177,7 +177,9 @@ from .routers.adaptive_preview_router import router as adaptive_preview_router
 # PIPELINE & PRESETS (2 routers)
 # Note: pipeline_router broken - needs httpx
 # =============================================================================
-from .routers.pipeline_presets_router import router as pipeline_presets_router
+# WP-2 2026-02-06: DISABLED - no frontend usage, double-prefix bug (4 routes)
+# from .routers.pipeline_presets_router import router as pipeline_presets_router
+pipeline_presets_router = None
 from .routers.dxf_plan_router import router as dxf_plan_router
 
 # =============================================================================
@@ -211,8 +213,10 @@ from .routers.posts_consolidated_router import router as posts_consolidated_rout
 
 # =============================================================================
 # INSTRUMENT GEOMETRY (1 router)
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (5 routes)
 # =============================================================================
-from .routers.instrument_geometry_router import router as instrument_geometry_router
+# from .routers.instrument_geometry_router import router as instrument_geometry_router
+instrument_geometry_router = None
 
 # =============================================================================
 # DATA REGISTRY (1 router)
@@ -294,8 +298,12 @@ from .routers.fret_router import router as fret_router
 # =============================================================================
 from .routers.unified_presets_router import router as unified_presets_router
 from .routers.strip_family_router import router as strip_family_router
-from .routers.rmos_patterns_router import router as rmos_patterns_router
-from .routers.rmos_saw_ops_router import router as rmos_saw_ops_router
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (5 routes)
+# from .routers.rmos_patterns_router import router as rmos_patterns_router
+rmos_patterns_router = None
+# WP-2 2026-02-06: DISABLED - no frontend usage detected (2 routes)
+# from .routers.rmos_saw_ops_router import router as rmos_saw_ops_router
+rmos_saw_ops_router = None
 from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # H7.1.2
 # Consolidated into simulation_consolidated_router:
 # from .routers.sim_metrics_router import router as sim_metrics_router
@@ -784,9 +792,10 @@ app.include_router(
 )  # No consolidated equivalent
 
 # Pipeline (2)
-app.include_router(
-    pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"]
-)
+if pipeline_presets_router:
+    app.include_router(
+        pipeline_presets_router, prefix="/api/pipeline/presets", tags=["Pipeline Presets"]
+    )
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
 # Legacy DXF Exports (1) - Migrated from ./server, routes at /exports/*
@@ -815,9 +824,10 @@ app.include_router(
 app.include_router(posts_consolidated_router, prefix="/api/posts", tags=["Post Processors"])
 
 # Instrument Geometry (1)
-app.include_router(
-    instrument_geometry_router, prefix="/api/instrument", tags=["Instrument Geometry"]
-)
+if instrument_geometry_router:
+    app.include_router(
+        instrument_geometry_router, prefix="/api/instrument", tags=["Instrument Geometry"]
+    )
 
 # Data Registry (1)
 app.include_router(registry_router, prefix="/api/registry", tags=["Data Registry"])
@@ -902,10 +912,12 @@ app.include_router(unified_presets_router, prefix="/api", tags=["Presets", "Unif
 app.include_router(
     strip_family_router, prefix="/api/rmos", tags=["RMOS", "Strip Families"]
 )
-app.include_router(rmos_patterns_router, prefix="/api/rmos", tags=["RMOS", "Patterns"])
-app.include_router(
-    rmos_saw_ops_router, prefix="/api/rmos", tags=["RMOS", "Saw Operations"]
-)
+if rmos_patterns_router:
+    app.include_router(rmos_patterns_router, prefix="/api/rmos", tags=["RMOS", "Patterns"])
+if rmos_saw_ops_router:
+    app.include_router(
+        rmos_saw_ops_router, prefix="/api/rmos", tags=["RMOS", "Saw Operations"]
+    )
 app.include_router(
     rmos_cam_intent_router, prefix="/api", tags=["RMOS", "CAM"]
 )  # H7.1.2
