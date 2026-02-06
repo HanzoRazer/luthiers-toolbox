@@ -588,6 +588,96 @@ def compute_moment_privacy(trigger_events):
 
 ---
 
+---
+
+## Appendix A: Additional Moment Patterns (Condensed)
+
+### DECISION_REQUIRED
+
+**Pattern:**
+- `DECISION_REQUIRED` event
+- Artifact awaiting confirmation
+
+**Used for:** choice presentation
+
+---
+
+### FINDING
+
+**Pattern:**
+- AttentionDirective candidate available
+- High confidence analyzer output
+
+**Used for:** review prompt
+
+---
+
+### ERROR
+
+**Pattern:**
+- `ANALYSIS_FAILED`
+- `SYSTEM_ERROR`
+
+**Used for:** recovery guidance
+
+---
+
+## Appendix B: Moment Priority Rules
+
+If multiple moments detected simultaneously:
+
+1. ERROR
+2. OVERLOAD
+3. DECISION_REQUIRED
+4. FINDING
+5. HESITATION
+6. FIRST_SIGNAL
+
+Lower priority moments are suppressed.
+
+---
+
+## Appendix C: Moment Diagnostic Format
+
+Each detected moment emits:
+
+```json
+{
+  "moment": "HESITATION",
+  "confidence": 0.72,
+  "trigger_events": ["evt_123","evt_124"]
+}
+```
+
+---
+
+## Appendix D: Extensibility Rules
+
+New moments:
+
+- MUST be derivable from existing events
+- MUST declare suppression priority
+- MUST NOT encode interpretation (presentation layer does that)
+
+---
+
+## Appendix E: What You Have Now
+
+With this spine complete, you can:
+
+- Run shadow mode (M0 diagnostics)
+- Replay sessions deterministically
+- Tune behavior safely via UWSM
+- Onboard new repos without friction
+
+**Complete Spine:**
+- Contracts (ToolCapabilityV1, AttentionDirectiveV1, AgentEventV1, UWSMv1)
+- Decision policy (this document)
+- UWSM update rules
+- Moment catalog
+
+---
+
 ## 9. Related Documents
 
 - [AGENT_DECISION_POLICY_V1.md](./AGENT_DECISION_POLICY_V1.md) - Operating mode definitions

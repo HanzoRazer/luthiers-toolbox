@@ -749,6 +749,148 @@ def test_detect_ignore_suggestions():
 
 ---
 
+---
+
+## Appendix A: Dimension Values (Quick Reference)
+
+| Dimension | Values |
+|--------|-------|
+| guidance_density | very_low → very_high |
+| initiative_tolerance | user_led \| shared_control \| agent_led |
+| cognitive_load_sensitivity | very_low → very_high |
+| exploration_style | dabble \| iterative \| deep_focus |
+| risk_posture | cautious \| balanced \| adventurous |
+| feedback_style | gentle \| neutral \| direct |
+| representation_preference | visual \| numeric \| narrative \| mixed |
+
+---
+
+## Appendix B: Evidence Types (Quick Reference)
+
+### Explicit
+- Direct user choice
+- Feedback controls
+- Preference toggles
+
+**Weight:** Strong
+
+### Behavioral
+- Repeated actions
+- Dwell time
+- Undo patterns
+- View switching
+
+**Weight:** Weak but accumulative
+
+### Contradictory
+- Behavior opposing current value
+
+**Effect:** Reduce confidence only
+
+---
+
+## Appendix C: Confidence Update Summary
+
+| Evidence | Δ Confidence |
+|-------|--------------|
+| Explicit | +0.20 (cap 0.90) |
+| Behavioral | +0.05 (cap 0.80) |
+| Contradiction | −0.15 (floor 0.20) |
+
+---
+
+## Appendix D: Hysteresis Rule (Summary)
+
+A value change requires:
+- Confidence ≥ 0.60
+- Same direction evidence in **2 consecutive windows**
+
+Prevents oscillation.
+
+---
+
+## Appendix E: Time Decay Formula
+
+```
+conf_eff = max(floor, conf * 0.5^(days_elapsed / half_life))
+```
+
+Half-lives:
+- cognitive_load_sensitivity: 7d
+- guidance_density: 14d
+- initiative_tolerance: 21d
+- exploration_style: 10d
+- risk_posture: 10d
+- feedback_style: 21d
+- representation_preference: 14d
+
+---
+
+## Appendix F: Dimension Update Signals (Condensed)
+
+### Guidance Density
+- "Guide me" → high (explicit)
+- "Stay light" → low (explicit)
+- Expands help repeatedly → nudge up
+- Dismisses explanations → nudge down
+
+### Cognitive Load Sensitivity
+- "Too much" feedback → high
+- Long idle after reveal → nudge up
+- Smooth action flow → nudge down
+
+### Initiative Tolerance
+- Accepts suggestions → toward agent_led
+- Ignores 3 suggestions → toward user_led
+
+### Exploration Style
+- Many tools, shallow → dabble
+- Repeated tweaks → iterative
+- Long deep sessions → deep_focus
+
+### Risk Posture
+- Undo spikes → cautious
+- Compare before commit → cautious
+- Large changes, no undo → adventurous
+
+### Feedback Style
+- Explicit control only in v1
+- Default: neutral
+
+### Representation Preference
+- Graph zoom / isolate → visual
+- Table view → numeric
+- Opens explanation panels → narrative
+- Frequent switching → mixed
+
+---
+
+## Appendix G: Audit Record Format
+
+Every update emits:
+
+```json
+{
+  "dimension": "representation_preference",
+  "previous": {"value":"visual","confidence":0.45},
+  "evidence": {"event_id":"evt_123","type":"behavioral"},
+  "next": {"value":"mixed","confidence":0.50},
+  "rule_id": "UWSM_REP_SWITCHING_v1"
+}
+```
+
+---
+
+## Appendix H: Non-Goals
+
+- **No identity inference** — UWSM is behavioral, not demographic
+- **No skill labeling** — mastery tracking lives elsewhere
+- **No long-term personality modeling** — preferences decay
+
+This document defines **update mechanics only**.
+
+---
+
 **Document Version:** 1.0.0
 **Last Updated:** 2026-02-06
 **See Also:** [AGENT_DECISION_POLICY_V1.md](AGENT_DECISION_POLICY_V1.md), [EVENT_MOMENTS_CATALOG_V1.md](EVENT_MOMENTS_CATALOG_V1.md)
