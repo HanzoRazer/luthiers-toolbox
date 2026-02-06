@@ -853,7 +853,8 @@ if pipeline_presets_router:
 app.include_router(dxf_plan_router, prefix="/api/dxf", tags=["DXF Planning"])
 
 # Legacy DXF Exports (1) - Migrated from ./server, routes at /exports/*
-app.include_router(legacy_dxf_exports_router, prefix="", tags=["DXF Exports", "Legacy"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage, legacy
+# app.include_router(legacy_dxf_exports_router, prefix="", tags=["DXF Exports", "Legacy"])
 
 # Blueprint (2) - blueprint_router is optional (AI deps may be missing)
 if blueprint_router:
