@@ -324,7 +324,9 @@ rmos_patterns_router = None
 # WP-2 2026-02-06: DISABLED - no frontend usage detected (2 routes)
 # from .routers.rmos_saw_ops_router import router as rmos_saw_ops_router
 rmos_saw_ops_router = None
-from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # H7.1.2
+# WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
+# from .routers.rmos_cam_intent_router import router as rmos_cam_intent_router  # H7.1.2
+rmos_cam_intent_router = None
 # Consolidated into simulation_consolidated_router:
 # from .routers.sim_metrics_router import router as sim_metrics_router
 from .routers.retract_router import router as retract_router
@@ -462,7 +464,9 @@ pipeline_preset_router = None
 # =============================================================================
 from .routers.art_presets_router import router as art_presets_router
 from .routers.cam_compare_diff_router import router as cam_compare_diff_router
-from .routers.cam_dxf_adaptive_router import router as cam_dxf_adaptive_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
+# from .routers.cam_dxf_adaptive_router import router as cam_dxf_adaptive_router
+cam_dxf_adaptive_router = None
 from .routers.cam_pipeline_preset_run_router import (
     router as cam_pipeline_preset_run_router,
 )
@@ -477,7 +481,9 @@ from .routers.compare_automation_router import router as compare_automation_rout
 # WP-2 2026-02-06: DISABLED - zero frontend usage
 # from .routers.health_router import router as health_router_ext
 health_router_ext = None
-from .routers.live_monitor_drilldown_api import router as live_monitor_router
+# WP-2 2026-02-06: DISABLED - zero frontend usage (1 route)
+# from .routers.live_monitor_drilldown_api import router as live_monitor_router
+live_monitor_router = None
 
 # =============================================================================
 # CNC PRODUCTION (1 router)
@@ -988,9 +994,11 @@ if rmos_saw_ops_router:
     app.include_router(
         rmos_saw_ops_router, prefix="/api/rmos", tags=["RMOS", "Saw Operations"]
     )
-app.include_router(
-    rmos_cam_intent_router, prefix="/api", tags=["RMOS", "CAM"]
-)  # H7.1.2
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+if rmos_cam_intent_router:
+    app.include_router(
+        rmos_cam_intent_router, prefix="/api", tags=["RMOS", "CAM"]
+    )  # H7.1.2
 # Consolidated into simulation_consolidated_router:
 # app.include_router(sim_metrics_router, prefix="/api", tags=["CAM", "Simulation"])
 app.include_router(
@@ -1086,7 +1094,9 @@ if pipeline_preset_router:
 # Wave 13 (FINAL): Art Presets + CAM Utilities + Compare + Monitor (9)
 app.include_router(art_presets_router, prefix="/api", tags=["Art", "Presets"])
 app.include_router(cam_compare_diff_router, prefix="/api", tags=["CAM", "Compare"])
-app.include_router(cam_dxf_adaptive_router, prefix="/api", tags=["CAM", "DXF"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+if cam_dxf_adaptive_router:
+    app.include_router(cam_dxf_adaptive_router, prefix="/api", tags=["CAM", "DXF"])
 app.include_router(
     cam_pipeline_preset_run_router, prefix="/api", tags=["CAM", "Pipeline"]
 )
@@ -1102,7 +1112,10 @@ app.include_router(
 # REMOVED: compare_risk_bucket_export_router → /api/compare/risk (consolidated)
 if health_router_ext:
     app.include_router(health_router_ext, prefix="/api/system", tags=["Health", "Extended"])
-app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
+if live_monitor_router:
+    app.include_router(live_monitor_router, prefix="/api", tags=["Monitor", "Live"])
 
 # CNC Production (1)
 if cnc_compare_jobs_router:

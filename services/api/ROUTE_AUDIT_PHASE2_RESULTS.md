@@ -3,14 +3,14 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 309
+**Current Route Count:** 306
 **Target:** <300
-**Reduction Achieved:** 221 routes (42%)
-**Gap to Target:** 10 routes
+**Reduction Achieved:** 224 routes (42%)
+**Gap to Target:** 7 routes
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 45 Routers
+## DISABLED (Zero Frontend Usage) - 48 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -100,6 +100,13 @@
 |--------|--------|--------|
 | `rmos_ai_advisory_router` | `/api/rmos/advisories/*` | DISABLED (path mismatch with frontend) |
 
+### Batch 12 - 3 routers, -3 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+| `live_monitor_router` | `/api/rmos/live-monitor` | DISABLED |
+| `cam_dxf_adaptive_router` | `/api/cam/dxf_adaptive_plan_run` | DISABLED |
+| `rmos_cam_intent_router` | `/api/rmos/cam/intent/normalize` | DISABLED |
+
 ---
 
 ## Previously Disabled (WP-2 earlier work)
@@ -152,9 +159,9 @@ These routers have confirmed frontend usage and must be retained:
 
 ## Next Steps to Reach <300
 
-Current: 309 routes
+Current: 306 routes
 Target: <300
-Gap: 10 routes
+Gap: 7 routes
 
 ### Remaining Options:
 
@@ -199,6 +206,7 @@ cd packages/client && npm run type-check
 | Batch 9 | 1 | 4 |
 | Batch 10 | 4 | 9 |
 | Batch 11 | 1 | 3 |
-| **Total** | **45** | **221** |
+| Batch 12 | 3 | 3 |
+| **Total** | **48** | **224** |
 
-**Route Reduction: 530 → 309 (42% reduction)**
+**Route Reduction: 530 → 306 (42% reduction)**
