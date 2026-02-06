@@ -3,14 +3,14 @@
 **Audited:** 2026-02-06
 **Method:** Grep search across `packages/client/src/**/*.{ts,vue}`
 **Starting Route Count:** 530
-**Current Route Count:** 298
+**Current Route Count:** 281
 **Target:** <300
-**Reduction Achieved:** 232 routes (44%)
-**Target Achieved:** Yes (2 under target)
+**Reduction Achieved:** 249 routes (47%)
+**Target Achieved:** Yes (19 under target)
 
 ---
 
-## DISABLED (Zero Frontend Usage) - 48 Routers
+## DISABLED (Zero Frontend Usage) - 49 Routers
 
 ### Batch 1 (Commit b140dbb) - 5 routers, -37 routes
 | Router | Prefix | Status |
@@ -108,6 +108,11 @@
 | `rmos_cam_intent_router` | `/api/rmos/cam/intent/normalize` | DISABLED |
 
 
+
+### Batch 15 - 1 router, -17 routes
+| Router | Prefix | Status |
+|--------|--------|--------|
+|  |  | DISABLED (SDK exists but never imported) |
 
 ### Batch 13 - Frontend Fix (analytics paths)
 | Change | Description |
@@ -227,9 +232,10 @@ cd packages/client && npm run type-check
 | Batch 12 | 3 | 3 |
 | Batch 13 | 0 | 0 | (frontend fix, router re-enabled)
 | Batch 14 | 4 | 8 |
-| **Total** | **52** | **232** |
+| Batch 15 | 1 | 17 |
+| **Total** | **53** | **249** |
 
-**Route Reduction: 530 → 298 (44% reduction)**
+**Route Reduction: 530 → 281 (47% reduction)**
 **Target <300: ACHIEVED**
 
 ---

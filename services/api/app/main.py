@@ -646,11 +646,13 @@ except ImportError as e:
     _log.warning("Optional router unavailable: rmos_runs_api_router (%s)", e)
     rmos_runs_api_router = None
 
-try:
-    from .rmos.api.rmos_workflow_router import router as rmos_workflow_router
-except ImportError as e:
-    _log.warning("Optional router unavailable: rmos_workflow_router (%s)", e)
-    rmos_workflow_router = None
+# WP-2 2026-02-06: DISABLED - zero frontend usage (SDK exists but never imported)
+# try:
+#     from .rmos.api.rmos_workflow_router import router as rmos_workflow_router
+# except ImportError as e:
+#     _log.warning("Optional router unavailable: rmos_workflow_router (%s)", e)
+#     rmos_workflow_router = None
+rmos_workflow_router = None
 
 # MVP Wrapper: RMOS-wrapped DXF -> GRBL golden path
 # WP-2 2026-02-06: DISABLED - zero frontend usage
@@ -1189,8 +1191,9 @@ if rmos_toolpaths_router:
 # Disabled: 2026-02-05 (WP-2: API Surface Reduction)
 # if rmos_runs_api_router:
 #     app.include_router(rmos_runs_api_router, tags=["RMOS", "Runs API"])
-if rmos_workflow_router:
-    app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
+# WP-2 2026-02-06: DISABLED - zero frontend usage
+# if rmos_workflow_router:
+#     app.include_router(rmos_workflow_router, tags=["RMOS", "Workflow"])
 
 # MVP Wrapper: RMOS-wrapped DXF -> GRBL golden path
 if rmos_mvp_wrapper_router:
