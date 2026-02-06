@@ -35,7 +35,7 @@ make api-verify                                          # Full verification: sc
 2. **DXF**: R12 format (AC1009) with closed LWPolylines – never newer versions
 3. **SDK**: Use typed helpers (`import { cam } from "@/sdk/endpoints"`) – never raw `fetch()`
 4. **CAM Intent**: Use `CamIntentV1` envelope (`app.rmos.cam.CamIntentV1`) – don't create alternatives
-5. **DO NOT MODIFY**: `__REFERENCE__/` directory, legacy archives (`Guitar Design HTML app/`, `ToolBox_*`) — **NOTE (2026-02-05):** `__REFERENCE__/` is scheduled for external archival and deletion after WP-0/WP-1/WP-4 complete. See `CHIEF_ENGINEER_HANDOFF.md` Section 11.
+5. **ARCHIVED**: `__REFERENCE__/` was archived to https://github.com/HanzoRazer/ltb-reference-archive and deleted (2026-02-05). Legacy archives (`Guitar Design HTML app/`, `ToolBox_*`) remain read-only.
 6. **Request IDs**: All API responses MUST include `X-Request-Id` header
 7. **Machine Profiles**: Use IDs from `machine_profiles.json` (`GRBL_3018_Default`, `Mach4_Router_4x8`, `LinuxCNC_KneeMill`)
 8. **Python Modules**: Run as modules (`python -m app.ci.check_boundary_imports`) not scripts
@@ -389,7 +389,7 @@ The codebase is undergoing structured cleanup. See `CHIEF_ENGINEER_HANDOFF.md` a
 
 | WP | Focus | Priority | Status |
 |----|-------|----------|--------|
-| WP-0 | Dead code purge | P0 | Pending (delete `__ARCHIVE__/`, `__REFERENCE__/`, stale `client/`, `streamlit_demo/`) |
+| WP-0 | Dead code purge | P0 | ✅ Complete (`__REFERENCE__/` archived + deleted, others already gone) |
 | WP-1 | Exception hardening | P0 | Pending (97 bare `except:`, 278 safety-critical `except Exception`) |
 | WP-2 | API surface reduction | P1 | Pending (1,060 → <300 routes target) |
 | WP-3 | God-object decomposition | P1 | Pending (30 Python + 25 Vue files over size limits) |
