@@ -44,7 +44,7 @@ def find_latest_approved_tuning_decision(
     try:
         res = store.list_runs_filtered(kind="saw_lab_tuning_decision", limit=limit)
         items = _get_items(res)
-    except Exception:
+    except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         items = []
 
     # Filter by meta keys first (fast, stable)
@@ -86,7 +86,7 @@ def find_latest_approved_tuning_decision(
     delta_dict = payload.get("effective_delta") if isinstance(payload, dict) else None
     try:
         delta = TuningDelta(**delta_dict) if isinstance(delta_dict, dict) else None
-    except Exception:
+    except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         delta = None
 
     decision_id = str(best.get("id") or best.get("artifact_id") or "")

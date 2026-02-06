@@ -98,7 +98,7 @@ class SawBiteLoadCalculator:
                 }
             )
             
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
             return SawCalculatorResult(
                 calculator_name="bite_load",
                 score=50.0,

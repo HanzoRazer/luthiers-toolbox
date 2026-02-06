@@ -348,5 +348,15 @@
       "stepdown": 1.0
     },
     "created_at": 1770415208.7502131
+  },
+  {
+    "id": "rosette_preset_1770418084087",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1770418084.0875337
   }
 ]

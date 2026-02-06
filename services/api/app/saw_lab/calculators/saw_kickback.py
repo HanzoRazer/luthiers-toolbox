@@ -128,7 +128,7 @@ class SawKickbackCalculator:
                 }
             )
             
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
             return SawCalculatorResult(
                 calculator_name="kickback",
                 score=50.0,

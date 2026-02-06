@@ -99,7 +99,7 @@ def approve_suggestion(req: ApproveSuggestionRequest) -> ApproveSuggestionRespon
         items = res.get("items") if isinstance(res, dict) else res
         items = items or []
         suggestion_art = items[0] if items else None
-    except Exception:
+    except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         suggestion_art = None
 
     if not isinstance(suggestion_art, dict):
@@ -125,7 +125,7 @@ def approve_suggestion(req: ApproveSuggestionRequest) -> ApproveSuggestionRespon
                 from .schemas_decision_intelligence import TuningDelta
 
                 effective_delta = TuningDelta(**delta) if isinstance(delta, dict) else None
-            except Exception:
+            except (ImportError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                 effective_delta = None
 
     decision_id, wrote = persist_decision_artifact(

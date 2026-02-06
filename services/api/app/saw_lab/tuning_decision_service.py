@@ -113,7 +113,7 @@ def find_latest_approved_tuning_decision(
             "state": "APPROVED",
             "created_utc": payload.get("created_utc", ""),
         }
-    except Exception:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError):  # WP-1: narrowed from except Exception
         return None
 
 

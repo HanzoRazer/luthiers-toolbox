@@ -161,7 +161,7 @@ class SawCuttingForceCalculator:
                 },
             )
 
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
             return SawCalculatorResult(
                 calculator_name="cutting_force",
                 score=50.0,

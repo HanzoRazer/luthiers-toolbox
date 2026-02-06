@@ -38,5 +38,5 @@ def maybe_autorollup_execution_metrics(
             batch_label=batch_label,
             tool_kind=tool_kind,
         )
-    except Exception:
+    except (ImportError, RuntimeError, ValueError, TypeError, OSError):  # WP-1: narrowed from except Exception
         return None

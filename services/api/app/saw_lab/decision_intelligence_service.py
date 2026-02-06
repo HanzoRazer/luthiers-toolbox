@@ -121,7 +121,7 @@ def append_override_jsonl(event: Dict[str, Any]) -> bool:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(event, sort_keys=True) + "\n")
         return True
-    except Exception:
+    except (IOError, OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         return False
 
 
@@ -156,7 +156,7 @@ def build_suggestion_for_execution(
             job_logs = res.get("items") or res.get("runs") or []
         elif isinstance(res, list):
             job_logs = res
-    except Exception:
+    except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         job_logs = []
 
     # Fallback: filter by session/batch then choose those with matching parent
@@ -173,7 +173,7 @@ def build_suggestion_for_execution(
                     or (a.get("index_meta") or {}).get("parent_artifact_id") == batch_execution_artifact_id
                 ):
                     job_logs.append(a)
-        except Exception:
+        except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             pass
 
     signals: List[str] = []
