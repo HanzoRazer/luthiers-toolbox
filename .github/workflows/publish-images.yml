@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+      - 'toolbox-v*.*.*'
   workflow_dispatch:
 
 env:
@@ -12,7 +13,40 @@ env:
   IMAGE_PREFIX: ${{ github.repository_owner }}/luthiers-toolbox
 
 jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Pre-release Gate: Verify agentic policy against golden session fixtures
+  # ───────────────────────────────────────────────────────────────────────────
+  verify-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install agentic spine dependencies
+        run: |
+          cd services/api
+          pip install --quiet -e ".[test]" || pip install --quiet -e .
+
+      - name: Run policy verification against fixtures
+        run: |
+          echo "🔍 Verifying agentic policy against golden session fixtures"
+          python tools/verify_policy.py services/api/tests/fixtures/
+          echo "✅ Policy verification passed"
+
+      - name: Upload golden sessions as release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-sessions
+          path: services/api/tests/fixtures/*.jsonl
+          retention-days: 90
+
   build-and-push:
+    needs: verify-policy
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -136,32 +170,46 @@ jobs:
           docker compose -f docker-compose.production.yml down -v
 
   create-release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
     needs: verify-images
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download golden sessions artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: golden-sessions
+          path: release-assets/
+
+      - name: Package golden sessions
+        run: |
+          cd release-assets
+          zip -r golden-sessions-${{ github.ref_name }}.zip *.jsonl
+          echo "📦 Packaged $(ls *.jsonl | wc -l) session files"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
+          files: |
+            release-assets/golden-sessions-${{ github.ref_name }}.zip
           body: |
             ## Docker Images
-            
+
             Pull the latest images:
             ```bash
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.ref_name }}
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:${{ github.ref_name }}
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:${{ github.ref_name }}
             ```
-            
+
             ## Deploy with Docker Compose
-            
+
             ```bash
             # Create .env file
             cat > .env << EOF
@@ -170,9 +218,23 @@ jobs:
             NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:${{ github.ref_name }}
             NGINX_PORT=80
             EOF
-            
+
             # Launch production stack
             docker compose -f docker-compose.production.yml up -d
             ```
-            
+
             Access at: http://localhost (or your server IP)
+
+            ## Agentic Policy Verification
+
+            Golden session fixtures are attached as `golden-sessions-${{ github.ref_name }}.zip`.
+
+            To verify policy compatibility with this release:
+            ```bash
+            # Download and extract
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/golden-sessions-${{ github.ref_name }}.zip
+            unzip golden-sessions-${{ github.ref_name }}.zip -d release-assets/sessions/
+
+            # Run policy verification
+            make verify-policy RELEASE_SESSIONS=release-assets/sessions/
+            ```
