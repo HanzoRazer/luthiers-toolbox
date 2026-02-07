@@ -1,0 +1,5 @@
+# Test runner
+pytest>=7.4,<9.0
+
+# Optional test orchestration (CI / multi-env)
+nox>=2023.4.22,<2025.0
