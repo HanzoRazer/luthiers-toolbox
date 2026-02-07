@@ -192,6 +192,172 @@ pip install -r requirements-dev.txt
 This is expected unless both repos are importable in the same environment.
 Skips are fine. The spine suite still passes.
 
+### CI fails but tests pass locally
+
+**Symptom**
+
+* All spine tests pass on your machine
+* CI fails with:
+
+  * `ModuleNotFoundError`
+  * unexpected skips
+  * different behavior in moment or policy tests
+* Re-running locally *still* passes
+
+**Most common causes (in order)**
+
+#### 1) Virtualenv leakage
+
+Your local shell is picking up packages from:
+
+* a global Python install
+* a different virtualenv
+* an editable install from another repo
+
+CI is clean. Your machine is not.
+
+**Fix**
+
+1. Deactivate all envs:
+
+   ```bash
+   deactivate || true
+   ```
+2. Delete and recreate:
+
+   ```bash
+   rm -rf .venv
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements-dev.txt
+   ```
+3. Re-run:
+
+   ```bash
+   make test-spine
+   ```
+
+**Rule of thumb**
+
+> If CI fails but your machine passes, assume your machine is lying.
+
+---
+
+#### 2) PYTHONPATH bleed
+
+Your shell has `PYTHONPATH` set from:
+
+* another project
+* a shell profile
+* an IDE run configuration
+
+This can silently make imports succeed locally and fail in CI.
+
+**Fix**
+
+* Run once with a clean environment:
+
+macOS / Linux:
+
+```bash
+PYTHONPATH= pytest -q tests/test_replay_smoke.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH=""
+pytest -q tests/test_replay_smoke.py
+```
+
+* If that fails, your local success depended on leaked paths.
+
+**Permanent fix**
+
+* Prefer one of:
+
+  * `pip install -e .`
+  * proper `pyproject.toml`
+* Do **not** rely on implicit repo-root imports.
+
+---
+
+#### 3) Editable install mismatch (`pip install -e .`)
+
+CI often installs the package *fresh*.
+Locally, you may have an editable install pointing at:
+
+* a different branch
+* a different path
+* stale code
+
+**Fix**
+
+1. Check editable installs:
+
+   ```bash
+   pip list | grep -E "\-e|editable"
+   ```
+2. Remove unexpected ones:
+
+   ```bash
+   pip uninstall <package-name>
+   ```
+3. Reinstall clean:
+
+   ```bash
+   pip install -e .
+   ```
+
+**Sanity check**
+
+```bash
+python -c "import app.agentic.spine; print(app.agentic.spine.__file__)"
+```
+
+Make sure the path is **this repo**, not somewhere else.
+
+---
+
+#### 4) Test order dependency (CI runs differently)
+
+CI may:
+
+* randomize test order
+* shard tests
+* use a different filesystem ordering
+
+If a test depends on global state, CI will expose it.
+
+**Fix**
+
+* Ensure tests:
+
+  * do not mutate shared globals
+  * do not rely on module import side effects
+* If in doubt, add:
+
+  ```bash
+  pytest --maxfail=1 --disable-warnings -q
+  ```
+
+And run with:
+
+```bash
+pytest --random-order
+```
+
+(if you add that plugin later).
+
+---
+
+**Rule of thumb**
+
+> CI is the reference machine.
+> Your laptop is a convenience layer.
+
+If CI fails, fix the environment assumptions — not the tests.
+
 ---
 
 ## 6) Contribution rules (so nobody breaks the spine)
