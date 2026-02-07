@@ -409,6 +409,17 @@ import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/render
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
 import { getDownloadUrl } from "@/sdk/endpoints/rmosAcoustics";
 
+// Agentic M1 events
+import { useAgenticEvents } from "@/composables/useAgenticEvents";
+
+const {
+  emitViewRendered,
+  emitArtifactCreated,
+  emitAnalysisFailed,
+  emitUserAction,
+  emitToolRendered,
+} = useAgenticEvents();
+
 const route = useRoute();
 
 const pack = shallowRef<NormalizedPack | null>(null);
@@ -568,10 +579,27 @@ async function loadZip(f: File) {
     kindFilter.value = "";
     selectedPeak.value = null;
     audioJumpError.value = "";
+
+    // --- Agentic M1: emit artifact created events ---
+    const hasWolfData = pack.value.files.some((x) => x.kind.includes("wolf"));
+    const hasOdsData = pack.value.files.some((x) => x.kind.includes("ods"));
+    if (hasWolfData) {
+      emitArtifactCreated("wolf_candidates_v1", 0.75);
+    }
+    if (hasOdsData) {
+      emitArtifactCreated("ods_snapshot_v1", 0.8);
+    }
+    // Emit view rendered to trigger FIRST_SIGNAL
+    emitViewRendered("audio_analyzer", pack.value.schema_id);
+    // --- End Agentic ---
   } catch (e: unknown) {
     pack.value = null;
     activePath.value = "";
     err.value = e instanceof Error ? e.message : String(e);
+
+    // --- Agentic M1: emit failure ---
+    emitAnalysisFailed(err.value);
+    // --- End Agentic ---
   }
 }
 
@@ -621,6 +649,10 @@ function onPeakSelected(payload: any) {
   const freq_hz = Number(payload?.freq_hz);
   if (!Number.isFinite(freq_hz)) return;
 
+  // --- Agentic M1: emit peak selection ---
+  emitUserAction("peak_selected", { freq_hz, spectrum: activePath.value });
+  // --- End Agentic ---
+
   const raw = payload?.raw ?? payload;
   let rawPretty = "";
   try {
@@ -662,6 +694,10 @@ watch(activePath, () => {
 
 // Deep-link support: load from sha256 query param (from Acoustics Library)
 onMounted(async () => {
+  // --- Agentic M1: emit tool rendered on mount ---
+  emitToolRendered("audio_analyzer");
+  // --- End Agentic ---
+
   const sha256 = route.query.sha256;
   if (typeof sha256 === "string" && sha256.length > 0) {
     resetError();
