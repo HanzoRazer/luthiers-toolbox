@@ -34,7 +34,9 @@ def get_pattern_complexity_distribution():
     try:
         analytics = get_pattern_analytics()
         return analytics.get_complexity_distribution()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting complexity distribution: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -50,7 +52,9 @@ def get_pattern_ring_statistics():
     try:
         analytics = get_pattern_analytics()
         return analytics.get_ring_statistics()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting ring statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -66,7 +70,9 @@ def get_pattern_geometry_metrics():
     try:
         analytics = get_pattern_analytics()
         return analytics.get_geometry_metrics()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting geometry metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -82,7 +88,9 @@ def get_pattern_strip_family_usage():
     try:
         analytics = get_pattern_analytics()
         return analytics.get_strip_family_usage()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting strip family usage: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -101,7 +109,9 @@ def get_pattern_popularity(limit: int = Query(10, ge=1, le=100)):
     try:
         analytics = get_pattern_analytics()
         return analytics.get_pattern_popularity(limit=limit)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting pattern popularity: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -125,9 +135,9 @@ def get_pattern_details_with_analytics(pattern_id: str):
             raise HTTPException(status_code=404, detail=f"Pattern {pattern_id} not found")
         
         return result
-    except HTTPException:
+    except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting pattern details: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -147,7 +157,9 @@ def get_material_type_distribution():
     try:
         analytics = get_material_analytics()
         return analytics.get_material_type_distribution()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting material distribution: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -163,7 +175,9 @@ def get_material_consumption():
     try:
         analytics = get_material_analytics()
         return analytics.get_strip_consumption_by_material()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting material consumption: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -179,7 +193,9 @@ def get_material_efficiency():
     try:
         analytics = get_material_analytics()
         return analytics.get_material_efficiency()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting material efficiency: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -195,7 +211,9 @@ def get_material_dimensional_analysis():
     try:
         analytics = get_material_analytics()
         return analytics.get_dimensional_analysis()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting dimensional analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -211,7 +229,9 @@ def get_material_supplier_analytics():
     try:
         analytics = get_material_analytics()
         return analytics.get_supplier_analytics()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting supplier analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -227,7 +247,9 @@ def get_material_inventory_status():
     try:
         analytics = get_material_analytics()
         return analytics.get_material_inventory_status()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting inventory status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -250,7 +272,9 @@ def get_job_success_trends(days: int = Query(30, ge=1, le=365)):
     try:
         analytics = get_job_analytics()
         return analytics.get_success_rate_trends(days=days)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting success trends: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -266,7 +290,9 @@ def get_job_duration_analysis():
     try:
         analytics = get_job_analytics()
         return analytics.get_duration_analysis_by_job_type()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting duration analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -282,7 +308,9 @@ def get_job_status_distribution():
     try:
         analytics = get_job_analytics()
         return analytics.get_status_distribution()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting status distribution: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -298,7 +326,9 @@ def get_job_throughput_metrics():
     try:
         analytics = get_job_analytics()
         return analytics.get_throughput_metrics()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting throughput metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -314,7 +344,9 @@ def get_job_failure_analysis():
     try:
         analytics = get_job_analytics()
         return analytics.get_failure_analysis()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting failure analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -330,7 +362,9 @@ def get_job_type_distribution():
     try:
         analytics = get_job_analytics()
         return analytics.get_job_type_distribution()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting job type distribution: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -349,6 +383,8 @@ def get_recent_jobs(limit: int = Query(10, ge=1, le=100)):
     try:
         analytics = get_job_analytics()
         return analytics.get_recent_job_summary(limit=limit)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error getting recent jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -237,7 +237,7 @@ def list_job_insights(
                 "review_pct": classification["review_pct"]
             })
         
-        except Exception as e:
+        except (KeyError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
             # Skip invalid job files
             continue
     

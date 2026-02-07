@@ -224,7 +224,7 @@ def validate_heightmap(
             level=ValidationLevel.WARNING,
             warnings=["PIL not available - skipping heightmap validation"],
         )
-    except Exception as e:
+    except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
         return ValidationResult(
             valid=False,
             level=ValidationLevel.ERROR,

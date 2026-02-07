@@ -622,7 +622,7 @@ def extract_loops_from_dxf(dxf_bytes: bytes, layer_name: str = "GEOMETRY") -> Tu
                 
                 loops.append(Loop(pts=points))
             
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from bare Exception
                 warnings.append(f"Error extracting LWPOLYLINE points: {str(e)}")
         
         if not loops:
@@ -630,7 +630,7 @@ def extract_loops_from_dxf(dxf_bytes: bytes, layer_name: str = "GEOMETRY") -> Tu
     
     except ezdxf.DXFError as e:
         warnings.append(f"DXF parsing error: {str(e)}")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from bare Exception
         warnings.append(f"Unexpected error reading DXF: {str(e)}")
     
     return loops, warnings
@@ -695,7 +695,9 @@ async def reconstruct_contours(
         )
     except GeometryTimeout as e:
         raise HTTPException(status_code=504, detail=str(e))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Contour reconstruction failed: {str(e)}"
@@ -771,7 +773,9 @@ async def dxf_preflight(
     try:
         preflight = DXFPreflight(dxf_bytes, filename=file.filename)
         report = preflight.run_all_checks()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Preflight validation failed: {str(e)}"
@@ -887,7 +891,9 @@ async def blueprint_to_adaptive(
             strategy=strategy,
             smoothing_radius=smoothing  # Note: parameter name is smoothing_radius in L.1
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Adaptive planner error: {str(e)}"

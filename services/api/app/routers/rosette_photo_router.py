@@ -190,7 +190,9 @@ async def import_rosette_photo(
             }
         )
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Conversion failed: {str(e)}"
@@ -296,7 +298,9 @@ async def import_rosette_photo_advanced(
             }
         )
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Advanced conversion failed: {str(e)}"

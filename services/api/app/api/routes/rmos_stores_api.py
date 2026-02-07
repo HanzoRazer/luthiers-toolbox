@@ -131,7 +131,7 @@ def get_migration_status():
             row = cursor.fetchone()
             schema_version = row[0] if row else None
             schema_applied = row[1] if row else None
-    except Exception:
+    except Exception:  # WP-1: keep broad — schema introspection may fail on missing table
         schema_version = None
         schema_applied = None
     
@@ -154,7 +154,7 @@ def get_migration_status():
                 pattern = stores.patterns.get_by_id(joblog['pattern_id'])
                 if not pattern:
                     validation_errors.append(f"JobLog {joblog['id']} references missing pattern")
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — non-critical validation check
         validation_warnings.append(f"Validation check failed: {str(e)}")
     
     return {

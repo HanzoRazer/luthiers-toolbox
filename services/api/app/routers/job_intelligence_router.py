@@ -166,7 +166,7 @@ def list_job_int_log(
                 created_at=rec.get("created_at", ""),
                 source=rec.get("source", "pipeline_run"),
             )
-        except Exception:  # noqa: BLE001
+        except (KeyError, ValueError, TypeError):  # WP-1: narrowed from except Exception
             continue
         items.append(item)
     

@@ -88,7 +88,7 @@ def list_recent(limit: int = 50, cursor: Optional[str] = None) -> tuple[list[Des
         try:
             data = json.loads(fp.read_text(encoding="utf-8"))
             sessions.append(DesignFirstSession.model_validate(data))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             # ignore corrupt files for testing; keep system resilient
             continue
 
@@ -109,7 +109,7 @@ def list_recent(limit: int = 50, cursor: Optional[str] = None) -> tuple[list[Des
                 return False
 
             sessions = [s for s in sessions if after_cut(s)]
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             # bad cursor -> ignore and return from top
             pass
 

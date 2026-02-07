@@ -145,7 +145,7 @@ def delete_workflow_session(
         try:
             run_count = count_runs_v2(workflow_session_id=session_id)
             has_linked_runs = run_count > 0
-        except Exception:
+        except (OSError, RuntimeError):  # WP-1: narrowed from except Exception
             pass  # Continue without run check if store unavailable
 
     if has_linked_runs and not force:

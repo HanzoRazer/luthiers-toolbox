@@ -329,7 +329,7 @@ class OpenAIVisionClient(VisionClient):
                 if attempt < self.config.max_retries:
                     time.sleep(self.config.retry_delay_seconds)
                     continue
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — AI API retry loop catch-all
                 if isinstance(e, (VisionAuthError, VisionParseError)):
                     raise
                 last_error = VisionAnalysisError(f"Analysis failed: {e}")

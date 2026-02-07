@@ -56,7 +56,7 @@ def list_baselines(lane: str | None = None) -> List[CompareBaselineSummary]:
                     created_at=created_at,
                 )
             )
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: narrowed from except Exception
             # ignore malformed baselines in MVP
             continue
     # newest first

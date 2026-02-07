@@ -412,7 +412,7 @@ class DxfEngine:
             buffer = StringIO()
             self.doc.write(buffer)
             return buffer.getvalue().encode('utf-8')
-        except Exception as exc:
+        except (OSError, ValueError) as exc:  # WP-1: narrowed from except Exception
             logger.error(f"DXF export to bytes failed: {exc}")
             raise DxfExportError(
                 f"Failed to export DXF document: {exc}",
@@ -432,7 +432,7 @@ class DxfEngine:
         try:
             self.doc.saveas(str(path))
             logger.info(f"DXF saved to: {path}")
-        except Exception as exc:
+        except (OSError, ValueError) as exc:  # WP-1: narrowed from except Exception
             logger.error(f"DXF export to file failed: {exc}")
             raise DxfExportError(
                 f"Failed to save DXF to '{path}': {exc}",

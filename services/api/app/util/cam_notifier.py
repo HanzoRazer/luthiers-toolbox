@@ -269,7 +269,7 @@ def notify_cam_consoles(project_id: str, payload: Dict[str, Any]) -> List[Dict[s
                 "settings": payload.get("settings"),
             })
             results.append({"simulate": r.status_code})
-        except Exception as e:
+        except Exception as e:  # WP-1: keep broad — httpx transport errors are diverse
             results.append({"simulate_error": str(e)})
 
         # 2. Optional optimization pass
@@ -283,7 +283,7 @@ def notify_cam_consoles(project_id: str, payload: Dict[str, Any]) -> List[Dict[s
                     "rpm": payload["settings"].get("rpm", 12000),
                 })
                 results.append({"optimize": r.status_code})
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — httpx transport errors are diverse
                 results.append({"optimize_error": str(e)})
 
         # 3. Optional metrics
@@ -294,7 +294,7 @@ def notify_cam_consoles(project_id: str, payload: Dict[str, Any]) -> List[Dict[s
                     "gcode": payload.get("gcode"),
                 })
                 results.append({"energy": r.status_code})
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — httpx transport errors are diverse
                 results.append({"energy_error": str(e)})
 
     return results

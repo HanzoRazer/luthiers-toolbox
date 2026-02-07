@@ -180,7 +180,7 @@ def export_execution_gcode(
 
         try:
             result = export_op_toolpaths_gcode(op_toolpaths_artifact_id=child_id, read_artifact=read_artifact)
-        except Exception:
+        except (ValueError, TypeError, KeyError, OSError):  # WP-1: narrowed from except Exception
             continue
 
         if not result.get("has_toolpaths"):

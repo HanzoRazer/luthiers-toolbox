@@ -28,7 +28,7 @@ def _get_sample_rate() -> float:
     """Get sampling rate from env (0.0 = off, 1.0 = all requests)."""
     try:
         return float(os.getenv("ENDPOINT_SAMPLE_RATE", "0.0"))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 0.0
 
 
@@ -105,7 +105,7 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
                     # Always emit to structured logs (cheap)
                     try:
                         logger.info("endpoint_sample=%s", json.dumps(payload, separators=(",", ":")))
-                    except Exception:
+                    except Exception:  # WP-1: keep broad — middleware must never interfere with request lifecycle
                         pass
 
                     # Optional JSONL file append (best-effort)
@@ -114,14 +114,13 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
                         try:
                             from .endpoint_stats import _append_jsonl
                             _append_jsonl(log_path, payload)
-                        except Exception:
+                        except (OSError, ImportError):  # WP-1: narrowed from except Exception
                             pass
 
             if status in {EndpointStatus.LEGACY, EndpointStatus.SHADOW}:
                 replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)
                 _warn_once(method=method, path_pattern=path_pattern or (request.url.path or ""), status=status, replacement=replacement)
-        except Exception:
-            # Never interfere with request lifecycle
+        except Exception:  # WP-1: keep broad — middleware must never interfere with request lifecycle
             logger.debug("Endpoint governance middleware failed (non-fatal).", exc_info=True)
 
         return response
@@ -133,7 +132,7 @@ def _get_status(*, endpoint, method: str, path_pattern: Optional[str], route=Non
     if raw:
         try:
             return EndpointStatus(raw)
-        except Exception:
+        except ValueError:  # WP-1: narrowed from except Exception
             return None
 
     # 2) From registry fallback

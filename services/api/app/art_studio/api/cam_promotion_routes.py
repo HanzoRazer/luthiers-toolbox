@@ -26,7 +26,9 @@ async def promote_to_cam(session_id: str) -> CamPromotionResponse:
         intent = build_promotion_intent_v1_for_session_id(session_id)
     except PermissionError as e:
         return CamPromotionResponse(ok=False, request=None, blocked_reason=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
     req = create_or_get_promotion_request(intent)

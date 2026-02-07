@@ -208,7 +208,7 @@ def roughing_gcode(req: RoughReq) -> Response:
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(

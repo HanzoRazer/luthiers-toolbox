@@ -68,7 +68,7 @@ def _load_presets() -> List[PipelinePreset]:
     try:
         raw = json.loads(PRESETS_PATH.read_text(encoding="utf-8") or "[]")
         return [PipelinePreset(**item) for item in raw]
-    except Exception:
+    except (json.JSONDecodeError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         # Corrupt or invalid file; treat as empty
         return []
 

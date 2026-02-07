@@ -132,7 +132,7 @@ def _atomic_write_text(target_path: Path, text: str, encoding: str = "utf-8") ->
         try:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             pass
 
 
@@ -197,7 +197,7 @@ def load_snapshot(snapshot_id: str) -> Optional[RosetteDesignSnapshot]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
         return RosetteDesignSnapshot.model_validate(data)
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return None
 
 
@@ -263,7 +263,7 @@ def list_snapshots(
                 continue
 
             snapshots.append(snapshot)
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
 
     # Apply pagination
@@ -306,7 +306,7 @@ def find_by_fingerprint(fingerprint: str) -> Optional[RosetteDesignSnapshot]:
             data = json.loads(path.read_text(encoding="utf-8"))
             if data.get("design_fingerprint") == fingerprint:
                 return RosetteDesignSnapshot.model_validate(data)
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
 
     return None
@@ -344,7 +344,7 @@ def set_baseline(snapshot_id: str, baseline: bool) -> Optional[RosetteDesignSnap
                 if data.get("baseline", False) and data.get("snapshot_id") != snapshot_id:
                     data["baseline"] = False
                     _atomic_write_text(path, json.dumps(data, indent=2), encoding="utf-8")
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 continue
 
     # Update target snapshot
@@ -367,7 +367,7 @@ def get_baseline() -> Optional[RosetteDesignSnapshot]:
             data = json.loads(path.read_text(encoding="utf-8"))
             if data.get("baseline", False):
                 return RosetteDesignSnapshot.model_validate(data)
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
 
     return None

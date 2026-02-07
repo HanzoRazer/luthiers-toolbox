@@ -31,7 +31,7 @@ def _init_otel():
             name="ltb_endpoint_hits_total",
             description="Endpoint hits by status/method/path_pattern (OTEL)",
         )
-    except Exception:
+    except (ImportError, AttributeError):  # WP-1: narrowed from except Exception
         # Not installed or not configured
         _counter = False  # sentinel: unavailable
 
@@ -53,6 +53,6 @@ def otel_increment_endpoint_hit(*, status: str, method: str, path_pattern: str) 
     }
     try:
         _counter.add(1, attributes=attrs)
-    except Exception:
+    except Exception:  # WP-1: keep broad — OTEL must never raise to caller
         # Never raise to caller
         return

@@ -163,7 +163,7 @@ def _on_startup() -> None:
         init_db()
         _db_available = True
         logger.info("Rosette jobs SQLite database initialized successfully")
-    except Exception as e:
+    except OSError as e:  # WP-1: narrowed from except Exception
         # In CI/Docker, the database may not be writable due to volume mount permissions
         # This is non-fatal - the health check and core APIs will still work
         _db_available = False
@@ -208,7 +208,7 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
             init_db()
             _db_available = True
             logger.info("On-demand DB init succeeded for /save endpoint")
-        except Exception as e:
+        except OSError as e:  # WP-1: narrowed from except Exception
             logger.warning(f"On-demand DB init failed for /save endpoint: {e}")
             raise HTTPException(
                 status_code=503,
@@ -237,7 +237,7 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
     # Register job within the Art Studio job spine for global timelines
     try:
         create_art_job("rosette", stored, job_id=stored["job_id"])
-    except Exception:
+    except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         # Non-fatal: job timelines will simply omit this entry if persistence fails
         pass
 

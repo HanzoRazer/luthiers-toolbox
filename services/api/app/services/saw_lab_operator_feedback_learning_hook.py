@@ -154,7 +154,7 @@ def record_operator_feedback_event(
         event_payload["refs"]["tool_id"] = (ex_payload.get("tool_id") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("tool_id")
         event_payload["refs"]["material_id"] = (ex_payload.get("material_id") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("material_id")
         event_payload["refs"]["thickness_mm"] = (ex_payload.get("thickness_mm") if isinstance(ex_payload, dict) else None) or event_payload["refs"].get("thickness_mm")
-    except Exception:
+    except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         pass
 
     art = write_run_artifact(
@@ -191,7 +191,7 @@ def record_operator_feedback_event(
         with path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
         event_payload["jsonl_written_to"] = str(path)
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         event_payload["jsonl_write_error"] = f"{type(e).__name__}: {e}"
 
     return art if isinstance(art, dict) else art.__dict__

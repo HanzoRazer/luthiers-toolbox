@@ -71,5 +71,7 @@ async def run_compare(payload: CompareInput):
             warnings=[],
         )
 
-    except Exception as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(exc))

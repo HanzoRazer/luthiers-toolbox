@@ -118,7 +118,7 @@ def _get_git_commit() -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip() or "unknown"
-    except Exception:
+    except (OSError, ValueError):  # WP-1: narrowed from except Exception
         pass
     return "unknown"
 
@@ -153,7 +153,7 @@ def _fetch_run(run_id: str) -> Optional[Dict[str, Any]]:
             }
     except ImportError:
         pass
-    except Exception:
+    except (KeyError, TypeError, AttributeError, ValueError):  # WP-1: narrowed from except Exception
         pass
 
     return None
@@ -203,7 +203,7 @@ def _fetch_artifacts_summary(run_id: str) -> tuple[Dict[str, int], list[Dict[str
             })
     except ImportError:
         pass
-    except Exception:
+    except (KeyError, TypeError, AttributeError, ValueError):  # WP-1: narrowed from except Exception
         pass
 
     return counts, recent
@@ -367,7 +367,7 @@ def _build_rosette_param_spec(snapshot_id: Optional[str]) -> Dict[str, Any]:
             return result
     except ImportError:
         return {"status": "store_unavailable", "snapshot_id": snapshot_id}
-    except Exception as e:
+    except (KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return {"status": "error", "snapshot_id": snapshot_id, "error": str(e)[:100]}
 
     return {"status": "not_found", "snapshot_id": snapshot_id}
@@ -446,7 +446,7 @@ def _build_diff_summary(run_id: str, compare_run_id: Optional[str] = None) -> Di
         }
     except ImportError:
         return {"status": "unavailable", "summary": "Diff engine not available."}
-    except Exception as e:
+    except (KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return {"status": "error", "summary": str(e)[:200]}
 
 
@@ -487,7 +487,7 @@ def _build_artifact_manifest(run_id: str) -> Dict[str, Any]:
         }
     except ImportError:
         return {"status": "unavailable", "run_id": run_id, "artifact_count": 0, "artifacts": []}
-    except Exception as e:
+    except (KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return {"status": "error", "run_id": run_id, "artifact_count": 0, "error": str(e)[:200], "artifacts": []}
 
 

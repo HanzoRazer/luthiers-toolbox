@@ -481,7 +481,7 @@ ANALYZER_IMPORT_ERROR: Optional[str] = None
 
 try:
     from analyzer import create_analyzer
-except Exception as e:
+except (ImportError, OSError) as e:  # WP-1: narrowed from bare Exception
     ANALYZER_AVAILABLE = False
     ANALYZER_IMPORT_ERROR = f"{type(e).__name__}: {e}"
     create_analyzer = None  # type: ignore
@@ -794,8 +794,9 @@ async def analyze_blueprint(file: UploadFile = File(...)):
             status_code=503,
             detail={"error": "AI_DISABLED", "message": str(e)},
         )
-    
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error analyzing blueprint: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
@@ -915,8 +916,9 @@ async def export_to_svg(request: ExportRequest) -> FileResponse:
                 "X-Scale-Factor": str(request.scale_correction)
             }
         )
-    
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Error exporting SVG: {e}")
         raise HTTPException(status_code=500, detail=f"SVG export failed: {str(e)}")
 
@@ -1185,8 +1187,9 @@ async def vectorize_geometry(
             processing_time_ms=processing_time,
             message=f"Detected {result['contours']} contours and {result['lines']} line segments"
         )
-    
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.error(f"Phase 2 vectorization failed: {e}")
         raise HTTPException(
             status_code=500,
@@ -1197,7 +1200,7 @@ async def vectorize_geometry(
         try:
             if 'tmp_path' in locals():
                 Path(tmp_path).unlink(missing_ok=True)
-        except Exception as e:
+        except OSError as e:  # WP-1: narrowed from bare Exception
             logger.warning(f"Failed to clean up temp file: {e}")
 
 # =============================================================================
@@ -1307,7 +1310,7 @@ async def health_check() -> Dict[str, Any]:
             "phase2_available": PHASE2_AVAILABLE
         }
     
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:  # WP-1: narrowed from bare Exception
         logger.error(f"Health check failed: {e}")
         return {
             "status": "unhealthy",

@@ -478,7 +478,7 @@ async def plan_from_dxf(
             "critical_count": sum(1 for i in report.issues if i.level == "critical"),
             "error_count": sum(1 for i in report.issues if i.level == "error"),
         }
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed — preflight non-fatal fallback
         # Preflight errors are non-fatal for plan extraction
         preflight_debug = {"error": str(e)}
 
@@ -486,7 +486,9 @@ async def plan_from_dxf(
     layer_name = geometry_layer or "GEOMETRY"
     try:
         loops, warnings = extract_loops_from_dxf(dxf_bytes, layer_name=layer_name)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=400,
             detail=f"Failed to extract loops from DXF: {str(e)}"

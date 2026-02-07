@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sqlite3
 
 from app.db.migrate_sqlite import _resolve_db_path, _connect, apply_migrations
 
@@ -70,7 +71,7 @@ def run_migrations_on_startup() -> None:
                 "applied_ids": applied_ids,
             },
         )
-    except Exception as e:
+    except (OSError, sqlite3.Error, ValueError) as e:  # WP-1: narrowed from except Exception
         logger.exception(
             "DB migrations: FAILED",
             extra={"db_path": str(db_path), "dry_run": dry_run}

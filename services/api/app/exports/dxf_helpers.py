@@ -151,7 +151,7 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
             if comment:
                 try:
                     doc.header.custom_vars.append(("COMMENT", comment))
-                except Exception:
+                except (ValueError, AttributeError):  # WP-1: narrowed from except Exception
                     pass
 
         for (etype, params) in entities:
@@ -200,7 +200,7 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
         doc.write(bio, fmt='asc')
         return bio.getvalue()
 
-    except Exception as e:
+    except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
         print(f"ezdxf export failed: {e}")
         return None
 

@@ -127,7 +127,7 @@ def _build_fallback_segments(
                     cut_type=op.get("cut_type", "crosscut"),
                 )
                 segments.append(seg)
-            except Exception:
+            except (ImportError, TypeError, ValueError):  # WP-1: narrowed from except Exception
                 # If SawSegment doesn't exist, create a simple dict
                 segments.append({
                     "start_x": 0.0,

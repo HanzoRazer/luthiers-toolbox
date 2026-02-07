@@ -164,7 +164,9 @@ def preview_inlay(req: InlayPreviewRequest) -> InlayPreviewResponse:
         
         return InlayPreviewResponse(result=result, preview_svg=svg)
         
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -208,7 +210,9 @@ def export_inlay_dxf(req: InlayDXFRequest) -> Response:
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 

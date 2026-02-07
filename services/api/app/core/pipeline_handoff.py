@@ -22,7 +22,7 @@ def try_pipeline_service_handoff(payload: Dict[str, Any]) -> Optional[str]:
 
         job = PIPELINE_SERVICE.create_job(payload)  # type: ignore[attr-defined]
         return getattr(job, "id", None)
-    except Exception:
+    except (ImportError, AttributeError):  # WP-1: narrowed from except Exception
         return None
 
 
@@ -70,7 +70,7 @@ def build_pipeline_payload(req: PipelineHandoffRequest) -> Dict[str, Any]:
             if worst_fragility >= 0.75:
                 payload["metadata"]["fragile_job"] = True
                 payload["metadata"]["fragility_reason"] = f"Worst material fragility: {worst_fragility:.2f}"
-        except Exception:
+        except (KeyError, TypeError, AttributeError, ValueError):  # WP-1: narrowed from except Exception
             # Don't fail handoff if CAM summary fails
             pass
     

@@ -442,7 +442,7 @@ def main():
         try:
             spec = normalize_pdf_row(row, header_map)
             blades.append(spec)
-        except Exception as e:
+        except (ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
             print(f"Warning: Failed to normalize row on page {row.page_number}: {e}", file=sys.stderr)
             continue
     

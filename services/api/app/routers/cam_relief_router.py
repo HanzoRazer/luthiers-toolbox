@@ -68,7 +68,9 @@ def relief_map_from_heightfield(payload: ReliefMapFromHeightfieldIn) -> ReliefMa
         return load_heightmap_to_map(payload)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:  # pragma: no cover
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load heightmap: {e}")
 
 
@@ -97,7 +99,9 @@ def relief_roughing(payload: ReliefRasterToolpathIn) -> ReliefToolpathOut:
     """
     try:
         return plan_relief_roughing(payload)
-    except Exception as e:  # pragma: no cover
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to plan roughing: {e}")
 
 
@@ -126,7 +130,9 @@ def relief_finishing(payload: ReliefFinishingIn) -> ReliefToolpathOut:
     """
     try:
         return plan_relief_finishing(payload)
-    except Exception as e:  # pragma: no cover
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to plan finishing: {e}")
 
 
@@ -164,5 +170,7 @@ def relief_sim_bridge(payload: ReliefSimIn) -> ReliefSimOut:
     """
     try:
         return run_relief_sim_bridge(payload)
-    except Exception as e:  # pragma: no cover
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Relief sim bridge failed: {e}")

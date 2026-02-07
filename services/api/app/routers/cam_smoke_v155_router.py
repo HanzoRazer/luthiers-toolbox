@@ -62,7 +62,7 @@ def smoke_posts() -> Dict[str, Any]:
             results[name] = {"ok": bool(g), "bytes": len(g)}
             if not g:
                 errors.append(f"{name}: empty gcode")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
             results[name] = {"ok": False, "error": str(e)}
             errors.append(f"{name}: {e}")
     

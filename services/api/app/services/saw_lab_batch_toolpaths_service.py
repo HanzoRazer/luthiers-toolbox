@@ -196,7 +196,7 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                     spec_payload = spec_art.get("payload") or {}
                     if not isinstance(spec_payload, dict):
                         spec_payload = {}
-                except Exception:
+                except (OSError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                     spec_payload = {}
 
             infer_tool_id = d_payload.get("tool_id") or spec_payload.get("tool_id")
@@ -207,7 +207,7 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                 if isinstance(items, list) and items:
                     infer_material_id = items[0].get("material_id")
                     infer_thickness_mm = items[0].get("thickness_mm")
-            except Exception:
+            except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
                 pass
 
             # Build a base context with defaults to tune
@@ -309,7 +309,7 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                 feas = svc.check_feasibility(design, context)
                 feas_d = _as_dict(feas)
                 risk, score, warnings = _risk_and_score(feas_d)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
                 risk, score, warnings = "ERROR", 0.0, [f"{type(e).__name__}: {e}"]
                 feas_d = {"risk_bucket": risk, "score": score}
 
@@ -363,7 +363,7 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
                 toolpaths_d = _as_dict(toolpaths)
                 ok_count += 1
                 child_status = "OK"
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
                 toolpaths_d = None
                 error_count += 1
                 child_status = "ERROR"
@@ -482,7 +482,7 @@ def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -
             },
         }
 
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — governance requires ERROR artifact even on unexpected failures
         # Persist parent ERROR even on unexpected failures
         parent_id = _write_artifact(
             kind="saw_batch_execution",

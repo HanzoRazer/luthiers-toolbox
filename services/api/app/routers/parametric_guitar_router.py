@@ -263,7 +263,9 @@ async def generate_parametric_body(request: GuitarDesignRequest) -> BodyOutlineR
             message=f"Generated {len(outline)} point outline for {request.guitarType} body"
         )
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 
@@ -328,7 +330,9 @@ async def export_parametric_body(request: GuitarDesignRequest) -> Response:
             }
         )
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
@@ -465,7 +469,9 @@ async def generate_and_plan_cam(request: GuitarDesignRequest) -> Dict[str, Any]:
             "message": f"Generated {len(moves)} CAM moves for {request.guitarType} body"
         }
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"CAM planning failed: {str(e)}")
 
 

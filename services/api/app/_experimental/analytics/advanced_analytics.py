@@ -82,7 +82,7 @@ class AdvancedAnalytics:
                     x_val = float(x_val)
                 if y_val is not None:
                     y_val = float(y_val)
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 continue
 
             if x_val is not None and y_val is not None:
@@ -110,7 +110,7 @@ class AdvancedAnalytics:
 
         try:
             r = cov / math.sqrt(var_x * var_y)
-        except Exception:
+        except (ValueError, ZeroDivisionError):  # WP-1: narrowed from except Exception
             r = 0.0
 
         # very rough p-value estimate using t-distribution approximation
@@ -118,7 +118,7 @@ class AdvancedAnalytics:
             t_stat = r * math.sqrt((n - 2) / (1 - r * r)) if abs(r) < 1 else float('inf')
             # two-tailed approximate p using survival of t; we won't import scipy — provide NaN placeholder
             p_est = None
-        except Exception:
+        except (ValueError, ZeroDivisionError):  # WP-1: narrowed from except Exception
             t_stat = None
             p_est = None
 
@@ -151,7 +151,7 @@ class AdvancedAnalytics:
                     'job_type': j.get('job_type', 'Unknown'),
                     'duration_seconds': float(d)
                 })
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 continue
 
         if not durations:

@@ -23,7 +23,7 @@ def _iter_config_files() -> list[Path]:
 def _load_file(path: Path) -> None:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except (OSError, json.JSONDecodeError, ValueError) as exc:  # WP-1: narrowed from except Exception  # pragma: no cover
         logger.warning("Failed to parse preset file %s: %s", path, exc)
         return
 
@@ -47,7 +47,7 @@ def _load_file(path: Path) -> None:
                 mode=mode,
                 **payload,
             )
-        except Exception as exc:
+        except (ValueError, TypeError, KeyError) as exc:  # WP-1: narrowed from except Exception
             logger.warning("Invalid preset '%s' in %s: %s", key, path, exc)
             continue
 

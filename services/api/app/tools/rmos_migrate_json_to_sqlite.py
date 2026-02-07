@@ -108,7 +108,7 @@ class RMOSMigrator:
                 self.stats['patterns']['migrated'] += 1
                 logger.debug(f"Migrated pattern: {data.get('name', 'unnamed')}")
                 
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 logger.error(f"Failed to migrate {file_path}: {e}")
                 self.stats['patterns']['failed'] += 1
     
@@ -143,7 +143,7 @@ class RMOSMigrator:
                 self.stats['strip_families']['migrated'] += 1
                 logger.debug(f"Migrated strip family: {data.get('name', 'unnamed')}")
                 
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 logger.error(f"Failed to migrate {file_path}: {e}")
                 self.stats['strip_families']['failed'] += 1
     
@@ -178,7 +178,7 @@ class RMOSMigrator:
                 self.stats['joblogs']['migrated'] += 1
                 logger.debug(f"Migrated joblog: {data.get('id', 'unknown')}")
                 
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 logger.error(f"Failed to migrate {file_path}: {e}")
                 self.stats['joblogs']['failed'] += 1
     

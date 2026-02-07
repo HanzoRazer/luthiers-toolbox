@@ -28,7 +28,7 @@ def _num(x: Any) -> float:
         if x is None:
             return 0.0
         return float(x)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 0.0
 
 

@@ -113,7 +113,9 @@ def list_lanes(
             machine_profile=machine_profile
         )
         return lanes
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list lanes: {str(e)}"
@@ -187,7 +189,9 @@ def set_override(req: SetOverrideRequest):
             reason=req.reason
         )
         return override
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to set override: {str(e)}"
@@ -216,7 +220,9 @@ def update_lane_scale(req: UpdateLaneScaleRequest):
             reason=req.reason
         )
         return {"success": True, "message": f"Lane scale updated to {req.lane_scale}"}
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update lane scale: {str(e)}"
@@ -250,7 +256,9 @@ def merge_parameters(req: MergeParametersRequest):
             overrides_applied=overrides_applied,
             lane_scale=lane_scale
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to merge parameters: {str(e)}"
@@ -278,7 +286,9 @@ def record_run(req: RecordRunRequest):
             "success": True,
             "message": f"Run recorded ({'success' if req.success else 'failure'})"
         }
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to record run: {str(e)}"
@@ -324,7 +334,9 @@ def get_audit_trail(
             limit=limit
         )
         return entries
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get audit trail: {str(e)}"
@@ -348,7 +360,9 @@ def get_statistics():
     try:
         stats = store.get_statistics()
         return stats
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get statistics: {str(e)}"

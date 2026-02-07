@@ -187,7 +187,7 @@ def drill_gcode_governed(req: DrillReq) -> Response:
         # Get final program text after wrapping for accurate hash
         try:
             program = resp.body.decode("utf-8") if isinstance(resp.body, (bytes, bytearray)) else program
-        except Exception:
+        except (UnicodeDecodeError, AttributeError):  # WP-1: narrowed from except Exception
             pass  # Fall back to pre-wrap program if body not accessible
 
     # Create RMOS artifact (matches adaptive pocket contract 1:1)

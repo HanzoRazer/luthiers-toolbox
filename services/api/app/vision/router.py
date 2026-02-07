@@ -79,7 +79,9 @@ def list_providers() -> ProvidersResponse:
         try:
             c = get_image_client(provider=name)
             configured = bool(getattr(c, "is_configured", True))
-        except Exception:
+        except HTTPException:
+            raise
+        except Exception:  # WP-1: governance catch-all — HTTP endpoint
             configured = False
         providers.append({"name": name, "configured": configured})
     return ProvidersResponse(providers=providers)
@@ -96,7 +98,9 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
 
     try:
         client = get_image_client(provider=payload.provider)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail=f"AI_PROVIDER_NOT_CONFIGURED: {payload.provider}") from e
 
     if getattr(client, "is_configured", True) is False:
@@ -113,7 +117,9 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
                 size=payload.size,
                 quality=payload.quality,
             )
-        except Exception as e:
+        except HTTPException:
+            raise
+        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
             raise HTTPException(status_code=502, detail=f"AI_PROVIDER_UNAVAILABLE: {str(e)}") from e
 
         # Extract from ImageResponse dataclass
@@ -131,7 +137,9 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
                 mime=mime,
                 filename=_filename(payload.provider, model_used, payload.size, fmt, i),
             )
-        except Exception as e:
+        except HTTPException:
+            raise
+        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
             raise HTTPException(status_code=500, detail=f"CAS_WRITE_FAILED: {str(e)}") from e
 
         assets.append(
@@ -221,14 +229,18 @@ async def segment_guitar(
                 ok=False,
                 error="Image too large. Maximum size is 10MB."
             )
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return SegmentResponse(ok=False, error=f"Failed to read image: {e}")
 
     # Initialize service
     try:
         vision_client = get_vision_client("openai")
         service = GuitarSegmentationService(vision_client)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=503, detail=f"Vision service unavailable: {e}")
 
     # Run segmentation
@@ -271,7 +283,9 @@ async def segment_guitar(
             )
             response.dxf_sha256 = attachment.sha256
             response.dxf_url = _blob_download_url(attachment.sha256)
-        except Exception as e:
+        except HTTPException:
+            raise
+        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
             response.notes += f" DXF export failed: {e}"
 
     # Export to SVG if requested
@@ -287,7 +301,9 @@ async def segment_guitar(
             )
             response.svg_sha256 = attachment.sha256
             response.svg_url = _blob_download_url(attachment.sha256)
-        except Exception as e:
+        except HTTPException:
+            raise
+        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
             response.notes += f" SVG export failed: {e}"
 
     return response
@@ -338,7 +354,9 @@ async def photo_to_gcode(
         image_bytes = await file.read()
         if len(image_bytes) > 10 * 1024 * 1024:
             return PhotoToGcodeResponse(ok=False, error="Image too large (max 10MB)")
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(ok=False, error=f"Failed to read image: {e}")
 
     # Step 1: AI Segmentation
@@ -351,7 +369,9 @@ async def photo_to_gcode(
             simplify_tolerance_mm=simplify_tolerance_mm,
             guitar_category=guitar_category,
         )
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(ok=False, error=f"Segmentation failed: {e}")
 
     if isinstance(seg_result, SegmentationError):
@@ -373,7 +393,9 @@ async def photo_to_gcode(
             filename=f"guitar_body_{seg_result.guitar_type}_preview.svg",
         )
         svg_url = _blob_download_url(attachment.sha256)
-    except Exception:
+    except HTTPException:
+        raise
+    except Exception:  # WP-1: governance catch-all — HTTP endpoint
         pass  # Non-fatal
 
     # Step 3: Generate DXF
@@ -387,7 +409,9 @@ async def photo_to_gcode(
             filename=f"guitar_body_{seg_result.guitar_type}.dxf",
         )
         dxf_url = _blob_download_url(attachment.sha256)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"DXF generation failed: {e}",
@@ -415,7 +439,9 @@ async def photo_to_gcode(
 
         # Call planner
         plan_result = plan(plan_request)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"CAM planning failed: {e}",
@@ -476,7 +502,9 @@ async def photo_to_gcode(
             filename=f"guitar_body_{seg_result.guitar_type}_{post_processor}.nc",
         )
         gcode_url = _blob_download_url(attachment.sha256)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"G-code generation failed: {e}",

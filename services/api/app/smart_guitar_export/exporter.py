@@ -65,7 +65,7 @@ def _get_git_commit() -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         pass
     return "unknown"
 
@@ -81,7 +81,7 @@ def _get_git_repo() -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         pass
     return "local"
 

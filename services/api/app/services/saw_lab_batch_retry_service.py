@@ -158,7 +158,7 @@ def retry_batch_execution(
             warnings = feas_d.get("warnings") or []
             if not isinstance(warnings, list):
                 warnings = [str(warnings)]
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
             risk, score, warnings = "ERROR", 0.0, [f"{type(e).__name__}: {e}"]
             feas_d = {"risk_bucket": "ERROR", "score": 0.0, "warnings": warnings}
 
@@ -200,7 +200,7 @@ def retry_batch_execution(
             toolpaths_d = _as_dict(toolpaths)
             ok += 1
             ch_status = "OK"
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
             toolpaths_d = None
             err += 1
             ch_status = "ERROR"

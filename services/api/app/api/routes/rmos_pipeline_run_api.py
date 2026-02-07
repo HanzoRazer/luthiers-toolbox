@@ -93,7 +93,9 @@ def run_pipeline(body: RunPipelineRequest):
     pattern_store = get_pattern_store()
     try:
         pat = pattern_store.get(body.pattern_id)
-    except Exception:
+    except HTTPException:
+        raise
+    except Exception:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=404, detail=f"Pattern '{body.pattern_id}' not found.")
 
     if not pat:
@@ -166,7 +168,7 @@ def run_pipeline(body: RunPipelineRequest):
                 "fragility_score": frag,
             },
         })
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — non-critical joblog write
         print(f"Warning: Failed to log job start: {e}")
 
     return RunPipelineResponse(

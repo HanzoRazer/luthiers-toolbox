@@ -168,10 +168,9 @@ async def roughing_gcode_intent(
             issues=issues_out,
             status="OK_WITH_ISSUES" if issues else "OK",
         )
-    except HTTPException:
-        # Re-raise HTTP exceptions (e.g., safety blocks)
+    except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # If handler fails, return a structured error but metrics still counted
         raise HTTPException(
             status_code=422,

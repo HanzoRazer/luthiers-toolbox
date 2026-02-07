@@ -227,7 +227,7 @@ def apply_auto_learning(
         
         return False
     
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
         # Don't fail run if learning fails
         print(f"Warning: Auto-learning failed: {e}")
         return False

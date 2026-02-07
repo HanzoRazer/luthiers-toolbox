@@ -122,7 +122,7 @@ class CAMAdvisor:
                         )
                     )
 
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — calculator spine can raise anything
                 advisories.append(
                     CAMAdvisory(
                         severity="info",

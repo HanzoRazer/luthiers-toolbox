@@ -12,7 +12,7 @@ router.include_router(feeds_speeds_router.router)
 # Optional Saw Lab routers load lazily so missing schemas do not break import.
 try:  # pragma: no cover - optional dependency
     from app.api.routes import saw_tools
-except Exception:  # noqa: BLE001
+except ImportError:  # WP-1: narrowed from except Exception  # noqa: BLE001
     saw_tools = None
 
 if saw_tools is not None:
@@ -20,7 +20,7 @@ if saw_tools is not None:
 
 try:  # pragma: no cover - optional dependency
     from app.api.routes import saw_ops
-except Exception:  # noqa: BLE001
+except ImportError:  # WP-1: narrowed from except Exception  # noqa: BLE001
     saw_ops = None
 
 if saw_ops is not None:

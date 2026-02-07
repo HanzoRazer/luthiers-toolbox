@@ -156,10 +156,10 @@ def _load_posts() -> Dict[str, Any]:
                     }
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to parse post config {f}: {e}")
-            except Exception as e:
+            except (OSError, KeyError, TypeError) as e:  # WP-1: per-file load fallback
                 logger.warning(f"Failed to load post config {f}: {e}")
     
-    except Exception as e:
+    except OSError as e:  # WP-1: directory scan fallback
         logger.error(f"Failed to scan posts directory: {e}")
     
     return out

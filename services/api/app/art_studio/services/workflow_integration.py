@@ -600,8 +600,7 @@ def evaluate_session_feasibility(
             warnings.extend(assessment.warnings)
         warnings.extend(report.recommendations)
 
-    except Exception as e:
-        # Fallback to basic validation if RMOS engine fails
+    except Exception as e:  # WP-1: keep broad — RMOS feasibility engine fallback to basic validation
         logger.warning(f"RMOS feasibility engine failed, using fallback: {e}")
         score = 70.0
         risk_bucket = RiskBucket.YELLOW
@@ -705,7 +704,7 @@ def approve_session(
             message="Session approved for toolpath generation",
             run_artifact_id=artifact_ref.artifact_id if artifact_ref else None,
         )
-    except Exception as e:
+    except (ValueError, PermissionError) as e:  # WP-1: narrowed from except Exception
         return ApprovalResponse(
             session_id=session_id,
             state=session.state.value,

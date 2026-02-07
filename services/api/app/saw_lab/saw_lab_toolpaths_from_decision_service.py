@@ -200,7 +200,7 @@ def generate_toolpaths_from_decision(
                 "statistics": _as_dict(result).get("statistics"),
             },
         }
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — saw lab toolpath generation must persist error artifacts
         err_payload = {
             "status": "ERROR",
             "error": f"{type(e).__name__}: {e}",

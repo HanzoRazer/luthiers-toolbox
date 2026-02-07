@@ -41,7 +41,7 @@ try:
         OutputFormat,
     )
     GENERATOR_AVAILABLE = True
-except Exception as e:
+except ImportError as e:  # WP-1: narrowed from except Exception
     print(f"Warning: Could not load pattern_generator: {e}")
 
 
@@ -203,7 +203,9 @@ async def list_patterns(
             patterns=patterns
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Failed to list patterns: {str(e)}"
@@ -251,7 +253,9 @@ async def generate_traditional_pattern(body: TraditionalPatternRequest):
             bom=result.bom
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Pattern generation failed: {str(e)}"
@@ -298,7 +302,9 @@ async def generate_modern_pattern(body: ModernPatternRequest):
             svg_content=result.svg_content
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Pattern generation failed: {str(e)}"
@@ -342,7 +348,7 @@ async def get_pattern_details(pattern_id: str):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Failed to load pattern: {str(e)}"

@@ -44,7 +44,9 @@ async def simulate_gcode(file: UploadFile = File(...), units: str = Form("mm")) 
     """
     try:
         text = (await file.read()).decode("utf-8", errors="ignore")
-    except Exception as exc:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Failed to read file: {exc}") from exc
 
     moves = _parse_gcode_lines(text)

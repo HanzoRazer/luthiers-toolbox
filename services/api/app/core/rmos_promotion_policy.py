@@ -64,7 +64,7 @@ def _load_policy_config() -> PromotionPolicyConfig:
             ultra_fragile_threshold=float(raw.get("ultra_fragile_threshold", 0.90)),
             lookback_jobs_per_preset=int(raw.get("lookback_jobs_per_preset", 200)),
         )
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
         print(f"Warning: Failed to load promotion policy config: {e}. Using defaults.")
         return PromotionPolicyConfig()
 

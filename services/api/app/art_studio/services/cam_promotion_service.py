@@ -32,7 +32,7 @@ def _load_index(path: Path) -> Dict[str, str]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
         # Corruption-safe behavior: fail closed (force new index) would be risky.
         # We keep it simple: treat as empty; requests still exist on disk.
         return {}

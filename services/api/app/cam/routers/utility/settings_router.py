@@ -231,7 +231,7 @@ async def cam_settings_import(
                     continue
                 mstore.upsert(m.model_dump(exclude_none=True))
                 report["imported"]["machines"] += 1
-            except Exception as exc:
+            except Exception as exc:  # WP-1: governance catch-all — error collector
                 add_error("machine", m.id, exc)
     except (ImportError, OSError) as exc:
         add_error("machine_store", "_", exc)
@@ -249,7 +249,7 @@ async def cam_settings_import(
                     continue
                 pstore.upsert(p.model_dump(exclude_none=True))
                 report["imported"]["posts"] += 1
-            except Exception as exc:
+            except Exception as exc:  # WP-1: governance catch-all — error collector
                 add_error("post", p.id, exc)
     except (ImportError, OSError) as exc:
         add_error("post_store", "_", exc)
@@ -266,7 +266,7 @@ async def cam_settings_import(
                     continue
                 pps.upsert({**pr.model_dump(exclude_none=True), "id": pid})
                 report["imported"]["pipeline_presets"] += 1
-            except Exception as exc:
+            except Exception as exc:  # WP-1: governance catch-all — error collector
                 add_error("pipeline_preset", pr.id or pr.name, exc)
     except (ImportError, OSError) as exc:
         add_error("preset_store", "_", exc)

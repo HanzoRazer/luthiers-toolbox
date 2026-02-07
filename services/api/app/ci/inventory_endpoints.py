@@ -54,7 +54,7 @@ def main(argv: List[str]) -> int:
         i = argv.index("--out")
         try:
             out_path = argv[i + 1]
-        except Exception as e:
+        except IndexError as e:  # WP-1: narrowed from except Exception
             raise SystemExit("--out requires a path") from e
 
     app = _load_app()

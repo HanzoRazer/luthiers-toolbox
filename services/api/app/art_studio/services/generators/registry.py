@@ -67,7 +67,7 @@ def generate_spec(
 
     try:
         spec = fn(outer_diameter_mm, inner_diameter_mm, params)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Generator error: {str(e)}")
         # Return a minimal fallback spec
         from ...schemas.rosette_params import RosetteParamSpec

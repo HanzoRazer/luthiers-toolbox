@@ -96,7 +96,7 @@ class RunSummaryProvider:
         except ImportError:
             # Fallback for when RMOS is not available
             return None
-        except Exception:
+        except (KeyError, TypeError, AttributeError, ValueError):  # WP-1: narrowed from except Exception
             return None
     
     def _build_summary(self, run_data: Dict[str, Any]) -> Dict[str, Any]:

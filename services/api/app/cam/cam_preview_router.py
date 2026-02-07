@@ -238,7 +238,7 @@ async def preview_fret_slot_cam(request: FretSlotPreviewRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise  # WP-1: pass through
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"CAM preview generation failed: {str(e)}"

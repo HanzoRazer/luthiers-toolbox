@@ -248,7 +248,7 @@ def _extract_issues_from_raw(raw: Dict[str, Any]) -> List[SimIssue]:
                 continue
             try:
                 issues.append(SimIssue(**item))
-            except Exception:
+            except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                 continue
 
     # Alternate: raw["collisions"]
@@ -268,7 +268,7 @@ def _extract_issues_from_raw(raw: Dict[str, Any]) -> List[SimIssue]:
                         note=c.get("note", "Collision detected"),
                     )
                 )
-            except Exception:
+            except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                 continue
 
     # Alternate: raw["gouges"]
@@ -288,7 +288,7 @@ def _extract_issues_from_raw(raw: Dict[str, Any]) -> List[SimIssue]:
                         note=g.get("note", "Gouge detected"),
                     )
                 )
-            except Exception:
+            except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                 continue
 
     return issues

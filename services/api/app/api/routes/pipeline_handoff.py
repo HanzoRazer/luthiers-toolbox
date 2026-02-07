@@ -16,5 +16,7 @@ def pipeline_handoff(req: PipelineHandoffRequest) -> PipelineHandoffResponse:
     try:
         result = handoff_to_pipeline(req)
         return PipelineHandoffResponse(**result)
-    except Exception as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(exc)) from exc

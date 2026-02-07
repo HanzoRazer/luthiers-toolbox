@@ -75,7 +75,7 @@ class RMOSDatabase:
         try:
             yield conn
             conn.commit()
-        except Exception as e:
+        except sqlite3.Error as e:  # WP-1: narrowed from except Exception
             conn.rollback()
             logger.error(f"Database error, rolling back: {e}")
             raise

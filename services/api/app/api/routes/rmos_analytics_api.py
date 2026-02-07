@@ -35,7 +35,9 @@ def get_lane_analytics(limit_recent: int = 200):
     """
     try:
         return compute_lane_analytics(limit_recent=limit_recent)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Analytics computation failed: {str(e)}")
 
 
@@ -54,5 +56,7 @@ def get_risk_timeline(preset_id: str, limit: int = 200):
     """
     try:
         return compute_risk_timeline_for_preset(preset_id=preset_id, limit=limit)
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Timeline computation failed: {str(e)}")

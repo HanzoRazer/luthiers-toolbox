@@ -121,7 +121,7 @@ def validate_manifest(manifest_dict: Dict[str, Any]) -> ValidationResult:
     try:
         manifest = SmartGuitarExportManifest.model_validate(manifest_dict)
         result.manifest = manifest
-    except Exception as e:
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         result.add_error(f"Schema validation failed: {e}")
         return result
 

@@ -32,7 +32,7 @@ def _read_store() -> Dict[str, Any]:
     raw = _TOOLS_JSON.read_text(encoding="utf-8")
     try:
         return json.loads(raw)
-    except Exception:
+    except json.JSONDecodeError:  # WP-1: narrowed from except Exception
         backup = _TOOLS_JSON.with_suffix(f".corrupt.{int(time.time())}.json")
         backup.write_text(raw, encoding="utf-8")
         return {"tools": []}

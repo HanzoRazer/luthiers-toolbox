@@ -144,7 +144,7 @@ def load_truth_map_text() -> Tuple[Path, str]:
         try:
             if candidate.exists() and candidate.is_file():
                 return (candidate, candidate.read_text(encoding="utf-8"))
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             continue
     tried = "\n".join(str(p) for p in _default_truth_map_candidates())
     raise FileNotFoundError(
@@ -257,7 +257,7 @@ def main(argv: Sequence[str]) -> int:
 
     try:
         res = run_check()
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — wraps app introspection + file I/O + truth map parsing
         print(f"[endpoint_truth_gate] ERROR: {e}")
         return 2
 

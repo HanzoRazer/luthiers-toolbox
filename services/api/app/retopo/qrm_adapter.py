@@ -96,7 +96,7 @@ def run(input_mesh: str, preset_path: str, out_dir: str) -> dict:
 
     try:
         preset = _load_preset(preset_path)
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return _stub_fallback(input_mesh, out_dir, f"Failed to load preset: {e}")
 
     args = _build_args(qrm_bin, Path(input_mesh), output_mesh, preset)

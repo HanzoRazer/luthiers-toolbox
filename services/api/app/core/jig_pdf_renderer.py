@@ -6,7 +6,7 @@ from typing import Any, Dict
 try:  # pragma: no cover - optional dependency
     from reportlab.lib.pagesizes import letter
     from reportlab.pdfgen import canvas
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover  # WP-1: narrowed from except Exception
     canvas = None  # type: ignore[assignment]
     letter = None  # type: ignore[assignment]
 

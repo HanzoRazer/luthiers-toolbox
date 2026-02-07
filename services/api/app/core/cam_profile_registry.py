@@ -30,7 +30,7 @@ def _load_profiles_raw(path: Path = DEFAULT_CAM_PROFILES_PATH) -> List[CamProfil
     for item in data:
         try:
             out.append(CamProfile(**item))
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             # In production: log invalid entries.
             continue
     return out

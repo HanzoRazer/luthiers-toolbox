@@ -85,7 +85,7 @@ def _json_load_maybe(v: Any) -> Dict[str, Any]:
         try:
             obj = json.loads(v)
             return obj if isinstance(obj, dict) else {}
-        except Exception:
+        except (json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             return {}
     return {}
 

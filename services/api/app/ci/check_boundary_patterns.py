@@ -140,7 +140,7 @@ def _relpath(path: Path) -> str:
     root = _true_repo_root()
     try:
         return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
-    except Exception:
+    except ValueError:  # WP-1: narrowed from except Exception
         return str(path).replace("\\", "/")
 
 
@@ -186,7 +186,7 @@ def _scan_file_for_patterns(
                         excerpt=line.strip()[:80],
                         reason=reason,
                     ))
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         pass
     return violations
 
@@ -238,7 +238,7 @@ def scan_frontend_sdk_boundary(repo_root: Path) -> List[PatternViolation]:
                                     excerpt=line.strip()[:80],
                                     reason=reason,
                                 ))
-                except Exception:
+                except OSError:  # WP-1: narrowed from except Exception
                     pass
 
     return violations
@@ -345,7 +345,7 @@ def main() -> int:
     try:
         args = _parse_args(sys.argv[1:])
         repo_root = _repo_root_from_cwd()
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — top-level CLI catch wraps arg parsing + repo root discovery
         print(f"Pattern scanner error: {e}", file=sys.stderr)
         return 3
 
@@ -377,7 +377,7 @@ def main() -> int:
 
         try:
             baseline = _load_baseline(bpath)
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
             print(f"Failed to read baseline {bpath}: {e}", file=sys.stderr)
             return 3
 

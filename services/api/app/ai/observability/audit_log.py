@@ -106,7 +106,7 @@ class AuditLogger:
             try:
                 with open(self.log_file, "a") as f:
                     f.write(entry.to_json() + "\n")
-            except Exception as e:
+            except OSError as e:  # WP-1: narrowed from except Exception
                 logger.error(f"Failed to write audit log: {e}")
 
     def get_entries(

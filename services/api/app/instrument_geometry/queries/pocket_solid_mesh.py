@@ -182,7 +182,7 @@ def _build_solid_from_ring(
             meta["cap_status"] = "ok_earclip"
             meta["cap_triangle_count"] = len(cap_tris) * 2
             return TriangleMesh(vertices=vertices, triangles=triangles, meta=meta)
-        except Exception as e:
+        except Exception as e:  # WP-1: keep broad — earclip triangulation can fail in many ways; fallback is safe
             meta["cap_status"] = "earclip_failed"
             meta["cap_error"] = str(e)
             if fallback_on_fail:

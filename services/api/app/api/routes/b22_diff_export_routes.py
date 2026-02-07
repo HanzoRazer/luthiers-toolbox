@@ -54,8 +54,7 @@ def export_diff_report(payload: DiffExportRequest):
             before_bytes = decode_data_url(payload.screenshotBefore)
             after_bytes = decode_data_url(payload.screenshotAfter)
             diff_bytes = decode_data_url(payload.screenshotDiff)
-        except Exception as exc:
-            # In a real app you'd want more robust error handling/logging
+        except (ValueError, Exception) as exc:  # WP-1: keep broad — base64 decode can raise multiple types
             raise ValueError(f"Failed to decode screenshots: {exc}") from exc
 
         # Choose filenames (you can tweak this)

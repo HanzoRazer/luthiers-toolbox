@@ -176,7 +176,7 @@ class ToolpathService:
                 warnings=warnings
             )
             
-        except Exception as e:
+        except Exception as e:  # WP-1: keep broad — CAM toolpath generation fallback; returns empty plan
             warnings.append(f"Toolpath generation error: {str(e)}")
             return RmosToolpathPlan(
                 toolpaths=[],

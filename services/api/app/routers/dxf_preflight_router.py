@@ -188,7 +188,9 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
     
     try:
         doc = ezdxf.readfile(str(dxf_path))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Failed to read DXF: {str(e)}")
     
     issues: List[ValidationIssue] = []
@@ -226,7 +228,7 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
                 fix_available=True,
                 fix_description="Set units to mm (most common for lutherie)"
             ))
-    except Exception:
+    except (KeyError, AttributeError):  # WP-1: narrowed — header access fallback
         units = "unknown"
     
     # Check 3: Analyze geometry and layers
@@ -656,7 +658,9 @@ def validate_dxf_base64(request: ValidateBase64Request):
     
     try:
         dxf_bytes = base64.b64decode(request.dxf_base64)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Invalid base64: {str(e)}")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf') as tmp:
@@ -694,7 +698,9 @@ async def auto_fix_dxf(request: AutoFixRequest):
     # Decode DXF
     try:
         dxf_bytes = base64.b64decode(request.dxf_base64)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Invalid base64: {str(e)}")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf', mode='wb') as tmp_in:
@@ -753,11 +759,11 @@ async def auto_fix_dxf(request: AutoFixRequest):
                     # Copy entity to R12 document (R12 may not support all entity types)
                     try:
                         r12_msp.add_foreign_entity(entity)
-                    except Exception:
+                    except (TypeError, ValueError, AttributeError):  # WP-1: narrowed — entity copy fallback
                         # Fallback: try direct copy for simple entities
                         if entity.dxftype() in ('LINE', 'CIRCLE', 'ARC', 'LWPOLYLINE', 'POLYLINE'):
                             r12_msp.add_entity(entity.copy())
-            except Exception as e:
+            except (TypeError, ValueError, AttributeError) as e:  # WP-1: narrowed — R12 copy fallback
                 # If copying fails, at least save as R12 even if empty
                 pass
             

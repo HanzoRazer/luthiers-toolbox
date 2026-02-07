@@ -317,7 +317,7 @@ async def workflow_list_recent(
         try:
             feas = s.feasibility or {}
             risk = feas.get("risk_bucket") or feas.get("risk") or feas.get("riskLevel")
-        except Exception:
+        except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             risk = None
 
         out.append(

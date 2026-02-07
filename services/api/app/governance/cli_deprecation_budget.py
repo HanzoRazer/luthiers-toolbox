@@ -47,7 +47,7 @@ def cmd_check() -> int:
 
     try:
         stats = load_shadow_stats(stats_path)
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
         print(f"[deprecation_budget] ERROR: failed to read stats: {e}", file=sys.stderr)
         return 1
 

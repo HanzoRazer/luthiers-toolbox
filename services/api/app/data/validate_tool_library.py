@@ -122,7 +122,7 @@ def main() -> None:
         library = ToolLibrary()
         print(f"  Tools loaded: {len(library.list_tool_ids())}")
         print(f"  Materials loaded: {len(library.list_material_ids())}")
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — CLI validator must catch any load error to report
         print(f"❌ Failed to load library: {e}")
         raise ValidationError(f"Library load failed: {e}")
     

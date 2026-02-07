@@ -113,7 +113,9 @@ def api_create_from_pattern(request: CreateFromPatternRequest) -> WorkflowCreate
         return create_workflow_from_pattern(request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
 
 
@@ -133,7 +135,9 @@ def api_create_from_generator(request: CreateFromGeneratorRequest) -> WorkflowCr
         return create_workflow_from_generator(request)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
 
 
@@ -153,7 +157,9 @@ def api_create_from_snapshot(request: CreateFromSnapshotRequest) -> WorkflowCrea
         return create_workflow_from_snapshot(request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to restore snapshot: {str(e)}")
 
 
@@ -205,7 +211,9 @@ def api_update_design(session_id: str, request: UpdateDesignRequest) -> SessionS
         return update_session_design(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -235,7 +243,9 @@ def api_evaluate_feasibility(
         return evaluate_session_feasibility(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -255,7 +265,9 @@ def api_approve_session(session_id: str, request: ApproveSessionRequest) -> Appr
         return approve_session(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -271,7 +283,9 @@ def api_reject_session(session_id: str, request: RejectSessionRequest) -> Approv
         return reject_session(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -294,7 +308,9 @@ def api_request_revision(
         return request_session_revision(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -318,7 +334,9 @@ def api_save_snapshot(session_id: str, request: SaveSnapshotRequest) -> Snapshot
         return save_session_as_snapshot(session_id, request)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to save snapshot: {str(e)}")
 
 

@@ -26,7 +26,7 @@ def load_all_presets() -> List[Dict[str, Any]]:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
         if isinstance(data, list):
             return data
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         pass
     return []
 

@@ -88,7 +88,7 @@ def _validate_top_level(
                         severity="error",
                     )
                 )
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             errors.append(
                 PipelineSpecIssue(
                     path="tool_d",

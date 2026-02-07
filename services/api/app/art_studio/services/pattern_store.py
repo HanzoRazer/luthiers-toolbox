@@ -179,7 +179,7 @@ class PatternStore:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 record = PatternRecord.model_validate(data)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 continue
 
             # Filter by generator_key

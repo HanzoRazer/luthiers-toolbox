@@ -40,7 +40,7 @@ def db_session() -> Generator[Session, None, None]:
     try:
         yield db
         db.commit()
-    except Exception:
+    except Exception:  # WP-1: keep broad — SQLAlchemy transaction guard must catch all to rollback
         db.rollback()
         raise
     finally:
@@ -60,7 +60,7 @@ def get_db() -> Generator[Session, None, None]:
     try:
         yield db
         db.commit()
-    except Exception:
+    except Exception:  # WP-1: keep broad — SQLAlchemy transaction guard must catch all to rollback
         db.rollback()
         raise
     finally:

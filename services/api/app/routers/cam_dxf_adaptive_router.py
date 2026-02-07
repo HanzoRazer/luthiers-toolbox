@@ -35,7 +35,9 @@ def _dxf_to_adaptive_request(
     try:
         data_stream = io.BytesIO(dxf_bytes)
         doc = ezdxf.read(data_stream)
-    except Exception as exc:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Failed to parse DXF: {exc}") from exc
 
     msp = doc.modelspace()
@@ -101,7 +103,9 @@ async def dxf_adaptive_plan_run(
     """
     try:
         dxf_bytes = await file.read()
-    except Exception as exc:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Failed to read DXF file: {exc}") from exc
 
     body = _dxf_to_adaptive_request(
@@ -134,7 +138,7 @@ async def dxf_adaptive_plan_run(
         # Bubble up error details from adaptive endpoint
         try:
             detail = resp.json()
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed — JSON parse fallback
             detail = resp.text
         raise HTTPException(status_code=resp.status_code, detail=detail)
 

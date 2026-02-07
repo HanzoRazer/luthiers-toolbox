@@ -138,7 +138,7 @@ def load_dxf_geometry_stub(asset: DXFAsset) -> Any:
         content = raw.decode("utf-8", errors="replace")
         stream = StringIO(content)
         mlpaths = read_dxf_to_mlpaths(stream)
-    except Exception:
+    except (OSError, ValueError):  # WP-1: narrowed from except Exception
         # If parsing fails, return raw bytes with empty geometry
         mlpaths = []
     
@@ -222,7 +222,7 @@ def load_dxf_geometry_by_path(file_path: str) -> dict:
     # Parse using R12 legacy parser
     try:
         mlpaths = read_dxf_to_mlpaths(raw)
-    except Exception as e:
+    except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
         raise ValueError(f"Failed to parse DXF file: {e}")
     
     # Extract paths and compute metrics

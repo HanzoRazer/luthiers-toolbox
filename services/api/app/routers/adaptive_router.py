@@ -127,7 +127,7 @@ def _load_post_profiles() -> Dict[str, Dict[str, Any]]:
         with open(profile_path, "r") as f:
             profiles = json.load(f)
             return {p["id"]: p for p in profiles}
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):  # WP-1: narrowed from except Exception
         return {}
 
 
@@ -1246,7 +1246,7 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
             }
         )
     
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Unexpected errors → 500 with logging
         import logging
         logging.exception(f"batch_export unexpected error: {e}")
@@ -1351,7 +1351,9 @@ def _dxf_to_loops_from_bytes(data: bytes, layer_name: str = "GEOMETRY") -> List[
         finally:
             import os
             os.unlink(tmp_path)
-    except Exception as exc:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Invalid DXF: {exc}") from exc
 
     msp = doc.modelspace()
