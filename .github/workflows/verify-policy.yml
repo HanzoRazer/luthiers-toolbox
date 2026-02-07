@@ -1,0 +1,33 @@
+name: verify-policy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install API dependencies
+        run: |
+          cd services/api
+          pip install --quiet -e ".[test]" 2>/dev/null || pip install --quiet -e .
+
+      - name: Run spine tests
+        run: |
+          cd services/api
+          python -m pytest tests/test_golden_m1_replay.py -v --no-header
+
+      - name: Verify policy against repo fixtures
+        run: |
+          python tools/verify_policy.py services/api/tests/fixtures/
