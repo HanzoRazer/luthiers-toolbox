@@ -17,6 +17,9 @@ mkdir -p "$OUT_DIR"
 ZIP_NAME="agentic-sessions-${TAG}.zip"
 ZIP_PATH="${OUT_DIR}/${ZIP_NAME}"
 
+# Resolve absolute path for zip output (needed when cd'ing into fixtures dir)
+ABS_ZIP_PATH="$(cd "$(dirname "$ZIP_PATH")" && pwd)/$(basename "$ZIP_PATH")"
+
 # Verify fixtures exist
 JSONL_COUNT=$(find "$FIXTURES_DIR" -maxdepth 1 -name "*.jsonl" | wc -l)
 if [ "$JSONL_COUNT" -eq 0 ]; then
@@ -30,7 +33,7 @@ echo "📦 Packaging $JSONL_COUNT session files from $FIXTURES_DIR"
 find "$FIXTURES_DIR" -maxdepth 1 -name "*.jsonl" -exec basename {} \; | sort
 
 # Create zip (from fixtures dir so paths are clean)
-( cd "$FIXTURES_DIR" && zip -r -q "../../../${ZIP_PATH}" ./*.jsonl )
+( cd "$FIXTURES_DIR" && zip -r -q "$ABS_ZIP_PATH" ./*.jsonl )
 
 echo "✅ Created: $ZIP_PATH"
 echo "zip_path=$ZIP_PATH"
