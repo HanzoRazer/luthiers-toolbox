@@ -1,6 +1,7 @@
 """Persistent storage helpers for Compare Lab baselines."""
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +27,7 @@ def list_baselines() -> List[Baseline]:
     for path in sorted(DATA_DIR.glob("*.json")):
         try:
             baselines.append(Baseline.model_validate_json(path.read_text(encoding="utf-8")))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
     return baselines
 

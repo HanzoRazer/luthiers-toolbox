@@ -31,7 +31,7 @@ def _extract_risk_and_score(feas: Any) -> Tuple[str, float]:
     score = feas.get("score")
     try:
         score_f = float(score)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         score_f = 0.0
 
     # If it's likely 0..1, scale to 0..100 for stable sorting/reporting
@@ -50,7 +50,7 @@ def _write_run_artifact_safely(*, kind: str, status: str, index_meta: Dict[str, 
         from app.rmos.runs_v2.store import persist_run, create_run_id
         from app.rmos.runs_v2.schemas import RunArtifact, Hashes, RunDecision
         from datetime import datetime, timezone
-    except Exception as e:
+    except ImportError as e:  # WP-1: narrowed from except Exception
         raise RuntimeError(
             "RunArtifact store not importable at app.rmos.runs_v2.store"
         ) from e
@@ -116,7 +116,7 @@ def _compute_saw_feasibility(design: Dict[str, Any], context: Dict[str, Any]) ->
     try:
         saw_design = SawDesign(**design) if design else SawDesign()
         saw_context = SawContext(**context) if context else SawContext()
-    except Exception:
+    except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         # Fallback: use dicts directly if Pydantic conversion fails
         saw_design = design
         saw_context = context
@@ -195,7 +195,7 @@ def compare_saw_candidates(
                 }
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError, RuntimeError) as e:  # WP-1: narrowed from except Exception
             # Always persist ERROR artifacts for forensics/diff
             artifact_id = _write_run_artifact_safely(
                 kind="saw_compare_feasibility",

@@ -702,7 +702,7 @@ def export_cnc_for_ring(payload: CNCExportRequest) -> CNCExportResponse:
             },
         )
 
-    except Exception as exc:
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
         # Best-effort: mark job failed and rethrow
         joblog.complete_job_with_results(
             job_id=job_id,
@@ -1007,7 +1007,7 @@ def get_cnc_history(limit: int = 50) -> CNCHistoryResponse:
         if isinstance(created_at_val, str):
             try:
                 created_at = datetime.fromisoformat(created_at_val.replace("Z", "+00:00"))
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass
 
         items.append(
@@ -1101,7 +1101,7 @@ def get_cnc_job_detail(job_id: str) -> CNCJobDetailResponse:
     if isinstance(created_at_val, str):
         try:
             created_at = datetime.fromisoformat(created_at_val.replace("Z", "+00:00"))
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             created_at = None
 
     return CNCJobDetailResponse(

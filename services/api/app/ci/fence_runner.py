@@ -247,7 +247,7 @@ class FenceRunner:
                                     line=i,
                                     message=f"Pattern match: {reason}"
                                 ))
-                except Exception:
+                except OSError:  # WP-1: narrowed from except Exception
                     pass
 
         return violations

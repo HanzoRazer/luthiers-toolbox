@@ -173,7 +173,7 @@ def load_builtin_posts() -> List[PostConfig]:
                         metadata=PostMetadata(**data.get('metadata', {})) if 'metadata' in data else None
                     )
                     posts.append(post)
-            except Exception:
+            except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: skip unloadable post files
                 pass  # Skip files that can't be loaded
 
     return posts
@@ -188,7 +188,7 @@ def load_custom_posts() -> List[PostConfig]:
         with open(CUSTOM_POSTS_FILE, 'r') as f:
             data = json.load(f)
             return [PostConfig(**post) for post in data.get('posts', [])]
-    except Exception:
+    except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: fallback on corrupt custom posts
         return []
 
 

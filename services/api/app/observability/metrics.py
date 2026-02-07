@@ -127,7 +127,7 @@ def should_sample_request_id() -> bool:
     raw = os.getenv("RMOS_METRICS_REQUEST_ID_SAMPLE_RATE", "0.01").strip()
     try:
         rate = float(raw)
-    except Exception:
+    except ValueError:  # WP-1: narrowed from except Exception
         rate = 0.01
     if rate <= 0:
         return False

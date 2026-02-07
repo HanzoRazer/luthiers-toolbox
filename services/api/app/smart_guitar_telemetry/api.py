@@ -207,7 +207,7 @@ async def ingest_telemetry(payload: Dict[str, Any]) -> TelemetryIngestResponse:
             append_cost_facts(_repo_root(), cost_facts)
             _log.info("Cost attribution: mapped %d facts from telemetry %s", len(cost_facts), stored.telemetry_id)
         result.warnings.extend(cost_warnings)
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — non-fatal cost attribution side-effect
         _log.warning("Cost attribution failed (non-fatal): %s", e)
 
     _log.info(

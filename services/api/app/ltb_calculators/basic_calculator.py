@@ -421,7 +421,7 @@ class LTBBasicCalculator:
         except ZeroDivisionError:
             self.state.error = "Cannot divide by zero"
             return 0.0
-        except Exception as e:
+        except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
             self.state.error = f"Error: {str(e)}"
             return 0.0
     

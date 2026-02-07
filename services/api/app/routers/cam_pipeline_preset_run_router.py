@@ -75,7 +75,7 @@ async def run_preset(
     if resp.status_code != 200:
         try:
             detail = resp.json()
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             detail = resp.text
         raise HTTPException(status_code=resp.status_code, detail=detail)
 

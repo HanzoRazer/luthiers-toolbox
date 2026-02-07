@@ -110,7 +110,7 @@ class SawBladeRegistry:
             with open(self.storage_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('blades', [])
-        except Exception as e:
+        except (OSError, json.JSONDecodeError) as e:  # WP-1: narrowed from except Exception
             print(f"Error loading blades: {e}")
             return []
     
@@ -337,7 +337,7 @@ class SawBladeRegistry:
                     existing_blades.append(blade.dict())
                     stats['created'] += 1
                     
-            except Exception as e:
+            except (ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
                 print(f"Error importing blade {blade.vendor} {blade.model_code}: {e}")
                 stats['errors'] += 1
         

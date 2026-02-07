@@ -132,7 +132,9 @@ def create_rosette_pattern(payload: RosettePatternCreateRequest) -> Dict[str, An
             rosette_geometry=payload.rosette_geometry,
             metadata=payload.metadata
         )
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Failed to create rosette pattern: {str(e)}"
@@ -149,8 +151,7 @@ def create_rosette_pattern(payload: RosettePatternCreateRequest) -> Dict[str, An
             },
             status="completed"
         )
-    except Exception:
-        # Log creation is non-critical for N11.1 scaffolding
+    except Exception:  # WP-1: keep broad — non-critical joblog write
         pass
     
     return pattern

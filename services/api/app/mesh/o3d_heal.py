@@ -14,7 +14,7 @@ import numpy as np
 try:
     import open3d as o3d  # type: ignore
     _HAS_O3D = True
-except Exception:
+except ImportError:  # WP-1: narrowed from except Exception
     o3d = None  # type: ignore
     _HAS_O3D = False
 

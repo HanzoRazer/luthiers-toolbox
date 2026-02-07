@@ -125,7 +125,9 @@ def generate_saw_gcode_api(req: SawGCodeRequest) -> SawGCodeResult:
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"G-code generation failed: {str(e)}"

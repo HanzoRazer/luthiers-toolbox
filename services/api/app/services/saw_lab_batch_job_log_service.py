@@ -71,7 +71,7 @@ def write_job_log(
                 decision_artifact=None,
                 policy_decision="PROPOSE",
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
             # Never fail the job log write if the learning hook fails.
             learning_event_error = f"{type(e).__name__}: {e}"
 
@@ -86,14 +86,14 @@ def write_job_log(
             if dec_id:
                 try:
                     dec_roll = persist_decision_metrics_rollup(batch_decision_artifact_id=dec_id)
-                except Exception:
+                except (ValueError, TypeError, KeyError, OSError):  # WP-1: narrowed from except Exception
                     dec_roll = None
 
             rollups = {
                 "execution_rollup_artifact": ex_roll,
                 "decision_rollup_artifact": dec_roll,
             }
-        except Exception:
+        except (ValueError, TypeError, KeyError, OSError):  # WP-1: narrowed from except Exception
             rollups = None
 
     # Keep response backward-compatible but include hook outputs when present.

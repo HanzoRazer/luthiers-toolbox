@@ -182,7 +182,9 @@ def get_dashboard_runs(
     """
     try:
         summaries = list_run_summaries(limit=limit)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Failed to load dashboard summaries: {str(e)}"

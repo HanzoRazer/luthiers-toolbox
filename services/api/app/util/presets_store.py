@@ -90,7 +90,7 @@ def load_all_presets() -> List[Dict[str, Any]]:
         # Migrate legacy presets on load
         migrated = [_migrate_legacy_preset(p) for p in data]
         return migrated
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return []
 
 

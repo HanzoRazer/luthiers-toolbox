@@ -187,7 +187,7 @@ class DesignSnapshotStore:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 snap = DesignSnapshot.model_validate(data)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 continue
 
             if pat_norm and (snap.pattern_id or "") != pat_norm:

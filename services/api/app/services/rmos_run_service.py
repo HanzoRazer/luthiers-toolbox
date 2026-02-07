@@ -212,7 +212,7 @@ def get_run_with_attachments(
             if verify_integrity:
                 try:
                     att_info["verified"] = verify_attachment(att.sha256)
-                except Exception as e:
+                except OSError as e:  # WP-1: narrowed from except Exception
                     att_info["verified"] = False
                     att_info["error"] = str(e)
 

@@ -83,7 +83,7 @@ class JobRiskStore:
                         if isinstance(data.get("created_at"), str):
                             data["created_at"] = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
                         reports.append(RiskReportOut(**data))
-                except Exception as e:
+                except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
                     print(f"Warning: Failed to parse line: {e}")
                     continue
 
@@ -139,7 +139,7 @@ class JobRiskStore:
                     )
                     
                     reports.append(summary)
-                except Exception as e:
+                except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
                     print(f"Warning: Failed to parse line: {e}")
                     continue
 

@@ -114,17 +114,17 @@ def resolve_learned_multipliers(
         if "spindle_rpm_mult" in sug:
             try:
                 rpm_mults.append(float(sug["spindle_rpm_mult"]))
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass
         if "feed_rate_mult" in sug:
             try:
                 feed_mults.append(float(sug["feed_rate_mult"]))
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass
         if "doc_mult" in sug:
             try:
                 doc_mults.append(float(sug["doc_mult"]))
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass
 
         sources.append(

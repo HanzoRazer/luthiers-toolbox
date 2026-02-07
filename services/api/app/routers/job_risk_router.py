@@ -54,7 +54,7 @@ def _load_job_records() -> dict:
     try:
         with open(JOB_RECORDS_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
         return {}
 
 

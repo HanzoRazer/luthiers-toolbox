@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 from PIL import Image
 import io
+import json
 
 from app.ai.transport import get_vision_client, VisionClient, VisionClientError
 from app.vision.segmentation_prompts import (
@@ -251,7 +252,7 @@ class GuitarSegmentationService:
         try:
             img = Image.open(io.BytesIO(image_bytes))
             image_width, image_height = img.size
-        except Exception as e:
+        except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
             return SegmentationError(
                 error=f"Failed to read image: {e}",
                 details="Ensure image is valid PNG, JPG, or WebP"
@@ -282,7 +283,7 @@ class GuitarSegmentationService:
         try:
             data = response.as_json
             validated = validate_segmentation_response(data)
-        except Exception as e:
+        except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
             return SegmentationError(
                 error=f"Failed to parse response: {e}",
                 details=response.raw_response[:500] if response else None

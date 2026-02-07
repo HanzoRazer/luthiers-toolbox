@@ -233,7 +233,7 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
             })(),
             preset=preset_label,
         )
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         # Don't fail snapshot save if log sync fails
         print(f"Warning: Failed to sync snapshot to compare_risk_log: {e}")
 
@@ -388,5 +388,7 @@ def export_compare_csv(
             },
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")

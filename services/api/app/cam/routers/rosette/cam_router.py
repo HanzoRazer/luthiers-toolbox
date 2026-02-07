@@ -266,7 +266,7 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(
@@ -390,7 +390,7 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(
@@ -443,7 +443,9 @@ def create_rosette_cam_job(body: RosetteCamJobCreateRequest) -> RosetteCamJobIdR
             message=f"CAM job '{body.job_id}' created successfully",
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=400, detail=f"Job creation failed: {str(e)}")
 
 
@@ -475,6 +477,6 @@ def get_rosette_cam_job(job_id: str) -> RosetteCamJobResponse:
         )
 
     except HTTPException:
-        raise
-    except Exception as e:
+        raise  # WP-1: pass through
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Job retrieval failed: {str(e)}")

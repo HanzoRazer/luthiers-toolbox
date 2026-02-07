@@ -402,7 +402,9 @@ def generate_neck(params: NeckParameters):
             scale_length=scale_length_out
         )
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(500, detail=f"Error generating neck: {str(e)}")
 
 
@@ -431,7 +433,9 @@ def export_dxf(params: NeckParameters):
             }
         )
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(500, detail=f"Error exporting DXF: {str(e)}")
 
 

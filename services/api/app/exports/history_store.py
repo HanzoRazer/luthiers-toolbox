@@ -120,7 +120,7 @@ def list_entries(limit: int = 50) -> List[Dict[str, Any]]:
             if (entry / "meta.json").exists():
                 try:
                     meta = json.loads((entry / "meta.json").read_text())
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                     meta = {
                         "id": entry.name,
                         "created_utc": "",

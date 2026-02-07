@@ -201,7 +201,7 @@ class DocsExcerptProvider:
         
         try:
             content = full_path.read_text(encoding="utf-8")
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             return None
         
         # If content is short enough, return it all

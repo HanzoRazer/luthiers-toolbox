@@ -91,7 +91,9 @@ def validate_operation(req: ValidateOperationRequest):
             material_family=req.material_family
         )
         return result
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Validation error: {str(e)}"
@@ -118,7 +120,9 @@ def validate_contour(req: ValidateContourRequest):
             contour_radius_mm=req.radius_mm
         )
         return result
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Validation error: {str(e)}"
@@ -145,7 +149,9 @@ def validate_doc(req: ValidateDOCRequest):
             doc_mm=req.doc_mm
         )
         return result
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Validation error: {str(e)}"
@@ -175,7 +181,9 @@ def validate_feeds(req: ValidateFeedsRequest):
             feed_ipm=req.feed_ipm
         )
         return result
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Validation error: {str(e)}"

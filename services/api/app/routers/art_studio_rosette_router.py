@@ -218,7 +218,7 @@ def _on_startup() -> None:
         init_db()
         _db_available = True
         logger.info("Art Studio rosette SQLite database initialized (deprecated router)")
-    except Exception as e:
+    except (OSError, Exception) as e:  # WP-1: DB init — non-fatal fallback
         _db_available = False
         logger.warning(
             f"Art Studio rosette database unavailable (non-fatal in CI): {e}"
@@ -278,7 +278,7 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
     # Register job within the Art Studio job spine for global timelines
     try:
         create_art_job("rosette", stored, job_id=stored["job_id"])
-    except Exception:
+    except (OSError, KeyError, TypeError):  # WP-1: non-fatal side-effect
         # Non-fatal: job timelines will simply omit this entry if persistence fails
         pass
 
@@ -461,7 +461,7 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
             })(),
             preset=preset_label,
         )
-    except Exception as e:
+    except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: non-fatal side-effect
         # Don't fail snapshot save if log sync fails
         print(f"Warning: Failed to sync snapshot to compare_risk_log: {e}")
     
@@ -628,7 +628,9 @@ def export_compare_csv(
             },
         )
 
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")
 
 

@@ -115,7 +115,7 @@ def _read_json_file(path: Path) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return {}
 
 
@@ -126,7 +126,7 @@ def _write_json_file(path: Path, data: Any) -> None:
     try:
         tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
         os.replace(tmp, path)
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         if tmp.exists():
             tmp.unlink()
         raise
@@ -241,7 +241,7 @@ class TelemetryStore:
             # Update index
             self._update_index_entry(telemetry_id, self._extract_index_meta(record))
 
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             if tmp.exists():
                 tmp.unlink()
             raise
@@ -268,7 +268,7 @@ class TelemetryStore:
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
                     return StoredTelemetry.from_dict(data)
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                     pass
 
         # Fall back to scanning partitions
@@ -283,7 +283,7 @@ class TelemetryStore:
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
                     return StoredTelemetry.from_dict(data)
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                     continue
 
         return None
@@ -337,7 +337,7 @@ class TelemetryStore:
                             return False
                         if date_to and received_dt > date_to:
                             return False
-                    except Exception:
+                    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                         pass
 
             return True
@@ -360,7 +360,7 @@ class TelemetryStore:
                     try:
                         data = json.loads(path.read_text(encoding="utf-8"))
                         results.append(StoredTelemetry.from_dict(data))
-                    except Exception:
+                    except (OSError, json.JSONDecodeError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                         continue
 
         return results
@@ -394,7 +394,7 @@ class TelemetryStore:
                             return False
                         if date_to and received_dt > date_to:
                             return False
-                    except Exception:
+                    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                         pass
 
             return True
@@ -465,7 +465,7 @@ class TelemetryStore:
                     data = json.loads(path.read_text(encoding="utf-8"))
                     record = StoredTelemetry.from_dict(data)
                     index[record.telemetry_id] = self._extract_index_meta(record)
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                     continue
 
         self._write_index(index)

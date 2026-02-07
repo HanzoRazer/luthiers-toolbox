@@ -132,7 +132,7 @@ class LearnedOverridesStore:
                 if isinstance(lanes, list):
                     return {}
                 return lanes
-        except Exception as e:
+        except (OSError, json.JSONDecodeError) as e:  # WP-1: narrowed from except Exception
             print(f"Error loading learned overrides: {e}")
             return {}
     
@@ -156,7 +156,7 @@ class LearnedOverridesStore:
             with open(self.audit_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('entries', [])
-        except Exception:
+        except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
             return []
     
     def _save_audit(self, entries: List[Dict[str, Any]]) -> None:

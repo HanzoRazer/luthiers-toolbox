@@ -19,12 +19,12 @@ from app.services.art_presets_store import (
 
 try:  # pragma: no cover - optional adaptive lane
     from app.routers.art.adaptive_router import router as adaptive_router  # type: ignore
-except Exception:  # noqa: BLE001
+except (ImportError, ModuleNotFoundError):  # WP-1: optional module import
     adaptive_router = None
 
 try:  # pragma: no cover - optional relief lane
     from app.routers.art.relief_router import router as relief_router  # type: ignore
-except Exception:  # noqa: BLE001
+except (ImportError, ModuleNotFoundError):  # WP-1: optional module import
     relief_router = None
 
 router = APIRouter(prefix="/api/art", tags=["art"])

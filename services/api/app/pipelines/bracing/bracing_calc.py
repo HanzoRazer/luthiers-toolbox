@@ -72,7 +72,7 @@ def run(inp_path, out_dir):
         try:
             with open(qpath, "r", encoding="utf-8") as qf:
                 q = json.load(qf)
-        except Exception:
+        except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
             q = []
     q.append({"type": "bracing_report", "model": model, "file": os.path.basename(out_json)})
     with open(qpath, "w", encoding="utf-8") as qf:

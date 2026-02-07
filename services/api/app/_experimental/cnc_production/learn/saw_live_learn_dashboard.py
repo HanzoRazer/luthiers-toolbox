@@ -89,7 +89,7 @@ def _load_all_runs() -> Dict[str, SawRunRecord]:
     for run_id, run_dict in runs_raw.items():
         try:
             out[run_id] = SawRunRecord.model_validate(run_dict)
-        except Exception:
+        except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             # Skip invalid runs
             continue
     
@@ -110,7 +110,7 @@ def _load_all_telemetry() -> Dict[str, SawTelemetryRecord]:
     for run_id, telem_dict in telem_raw.items():
         try:
             out[run_id] = SawTelemetryRecord.model_validate(telem_dict)
-        except Exception:
+        except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             # Skip invalid telemetry
             continue
     
@@ -195,7 +195,7 @@ def list_run_summaries(limit: int = 50) -> List[RunSummary]:
                     mode=mode,
                     machine_profile=machine_profile,
                 )
-            except Exception:
+            except Exception:  # WP-1: keep broad — optional enrichment, any failure = empty history
                 lane_scale_history = []
         
         summaries.append(

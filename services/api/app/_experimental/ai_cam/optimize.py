@@ -142,7 +142,7 @@ class CAMOptimizer:
                             notes=notes,
                         )
                     )
-                except Exception as e:
+                except Exception as e:  # WP-1: keep broad — calculator spine can raise anything
                     candidates.append(
                         OptimizationCandidate(
                             feed_mm_min=round(f, 1),

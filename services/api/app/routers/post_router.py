@@ -136,7 +136,7 @@ def load_builtin_posts() -> List[PostConfig]:
                         metadata=PostMetadata(**data.get('metadata', {})) if 'metadata' in data else None
                     )
                     posts.append(post)
-            except Exception as e:
+            except (KeyError, ValueError, json.JSONDecodeError, OSError) as e:  # WP-1: narrowed from except Exception
                 print(f"Warning: Could not load builtin post {post_id}: {e}")
     
     return posts

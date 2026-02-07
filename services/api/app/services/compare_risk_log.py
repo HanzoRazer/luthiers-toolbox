@@ -21,7 +21,7 @@ def _load_log() -> Dict[str, Any]:
     try:
         with LOG_PATH.open("r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return {"entries": []}
 
 

@@ -13,7 +13,7 @@ from starlette.responses import Response
 # Patch N.12 — Tool table utilities
 try:
     from .util.tool_table import tool_context
-except Exception:
+except ImportError:  # WP-1: narrowed from except Exception
     def tool_context(mid, tnum):
         return {}
 
@@ -39,7 +39,7 @@ def _load_posts() -> List[Dict[str, Any]]:
             return []
     except FileNotFoundError:
         return []
-    except Exception as e:
+    except (json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
         # Keep CAM alive even if posts file is broken
         print(f"[post_injection_dropin] posts load failed: {e}")
         return []
@@ -87,7 +87,7 @@ def inject_header_footer(nc_text: str, post_id: str, *, tokens: Dict[str, Any]) 
             for k, v in tc.items():
                 if v is not None:
                     tokens[k] = v
-    except Exception:
+    except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         pass
     
     header = _expand_lines(post.get("header"), tokens)
@@ -145,7 +145,7 @@ class PostInjectionMiddleware(BaseHTTPMiddleware):
         ctx: Dict[str, Any] = {}
         if ctx_raw:
             try: ctx = json.loads(ctx_raw)
-            except Exception: ctx = {}
+            except (json.JSONDecodeError, ValueError): ctx = {}  # WP-1: narrowed from except Exception
 
         # Calculate effective mode and post
         mode  = str(ctx.get("post_mode") or TB_POST_INJECTION).lower()
@@ -185,7 +185,7 @@ class PostInjectionMiddleware(BaseHTTPMiddleware):
             body_bytes += chunk
         try:
             nc_text = body_bytes.decode("utf-8", errors="ignore")
-        except Exception:
+        except (UnicodeDecodeError, AttributeError):  # WP-1: narrowed from except Exception
             return response
 
         wrapped = inject_header_footer(nc_text, post_id, tokens=tokens)

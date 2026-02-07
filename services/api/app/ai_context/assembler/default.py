@@ -94,7 +94,7 @@ class DefaultAssembler:
                 all_sources.extend(sources)
                 all_attachments.extend(attachments)
                 all_warnings.extend(warnings)
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — plugin-style provider can raise anything
                 all_warnings.append(AdapterWarning(
                     code=WarningCode.PROVIDER_ERROR,
                     message=f"Provider {provider.__class__.__name__} failed: {e}",
@@ -167,7 +167,7 @@ class DefaultAssembler:
                     all_sources.extend(sources)
                     all_attachments.extend(attachments)
                     all_warnings.extend(warnings)
-                except Exception as e:
+                except Exception as e:  # WP-1: keep broad — plugin-style provider can raise anything
                     all_warnings.append(AdapterWarning(
                         code=WarningCode.PROVIDER_ERROR,
                         message=f"Provider {provider.__class__.__name__} failed: {e}",

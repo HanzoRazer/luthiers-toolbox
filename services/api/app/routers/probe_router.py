@@ -131,7 +131,9 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
         
         return ProbeOut(gcode=gcode, stats=stats)
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -170,7 +172,9 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "draft"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -228,7 +232,9 @@ async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "governed"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -256,7 +262,9 @@ async def generate_boss_probe(body: BossProbeIn) -> ProbeOut:
         
         return ProbeOut(gcode=gcode, stats=stats)
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -294,7 +302,9 @@ async def download_boss_probe(body: BossProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "draft"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -351,7 +361,9 @@ async def download_boss_probe_governed(body: BossProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "governed"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -373,7 +385,9 @@ async def generate_surface_z_probe(body: SurfaceZProbeIn) -> ProbeOut:
         
         return ProbeOut(gcode=gcode, stats=stats)
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -407,7 +421,9 @@ async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "draft"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -460,7 +476,9 @@ async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "governed"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -488,7 +506,9 @@ async def generate_pocket_probe(body: PocketProbeIn) -> ProbeOut:
         
         return ProbeOut(gcode=gcode, stats=stats)
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -525,7 +545,9 @@ async def download_pocket_probe(body: PocketProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "draft"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -581,7 +603,9 @@ async def download_pocket_probe_governed(body: PocketProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "governed"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -604,7 +628,9 @@ async def generate_vise_square_probe(body: ViseSquareProbeIn) -> ProbeOut:
         
         return ProbeOut(gcode=gcode, stats=stats)
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -638,7 +664,9 @@ async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
         resp.headers["X-ToolBox-Lane"] = "draft"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -691,7 +719,9 @@ async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Respon
         resp.headers["X-ToolBox-Lane"] = "governed"
         return resp
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -738,7 +768,9 @@ async def generate_setup_sheet(body: SetupSheetIn) -> Response:
             }
         )
     
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=str(e))
 
 

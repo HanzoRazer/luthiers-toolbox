@@ -358,5 +358,35 @@
       "stepdown": 1.0
     },
     "created_at": 1770418084.0875337
+  },
+  {
+    "id": "rosette_preset_1770422779780",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1770422779.7804463
+  },
+  {
+    "id": "rosette_preset_1770424192104",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1770424192.104254
+  },
+  {
+    "id": "rosette_preset_1770459943258",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1770459943.2582467
   }
 ]

@@ -17,7 +17,7 @@ def _num(x: Any) -> Optional[float]:
         if x is None:
             return None
         return float(x)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return None
 
 

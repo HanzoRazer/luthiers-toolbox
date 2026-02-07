@@ -33,7 +33,7 @@ def scan_frontend_api_paths(roots: List[str] | None = None) -> Set[str]:
             try:
                 with open(fp, "r", encoding="utf-8") as f:
                     text = f.read()
-            except Exception:
+            except OSError:  # WP-1: narrowed from except Exception
                 continue
 
             for m in API_RE.finditer(text):

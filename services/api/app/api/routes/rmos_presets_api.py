@@ -126,7 +126,9 @@ def promote_preset(preset_id: str, body: PromoteRequest):
     pattern_store = get_pattern_store()
     try:
         pat = pattern_store.get(preset_id)
-    except Exception:
+    except HTTPException:
+        raise
+    except Exception:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=404, detail=f"Preset '{preset_id}' not found.")
 
     if not pat:
@@ -214,7 +216,7 @@ def promote_preset(preset_id: str, body: PromoteRequest):
                 "safety_decision": decision.dict(),  # N10.2.1: Include safety decision
             },
         })
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — non-critical joblog write
         print(f"Warning: Failed to log promotion to joblog: {e}")
 
     # Include safety decision in stats for response

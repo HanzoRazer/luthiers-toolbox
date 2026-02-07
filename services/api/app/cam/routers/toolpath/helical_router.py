@@ -375,8 +375,8 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
         return result
 
     except HTTPException:
-        raise
-    except Exception as e:
+        raise  # WP-1: pass through
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         run_id = create_run_id()
         artifact = RunArtifact(
             run_id=run_id,

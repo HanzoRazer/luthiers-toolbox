@@ -147,7 +147,7 @@ def offset_polyline(
         
         return _shapely_to_polylines(buffer_geom)
         
-    except Exception as exc:
+    except (ValueError, TypeError) as exc:  # WP-1: narrowed from except Exception
         raise OffsetEngineError(
             f"Offset operation failed: {exc}",
             details={"distance": distance, "point_count": len(points)}
@@ -206,7 +206,7 @@ def parallel_offset(
         
         return None
         
-    except Exception as exc:
+    except (ValueError, TypeError) as exc:  # WP-1: narrowed from except Exception
         logger.warning(f"Parallel offset failed: {exc}")
         return None
 

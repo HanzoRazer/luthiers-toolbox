@@ -214,7 +214,7 @@ def _to_relpath_str(path: Path) -> str:
     root = _repo_root_from_cwd()
     try:
         return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
-    except Exception:
+    except ValueError:  # WP-1: narrowed from except Exception
         return str(path).replace("\\", "/")
 
 
@@ -247,7 +247,7 @@ def _normalize_file_key(file_path: Path, root: Path) -> str:
     try:
         rel = file_path.resolve().relative_to(root.resolve())
         return str(rel).replace("\\", "/")
-    except Exception:
+    except ValueError:  # WP-1: narrowed from except Exception
         return str(file_path).replace("\\", "/")
 
 
@@ -683,7 +683,7 @@ def main() -> int:
     try:
         args = _parse_args(sys.argv[1:])
         import_violations, symbol_violations = check_boundaries()
-    except Exception as e:
+    except Exception as e:  # WP-1: keep broad — top-level CLI catch wraps arg parsing + AST scanning + file I/O
         print(f"Boundary checker error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
@@ -713,7 +713,7 @@ def main() -> int:
             return 3
         try:
             baseline = _load_baseline(bpath)
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
             print(f"Failed to read baseline {bpath}: {e}", file=sys.stderr)
             return 3
 

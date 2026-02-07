@@ -200,7 +200,7 @@ class AdvisoryAssetStore:
                         
                         try:
                             asset = AdvisoryAsset.model_validate_json(meta_path.read_text())
-                        except Exception:
+                        except (ValueError, OSError):  # WP-1: narrowed from except Exception
                             continue
                         
                         if asset_type and asset.asset_type != asset_type:
@@ -354,7 +354,7 @@ class PromptHistoryStore:
                 if templates_only and not entry.is_template:
                     continue
                 prompts.append(entry)
-            except Exception:
+            except (ValueError, OSError):  # WP-1: narrowed from except Exception
                 continue
         
         return prompts
@@ -376,7 +376,7 @@ class PromptHistoryStore:
             try:
                 entry = PromptHistoryEntry.model_validate_json(path.read_text())
                 prompts.append(entry)
-            except Exception:
+            except (ValueError, OSError):  # WP-1: narrowed from except Exception
                 continue
         
         return prompts
@@ -403,7 +403,7 @@ class PromptHistoryStore:
                         try:
                             entry = PromptHistoryEntry.model_validate_json(path.read_text())
                             prompts.append(entry)
-                        except Exception:
+                        except (ValueError, OSError):  # WP-1: narrowed from except Exception
                             continue
         
         return prompts
@@ -480,7 +480,7 @@ class BudgetTracker:
         if self._config_path.exists():
             try:
                 self._config = BudgetConfig.model_validate_json(self._config_path.read_text())
-            except Exception:
+            except (ValueError, OSError):  # WP-1: narrowed from except Exception
                 self._config = BudgetConfig()
         else:
             self._config = BudgetConfig()
@@ -695,7 +695,7 @@ class RequestRecordStore:
                             record = RequestRecord.model_validate_json(path.read_text())
                             if record.request_id == request_id:
                                 results.append(record)
-                        except Exception:
+                        except (ValueError, OSError):  # WP-1: narrowed from except Exception
                             continue
         return results
     
@@ -716,7 +716,7 @@ class RequestRecordStore:
                             record = RequestRecord.model_validate_json(path.read_text())
                             if record.asset_id == asset_id:
                                 results.append(record)
-                        except Exception:
+                        except (ValueError, OSError):  # WP-1: narrowed from except Exception
                             continue
         return results
     
@@ -738,7 +738,7 @@ class RequestRecordStore:
                         try:
                             record = RequestRecord.model_validate_json(path.read_text())
                             records.append(record)
-                        except Exception:
+                        except (ValueError, OSError):  # WP-1: narrowed from except Exception
                             continue
         return records
 

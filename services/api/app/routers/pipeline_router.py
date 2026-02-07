@@ -1336,7 +1336,7 @@ async def run_pipeline(
                     )
                 )
                 break
-            except HTTPException as exc:
+            except HTTPException as exc:  # WP-1: catch HTTPException separately
                 results.append(
                     PipelineOpResult(
                         id=op.id,
@@ -1347,7 +1347,7 @@ async def run_pipeline(
                     )
                 )
                 break
-            except Exception as exc:
+            except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
                 results.append(
                     PipelineOpResult(
                         id=op.id,

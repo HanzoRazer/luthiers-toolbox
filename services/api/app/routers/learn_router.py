@@ -176,7 +176,9 @@ def ingest_telemetry(req: TelemetryIngestRequest) -> TelemetryIngestResponse:
     except ValueError as e:
         # Run or telemetry not found
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Other processing errors
         raise HTTPException(
             status_code=500,

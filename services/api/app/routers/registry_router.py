@@ -112,7 +112,9 @@ def get_scale_lengths(
     try:
         registry = Registry(edition=edition)
         data = registry.get_scale_lengths()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load scale lengths: {e}")
     
     scales = data.get("scales", {})
@@ -135,7 +137,9 @@ def get_wood_species(
     try:
         registry = Registry(edition=edition)
         data = registry.get_wood_species()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load wood species: {e}")
     
     species = data.get("species", {})
@@ -169,7 +173,9 @@ def get_empirical_limits(
             status_code=403, 
             detail=f"Upgrade required: {e}. Empirical limits require Pro or Enterprise edition."
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load empirical limits: {e}")
     
     limits = data.get("limits", {})
@@ -204,7 +210,9 @@ def get_empirical_limit_by_wood(
             status_code=403, 
             detail=f"Upgrade required: {e}. Empirical limits require Pro or Enterprise edition."
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load empirical limits: {e}")
     
     limits = data.get("limits", {})
@@ -235,7 +243,9 @@ def get_fret_formulas(
     try:
         registry = Registry(edition=edition)
         data = registry.get_fret_formulas()
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Failed to load fret formulas: {e}")
     
     return {
@@ -265,7 +275,7 @@ def registry_health() -> Dict[str, Any]:
             "status": "ok",
             "scales_loaded": len(scales.get("scales", {}))
         }
-    except Exception as e:
+    except (ValueError, OSError) as e:  # WP-1: narrowed — data loading
         health["status"] = "degraded"
         health["checks"]["system_tier"] = {"status": "error", "error": str(e)}
     
@@ -277,7 +287,7 @@ def registry_health() -> Dict[str, Any]:
             "status": "ok",
             "limits_loaded": len(limits.get("limits", {}))
         }
-    except Exception as e:
+    except (ValueError, OSError) as e:  # WP-1: narrowed — data loading
         health["status"] = "degraded"
         health["checks"]["edition_tier"] = {"status": "error", "error": str(e)}
     

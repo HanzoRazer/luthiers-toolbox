@@ -139,7 +139,9 @@ def energy_csv(body: EnergyIn) -> StreamingResponse:
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{stem}.csv"'}
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.exception(f"energy_csv failed: {e}")
         raise HTTPException(status_code=500, detail=f"Energy CSV generation failed: {str(e)}")
 

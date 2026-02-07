@@ -207,7 +207,7 @@ async def get_current_principal(
                 if mode == "jwt":
                     raise  # JWT-only mode: fail on invalid token
                 # Hybrid mode: continue to fallback
-            except Exception:
+            except Exception:  # WP-1: keep broad — JWT decode may raise varied errors; hybrid mode must fall through
                 if mode == "jwt":
                     raise HTTPException(status_code=401, detail="Invalid token")
                 # Hybrid mode: continue to fallback

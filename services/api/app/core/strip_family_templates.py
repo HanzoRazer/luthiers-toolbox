@@ -35,7 +35,7 @@ def load_templates(path: Path = DEFAULT_TEMPLATES_PATH) -> List[StripFamilyTempl
     for item in raw:
         try:
             out.append(StripFamilyTemplate(**item))
-        except Exception as e:
+        except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
             # Skip malformed entries (log in production)
             print(f"Warning: Skipping invalid template: {e}")
             continue

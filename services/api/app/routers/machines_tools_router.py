@@ -180,7 +180,7 @@ def import_csv(mid: str, file: UploadFile = File(...)):
                 "feed_mm_min": float(row["feed_mm_min"]) if row.get("feed_mm_min") else None,
                 "plunge_mm_min": float(row["plunge_mm_min"]) if row.get("plunge_mm_min") else None
             })
-        except Exception as e:
+        except (KeyError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
             skipped += 1
             continue
     

@@ -175,7 +175,7 @@ def offset_polygon_mm(
         # Inward offset → negative distance in scaled coordinates
         try:
             solution = co.Execute(-current_step * SCALE)
-        except Exception as exc:  # pragma: no cover
+        except (RuntimeError, ValueError) as exc:  # WP-1: narrowed from except Exception  # pragma: no cover
             raise RuntimeError(f"offset_polygon_mm: pyclipper offset failed: {exc}") from exc
 
         if not solution:
@@ -221,7 +221,7 @@ def _shrink_once(outer: Sequence[Point], margin: float) -> Path:
 
     try:
         solution = co.Execute(-margin * SCALE)
-    except Exception:
+    except (RuntimeError, ValueError):  # WP-1: narrowed from except Exception
         # On failure, just return the normalized outer; better to be conservative
         return outer_norm
 

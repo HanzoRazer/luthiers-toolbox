@@ -60,7 +60,7 @@ class JobAnalytics:
                     daily_stats[date]["completed"] += 1
                 elif status == "failed":
                     daily_stats[date]["failed"] += 1
-            except Exception:
+            except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
                 continue
         
         # Convert to sorted list with success rates
@@ -207,7 +207,7 @@ class JobAnalytics:
             try:
                 date = created_at.split('T')[0]
                 daily_counts[date] += 1
-            except Exception:
+            except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
                 continue
         
         # Calculate averages

@@ -163,7 +163,7 @@ def export_polyline_dxf(req: PolyDXFReq):
         write_text(entry, "summary.json", json.dumps(summary, indent=2))
         finalize(entry)
         export_id = entry["id"]
-    except Exception:
+    except (OSError, KeyError, ValueError):  # WP-1: non-fatal history storage
         pass  # History storage unavailable - continue with export
 
     return Response(
@@ -262,7 +262,7 @@ def export_biarc_dxf(req: BiarcDXFReq):
         write_text(entry, "summary.json", json.dumps(summary, indent=2))
         finalize(entry)
         export_id = entry["id"]
-    except Exception:
+    except (OSError, KeyError, ValueError):  # WP-1: non-fatal history storage
         pass  # History storage unavailable - continue with export
 
     return Response(

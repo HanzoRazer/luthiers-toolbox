@@ -24,7 +24,9 @@ def correlation(x: Optional[str] = None, y: Optional[str] = None):
     try:
         analytics = get_advanced_analytics()
         return analytics.pearson_correlation(x, y)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.exception("correlation error")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -34,7 +36,9 @@ def duration_anomalies(z: Optional[float] = 3.0):
     try:
         analytics = get_advanced_analytics()
         return analytics.detect_duration_anomalies(z_thresh=float(z))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.exception("duration anomaly error")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -44,7 +48,9 @@ def success_anomalies(z: Optional[float] = 3.0, window_days: Optional[int] = 30)
     try:
         analytics = get_advanced_analytics()
         return analytics.detect_success_rate_anomalies(window_days=int(window_days), z_thresh=float(z))
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.exception("success anomaly error")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -54,6 +60,8 @@ def predict_failure(body: dict = Body(...)):
     try:
         analytics = get_advanced_analytics()
         return analytics.predict_failure_risk(body)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         logger.exception("predict error")
         raise HTTPException(status_code=500, detail=str(e))

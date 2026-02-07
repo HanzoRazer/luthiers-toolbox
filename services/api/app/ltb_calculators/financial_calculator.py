@@ -865,42 +865,42 @@ def calculator_repl():
                           f"{row.interest:10.2f} {row.balance:12.2f}")
                 if calc.n and calc.n > 12:
                     print(f"  ... ({int(calc.n) - 12} more periods)")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif cmd in ('fv', 'solvefv'):
             try:
                 result = calc.solve_fv()
                 print(f"  FV = {result}")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif cmd in ('pv', 'solvepv'):
             try:
                 result = calc.solve_pv()
                 print(f"  PV = {result}")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif cmd in ('pmt', 'solvepmt'):
             try:
                 result = calc.solve_pmt()
                 print(f"  PMT = {result}")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif cmd in ('n', 'solven'):
             try:
                 result = calc.solve_n()
                 print(f"  N = {result}")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif cmd in ('rate', 'solverate', 'i_y'):
             try:
                 result = calc.solve_rate()
                 print(f"  I/Y = {result}%")
-            except Exception as e:
+            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
                 print(f"  Error: {e}")
         
         elif '=' in user_input:

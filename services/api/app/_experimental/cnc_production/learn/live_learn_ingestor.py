@@ -165,7 +165,7 @@ def compute_lane_metrics(telem: SawTelemetryRecord) -> LaneMetrics:
             last_ts = cut_samples[-1].timestamp
             if isinstance(first_ts, datetime) and isinstance(last_ts, datetime):
                 total_cut_time_s = (last_ts - first_ts).total_seconds()
-        except Exception:
+        except (TypeError, ValueError, AttributeError):  # WP-1: narrowed from except Exception
             pass
     
     return LaneMetrics(

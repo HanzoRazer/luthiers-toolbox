@@ -98,7 +98,9 @@ async def normalize_intent_endpoint(
             "issues": [{"code": i.code, "message": i.message, "path": i.path} for i in getattr(e, "issues", [])],
         }
         raise HTTPException(status_code=422, detail=detail)
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Defensive: treat unexpected exceptions as 500 with minimal disclosure
         raise HTTPException(status_code=500, detail={"message": "normalize_failed", "error": str(e)})
 

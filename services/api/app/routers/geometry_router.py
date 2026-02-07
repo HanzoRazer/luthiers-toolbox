@@ -465,7 +465,9 @@ async def import_geometry(request: Request):
         try:
             geometry = GeometryIn(**geometry_data)
             return geometry.dict()
-        except Exception as e:
+        except HTTPException:  # WP-1: pass through HTTPException
+            raise
+        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
             raise HTTPException(400, f"Invalid geometry format: {str(e)}")
     
     # Handle file upload

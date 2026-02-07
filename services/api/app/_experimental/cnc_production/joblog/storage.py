@@ -66,7 +66,7 @@ def _load_json(path: Path) -> Dict[str, Any]:
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
         return {}
 
 
@@ -175,7 +175,7 @@ def list_runs(
                 continue
             
             run_list.append(run)
-        except Exception:
+        except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             continue  # Skip malformed entries
     
     # Sort by creation time (newest first)

@@ -7,7 +7,7 @@ from typing import List, Literal, Optional, Union
 
 try:  # pragma: no cover - optional dependency
     import ezdxf
-except Exception:  # pragma: no cover - executed if ezdxf missing
+except ImportError:  # pragma: no cover - executed if ezdxf missing  # WP-1: narrowed from except Exception
     ezdxf = None  # type: ignore[assignment]
 
 GeomKind = Literal["line", "circle"]

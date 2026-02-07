@@ -154,7 +154,7 @@ def scan_for_legacy_usage(roots: List[str] | None = None) -> LegacyUsageReport:
                 try:
                     with open(fp, "r", encoding="utf-8") as f:
                         lines = f.readlines()
-                except Exception:
+                except OSError:  # WP-1: narrowed from except Exception
                     continue
 
                 for line_num, line in enumerate(lines, 1):

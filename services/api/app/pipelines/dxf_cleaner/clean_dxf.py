@@ -82,7 +82,7 @@ def spline_to_points(spline: Spline, num_segments: int = 64) -> List[Tuple[float
         # Use ezdxf's built-in flattening
         points = list(spline.flattening(0.1))  # 0.1mm tolerance
         return [(p.x, p.y) for p in points]
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         # Fallback to control points if flattening fails
         return [(p.x, p.y) for p in spline.control_points]
 
@@ -138,7 +138,7 @@ def clean_dxf(input_path: str | Path, output_path: str | Path, tolerance: float 
                 if poly.is_valid:
                     # Will be handled separately
                     pass
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass
             all_segments.append(LineString(points))
             stats['circles'] += 1

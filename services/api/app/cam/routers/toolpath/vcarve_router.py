@@ -87,7 +87,7 @@ def _parse_svg_polylines(svg: str) -> List[List[Tuple[float, float]]]:
                 x, y = parts
             try:
                 pts.append((float(x), float(y)))
-            except Exception:
+            except ValueError:  # WP-1: narrowed from except Exception
                 pass
         if pts:
             pl.append(pts)
@@ -382,8 +382,8 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
         }
 
     except HTTPException:
-        raise
-    except Exception as e:
+        raise  # WP-1: pass through
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(

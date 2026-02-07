@@ -100,7 +100,7 @@ class RMOSMigrationAuditor:
                         self.warnings.append(f"Schema version is {version}, expected 1")
                     self.stats['checks_passed'] += 1
                     logger.debug(f"Schema version: {version}")
-        except Exception as e:
+        except (OSError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check schema version: {e}")
             self.stats['checks_failed'] += 1
     
@@ -123,7 +123,7 @@ class RMOSMigrationAuditor:
                         self.stats['checks_passed'] += 1
                         
                 logger.debug(f"Found tables: {existing_tables}")
-        except Exception as e:
+        except (OSError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check tables: {e}")
             self.stats['checks_failed'] += 1
     
@@ -150,7 +150,7 @@ class RMOSMigrationAuditor:
                         self.warnings.append(f"Recommended index missing: {index}")
                         
                 logger.debug(f"Found indexes: {existing_indexes}")
-        except Exception as e:
+        except (OSError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
             self.warnings.append(f"Failed to check indexes: {e}")
     
     def _check_patterns_integrity(self):
@@ -187,7 +187,7 @@ class RMOSMigrationAuditor:
                 self.stats['checks_passed'] += 1
                 
             logger.debug(f"Validated {len(patterns)} patterns")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check patterns integrity: {e}")
             self.stats['checks_failed'] += 1
     
@@ -230,7 +230,7 @@ class RMOSMigrationAuditor:
                 self.stats['checks_passed'] += 1
                 
             logger.debug(f"Validated {len(families)} strip families")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check strip families integrity: {e}")
             self.stats['checks_failed'] += 1
     
@@ -276,7 +276,7 @@ class RMOSMigrationAuditor:
                 self.stats['checks_passed'] += 1
                 
             logger.debug(f"Validated {len(joblogs)} joblogs")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check joblogs integrity: {e}")
             self.stats['checks_failed'] += 1
     
@@ -321,7 +321,7 @@ class RMOSMigrationAuditor:
                         self.stats['checks_passed'] += 1
             
             logger.debug("Foreign key checks completed")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check foreign keys: {e}")
             self.stats['checks_failed'] += 1
     
@@ -353,7 +353,7 @@ class RMOSMigrationAuditor:
                         self.stats['checks_failed'] += 1
             
             logger.debug("Timestamp consistency checks completed")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check timestamp consistency: {e}")
             self.stats['checks_failed'] += 1
     
@@ -399,7 +399,7 @@ class RMOSMigrationAuditor:
                         self.warnings.append(f"JobLog {joblog['id']} results is not a dict")
             
             logger.debug("JSON field checks completed")
-        except Exception as e:
+        except (OSError, KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
             self.errors.append(f"Failed to check JSON fields: {e}")
             self.stats['checks_failed'] += 1
     

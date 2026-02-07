@@ -25,7 +25,7 @@ def _get_max_series() -> int:
     """
     try:
         return int(os.getenv("ENDPOINT_METRICS_MAX_SERIES", "2000"))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 2000
 
 
@@ -158,10 +158,10 @@ def record_hit(
                 method=str(method),
                 path_pattern=str(path_pattern),
             )
-        except Exception:
+        except Exception:  # WP-1: keep broad — optional OTEL telemetry must never crash
             pass
 
-    except Exception:
+    except Exception:  # WP-1: keep broad — record_hit is non-fatal by design
         # Non-fatal by design
         return
 
@@ -292,7 +292,7 @@ def _append_jsonl(path: str, obj: Dict[str, Any]) -> None:
     # Ensure parent dir exists if possible
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         pass
     with open(path, "a", encoding="utf-8") as f:
         f.write(line + "\n")

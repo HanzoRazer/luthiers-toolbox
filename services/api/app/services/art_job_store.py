@@ -25,7 +25,7 @@ def _load() -> List[Dict[str, Any]]:
         if not raw.strip():
             return []
         return json.loads(raw)
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return []
 
 

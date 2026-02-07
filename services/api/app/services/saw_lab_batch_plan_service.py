@@ -84,7 +84,7 @@ def create_batch_plan(*, batch_spec_artifact_id: str) -> Dict[str, Any]:
             score = float(feas_d.get("score") or feas_d.get("feasibility_score") or 0.0)
             risk_bucket = str(feas_d.get("risk_bucket") or feas_d.get("risk") or "UNKNOWN").upper()
             warnings = feas_d.get("warnings") or []
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
             score = 0.0
             risk_bucket = "ERROR"
             warnings = [f"{type(e).__name__}: {e}"]

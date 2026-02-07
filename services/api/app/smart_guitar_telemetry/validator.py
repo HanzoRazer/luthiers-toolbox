@@ -130,7 +130,7 @@ def validate_telemetry(payload_dict: Dict[str, Any]) -> TelemetryValidationResul
     try:
         payload = TelemetryPayload.model_validate(payload_dict)
         result.payload = payload
-    except Exception as e:
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         result.add_error(f"Schema validation failed: {e}")
         return result
 

@@ -45,7 +45,7 @@ class ConnectionManager:
         """Send message to specific client."""
         try:
             await websocket.send_json(message)
-        except Exception as e:
+        except Exception as e:  # WP-1: keep broad — WebSocket transport
             logger.error(f"Failed to send to client: {e}")
             self.disconnect(websocket)
             
@@ -67,7 +67,7 @@ class ConnectionManager:
                     
             try:
                 await connection.send_json(message)
-            except Exception as e:
+            except Exception as e:  # WP-1: keep broad — WebSocket transport
                 logger.error(f"Broadcast failed: {e}")
                 disconnected.append(connection)
                 
@@ -104,7 +104,7 @@ async def broadcast_job_event(event_type: str, job: Dict[str, Any]):
             "fragility_band": frag_ctx.get("fragility_band", "unknown"),
             "lane_hint": frag_ctx.get("lane_hint"),
         }
-    except Exception as e:
+    except (KeyError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
         logger.warning(f"Failed to extract fragility context for job {job.get('id')}: {e}")
         enriched_job = job  # Fallback to original job without fragility data
     
