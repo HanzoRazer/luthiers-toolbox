@@ -33,7 +33,8 @@ jobs:
       - name: Install agentic spine dependencies
         run: |
           cd services/api
-          pip install --quiet -e ".[test]" 2>/dev/null || pip install --quiet -e .
+          pip install --quiet -r requirements.txt
+          pip install --quiet pytest pytest-cov
 
       - name: Run spine tests (release gate)
         run: |
@@ -87,7 +88,8 @@ jobs:
       - name: Install agentic spine dependencies
         run: |
           cd services/api
-          pip install --quiet -e ".[test]" 2>/dev/null || pip install --quiet -e .
+          pip install --quiet -r requirements.txt
+          pip install --quiet pytest pytest-cov
 
       - name: Download previous release session bundle
         id: prev_bundle
