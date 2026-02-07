@@ -1,0 +1,49 @@
+name: Spine Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/app/agentic/**'
+      - 'services/api/tests/test_*_engine_v1.py'
+      - 'services/api/tests/test_replay_smoke.py'
+      - 'services/api/tests/test_event_contract_parity.py'
+  pull_request:
+    paths:
+      - 'services/api/app/agentic/**'
+      - 'services/api/tests/test_*_engine_v1.py'
+      - 'services/api/tests/test_replay_smoke.py'
+      - 'services/api/tests/test_event_contract_parity.py'
+
+jobs:
+  spine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run spine tests
+        run: |
+          pytest -q \
+            tests/test_event_contract_parity.py \
+            tests/test_moments_engine_v1.py \
+            tests/test_policy_engine_v1.py \
+            tests/test_replay_smoke.py \
+            --tb=short
+
+      - name: Verify determinism (run twice)
+        run: |
+          pytest -q tests/test_replay_smoke.py --tb=short
+          pytest -q tests/test_replay_smoke.py --tb=short
