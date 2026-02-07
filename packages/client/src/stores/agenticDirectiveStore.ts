@@ -348,8 +348,12 @@ const EVENT_DEDUP_WINDOW_MS = 100; // Prevent rapid-fire same events
 const FIRST_SIGNAL_GRACE_MS = 1500; // Grace window for FIRST_SIGNAL priority
 const DIRECTIVE_COOLDOWN_MS = 10000; // 10s cooldown between non-critical directives
 
-// Critical moments that bypass cooldown (always show immediately)
+// Critical moments that bypass cooldown and "only critical after first" gate
 const CRITICAL_MOMENTS = new Set(["ERROR", "OVERLOAD", "DECISION_REQUIRED"]);
+
+function isCriticalMoment(m: DetectedMoment | null): boolean {
+  return !!m && CRITICAL_MOMENTS.has(m.moment);
+}
 
 // --- Directive Key Utils ---
 
@@ -437,6 +441,7 @@ export const useAgenticDirectiveStore = defineStore(
     const firstViewRenderedAt = ref<number | null>(null);
     const latestMoment = ref<DetectedMoment | null>(null);
     const lastDirectiveShownAt = ref<number | null>(null);
+    const firstDirectiveShown = ref<boolean>(false); // Gate for "only critical after first"
 
     // Mode from environment
     const mode = computed<AgenticMode>(() => {
@@ -542,36 +547,42 @@ export const useAgenticDirectiveStore = defineStore(
       // If decision doesn't emit, nothing to track
       if (!decision.emit_directive) return;
 
+      // 1) After first directive, only allow critical moments
+      //    (prevents nagging with FINDING/HESITATION after initial coaching)
+      if (firstDirectiveShown.value && !isCriticalMoment(chosen)) {
+        latestDecision.value = { ...decision, emit_directive: false };
+        return;
+      }
+
       const key = makeDirectiveKey(chosen, decision);
 
-      // 1) If key already dismissed, suppress showing it (but keep decision for diagnostics)
+      // 2) If key already dismissed, suppress showing it (but keep decision for diagnostics)
       if (key && dismissedKeys.value.has(key)) {
         latestDecision.value = { ...decision, emit_directive: false };
         return;
       }
 
-      // 2) If same directiveKey as last time, do NOT reset dismissed=false
+      // 3) If same directiveKey as last time, do NOT reset dismissed=false
       //    (prevents flicker/resurrection on reprocessing full event list)
       if (key && key === lastDirectiveKey.value) {
         return;
       }
 
-      // 3) Cooldown: suppress non-critical moments if within cooldown period
-      //    (prevents nagging — feels human)
-      const isCritical = CRITICAL_MOMENTS.has(chosen.moment);
-      if (!isCritical && lastDirectiveShownAt.value != null) {
+      // 4) Cooldown: suppress non-critical moments if within cooldown period
+      //    (extra safety — critical bypasses this via step 1)
+      if (!isCriticalMoment(chosen) && lastDirectiveShownAt.value != null) {
         const elapsed = Date.now() - lastDirectiveShownAt.value;
         if (elapsed < DIRECTIVE_COOLDOWN_MS) {
-          // Suppress but keep decision for diagnostics
           latestDecision.value = { ...decision, emit_directive: false };
           return;
         }
       }
 
-      // 4) New directiveKey: accept it, show bubble, and clear dismissed for this new key only
+      // 5) New directiveKey: accept it, show bubble
       lastDirectiveKey.value = key ?? null;
       lastDirectiveShownAt.value = Date.now();
       dismissed.value = false;
+      firstDirectiveShown.value = true;
 
       // FIRST_SIGNAL bookkeeping
       if (chosen.moment === "FIRST_SIGNAL") {
@@ -653,6 +664,7 @@ export const useAgenticDirectiveStore = defineStore(
       lastDirectiveKey.value = null;
       dismissedKeys.value.clear();
       firstSignalShown.value = false;
+      firstDirectiveShown.value = false;
       firstViewRenderedAt.value = null;
       lastDirectiveShownAt.value = null;
       lastEventByType.value.clear();

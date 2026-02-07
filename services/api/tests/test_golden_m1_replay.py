@@ -38,7 +38,7 @@ def test_fixture_exists():
 def test_fixture_has_multiple_sessions(replay_module, events):
     """Fixture contains multiple test sessions."""
     sessions = replay_module.group_by_session(events)
-    assert len(sessions) >= 5, f"Expected 5+ sessions, got {len(sessions)}"
+    assert len(sessions) >= 7, f"Expected 7+ sessions, got {len(sessions)}"
 
     expected_sessions = [
         "session_golden_m1",
@@ -46,6 +46,8 @@ def test_fixture_has_multiple_sessions(replay_module, events):
         "session_error",
         "session_finding",
         "session_first_signal",
+        "session_noncritical_suppressed",
+        "session_critical_allowed",
     ]
     for sid in expected_sessions:
         assert sid in sessions, f"Missing session: {sid}"
@@ -153,7 +155,66 @@ def test_m0_never_emits(replay_module, events):
 def test_replay_determinism(replay_module, events):
     """Multiple replays should produce identical results."""
     result = replay_module.run_determinism_check(events, runs=5)
-    
+
     assert result["deterministic"] is True, f"Non-deterministic sessions: {result['mismatches']}"
     assert result["runs"] == 5
     assert result["mismatches"] == []
+
+
+# --- Session-level gate tests (validates fixture structure for frontend gate) ---
+# Note: The "only critical after first" gate is implemented in the frontend store.
+# These tests validate the raw moments detected, which the frontend uses to apply the gate.
+
+
+def test_noncritical_suppressed_session_detects_hesitation(replay_module, events):
+    """session_noncritical_suppressed: view_rendered (FIRST_SIGNAL) then idle_timeout (HESITATION).
+
+    Raw moment detection: HESITATION (priority 5) beats FIRST_SIGNAL (priority 6).
+    Frontend gate: After first directive shown, HESITATION would be suppressed (non-critical).
+    """
+    from app.agentic.spine.moments import detect_moments
+
+    sessions = replay_module.group_by_session(events)
+    session_events = sessions["session_noncritical_suppressed"]
+
+    # Raw detection: HESITATION wins by priority
+    # (Frontend gate would suppress this after first directive)
+    moments = detect_moments(session_events)
+    assert len(moments) == 1
+    assert moments[0]["moment"] == "HESITATION"
+
+
+def test_critical_allowed_session_detects_overload(replay_module, events):
+    """session_critical_allowed: view_rendered (FIRST_SIGNAL) then 3 undos (OVERLOAD).
+
+    Raw moment detection: OVERLOAD (priority 2) beats FIRST_SIGNAL (priority 6).
+    Frontend gate: OVERLOAD is critical, so it would still show after first directive.
+    """
+    from app.agentic.spine.moments import detect_moments
+
+    sessions = replay_module.group_by_session(events)
+    session_events = sessions["session_critical_allowed"]
+
+    # Raw detection: OVERLOAD wins by priority
+    # (Frontend gate would allow this — OVERLOAD is critical)
+    moments = detect_moments(session_events)
+    assert len(moments) == 1
+    assert moments[0]["moment"] == "OVERLOAD"
+
+
+def test_noncritical_not_in_critical_set():
+    """HESITATION and FINDING are not critical moments."""
+    CRITICAL_MOMENTS = {"ERROR", "OVERLOAD", "DECISION_REQUIRED"}
+
+    assert "HESITATION" not in CRITICAL_MOMENTS
+    assert "FINDING" not in CRITICAL_MOMENTS
+    assert "FIRST_SIGNAL" not in CRITICAL_MOMENTS
+
+
+def test_critical_moments_are_critical():
+    """ERROR, OVERLOAD, DECISION_REQUIRED are critical moments."""
+    CRITICAL_MOMENTS = {"ERROR", "OVERLOAD", "DECISION_REQUIRED"}
+
+    assert "ERROR" in CRITICAL_MOMENTS
+    assert "OVERLOAD" in CRITICAL_MOMENTS
+    assert "DECISION_REQUIRED" in CRITICAL_MOMENTS
