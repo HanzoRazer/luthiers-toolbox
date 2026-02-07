@@ -11,11 +11,11 @@ FROM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
 
 # Install dependencies first (better caching)
-COPY client/package*.json ./
+COPY packages/client/package*.json ./
 RUN npm ci --production=false
 
 # Copy source and build
-COPY client/ ./
+COPY packages/client/ ./
 RUN npm run build
 
 # Verify build output
