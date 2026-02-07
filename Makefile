@@ -16,6 +16,10 @@ help:
 	@echo "viewer-pack-fixture     Regenerate minimal viewer pack fixture zip"
 	@echo "viewer-pack-parity      Check schema parity with tap_tone_pi"
 	@echo "viewer-pack-gate        Run full viewer pack v1 contract gate"
+	@echo ""
+	@echo "Agentic Policy Verification:"
+	@echo "verify-policy           Verify policy against release-assets/sessions/"
+	@echo "verify-policy-fixtures  Verify policy against repo fixtures"
 
 # Configuration
 API_HOST ?= 127.0.0.1
@@ -199,3 +203,28 @@ analyzer-smoke-local:
 	  --chladni-dir   ../tap_tone_pi/out/DEMO/chladni \
 	  --phase2-dir    ../tap_tone_pi/runs_phase2/DEMO/session_0001 \
 	  --moe-dir       ../tap_tone_pi/out/DEMO/moe
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Agentic Policy Verification
+# Replay external/downloaded session artifacts through policy engine
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Directory containing downloaded JSONL session assets (not committed)
+RELEASE_SESSIONS ?= release-assets/sessions
+
+.PHONY: verify-policy
+verify-policy:
+	@echo "🔍 Verifying agentic policy against release assets"
+	@test -d $(RELEASE_SESSIONS) || ( \
+		echo "❌ Missing directory: $(RELEASE_SESSIONS)"; \
+		echo "   Create it and drop JSONL session files inside."; \
+		exit 1 \
+	)
+	@python tools/verify_policy.py $(RELEASE_SESSIONS)
+	@echo "✅ Policy verification complete"
+
+.PHONY: verify-policy-fixtures
+verify-policy-fixtures:
+	@echo "🔍 Verifying agentic policy against repo fixtures"
+	@python tools/verify_policy.py services/api/tests/fixtures/
+	@echo "✅ Fixture verification complete"
