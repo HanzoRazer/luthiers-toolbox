@@ -4,14 +4,16 @@
     <main class="app-main">
       <router-view />
     </main>
-    <!-- M1 Advisory Mode: Coach Bubble -->
+    <!-- M1 Advisory Mode: Coach Bubble + Idle Detection -->
     <CoachBubble />
+    <IdleDetector :threshold-ms="8000" />
   </div>
 </template>
 
 <script setup lang="ts">
 import AppNav from '@/components/AppNav.vue';
 import CoachBubble from '@/components/agentic/CoachBubble.vue';
+import IdleDetector from '@/components/agentic/IdleDetector.vue';
 </script>
 
 <style>
