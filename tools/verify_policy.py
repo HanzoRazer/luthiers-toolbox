@@ -22,7 +22,12 @@ What this enforces:
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
+
+# Fix Windows console encoding for Unicode output
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Add services/api to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "services" / "api"))
