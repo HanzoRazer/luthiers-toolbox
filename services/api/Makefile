@@ -129,6 +129,32 @@ api-health:
 		echo "==> Health check completed."; \
 		pkill -f "uvicorn app.main:app" >/dev/null 2>&1 || true)
 
+# ----------------------------
+# Agentic Spine Test Suite
+# ----------------------------
+
+.PHONY: test-contracts test-moments test-policy test-replay test-spine
+
+test-contracts:
+	@echo "==> Running contract parity tests"
+	@$(PYTHON) -m pytest -q tests/test_event_contract_parity.py
+
+test-moments:
+	@echo "==> Running moment detector tests"
+	@$(PYTHON) -m pytest -q tests/test_moments_engine_v1.py
+
+test-policy:
+	@echo "==> Running policy engine tests"
+	@$(PYTHON) -m pytest -q tests/test_policy_engine_v1.py
+
+test-replay:
+	@echo "==> Running replay smoke test"
+	@$(PYTHON) -m pytest -q tests/test_replay_smoke.py
+
+test-spine: test-contracts test-moments test-policy test-replay
+	@echo ""
+	@echo "✅ Agentic spine test suite passed"
+
 help:
 	@echo "Luthier's Tool Box API Makefile"
 	@echo ""
@@ -140,6 +166,13 @@ help:
 	@echo "  api-run          Start uvicorn dev server"
 	@echo "  api-test         Run smoke tests"
 	@echo "  api-health       Health check (start server, test endpoint, shutdown)"
+	@echo ""
+	@echo "Agentic Spine:"
+	@echo "  test-spine       Run full spine test suite"
+	@echo "  test-contracts   Run contract parity tests"
+	@echo "  test-moments     Run moment detector tests"
+	@echo "  test-policy      Run policy engine tests"
+	@echo "  test-replay      Run replay smoke test"
 	@echo ""
 	@echo "Variables:"
 	@echo "  PY=$(PY)          Python interpreter"
