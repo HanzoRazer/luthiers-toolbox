@@ -1,26 +1,24 @@
-# app/agentic/spine/moments.py
 """
-Moment Detection Engine — Reference Implementation
+Moment Detection Engine — Detects user moments from event streams.
 
-Detects named patterns (moments) from AgentEventV1 event streams.
-This is a conservative, dependency-light implementation designed to:
-1. Pass the test suite
-2. Work correctly in shadow mode
-3. Provide a bootstrap for CI
+Moments are high-level abstractions that summarize what's happening:
+- FIRST_SIGNAL: User just started or analysis completed
+- HESITATION: User has been idle (not changing parameters)
+- OVERLOAD: User gave "too_much" feedback or multiple undos
+- FINDING: High-confidence artifact was created
+- DECISION_REQUIRED: Explicit decision point reached
+- ERROR: Analysis failed or system error occurred
 
-For full specification, see: docs/EVENT_MOMENTS_CATALOG_V1.md
+Priority (highest to lowest):
+ERROR > OVERLOAD > DECISION_REQUIRED > FINDING > HESITATION > FIRST_SIGNAL
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TypedDict, List, Dict, Any
 
-
-MomentName = str
-
-
-PRIORITY: Dict[MomentName, int] = {
+# Priority order (lower = higher priority)
+MOMENT_PRIORITY: Dict[str, int] = {
     "ERROR": 1,
     "OVERLOAD": 2,
     "DECISION_REQUIRED": 3,
@@ -30,147 +28,119 @@ PRIORITY: Dict[MomentName, int] = {
 }
 
 
-def _get(e: Any, key: str, default=None):
-    if isinstance(e, dict):
-        return e.get(key, default)
-    return getattr(e, key, default)
+class DetectedMoment(TypedDict):
+    moment: str
+    confidence: float
+    trigger_events: List[str]
 
 
-def _payload(e: Any) -> dict:
-    p = _get(e, "payload", {}) or {}
-    return p if isinstance(p, dict) else {}
-
-
-def _eid(e: Any) -> str:
-    return str(_get(e, "event_id", ""))
-
-
-def detect_moments(events: List[Any]) -> List[dict]:
+def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     """
-    Detect moments from a list of AgentEventV1-like dicts/objects.
-
-    Output: list of dicts
-      { "moment": str, "confidence": float, "trigger_events": [event_id, ...] }
-
-    Priority rule: if multiple moments detected, only highest priority is returned.
+    Detect moments from a list of AgentEventV1 events.
+    
+    Returns a list of detected moments, sorted by priority (highest first).
+    Typically returns 0-1 moments due to priority suppression.
     """
     if not events:
         return []
-
-    # Sort by occurred_at if present, otherwise keep order
-    def _sort_key(e: Any) -> str:
-        return str(_get(e, "occurred_at", ""))
-
-    evs = sorted(events, key=_sort_key)
-
-    detected: List[Tuple[MomentName, float, List[str]]] = []
-
-    # --- ERROR ---
+    
+    # Sort by occurred_at
+    evs = sorted(events, key=lambda e: e.get("occurred_at", ""))
+    
+    detected: List[tuple] = []  # (moment, confidence, trigger_events)
+    
+    # ERROR detection
     for e in evs:
-        et = _get(e, "event_type")
-        if et in ("analysis_failed", "system_error"):
-            detected.append(("ERROR", 0.95, [_eid(e)]))
+        if e.get("event_type") in ("analysis_failed", "system_error"):
+            detected.append(("ERROR", 0.95, [e["event_id"]]))
             break
-
-    # --- OVERLOAD ---
-    if not any(m[0] == "ERROR" for m in detected):
-        # Explicit too_much
+    
+    # OVERLOAD (explicit too_much feedback)
+    if not any(d[0] == "ERROR" for d in detected):
         for e in evs:
-            if _get(e, "event_type") == "user_feedback":
-                fb = _payload(e).get("feedback")
-                if fb == "too_much":
-                    detected.append(("OVERLOAD", 0.9, [_eid(e)]))
+            if e.get("event_type") == "user_feedback":
+                payload = e.get("payload", {})
+                if payload.get("feedback") == "too_much":
+                    detected.append(("OVERLOAD", 0.9, [e["event_id"]]))
                     break
-
-        # Undo spike heuristic: 3 undo actions within the provided window
-        if not any(m[0] == "OVERLOAD" for m in detected):
-            undo_ids = [
-                _eid(e)
-                for e in evs
-                if _get(e, "event_type") == "user_action" and _payload(e).get("action") == "undo"
-            ]
-            if len(undo_ids) >= 3:
-                detected.append(("OVERLOAD", 0.75, undo_ids[:3]))
-
-        # Rapid open/close cycles: tool_rendered/tool_closed alternating at least twice
-        if not any(m[0] == "OVERLOAD" for m in detected):
-            toggles = []
-            for e in evs:
-                if _get(e, "event_type") in ("tool_rendered", "tool_closed"):
-                    toggles.append((_get(e, "event_type"), _eid(e)))
-            # naive: if at least 4 toggle events, treat as overload
-            if len(toggles) >= 4:
-                detected.append(("OVERLOAD", 0.65, [eid for _, eid in toggles[:4]]))
-
-    # --- DECISION_REQUIRED ---
-    if not any(m[0] in ("ERROR", "OVERLOAD") for m in detected):
+    
+    # OVERLOAD (undo spike)
+    if not any(d[0] == "OVERLOAD" for d in detected):
+        undo_ids = [
+            e["event_id"]
+            for e in evs
+            if e.get("event_type") == "user_action"
+            and e.get("payload", {}).get("action") == "undo"
+        ]
+        if len(undo_ids) >= 3:
+            detected.append(("OVERLOAD", 0.75, undo_ids[:3]))
+    
+    # DECISION_REQUIRED
+    if not any(d[0] in ("ERROR", "OVERLOAD") for d in detected):
         for e in evs:
-            if _get(e, "event_type") == "decision_required":
-                detected.append(("DECISION_REQUIRED", 0.9, [_eid(e)]))
+            if e.get("event_type") == "decision_required":
+                detected.append(("DECISION_REQUIRED", 0.9, [e["event_id"]]))
                 break
-
-    # --- FINDING ---
-    if not any(m[0] in ("ERROR", "OVERLOAD", "DECISION_REQUIRED") for m in detected):
-        # Preferred: attention_requested, but only if there is supporting high-confidence artifact_created
-        attention_e = next((e for e in evs if _get(e, "event_type") == "attention_requested"), None)
-
-        high_conf_artifact = None
+    
+    # FINDING (high-confidence artifact)
+    if not any(d[0] in ("ERROR", "OVERLOAD", "DECISION_REQUIRED") for d in detected):
         for e in evs:
-            if _get(e, "event_type") == "artifact_created":
-                p = _payload(e)
-                if p.get("schema") == "wolf_candidates_v1" and float(p.get("confidence_max", 0.0)) >= 0.6:
-                    high_conf_artifact = e
+            if e.get("event_type") == "artifact_created":
+                payload = e.get("payload", {})
+                if (
+                    payload.get("schema") == "wolf_candidates_v1"
+                    and float(payload.get("confidence_max", 0)) >= 0.6
+                ):
+                    detected.append(("FINDING", 0.7, [e["event_id"]]))
                     break
-
-        if attention_e and high_conf_artifact:
-            detected.append(("FINDING", 0.85, [_eid(attention_e)]))
-        elif high_conf_artifact:
-            detected.append(("FINDING", 0.7, [_eid(high_conf_artifact)]))
-
-    # --- HESITATION ---
-    if not any(m[0] in ("ERROR", "OVERLOAD", "DECISION_REQUIRED", "FINDING") for m in detected):
-        # If a parameter change happens, suppress hesitation.
+    
+    # HESITATION (idle timeout without parameter change)
+    if not any(d[0] in ("ERROR", "OVERLOAD", "DECISION_REQUIRED", "FINDING") for d in detected):
         has_param_change = any(
-            _get(e, "event_type") == "user_action" and _payload(e).get("action") == "parameter_changed"
+            e.get("event_type") == "user_action"
+            and e.get("payload", {}).get("action") == "parameter_changed"
             for e in evs
         )
         if not has_param_change:
-            # Idle timeout event triggers hesitation
-            idle_e = next((e for e in evs if _get(e, "event_type") == "idle_timeout"), None)
-            if idle_e:
-                detected.append(("HESITATION", 0.8, [_eid(idle_e)]))
-            else:
-                # Repeated hovers trigger hesitation
-                hover_events = [
-                    e
-                    for e in evs
-                    if _get(e, "event_type") == "user_action" and _payload(e).get("action") == "hover"
-                ]
-                if len(hover_events) >= 2:
-                    detected.append(("HESITATION", 0.65, [_eid(hover_events[0]), _eid(hover_events[1])]))
-
-    # --- FIRST_SIGNAL ---
+            idle_event = next(
+                (e for e in evs if e.get("event_type") == "idle_timeout"),
+                None,
+            )
+            if idle_event:
+                detected.append(("HESITATION", 0.8, [idle_event["event_id"]]))
+    
+    # FIRST_SIGNAL (view rendered or analysis completed)
     if not detected:
-        # Prefer view_rendered (user_action with action=view_rendered)
-        view_e = next(
+        view_event = next(
             (
                 e
                 for e in evs
-                if _get(e, "event_type") == "user_action" and _payload(e).get("action") == "view_rendered"
+                if e.get("event_type") == "user_action"
+                and e.get("payload", {}).get("action") == "view_rendered"
             ),
             None,
         )
-        if view_e:
-            detected.append(("FIRST_SIGNAL", 0.75, [_eid(view_e)]))
+        if view_event:
+            detected.append(("FIRST_SIGNAL", 0.75, [view_event["event_id"]]))
         else:
-            comp_e = next((e for e in evs if _get(e, "event_type") == "analysis_completed"), None)
-            if comp_e:
-                detected.append(("FIRST_SIGNAL", 0.65, [_eid(comp_e)]))
-
+            comp_event = next(
+                (e for e in evs if e.get("event_type") == "analysis_completed"),
+                None,
+            )
+            if comp_event:
+                detected.append(("FIRST_SIGNAL", 0.65, [comp_event["event_id"]]))
+    
     if not detected:
         return []
-
-    # Apply priority suppression: keep only the single highest-priority moment
-    detected.sort(key=lambda x: PRIORITY.get(x[0], 999))
+    
+    # Priority suppression: keep only highest priority
+    detected.sort(key=lambda d: MOMENT_PRIORITY.get(d[0], 999))
     best = detected[0]
-    return [{"moment": best[0], "confidence": float(best[1]), "trigger_events": best[2]}]
+    
+    return [
+        DetectedMoment(
+            moment=best[0],
+            confidence=best[1],
+            trigger_events=best[2],
+        )
+    ]
