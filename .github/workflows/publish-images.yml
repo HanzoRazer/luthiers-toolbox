@@ -218,6 +218,9 @@ jobs:
   verify-images:
     needs: build-and-push
     runs-on: ubuntu-latest
+    env:
+      # Docker requires lowercase image names
+      IMAGE_PREFIX_LOWER: hanzorazer/luthiers-toolbox
 
     steps:
       - name: Checkout repository
@@ -232,26 +235,26 @@ jobs:
 
       - name: Pull and verify API image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-api:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-api:latest
 
       - name: Pull and verify Client image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-client:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-client:latest
 
       - name: Pull and verify Nginx image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-nginx:latest
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-nginx:latest
 
       - name: Test stack with published images
         run: |
           # Create test .env
           cat > .env << EOF
-          API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
-          CLIENT_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-client:latest
-          NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
+          API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-api:latest
+          CLIENT_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-client:latest
+          NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX_LOWER }}-nginx:latest
           NGINX_PORT=8080
           EOF
 
