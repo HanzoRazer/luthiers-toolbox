@@ -346,6 +346,10 @@ function debounce<T extends (...args: unknown[]) => void>(
 const DECISION_DEBOUNCE_MS = 250; // Prevent flicker
 const EVENT_DEDUP_WINDOW_MS = 100; // Prevent rapid-fire same events
 const FIRST_SIGNAL_GRACE_MS = 1500; // Grace window for FIRST_SIGNAL priority
+const DIRECTIVE_COOLDOWN_MS = 10000; // 10s cooldown between non-critical directives
+
+// Critical moments that bypass cooldown (always show immediately)
+const CRITICAL_MOMENTS = new Set(["ERROR", "OVERLOAD", "DECISION_REQUIRED"]);
 
 // --- Directive Key Utils ---
 
@@ -368,12 +372,13 @@ function makeDirectiveKey(
 }
 
 /**
- * Select moment with FIRST_SIGNAL grace window.
+ * Select moment with FIRST_SIGNAL grace window and one-shot suppression.
  * Ensures FTUE shows "Inspect this" before "Review this".
  *
- * If FINDING is top but we haven't shown FIRST_SIGNAL yet:
- * 1. Prefer existing FIRST_SIGNAL from moments list if present
- * 2. Otherwise, during grace window, suppress (show nothing briefly)
+ * Rules:
+ * 1. FIRST_SIGNAL is one-shot: if already shown, never return it again
+ * 2. If FINDING is top but we haven't shown FIRST_SIGNAL yet, prefer FIRST_SIGNAL
+ * 3. During grace window, suppress non-critical if FIRST_SIGNAL not yet shown
  */
 function selectMomentWithGrace(
   moments: DetectedMoment[],
@@ -383,6 +388,13 @@ function selectMomentWithGrace(
   if (!moments?.length) return null;
 
   const top = moments[0];
+
+  // One-shot: if FIRST_SIGNAL already shown, never return it again
+  if (firstSignalShown && top.moment === "FIRST_SIGNAL") {
+    // Skip to next moment if available, otherwise null
+    const next = moments.find((m) => m.moment !== "FIRST_SIGNAL");
+    return next ?? null;
+  }
 
   // If FINDING is top but we haven't shown FIRST_SIGNAL yet,
   // prefer FIRST_SIGNAL if present in moments list
@@ -424,6 +436,7 @@ export const useAgenticDirectiveStore = defineStore(
     const firstSignalShown = ref<boolean>(false);
     const firstViewRenderedAt = ref<number | null>(null);
     const latestMoment = ref<DetectedMoment | null>(null);
+    const lastDirectiveShownAt = ref<number | null>(null);
 
     // Mode from environment
     const mode = computed<AgenticMode>(() => {
@@ -543,8 +556,21 @@ export const useAgenticDirectiveStore = defineStore(
         return;
       }
 
-      // 3) New directiveKey: accept it, show bubble, and clear dismissed for this new key only
+      // 3) Cooldown: suppress non-critical moments if within cooldown period
+      //    (prevents nagging — feels human)
+      const isCritical = CRITICAL_MOMENTS.has(chosen.moment);
+      if (!isCritical && lastDirectiveShownAt.value != null) {
+        const elapsed = Date.now() - lastDirectiveShownAt.value;
+        if (elapsed < DIRECTIVE_COOLDOWN_MS) {
+          // Suppress but keep decision for diagnostics
+          latestDecision.value = { ...decision, emit_directive: false };
+          return;
+        }
+      }
+
+      // 4) New directiveKey: accept it, show bubble, and clear dismissed for this new key only
       lastDirectiveKey.value = key ?? null;
+      lastDirectiveShownAt.value = Date.now();
       dismissed.value = false;
 
       // FIRST_SIGNAL bookkeeping
@@ -628,6 +654,7 @@ export const useAgenticDirectiveStore = defineStore(
       dismissedKeys.value.clear();
       firstSignalShown.value = false;
       firstViewRenderedAt.value = null;
+      lastDirectiveShownAt.value = null;
       lastEventByType.value.clear();
     }
 
