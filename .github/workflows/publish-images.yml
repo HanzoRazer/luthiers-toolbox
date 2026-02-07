@@ -13,11 +13,14 @@ env:
   IMAGE_PREFIX: ${{ github.repository_owner }}/luthiers-toolbox
 
 jobs:
-  # ───────────────────────────────────────────────────────────────────────────
-  # Pre-release Gate: Verify agentic policy against golden session fixtures
-  # ───────────────────────────────────────────────────────────────────────────
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Pre-release Gate: Verify agentic policy + package session bundle
+  # ═══════════════════════════════════════════════════════════════════════════
   verify-policy:
     runs-on: ubuntu-latest
+    outputs:
+      zip_path: ${{ steps.package.outputs.zip_path }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,28 +33,118 @@ jobs:
       - name: Install agentic spine dependencies
         run: |
           cd services/api
-          pip install --quiet -e ".[test]" || pip install --quiet -e .
+          pip install --quiet -e ".[test]" 2>/dev/null || pip install --quiet -e .
 
-      - name: Run policy verification against fixtures
+      - name: Run spine tests (release gate)
+        run: |
+          cd services/api
+          python -m pytest tests/test_golden_m1_replay.py -v --no-header
+
+      - name: Verify policy against repo fixtures
         run: |
           echo "🔍 Verifying agentic policy against golden session fixtures"
           python tools/verify_policy.py services/api/tests/fixtures/
           echo "✅ Policy verification passed"
 
-      - name: Upload golden sessions as release artifact
+      - name: Package session fixtures for this release
+        id: package
+        run: |
+          chmod +x tools/package_sessions.sh
+          ZIP_PATH=$(tools/package_sessions.sh "${{ github.ref_name }}" "dist" "services/api/tests/fixtures")
+          echo "zip_path=dist/agentic-sessions-${{ github.ref_name }}.zip" >> $GITHUB_OUTPUT
+
+      - name: Verify policy against packaged bundle (sanity check)
+        run: |
+          rm -rf release-assets/sessions
+          mkdir -p release-assets/sessions
+          unzip -q "dist/agentic-sessions-${{ github.ref_name }}.zip" -d release-assets/sessions
+          python tools/verify_policy.py release-assets/sessions/
+
+      - name: Upload session bundle as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: golden-sessions
-          path: services/api/tests/fixtures/*.jsonl
+          name: agentic-sessions
+          path: dist/agentic-sessions-${{ github.ref_name }}.zip
           retention-days: 90
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Cross-version Replay: Verify current code handles previous release sessions
+  # ═══════════════════════════════════════════════════════════════════════════
+  cross-version-replay:
+    runs-on: ubuntu-latest
+    needs: verify-policy
+    continue-on-error: true  # Don't block first few releases without bundles
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install agentic spine dependencies
+        run: |
+          cd services/api
+          pip install --quiet -e ".[test]" 2>/dev/null || pip install --quiet -e .
+
+      - name: Download previous release session bundle
+        id: prev_bundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find previous release tag matching toolbox-v*
+          PREV_TAG=$(gh release list --limit 20 --json tagName \
+            --jq '[.[].tagName | select(startswith("toolbox-v"))] | .[1] // empty')
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "ℹ️ No previous toolbox-v* release found (this may be the first)"
+            echo "has_prev=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "📦 Previous release: $PREV_TAG"
+          ASSET="agentic-sessions-${PREV_TAG}.zip"
+
+          mkdir -p dist/prev
+          gh release download "$PREV_TAG" --pattern "$ASSET" --dir dist/prev || {
+            echo "ℹ️ Previous release has no session bundle attached"
+            echo "has_prev=false" >> $GITHUB_OUTPUT
+            exit 0
+          }
+
+          if [ ! -f "dist/prev/$ASSET" ]; then
+            echo "ℹ️ Asset download failed: $ASSET"
+            echo "has_prev=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "✅ Downloaded: dist/prev/$ASSET"
+          echo "has_prev=true" >> $GITHUB_OUTPUT
+          echo "prev_zip=dist/prev/$ASSET" >> $GITHUB_OUTPUT
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+      - name: Verify current code handles previous release sessions
+        if: steps.prev_bundle.outputs.has_prev == 'true'
+        run: |
+          echo "🔄 Cross-version replay: ${{ steps.prev_bundle.outputs.prev_tag }} → ${{ github.ref_name }}"
+          rm -rf release-assets/prev_sessions
+          mkdir -p release-assets/prev_sessions
+          unzip -q "${{ steps.prev_bundle.outputs.prev_zip }}" -d release-assets/prev_sessions
+          python tools/verify_policy.py release-assets/prev_sessions/
+          echo "✅ Cross-version compatibility verified"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Build and Push Docker Images
+  # ═══════════════════════════════════════════════════════════════════════════
   build-and-push:
     needs: verify-policy
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    
+
     strategy:
       matrix:
         component:
@@ -64,7 +157,7 @@ jobs:
           - name: nginx
             dockerfile: docker/nginx/Dockerfile
             context: .
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -116,10 +209,13 @@ jobs:
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Verify Published Images
+  # ═══════════════════════════════════════════════════════════════════════════
   verify-images:
     needs: build-and-push
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -155,23 +251,26 @@ jobs:
           NGINX_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:latest
           NGINX_PORT=8080
           EOF
-          
+
           # Launch stack
           docker compose -f docker-compose.production.yml up -d
-          
+
           # Wait for health
           sleep 15
-          
+
           # Test nginx proxy
           curl -f http://localhost:8080/health || exit 1
           curl -f http://localhost:8080/api/health || exit 1
-          
+
           # Cleanup
           docker compose -f docker-compose.production.yml down -v
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Create GitHub Release with Session Bundle
+  # ═══════════════════════════════════════════════════════════════════════════
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: verify-images
+    needs: [verify-images, cross-version-replay]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -180,24 +279,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download golden sessions artifact
+      - name: Download session bundle artifact
         uses: actions/download-artifact@v4
         with:
-          name: golden-sessions
-          path: release-assets/
-
-      - name: Package golden sessions
-        run: |
-          cd release-assets
-          zip -r golden-sessions-${{ github.ref_name }}.zip *.jsonl
-          echo "📦 Packaged $(ls *.jsonl | wc -l) session files"
+          name: agentic-sessions
+          path: dist/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            release-assets/golden-sessions-${{ github.ref_name }}.zip
+            dist/agentic-sessions-${{ github.ref_name }}.zip
           body: |
             ## Docker Images
 
@@ -227,14 +321,21 @@ jobs:
 
             ## Agentic Policy Verification
 
-            Golden session fixtures are attached as `golden-sessions-${{ github.ref_name }}.zip`.
+            Session fixtures attached as `agentic-sessions-${{ github.ref_name }}.zip`.
 
-            To verify policy compatibility with this release:
+            **Verify policy compatibility:**
             ```bash
             # Download and extract
-            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/golden-sessions-${{ github.ref_name }}.zip
-            unzip golden-sessions-${{ github.ref_name }}.zip -d release-assets/sessions/
+            gh release download ${{ github.ref_name }} --pattern "agentic-sessions-*.zip" --dir dist
+            mkdir -p release-assets/sessions
+            unzip dist/agentic-sessions-${{ github.ref_name }}.zip -d release-assets/sessions/
 
             # Run policy verification
+            make verify-policy RELEASE_SESSIONS=release-assets/sessions/
+            ```
+
+            **Cross-version testing:**
+            ```bash
+            # Test that current code handles this release's sessions
             make verify-policy RELEASE_SESSIONS=release-assets/sessions/
             ```
