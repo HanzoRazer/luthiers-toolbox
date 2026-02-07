@@ -323,6 +323,29 @@ function decide(
   };
 }
 
+// --- Debounce utility ---
+
+function debounce<T extends (...args: unknown[]) => void>(
+  fn: T,
+  delayMs: number
+): T {
+  let timeoutId: number | null = null;
+  return ((...args: unknown[]) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = window.setTimeout(() => {
+      fn(...args);
+      timeoutId = null;
+    }, delayMs);
+  }) as T;
+}
+
+// --- Constants ---
+
+const DECISION_DEBOUNCE_MS = 250; // Prevent flicker
+const EVENT_DEDUP_WINDOW_MS = 100; // Prevent rapid-fire same events
+
 // --- Store ---
 
 export const useAgenticDirectiveStore = defineStore(
@@ -334,6 +357,9 @@ export const useAgenticDirectiveStore = defineStore(
     const uwsm = ref<UWSMSnapshot>({ ...DEFAULT_UWSM });
     const latestDecision = ref<PolicyDecision | null>(null);
     const dismissed = ref<boolean>(false);
+
+    // Event deduplication tracking
+    const lastEventByType = ref<Map<string, number>>(new Map());
 
     // Mode from environment
     const mode = computed<AgenticMode>(() => {
@@ -352,11 +378,34 @@ export const useAgenticDirectiveStore = defineStore(
     });
 
     // Actions
+
+    /**
+     * Check if an event of this type was emitted recently (deduplication).
+     */
+    function isDuplicateEvent(eventType: string): boolean {
+      const now = Date.now();
+      const lastTime = lastEventByType.value.get(eventType);
+      if (lastTime && now - lastTime < EVENT_DEDUP_WINDOW_MS) {
+        return true;
+      }
+      lastEventByType.value.set(eventType, now);
+      return false;
+    }
+
     function emitEvent(
       eventType: string,
       payload: Record<string, unknown>,
       component = "ui"
     ) {
+      // Deduplication: skip if same event type within window
+      // Exception: user_feedback and user_action always go through
+      if (
+        !["user_feedback", "user_action"].includes(eventType) &&
+        isDuplicateEvent(eventType)
+      ) {
+        return null;
+      }
+
       const event: AgentEventV1 = {
         event_id: `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
         event_type: eventType,
@@ -374,13 +423,13 @@ export const useAgenticDirectiveStore = defineStore(
 
       events.value.push(event);
 
-      // Re-run decision pipeline
-      updateDecision();
+      // Re-run decision pipeline (debounced)
+      debouncedUpdateDecision();
 
       return event;
     }
 
-    function updateDecision() {
+    function updateDecisionImmediate() {
       const moments = detectMoments(events.value);
       if (moments.length === 0) {
         latestDecision.value = null;
@@ -394,6 +443,17 @@ export const useAgenticDirectiveStore = defineStore(
       if (decision.emit_directive) {
         dismissed.value = false;
       }
+    }
+
+    // Debounced version to prevent UI flicker
+    const debouncedUpdateDecision = debounce(
+      updateDecisionImmediate,
+      DECISION_DEBOUNCE_MS
+    );
+
+    // Alias for external callers who want immediate update
+    function updateDecision() {
+      updateDecisionImmediate();
     }
 
     function submitFeedback(feedback: "helpful" | "too_much") {
