@@ -359,10 +359,11 @@ function makeDirectiveKey(
   moment: DetectedMoment | null,
   decision: PolicyDecision | null
 ): string | null {
-  if (!moment || !decision?.emit_directive) return null;
-  const m = moment.moment;
+  if (!moment || !decision) return null;
+  const m = moment.moment ?? "NONE";
   const rule = decision.diagnostic?.rule_id ?? "NO_RULE";
-  const triggers = moment.trigger_events.join(",");
+  // Sort trigger IDs for determinism (order can vary)
+  const triggers = [...(moment.trigger_events ?? [])].sort().join(",");
   return `${m}|${rule}|${triggers}`;
 }
 
@@ -370,38 +371,32 @@ function makeDirectiveKey(
  * Select moment with FIRST_SIGNAL grace window.
  * Ensures FTUE shows "Inspect this" before "Review this".
  *
- * During the grace window after first view_rendered:
- * - If FINDING is detected, synthesize FIRST_SIGNAL instead
- * - This ensures the first directive is always "Inspect this"
+ * If FINDING is top but we haven't shown FIRST_SIGNAL yet:
+ * 1. Prefer existing FIRST_SIGNAL from moments list if present
+ * 2. Otherwise, during grace window, suppress (show nothing briefly)
  */
 function selectMomentWithGrace(
   moments: DetectedMoment[],
   firstSignalShown: boolean,
-  firstViewRenderedAt: number | null,
-  events: AgentEventV1[]
+  firstViewRenderedAt: number | null
 ): DetectedMoment | null {
-  if (!moments.length) return null;
+  if (!moments?.length) return null;
 
   const top = moments[0];
 
-  // If FINDING is top but we haven't shown FIRST_SIGNAL yet, prefer FIRST_SIGNAL
+  // If FINDING is top but we haven't shown FIRST_SIGNAL yet,
+  // prefer FIRST_SIGNAL if present in moments list
   if (!firstSignalShown && top.moment === "FINDING") {
-    // During grace window, synthesize FIRST_SIGNAL from view_rendered event
-    if (firstViewRenderedAt && Date.now() - firstViewRenderedAt < FIRST_SIGNAL_GRACE_MS) {
-      // Find the view_rendered event to use as trigger
-      const viewEvent = events.find(
-        (e) =>
-          e.event_type === "user_action" &&
-          (e.payload as Record<string, unknown>)?.action === "view_rendered"
-      );
-      if (viewEvent) {
-        // Return synthetic FIRST_SIGNAL during grace window
-        return {
-          moment: "FIRST_SIGNAL",
-          confidence: 0.75,
-          trigger_events: [viewEvent.event_id],
-        };
-      }
+    const firstSignal = moments.find((m) => m.moment === "FIRST_SIGNAL");
+    if (firstSignal) return firstSignal;
+
+    // Grace window suppression: if FIRST_SIGNAL not present yet,
+    // show nothing briefly rather than jumping straight to FINDING
+    if (
+      firstViewRenderedAt != null &&
+      Date.now() - firstViewRenderedAt < FIRST_SIGNAL_GRACE_MS
+    ) {
+      return null;
     }
   }
 
@@ -510,51 +505,51 @@ export const useAgenticDirectiveStore = defineStore(
     function updateDecisionImmediate() {
       const moments = detectMoments(events.value);
 
-      // Apply FIRST_SIGNAL grace window
+      // IMPORTANT: choose moment with FIRST_SIGNAL grace logic
       const chosen = selectMomentWithGrace(
         moments,
         firstSignalShown.value,
-        firstViewRenderedAt.value,
-        events.value
+        firstViewRenderedAt.value
       );
 
       if (!chosen) {
-        latestDecision.value = null;
         latestMoment.value = null;
+        latestDecision.value = null;
         return;
       }
 
       latestMoment.value = chosen;
+
       const decision = decide(chosen, uwsm.value, mode.value);
+      latestDecision.value = decision;
+
+      // Shadow mode never shows UI directives
+      if (mode.value === "M0") return;
+
+      // If decision doesn't emit, nothing to track
+      if (!decision.emit_directive) return;
+
       const key = makeDirectiveKey(chosen, decision);
 
-      // Shadow mode: just track, never show
-      if (mode.value === "M0") {
-        latestDecision.value = decision;
-        return;
-      }
-
-      // If directive was dismissed before, do not show it again
+      // 1) If key already dismissed, suppress showing it (but keep decision for diagnostics)
       if (key && dismissedKeys.value.has(key)) {
         latestDecision.value = { ...decision, emit_directive: false };
         return;
       }
 
-      // If directive key unchanged, preserve dismissed state (don't force bubble back)
+      // 2) If same directiveKey as last time, do NOT reset dismissed=false
+      //    (prevents flicker/resurrection on reprocessing full event list)
       if (key && key === lastDirectiveKey.value) {
-        latestDecision.value = decision;
         return;
       }
 
-      // New directive → show it
-      latestDecision.value = decision;
-      lastDirectiveKey.value = key;
+      // 3) New directiveKey: accept it, show bubble, and clear dismissed for this new key only
+      lastDirectiveKey.value = key ?? null;
+      dismissed.value = false;
 
-      if (decision.emit_directive) {
-        dismissed.value = false;
-        if (chosen.moment === "FIRST_SIGNAL") {
-          firstSignalShown.value = true;
-        }
+      // FIRST_SIGNAL bookkeeping
+      if (chosen.moment === "FIRST_SIGNAL") {
+        firstSignalShown.value = true;
       }
     }
 
