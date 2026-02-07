@@ -381,121 +381,174 @@ If CI fails, fix the environment assumptions — not the tests.
 
 ### How to add a new event type without breaking the spine
 
-Use this checklist. Do not skip steps.
+**Goal:** Introduce a new `event_type` safely across repos while keeping:
 
-#### Step 1: Schema (contracts layer)
+* deterministic behavior
+* backward compatibility
+* green CI
 
-- [ ] Add event type to `AgentEventV1` if using typed enum
-- [ ] Document the new `event_type` string in the event catalog
-- [ ] Define `payload` shape (what fields? required vs optional?)
-- [ ] Add to `docs/EVENT_MOMENTS_CATALOG_V1.md` if it can trigger moments
-
-**Do not proceed until the schema is committed.**
+Use this checklist every time.
 
 ---
 
-#### Step 2: Test fixtures (conftest.py)
+#### 1) Start with the contract, not the code
 
-- [ ] Add a fixture function: `ev_<your_event_name>`
-- [ ] Use `mk_event()` helper with correct `event_type` and `payload`
-- [ ] Include realistic `source`, `privacy_layer`, `occurred_at`
+* Add the new `event_type` to the **Event Emission Contract** allowlist (`AgentEventV1` doc / codebook).
+* If you're unsure whether it belongs as a new type:
 
-Example:
+  * Prefer keeping `event_type="user_action"` and add a structured `payload.action` first.
+  * Only promote to a top-level `event_type` when multiple repos will emit it.
 
-```python
-@pytest.fixture
-def ev_my_new_event():
-    return mk_event(
-        eid="evt_new_01",
-        etype="my_new_event",
-        payload={"key": "value"},
-    )
+Result: one canonical name, no fragmentation.
+
+---
+
+#### 2) Make it additive only (no breaking changes)
+
+* Do **not** rename existing event types.
+* Do **not** remove existing payload fields.
+* New event types must be ignorable by old consumers.
+
+Rule: *Old agent versions must be able to run with new events present.*
+
+---
+
+#### 3) Define the minimal payload schema
+
+Document:
+
+* required payload keys
+* optional keys
+* allowed enum values
+* example event
+
+Keep payload small and factual (no interpretation).
+
+Example pattern:
+
+```json
+{
+  "event_type": "VIEW_RENDERED",
+  "payload": { "panel_id": "spectrum", "trace_id": "main" }
+}
 ```
 
----
-
-#### Step 3: Moment detector (if event triggers moments)
-
-- [ ] Update `app/agentic/spine/moments.py` (or `tap_tone_pi/agentic/spine/moments.py`)
-- [ ] Add detection logic in `detect_moments()`
-- [ ] Respect priority suppression rules (ERROR > OVERLOAD > ... > FIRST_SIGNAL)
-- [ ] Add test case in `tests/test_moments_engine_v1.py`
-
-**If the event does NOT trigger moments, skip this step.**
+Result: all repos emit the same shape.
 
 ---
 
-#### Step 4: UWSM evidence (if event implies user preference)
+#### 4) Update fixtures first (this prevents "works on my machine")
 
-- [ ] Update `app/agentic/spine/uwsm_update.py` `_extract_evidence()`
-- [ ] Choose evidence type: `explicit` (user said it) or `behavioral` (user did it)
-- [ ] Assign a `rule_id` (e.g., `UWSM_<DIM>_<SIGNAL>_v1`)
-- [ ] Add test to verify evidence extraction
+* Add at least one new event sample to:
 
-**If the event does NOT imply preference, skip this step.**
+  * `tests/conftest.py` fixture builders (if applicable)
+  * `tests/fixtures/smoke_session.jsonl` if it's core to onboarding
+* Ensure `occurred_at` is present and ordered.
 
----
-
-#### Step 5: Smoke fixture (if event is common)
-
-- [ ] Consider adding to `tests/fixtures/smoke_session.jsonl`
-- [ ] Only if the event is part of a typical session flow
-- [ ] Keep the fixture minimal (4-6 events max)
+Result: deterministic test coverage from day one.
 
 ---
 
-#### Step 6: Cross-repo parity
+#### 5) Ensure contract parity tests still pass
 
-- [ ] Sync changes to **both** repos:
-  * `luthiers-toolbox/services/api/app/agentic/spine/`
-  * `tap_tone_pi/tap_tone_pi/agentic/spine/`
-- [ ] Adjust import paths (`app.` vs `tap_tone_pi.`)
-- [ ] Run `make test-spine` in **both** repos
+* Run:
+
+  ```bash
+  pytest -q tests/test_event_contract_parity.py
+  ```
+* If it fails:
+
+  * Your pydantic/dataclass models diverged
+  * Or serialization isn't stable
+
+Result: both repos can parse/serialize the same event.
 
 ---
 
-#### Step 7: Run the full suite
+#### 6) Decide if the moment detector should care
+
+Ask:
+
+* Is this event a new *signal* for an existing moment?
+* Or does it define a new moment?
+
+If it affects moment detection:
+
+* Update `EVENT_MOMENTS_CATALOG_V1.md`
+* Update `detect_moments()` in `app/agentic/spine/moments.py`
+* Add/extend tests in `tests/test_moments_engine_v1.py`
+
+Result: moments remain deterministic and audited.
+
+---
+
+#### 7) Decide if the policy engine should care
+
+Ask:
+
+* Does this event change *intervention selection*?
+* Or just add richer context to directives?
+
+If yes:
+
+* Update `AGENT_DECISION_POLICY_V1.md`
+* Update `decide()` in `app/agentic/spine/policy.py`
+* Add tests in `tests/test_policy_engine_v1.py`
+
+Result: policy changes are intentional and tested.
+
+---
+
+#### 8) Decide if UWSM should update from it
+
+Ask:
+
+* Does this event reflect a stable working-style preference?
+
+If yes:
+
+* Add an evidence rule in `uwsm_update.py` (deterministic)
+* Emit an audit record with a new `rule_id`
+* Add at least one replay fixture that triggers it
+
+Result: personalization remains explainable and non-creepy.
+
+---
+
+#### 9) Run the full spine suite before merging
+
+Run:
 
 ```bash
 make test-spine
 ```
 
-If any test fails:
-
-1. Fix it
-2. Do not merge until green
-3. Do not "skip for now"
-
----
-
-#### Anti-patterns (do not do these)
-
-| Anti-pattern | Why it breaks things |
-|--------------|----------------------|
-| Add event type without fixture | Tests can't exercise it |
-| Add moment detection without test | Silent regressions |
-| Add UWSM evidence without rule_id | Audit trail is broken |
-| Sync one repo but not the other | Contract parity fails |
-| Add to smoke fixture unnecessarily | Bloats replay tests |
-
----
-
-#### Quick sanity check
-
-After adding a new event type, you should be able to:
+Or without make:
 
 ```bash
-# 1. Parse it
-python -c "from app.agentic.spine.replay import load_events; print('OK')"
-
-# 2. Detect moments from it (if applicable)
-python -c "from app.agentic.spine.moments import detect_moments; print('OK')"
-
-# 3. Run replay with it
-python -m app.agentic.spine.replay tests/fixtures/smoke_session.jsonl --mode M0
+pytest -q \
+  tests/test_event_contract_parity.py \
+  tests/test_moments_engine_v1.py \
+  tests/test_policy_engine_v1.py \
+  tests/test_replay_smoke.py
 ```
 
-If any of these fail, you missed a step.
+Result: integration-safe change.
+
+---
+
+#### 10) Versioning rule (keep governance sane)
+
+* If you add a new event type: **minor bump** (e.g., `event_version 1.1`)
+* If you rename or remove: **major bump** (avoid unless unavoidable)
+
+Result: cross-repo upgrades don't become outages.
+
+---
+
+**Rule of thumb:**
+
+> If you can't write the fixture and the test first, the event type isn't ready.
 
 ---
 
