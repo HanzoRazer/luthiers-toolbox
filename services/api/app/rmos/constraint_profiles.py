@@ -204,11 +204,11 @@ class ProfileStore:
                 try:
                     profile = ConstraintProfile.from_dict(profile_id, profile_data)
                     self._profiles[profile_id] = profile
-                except Exception:
+                except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
                     continue  # Skip invalid profiles
             
             return True
-        except Exception:
+        except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             return False
     
     def save_to_yaml(self) -> bool:
@@ -236,7 +236,7 @@ class ProfileStore:
                 yaml.dump(data, f, default_flow_style=False, sort_keys=False)
             
             return True
-        except Exception:
+        except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
             return False
     
     def get(self, profile_id: str) -> Optional[ConstraintProfile]:

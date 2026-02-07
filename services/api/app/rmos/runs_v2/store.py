@@ -354,7 +354,7 @@ def _read_json_file(path: Path) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (json.JSONDecodeError, OSError):  # WP-1: narrowed from except Exception
         return {}
 
 
@@ -365,7 +365,7 @@ def _write_json_file(path: Path, data: Dict[str, Any]) -> None:
     try:
         tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, path)
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         if tmp.exists():
             tmp.unlink()
         raise
@@ -443,7 +443,7 @@ class RunStoreV2:
                     data = json.loads(path.read_text(encoding="utf-8"))
                     artifact = RunArtifact.model_validate(data)
                     index[artifact.run_id] = _extract_index_meta(artifact)
-                except Exception:
+                except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
                     continue
 
         self._write_index(index)
@@ -467,7 +467,7 @@ class RunStoreV2:
             if isinstance(obj, dict):
                 return obj
             return {}
-        except Exception:
+        except (json.JSONDecodeError, OSError):  # WP-1: narrowed from except Exception
             return {}
 
     def _write_advisory_lookup(self, lookup: Dict[str, Dict[str, Any]]) -> None:
@@ -518,7 +518,7 @@ class RunStoreV2:
         # created may be datetime; normalize:
         try:
             date_part = created.date().isoformat()
-        except Exception:
+        except (AttributeError, TypeError):  # WP-1: narrowed from except Exception
             # fallback: assume ISO string with date prefix
             date_part = str(created)[:10]
 
@@ -669,7 +669,7 @@ class RunStoreV2:
             # Update global attachment meta index (best-effort)
             try:
                 self._attachment_meta.update_from_artifact(artifact)
-            except Exception:
+            except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                 # Best-effort: do not fail run persistence if meta index update fails
                 pass
 
@@ -678,10 +678,10 @@ class RunStoreV2:
                 from .attachment_meta import AttachmentRecentIndex
                 recent_idx = AttachmentRecentIndex(self.root)
                 recent_idx.rebuild_from_meta_index(self._attachment_meta)
-            except Exception:
+            except (ImportError, OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
                 # Best-effort: do not fail run persistence if recency index update fails
                 pass
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             # Clean up temp file on failure
             if tmp.exists():
                 tmp.unlink()
@@ -740,7 +740,7 @@ class RunStoreV2:
                 )
 
             self._update_index_entry(artifact.run_id, index_meta)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             # Clean up temp file on failure
             if tmp.exists():
                 tmp.unlink()
@@ -775,7 +775,7 @@ class RunStoreV2:
                     # Load advisory links
                     artifact = self._load_advisory_links(artifact, partition)
                     return artifact
-                except Exception:
+                except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
                     continue
 
         return None
@@ -794,7 +794,7 @@ class RunStoreV2:
                 # Avoid duplicates
                 if not any(a.advisory_id == ref.advisory_id for a in advisory_inputs):
                     advisory_inputs.append(ref)
-            except Exception:
+            except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
                 continue
 
         # Return artifact with merged advisory inputs
@@ -859,7 +859,7 @@ class RunStoreV2:
                 encoding="utf-8",
             )
             os.replace(tmp, link_path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             if tmp.exists():
                 tmp.unlink()
             raise
@@ -931,7 +931,7 @@ class RunStoreV2:
                     meta={"rate_limit_key": limit_key},
                 )
                 append_delete_audit(store_root=self.root, event=event)
-            except Exception:
+            except Exception:  # WP-1: governance catch-all — audit must never break deletion
                 pass
             raise
 
@@ -985,7 +985,7 @@ class RunStoreV2:
                         meta=None,
                     )
                     append_delete_audit(store_root=self.root, event=event)
-                except Exception:
+                except Exception:  # WP-1: governance catch-all — audit must never break deletion
                     pass
                 raise KeyError(f"Run not found: {run_id}")
 
@@ -1030,7 +1030,7 @@ class RunStoreV2:
                         try:
                             link_path.unlink()
                             result["advisory_links_deleted"] += 1
-                        except Exception:
+                        except OSError:  # WP-1: narrowed from except Exception
                             pass
 
                 # Delete the artifact file
@@ -1038,14 +1038,14 @@ class RunStoreV2:
                     artifact_path.unlink()
                     result["artifact_deleted"] = True
                     result["deleted"] = True
-                except Exception as e:
+                except OSError as e:  # WP-1: narrowed from except Exception
                     error_msg = f"Failed to delete artifact: {e}"
 
         except KeyError:
             raise  # Re-raise KeyError for not found
         except DeleteRateLimitError:
             raise  # Re-raise rate limit error
-        except Exception as e:
+        except Exception as e:  # WP-1: governance catch-all — captures deletion error for audit trail
             error_msg = str(e)
 
         # H3.6.2: Append to audit log (best-effort, never blocks deletion)
@@ -1067,7 +1067,7 @@ class RunStoreV2:
                 },
             )
             append_delete_audit(store_root=self.root, event=event)
-        except Exception:
+        except Exception:  # WP-1: governance catch-all — audit must never break delete
             # Audit must never break delete
             pass
 
@@ -1120,7 +1120,7 @@ class RunStoreV2:
                     artifact = RunArtifact.model_validate(data)
                     artifact = self._load_advisory_links(artifact, partition)
                     runs.append(artifact)
-                except Exception:
+                except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
                     continue
 
                 if len(runs) >= limit:
@@ -1190,7 +1190,7 @@ class RunStoreV2:
                             return False
                         if date_to and created_dt > date_to:
                             return False
-                    except Exception:
+                    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                         pass
 
             # Merge kind into event_type (kind is an alias)
@@ -1284,7 +1284,7 @@ class RunStoreV2:
                         data = json.loads(path.read_text(encoding="utf-8"))
                         artifact = RunArtifact.model_validate(data)
                         artifact = self._load_advisory_links(artifact, path.parent)
-                    except Exception:
+                    except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
                         pass
 
             # Fall back to full search if partition lookup failed
@@ -1332,7 +1332,7 @@ class RunStoreV2:
                             return False
                         if date_to and created_dt > date_to:
                             return False
-                    except Exception:
+                    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                         pass
 
             if event_type and m.get("event_type") != event_type:
@@ -1671,7 +1671,7 @@ def query_recent(
     if cursor:
         try:
             cursor_ts, cursor_id = cursor.split("|", 1)
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             cursor_ts, cursor_id = None, None
 
     def is_older_than_cursor(r: Dict[str, Any]) -> bool:

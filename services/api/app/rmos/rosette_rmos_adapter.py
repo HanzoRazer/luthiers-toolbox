@@ -474,7 +474,7 @@ def generate_rosette_with_feasibility(
         output.feasibility_score = 85.0
         output.risk_bucket = "GREEN"
         output.feasibility_warnings = ["Stub feasibility - RMOS scorer not available"]
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         # Feasibility failed but generation succeeded
         output.feasibility_warnings = [f"Feasibility scoring failed: {e}"]
     
@@ -582,7 +582,7 @@ def submit_rosette_to_workflow(
         
     except ImportError:
         result["errors"].append("RMOS workflow module not available")
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception
         result["errors"].append(f"Workflow submission failed: {e}")
     
     return result
@@ -656,7 +656,7 @@ def demo():
         print(f"Risk bucket: {output.risk_bucket}")
         print(f"SVG generated: {output.svg_preview is not None}")
         print(f"Run ID: {output.run_id}")
-    except Exception as e:
+    except Exception as e:  # WP-1: demo/main guard — keep broad
         print(f"Pipeline test: {e}")
     
     print("\n" + "=" * 60)

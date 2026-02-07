@@ -278,7 +278,9 @@ def set_session_design(
     try:
         set_design(session, req.design, actor=ActorRole.USER)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -307,7 +309,9 @@ def set_session_context(
     try:
         set_context(session, req.context, actor=ActorRole.USER)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -336,7 +340,9 @@ def request_session_feasibility(
     try:
         request_feasibility(session, actor=ActorRole.USER)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -392,7 +398,9 @@ def store_session_feasibility(
             session.last_feasibility_artifact = artifact_ref
         
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -436,7 +444,9 @@ def approve_session(
             message="Session approved for toolpath generation.",
             run_artifact_id=artifact_ref.artifact_id if artifact_ref else None,
         )
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         # Approval may be blocked by governance rules
         raise HTTPException(
             status_code=409,
@@ -474,7 +484,9 @@ def reject_session(
         artifact_ref = bridge.on_rejected(session, reason=req.reason, request_id=x_request_id)
         
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -505,7 +517,9 @@ def request_session_toolpaths(
     try:
         request_toolpaths(session, actor=ActorRole.USER)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -555,7 +569,9 @@ def store_session_toolpaths(
             session.last_toolpaths_artifact = artifact_ref
         
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -585,7 +601,9 @@ def require_session_revision(
     try:
         require_revision(session, actor=req.actor, reason=req.reason)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -612,7 +630,9 @@ def archive_session(
     try:
         archive(session, actor=ActorRole.USER, note=note)
         STORE.put(session)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(

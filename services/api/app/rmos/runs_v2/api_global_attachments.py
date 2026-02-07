@@ -25,7 +25,7 @@ def _read_meta(sha256: str) -> dict:
     if meta_path.exists():
         try:
             return json.loads(meta_path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
             return {}
     return {}
 
@@ -57,7 +57,7 @@ def get_attachment_global(sha256: str):
 
     try:
         data = data_path.read_bytes()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=500, detail="failed to read attachment")
 
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}

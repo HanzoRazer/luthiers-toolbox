@@ -174,7 +174,9 @@ async def search_designs(request: ConstraintSearchRequest) -> ConstraintSearchRe
     # Run search
     try:
         results = search_constraint_first(params)
-    except Exception as e:
+    except HTTPException:
+        raise  # WP-1: pass through HTTPException
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Search failed: {str(e)}"

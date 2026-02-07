@@ -347,7 +347,7 @@ def _update_attachment_meta_index(
 
         idx.write(data)
         return True
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         # Meta index is best-effort; do not fail ingestion
         return False
 
@@ -406,7 +406,7 @@ def _update_index(*, runs_root: Path, run_obj: Dict[str, Any], run_json_path: Pa
         }
         _json_dump(idx_path, idx_out)
         return True
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         # Index is best-effort; do not fail ingestion because of cache.
         return False
 
@@ -433,7 +433,7 @@ def load_run_artifact(run_id: str) -> Optional[RunArtifact]:
                         if p.exists() and p.is_file():
                             run_json_path = p
                             break
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             pass
 
     # 2) Fallback: scan date partitions
@@ -455,7 +455,7 @@ def load_run_artifact(run_id: str) -> Optional[RunArtifact]:
 
     try:
         raw = _json_load(run_json_path)
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return None
 
     attachments = []

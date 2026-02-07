@@ -100,7 +100,7 @@ def cmd_tail(args: argparse.Namespace) -> int:
                             actor = e.get("actor") or "anonymous"
                             reason = e.get("reason", "")[:50]
                             print(f"[{ts}] {mode:5} {outcome:12} {run_id} by {actor} - {reason}")
-                        except Exception:
+                        except (json.JSONDecodeError, ValueError, KeyError):  # WP-1: narrowed from except Exception
                             print(ln)
             last_size = size
     except KeyboardInterrupt:

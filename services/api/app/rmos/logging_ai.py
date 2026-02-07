@@ -28,7 +28,7 @@ except (ImportError, AttributeError, ModuleNotFoundError):
 
 try:
     from .logging_core import log_rmos_event  # type: ignore[import]
-except Exception:
+except ImportError:  # WP-1: narrowed from except Exception
     def log_rmos_event(event_type: str, payload: Dict[str, Any]) -> None:
         """Safe no-op fallback if the core RMOS logging system is not available."""
         return
@@ -108,7 +108,7 @@ def _infer_geometry_engine(ctx: RmosContext) -> Optional[str]:
             return "shapely"
         if getattr(ctx, "use_ml_geometry", False):
             return "ml"
-    except Exception:
+    except (AttributeError, TypeError):  # WP-1: narrowed from except Exception
         pass
     return None
 

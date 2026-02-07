@@ -76,7 +76,7 @@ def put_bytes_attachment(
         try:
             tmp.write_bytes(data)
             os.replace(tmp, path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             if tmp.exists():
                 tmp.unlink()
             raise
@@ -155,7 +155,7 @@ def put_json_attachment(
         try:
             tmp.write_text(pretty, encoding="utf-8")
             os.replace(tmp, path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             if tmp.exists():
                 tmp.unlink()
             raise
@@ -214,7 +214,7 @@ def get_bytes_attachment(sha256: str) -> Optional[bytes]:
         return None
     try:
         return Path(path).read_bytes()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         return None
 
 
@@ -234,7 +234,7 @@ def load_json_attachment(sha256: str) -> Optional[Dict[str, Any]]:
 
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
         return None
 
 
@@ -268,7 +268,7 @@ def verify_attachment(sha256: str) -> Dict[str, Any]:
             "actual_sha256": actual,
             "error": None if match else "hash_mismatch",
         }
-    except Exception as e:
+    except OSError as e:  # WP-1: narrowed from except Exception
         return {
             "sha256": sha256,
             "ok": False,

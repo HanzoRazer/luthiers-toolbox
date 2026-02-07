@@ -140,7 +140,7 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — creates ERROR RunArtifact for audit trail
         # ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(

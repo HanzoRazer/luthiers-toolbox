@@ -281,7 +281,7 @@ class OperationAdapter:
                 gcode_sha256 = sha256_of_text(gcode_text) if gcode_text else None
             else:
                 warnings.append("No tool adapter configured - G-code generation skipped")
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
             warnings.append(f"G-code generation error: {e}")
 
         # Create execution artifact
@@ -414,7 +414,7 @@ class OperationAdapter:
                     "cam_intent_v1": request.cam_intent_v1,
                     "planned_at": datetime.now(timezone.utc).isoformat(),
                 }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
             warnings.append(f"Plan generation error: {e}")
 
         # Determine status

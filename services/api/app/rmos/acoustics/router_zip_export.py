@@ -48,7 +48,7 @@ def _max_zip_items() -> int:
         return 200
     try:
         return max(1, int(v))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 200
 
 
@@ -58,7 +58,7 @@ def _max_zip_total_input_bytes() -> int:
         return 500 * 1024 * 1024  # 500MB
     try:
         return max(1, int(v))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 500 * 1024 * 1024
 
 
@@ -68,7 +68,7 @@ def _max_zip_output_bytes() -> int:
         return 500 * 1024 * 1024  # 500MB
     try:
         return max(1, int(v))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 500 * 1024 * 1024
 
 
@@ -164,7 +164,7 @@ def _store_blob_content_addressed(root: Path, tmp_file: Path, ext: str) -> tuple
     if final_path.exists():
         try:
             tmp_file.unlink(missing_ok=True)  # py3.11+
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             pass
         return sha, final_path, int(final_path.stat().st_size)
 
@@ -284,7 +284,7 @@ def export_run_attachments_zip(
 
         try:
             sz = int(blob.stat().st_size)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             continue
 
         total_in += sz
@@ -382,5 +382,5 @@ def export_run_attachments_zip(
         try:
             if tmp_zip_path.exists():
                 tmp_zip_path.unlink()
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             pass

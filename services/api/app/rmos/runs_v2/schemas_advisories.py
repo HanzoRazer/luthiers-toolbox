@@ -26,7 +26,7 @@ def _is_lower_hex(s: str) -> bool:
     try:
         int(s, 16)
         return True
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return False
 
 

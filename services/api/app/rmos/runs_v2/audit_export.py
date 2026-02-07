@@ -111,7 +111,7 @@ def build_batch_audit_zip(
             if include_attachments:
                 try:
                     atts = ports.list_attachments(aid) or []
-                except Exception:
+                except (OSError, RuntimeError, KeyError):  # WP-1: narrowed from except Exception
                     atts = []
                 for att in atts:
                     if not isinstance(att, dict):
@@ -130,7 +130,7 @@ def build_batch_audit_zip(
                     att_key = att.get("id") or att.get("sha256") or att.get("path") or att_name
                     try:
                         b = ports.get_attachment_bytes(aid, att_key)
-                    except Exception:
+                    except (OSError, KeyError):  # WP-1: narrowed from except Exception
                         continue
                     z.writestr(f"attachments/{aid}/{att_name}", b)
 

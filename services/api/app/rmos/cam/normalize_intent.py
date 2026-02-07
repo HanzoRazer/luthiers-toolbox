@@ -41,7 +41,7 @@ def _as_float(v: Any, *, path: str, issues: List[CamIntentIssue]) -> Optional[fl
         return None
     try:
         return float(v)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         issues.append(CamIntentIssue(code="type_error", message=f"Expected number at {path}", path=path))
         return None
 
@@ -51,7 +51,7 @@ def _as_int(v: Any, *, path: str, issues: List[CamIntentIssue]) -> Optional[int]
         return None
     try:
         return int(v)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         issues.append(CamIntentIssue(code="type_error", message=f"Expected integer at {path}", path=path))
         return None
 

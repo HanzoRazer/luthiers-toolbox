@@ -232,7 +232,7 @@ async def export_operation_zip(
         )
     except ExportError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=500, detail=f"Export failed: {e}")
 
 

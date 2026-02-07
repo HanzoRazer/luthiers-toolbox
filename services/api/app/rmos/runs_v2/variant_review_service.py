@@ -195,7 +195,7 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 preview_reason = reason
                 # Compute risk based on SVG content
                 _, risk_level, _, _ = _risk_from_svg_for_binding(svg_text)
-            except Exception:
+            except (UnicodeDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 preview_blocked = True
                 preview_reason = "decode"
                 risk_level = "YELLOW"
@@ -524,7 +524,7 @@ def bulk_promote_variants(
             ))
             succeeded += 1
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
             results.append(BulkPromoteItemResult(
                 advisory_id=advisory_id,
                 success=False,

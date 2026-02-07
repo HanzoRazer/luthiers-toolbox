@@ -223,7 +223,7 @@ def append_event(root: Optional[Path], event: IngestEvent) -> Path:
     try:
         summary = _event_to_summary(event)
         update_recent_index(root, summary)
-    except Exception:
+    except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         pass  # Non-blocking
 
     return event_path
@@ -262,7 +262,7 @@ def update_recent_index(root: Path, event_summary: IngestEventSummary) -> None:
         try:
             data = _json_load(recent_path)
             entries = data.get("entries", []) if isinstance(data, dict) else []
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             entries = []
 
     # Remove duplicate if present
@@ -313,7 +313,7 @@ def list_events_recent(
         try:
             data = _json_load(recent_path)
             entries = data.get("entries", []) if isinstance(data, dict) else []
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             entries = []
 
     # Filter by outcome
@@ -367,7 +367,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
                     if ts:
                         date_hint = _date_partition(ts)
                     break
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             pass
 
     # Try date hint first
@@ -376,7 +376,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
         if p.exists():
             try:
                 return _json_load(p)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 pass
 
     # Fallback: scan date directories (newest first)
@@ -391,7 +391,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
         if p.exists():
             try:
                 return _json_load(p)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 continue
 
     return None

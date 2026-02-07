@@ -85,7 +85,7 @@ def verify(
             try:
                 data = json.loads(artifact_path.read_text(encoding="utf-8"))
                 RunArtifact.model_validate(data)
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 deserialize_failures.append({
                     "run_id": run_id,
                     "error": repr(e)

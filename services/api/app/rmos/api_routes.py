@@ -84,7 +84,9 @@ async def check_feasibility(request: FeasibilityRequest):
         
         return result
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Feasibility computation failed: {str(e)}"
@@ -119,7 +121,9 @@ async def generate_bom(request: BomRequest):
         
         return result
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"BOM generation failed: {str(e)}"
@@ -157,7 +161,9 @@ async def generate_toolpaths(request: ToolpathRequest):
         
         return result
         
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Toolpath generation failed: {str(e)}"

@@ -188,7 +188,7 @@ def list_validation_sessions(
             with open(f, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
             results.append(ValidationSessionRecord(**data))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
 
     return results
@@ -248,7 +248,7 @@ def list_validation_runs(
 
             if len(results) >= offset + limit:
                 break
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             continue
 
     return results[offset:offset + limit]

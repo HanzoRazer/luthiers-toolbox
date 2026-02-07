@@ -185,7 +185,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(chipload_result.get("score", 100.0)))
         if chipload_result.get("warning"):
             warnings.append(f"Chipload: {chipload_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Chipload calculation failed: {str(e)}")
         scores.append(50.0)  # Neutral score on error
         weights.append(0.3)
@@ -200,7 +200,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(heat_result.get("score", 100.0)))
         if heat_result.get("warning"):
             warnings.append(f"Heat: {heat_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Heat calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.25)
@@ -215,7 +215,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(deflection_result.get("score", 100.0)))
         if deflection_result.get("warning"):
             warnings.append(f"Deflection: {deflection_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Deflection calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.2)
@@ -230,7 +230,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(rim_speed_result.get("score", 100.0)))
         if rim_speed_result.get("warning"):
             warnings.append(f"Rim Speed: {rim_speed_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Rim speed calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.15)
@@ -245,7 +245,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(geometry_result.get("score", 100.0)))
         if geometry_result.get("warning"):
             warnings.append(f"Geometry: {geometry_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         warnings.append(f"Geometry calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.1)
@@ -260,7 +260,7 @@ def _score_router_feasibility(
         risk_levels.append(_classify_risk(channel_result.get("score", 100.0)))
         if channel_result.get("warning"):
             warnings.append(f"Channel: {channel_result['warning']}")
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         # Non-critical - just log warning, don't affect score
         calculator_results["rosette_channel"] = {"error": str(e)}
     
@@ -353,7 +353,7 @@ def _check_rosette_channel(design: RosetteParamSpec, ctx: RmosContext) -> Dict[s
             "warning": "; ".join(warnings) if warnings else None,
             "raw_result": result,
         }
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         return {"score": 50.0, "warning": f"Channel calculation error: {str(e)}", "error": True}
 
 
@@ -411,7 +411,7 @@ def _estimate_efficiency(design: RosetteParamSpec, ctx: RmosContext) -> float:
                     bounding_area = pi * channel_outer_r**2
                     
                     return round((rosette_area / bounding_area) * 100, 2)
-            except Exception:
+            except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
                 pass  # Fall through to basic estimate
         
         # Basic estimate: larger inner diameter = higher waste
@@ -419,7 +419,7 @@ def _estimate_efficiency(design: RosetteParamSpec, ctx: RmosContext) -> float:
         inner_area = pi * (inner_d / 2) ** 2
         usable_area = outer_area - inner_area
         return round((usable_area / outer_area) * 100, 2)
-    except Exception:
+    except (ZeroDivisionError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         return 85.0  # Default assumption
 
 

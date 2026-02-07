@@ -188,7 +188,7 @@ def build_batch_summary(
                 batch_label=batch_label,
                 tool_kind=tool_kind,
             )
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
             root_id = None
 
     # small "stage" surface for UI cards

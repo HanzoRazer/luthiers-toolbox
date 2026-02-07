@@ -99,7 +99,7 @@ def _read_head_bytes(sha256: str, max_bytes: int = 4096) -> bytes:
     try:
         with open(path, "rb") as f:
             return f.read(max_bytes)
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         return b""
 
 
@@ -208,7 +208,7 @@ def _svg_preview_is_safe(svg_bytes: bytes) -> Tuple[bool, str, Optional[str]]:
     """
     try:
         text = svg_bytes.decode("utf-8", errors="strict")
-    except Exception:
+    except UnicodeDecodeError:  # WP-1: narrowed from except Exception
         return (False, "SVG preview requires UTF-8 SVG content", "encoding")
 
     lower = text.lower()
@@ -402,13 +402,13 @@ def download_all_zip(run_id: str, background: BackgroundTasks) -> FileResponse:
         # clean temp zip before re-raising
         try:
             os.remove(zip_path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             pass
         raise
-    except Exception as e:
+    except (OSError, ValueError, zipfile.BadZipFile) as e:  # WP-1: narrowed from except Exception
         try:
             os.remove(zip_path)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             pass
         raise HTTPException(status_code=500, detail=f"Failed to build zip: {e}")
 

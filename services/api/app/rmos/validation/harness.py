@@ -263,7 +263,7 @@ def evaluate_scenario(scenario: Dict[str, Any]) -> ValidationResult:
         actual_rules = result.rules_triggered
         actual_export = not result.blocking
 
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — engine error treated as RED for safety
         # Engine error - treat as RED with error
         fi = FeasibilityInput(
             tool_d=1, stepover=0.5, stepdown=1, z_rough=-1,

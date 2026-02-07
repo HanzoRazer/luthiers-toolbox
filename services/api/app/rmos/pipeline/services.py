@@ -296,7 +296,7 @@ class PipelineService:
                 if self.feasibility_checker:
                     try:
                         feas_result = self.feasibility_checker.check(op_design, context)
-                    except Exception as e:
+                    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
                         feas_result = {
                             "score": 0.0,
                             "risk_bucket": "ERROR",
@@ -517,7 +517,7 @@ class PipelineService:
             if self.feasibility_checker:
                 try:
                     feas_result = self.feasibility_checker.check(design, context)
-                except Exception as e:
+                except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
                     feas_result = {
                         "score": 0.0,
                         "risk_bucket": "ERROR",
@@ -579,7 +579,7 @@ class PipelineService:
                     if gcode:
                         gcode_hash = sha256_of_obj(gcode)
                     ok_count += 1
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
                     op_status = PipelineStatus.ERROR
                     errors = [f"{type(e).__name__}: {str(e)}"]
                     error_count += 1

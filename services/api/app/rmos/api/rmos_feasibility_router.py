@@ -198,7 +198,7 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
                 },
             },
         }
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — fail-open to YELLOW for manufacturing continuity
         # Fallback on error - return YELLOW (allows with warning)
         return {
             "mode": "saw",
@@ -301,7 +301,7 @@ def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) 
                 },
             },
         }
-    except Exception as e:
+    except Exception as e:  # WP-1: governance catch-all — fail-open to YELLOW for manufacturing continuity
         # Fallback on error - return YELLOW (allows with warning)
         return {
             "mode": "rosette",

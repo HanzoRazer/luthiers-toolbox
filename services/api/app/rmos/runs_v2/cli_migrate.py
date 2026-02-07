@@ -63,7 +63,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             v1_data = load_v1_store(v1_path)
             print(f"  Status: EXISTS")
             print(f"  Artifact count: {len(v1_data)}")
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
             print(f"  Status: ERROR - {e}")
     else:
         print(f"  Status: NOT FOUND (no v1 data to migrate)")

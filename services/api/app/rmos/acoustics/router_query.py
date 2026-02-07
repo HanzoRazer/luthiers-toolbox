@@ -110,7 +110,7 @@ def get_index(
                 return False
             try:
                 ca_dt = _parse_iso_utc(ca)
-            except Exception:
+            except (ValueError, TypeError):  # WP-1: narrowed from except Exception
                 return False
             if since_dt and ca_dt < since_dt:
                 return False
@@ -166,7 +166,7 @@ def get_run(run_id: str) -> dict[str, Any]:
                             p = (runs_root / rel).resolve()
                             if p.exists() and p.is_file():
                                 return _load_json(p)
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError):  # WP-1: narrowed from except Exception
             # ignore and fall back
             pass
 

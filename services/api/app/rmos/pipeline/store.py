@@ -16,6 +16,7 @@ Key Features:
 """
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Protocol, Union
@@ -145,7 +146,7 @@ class DefaultPipelineStore:
 
         try:
             return read_run_artifact(artifact_id)
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError):  # WP-1: narrowed from except Exception
             return None
 
     def query(self, query: ArtifactQuery) -> ArtifactQueryResult:
@@ -185,7 +186,7 @@ class DefaultPipelineStore:
                 limit=query.limit,
                 offset=query.offset,
             )
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: narrowed from except Exception
             return ArtifactQueryResult(items=[], total=0)
 
 

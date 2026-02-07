@@ -153,7 +153,7 @@ def _evaluate_candidate(
             context=ctx,
             result=result,
         )
-    except Exception:
+    except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
         pass  # Don't fail search if logging fails
     
     return result
@@ -217,7 +217,7 @@ def search_constraint_first(
         # Evaluate through RMOS
         try:
             result = _evaluate_candidate(design, params)
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
             # Skip failed evaluations
             continue
         

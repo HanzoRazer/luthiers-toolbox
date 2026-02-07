@@ -40,7 +40,7 @@ def _default_ttl_seconds() -> int:
         return 300
     try:
         return max(30, int(v))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 300
 
 

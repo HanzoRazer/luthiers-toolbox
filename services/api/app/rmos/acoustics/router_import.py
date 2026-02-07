@@ -68,7 +68,7 @@ def _write_ingest_event_safe(
             bundle_sha256=bundle_sha256,
         )
         append_event(root, event)
-    except Exception:
+    except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
         pass  # Best-effort: never block import flow
 
 
@@ -145,7 +145,7 @@ def _extract_validation_report_from_zip(
             "error": "invalid_validation_report_json",
             "message": f"validation_report.json is not valid JSON: {e}",
         })
-    except Exception as e:
+    except (UnicodeDecodeError, OSError, KeyError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=400, detail={
             "error": "invalid_validation_report_json",
             "message": f"Failed to read validation_report.json: {e}",
@@ -204,7 +204,7 @@ def _extract_zip_to_tempdir(zip_bytes: bytes) -> Path:
     except HTTPException:
         shutil.rmtree(tmpdir, ignore_errors=True)
         raise
-    except Exception as e:
+    except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
         shutil.rmtree(tmpdir, ignore_errors=True)
         raise HTTPException(status_code=500, detail=f"Zip extraction failed: {e!s}")
 
@@ -215,7 +215,7 @@ def _load_manifest_or_400(package_root: Path) -> TapToneBundleManifestV1:
         raise HTTPException(status_code=400, detail=f"manifest.json not found at {manifest_path}")
     try:
         return TapToneBundleManifestV1.model_validate_json(manifest_path.read_text(encoding="utf-8"))
-    except Exception as e:
+    except (ValueError, OSError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=400, detail=f"Manifest validation failed: {e!s}")
 
 
@@ -359,7 +359,7 @@ async def import_acoustics_zip(
         )
         raise
 
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         # 500 - quarantined
         _write_ingest_event_safe(
             outcome="quarantined",

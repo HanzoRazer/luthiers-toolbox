@@ -18,7 +18,7 @@ def _as_dict(obj: Any) -> JsonDict:
     if hasattr(obj, "model_dump"):
         try:
             return obj.model_dump()
-        except Exception:
+        except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             return {}
     return {}
 
@@ -31,14 +31,14 @@ def _as_list(obj: Any) -> List[Any]:
     # pydantic list-like
     try:
         return list(obj)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return []
 
 
 def _safe_str(x: Any) -> str:
     try:
         return str(x)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return ""
 
 

@@ -146,7 +146,7 @@ class JobLogService:
                     notes=notes,
                 )
                 learning_emitted = True
-            except Exception:
+            except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass  # Hook failure shouldn't fail the job log
 
         if is_metrics_rollup_hook_enabled(self.tool_type):
@@ -157,7 +157,7 @@ class JobLogService:
                     execution_artifact_id=execution_artifact_id,
                 )
                 rollup_updated = True
-            except Exception:
+            except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
                 pass  # Hook failure shouldn't fail the job log
 
         return JobLogResponse(

@@ -147,7 +147,7 @@ class ProfileHistoryStore:
             with open(self._jsonl_path, "a", encoding="utf-8") as f:
                 f.write(entry.to_json_line() + "\n")
             return True
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             return False
     
     def record_create(
@@ -276,7 +276,7 @@ class ProfileHistoryStore:
             # Return most recent first, limited
             entries.reverse()
             return entries[:limit]
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             return entries
     
     def get_all_history(
@@ -314,7 +314,7 @@ class ProfileHistoryStore:
             # Return most recent first, limited
             entries.reverse()
             return entries[:limit]
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             return entries
     
     def get_entry_by_id(self, entry_id: str) -> Optional[ProfileHistoryEntry]:
@@ -336,7 +336,7 @@ class ProfileHistoryStore:
                         continue
             
             return None
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             return None
     
     def get_state_at_entry(self, entry_id: str) -> Optional[Dict[str, Any]]:
