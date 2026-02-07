@@ -345,6 +345,68 @@ function debounce<T extends (...args: unknown[]) => void>(
 
 const DECISION_DEBOUNCE_MS = 250; // Prevent flicker
 const EVENT_DEDUP_WINDOW_MS = 100; // Prevent rapid-fire same events
+const FIRST_SIGNAL_GRACE_MS = 1500; // Grace window for FIRST_SIGNAL priority
+
+// --- Directive Key Utils ---
+
+type DetectedMoment = { moment: string; confidence: number; trigger_events: string[] };
+
+/**
+ * Build a stable key for a directive based on moment + rule + trigger events.
+ * Used for dismiss deduplication.
+ */
+function makeDirectiveKey(
+  moment: DetectedMoment | null,
+  decision: PolicyDecision | null
+): string | null {
+  if (!moment || !decision?.emit_directive) return null;
+  const m = moment.moment;
+  const rule = decision.diagnostic?.rule_id ?? "NO_RULE";
+  const triggers = moment.trigger_events.join(",");
+  return `${m}|${rule}|${triggers}`;
+}
+
+/**
+ * Select moment with FIRST_SIGNAL grace window.
+ * Ensures FTUE shows "Inspect this" before "Review this".
+ *
+ * During the grace window after first view_rendered:
+ * - If FINDING is detected, synthesize FIRST_SIGNAL instead
+ * - This ensures the first directive is always "Inspect this"
+ */
+function selectMomentWithGrace(
+  moments: DetectedMoment[],
+  firstSignalShown: boolean,
+  firstViewRenderedAt: number | null,
+  events: AgentEventV1[]
+): DetectedMoment | null {
+  if (!moments.length) return null;
+
+  const top = moments[0];
+
+  // If FINDING is top but we haven't shown FIRST_SIGNAL yet, prefer FIRST_SIGNAL
+  if (!firstSignalShown && top.moment === "FINDING") {
+    // During grace window, synthesize FIRST_SIGNAL from view_rendered event
+    if (firstViewRenderedAt && Date.now() - firstViewRenderedAt < FIRST_SIGNAL_GRACE_MS) {
+      // Find the view_rendered event to use as trigger
+      const viewEvent = events.find(
+        (e) =>
+          e.event_type === "user_action" &&
+          (e.payload as Record<string, unknown>)?.action === "view_rendered"
+      );
+      if (viewEvent) {
+        // Return synthetic FIRST_SIGNAL during grace window
+        return {
+          moment: "FIRST_SIGNAL",
+          confidence: 0.75,
+          trigger_events: [viewEvent.event_id],
+        };
+      }
+    }
+  }
+
+  return top;
+}
 
 // --- Store ---
 
@@ -360,6 +422,13 @@ export const useAgenticDirectiveStore = defineStore(
 
     // Event deduplication tracking
     const lastEventByType = ref<Map<string, number>>(new Map());
+
+    // Directive dedupe tracking (Option B)
+    const lastDirectiveKey = ref<string | null>(null);
+    const dismissedKeys = ref<Set<string>>(new Set());
+    const firstSignalShown = ref<boolean>(false);
+    const firstViewRenderedAt = ref<number | null>(null);
+    const latestMoment = ref<DetectedMoment | null>(null);
 
     // Mode from environment
     const mode = computed<AgenticMode>(() => {
@@ -423,6 +492,15 @@ export const useAgenticDirectiveStore = defineStore(
 
       events.value.push(event);
 
+      // Track first view_rendered for FIRST_SIGNAL grace window
+      if (
+        eventType === "user_action" &&
+        payload?.action === "view_rendered" &&
+        firstViewRenderedAt.value === null
+      ) {
+        firstViewRenderedAt.value = Date.now();
+      }
+
       // Re-run decision pipeline (debounced)
       debouncedUpdateDecision();
 
@@ -431,17 +509,52 @@ export const useAgenticDirectiveStore = defineStore(
 
     function updateDecisionImmediate() {
       const moments = detectMoments(events.value);
-      if (moments.length === 0) {
+
+      // Apply FIRST_SIGNAL grace window
+      const chosen = selectMomentWithGrace(
+        moments,
+        firstSignalShown.value,
+        firstViewRenderedAt.value,
+        events.value
+      );
+
+      if (!chosen) {
         latestDecision.value = null;
+        latestMoment.value = null;
         return;
       }
 
-      const decision = decide(moments[0], uwsm.value, mode.value);
-      latestDecision.value = decision;
+      latestMoment.value = chosen;
+      const decision = decide(chosen, uwsm.value, mode.value);
+      const key = makeDirectiveKey(chosen, decision);
 
-      // If new directive, clear dismissed state
+      // Shadow mode: just track, never show
+      if (mode.value === "M0") {
+        latestDecision.value = decision;
+        return;
+      }
+
+      // If directive was dismissed before, do not show it again
+      if (key && dismissedKeys.value.has(key)) {
+        latestDecision.value = { ...decision, emit_directive: false };
+        return;
+      }
+
+      // If directive key unchanged, preserve dismissed state (don't force bubble back)
+      if (key && key === lastDirectiveKey.value) {
+        latestDecision.value = decision;
+        return;
+      }
+
+      // New directive → show it
+      latestDecision.value = decision;
+      lastDirectiveKey.value = key;
+
       if (decision.emit_directive) {
         dismissed.value = false;
+        if (chosen.moment === "FIRST_SIGNAL") {
+          firstSignalShown.value = true;
+        }
       }
     }
 
@@ -459,6 +572,12 @@ export const useAgenticDirectiveStore = defineStore(
     function submitFeedback(feedback: "helpful" | "too_much") {
       const directive = latestDecision.value?.directive;
       const ruleId = latestDecision.value?.diagnostic?.rule_id ?? "unknown";
+
+      // Add current directive key to dismissed set (prevents resurrection)
+      const key = makeDirectiveKey(latestMoment.value, latestDecision.value);
+      if (key) {
+        dismissedKeys.value.add(key);
+      }
 
       emitEvent("user_feedback", {
         feedback,
@@ -486,6 +605,12 @@ export const useAgenticDirectiveStore = defineStore(
       const directive = latestDecision.value?.directive;
       const ruleId = latestDecision.value?.diagnostic?.rule_id ?? "unknown";
 
+      // Add current directive key to dismissed set (prevents resurrection)
+      const key = makeDirectiveKey(latestMoment.value, latestDecision.value);
+      if (key) {
+        dismissedKeys.value.add(key);
+      }
+
       emitEvent("user_action", {
         action: "dismiss_directive",
         directive_action: directive?.action ?? "NONE",
@@ -498,9 +623,17 @@ export const useAgenticDirectiveStore = defineStore(
     function clearSession() {
       events.value = [];
       latestDecision.value = null;
+      latestMoment.value = null;
       dismissed.value = false;
       sessionId.value = `session_${Date.now().toString(36)}`;
       uwsm.value = { ...DEFAULT_UWSM };
+
+      // Reset directive tracking
+      lastDirectiveKey.value = null;
+      dismissedKeys.value.clear();
+      firstSignalShown.value = false;
+      firstViewRenderedAt.value = null;
+      lastEventByType.value.clear();
     }
 
     // Export events as JSONL (for debugging/recording)
