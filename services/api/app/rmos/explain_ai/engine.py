@@ -83,7 +83,7 @@ def generate_assistant_explanation(
     try:
         raw_rules = (run.feasibility or {}).get("rules_triggered", [])
         rule_ids = [str(x).strip().upper() for x in raw_rules if x]
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
         rule_ids = []
 
     # Get risk level safely
@@ -120,7 +120,7 @@ def generate_assistant_explanation(
                 operator_notes.append(
                     f"Plunge feed exceeds XY feed: feed_z={facts['feed_z']} > feed_xy={facts['feed_xy']}."
                 )
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             pass
 
     # Build suggested actions tied to known rule IDs

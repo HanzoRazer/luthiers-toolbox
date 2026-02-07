@@ -276,7 +276,7 @@ def evaluate_feasibility(
     try:
         chipload_result = compute_chipload_risk(request)
         assessments.append(normalize_risk_result(chipload_result, "chipload"))
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         assessments.append(RiskAssessment(
             category="chipload",
             score=0.0,
@@ -288,7 +288,7 @@ def evaluate_feasibility(
     try:
         heat_result = compute_heat_risk(request)
         assessments.append(normalize_risk_result(heat_result, "heat"))
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         assessments.append(RiskAssessment(
             category="heat",
             score=0.0,
@@ -300,7 +300,7 @@ def evaluate_feasibility(
     try:
         deflection_result = compute_deflection_risk(request)
         assessments.append(normalize_risk_result(deflection_result, "deflection"))
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         assessments.append(RiskAssessment(
             category="deflection",
             score=0.0,
@@ -312,7 +312,7 @@ def evaluate_feasibility(
     try:
         rimspeed_result = compute_rimspeed_risk(request)
         assessments.append(normalize_risk_result(rimspeed_result, "rimspeed"))
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         assessments.append(RiskAssessment(
             category="rimspeed",
             score=0.0,
@@ -324,7 +324,7 @@ def evaluate_feasibility(
     try:
         bom_result = compute_bom_efficiency(request)
         assessments.append(normalize_risk_result(bom_result, "bom_efficiency"))
-    except Exception as e:
+    except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         assessments.append(RiskAssessment(
             category="bom_efficiency",
             score=0.0,

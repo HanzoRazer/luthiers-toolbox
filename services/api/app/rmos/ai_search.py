@@ -85,7 +85,7 @@ def _hash_candidate(design: Any) -> str:
         import json
         serialized = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(serialized.encode()).hexdigest()[:16]
-    except Exception:
+    except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
         return hashlib.sha256(str(design).encode()).hexdigest()[:16]
 
 
@@ -222,7 +222,7 @@ def run_constraint_first_search(request: AiSearchRequest) -> AiSearchResponse:
         # Generate candidate
         try:
             candidate = generator(prev_design, attempt_idx)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
             # Log error but continue
             continue
         
@@ -242,7 +242,7 @@ def run_constraint_first_search(request: AiSearchRequest) -> AiSearchResponse:
                 ctx=ctx,
                 workflow_mode=workflow_mode,
             )
-        except Exception as e:
+        except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
             # Score failed - treat as RED
             result = RmosFeasibilityResult(
                 score=0.0,

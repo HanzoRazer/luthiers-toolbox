@@ -126,7 +126,7 @@ def read_jsonl(path: Optional[Path] = None) -> Iterator[RunLogEntry]:
             try:
                 data = json.loads(line)
                 yield RunLogEntry.model_validate(data)
-            except Exception as e:
+            except (json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 # Log error but continue - don't fail on malformed entries
                 print(f"Warning: Skipping malformed line {line_num}: {e}")
 

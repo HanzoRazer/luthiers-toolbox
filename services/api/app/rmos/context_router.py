@@ -217,7 +217,7 @@ def create_custom_context(request: ContextCreateRequest):
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except (TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=400, detail=f"Failed to create context: {str(e)}")
     
     return ContextResponse(
@@ -277,7 +277,7 @@ def validate_context(request: ContextValidateRequest):
             valid=len(errors) == 0,
             errors=errors,
         )
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
         return ContextValidateResponse(
             valid=False,
             errors=[f"Failed to parse context: {str(e)}"],

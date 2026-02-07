@@ -48,7 +48,7 @@ def _max_batch_items() -> int:
         return 200
     try:
         return max(1, int(v))
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 200
 
 
@@ -141,7 +141,7 @@ def list_run_attachments(
         if blob.exists():
             try:
                 size = int(blob.stat().st_size)
-            except Exception:
+            except (OSError, ValueError):  # WP-1: narrowed from except Exception
                 size = None
 
         entry = RunAttachmentOut(
@@ -324,7 +324,7 @@ def signed_batch(
         st_size = None
         try:
             st_size = int(blob.stat().st_size)
-        except Exception:
+        except (OSError, ValueError):  # WP-1: narrowed from except Exception
             st_size = None
 
         item = SignedBatchItem(

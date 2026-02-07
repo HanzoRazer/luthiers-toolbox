@@ -137,7 +137,7 @@ def _get_git_sha() -> Optional[str]:
                 if ref_path.exists():
                     return ref_path.read_text().strip()[:12]
             return ref[:12]
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         pass
     return os.getenv("GIT_SHA", None)
 
@@ -399,11 +399,17 @@ async def wrap_mvp_dxf_to_grbl(
 
             try:
                 gcode_text = _call_gcode(request_payload, plan_result)
-            except Exception as e:
+            except HTTPException as e:  # WP-1: catch internal validation HTTPExceptions
+                cam_error = f"G-code generation failed: {e.detail}"
+                cam_ok = False
+            except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
                 cam_error = f"G-code generation failed: {e}"
                 cam_ok = False
 
-    except Exception as e:
+    except HTTPException as e:  # WP-1: catch internal validation HTTPExceptions (e.g., tool_d <= 0)
+        cam_error = f"DXF processing failed: {e.detail}"
+        cam_ok = False
+    except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
         cam_error = f"DXF processing failed: {e}"
         cam_ok = False
 
@@ -417,7 +423,7 @@ async def wrap_mvp_dxf_to_grbl(
                 filename="feasibility.json",
             )
             attachments: List[RunAttachment] = [feasibility_att]
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             attachments = []
 
         # Build error response with feasibility info
@@ -521,7 +527,7 @@ async def wrap_mvp_dxf_to_grbl(
         )
         attachments.append(feasibility_att)
 
-    except Exception as e:
+    except OSError as e:  # WP-1: narrowed from except Exception
         rmos_status = "partial"
         rmos_error = f"Attachment storage failed: {e}"
         warnings.append(f"RMOS attachment storage failed: {e}")
@@ -586,7 +592,7 @@ async def wrap_mvp_dxf_to_grbl(
 
         persist_run(artifact)
 
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         if rmos_status == "ok":
             rmos_status = "failed"
         else:

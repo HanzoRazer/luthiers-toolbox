@@ -27,7 +27,7 @@ router = APIRouter(
 
 try:
     from .logging_core import query_rmos_events
-except Exception:
+except ImportError:  # WP-1: narrowed from except Exception
     def query_rmos_events(
         event_type: str,
         filters: Dict[str, Any],
@@ -102,7 +102,7 @@ def list_ai_attempts(
     for evt in raw_events:
         try:
             attempts.append(AiAttemptLogView.model_validate(evt))
-        except Exception:
+        except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             continue
 
     return attempts
@@ -135,7 +135,7 @@ def list_ai_runs(
     for evt in raw_events:
         try:
             runs.append(AiRunSummaryLogView.model_validate(evt))
-        except Exception:
+        except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             continue
 
     return runs

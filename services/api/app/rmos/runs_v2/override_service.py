@@ -308,7 +308,7 @@ def get_override_info(run: RunArtifact) -> Optional[OverrideMetaUpdate]:
         return None
     try:
         return OverrideMetaUpdate.model_validate(override_data)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return None
 
 

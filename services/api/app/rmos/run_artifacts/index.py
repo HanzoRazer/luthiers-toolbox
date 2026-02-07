@@ -35,7 +35,7 @@ def _safe_load_json(path: Path) -> Dict[str, Any]:
     root = _artifact_root()
     try:
         rp = path.resolve()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         raise ValueError("Invalid artifact path")
 
     # Ensure path is within artifact root
@@ -86,7 +86,7 @@ def list_artifacts() -> List[RunIndexRow]:
                     index_meta=obj.get("index_meta", {}) or {},
                 )
             )
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: narrowed from except Exception
             # Ignore malformed artifacts in index listing (but keep raw file for forensics)
             continue
 

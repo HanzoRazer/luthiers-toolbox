@@ -23,12 +23,12 @@ def _safe_import_fusion():
     try:
         from services.api.app.rmos.feasibility_fusion import evaluate_feasibility
         return evaluate_feasibility, None
-    except Exception as e:
+    except ImportError as e:  # WP-1: narrowed from except Exception
         # Try relative import as fallback
         try:
             from ..feasibility_fusion import evaluate_feasibility
             return evaluate_feasibility, None
-        except Exception as e2:
+        except ImportError as e2:  # WP-1: narrowed from except Exception
             return None, e2
 
 
@@ -137,7 +137,7 @@ class BaselineFeasibilityEngineV1:
                         a["risk"] = risk.value
                     out["assessments"].append(a)
 
-        except Exception as e:
+        except Exception as e:  # WP-1: governance catch-all — engine must always return a valid result
             out = {
                 "status": "ERROR",
                 "reasons": [f"engine exception: {type(e).__name__}: {e}"],
@@ -156,7 +156,7 @@ class BaselineFeasibilityEngineV1:
         # Contract validation (fail-safe to ERROR)
         try:
             validate_result_contract(out)
-        except Exception as e:
+        except Exception as e:  # WP-1: governance catch-all — contract violation must not crash engine
             out = {
                 "status": "ERROR",
                 "reasons": [f"result contract violation: {type(e).__name__}: {e}"],

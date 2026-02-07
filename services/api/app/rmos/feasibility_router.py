@@ -176,7 +176,7 @@ async def evaluate_feasibility_endpoint(
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except (TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=500, detail=f"Feasibility evaluation failed: {str(e)}")
 
 
@@ -241,7 +241,7 @@ async def evaluate_feasibility_for_model_endpoint(
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except (TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=500, detail=f"Feasibility evaluation failed: {str(e)}")
 
 

@@ -183,7 +183,7 @@ def browse_runs(
                     # Older than cursor, include
                     filtered.append(r)
             runs = filtered
-        except Exception:
+        except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
             pass  # Invalid cursor, ignore
 
     # Filter by session_id
@@ -585,7 +585,7 @@ def list_run_attachments_with_bytes(
                 # Prefer store-reported size, but verify on disk
                 try:
                     st_size = int(p.stat().st_size)
-                except Exception:
+                except OSError:  # WP-1: narrowed from except Exception
                     st_size = None
 
                 if st_size is not None and st_size > int(max_inline_bytes):
@@ -597,7 +597,7 @@ def list_run_attachments_with_bytes(
                             item["omitted_reason"] = f"too_large_for_inline>{int(max_inline_bytes)}"
                         else:
                             item["data_b64"] = base64.b64encode(raw).decode("ascii")
-                    except Exception:
+                    except OSError:  # WP-1: narrowed from except Exception
                         item["omitted_reason"] = "read_failed"
 
         out_items.append(AttachmentMetaPublic(**item))
@@ -668,7 +668,7 @@ def attachment_meta_exists(
     if in_store:
         try:
             size_bytes = int(p.stat().st_size)
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             size_bytes = None
 
     # Extended fields when in_index

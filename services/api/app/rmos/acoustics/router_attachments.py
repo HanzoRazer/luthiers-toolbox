@@ -76,7 +76,7 @@ def _max_attachment_bytes() -> int:
         return 104857600  # 100MB default
     try:
         return int(v)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         return 104857600
 
 

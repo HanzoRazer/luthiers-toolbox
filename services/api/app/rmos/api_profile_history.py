@@ -300,7 +300,7 @@ async def rollback_profile(
             constraints=constraints,
             metadata=metadata,
         )
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(
             status_code=500,
             detail=f"Failed to parse target state: {str(e)}",

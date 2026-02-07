@@ -98,13 +98,15 @@ async def constraint_search(
             status_code=400,
             detail=f"Policy violation: {str(e)}",
         )
-    except Exception:
+    except ImportError:  # WP-1: narrowed from except Exception
         pass  # Policy module not available, continue
     
     try:
         response = run_constraint_first_search(request)
         return response
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Search engine error: {str(e)}",
@@ -187,7 +189,9 @@ async def quick_check(
             workflow_mode=response.workflow_mode,
             profile_id=response.constraint_profile_applied,
         )
-    except Exception as e:
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(
             status_code=500,
             detail=f"Quick check error: {str(e)}",

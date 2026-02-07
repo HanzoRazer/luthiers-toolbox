@@ -56,7 +56,7 @@ class RunsListResponse(BaseModel):
 def _safe_read_json(path: Path) -> Optional[Dict[str, Any]]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
         return None
 
 

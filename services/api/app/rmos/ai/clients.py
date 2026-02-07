@@ -54,7 +54,7 @@ class LLMClientAdapter:
                 max_tokens=kwargs.get("max_tokens", 2048),
             )
             return response.content
-        except Exception:
+        except Exception:  # WP-1: keep broad — external LLM API can raise arbitrary errors
             return ""
 
 
@@ -78,7 +78,7 @@ def get_ai_client() -> AiClient:
                 _ai_client = LLMClientAdapter(llm)
             else:
                 _ai_client = StubAiClient()
-        except Exception:
+        except (ImportError, AttributeError):  # WP-1: narrowed from except Exception
             _ai_client = StubAiClient()
     return _ai_client
 

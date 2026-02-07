@@ -140,7 +140,7 @@ def migrate_v1_to_v2(
     if not skip_backup and not dry_run:
         try:
             report.backup_path = backup_v1_store(v1_path)
-        except Exception as e:
+        except OSError as e:  # WP-1: narrowed from except Exception
             report.errors.append({"error": "backup_failed", "detail": str(e)})
             if stop_on_error:
                 report.completed_at = datetime.now(timezone.utc)
@@ -149,7 +149,7 @@ def migrate_v1_to_v2(
     # Load v1 data
     try:
         v1_data = load_v1_store(v1_path)
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
         report.errors.append({"error": "load_failed", "detail": str(e)})
         report.completed_at = datetime.now(timezone.utc)
         return report
@@ -198,7 +198,7 @@ def migrate_v1_to_v2(
 
             report.migrated += 1
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
             report.errors.append({
                 "run_id": run_id,
                 "error": "conversion_failed",
@@ -293,7 +293,7 @@ def rollback_migration(
         try:
             shutil.copy2(backup_path, v1_path)
             result["restored_v1"] = True
-        except Exception as e:
+        except OSError as e:  # WP-1: narrowed from except Exception
             result["errors"].append(f"Failed to restore v1: {e}")
     else:
         result["errors"].append(f"Backup not found: {backup_path}")
@@ -305,7 +305,7 @@ def rollback_migration(
             try:
                 shutil.rmtree(v2_path)
                 result["deleted_v2"] = True
-            except Exception as e:
+            except OSError as e:  # WP-1: narrowed from except Exception
                 result["errors"].append(f"Failed to delete v2: {e}")
 
     return result

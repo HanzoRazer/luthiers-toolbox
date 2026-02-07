@@ -17,6 +17,7 @@ REMOVED (Strict Immutability):
 
 from __future__ import annotations
 
+import binascii
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -901,7 +902,7 @@ def create_run_attachment(run_id: str, req: RunAttachmentCreateRequest):
     # Decode base64 payload
     try:
         data = base64.b64decode(req.b64)
-    except Exception as e:
+    except (binascii.Error, ValueError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=400, detail=f"Invalid base64 payload: {e}")
 
     # Verify SHA256 matches
@@ -1249,7 +1250,7 @@ def delete_run_endpoint(
                 errors=deny_reason,
             )
             append_delete_audit(store_root=store.root, event=event)
-        except Exception:
+        except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
             pass  # Audit must never block
         raise HTTPException(status_code=403, detail=deny_reason)
 
@@ -1637,7 +1638,7 @@ def explain_run_on_demand(
                 "feasibility": run.feasibility or {},
             }
         )
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
         grounded_hash = None
 
     explanation = generate_assistant_explanation(
@@ -1673,7 +1674,7 @@ def explain_run_on_demand(
         run.meta = dict(run.meta or {})
         run.meta["assistant_explanation_model"] = "deterministic.v1"
         run.meta["assistant_explanation_inputs_sha256"] = grounded_hash
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
         pass
 
     update_run(run)

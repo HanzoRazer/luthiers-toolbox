@@ -83,7 +83,7 @@ def append_delete_audit(
         f.flush()
         try:
             os.fsync(f.fileno())
-        except Exception:
+        except OSError:  # WP-1: narrowed from except Exception
             # fsync may fail on some filesystems; audit is best-effort
             pass
 
@@ -153,7 +153,7 @@ def read_audit_lines(
     # Small file expected. If it grows, we can implement a true tail later.
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         return []
 
     lines = lines[-max(1, tail):]
@@ -163,7 +163,7 @@ def read_audit_lines(
             continue
         try:
             out.append(json.loads(ln))
-        except Exception:
+        except (json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             # keep going; audit file should be append-only and resilient
             continue
     return out

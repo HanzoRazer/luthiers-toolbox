@@ -61,7 +61,7 @@ def _load_overrides_index() -> Dict[str, str]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
         return {}
 
 

@@ -77,7 +77,7 @@ class AttachmentMetaIndex:
             return {}
         try:
             return json.loads(self.path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             # If corrupted, fail safe: treat as empty (caller may rebuild later)
             return {}
 
@@ -216,7 +216,7 @@ class AttachmentMetaIndex:
 
                 try:
                     raw = json.loads(p.read_text(encoding="utf-8"))
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                     continue
 
                 # Minimum fields for a run artifact
@@ -238,7 +238,7 @@ class AttachmentMetaIndex:
                         filename = str(a.get("filename", "attachment"))
                         size_bytes = int(a.get("size_bytes", 0) or 0)
                         a_created = str(a.get("created_at_utc", created_at_utc))
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
                         continue
 
                     attachments_indexed += 1
@@ -366,7 +366,7 @@ class AttachmentRecentIndex:
             }
         try:
             return json.loads(self.path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
             return {
                 "schema_version": "acoustics_attachment_recent_index_v1",
                 "max_entries": self.max_entries,

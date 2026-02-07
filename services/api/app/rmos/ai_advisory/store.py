@@ -61,7 +61,7 @@ def persist_advisory(artifact: AdvisoryArtifactV1) -> Path:
             encoding="utf-8",
         )
         os.replace(str(tmp_path), str(path))
-    except Exception:
+    except OSError:  # WP-1: narrowed from except Exception
         if tmp_path.exists():
             tmp_path.unlink()
         raise
@@ -89,7 +89,7 @@ def load_advisory(advisory_id: str) -> Optional[AdvisoryArtifactV1]:
             try:
                 data = json.loads(artifact_path.read_text(encoding="utf-8"))
                 return AdvisoryArtifactV1.model_validate(data)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 return None
 
     return None
@@ -135,7 +135,7 @@ def list_advisories(
                 data = json.loads(artifact_path.read_text(encoding="utf-8"))
                 artifact = AdvisoryArtifactV1.model_validate(data)
                 results.append(artifact)
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
                 continue
 
     return results

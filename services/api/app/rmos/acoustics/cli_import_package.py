@@ -12,6 +12,7 @@ The package directory is expected to contain:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -51,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     # Load and validate manifest
     try:
         manifest = TapToneBundleManifestV1.model_validate(_json_load(manifest_path))
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
         print(f"ERROR: Failed to parse manifest: {e}", file=sys.stderr)
         return 1
 
@@ -75,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest=manifest,
             status=args.status,
         )
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
         print(f"ERROR: Persist failed: {e}", file=sys.stderr)
         return 1
 

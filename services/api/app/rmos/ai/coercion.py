@@ -70,12 +70,12 @@ def coerce_to_rosette_spec(raw: Dict[str, Any]) -> RosetteParamSpec:
 
     try:
         return RosetteParamSpec.model_validate(filtered)
-    except Exception:
+    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
         # If validation fails, try with just the known defaults
         safe_defaults = {k: v for k, v in defaults.items() if k in known_fields}
         try:
             return RosetteParamSpec.model_validate(safe_defaults)
-        except Exception:
+        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
             # Last resort: return with whatever we can construct
             return RosetteParamSpec(**safe_defaults)
 
