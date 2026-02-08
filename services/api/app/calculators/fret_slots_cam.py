@@ -14,39 +14,19 @@ from dataclasses import dataclass
 from typing import List, Tuple, Dict, Any, Optional, Literal
 from math import sqrt, pi
 
-from ..instrument_geometry.neck.fret_math import (
-    compute_fret_positions_mm,
-    compute_fan_fret_positions,
-    validate_fan_fret_geometry,
-    FanFretPoint,
-)
+from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
 from ..instrument_geometry.body.fretboard_geometry import (
     compute_width_at_position_mm,
     compute_fret_slot_lines,
 )
 from ..instrument_geometry.neck.neck_profiles import FretboardSpec
-from ..rmos.context import RmosContext, CutType
+from ..rmos.context import RmosContext
 from ..data_registry import Registry
 
 
 @dataclass
 class FretSlotToolpath:
-    """
-    Complete CAM toolpath data for a single fret slot.
-    
-    Attributes:
-        fret_number: Fret number (1-based).
-        position_mm: Distance from nut to fret center (X coordinate).
-        width_mm: Fretboard width at this position.
-        bass_point: (x, y) coordinate of bass-side endpoint.
-        treble_point: (x, y) coordinate of treble-side endpoint.
-        slot_depth_mm: Cutting depth for this slot.
-        slot_width_mm: Kerf width (typically 0.5-0.6mm for fret saws).
-        feed_rate_mmpm: Material-aware cutting feedrate.
-        plunge_rate_mmpm: Material-aware plunge feedrate.
-        angle_rad: Fret angle in radians (0 for standard, non-zero for fan-fret).
-        is_perpendicular: True if this is the perpendicular fret in fan-fret system.
-    """
+    """CAM toolpath data for a single fret slot."""
     fret_number: int
     position_mm: float
     width_mm: float
@@ -62,15 +42,7 @@ class FretSlotToolpath:
 
 @dataclass
 class FretSlotCAMOutput:
-    """
-    Complete CAM output bundle for fretboard operations.
-    
-    Attributes:
-        toolpaths: List of per-fret toolpath data.
-        dxf_content: DXF R12 formatted file content.
-        gcode_content: G-code program content.
-        statistics: Operation statistics (time, length, etc.).
-    """
+    """Complete CAM output bundle for fretboard operations."""
     toolpaths: List[FretSlotToolpath]
     dxf_content: str
     gcode_content: str
@@ -498,8 +470,9 @@ def generate_fret_slot_cam(
         >>> print(output.statistics["slot_count"])  # 22
     """
     if mode == "fan":
-        # Fan-fret mode
-        return _generate_fan_fret_cam(
+        # Fan-fret mode (extracted to fret_slots_fan_cam.py)
+        from .fret_slots_fan_cam import generate_fan_fret_cam
+        return generate_fan_fret_cam(
             spec=spec,
             context=context,
             treble_scale_mm=treble_scale_mm,
@@ -523,271 +496,3 @@ def generate_fret_slot_cam(
             gcode_content=gcode_content,
             statistics=statistics,
         )
-
-
-# =============================================================================
-# Wave 19: Fan-Fret CAM Generation
-# =============================================================================
-
-def _generate_fan_fret_cam(
-    spec: FretboardSpec,
-    context: RmosContext,
-    treble_scale_mm: Optional[float],
-    bass_scale_mm: Optional[float],
-    perpendicular_fret: int,
-    slot_depth_mm: float,
-    slot_width_mm: float,
-    safe_z_mm: float,
-    post_id: str,
-) -> FretSlotCAMOutput:
-    """
-    Internal function for fan-fret CAM generation.
-    
-    Args:
-        spec: Fretboard specification (uses nut/heel widths for taper).
-        context: RMOS context for material-aware feeds.
-        treble_scale_mm: Treble-side scale length.
-        bass_scale_mm: Bass-side scale length.
-        perpendicular_fret: Fret number that remains perpendicular.
-        slot_depth_mm: Nominal cutting depth.
-        slot_width_mm: Kerf width.
-        safe_z_mm: Safe retract height.
-        post_id: Post-processor ID.
-    
-    Returns:
-        FretSlotCAMOutput with angled fret toolpaths.
-    """
-    # Validate fan-fret parameters
-    if treble_scale_mm is None or bass_scale_mm is None:
-        raise ValueError("Fan-fret mode requires treble_scale_mm and bass_scale_mm")
-    
-    is_valid, error_msg = validate_fan_fret_geometry(
-        treble_scale_mm, bass_scale_mm, perpendicular_fret, spec.fret_count
-    )
-    if not is_valid:
-        raise ValueError(f"Invalid fan-fret geometry: {error_msg}")
-    
-    # Compute fan-fret positions
-    fret_points = compute_fan_fret_positions(
-        treble_scale_mm=treble_scale_mm,
-        bass_scale_mm=bass_scale_mm,
-        fret_count=spec.fret_count,
-        perpendicular_fret=perpendicular_fret,
-        nut_width_mm=spec.nut_width_mm,
-        heel_width_mm=spec.heel_width_mm,
-        scale_length_reference_mm=treble_scale_mm,
-    )
-    
-    # Generate toolpaths from fan-fret points
-    toolpaths = _generate_fan_fret_toolpaths(
-        fret_points=fret_points,
-        spec=spec,
-        context=context,
-        treble_scale_mm=treble_scale_mm,
-        slot_depth_mm=slot_depth_mm,
-        slot_width_mm=slot_width_mm,
-    )
-    
-    # Export with fan-fret layer
-    dxf_content = _export_fan_fret_dxf_r12(toolpaths)
-    gcode_content = generate_gcode(toolpaths, safe_z_mm, post_id, mode='fan')
-    statistics = compute_cam_statistics(toolpaths, safe_z_mm)
-    
-    # Add fan-fret metadata to statistics
-    statistics["mode"] = "fan"
-    statistics["treble_scale_mm"] = treble_scale_mm
-    statistics["bass_scale_mm"] = bass_scale_mm
-    statistics["perpendicular_fret"] = perpendicular_fret
-    statistics["max_angle_deg"] = max(
-        abs(tp.angle_rad) * 180.0 / pi for tp in toolpaths
-    )
-    
-    return FretSlotCAMOutput(
-        toolpaths=toolpaths,
-        dxf_content=dxf_content,
-        gcode_content=gcode_content,
-        statistics=statistics,
-    )
-
-
-def _generate_fan_fret_toolpaths(
-    fret_points: List[FanFretPoint],
-    spec: FretboardSpec,
-    context: RmosContext,
-    treble_scale_mm: float,
-    slot_depth_mm: float,
-    slot_width_mm: float,
-) -> List[FretSlotToolpath]:
-    """
-    Generate toolpaths from FanFretPoint geometry.
-    
-    Args:
-        fret_points: List of FanFretPoint from compute_fan_fret_positions().
-        spec: Fretboard specification.
-        context: RMOS context.
-        treble_scale_mm: Treble scale length (for depth blend calculation).
-        slot_depth_mm: Nominal cutting depth.
-        slot_width_mm: Kerf width.
-    
-    Returns:
-        List of FretSlotToolpath with angled fret data.
-    """
-    toolpaths: List[FretSlotToolpath] = []
-    
-    # Calculate base feedrates (material-aware)
-    base_feed_mmpm = 1200.0  # Default for hardwood
-    base_plunge_mmpm = 300.0
-    
-    if context.materials:
-        density_factor = 1.0
-        if context.materials.density_kg_m3:
-            reference_density = 700.0  # kg/m³
-            density_factor = reference_density / context.materials.density_kg_m3
-            density_factor = max(0.5, min(1.5, density_factor))
-        
-        base_feed_mmpm *= density_factor
-        base_plunge_mmpm *= density_factor
-    
-    # Skip fret 0 (nut) - start from fret 1
-    for fret_point in fret_points[1:]:
-        # Average X position for width/depth calculations
-        avg_x = (fret_point.treble_pos_mm + fret_point.bass_pos_mm) / 2.0
-        
-        # Compute width at this position
-        width = compute_width_at_position_mm(
-            spec.nut_width_mm,
-            spec.heel_width_mm,
-            treble_scale_mm,  # Use treble scale as reference
-            spec.fret_count,
-            avg_x,
-        )
-        
-        # Radius-blended depth
-        depth = compute_radius_blended_depth(
-            spec.base_radius_mm,
-            spec.end_radius_mm,
-            avg_x,
-            treble_scale_mm,
-            slot_depth_mm,
-        )
-        
-        # Bass and treble endpoints
-        # Use angle to calculate endpoints from center
-        half_width = width / 2.0
-        bass_pt = (fret_point.bass_pos_mm, fret_point.center_y + half_width)
-        treble_pt = (fret_point.treble_pos_mm, fret_point.center_y - half_width)
-        
-        toolpath = FretSlotToolpath(
-            fret_number=fret_point.fret_number,
-            position_mm=avg_x,
-            width_mm=width,
-            bass_point=bass_pt,
-            treble_point=treble_pt,
-            slot_depth_mm=depth,
-            slot_width_mm=slot_width_mm,
-            feed_rate_mmpm=base_feed_mmpm,
-            plunge_rate_mmpm=base_plunge_mmpm,
-            angle_rad=fret_point.angle_rad,
-        )
-        toolpaths.append(toolpath)
-    
-    return toolpaths
-
-
-def _export_fan_fret_dxf_r12(toolpaths: List[FretSlotToolpath]) -> str:
-    """
-    Export fan-fret toolpaths as DXF R12 with FRET_SLOTS_FAN layer.
-    
-    Args:
-        toolpaths: List of FretSlotToolpath with angle data.
-    
-    Returns:
-        DXF R12 formatted string.
-    
-    Notes:
-        - Uses layer "FRET_SLOTS_FAN" to distinguish from standard slots.
-        - LINE entities with angle metadata in comments.
-        - Perpendicular fret marked with special color (cyan).
-    """
-    lines = [
-        "0",
-        "SECTION",
-        "2",
-        "HEADER",
-        "9",
-        "$ACADVER",
-        "1",
-        "AC1009",  # DXF R12
-        "9",
-        "$INSUNITS",
-        "70",
-        "4",  # Millimeters
-        "0",
-        "ENDSEC",
-        "0",
-        "SECTION",
-        "2",
-        "TABLES",
-        "0",
-        "TABLE",
-        "2",
-        "LAYER",
-        "70",
-        "1",
-        "0",
-        "LAYER",
-        "2",
-        "FRET_SLOTS_FAN",  # Fan-fret layer
-        "70",
-        "0",
-        "62",
-        "7",  # White color
-        "0",
-        "ENDTAB",
-        "0",
-        "ENDSEC",
-        "0",
-        "SECTION",
-        "2",
-        "ENTITIES",
-    ]
-    
-    for tp in toolpaths:
-        # Angle in degrees for metadata
-        angle_deg = tp.angle_rad * 180.0 / pi
-        
-        # Color code: cyan (4) for perpendicular, white (7) for angled
-        color = "4" if tp.is_perpendicular else "7"
-        
-        # LINE entity with metadata comment
-        lines.extend([
-            "0",
-            "LINE",
-            "8",
-            "FRET_SLOTS_FAN",
-            "62",
-            color,
-            "10",
-            f"{tp.bass_point[0]:.4f}",
-            "20",
-            f"{tp.bass_point[1]:.4f}",
-            "30",
-            "0.0",
-            "11",
-            f"{tp.treble_point[0]:.4f}",
-            "21",
-            f"{tp.treble_point[1]:.4f}",
-            "31",
-            "0.0",
-            "999",
-            f"FRET_{tp.fret_number}_ANGLE_{angle_deg:.2f}deg",
-        ])
-    
-    lines.extend([
-        "0",
-        "ENDSEC",
-        "0",
-        "EOF",
-    ])
-    
-    return "\n".join(lines)
