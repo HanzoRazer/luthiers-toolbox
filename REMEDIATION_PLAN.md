@@ -262,20 +262,58 @@ Add `/api/features` endpoint that reports what's loaded:
 **Impact:** Maintainability +2, Aesthetics +1
 **Risk:** Medium (refactoring large files can introduce regressions)
 
-### 3.1 — Python files over 500 lines (top 10)
+### 3.1 — Python files over 500 lines
+
+**Last scanned:** 2026-02-07 (post WP-3 session: 19 decompositions complete)  
+**Total remaining:** 33 files over 500 lines (down from 90+ at start)
+
+#### Previously decomposed — still over 500 (7 files — 1 done, 6 remaining)
+
+| File | Lines | Prior | Notes |
+|------|-------|-------|-------|
+| `art_studio/services/workflow_integration.py` | 825 | 909 | Needs 2nd pass |
+| `api/routes/rmos_rosette_api.py` | 769 | 828 | Needs 2nd pass |
+| `rmos/runs_v2/store.py` | 709 | 923 | Needs 2nd pass |
+| ~~`data_registry/registry.py`~~ | ~~583~~ → 480 | 697 | ✅ Done (batch 3) — `registry_products.py` |
+| `rmos/runs_v2/acoustics_router.py` | 544 | 836 | Needs 2nd pass |
+| `calculators/suite/scientific_calculator.py` | 515 | 782 | Needs 2nd pass |
+| `calculators/fret_slots_cam.py` | 507 | 722 | Needs 2nd pass |
+
+#### Infra / CI / Test / Extracted artifacts (4 files — exempt or low priority)
+
+| File | Lines | Category |
+|------|-------|----------|
+| `main.py` | 890 | Infra — router registry, not a god object |
+| `ci/check_boundary_imports.py` | 745 | CI tooling — not app code |
+| `generators/lespaul_gcode_gen.py` | 593 | Extracted artifact from WP-3 decomposition |
+| `tests/test_e2e_workflow_integration.py` | 567 | Test file — not app code |
+
+#### Fresh targets (22 files — 7 done, 15 remaining)
 
 | File | Lines | Decomposition Strategy |
 |------|-------|----------------------|
-| `saw_lab/batch_router.py` | 2,724 | Split into: batch_crud_router.py, batch_query_router.py, batch_execution_router.py, batch_schemas.py |
-| `instrument_geometry/body/detailed_outlines.py` | 2,088 | Extract outline data into JSON/YAML files; keep computation only |
-| `rmos/runs_v2/api_runs.py` | 1,845 | Split: run_crud.py, run_query.py, run_lifecycle.py |
-| `rmos/runs_v2/store.py` | 1,733 | Split: store_read.py, store_write.py, store_migration.py |
-| `cam/rosette/pattern_generator.py` | 1,683 | Extract pattern definitions to data files; keep algorithm |
-| `routers/adaptive_router.py` | 1,479 | Move to cam/adaptive/router.py, split CRUD from computation |
-| `routers/pipeline_router.py` | 1,380 | Move to rmos/pipeline/router.py |
-| `routers/blueprint_router.py` | 1,315 | Move to vision/blueprint/router.py |
-| `main.py` | 1,297 | Replace with auto-discovery (see Phase 2.3) |
-| `cam/rosette/photo_converter.py` | 1,264 | Extract image processing pipeline stages |
+| ~~`saw_lab/batch_router.py`~~ | ~~710~~ → 281 | ✅ Done (batch 3) — `batch_router_toolpaths.py` |
+| `rmos/mvp_wrapper.py` | 608 | Extract DXF parsing helpers |
+| `routers/body_generator_router.py` | 600 | Extract computation from router |
+| `routers/art_studio_rosette_router.py` | 594 | Extract preset/export logic |
+| `rmos/runs_v2/api_runs.py` | 593 | Split: run CRUD vs query vs lifecycle |
+| `rmos/runs_v2/variant_review_service.py` | 585 | Extract review helpers |
+| `routers/pipeline_router.py` | 584 | Move to rmos/pipeline/router.py |
+| ~~`sandboxes/smart_guitar/generate_gcode.py`~~ | ~~572~~ → 472 | ✅ Done (batch 3) — `toolpath_strategies.py` |
+| ~~`util/poly_offset_spiral.py`~~ | ~~552~~ → 438 | ✅ Done (batch 3) — `poly_arc_smooth.py` |
+| ~~`cam/routers/monitoring/metrics_router.py`~~ | ~~549~~ → 224 | ✅ Done (batch 3) — `metrics_thermal.py` |
+| ~~`ai_context_adapter/routes.py`~~ | 313 | ✅ Skipped — already under 500 |
+| `cam/probe_svg.py` | 536 | Extract SVG generation helpers |
+| ~~`calculators/alternative_temperaments.py`~~ | ~~531~~ → 474 | ✅ Done (batch 3) — `temperament_ratios.py` |
+| `workflow/state_machine.py` | 531 | Extract transition validators |
+| `saw_lab/batch_metrics_router.py` | 528 | Split: metrics vs rollup endpoints |
+| `rmos/feasibility/rules.py` | 519 | Extract rule definitions |
+| `routers/unified_presets_router.py` | 509 | Extract preset helpers |
+| `cam_core/saw_lab/saw_blade_validator.py` | 508 | Extract validation rules |
+| ~~`services/relief_kernels.py`~~ | ~~506~~ → 435 | ✅ Done (batch 3) — `relief_helpers.py` |
+| `routers/calculators_router.py` | 505 | Split: domain-specific sub-routers |
+| `calculators/inlay_calc.py` | 504 | Extract geometry helpers |
+| `routers/retract_router.py` | 504 | Extract computation from router |
 
 ### 3.2 — Vue files over 800 lines (top 10)
 
