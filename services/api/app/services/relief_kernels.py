@@ -1,15 +1,4 @@
-"""
-Relief carving kernels for heightmap processing and toolpath generation.
-
-This module provides:
-- Heightmap loading with Gaussian smoothing
-- Slope computation for hotspot detection
-- Multi-pass roughing raster toolpaths
-- Scallop-based finishing toolpaths for ball nose tools
-- Z-aware overlay generation
-
-Dependencies: Pillow, numpy
-"""
+"""Relief carving kernels for heightmap processing and toolpath generation."""
 
 from __future__ import annotations
 
@@ -34,34 +23,14 @@ from ..schemas.relief import (
 
 
 def _load_heightmap(path: Path) -> np.ndarray:
-    """
-    Load a grayscale heightmap (0..255) as a numpy array of floats in [0,1].
-    
-    Args:
-        path: Path to grayscale image file
-        
-    Returns:
-        2D numpy array with values in [0, 1]
-    """
+    """Load a grayscale heightmap (0..255) as a numpy array of floats in [0,1]."""
     img = Image.open(path).convert("L")
     arr = np.asarray(img, dtype=np.float32) / 255.0
     return arr
 
 
 def _apply_smoothing(arr: np.ndarray, sigma: float) -> np.ndarray:
-    """
-    Apply separable box blur approximation for Gaussian smoothing.
-    
-    This avoids scipy dependency while providing adequate smoothing
-    for CNC toolpath generation.
-    
-    Args:
-        arr: 2D input array
-        sigma: Smoothing radius in samples
-        
-    Returns:
-        Smoothed 2D array
-    """
+    """Apply separable box blur approximation for Gaussian smoothing."""
     if sigma <= 0:
         return arr
 
@@ -82,18 +51,7 @@ def _apply_smoothing(arr: np.ndarray, sigma: float) -> np.ndarray:
 
 
 def load_heightmap_to_map(payload: ReliefMapFromHeightfieldIn) -> ReliefMapFromHeightfieldOut:
-    """
-    Convert a grayscale heightmap into a Z grid with physical units.
-    
-    Args:
-        payload: Input parameters with heightmap path and Z scaling
-        
-    Returns:
-        ReliefMapFromHeightfieldOut with Z grid and statistics
-        
-    Raises:
-        FileNotFoundError: If heightmap file doesn't exist
-    """
+    """Convert a grayscale heightmap into a Z grid with physical units."""
     path = Path(payload.heightmap_path)
     if not path.exists():
         raise FileNotFoundError(f"Heightmap not found: {path}")
@@ -143,16 +101,7 @@ def load_heightmap_to_map(payload: ReliefMapFromHeightfieldIn) -> ReliefMapFromH
 def _compute_xy_slope_deg(
     z: np.ndarray, cell_size_xy: float
 ) -> np.ndarray:
-    """
-    Compute approximate slope angle (degrees) at each cell using central differences.
-    
-    Args:
-        z: 2D Z grid
-        cell_size_xy: Physical distance between cells
-        
-    Returns:
-        2D array of slope angles in degrees
-    """
+    """Compute approximate slope angle (degrees) at each cell using central differences."""
     # Central differences for gradient
     dz_dx = np.zeros_like(z)
     dz_dy = np.zeros_like(z)
@@ -172,116 +121,15 @@ def _compute_xy_slope_deg(
     return slope_deg
 
 
-def _build_slope_overlays(
-    z: np.ndarray,
-    slope_deg: np.ndarray,
-    cell_size_xy: float,
-    origin_x: float,
-    origin_y: float,
-    high_thresh: float = 45.0,
-    med_thresh: float = 25.0,
-) -> List[ReliefOverlay]:
-    """
-    Generate overlays marking high-slope regions for backplot visualization.
-    
-    Args:
-        z: 2D Z grid
-        slope_deg: Computed slope angles in degrees
-        cell_size_xy: Physical distance between cells
-        origin_x: X origin of grid
-        origin_y: Y origin of grid
-        high_thresh: Angle threshold for high severity (degrees)
-        med_thresh: Angle threshold for medium severity (degrees)
-        
-    Returns:
-        List of ReliefOverlay objects marking hotspots
-    """
-    overlays: List[ReliefOverlay] = []
-    h, w = slope_deg.shape
-
-    for j in range(h):
-        for i in range(w):
-            angle = float(slope_deg[j, i])
-            if angle < med_thresh:
-                continue
-            z_val = float(z[j, i])
-            x = origin_x + i * cell_size_xy
-            y = origin_y + j * cell_size_xy
-
-            if angle >= high_thresh:
-                severity = "high"
-            else:
-                severity = "medium"
-
-            overlays.append(
-                ReliefOverlay(
-                    type="slope_hotspot",
-                    x=x,
-                    y=y,
-                    z=z_val,
-                    slope_deg=angle,
-                    severity=severity,  # type: ignore[arg-type]
-                    meta={},
-                )
-            )
-
-    return overlays
-
-
-def _clip_roi_indices(
-    width: int,
-    height: int,
-    cell_size_xy: float,
-    origin_x: float,
-    origin_y: float,
-    roi_min_x: float | None,
-    roi_max_x: float | None,
-    roi_min_y: float | None,
-    roi_max_y: float | None,
-) -> Tuple[int, int, int, int]:
-    """
-    Convert optional ROI in physical coordinates to grid indices.
-    
-    Returns:
-        (min_i, max_i, min_j, max_j) tuple of grid indices
-    """
-    # Default to full extents
-    min_i = 0
-    max_i = width - 1
-    min_j = 0
-    max_j = height - 1
-
-    if roi_min_x is not None:
-        min_i = max(min_i, int((roi_min_x - origin_x) / cell_size_xy))
-    if roi_max_x is not None:
-        max_i = min(max_i, int((roi_max_x - origin_x) / cell_size_xy))
-
-    if roi_min_y is not None:
-        min_j = max(min_j, int((roi_min_y - origin_y) / cell_size_xy))
-    if roi_max_y is not None:
-        max_j = min(max_j, int((roi_max_y - origin_y) / cell_size_xy))
-
-    min_i = max(0, min_i)
-    max_i = min(width - 1, max_i)
-    min_j = max(0, min_j)
-    max_j = min(height - 1, max_j)
-
-    return min_i, max_i, min_j, max_j
+# WP-3: _build_slope_overlays and _clip_roi_indices extracted to relief_helpers.py
+from .relief_helpers import (  # noqa: E402
+    _build_slope_overlays as _build_slope_overlays,
+    _clip_roi_indices as _clip_roi_indices,
+)
 
 
 def plan_relief_roughing(payload: ReliefRasterToolpathIn) -> ReliefToolpathOut:
-    """
-    Generate simple raster roughing over the relief map with multiple Z passes.
-    
-    This creates a multi-pass serpentine raster pattern, roughing down to the
-    minimum Z in the region of interest.
-    
-    Args:
-        payload: Input parameters with Z grid, tool, and feed parameters
-        
-    Returns:
-        ReliefToolpathOut with moves, slope overlays, and statistics
-    """
+    """Generate simple raster roughing over the relief map with multiple Z passes."""
     z_grid = np.asarray(payload.z_grid, dtype=np.float32)
     h, w = z_grid.shape
 
@@ -395,20 +243,7 @@ def _map_slope_to_scallop(
 
 
 def plan_relief_finishing(payload: ReliefFinishingIn) -> ReliefToolpathOut:
-    """
-    Generate finishing raster toolpath with scallop-based stepover for ball nose.
-    
-    Phase 24.6: Now supports dynamic scallop (slope-aware spacing) for more uniform load.
-    
-    Uses simplified scallop formula: h ≈ s²/(8R) => s ≈ √(8Rh)
-    where h = scallop height, R = tool radius, s = stepover
-    
-    Args:
-        payload: Input parameters with Z grid, tool, scallop, and pattern
-        
-    Returns:
-        ReliefToolpathOut with Z-following moves, slope overlays, and statistics
-    """
+    """Generate finishing raster toolpath with scallop-based stepover for ball nose."""
     z_grid = np.asarray(payload.z_grid, dtype=np.float32)
     h, w = z_grid.shape
 

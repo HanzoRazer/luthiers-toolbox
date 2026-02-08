@@ -96,41 +96,7 @@ def offset_polygon_mm(
     miter_limit: float = 4.0,
     arc_tolerance: float = 0.05,
 ) -> Paths:
-    """
-    Robustly offset a polygon inward in mm using pyclipper, returning a list of
-    concentric offset rings (no spiral stitching here directly).
-
-    This is the "onion-skin" generator for N18. Phase 2 uses this in
-    generate_offset_rings() and then link_rings_to_spiral() to build a spiral.
-
-    Args:
-        outer:
-            The outer polygon as a sequence of (x, y) points in mm.
-            It should describe a simple, non-self-intersecting polygon.
-        offset_step:
-            Positive distance in mm between successive inward offsets.
-            (Internally applied as a negative distance for inward offset.)
-        max_rings:
-            Safety limit on how many offset shells to generate.
-        min_area_mm2:
-            Minimum area for an offset ring to be kept. Very small rings are
-            discarded to avoid numerical noise.
-        miter_limit:
-            pyclipper miter limit (for join type).
-        arc_tolerance:
-            pyclipper arc tolerance in scaled units, roughly controlling
-            how curves are approximated.
-
-    Returns:
-        A list of rings, each a list of (x, y) in mm. The first ring is the
-        first offset from the outer polygon, and so on inward.
-
-    Raises:
-        ValueError:
-            If inputs are invalid (e.g., too few vertices or non-positive step).
-        RuntimeError:
-            If pyclipper operations fail for unexpected reasons.
-    """
+    """Robustly offset a polygon inward in mm using pyclipper, returning a list of"""
     # Basic validation
     if len(outer) < 3:
         raise ValueError("offset_polygon_mm: outer polygon must have at least 3 points")
@@ -251,17 +217,7 @@ def generate_offset_rings(
     *,
     max_rings: int = 256,
 ) -> Paths:
-    """
-    Generate inward offset rings from an outer boundary, respecting margin.
-
-    This is a higher-level helper on top of offset_polygon_mm(), doing:
-
-        1. Shrink outer by `margin` (if > 0).
-        2. Generate concentric rings at `tool_d * stepover` spacing.
-
-    Returns:
-        List of rings (outermost first) as closed paths.
-    """
+    """Generate inward offset rings from an outer boundary, respecting margin."""
     if tool_d <= 0.0:
         raise ValueError("generate_offset_rings: tool_d must be positive")
 
@@ -340,24 +296,7 @@ def link_rings_to_spiral(
     *,
     climb: bool = True,
 ) -> Path:
-    """
-    Stitch a list of inward offset rings into a single continuous spiral path.
-
-    Strategy:
-        - Start on the outermost ring.
-        - For each subsequent ring:
-            * pick the nearest point to the current end of the spiral
-            * rotate the ring so that point is first
-            * reverse orientation when necessary to maintain smooth traversal
-            * connect with a short linear link segment.
-
-    Notes:
-        - This is a geometry-only function; feed/speed/Z is handled elsewhere.
-        - Assumes rings are closed paths.
-
-    Returns:
-        A single path (open polyline) representing the spiral in XY.
-    """
+    """Stitch a list of inward offset rings into a single continuous spiral path."""
     if not rings:
         return []
 
@@ -441,131 +380,9 @@ def link_rings_to_spiral(
 
 
 # ---------------------------------------------------------------------------
-# Phase 3: ARC SMOOTHING ENGINE
+# WP-3: Arc smoothing engine extracted to poly_arc_smooth.py
 # ---------------------------------------------------------------------------
-
-
-def _normalize(vx: float, vy: float) -> Tuple[float, float]:
-    mag = math.hypot(vx, vy)
-    if mag < 1e-9:
-        return 0.0, 0.0
-    return vx / mag, vy / mag
-
-
-def _distance(a: Point, b: Point) -> float:
-    return math.hypot(a[0] - b[0], a[1] - b[1])
-
-
-def _corner_angle(prev: Point, curr: Point, nxt: Point) -> float:
-    """Return interior angle in radians at curr."""
-    ax, ay = prev[0] - curr[0], prev[1] - curr[1]
-    bx, by = nxt[0] - curr[0], nxt[1] - curr[1]
-
-    ax, ay = _normalize(ax, ay)
-    bx, by = _normalize(bx, by)
-
-    dot = ax * bx + ay * by
-    dot = max(-1.0, min(1.0, dot))
-    return math.acos(dot)
-
-
-def _fillet(
-    prev: Point,
-    curr: Point,
-    nxt: Point,
-    radius: float,
-    segments: int = 5,
-) -> Path:
-    """
-    Insert a circular fillet between prev → curr → nxt.
-    Returns small polyline approximating the arc.
-    """
-    # Direction vectors
-    vx1, vy1 = prev[0] - curr[0], prev[1] - curr[1]
-    vx2, vy2 = nxt[0] - curr[0], nxt[1] - curr[1]
-    nx1, ny1 = _normalize(vx1, vy1)
-    nx2, ny2 = _normalize(vx2, vy2)
-
-    # Points offset from curr along each direction
-    p1 = (curr[0] + nx1 * radius, curr[1] + ny1 * radius)
-    p2 = (curr[0] + nx2 * radius, curr[1] + ny2 * radius)
-
-    # Mid-angle interpolation for arc (simple circular transition)
-    angle1 = math.atan2(nx1 * -1, ny1 * -1)  # rotate into perpendicular space
-    angle2 = math.atan2(nx2 * -1, ny2 * -1)
-
-    # Normalize sweep
-    # We want smallest positive sweep
-    while angle2 < angle1:
-        angle2 += 2 * math.pi
-
-    arc = []
-    for i in range(segments + 1):
-        t = i / segments
-        ang = angle1 + (angle2 - angle1) * t
-        x = curr[0] + radius * math.cos(ang)
-        y = curr[1] + radius * math.sin(ang)
-        arc.append((x, y))
-    return arc
-
-
-def smooth_with_arcs(
-    path: Sequence[Point],
-    corner_radius_min: float,
-    corner_tol_mm: float,
-) -> Path:
-    """
-    Phase 3 arc smoothing: scan corners of `path` and insert small circular
-    fillets where:
-        - corner angle is sufficiently sharp
-        - path segments are long enough to accept a fillet
-
-    This does NOT emit G2/G3 directly — g2_emitter will convert these
-    small arc-approximated poly segments into G2/G3 as needed.
-    """
-    if corner_radius_min is None:
-        return list(path)
-    if corner_tol_mm is None:
-        corner_tol_mm = corner_radius_min * 0.5
-
-    pts = list(path)
-    n = len(pts)
-    if n < 3:
-        return pts
-
-    out: Path = [pts[0]]
-
-    for i in range(1, n - 1):
-        prev = pts[i - 1]
-        curr = pts[i]
-        nxt = pts[i + 1]
-
-        # Corner angle
-        angle = _corner_angle(prev, curr, nxt)
-
-        # If nearly straight → skip smoothing
-        if abs(angle - math.pi) < 0.1:
-            out.append(curr)
-            continue
-
-        # Determine allowable radius based on adjacent segments
-        d1 = _distance(prev, curr)
-        d2 = _distance(curr, nxt)
-        max_r = min(d1, d2) * 0.3  # keep reasonable
-        r = min(max_r, corner_radius_min)
-
-        if r < corner_radius_min * 0.5:
-            # Too small to matter
-            out.append(curr)
-            continue
-
-        # Insert fillet
-        arc = _fillet(prev, curr, nxt, r, segments=5)
-        # Replace the corner by the arc (but avoid duplicating curr)
-        out.extend(arc)
-
-    out.append(pts[-1])
-    return out
+from .poly_arc_smooth import smooth_with_arcs  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -583,22 +400,7 @@ def build_spiral_poly(
     corner_radius_min: Optional[float] = None,
     corner_tol_mm: Optional[float] = None,
 ) -> Path:
-    """
-    Build a spiral toolpath from a pocket boundary using inward offsets.
-
-    High-level steps:
-        1. Shrink outer by `margin` (if > 0).
-        2. Generate inward offset rings at spacing tool_d * stepover.
-        3. Stitch rings into a single continuous spiral path.
-        4. (Phase 3) Optionally smooth with arcs (corner fillets).
-
-    For N18, the spiral path is then consumed by the G-code emitter:
-        - XY is taken from this polyline
-        - Feed/Z is managed by the router.
-
-    Returns:
-        A single path (open polyline) in XY (mm).
-    """
+    """Build a spiral toolpath from a pocket boundary using inward offsets."""
     rings = generate_offset_rings(
         outer=outer,
         tool_d=tool_d,
