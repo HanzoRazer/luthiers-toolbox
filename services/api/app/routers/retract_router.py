@@ -1,9 +1,4 @@
-"""
-FastAPI router for retract pattern optimization.
-
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
-Phase 5 Part 3: N.08 Retract Patterns
-"""
+"""FastAPI router for retract pattern optimization."""
 
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -35,13 +30,11 @@ from ..rmos.runs import (
     sha256_of_text,
 )
 
-
 class Point3DModel(BaseModel):
     """3D point model."""
     x: float
     y: float
     z: float
-
 
 class RetractStrategyIn(BaseModel):
     """Input for retract strategy application."""
@@ -56,12 +49,10 @@ class RetractStrategyIn(BaseModel):
     feed_rate: float = Field(300.0, description="Cutting feed rate (mm/min)")
     optimize_path: str = Field("nearest_neighbor", description="Path optimization: none, nearest_neighbor, reverse")
 
-
 class RetractStrategyOut(BaseModel):
     """Output from retract strategy."""
     gcode: List[str]
     stats: Dict[str, Any]
-
 
 class LeadInPatternIn(BaseModel):
     """Input for lead-in pattern generation."""
@@ -77,16 +68,13 @@ class LeadInPatternIn(BaseModel):
     feed_reduction: float = Field(0.5, description="Feed rate multiplier (0.5 = 50%)")
     feed_rate: float = Field(300.0, description="Base cutting feed rate (mm/min)")
 
-
 class LeadInPatternOut(BaseModel):
     """Output from lead-in pattern generation."""
     gcode: List[str]
 
-
 class StrategyListOut(BaseModel):
     """Output for strategy list."""
     strategies: List[Dict[str, Any]]
-
 
 class TimeSavingsIn(BaseModel):
     """Input for time savings estimation."""
@@ -94,14 +82,12 @@ class TimeSavingsIn(BaseModel):
     features_count: int
     avg_feature_distance: float = Field(50.0, description="Average distance between features (mm)")
 
-
 class TimeSavingsOut(BaseModel):
     """Output for time savings estimation."""
     total_time_s: float
     z_time_s: float
     xy_time_s: float
     savings_pct: float
-
 
 @router.get("/strategies", response_model=StrategyListOut)
 def list_strategies() -> Dict[str, Any]:
@@ -136,7 +122,6 @@ def list_strategies() -> Dict[str, Any]:
     ]
     
     return {"strategies": strategies}
-
 
 @router.post("/apply", response_model=RetractStrategyOut)
 def apply_retract_strategy(body: RetractStrategyIn) -> Dict[str, Any]:
@@ -209,7 +194,6 @@ def apply_retract_strategy(body: RetractStrategyIn) -> Dict[str, Any]:
         "stats": stats
     }
 
-
 @router.post("/lead_in", response_model=LeadInPatternOut)
 def generate_lead_in(body: LeadInPatternIn) -> Dict[str, Any]:
     """
@@ -250,7 +234,6 @@ def generate_lead_in(body: LeadInPatternIn) -> Dict[str, Any]:
     
     return {"gcode": gcode_lines}
 
-
 @router.post("/estimate", response_model=TimeSavingsOut)
 def estimate_time_savings(body: TimeSavingsIn) -> Dict[str, Any]:
     """
@@ -279,7 +262,6 @@ def estimate_time_savings(body: TimeSavingsIn) -> Dict[str, Any]:
     
     return savings
 
-
 @router.post("/gcode", response_class=Response)
 def generate_simple_retract_gcode(
     strategy: str = "direct",
@@ -289,14 +271,7 @@ def generate_simple_retract_gcode(
     helix_radius: float = 5.0,
     helix_pitch: float = 1.0
 ) -> Response:
-    """
-    Generate simple retract G-code (for CAM Essentials Lab UI).
-    
-    Strategies:
-    - direct: Rapid G0 to safe Z
-    - ramped: Linear G1 ramp at controlled feed
-    - helical: G2/G3 spiral with Z lift
-    """
+    """Generate simple retract G-code (for CAM Essentials Lab UI)."""
     gcode_lines = [
         "G21 G90",
         f"(Retract Strategy: {strategy})",
@@ -343,7 +318,6 @@ def generate_simple_retract_gcode(
     resp.headers["X-ToolBox-Lane"] = "draft"
     return resp
 
-
 # =============================================================================
 # Governed Lane: Full RMOS artifact persistence and audit trail  
 # =============================================================================
@@ -357,12 +331,7 @@ def generate_simple_retract_gcode_governed(
     helix_radius: float = 5.0,
     helix_pitch: float = 1.0
 ) -> Response:
-    """
-    Generate simple retract G-code (GOVERNED lane).
-    
-    Same toolpath as /gcode but with full RMOS artifact persistence.
-    Use this endpoint for production/machine execution.
-    """
+    """Generate simple retract G-code (GOVERNED lane)."""
     gcode_lines = [
         "G21 G90",
         f"(Retract Strategy: {strategy})",
@@ -432,7 +401,6 @@ def generate_simple_retract_gcode_governed(
     resp.headers["X-ToolBox-Lane"] = "governed"
     return resp
 
-
 @router.post("/gcode/download")
 def download_retract_gcode(body: RetractStrategyIn) -> Response:
     """
@@ -468,15 +436,9 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
     resp.headers["X-ToolBox-Lane"] = "draft"
     return resp
 
-
 @router.post("/gcode/download_governed")
 def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
-    """
-    Generate and download G-code with retract optimization (GOVERNED lane).
-    
-    Same toolpath as /gcode/download but with full RMOS artifact persistence.
-    Use this endpoint for production/machine execution.
-    """
+    """Generate and download G-code with retract optimization (GOVERNED lane)."""
     # Apply strategy (reuse apply endpoint logic)
     result = apply_retract_strategy(body)
     

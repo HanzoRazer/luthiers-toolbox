@@ -1,14 +1,4 @@
-"""
-Wave 8: Calculators Router
-
-Exposes a unified endpoint for evaluating cut operations:
-- Router bit feeds/speeds
-- Saw blade physics
-- Chipload, heat, deflection calculations
-
-This provides a single API for the Calculator Debug Panel
-and internal feasibility checks.
-"""
+"""Wave 8: Calculators Router"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
@@ -20,7 +10,6 @@ router = APIRouter(
     prefix="/calculators",
     tags=["calculators"],
 )
-
 
 # ---------------------------------------------------------------------------
 # Result dataclasses
@@ -35,7 +24,6 @@ class ChiploadResult:
     max_recommended_mm: Optional[float] = None
     message: str = ""
 
-
 @dataclass
 class HeatResult:
     """Heat risk assessment."""
@@ -43,14 +31,12 @@ class HeatResult:
     category: str     # "COOL" / "WARM" / "HOT"
     message: str = ""
 
-
 @dataclass
 class DeflectionResult:
     """Tool deflection assessment."""
     deflection_mm: Optional[float]
     risk: str  # "GREEN" / "YELLOW" / "RED"
     message: str = ""
-
 
 @dataclass
 class RimSpeedResult:
@@ -60,14 +46,12 @@ class RimSpeedResult:
     max_recommended_m_per_min: Optional[float] = None
     message: str = ""
 
-
 @dataclass
 class KickbackRiskResult:
     """Saw blade kickback risk assessment."""
     risk_score: float  # 0–1
     category: str      # "LOW" / "MEDIUM" / "HIGH"
     message: str = ""
-
 
 @dataclass 
 class BitePerToothResult:
@@ -78,13 +62,11 @@ class BitePerToothResult:
     max_recommended_mm: Optional[float] = None
     message: str = ""
 
-
 # ---------------------------------------------------------------------------
 # Pydantic request/response models
 # ---------------------------------------------------------------------------
 
 ToolKind = Literal["router_bit", "saw_blade"]
-
 
 class CutOperationPayload(BaseModel):
     """Request payload for cut operation evaluation."""
@@ -105,7 +87,6 @@ class CutOperationPayload(BaseModel):
     machine_id: Optional[str] = None
     profile_id: Optional[str] = None
 
-
 class CalculatorBundleResponse(BaseModel):
     """Response with all calculator results."""
     tool_id: str
@@ -123,7 +104,6 @@ class CalculatorBundleResponse(BaseModel):
     hard_failures: List[str] = []
     
     overall_risk: str = "GREEN"  # "GREEN" / "YELLOW" / "RED"
-
 
 # ---------------------------------------------------------------------------
 # Calculator implementations
@@ -166,22 +146,13 @@ def calculate_chipload(
         message=message,
     )
 
-
 def calculate_heat_risk(
     chipload_mm: Optional[float],
     rpm: float,
     depth_of_cut_mm: float,
     material_heat_sensitivity: float = 0.5,  # 0-1
 ) -> HeatResult:
-    """
-    Estimate heat risk based on cutting parameters.
-    
-    Higher risk with:
-    - Low chipload (rubbing instead of cutting)
-    - High RPM
-    - Deep cuts
-    - Heat-sensitive materials
-    """
+    """Estimate heat risk based on cutting parameters."""
     if chipload_mm is None or chipload_mm <= 0:
         return HeatResult(
             heat_risk=0.8,
@@ -214,19 +185,13 @@ def calculate_heat_risk(
         message=message,
     )
 
-
 def calculate_deflection(
     tool_diameter_mm: float,
     depth_of_cut_mm: float,
     width_of_cut_mm: Optional[float],
     stickout_mm: float = 25.0,  # Assumed stickout
 ) -> DeflectionResult:
-    """
-    Estimate tool deflection risk.
-    
-    Simplified model based on tool diameter vs stickout ratio
-    and cutting forces (proportional to DOC × WOC).
-    """
+    """Estimate tool deflection risk."""
     if tool_diameter_mm <= 0:
         return DeflectionResult(
             deflection_mm=None,
@@ -262,7 +227,6 @@ def calculate_deflection(
         message=message,
     )
 
-
 def calculate_rim_speed(
     blade_diameter_mm: float,
     rpm: float,
@@ -296,7 +260,6 @@ def calculate_rim_speed(
         max_recommended_m_per_min=max_rim_speed_m_per_min,
         message=message,
     )
-
 
 def calculate_bite_per_tooth(
     feed_mm_min: float,
@@ -335,21 +298,13 @@ def calculate_bite_per_tooth(
         message=message,
     )
 
-
 def calculate_kickback_risk(
     depth_of_cut_mm: float,
     blade_diameter_mm: float,
     tooth_count: int,
     feed_mm_min: float,
 ) -> KickbackRiskResult:
-    """
-    Estimate kickback risk for saw operations.
-    
-    Higher risk with:
-    - Deep cuts relative to blade size
-    - Aggressive feed rates
-    - Low tooth count (larger gullets)
-    """
+    """Estimate kickback risk for saw operations."""
     # Depth ratio (deeper = more risk)
     max_depth = blade_diameter_mm * 0.4  # Rule of thumb: max 40% of blade diameter
     depth_ratio = min(1.0, depth_of_cut_mm / max_depth) if max_depth > 0 else 1.0
@@ -378,7 +333,6 @@ def calculate_kickback_risk(
         category=category,
         message=message,
     )
-
 
 # ---------------------------------------------------------------------------
 # Main evaluation function
@@ -496,27 +450,14 @@ def evaluate_cut_operation(payload: CutOperationPayload) -> CalculatorBundleResp
         overall_risk=overall_risk,
     )
 
-
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
 @router.post("/evaluate", response_model=CalculatorBundleResponse)
 def evaluate_cut(payload: CutOperationPayload) -> CalculatorBundleResponse:
-    """
-    Evaluate a cut operation and return all calculator results.
-    
-    Supports both router bits and saw blades. Returns:
-    - Chipload or bite-per-tooth
-    - Heat risk assessment
-    - Deflection risk (router bits)
-    - Rim speed (saw blades)
-    - Kickback risk (saw blades)
-    - Overall risk level (GREEN/YELLOW/RED)
-    - Warnings and hard failures
-    """
+    """Evaluate a cut operation and return all calculator results."""
     return evaluate_cut_operation(payload)
-
 
 # Alias for Calculator Spine API compatibility
 @router.post("/evaluate-cut", response_model=CalculatorBundleResponse)
@@ -527,7 +468,6 @@ def evaluate_cut_alias(payload: CutOperationPayload) -> CalculatorBundleResponse
     See /evaluate for full documentation.
     """
     return evaluate_cut_operation(payload)
-
 
 @router.get("/health")
 def calculator_health():
