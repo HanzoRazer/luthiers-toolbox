@@ -1,16 +1,6 @@
 # services/api/app/calculators/inlay_calc.py
 
-"""
-Inlay calculator for the Luthier's ToolBox.
-
-This module provides pattern generation for decorative inlays including:
-- Fretboard position markers (dots, diamonds, blocks, custom)
-- Headstock inlays (logo, decorative patterns)
-- Purfling patterns (herringbone, rope, checkerboard)
-
-Unlike bracing_calc and rosette_calc which wrap legacy modules,
-this is a new calculator with pattern-first design.
-"""
+"""Inlay calculator for the Luthier's ToolBox."""
 
 from __future__ import annotations
 
@@ -24,7 +14,6 @@ from pydantic import BaseModel, Field
 # For production use, call get_scale_from_registry() helper to get registry data
 # Registry provides: fender_25_5 (647.7mm), gibson_24_75 (628.65mm), prs_25 (635mm), etc.
 
-
 class InlayPatternType(str, Enum):
     """Types of inlay patterns available."""
     DOT = "dot"
@@ -36,7 +25,6 @@ class InlayPatternType(str, Enum):
     SNOWFLAKE = "snowflake"
     CUSTOM = "custom"
 
-
 class FretMarkerStyle(str, Enum):
     """Standard fret marker position styles."""
     STANDARD = "standard"        # 3,5,7,9,12,15,17,19,21,24
@@ -46,14 +34,8 @@ class FretMarkerStyle(str, Enum):
     BLOCKS = "blocks"            # Gibson-style blocks
     TRAPEZOIDS = "trapezoids"    # Gibson ES-style
 
-
 class InlayShape(BaseModel):
-    """
-    A single inlay shape with position and geometry.
-    
-    All dimensions in mm. Origin is typically at fret center or 
-    soundhole center depending on context.
-    """
+    """A single inlay shape with position and geometry."""
     pattern_type: InlayPatternType = Field(description="Shape type")
     x_mm: float = Field(description="X position from reference origin")
     y_mm: float = Field(description="Y position from reference origin")
@@ -67,7 +49,6 @@ class InlayShape(BaseModel):
         default=None,
         description="Custom shape vertices as (x, y) tuples relative to position"
     )
-
 
 class InlayCalcInput(BaseModel):
     """Input for inlay pattern generation."""
@@ -135,7 +116,6 @@ class InlayCalcInput(BaseModel):
         description="Side dot diameter (typically smaller)"
     )
 
-
 class InlayCalcResult(BaseModel):
     """Result of inlay pattern calculation."""
     
@@ -152,7 +132,6 @@ class InlayCalcResult(BaseModel):
     pocket_depth_mm: float
     toolpath_notes: str = Field(default="")
 
-
 def fret_position_mm(fret_number: int, scale_length_mm: float) -> float:
     """
     Calculate distance from nut to fret using 12-TET formula.
@@ -162,7 +141,6 @@ def fret_position_mm(fret_number: int, scale_length_mm: float) -> float:
     if fret_number <= 0:
         return 0.0
     return scale_length_mm * (1.0 - pow(2, -fret_number / 12.0))
-
 
 def fret_midpoint_mm(fret_number: int, scale_length_mm: float) -> float:
     """
@@ -177,7 +155,6 @@ def fret_midpoint_mm(fret_number: int, scale_length_mm: float) -> float:
     pos_at = fret_position_mm(fret_number, scale_length_mm)
     return (pos_before + pos_at) / 2.0
 
-
 def interpolate_width(x_mm: float, scale_length_mm: float, 
                       nut_width: float, fret_12_width: float) -> float:
     """Interpolate fretboard width at position x from nut."""
@@ -191,7 +168,6 @@ def interpolate_width(x_mm: float, scale_length_mm: float,
     t = x_mm / fret_12_pos
     return nut_width + t * (fret_12_width - nut_width)
 
-
 def generate_dot_shape(x: float, y: float, diameter: float, depth: float) -> InlayShape:
     """Generate a circular dot inlay shape."""
     return InlayShape(
@@ -202,7 +178,6 @@ def generate_dot_shape(x: float, y: float, diameter: float, depth: float) -> Inl
         height_mm=diameter,
         depth_mm=depth,
     )
-
 
 def generate_diamond_shape(x: float, y: float, width: float, 
                            height: float, depth: float) -> InlayShape:
@@ -224,7 +199,6 @@ def generate_diamond_shape(x: float, y: float, width: float,
         ],
     )
 
-
 def generate_block_shape(x: float, y: float, width: float, 
                          height: float, depth: float) -> InlayShape:
     """Generate a rectangular block inlay shape."""
@@ -244,7 +218,6 @@ def generate_block_shape(x: float, y: float, width: float,
             (-half_w, -half_h),  # bottom-left
         ],
     )
-
 
 def generate_parallelogram_shape(x: float, y: float, width: float,
                                   height: float, skew_deg: float, 
@@ -269,17 +242,8 @@ def generate_parallelogram_shape(x: float, y: float, width: float,
         ],
     )
 
-
 def calculate_fretboard_inlays(input_data: InlayCalcInput) -> InlayCalcResult:
-    """
-    Calculate fretboard inlay positions and shapes.
-    
-    Args:
-        input_data: InlayCalcInput with pattern and dimension specs
-        
-    Returns:
-        InlayCalcResult with positioned shapes
-    """
+    """Calculate fretboard inlay positions and shapes."""
     shapes: List[InlayShape] = []
     
     for fret in input_data.fret_positions:
@@ -375,21 +339,11 @@ def calculate_fretboard_inlays(input_data: InlayCalcInput) -> InlayCalcResult:
         toolpath_notes=f"{len(shapes)} {input_data.pattern_type.value} inlays at {input_data.pocket_depth_mm}mm depth"
     )
 
-
 def generate_inlay_dxf_string(
     result: InlayCalcResult,
     dxf_version: str = "R12",
 ) -> str:
-    """
-    Generate DXF string for inlay shapes.
-    
-    Args:
-        result: InlayCalcResult from calculate_fretboard_inlays()
-        dxf_version: Target DXF version (R12 default)
-        
-    Returns:
-        DXF string content
-    """
+    """Generate DXF string for inlay shapes."""
     # Import dxf_compat for version-aware generation
     try:
         from ..util.dxf_compat import create_document, add_polyline, validate_version
@@ -428,8 +382,6 @@ def generate_inlay_dxf_string(
     stream = StringIO()
     doc.write(stream)
     return stream.getvalue()
-    return stream.getvalue()
-
 
 def _generate_basic_r12_dxf(result: InlayCalcResult) -> str:
     """Fallback basic R12 DXF generation without dxf_compat."""
@@ -460,7 +412,6 @@ def _generate_basic_r12_dxf(result: InlayCalcResult) -> str:
     stream = StringIO()
     doc.write(stream)
     return stream.getvalue()
-
 
 # Preset configurations
 INLAY_PRESETS = {
@@ -504,11 +455,9 @@ INLAY_PRESETS = {
     ),
 }
 
-
 def get_preset(name: str) -> Optional[InlayCalcInput]:
     """Get a preset inlay configuration by name."""
     return INLAY_PRESETS.get(name)
-
 
 def list_presets() -> Dict[str, str]:
     """List available inlay presets with descriptions."""
@@ -521,22 +470,8 @@ def list_presets() -> Dict[str, str]:
         "trapezoid_es": "Gibson ES-style trapezoid inlays",
     }
 
-
 def get_scale_from_registry(scale_id: str = "fender_25_5", edition: str = "express") -> float:
-    """
-    Get scale length from data registry (system tier - available to all editions).
-    
-    Args:
-        scale_id: Scale identifier (fender_25_5, gibson_24_75, prs_25, etc.)
-        edition: Product edition (express, pro, enterprise) - defaults to express for system data
-    
-    Returns:
-        Scale length in mm (defaults to 647.7mm if registry unavailable)
-    
-    Examples:
-        >>> get_scale_from_registry("fender_25_5")  # 647.7mm
-        >>> get_scale_from_registry("gibson_24_75")  # 628.65mm
-    """
+    """Get scale length from data registry (system tier - available to all editions)."""
     try:
         from ..data_registry import Registry
         registry = Registry(edition=edition)
