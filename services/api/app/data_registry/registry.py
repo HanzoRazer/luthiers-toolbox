@@ -1,192 +1,37 @@
-"""
-Luthier's ToolBox - Hybrid Data Registry
-=========================================
-
-Three-tier data architecture for multi-product SaaS delivery:
-
-    SYSTEM DATA (Read-only)
-        └── Shipped with product, same for all users
-        └── Scale lengths, fret formulas, wood species reference
-        
-    EDITION DATA (Read-only, product-specific)  
-        └── Express: Basic templates only
-        └── Pro: + Tools, machines, empirical limits, CAM presets
-        └── Enterprise: + Fleet configs, production scheduling
-        
-    USER DATA (CRUD, cloud-synced)
-        └── Custom profiles, templates, tools, machines, projects
-        └── Local SQLite with optional PostgreSQL sync
-
-Usage:
-    from data_registry import Registry
-    
-    # Initialize for a specific product edition
-    reg = Registry(edition="pro", user_id="user_123")
-    
-    # Access data (automatically resolves tier precedence)
-    tool = reg.get_tool("flat_6mm_2f")           # User > Edition > System
-    wood = reg.get_material("mahogany")          # Edition > System
-    scale = reg.get_scale_length("fender_25_5")  # System only
-    
-    # User data CRUD
-    reg.save_custom_tool({...})
-    reg.save_project({...})
-"""
+"""Luthier's ToolBox - Hybrid Data Registry"""
 
 import json
 import os
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from enum import Enum
-from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
 
+# WP-3: Configuration, enums, and entitlements extracted to registry_config.py
+from .registry_config import (
+    Edition as Edition,
+    DataTier as DataTier,
+    EDITION_ENTITLEMENTS as EDITION_ENTITLEMENTS,
+    SyncState as SyncState,
+    RegistryConfig as RegistryConfig,
+    ValidationError as ValidationError,
+    EntitlementError as EntitlementError,
+)
 
-class Edition(Enum):
-    # Core Editions (Tiered)
-    EXPRESS = "express"           # $49 - Entry-level, geometry only
-    PRO = "pro"                   # $299-399 - Professional CAM
-    ENTERPRISE = "enterprise"     # $899-1299 - Multi-CNC, customers, inventory
-    
-    # Standalone Parametric Tools (Etsy/Gumroad)
-    PARAMETRIC = "parametric"               # $39-59 - Guitar builder CAD
-    NECK_DESIGNER = "neck_designer"         # $29-79 - Neck profile creator
-    HEADSTOCK_DESIGNER = "headstock_designer"  # $14-29 - Headstock layout
-    BRIDGE_DESIGNER = "bridge_designer"     # $14-19 - Bridge geometry (or free)
-    FINGERBOARD_DESIGNER = "fingerboard_designer"  # $19-29 - Fretboard calculator
-    
-    # Industry Crossover
-    CNC_BLUEPRINTS = "cnc_blueprints"       # $29-49 - Housing industry blueprint reader
+# WP-3: Standalone product data accessors extracted to registry_products.py
+from .registry_products import RegistryProductsMixin
 
 
-class DataTier(Enum):
-    SYSTEM = "system"       # Read-only, shipped with product
-    EDITION = "edition"     # Read-only, product-specific
-    USER = "user"           # CRUD, cloud-synced
-
-
-# Product entitlements - which data categories each edition can access
-EDITION_ENTITLEMENTS = {
-    # =========================================================================
-    # CORE EDITIONS (Tiered)
-    # =========================================================================
-    Edition.EXPRESS: {
-        "system": ["instruments", "materials", "references"],
-        "edition": [],  # Express gets no edition-specific data (honeypot strategy)
-        "user": ["custom_profiles", "custom_templates", "projects"]
-    },
-    Edition.PRO: {
-        "system": ["instruments", "materials", "references"],
-        "edition": ["tools", "machines", "empirical", "cam_presets", "posts"],
-        "user": ["custom_profiles", "custom_templates", "my_tools", "my_machines", "projects"]
-    },
-    Edition.ENTERPRISE: {
-        "system": ["instruments", "materials", "references"],
-        "edition": ["tools", "machines", "empirical", "cam_presets", "posts", "fleet", "scheduling"],
-        "user": ["custom_profiles", "custom_templates", "my_tools", "my_machines", "projects", 
-                 "customers", "orders", "inventory"]
-    },
-    
-    # =========================================================================
-    # STANDALONE PARAMETRIC TOOLS (Etsy/Gumroad - No CAM features)
-    # =========================================================================
-    Edition.PARAMETRIC: {
-        # Full guitar CAD - needs all geometry, no CAM
-        "system": ["instruments", "materials", "references"],
-        "edition": ["guitar_templates", "parametric_constraints"],
-        "user": ["custom_profiles", "custom_templates", "projects"]
-    },
-    Edition.NECK_DESIGNER: {
-        # Neck profiles, taper, truss rod - subset of instruments
-        "system": ["instruments", "references"],  # neck_profiles, scale_lengths
-        "edition": ["neck_templates", "truss_specs"],
-        "user": ["custom_profiles", "projects"]
-    },
-    Edition.HEADSTOCK_DESIGNER: {
-        # Headstock shapes, tuner layouts
-        "system": ["instruments", "references"],
-        "edition": ["headstock_templates", "tuner_layouts"],
-        "user": ["custom_templates", "projects"]
-    },
-    Edition.BRIDGE_DESIGNER: {
-        # Bridge geometry, string spacing, saddle compensation
-        "system": ["instruments", "references"],  # scale_lengths, compensation
-        "edition": ["bridge_templates", "saddle_specs"],
-        "user": ["custom_templates", "projects"]
-    },
-    Edition.FINGERBOARD_DESIGNER: {
-        # Fret positions, radius, inlay layouts
-        "system": ["instruments", "references"],  # fret_formulas, scale_lengths
-        "edition": ["fretboard_templates", "inlay_patterns"],
-        "user": ["custom_templates", "projects"]
-    },
-    
-    # =========================================================================
-    # INDUSTRY CROSSOVER
-    # =========================================================================
-    Edition.CNC_BLUEPRINTS: {
-        # Housing industry blueprint reader - completely different domain
-        "system": ["references"],  # Generic measurement/dimension data
-        "edition": ["blueprint_standards", "dimension_tables", "construction_codes"],
-        "user": ["imported_blueprints", "projects"]
-    }
-}
-
-
-@dataclass
-class SyncState:
-    """Tracks local vs cloud sync status for user data"""
-    last_local_update: Optional[datetime] = None
-    last_cloud_sync: Optional[datetime] = None
-    pending_changes: int = 0
-    sync_enabled: bool = False
-
-
-@dataclass
-class RegistryConfig:
-    """Configuration for registry initialization"""
-    edition: Edition = Edition.PRO
-    user_id: Optional[str] = None
-    base_path: Optional[Path] = None
-    user_db_path: Optional[Path] = None
-    cloud_sync_enabled: bool = False
-    cloud_endpoint: Optional[str] = None
-    validate_on_load: bool = True
-
-
-class ValidationError(Exception):
-    """Raised when data fails schema validation"""
-    pass
-
-
-class EntitlementError(Exception):
-    """Raised when accessing data outside product entitlements"""
-    pass
-
-
-class Registry:
-    """
-    Hybrid data registry with three-tier architecture.
-    
-    Supports local-first operation with optional cloud sync.
-    """
+class Registry(RegistryProductsMixin):
+    """Hybrid data registry with three-tier architecture."""
     
     def __init__(self, 
                  edition: Union[str, Edition] = "pro",
                  user_id: Optional[str] = None,
                  base_path: Optional[str] = None,
                  validate: bool = True):
-        """
-        Initialize the registry.
-        
-        Args:
-            edition: Product edition (express, pro, enterprise)
-            user_id: User identifier for user-tier data
-            base_path: Override default data path
-            validate: Whether to validate data on load
-        """
+        """Initialize the registry."""
         if isinstance(edition, str):
             edition = Edition(edition.lower())
         
@@ -307,127 +152,16 @@ class Registry:
         self._check_entitlement("edition", "posts")
         return self._load_edition_data("posts/processors.json")
     
-    # =========================================================================
-    # STANDALONE PARAMETRIC PRODUCTS (No CAM features)
-    # =========================================================================
-    
-    # --- ltb-parametric ($39-59) ---
-    def get_guitar_templates(self) -> Dict[str, Any]:
-        """Get parametric guitar templates (ltb-parametric only)"""
-        self._check_entitlement("edition", "guitar_templates")
-        return self._load_edition_data("guitar_templates.json")
-    
-    def get_guitar_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific parametric guitar template"""
-        templates = self.get_guitar_templates()
-        return templates.get("templates", {}).get(template_id)
-    
-    # --- ltb-neck-designer ($29-79) ---
-    def get_neck_templates(self) -> Dict[str, Any]:
-        """Get advanced neck templates (ltb-neck-designer only)"""
-        self._check_entitlement("edition", "neck_templates")
-        return self._load_edition_data("neck_templates.json")
-    
-    def get_neck_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific neck template"""
-        templates = self.get_neck_templates()
-        return templates.get("templates", {}).get(template_id)
-    
-    def get_truss_specs(self) -> Dict[str, Any]:
-        """Get truss rod specifications (ltb-neck-designer only)"""
-        self._check_entitlement("edition", "truss_specs")
-        templates = self.get_neck_templates()
-        return templates.get("truss_specs", {})
-    
-    # --- ltb-headstock-designer ($14-29) ---
-    def get_headstock_templates(self) -> Dict[str, Any]:
-        """Get headstock templates (ltb-headstock-designer only)"""
-        self._check_entitlement("edition", "headstock_templates")
-        return self._load_edition_data("headstock_templates.json")
-    
-    def get_headstock_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific headstock template"""
-        templates = self.get_headstock_templates()
-        return templates.get("templates", {}).get(template_id)
-    
-    def get_tuner_layouts(self) -> Dict[str, Any]:
-        """Get tuner layout specifications (ltb-headstock-designer only)"""
-        self._check_entitlement("edition", "tuner_layouts")
-        templates = self.get_headstock_templates()
-        return templates.get("tuner_layouts", {})
-    
-    # --- ltb-bridge-designer ($14-19) ---
-    def get_bridge_templates(self) -> Dict[str, Any]:
-        """Get bridge templates (ltb-bridge-designer only)"""
-        self._check_entitlement("edition", "bridge_templates")
-        return self._load_edition_data("bridge_templates.json")
-    
-    def get_bridge_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific bridge template"""
-        templates = self.get_bridge_templates()
-        return templates.get("templates", {}).get(template_id)
-    
-    def get_saddle_specs(self) -> Dict[str, Any]:
-        """Get saddle specifications (ltb-bridge-designer only)"""
-        self._check_entitlement("edition", "saddle_specs")
-        templates = self.get_bridge_templates()
-        return templates.get("saddle_specs", {})
-    
-    # --- ltb-fingerboard-designer ($19-29) ---
-    def get_fretboard_templates(self) -> Dict[str, Any]:
-        """Get fretboard templates (ltb-fingerboard-designer only)"""
-        self._check_entitlement("edition", "fretboard_templates")
-        return self._load_edition_data("fretboard_templates.json")
-    
-    def get_fretboard_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific fretboard template"""
-        templates = self.get_fretboard_templates()
-        return templates.get("templates", {}).get(template_id)
-    
-    def get_inlay_patterns(self) -> Dict[str, Any]:
-        """Get inlay patterns (ltb-fingerboard-designer only)"""
-        self._check_entitlement("edition", "inlay_patterns")
-        templates = self.get_fretboard_templates()
-        return templates.get("inlay_patterns", {})
-    
-    def get_fret_wire_specs(self) -> Dict[str, Any]:
-        """Get fret wire specifications (ltb-fingerboard-designer only)"""
-        self._check_entitlement("edition", "fretboard_templates")
-        templates = self.get_fretboard_templates()
-        return templates.get("fret_wire_specs", {})
-    
-    # =========================================================================
-    # INDUSTRY CROSSOVER - ltb-cnc-blueprints ($29-49)
-    # =========================================================================
-    
-    def get_blueprint_standards(self) -> Dict[str, Any]:
-        """Get housing industry blueprint standards (ltb-cnc-blueprints only)"""
-        self._check_entitlement("edition", "blueprint_standards")
-        return self._load_edition_data("blueprint_standards.json")
-    
-    def get_dimension_tables(self) -> Dict[str, Any]:
-        """Get construction dimension tables (ltb-cnc-blueprints only)"""
-        self._check_entitlement("edition", "dimension_tables")
-        standards = self.get_blueprint_standards()
-        return standards.get("dimension_tables", {})
-    
-    def get_construction_codes(self) -> Dict[str, Any]:
-        """Get construction code references (ltb-cnc-blueprints only)"""
-        self._check_entitlement("edition", "construction_codes")
-        standards = self.get_blueprint_standards()
-        return standards.get("construction_codes", {})
-    
+    # WP-3: Standalone product accessors (ltb-parametric, ltb-neck-designer,
+    # ltb-headstock-designer, ltb-bridge-designer, ltb-fingerboard-designer,
+    # ltb-cnc-blueprints) extracted to RegistryProductsMixin via registry_products.py
+
     # =========================================================================
     # COMBINED QUERIES (Merges tiers with precedence)
     # =========================================================================
     
     def get_material_with_limits(self, species_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get wood species data combined with empirical limits.
-        
-        Returns merged dict with both reference properties and cutting limits.
-        Express edition gets reference only, Pro/Enterprise get limits too.
-        """
+        """Get wood species data combined with empirical limits."""
         wood = self.get_wood(species_id)
         if not wood:
             return None
@@ -449,17 +183,7 @@ class Registry:
                                operation: str, 
                                material: str,
                                preferred_diameter: Optional[float] = None) -> Optional[Dict[str, Any]]:
-        """
-        Find best tool for an operation considering material and diameter.
-        
-        Args:
-            operation: "roughing", "finishing", "vcarve", "drilling", etc.
-            material: Wood species ID
-            preferred_diameter: Preferred tool diameter in mm
-        
-        Returns:
-            Best matching tool dict or None
-        """
+        """Find best tool for an operation considering material and diameter."""
         tools = self.get_tools()
         candidates = []
         
@@ -585,7 +309,7 @@ class Registry:
         schema_path = self.base_path / "schemas"
         if schema_path.exists():
             for schema_file in schema_path.glob("*.json"):
-                with open(schema_file) as f:
+                with open(schema_file, encoding="utf-8") as f:
                     self._schemas[schema_file.stem] = json.load(f)
     
     def _load_system_data(self, relative_path: str) -> Dict[str, Any]:
@@ -628,7 +352,7 @@ class Registry:
             return {}
         
         try:
-            with open(file_path) as f:
+            with open(file_path, encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             raise ValidationError(f"Invalid JSON in {file_path}: {e}")

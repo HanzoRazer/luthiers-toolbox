@@ -1,30 +1,4 @@
-"""
-Alternative Temperament Fret Calculations
-
-Implements non-equal temperament fret positions for the Smart Guitar concept.
-Supports just intonation, Pythagorean, meantone, and key-specific optimization.
-
-The Smart Guitar concept allows frets to be positioned at mathematically 
-"perfect" intervals for a specific key, rather than the compromise positions
-of equal temperament (12-TET).
-
-Theory:
-    In 12-TET, each semitone has ratio 2^(1/12) ≈ 1.05946
-    This means intervals like major 3rds are ~14 cents sharp of pure 5:4
-    
-    In Just Intonation, intervals use simple ratios:
-    - Perfect 5th: 3:2 (702 cents) vs 12-TET 700 cents
-    - Major 3rd: 5:4 (386 cents) vs 12-TET 400 cents (14 cents sharp!)
-    - Perfect 4th: 4:3 (498 cents) vs 12-TET 500 cents
-
-References:
-    - https://www.liutaiomottola.com/formulae/fret.htm
-    - "Tuning and Temperament" by J. Murray Barbour
-    - True Temperament guitars (commercial implementation)
-
-Author: Luthier's Toolbox
-Date: December 2025
-"""
+"""Alternative Temperament Fret Calculations"""
 
 from __future__ import annotations
 
@@ -34,63 +8,16 @@ from enum import Enum
 import math
 
 
-# =============================================================================
-# CONSTANTS: Temperament Ratio Tables
-# =============================================================================
-
-# Just Intonation - Major scale ratios (pure intervals)
-JUST_MAJOR_RATIOS = {
-    0: (1, 1),      # Unison: 1/1
-    1: (16, 15),    # Minor 2nd: 16/15 (diatonic semitone)
-    2: (9, 8),      # Major 2nd: 9/8 (whole tone)
-    3: (6, 5),      # Minor 3rd: 6/5
-    4: (5, 4),      # Major 3rd: 5/4 (the "sweet" third)
-    5: (4, 3),      # Perfect 4th: 4/3
-    6: (45, 32),    # Tritone: 45/32 (augmented 4th)
-    7: (3, 2),      # Perfect 5th: 3/2 (the anchor)
-    8: (8, 5),      # Minor 6th: 8/5
-    9: (5, 3),      # Major 6th: 5/3
-    10: (9, 5),     # Minor 7th: 9/5 (harmonic)
-    11: (15, 8),    # Major 7th: 15/8
-    12: (2, 1),     # Octave: 2/1
-}
-
-# Pythagorean tuning - built on pure 5ths (3:2)
-PYTHAGOREAN_RATIOS = {
-    0: (1, 1),
-    1: (256, 243),   # Pythagorean limma
-    2: (9, 8),       # Pythagorean whole tone
-    3: (32, 27),     # Pythagorean minor 3rd
-    4: (81, 64),     # Pythagorean major 3rd (ditone - quite sharp!)
-    5: (4, 3),
-    6: (729, 512),   # Pythagorean tritone
-    7: (3, 2),
-    8: (128, 81),
-    9: (27, 16),
-    10: (16, 9),
-    11: (243, 128),
-    12: (2, 1),
-}
-
-# Quarter-comma Meantone - compromise for better 3rds
-MEANTONE_RATIOS = {
-    0: (1, 1),
-    1: (1.0449, 1),
-    2: (1.1180, 1),
-    3: (1.1963, 1),
-    4: (5, 4),        # Pure major 3rd
-    5: (1.3375, 1),
-    6: (1.3975, 1),
-    7: (1.4953, 1),   # Narrow 5th
-    8: (1.6000, 1),
-    9: (1.6719, 1),
-    10: (1.7889, 1),
-    11: (1.8692, 1),
-    12: (2, 1),
-}
-
-# Equal temperament ratios for reference
-EQUAL_12TET_RATIOS = {i: (2 ** (i / 12), 1) for i in range(13)}
+# WP-3: Ratio constant tables extracted to temperament_ratios.py
+from .temperament_ratios import (
+    JUST_MAJOR_RATIOS as JUST_MAJOR_RATIOS,
+    PYTHAGOREAN_RATIOS as PYTHAGOREAN_RATIOS,
+    MEANTONE_RATIOS as MEANTONE_RATIOS,
+    EQUAL_12TET_RATIOS as EQUAL_12TET_RATIOS,
+    STANDARD_TUNING_SEMITONES as STANDARD_TUNING_SEMITONES,
+    NOTE_NAMES as NOTE_NAMES,
+    INTERVAL_NAMES as INTERVAL_NAMES,
+)
 
 
 class TemperamentSystem(str, Enum):
@@ -143,18 +70,8 @@ class StaggeredFret:
         }
 
 
-# Standard guitar tuning: string open pitches relative to low E
-STANDARD_TUNING_SEMITONES = [0, 5, 10, 15, 19, 24]  # E A D G B E
-
-# Note names for reference
-NOTE_NAMES = ["E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#"]
-
-# Interval names
-INTERVAL_NAMES = [
-    "Unison", "Minor 2nd", "Major 2nd", "Minor 3rd", 
-    "Major 3rd", "Perfect 4th", "Tritone", "Perfect 5th",
-    "Minor 6th", "Major 6th", "Minor 7th", "Major 7th", "Octave"
-]
+# Standard guitar tuning: imported from temperament_ratios
+# Note names and Interval names: imported from temperament_ratios
 
 
 # =============================================================================
@@ -173,12 +90,7 @@ def ratio_to_cents(ratio: Tuple[int, int]) -> float:
 
 
 def position_from_ratio(ratio: float, scale_length_mm: float) -> float:
-    """
-    Convert frequency ratio to fret position from nut.
-    
-    The string length at a fret = scale_length / ratio
-    So fret position from nut = scale_length - (scale_length / ratio)
-    """
+    """Convert frequency ratio to fret position from nut."""
     return scale_length_mm - (scale_length_mm / ratio)
 
 
@@ -196,12 +108,7 @@ def compute_deviation_cents(
     alt_pos_mm: float,
     scale_length_mm: float
 ) -> float:
-    """
-    Compute deviation in cents between two fret positions.
-    
-    Positive = alternative is sharper (fret closer to nut)
-    Negative = alternative is flatter (fret closer to bridge)
-    """
+    """Compute deviation in cents between two fret positions."""
     equal_length = scale_length_mm - equal_pos_mm
     alt_length = scale_length_mm - alt_pos_mm
     
@@ -502,26 +409,7 @@ NAMED_RATIO_SETS: Dict[str, str] = {
 
 
 def get_ratio_set(ratio_set_id: str, fret_count: int = 22) -> List[float]:
-    """
-    Return a per-fret ratio list for CAM fret placement.
-
-    IMPORTANT:
-      For CAM fret placement we need a per-fret ratio list (len == fret_count):
-        ratios[n-1] = freq_ratio at fret n relative to open
-
-      This function generates per-fret ratios by extending the scale-degree
-      ratios across octaves.
-
-    Args:
-        ratio_set_id: Named ratio set (JUST_MAJOR, PYTHAGOREAN, MEANTONE)
-        fret_count: Number of frets to generate ratios for
-
-    Returns:
-        List of frequency ratios, one per fret
-
-    Raises:
-        ValueError: If ratio_set_id is unknown
-    """
+    """Return a per-fret ratio list for CAM fret placement."""
     key = (ratio_set_id or "").strip().upper()
 
     # Select the appropriate ratio table
@@ -556,27 +444,7 @@ def compute_fret_positions_from_ratios_mm(
     scale_length_mm: float,
     ratios: List[float],
 ) -> List[float]:
-    """
-    Convert frequency ratios to fret positions (distance from nut, mm).
-
-    This is the canonical function for converting a per-fret ratio list
-    to manufacturable fret positions.
-
-    Contract:
-      - ratios is per-fret: ratios[n-1] corresponds to fret n
-      - each ratio must be > 1.0 (fretted note is higher than open)
-      - output positions must strictly increase (physically valid)
-
-    Args:
-        scale_length_mm: Scale length in millimeters
-        ratios: Per-fret frequency ratios (len == fret_count)
-
-    Returns:
-        List of fret positions in mm from nut
-
-    Raises:
-        ValueError: If inputs are invalid or produce invalid geometry
-    """
+    """Convert frequency ratios to fret positions (distance from nut, mm)."""
     if scale_length_mm <= 0:
         raise ValueError("scale_length_mm must be > 0")
     if not ratios:
