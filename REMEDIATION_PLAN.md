@@ -1,30 +1,38 @@
 # Luthier's ToolBox — Remediation Plan
 
 **Date:** 2026-02-05
+**Last Updated:** 2026-02-09
 **Based on:** `luthiers-toolbox-design-review.md` (scored 5.15/10) + `luthiers-toolbox-design-review-factcheck.md` (verified numbers)
 **Goal:** Raise the weighted score from ~4.7/10 (corrected) to 7.0+/10
 
 ---
 
-## Verified Baseline (current state)
+## Phase Status Summary
 
-| Metric | Count |
-|--------|-------|
-| Python files | 1,358 |
-| Python LOC | 265,128 |
-| TypeScript/Vue LOC | 146,183 |
-| API route decorators | 1,060 |
-| Router registrations in main.py | 123 |
-| try: blocks in main.py | 47 |
-| `except Exception` blocks | 1,622 |
-| Bare `except:` blocks | 97 |
-| Python files > 500 lines | 30+ |
-| Vue files > 800 lines | 25+ |
-| Test files | 262 |
-| Test LOC | 45,141 |
-| Docs .md files | 685 (in docs/), 1,100 total |
-| Docs size | 12 MB |
-| Backup/archive artifacts | 30+ files, 5 stale directories |
+| Phase | Status | Key Metric |
+|-------|--------|------------|
+| **Phase 0** — Dead Code Purge | ✅ COMPLETE | Stale dirs deleted |
+| **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅ bare except=0, 1.2 pending |
+| **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
+| **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
+| **Phase 4** — Documentation Triage | ⏳ NOT STARTED | 685 docs |
+| **Phase 5** — Quick Cut Mode | ⏳ NOT STARTED | Onboarding flow |
+| **Phase 6** — Health/Observability | ⏳ NOT STARTED | Health endpoint |
+
+### Test Suite (2026-02-09)
+- **1,069 passed**, 0 failed, 0 errors, 8 skipped
+
+---
+
+## Verified Baseline (original state Feb 2026)
+
+| Metric | Original | Current |
+|--------|----------|---------|
+| Python files | 1,358 | ~1,400 |
+| Bare `except:` blocks | 97 | **0** ✅ |
+| Python files > 500 lines | 30+ | **0** ✅ |
+| Test files | 262 | 270+ |
+| Backup/archive artifacts | 30+ | **0** ✅ |
 
 ---
 
@@ -539,7 +547,7 @@ Phase 0 is done when:
 - [ ] .gitignore updated to prevent recurrence
 
 Phase 1 is done when:
-- [ ] Zero bare `except:` blocks (`grep -rP '^\s*except\s*:' services/api/app/ | wc -l` == 0)
+- [x] Zero bare `except:` blocks (`grep -rP '^\s*except\s*:' services/api/app/ | wc -l` == 0) ✅ 2026-02-09
 - [ ] All safety-critical paths use `@safety_critical` decorator
 - [ ] `except Exception` in rmos/, cam/, calculators/ replaced with specific types
 
