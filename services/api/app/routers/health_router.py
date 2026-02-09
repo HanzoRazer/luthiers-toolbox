@@ -13,6 +13,8 @@ from fastapi import APIRouter
 from importlib import metadata
 from importlib.metadata import PackageNotFoundError
 
+from ..core.observability import get_health_summary
+
 router = APIRouter(tags=["System"])
 
 # Determine repository root relative to this file
@@ -146,3 +148,16 @@ def health_check(include_diagnostics: bool = False) -> Dict[str, Any]:
         }
 
     return payload
+
+
+@router.get("/health/detailed", summary="Detailed system health with feature tracking")
+def detailed_health() -> Dict[str, Any]:
+    """
+    Return comprehensive health summary including:
+    - Application status (ok/degraded)
+    - Uptime in seconds
+    - Version info
+    - Loaded features list
+    - Failed features with error messages
+    """
+    return get_health_summary()
