@@ -13,8 +13,8 @@ from unittest.mock import patch, MagicMock
 @pytest.fixture
 def mock_store():
     """Mock the store functions."""
-    with patch("app.saw_lab.batch_router.get_artifact") as mock_get, \
-         patch("app.saw_lab.batch_router.store_artifact") as mock_store:
+    with patch("app.saw_lab.batch_router_toolpaths.get_artifact") as mock_get, \
+         patch("app.saw_lab.batch_router_toolpaths.store_artifact") as mock_store:
         yield mock_get, mock_store
 
 
