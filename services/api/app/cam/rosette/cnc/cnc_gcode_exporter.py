@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from app.core.safety import safety_critical
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
@@ -38,6 +40,7 @@ class GCodePostConfig:
     tool_id: int = 1
 
 
+@safety_critical
 def generate_gcode_from_toolpaths(
     plan: ToolpathPlan,
     post: GCodePostConfig,

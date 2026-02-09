@@ -11,7 +11,8 @@ Wave 17: Phase C - Fretboard CAM Operations
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any, Optional, Literal
+from typing import
+from app.core.safety import safety_critical List, Tuple, Dict, Any, Optional, Literal
 from math import sqrt, pi
 
 from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
@@ -299,6 +300,7 @@ def export_dxf_r12(toolpaths: List[FretSlotToolpath], mode: str = 'standard') ->
     return "\n".join(lines)
 
 
+@safety_critical
 def generate_gcode(
     toolpaths: List[FretSlotToolpath],
     safe_z_mm: float = 5.0,

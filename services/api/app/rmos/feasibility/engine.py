@@ -4,8 +4,10 @@ from typing import Dict, List
 
 from .schemas import FeasibilityInput, FeasibilityResult, RiskLevel
 from .rules import all_rules
+from app.core.safety import safety_critical
 
 
+@safety_critical
 def compute_feasibility(fi: FeasibilityInput) -> FeasibilityResult:
     """
     Compute feasibility with Phase 3 explainability.

@@ -10,6 +10,8 @@ Implements the ToolAdapter protocol for use with OperationAdapter.
 
 from __future__ import annotations
 
+from app.core.safety import safety_critical
+
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 
@@ -51,8 +53,8 @@ class CamRoughingAdapter:
         self.max_doc_in = max_doc_in
         self.max_woc_in = max_woc_in
 
-    def compute_feasibility(
-        self,
+    @safety_critical
+    def compute_feasibility(self,
         cam_intent: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
@@ -128,8 +130,8 @@ class CamRoughingAdapter:
             "details": details,
         }
 
-    def generate_gcode(
-        self,
+    @safety_critical
+    def generate_gcode(self,
         cam_intent: Dict[str, Any],
         feasibility: Dict[str, Any],
     ) -> Tuple[str, Dict[str, Any]]:
