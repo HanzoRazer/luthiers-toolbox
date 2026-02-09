@@ -12,8 +12,9 @@ Moments are high-level abstractions that summarize what's happening:
 Priority (highest to lowest):
 ERROR > OVERLOAD > DECISION_REQUIRED > FINDING > HESITATION > FIRST_SIGNAL
 
-Priority suppression: Only the highest-priority detected moment is returned.
-Lower-priority moments are suppressed to avoid overwhelming the user.
+Suppression rules:
+- ERROR or OVERLOAD: Full suppression (only that moment is returned)
+- Other moments: All returned, grace selector picks based on FTUE context
 """
 
 from __future__ import annotations
@@ -42,8 +43,9 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     """
     Detect moments from a list of AgentEventV1 events.
 
-    Returns the highest-priority detected moment only.
-    Lower-priority moments are suppressed.
+    Suppression rules:
+    - ERROR or OVERLOAD detected: returns only that moment (critical suppression)
+    - Otherwise: returns all detected moments for grace selector to choose
     """
     if not events:
         return []
@@ -137,13 +139,26 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     # Sort by priority (highest first)
     detected.sort(key=lambda d: MOMENT_PRIORITY.get(d[0], 999))
 
-    # Return only the highest priority moment (priority suppression)
-    top = detected[0]
+    # Critical suppression: ERROR or OVERLOAD suppress all other moments
+    top_moment = detected[0][0]
+    if top_moment in ("ERROR", "OVERLOAD"):
+        top = detected[0]
+        return [
+            DetectedMoment(
+                moment=top[0],
+                confidence=top[1],
+                trigger_events=top[2],
+                priority=MOMENT_PRIORITY.get(top[0], 999),
+            )
+        ]
+
+    # Non-critical: return all moments for grace selector to choose
     return [
         DetectedMoment(
-            moment=top[0],
-            confidence=top[1],
-            trigger_events=top[2],
-            priority=MOMENT_PRIORITY.get(top[0], 999),
+            moment=d[0],
+            confidence=d[1],
+            trigger_events=d[2],
+            priority=MOMENT_PRIORITY.get(d[0], 999),
         )
+        for d in detected
     ]
