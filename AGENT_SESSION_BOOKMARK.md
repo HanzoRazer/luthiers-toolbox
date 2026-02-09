@@ -1,8 +1,8 @@
 # Agent Session Bookmark
 
 **Date:** 2026-02-09
-**Session:** Remediation Complete + WP-3 Decomposition
-**Last Commit:** 8211743 docs: update session bookmark with WP-3 complete
+**Session:** Remediation Complete + Cross-Repo Cleanup
+**Last Commit:** d256243 docs: update bookmark with v0.36.0 tag and release
 **Tag:** toolbox-v0.36.0
 **Release:** https://github.com/HanzoRazer/luthiers-toolbox/releases/tag/toolbox-v0.36.0
 
@@ -11,6 +11,21 @@
 ## Session Summary
 
 All remediation phases complete. WP-3 god-object decomposition committed. Tagged and released.
+
+Cross-repo cleanup completed:
+- **sg-spec**: Deleted coach module (superseded by sg-agentd), nested duplicate, dev artifacts
+- **string_master**: Removed orphaned coach imports and tests
+
+---
+
+## Cross-Repo Cleanup (2026-02-09)
+
+| Repo | Commit | Changes |
+|------|--------|---------|
+| sg-spec | 6a7645f | -54,000 lines (coach + duplicate + tests) |
+| string_master | 239af9a | -3,000 lines (orphaned coach tests) |
+
+sg-spec design review score: 7.59 → **8.55** (A-)
 
 ---
 
