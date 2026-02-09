@@ -41,7 +41,18 @@ from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Body, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+# Import schemas from extracted module (Phase 9 decomposition)
+from .geometry_schemas import (
+    Segment,
+    GeometryIn,
+    ParityRequest,
+    ExportRequest,
+    GcodeExportIn,
+    ExportBundleIn,
+    ExportBundleMultiIn,
+)
 
 # Import RMOS run artifact persistence (OPERATION lane requirement)
 from datetime import timezone
@@ -204,48 +215,7 @@ def _metadata_comment(units: str, post_id: str) -> str:
     ts = datetime.datetime.utcnow().isoformat() + "Z"
     return f"(POST={post_id or 'NONE'};UNITS={units or 'mm'};DATE={ts})"
 
-# =============================================================================
-# PYDANTIC MODELS
-# =============================================================================
-
-class Segment(BaseModel):
-    """
-    Geometry segment (line or arc).
-    
-    Segment Types:
-    - line: Requires x1, y1, x2, y2
-    - arc: Requires cx, cy, r, start, end, cw
-    
-    Coordinates:
-    - All values in current units (mm or inch)
-    - Angles in degrees (0-360)
-    """
-    type: Literal["line", "arc"]  # MUST be explicit type
-    x1: Optional[float] = None    # Line start X
-    y1: Optional[float] = None    # Line start Y
-    x2: Optional[float] = None    # Line end X
-    y2: Optional[float] = None    # Line end Y
-    cx: Optional[float] = None    # Arc center X
-    cy: Optional[float] = None    # Arc center Y
-    r: Optional[float] = None     # Arc radius
-    start: Optional[float] = None # Arc start angle (degrees)
-    end: Optional[float] = None   # Arc end angle (degrees)
-    cw: Optional[bool] = None     # Arc clockwise flag
-
-class GeometryIn(BaseModel):
-    """
-    Canonical geometry format for import/export.
-    
-    Fields:
-    - units: 'mm' or 'inch' (MUST be explicit)
-    - paths: List of Segment objects
-    
-    Validation:
-    - Path count must be <= MAX_SEGMENTS
-    - Coordinates must be within safe bounds
-    """
-    units: Literal["mm", "inch"] = "mm"
-    paths: List[Segment]
+# Schemas imported from geometry_schemas.py (Phase 9 decomposition)
 
 def _svg_path_to_segments(svg_text:str)->List[Dict[str,Any]]:
     """
@@ -502,11 +472,6 @@ async def import_geometry(request: Request):
     else:
         raise HTTPException(400, "Provide either JSON geometry or a file (.svg/.dxf)")
 
-class ParityRequest(BaseModel):
-    geometry: GeometryIn
-    gcode: str
-    tolerance_mm: float = 0.05
-
 @router.post("/parity")
 def parity(body: ParityRequest) -> Dict[str, Any]:
     """
@@ -608,11 +573,6 @@ def parity(body: ParityRequest) -> Dict[str, Any]:
     return {"rms_error_mm": round(rms,4), "max_error_mm": round(mx,4), "tolerance_mm": body.tolerance_mm, "pass": mx <= body.tolerance_mm}
 
 
-class ExportRequest(BaseModel):
-    geometry: GeometryIn
-    post_id: Optional[str] = None  # GRBL/Mach4/LinuxCNC/PathPilot/MASSO
-    job_name: Optional[str] = Field(default=None, description="Filename stem for DXF/SVG (safe chars only)")
-
 @router.post("/export")
 def export_geometry(fmt: str = "dxf", body: ExportRequest = Body(...)):
     """
@@ -704,12 +664,6 @@ def export_geometry(fmt: str = "dxf", body: ExportRequest = Body(...)):
             headers={"Content-Disposition": f'attachment; filename="{stem}.svg"'},
         )
 
-
-class GcodeExportIn(BaseModel):
-    gcode: str
-    units: Optional[str] = "mm"
-    post_id: Optional[str] = None
-    job_name: Optional[str] = Field(default=None, description="Filename stem for NC file (safe chars only)")
 
 @router.post("/export_gcode")
 def export_gcode(body: GcodeExportIn) -> Response:
@@ -871,12 +825,6 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
     return resp
 
 
-class ExportBundleIn(BaseModel):
-    geometry: GeometryIn
-    gcode: str
-    post_id: Optional[str] = None
-    target_units: Optional[str] = None  # if provided, geometry is scaled server-side before export
-    job_name: Optional[str] = Field(default=None, description="Filename stem for bundle files (safe chars only)")
 
 @router.post("/export_bundle")
 def export_bundle(body: ExportBundleIn) -> Response:
@@ -997,12 +945,6 @@ def export_bundle(body: ExportBundleIn) -> Response:
     )
 
 
-class ExportBundleMultiIn(BaseModel):
-    geometry: GeometryIn
-    gcode: str
-    post_ids: List[str]  # e.g. ["GRBL","Mach4","LinuxCNC","PathPilot","MASSO"]
-    target_units: Optional[str] = None  # if provided, geometry is scaled server-side before export
-    job_name: Optional[str] = Field(default=None, description="Filename stem for bundle files (safe chars only)")
 
 @router.post("/export_bundle_multi")
 def export_bundle_multi(body: ExportBundleMultiIn) -> Response:
