@@ -1,178 +1,33 @@
-"""
-Body Generator Router - Luthier's ToolBox
-
-FastAPI router for electric guitar body G-code generation.
-Integrates with existing multi-post architecture.
-
-LANE: OPERATION (for /generate, /export/multi endpoints)
-LANE: UTILITY (for /analyze, /machines, /tools, /posts endpoints)
-Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
-
-Two-Lane Architecture:
-- Draft endpoints: Fast preview, no RMOS tracking
-- Governed endpoints: Full RunArtifact persistence + SHA256 hashes
-
-Endpoints:
-    POST /api/cam/body/analyze              - Analyze DXF (UTILITY)
-    POST /api/cam/body/generate             - Generate G-code (DRAFT)
-    POST /api/cam/body/generate_governed    - Generate G-code with RMOS (GOVERNED)
-    POST /api/cam/body/export/multi         - Multi-post ZIP (DRAFT)
-    POST /api/cam/body/export/multi_governed - Multi-post ZIP with RMOS (GOVERNED)
-"""
-
+"""Body Generator Router - Luthier's ToolBox"""
 from datetime import datetime, timezone
 from io import BytesIO
 from typing import List, Dict, Optional, Tuple, Any
-import json
-import os
-import tempfile
-import zipfile
+import os, tempfile, zipfile
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 
+from .body_generator_schemas import (
+    ToolConfigModel, MachineConfigModel, AnalyzeResponse, GenerateRequest,
+    GenerateResponse, GenerateGovernedResponse, MultiExportRequest,
+)
 from ..generators.lespaul_body_generator import (
-    LesPaulDXFReader,
-    LesPaulGCodeGenerator,
-    TOOLS,
-    MACHINES,
-    ToolConfig,
-    MachineConfig,
+    LesPaulDXFReader, LesPaulGCodeGenerator, TOOLS, MACHINES, ToolConfig, MachineConfig,
 )
-
-# Import RMOS run artifact persistence (OPERATION lane requirement)
-from ..rmos.runs import (
-    RunArtifact,
-    persist_run,
-    create_run_id,
-    sha256_of_obj,
-    sha256_of_text,
-)
-
+from ..rmos.runs import RunArtifact, persist_run, create_run_id, sha256_of_obj, sha256_of_text
 
 router = APIRouter()
 
-
-# =============================================================================
-# POST-PROCESSOR CONFIGURATIONS
-# =============================================================================
-
+# --- Post-Processor Configurations ---
 POST_CONFIGS = {
-    "GRBL": {
-        "header": ["G90", "G21", "G94", "F1000", "(post GRBL)"],
-        "footer": ["M5", "M30"],
-        "units": "mm",
-        "arc_mode": "IJK",
-    },
-    "Mach4": {
-        "header": ["G20", "G90", "G94", "(Mach4 Post-Processor)", "G54"],
-        "footer": ["M5", "G28 G91 Z0", "M30"],
-        "units": "inch",
-        "arc_mode": "IJK",
-    },
-    "LinuxCNC": {
-        "header": ["G21", "G90", "G94", "G64 P0.01", "(LinuxCNC Post)"],
-        "footer": ["M5", "M2"],
-        "units": "mm",
-        "arc_mode": "R",
-    },
-    "PathPilot": {
-        "header": ["G20", "G90", "G94", "(PathPilot / Tormach)", "G54"],
-        "footer": ["M5", "G53 G0 Z0", "M30"],
-        "units": "inch",
-        "arc_mode": "IJK",
-    },
-    "MASSO": {
-        "header": ["G21", "G90", "G94", "(MASSO Controller)"],
-        "footer": ["M5", "M30"],
-        "units": "mm",
-        "arc_mode": "IJK",
-    },
+    "GRBL": {"header": ["G90", "G21", "G94", "F1000", "(post GRBL)"], "footer": ["M5", "M30"], "units": "mm", "arc_mode": "IJK"},
+    "Mach4": {"header": ["G20", "G90", "G94", "(Mach4 Post-Processor)", "G54"], "footer": ["M5", "G28 G91 Z0", "M30"], "units": "inch", "arc_mode": "IJK"},
+    "LinuxCNC": {"header": ["G21", "G90", "G94", "G64 P0.01", "(LinuxCNC Post)"], "footer": ["M5", "M2"], "units": "mm", "arc_mode": "R"},
+    "PathPilot": {"header": ["G20", "G90", "G94", "(PathPilot / Tormach)", "G54"], "footer": ["M5", "G53 G0 Z0", "M30"], "units": "inch", "arc_mode": "IJK"},
+    "MASSO": {"header": ["G21", "G90", "G94", "(MASSO Controller)"], "footer": ["M5", "M30"], "units": "mm", "arc_mode": "IJK"},
 }
 
-
-# =============================================================================
-# REQUEST/RESPONSE MODELS
-# =============================================================================
-
-class ToolConfigModel(BaseModel):
-    number: int
-    name: str
-    diameter_in: float
-    rpm: int
-    feed_ipm: float
-    plunge_ipm: float
-    stepdown_in: float
-    stepover_pct: float
-
-
-class MachineConfigModel(BaseModel):
-    name: str
-    max_x_in: float
-    max_y_in: float
-    max_z_in: float
-    safe_z_in: float = 0.75
-    retract_z_in: float = 0.25
-    rapid_rate: float = 200.0
-
-
-class AnalyzeResponse(BaseModel):
-    """DXF analysis results."""
-    filepath: str
-    body_outline: Optional[Dict[str, Any]]
-    layers: Dict[str, Dict[str, int]]
-    origin_offset: Tuple[float, float]
-    recommended_operations: List[str]
-
-
-class GenerateRequest(BaseModel):
-    """Request to generate body G-code."""
-    post_id: str = Field("Mach4", description="Post-processor ID")
-    machine: str = Field("txrx_router", description="Machine configuration")
-    stock_thickness_in: float = Field(1.75, description="Stock thickness in inches")
-    tab_count: int = Field(6, description="Number of holding tabs")
-    tab_width_in: float = Field(0.5, description="Tab width in inches")
-    tab_height_in: float = Field(0.125, description="Tab height in inches")
-    job_name: Optional[str] = None
-
-
-class GenerateResponse(BaseModel):
-    """Body G-code generation results."""
-    gcode: str
-    post_id: str
-    job_name: str
-    stats: Dict[str, Any]
-    body_size: Dict[str, float]
-
-
-class GenerateGovernedResponse(BaseModel):
-    """Body G-code generation results with RMOS tracking."""
-    gcode: str
-    post_id: str
-    job_name: str
-    stats: Dict[str, Any]
-    body_size: Dict[str, float]
-    # RMOS fields
-    run_id: str
-    request_hash: str
-    gcode_hash: str
-
-
-class MultiExportRequest(BaseModel):
-    """Request for multi-post ZIP export."""
-    post_ids: List[str] = Field(
-        ["GRBL", "Mach4", "LinuxCNC", "PathPilot", "MASSO"],
-        description="Post-processor IDs"
-    )
-    machine: str = "txrx_router"
-    stock_thickness_in: float = 1.75
-    tab_count: int = 6
-    job_name: Optional[str] = None
-
-# =============================================================================
-# HELPER FUNCTIONS
-# =============================================================================
+# --- Helper Functions ---
 
 def inject_post_header(gcode: str, post_id: str) -> str:
     """Inject post-processor header into G-code."""
@@ -180,13 +35,11 @@ def inject_post_header(gcode: str, post_id: str) -> str:
     header_lines = cfg["header"]
     return "\n".join(header_lines) + "\n" + gcode
 
-
 def inject_post_footer(gcode: str, post_id: str) -> str:
     """Inject post-processor footer into G-code."""
     cfg = POST_CONFIGS.get(post_id, POST_CONFIGS["GRBL"])
     footer_lines = cfg["footer"]
     return gcode.rstrip() + "\n" + "\n".join(footer_lines) + "\n"
-
 
 def generate_body_gcode_from_dxf(
     tmp_path: str,
@@ -195,15 +48,7 @@ def generate_body_gcode_from_dxf(
     post_id: str,
     job_name: str,
 ) -> Tuple[str, Dict[str, Any], Dict[str, float]]:
-    """
-    Pure generator function: DXF file -> G-code string.
-
-    Single source of truth for body G-code generation.
-    Used by both draft and governed endpoints.
-
-    Returns:
-        Tuple of (gcode_str, stats_dict, body_size_dict)
-    """
+    """Pure generator function: DXF file -> G-code string."""
     # Load machine config
     machine_cfg = MACHINES.get(machine)
     if not machine_cfg:
@@ -248,10 +93,7 @@ def generate_body_gcode_from_dxf(
 
     return gcode, stats, body_size
 
-
-# =============================================================================
-# UTILITY ENDPOINTS (No RMOS tracking)
-# =============================================================================
+# --- UTILITY ENDPOINTS (No RMOS tracking) ---
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_dxf(file: UploadFile = File(...)) -> AnalyzeResponse:
@@ -288,10 +130,7 @@ async def analyze_dxf(file: UploadFile = File(...)) -> AnalyzeResponse:
     finally:
         os.unlink(tmp_path)
 
-
-# =============================================================================
-# DRAFT LANE: Fast preview, no RMOS tracking
-# =============================================================================
+# --- DRAFT LANE: Fast preview, no RMOS tracking ---
 
 @router.post("/generate", response_model=GenerateResponse)
 async def generate_body_gcode(
@@ -301,12 +140,7 @@ async def generate_body_gcode(
     stock_thickness_in: float = 1.75,
     job_name: Optional[str] = None,
 ) -> GenerateResponse:
-    """
-    Generate body G-code from DXF file (DRAFT lane).
-
-    Fast preview endpoint - no RMOS artifact persistence.
-    For production/machine execution, use /generate_governed.
-    """
+    """Generate body G-code from DXF file (DRAFT lane)."""
     if not file.filename or not file.filename.lower().endswith(".dxf"):
         raise HTTPException(status_code=400, detail="File must be a .dxf file")
 
@@ -352,12 +186,7 @@ async def export_multi_post(
     stock_thickness_in: float = 1.75,
     job_name: Optional[str] = None,
 ) -> StreamingResponse:
-    """
-    Generate multi-post ZIP export (DRAFT lane).
-
-    Returns ZIP file with G-code for each selected post-processor.
-    For production/machine execution, use /export/multi_governed.
-    """
+    """Generate multi-post ZIP export (DRAFT lane)."""
     if not file.filename or not file.filename.lower().endswith(".dxf"):
         raise HTTPException(status_code=400, detail="File must be a .dxf file")
 
@@ -408,10 +237,7 @@ async def export_multi_post(
     finally:
         os.unlink(tmp_path)
 
-
-# =============================================================================
-# GOVERNED LANE: Full RMOS artifact persistence and audit trail
-# =============================================================================
+# --- GOVERNED LANE: Full RMOS artifact persistence and audit trail ---
 
 @router.post("/generate_governed", response_model=GenerateGovernedResponse)
 async def generate_body_gcode_governed(
@@ -421,16 +247,7 @@ async def generate_body_gcode_governed(
     stock_thickness_in: float = 1.75,
     job_name: Optional[str] = None,
 ) -> GenerateGovernedResponse:
-    """
-    Generate body G-code from DXF file (GOVERNED lane).
-
-    Same G-code as /generate but with full RMOS artifact persistence:
-    - Creates immutable RunArtifact
-    - SHA256 hashes request and output
-    - Returns run_id for audit trail
-
-    Use this endpoint for production/machine execution.
-    """
+    """Generate body G-code from DXF file (GOVERNED lane)."""
     if not file.filename or not file.filename.lower().endswith(".dxf"):
         raise HTTPException(status_code=400, detail="File must be a .dxf file")
 
@@ -507,16 +324,7 @@ async def export_multi_post_governed(
     stock_thickness_in: float = 1.75,
     job_name: Optional[str] = None,
 ) -> StreamingResponse:
-    """
-    Generate multi-post ZIP export (GOVERNED lane).
-
-    Same ZIP as /export/multi but with full RMOS artifact persistence:
-    - Creates RunArtifact for each post-processor
-    - SHA256 hashes all outputs
-    - Returns run_ids in response headers
-
-    Use this endpoint for production/machine execution.
-    """
+    """Generate multi-post ZIP export (GOVERNED lane)."""
     if not file.filename or not file.filename.lower().endswith(".dxf"):
         raise HTTPException(status_code=400, detail="File must be a .dxf file")
 
@@ -611,10 +419,7 @@ async def export_multi_post_governed(
     finally:
         os.unlink(tmp_path)
 
-
-# =============================================================================
-# INFO ENDPOINTS (UTILITY lane)
-# =============================================================================
+# --- INFO ENDPOINTS (UTILITY lane) ---
 
 @router.get("/machines")
 def list_machines() -> Dict[str, Any]:
@@ -629,7 +434,6 @@ def list_machines() -> Dict[str, Any]:
         for name, cfg in MACHINES.items()
     }
 
-
 @router.get("/tools")
 def list_tools() -> Dict[str, Any]:
     """List available tool configurations."""
@@ -642,7 +446,6 @@ def list_tools() -> Dict[str, Any]:
         }
         for name, cfg in TOOLS.items()
     }
-
 
 @router.get("/posts")
 def list_posts() -> Dict[str, Any]:
