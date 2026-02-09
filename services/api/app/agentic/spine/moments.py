@@ -12,8 +12,8 @@ Moments are high-level abstractions that summarize what's happening:
 Priority (highest to lowest):
 ERROR > OVERLOAD > DECISION_REQUIRED > FINDING > HESITATION > FIRST_SIGNAL
 
-Note: Returns ALL detected moments (sorted by priority) so that
-the grace selector can prefer FIRST_SIGNAL over FINDING in FTUE.
+Priority suppression: Only the highest-priority detected moment is returned.
+Lower-priority moments are suppressed to avoid overwhelming the user.
 """
 
 from __future__ import annotations
@@ -42,9 +42,8 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     """
     Detect moments from a list of AgentEventV1 events.
 
-    Returns a list of ALL detected moments, sorted by priority (highest first).
-    The caller (replay harness or store) applies grace selection to choose
-    which moment to act on.
+    Returns the highest-priority detected moment only.
+    Lower-priority moments are suppressed.
     """
     if not events:
         return []
@@ -138,12 +137,13 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     # Sort by priority (highest first)
     detected.sort(key=lambda d: MOMENT_PRIORITY.get(d[0], 999))
 
+    # Return only the highest priority moment (priority suppression)
+    top = detected[0]
     return [
         DetectedMoment(
-            moment=d[0],
-            confidence=d[1],
-            trigger_events=d[2],
-            priority=MOMENT_PRIORITY.get(d[0], 999),
+            moment=top[0],
+            confidence=top[1],
+            trigger_events=top[2],
+            priority=MOMENT_PRIORITY.get(top[0], 999),
         )
-        for d in detected
     ]
