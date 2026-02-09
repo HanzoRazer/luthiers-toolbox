@@ -344,14 +344,25 @@ Update REMEDIATION_PLAN.md with accurate counts:
 
 ## Success Metrics
 
-| Metric | Current | Target | Phase |
-|--------|---------|--------|-------|
-| Root items | 78 | <25 | 7 |
-| Files >500 lines | 16 | 0 | 9 |
-| Safety-critical broad exceptions | 225 | 0 | 8 |
-| Startup validation | None | Fail-fast | 10 |
-| /api/features endpoint | Missing | Implemented | 11 |
-| Design review score | 5.41 | 7.0+ | All |
+| Metric | Original | Current | Target | Phase | Status |
+|--------|----------|---------|--------|-------|--------|
+| Root items | 78 | **38** | <25 | 7 | Done |
+| Files >500 lines | 16 | **17** | <10 | 9 | Started |
+| Safety-critical broad exceptions | 225 | **2** (documented) | 0 | 8 | Done |
+| Startup validation | None | **Fail-fast** | Fail-fast | 10 | Done |
+| /api/features endpoint | Missing | **Implemented** | Implemented | 11 | Done |
+| /api/features/catalog endpoint | Missing | **Implemented** | Implemented | 11 | Done |
+| Design review score | 5.41 | TBD | 7.0+ | All | In Progress |
+
+### Phase Completion Summary
+
+| Phase | Description | Status | Commit |
+|-------|-------------|--------|--------|
+| 7 | Root directory cleanup | ✅ Complete | b2d9de9 |
+| 8 | Exception hardening | ✅ Complete | a019f7c |
+| 9 | God-object decomposition | 🔶 Started | b3e388c |
+| 10 | Startup validation | ✅ Complete | 848c7fc |
+| 11 | API documentation | ✅ Complete | (pending) |
 
 ---
 

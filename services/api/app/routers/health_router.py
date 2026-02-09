@@ -14,7 +14,7 @@ from importlib import metadata
 from importlib.metadata import PackageNotFoundError
 
 from ..core.observability import get_health_summary
-from ..core.features import get_feature_summary
+from ..core.features import get_feature_summary, get_feature_catalog
 from ..health.startup import get_startup_summary
 
 router = APIRouter(tags=["System"])
@@ -176,6 +176,21 @@ def list_features() -> Dict[str, Any]:
     - total_routes: Total number of API routes
     """
     return get_feature_summary()
+
+
+@router.get("/features/catalog", summary="Feature catalog with use cases")
+def feature_catalog() -> Dict[str, Any]:
+    """
+    Return user-friendly feature catalog with versions and use cases.
+
+    Response includes:
+    - features: Available features with versions, descriptions, stability
+    - use_cases: Step-by-step guides for common workflows
+    - documentation: Links to API docs
+
+    This is the recommended endpoint for understanding what the API offers.
+    """
+    return get_feature_catalog()
 
 
 @router.get("/health/modules", summary="Safety-critical module status")
