@@ -16,7 +16,7 @@
 | **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
 | **Phase 4** — Documentation Triage | ✅ COMPLETE | 30 docs (was 685) |
-| **Phase 5** — Quick Cut Mode | ⏳ NOT STARTED | Onboarding flow |
+| **Phase 5** — Quick Cut Mode | ✅ COMPLETE | 3-step wizard |
 | **Phase 6** — Health/Observability | ⏳ NOT STARTED | Health endpoint |
 
 ### Test Suite (2026-02-09)
@@ -427,6 +427,15 @@ Replace misleading badges:
 ---
 
 ## Phase 5: Onboarding / Quick Cut Mode (user fit + usability)
+
+**Status:** ✅ COMPLETE (2026-02-09)
+
+### Completed Actions
+- Created QuickCutView.vue with 3-step wizard (Upload → Configure → Export)
+- Created appModeStore.ts with proMode toggle
+- Added /quick-cut route and prominent nav entry
+- Support for 5 CNC platforms (GRBL, Mach4, LinuxCNC, PathPilot, MASSO)
+- Material presets with auto-calculated feeds/speeds
 
 **Impact:** User Fit +3, Usability +2, Purpose Clarity +1
 **Risk:** Low (additive, doesn't change existing workflows)
