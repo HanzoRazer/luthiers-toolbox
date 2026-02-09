@@ -44,7 +44,7 @@ def execute_delete(
     if check_rate_limit is not None:
         try:
             check_rate_limit(limit_key)
-        except Exception as e:
+        except Exception as e:  # WP-1: broad catch intentional — callback may raise arbitrary errors, always re-raises
             if isinstance(e, DeleteRateLimitError_cls):
                 try:
                     event = build_delete_audit_event(
@@ -152,7 +152,7 @@ def execute_delete(
 
     except KeyError:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-1: broad catch intentional — ensures audit event is written, always re-raises specific errors
         if isinstance(e, DeleteRateLimitError_cls):
             raise
         error_msg = str(e)
