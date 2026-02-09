@@ -15,6 +15,7 @@ from importlib.metadata import PackageNotFoundError
 
 from ..core.observability import get_health_summary
 from ..core.features import get_feature_summary
+from ..health.startup import get_startup_summary
 
 router = APIRouter(tags=["System"])
 
@@ -175,3 +176,20 @@ def list_features() -> Dict[str, Any]:
     - total_routes: Total number of API routes
     """
     return get_feature_summary()
+
+
+@router.get("/health/modules", summary="Safety-critical module status")
+def module_status() -> Dict[str, Any]:
+    """
+    Return status of safety-critical modules validated at startup.
+
+    This endpoint shows which modules were successfully loaded during
+    the startup validation phase. If any required module failed, the
+    server would not have started (unless RMOS_STRICT_STARTUP=0).
+
+    Response includes:
+    - safety_critical: Required modules (server won't start without these)
+    - optional: Non-critical modules (warnings only)
+    - modules: Detailed status of each module
+    """
+    return get_startup_summary()
