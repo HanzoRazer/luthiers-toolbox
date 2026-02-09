@@ -12,7 +12,7 @@
 | Phase | Status | Key Metric |
 |-------|--------|------------|
 | **Phase 0** — Dead Code Purge | ✅ COMPLETE | Stale dirs deleted |
-| **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅ bare=0, 1.2 🔶 safety-critical fixed |
+| **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅, 1.2 🔶, 1.3 ✅ decorator |
 | **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
 | **Phase 4** — Documentation Triage | ⏳ NOT STARTED | 685 docs |
@@ -644,6 +644,23 @@ Since the system is pre-production with zero external users:
 ---
 
 ## Recent Session Log
+
+### 2026-02-09 — Phase 1.3 @safety_critical Decorator
+
+Added fail-closed decorator for safety-critical functions:
+
+| Commit | Description |
+|--------|-------------|
+| 7dbbb9b | feat(safety): add @safety_critical decorator |
+
+**Functions decorated:**
+- compute_feasibility() — rmos/feasibility/engine.py
+- generate_gcode() — calculators/fret_slots_cam.py, fret_slots_export.py
+- emit_gcode_from_moves() — services/saw_lab_gcode_emit_service.py
+- generate_gcode_from_toolpaths() — cam/rosette/cnc/cnc_gcode_exporter.py
+- compute_feasibility(), generate_gcode() — rmos/operations/cam_adapter.py, saw_adapter.py
+
+**Result:** 87 feasibility/gcode tests pass
 
 ### 2026-02-09 — Phase 1.2 Exception Triage
 
