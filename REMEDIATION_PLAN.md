@@ -15,7 +15,7 @@
 | **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅, 1.2 🔶, 1.3 ✅ decorator |
 | **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
-| **Phase 4** — Documentation Triage | ⏳ NOT STARTED | 685 docs |
+| **Phase 4** — Documentation Triage | ✅ COMPLETE | 30 docs (was 685) |
 | **Phase 5** — Quick Cut Mode | ⏳ NOT STARTED | Onboarding flow |
 | **Phase 6** — Health/Observability | ⏳ NOT STARTED | Health endpoint |
 
@@ -365,6 +365,19 @@ Use baseline mode (like existing fence architecture) to allow current violations
 ---
 
 ## Phase 4: Documentation Triage (maintainability)
+
+**Status:** ✅ COMPLETE (2026-02-09)
+
+### Completed Actions
+- Deleted docs/ENDPOINT_TRUTH_MAP.md (40KB auto-generated)
+- Deleted docs/Runs_Advisory_Integration/ (dead Python code)
+- Deleted docs/products/ (marketing materials)
+- Rewrote README.md: 657 → 110 lines (-83%)
+- Fixed outdated claims (November 2025, wrong repo structure)
+
+### Results
+- docs/ markdown files: 30 (target: ≤50) ✅
+- README.md: accurate metrics, compact (110 lines) ✅
 
 **Impact:** Maintainability +1, Purpose Clarity +1
 **Risk:** Low (documentation changes don't affect runtime)
