@@ -1,21 +1,4 @@
-"""
-Saw Blade Validator - Safety checks for saw operations.
-
-Validates blade specifications against operation parameters to prevent:
-- Blade binding (radius too tight for blade diameter)
-- Excessive depth of cut (kerf overload)
-- RPM out of safe range (blade manufacturer limits)
-- Feed rate too high (chipload safety)
-- Kerf vs plate thickness ratio issues
-
-Returns: OK, WARN, or ERROR with human-readable messages.
-
-Integrates with:
-- saw_blade_registry.py (CP-S50) for blade specs
-- SawSlicePanel.vue for straight cut validation
-- SawContourPanel.vue for curved path validation
-- SawBatchPanel.vue for multi-operation validation
-"""
+"""Saw Blade Validator - Safety checks for saw operations."""
 
 from typing import Optional, Dict, Any, List
 from enum import Enum
@@ -23,10 +6,7 @@ from pydantic import BaseModel
 
 from .saw_blade_registry import SawBladeSpec, get_registry
 
-
-# ============================================================================
-# Validation Result Types
-# ============================================================================
+# --- Validation Result Types ---
 
 class ValidationLevel(str, Enum):
     """Validation result severity."""
@@ -34,13 +14,11 @@ class ValidationLevel(str, Enum):
     WARN = "WARN"       # Risky but may be acceptable
     ERROR = "ERROR"     # Unsafe, must not proceed
 
-
 class ValidationResult(BaseModel):
     """Validation check result."""
     level: ValidationLevel
     message: str
     details: Optional[Dict[str, Any]] = None
-
 
 class OperationValidation(BaseModel):
     """Complete operation validation result."""
@@ -49,10 +27,7 @@ class OperationValidation(BaseModel):
     blade: Optional[SawBladeSpec] = None
     safe_to_proceed: bool
 
-
-# ============================================================================
-# Safety Constants
-# ============================================================================
+# --- Safety Constants ---
 
 class SafetyLimits:
     """Safety thresholds for saw operations."""
@@ -85,10 +60,7 @@ class SafetyLimits:
     KERF_PLATE_RATIO_MAX = 2.0      # Kerf should be < plate × 2.0
     KERF_PLATE_RATIO_WARN = 1.5     # Warning if > plate × 1.5
 
-
-# ============================================================================
-# Validator
-# ============================================================================
+# --- Validator ---
 
 class SawBladeValidator:
     """Validates saw operations against blade specifications."""
@@ -98,9 +70,7 @@ class SawBladeValidator:
         self.registry = get_registry()
         self.limits = SafetyLimits()
     
-    # ------------------------------------------------------------------------
-    # Main Validation Entry Point
-    # ------------------------------------------------------------------------
+    # --- Main Validation Entry Point ---
     
     def validate_operation(
         self,
@@ -112,21 +82,7 @@ class SawBladeValidator:
         contour_radius_mm: Optional[float] = None,
         material_family: Optional[str] = None
     ) -> OperationValidation:
-        """
-        Validate complete operation against blade specs.
-        
-        Args:
-            blade_id: Blade registry ID
-            operation_type: "slice", "batch", "contour"
-            doc_mm: Depth of cut in mm (optional)
-            rpm: Spindle RPM (optional)
-            feed_ipm: Feed rate in inches per minute (optional)
-            contour_radius_mm: Minimum radius for contours (optional)
-            material_family: Material being cut (optional)
-            
-        Returns:
-            OperationValidation with overall status and individual checks
-        """
+        """Validate complete operation against blade specs."""
         checks = []
         
         # Get blade from registry
@@ -180,9 +136,7 @@ class SawBladeValidator:
             safe_to_proceed=(overall != ValidationLevel.ERROR)
         )
     
-    # ------------------------------------------------------------------------
-    # Individual Validation Checks
-    # ------------------------------------------------------------------------
+    # --- Individual Validation Checks ---
     
     def _check_contour_radius(
         self,
@@ -524,10 +478,7 @@ class SawBladeValidator:
             message=f"Blade is compatible with {material_family}"
         )
 
-
-# ============================================================================
-# Singleton Instance
-# ============================================================================
+# --- Singleton Instance ---
 
 _validator_instance = None
 
