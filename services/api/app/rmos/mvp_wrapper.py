@@ -1,130 +1,27 @@
-"""
-RMOS MVP Wrapper - DXF to GRBL Golden Path with Governance
-
-Wraps the locked MVP manufacturing path (DXF -> plan_from_dxf -> GRBL gcode)
-with RMOS audit + governance without modifying CAM output.
-
-Policy: Best-effort RMOS (returns gcode even if RMOS storage fails)
-
-Contract: MVP_DXF_TO_GRBL_WRAPPER_CONTRACT_v1
-"""
-
+"""RMOS MVP Wrapper - DXF to GRBL Golden Path with Governance"""
 from __future__ import annotations
-
-import json
 import os
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Request
-from pydantic import BaseModel, Field
 
-from .runs_v2.schemas import (
-    RunArtifact,
-    RunDecision,
-    RunOutputs,
-    Hashes,
-    RunAttachment,
+from .mvp_wrapper_schemas import (
+    RMOSWrapDecision, RMOSWrapAttachmentRef, RMOSWrapHashes,
+    RMOSWrapGCodeRef, RMOSWrapMvpResponse, MVPManifest,
 )
+from .runs_v2.schemas import RunArtifact, RunDecision, RunOutputs, Hashes, RunAttachment
 from .runs_v2.store import create_run_id, persist_run
 from .runs_v2.hashing import sha256_of_bytes, sha256_of_obj, sha256_of_text
 from .runs_v2.attachments import put_bytes_attachment, put_json_attachment, put_text_attachment
 from .feasibility import FeasibilityInput, compute_feasibility
 
-
 router = APIRouter(prefix="/api/rmos/wrap/mvp", tags=["RMOS MVP Wrapper"])
 
+GCODE_INLINE_LIMIT = 200_000  # Inline size limit for gcode (200KB)
 
-# =============================================================================
-# Response Schemas (aligned to RMOS wrapping contract)
-# =============================================================================
-
-# Inline size limit for gcode (200KB)
-GCODE_INLINE_LIMIT = 200_000
-
-
-class RMOSWrapDecision(BaseModel):
-    """Decision outcome from RMOS wrapping."""
-    risk_level: str = Field(..., description="GREEN|YELLOW|RED|UNKNOWN|ERROR")
-    warnings: List[str] = Field(default_factory=list)
-    block_reason: Optional[str] = None
-
-
-class RMOSWrapAttachmentRef(BaseModel):
-    """Reference to a content-addressed attachment."""
-    kind: str = Field(..., description="dxf_input|cam_plan|gcode_output|manifest")
-    sha256: str = Field(..., min_length=64, max_length=64)
-    filename: str
-    mime: Optional[str] = None
-    size_bytes: Optional[int] = None
-    created_at_utc: Optional[str] = None
-
-
-class RMOSWrapHashes(BaseModel):
-    """SHA256 hash chain for audit verification."""
-    feasibility_sha256: str = Field(..., min_length=64, max_length=64)
-    opplan_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
-    gcode_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
-    toolpaths_sha256: Optional[str] = Field(None, min_length=64, max_length=64)
-
-
-class RMOSWrapGCodeRef(BaseModel):
-    """G-code reference - inline text or path to attachment."""
-    inline: bool = Field(..., description="True if gcode is included inline")
-    text: Optional[str] = Field(None, description="Inline gcode text when inline=true")
-    path: Optional[str] = Field(None, description="Attachment path when inline=false")
-
-
-class RMOSWrapMvpResponse(BaseModel):
-    """
-    Response from MVP DXF-to-GRBL wrapper.
-
-    Designed for:
-    - Clear downstream integration (UI, audit systems)
-    - Best-effort RMOS (ok=true even if rmos_persisted=false)
-    - Explicit gcode delivery (inline vs path)
-    """
-    ok: bool = Field(True, description="True if CAM succeeded (regardless of RMOS)")
-    run_id: str = Field(..., description="RMOS run artifact ID (empty string if not persisted)")
-    decision: RMOSWrapDecision = Field(..., description="Risk assessment outcome")
-    hashes: RMOSWrapHashes = Field(..., description="SHA256 hash chain")
-    attachments: List[RMOSWrapAttachmentRef] = Field(default_factory=list, description="Content-addressed attachments")
-    gcode: RMOSWrapGCodeRef = Field(..., description="G-code delivery reference")
-
-    # Convenience fields
-    warnings: List[str] = Field(default_factory=list, description="All warnings (same as decision.warnings)")
-    rmos_persisted: bool = Field(True, description="True if RMOS artifact was persisted")
-    rmos_error: Optional[str] = Field(None, description="RMOS error message if persistence failed")
-
-
-class MVPManifest(BaseModel):
-    """Manifest documenting the MVP golden path execution."""
-    pipeline_id: str = "mvp_dxf_to_grbl_v1"
-    controller: str = "GRBL"
-    created_at_utc: str
-
-    # Input parameters
-    params: Dict[str, Any] = Field(default_factory=dict)
-
-    # Hashes
-    dxf_sha256: str
-    plan_sha256: str
-    gcode_sha256: str
-
-    # Metadata
-    api_version: str = "1.0.0"
-    git_sha: Optional[str] = None
-    post_profile_id: str = "GRBL"
-
-    # Warnings
-    warnings: List[str] = Field(default_factory=list)
-
-
-# =============================================================================
-# Internal Helpers
-# =============================================================================
+# --- Internal Helpers ---
 
 def _get_git_sha() -> Optional[str]:
     """Get current git SHA if available."""
@@ -141,32 +38,18 @@ def _get_git_sha() -> Optional[str]:
         pass
     return os.getenv("GIT_SHA", None)
 
-
 def _compute_risk_level(warnings: List[str]) -> str:
-    """
-    Compute risk level from warnings.
-
-    MVP policy:
-    - No warnings -> GREEN
-    - Any warnings -> YELLOW
-    - Errors handled separately -> RED
-    """
+    """Compute risk level from warnings."""
     if not warnings:
         return "GREEN"
     return "YELLOW"
-
 
 def _call_plan_from_dxf(
     dxf_bytes: bytes,
     filename: str,
     params: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """
-    Call the existing plan_from_dxf logic internally.
-
-    This imports the router's internal functions to avoid HTTP overhead
-    while maintaining the exact same CAM logic.
-    """
+    """Call plan_from_dxf internally."""
     # Import adaptive router internals
     from ..routers.adaptive_router import (
         _dxf_to_loops_from_bytes,
@@ -210,13 +93,8 @@ def _call_plan_from_dxf(
         "plan": plan_dict,
     }
 
-
 def _call_gcode(request_payload: Dict[str, Any], plan_result: Dict[str, Any]) -> str:
-    """
-    Generate G-code from plan result using post-processor.
-
-    Uses the same logic as the /gcode endpoint but returns text directly.
-    """
+    """Generate G-code from plan result."""
     from ..routers.adaptive_router import (
         _load_post_profiles,
         _apply_adaptive_feed,
@@ -256,10 +134,7 @@ def _call_gcode(request_payload: Dict[str, Any], plan_result: Dict[str, Any]) ->
     full_lines = hdr + [meta_comment] + body_lines + ftr
     return "\n".join(full_lines)
 
-
-# =============================================================================
-# Main Wrapper Endpoint
-# =============================================================================
+# --- Main Wrapper Endpoint ---
 
 @router.post("/dxf-to-grbl", response_model=RMOSWrapMvpResponse)
 async def wrap_mvp_dxf_to_grbl(
@@ -281,24 +156,12 @@ async def wrap_mvp_dxf_to_grbl(
     job_name: Optional[str] = Form(None, description="Job name for tracking"),
     notes: Optional[str] = Form(None, description="Operator notes"),
 ) -> RMOSWrapMvpResponse:
-    """
-    MVP Golden Path with RMOS Wrapping.
-
-    Executes: DXF -> plan_from_dxf -> GRBL gcode
-
-    Then wraps with RMOS governance:
-    - Creates run artifact
-    - Stores content-addressed attachments (DXF, plan, gcode, manifest)
-    - Records decision status
-
-    Policy: Best-effort RMOS - returns gcode even if RMOS storage fails.
-    """
+    """MVP Golden Path with RMOS Wrapping."""
     run_id = create_run_id()
     warnings: List[str] = []
     rmos_status = "ok"
     rmos_error: Optional[str] = None
 
-    # Collect parameters
     params = {
         "tool_d": tool_d,
         "stepover": stepover,
@@ -315,17 +178,10 @@ async def wrap_mvp_dxf_to_grbl(
         "margin": margin,
     }
 
-    # Read DXF bytes
     dxf_bytes = await file.read()
     dxf_filename = file.filename or "input.dxf"
     dxf_sha256 = sha256_of_bytes(dxf_bytes)
 
-    # ==========================================================================
-    # Step 1: Pre-CAM Feasibility Check (deterministic, before plan generation)
-    # ==========================================================================
-    # Build FeasibilityInput from request params + cheap DXF-derived signals
-    # NOTE: We don't have loops yet (they come from plan), so we use preflight hints
-    # For MVP, preflight signals are optional (None) - rules will skip checks if missing
     fi = FeasibilityInput(
         tool_d=tool_d,
         stepover=stepover,
@@ -340,7 +196,6 @@ async def wrap_mvp_dxf_to_grbl(
         climb=climb,
         smoothing=smoothing,
         margin=margin,
-        # Preflight signals (None for MVP - can be enhanced later)
         has_closed_paths=None,
         loop_count_hint=None,
         entity_count=None,
@@ -352,12 +207,10 @@ async def wrap_mvp_dxf_to_grbl(
 
     feasibility_result = compute_feasibility(fi)
 
-    # Compute deterministic feasibility hash (exclude computed_at_utc)
     feasibility_for_hash = feasibility_result.model_dump()
     feasibility_for_hash.pop("computed_at_utc", None)
     feasibility_sha256 = sha256_of_obj(feasibility_for_hash)
 
-    # Derive decision from feasibility (authoritative)
     risk_level = feasibility_result.risk_level.value
     block_reason: Optional[str] = None
     if feasibility_result.blocking:
@@ -365,13 +218,6 @@ async def wrap_mvp_dxf_to_grbl(
         warnings.extend(feasibility_result.blocking_reasons)
     warnings.extend(feasibility_result.warnings)
 
-    # Option A (MVP): RED does not block generation, but marks decision as RED
-    # Operator pack download can require override later
-    # If CAM fails due to invalid params, we still return RMOS response with feasibility
-
-    # ==========================================================================
-    # Step 1.5: Generate plan (existing golden path logic)
-    # ==========================================================================
     plan_result: Optional[Dict[str, Any]] = None
     gcode_text: Optional[str] = None
     cam_error: Optional[str] = None
@@ -413,7 +259,6 @@ async def wrap_mvp_dxf_to_grbl(
         cam_error = f"DXF processing failed: {e}"
         cam_ok = False
 
-    # If CAM failed, return RMOS response with feasibility but no gcode
     if not cam_ok:
         # Store feasibility attachment even if CAM failed
         try:
@@ -458,14 +303,9 @@ async def wrap_mvp_dxf_to_grbl(
             rmos_error=cam_error,
         )
 
-    # ==========================================================================
-    # Step 3: Compute content hashes (RMOS wrapping begins here)
-    # ==========================================================================
-    # dxf_sha256 already computed in Step 1
     plan_sha256 = sha256_of_obj(plan_result)
     gcode_sha256 = sha256_of_text(gcode_text)
 
-    # Build manifest
     manifest = MVPManifest(
         created_at_utc=datetime.now(timezone.utc).isoformat(),
         params=params,
@@ -477,9 +317,6 @@ async def wrap_mvp_dxf_to_grbl(
     )
     manifest_sha256 = sha256_of_obj(manifest.model_dump())
 
-    # ==========================================================================
-    # Step 4: Store attachments (content-addressed, best-effort)
-    # ==========================================================================
     attachments: List[RunAttachment] = []
 
     try:
@@ -532,11 +369,6 @@ async def wrap_mvp_dxf_to_grbl(
         rmos_error = f"Attachment storage failed: {e}"
         warnings.append(f"RMOS attachment storage failed: {e}")
 
-    # ==========================================================================
-    # Step 5: Create RMOS run artifact (best-effort)
-    # ==========================================================================
-    # risk_level and feasibility_sha256 already computed in Step 1
-    # Compute score from risk_level
     if risk_level == "GREEN":
         score = 100.0
     elif risk_level == "YELLOW":
@@ -604,7 +436,6 @@ async def wrap_mvp_dxf_to_grbl(
     # Return response (always includes gcode per best-effort policy)
     # ==========================================================================
 
-    # Build attachment refs
     attachment_refs = [
         RMOSWrapAttachmentRef(
             kind=att.kind,
@@ -617,7 +448,6 @@ async def wrap_mvp_dxf_to_grbl(
         for att in attachments
     ]
 
-    # Determine inline vs path for gcode
     gcode_inline = len(gcode_text) <= GCODE_INLINE_LIMIT
     gcode_ref = RMOSWrapGCodeRef(
         inline=gcode_inline,
