@@ -2,13 +2,15 @@
 
 **Date:** 2026-02-09
 **Session:** Remediation Complete + WP-3 Decomposition
-**Last Commit:** 543f740 refactor: WP-3 store decomposition + god-object cleanup
+**Last Commit:** 8211743 docs: update session bookmark with WP-3 complete
+**Tag:** toolbox-v0.36.0
+**Release:** https://github.com/HanzoRazer/luthiers-toolbox/releases/tag/toolbox-v0.36.0
 
 ---
 
 ## Session Summary
 
-All remediation phases complete. WP-3 god-object decomposition committed.
+All remediation phases complete. WP-3 god-object decomposition committed. Tagged and released.
 
 ---
 
