@@ -322,9 +322,9 @@ def test_wrapper_persists_run_with_feasibility_in_runs_v2_store(tmp_path, monkey
 
     # Reset Runs v2 singleton store so it picks up env vars in this test process.
     # This must happen BEFORE app/testclient creation to prevent "sticky" defaults.
-    from app.rmos.runs_v2 import store as runs_v2_store
-    if hasattr(runs_v2_store, "_default_store"):
-        runs_v2_store._default_store = None
+    from app.rmos.runs_v2 import store_api
+    # NOTE: The singleton lives in store_api, not store (store.py re-exports functions only)
+    store_api._default_store = None
 
     # Create fresh app after env and store reset
     from fastapi import FastAPI
