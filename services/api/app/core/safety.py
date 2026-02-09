@@ -77,3 +77,63 @@ def safety_critical_async(func: Callable[P, R]) -> Callable[P, R]:
             raise  # never swallow
 
     return wrapper
+
+
+# =============================================================================
+# SPECIFIC EXCEPTION TYPES FOR SAFETY-CRITICAL OPERATIONS
+# =============================================================================
+
+
+class FeasibilityError(Exception):
+    """Base exception for feasibility analysis errors."""
+    pass
+
+
+class FeasibilityInputError(FeasibilityError):
+    """Invalid input to feasibility analysis."""
+    pass
+
+
+class FeasibilityRuleError(FeasibilityError):
+    """Error evaluating a feasibility rule."""
+    pass
+
+
+class GCodeGenerationError(Exception):
+    """Error during G-code generation."""
+    pass
+
+
+class ToolpathError(Exception):
+    """Error during toolpath computation."""
+    pass
+
+
+class MaterialError(Exception):
+    """Error related to material properties or validation."""
+    pass
+
+
+class MachineConfigError(Exception):
+    """Error in machine configuration or limits."""
+    pass
+
+
+class RunArtifactError(Exception):
+    """Error reading/writing run artifacts."""
+    pass
+
+
+class AuditTrailError(Exception):
+    """Error maintaining audit trail."""
+    pass
+
+
+class SawLabError(Exception):
+    """Error in saw lab operations."""
+    pass
+
+
+class DecisionIntelligenceError(Exception):
+    """Error in decision intelligence service."""
+    pass
