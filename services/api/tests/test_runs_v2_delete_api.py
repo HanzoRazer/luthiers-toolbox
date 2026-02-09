@@ -68,9 +68,12 @@ def test_env(tmp_path, monkeypatch):
     monkeypatch.setenv("RMOS_DELETE_DEFAULT_MODE", "soft")
     monkeypatch.setenv("RMOS_DELETE_ALLOW_HARD", "false")
 
+    # Clear store_api singleton BEFORE reload (the actual singleton lives there)
+    from app.rmos.runs_v2 import store_api
+    store_api._default_store = None
+
     # Reload store module to pick up new path
     from app.rmos.runs_v2 import store as store_module
-    store_module._default_store = None
     importlib.reload(store_module)
 
     return {
@@ -87,11 +90,13 @@ def client(test_env):
 
 
 @pytest.fixture
-def seeded_run(test_env):
-    """Create and return a seeded run for testing."""
+def seeded_run(test_env, request):
+    """Create and return a seeded run for testing with unique ID per test."""
     from app.rmos.runs_v2.store import persist_run
+    from uuid import uuid4
 
-    run_id = "run_test_api_delete"
+    # Use unique run_id per test to avoid "already exists" conflicts
+    run_id = f"run_test_api_delete_{uuid4().hex[:8]}"
     artifact = _make_minimal_artifact(run_id=run_id)
     persist_run(artifact)
     return run_id

@@ -114,6 +114,11 @@ def runs_v2_store(tmp_path, monkeypatch):
     # Set env before importing
     monkeypatch.setenv("RMOS_RUNS_DIR", str(store_dir))
 
+    # Clear the store_api singleton BEFORE reload
+    # NOTE: The singleton lives in store_api, not store
+    from app.rmos.runs_v2 import store_api
+    store_api._default_store = None
+
     # Import and reload to pick up new env
     import app.rmos.runs_v2.store as store_module
     importlib.reload(store_module)
