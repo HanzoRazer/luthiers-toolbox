@@ -3,20 +3,27 @@
 **Date:** 2026-02-09
 **Based on:** `luthiers-toolbox-design-review.md` (5.41/10)
 **Goal:** Raise score to 7.0+/10
-**Result:** ✅ **7.2/10** achieved (+1.79)
+**Snapshot 16 Review:** 6.68/10 (+1.27) — external reviewer used stricter methodology
+**Gap to target:** 0.32 points
 
 ---
 
-## Current State (Verified)
+## Current State (Phase 12 Verified - 2026-02-09)
 
-| Metric | Review Claim | Before | Current | Target |
-|--------|--------------|--------|---------|--------|
-| Root directory items | 38 | 78 | **38** | <25 |
-| Files >500 lines | 19+ | 16 | **15** | <10 |
-| Broad `except Exception` | 725 | ~225 | **2** (documented) | 0 in safety paths |
-| API routes | 992 | TBD | **361** | <300 core |
-| .txt files at root | - | 22 | **0** | 0 |
-| .jpg files at root | - | 14MB | **0** | 0 |
+| Metric | Snap 15 | Snap 16 | Target | Gap |
+|--------|---------|---------|--------|-----|
+| Root directory items | 38 | **40** | <25 | -15 |
+| Files >500 lines (app/) | 16 | **16** | <10 | -6 |
+| Broad `except Exception` | 725 | **602** | <200 | -402 |
+| Route decorators | ~992 | **1,004** | <500 | -504 |
+| @safety_critical sites | 0 | **13** | 20+ | +7 |
+| .txt/.jpg at root | 22+14MB | **0** | 0 | ✅ |
+
+**Methodology:**
+- Files >500: `find app/ -name "*.py" | xargs wc -l | awk '$1>500'`
+- except Exception: `grep -r "except Exception" app/ | wc -l`
+- Route decorators: `grep -rE "@(app|router)\.(get|post|put|delete|patch)" | wc -l`
+- Routers in manifest: 53 (separate metric)
 
 ### Files Over 500 Lines (Current)
 
@@ -160,20 +167,20 @@ Files still >500 lines requiring future decomposition:
 
 ---
 
-## Success Metrics
+## Success Metrics (Phase 12 Corrected)
 
 | Metric | Original | Current | Target | Phase | Status |
 |--------|----------|---------|--------|-------|--------|
-| Root items | 78 | **38** | <25 | 7 | ✅ Done |
-| Files >500 lines | 16 | **15** | <10 | 9 | ✅ Done (main target) |
+| Root items | 78 | **40** | <25 | 7/17 | -15 to go |
+| Files >500 lines | 19+ | **16** | <10 | 9/13 | -6 to go |
 | main.py lines | 915 | **207** | <200 | 9 | ✅ Done |
-| Safety-critical exceptions | 225 | **2** | 0 | 8 | ✅ Done |
+| except Exception | 725 | **602** | <200 | 8/15 | -402 to go |
+| @safety_critical sites | 0 | **13** | 20+ | 14 | +7 to go |
 | Startup validation | None | **Fail-fast** | Fail-fast | 10 | ✅ Done |
 | /api/features endpoint | Missing | **Implemented** | Implemented | 11 | ✅ Done |
-| /api/features/catalog | Missing | **Implemented** | Implemented | 11 | ✅ Done |
-| Total routes loaded | - | **361** | - | 9 | Verified |
-| Routers in manifest | - | **53/53** | - | 9 | Verified |
-| Design review score | 5.41 | **7.2** | 7.0+ | All | ✅ Target exceeded |
+| Route decorators | ~992 | **1,004** | <500 | 16 | -504 to go |
+| Routers in manifest | - | **53/53** | - | 9 | ✅ Done |
+| Design review score | 5.41 | **6.68** | 7.0+ | All | Gap: 0.32 |
 
 ### Phase Completion Summary
 
@@ -196,17 +203,20 @@ Files still >500 lines requiring future decomposition:
 
 ---
 
-## Re-Review Scoring (2026-02-09)
+## External Review Scoring (Snapshot 16 - 2026-02-09)
 
-| Category | Before | After |
-|----------|--------|-------|
-| Code Organization | 4/10 | **7/10** |
-| Safety & Reliability | 5/10 | **8/10** |
-| Maintainability | 4/10 | **7/10** |
-| Documentation | 6/10 | **7/10** |
-| API Design | 7/10 | 7/10 |
-| Testing | 6/10 | 6/10 |
-| **Weighted Total** | **5.41** | **7.2** |
+| Category | Snap 15 | Snap 16 | Weight | Weighted |
+|----------|---------|---------|--------|----------|
+| Purpose Clarity | 7 | **8**/10 | 1.0 | 8.0 |
+| User Fit | 6 | **7**/10 | 1.5 | 10.5 |
+| Usability | 5 | **7**/10 | 1.5 | 10.5 |
+| Reliability | 5 | **6**/10 | 1.5 | 9.0 |
+| Maintainability | 4 | **6**/10 | 1.5 | 9.0 |
+| Cost/Efficiency | 6 | **7**/10 | 1.0 | 7.0 |
+| Safety | 6 | **7**/10 | 2.0 | 14.0 |
+| Scalability | 5 | **6**/10 | 0.5 | 3.0 |
+| Aesthetics | 4 | **5**/10 | 0.5 | 2.5 |
+| **Weighted Total** | **5.41** | | | **6.68** |
 
 ---
 
@@ -214,7 +224,10 @@ Files still >500 lines requiring future decomposition:
 
 1. **main.py target achieved:** Reduced from 915 to 207 lines (target was <200)
 2. **router_registry.py:** New 519-line file is intentional (manifest for 53 routers)
-3. **Remaining files >500:** 9 router files pending future decomposition (lower priority)
-4. **Test coverage:** Not addressed in this plan; separate initiative
-5. **Re-review complete:** Score improved from 5.41 to 7.2 (+1.79), exceeding 7.0+ target
-6. **Release:** toolbox-v0.38.0
+3. **Remaining files >500:** 16 files require decomposition (target <10)
+4. **Exception hardening:** 602 broad exceptions remain (target <200)
+5. **@safety_critical:** 13 sites decorated (target 20+)
+6. **Route consolidation:** 1,004 decorators (target <500)
+7. **External review:** Score 6.68/10, gap of 0.32 to 7.0+ target
+8. **Release:** toolbox-v0.38.0
+9. **Phase 12:** Metrics accuracy fix applied 2026-02-09
