@@ -1,10 +1,4 @@
-"""
-Feasibility Rules — Phase 3 Explainability
-
-Each rule now emits a rule_id that maps to the authoritative registry.
-The message is preserved for backward compatibility, but rule_id is
-the canonical reference for explanation lookup.
-"""
+"""Feasibility Rules — Phase 3 Explainability"""
 
 from __future__ import annotations
 
@@ -13,34 +7,21 @@ from typing import List, Optional
 
 from .schemas import FeasibilityInput, MaterialHardness
 
-
 @dataclass(frozen=True)
 class RuleHit:
-    """
-    A single rule trigger result.
-    
-    Attributes:
-        rule_id: Canonical rule identifier (e.g., "F001") — lookup in rule_registry.py
-        level: "RED" or "YELLOW"
-        message: Human-readable message (for backward compatibility)
-        constraint: Optional constraint expression that was violated
-    """
+    """A single rule trigger result."""
     rule_id: str  # Phase 3: canonical identifier for registry lookup
     level: str  # "RED" or "YELLOW"
     message: str
     constraint: Optional[str] = None
 
-
-# =============================================================================
-# RED rules (blocking)
-# =============================================================================
+# --- RED rules (blocking) ---
 
 def rule_red_invalid_tool(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     if fi.tool_d <= 0:
         hits.append(RuleHit("F001", "RED", "tool_d must be > 0"))
     return hits
-
 
 def rule_red_invalid_stepover(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
@@ -50,13 +31,11 @@ def rule_red_invalid_stepover(fi: FeasibilityInput) -> List[RuleHit]:
         hits.append(RuleHit("F002", "RED", f"stepover must be in (0, {max_stepover}]"))
     return hits
 
-
 def rule_red_invalid_stepdown(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     if fi.stepdown <= 0:
         hits.append(RuleHit("F003", "RED", "stepdown must be > 0"))
     return hits
-
 
 def rule_red_invalid_depth(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
@@ -64,13 +43,11 @@ def rule_red_invalid_depth(fi: FeasibilityInput) -> List[RuleHit]:
         hits.append(RuleHit("F004", "RED", "z_rough must be negative (cutting depth)"))
     return hits
 
-
 def rule_red_invalid_safe_z(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     if fi.safe_z <= 0:
         hits.append(RuleHit("F005", "RED", "safe_z must be > 0"))
     return hits
-
 
 def rule_red_no_closed_geometry_hint(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
@@ -82,10 +59,7 @@ def rule_red_no_closed_geometry_hint(fi: FeasibilityInput) -> List[RuleHit]:
         hits.append(RuleHit("F007", "RED", "No closed loops detected in DXF (preflight)"))
     return hits
 
-
-# =============================================================================
-# RED rules — Adversarial Detection (F020-F029)
-# =============================================================================
+# --- RED rules — Adversarial Detection (F020-F029) ---
 
 def rule_red_excessive_doc_hardwood(fi: FeasibilityInput) -> List[RuleHit]:
     """F020: Excessive DOC in hard/extreme material — tool breakage or machine stall."""
@@ -101,7 +75,6 @@ def rule_red_excessive_doc_hardwood(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_red_tool_breakage_doc_ratio(fi: FeasibilityInput) -> List[RuleHit]:
     """F021: DOC:diameter ratio exceeds safe limits — tool breakage risk."""
     hits: List[RuleHit] = []
@@ -116,7 +89,6 @@ def rule_red_tool_breakage_doc_ratio(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_red_depth_exceeds_material(fi: FeasibilityInput) -> List[RuleHit]:
     """F022: Cutting depth exceeds material thickness — impossible geometry."""
     hits: List[RuleHit] = []
@@ -129,7 +101,6 @@ def rule_red_depth_exceeds_material(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_red_invalid_geometry_dimensions(fi: FeasibilityInput) -> List[RuleHit]:
     """F023: Zero or negative geometry dimensions — invalid input."""
     hits: List[RuleHit] = []
@@ -141,20 +112,13 @@ def rule_red_invalid_geometry_dimensions(fi: FeasibilityInput) -> List[RuleHit]:
         hits.append(RuleHit("F023", "RED", f"Invalid geometry: depth must be > 0 (got {fi.geometry_depth_mm})"))
     return hits
 
-
 def rule_red_missing_material(fi: FeasibilityInput) -> List[RuleHit]:
-    """F024: Material explicitly set to unknown — cannot validate safety.
-    
-    NOTE: Only triggers when material_hardness is EXPLICITLY set to UNKNOWN.
-    If material info is not provided (None), the check is skipped for backward
-    compatibility with MVP/basic use cases that don't require material validation.
-    """
+    """F024: Material explicitly set to unknown — cannot validate safety."""
     hits: List[RuleHit] = []
     # Only trigger if hardness is EXPLICITLY set to UNKNOWN (not just None/missing)
     if fi.material_hardness == MaterialHardness.UNKNOWN:
         hits.append(RuleHit("F024", "RED", "Material hardness unknown — cannot validate CAM parameters"))
     return hits
-
 
 def rule_red_tool_larger_than_pocket(fi: FeasibilityInput) -> List[RuleHit]:
     """F025: Tool diameter exceeds geometry width — physically impossible."""
@@ -167,7 +131,6 @@ def rule_red_tool_larger_than_pocket(fi: FeasibilityInput) -> List[RuleHit]:
                 constraint=f"tool_d <= {fi.geometry_width_mm}"
             ))
     return hits
-
 
 def rule_red_chatter_deflection_risk(fi: FeasibilityInput) -> List[RuleHit]:
     """F026: Tool stickout:diameter ratio too high — chatter/deflection risk."""
@@ -183,7 +146,6 @@ def rule_red_chatter_deflection_risk(fi: FeasibilityInput) -> List[RuleHit]:
                 constraint=f"tool_stickout / tool_d <= {limit}"
             ))
     return hits
-
 
 def rule_red_thermal_risk(fi: FeasibilityInput) -> List[RuleHit]:
     """F027: Resinous material + small tool + no coolant — thermal damage risk."""
@@ -204,7 +166,6 @@ def rule_red_thermal_risk(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_red_structural_wall_failure(fi: FeasibilityInput) -> List[RuleHit]:
     """F028: Wall thickness too thin — structural failure risk."""
     hits: List[RuleHit] = []
@@ -217,7 +178,6 @@ def rule_red_structural_wall_failure(fi: FeasibilityInput) -> List[RuleHit]:
                 constraint="wall_thickness_mm >= 1.0"
             ))
     return hits
-
 
 def rule_red_combined_adversarial(fi: FeasibilityInput) -> List[RuleHit]:
     """F029: Multiple unsafe conditions combined — catastrophic risk."""
@@ -247,10 +207,7 @@ def rule_red_combined_adversarial(fi: FeasibilityInput) -> List[RuleHit]:
         ))
     return hits
 
-
-# =============================================================================
-# YELLOW rules (warnings)
-# =============================================================================
+# --- YELLOW rules (warnings) ---
 
 def rule_yellow_tool_too_large(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
@@ -265,13 +222,11 @@ def rule_yellow_tool_too_large(fi: FeasibilityInput) -> List[RuleHit]:
         )
     return hits
 
-
 def rule_yellow_feed_z_gt_feed_xy(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
     if fi.feed_z > fi.feed_xy:
         hits.append(RuleHit("F011", "YELLOW", "feed_z > feed_xy; plunge may be too aggressive"))
     return hits
-
 
 def rule_yellow_stepdown_large(fi: FeasibilityInput, max_stepdown_mm: float = 3.0) -> List[RuleHit]:
     hits: List[RuleHit] = []
@@ -286,7 +241,6 @@ def rule_yellow_stepdown_large(fi: FeasibilityInput, max_stepdown_mm: float = 3.
         )
     return hits
 
-
 def rule_yellow_loop_count_high(fi: FeasibilityInput, max_loops: int = 1000) -> List[RuleHit]:
     hits: List[RuleHit] = []
     if fi.loop_count_hint is not None and fi.loop_count_hint > max_loops:
@@ -300,10 +254,7 @@ def rule_yellow_loop_count_high(fi: FeasibilityInput, max_loops: int = 1000) -> 
         )
     return hits
 
-
-# =============================================================================
-# YELLOW rules — Edge Pressure Detection (F030-F039)
-# =============================================================================
+# --- YELLOW rules — Edge Pressure Detection (F030-F039) ---
 
 def rule_yellow_deep_pocket(fi: FeasibilityInput) -> List[RuleHit]:
     """F030: Deep pocket warning — depth > 2x tool diameter."""
@@ -318,7 +269,6 @@ def rule_yellow_deep_pocket(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_yellow_hardwood_doc(fi: FeasibilityInput) -> List[RuleHit]:
     """F031: Moderate DOC in hardwood — not dangerous but warrants attention."""
     hits: List[RuleHit] = []
@@ -332,7 +282,6 @@ def rule_yellow_hardwood_doc(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_yellow_small_tool(fi: FeasibilityInput) -> List[RuleHit]:
     """F032: Small tool warning — increased breakage risk."""
     hits: List[RuleHit] = []
@@ -342,7 +291,6 @@ def rule_yellow_small_tool(fi: FeasibilityInput) -> List[RuleHit]:
             f"Small tool ({fi.tool_d}mm) — higher breakage risk; use conservative feeds/speeds",
         ))
     return hits
-
 
 def rule_red_depth_exceeds_flute(fi: FeasibilityInput) -> List[RuleHit]:
     """F033: Depth exceeds flute length — tool damage risk (RED)."""
@@ -356,7 +304,6 @@ def rule_red_depth_exceeds_flute(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_yellow_narrow_slot(fi: FeasibilityInput) -> List[RuleHit]:
     """F034: Narrow slot — high aspect ratio."""
     hits: List[RuleHit] = []
@@ -369,7 +316,6 @@ def rule_yellow_narrow_slot(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_yellow_aggressive_stepover(fi: FeasibilityInput) -> List[RuleHit]:
     """F035: Aggressive stepover — high tool engagement."""
     hits: List[RuleHit] = []
@@ -380,7 +326,6 @@ def rule_yellow_aggressive_stepover(fi: FeasibilityInput) -> List[RuleHit]:
             constraint="stepover <= 0.7"
         ))
     return hits
-
 
 def rule_yellow_thin_remaining_wall(fi: FeasibilityInput) -> List[RuleHit]:
     """F036: Thin wall warning — fragile but not structural failure risk."""
@@ -394,7 +339,6 @@ def rule_yellow_thin_remaining_wall(fi: FeasibilityInput) -> List[RuleHit]:
                 constraint="wall_thickness_mm >= 2.0"
             ))
     return hits
-
 
 def rule_yellow_combined_edge_pressure(fi: FeasibilityInput) -> List[RuleHit]:
     """F037: Multiple edge conditions combined — elevated risk."""
@@ -421,7 +365,6 @@ def rule_yellow_combined_edge_pressure(fi: FeasibilityInput) -> List[RuleHit]:
         ))
     return hits
 
-
 def rule_yellow_thin_floor(fi: FeasibilityInput) -> List[RuleHit]:
     """F038: Thin floor — risk of punching through."""
     hits: List[RuleHit] = []
@@ -434,7 +377,6 @@ def rule_yellow_thin_floor(fi: FeasibilityInput) -> List[RuleHit]:
             ))
     return hits
 
-
 def rule_yellow_complex_geometry(fi: FeasibilityInput) -> List[RuleHit]:
     """F039: Complex geometry — requires extra attention."""
     hits: List[RuleHit] = []
@@ -444,7 +386,6 @@ def rule_yellow_complex_geometry(fi: FeasibilityInput) -> List[RuleHit]:
             "Complex geometry (L-shape, multiple islands) — verify toolpaths carefully",
         ))
     return hits
-
 
 def rule_yellow_feed_override(fi: FeasibilityInput) -> List[RuleHit]:
     """F040: Feed override applied — operator has modified feeds."""
@@ -462,7 +403,6 @@ def rule_yellow_feed_override(fi: FeasibilityInput) -> List[RuleHit]:
                 f"Feed override at {fi.feed_override_percent}% — unusually slow; verify settings",
             ))
     return hits
-
 
 def rule_red_severe_combined_pressure(fi: FeasibilityInput) -> List[RuleHit]:
     """F041: Severe combined pressure — too many risk factors, block export."""
@@ -490,7 +430,6 @@ def rule_red_severe_combined_pressure(fi: FeasibilityInput) -> List[RuleHit]:
             f"Severe combined pressure ({severe_factors} risk factors) — unsafe without manual review",
         ))
     return hits
-
 
 def all_rules(fi: FeasibilityInput) -> List[RuleHit]:
     hits: List[RuleHit] = []
