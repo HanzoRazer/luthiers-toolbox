@@ -1,153 +1,28 @@
-"""
-Art Studio Rosette Router
-
-DEPRECATED: Routes migrated to art_studio/api/ in Phase 5 consolidation:
-    - rosette_jobs_routes.py    (preview, save, jobs, presets)
-    - rosette_compare_routes.py (compare, snapshots, export_csv)
-
-This file remains for backward compatibility during transition.
-New code should import from app.art_studio.api.
-
-Note: Circle generation math extracted to geometry/arc_utils.py
-following the Fortran Rule (all math in subroutines).
-"""
-
+"""Art Studio Rosette Router"""
 from __future__ import annotations
-
-import logging
-import uuid
+import io, logging, uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, validator
-import io
 
-logger = logging.getLogger(__name__)
-
-# Import canonical geometry functions - NO inline math in routers (Fortran Rule)
+from .art_studio_rosette_schemas import (
+    RosettePreviewIn, RosettePath, RosettePreviewOut, RosetteSaveIn, RosetteJobOut,
+    RosettePresetOut, RosetteCompareIn, RosetteDiffSummary, RosetteCompareOut,
+    CompareSnapshotIn, CompareSnapshotOut,
+)
 from ..geometry.arc_utils import generate_circle_points
-
 from ..art_studio_rosette_store import (
-    get_compare_snapshots,
-    get_job,
-    init_db,
-    list_jobs,
-    list_presets,
-    save_compare_snapshot,
-    save_job,
+    get_compare_snapshots, get_job, init_db, list_jobs, list_presets,
+    save_compare_snapshot, save_job,
 )
 from ..services.art_job_store import create_art_job
-from ..services import compare_risk_log  # Phase 28.1: Sync to legacy log
+from ..services import compare_risk_log
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ---- Pydantic models --------------------------------------------------------
-
-
-class RosettePreviewIn(BaseModel):
-    pattern_type: str = Field(..., description="e.g. 'herringbone', 'rope', 'simple_ring'")
-    segments: int = Field(64, ge=8, le=720)
-    inner_radius: float = Field(40.0, gt=0)
-    outer_radius: float = Field(45.0, gt=0)
-    units: str = Field("mm", pattern="^(mm|inch)$")
-    preset: Optional[str] = Field(None, description="Optional preset name")
-    name: Optional[str] = Field(None, description="Optional friendly job name for saving")
-
-    @validator("outer_radius")
-    def check_radii(cls, v, values):
-        inner = values.get("inner_radius", None)
-        if inner is not None and v <= inner:
-            raise ValueError("outer_radius must be greater than inner_radius")
-        return v
-
-
-class RosettePath(BaseModel):
-    points: List[Tuple[float, float]]  # [ [x,y], ... ]
-
-
-class RosettePreviewOut(BaseModel):
-    job_id: str
-    pattern_type: str
-    segments: int
-    inner_radius: float
-    outer_radius: float
-    units: str
-    preset: Optional[str]
-    name: Optional[str]
-    paths: List[RosettePath]
-    bbox: Tuple[float, float, float, float]  # (min_x, min_y, max_x, max_y)
-
-
-class RosetteSaveIn(BaseModel):
-    """Save a rosette job with full preview data"""
-    preview: RosettePreviewOut
-    name: Optional[str] = None
-    preset: Optional[str] = None
-
-
-class RosetteJobOut(BaseModel):
-    job_id: str
-    name: Optional[str]
-    preset: Optional[str]
-    created_at: str
-    preview: RosettePreviewOut
-
-
-class RosettePresetOut(BaseModel):
-    name: str
-    pattern_type: str
-    segments: int
-    inner_radius: float
-    outer_radius: float
-    metadata: Dict[str, Any]
-
-
-# ---- Compare Mode models ----------------------------------------------------
-
-
-class RosetteCompareIn(BaseModel):
-    job_id_a: str = Field(..., description="Baseline job id (A)")
-    job_id_b: str = Field(..., description="Variant job id (B)")
-
-
-class RosetteDiffSummary(BaseModel):
-    job_id_a: str
-    job_id_b: str
-
-    pattern_type_a: str
-    pattern_type_b: str
-    pattern_type_same: bool
-
-    segments_a: int
-    segments_b: int
-    segments_delta: int
-
-    inner_radius_a: float
-    inner_radius_b: float
-    inner_radius_delta: float
-
-    outer_radius_a: float
-    outer_radius_b: float
-    outer_radius_delta: float
-
-    units_a: str
-    units_b: str
-    units_same: bool
-
-    bbox_union: Tuple[float, float, float, float]
-    bbox_a: Tuple[float, float, float, float]
-    bbox_b: Tuple[float, float, float, float]
-
-
-class RosetteCompareOut(BaseModel):
-    job_a: RosettePreviewOut
-    job_b: RosettePreviewOut
-    diff_summary: RosetteDiffSummary
-
-
-# ---- Geometry stub - Delegates to geometry/arc_utils.py (Fortran Rule) ------
-
+# --- Geometry Helpers ---
 
 def _generate_simple_ring_paths(
     segments: int,
@@ -163,22 +38,14 @@ def _generate_simple_ring_paths(
     outer = generate_circle_points(outer_radius, segments, closed=True)
     return [inner, outer]
 
-
 def _generate_rosette_paths(body: RosettePreviewIn) -> List[List[Tuple[float, float]]]:
-    """Stub rosette generator; later we can plug in the true Art Studio kernel.
-
-    For now:
-    - pattern_type 'simple_ring' or unknown => two concentric circles.
-    - pattern_type 'herringbone' => same geometry, different metadata (future ready).
-    - pattern_type 'rope' => same geometry, but you can tweak radii slightly if desired.
-    """
+    """Stub rosette generator; later we can plug in the true Art Studio kernel."""
     segments = body.segments
     inner_radius = body.inner_radius
     outer_radius = body.outer_radius
 
     # you can branch by pattern_type here later
     return _generate_simple_ring_paths(segments, inner_radius, outer_radius)
-
 
 def _compute_bbox(paths: List[List[Tuple[float, float]]]) -> Tuple[float, float, float, float]:
     xs: List[float] = []
@@ -191,7 +58,6 @@ def _compute_bbox(paths: List[List[Tuple[float, float]]]) -> Tuple[float, float,
         return (0.0, 0.0, 0.0, 0.0)
     return (min(xs), min(ys), max(xs), max(ys))
 
-
 def _union_bbox(
     bbox_a: Tuple[float, float, float, float],
     bbox_b: Tuple[float, float, float, float],
@@ -202,13 +68,10 @@ def _union_bbox(
     max_y = max(bbox_a[3], bbox_b[3])
     return (min_x, min_y, max_x, max_y)
 
-
-# ---- Routes -----------------------------------------------------------------
-
+# --- Routes ---
 
 # Flag to track if DB is available (set during startup)
 _db_available: bool = False
-
 
 @router.on_event("startup")
 def _on_startup() -> None:
@@ -223,7 +86,6 @@ def _on_startup() -> None:
         logger.warning(
             f"Art Studio rosette database unavailable (non-fatal in CI): {e}"
         )
-
 
 @router.post("/preview", response_model=RosettePreviewOut)
 def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
@@ -245,7 +107,6 @@ def preview_rosette(body: RosettePreviewIn) -> RosettePreviewOut:
         paths=paths,
         bbox=bbox,
     )
-
 
 @router.post("/save", response_model=RosetteJobOut)
 def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
@@ -290,7 +151,6 @@ def save_rosette_job(body: RosetteSaveIn) -> RosetteJobOut:
         preview=preview,
     )
 
-
 @router.get("/jobs", response_model=List[RosetteJobOut])
 def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
     if not _db_available:
@@ -310,7 +170,6 @@ def list_rosette_jobs(limit: int = 20) -> List[RosetteJobOut]:
         )
     return out
 
-
 @router.get("/presets", response_model=List[RosettePresetOut])
 def get_rosette_presets() -> List[RosettePresetOut]:
     if not _db_available:
@@ -328,9 +187,7 @@ def get_rosette_presets() -> List[RosettePresetOut]:
         for r in rows
     ]
 
-
-# ---- Compare Route ----------------------------------------------------------
-
+# --- Compare Route ---
 
 @router.post("/compare", response_model=RosetteCompareOut)
 def compare_rosette_jobs(body: RosetteCompareIn) -> RosetteCompareOut:
@@ -377,9 +234,7 @@ def compare_rosette_jobs(body: RosetteCompareIn) -> RosetteCompareOut:
         diff_summary=diff,
     )
 
-
-# ---- Phase 27.2: Risk Snapshot Routes ---------------------------------------
-
+# --- Phase 27.2: Risk Snapshot Routes ---
 
 class CompareSnapshotIn(BaseModel):
     """Request to save a comparison snapshot to risk timeline."""
@@ -389,7 +244,6 @@ class CompareSnapshotIn(BaseModel):
     diff_summary: Dict[str, Any]
     lane: Optional[str] = Field(None, description="Optional lane (e.g., 'production')")
     note: Optional[str] = Field(None, description="Optional note about this comparison")
-
 
 class CompareSnapshotOut(BaseModel):
     """Snapshot record from risk timeline."""
@@ -402,19 +256,9 @@ class CompareSnapshotOut(BaseModel):
     note: Optional[str]
     created_at: str
 
-
 @router.post("/compare/snapshot", response_model=CompareSnapshotOut)
 def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
-    """
-    Save a comparison snapshot to the risk timeline.
-
-    Risk score calculation (client-side):
-    - Base score from segment delta: abs(delta) / max(seg_a, seg_b) * 50
-    - Radius delta contribution: abs(inner_delta + outer_delta) / 10 * 50
-    - Clamp to 0-100
-
-    Phase 28.1: Also syncs to compare_risk_log for cross-lab dashboard integration.
-    """
+    """Save a comparison snapshot to the risk timeline."""
     if not _db_available:
         raise HTTPException(
             status_code=503,
@@ -487,7 +331,6 @@ def save_snapshot(body: CompareSnapshotIn) -> CompareSnapshotOut:
         created_at=snapshot["created_at"],
     )
 
-
 @router.get("/compare/snapshots", response_model=List[CompareSnapshotOut])
 def list_snapshots(
     job_id_a: Optional[str] = None,
@@ -495,15 +338,7 @@ def list_snapshots(
     lane: Optional[str] = None,
     limit: int = 50,
 ) -> List[CompareSnapshotOut]:
-    """
-    Retrieve comparison snapshots from risk timeline with optional filtering.
-
-    Query params:
-    - job_id_a: Filter by first job ID
-    - job_id_b: Filter by second job ID
-    - lane: Filter by lane (e.g., 'production', 'testing')
-    - limit: Max results (default 50)
-    """
+    """Retrieve comparison snapshots from risk timeline with optional filtering."""
     if not _db_available:
         return []
     snapshots = get_compare_snapshots(
@@ -527,11 +362,7 @@ def list_snapshots(
         for s in snapshots
     ]
 
-
-# ============================================================================
-# Phase 27.3: CSV Export Endpoint
-# ============================================================================
-
+# --- Phase 27.3: CSV Export Endpoint ---
 
 @router.get("/compare/export_csv")
 def export_compare_csv(
@@ -540,28 +371,7 @@ def export_compare_csv(
     lane: Optional[str] = None,
     limit: int = 100,
 ):
-    """
-    Export comparison snapshots as CSV.
-
-    Query params:
-    - job_id_a: Filter by baseline job ID
-    - job_id_b: Filter by variant job ID
-    - lane: Filter by lane (production, testing, etc.)
-    - limit: Max records (default 100)
-
-    Returns CSV with columns:
-    - timestamp: ISO timestamp of snapshot creation
-    - job_id_a: Baseline job ID
-    - job_id_b: Variant job ID
-    - lane: Lane/category
-    - risk_score: Calculated risk score (0-100)
-    - segments_delta: Difference in segment count
-    - inner_radius_delta: Difference in inner radius
-    - outer_radius_delta: Difference in outer radius
-    - pattern_type_a: Pattern type of baseline
-    - pattern_type_b: Pattern type of variant
-    - note: Optional note
-    """
+    """Export comparison snapshots as CSV."""
     if not _db_available:
         raise HTTPException(
             status_code=503,
@@ -634,9 +444,6 @@ def export_compare_csv(
         raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")
 
 
-# ============================================================================
-# CAM Integration Endpoints - MOVED
-# ============================================================================
 # CAM endpoints have been extracted to:
 #   app/cam/routers/rosette/cam_router.py
 #
@@ -646,7 +453,3 @@ def export_compare_csv(
 #   POST /api/cam/rosette/jobs
 #   GET  /api/cam/rosette/jobs/{job_id}
 # ============================================================================
-
-
-
-
