@@ -1,14 +1,15 @@
 # Agent Session Bookmark
 
 **Date:** 2026-02-08
-**Session:** WP-3 God-Object Decomposition — COMPLETE
-**Last Commit:** `0bc5424` — WP-3: store.py — 709 -> 478 lines
+**Session:** WP-3 God-Object Decomposition — COMPLETE + Import Fixes
+**Last Commit:** `8618064` — fix(WP-3): add missing imports after store.py decomposition
 
 ---
 
-## WP-3 COMPLETE 🎉
+## WP-3 COMPLETE + POST-FIX
 
-All target files have been decomposed to ≤500 lines.
+All target files have been decomposed to <=500 lines.
+Import wiring fixes applied after test run revealed missing exports.
 
 ### This Session Summary
 
@@ -19,6 +20,14 @@ All target files have been decomposed to ≤500 lines.
 | `store.py` | 709 -> 478 | 231 | `0bc5424` |
 
 **Session total: 840 lines saved**
+
+### Post-Decomposition Import Fixes
+
+| Fix | File | Issue |
+|---|---|---|
+| Re-export contracts | `agentic/__init__.py` | Missing ToolCapabilityV1, etc. |
+| Add uuid4 import | `runs_v2/store_api.py` | NameError in create_run_id() |
+| Re-export rate limit | `runs_v2/store.py` | _DELETE_RATE_LIMIT for test compat |
 
 ---
 
@@ -54,3 +63,4 @@ All target files have been decomposed to ≤500 lines.
 - **259 API routes** — preserved
 - **All Python app files <= 500 lines** — achieved
 - **AST parse clean** — all files verified
+- **Test suite**: 1052 passed (11 flaky tests, 6 errors - pre-existing isolation issues)
