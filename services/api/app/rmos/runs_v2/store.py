@@ -31,6 +31,7 @@ from .index_meta import (
 from .store_ratelimit import (
     DeleteRateLimitError,
     check_delete_rate_limit as _check_delete_rate_limit,
+    _DELETE_RATE_LIMIT,  # re-export for test compatibility
 )
 
 # Completeness guard — extracted WP-3
