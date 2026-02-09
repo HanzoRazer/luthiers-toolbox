@@ -1,61 +1,62 @@
 # Agent Session Bookmark
 
 **Date:** 2026-02-09
-**Session:** Post-WP-3 Test Fixes — All Tests Passing
-**Last Commit:** `a90e3ab` — fix(tests): resolve test isolation issues with store_api singleton
+**Session:** Phase 1.2 Exception Triage - Safety-Critical Path Fixed
+**Last Commit:** `3809dc9` - docs: update remediation plan with Phase 1.2 progress
 
 ---
 
 ## Session Summary
 
-Fixed all test failures after WP-3 decomposition. All 1069 tests now pass.
+Fixed 3 `except Exception:` blocks in safety-critical audit path (store_delete.py).
+All 1,069 tests pass.
 
-### Bug Fixes
+### Phase 1.2 Exception Triage
 
-| Bug | Root Cause | Fix | Commit |
-|-----|------------|-----|--------|
-| Delete audit tests (4 failing) | Fixture cleared `store._default_store` but singleton lives in `store_api` | Clear `store_api._default_store` + reload `store_ratelimit` | `47f1199` |
-| Moments engine tests (2 failing) | Returned only highest priority moment, broke grace selector | Selective suppression: ERROR/OVERLOAD suppress all, others return all | `24ffea8` |
-| Plan choose tests (2 failing, 404) | Patched `batch_router.get_artifact` but imports are in `batch_router_toolpaths` | Patch `batch_router_toolpaths.get_artifact` and `store_artifact` | `7b80dbb` |
-| Test isolation (2 failed, 6 errors) | Three test files cleared wrong singleton module | Clear `store_api._default_store` in all three files | `a90e3ab` |
+| File | Lines | Fix | Commit |
+|------|-------|-----|--------|
+| \ | 59-60, 104-105, 171-172 | Narrowed to \ + logging | \ |
 
-### Test Isolation Fixes
+**Audit findings:**
+- Total \ in codebase: 33 remaining
+- All have \ comments explaining why kept broad
+- Categories: JWT auth, OTEL telemetry, SQLAlchemy guards, HTTP endpoints
 
-| File | Issue | Fix |
-|------|-------|-----|
-| `test_rmos_wrapper_feasibility_phase1.py` | Cleared `runs_v2_store._default_store` | Import `store_api`, clear `store_api._default_store` |
-| `test_runs_v2_delete_api.py` | Same + hardcoded run_id | Clear `store_api._default_store` + use `uuid4()` for unique IDs |
-| `test_runs_v2_split_store.py` | Same issue in fixture | Clear `store_api._default_store` before reload |
+### Key Insight
+
+Audit logging exceptions are intentionally "fail-soft" - they should not interrupt the main operation. However, they should:
+1. Catch specific exceptions (not all)
+2. Log warnings (not silently swallow)
+3. Still allow the main operation to complete
 
 ---
 
-## Key Insights
+## Commits This Session
 
-### Python Import Semantics
-- `from module import name` creates a **local binding**, not a reference
-- `patch()` must target where the name is **looked up** (consumer module), not where defined
-- Singleton patterns with module-level variables require clearing the **actual module** holding the singleton
-
-### Moments Engine Priority Rules
-- Priority order: ERROR > OVERLOAD > DECISION_REQUIRED > FINDING > HESITATION > FIRST_SIGNAL
-- **Critical suppression**: ERROR or OVERLOAD suppress all other moments
-- **Non-critical**: All moments returned for grace selector to choose based on FTUE context
+| Commit | Description |
+|--------|-------------|
+| \ | fix(rmos): narrow except Exception in store_delete.py |
+| \ | docs: update remediation plan with Phase 1.2 progress |
 
 ---
 
 ## Test Results
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Passed | 1061 | 1069 |
-| Failed | 2 | 0 |
-| Errors | 6 | 0 |
-| Skipped | - | 8 |
-
-**All tests passing. Ready for next work package.**
+| Metric | Value |
+|--------|-------|
+| Passed | 1,069 |
+| Failed | 0 |
+| Errors | 0 |
+| Skipped | 8 |
 
 ---
 
+## Previous Session (2026-02-09 earlier)
+
+Post-WP-3 Test Fixes:
+- Fixed test isolation issues with store_api singleton
+- All 1,069 tests passing
+- Commits: \, \, \, 
 ## Previous Session (2026-02-08)
 
 WP-3 God-Object Decomposition completed:
