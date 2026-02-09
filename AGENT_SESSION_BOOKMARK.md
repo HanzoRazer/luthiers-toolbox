@@ -1,33 +1,32 @@
 # Agent Session Bookmark
 
 **Date:** 2026-02-09
-**Session:** Phase 1.2 Exception Triage - Safety-Critical Path Fixed
-**Last Commit:** `3809dc9` - docs: update remediation plan with Phase 1.2 progress
+**Session:** Phase 4 Documentation Triage Complete
+**Last Commit:** `bbd6457` - docs: rewrite README.md for accuracy (Phase 4)
 
 ---
 
 ## Session Summary
 
-Fixed 3 `except Exception:` blocks in safety-critical audit path (store_delete.py).
-All 1,069 tests pass.
+Completed Phase 4 Documentation Triage:
+- Deleted non-essential docs (dead code, marketing, auto-generated)
+- Rewrote README.md: 657 -> 110 lines (-83%)
+- docs/ now has 30 markdown files (target: <=50)
 
-### Phase 1.2 Exception Triage
+Also completed Phase 1.3 (@safety_critical decorator) earlier in session.
 
-| File | Lines | Fix | Commit |
-|------|-------|-----|--------|
-| \ | 59-60, 104-105, 171-172 | Narrowed to \ + logging | \ |
+### Phase 4 Documentation Triage
 
-**Audit findings:**
-- Total \ in codebase: 33 remaining
-- All have \ comments explaining why kept broad
-- Categories: JWT auth, OTEL telemetry, SQLAlchemy guards, HTTP endpoints
+| Action | Result |
+|--------|--------|
+| Delete docs/ENDPOINT_TRUTH_MAP.md | 40KB auto-generated removed |
+| Delete docs/Runs_Advisory_Integration/ | Dead Python code removed |
+| Delete docs/products/ | Marketing materials removed |
+| Rewrite README.md | 657 -> 110 lines (-83%) |
 
-### Key Insight
-
-Audit logging exceptions are intentionally "fail-soft" - they should not interrupt the main operation. However, they should:
-1. Catch specific exceptions (not all)
-2. Log warnings (not silently swallow)
-3. Still allow the main operation to complete
+**Success criteria met:**
+- docs/ <=50 files: **30 files** 
+- README has accurate metrics 
 
 ---
 
@@ -35,8 +34,26 @@ Audit logging exceptions are intentionally "fail-soft" - they should not interru
 
 | Commit | Description |
 |--------|-------------|
-| \ | fix(rmos): narrow except Exception in store_delete.py |
-| \ | docs: update remediation plan with Phase 1.2 progress |
+| `bbd6457` | docs: rewrite README.md for accuracy (Phase 4) |
+| `0f03780` | docs: remove non-essential docs (Phase 4 triage) |
+| `62128c7` | docs: update remediation plan with Phase 1.3 complete |
+| `7dbbb9b` | feat(safety): add @safety_critical decorator |
+
+---
+
+## Phase Status
+
+| Phase | Status |
+|-------|--------|
+| Phase 0 - Dead Code Purge | COMPLETE |
+| Phase 1.1 - Bare except elimination | COMPLETE |
+| Phase 1.2 - Exception triage | COMPLETE (3 fixes) |
+| Phase 1.3 - @safety_critical decorator | COMPLETE |
+| Phase 2 - API Surface Reduction | NOT STARTED |
+| Phase 3 - God-Object Decomposition | COMPLETE |
+| Phase 4 - Documentation Triage | COMPLETE |
+| Phase 5 - Quick Cut Mode | NOT STARTED |
+| Phase 6 - Health/Observability | NOT STARTED |
 
 ---
 
@@ -53,13 +70,6 @@ Audit logging exceptions are intentionally "fail-soft" - they should not interru
 
 ## Previous Session (2026-02-09 earlier)
 
-Post-WP-3 Test Fixes:
-- Fixed test isolation issues with store_api singleton
-- All 1,069 tests passing
-- Commits: \, \, \, 
-## Previous Session (2026-02-08)
-
-WP-3 God-Object Decomposition completed:
-- 47 decompositions
-- 0 app files over 500-line threshold
-- 840 lines saved in final session
+Phase 1.2 Exception Triage:
+- Fixed 3 `except Exception:` blocks in store_delete.py
+- Narrowed to `except (OSError, TypeError)` with logging
