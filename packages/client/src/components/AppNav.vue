@@ -12,6 +12,14 @@
 
       <nav class="flex items-center gap-3 text-[11px]">
         <RouterLink
+          to="/quick-cut"
+          class="px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
+          active-class="bg-blue-700 text-white"
+        >
+          Quick Cut
+        </RouterLink>
+
+        <RouterLink
           to="/lab/bridge"
           class="px-2 py-1 rounded hover:bg-gray-100"
           active-class="bg-gray-900 text-white hover:bg-gray-900"

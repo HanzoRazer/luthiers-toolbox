@@ -11,6 +11,13 @@ const routes: RouteRecordRaw[] = [
     component: RosettePipelineView,
   },
 
+  // Quick Cut - Simplified DXF to G-code flow (Phase 5)
+  {
+    path: "/quick-cut",
+    name: "QuickCut",
+    component: () => import("@/views/QuickCutView.vue"),
+  },
+
   // RMOS main view as its own route (optional)
   {
     path: "/rmos",
