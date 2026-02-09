@@ -71,6 +71,18 @@ tmp/
 !services/api/tests/fixtures/**/*.zip
 
 # ------------------------------------------
+# Root Directory Artifacts (DO NOT TRACK)
+# ------------------------------------------
+/*.patch
+/*.jpg
+/*.png
+/nul
+/tap_tone_pi*/
+/ai-integrator/
+/sg-spec*/
+/string_master*/
+
+# ------------------------------------------
 # Database Files (Local Dev)
 # ------------------------------------------
 *.db
