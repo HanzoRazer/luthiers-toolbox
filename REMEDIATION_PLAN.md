@@ -17,7 +17,7 @@
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
 | **Phase 4** — Documentation Triage | ✅ COMPLETE | 30 docs (was 685) |
 | **Phase 5** — Quick Cut Mode | ✅ COMPLETE | 3-step wizard |
-| **Phase 6** — Health/Observability | ⏳ NOT STARTED | Health endpoint |
+| **Phase 6** — Health/Observability | ✅ COMPLETE | /api/health/detailed endpoint |
 
 ### Test Suite (2026-02-09)
 - **1,069 passed**, 0 failed, 0 errors, 8 skipped
