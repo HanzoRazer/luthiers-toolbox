@@ -1,7 +1,0 @@
-{
-  "artifact_type": "load_series",
-  "unit": "N",
-  "sample_rate_hz": 50,
-  "ts_utc_start": "2025-12-29T00:00:00Z",
-  "data": [[0.0, 0.1], [0.02, 0.15], [0.04, 0.22]]
-}

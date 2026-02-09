@@ -1,6 +1,0 @@
-numpy
-scipy
-sounddevice
-matplotlib
-jsonschema
-pyserial
