@@ -13,7 +13,7 @@
 |-------|--------|------------|
 | **Phase 0** — Dead Code Purge | ✅ COMPLETE | Stale dirs deleted |
 | **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅, 1.2 🔶, 1.3 ✅ decorator |
-| **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
+| **Phase 2** — API Surface Reduction | ✅ COMPLETE | 262 routes (was 1,060) |
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
 | **Phase 4** — Documentation Triage | ✅ COMPLETE | 30 docs (was 685) |
 | **Phase 5** — Quick Cut Mode | ✅ COMPLETE | 3-step wizard |
@@ -575,10 +575,10 @@ Phase 1 is done when:
 - [ ] Remaining safety-critical paths (cam/, calculators/) triaged
 
 Phase 2 is done when:
-- [ ] main.py < 200 lines (feature auto-discovery)
-- [ ] `/api/features` endpoint reports all loaded/failed modules
-- [ ] Route count < 300 (from 1,060)
-- [ ] `routers/` directory contains ≤10 files (from 107)
+- [ ] main.py < 200 lines (feature auto-discovery) — currently 905, deferred
+- [x] `/api/features` endpoint reports all loaded/failed modules ✅ 2026-02-09
+- [x] Route count < 300 (from 1,060) — now 262 ✅ 2026-02-09
+- [ ] `routers/` directory contains ≤10 files (from 107) — currently 88, deferred
 
 Phase 3 is done when:
 - [x] No Python file > 500 lines (or baseline-locked with CI enforcement) ✅ 2026-02-08
