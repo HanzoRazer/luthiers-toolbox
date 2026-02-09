@@ -12,7 +12,7 @@
 | Phase | Status | Key Metric |
 |-------|--------|------------|
 | **Phase 0** — Dead Code Purge | ✅ COMPLETE | Stale dirs deleted |
-| **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅ bare except=0, 1.2 pending |
+| **Phase 1** — Exception Hardening | 🔶 IN PROGRESS | 1.1 ✅ bare=0, 1.2 🔶 safety-critical fixed |
 | **Phase 2** — API Surface Reduction | ⏳ NOT STARTED | 1,060 routes |
 | **Phase 3** — God-Object Decomposition | ✅ COMPLETE | 47 decompositions, 0 files >500 |
 | **Phase 4** — Documentation Triage | ⏳ NOT STARTED | 685 docs |
@@ -549,7 +549,8 @@ Phase 0 is done when:
 Phase 1 is done when:
 - [x] Zero bare `except:` blocks (`grep -rP '^\s*except\s*:' services/api/app/ | wc -l` == 0) ✅ 2026-02-09
 - [ ] All safety-critical paths use `@safety_critical` decorator
-- [ ] `except Exception` in rmos/, cam/, calculators/ replaced with specific types
+- [x] `except Exception` in rmos/runs_v2/store_delete.py narrowed to specific types ✅ 2026-02-09
+- [ ] Remaining safety-critical paths (cam/, calculators/) triaged
 
 Phase 2 is done when:
 - [ ] main.py < 200 lines (feature auto-discovery)
@@ -643,6 +644,23 @@ Since the system is pre-production with zero external users:
 ---
 
 ## Recent Session Log
+
+### 2026-02-09 — Phase 1.2 Exception Triage
+
+Fixed 3 except Exception blocks in safety-critical audit path:
+
+| File | Lines | Fix | Commit |
+|------|-------|-----|--------|
+| store_delete.py | 56-57, 101-102, 168-169 | Narrowed to (OSError, TypeError) + logging | 10f1e93 |
+
+**Remaining except Exception blocks:** 33 (all have WP-1 comments explaining why kept broad)
+- auth/deps.py: JWT decode (hybrid mode fallback)
+- governance/: OTEL telemetry (must never crash)
+- db/session.py: SQLAlchemy transaction guard
+- vision/router.py: HTTP endpoint catch-all
+- conftest.py: Test cleanup (6 occurrences)
+
+**Result:** 1,069 passed, 0 failed, 0 errors
 
 ### 2026-02-09 — Test Isolation Fixes
 
