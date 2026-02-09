@@ -1,19 +1,4 @@
-"""
-RMOS Variant Review Service
-
-Product Bundle: Variant Review, Rating, and Promotion
-
-Capabilities:
-- List advisory variants for a run
-- Save rating + notes for a variant
-- Promote a variant to manufacturing candidate
-
-Governance rules:
-- Reviews are stored in RunArtifact.advisory_reviews (does not mutate advisory blob)
-- Promotion adds to manufacturing_candidates list (in-place on run)
-- RBAC: promotion requires admin/operator/engineer role
-- All actions are auditable
-"""
+"""RMOS Variant Review Service"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -40,10 +25,8 @@ from .schemas_variant_review import (
 from .schemas_manufacturing import ManufacturingCandidate
 from .advisory_variant_state import read_rejection, write_rejection, clear_rejection
 
-
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
 
 def _authorized_advisory_ids(run: Any) -> List[str]:
     """Get list of advisory IDs linked to a run."""
@@ -54,7 +37,6 @@ def _authorized_advisory_ids(run: Any) -> List[str]:
         if isinstance(adv, str) and adv:
             out.append(adv)
     return out
-
 
 def _mime_from_bytes(data: bytes) -> str:
     """High-signal MIME sniffing from first bytes."""
@@ -70,20 +52,12 @@ def _mime_from_bytes(data: bytes) -> str:
         return "image/jpeg"
     return "application/octet-stream"
 
-
 def _infer_filename(advisory_id: str, mime: str) -> str:
     """Generate filename from advisory ID and MIME type."""
-    ext = {
-        "image/svg+xml": ".svg",
-        "application/json": ".json",
-        "text/plain": ".txt",
-        "image/png": ".png",
-        "image/jpeg": ".jpg",
-        "application/pdf": ".pdf",
-        "application/octet-stream": ".bin",
-    }.get(mime, ".bin")
+    ext = {"image/svg+xml": ".svg", "application/json": ".json", "text/plain": ".txt",
+           "image/png": ".png", "image/jpeg": ".jpg", "application/pdf": ".pdf",
+           "application/octet-stream": ".bin"}.get(mime, ".bin")
     return f"{advisory_id[:16]}{ext}"
-
 
 def _preview_safety(svg_text: str) -> Tuple[bool, Optional[str]]:
     """Check if SVG is safe for inline preview."""
@@ -99,14 +73,8 @@ def _preview_safety(svg_text: str) -> Tuple[bool, Optional[str]]:
         return False, "text"
     return True, None
 
-
 def _risk_from_svg_for_binding(svg_text: str) -> Tuple[str, str, float, str]:
-    """
-    Bind-time policy for SVG promotion:
-      - BLOCK: script, foreignObject, image
-      - ALLOW: path, geometry
-      - WARN: text => ALLOW + YELLOW
-    """
+    """Bind-time policy for SVG promotion:"""
     lower = (svg_text or "").lower()
     if "<script" in lower:
         return ("BLOCK", "RED", 0.0, "svg_script")
@@ -118,12 +86,10 @@ def _risk_from_svg_for_binding(svg_text: str) -> Tuple[str, str, float, str]:
         return ("ALLOW", "YELLOW", 0.75, "svg_text_requires_outline")
     return ("ALLOW", "GREEN", 1.0, "ok")
 
-
 def _get_user_id(req: Request) -> Optional[str]:
     """Extract user ID from request headers (legacy, for save_review)."""
     uid = (req.headers.get("x-user-id") or "").strip()
     return uid or None
-
 
 def list_variants(run_id: str) -> AdvisoryVariantListResponse:
     """List all advisory variants for a run with their review status."""
@@ -158,25 +124,12 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
         p = get_attachment_path(adv_id)
         if not p:
             # Still list, but mark missing
-            items.append(
-                AdvisoryVariantSummary(
-                    advisory_id=adv_id,
-                    mime="application/octet-stream",
-                    filename=_infer_filename(adv_id, "application/octet-stream"),
-                    size_bytes=0,
-                    preview_blocked=True,
-                    preview_block_reason="missing",
-                    rating=None,
-                    notes=None,
-                    promoted=adv_id in promoted_ids,
-                    status="NEW",
-                    risk_level="RED",
-                    created_at_utc=None,
-                    updated_at_utc=None,
-                    rejected=False,
-                    rejection_reason=None,
-                )
-            )
+            items.append(AdvisoryVariantSummary(
+                advisory_id=adv_id, mime="application/octet-stream", filename=_infer_filename(adv_id, "application/octet-stream"),
+                size_bytes=0, preview_blocked=True, preview_block_reason="missing", rating=None, notes=None,
+                promoted=adv_id in promoted_ids, status="NEW", risk_level="RED",
+                created_at_utc=None, updated_at_utc=None, rejected=False, rejection_reason=None,
+            ))
             continue
 
         size = Path(p).stat().st_size
@@ -235,34 +188,19 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
         else:
             status = "NEW"
 
-        items.append(
-            AdvisoryVariantSummary(
-                advisory_id=adv_id,
-                mime=mime,
-                filename=filename,
-                size_bytes=size,
-                preview_blocked=preview_blocked,
-                preview_block_reason=preview_reason,
-                rating=rating,
-                notes=notes,
-                promoted=is_promoted,
-                status=status,  # type: ignore
-                risk_level=risk_level,  # type: ignore
-                created_at_utc=created_at_utc,
-                updated_at_utc=updated_at_utc,
-                rejected=is_rejected,
-                rejection_reason=rejection_reason,
-                rejection_reason_code=rejection_reason_code,
-                rejection_reason_detail=rejection_reason_detail,
-                rejection_operator_note=rejection_operator_note,
-                rejected_at_utc=rejected_at_utc,
-            )
-        )
+        items.append(AdvisoryVariantSummary(
+            advisory_id=adv_id, mime=mime, filename=filename, size_bytes=size,
+            preview_blocked=preview_blocked, preview_block_reason=preview_reason, rating=rating, notes=notes,
+            promoted=is_promoted, status=status, risk_level=risk_level,  # type: ignore
+            created_at_utc=created_at_utc, updated_at_utc=updated_at_utc,
+            rejected=is_rejected, rejection_reason=rejection_reason, rejection_reason_code=rejection_reason_code,
+            rejection_reason_detail=rejection_reason_detail, rejection_operator_note=rejection_operator_note,
+            rejected_at_utc=rejected_at_utc,
+        ))
 
     # Stable ordering by advisory_id for determinism
     items.sort(key=lambda x: x.advisory_id)
     return AdvisoryVariantListResponse(run_id=run_id, count=len(items), items=items)
-
 
 def save_review(
     run_id: str,
@@ -299,7 +237,6 @@ def save_review(
         updated_at_utc=now,
         updated_by=user_id,
     )
-
 
 def promote_variant(
     run_id: str,
@@ -350,28 +287,17 @@ def promote_variant(
     if decision == "BLOCK":
         # Do NOT persist a candidate
         return PromoteVariantResponse(
-            run_id=run_id,
-            advisory_id=advisory_id,
-            decision="BLOCK",
-            risk_level="RED",
-            score=score,
-            reason=reason,
-            manufactured_candidate_id=None,
+            run_id=run_id, advisory_id=advisory_id, decision="BLOCK", risk_level="RED",
+            score=score, reason=reason, manufactured_candidate_id=None,
             message="Promotion blocked by bind-time policy",
         )
 
     user_id = principal.user_id
     now = _utc_now()
     cand = ManufacturingCandidate(
-        candidate_id=f"mc_{uuid4().hex[:12]}",
-        advisory_id=advisory_id,
-        status="PROPOSED",
-        label=payload.label,
-        note=payload.note,
-        created_at_utc=now,
-        created_by=user_id,
-        updated_at_utc=now,
-        updated_by=user_id,
+        candidate_id=f"mc_{uuid4().hex[:12]}", advisory_id=advisory_id, status="PROPOSED",
+        label=payload.label, note=payload.note, created_at_utc=now, created_by=user_id,
+        updated_at_utc=now, updated_by=user_id,
     )
     candidates.append(cand)
     run.manufacturing_candidates = candidates
@@ -382,20 +308,11 @@ def promote_variant(
     update_run(run)
 
     return PromoteVariantResponse(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        decision="ALLOW",
-        risk_level=risk,  # type: ignore
-        score=score,
-        reason=reason,
-        manufactured_candidate_id=cand.candidate_id,
-        message=None,
+        run_id=run_id, advisory_id=advisory_id, decision="ALLOW", risk_level=risk,  # type: ignore
+        score=score, reason=reason, manufactured_candidate_id=cand.candidate_id, message=None,
     )
 
-
-# =============================================================================
-# Bulk Promote (Product Bundle)
-# =============================================================================
+# --- Bulk Promote (Product Bundle) ---
 
 from .schemas_variant_review import (
     BulkPromoteRequest,
@@ -403,19 +320,12 @@ from .schemas_variant_review import (
     BulkPromoteResponse,
 )
 
-
 def bulk_promote_variants(
     run_id: str,
     payload: BulkPromoteRequest,
     principal: Principal,
 ) -> BulkPromoteResponse:
-    """Bulk-promote multiple advisory variants to manufacturing candidates.
-
-    Processes each variant individually, collecting results.
-    Continues on individual failures to maximize throughput.
-
-    Returns aggregate statistics and per-item results.
-    """
+    """Bulk-promote multiple advisory variants to manufacturing candidates."""
     run = get_run(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
@@ -441,32 +351,20 @@ def bulk_promote_variants(
     for advisory_id in payload.advisory_ids:
         # Check if advisory is linked to run
         if advisory_id not in allowed:
-            results.append(BulkPromoteItemResult(
-                advisory_id=advisory_id,
-                success=False,
-                error="Advisory blob not linked to this run",
-            ))
+            results.append(BulkPromoteItemResult(advisory_id=advisory_id, success=False, error="Advisory blob not linked to this run"))
             failed += 1
             continue
 
         # Check if already promoted
         if advisory_id in already_promoted:
-            results.append(BulkPromoteItemResult(
-                advisory_id=advisory_id,
-                success=False,
-                error="Variant already promoted",
-            ))
+            results.append(BulkPromoteItemResult(advisory_id=advisory_id, success=False, error="Variant already promoted"))
             failed += 1
             continue
 
         # Resolve blob
         path = get_attachment_path(advisory_id)
         if not path:
-            results.append(BulkPromoteItemResult(
-                advisory_id=advisory_id,
-                success=False,
-                error="Advisory blob not found (CAS missing)",
-            ))
+            results.append(BulkPromoteItemResult(advisory_id=advisory_id, success=False, error="Advisory blob not found (CAS missing)"))
             failed += 1
             continue
 
@@ -487,64 +385,37 @@ def bulk_promote_variants(
 
             if decision == "BLOCK":
                 results.append(BulkPromoteItemResult(
-                    advisory_id=advisory_id,
-                    success=False,
-                    decision="BLOCK",
-                    risk_level="RED",
-                    score=score,
-                    reason=reason,
-                    error="Promotion blocked by bind-time policy",
+                    advisory_id=advisory_id, success=False, decision="BLOCK", risk_level="RED",
+                    score=score, reason=reason, error="Promotion blocked by bind-time policy",
                 ))
                 blocked += 1
                 continue
 
             # Create manufacturing candidate
             cand = ManufacturingCandidate(
-                candidate_id=f"mc_{uuid4().hex[:12]}",
-                advisory_id=advisory_id,
-                status="PROPOSED",
-                label=payload.label,
-                note=payload.note,
-                created_at_utc=now,
-                created_by=user_id,
-                updated_at_utc=now,
-                updated_by=user_id,
+                candidate_id=f"mc_{uuid4().hex[:12]}", advisory_id=advisory_id, status="PROPOSED",
+                label=payload.label, note=payload.note, created_at_utc=now, created_by=user_id,
+                updated_at_utc=now, updated_by=user_id,
             )
             candidates.append(cand)
             already_promoted.add(advisory_id)  # Track to prevent duplicates in same batch
 
             results.append(BulkPromoteItemResult(
-                advisory_id=advisory_id,
-                success=True,
-                decision="ALLOW",
-                risk_level=risk,  # type: ignore
-                score=score,
-                reason=reason,
-                manufactured_candidate_id=cand.candidate_id,
+                advisory_id=advisory_id, success=True, decision="ALLOW", risk_level=risk,  # type: ignore
+                score=score, reason=reason, manufactured_candidate_id=cand.candidate_id,
             ))
             succeeded += 1
 
-        except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
-            results.append(BulkPromoteItemResult(
-                advisory_id=advisory_id,
-                success=False,
-                error=str(e),
-            ))
+        except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed
+            results.append(BulkPromoteItemResult(advisory_id=advisory_id, success=False, error=str(e)))
             failed += 1
 
     # Persist all changes at once
     run.manufacturing_candidates = candidates
     update_run(run)
 
-    return BulkPromoteResponse(
-        run_id=run_id,
-        total=len(payload.advisory_ids),
-        succeeded=succeeded,
-        failed=failed,
-        blocked=blocked,
-        results=results,
-    )
-
+    return BulkPromoteResponse(run_id=run_id, total=len(payload.advisory_ids), succeeded=succeeded,
+                               failed=failed, blocked=blocked, results=results)
 
 def reject_variant(
     run_id: str,
@@ -573,15 +444,8 @@ def reject_variant(
         operator_note=payload.operator_note,
     )
 
-    return RejectVariantResponse(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        rejected=True,
-        reason_code=payload.reason_code,
-        reason_detail=payload.reason_detail,
-        rejected_at_utc=now,
-    )
-
+    return RejectVariantResponse(run_id=run_id, advisory_id=advisory_id, rejected=True,
+                                  reason_code=payload.reason_code, reason_detail=payload.reason_detail, rejected_at_utc=now)
 
 def unreject_variant(
     run_id: str,
@@ -603,9 +467,4 @@ def unreject_variant(
     now = _utc_now()
     clear_rejection(run_id=run_id, advisory_id=advisory_id)
 
-    return UnrejectVariantResponse(
-        run_id=run_id,
-        advisory_id=advisory_id,
-        rejected=False,
-        cleared_at_utc=now,
-    )
+    return UnrejectVariantResponse(run_id=run_id, advisory_id=advisory_id, rejected=False, cleared_at_utc=now)
