@@ -501,6 +501,16 @@ app.add_middleware(EndpointGovernanceMiddleware)
 
 from .db.startup import run_migrations_on_startup
 from .core.observability import set_version, register_loaded_feature
+from .health.startup import validate_startup, get_startup_summary
+
+
+@app.on_event("startup")
+def _startup_safety_validation() -> None:
+    """Validate safety-critical modules are loaded. FAIL FAST if not."""
+    # Set strict=True to block startup if safety modules fail
+    # Set strict=False during development/testing if needed
+    strict_mode = os.getenv("RMOS_STRICT_STARTUP", "1") != "0"
+    validate_startup(strict=strict_mode)
 
 
 @app.on_event("startup")
