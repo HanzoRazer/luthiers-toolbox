@@ -1,17 +1,4 @@
-"""
-Workflow State Machine - Canonical Implementation
-
-Implements governance-compliant workflow state transitions for:
-- Design-First mode: Full artistic freedom, then machine constraints
-- Constraint-First mode: Start with machine limits, then design
-- AI-Assisted mode: AI-driven parameter suggestions
-
-Governance Requirements:
-1. Server-side feasibility enforcement for toolpaths
-2. Run artifact persistence at every state change
-3. Hash/version tracking for diff viewer support
-4. RED/UNKNOWN risk blocks unless explicitly overridden
-"""
+"""Workflow State Machine - Canonical Implementation"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -21,16 +8,12 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-
-# ---------------------------------------------------------------------------
-# Enums / Types
-# ---------------------------------------------------------------------------
+# --- Enums / Types ---
 
 class WorkflowMode(str, Enum):
     DESIGN_FIRST = "design_first"
     CONSTRAINT_FIRST = "constraint_first"
     AI_ASSISTED = "ai_assisted"
-
 
 class WorkflowState(str, Enum):
     DRAFT = "draft"
@@ -48,13 +31,11 @@ class WorkflowState(str, Enum):
     REJECTED = "rejected"
     ARCHIVED = "archived"
 
-
 class RiskBucket(str, Enum):
     GREEN = "GREEN"
     YELLOW = "YELLOW"
     RED = "RED"
     UNKNOWN = "UNKNOWN"
-
 
 class ActorRole(str, Enum):
     USER = "user"
@@ -62,28 +43,20 @@ class ActorRole(str, Enum):
     SYSTEM = "system"
     OPERATOR = "operator"
 
-
 class RunStatus(str, Enum):
     OK = "OK"
     BLOCKED = "BLOCKED"
     ERROR = "ERROR"
 
-
-# ---------------------------------------------------------------------------
-# Run Artifact Contracts (maps to RUN_ARTIFACT_* docs)
-# ---------------------------------------------------------------------------
+# --- Run Artifact Contracts (maps to RUN_ARTIFACT_* docs) ---
 
 class RunArtifactRef(BaseModel):
-    """
-    Minimal reference to a persisted run artifact.
-    The artifact storage layer decides filesystem/db layout.
-    """
+    """Minimal reference to a persisted run artifact."""
     artifact_id: str
     kind: str  # "feasibility" | "toolpaths" | "bom" | ...
     status: RunStatus
     created_utc: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     meta: Dict[str, Any] = Field(default_factory=dict)
-
 
 class FeasibilityResult(BaseModel):
     score: float = Field(..., ge=0.0, le=100.0)
@@ -101,7 +74,6 @@ class FeasibilityResult(BaseModel):
     # - tool_id/material_id/machine_id
     # - source: "server_recompute" | "server_direct" | "client_ignored"
 
-
 class ToolpathPlanRef(BaseModel):
     plan_id: str
     meta: Dict[str, Any] = Field(default_factory=dict)
@@ -111,13 +83,11 @@ class ToolpathPlanRef(BaseModel):
     # - design_hash/context_hash
     # - policy_version/calculator_versions
 
-
 class WorkflowApproval(BaseModel):
     approved: bool
     approved_by: ActorRole
     note: Optional[str] = None
     ts_utc: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class WorkflowEvent(BaseModel):
     ts_utc: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -128,16 +98,8 @@ class WorkflowEvent(BaseModel):
     summary: str
     details: Dict[str, Any] = Field(default_factory=dict)
 
-
 class WorkflowSession(BaseModel):
-    """
-    Authoritative workflow session record.
-
-    After repo-wide requirements:
-      - Every feasibility/toolpaths attempt MUST yield an artifact
-      - Toolpaths MUST enforce server-side feasibility recompute
-      - Hashes/versions MUST be captured for diffing and indexing
-    """
+    """Authoritative workflow session record."""
     session_id: str = Field(default_factory=lambda: str(uuid4()))
     mode: WorkflowMode
     state: WorkflowState = WorkflowState.DRAFT
@@ -175,22 +137,15 @@ class WorkflowSession(BaseModel):
     # Populate from context builder: tool_id/material_id/machine_id/etc.
     index_meta: Dict[str, Any] = Field(default_factory=dict)
 
-
-# ---------------------------------------------------------------------------
-# Exceptions
-# ---------------------------------------------------------------------------
+# --- Exceptions ---
 
 class WorkflowTransitionError(RuntimeError):
     pass
 
-
 class GovernanceError(RuntimeError):
     pass
 
-
-# ---------------------------------------------------------------------------
-# Transition table
-# ---------------------------------------------------------------------------
+# --- Transition table ---
 
 TransitionKey = Tuple[WorkflowState, str]
 
@@ -214,13 +169,11 @@ _ALLOWED: Dict[TransitionKey, WorkflowState] = {
     (WorkflowState.REJECTED, "archive"): WorkflowState.ARCHIVED,
 }
 
-
 def _assert_can(session: WorkflowSession, action: str) -> WorkflowState:
     key = (session.state, action)
     if key not in _ALLOWED:
         raise WorkflowTransitionError(f"Illegal transition: {session.state} --{action}--> ?")
     return _ALLOWED[key]
-
 
 def _emit(session: WorkflowSession, *, actor: ActorRole, action: str,
           from_state: WorkflowState, to_state: WorkflowState,
@@ -237,22 +190,15 @@ def _emit(session: WorkflowSession, *, actor: ActorRole, action: str,
     )
     session.state = to_state
 
-
-# ---------------------------------------------------------------------------
-# Artifact hooks (call out to persistence layer from routers/services)
-# ---------------------------------------------------------------------------
+# --- Artifact hooks (call out to persistence layer from routers/services) ---
 
 def attach_feasibility_artifact(session: WorkflowSession, artifact: RunArtifactRef) -> None:
     session.last_feasibility_artifact = artifact
 
-
 def attach_toolpaths_artifact(session: WorkflowSession, artifact: RunArtifactRef) -> None:
     session.last_toolpaths_artifact = artifact
 
-
-# ---------------------------------------------------------------------------
-# Public API (state changes)
-# ---------------------------------------------------------------------------
+# --- Public API (state changes) ---
 
 def new_session(mode: WorkflowMode, *, index_meta: Optional[Dict[str, Any]] = None) -> WorkflowSession:
     s = WorkflowSession(mode=mode, index_meta=index_meta or {})
@@ -266,7 +212,6 @@ def new_session(mode: WorkflowMode, *, index_meta: Optional[Dict[str, Any]] = No
         details={"mode": mode.value},
     )
     return s
-
 
 def set_design(session: WorkflowSession, design: Any, *, actor: ActorRole) -> WorkflowSession:
     _assert_can(session, "set_design")
@@ -284,7 +229,6 @@ def set_design(session: WorkflowSession, design: Any, *, actor: ActorRole) -> Wo
     _emit(session, actor=actor, action="set_design", from_state=prev, to_state=to_state, summary="Design updated")
     return session
 
-
 def set_context(session: WorkflowSession, context: Any, *, actor: ActorRole) -> WorkflowSession:
     to_state = _assert_can(session, "set_context")
     prev = session.state
@@ -300,7 +244,6 @@ def set_context(session: WorkflowSession, context: Any, *, actor: ActorRole) -> 
     _emit(session, actor=actor, action="set_context", from_state=prev, to_state=to_state, summary="Context set/normalized")
     return session
 
-
 def request_feasibility(session: WorkflowSession, *, actor: ActorRole) -> WorkflowSession:
     if session.design is None:
         raise WorkflowTransitionError("Cannot request feasibility: design is missing")
@@ -311,7 +254,6 @@ def request_feasibility(session: WorkflowSession, *, actor: ActorRole) -> Workfl
     prev = session.state
     _emit(session, actor=actor, action="request_feasibility", from_state=prev, to_state=to_state, summary="Feasibility requested")
     return session
-
 
 def store_feasibility(session: WorkflowSession, result: FeasibilityResult, *, actor: ActorRole) -> WorkflowSession:
     to_state = _assert_can(session, "store_feasibility")
@@ -350,7 +292,6 @@ def store_feasibility(session: WorkflowSession, result: FeasibilityResult, *, ac
     )
     return session
 
-
 def approve(session: WorkflowSession, *, actor: ActorRole, note: Optional[str] = None) -> WorkflowSession:
     if session.feasibility is None:
         raise WorkflowTransitionError("Cannot approve: feasibility is missing")
@@ -379,7 +320,6 @@ def approve(session: WorkflowSession, *, actor: ActorRole, note: Optional[str] =
     )
     return session
 
-
 def reject(session: WorkflowSession, *, actor: ActorRole, reason: str) -> WorkflowSession:
     to_state = _assert_can(session, "reject")
     prev = session.state
@@ -387,14 +327,8 @@ def reject(session: WorkflowSession, *, actor: ActorRole, reason: str) -> Workfl
     _emit(session, actor=actor, action="reject", from_state=prev, to_state=to_state, summary="Rejected", details={"reason": reason})
     return session
 
-
 def request_toolpaths(session: WorkflowSession, *, actor: ActorRole) -> WorkflowSession:
-    """
-    Repo-wide requirement mapping:
-      - Toolpaths MUST be gated by feasibility
-      - Toolpaths MUST require SERVER-SIDE feasibility recompute (production)
-      - Any block MUST still emit an artifact (done in router/service layer via attach_toolpaths_artifact)
-    """
+    """Repo-wide requirement mapping:"""
     if session.feasibility is None:
         raise WorkflowTransitionError("Cannot request toolpaths: feasibility is missing")
 
@@ -427,7 +361,6 @@ def request_toolpaths(session: WorkflowSession, *, actor: ActorRole) -> Workflow
     )
     return session
 
-
 def store_toolpaths(session: WorkflowSession, plan_ref: ToolpathPlanRef, *, actor: ActorRole) -> WorkflowSession:
     to_state = _assert_can(session, "store_toolpaths")
     prev = session.state
@@ -443,7 +376,6 @@ def store_toolpaths(session: WorkflowSession, plan_ref: ToolpathPlanRef, *, acto
         details={"plan_id": plan_ref.plan_id, "toolpath_hash": plan_ref.meta.get("toolpath_hash")},
     )
     return session
-
 
 def require_revision(session: WorkflowSession, *, actor: ActorRole, reason: str) -> WorkflowSession:
     if session.feasibility is None:
@@ -462,23 +394,16 @@ def require_revision(session: WorkflowSession, *, actor: ActorRole, reason: str)
     )
     return session
 
-
 def archive(session: WorkflowSession, *, actor: ActorRole, note: Optional[str] = None) -> WorkflowSession:
     to_state = _assert_can(session, "archive")
     prev = session.state
     _emit(session, actor=actor, action="archive", from_state=prev, to_state=to_state, summary="Archived", details={"note": note or ""})
     return session
 
-
-# ---------------------------------------------------------------------------
-# Diff-viewer friendly snapshot (maps to RUN_DIFF_VIEWER.md)
-# ---------------------------------------------------------------------------
+# --- Diff-viewer friendly snapshot (maps to RUN_DIFF_VIEWER.md) ---
 
 class RunComparableSnapshot(BaseModel):
-    """
-    Stable, minimal snapshot used by diff tooling.
-    Prefer hashes + versions rather than huge payloads.
-    """
+    """Stable, minimal snapshot used by diff tooling."""
     session_id: str
     mode: WorkflowMode
     tool_id: Optional[str] = None
@@ -498,7 +423,6 @@ class RunComparableSnapshot(BaseModel):
 
     feasibility_artifact_id: Optional[str] = None
     toolpaths_artifact_id: Optional[str] = None
-
 
 def to_comparable_snapshot(session: WorkflowSession) -> RunComparableSnapshot:
     tool_id = session.index_meta.get("tool_id")
@@ -526,10 +450,7 @@ def to_comparable_snapshot(session: WorkflowSession) -> RunComparableSnapshot:
         toolpaths_artifact_id=(session.last_toolpaths_artifact.artifact_id if session.last_toolpaths_artifact else None),
     )
 
-
-# ---------------------------------------------------------------------------
-# Convenience helpers
-# ---------------------------------------------------------------------------
+# --- Convenience helpers ---
 
 def next_step_hint(session: WorkflowSession) -> str:
     """
