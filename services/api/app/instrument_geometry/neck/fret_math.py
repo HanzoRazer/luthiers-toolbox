@@ -1,28 +1,4 @@
-"""
-Instrument Geometry: Scale Length & Fret Positions
-
-Implements canonical equal-tempered fret spacing for a given scale length.
-
-See docs/KnowledgeBase/Instrument_Geometry/Fret_Scale_Theory.md
-for derivations, references, and assumptions.
-
-Core Formula (12th Root of 2):
-    The distance from the nut to the nth fret is:
-        d_n = scale_length - scale_length / (2^(n/12))
-
-    Or equivalently:
-        d_n = scale_length * (1 - 1/(2^(n/12)))
-
-    This is derived from equal temperament, where each semitone
-    has a frequency ratio of 2^(1/12) ≈ 1.05946.
-
-References:
-    - https://www.liutaiomottola.com/formulae/fret.htm
-    - Stewart-MacDonald fret scale calculator
-    - "Guitar Making: Tradition and Technology" by Cumpiano & Natelson
-
-Moved from: instrument_geometry/scale_length.py (Wave 14 reorg)
-"""
+"""Instrument Geometry: Scale Length & Fret Positions"""
 
 from __future__ import annotations
 
@@ -40,39 +16,7 @@ PERP_ANGLE_EPS = 1e-4  # ~0.006 degrees
 
 @dataclass
 class FanFretPoint:
-    """
-    A single point on a fan-fret (multiscale) fretboard.
-    
-    Represents the position of a fret at a specific string location,
-    with metadata about the fret's angle relative to perpendicular.
-    
-    Attributes:
-        fret_number: 1-based fret number (0 = nut position)
-        string_index: 0-based string index (0 = bass, n-1 = treble)
-        x_mm: X position (along neck, from nut)
-        y_mm: Y position (across neck, from centerline)
-        angle_rad: Fret angle in radians (0 = perpendicular to centerline)
-        is_perpendicular: True if fret angle is within PERP_ANGLE_EPS of perpendicular
-        bass_scale_mm: Scale length on bass side (for reference)
-        treble_scale_mm: Scale length on treble side (for reference)
-    
-    Example:
-        >>> pt = FanFretPoint(
-        ...     fret_number=12,
-        ...     string_index=0,
-        ...     x_mm=324.0,
-        ...     y_mm=-20.0,
-        ...     angle_rad=0.05,
-        ...     is_perpendicular=False,
-        ...     bass_scale_mm=686.0,
-        ...     treble_scale_mm=648.0,
-        ... )
-        >>> pt.is_perpendicular
-        False
-    
-    Wave 19 Enhancement (December 2025): Added is_perpendicular field
-    for floating-point safe perpendicular fret detection.
-    """
+    """A single point on a fan-fret (multiscale) fretboard."""
     fret_number: int
     string_index: int
     x_mm: float
@@ -104,19 +48,7 @@ def _compute_fret_angle(
     treble_x: float,
     fretboard_width_mm: float,
 ) -> Tuple[float, bool]:
-    """
-    Compute the angle of a fan fret relative to perpendicular.
-    
-    Args:
-        bass_x: X position at bass edge
-        treble_x: X position at treble edge
-        fretboard_width_mm: Width of fretboard at this position
-    
-    Returns:
-        Tuple of (angle_radians, is_perpendicular)
-        - angle_radians: Angle from perpendicular (0 = straight across)
-        - is_perpendicular: True if angle is within PERP_ANGLE_EPS
-    """
+    """Compute the angle of a fan fret relative to perpendicular."""
     if fretboard_width_mm <= 0:
         return (0.0, True)
     
@@ -133,36 +65,7 @@ def _compute_fret_angle(
 
 
 def compute_fret_positions_mm(scale_length_mm: float, fret_count: int) -> List[float]:
-    """
-    Compute distance from the nut to each fret (in mm) for an equal-tempered
-    instrument using the 12th-root-of-2 rule.
-
-    Formula (distance from nut to nth fret):
-        d_n = scale_length - scale_length / (2 ** (n / 12))
-        d_n = scale_length * (1 - 2 ** (-n / 12))
-
-    Args:
-        scale_length_mm: Full scale length in millimeters (nut to bridge reference).
-        fret_count: Number of frets to compute (e.g. 20, 21, 22, 24).
-
-    Returns:
-        List of length `fret_count`, where index 0 is the 1st fret, etc.
-        Each value is the distance from the nut to that fret in mm.
-
-    Raises:
-        ValueError: If scale_length_mm <= 0 or fret_count <= 0.
-
-    Example:
-        >>> positions = compute_fret_positions_mm(648.0, 22)  # 25.5" Fender scale
-        >>> round(positions[11], 2)  # 12th fret should be at half scale length
-        324.0
-
-    Common Scale Lengths:
-        - Fender: 648.0 mm (25.5")
-        - Gibson: 628.65 mm (24.75")
-        - PRS: 635.0 mm (25")
-        - Classical: 650.0 mm (25.6")
-    """
+    """Compute distance from the nut to each fret (in mm) for an equal-tempered"""
     if scale_length_mm <= 0:
         raise ValueError("scale_length_mm must be > 0")
     if fret_count <= 0:
@@ -180,29 +83,7 @@ def compute_fret_positions_mm(scale_length_mm: float, fret_count: int) -> List[f
 
 
 def compute_fret_spacing_mm(scale_length_mm: float, fret_count: int) -> List[float]:
-    """
-    Compute the spacing between consecutive frets (in mm).
-
-    This gives the distance from one fret to the next, useful for
-    CNC slot cutting where you need incremental moves.
-
-    Args:
-        scale_length_mm: Full scale length in millimeters.
-        fret_count: Number of frets to compute.
-
-    Returns:
-        List of length `fret_count`, where:
-        - Index 0 is the distance from nut to 1st fret
-        - Index 1 is the distance from 1st fret to 2nd fret
-        - etc.
-
-    Example:
-        >>> spacings = compute_fret_spacing_mm(648.0, 22)
-        >>> round(spacings[0], 2)  # First fret spacing (nut to 1st)
-        36.4
-        >>> round(spacings[11], 2)  # 12th fret spacing (11th to 12th)
-        17.17
-    """
+    """Compute the spacing between consecutive frets (in mm)."""
     if scale_length_mm <= 0:
         raise ValueError("scale_length_mm must be > 0")
     if fret_count <= 0:
@@ -227,26 +108,7 @@ def compute_compensated_scale_length_mm(
     saddle_comp_mm: float,
     nut_comp_mm: float = 0.0,
 ) -> float:
-    """
-    Compute the effective scale length after saddle (and optional nut) compensation.
-
-    Intonation compensation is needed because:
-    1. Fretting a string increases its tension (sharpens pitch)
-    2. String stiffness affects vibration (wound strings need more compensation)
-    3. Action height affects stretch when fretting
-
-    Args:
-        scale_length_mm: Nominal scale length (nut to saddle reference).
-        saddle_comp_mm: Saddle setback compensation (positive = longer).
-        nut_comp_mm: Nut compensation (positive = shorter effective length).
-
-    Returns:
-        Compensated scale length in mm.
-
-    Example:
-        >>> compute_compensated_scale_length_mm(648.0, 2.5, 0.5)
-        650.0
-    """
+    """Compute the effective scale length after saddle (and optional nut) compensation."""
     return scale_length_mm + saddle_comp_mm - nut_comp_mm
 
 
@@ -254,22 +116,7 @@ def compute_fret_to_bridge_mm(
     scale_length_mm: float,
     fret_number: int,
 ) -> float:
-    """
-    Compute the distance from a specific fret to the bridge.
-
-    Useful for intonation calculations and pickup placement.
-
-    Args:
-        scale_length_mm: Full scale length in mm.
-        fret_number: Fret number (1 = first fret, 12 = octave, etc.)
-
-    Returns:
-        Distance from the specified fret to the bridge in mm.
-
-    Example:
-        >>> round(compute_fret_to_bridge_mm(648.0, 12), 2)
-        324.0  # 12th fret is exactly half scale length
-    """
+    """Compute the distance from a specific fret to the bridge."""
     if fret_number <= 0:
         return scale_length_mm  # From nut to bridge
 
@@ -286,38 +133,7 @@ def compute_multiscale_fret_positions_mm(
     perpendicular_fret: int = 0,
     fretboard_width_mm: float = 50.0,
 ) -> List[List[FanFretPoint]]:
-    """
-    Compute fret positions for a multiscale (fanned fret) instrument.
-
-    Each fret becomes a line segment connecting different positions
-    on the bass and treble sides. Returns FanFretPoint objects with
-    angle and perpendicularity metadata.
-
-    Args:
-        bass_scale_mm: Scale length on bass side.
-        treble_scale_mm: Scale length on treble side.
-        fret_count: Number of frets.
-        string_count: Number of strings.
-        perpendicular_fret: Which fret is perpendicular to strings (0 = nut).
-        fretboard_width_mm: Width of fretboard for angle calculations.
-
-    Returns:
-        List of frets, where each fret is a list of FanFretPoint objects
-        for each string position (bass to treble).
-
-    Example:
-        >>> frets = compute_multiscale_fret_positions_mm(686.0, 648.0, 24, 6, 12)
-        >>> frets[11][0].is_perpendicular  # 12th fret should be perpendicular
-        True
-        >>> frets[0][0].is_perpendicular   # 1st fret is angled
-        False
-
-    Note:
-        This uses linear interpolation. Real multiscale
-        instruments may use more complex fan patterns.
-    
-    Wave 19 Enhancement: Returns FanFretPoint with is_perpendicular field.
-    """
+    """Compute fret positions for a multiscale (fanned fret) instrument."""
     if bass_scale_mm <= 0 or treble_scale_mm <= 0:
         raise ValueError("Scale lengths must be > 0")
     if fret_count <= 0 or string_count <= 1:
@@ -453,21 +269,7 @@ RADIUS_VALUES_MM = {
 
 @dataclass
 class FanFretPointLegacy:
-    """
-    DEPRECATED: Legacy FanFretPoint structure from Wave 19 (fret_math.py.bak line 274).
-    
-    This class exists only for backward compatibility with routers expecting the old API.
-    New code should use the modern FanFretPoint class.
-    
-    Attributes:
-        fret_number: Fret number (0 = nut, 1 = first fret, etc.)
-        treble_pos_mm: Distance from nut on treble side (mm)
-        bass_pos_mm: Distance from nut on bass side (mm)
-        angle_rad: Fret angle in radians (0 = perpendicular to centerline)
-        center_x: X position on centerline (mm from nut)
-        center_y: Y position perpendicular offset (mm)
-        is_perpendicular: Flag for designated perpendicular fret
-    """
+    """DEPRECATED: Legacy FanFretPoint structure from Wave 19 (fret_math.py.bak line 274)."""
     fret_number: int
     treble_pos_mm: float
     bass_pos_mm: float
@@ -503,17 +305,7 @@ def _calculate_perpendicular_fret_intersection(
     bass_scale_mm: float,
     target_fret: int = 7
 ) -> Tuple[float, float]:
-    """
-    Helper: Calculate the intersection point where the specified fret should be perpendicular.
-    
-    Args:
-        treble_scale_mm: Scale length on treble (high E) side
-        bass_scale_mm: Scale length on bass (low E) side
-        target_fret: Which fret should be perpendicular (typically 7 or 8)
-    
-    Returns:
-        Tuple of (treble_position, bass_position) in mm from nut
-    """
+    """Helper: Calculate the intersection point where the specified fret should be perpendicular."""
     treble_pos = _compute_fret_position_standard(treble_scale_mm, target_fret)
     bass_pos = _compute_fret_position_standard(bass_scale_mm, target_fret)
     avg_pos = (treble_pos + bass_pos) / 2.0
@@ -529,30 +321,7 @@ def compute_fan_fret_positions(
     perpendicular_fret: int = 7,
     scale_length_reference_mm: float = None,
 ) -> List[FanFretPointLegacy]:
-    """
-    DEPRECATED: Backward compatibility implementation for old compute_fan_fret_positions API.
-    
-    Calculate complete fan-fret geometry with angled slots (Wave 19 API).
-    
-    Args:
-        treble_scale_mm: Scale length on treble (high E) side (e.g., 648.0 for 25.5")
-        bass_scale_mm: Scale length on bass (low E) side (e.g., 686.0 for 27")
-        fret_count: Total number of frets (typically 22 or 24)
-        nut_width_mm: Fretboard width at nut (typically 42-44mm)
-        heel_width_mm: Fretboard width at heel (typically 52-56mm)
-        perpendicular_fret: Which fret remains perpendicular to centerline (typically 7 or 8)
-        scale_length_reference_mm: Reference scale for radius blend (ignored)
-    
-    Returns:
-        List of FanFretPointLegacy objects, one per fret (including fret 0 = nut)
-    
-    Example:
-        >>> points = compute_fan_fret_positions(648.0, 686.0, 22, 42.0, 56.0, 7)
-        >>> points[7].is_perpendicular
-        True
-        >>> abs(points[7].angle_deg) < 0.1
-        True  # Perpendicular fret has near-zero angle
-    """
+    """DEPRECATED: Backward compatibility implementation for old compute_fan_fret_positions API."""
     fret_points: List[FanFretPointLegacy] = []
     
     # Calculate perpendicular fret position (both sides equal)
@@ -619,18 +388,7 @@ def validate_fan_fret_geometry(
     fret_count: int,
     perpendicular_fret: int,
 ) -> Dict[str, Any]:
-    """
-    DEPRECATED: Validate fan-fret parameters before calculation.
-    
-    Args:
-        treble_scale_mm: Treble scale length
-        bass_scale_mm: Bass scale length
-        fret_count: Total fret count
-        perpendicular_fret: Perpendicular fret number
-    
-    Returns:
-        Dict with keys: valid (bool), message (str), warnings (optional list)
-    """
+    """DEPRECATED: Validate fan-fret parameters before calculation."""
     warnings = []
     
     if treble_scale_mm <= 0:

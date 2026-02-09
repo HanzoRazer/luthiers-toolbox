@@ -1,18 +1,4 @@
-"""
-Smart Guitar Telemetry Store - Date-Partitioned, Append-Only
-
-Stores validated telemetry payloads from Smart Guitar devices.
-Uses date-partitioned file storage for efficient time-range queries.
-
-Storage Structure:
-    {root}/
-    ├── 2026-01-10/
-    │   ├── telem_20260110170600_000001.json
-    │   └── telem_20260110180000_000002.json
-    ├── 2026-01-11/
-    │   └── telem_20260111090000_000003.json
-    └── _index.json
-"""
+"""Smart Guitar Telemetry Store - Date-Partitioned, Append-Only"""
 
 from __future__ import annotations
 
@@ -138,19 +124,10 @@ def _write_json_file(path: Path, data: Any) -> None:
 
 
 class TelemetryStore:
-    """
-    Date-partitioned, append-only telemetry store.
-
-    Thread-safe for concurrent writes.
-    """
+    """Date-partitioned, append-only telemetry store."""
 
     def __init__(self, root_dir: Optional[str] = None):
-        """
-        Initialize the store.
-
-        Args:
-            root_dir: Root directory for storage. Defaults to SMART_GUITAR_TELEMETRY_DIR env var.
-        """
+        """Initialize the store."""
         self.root = Path(root_dir or _get_store_root()).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self._index_path = self.root / "_index.json"
@@ -203,16 +180,7 @@ class TelemetryStore:
         payload: TelemetryPayload,
         warnings: Optional[List[str]] = None,
     ) -> StoredTelemetry:
-        """
-        Store a validated telemetry payload.
-
-        Args:
-            payload: The validated TelemetryPayload
-            warnings: Any validation warnings
-
-        Returns:
-            StoredTelemetry record with assigned ID
-        """
+        """Store a validated telemetry payload."""
         received_at = datetime.now(timezone.utc)
         telemetry_id = generate_telemetry_id()
         partition = self._date_partition(received_at)
@@ -249,15 +217,7 @@ class TelemetryStore:
         return record
 
     def get(self, telemetry_id: str) -> Optional[StoredTelemetry]:
-        """
-        Retrieve a telemetry record by ID.
-
-        Args:
-            telemetry_id: The telemetry ID
-
-        Returns:
-            StoredTelemetry if found, None otherwise
-        """
+        """Retrieve a telemetry record by ID."""
         # Check index first for partition
         index = self._read_index()
         meta = index.get(telemetry_id)
@@ -299,21 +259,7 @@ class TelemetryStore:
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[StoredTelemetry]:
-        """
-        List telemetry records with optional filtering.
-
-        Args:
-            limit: Maximum results
-            offset: Number to skip
-            instrument_id: Filter by instrument
-            manufacturing_batch_id: Filter by batch
-            category: Filter by telemetry category
-            date_from: Filter by received date >=
-            date_to: Filter by received date <=
-
-        Returns:
-            List of matching StoredTelemetry records
-        """
+        """List telemetry records with optional filtering."""
         index = self._read_index()
 
         if not index:
@@ -402,15 +348,7 @@ class TelemetryStore:
         return sum(1 for m in index.values() if matches(m))
 
     def get_instrument_summary(self, instrument_id: str) -> Dict[str, Any]:
-        """
-        Get summary statistics for an instrument.
-
-        Args:
-            instrument_id: The instrument ID
-
-        Returns:
-            Dict with summary statistics
-        """
+        """Get summary statistics for an instrument."""
         index = self._read_index()
 
         records = [m for m in index.values() if m.get("instrument_id") == instrument_id]
@@ -443,12 +381,7 @@ class TelemetryStore:
         }
 
     def rebuild_index(self) -> int:
-        """
-        Rebuild the index by scanning all partitions.
-
-        Returns:
-            Number of records indexed
-        """
+        """Rebuild the index by scanning all partitions."""
         index: Dict[str, Dict[str, Any]] = {}
 
         partitions = [

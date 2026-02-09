@@ -1,14 +1,4 @@
-"""
-RMOS Feasibility Fusion
-
-Wave 18: Phase D - Feasibility Fusion Router
-
-Aggregates all calculator risk assessments (chipload, heat, deflection, rimspeed, BOM)
-into a unified feasibility score with actionable recommendations.
-
-This module provides the business logic for evaluating manufacturability of
-guitar components across multiple CNC feasibility dimensions.
-"""
+"""RMOS Feasibility Fusion"""
 
 from __future__ import annotations
 
@@ -82,19 +72,7 @@ class FeasibilityReport:
 
 
 def normalize_risk_result(result: Dict[str, Any], category: str) -> RiskAssessment:
-    """
-    Normalize calculator output to RiskAssessment format.
-    
-    Different calculators may return slightly different schemas.
-    This function provides a uniform interface.
-    
-    Args:
-        result: Raw calculator output dict.
-        category: Risk category name.
-    
-    Returns:
-        Normalized RiskAssessment object.
-    """
+    """Normalize calculator output to RiskAssessment format."""
     score = result.get("score", 0.0)
     risk_str = result.get("risk", "UNKNOWN")
     warnings = result.get("warnings", [])
@@ -116,22 +94,7 @@ def normalize_risk_result(result: Dict[str, Any], category: str) -> RiskAssessme
 
 
 def compute_weighted_score(assessments: List[RiskAssessment]) -> float:
-    """
-    Compute weighted aggregate score from individual assessments.
-    
-    Weights (tunable):
-        - chipload: 30% (critical for tool life)
-        - heat: 25% (critical for finish quality)
-        - deflection: 20% (affects precision)
-        - rimspeed: 15% (safety concern)
-        - bom_efficiency: 10% (cost optimization)
-    
-    Args:
-        assessments: List of RiskAssessment objects.
-    
-    Returns:
-        Weighted score (0-100).
-    """
+    """Compute weighted aggregate score from individual assessments."""
     weights = {
         "chipload": 0.30,
         "heat": 0.25,
@@ -155,17 +118,7 @@ def compute_weighted_score(assessments: List[RiskAssessment]) -> float:
 
 
 def determine_overall_risk(assessments: List[RiskAssessment]) -> RiskLevel:
-    """
-    Determine overall risk level (worst-case across all categories).
-    
-    Priority: RED > YELLOW > GREEN > UNKNOWN
-    
-    Args:
-        assessments: List of RiskAssessment objects.
-    
-    Returns:
-        Overall RiskLevel.
-    """
+    """Determine overall risk level (worst-case across all categories)."""
     if not assessments:
         return RiskLevel.UNKNOWN
     
@@ -240,34 +193,7 @@ def evaluate_feasibility(
     design: Dict[str, Any],
     context: RmosContext,
 ) -> FeasibilityReport:
-    """
-    Evaluate overall feasibility of a manufacturing operation.
-    
-    This is the main entry point for Phase D feasibility fusion.
-    Orchestrates all calculator calls and aggregates results.
-    
-    Args:
-        design: Design parameters (tool, feeds, speeds, geometry).
-        context: RMOS context with material and constraints.
-    
-    Returns:
-        FeasibilityReport with overall score and per-category assessments.
-    
-    Example:
-        >>> from rmos.context import RmosContext
-        >>> ctx = RmosContext.from_model_id("strat_25_5")
-        >>> design = {
-        ...     "tool_diameter_mm": 6.0,
-        ...     "feed_rate_mmpm": 1200,
-        ...     "spindle_rpm": 18000,
-        ...     "depth_of_cut_mm": 3.0,
-        ... }
-        >>> report = evaluate_feasibility(design, ctx)
-        >>> report.overall_score
-        85.3
-        >>> report.is_feasible()
-        True
-    """
+    """Evaluate overall feasibility of a manufacturing operation."""
     request = {"design": design, "context": context}
     
     assessments = []
@@ -350,24 +276,7 @@ def evaluate_feasibility_for_model(
     model_id: str,
     design: Dict[str, Any],
 ) -> FeasibilityReport:
-    """
-    Convenience function: Evaluate feasibility from model_id.
-    
-    Automatically creates RmosContext from model_id and evaluates.
-    
-    Args:
-        model_id: Guitar model identifier (e.g., "strat_25_5").
-        design: Design parameters dict.
-    
-    Returns:
-        FeasibilityReport.
-    
-    Example:
-        >>> report = evaluate_feasibility_for_model(
-        ...     "strat_25_5",
-        ...     {"tool_diameter_mm": 6.0, "feed_rate_mmpm": 1200}
-        ... )
-    """
+    """Convenience function: Evaluate feasibility from model_id."""
     context = RmosContext.from_model_id(model_id)
     return evaluate_feasibility(design, context)
 
@@ -378,18 +287,7 @@ def evaluate_feasibility_for_model(
 
 @dataclass
 class PerFretRisk:
-    """
-    Risk assessment for a single fret slot operation.
-    
-    Attributes:
-        fret_number: Fret number (1-24).
-        angle_deg: Slot angle in degrees.
-        chipload_risk: Chipload risk score (0-100).
-        heat_risk: Heat accumulation risk score (0-100).
-        deflection_risk: Tool deflection risk score (0-100).
-        overall_risk: RiskLevel (GREEN/YELLOW/RED).
-        warnings: List of warnings for this fret.
-    """
+    """Risk assessment for a single fret slot operation."""
     fret_number: int
     angle_deg: float
     chipload_risk: float
@@ -403,29 +301,7 @@ def evaluate_per_fret_feasibility(
     toolpaths: List[Any],
     context: RmosContext,
 ) -> List[PerFretRisk]:
-    """
-    Evaluate feasibility for each fret slot individually.
-    
-    This function analyzes each fret's specific geometry (angle, length, depth)
-    and material properties to identify high-risk operations.
-    
-    Args:
-        toolpaths: List of FretSlotToolpath objects from CAM generator.
-        context: RMOS context with material and machine data.
-    
-    Returns:
-        List of PerFretRisk objects, one per fret.
-    
-    Notes:
-        - For fan-fret, angles affect chipload (oblique cutting increases load).
-        - Longer slots accumulate more heat (bass side slots longer than treble).
-        - Deeper slots (compound radius) increase deflection risk.
-    
-    Example:
-        >>> toolpaths = generate_fret_slot_cam(spec, ctx, mode='fan')
-        >>> risks = evaluate_per_fret_feasibility(toolpaths, ctx)
-        >>> high_risk_frets = [r for r in risks if r.overall_risk == RiskLevel.RED]
-    """
+    """Evaluate feasibility for each fret slot individually."""
     per_fret_risks = []
     
     for tp in toolpaths:
@@ -521,22 +397,7 @@ def evaluate_per_fret_feasibility(
 
 
 def summarize_per_fret_risks(per_fret_risks: List[PerFretRisk]) -> Dict[str, Any]:
-    """
-    Summarize per-fret risk analysis for reporting.
-    
-    Args:
-        per_fret_risks: List of PerFretRisk objects.
-    
-    Returns:
-        Summary dict with counts, max risks, and high-risk frets.
-    
-    Example:
-        >>> summary = summarize_per_fret_risks(risks)
-        >>> summary['high_risk_count']
-        3
-        >>> summary['max_angle_deg']
-        27.5
-    """
+    """Summarize per-fret risk analysis for reporting."""
     if not per_fret_risks:
         return {
             "total_frets": 0,

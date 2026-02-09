@@ -1,12 +1,4 @@
-"""
-RMOS Pipeline Learning Service
-
-LANE: OPERATION (infrastructure)
-Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md, ADR-003 Phase 5
-
-Service for learning events, decisions, and multiplier application.
-Enables parameter optimization based on operator feedback.
-"""
+"""RMOS Pipeline Learning Service"""
 from __future__ import annotations
 
 import json
@@ -60,16 +52,7 @@ def detect_signals(
     metrics: JobLogMetrics,
     notes: Optional[str] = None,
 ) -> List[QualitySignal]:
-    """
-    Detect quality signals from metrics and notes.
-
-    Args:
-        metrics: Job metrics
-        notes: Operator notes
-
-    Returns:
-        List of detected signals
-    """
+    """Detect quality signals from metrics and notes."""
     signals = []
 
     # Check metrics flags
@@ -112,15 +95,7 @@ _SIGNAL_SUGGESTIONS: Dict[QualitySignal, Tuple[float, float, float, float, str]]
 
 
 def generate_suggestions(signals: List[QualitySignal]) -> List[LearningSuggestion]:
-    """
-    Generate learning suggestions based on detected signals.
-
-    Args:
-        signals: List of detected quality signals
-
-    Returns:
-        List of learning suggestions
-    """
+    """Generate learning suggestions based on detected signals."""
     suggestions = []
 
     for signal in signals:
@@ -142,17 +117,7 @@ def generate_suggestions(signals: List[QualitySignal]) -> List[LearningSuggestio
 
 
 def aggregate_multipliers(suggestions: List[LearningSuggestion]) -> LearningMultipliers:
-    """
-    Aggregate multipliers from multiple suggestions.
-
-    Uses weighted average based on confidence.
-
-    Args:
-        suggestions: List of suggestions
-
-    Returns:
-        Aggregated multipliers
-    """
+    """Aggregate multipliers from multiple suggestions."""
     if not suggestions:
         return LearningMultipliers()
 
@@ -199,21 +164,7 @@ class LearningService:
         material_id: Optional[str] = None,
         operation_type: Optional[str] = None,
     ) -> LearningEventResponse:
-        """
-        Emit a learning event from job log analysis.
-
-        Args:
-            job_log_artifact_id: Source job log
-            execution_artifact_id: Related execution
-            metrics: Job metrics
-            notes: Operator notes
-            tool_id: Tool identifier
-            material_id: Material identifier
-            operation_type: Operation type
-
-        Returns:
-            LearningEventResponse with artifact ID
-        """
+        """Emit a learning event from job log analysis."""
         # Detect signals
         signals = detect_signals(metrics, notes)
 
@@ -278,19 +229,7 @@ class LearningService:
         reason: Optional[str] = None,
         multipliers: Optional[LearningMultipliers] = None,
     ) -> LearningDecisionResponse:
-        """
-        Create a learning decision.
-
-        Args:
-            learning_event_artifact_id: Learning event to decide on
-            policy: PROPOSE, ACCEPT, or REJECT
-            decided_by: Who made the decision
-            reason: Decision rationale
-            multipliers: Override multipliers (optional)
-
-        Returns:
-            LearningDecisionResponse with artifact ID
-        """
+        """Create a learning decision."""
         # Read learning event
         event = read_artifact(learning_event_artifact_id)
         event_payload = event.get("payload", {}) if event else {}
@@ -376,17 +315,7 @@ class LearningService:
         material_id: Optional[str] = None,
         operation_type: Optional[str] = None,
     ) -> Tuple[LearningMultipliers, Dict[str, Any]]:
-        """
-        Resolve learned multipliers for a context.
-
-        Args:
-            tool_id: Tool identifier
-            material_id: Material identifier
-            operation_type: Operation type
-
-        Returns:
-            Tuple of (multipliers, provenance)
-        """
+        """Resolve learned multipliers for a context."""
         path = get_learned_overrides_path(self.tool_type)
 
         if not os.path.exists(path):
@@ -445,16 +374,7 @@ class LearningService:
         context: Dict[str, Any],
         multipliers: LearningMultipliers,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """
-        Apply multipliers to a machining context.
-
-        Args:
-            context: Original context
-            multipliers: Multipliers to apply
-
-        Returns:
-            Tuple of (modified_context, tuning_stamp)
-        """
+        """Apply multipliers to a machining context."""
         modified = context.copy()
         tuning_stamp = {
             "applied": True,
@@ -546,12 +466,7 @@ def apply_multipliers_to_context(
     multipliers: Optional[LearningMultipliers] = None,
     **kwargs: Any,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Apply learned multipliers to a context.
-
-    If multipliers not provided, resolves from learned overrides.
-    Returns (modified_context, tuning_stamp).
-    """
+    """Apply learned multipliers to a context."""
     service = LearningService(tool_type)
 
     if multipliers is None:

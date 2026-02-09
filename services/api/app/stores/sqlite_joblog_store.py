@@ -97,23 +97,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         }
     
     def get_by_status(self, status: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """
-        Get jobs by status.
-        
-        Args:
-            status: Job status (pending, running, completed, failed)
-            limit: Maximum number of results
-            
-        Returns:
-            List of jobs with matching status
-            
-        Example:
-            # Get all pending jobs
-            pending = store.get_by_status("pending")
-            
-            # Get 10 most recent completed jobs
-            completed = store.get_by_status("completed", limit=10)
-        """
+        """Get jobs by status."""
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE status = ?
@@ -131,18 +115,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         return [self._row_to_dict(row) for row in rows]
     
     def get_by_pattern(self, pattern_id: str) -> List[Dict[str, Any]]:
-        """
-        Get all jobs for a specific pattern.
-        
-        Args:
-            pattern_id: Pattern ID to filter by
-            
-        Returns:
-            List of jobs for this pattern
-            
-        Example:
-            jobs = store.get_by_pattern("pattern-123")
-        """
+        """Get all jobs for a specific pattern."""
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE pattern_id = ?
@@ -157,20 +130,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         return [self._row_to_dict(row) for row in rows]
     
     def get_by_job_type(self, job_type: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """
-        Get jobs by type.
-        
-        Args:
-            job_type: Job type (e.g., "slice", "batch", "contour")
-            limit: Maximum number of results
-            
-        Returns:
-            List of jobs with matching type
-            
-        Example:
-            # Get all slice jobs
-            slice_jobs = store.get_by_job_type("slice")
-        """
+        """Get jobs by type."""
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE job_type = ?
@@ -188,22 +148,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         return [self._row_to_dict(row) for row in rows]
     
     def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a single job by job_id.
-        
-        Bundle #11: Used for fetching operator reports from completed jobs.
-        
-        Args:
-            job_id: Job identifier (e.g., "JOB-ROSETTE-20251201-153045-abc123")
-            
-        Returns:
-            Job dictionary if found, None otherwise
-            
-        Example:
-            job = store.get_job("JOB-ROSETTE-20251201-153045-abc123")
-            if job:
-                report = job['results'].get('operator_report_md')
-        """
+        """Get a single job by job_id."""
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE id = ?
@@ -228,22 +173,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         return self.get_all(limit=limit, offset=offset)
 
     def list_rosette_cnc_exports(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """
-        Return the most recent rosette CNC export jobs (limited).
-        
-        Bundle #13 (Part A): Used for CNC History view.
-        
-        Args:
-            limit: Maximum number of jobs to return
-            
-        Returns:
-            List of CNC export job dictionaries, newest first
-            
-        Example:
-            jobs = store.list_rosette_cnc_exports(limit=100)
-            for job in jobs:
-                print(f"{job['id']}: {job['status']}")
-        """
+        """Return the most recent rosette CNC export jobs (limited)."""
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE job_type = ?
@@ -259,32 +189,11 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         return [self._row_to_dict(row) for row in rows]
     
     def get_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get most recent jobs across all types.
-        
-        Args:
-            limit: Number of jobs to return
-            
-        Returns:
-            List of recent jobs
-            
-        Example:
-            recent = store.get_recent(20)
-        """
+        """Get most recent jobs across all types."""
         return self.get_all(limit=limit)
     
     def get_statistics(self) -> Dict[str, Any]:
-        """
-        Get job statistics.
-        
-        Returns:
-            Dictionary with counts, averages, and aggregates
-            
-        Example:
-            stats = store.get_statistics()
-            print(f"Total jobs: {stats['total_count']}")
-            print(f"Success rate: {stats['success_rate']}%")
-        """
+        """Get job statistics."""
         query = """
             SELECT
                 COUNT(*) as total_count,
@@ -323,29 +232,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
                       end_time: Optional[str] = None,
                       duration_seconds: Optional[float] = None,
                       results: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        """
-        Update job status and optionally completion data.
-        
-        Args:
-            job_id: Job ID to update
-            status: New status
-            end_time: Completion timestamp (ISO format)
-            duration_seconds: Job duration
-            results: Job results dictionary
-            
-        Returns:
-            Updated job or None if not found
-            
-        Example:
-            # Mark job as completed
-            job = store.update_status(
-                "job-123",
-                "completed",
-                end_time="2025-11-28T10:30:00",
-                duration_seconds=45.2,
-                results={"cuts": 120, "length_mm": 5000}
-            )
-        """
+        """Update job status and optionally completion data."""
         update_data = {'status': status}
         
         if end_time:
@@ -366,47 +253,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         parameters: Optional[Dict[str, Any]] = None,
         status: str = "planned"
     ) -> Dict[str, Any]:
-        """
-        Create a JobLog entry for a rosette-related operation.
-        
-        Scaffolding method for N11.1 - later patches (N12–N14) will use this
-        to log slice batches, CNC exports, simulation details, etc.
-        
-        Args:
-            job_type: One of JOB_TYPE_ROSETTE_* constants
-            pattern_id: Associated rosette pattern ID (if any)
-            parameters: Job parameters (rings, kerf, tool, etc.)
-            status: Initial status (default: 'planned')
-        
-        Returns:
-            Created job dictionary
-        
-        Example:
-            # Create slice batch job
-            job = store.create_rosette_job(
-                job_type=JOB_TYPE_ROSETTE_SLICE_BATCH,
-                pattern_id="rosette_001",
-                parameters={
-                    "rings_processed": 5,
-                    "total_slices": 240,
-                    "kerf_mm": 1.8,
-                    "saw_blade_id": "thin_kerf_001"
-                },
-                status="planned"
-            )
-            
-            # Create CNC export job
-            cnc_job = store.create_rosette_job(
-                job_type=JOB_TYPE_ROSETTE_CNC_EXPORT,
-                pattern_id="rosette_001",
-                parameters={
-                    "post_processor": "GRBL",
-                    "feed_rate": 1200,
-                    "units": "mm"
-                },
-                status="running"
-            )
-        """
+        """Create a JobLog entry for a rosette-related operation."""
         import uuid
         
         # Generate unique job ID
@@ -442,37 +289,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         envelope: Dict[str, Any],
         parameters_extra: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """
-        Create a JobLog entry for a rosette CNC export.
-
-        Parameters include:
-          - ring_id
-          - material
-          - jig_origin {origin_x_mm, origin_y_mm, rotation_deg}
-          - envelope bounds
-          - any extra fields (N10/N14 can extend later)
-
-        Args:
-            pattern_id: Associated pattern ID (optional)
-            ring_id: Ring being exported
-            material: Material type (hardwood, softwood, composite)
-            jig_origin: Jig alignment parameters
-            envelope: Machine envelope bounds
-            parameters_extra: Additional parameters to include
-
-        Returns:
-            Created job dictionary with status='running'
-
-        Example:
-            job = store.create_rosette_cnc_export_job(
-                pattern_id="rosette_001",
-                ring_id=1,
-                material="hardwood",
-                jig_origin={"origin_x_mm": 100.0, "origin_y_mm": 100.0, "rotation_deg": 0.0},
-                envelope={"x_min_mm": 0.0, "x_max_mm": 1000.0, ...},
-                parameters_extra={"batch_id": "slice_batch_ring_1"}
-            )
-        """
+        """Create a JobLog entry for a rosette CNC export."""
         params = {
             "ring_id": ring_id,
             "material": material,
@@ -495,36 +312,7 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         status: str,
         results: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
-        """
-        Generic helper to mark a job as completed / failed with result payload.
-
-        Args:
-            job_id: Job ID to update
-            status: New status ('completed' or 'failed')
-            results: Result payload dictionary
-
-        Returns:
-            Updated job or None if not found
-
-        Example:
-            # Mark CNC export as completed
-            job = store.complete_job_with_results(
-                job_id="JOB-ROSETTE-20251201-123456-abc123",
-                status="completed",
-                results={
-                    "safety": {"decision": "allow", "risk_level": "low"},
-                    "simulation": {"runtime_sec": 45.3},
-                    "metadata": {"segment_count": 8}
-                }
-            )
-
-            # Mark as failed
-            job = store.complete_job_with_results(
-                job_id="JOB-ROSETTE-20251201-123456-abc123",
-                status="failed",
-                results={"error": "Toolpath exceeds machine envelope"}
-            )
-        """
+        """Generic helper to mark a job as completed / failed with result payload."""
         end_time = datetime.utcnow().isoformat()
         
         # Calculate duration if job has start_time

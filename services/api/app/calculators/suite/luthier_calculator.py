@@ -1,57 +1,4 @@
-"""
-Luthier & Woodworking Calculator - Luthier's ToolBox
-
-Specialized calculations for guitar building and woodworking.
-
-Luthier Functions:
-    Curves & Radius:
-        radius_from_3_points()      Classic geometry - find radius from 3 points on arc
-        radius_from_chord()         Radius from chord length and height
-        compound_radius()           Fretboard compound radius at any position
-        arc_length()                Length along curved surface
-        
-    Frets & Scale:
-        fret_position()             Fret distance from nut
-        fret_spacing()              Distance between adjacent frets
-        scale_length()              Calculate scale length
-        compensation()              Saddle compensation estimate
-        
-    Strings & Tension:
-        string_tension()            Tension in pounds/newtons
-        pitch_from_tension()        Frequency from physical properties
-        
-    Neck Geometry:
-        neck_angle()                Neck pitch/angle calculation
-        action_at_fret()            String height at any fret
-        relief_depth()              Neck relief measurement
-
-Woodworking Functions:
-    Tapers & Wedges:
-        wedge_angle()               Angle from taper dimensions
-        taper_per_foot()            TPF from dimensions
-        taper_offset()              Offset for tapering jig
-        
-    Materials:
-        board_feet()                Lumber volume calculation
-        sheet_goods_yield()         Plywood cut optimization
-        wood_movement()             Seasonal expansion estimate
-        
-    Joinery:
-        miter_angle()               Miter for n-sided polygon
-        dovetail_angle()            Dovetail slope calculation
-        box_joint_spacing()         Finger joint layout
-        kerf_bend_spacing()         Kerf cuts for bending
-
-Usage:
-    calc = LuthierCalculator()
-    
-    # Find radius of an archtop curve from 3 measured points
-    radius = calc.radius_from_3_points(
-        (0, 0), (6, 0.5), (12, 0)
-    )  # Returns radius in same units as input
-
-Author: Luthier's ToolBox
-"""
+"""Luthier & Woodworking Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
 from dataclasses import dataclass
@@ -124,24 +71,7 @@ class LuthierCalculator(ScientificCalculator):
     def radius_from_3_points(self, p1: Tuple[float, float], 
                               p2: Tuple[float, float],
                               p3: Tuple[float, float]) -> float:
-        """
-        Calculate radius of circle passing through 3 points.
-        
-        Classic luthier measurement: place 3 points on a curve
-        (like an archtop or radius gauge) and calculate the radius.
-        
-        Args:
-            p1, p2, p3: Three points as (x, y) tuples
-            
-        Returns:
-            Radius of the circle (same units as input)
-            
-        Example:
-            # Measure archtop curve: center is 0.5" higher than edges
-            # Points at x=0, x=6, x=12 inches
-            >>> calc.radius_from_3_points((0, 0), (6, 0.5), (12, 0))
-            36.25  # inches
-        """
+        """Calculate radius of circle passing through 3 points."""
         x1, y1 = p1
         x2, y2 = p2
         x3, y3 = p3
@@ -171,19 +101,7 @@ class LuthierCalculator(ScientificCalculator):
         return round(radius, 4)
     
     def radius_from_chord(self, chord_length: float, height: float) -> float:
-        """
-        Calculate radius from chord length and arc height (sagitta).
-        
-        Useful for measuring fretboard radius with a straightedge:
-        measure the gap under the straightedge at the center.
-        
-        Args:
-            chord_length: Length of straightedge/chord
-            height: Height of arc at center (gap under straightedge)
-            
-        Returns:
-            Radius
-        """
+        """Calculate radius from chord length and arc height (sagitta)."""
         if height <= 0:
             return float('inf')
         
@@ -223,18 +141,7 @@ class LuthierCalculator(ScientificCalculator):
     
     def compound_radius(self, nut_radius: float, saddle_radius: float,
                         scale_length: float, position: float) -> float:
-        """
-        Calculate radius at any position on a compound radius fretboard.
-        
-        Args:
-            nut_radius: Radius at nut
-            saddle_radius: Radius at saddle/bridge
-            scale_length: Scale length
-            position: Distance from nut
-            
-        Returns:
-            Radius at specified position
-        """
+        """Calculate radius at any position on a compound radius fretboard."""
         t = position / scale_length
         radius = nut_radius + t * (saddle_radius - nut_radius)
         
@@ -279,17 +186,7 @@ class LuthierCalculator(ScientificCalculator):
     
     def fret_position(self, scale_length: float, fret_number: int,
                       use_rule_of_18: bool = False) -> float:
-        """
-        Calculate fret position from nut.
-        
-        Args:
-            scale_length: Scale length (nut to saddle)
-            fret_number: Fret number (1 = first fret)
-            use_rule_of_18: Use traditional approximation vs precise 12-TET
-            
-        Returns:
-            Distance from nut to fret
-        """
+        """Calculate fret position from nut."""
         divisor = self.RULE_OF_18 if use_rule_of_18 else self.EQUAL_TEMPERAMENT
         
         if not use_rule_of_18:

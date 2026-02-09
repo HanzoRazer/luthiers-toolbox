@@ -9,6 +9,10 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from .batch_router import router as batch_router
+from .batch_query_router import router as batch_query_router
+from .batch_learning_router import router as batch_learning_router
+from .batch_metrics_router import router as batch_metrics_router
+from .batch_gcode_router import router as batch_gcode_router
 from .execution_metrics_router import router as execution_metrics_router
 from .metrics_lookup_router import router as metrics_lookup_router
 from .latest_batch_chain_router import router as latest_batch_chain_router
@@ -26,6 +30,10 @@ from .execution_complete_router import router as execution_complete_router
 
 router = APIRouter()
 router.include_router(batch_router)
+router.include_router(batch_query_router)
+router.include_router(batch_learning_router)
+router.include_router(batch_metrics_router)
+router.include_router(batch_gcode_router)
 router.include_router(execution_metrics_router)
 router.include_router(metrics_lookup_router)
 router.include_router(latest_batch_chain_router)

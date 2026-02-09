@@ -1,14 +1,4 @@
-"""
-RMOS Run Artifact Schemas v2 - Governance Compliant
-
-Pydantic-based schemas compliant with RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md.
-
-Key compliance changes from v1:
-- Pydantic BaseModel instead of dataclass
-- Required fields enforced: feasibility_sha256, risk_level
-- Nested Hashes and RunOutputs models
-- Immutable design (no modification methods)
-"""
+"""RMOS Run Artifact Schemas v2 - Governance Compliant"""
 
 from __future__ import annotations
 
@@ -47,11 +37,7 @@ RejectReasonCode = Literal[
 # =============================================================================
 
 class Hashes(BaseModel):
-    """
-    SHA256 hashes for audit verification.
-
-    Contract Requirement: feasibility_sha256 is ALWAYS required.
-    """
+    """SHA256 hashes for audit verification."""
     feasibility_sha256: str = Field(
         ...,  # REQUIRED per governance contract
         description="SHA256 of server-computed feasibility (REQUIRED)",
@@ -77,11 +63,7 @@ class Hashes(BaseModel):
 
 
 class RunDecision(BaseModel):
-    """
-    Safety decision extracted from feasibility evaluation.
-
-    Contract Requirement: risk_level is REQUIRED.
-    """
+    """Safety decision extracted from feasibility evaluation."""
     risk_level: str = Field(
         ...,  # REQUIRED per governance contract
         description="Risk classification: GREEN, YELLOW, RED, UNKNOWN, ERROR",
@@ -142,12 +124,7 @@ class RunOutputs(BaseModel):
 
 
 class RunLineage(BaseModel):
-    """
-    Lineage tracking for Plan → Execute relationships.
-
-    Bundle 09: Backend lineage support.
-    Stable key: parent_plan_run_id
-    """
+    """Lineage tracking for Plan → Execute relationships."""
     parent_plan_run_id: Optional[str] = Field(
         None,
         description="Run ID of the parent plan artifact (for lineage tracking)",
@@ -186,12 +163,7 @@ class RunAttachment(BaseModel):
 
 
 class AdvisoryInputRef(BaseModel):
-    """
-    Reference to an attached advisory/explanation asset.
-
-    Append-only: These references are added but never removed.
-    Review state is mutable (status, rejected, rating, notes, etc.).
-    """
+    """Reference to an attached advisory/explanation asset."""
     advisory_id: str = Field(
         ...,
         description="Unique identifier of the advisory asset",
@@ -283,14 +255,7 @@ class AdvisoryInputRef(BaseModel):
 # =============================================================================
 
 class RunArtifact(BaseModel):
-    """
-    Complete record of a toolpath generation attempt.
-
-    IMMUTABLE: Once created, artifacts are never modified.
-    Created for EVERY request: OK, BLOCKED, or ERROR.
-
-    Compliance: RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md
-    """
+    """Complete record of a toolpath generation attempt."""
     # Identity (REQUIRED)
     run_id: str = Field(
         ...,
@@ -490,174 +455,20 @@ class RunArtifact(BaseModel):
 
 
 # =============================================================================
-# Attachment Creation Schemas
+# WP-3: Attachment schemas extracted to schemas_attachments.py — re-export
 # =============================================================================
 
-class RunAttachmentCreateRequest(BaseModel):
-    """Request to create a new attachment for a run."""
-    kind: str = Field(
-        ...,
-        description="Attachment type: geometry_svg, geometry_spec_json, ai_provenance_json, gcode, etc.",
-    )
-    filename: str = Field(
-        ...,
-        description="Display filename",
-    )
-    content_type: str = Field(
-        ...,
-        description="MIME type (e.g., image/svg+xml, application/json)",
-    )
-    sha256: str = Field(
-        ...,
-        description="Expected SHA256 hash of the decoded content",
-        min_length=64,
-        max_length=64,
-    )
-    b64: str = Field(
-        ...,
-        description="Base64-encoded payload (dev-friendly, deterministic)",
-    )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Additional metadata: request_id, generator_version, variant_index, etc.",
-    )
-
-
-class RunAttachmentCreateResponse(BaseModel):
-    """Response after creating an attachment."""
-    attachment_id: str = Field(
-        ...,
-        description="Attachment identifier (same as sha256 for content-addressed storage)",
-    )
-    sha256: str = Field(
-        ...,
-        description="Verified SHA256 hash of the content",
-    )
-    kind: str = Field(
-        ...,
-        description="Attachment type",
-    )
-
-
-# =============================================================================
-# Art Studio Binding Schemas
-# =============================================================================
-
-class BindArtStudioCandidateRequest(BaseModel):
-    """Request to bind Art Studio candidate attachments to a run artifact."""
-    attachment_ids: List[str] = Field(
-        ...,
-        description="List of attachment SHA256 hashes (att-... or raw sha256)",
-        min_length=1,
-    )
-    operator_notes: Optional[str] = Field(
-        None,
-        description="Optional operator notes for this binding",
-    )
-    strict: bool = Field(
-        default=True,
-        description="If true, fail if any attachment is missing",
-    )
-
-
-class BindArtStudioCandidateResponse(BaseModel):
-    """Response after binding Art Studio candidate."""
-    artifact_id: str = Field(
-        ...,
-        description="Created run artifact ID",
-    )
-    decision: Literal["ALLOW", "BLOCK"] = Field(
-        ...,
-        description="Feasibility decision: ALLOW or BLOCK",
-    )
-    feasibility_score: float = Field(
-        ...,
-        description="Feasibility score (0.0 - 1.0)",
-        ge=0.0,
-        le=1.0,
-    )
-    risk_level: str = Field(
-        ...,
-        description="Risk level: GREEN, YELLOW, RED, UNKNOWN",
-    )
-    feasibility_sha256: str = Field(
-        ...,
-        description="SHA256 of the feasibility evaluation",
-        min_length=64,
-        max_length=64,
-    )
-    attachment_sha256_map: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Map of attachment_id -> verified sha256",
-    )
-
-
-# =============================================================================
-# Bundle 17: Attachment Path Normalization + Contract
-# =============================================================================
-
-def normalize_attachment_path(p: str) -> str:
-    """
-    Normalize an attachment path to forward slashes.
-
-    Removes leading "./" and collapses double slashes.
-    """
-    s = (p or "").strip().replace("\\", "/")
-    while s.startswith("./"):
-        s = s[2:]
-    # Collapse accidental double slashes
-    while "//" in s:
-        s = s.replace("//", "/")
-    return s
-
-
-class RunAttachmentRowV1(BaseModel):
-    """
-    Normalized attachment row for list responses.
-
-    Bundle 17: Consistent keys for all attachment rows:
-    - att_id: Always present (stable identifier)
-    - path: Always present (normalized to forward slashes)
-    - signed_url: Optional (only when requested)
-
-    Contract: RMOS_RUNS_V2_ATTACHMENTS_CONTRACT_v1.md
-    """
-    att_id: str = Field(
-        ...,
-        description="Attachment ID (stable identifier)",
-    )
-    path: str = Field(
-        ...,
-        description="Normalized attachment path (forward slashes)",
-    )
-    sha256: Optional[str] = Field(
-        None,
-        description="Content hash",
-    )
-    size_bytes: Optional[int] = Field(
-        None,
-        description="File size in bytes",
-    )
-    content_type: Optional[str] = Field(
-        None,
-        description="MIME type",
-    )
-    signed_url: Optional[str] = Field(
-        None,
-        description="Signed URL for direct download (only when requested)",
-    )
-
-
-class RunAttachmentsListResponseV1(BaseModel):
-    """
-    Normalized response for attachment list endpoint.
-
-    Bundle 17: All rows have consistent att_id + path fields.
-    """
-    attachments: List[RunAttachmentRowV1] = Field(
-        default_factory=list,
-        description="List of attachment rows (normalized)",
-    )
+# NOTE: Cannot use relative import here because this file may be loaded via
+# importlib (see schemas/__init__.py). Use absolute import instead.
+from app.rmos.runs_v2.schemas_attachments import (  # noqa: E402
+    BindArtStudioCandidateRequest as BindArtStudioCandidateRequest,
+    BindArtStudioCandidateResponse as BindArtStudioCandidateResponse,
+    RunAttachmentCreateRequest as RunAttachmentCreateRequest,
+    RunAttachmentCreateResponse as RunAttachmentCreateResponse,
+    RunAttachmentRowV1 as RunAttachmentRowV1,
+    RunAttachmentsListResponseV1 as RunAttachmentsListResponseV1,
+    normalize_attachment_path as normalize_attachment_path,
+)
 
 
 # =============================================================================
@@ -674,9 +485,3 @@ RunLineage.model_rebuild()
 RunAttachment.model_rebuild()
 AdvisoryInputRef.model_rebuild()
 RunArtifact.model_rebuild()
-RunAttachmentCreateRequest.model_rebuild()
-RunAttachmentCreateResponse.model_rebuild()
-BindArtStudioCandidateRequest.model_rebuild()
-BindArtStudioCandidateResponse.model_rebuild()
-RunAttachmentRowV1.model_rebuild()
-RunAttachmentsListResponseV1.model_rebuild()

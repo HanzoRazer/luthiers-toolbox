@@ -59,17 +59,7 @@ def calculate_retract_height(
     next_pos: Tuple[float, float],
     config: RetractConfig
 ) -> float:
-    """
-    Calculate optimal retract height based on strategy and travel distance.
-    
-    Args:
-        current_pos: Current XY position
-        next_pos: Next XY position
-        config: Retract configuration
-    
-    Returns:
-        Retract Z height
-    """
+    """Calculate optimal retract height based on strategy and travel distance."""
     distance = distance_2d(current_pos, next_pos)
     
     if config.strategy == "minimal":
@@ -102,17 +92,7 @@ def generate_minimal_retract(
     config: RetractConfig,
     feed_rate: float = 300.0
 ) -> Tuple[List[str], Dict[str, Any]]:
-    """
-    Generate G-code with minimal retract strategy.
-    
-    Args:
-        features: List of feature paths (each path is list of XYZ points)
-        config: Retract configuration
-        feed_rate: Cutting feed rate
-    
-    Returns:
-        (gcode_lines, stats)
-    """
+    """Generate G-code with minimal retract strategy."""
     lines = []
     total_retracts = 0
     total_distance = 0.0
@@ -178,17 +158,7 @@ def generate_safe_retract(
     config: RetractConfig,
     feed_rate: float = 300.0
 ) -> Tuple[List[str], Dict[str, Any]]:
-    """
-    Generate G-code with safe retract strategy.
-    
-    Args:
-        features: List of feature paths
-        config: Retract configuration
-        feed_rate: Cutting feed rate
-    
-    Returns:
-        (gcode_lines, stats)
-    """
+    """Generate G-code with safe retract strategy."""
     lines = []
     total_retracts = 0
     total_distance = 0.0
@@ -250,17 +220,7 @@ def generate_incremental_retract(
     config: RetractConfig,
     feed_rate: float = 300.0
 ) -> Tuple[List[str], Dict[str, Any]]:
-    """
-    Generate G-code with incremental retract strategy.
-    
-    Args:
-        features: List of feature paths
-        config: Retract configuration
-        feed_rate: Cutting feed rate
-    
-    Returns:
-        (gcode_lines, stats)
-    """
+    """Generate G-code with incremental retract strategy."""
     lines = []
     total_retracts = 0
     total_distance = 0.0
@@ -346,19 +306,7 @@ def generate_linear_lead_in(
     config: LeadInConfig,
     feed_rate: float = 300.0
 ) -> List[str]:
-    """
-    Generate linear lead-in pattern.
-    
-    Args:
-        start_x, start_y: Entry point coordinates
-        start_z: Cutting depth
-        entry_x, entry_y: Actual cut start point
-        config: Lead-in configuration
-        feed_rate: Cutting feed rate
-    
-    Returns:
-        G-code lines for lead-in
-    """
+    """Generate linear lead-in pattern."""
     lines = []
     
     # Calculate lead-in start point (back from entry point)
@@ -390,19 +338,7 @@ def generate_arc_lead_in(
     config: LeadInConfig,
     feed_rate: float = 300.0
 ) -> List[str]:
-    """
-    Generate arc lead-in pattern.
-    
-    Args:
-        start_x, start_y: Entry point coordinates
-        start_z: Cutting depth
-        entry_x, entry_y: Actual cut start point
-        config: Lead-in configuration
-        feed_rate: Cutting feed rate
-    
-    Returns:
-        G-code lines for lead-in
-    """
+    """Generate arc lead-in pattern."""
     lines = []
     
     # Calculate arc center and start point
@@ -488,17 +424,7 @@ def calculate_time_savings(
     features_count: int,
     avg_feature_distance: float = 50.0
 ) -> Dict[str, float]:
-    """
-    Estimate time savings for different retract strategies.
-    
-    Args:
-        strategy: Retract strategy name
-        features_count: Number of features
-        avg_feature_distance: Average distance between features (mm)
-    
-    Returns:
-        Time statistics (seconds)
-    """
+    """Estimate time savings for different retract strategies."""
     # Assume:
     # - Rapid Z rate: 500 mm/min
     # - Rapid XY rate: 3000 mm/min

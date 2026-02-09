@@ -23,7 +23,7 @@ Usage:
     neck_gen.generate("neck_output.nc")
 """
 
-# Body generator
+# Body generator (WP-3: config in lespaul_config.py, generator in lespaul_gcode_gen.py)
 from .lespaul_body_generator import (
     LesPaulBodyGenerator,
     LesPaulDXFReader,

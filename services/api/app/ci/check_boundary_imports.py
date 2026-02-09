@@ -271,12 +271,7 @@ def _module_matches_prefix(module: str, prefixes: Tuple[str, ...]) -> bool:
 # --- AST Parsing -----------------------------------------------------------
 
 def _parse_imports_and_symbols(py_file: Path) -> Tuple[List[Tuple[int, str]], List[Tuple[int, str]], bool]:
-    """
-    Parse file and return:
-      - imports: list of (lineno, module)
-      - symbol_refs: list of (lineno, symbol) for RunArtifact usage
-      - has_type_checking: whether file has TYPE_CHECKING block
-    """
+    """Parse file and return:"""
     src = py_file.read_text(encoding="utf-8", errors="ignore")
     try:
         tree = ast.parse(src, filename=str(py_file))

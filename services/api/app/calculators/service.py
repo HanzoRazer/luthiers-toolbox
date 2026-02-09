@@ -1,11 +1,4 @@
-"""
-RMOS 2.0 Calculator Service
-Unified facade for chipload, heat, deflection, rim speed, BOM, and bracing calculators.
-
-Supports two modes:
-    - Router mode (default): For rosette/router operations
-    - Saw mode: Activated when tool_id starts with "saw:" prefix
-"""
+"""RMOS 2.0 Calculator Service"""
 from typing import Dict, Any, Optional
 from math import pi
 from ..rmos.api_contracts import RmosContext, RmosBomResult, RmosFeasibilityResult
@@ -28,20 +21,10 @@ def _is_saw_tool(tool_id: Optional[str]) -> bool:
 
 
 class CalculatorService:
-    """
-    Unified calculator facade providing manufacturing feasibility checks.
-    Each calculator returns dict with 'score' (0-100) and optional 'warning' string.
-    
-    Supports saw mode when tool_id starts with "saw:" prefix.
-    """
+    """Unified calculator facade providing manufacturing feasibility checks."""
     
     def __init__(self, edition: str = "pro"):
-        """
-        Initialize calculator service with data registry.
-        
-        Args:
-            edition: Product edition (express, pro, enterprise)
-        """
+        """Initialize calculator service with data registry."""
         self.edition = edition
         self.registry = Registry(edition=edition)
     
@@ -50,16 +33,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> RmosFeasibilityResult:
-        """
-        Evaluate overall feasibility, branching on saw vs router mode.
-        
-        Args:
-            design: Design parameters
-            ctx: Manufacturing context
-        
-        Returns:
-            RmosFeasibilityResult with score, risk, warnings
-        """
+        """Evaluate overall feasibility, branching on saw vs router mode."""
         if _is_saw_tool(ctx.tool_id):
             return self._evaluate_saw_feasibility(design, ctx)
         return self._evaluate_router_feasibility(design, ctx)
@@ -147,12 +121,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> Dict[str, Any]:
-        """
-        Check if chipload is within acceptable range for material/tool.
-        
-        Returns:
-            {'score': 0-100, 'warning': str (optional), 'chipload_mm': float}
-        """
+        """Check if chipload is within acceptable range for material/tool."""
         # Get empirical limits from registry (Pro edition only)
         try:
             # Default values for Express edition (no empirical data)
@@ -213,12 +182,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> Dict[str, Any]:
-        """
-        Check if heat dissipation is adequate for cut depth/feed rate.
-        
-        Returns:
-            {'score': 0-100, 'warning': str (optional), 'heat_index': float}
-        """
+        """Check if heat dissipation is adequate for cut depth/feed rate."""
         # Placeholder implementation
         try:
             # Heat index based on ring count and pattern complexity
@@ -247,12 +211,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> Dict[str, Any]:
-        """
-        Check if tool deflection is acceptable for required cut depth.
-        
-        Returns:
-            {'score': 0-100, 'warning': str (optional), 'deflection_mm': float}
-        """
+        """Check if tool deflection is acceptable for required cut depth."""
         # Placeholder implementation
         try:
             # Assume 6mm tool, 25mm stickout, typical cut depth
@@ -287,12 +246,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> Dict[str, Any]:
-        """
-        Check if rim speed (surface speed at outer diameter) is safe.
-        
-        Returns:
-            {'score': 0-100, 'warning': str (optional), 'rim_speed_m_per_min': float}
-        """
+        """Check if rim speed (surface speed at outer diameter) is safe."""
         # Get optimal spindle speed from registry (Pro edition only)
         try:
             spindle_rpm = 18000  # Default for Express
@@ -339,12 +293,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> Dict[str, Any]:
-        """
-        Check if geometry complexity is within machine capability.
-        
-        Returns:
-            {'score': 0-100, 'warning': str (optional), 'complexity_index': float}
-        """
+        """Check if geometry complexity is within machine capability."""
         # Placeholder implementation
         try:
             # Complexity based on ring count and pattern type
@@ -383,12 +332,7 @@ class CalculatorService:
         design: RosetteParamSpec,
         ctx: RmosContext
     ) -> RmosBomResult:
-        """
-        Compute Bill of Materials for design.
-        
-        Returns:
-            RmosBomResult with material area, tool IDs, waste estimate
-        """
+        """Compute Bill of Materials for design."""
         try:
             # Calculate material area (outer circle)
             material_required_mm2 = pi * (design.outer_diameter_mm / 2) ** 2
@@ -427,27 +371,14 @@ class CalculatorService:
 def calculate_bracing_section(
     data: bracing_calc.BracingCalcInput,
 ) -> bracing_calc.BraceSectionResult:
-    """
-    Public façade for bracing section calculations.
-
-    This is the function RMOS, Art Studio, or any other subsystem
-    should call when they need bracing properties.
-
-    It delegates to calculators.bracing_calc and ultimately to the
-    legacy pipelines.bracing.bracing_calc implementation.
-    """
+    """Public façade for bracing section calculations."""
     return bracing_calc.calculate_brace_section(data)
 
 
 def estimate_bracing_mass_grams(
     data: bracing_calc.BracingCalcInput,
 ) -> float:
-    """
-    Public façade for bracing mass estimation.
-
-    Returns the estimated brace mass in grams, as computed by the
-    underlying bracing physics module.
-    """
+    """Public façade for bracing mass estimation."""
     return bracing_calc.estimate_mass_grams(data)
 
 
@@ -459,23 +390,7 @@ def estimate_bracing_mass_grams(
 # ---------------------------------------------------------------------------
 
 def compute_chipload_risk(request: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate chipload risk for given design and context.
-    
-    Args:
-        request: {
-            "design": RosetteParamSpec or dict,
-            "context": RmosContext or dict,
-        }
-    
-    Returns:
-        {
-            "score": float (0-100),
-            "risk": str ("GREEN"|"YELLOW"|"RED"),
-            "warnings": List[str],
-            "details": dict
-        }
-    """
+    """Evaluate chipload risk for given design and context."""
     from ..rmos.context import RmosContext
     service = CalculatorService()
     design = request.get("design")
@@ -485,20 +400,7 @@ def compute_chipload_risk(request: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compute_heat_risk(request: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate heat dissipation risk for given design and context.
-    
-    Args:
-        request: Same as compute_chipload_risk
-    
-    Returns:
-        {
-            "score": float (0-100),
-            "risk": str ("GREEN"|"YELLOW"|"RED"),
-            "warnings": List[str],
-            "details": dict
-        }
-    """
+    """Evaluate heat dissipation risk for given design and context."""
     from ..rmos.context import RmosContext
     service = CalculatorService()
     design = request.get("design")
@@ -508,20 +410,7 @@ def compute_heat_risk(request: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compute_deflection_risk(request: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate tool deflection risk for given design and context.
-    
-    Args:
-        request: Same as compute_chipload_risk
-    
-    Returns:
-        {
-            "score": float (0-100),
-            "risk": str ("GREEN"|"YELLOW"|"RED"),
-            "warnings": List[str],
-            "details": dict
-        }
-    """
+    """Evaluate tool deflection risk for given design and context."""
     from ..rmos.context import RmosContext
     service = CalculatorService()
     design = request.get("design")
@@ -531,20 +420,7 @@ def compute_deflection_risk(request: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compute_rimspeed_risk(request: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate rim speed safety for given design and context.
-    
-    Args:
-        request: Same as compute_chipload_risk
-    
-    Returns:
-        {
-            "score": float (0-100),
-            "risk": str ("GREEN"|"YELLOW"|"RED"),
-            "warnings": List[str],
-            "details": dict
-        }
-    """
+    """Evaluate rim speed safety for given design and context."""
     from ..rmos.context import RmosContext
     service = CalculatorService()
     design = request.get("design")
@@ -554,23 +430,7 @@ def compute_rimspeed_risk(request: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compute_bom_efficiency(request: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate bill-of-materials efficiency for given design and context.
-    
-    Note: BOM calculator is still under development.
-    Returns conservative score until fully implemented.
-    
-    Args:
-        request: Same as compute_chipload_risk
-    
-    Returns:
-        {
-            "score": float (0-100, currently 75.0 default),
-            "risk": str ("YELLOW"),
-            "warnings": List[str],
-            "details": dict
-        }
-    """
+    """Evaluate bill-of-materials efficiency for given design and context."""
     from ..rmos.context import RmosContext
     service = CalculatorService()
     design = request.get("design")

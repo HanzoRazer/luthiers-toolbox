@@ -1,48 +1,4 @@
-"""
-Fraction Calculator - Luthier's ToolBox
-
-Woodworker-friendly calculator that displays and operates on fractions.
-Slots between BasicCalculator and ScientificCalculator in the hierarchy.
-
-Features:
-    Display:
-        - Show results as fractions (1/8, 3/16, 1/32)
-        - Configurable precision (8ths, 16ths, 32nds, 64ths)
-        - Mixed numbers (2-3/8)
-        - Decimal/fraction toggle
-        
-    Input:
-        - Enter fractions: "3/4", "1-1/2", "2 3/8"
-        - Feet-inches: 4'6-1/2" 
-        
-    Operations:
-        - Add/subtract fractions
-        - Multiply/divide fractions
-        - Convert decimal ↔ fraction
-        - Reduce to lowest terms
-        - Find common denominator
-
-Usage:
-    calc = FractionCalculator()
-    
-    # Add fractions
-    calc.fraction(3, 4).operation('+').fraction(1, 8)
-    calc.equals()  # Returns 0.875, displays "7/8"
-    
-    # Convert decimal to fraction
-    calc.to_fraction(0.875)  # "7/8"
-    calc.to_fraction(0.875, max_denom=16)  # "14/16" 
-    
-    # Parse fraction string
-    calc.parse_fraction("2-3/8")  # 2.375
-
-Woodworking denominators:
-    Tape measures: 16ths or 32nds
-    Precision work: 32nds or 64ths
-    Rough carpentry: 8ths
-
-Author: Luthier's ToolBox
-"""
+"""Fraction Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
 from dataclasses import dataclass
@@ -93,21 +49,7 @@ class FractionResult:
 
 
 class FractionCalculator(BasicCalculator):
-    """
-    Calculator with fraction support for woodworkers.
-    
-    Extends BasicCalculator with:
-    - Fraction input and display
-    - Decimal ↔ fraction conversion
-    - Configurable precision (8ths, 16ths, 32nds, 64ths)
-    
-    Example:
-        >>> calc = FractionCalculator()
-        >>> calc.set_precision(16)  # Work in 16ths
-        >>> calc.fraction(3, 4).operation('+').fraction(1, 8)
-        >>> print(calc.display_fraction)
-        7/8
-    """
+    """Calculator with fraction support for woodworkers."""
     
     # Common woodworking denominators
     PRECISION_8THS = 8
@@ -158,18 +100,7 @@ class FractionCalculator(BasicCalculator):
     # =========================================================================
     
     def fraction(self, numerator: int, denominator: int = 1) -> 'FractionCalculator':
-        """
-        Enter a fraction.
-        
-        Args:
-            numerator: Top number
-            denominator: Bottom number (default 1 for whole numbers)
-            
-        Example:
-            calc.fraction(3, 4)      # 3/4
-            calc.fraction(7, 8)      # 7/8
-            calc.fraction(5)         # 5 (whole number)
-        """
+        """Enter a fraction."""
         if denominator == 0:
             self.state.error = "Cannot divide by zero"
             return self
@@ -183,17 +114,7 @@ class FractionCalculator(BasicCalculator):
         return self
     
     def mixed_number(self, whole: int, numerator: int, denominator: int) -> 'FractionCalculator':
-        """
-        Enter a mixed number.
-        
-        Args:
-            whole: Whole number part
-            numerator: Fraction numerator
-            denominator: Fraction denominator
-            
-        Example:
-            calc.mixed_number(2, 3, 8)  # 2-3/8
-        """
+        """Enter a mixed number."""
         if denominator == 0:
             self.state.error = "Cannot divide by zero"
             return self
@@ -208,21 +129,7 @@ class FractionCalculator(BasicCalculator):
         return self
     
     def parse_fraction(self, text: str) -> float:
-        """
-        Parse a fraction string and enter it.
-        
-        Formats supported:
-            "3/4"       - Simple fraction
-            "2-3/8"     - Mixed number with hyphen
-            "2 3/8"     - Mixed number with space
-            "1-1/2"     - Mixed number
-            "4'6-1/2\"" - Feet and inches
-            "4' 6\""    - Feet and inches
-            "0.875"     - Decimal (passthrough)
-            
-        Returns:
-            Decimal value
-        """
+        """Parse a fraction string and enter it."""
         self._clear_error()
         text = text.strip()
         
@@ -284,23 +191,7 @@ class FractionCalculator(BasicCalculator):
     
     def to_fraction(self, decimal: float = None, 
                     max_denom: int = None) -> FractionResult:
-        """
-        Convert decimal to fraction.
-        
-        Args:
-            decimal: Value to convert (default: current display)
-            max_denom: Maximum denominator (default: self.precision)
-            
-        Returns:
-            FractionResult with numerator, denominator, whole part
-            
-        Example:
-            >>> calc.to_fraction(0.875)
-            FractionResult(decimal=0.875, numerator=7, denominator=8)
-            
-            >>> calc.to_fraction(2.375)
-            FractionResult(decimal=2.375, whole=2, numerator=3, denominator=8)
-        """
+        """Convert decimal to fraction."""
         if decimal is None:
             decimal = self.state.display_value
         
@@ -525,18 +416,7 @@ class FractionCalculator(BasicCalculator):
     
     def feet_inches(self, feet: int, inches: float = 0, 
                     frac_num: int = 0, frac_denom: int = 1) -> 'FractionCalculator':
-        """
-        Enter measurement in feet and inches.
-        
-        Args:
-            feet: Feet
-            inches: Whole inches
-            frac_num: Fractional inch numerator
-            frac_denom: Fractional inch denominator
-            
-        Example:
-            calc.feet_inches(4, 6, 1, 2)  # 4' 6-1/2"
-        """
+        """Enter measurement in feet and inches."""
         total_inches = feet * 12 + inches + (frac_num / frac_denom if frac_denom else 0)
         self.state.display = self._format_result(total_inches)
         self._update_fraction_display(total_inches)

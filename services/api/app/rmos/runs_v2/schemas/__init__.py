@@ -35,6 +35,7 @@ BindArtStudioCandidateRequest = _schemas_module.BindArtStudioCandidateRequest
 BindArtStudioCandidateResponse = _schemas_module.BindArtStudioCandidateResponse
 RunAttachmentRowV1 = _schemas_module.RunAttachmentRowV1
 RunAttachmentsListResponseV1 = _schemas_module.RunAttachmentsListResponseV1
+normalize_attachment_path = _schemas_module.normalize_attachment_path
 
 # Re-export advisory schemas
 from .advisory_schemas import (

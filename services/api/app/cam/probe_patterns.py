@@ -17,20 +17,7 @@ def generate_corner_probe(
     safe_z: float = 10.0,
     work_offset: int = 1
 ) -> str:
-    """
-    Generate corner finding probe pattern.
-    
-    Args:
-        pattern: "corner_outside" or "corner_inside"
-        approach_distance: Distance to start probe from estimated edge (mm)
-        retract_distance: Retract after each probe (mm)
-        feed_probe: Probing feed rate (mm/min)
-        safe_z: Safe Z height (mm)
-        work_offset: G54-G59 offset number (1-6)
-    
-    Returns:
-        G-code string with G31 probes and G10 L20 offset setting
-    """
+    """Generate corner finding probe pattern."""
     outside = (pattern == "corner_outside")
     wcs_cmd = f"G{53 + work_offset}"  # G54-G59
     
@@ -108,23 +95,7 @@ def generate_boss_probe(
     safe_z: float = 10.0,
     work_offset: int = 1
 ) -> str:
-    """
-    Generate circular boss/hole finding pattern.
-    
-    Args:
-        pattern: "boss_circular" (external) or "hole_circular" (internal)
-        estimated_diameter: Estimated feature diameter (mm)
-        estimated_center: Estimated center (X, Y) in mm
-        probe_count: Number of probes (4, 6, 8, 12)
-        approach_distance: Distance beyond estimated edge to start (mm)
-        retract_distance: Retract after each probe (mm)
-        feed_probe: Probing feed rate (mm/min)
-        safe_z: Safe Z height (mm)
-        work_offset: G54-G59 offset number (1-6)
-    
-    Returns:
-        G-code with circular probe pattern and center calculation
-    """
+    """Generate circular boss/hole finding pattern."""
     boss = (pattern == "boss_circular")
     wcs_cmd = f"G{53 + work_offset}"
     ex, ey = estimated_center
@@ -228,19 +199,7 @@ def generate_surface_z_probe(
     retract_distance: float = 5.0,
     work_offset: int = 1
 ) -> str:
-    """
-    Generate surface Z-zero touch-off pattern.
-    
-    Args:
-        approach_z: Z position to start probe from (mm)
-        probe_depth: Maximum depth to probe (negative, mm)
-        feed_probe: Probing feed rate (mm/min)
-        retract_distance: Retract after touch (mm)
-        work_offset: G54-G59 offset number (1-6)
-    
-    Returns:
-        G-code with Z-axis probe
-    """
+    """Generate surface Z-zero touch-off pattern."""
     wcs_cmd = f"G{53 + work_offset}"
     
     gcode_lines = [
@@ -282,22 +241,7 @@ def generate_pocket_probe(
     work_offset: int = 1,
     origin_corner: str = "lower_left"
 ) -> str:
-    """
-    Generate inside pocket corner finding pattern.
-    
-    Args:
-        pocket_width: Estimated pocket width (mm)
-        pocket_height: Estimated pocket height (mm)
-        approach_distance: Distance from center to start probe (mm)
-        retract_distance: Retract after each probe (mm)
-        feed_probe: Probing feed rate (mm/min)
-        safe_z: Safe Z height (mm)
-        work_offset: G54-G59 offset number (1-6)
-        origin_corner: "lower_left", "lower_right", "upper_left", "upper_right", or "center"
-    
-    Returns:
-        G-code with internal pocket probing
-    """
+    """Generate inside pocket corner finding pattern."""
     wcs_cmd = f"G{53 + work_offset}"
     hw = pocket_width / 2.0
     hh = pocket_height / 2.0
@@ -397,22 +341,7 @@ def generate_vise_square_probe(
     feed_probe: float = 100.0,
     safe_z: float = 10.0
 ) -> str:
-    """
-    Generate vise squareness check pattern.
-    
-    Probes vise jaw at two Y positions to measure angle.
-    
-    Args:
-        vise_jaw_height: Z height of vise jaw (mm)
-        probe_spacing: Y distance between two probe points (mm)
-        approach_distance: Distance to start probe from jaw (mm)
-        retract_distance: Retract after each probe (mm)
-        feed_probe: Probing feed rate (mm/min)
-        safe_z: Safe Z height (mm)
-    
-    Returns:
-        G-code with angle measurement
-    """
+    """Generate vise squareness check pattern."""
     gcode_lines = [
         "(Vise Squareness Check)",
         "(Probes vise jaw at 2 points to measure angle)",

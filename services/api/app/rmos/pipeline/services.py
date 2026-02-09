@@ -1,73 +1,17 @@
-"""
-RMOS Pipeline Services - Business Logic for Multi-Stage Execution
-
-LANE: OPERATION (infrastructure)
-Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md, ADR-003 Phase 4
-
-This module provides the service layer for the 4-stage pipeline:
-SPEC → PLAN → DECISION → EXECUTE
-
-Each function creates an immutable artifact and links it to its parent,
-forming an auditable chain for deterministic replay.
-
-Usage:
-    # 1. Create spec from user request
-    spec_id = create_spec_artifact(
-        tool_type="roughing",
-        design={"width": 100, "height": 50, ...},
-        context={"tool_id": "endmill_6mm", ...},
-        batch_label="Job-001",
-    )
-
-    # 2. Generate plan with feasibility scoring
-    plan_id = create_plan_artifact(
-        spec_artifact_id=spec_id,
-        operations=[
-            PlanOperation(op_id="op_1", feasibility_score=85, risk_bucket="GREEN"),
-        ],
-    )
-
-    # 3. Operator approves plan
-    decision_id = create_decision_artifact(
-        plan_artifact_id=plan_id,
-        approved_by="operator:john",
-        reason="Looks good",
-        op_order=["op_1"],
-    )
-
-    # 4. Execute approved decision
-    execution_id = create_execution_artifact(
-        decision_artifact_id=decision_id,
-        results=[
-            ExecutionResult(op_id="op_1", status="OK", ...),
-        ],
-    )
-"""
+"""RMOS Pipeline Services - Business Logic for Multi-Stage Execution"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Protocol, TypeVar
+from typing import Any, Dict, List, Optional, Protocol
 
 from .schemas import (
     PipelineStage,
     PipelineStatus,
     RiskBucket,
-    IndexMeta,
-    SpecArtifact,
-    PlanArtifact,
-    DecisionArtifact,
-    ExecutionArtifact,
-    OpToolpathsArtifact,
     PlanOperation,
-    ExecutionResult,
-    ChosenOrder,
-    SpecRequest,
     SpecResponse,
-    PlanRequest,
     PlanResponse,
-    ApproveRequest,
     ApproveResponse,
-    ExecuteRequest,
     ExecuteResponse,
 )
 from .store import (
@@ -84,15 +28,7 @@ def _utc_now_iso() -> str:
 
 
 def _aggregate_risk(operations: List[PlanOperation]) -> RiskBucket:
-    """
-    Determine aggregate risk from list of operations.
-
-    Rules:
-    - Any RED → aggregate RED
-    - Any UNKNOWN → aggregate UNKNOWN (if no RED)
-    - Any YELLOW → aggregate YELLOW (if no RED/UNKNOWN)
-    - All GREEN → aggregate GREEN
-    """
+    """Determine aggregate risk from list of operations."""
     has_red = any(op.risk_bucket == RiskBucket.RED for op in operations)
     has_unknown = any(op.risk_bucket == RiskBucket.UNKNOWN for op in operations)
     has_yellow = any(op.risk_bucket == RiskBucket.YELLOW for op in operations)
@@ -122,15 +58,7 @@ class FeasibilityChecker(Protocol):
     """Protocol for feasibility checking."""
 
     def check(self, design: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Check feasibility for a design/context.
-
-        Returns dict with:
-        - score: float (0-100)
-        - risk_bucket: str (GREEN, YELLOW, RED, UNKNOWN)
-        - warnings: List[str]
-        - details: Dict[str, Any] (calculator results, etc.)
-        """
+        """Check feasibility for a design/context."""
         ...
 
 
@@ -142,24 +70,12 @@ class ToolpathGenerator(Protocol):
         design: Dict[str, Any],
         context: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """
-        Generate toolpaths for a design/context.
-
-        Returns dict with:
-        - moves: List[Dict] (canonical GCodeMoves)
-        - gcode: str (generated G-code)
-        - stats: Dict[str, Any] (path length, time, etc.)
-        """
+        """Generate toolpaths for a design/context."""
         ...
 
 
 class PipelineService:
-    """
-    Service for managing pipeline operations.
-
-    This class provides the core pipeline logic, allowing customization
-    of feasibility checking and toolpath generation via protocols.
-    """
+    """Service for managing pipeline operations."""
 
     def __init__(
         self,
@@ -167,14 +83,7 @@ class PipelineService:
         feasibility_checker: Optional[FeasibilityChecker] = None,
         toolpath_generator: Optional[ToolpathGenerator] = None,
     ):
-        """
-        Initialize pipeline service.
-
-        Args:
-            tool_type: Tool type prefix (e.g., "roughing", "drilling")
-            feasibility_checker: Custom feasibility checker
-            toolpath_generator: Custom toolpath generator
-        """
+        """Initialize pipeline service."""
         self.tool_type = tool_type
         self.feasibility_checker = feasibility_checker
         self.toolpath_generator = toolpath_generator
@@ -192,19 +101,7 @@ class PipelineService:
         session_id: Optional[str] = None,
         items: Optional[List[Dict[str, Any]]] = None,
     ) -> SpecResponse:
-        """
-        Create a SPEC artifact.
-
-        Args:
-            design: Design parameters
-            context: Machining context
-            batch_label: User-provided batch label
-            session_id: Session correlation ID
-            items: Optional list of batch items
-
-        Returns:
-            SpecResponse with artifact ID
-        """
+        """Create a SPEC artifact."""
         item_count = len(items) if items else 1
 
         # Generate op_ids for each item
@@ -253,19 +150,7 @@ class PipelineService:
         *,
         operations: Optional[List[PlanOperation]] = None,
     ) -> PlanResponse:
-        """
-        Create a PLAN artifact from a spec.
-
-        If operations are not provided, they are generated from the spec
-        using the feasibility checker.
-
-        Args:
-            spec_artifact_id: Parent spec artifact ID
-            operations: Pre-computed operations (optional)
-
-        Returns:
-            PlanResponse with artifact ID and operations
-        """
+        """Create a PLAN artifact from a spec."""
         # Read spec artifact
         spec = read_artifact(spec_artifact_id)
         if not spec:
@@ -373,19 +258,7 @@ class PipelineService:
         setup_order: Optional[List[str]] = None,
         op_order: Optional[List[str]] = None,
     ) -> ApproveResponse:
-        """
-        Create a DECISION artifact (approval checkpoint).
-
-        Args:
-            plan_artifact_id: Plan to approve
-            approved_by: Operator name/ID
-            reason: Approval reason
-            setup_order: Chosen setup order (optional)
-            op_order: Chosen operation order (optional)
-
-        Returns:
-            ApproveResponse with artifact ID
-        """
+        """Create a DECISION artifact (approval checkpoint)."""
         # Read plan artifact
         plan = read_artifact(plan_artifact_id)
         if not plan:
@@ -453,233 +326,19 @@ class PipelineService:
         retry_of_execution_id: Optional[str] = None,
         retry_reason: Optional[str] = None,
     ) -> ExecuteResponse:
+        """Create an EXECUTION artifact (generate toolpaths).
+
+        WP-3: Core logic extracted to services_execution.execute_pipeline().
         """
-        Create an EXECUTION artifact (generate toolpaths).
+        from .services_execution import execute_pipeline
 
-        This is where the actual toolpath generation happens.
-        Feasibility is recomputed server-side for each operation.
-
-        Args:
-            decision_artifact_id: Approved decision to execute
-            op_ids: Specific ops to execute (None = all)
-            is_retry: Whether this is a retry execution
-            retry_of_execution_id: Original execution being retried
-            retry_reason: Reason for retry
-
-        Returns:
-            ExecuteResponse with results
-        """
-        # Read decision artifact
-        decision = read_artifact(decision_artifact_id)
-        if not decision:
-            raise ValueError(f"Decision artifact not found: {decision_artifact_id}")
-
-        decision_payload = decision.get("payload", {})
-        decision_meta = decision.get("index_meta", {})
-
-        plan_artifact_id = decision_payload.get("plan_artifact_id") or decision_meta.get("parent_plan_artifact_id")
-        spec_artifact_id = decision_payload.get("spec_artifact_id") or decision_meta.get("parent_spec_artifact_id")
-        batch_label = decision_payload.get("batch_label") or decision_meta.get("batch_label")
-        session_id = decision_payload.get("session_id") or decision_meta.get("session_id")
-
-        # Get execution order from decision
-        chosen_order = decision_payload.get("chosen_order", {})
-        all_op_order = chosen_order.get("op_order", [])
-
-        # Filter to requested ops if specified
-        if op_ids is not None:
-            op_order = [op_id for op_id in all_op_order if op_id in op_ids]
-        else:
-            op_order = all_op_order
-
-        # Read plan for operation details
-        plan = read_artifact(plan_artifact_id) if plan_artifact_id else None
-        plan_payload = plan.get("payload", {}) if plan else {}
-        plan_operations = {
-            op.get("op_id"): op
-            for op in plan_payload.get("operations", [])
-        }
-
-        # Execute each operation
-        results: List[ExecutionResult] = []
-        children: List[Dict[str, str]] = []
-        ok_count = 0
-        blocked_count = 0
-        error_count = 0
-
-        for op_id in op_order:
-            op_data = plan_operations.get(op_id, {})
-            design = op_data.get("design", {})
-            context = op_data.get("context", {})
-
-            # Server-side feasibility recompute (mandatory)
-            feas_result = {"score": 50.0, "risk_bucket": "UNKNOWN", "warnings": []}
-            if self.feasibility_checker:
-                try:
-                    feas_result = self.feasibility_checker.check(design, context)
-                except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
-                    feas_result = {
-                        "score": 0.0,
-                        "risk_bucket": "ERROR",
-                        "warnings": [str(e)],
-                    }
-
-            risk_bucket = RiskBucket(feas_result.get("risk_bucket", "UNKNOWN"))
-            score = feas_result.get("score", 0.0)
-            warnings = feas_result.get("warnings", [])
-
-            # Block if RED or UNKNOWN
-            if risk_bucket in (RiskBucket.RED, RiskBucket.UNKNOWN):
-                blocked_count += 1
-                status = PipelineStatus.BLOCKED
-
-                # Create blocked op_toolpaths artifact
-                child_id = write_artifact(
-                    kind=self._kind("op_toolpaths"),
-                    stage=PipelineStage.EXECUTE,
-                    status=PipelineStatus.BLOCKED,
-                    index_meta={
-                        "tool_type": self.tool_type,
-                        "parent_decision_artifact_id": decision_artifact_id,
-                        "parent_plan_artifact_id": plan_artifact_id,
-                        "parent_spec_artifact_id": spec_artifact_id,
-                        "op_id": op_id,
-                    },
-                    payload={
-                        "op_id": op_id,
-                        "design": design,
-                        "context": context,
-                        "feasibility_recomputed": feas_result,
-                        "blocked_reason": f"Server-side feasibility: {risk_bucket.value}",
-                    },
-                )
-
-                results.append(ExecutionResult(
-                    op_id=op_id,
-                    status=status,
-                    risk_bucket=risk_bucket,
-                    feasibility_score=score,
-                    toolpaths_artifact_id=child_id,
-                    warnings=warnings,
-                ))
-                children.append({"artifact_id": child_id, "kind": self._kind("op_toolpaths")})
-                continue
-
-            # Generate toolpaths
-            toolpaths_result: Dict[str, Any] = {}
-            gcode = ""
-            gcode_hash = None
-            op_status = PipelineStatus.OK
-            errors: List[str] = []
-
-            if self.toolpath_generator:
-                try:
-                    toolpaths_result = self.toolpath_generator.generate(design, context)
-                    gcode = toolpaths_result.get("gcode", "")
-                    if gcode:
-                        gcode_hash = sha256_of_obj(gcode)
-                    ok_count += 1
-                except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
-                    op_status = PipelineStatus.ERROR
-                    errors = [f"{type(e).__name__}: {str(e)}"]
-                    error_count += 1
-            else:
-                # No generator, just mark as OK with empty toolpaths
-                ok_count += 1
-
-            # Create op_toolpaths artifact
-            child_id = write_artifact(
-                kind=self._kind("op_toolpaths"),
-                stage=PipelineStage.EXECUTE,
-                status=op_status,
-                index_meta={
-                    "tool_type": self.tool_type,
-                    "parent_decision_artifact_id": decision_artifact_id,
-                    "parent_plan_artifact_id": plan_artifact_id,
-                    "parent_spec_artifact_id": spec_artifact_id,
-                    "op_id": op_id,
-                },
-                payload={
-                    "op_id": op_id,
-                    "design": design,
-                    "context": context,
-                    "feasibility_recomputed": feas_result,
-                    "toolpaths": toolpaths_result,
-                    "gcode": gcode,
-                },
-                output_hash=gcode_hash,
-            )
-
-            results.append(ExecutionResult(
-                op_id=op_id,
-                status=op_status,
-                risk_bucket=risk_bucket,
-                feasibility_score=score,
-                toolpaths_artifact_id=child_id,
-                errors=errors,
-                warnings=warnings,
-            ))
-            children.append({"artifact_id": child_id, "kind": self._kind("op_toolpaths")})
-
-        # Create parent execution artifact
-        overall_status = PipelineStatus.OK
-        if error_count > 0:
-            overall_status = PipelineStatus.ERROR
-        elif blocked_count > 0 and ok_count == 0:
-            overall_status = PipelineStatus.BLOCKED
-
-        payload = {
-            "created_utc": _utc_now_iso(),
-            "decision_artifact_id": decision_artifact_id,
-            "plan_artifact_id": plan_artifact_id,
-            "spec_artifact_id": spec_artifact_id,
-            "batch_label": batch_label,
-            "session_id": session_id,
-            "op_count": len(op_order),
-            "ok_count": ok_count,
-            "blocked_count": blocked_count,
-            "error_count": error_count,
-            "results": [r.model_dump() for r in results],
-            "children": children,
-            "is_retry": is_retry,
-            "retry_of_execution_id": retry_of_execution_id,
-            "retry_reason": retry_reason,
-        }
-
-        index_meta = {
-            "tool_type": self.tool_type,
-            "parent_decision_artifact_id": decision_artifact_id,
-            "parent_plan_artifact_id": plan_artifact_id,
-            "parent_spec_artifact_id": spec_artifact_id,
-            "batch_label": batch_label,
-            "session_id": session_id,
-            "workflow_mode": "pipeline",
-            "op_count": len(op_order),
-            "ok_count": ok_count,
-            "blocked_count": blocked_count,
-            "error_count": error_count,
-        }
-
-        artifact_id = write_artifact(
-            kind=self._kind("execution"),
-            stage=PipelineStage.EXECUTE,
-            status=overall_status,
-            index_meta=index_meta,
-            payload=payload,
-        )
-
-        return ExecuteResponse(
-            execution_artifact_id=artifact_id,
-            decision_artifact_id=decision_artifact_id,
-            plan_artifact_id=plan_artifact_id,
-            spec_artifact_id=spec_artifact_id,
-            batch_label=batch_label,
-            status=overall_status.value,
-            op_count=len(op_order),
-            ok_count=ok_count,
-            blocked_count=blocked_count,
-            error_count=error_count,
-            results=results,
+        return execute_pipeline(
+            self,
+            decision_artifact_id,
+            op_ids=op_ids,
+            is_retry=is_retry,
+            retry_of_execution_id=retry_of_execution_id,
+            retry_reason=retry_reason,
         )
 
     def retry_execution(
@@ -689,41 +348,17 @@ class PipelineService:
         op_ids: Optional[List[str]] = None,
         reason: str = "retry",
     ) -> ExecuteResponse:
+        """Retry a previous execution (immutable - creates new artifacts).
+
+        WP-3: Core logic extracted to services_execution.retry_pipeline_execution().
         """
-        Retry a previous execution (immutable - creates new artifacts).
+        from .services_execution import retry_pipeline_execution
 
-        Args:
-            execution_artifact_id: Execution to retry
-            op_ids: Specific ops to retry (None = all blocked/error)
-            reason: Reason for retry
-
-        Returns:
-            ExecuteResponse with new execution
-        """
-        # Read original execution
-        execution = read_artifact(execution_artifact_id)
-        if not execution:
-            raise ValueError(f"Execution artifact not found: {execution_artifact_id}")
-
-        execution_payload = execution.get("payload", {})
-        decision_artifact_id = execution_payload.get("decision_artifact_id")
-
-        # Determine ops to retry
-        if op_ids is None:
-            # Retry all blocked/error ops
-            results = execution_payload.get("results", [])
-            op_ids = [
-                r.get("op_id")
-                for r in results
-                if r.get("status") in ("BLOCKED", "ERROR")
-            ]
-
-        return self.create_execution(
-            decision_artifact_id=decision_artifact_id,
+        return retry_pipeline_execution(
+            self,
+            execution_artifact_id,
             op_ids=op_ids,
-            is_retry=True,
-            retry_of_execution_id=execution_artifact_id,
-            retry_reason=reason,
+            reason=reason,
         )
 
 

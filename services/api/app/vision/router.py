@@ -199,21 +199,7 @@ async def segment_guitar(
     guitar_category: str = Form("auto", description="Guitar type: auto, acoustic, electric"),
     output_format: str = Form("json", description="Output: json, dxf, svg, all"),
 ) -> SegmentResponse:
-    """
-    Segment guitar body from uploaded image using AI vision.
-
-    Extracts the guitar body outline as a polygon, optionally exporting
-    to DXF or SVG format for CAM processing.
-
-    Pipeline:
-    1. Send image to GPT-4o Vision
-    2. Extract body polygon coordinates
-    3. Scale to target dimensions (mm)
-    4. Simplify and ensure proper winding
-    5. Optionally export to DXF/SVG
-
-    Returns polygon coordinates and optional asset URLs.
-    """
+    """Segment guitar body from uploaded image using AI vision."""
     # Validate file type
     if file.content_type not in ("image/png", "image/jpeg", "image/webp"):
         return SegmentResponse(
@@ -321,25 +307,7 @@ async def photo_to_gcode(
     feed_rate_mm_min: float = Form(1200.0, description="Feed rate mm/min"),
     post_processor: str = Form("GRBL", description="Post processor"),
 ) -> PhotoToGcodeResponse:
-    """
-    Complete pipeline: Photo → AI Segmentation → DXF → G-code
-
-    Extracts guitar body outline from image and generates CNC-ready G-code
-    for pocket machining operations.
-
-    Pipeline:
-    1. AI Vision (GPT-4o) extracts body outline
-    2. Polygon scaled and simplified
-    3. DXF generated for CAM
-    4. Adaptive pocket toolpath planned
-    5. G-code generated with post-processor
-
-    Returns:
-    - SVG preview of segmented outline
-    - DXF file for CAM software
-    - G-code file ready for CNC
-    - CAM statistics (area, time, moves)
-    """
+    """Complete pipeline: Photo → AI Segmentation → DXF → G-code"""
     from app.routers.adaptive_router import Loop, PlanIn, plan
 
     # Validate file type

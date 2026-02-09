@@ -1,23 +1,4 @@
-"""
-AI Platform LLM Client - Canonical Transport Layer
-
-This module provides HTTP transport for LLM API calls.
-It handles authentication, retries, timeouts, and raw request/response.
-
-Canonical LLM transport client.
-DATE: December 2025
-
-INVARIANTS:
-- This module must NOT import from domain modules (Vision, RMOS, etc.)
-- All external API calls go through this layer
-- Provider-specific logic lives in ai.providers.*
-
-Usage:
-    from app.ai.transport import get_llm_client
-
-    client = get_llm_client()
-    response = client.request_json(prompt="Generate rosette parameters...")
-"""
+"""AI Platform LLM Client - Canonical Transport Layer"""
 from __future__ import annotations
 
 import os
@@ -156,22 +137,7 @@ class LLMJsonResponse:
 # ---------------------------------------------------------------------------
 
 class LLMClient:
-    """
-    Low-level HTTP client for LLM API calls.
-
-    This class handles:
-    - HTTP transport (POST requests)
-    - Authentication headers
-    - Retries with exponential backoff
-    - Timeout handling
-    - Raw response parsing
-
-    It does NOT handle:
-    - Prompt templates or formatting
-    - Domain-specific output parsing
-    - Provider selection logic
-    - Business logic
-    """
+    """Low-level HTTP client for LLM API calls."""
 
     def __init__(self, config: Optional[LLMConfig] = None):
         if config is None:
@@ -324,25 +290,7 @@ class LLMClient:
         temperature: float = 0.7,
         max_tokens: int = 2048,
     ) -> LLMResponse:
-        """
-        Send a text completion request to the LLM API.
-
-        Args:
-            prompt: User prompt text
-            model: Model identifier (defaults to config.default_model)
-            system_prompt: Optional system prompt
-            temperature: Sampling temperature (0.0-2.0)
-            max_tokens: Maximum tokens in response
-
-        Returns:
-            LLMResponse with generated text
-
-        Raises:
-            LLMAuthError: Invalid API key
-            LLMTimeoutError: Request timed out
-            LLMRateLimitError: Rate limit exceeded
-            LLMClientError: Other API errors
-        """
+        """Send a text completion request to the LLM API."""
         if not self.is_configured:
             raise LLMAuthError(f"API key not configured for {self.config.provider}")
 
@@ -419,22 +367,7 @@ class LLMClient:
         temperature: float = 0.7,
         max_tokens: int = 2048,
     ) -> LLMJsonResponse:
-        """
-        Send a JSON-mode completion request to the LLM API.
-
-        Args:
-            prompt: User prompt text (should request JSON output)
-            model: Model identifier
-            system_prompt: Optional system prompt
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens in response
-
-        Returns:
-            LLMJsonResponse with parsed JSON data
-
-        Raises:
-            LLMResponseError: Response is not valid JSON
-        """
+        """Send a JSON-mode completion request to the LLM API."""
         # Add JSON instruction to system prompt
         json_system = (system_prompt or "") + "\nRespond with valid JSON only."
 

@@ -99,7 +99,7 @@ def get_les_paul_body_outline() -> Tuple[List[Tuple[float, float]], float, float
 
     try:
         # Try to load from body/detailed_outlines.py
-        from app.instrument_geometry.body.detailed_outlines import DETAILED_BODY_OUTLINES
+        from app.instrument_geometry.body.detailed_outlines import BODY_OUTLINES as DETAILED_BODY_OUTLINES
 
         if "les_paul" in DETAILED_BODY_OUTLINES:
             outline = DETAILED_BODY_OUTLINES["les_paul"]
