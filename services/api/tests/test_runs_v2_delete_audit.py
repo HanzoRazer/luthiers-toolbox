@@ -61,9 +61,12 @@ def runs_v2_store(tmp_path, monkeypatch):
     # Disable rate limiting for tests
     monkeypatch.setenv("RMOS_DELETE_RATE_LIMIT_MAX", "0")
 
+    # Clear store_api singleton BEFORE reload (the actual singleton lives there)
+    from app.rmos.runs_v2 import store_api
+    store_api._default_store = None
+
     # Reload store module to pick up new path
     from app.rmos.runs_v2 import store as store_module
-    store_module._default_store = None
     importlib.reload(store_module)
 
     return store_module
@@ -204,10 +207,15 @@ def test_rate_limiting(tmp_path, monkeypatch):
     monkeypatch.setenv("RMOS_DELETE_RATE_LIMIT_MAX", "2")
     monkeypatch.setenv("RMOS_DELETE_RATE_LIMIT_WINDOW", "60")
 
+    # Reload store_ratelimit to pick up new env vars (config read at import time)
+    from app.rmos.runs_v2 import store_ratelimit
+    importlib.reload(store_ratelimit)
+
+    # Clear store_api singleton BEFORE reload (the actual singleton lives there)
+    from app.rmos.runs_v2 import store_api
+    store_api._default_store = None
+
     from app.rmos.runs_v2 import store as store_module
-    store_module._default_store = None
-    # Clear rate limit state
-    store_module._DELETE_RATE_LIMIT.clear()
     importlib.reload(store_module)
 
     from app.rmos.runs_v2.store import DeleteRateLimitError
