@@ -26,14 +26,16 @@ Usage:
     reg.save_custom_tool({...})
 """
 
-from .registry import (
-    Registry,
+from .registry_config import (
     Edition,
     DataTier,
     ValidationError,
     EntitlementError,
+    EDITION_ENTITLEMENTS,
+)
+from .registry import (
+    Registry,
     get_registry,
-    EDITION_ENTITLEMENTS
 )
 
 __all__ = [

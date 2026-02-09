@@ -1,23 +1,5 @@
 #!/usr/bin/env python3
-"""
-Traditional Rosette Builder Interface
-
-A craftsman-friendly interface for the rosette pattern system.
-Uses traditional lutherie terminology and workflow:
-
-    Cut Strips → Glue Sticks → Slice Chips → Assemble Pattern
-
-This module wraps the pattern generator with terms familiar to
-traditional builders who learned from masters like Torres, Hauser,
-Romanillos, and other classical guitar makers.
-
-Terminology:
-    - Strip: A thin piece of veneer cut to width
-    - Stick: Multiple strips glued together (one row of the matrix)
-    - Chip: A thin slice cut from a stick
-    - Laminate: The assembled pattern before bending
-    - Channel: The routed groove in the guitar top
-"""
+"""Traditional Rosette Builder Interface"""
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
@@ -426,17 +408,7 @@ class TraditionalBuilder:
         as_ring: bool = False,
         num_repeats: int = 4,
     ) -> "Image.Image":
-        """
-        Render the actual pattern geometry.
-
-        Args:
-            pattern_id: Pattern to render
-            as_ring: If True, show as circular ring; if False, show matrix strip
-            num_repeats: For ring view, number of pattern repeats
-
-        Returns:
-            PIL Image showing the exact formula geometry
-        """
+        """Render the actual pattern geometry."""
         return self.renderer.render_preset(
             pattern_id,
             as_ring=as_ring,
@@ -463,35 +435,7 @@ class TraditionalBuilder:
         chip_length_mm: float = 2.0,
         notes: Optional[str] = None,
     ) -> MatrixFormula:
-        """
-        Create a custom matrix formula.
-
-        For traditional builders who want to design their own patterns
-        or recreate a pattern from a master they studied with.
-
-        Args:
-            name: Name for this pattern
-            rows: List of dicts like [{"black": 3, "white": 2}, ...]
-            column_sequence: Assembly order like [1, 2, 3, 2, 1]
-            strip_width_mm: Width of each strip
-            strip_thickness_mm: Thickness of veneer
-            chip_length_mm: Length when sliced
-            notes: Optional description
-
-        Returns:
-            MatrixFormula that can be used with create_project()
-
-        Example:
-            >>> builder = TraditionalBuilder()
-            >>> formula = builder.create_custom_formula(
-            ...     name="My Custom Pattern",
-            ...     rows=[
-            ...         {"ebony": 2, "holly": 3},
-            ...         {"ebony": 3, "holly": 2},
-            ...     ],
-            ...     column_sequence=[1, 2, 1, 2, 1],
-            ... )
-        """
+        """Create a custom matrix formula."""
         formula = MatrixFormula(
             name=name,
             rows=rows,

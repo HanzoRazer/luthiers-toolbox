@@ -1,94 +1,4 @@
-"""
-Adaptive Pocketing Engine - L.2 True Spiralizer + Adaptive Stepover
-
-Advanced adaptive pocket milling with continuous spiral toolpaths, intelligent
-corner handling, and curvature-aware tool engagement optimization.
-
-Module Purpose:
-    Extend L.1 robust offsetting with continuous spiral stitching (nearest-point
-    ring connections), adaptive local stepover modulation, automatic min-fillet
-    injection at sharp corners, and HUD overlay generation for visual analysis.
-
-Key Features:
-    - **True continuous spiral**: Single-pass toolpath via nearest-point stitching
-    - **Adaptive local stepover**: Automatic densification near curves and islands
-    - **Min-fillet injection**: Automatic arc insertion at sharp corners (prevents jerking)
-    - **HUD overlay system**: Visual annotations (tight radii, slowdown zones, fillets)
-    - **Curvature-based respacing**: Uniform tool engagement via adaptive point distribution
-    - **Per-move slowdown metadata**: Feed scaling factors embedded in move dicts
-    - **Heatmap visualization support**: Color-coded toolpath by speed
-
-Algorithm Overview:
-    1. Generate offset rings using L.1 robust offsetting (pyclipper)
-    2. Inject min-fillets at sharp corners (angle threshold, radius validation)
-    3. Apply adaptive local stepover (perimeter ratio heuristic near boundaries)
-    4. Stitch rings into true spiral (nearest-point connections minimize distance)
-    5. Curvature-based respacing (uniform engagement in tight zones)
-    6. Compute slowdown factors (feed reduction in overload segments)
-    7. Generate HUD overlays (tight radius markers, slowdown zones, fillet annotations)
-    8. Return toolpath with metadata (overlays, statistics, move-level slowdowns)
-
-Critical Safety Rules:
-    1. Corner radius MUST meet minimum threshold (typically 2-3mm for 6mm tool)
-    2. Feed slowdown REQUIRED in tight zones (typically 40-60% reduction)
-    3. Fillet radius MUST be validated before insertion (leg length check)
-    4. Adaptive stepover MUST maintain minimum spacing (0.3 × tool_d)
-    5. Curvature-based respacing maintains spacing bounds [0.5×, 2.0×] of target
-
-Validation Constants:
-    MIN_CORNER_RADIUS_MM = 0.5        # Minimum fillet radius (0.5mm)
-    MAX_CORNER_RADIUS_MM = 25.0       # Maximum fillet radius (25mm)
-    MIN_FEED_SLOWDOWN_PCT = 20.0      # Minimum feed reduction (20%)
-    MAX_FEED_SLOWDOWN_PCT = 80.0      # Maximum feed reduction (80%)
-    MIN_FEED_RATE_MM_MIN = 50.0       # Minimum feed rate (50 mm/min)
-    MAX_FEED_RATE_MM_MIN = 10000.0    # Maximum feed rate (10,000 mm/min)
-
-Integration Points:
-    - Used by: adaptive_router.py (/api/cam/pocket/adaptive/plan with L.2 params)
-    - Depends on: adaptive_core_l1 (offset stacks), adaptive_spiralizer_utils (curvature)
-    - Exports: plan_adaptive_l2 (main entry), inject_min_fillet, true_spiral_from_rings
-
-Performance Characteristics:
-    - Typical pocket (100×60mm, 6mm tool): ~180-220 moves (L.2 vs ~156 L.1)
-    - Fillet injection overhead: +5-10% moves for sharp corners
-    - Adaptive stepover densification: +10-20% moves near tight zones
-    - Curvature respacing: +15-25% moves for uniform engagement
-    - Memory: ~2-8 MB for typical pockets (path arrays + HUD data)
-
-Example Usage:
-    ```python
-    # Advanced spiral with min-fillets and adaptive stepover
-    outer = [(0, 0), (100, 0), (100, 60), (0, 60)]
-    path_pts, overlays = plan_adaptive_l2(
-        loops=[outer],
-        tool_d=6.0,
-        stepover=0.45,
-        stepdown=1.5,
-        margin=0.5,
-        strategy="Spiral",
-        smoothing=0.3,
-        corner_radius_min=2.5,           # Min-fillet threshold
-        target_stepover=0.4,             # Adaptive densification target
-        slowdown_feed_pct=40.0           # Feed reduction in tight zones
-    )
-    
-    # Overlays contain HUD markers:
-    # - tight_segments: [(idx, x, y, radius), ...]
-    # - slowdown_zones: [(start_idx, end_idx, factor), ...]
-    # - fillet_marks: [(idx, x, y, radius, "arc"), ...]
-    ```
-
-References:
-    - PATCH_L2_TRUE_SPIRALIZER.md: Original continuous spiral implementation
-    - PATCH_L2_MERGED_SUMMARY.md: Curvature-based respacing and heatmap docs
-    - ADAPTIVE_POCKETING_MODULE_L.md: Complete module documentation
-    - CODING_POLICY.md: Standards and safety rules applied
-
-Version: L.2 (True Spiralizer + Adaptive Stepover + Min-Fillet + HUD)
-Status: ✅ Production Ready
-Author: Luthier's Tool Box Team
-Date: November 2025
-"""
+"""Adaptive Pocketing Engine - L.2 True Spiralizer + Adaptive Stepover"""
 import math
 from typing import List, Tuple, Dict, Any, Optional, Union, Literal
 import pyclipper
@@ -121,21 +31,7 @@ MAX_FEED_RATE_MM_MIN: float = 10000.0    # Maximum feed rate (rapid traverse)
 # =============================================================================
 
 def _nearest_index(ring: List[Tuple[float, float]], pt: Tuple[float, float]) -> int:
-    """
-    Find index of nearest point in ring to given point.
-    
-    Args:
-        ring: List of (x, y) points forming a ring
-        pt: Target point (x, y)
-        
-    Returns:
-        Index of nearest point in ring
-        
-    Example:
-        >>> ring = [(0, 0), (10, 0), (10, 10), (0, 10)]
-        >>> _nearest_index(ring, (5, 5))
-        2  # Closest to (10, 10)
-    """
+    """Find index of nearest point in ring to given point."""
     from math import hypot
     return min(
         range(len(ring)),
@@ -147,24 +43,7 @@ def _closest_pair(
     a: List[Tuple[float, float]],
     b: List[Tuple[float, float]]
 ) -> Tuple[int, int]:
-    """
-    Find indices of closest point pair between two rings.
-    
-    Used for spiral stitching to minimize connection distance between rings.
-    
-    Args:
-        a: First ring (list of points)
-        b: Second ring (list of points)
-        
-    Returns:
-        Tuple of (index_in_a, index_in_b) for closest pair
-        
-    Example:
-        >>> a = [(0, 0), (10, 0)]
-        >>> b = [(5, 5), (15, 5)]
-        >>> _closest_pair(a, b)
-        (1, 0)  # (10, 0) closest to (5, 5)
-    """
+    """Find indices of closest point pair between two rings."""
     from math import hypot
     best = (0, 0, 1e18)  # (idx_a, idx_b, distance)
     
@@ -178,30 +57,7 @@ def _closest_pair(
 
 
 def _angle(p0: Tuple[float, float], p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
-    """
-    Calculate turn angle at p1 between vectors p0→p1 and p1→p2.
-    
-    Returns absolute angle in radians (0 to π).
-    
-    Args:
-        p0: Previous point
-        p1: Current point (vertex)
-        p2: Next point
-        
-    Returns:
-        Turn angle in radians (always positive)
-        
-    Example:
-        >>> p0, p1, p2 = (0, 0), (10, 0), (10, 10)
-        >>> angle = _angle(p0, p1, p2)
-        >>> abs(angle - math.pi/2) < 0.01  # 90° turn
-        True
-        
-    Notes:
-        - Returns 0 for straight lines
-        - Returns π for 180° reversals
-        - Used for corner detection in fillet injection
-    """
+    """Calculate turn angle at p1 between vectors p0→p1 and p1→p2."""
     ax, ay = p0[0] - p1[0], p0[1] - p1[1]
     bx, by = p2[0] - p1[0], p2[1] - p1[1]
     
@@ -228,41 +84,7 @@ def _fillet(
     p2: Tuple[float, float],
     R: float
 ) -> Optional[Tuple[Dict[str, Any], Tuple[float, float], Tuple[float, float]]]:
-    """
-    Generate arc fillet at corner with specified radius.
-    
-    Computes tangency points and arc parameters to smooth a sharp corner.
-    Uses geometric construction with bisector method.
-    
-    Args:
-        p0: Point before corner
-        p1: Corner vertex (will be replaced by arc)
-        p2: Point after corner
-        R: Desired fillet radius in mm
-        
-    Returns:
-        Tuple of (arc_dict, tangency_point1, tangency_point2) if valid, else None
-        - arc_dict: {'type': 'arc', 'cx': ..., 'cy': ..., 'r': ..., 'start': ..., 'end': ..., 'cw': bool}
-        - tangency_point1: Where arc starts on p0→p1 segment
-        - tangency_point2: Where arc ends on p1→p2 segment
-        
-    Returns None if:
-        - Angle too small (< 0.001 radians)
-        - Legs too short for fillet (t > 45% of leg length)
-        - Invalid geometry (degenerate vectors)
-        
-    Example:
-        >>> p0, p1, p2 = (0, 0), (10, 0), (10, 10)
-        >>> result = _fillet(p0, p1, p2, R=2.0)
-        >>> result is not None  # Valid fillet at 90° corner
-        True
-        
-    Notes:
-        - Uses numpy for vector operations (assumes import available)
-        - Automatically chooses shorter arc direction
-        - Returns angles in degrees for G2/G3 arc commands
-        - Fails gracefully for impossible filleting scenarios
-    """
+    """Generate arc fillet at corner with specified radius."""
     import numpy as np
     
     # Convert to numpy arrays for vector math
@@ -341,38 +163,7 @@ def inject_min_fillet(
     path: List[Tuple[float, float]],
     corner_radius_min: float
 ) -> Tuple[List[Union[Tuple[float, float], Dict[str, Any]]], List[Dict[str, Any]]]:
-    """
-    Insert arc fillets at sharp corners to prevent machine jerking.
-    
-    Analyzes each vertex in the path and injects fillet arcs where turn angles
-    exceed threshold. Helps maintain smooth tool motion and reduces wear on
-    CNC machine components.
-    
-    Args:
-        path: List of (x, y) points forming the toolpath
-        corner_radius_min: Minimum corner radius to enforce in mm (typically 2-3mm)
-        
-    Returns:
-        Tuple of (mixed_path, overlay_notes)
-        - mixed_path: List containing (x,y) points and arc dicts
-        - overlay_notes: List of HUD annotations for visualization
-        
-    Raises:
-        ValueError: If corner_radius_min out of valid range
-        
-    Example:
-        >>> path = [(0, 0), (10, 0), (10, 10), (0, 10)]
-        >>> mixed, overlays = inject_min_fillet(path, corner_radius_min=2.0)
-        >>> len([x for x in mixed if isinstance(x, dict)]) > 0  # Has arcs
-        True
-        
-    Notes:
-        - Only fillets turns < 160° (ignores near-straight segments)
-        - Automatically validates leg length before inserting fillet
-        - Returns original points if fillet impossible
-        - Mixed path contains both points (x,y) and arc dicts
-        - Overlay notes used for HUD visualization in UI
-    """
+    """Insert arc fillets at sharp corners to prevent machine jerking."""
     # Validate corner radius
     if not (MIN_CORNER_RADIUS_MM <= corner_radius_min <= MAX_CORNER_RADIUS_MM):
         raise ValueError(
@@ -428,42 +219,7 @@ def adaptive_local_stepover(
     target_stepover: float,
     tool_d: float
 ) -> List[List[Tuple[float, float]]]:
-    """
-    Adjust ring spacing based on local geometry complexity.
-    
-    Automatically densifies rings near tight curves or islands to maintain
-    consistent tool engagement. Uses perimeter ratio heuristic to detect
-    tight zones and inserts interpolated mid-rings.
-    
-    Args:
-        rings: List of offset rings (outermost to innermost)
-        target_stepover: Target stepover fraction (0.3-0.7)
-        tool_d: Tool diameter in mm
-        
-    Returns:
-        Adjusted ring list with adaptive spacing
-        
-    Raises:
-        ValueError: If target_stepover or tool_d out of valid range
-        
-    Example:
-        >>> rings = [[(0,0), (100,0), (100,60), (0,60)], [(5,5), (95,5), (95,55), (5,55)]]
-        >>> adjusted = adaptive_local_stepover(rings, target_stepover=0.45, tool_d=6.0)
-        >>> len(adjusted) >= len(rings)  # May have added mid-rings
-        True
-        
-    Notes:
-        - Densification triggered when perimeter ratio > 0.92 (tight zones)
-        - Inserts interpolated mid-ring between consecutive rings
-        - Maintains minimum stepover of 0.3 × tool_d
-        - Heuristic-based (perimeter comparison), not exact curvature
-        
-    Algorithm:
-        1. Compare consecutive ring perimeters
-        2. If ratio > 0.92, shape is shrinking slowly (tight zone)
-        3. Insert interpolated mid-ring for better coverage
-        4. Otherwise, keep original spacing
-    """
+    """Adjust ring spacing based on local geometry complexity."""
     # Validate inputs
     if not (MIN_STEPOVER <= target_stepover <= MAX_STEPOVER):
         raise ValueError(
@@ -524,40 +280,7 @@ def adaptive_local_stepover(
 def true_spiral_from_rings(
     rings: List[List[Tuple[float, float]]]
 ) -> List[Tuple[float, float]]:
-    """
-    Build continuous spiral toolpath by stitching rings with smooth connectors.
-    
-    Creates a single continuous path from outermost to innermost ring using
-    nearest-point connections. Eliminates retracts between rings for faster
-    machining and better surface finish.
-    
-    Args:
-        rings: List of offset rings (outermost first)
-        
-    Returns:
-        Continuous spiral path as list of (x, y) points
-        
-    Example:
-        >>> rings = [[(0,0), (10,0), (10,10), (0,10)], [(2,2), (8,2), (8,8), (2,8)]]
-        >>> spiral = true_spiral_from_rings(rings)
-        >>> len(spiral) == sum(len(r) for r in rings) + len(rings) - 1  # All points + connections
-        True
-        
-    Notes:
-        - Uses nearest-point stitching to minimize connection distance
-        - Each ring is traversed starting from connection point
-        - Single continuous toolpath (no Z retracts)
-        - Faster than Lanes strategy (discrete rings)
-        - Better surface finish (no witness marks from retracts)
-        
-    Algorithm:
-        1. Start with outermost ring
-        2. For each subsequent ring:
-           a. Find closest point to current endpoint
-           b. Add short connection segment
-           c. Traverse ring starting from connection point
-        3. Return complete continuous path
-    """
+    """Build continuous spiral toolpath by stitching rings with smooth connectors."""
     if not rings:
         return []
     
@@ -596,42 +319,7 @@ def analyze_overloads(
     feed_xy: float,
     slowdown_feed_pct: float
 ) -> List[Dict[str, Any]]:
-    """
-    Generate HUD overlay annotations for tight zones and feed slowdowns.
-    
-    Analyzes mixed path (points + arcs) to identify areas requiring special
-    attention: tight radii that may cause tool deflection and zones where
-    feed rate should be reduced for safety.
-    
-    Args:
-        path: Mixed path containing (x,y) points and arc dicts
-        tool_d: Tool diameter in mm
-        corner_radius_min: Minimum acceptable corner radius in mm
-        feed_xy: Nominal cutting feed rate in mm/min
-        slowdown_feed_pct: Feed reduction percentage for tight zones (20-80%)
-        
-    Returns:
-        List of HUD overlay annotations with kinds:
-        - 'tight_radius': Marks zones where radius < minimum
-        - 'slowdown': Suggests feed reductions around tight zones
-        
-    Raises:
-        ValueError: If feed_xy or slowdown_feed_pct out of valid range
-        
-    Example:
-        >>> path = [(0, 0), (10, 0), {'type': 'arc', 'cx': 10, 'cy': 5, 'r': 1.5}]
-        >>> overlays = analyze_overloads(path, tool_d=6.0, corner_radius_min=2.0, 
-        ...                              feed_xy=1200, slowdown_feed_pct=50.0)
-        >>> any(o['kind'] == 'tight_radius' for o in overlays)
-        True
-        
-    Notes:
-        - Explicit arcs checked against corner_radius_min directly
-        - Implicit corners inferred from turn angles using chord/tangent formula
-        - Slowdown annotations placed at vertices requiring feed reduction
-        - Used for HUD visualization in UI components
-        - Helps operators identify problematic toolpath zones
-    """
+    """Generate HUD overlay annotations for tight zones and feed slowdowns."""
     # Validate feed rate
     if not (MIN_FEED_RATE_MM_MIN <= feed_xy <= MAX_FEED_RATE_MM_MIN):
         raise ValueError(
@@ -715,67 +403,7 @@ def plan_adaptive_l2(
     feed_xy: float,
     slowdown_feed_pct: float
 ) -> Dict[str, Any]:
-    """
-    Plan adaptive pocket with L.2 advanced features.
-    
-    Combines robust offsetting (L.1) with continuous spiral stitching, adaptive
-    stepover, automatic fillet injection, and curvature-based respacing for
-    optimal tool engagement and surface finish.
-    
-    Features:
-    - Robust polygon offsetting with island handling (L.1)
-    - Adaptive local stepover (densification near tight zones)
-    - True continuous spiral (no retracts between rings)
-    - Curvature-based respacing (uniform engagement)
-    - Min-fillet injection (automatic arc insertion at corners)
-    - HUD overlays (tight radius markers + feed slowdown annotations)
-    
-    Args:
-        loops: List of polygons; first = outer boundary, rest = islands
-        tool_d: Tool diameter in mm (0.5-50.0)
-        stepover: Base stepover fraction (0.3-0.7)
-        stepdown: Depth per pass in mm (reserved for future)
-        margin: Clearance from boundaries in mm
-        strategy: "Spiral" (continuous) or "Lanes" (discrete)
-        smoothing_radius: Arc tolerance for offsetting in mm (0.05-1.0)
-        corner_radius_min: Minimum corner radius to enforce in mm (0.5-25.0)
-        target_stepover: Target stepover for adaptive algorithm (0.3-0.7)
-        feed_xy: Nominal cutting feed rate in mm/min (50-10000)
-        slowdown_feed_pct: Feed reduction % for tight zones (20-80)
-        
-    Returns:
-        Dict with keys:
-        - 'path': Mixed list of (x,y) points and arc dicts
-        - 'overlays': List of HUD annotations (tight_radius, slowdown, fillet)
-        - 'fillets': Count of inserted fillets
-        
-    Raises:
-        ValueError: If any parameter out of valid range
-        
-    Example:
-        >>> loops = [[(0, 0), (100, 0), (100, 60), (0, 60)]]
-        >>> result = plan_adaptive_l2(
-        ...     loops, tool_d=6.0, stepover=0.45, stepdown=1.5, margin=0.5,
-        ...     strategy="Spiral", smoothing_radius=0.3, corner_radius_min=2.0,
-        ...     target_stepover=0.45, feed_xy=1200, slowdown_feed_pct=50.0
-        ... )
-        >>> len(result['path']) > 0
-        True
-        >>> 'overlays' in result and 'fillets' in result
-        True
-        
-    Notes:
-        - All validations performed by called functions (composable design)
-        - Returns empty path if no valid offset rings generated
-        - Fillet count useful for reporting toolpath quality metrics
-        - Overlays used for HUD visualization in UI
-        - Curvature-based respacing uses 3× tool_d as threshold radius
-        
-    References:
-        - PATCH_L2_TRUE_SPIRALIZER.md for algorithm details
-        - PATCH_L2_MERGED_SUMMARY.md for curvature respacing
-        - CODING_POLICY.md Section "Critical Safety Rules"
-    """
+    """Plan adaptive pocket with L.2 advanced features."""
     # Generate robust offset rings (L.1)
     rings = build_offset_stacks_robust(
         loops[0],

@@ -1,49 +1,4 @@
-"""
-Financial Calculator - Luthier's ToolBox
-
-Time Value of Money (TVM) and business calculations.
-Modeled after HP-12C / TI BA II Plus behavior.
-
-TVM Variables:
-    N       Number of periods
-    I/Y     Interest rate per year (%)
-    PV      Present Value
-    PMT     Payment per period
-    FV      Future Value
-
-TVM Functions:
-    solve_fv()      Future Value
-    solve_pv()      Present Value  
-    solve_pmt()     Payment
-    solve_n()       Number of periods
-    solve_rate()    Interest rate
-
-Amortization:
-    amortization_schedule()     Full payment schedule
-    amortization_period()       Single period breakdown
-
-Depreciation:
-    straight_line()             SL depreciation
-    declining_balance()         DB depreciation
-    sum_of_years()              SYD depreciation
-
-Business:
-    markup()                    Cost to price
-    margin()                    Price to margin
-    breakeven()                 Units to break even
-
-Usage:
-    calc = FinancialCalculator()
-    
-    # Loan payment: $200,000 mortgage, 30 years, 6.5% APR
-    calc.n = 360        # months
-    calc.i_y = 6.5/12   # monthly rate
-    calc.pv = 200000
-    calc.fv = 0
-    payment = calc.solve_pmt()  # -1264.14
-
-Author: Luthier's ToolBox
-"""
+"""Financial Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -54,13 +9,7 @@ from .scientific_calculator import LTBScientificCalculator
 
 @dataclass
 class TVMState:
-    """
-    Time Value of Money register state.
-    
-    Sign convention (cash flow):
-        Positive = money received (inflow)
-        Negative = money paid out (outflow)
-    """
+    """Time Value of Money register state."""
     n: Optional[float] = None       # Number of periods
     i_y: Optional[float] = None     # Interest rate per period (%)
     pv: Optional[float] = None      # Present Value
@@ -83,27 +32,7 @@ class AmortizationRow:
 
 
 class LTBFinancialCalculator(LTBScientificCalculator):
-    """
-    Financial calculator with TVM and business functions.
-    
-    Example - Monthly mortgage payment:
-        >>> calc = FinancialCalculator()
-        >>> calc.n = 360          # 30 years * 12 months
-        >>> calc.i_y = 6.5 / 12   # 6.5% APR / 12 months
-        >>> calc.pv = 200000      # Loan amount
-        >>> calc.fv = 0           # Paid off at end
-        >>> calc.solve_pmt()
-        -1264.14
-        
-    Example - Investment growth:
-        >>> calc.clear_tvm()
-        >>> calc.n = 10           # 10 years
-        >>> calc.i_y = 7          # 7% annual return
-        >>> calc.pv = -10000      # Initial investment (outflow)
-        >>> calc.pmt = 0          # No additional contributions
-        >>> calc.solve_fv()
-        19671.51
-    """
+    """Financial calculator with TVM and business functions."""
     
     def __init__(self):
         super().__init__()
@@ -183,14 +112,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return 1 if self.tvm.begin_mode else 0
     
     def solve_fv(self) -> float:
-        """
-        Solve for Future Value.
-        
-        FV = -PV(1+i)^n - PMT * [(1+i)^n - 1] / i * (1 + i*type)
-        
-        Returns:
-            Future Value
-        """
+        """Solve for Future Value."""
         n = self.tvm.n
         i = self._get_rate()
         pv = self.tvm.pv or 0
@@ -214,14 +136,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return self.tvm.fv
     
     def solve_pv(self) -> float:
-        """
-        Solve for Present Value.
-        
-        PV = -FV / (1+i)^n - PMT * [1 - (1+i)^-n] / i * (1 + i*type)
-        
-        Returns:
-            Present Value
-        """
+        """Solve for Present Value."""
         n = self.tvm.n
         i = self._get_rate()
         pmt = self.tvm.pmt or 0
@@ -243,14 +158,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return self.tvm.pv
     
     def solve_pmt(self) -> float:
-        """
-        Solve for Payment.
-        
-        PMT = -(PV + FV / (1+i)^n) / ([1 - (1+i)^-n] / i * (1 + i*type))
-        
-        Returns:
-            Payment per period
-        """
+        """Solve for Payment."""
         n = self.tvm.n
         i = self._get_rate()
         pv = self.tvm.pv or 0
@@ -275,14 +183,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return self.tvm.pmt
     
     def solve_n(self) -> float:
-        """
-        Solve for Number of periods.
-        
-        Uses iterative approach for complex cases.
-        
-        Returns:
-            Number of periods
-        """
+        """Solve for Number of periods."""
         i = self._get_rate()
         pv = self.tvm.pv or 0
         pmt = self.tvm.pmt or 0
@@ -310,12 +211,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return self.tvm.n
     
     def solve_rate(self, max_iterations: int = 100, tolerance: float = 1e-10) -> float:
-        """
-        Solve for Interest Rate using Newton-Raphson iteration.
-        
-        Returns:
-            Interest rate per period (%)
-        """
+        """Solve for Interest Rate using Newton-Raphson iteration."""
         n = self.tvm.n
         pv = self.tvm.pv or 0
         pmt = self.tvm.pmt or 0
@@ -372,15 +268,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     # =========================================================================
     
     def amortization_schedule(self, periods: int = None) -> List[AmortizationRow]:
-        """
-        Generate full amortization schedule.
-        
-        Args:
-            periods: Number of periods (defaults to N)
-            
-        Returns:
-            List of AmortizationRow with payment breakdown
-        """
+        """Generate full amortization schedule."""
         n = periods or int(self.tvm.n or 0)
         i = self._get_rate()
         balance = abs(self.tvm.pv or 0)
@@ -407,15 +295,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return schedule
     
     def amortization_period(self, period: int) -> AmortizationRow:
-        """
-        Get amortization breakdown for specific period.
-        
-        Args:
-            period: Period number (1-based)
-            
-        Returns:
-            AmortizationRow for that period
-        """
+        """Get amortization breakdown for specific period."""
         schedule = self.amortization_schedule(period)
         if period <= len(schedule):
             return schedule[period - 1]
@@ -438,18 +318,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     # =========================================================================
     
     def straight_line(self, cost: float, salvage: float, life: int, period: int = None) -> float:
-        """
-        Straight-line depreciation.
-        
-        Args:
-            cost: Initial asset cost
-            salvage: Salvage value at end of life
-            life: Useful life in periods
-            period: Specific period (or None for annual amount)
-            
-        Returns:
-            Depreciation amount
-        """
+        """Straight-line depreciation."""
         if life <= 0:
             raise ValueError("Life must be positive")
         
@@ -458,19 +327,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     
     def declining_balance(self, cost: float, salvage: float, life: int, 
                           period: int, factor: float = 2.0) -> float:
-        """
-        Declining balance depreciation (default double declining).
-        
-        Args:
-            cost: Initial asset cost
-            salvage: Salvage value
-            life: Useful life in periods
-            period: Period to calculate (1-based)
-            factor: Declining factor (2.0 = double declining)
-            
-        Returns:
-            Depreciation for specified period
-        """
+        """Declining balance depreciation (default double declining)."""
         if life <= 0 or period <= 0:
             raise ValueError("Life and period must be positive")
         
@@ -492,18 +349,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return 0.0
     
     def sum_of_years(self, cost: float, salvage: float, life: int, period: int) -> float:
-        """
-        Sum-of-years-digits depreciation.
-        
-        Args:
-            cost: Initial asset cost
-            salvage: Salvage value
-            life: Useful life in periods
-            period: Period to calculate (1-based)
-            
-        Returns:
-            Depreciation for specified period
-        """
+        """Sum-of-years-digits depreciation."""
         if life <= 0 or period <= 0 or period > life:
             raise ValueError("Invalid life or period")
         
@@ -522,58 +368,26 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     # =========================================================================
     
     def markup(self, cost: float, markup_percent: float) -> float:
-        """
-        Calculate selling price from cost and markup percentage.
-        
-        Markup% = (Price - Cost) / Cost * 100
-        
-        Args:
-            cost: Product cost
-            markup_percent: Markup as percentage of cost
-            
-        Returns:
-            Selling price
-        """
+        """Calculate selling price from cost and markup percentage."""
         price = cost * (1 + markup_percent / 100)
         return round(price, 2)
     
     def markup_percent(self, cost: float, price: float) -> float:
-        """
-        Calculate markup percentage from cost and price.
-        
-        Returns:
-            Markup as percentage
-        """
+        """Calculate markup percentage from cost and price."""
         if cost == 0:
             raise ValueError("Cost cannot be zero")
         markup = ((price - cost) / cost) * 100
         return round(markup, 2)
     
     def margin(self, cost: float, margin_percent: float) -> float:
-        """
-        Calculate selling price from cost and margin percentage.
-        
-        Margin% = (Price - Cost) / Price * 100
-        
-        Args:
-            cost: Product cost
-            margin_percent: Margin as percentage of price
-            
-        Returns:
-            Selling price
-        """
+        """Calculate selling price from cost and margin percentage."""
         if margin_percent >= 100:
             raise ValueError("Margin cannot be >= 100%")
         price = cost / (1 - margin_percent / 100)
         return round(price, 2)
     
     def margin_percent(self, cost: float, price: float) -> float:
-        """
-        Calculate margin percentage from cost and price.
-        
-        Returns:
-            Margin as percentage
-        """
+        """Calculate margin percentage from cost and price."""
         if price == 0:
             raise ValueError("Price cannot be zero")
         margin = ((price - cost) / price) * 100
@@ -581,17 +395,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     
     def breakeven_units(self, fixed_costs: float, price: float, 
                         variable_cost: float) -> float:
-        """
-        Calculate break-even quantity.
-        
-        Args:
-            fixed_costs: Total fixed costs
-            price: Selling price per unit
-            variable_cost: Variable cost per unit
-            
-        Returns:
-            Number of units to break even
-        """
+        """Calculate break-even quantity."""
         contribution = price - variable_cost
         if contribution <= 0:
             raise ValueError("Price must exceed variable cost")
@@ -600,16 +404,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
         return math.ceil(units)  # Round up - can't sell partial units
     
     def breakeven_revenue(self, fixed_costs: float, margin_percent: float) -> float:
-        """
-        Calculate break-even revenue.
-        
-        Args:
-            fixed_costs: Total fixed costs
-            margin_percent: Gross margin percentage
-            
-        Returns:
-            Revenue needed to break even
-        """
+        """Calculate break-even revenue."""
         if margin_percent <= 0:
             raise ValueError("Margin must be positive")
         
@@ -622,16 +417,7 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     
     def nominal_to_effective(self, nominal_rate: float, 
                              compounds_per_year: int) -> float:
-        """
-        Convert nominal (APR) to effective annual rate (APY/EAR).
-        
-        Args:
-            nominal_rate: Nominal annual rate (%)
-            compounds_per_year: Compounding periods per year
-            
-        Returns:
-            Effective annual rate (%)
-        """
+        """Convert nominal (APR) to effective annual rate (APY/EAR)."""
         r = nominal_rate / 100
         n = compounds_per_year
         effective = ((1 + r/n) ** n - 1) * 100
@@ -639,312 +425,14 @@ class LTBFinancialCalculator(LTBScientificCalculator):
     
     def effective_to_nominal(self, effective_rate: float,
                              compounds_per_year: int) -> float:
-        """
-        Convert effective annual rate (APY) to nominal rate (APR).
-        
-        Args:
-            effective_rate: Effective annual rate (%)
-            compounds_per_year: Compounding periods per year
-            
-        Returns:
-            Nominal annual rate (%)
-        """
+        """Convert effective annual rate (APY) to nominal rate (APR)."""
         ear = effective_rate / 100
         n = compounds_per_year
         nominal = n * ((1 + ear) ** (1/n) - 1) * 100
         return round(nominal, 4)
 
 
-# =============================================================================
-# TESTS
-# =============================================================================
+# Tests and CLI REPL extracted to financial_calculator_cli.py
+# Backward-compatible re-exports:
+from .financial_calculator_cli import run_tests, calculator_repl  # noqa: F401
 
-def run_tests():
-    """Run financial calculator tests."""
-    calc = FinancialCalculator()
-    
-    tests_passed = 0
-    tests_failed = 0
-    
-    def test(name: str, expected: float, actual: float, tolerance: float = 0.01):
-        nonlocal tests_passed, tests_failed
-        if abs(expected - actual) < tolerance:
-            print(f"  ✓ {name}")
-            tests_passed += 1
-        else:
-            print(f"  ✗ {name}: expected {expected}, got {actual}")
-            tests_failed += 1
-    
-    print("\n=== Financial Calculator Tests ===\n")
-    
-    # -------------------------------------------------------------------------
-    # TVM: Mortgage Payment
-    # -------------------------------------------------------------------------
-    print("TVM - Mortgage Payment:")
-    print("  $200,000 loan, 30 years, 6.5% APR")
-    calc.clear_tvm()
-    calc.n = 360            # 30 years * 12 months
-    calc.i_y = 6.5 / 12     # Monthly rate
-    calc.pv = 200000        # Loan amount
-    calc.fv = 0             # Paid off
-    pmt = calc.solve_pmt()
-    test("Monthly payment = -$1,264.14", -1264.14, pmt, 0.01)
-    
-    # -------------------------------------------------------------------------
-    # TVM: Investment Growth
-    # -------------------------------------------------------------------------
-    print("\nTVM - Investment Growth:")
-    print("  $10,000 initial, 7% annual, 10 years")
-    calc.clear_tvm()
-    calc.n = 10
-    calc.i_y = 7
-    calc.pv = -10000        # Investment (outflow)
-    calc.pmt = 0
-    fv = calc.solve_fv()
-    test("Future value = $19,671.51", 19671.51, fv, 0.01)
-    
-    # -------------------------------------------------------------------------
-    # TVM: Solve for N
-    # -------------------------------------------------------------------------
-    print("\nTVM - Solve for N:")
-    print("  How long to double money at 8%?")
-    calc.clear_tvm()
-    calc.i_y = 8
-    calc.pv = -1000
-    calc.pmt = 0
-    calc.fv = 2000
-    n = calc.solve_n()
-    test("Years to double ≈ 9.01 (Rule of 72: 9)", 9.01, n, 0.1)
-    
-    # -------------------------------------------------------------------------
-    # TVM: Solve for Rate
-    # -------------------------------------------------------------------------
-    print("\nTVM - Solve for Rate:")
-    print("  $1,000 grows to $2,000 in 10 years, what rate?")
-    calc.clear_tvm()
-    calc.n = 10
-    calc.pv = -1000
-    calc.pmt = 0
-    calc.fv = 2000
-    rate = calc.solve_rate()
-    test("Interest rate ≈ 7.18%", 7.18, rate, 0.1)
-    
-    # -------------------------------------------------------------------------
-    # TVM: Car Loan
-    # -------------------------------------------------------------------------
-    print("\nTVM - Car Loan:")
-    print("  $25,000 loan, 5 years, 4.5% APR")
-    calc.clear_tvm()
-    calc.n = 60             # 5 years * 12
-    calc.i_y = 4.5 / 12     # Monthly
-    calc.pv = 25000
-    calc.fv = 0
-    pmt = calc.solve_pmt()
-    test("Monthly payment = -$465.85", -465.85, pmt, 0.01)
-    
-    # -------------------------------------------------------------------------
-    # Amortization
-    # -------------------------------------------------------------------------
-    print("\nAmortization:")
-    calc.clear_tvm()
-    calc.n = 360
-    calc.i_y = 6.5 / 12
-    calc.pv = 200000
-    calc.pmt = -1264.14
-    
-    row1 = calc.amortization_period(1)
-    test("Month 1 interest = $1,083.33", 1083.33, row1.interest, 0.01)
-    test("Month 1 principal = $180.81", 180.81, row1.principal, 0.01)
-    
-    total_int = calc.total_interest()
-    test("Total interest ≈ $255,088", 255088, total_int, 100)
-    
-    # -------------------------------------------------------------------------
-    # Depreciation
-    # -------------------------------------------------------------------------
-    print("\nDepreciation:")
-    print("  $10,000 asset, $1,000 salvage, 5 year life")
-    
-    sl = calc.straight_line(10000, 1000, 5)
-    test("Straight-line = $1,800/year", 1800, sl)
-    
-    ddb1 = calc.declining_balance(10000, 1000, 5, 1)
-    test("DDB year 1 = $4,000", 4000, ddb1)
-    
-    ddb2 = calc.declining_balance(10000, 1000, 5, 2)
-    test("DDB year 2 = $2,400", 2400, ddb2)
-    
-    syd1 = calc.sum_of_years(10000, 1000, 5, 1)
-    test("SYD year 1 = $3,000", 3000, syd1)
-    
-    syd5 = calc.sum_of_years(10000, 1000, 5, 5)
-    test("SYD year 5 = $600", 600, syd5)
-    
-    # -------------------------------------------------------------------------
-    # Business Calculations
-    # -------------------------------------------------------------------------
-    print("\nBusiness Calculations:")
-    
-    price = calc.markup(100, 50)
-    test("$100 cost + 50% markup = $150", 150, price)
-    
-    price = calc.margin(100, 40)
-    test("$100 cost + 40% margin = $166.67", 166.67, price, 0.01)
-    
-    units = calc.breakeven_units(50000, 25, 10)
-    test("Break-even: $50k fixed, $25 price, $10 var = 3,334 units", 3334, units)
-    
-    # -------------------------------------------------------------------------
-    # Interest Conversions
-    # -------------------------------------------------------------------------
-    print("\nInterest Conversions:")
-    
-    apy = calc.nominal_to_effective(12, 12)  # 12% APR, monthly
-    test("12% APR monthly → 12.68% APY", 12.68, apy, 0.01)
-    
-    apr = calc.effective_to_nominal(12.68, 12)
-    test("12.68% APY → 12% APR", 12.0, apr, 0.01)
-    
-    print(f"\n=== Results: {tests_passed} passed, {tests_failed} failed ===")
-    
-    return tests_failed == 0
-
-
-# =============================================================================
-# CLI
-# =============================================================================
-
-def calculator_repl():
-    """Interactive financial calculator."""
-    calc = FinancialCalculator()
-    
-    print("=" * 55)
-    print("Financial Calculator - Luthier's ToolBox")
-    print("=" * 55)
-    print("TVM Registers: n, i_y (rate%), pv, pmt, fv")
-    print("Solve: fv, pv, pmt, n, rate")
-    print("Commands: show (display registers), clear, amort, q")
-    print()
-    print("Example: n=360, i_y=0.5417, pv=200000, fv=0, pmt")
-    print()
-    
-    while True:
-        try:
-            user_input = input(f"[{calc.display}] fin> ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nGoodbye!")
-            break
-        
-        if not user_input:
-            continue
-        
-        cmd = user_input.lower()
-        
-        if cmd in ('q', 'quit', 'exit'):
-            break
-        
-        elif cmd in ('c', 'clear'):
-            calc.clear_tvm()
-            print("  TVM registers cleared")
-        
-        elif cmd in ('show', 'status', 'regs'):
-            print(f"  N   = {calc.n}")
-            print(f"  I/Y = {calc.i_y}%")
-            print(f"  PV  = {calc.pv}")
-            print(f"  PMT = {calc.pmt}")
-            print(f"  FV  = {calc.fv}")
-            print(f"  Mode: {'BEGIN' if calc.tvm.begin_mode else 'END'}")
-        
-        elif cmd == 'amort':
-            try:
-                schedule = calc.amortization_schedule()[:12]  # First 12 periods
-                print(f"  {'Per':>4} {'Payment':>10} {'Principal':>10} {'Interest':>10} {'Balance':>12}")
-                print("  " + "-" * 50)
-                for row in schedule:
-                    print(f"  {row.period:4d} {row.payment:10.2f} {row.principal:10.2f} "
-                          f"{row.interest:10.2f} {row.balance:12.2f}")
-                if calc.n and calc.n > 12:
-                    print(f"  ... ({int(calc.n) - 12} more periods)")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif cmd in ('fv', 'solvefv'):
-            try:
-                result = calc.solve_fv()
-                print(f"  FV = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif cmd in ('pv', 'solvepv'):
-            try:
-                result = calc.solve_pv()
-                print(f"  PV = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif cmd in ('pmt', 'solvepmt'):
-            try:
-                result = calc.solve_pmt()
-                print(f"  PMT = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif cmd in ('n', 'solven'):
-            try:
-                result = calc.solve_n()
-                print(f"  N = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif cmd in ('rate', 'solverate', 'i_y'):
-            try:
-                result = calc.solve_rate()
-                print(f"  I/Y = {result}%")
-            except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
-                print(f"  Error: {e}")
-        
-        elif '=' in user_input:
-            # Register assignment: n=360, i_y=6.5, etc.
-            try:
-                var, val = user_input.split('=', 1)
-                var = var.strip().lower()
-                val = float(val.strip())
-                
-                if var == 'n':
-                    calc.n = val
-                elif var in ('i_y', 'iy', 'i', 'rate'):
-                    calc.i_y = val
-                elif var == 'pv':
-                    calc.pv = val
-                elif var == 'pmt':
-                    calc.pmt = val
-                elif var == 'fv':
-                    calc.fv = val
-                else:
-                    print(f"  Unknown register: {var}")
-                    continue
-                
-                print(f"  {var.upper()} = {val}")
-            except ValueError as e:
-                print(f"  Error: {e}")
-        
-        else:
-            # Try as expression
-            result = calc.evaluate(user_input)
-            if calc.error:
-                print(f"  Error: {calc.error}")
-            else:
-                print(f"  = {result}")
-
-
-# =============================================================================
-# MAIN
-# =============================================================================
-
-if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        run_tests()
-    else:
-        calculator_repl()

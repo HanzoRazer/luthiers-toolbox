@@ -1,33 +1,4 @@
-"""
-Basic Calculator - Luthier's ToolBox
-
-A clean, working calculator modeled after Google/Android calculators.
-No frills, just solid math that works.
-
-Operations:
-    +  Addition
-    -  Subtraction
-    ×  Multiplication (*)
-    ÷  Division (/)
-    %  Percentage
-    ±  Negate
-    √  Square root
-    C  Clear all
-    CE Clear entry
-    ⌫  Backspace
-
-Usage:
-    calc = BasicCalculator()
-    calc.digit(5)
-    calc.operation('+')
-    calc.digit(3)
-    result = calc.equals()  # 8.0
-
-    # Or parse expression string:
-    result = calc.evaluate("5 + 3")  # 8.0
-
-Author: Luthier's ToolBox
-"""
+"""Basic Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -48,17 +19,7 @@ class Operation(Enum):
 
 @dataclass
 class CalculatorState:
-    """
-    Calculator internal state.
-
-    Models a standard calculator's memory:
-    - display: Current number being entered/displayed
-    - accumulator: Running result from previous operations
-    - pending_op: Operation waiting to be applied
-    - just_evaluated: True if equals was just pressed (for chain operations)
-    - error: Error message if something went wrong
-    - memory: Memory register for M+, M-, MR, MC functions
-    """
+    """Calculator internal state."""
     display: str = '0'
     accumulator: Optional[float] = None
     pending_op: Operation = Operation.NONE
@@ -76,22 +37,7 @@ class CalculatorState:
 
 
 class BasicCalculator:
-    """
-    Basic calculator with Google/Android-style behavior.
-    
-    Example:
-        >>> calc = BasicCalculator()
-        >>> calc.digit(1)
-        >>> calc.digit(2)
-        >>> calc.operation('+')
-        >>> calc.digit(3)
-        >>> calc.equals()
-        15.0
-        
-        >>> calc.clear()
-        >>> calc.evaluate("100 / 4")
-        25.0
-    """
+    """Basic calculator with Google/Android-style behavior."""
     
     MAX_DIGITS = 15  # Prevent overflow
     
@@ -104,15 +50,7 @@ class BasicCalculator:
     # =========================================================================
     
     def digit(self, d: int) -> 'BasicCalculator':
-        """
-        Enter a digit (0-9).
-
-        Args:
-            d: Single digit 0-9
-
-        Returns:
-            self for chaining
-        """
+        """Enter a digit (0-9)."""
         if not 0 <= d <= 9:
             return self
 
@@ -175,12 +113,7 @@ class BasicCalculator:
     # =========================================================================
     
     def operation(self, op: str) -> 'BasicCalculator':
-        """
-        Set pending operation (+, -, *, /).
-        
-        If there's already a pending operation, evaluate it first
-        (chain calculation).
-        """
+        """Set pending operation (+, -, *, /)."""
         self._clear_error()
         
         # Map operator strings
@@ -211,12 +144,7 @@ class BasicCalculator:
         return self
     
     def equals(self) -> float:
-        """
-        Evaluate pending operation and return result.
-        
-        Returns:
-            The calculated result
-        """
+        """Evaluate pending operation and return result."""
         self._clear_error()
         
         if self.state.pending_op == Operation.NONE:
@@ -288,14 +216,7 @@ class BasicCalculator:
         return self
     
     def percent(self) -> 'BasicCalculator':
-        """
-        Convert to percentage.
-        
-        Behavior depends on context:
-        - Standalone: divide by 100
-        - After operator: calculate percentage of accumulator
-          e.g., 200 + 10% = 200 + 20 = 220
-        """
+        """Convert to percentage."""
         self._clear_error()
         
         value = self.state.display_value
@@ -439,23 +360,7 @@ class BasicCalculator:
     # =========================================================================
     
     def evaluate(self, expression: str) -> float:
-        """
-        Evaluate a simple expression string.
-        
-        Supports: +, -, *, /, parentheses
-        
-        Args:
-            expression: Math expression like "5 + 3 * 2"
-            
-        Returns:
-            Calculated result
-            
-        Example:
-            >>> calc.evaluate("10 + 5 * 2")
-            20.0
-            >>> calc.evaluate("(10 + 5) * 2")
-            30.0
-        """
+        """Evaluate a simple expression string."""
         self.clear()
         
         # Sanitize input
@@ -521,191 +426,15 @@ class BasicCalculator:
 # CLI INTERFACE
 # =============================================================================
 
-def calculator_repl():
-    """Interactive calculator REPL."""
-    calc = BasicCalculator()
-    
-    print("=" * 40)
-    print("Basic Calculator - Luthier's ToolBox")
-    print("=" * 40)
-    print("Commands: digits, +, -, *, /, =, c(lear), q(uit)")
-    print("Or enter full expression: 5 + 3 * 2")
-    print()
-    
-    while True:
-        try:
-            user_input = input(f"[{calc.display}] > ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print("\nGoodbye!")
-            break
-        
-        if not user_input:
-            continue
-        
-        if user_input in ('q', 'quit', 'exit'):
-            print("Goodbye!")
-            break
-        
-        if user_input in ('c', 'clear'):
-            calc.clear()
-            continue
-        
-        if user_input == 'ce':
-            calc.clear_entry()
-            continue
-        
-        if user_input == 'h' or user_input == 'history':
-            for h in calc.history[-10:]:
-                print(f"  {h}")
-            continue
-        
-        # Check if it's a full expression
-        if any(op in user_input for op in ['+', '-', '*', '/', '(']) and len(user_input) > 2:
-            result = calc.evaluate(user_input)
-            if calc.error:
-                print(f"  Error: {calc.error}")
-            else:
-                print(f"  = {result}")
-            continue
-        
-        # Single character/token processing
-        for char in user_input:
-            if char.isdigit():
-                calc.digit(int(char))
-            elif char == '.':
-                calc.decimal()
-            elif char in '+-*/':
-                calc.operation(char)
-            elif char == '=':
-                result = calc.equals()
-                print(f"  = {result}")
-            elif char == '%':
-                calc.percent()
-            elif char == 'n':  # negate
-                calc.negate()
-            elif char == 'r':  # square root
-                calc.sqrt()
-                print(f"  = {calc.display}")
 
 
 # =============================================================================
 # TESTS
 # =============================================================================
 
-def run_tests():
-    """Run basic calculator tests."""
-    calc = BasicCalculator()
-    
-    tests_passed = 0
-    tests_failed = 0
-    
-    def test(name: str, expected, actual):
-        nonlocal tests_passed, tests_failed
-        if abs(expected - actual) < 1e-10:
-            print(f"  ✓ {name}")
-            tests_passed += 1
-        else:
-            print(f"  ✗ {name}: expected {expected}, got {actual}")
-            tests_failed += 1
-    
-    print("\n=== Basic Calculator Tests ===\n")
-    
-    # Basic operations
-    print("Addition:")
-    calc.clear()
-    calc.digit(5).operation('+').digit(3)
-    test("5 + 3 = 8", 8, calc.equals())
-    
-    print("\nSubtraction:")
-    calc.clear()
-    calc.digit(1).digit(0).operation('-').digit(4)
-    test("10 - 4 = 6", 6, calc.equals())
-    
-    print("\nMultiplication:")
-    calc.clear()
-    calc.digit(6).operation('*').digit(7)
-    test("6 × 7 = 42", 42, calc.equals())
-    
-    print("\nDivision:")
-    calc.clear()
-    calc.digit(2).digit(0).operation('/').digit(4)
-    test("20 ÷ 4 = 5", 5, calc.equals())
-    
-    # Decimals
-    print("\nDecimals:")
-    calc.clear()
-    calc.digit(3).decimal().digit(1).digit(4).operation('+').digit(2).decimal().digit(8).digit(6)
-    test("3.14 + 2.86 = 6", 6, calc.equals())
-    
-    # Chained operations
-    print("\nChained operations:")
-    calc.clear()
-    calc.digit(5).operation('+').digit(3).operation('*').digit(2)
-    test("5 + 3 * 2 = 16 (left-to-right)", 16, calc.equals())
-    
-    # Expression parsing (respects precedence)
-    print("\nExpression parsing:")
-    test("evaluate('5 + 3 * 2') = 11", 11, calc.evaluate("5 + 3 * 2"))
-    test("evaluate('(5 + 3) * 2') = 16", 16, calc.evaluate("(5 + 3) * 2"))
-    test("evaluate('100 / 4 / 5') = 5", 5, calc.evaluate("100 / 4 / 5"))
-    
-    # Percentage
-    print("\nPercentage:")
-    calc.clear()
-    calc.digit(2).digit(0).digit(0).percent()
-    test("200% = 2", 2, calc.value)
-    
-    calc.clear()
-    calc.digit(2).digit(0).digit(0).operation('+').digit(1).digit(0).percent()
-    test("200 + 10% → 10% of 200 = 20", 20, calc.value)
-    
-    # Square root
-    print("\nSquare root:")
-    calc.clear()
-    calc.digit(1).digit(6).sqrt()
-    test("√16 = 4", 4, calc.value)
-    
-    calc.clear()
-    calc.digit(2).sqrt()
-    test("√2 ≈ 1.414", 1.41421356, calc.value)
-    
-    # Negation
-    print("\nNegation:")
-    calc.clear()
-    calc.digit(5).negate()
-    test("-5", -5, calc.value)
-    calc.negate()
-    test("back to 5", 5, calc.value)
-    
-    # Division by zero
-    print("\nError handling:")
-    calc.clear()
-    calc.digit(5).operation('/').digit(0).equals()
-    print(f"  ✓ 5/0 error: {calc.error}" if calc.error else "  ✗ No error for 5/0")
-    
-    print(f"\n=== Results: {tests_passed} passed, {tests_failed} failed ===")
-    
-    return tests_failed == 0
 
 
 # =============================================================================
 # MAIN
 # =============================================================================
 
-if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'test':
-            run_tests()
-        else:
-            # Evaluate expression from command line
-            calc = BasicCalculator()
-            expr = ' '.join(sys.argv[1:])
-            result = calc.evaluate(expr)
-            if calc.error:
-                print(f"Error: {calc.error}")
-            else:
-                print(result)
-    else:
-        calculator_repl()

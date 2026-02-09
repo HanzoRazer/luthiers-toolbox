@@ -1,25 +1,5 @@
 #!/usr/bin/env python3
-"""
-Headstock Inlay Art Prompt Module
-
-AI image generation prompts for headstock designs and inlay artwork.
-Captures lutherie domain knowledge for consistent, high-quality renders.
-
-Headstock Styles:
-    - Les Paul (Gibson open-book)
-    - Stratocaster (Fender 6-in-line)
-    - Classical (slotted)
-    - Acoustic (Martin-style)
-    - PRS (curved)
-    - Custom shapes
-
-Inlay Designs:
-    - Birds (hummingbird, dove, eagle)
-    - Floral (rose, vine, tree of life)
-    - Geometric (diamond, split block)
-    - Custom artwork
-    - Logo/text
-"""
+"""Headstock Inlay Art Prompt Module"""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -257,30 +237,7 @@ def generate_headstock_prompt(
     background: str = "dark gradient studio",
     include_strings: bool = True,
 ) -> str:
-    """
-    Generate a detailed prompt for AI headstock image generation.
-
-    Args:
-        style: Headstock style (les_paul, stratocaster, classical, etc.)
-        headstock_wood: Wood species for headstock (mahogany, rosewood, etc.)
-        inlay_design: Inlay design name (hummingbird, rose, tree_of_life, etc.)
-        inlay_material: Material for inlay (maple, mother_of_pearl, abalone)
-        tuner_style: Tuner description (chrome vintage, gold Grover, etc.)
-        additional_details: Extra prompt details
-        background: Background description
-        include_strings: Whether to show strings
-
-    Returns:
-        Complete prompt string for image generation
-
-    Example:
-        >>> prompt = generate_headstock_prompt(
-        ...     style="les_paul",
-        ...     headstock_wood="mahogany",
-        ...     inlay_design="hummingbird",
-        ...     inlay_material="flame_maple",
-        ... )
-    """
+    """Generate a detailed prompt for AI headstock image generation."""
     # Get descriptions
     shape_desc = HEADSTOCK_SHAPES.get(style, HEADSTOCK_SHAPES.get("les_paul"))
     wood_desc = WOOD_DESCRIPTIONS.get(headstock_wood, f"{headstock_wood} wood")
@@ -334,21 +291,7 @@ def generate_inlay_prompt(
     size_description: str = "approximately 2 inches tall",
     style_notes: Optional[str] = None,
 ) -> str:
-    """
-    Generate a prompt for an isolated inlay design (not installed).
-
-    Useful for showing the inlay piece before installation, or for
-    creating design reference images.
-
-    Args:
-        design: Inlay design name
-        material: Inlay material
-        size_description: Size reference
-        style_notes: Additional style guidance
-
-    Returns:
-        Prompt string for isolated inlay image
-    """
+    """Generate a prompt for an isolated inlay design (not installed)."""
     design_desc = INLAY_DESIGNS.get(design, f"{design} design")
     material_desc = WOOD_DESCRIPTIONS.get(material, f"{material}")
 
@@ -521,18 +464,7 @@ INLAY_TEMPLATES: Dict[str, Dict] = {
 
 
 def get_template_prompt(template_name: str) -> str:
-    """
-    Generate a prompt from a pre-built template.
-
-    Args:
-        template_name: Key from HEADSTOCK_TEMPLATES
-
-    Returns:
-        Complete prompt string
-
-    Example:
-        >>> prompt = get_template_prompt("gibson_hummingbird")
-    """
+    """Generate a prompt from a pre-built template."""
     if template_name not in HEADSTOCK_TEMPLATES:
         available = ", ".join(HEADSTOCK_TEMPLATES.keys())
         raise ValueError(f"Unknown template '{template_name}'. Available: {available}")

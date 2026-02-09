@@ -1,88 +1,18 @@
-"""
-Learned Overrides System - 4-tuple lane-based parameter learning.
-
-Stores learned parameter adjustments organized by lane keys:
-Lane Key = (tool_id, material, mode, machine_profile)
-
-Features:
-- Timestamped overrides with source tracking
-- Merge logic: baseline + learned_override + lane_scale
-- Complete audit trail for all changes
-- Promotion from learned → preset
-- Multi-machine support
-
-Integrates with:
-- CP-S60 Live Learn Ingestor (telemetry → learned adjustments)
-- CP-S50 Saw Blade Registry (tool_id = blade_id)
-- Machine Profiles (machine_profile)
-- Feeds/Speeds baseline data
-"""
+"""Learned Overrides System - 4-tuple lane-based parameter learning."""
 
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-from pydantic import BaseModel, Field
-from enum import Enum
 
-
-# ============================================================================
-# Models
-# ============================================================================
-
-class OverrideSource(str, Enum):
-    """Source of override value."""
-    MANUAL = "manual"                   # Operator manual adjustment
-    AUTO_LEARN = "auto_learn"          # Learned from telemetry
-    OPERATOR_OVERRIDE = "operator_override"  # Operator one-time override
-    PROMOTED = "promoted"              # Promoted to preset
-    IMPORTED = "imported"              # Imported from external source
-
-
-class LaneKey(BaseModel):
-    """4-tuple lane identifier."""
-    tool_id: str                       # Blade ID from registry
-    material: str                      # Material family (hardwood, softwood, etc.)
-    mode: str                          # Operation mode (rip, crosscut, contour)
-    machine_profile: str               # Machine identifier
-
-
-class ParameterOverride(BaseModel):
-    """Single parameter override with metadata."""
-    param_name: str                    # feed_ipm, rpm, doc_mm, etc.
-    value: float                       # Override value
-    scale: float = 1.0                 # Multiplier relative to baseline
-    source: OverrideSource            # Where this came from
-    confidence: float = 1.0            # 0.0-1.0 confidence score
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    operator: Optional[str] = None     # Operator who made change
-    notes: Optional[str] = None
-
-
-class LaneOverrides(BaseModel):
-    """All overrides for a specific lane."""
-    lane_key: LaneKey
-    overrides: Dict[str, ParameterOverride] = {}  # param_name -> override
-    lane_scale: float = 1.0            # Overall lane adjustment factor
-    run_count: int = 0                 # Number of successful runs
-    success_rate: float = 1.0          # Success rate (0.0-1.0)
-    last_run: Optional[str] = None     # ISO timestamp of last run
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-
-
-class AuditEntry(BaseModel):
-    """Audit trail entry for override changes."""
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    lane_key: LaneKey
-    param_name: str
-    source: OverrideSource
-    prev_value: Optional[float]
-    new_value: float
-    prev_scale: Optional[float]
-    new_scale: float
-    operator: Optional[str] = None
-    reason: Optional[str] = None
+# Models extracted to learned_overrides_models.py (WP-3)
+from .learned_overrides_models import (
+    OverrideSource as OverrideSource,
+    LaneKey as LaneKey,
+    ParameterOverride as ParameterOverride,
+    LaneOverrides as LaneOverrides,
+    AuditEntry as AuditEntry,
+)
 
 
 # ============================================================================
@@ -93,12 +23,7 @@ class LearnedOverridesStore:
     """Centralized learned overrides storage and management."""
     
     def __init__(self, storage_path: Optional[Path] = None):
-        """
-        Initialize learned overrides store.
-        
-        Args:
-            storage_path: Path to JSON storage (default: app/data/cnc_production/learned_overrides.json)
-        """
+        """Initialize learned overrides store."""
         if storage_path is None:
             storage_path = Path(__file__).parent.parent.parent / "data" / "cnc_production" / "learned_overrides.json"
         
@@ -181,15 +106,7 @@ class LearnedOverridesStore:
     # ------------------------------------------------------------------------
     
     def get_lane(self, lane_key: LaneKey) -> Optional[LaneOverrides]:
-        """
-        Get overrides for specific lane.
-        
-        Args:
-            lane_key: 4-tuple lane identifier
-            
-        Returns:
-            LaneOverrides or None if lane doesn't exist
-        """
+        """Get overrides for specific lane."""
         lanes = self._load_lanes()
         lane_id = self._make_lane_id(lane_key)
         
@@ -199,15 +116,7 @@ class LearnedOverridesStore:
         return LaneOverrides(**lanes[lane_id])
     
     def create_lane(self, lane_key: LaneKey) -> LaneOverrides:
-        """
-        Create new lane with default values.
-        
-        Args:
-            lane_key: 4-tuple lane identifier
-            
-        Returns:
-            Created LaneOverrides
-        """
+        """Create new lane with default values."""
         lanes = self._load_lanes()
         lane_id = self._make_lane_id(lane_key)
         
@@ -232,18 +141,7 @@ class LearnedOverridesStore:
         mode: Optional[str] = None,
         machine_profile: Optional[str] = None
     ) -> List[LaneOverrides]:
-        """
-        List lanes matching filters.
-        
-        Args:
-            tool_id: Filter by tool ID
-            material: Filter by material
-            mode: Filter by mode
-            machine_profile: Filter by machine profile
-            
-        Returns:
-            List of matching lanes
-        """
+        """List lanes matching filters."""
         lanes = self._load_lanes()
         results = []
         
@@ -280,23 +178,7 @@ class LearnedOverridesStore:
         notes: Optional[str] = None,
         reason: Optional[str] = None
     ) -> ParameterOverride:
-        """
-        Set parameter override for lane.
-        
-        Args:
-            lane_key: 4-tuple lane identifier
-            param_name: Parameter name (feed_ipm, rpm, etc.)
-            value: New value
-            source: Override source
-            scale: Optional scale factor (computed if not provided)
-            confidence: Confidence score (0.0-1.0)
-            operator: Operator who made change
-            notes: Additional notes
-            reason: Reason for change (audit trail)
-            
-        Returns:
-            Created ParameterOverride
-        """
+        """Set parameter override for lane."""
         lanes = self._load_lanes()
         lane_id = self._make_lane_id(lane_key)
         
@@ -354,16 +236,7 @@ class LearnedOverridesStore:
         operator: Optional[str] = None,
         reason: Optional[str] = None
     ) -> None:
-        """
-        Update overall lane scale factor.
-        
-        Args:
-            lane_key: 4-tuple lane identifier
-            lane_scale: New lane scale (multiplier)
-            source: Source of change
-            operator: Operator who made change
-            reason: Reason for change
-        """
+        """Update overall lane scale factor."""
         lanes = self._load_lanes()
         lane_id = self._make_lane_id(lane_key)
         
@@ -395,13 +268,7 @@ class LearnedOverridesStore:
         lane_key: LaneKey,
         success: bool = True
     ) -> None:
-        """
-        Record successful run for lane.
-        
-        Args:
-            lane_key: 4-tuple lane identifier
-            success: Whether run was successful
-        """
+        """Record successful run for lane."""
         lanes = self._load_lanes()
         lane_id = self._make_lane_id(lane_key)
         
@@ -432,18 +299,7 @@ class LearnedOverridesStore:
         baseline: Dict[str, float],
         lane_key: LaneKey
     ) -> Dict[str, float]:
-        """
-        Merge baseline with learned overrides and lane scale.
-        
-        Formula: final = (baseline + learned_override) * lane_scale
-        
-        Args:
-            baseline: Baseline parameter values
-            lane_key: 4-tuple lane identifier
-            
-        Returns:
-            Merged parameter dictionary
-        """
+        """Merge baseline with learned overrides and lane scale."""
         lane = self.get_lane(lane_key)
         if lane is None:
             # No overrides, return baseline
@@ -475,17 +331,7 @@ class LearnedOverridesStore:
         baseline_value: float,
         lane_key: LaneKey
     ) -> Tuple[float, Dict[str, Any]]:
-        """
-        Get effective parameter value with metadata.
-        
-        Args:
-            param_name: Parameter name
-            baseline_value: Baseline value
-            lane_key: 4-tuple lane identifier
-            
-        Returns:
-            (effective_value, metadata_dict)
-        """
+        """Get effective parameter value with metadata."""
         lane = self.get_lane(lane_key)
         
         if lane is None:
@@ -537,17 +383,7 @@ class LearnedOverridesStore:
         param_name: Optional[str] = None,
         limit: int = 100
     ) -> List[AuditEntry]:
-        """
-        Get audit trail entries.
-        
-        Args:
-            lane_key: Filter by lane (optional)
-            param_name: Filter by parameter (optional)
-            limit: Maximum entries to return
-            
-        Returns:
-            List of audit entries (newest first)
-        """
+        """Get audit trail entries."""
         entries = self._load_audit()
         results = []
         
@@ -573,12 +409,7 @@ class LearnedOverridesStore:
         return results
     
     def get_statistics(self) -> Dict[str, Any]:
-        """
-        Get store statistics.
-        
-        Returns:
-            Statistics dictionary
-        """
+        """Get store statistics."""
         lanes = self._load_lanes()
         audit = self._load_audit()
         

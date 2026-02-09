@@ -1,17 +1,4 @@
-"""
-Workflow → Runs V2 Bridge
-
-Connects WorkflowSession state transitions to RunArtifact persistence.
-On significant state changes, creates immutable run artifacts for:
-- Audit trail
-- Diff viewer support
-- Index API queries
-
-Governance Compliance:
-- Every feasibility result → RunArtifact (event_type="feasibility")
-- Every approval → RunArtifact (event_type="approval")
-- Every toolpath generation → RunArtifact (event_type="toolpaths")
-"""
+"""Workflow → Runs V2 Bridge"""
 from __future__ import annotations
 
 import hashlib
@@ -39,6 +26,12 @@ from .state_machine import (
     RunArtifactRef,
     RiskBucket,
     RunStatus,
+)
+
+# Event handlers extracted to workflow_runs_bridge_events.py (WP-3)
+from .workflow_runs_bridge_events import (
+    handle_rejected,
+    handle_snapshot_saved,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,21 +73,7 @@ def _get_default_store() -> RunStoreV2:
 
 
 class WorkflowRunsBridge:
-    """
-    Bridge between WorkflowSession and RunArtifact persistence.
-    
-    Usage:
-        bridge = WorkflowRunsBridge()
-        
-        # After storing feasibility
-        artifact_ref = bridge.on_feasibility_stored(session)
-        
-        # After approval
-        artifact_ref = bridge.on_approved(session)
-        
-        # After toolpaths
-        artifact_ref = bridge.on_toolpaths_stored(session)
-    """
+    """Bridge between WorkflowSession and RunArtifact persistence."""
     
     def __init__(self, store: Optional[RunStoreV2] = None):
         self.store = store or _get_default_store()
@@ -311,17 +290,7 @@ class WorkflowRunsBridge:
         gcode_text: Optional[str] = None,
         request_id: Optional[str] = None,
     ) -> Optional[RunArtifactRef]:
-        """
-        Create RunArtifact when toolpaths are stored.
-        
-        Called after store_toolpaths() transition.
-        
-        Args:
-            session: The workflow session
-            toolpaths_data: Raw toolpath data for hashing
-            gcode_text: Generated G-code (inline if <= 200KB)
-            request_id: Correlation ID
-        """
+        """Create RunArtifact when toolpaths are stored."""
         if session.toolpaths is None:
             logger.warning("on_toolpaths_stored called but no toolpaths in session")
             return None
@@ -423,76 +392,14 @@ class WorkflowRunsBridge:
         reason: str,
         request_id: Optional[str] = None,
     ) -> Optional[RunArtifactRef]:
-        """
-        Create RunArtifact when session is rejected.
-        
-        Called after reject() transition.
-        """
-        feas_hash = "0" * 64  # Placeholder if no feasibility
-        feas_dict: Dict[str, Any] = {}
-        
-        if session.feasibility:
-            feas = session.feasibility
-            feas_dict = self._build_feasibility_dict(feas)
-            feas_hash = _sha256(feas_dict)
-            risk_level = _risk_bucket_to_level(feas.risk_bucket)
-            score = feas.score
-        else:
-            risk_level = "UNKNOWN"
-            score = None
-        
-        # Build decision
-        decision = RunDecision(
-            risk_level=risk_level,
-            score=score,
-            block_reason=reason,
-            warnings=[],
-            details={"rejected": True, "reason": reason},
-        )
-        
-        # Create artifact
-        run_id = create_run_id()
-        artifact = RunArtifact(
-            run_id=run_id,
-            mode=session.mode.value,
-            tool_id=session.index_meta.get("tool_id", "unknown"),
-            status="BLOCKED",
-            request_summary=self._build_request_summary(session),
-            feasibility=feas_dict,
-            decision=decision,
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            event_type="rejection",
-            workflow_session_id=session.session_id,
-            material_id=session.index_meta.get("material_id"),
-            machine_id=session.index_meta.get("machine_id"),
-            workflow_mode=session.mode.value,
-            meta={
-                "request_id": request_id,
-                "workflow_state": session.state.value,
-                "rejection_reason": reason,
-            },
-        )
-        
-        # Persist
-        try:
-            self.store.put(artifact)
-            logger.info(
-                "workflow_runs_bridge.rejection_persisted",
-                extra={
-                    "run_id": run_id,
-                    "session_id": session.session_id,
-                    "reason": reason,
-                }
-            )
-        except ValueError as e:
-            logger.error(f"Failed to persist rejection artifact: {e}")
-            return None
-        
-        return RunArtifactRef(
-            artifact_id=run_id,
-            kind="rejection",
-            status=RunStatus.BLOCKED,
-            meta={"reason": reason},
+        """Create RunArtifact when session is rejected."""
+        return handle_rejected(
+            self.store,
+            session,
+            reason=reason,
+            request_id=request_id,
+            build_request_summary=self._build_request_summary,
+            build_feasibility_dict=self._build_feasibility_dict,
         )
 
     def on_snapshot_saved(
@@ -505,92 +412,17 @@ class WorkflowRunsBridge:
         tags: Optional[list[str]] = None,
         request_id: Optional[str] = None,
     ) -> Optional[RunArtifactRef]:
-        """
-        Create RunArtifact when a session snapshot is saved.
-
-        Called from save-snapshot endpoint.
-        """
-        # Hash the snapshot data
-        snapshot_hash = _sha256(snapshot_data)
-
-        # Build feasibility info if available
-        feas_dict: Dict[str, Any] = {}
-        feas_hash = "0" * 64
-        risk_level = "UNKNOWN"
-        score = None
-
-        if session.feasibility:
-            feas = session.feasibility
-            feas_dict = self._build_feasibility_dict(feas)
-            feas_hash = _sha256(feas_dict)
-            risk_level = _risk_bucket_to_level(feas.risk_bucket)
-            score = feas.score
-
-        # Build decision
-        decision = RunDecision(
-            risk_level=risk_level,
-            score=score,
-            warnings=[],
-            details={
-                "snapshot_id": snapshot_id,
-                "snapshot_name": snapshot_name,
-                "tags": tags or [],
-            },
-        )
-
-        # Create artifact
-        run_id = create_run_id()
-        artifact = RunArtifact(
-            run_id=run_id,
-            mode=session.mode.value,
-            tool_id=session.index_meta.get("tool_id", "unknown"),
-            status="OK",
-            request_summary=self._build_request_summary(session),
-            feasibility=feas_dict,
-            decision=decision,
-            hashes=Hashes(
-                feasibility_sha256=feas_hash,
-                snapshot_sha256=snapshot_hash,
-            ),
-            event_type="snapshot",
-            workflow_session_id=session.session_id,
-            material_id=session.index_meta.get("material_id"),
-            machine_id=session.index_meta.get("machine_id"),
-            workflow_mode=session.mode.value,
-            meta={
-                "request_id": request_id,
-                "workflow_state": session.state.value,
-                "snapshot_id": snapshot_id,
-                "snapshot_name": snapshot_name,
-                "tags": tags or [],
-            },
-        )
-
-        # Persist
-        try:
-            self.store.put(artifact)
-            logger.info(
-                "workflow_runs_bridge.snapshot_persisted",
-                extra={
-                    "run_id": run_id,
-                    "session_id": session.session_id,
-                    "snapshot_id": snapshot_id,
-                    "snapshot_name": snapshot_name,
-                }
-            )
-        except ValueError as e:
-            logger.error(f"Failed to persist snapshot artifact: {e}")
-            return None
-
-        return RunArtifactRef(
-            artifact_id=run_id,
-            kind="snapshot",
-            status=RunStatus.OK,
-            meta={
-                "snapshot_id": snapshot_id,
-                "snapshot_name": snapshot_name,
-                "snapshot_hash": snapshot_hash,
-            },
+        """Create RunArtifact when a session snapshot is saved."""
+        return handle_snapshot_saved(
+            self.store,
+            session,
+            snapshot_id=snapshot_id,
+            snapshot_name=snapshot_name,
+            snapshot_data=snapshot_data,
+            tags=tags,
+            request_id=request_id,
+            build_request_summary=self._build_request_summary,
+            build_feasibility_dict=self._build_feasibility_dict,
         )
 
 

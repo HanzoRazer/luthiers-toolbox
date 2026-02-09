@@ -1,16 +1,4 @@
-"""
-Saw Lab 2.0 - Path Planner
-
-Plans cutting paths for saw blade operations.
-
-Contains:
-- NEW: Saw Path Planner 2.1 (function-based, RMOS 2.0 preferred API)
-  - SawPlannerConfig, SawCutOperation, SawCutPlan
-  - plan_saw_cuts_for_board() - main entry point
-  
-- LEGACY: SawPathPlanner class - kept for backward compatibility
-  - plan_cuts(), _plan_dado_cuts(), _plan_through_cuts()
-"""
+"""Saw Lab 2.0 - Path Planner"""
 from __future__ import annotations
 
 from typing import List, Dict, Any, Literal, Optional
@@ -31,10 +19,7 @@ CutType = Literal["RIP", "CROSSCUT", "TRIM", "OTHER"]
 
 
 class SawPlannerConfig(BaseModel):
-    """
-    Planner-level knobs for trim, scrap, and ordering behavior.
-    In the future this can be built from SawLabConfig or RMOS context.
-    """
+    """Planner-level knobs for trim, scrap, and ordering behavior."""
     leading_trim_mm: float = 0.0
     trailing_trim_mm: float = 0.0
     min_scrap_length_mm: float = 20.0
@@ -101,10 +86,7 @@ class SawMaterialSpec(BaseModel):
 
 
 class SawCutContext(BaseModel):
-    """
-    Context for 2.1 path planner.
-    Provides blade, material, and stock information.
-    """
+    """Context for 2.1 path planner."""
     blade: SawBladeSpec = Field(default_factory=SawBladeSpec)
     material: SawMaterialSpec = Field(default_factory=SawMaterialSpec)
     stock_length_mm: Optional[float] = None
@@ -112,10 +94,7 @@ class SawCutContext(BaseModel):
 
 
 class SawLabConfig(BaseModel):
-    """
-    Configuration for Saw Lab operations.
-    Can host planner defaults in the future.
-    """
+    """Configuration for Saw Lab operations."""
     default_safe_z_mm: float = 15.0
     default_feed_rate_mm_per_min: float = 3000.0
 
@@ -130,12 +109,7 @@ def _compute_basic_yield(
     kerf_mm: float,
     planner_cfg: SawPlannerConfig,
 ) -> tuple[bool, float, float, float, List[str]]:
-    """
-    Compute a trim-aware, kerf-aware, scrap-aware yield check.
-
-    Returns:
-        (is_feasible, total_piece_length_mm, total_kerf_loss_mm, scrap_length_mm, warnings[])
-    """
+    """Compute a trim-aware, kerf-aware, scrap-aware yield check."""
     warnings: List[str] = []
 
     if stock_length_mm <= 0.0:
@@ -265,17 +239,7 @@ def plan_saw_cuts_for_board(
     config: Optional[SawLabConfig] = None,
     planner_cfg: Optional[SawPlannerConfig] = None,
 ) -> SawCutPlan:
-    """
-    Saw Path Planner 2.1 – Single-board, trim + scrap + ordering.
-
-    Inputs:
-        - SawCutContext: blade, material, stock_length_mm, desired_piece_lengths_mm
-        - SawLabConfig: unused for now, can host defaults later
-        - SawPlannerConfig: trim, scrap, ordering knobs
-
-    Output:
-        - SawCutPlan: operations, stats, feasibility, warnings
-    """
+    """Saw Path Planner 2.1 – Single-board, trim + scrap + ordering."""
     config = config or SawLabConfig()
     planner_cfg = planner_cfg or SawPlannerConfig()
     
@@ -334,15 +298,7 @@ def plan_saw_cuts_for_board(
 
 
 class SawPathPlanner:
-    """
-    Plans cutting paths for saw operations.
-    
-    Considers:
-        - Cut order optimization
-        - Safe entry/exit paths
-        - Kerf compensation
-        - Repeated cut patterns
-    """
+    """Plans cutting paths for saw operations."""
     
     def __init__(self):
         self._geometry = SawGeometryEngine()
@@ -352,16 +308,7 @@ class SawPathPlanner:
         design: SawDesign,
         ctx: SawContext
     ) -> List[Dict[str, Any]]:
-        """
-        Plan the sequence of cuts for the operation.
-        
-        Args:
-            design: Cut design parameters
-            ctx: Saw context
-        
-        Returns:
-            List of cut path segments
-        """
+        """Plan the sequence of cuts for the operation."""
         segments = []
         
         # Get cut profile
@@ -493,16 +440,7 @@ class SawPathPlanner:
         segments: List[Dict[str, Any]],
         ctx: SawContext
     ) -> float:
-        """
-        Estimate total time for planned cuts.
-        
-        Args:
-            segments: Planned cut segments
-            ctx: Saw context
-        
-        Returns:
-            Estimated time in seconds
-        """
+        """Estimate total time for planned cuts."""
         time_seconds = 0.0
         rapid_feed = 10000.0  # mm/min for rapids
         

@@ -1,12 +1,4 @@
-"""
-Saw Lab Batch Toolpaths Service
-
-Generates toolpaths from a batch decision artifact.
-Enforces governance invariants:
-  - Server-side feasibility recompute before generating any toolpaths
-  - Artifacts written even on failures
-  - Parent execution artifact references all child artifacts + summary stats
-"""
+"""Saw Lab Batch Toolpaths Service"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -71,17 +63,7 @@ def _risk_and_score(feas_d: Dict[str, Any]) -> Tuple[str, float, List[str]]:
 
 
 def generate_batch_toolpaths_from_decision(*, batch_decision_artifact_id: str) -> Dict[str, Any]:
-    """
-    Reads saw_batch_decision -> saw_batch_plan -> executes chosen setup/op order.
-
-    For each op:
-      - server-side feasibility recompute (mandatory)
-      - if RED/BLOCKED => write child artifact status=BLOCKED, no toolpaths
-      - else generate toolpaths => write child artifact status=OK
-
-    Writes a parent saw_batch_execution artifact referencing all children.
-    Always persists artifacts even on errors.
-    """
+    """Reads saw_batch_decision -> saw_batch_plan -> executes chosen setup/op order."""
     from app.saw_lab import SawLabService
 
     svc = SawLabService()

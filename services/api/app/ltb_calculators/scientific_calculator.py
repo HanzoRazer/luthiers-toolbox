@@ -1,44 +1,4 @@
-"""
-Scientific Calculator - Luthier's ToolBox
-
-Extends BasicCalculator with scientific functions.
-Built for engineers who know that e^1 = 2.7182818285
-
-Functions:
-    Exponential:
-        e^x     Euler's number raised to x
-        10^x    10 raised to x
-        x^y     x raised to y power
-        
-    Logarithmic:
-        ln      Natural log (base e)
-        log     Common log (base 10)
-        
-    Trigonometric (radians by default):
-        sin, cos, tan
-        asin, acos, atan
-        
-    Other:
-        π       Pi constant
-        e       Euler's constant
-        x²      Square
-        x³      Cube
-        1/x     Reciprocal
-        n!      Factorial
-        abs     Absolute value
-
-Usage:
-    calc = ScientificCalculator()
-    
-    # The engineering sanity check
-    calc.exp()  # e^1 when display is 1
-    assert abs(calc.value - 2.7182818285) < 1e-9
-    
-    # Or:
-    result = calc.evaluate("e^1")  # 2.718281828459045
-
-Author: Luthier's ToolBox
-"""
+"""Scientific Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
 import math
@@ -48,32 +8,14 @@ from .basic_calculator import CalculatorState, Operation
 
 
 class LTBScientificCalculator(LTBFractionCalculator):
-    """
-    Scientific calculator extending BasicCalculator.
-    
-    Adds exponential, logarithmic, and trigonometric functions.
-    
-    Example:
-        >>> calc = ScientificCalculator()
-        >>> calc.digit(1).exp()  # e^1
-        >>> print(calc.display)
-        2.7182818285
-        
-        >>> calc.pi().operation('*').digit(2).equals()
-        6.283185307179586
-    """
+    """Scientific calculator extending BasicCalculator."""
     
     # Constants
     E = math.e       # 2.718281828459045
     PI = math.pi     # 3.141592653589793
     
     def __init__(self, angle_mode: str = 'rad'):
-        """
-        Initialize scientific calculator.
-        
-        Args:
-            angle_mode: 'rad' for radians (default), 'deg' for degrees
-        """
+        """Initialize scientific calculator."""
         super().__init__()
         self.angle_mode = angle_mode  # 'rad' or 'deg'
     
@@ -100,12 +42,7 @@ class LTBScientificCalculator(LTBFractionCalculator):
     # =========================================================================
     
     def exp(self) -> 'LTBScientificCalculator':
-        """
-        Calculate e^x (Euler's number raised to display value).
-        
-        The classic engineering sanity check:
-            calc.digit(1).exp() should give 2.7182818285
-        """
+        """Calculate e^x (Euler's number raised to display value)."""
         self._clear_error()
         x = self.state.display_value
         
@@ -368,18 +305,7 @@ class LTBScientificCalculator(LTBFractionCalculator):
     # =========================================================================
     
     def evaluate(self, expression: str) -> float:
-        """
-        Evaluate expression with scientific functions.
-        
-        Supports: +, -, *, /, ^, sqrt(), sin(), cos(), tan(), 
-                  ln(), log(), e, pi, exp()
-        
-        Examples:
-            calc.evaluate("e^1")           # 2.718281828459045
-            calc.evaluate("sin(pi/2)")     # 1.0
-            calc.evaluate("log(100)")      # 2.0
-            calc.evaluate("2^10")          # 1024.0
-        """
+        """Evaluate expression with scientific functions."""
         self.clear()
         
         # Preprocess expression
@@ -473,183 +399,15 @@ def sanity_check() -> bool:
 # TESTS
 # =============================================================================
 
-def run_tests():
-    """Run scientific calculator tests."""
-    calc = ScientificCalculator()
-    
-    tests_passed = 0
-    tests_failed = 0
-    
-    def test(name: str, expected: float, actual: float, tolerance: float = 1e-9):
-        nonlocal tests_passed, tests_failed
-        if abs(expected - actual) < tolerance:
-            print(f"  ✓ {name}")
-            tests_passed += 1
-        else:
-            print(f"  ✗ {name}: expected {expected}, got {actual}")
-            tests_failed += 1
-    
-    print("\n=== Scientific Calculator Tests ===\n")
-    
-    # Sanity check first
-    if not sanity_check():
-        print("FAILED: Basic sanity check failed!")
-        return False
-    
-    # Constants
-    print("Constants:")
-    calc.pi()
-    test("π = 3.14159...", math.pi, calc.value)
-    calc.euler()
-    test("e = 2.71828...", math.e, calc.value)
-    
-    # Exponential
-    print("\nExponential:")
-    calc.clear().digit(2).exp()
-    test("e^2 = 7.389...", math.exp(2), calc.value)
-    
-    calc.clear().digit(3).pow10()
-    test("10^3 = 1000", 1000, calc.value)
-    
-    calc.clear().digit(2).power(10)
-    test("2^10 = 1024", 1024, calc.value)
-    
-    calc.clear().digit(5).square()
-    test("5² = 25", 25, calc.value)
-    
-    calc.clear().digit(3).cube()
-    test("3³ = 27", 27, calc.value)
-    
-    # Logarithmic
-    print("\nLogarithmic:")
-    test("ln(e) = 1", 1, calc.evaluate("ln(e)"))
-    test("ln(e^2) = 2", 2, calc.evaluate("ln(exp(2))"))
-    test("log(100) = 2", 2, calc.evaluate("log(100)"))
-    test("log(1000) = 3", 3, calc.evaluate("log(1000)"))
-    
-    # Trigonometric (radians)
-    print("\nTrig (radians):")
-    calc.set_radians()
-    test("sin(π/2) = 1", 1, calc.evaluate("sin(pi/2)"))
-    test("cos(π) = -1", -1, calc.evaluate("cos(pi)"))
-    test("tan(π/4) = 1", 1, calc.evaluate("tan(pi/4)"))
-    
-    # Trigonometric (degrees)
-    print("\nTrig (degrees):")
-    calc.set_degrees()
-    calc.clear().digit(9).digit(0).sin()
-    test("sin(90°) = 1", 1, calc.value)
-    calc.clear().digit(1).digit(8).digit(0).cos()
-    test("cos(180°) = -1", -1, calc.value)
-    calc.clear().digit(4).digit(5).tan()
-    test("tan(45°) = 1", 1, calc.value)
-    
-    # Inverse trig
-    print("\nInverse trig (degrees):")
-    calc.set_degrees()
-    calc.clear().digit(1).asin()
-    test("asin(1) = 90°", 90, calc.value)
-    calc.clear().digit(0).acos()
-    test("acos(0) = 90°", 90, calc.value)
-    
-    # Other functions
-    print("\nOther functions:")
-    calc.clear().digit(5).factorial()
-    test("5! = 120", 120, calc.value)
-    
-    calc.clear().digit(4).reciprocal()
-    test("1/4 = 0.25", 0.25, calc.value)
-    
-    calc.clear().digit(5).negate().abs_val()
-    test("|-5| = 5", 5, calc.value)
-    
-    # Expression parsing
-    print("\nExpression parsing:")
-    test("2**10 = 1024", 1024, calc.evaluate("2**10"))
-    test("sqrt(144) = 12", 12, calc.evaluate("sqrt(144)"))
-    test("e^0 = 1", 1, calc.evaluate("e**0"))
-    
-    print(f"\n=== Results: {tests_passed} passed, {tests_failed} failed ===")
-    
-    return tests_failed == 0
 
 
 # =============================================================================
 # CLI
 # =============================================================================
 
-def calculator_repl():
-    """Interactive scientific calculator REPL."""
-    calc = ScientificCalculator()
-    
-    print("=" * 50)
-    print("Scientific Calculator - Luthier's ToolBox")
-    print("=" * 50)
-    print("Functions: sin cos tan asin acos atan")
-    print("           ln log exp sqrt pi e")
-    print("           ^ (power), ! (factorial)")
-    print(f"Angle mode: {calc.angle_mode}")
-    print("Commands: deg/rad (toggle), c (clear), q (quit)")
-    print()
-    
-    while True:
-        mode_indicator = "DEG" if calc.angle_mode == 'deg' else "RAD"
-        try:
-            user_input = input(f"[{calc.display}] ({mode_indicator}) > ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nGoodbye!")
-            break
-        
-        if not user_input:
-            continue
-        
-        cmd = user_input.lower()
-        
-        if cmd in ('q', 'quit', 'exit'):
-            break
-        elif cmd in ('c', 'clear'):
-            calc.clear()
-        elif cmd in ('deg', 'degrees'):
-            calc.set_degrees()
-            print(f"  Angle mode: degrees")
-        elif cmd in ('rad', 'radians'):
-            calc.set_radians()
-            print(f"  Angle mode: radians")
-        elif cmd == 'pi':
-            calc.pi()
-        elif cmd == 'e':
-            calc.euler()
-        elif cmd == 'sanity':
-            sanity_check()
-        else:
-            # Try to evaluate as expression
-            result = calc.evaluate(user_input)
-            if calc.error:
-                print(f"  Error: {calc.error}")
-            else:
-                print(f"  = {result}")
 
 
 # =============================================================================
 # MAIN
 # =============================================================================
 
-if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'test':
-            run_tests()
-        elif sys.argv[1] == 'sanity':
-            sanity_check()
-        else:
-            # Evaluate expression
-            calc = ScientificCalculator()
-            expr = ' '.join(sys.argv[1:])
-            result = calc.evaluate(expr)
-            if calc.error:
-                print(f"Error: {calc.error}")
-            else:
-                print(result)
-    else:
-        calculator_repl()

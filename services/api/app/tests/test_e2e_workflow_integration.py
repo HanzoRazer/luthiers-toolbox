@@ -1,26 +1,5 @@
 #!/usr/bin/env python3
-"""
-End-to-End Integration Test: Workflow → Feasibility → Approval → Toolpaths → Artifacts
-
-Tests the complete chain:
-1. Create workflow session (design-first mode)
-2. Set design parameters (rosette spec)
-3. Set context (tool, material, machine)
-4. Request and store feasibility evaluation
-5. Approve the design
-6. Request and store toolpaths
-7. Verify run artifact chain in database
-
-Run standalone:
-    python -m tests.test_e2e_workflow_integration
-
-Run with pytest:
-    pytest tests/test_e2e_workflow_integration.py -v
-
-Requires:
-    - SQLite database (created automatically)
-    - No external services (all in-memory/mocked)
-"""
+"""End-to-End Integration Test: Workflow → Feasibility → Approval → Toolpaths → Artifacts"""
 from __future__ import annotations
 
 import hashlib
@@ -133,15 +112,7 @@ class TestEndToEndWorkflowIntegration:
     """End-to-end test of workflow → artifact chain."""
     
     def test_complete_workflow_chain(self, db_session):
-        """
-        Test the complete chain:
-        1. Create workflow session
-        2. Set design and context
-        3. Store feasibility
-        4. Approve
-        5. Store toolpaths
-        6. Verify artifacts
-        """
+        """Test the complete chain:"""
         from app.workflow.state_machine import (
             WorkflowSession,
             WorkflowMode,

@@ -1,23 +1,4 @@
-"""
-RMOS Operation Adapter - Canonical Pattern Wrapper
-
-LANE: OPERATION (governance-compliant)
-Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
-
-This adapter wraps Bundle 01-03, 07 code to use canonical runs_v2 patterns:
-- RunArtifact + persist_run() for artifact persistence
-- create_run_id() for run ID generation
-- sha256_of_obj() for deterministic hashing
-- Proper event_type convention: {tool_id}_{operation}_{status}
-
-All six governance checks are enforced:
-1. Feasibility gate (blocks on RED/UNKNOWN risk)
-2. Canonical artifact pattern (RunArtifact + persist_run)
-3. Event type convention ({tool_id}_{operation}_execution/blocked/planned)
-4. No new request schema shapes
-5. Clean router mount patterns
-6. Tests included in test_operations_adapter.py
-"""
+"""RMOS Operation Adapter - Canonical Pattern Wrapper"""
 
 from __future__ import annotations
 
@@ -55,11 +36,7 @@ PlanStatus = Literal["PLANNED", "BLOCKED", "ERROR"]
 
 
 class OperationRequest(BaseModel):
-    """
-    Canonical request for operation execution.
-
-    Maps to Bundle 01-03 request format but enforces governance.
-    """
+    """Canonical request for operation execution."""
     tool_id: str = Field(..., description="Tool identifier (e.g., 'saw_v1', 'cam_roughing_v1')")
     mode: str = Field(..., description="Operation mode (e.g., 'saw', 'cam', 'roughing')")
     cam_intent_v1: Dict[str, Any] = Field(..., description="CAM intent payload")
@@ -84,11 +61,7 @@ class OperationResult(BaseModel):
 
 
 class PlanRequest(BaseModel):
-    """
-    Canonical request for operation planning.
-
-    Maps to Bundle 07 request format.
-    """
+    """Canonical request for operation planning."""
     tool_id: str = Field(..., description="Tool identifier")
     mode: str = Field(..., description="Operation mode")
     cam_intent_v1: Dict[str, Any] = Field(..., description="CAM intent payload")
@@ -113,14 +86,7 @@ class PlanResult(BaseModel):
 # =============================================================================
 
 class ToolAdapter(Protocol):
-    """
-    Protocol for tool-specific adapters (saw, cam_roughing, etc.)
-
-    Each tool type implements this to provide:
-    - Feasibility computation
-    - G-code generation
-    - Plan generation
-    """
+    """Protocol for tool-specific adapters (saw, cam_roughing, etc.)"""
 
     def compute_feasibility(
         self,
@@ -167,12 +133,7 @@ def extract_risk_level(feasibility: Dict[str, Any]) -> RiskLevel:
 
 
 def should_block(risk_level: RiskLevel) -> bool:
-    """
-    Determine if operation should be blocked based on risk.
-
-    Blocks on: RED, UNKNOWN, ERROR
-    Allows: GREEN, YELLOW
-    """
+    """Determine if operation should be blocked based on risk."""
     return risk_level in ("RED", "UNKNOWN", "ERROR")
 
 
@@ -192,16 +153,7 @@ def get_block_reason(risk_level: RiskLevel, feasibility: Dict[str, Any]) -> str:
 # =============================================================================
 
 def make_event_type(tool_id: str, operation: str, status: str) -> str:
-    """
-    Generate canonical event type.
-
-    Pattern: {tool_id}_{operation}_{status}
-
-    Examples:
-        - saw_v1_execution_ok
-        - saw_v1_execution_blocked
-        - cam_roughing_v1_plan_planned
-    """
+    """Generate canonical event type."""
     # Normalize tool_id (remove version suffix for grouping)
     tool_base = tool_id.lower().replace("-", "_")
     op = operation.lower().replace("-", "_")
@@ -214,38 +166,14 @@ def make_event_type(tool_id: str, operation: str, status: str) -> str:
 # =============================================================================
 
 class OperationAdapter:
-    """
-    Adapter that wraps tool-specific logic with governance compliance.
-
-    Enforces:
-    1. Feasibility gate (blocks RED/UNKNOWN)
-    2. Canonical artifact persistence (RunArtifact + persist_run)
-    3. Proper event_type naming
-    4. SHA256 hashing for audit
-    """
+    """Adapter that wraps tool-specific logic with governance compliance."""
 
     def __init__(self, tool_adapter: Optional[ToolAdapter] = None):
-        """
-        Initialize adapter with optional tool-specific implementation.
-
-        Args:
-            tool_adapter: Tool-specific adapter for feasibility/gcode generation
-        """
+        """Initialize adapter with optional tool-specific implementation."""
         self.tool_adapter = tool_adapter
 
     def execute(self, request: OperationRequest) -> OperationResult:
-        """
-        Execute an operation with full governance compliance.
-
-        Steps:
-        1. Generate run_id
-        2. Compute feasibility hash
-        3. Check feasibility gate (block if RED/UNKNOWN)
-        4. Generate G-code (if allowed)
-        5. Create RunArtifact with proper event_type
-        6. Persist using canonical pattern
-        7. Return result
-        """
+        """Execute an operation with full governance compliance."""
         run_id = create_run_id()
 
         # Extract and validate feasibility
@@ -381,12 +309,7 @@ class OperationAdapter:
         )
 
     def plan(self, request: PlanRequest) -> PlanResult:
-        """
-        Create a plan artifact (pre-execution).
-
-        Plans don't generate G-code - they capture intent and feasibility
-        for later execution with lineage tracking.
-        """
+        """Create a plan artifact (pre-execution)."""
         run_id = create_run_id()
 
         # Compute or use provided feasibility
@@ -499,24 +422,7 @@ def execute_operation(
     tool_adapter: Optional[ToolAdapter] = None,
     meta: Optional[Dict[str, Any]] = None,
 ) -> OperationResult:
-    """
-    Execute an operation with governance compliance.
-
-    This is the main entry point for Bundle 01-03.
-
-    Args:
-        tool_id: Tool identifier (e.g., 'saw_v1')
-        mode: Operation mode (e.g., 'saw')
-        cam_intent_v1: CAM intent payload
-        feasibility: Server-computed feasibility
-        request_id: Optional correlation ID
-        parent_plan_run_id: Optional parent plan for lineage
-        tool_adapter: Optional tool-specific adapter
-        meta: Optional additional metadata
-
-    Returns:
-        OperationResult with run_id, status, and outputs
-    """
+    """Execute an operation with governance compliance."""
     request = OperationRequest(
         tool_id=tool_id,
         mode=mode,
@@ -541,23 +447,7 @@ def plan_operation(
     tool_adapter: Optional[ToolAdapter] = None,
     meta: Optional[Dict[str, Any]] = None,
 ) -> PlanResult:
-    """
-    Create an operation plan with governance compliance.
-
-    This is the main entry point for Bundle 07 (plan endpoints).
-
-    Args:
-        tool_id: Tool identifier
-        mode: Operation mode
-        cam_intent_v1: CAM intent payload
-        feasibility: Optional pre-computed feasibility
-        request_id: Optional correlation ID
-        tool_adapter: Optional tool-specific adapter
-        meta: Optional additional metadata
-
-    Returns:
-        PlanResult with run_id, status, and plan data
-    """
+    """Create an operation plan with governance compliance."""
     request = PlanRequest(
         tool_id=tool_id,
         mode=mode,

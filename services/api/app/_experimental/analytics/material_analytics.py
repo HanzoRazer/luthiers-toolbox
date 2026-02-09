@@ -180,17 +180,7 @@ class MaterialAnalytics:
         }
     
     def get_strip_consumption_by_material(self) -> Dict[str, Any]:
-        """
-        Calculate total strip consumption per material type.
-        
-        Aggregates:
-        - Total strip count
-        - Total length (if available)
-        - Average strip dimensions
-        
-        Returns:
-            Consumption statistics per material
-        """
+        """Calculate total strip consumption per material type."""
         families = self.stores.strip_families.get_all()
         
         material_stats = defaultdict(lambda: {
@@ -244,17 +234,7 @@ class MaterialAnalytics:
         }
     
     def get_material_efficiency(self) -> Dict[str, Any]:
-        """
-        Calculate material efficiency based on job results.
-        
-        Analyzes:
-        - Waste percentage per material
-        - Successful cuts vs failed
-        - Material utilization rates
-        
-        Returns:
-            Efficiency metrics per material type
-        """
+        """Calculate material efficiency based on job results."""
         families = self.stores.strip_families.get_all()
         joblogs = self.stores.joblogs.get_all()
         

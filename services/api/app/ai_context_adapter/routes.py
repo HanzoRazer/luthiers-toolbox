@@ -1,21 +1,5 @@
 # services/api/app/ai_context_adapter/routes.py
-"""
-AI Context Adapter API Routes
-
-Endpoints:
-- GET /api/ai/context?run_id=... (envelope for existing run)
-- GET /api/ai/context/health (health check)
-- POST /api/ai/context/build (bounded context assembly)
-
-This is the ONLY interface AI systems should use to get ToolBox context.
-
-HARD BOUNDARY RULE: Context payloads must NEVER contain:
-- toolpaths (manufacturing execution paths)
-- gcode (machine instructions)
-- sensitive manufacturing parameters
-
-Contract: toolbox_ai_context_envelope_v1
-"""
+"""AI Context Adapter API Routes"""
 
 from __future__ import annotations
 
@@ -223,14 +207,7 @@ def health() -> Dict[str, Any]:
 def get_context(
     run_id: str = Query(..., min_length=6, max_length=128, description="Run ID to get context for"),
 ) -> Dict[str, Any]:
-    """
-    Get AI context envelope for a run.
-
-    Returns a schema-valid toolbox_ai_context_envelope_v1.
-    All sensitive data is redacted.
-
-    This is the ONLY interface AI systems should use.
-    """
+    """Get AI context envelope for a run."""
     # Fetch run data
     run = _fetch_run(run_id)
     if not run:
@@ -326,15 +303,7 @@ def _build_design_intent(pattern_id: str) -> Dict[str, Any]:
 
 
 def _build_rosette_param_spec(snapshot_id: Optional[str]) -> Dict[str, Any]:
-    """
-    Build rosette parameter spec context.
-
-    Requires snapshot_id (Art Studio snapshot). Does NOT include manufacturing
-    parameters - only design parameters.
-
-    v1 behavior: caller must provide snapshot_id explicitly.
-    v1.1+: may resolve from run.meta["snapshot_id"] if bound.
-    """
+    """Build rosette parameter spec context."""
     if not snapshot_id:
         return {
             "status": "rosette_snapshot_unbound",
@@ -408,12 +377,7 @@ def _build_governance_notes(intent: str = "") -> Dict[str, Any]:
 
 
 def _build_diff_summary(run_id: str, compare_run_id: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Build diff summary context (safe text only, no manufacturing data).
-
-    If compare_run_id is provided, computes diff between runs.
-    Otherwise returns status indicating no comparison available.
-    """
+    """Build diff summary context (safe text only, no manufacturing data)."""
     if not compare_run_id:
         return {
             "status": "no_comparison",
@@ -493,17 +457,7 @@ def _build_artifact_manifest(run_id: str) -> Dict[str, Any]:
 
 @router.post("/build", response_model=AiContextBuildResponse)
 def build_context(payload: AiContextBuildRequest) -> AiContextBuildResponse:
-    """
-    Build a bounded AI context bundle.
-
-    This endpoint assembles context from ToolBox state based on explicit includes.
-    It does NOT call any AI provider - it only prepares context for later AI consumption.
-
-    **HARD BOUNDARY RULE**: Context will NEVER contain toolpaths, G-code, or
-    sensitive manufacturing execution data. The boundary gate enforces this.
-
-    Use this endpoint to gather context before making an AI call.
-    """
+    """Build a bounded AI context bundle."""
     if not _AI_CONTEXT_ENABLED:
         raise HTTPException(
             status_code=503,

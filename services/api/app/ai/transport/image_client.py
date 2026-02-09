@@ -1,24 +1,4 @@
-"""
-AI Platform Image Client - Canonical Transport Layer
-
-This module provides HTTP transport for Image Generation APIs.
-Handles DALL-E, Stable Diffusion, and stub providers.
-
-Canonical AI image transport client.
-DATE: December 2025
-
-INVARIANTS:
-- This module must NOT import from domain modules (Vision, Art Studio, etc.)
-- All external image API calls go through this layer
-- Provider-specific config lives in ai.providers.*
-
-Usage:
-    from app.ai.transport import get_image_client
-
-    client = get_image_client(provider="openai")
-    response = client.generate(prompt="A rosette pattern...")
-    image_bytes = response.image_bytes
-"""
+"""AI Platform Image Client - Canonical Transport Layer"""
 from __future__ import annotations
 
 import os
@@ -128,11 +108,7 @@ class ImageResponse:
 # ---------------------------------------------------------------------------
 
 class ImageClient(ABC):
-    """
-    Abstract base for image generation clients.
-
-    GOVERNANCE: Returns ImageResponse, handles raw HTTP transport.
-    """
+    """Abstract base for image generation clients."""
 
     def __init__(self, config: Optional[ImageConfig] = None):
         self.config = config or ImageConfig()
@@ -416,10 +392,7 @@ class StableDiffusionClient(ImageClient):
 # ---------------------------------------------------------------------------
 
 class StubImageClient(ImageClient):
-    """
-    Stub client for testing without real API calls.
-    Returns deterministic placeholder images.
-    """
+    """Stub client for testing without real API calls."""
 
     def __init__(self, config: Optional[ImageConfig] = None):
         if config is None:
@@ -496,15 +469,7 @@ _default_client: Optional[ImageClient] = None
 
 
 def get_image_client(provider: str = "stub") -> ImageClient:
-    """
-    Get an image client instance.
-
-    Args:
-        provider: "openai", "dalle", "sd", "stable_diffusion", or "stub"
-
-    Returns:
-        Configured ImageClient instance
-    """
+    """Get an image client instance."""
     global _default_client
 
     provider = provider.lower()

@@ -1,11 +1,4 @@
-"""
-RMOS Stores API Router (N8.6 + N8.7 + N10.0)
-
-FastAPI endpoints for RMOS SQLite stores.
-Provides REST API for patterns, joblogs, and strip families.
-Includes migration dashboard for N8.7.
-N10.0: Real-time WebSocket event broadcasting.
-"""
+"""RMOS Stores API Router (N8.6 + N8.7 + N10.0)"""
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List, Dict, Any
@@ -82,16 +75,7 @@ class StripFamilyUpdate(BaseModel):
 
 @router.get("/migration/status")
 def get_migration_status():
-    """
-    Get RMOS migration status and statistics.
-    
-    Returns:
-        - last_migration: Timestamp of most recent migration
-        - entity_counts: Current counts for all entity types
-        - database_info: Size, location, schema version
-        - recent_entities: Most recently created entities
-        - validation_summary: Quick integrity check
-    """
+    """Get RMOS migration status and statistics."""
     stores = get_rmos_stores()
     db = stores.db
     

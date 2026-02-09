@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""
-AI Rosette → RMOS Adapter
-
-Bridges the gap between:
-- MatrixFormula (pattern visualization, BOM, assembly)
-- RosetteParamSpec (RMOS feasibility scoring, toolpath generation)
-- RunArtifacts (audit trail, drift detection)
-
-This is the critical integration point between the AI pattern generator
-and the existing RMOS manufacturing pipeline.
-
-GOVERNANCE: This file lives in rmos/ (authoritative zone).
-It may import from AI sandbox to receive data, but AI sandbox
-must NOT import from this file.
-"""
+"""AI Rosette → RMOS Adapter"""
 
 from __future__ import annotations
 
@@ -44,12 +30,7 @@ class RosetteRingParam(BaseModel):
 
 
 class RosetteParamSpec(BaseModel):
-    """
-    Rosette design parameters for RMOS feasibility scoring.
-    
-    This schema is what RMOS expects. The AI generates MatrixFormula,
-    this adapter converts it to RosetteParamSpec.
-    """
+    """Rosette design parameters for RMOS feasibility scoring."""
     version: str = "1.0"
     outer_diameter_mm: float = 100.0
     inner_diameter_mm: float = 90.0
@@ -69,21 +50,7 @@ def matrix_formula_to_rosette_spec(
     channel_depth_mm: float = 1.5,
     ring_placement: str = "outside",  # "outside" or "centered"
 ) -> RosetteParamSpec:
-    """
-    Convert a MatrixFormula dict to RosetteParamSpec for RMOS.
-    
-    The MatrixFormula describes the PATTERN (colors, arrangement).
-    The RosetteParamSpec describes the GEOMETRY (dimensions for CNC).
-    
-    Args:
-        formula: MatrixFormula dict from AI generator
-        soundhole_diameter_mm: Soundhole diameter (default 90mm for classical)
-        channel_depth_mm: Routing depth (default 1.5mm)
-        ring_placement: Where pattern sits relative to soundhole
-    
-    Returns:
-        RosetteParamSpec ready for RMOS feasibility scoring
-    """
+    """Convert a MatrixFormula dict to RosetteParamSpec for RMOS."""
     # Extract dimensions from formula
     rows = formula.get('rows', [])
     col_seq = formula.get('column_sequence', [])
@@ -162,12 +129,7 @@ def rosette_spec_to_context_dict(
 # =============================================================================
 
 class AIRosetteOutput(BaseModel):
-    """
-    Complete output from AI rosette generation.
-    
-    Contains BOTH the pattern data (for visualization) AND
-    the RMOS-compatible spec (for feasibility).
-    """
+    """Complete output from AI rosette generation."""
     # AI generation metadata
     generation_id: str = Field(..., description="Unique generation ID")
     prompt: str = Field(..., description="Original prompt")
@@ -218,27 +180,7 @@ def create_rosette_run_artifact(
     machine_id: Optional[str] = None,
     event_type: str = "ai_rosette_generation",
 ) -> RunArtifact:
-    """
-    Create a RunArtifact for an AI rosette generation.
-    
-    This provides audit trail for AI-generated designs.
-    The artifact captures:
-    - The prompt and generation parameters
-    - The resulting formula and RMOS spec
-    - Feasibility assessment
-    - SVG preview as attachment
-    
-    Args:
-        output: AIRosetteOutput from generation
-        workflow_session_id: If part of a workflow session
-        tool_id: Tool used for manufacturing
-        material_id: Material spec
-        machine_id: Target CNC machine
-        event_type: Type of event (default: ai_rosette_generation)
-    
-    Returns:
-        Persisted RunArtifact with attachments
-    """
+    """Create a RunArtifact for an AI rosette generation."""
     run_id = create_run_id()
     attachments: List[RunAttachment] = []
     
@@ -352,21 +294,7 @@ def finalize_rosette_design(
     material_id: Optional[str] = None,
     machine_id: Optional[str] = None,
 ) -> AIRosetteOutput:
-    """
-    Finalize an AI rosette design by creating a RunArtifact.
-    
-    Call this when user confirms/selects a design for manufacturing.
-    Creates immutable audit trail and returns updated output with run_id.
-    
-    Args:
-        output: AIRosetteOutput to finalize
-        tool_id: Tool selection
-        material_id: Material selection  
-        machine_id: Machine selection
-    
-    Returns:
-        Updated AIRosetteOutput with run_id set
-    """
+    """Finalize an AI rosette design by creating a RunArtifact."""
     artifact = create_rosette_run_artifact(
         output,
         tool_id=tool_id,
@@ -394,29 +322,7 @@ def generate_rosette_with_feasibility(
     material_id: Optional[str] = None,
     create_run_artifact: bool = False,
 ) -> AIRosetteOutput:
-    """
-    Complete pipeline: Prompt → Pattern → Feasibility → (Optional) RunArtifact.
-    
-    This is the main integration function that:
-    1. Generates pattern from AI prompt
-    2. Converts to RMOS spec
-    3. Scores feasibility
-    4. Generates visualization
-    5. (Optional) Creates RunArtifact for audit trail
-    
-    Args:
-        prompt: Natural language description
-        style: Pattern style (torres, hauser, etc.)
-        complexity: Complexity level
-        colors: Number of colors/materials
-        soundhole_diameter_mm: Soundhole size
-        tool_id: Tool for feasibility
-        material_id: Material for feasibility
-        create_run_artifact: If True, persists a RunArtifact
-    
-    Returns:
-        AIRosetteOutput with everything needed
-    """
+    """Complete pipeline: Prompt → Pattern → Feasibility → (Optional) RunArtifact."""
     # Deterministic stub formula.
     # AI-assisted generation is not yet promoted to canonical.
     # When ready, integrate via app.ai.transport + HTTP API.
@@ -503,24 +409,7 @@ def submit_rosette_to_workflow(
     machine_id: Optional[str] = None,
     approved_by: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Submit a finalized rosette design to the RMOS workflow.
-    
-    This creates:
-    1. A workflow session
-    2. Context with the rosette spec
-    3. Approval request (if feasibility is GREEN)
-    
-    Args:
-        output: AIRosetteOutput to submit
-        tool_id: Tool for manufacturing
-        material_id: Material selection
-        machine_id: Target machine
-        approved_by: User/operator name
-    
-    Returns:
-        Dict with session_id, status, and any errors
-    """
+    """Submit a finalized rosette design to the RMOS workflow."""
     # Ensure we have a run artifact
     if not output.run_id:
         output = finalize_rosette_design(
@@ -592,76 +481,3 @@ def submit_rosette_to_workflow(
 # DEMO
 # =============================================================================
 
-def demo():
-    """Demo the adapter with RunArtifact integration."""
-    print("=" * 60)
-    print("AI ROSETTE → RMOS ADAPTER DEMO")
-    print("=" * 60)
-    
-    # Sample formula (Torres diamond)
-    formula = {
-        "name": "Torres Diamond",
-        "rows": [
-            {"black": 1, "white": 5},
-            {"black": 2, "white": 4},
-            {"black": 3, "white": 3},
-            {"black": 4, "white": 2},
-            {"black": 3, "white": 3},
-            {"black": 2, "white": 4},
-            {"black": 1, "white": 5},
-        ],
-        "column_sequence": [1, 2, 3, 4, 5, 6, 7, 6, 5],
-        "strip_width_mm": 0.7,
-        "strip_thickness_mm": 0.6,
-        "chip_length_mm": 1.6,
-    }
-    
-    print("\n--- Input: MatrixFormula ---")
-    print(f"Name: {formula['name']}")
-    print(f"Rows: {len(formula['rows'])}")
-    print(f"Columns: {len(formula['column_sequence'])}")
-    
-    # Convert to RMOS spec
-    spec = matrix_formula_to_rosette_spec(formula, soundhole_diameter_mm=85.0)
-    
-    print("\n--- Output: RosetteParamSpec ---")
-    print(f"Version: {spec.version}")
-    print(f"Outer diameter: {spec.outer_diameter_mm}mm")
-    print(f"Inner diameter: {spec.inner_diameter_mm}mm")
-    print(f"Soundhole: {spec.soundhole_diameter_mm}mm")
-    print(f"Depth: {spec.depth_mm}mm")
-    print(f"Ring count: {len(spec.ring_params)}")
-    
-    if spec.ring_params:
-        ring = spec.ring_params[0]
-        print(f"\nRing 0:")
-        print(f"  Width: {ring.width_mm}mm")
-        print(f"  Tile length: {ring.tile_length_mm}mm")
-        print(f"  Pattern type: {ring.pattern_type}")
-    
-    print(f"\nNotes: {spec.notes}")
-    
-    print("\n--- Full Pipeline Test (with RunArtifact) ---")
-    try:
-        output = generate_rosette_with_feasibility(
-            prompt="Torres diamond pattern with ebony and maple",
-            style="torres",
-            soundhole_diameter_mm=85.0,
-            create_run_artifact=True,  # Creates audit trail
-        )
-        print(f"Generation ID: {output.generation_id}")
-        print(f"Prompt: {output.prompt}")
-        print(f"Style: {output.style}")
-        print(f"Feasibility score: {output.feasibility_score}")
-        print(f"Risk bucket: {output.risk_bucket}")
-        print(f"SVG generated: {output.svg_preview is not None}")
-        print(f"Run ID: {output.run_id}")
-    except Exception as e:  # WP-1: demo/main guard — keep broad
-        print(f"Pipeline test: {e}")
-    
-    print("\n" + "=" * 60)
-    print("Demo complete!")
-
-
-if __name__ == "__main__":
-    demo()
