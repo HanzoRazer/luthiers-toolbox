@@ -1,21 +1,4 @@
-"""
-Unified Presets Router - Single endpoint for CAM + Export + Neck presets
-
-Implements unified preset CRUD per UNIFIED_PRESETS_DESIGN.md
-
-Endpoints:
-    GET    /api/presets          - List all presets (with ?kind= and ?tag= filters)
-    GET    /api/presets/{id}     - Get single preset
-    POST   /api/presets          - Create new preset
-    PATCH  /api/presets/{id}     - Update preset
-    DELETE /api/presets/{id}     - Delete preset
-
-Schema:
-    - kind: "cam" | "export" | "neck" | "combo"
-    - cam_params: {stepover, strategy, feed_xy, ...}
-    - export_params: {filename_template, include_flags, default_format, ...}
-    - neck_params: {profile_id, scale_length_mm, section_defaults, ...}
-"""
+"""Unified Presets Router - Single endpoint for CAM + Export + Neck presets"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -42,7 +25,6 @@ router = APIRouter(prefix="/presets", tags=["presets", "unified"])
 
 PresetKind = Literal["cam", "export", "neck", "combo"]
 
-
 class CamParams(BaseModel):
     """CAM operation parameters."""
     stepover: Optional[float] = None
@@ -53,7 +35,6 @@ class CamParams(BaseModel):
     feed_z: Optional[float] = None
     safe_z: Optional[float] = None
     z_rough: Optional[float] = None
-
 
 class ExportParams(BaseModel):
     """Export configuration parameters."""
@@ -68,13 +49,11 @@ class ExportParams(BaseModel):
     )
     default_directory: Optional[str] = None
 
-
 class NeckSectionDefault(BaseModel):
     """Default dimensions for a neck section."""
     name: str
     width_mm: float
     thickness_mm: float
-
 
 class NeckParams(BaseModel):
     """Neck profile parameters."""
@@ -82,7 +61,6 @@ class NeckParams(BaseModel):
     profile_name: Optional[str] = None
     scale_length_mm: Optional[float] = None
     section_defaults: Optional[List[NeckSectionDefault]] = None
-
 
 class PresetIn(BaseModel):
     """Request body for creating/updating presets."""
@@ -105,7 +83,6 @@ class PresetIn(BaseModel):
     export_params: Optional[Dict[str, Any]] = Field(None, description="Export configuration")
     neck_params: Optional[Dict[str, Any]] = Field(None, description="Neck profile parameters")
 
-
 class PresetOut(BaseModel):
     """Response schema for presets."""
     id: str
@@ -125,62 +102,25 @@ class PresetOut(BaseModel):
     updated_at: str
     created_by: Optional[str] = None
 
-
 @router.get("", response_model=List[Dict[str, Any]])
 def get_presets(
     kind: Optional[PresetKind] = Query(None, description="Filter by preset kind"),
     tag: Optional[str] = Query(None, description="Filter by tag")
 ) -> List[Dict[str, Any]]:
-    """
-    List all presets with optional filters.
-    
-    Query Parameters:
-        - kind: Filter by preset kind (cam, export, neck, combo)
-        - tag: Filter by tag (matches if tag in preset.tags)
-    
-    Returns:
-        List of presets matching filters
-    """
+    """List all presets with optional filters."""
     return list_presets(kind=kind, tag=tag)
-
 
 @router.get("/{preset_id}", response_model=Dict[str, Any])
 def get_preset_by_id(preset_id: str) -> Dict[str, Any]:
-    """
-    Get a single preset by ID.
-    
-    Args:
-        preset_id: UUID of the preset
-    
-    Returns:
-        Preset object
-    
-    Raises:
-        HTTPException 404: If preset not found
-    """
+    """Get a single preset by ID."""
     preset = get_preset(preset_id)
     if not preset:
         raise HTTPException(status_code=404, detail=f"Preset {preset_id} not found")
     return preset
 
-
 @router.post("", response_model=Dict[str, Any])
 def create_preset(payload: PresetIn) -> Dict[str, Any]:
-    """
-    Create a new preset.
-    
-    Request Body:
-        - name: Preset name (required)
-        - kind: cam | export | neck | combo (required)
-        - description: Optional description
-        - tags: List of tags for filtering
-        - cam_params: CAM-specific parameters (optional)
-        - export_params: Export-specific parameters (optional)
-        - neck_params: Neck-specific parameters (optional)
-    
-    Returns:
-        Created preset with generated ID and timestamps
-    """
+    """Create a new preset."""
     now = datetime.now(timezone.utc).isoformat()
     
     preset = {
@@ -204,26 +144,9 @@ def create_preset(payload: PresetIn) -> Dict[str, Any]:
     
     return insert_preset(preset)
 
-
 @router.patch("/{preset_id}", response_model=Dict[str, Any])
 def update_preset_by_id(preset_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Update an existing preset.
-    
-    Args:
-        preset_id: UUID of the preset
-        payload: Fields to update (partial update supported)
-    
-    Returns:
-        Updated preset
-    
-    Raises:
-        HTTPException 404: If preset not found
-    
-    Notes:
-        - Immutable fields (id, created_at, created_by) are ignored if provided
-        - updated_at is automatically set to current time
-    """
+    """Update an existing preset."""
     # Remove immutable fields from patch
     payload.pop("id", None)
     payload.pop("created_at", None)
@@ -238,57 +161,18 @@ def update_preset_by_id(preset_id: str, payload: Dict[str, Any]) -> Dict[str, An
     
     return updated
 
-
 @router.delete("/{preset_id}")
 def delete_preset_by_id(preset_id: str) -> Dict[str, Any]:
-    """
-    Delete a preset.
-    
-    Args:
-        preset_id: UUID of the preset
-    
-    Returns:
-        Success confirmation
-    
-    Raises:
-        HTTPException 404: If preset not found
-    """
+    """Delete a preset."""
     success = delete_preset(preset_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Preset {preset_id} not found")
     
     return {"ok": True, "deleted": preset_id}
 
-
 @router.post("/validate-template")
 def validate_filename_template(body: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Validate a filename template and return analysis.
-    
-    Request body:
-        template: str - Filename template with {token} placeholders
-    
-    Returns:
-        Validation results:
-        - valid: bool - Whether template is valid
-        - tokens: list - List of tokens found in template
-        - unknown_tokens: list - Tokens not in supported set
-        - warnings: list - Potential issues
-        - example: str - Example resolved filename
-    
-    Example Request:
-        POST /api/presets/validate-template
-        {"template": "{preset}__{neck_profile}__{date}.nc"}
-    
-    Example Response:
-        {
-            "valid": true,
-            "tokens": ["preset", "neck_profile", "date"],
-            "unknown_tokens": [],
-            "warnings": [],
-            "example": "Strat_Roughing__Fender_Modern_C__2025-11-28.nc"
-        }
-    """
+    """Validate a filename template and return analysis."""
     template = body.get("template", "")
     
     if not template:
@@ -316,45 +200,9 @@ def validate_filename_template(body: Dict[str, Any]) -> Dict[str, Any]:
     
     return validation
 
-
 @router.post("/resolve-filename")
 def resolve_filename(body: Dict[str, Any]) -> Dict[str, str]:
-    """
-    Resolve a filename template with provided context.
-    
-    Request body:
-        template: str - Optional template (uses intelligent default if omitted)
-        preset_name: str - Preset name
-        machine_id: str - Optional machine ID
-        post_id: str - Optional post-processor ID
-        operation: str - Optional operation type
-        material: str - Optional material
-        neck_profile: str - Optional neck profile
-        neck_section: str - Optional neck section
-        compare_mode: str - Optional compare mode
-        job_id: str - Optional job ID
-        raw: str - Optional raw geometry source
-        extension: str - Optional file extension (default: "nc")
-    
-    Returns:
-        Resolved filename:
-        - filename: str - Fully resolved filename with extension
-        - template_used: str - Template that was used
-    
-    Example Request:
-        POST /api/presets/resolve-filename
-        {
-            "preset_name": "Strat Pocket",
-            "post_id": "GRBL",
-            "extension": "gcode"
-        }
-    
-    Example Response:
-        {
-            "filename": "Strat_Pocket__GRBL__2025-11-28.gcode",
-            "template_used": "{preset}__{post}__{date}"
-        }
-    """
+    """Resolve a filename template with provided context."""
     template = body.get("template")
     extension = body.get("extension", "nc")
     
@@ -397,9 +245,7 @@ def resolve_filename(body: Dict[str, Any]) -> Dict[str, str]:
         "template_used": template
     }
 
-
-# ===== B21: Multi-Run Comparison =====
-
+# --- B21: Multi-Run Comparison ---
 
 class ComparisonRunMetrics(BaseModel):
     """Performance metrics for a single run."""
@@ -424,7 +270,6 @@ class ComparisonRunMetrics(BaseModel):
     efficiency_score: Optional[float] = Field(None, description="0-100 score based on time/energy/quality")
     
     created_at: Optional[str] = None
-
 
 class ComparisonAnalysis(BaseModel):
     """Analysis results for multi-run comparison."""
@@ -451,31 +296,15 @@ class ComparisonAnalysis(BaseModel):
         description="Optimization suggestions based on historical data"
     )
 
-
 class CompareRunsRequest(BaseModel):
     """Request to compare multiple preset runs."""
     preset_ids: List[str] = Field(..., min_items=2, description="At least 2 presets to compare")
     include_trends: bool = Field(True, description="Calculate trend analysis")
     include_recommendations: bool = Field(True, description="Generate optimization recommendations")
 
-
 @router.post("/compare-runs", response_model=ComparisonAnalysis)
 def compare_preset_runs(body: CompareRunsRequest) -> ComparisonAnalysis:
-    """
-    B21: Multi-Run Comparison
-    
-    Compares multiple jobs cloned as presets to analyze performance evolution
-    and recommend best configuration based on historical data.
-    
-    Args:
-        body: Request with preset IDs to compare
-        
-    Returns:
-        ComparisonAnalysis with metrics, trends, and recommendations
-        
-    Raises:
-        HTTPException: If presets not found or insufficient data
-    """
+    """B21: Multi-Run Comparison"""
     from ..services.job_int_log import find_job_log_by_run_id
     
     if len(body.preset_ids) < 2:
