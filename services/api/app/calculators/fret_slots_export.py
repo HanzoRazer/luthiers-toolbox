@@ -1,26 +1,8 @@
-"""
-Fret Slots Export Calculator
-
-Generates G-code for fret slot cutting with multiple post-processor support.
-
-Phase E Implementation (December 2025)
-PATCH-001: Add intonation_model for explicit 12-TET default + opt-in custom ratios (January 2026)
-
-Supported Post-Processors:
-- GRBL (default)
-- Mach3/Mach4
-- LinuxCNC
-- PathPilot
-- MASSO
-- Fanuc
-- Haas
-
-Intonation Models (PATCH-001):
-- equal_temperament_12 (default): Standard 12-TET fret positions
-- custom_ratios: REQUIRES explicit per-fret ratios[] (ratio_set_id is rejected)
-"""
+"""Fret Slots Export Calculator"""
 
 from __future__ import annotations
+
+from app.core.safety import safety_critical
 
 import os
 from dataclasses import dataclass
@@ -183,6 +165,7 @@ def compute_slot_geometry(
     return slots
 
 
+@safety_critical
 def generate_gcode(
     slots: List[FretSlotData],
     post: PostProcessor,
@@ -190,19 +173,7 @@ def generate_gcode(
     feed_rate_mmpm: float = 1500.0,
     plunge_rate_mmpm: float = 400.0,
 ) -> Tuple[str, ExportStatistics]:
-    """
-    Generate G-code for fret slot cutting.
-    
-    Args:
-        slots: List of FretSlotData from compute_slot_geometry()
-        post: Target post-processor
-        safe_z_mm: Safe retract height
-        feed_rate_mmpm: Cutting feed rate
-        plunge_rate_mmpm: Plunge feed rate
-    
-    Returns:
-        Tuple of (gcode_string, statistics)
-    """
+    """Generate G-code for fret slot cutting."""
     template = POST_TEMPLATES.get(post, POST_TEMPLATES[PostProcessor.GRBL])
     
     lines: List[str] = []
@@ -305,28 +276,7 @@ def validate_fret_positions_for_machining(
     heel_margin_mm: float = 1.0,
     min_spacing_factor: float = 1.25,
 ) -> List[str]:
-    """
-    Temperament-agnostic manufacturability checks.
-    
-    Returns list of warning/error messages. Empty list = valid.
-    
-    Checks:
-      - positions are within bounds (0 < pos < scale_length)
-      - adjacent frets are not too close for the declared slot width
-      - first fret is not too close to nut
-      - last fret is not too close to bridge
-    
-    Args:
-        fret_positions_mm: List of fret positions from nut
-        scale_length_mm: Total scale length
-        slot_width_mm: Width of fret slot (kerf)
-        nut_margin_mm: Minimum distance from nut to first fret
-        heel_margin_mm: Minimum distance from last fret to scale end
-        min_spacing_factor: Multiplier for slot_width to determine min spacing
-    
-    Returns:
-        List of error messages (empty if valid)
-    """
+    """Temperament-agnostic manufacturability checks."""
     errors: List[str] = []
     
     if not fret_positions_mm:
@@ -364,22 +314,7 @@ def validate_fret_positions_for_machining(
 def export_fret_slots(
     request: FretSlotExportRequest,
 ) -> FretSlotExportResponse:
-    """
-    Main export function for fret slot G-code.
-    
-    PATCH-001: Now supports intonation_model selection:
-      - equal_temperament_12 (default): Standard 12-TET fret positions
-      - custom_ratios: Uses provided ratios[] or ratio_set_id
-    
-    Args:
-        request: FretSlotExportRequest with all parameters
-    
-    Returns:
-        FretSlotExportResponse with G-code and metadata
-    
-    Raises:
-        ValueError: If custom_ratios configuration is invalid
-    """
+    """Main export function for fret slot G-code."""
     # PATCH-001: Compute fret positions based on intonation model
     if request.intonation_model == "equal_temperament_12":
         # Default: use canonical 12-TET calculation

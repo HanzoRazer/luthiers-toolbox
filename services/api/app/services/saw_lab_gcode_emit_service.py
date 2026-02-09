@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import
+from app.core.safety import safety_critical Any, Callable, Dict, List, Optional
 
 # Type alias for artifact reader callable
 ArtifactReader = Callable[[str], Any]
@@ -12,6 +13,7 @@ def _default_artifact_reader() -> ArtifactReader:
     return read_run_artifact
 
 
+@safety_critical
 def emit_gcode_from_moves(moves: List[Dict[str, Any]]) -> str:
     """
     Convert SawToolpathMove dicts to G-code string.
