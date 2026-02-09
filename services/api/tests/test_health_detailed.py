@@ -47,3 +47,19 @@ def test_health_detailed_has_version(client: TestClient):
     assert "version" in data
     assert isinstance(data["version"], str)
     assert len(data["version"]) > 0
+
+
+def test_features_endpoint_returns_structure(client: TestClient):
+    """Test that /api/features returns expected structure."""
+    response = client.get("/api/features")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "loaded" in data
+    assert "loaded_count" in data
+    assert "failed" in data
+    assert "failed_count" in data
+    assert "total_routes" in data
+    assert isinstance(data["loaded"], dict)
+    assert isinstance(data["failed"], dict)
+    assert isinstance(data["total_routes"], int)

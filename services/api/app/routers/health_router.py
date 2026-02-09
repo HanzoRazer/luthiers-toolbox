@@ -14,6 +14,7 @@ from importlib import metadata
 from importlib.metadata import PackageNotFoundError
 
 from ..core.observability import get_health_summary
+from ..core.features import get_feature_summary
 
 router = APIRouter(tags=["System"])
 
@@ -161,3 +162,16 @@ def detailed_health() -> Dict[str, Any]:
     - Failed features with error messages
     """
     return get_health_summary()
+
+
+@router.get("/features", summary="List loaded API features")
+def list_features() -> Dict[str, Any]:
+    """
+    Return summary of all API features/routers.
+
+    Response includes:
+    - loaded: Features that loaded successfully with route counts
+    - failed: Features that failed to load with error messages
+    - total_routes: Total number of API routes
+    """
+    return get_feature_summary()
