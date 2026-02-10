@@ -1,43 +1,4 @@
-"""
-Tooling and Post-Processor Management Router
-
-Provides endpoints for listing and configuring CNC post-processors used in
-multi-machine CAM workflows. Supports 5 platforms: GRBL, Mach4, LinuxCNC,
-PathPilot, and MASSO.
-
-Features:
-- List all available post-processors with metadata
-- Retrieve specific post-processor configuration
-- Consistent JSON format for G-code headers and footers
-- Case-insensitive post_id matching
-
-Endpoints:
-- GET /tooling/posts - List all post-processors
-- GET /tooling/posts/{post_id} - Get specific post-processor config
-
-Architecture:
-- Post-processor configs stored as JSON files in services/api/app/data/posts/
-- Each config defines "header" and "footer" arrays for G-code wrapping
-- Loaded on-demand (no caching) for hot-reload support during development
-
-CRITICAL SAFETY RULES:
-1. Post-processor IDs are case-insensitive (grbl == GRBL == Grbl)
-2. Missing post configs return empty arrays (fail-safe, not error)
-3. File I/O errors are logged but don't crash endpoint (graceful degradation)
-4. JSON parse errors for individual posts are isolated (one bad file doesn't break all)
-5. Always return consistent schema (id, name, title, header, footer)
-
-Example:
-    # List all posts
-    GET /api/tooling/posts
-    => [
-        {"id": "grbl", "name": "grbl", "title": "GRBL CNC", "header": [...], "footer": [...]},
-        {"id": "mach4", "name": "mach4", "title": "Mach4", "header": [...], "footer": [...]}
-    ]
-    
-    # Get specific post
-    GET /api/tooling/posts/GRBL
-    => {"id": "grbl", "name": "grbl", "title": "GRBL CNC", "header": [...], "footer": [...]}
+"""Tooling and Post-Processor Management Router."""
 """
 import json
 import logging

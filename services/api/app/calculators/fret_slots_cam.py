@@ -1,12 +1,4 @@
-"""
-Fret Slots CAM Calculator
-
-Generates CAM toolpaths (DXF R12 + G-code) for fret slot cutting operations.
-Integrates with RMOS context for material-aware feedrate calculations and
-feasibility checking.
-
-Wave 17: Phase C - Fretboard CAM Operations
-"""
+"""Fret Slots CAM Calculator - generates toolpaths for fret slot cutting."""
 
 from __future__ import annotations
 

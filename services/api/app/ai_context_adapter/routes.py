@@ -9,7 +9,8 @@ import subprocess
 from typing import Any, Dict, List, Optional, Set
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+
+from .schemas import AiContextBuildRequest, AiContextBuildResponse
 
 from .assembler.default import build_context_envelope
 
@@ -46,11 +47,7 @@ FORBIDDEN_PATTERNS: List[re.Pattern] = [
 
 
 def _contains_forbidden_content(obj: Any, path: str = "") -> List[str]:
-    """
-    Recursively check for forbidden manufacturing content.
-
-    Returns list of violations found.
-    """
+    """Check for forbidden manufacturing content. Returns violations."""
     violations: List[str] = []
 
     if isinstance(obj, dict):
@@ -74,11 +71,7 @@ def _contains_forbidden_content(obj: Any, path: str = "") -> List[str]:
 
 
 def enforce_boundary_gate(context: Dict[str, Any]) -> None:
-    """
-    Enforce hard boundary rule: no manufacturing secrets in context.
-
-    Raises HTTPException if violations found.
-    """
+    """Enforce hard boundary rule. Raises HTTPException if violations found."""
     violations = _contains_forbidden_content(context)
     if violations:
         raise HTTPException(
@@ -237,39 +230,6 @@ def get_context(
 # =============================================================================
 # POST /build - Bounded Context Assembly
 # =============================================================================
-
-class AiContextBuildRequest(BaseModel):
-    """Request to build a bounded AI context bundle."""
-    # Identify what the user is working on
-    run_id: Optional[str] = Field(None, description="RMOS run ID")
-    snapshot_id: Optional[str] = Field(None, description="Art Studio snapshot ID (for rosette_param_spec)")
-    pattern_id: Optional[str] = Field(None, description="[DEPRECATED] Alias for snapshot_id")
-    compare_run_id: Optional[str] = Field(None, description="Run ID to compare against for diff_summary")
-
-    # Mode selection
-    mode: str = Field(
-        default="run_first",
-        description="Context mode: run_first (default) or art_studio_first",
-    )
-
-    # What the UI wants to include (explicit allowlist)
-    include: List[str] = Field(
-        default_factory=list,
-        description="What to include: rosette_param_spec, diff_summary, artifact_manifest, run_summary, design_intent, governance_notes",
-    )
-
-    # Optional UI-provided notes (kept separate so we can fence it)
-    user_notes: Optional[str] = Field(None, description="User-provided notes for context")
-
-
-class AiContextBuildResponse(BaseModel):
-    """Response with bounded AI context bundle."""
-    schema_id: str = Field(default="toolbox_ai_context", description="Schema identifier")
-    schema_version: str = Field(default="v1", description="Schema version")
-    context_id: str = Field(..., description="Unique context bundle ID")
-    summary: str = Field(..., description="Human-readable summary of what's included")
-    context: Dict[str, Any] = Field(default_factory=dict, description="The bounded context payload")
-    warnings: List[str] = Field(default_factory=list, description="Warnings about missing or stubbed data")
 
 
 # Allowlisted includes (explicit opt-in)

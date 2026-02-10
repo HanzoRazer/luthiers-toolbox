@@ -1,21 +1,4 @@
-"""Router Registry — Centralized router loading and health tracking.
-
-This module replaces the 50+ scattered try/except import blocks in main.py
-with a declarative manifest and dynamic loading.
-
-Benefits:
-- Single source of truth for all routers
-- Automatic health tracking for /api/features
-- Cleaner main.py (<200 lines target)
-- Easier to add/remove routers
-
-Usage:
-    from .router_registry import load_all_routers, get_router_health
-
-    app = FastAPI()
-    for router, prefix, tags in load_all_routers():
-        app.include_router(router, prefix=prefix, tags=tags)
-"""
+"""Router Registry — Centralized router loading and health tracking."""
 
 from __future__ import annotations
 
@@ -27,7 +10,6 @@ from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter
 
 _log = logging.getLogger(__name__)
-
 
 @dataclass
 class RouterSpec:
@@ -41,11 +23,9 @@ class RouterSpec:
     enabled: bool = True  # If False, skip loading
     category: str = "misc"  # For grouping in health reports
 
-
 # Track loading status
 _loaded_routers: Dict[str, bool] = {}
 _router_errors: Dict[str, str] = {}
-
 
 # =============================================================================
 # ROUTER MANIFEST
@@ -422,7 +402,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     ),
 ]
 
-
 def _try_load_router(spec: RouterSpec) -> Optional[APIRouter]:
     """Attempt to load a single router from its spec."""
     if not spec.enabled:
@@ -455,7 +434,6 @@ def _try_load_router(spec: RouterSpec) -> Optional[APIRouter]:
             _log.warning("⚠ Router attribute not found: %s.%s", spec.module, spec.router_attr)
         return None
 
-
 def load_all_routers() -> List[Tuple[APIRouter, str, List[str]]]:
     """Load all routers from the manifest.
 
@@ -485,7 +463,6 @@ def load_all_routers() -> List[Tuple[APIRouter, str, List[str]]]:
 
     return loaded
 
-
 def get_router_health() -> Dict[str, Any]:
     """Get health summary of all routers.
 
@@ -512,7 +489,6 @@ def get_router_health() -> Dict[str, Any]:
         },
         "errors": _router_errors,
     }
-
 
 def get_loaded_routers() -> Dict[str, bool]:
     """Return dict of module -> loaded status."""

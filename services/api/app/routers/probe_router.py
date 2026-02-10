@@ -12,101 +12,14 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from ..cam import probe_patterns, probe_svg
+from ..cam.probe_service import create_governed_probe_response
 
-# Import RMOS run artifact persistence (OPERATION lane requirement)
-from ..rmos.runs import (
-    RunArtifact,
-    persist_run,
-    create_run_id,
-    sha256_of_obj,
-    sha256_of_text,
-)
 
 router = APIRouter()
-
-
-class ProbePointIn(BaseModel):
-    """Single probe point definition for custom patterns."""
-    x: float
-    y: float
-    z: float
-    label: str = ""
-
-
-class CornerProbeIn(BaseModel):
-    """Corner find pattern input."""
-    pattern: Literal["corner_outside", "corner_inside"] = "corner_outside"
-    approach_distance: float = Field(20.0, ge=5.0, le=50.0, description="Distance to start probe from edge (mm)")
-    retract_distance: float = Field(2.0, ge=0.5, le=10.0, description="Retract after each probe (mm)")
-    feed_probe: float = Field(100.0, ge=10.0, le=500.0, description="Probing feed rate (mm/min)")
-    safe_z: float = Field(10.0, ge=5.0, le=50.0, description="Safe Z height (mm)")
-    work_offset: int = Field(1, ge=1, le=6, description="G54-G59 offset number (1-6)")
-
-
-class BossProbeIn(BaseModel):
-    """Boss/hole find pattern input."""
-    pattern: Literal["boss_circular", "hole_circular"] = "boss_circular"
-    estimated_diameter: float = Field(50.0, ge=5.0, le=500.0, description="Estimated feature diameter (mm)")
-    estimated_center_x: float = Field(0.0, description="Estimated center X (mm)")
-    estimated_center_y: float = Field(0.0, description="Estimated center Y (mm)")
-    probe_count: int = Field(4, ge=4, le=12, description="Number of probe points (4, 6, 8, 12)")
-    approach_distance: float = Field(5.0, ge=2.0, le=20.0, description="Distance beyond edge to start (mm)")
-    retract_distance: float = Field(5.0, ge=2.0, le=20.0, description="Retract after each probe (mm)")
-    feed_probe: float = Field(100.0, ge=10.0, le=500.0, description="Probing feed rate (mm/min)")
-    safe_z: float = Field(10.0, ge=5.0, le=50.0, description="Safe Z height (mm)")
-    work_offset: int = Field(1, ge=1, le=6, description="G54-G59 offset number (1-6)")
-
-
-class SurfaceZProbeIn(BaseModel):
-    """Surface Z touch-off input."""
-    approach_z: float = Field(10.0, ge=5.0, le=50.0, description="Z position to start probe from (mm)")
-    probe_depth: float = Field(-20.0, le=-5.0, description="Maximum depth to probe (negative, mm)")
-    feed_probe: float = Field(50.0, ge=10.0, le=200.0, description="Probing feed rate (mm/min)")
-    retract_distance: float = Field(5.0, ge=2.0, le=20.0, description="Retract after touch (mm)")
-    work_offset: int = Field(1, ge=1, le=6, description="G54-G59 offset number (1-6)")
-
-
-class PocketProbeIn(BaseModel):
-    """Pocket/inside corner find input."""
-    pocket_width: float = Field(100.0, ge=10.0, le=500.0, description="Estimated pocket width (mm)")
-    pocket_height: float = Field(60.0, ge=10.0, le=500.0, description="Estimated pocket height (mm)")
-    approach_distance: float = Field(10.0, ge=5.0, le=50.0, description="Distance from center to start (mm)")
-    retract_distance: float = Field(2.0, ge=0.5, le=10.0, description="Retract after each probe (mm)")
-    feed_probe: float = Field(100.0, ge=10.0, le=500.0, description="Probing feed rate (mm/min)")
-    safe_z: float = Field(10.0, ge=5.0, le=50.0, description="Safe Z height (mm)")
-    work_offset: int = Field(1, ge=1, le=6, description="G54-G59 offset number (1-6)")
-    origin_corner: Literal["lower_left", "lower_right", "upper_left", "upper_right", "center"] = "center"
-
-
-class ViseSquareProbeIn(BaseModel):
-    """Vise squareness check input."""
-    vise_jaw_height: float = Field(50.0, ge=10.0, le=200.0, description="Z height of vise jaw (mm)")
-    probe_spacing: float = Field(100.0, ge=50.0, le=300.0, description="Y distance between probes (mm)")
-    approach_distance: float = Field(20.0, ge=5.0, le=50.0, description="Distance to start probe from jaw (mm)")
-    retract_distance: float = Field(5.0, ge=2.0, le=20.0, description="Retract after each probe (mm)")
-    feed_probe: float = Field(100.0, ge=10.0, le=500.0, description="Probing feed rate (mm/min)")
-    safe_z: float = Field(10.0, ge=5.0, le=50.0, description="Safe Z height (mm)")
-
-
-class SetupSheetIn(BaseModel):
-    """Setup sheet generation input."""
-    pattern: Literal[
-        "corner_outside", "corner_inside",
-        "boss_circular", "hole_circular",
-        "pocket_inside", "surface_z"
-    ]
-    part_width: Optional[float] = Field(100.0, description="Part width for corner/pocket (mm)")
-    part_height: Optional[float] = Field(60.0, description="Part height for corner/pocket (mm)")
-    feature_diameter: Optional[float] = Field(50.0, description="Boss/hole diameter (mm)")
-    probe_offset: Optional[float] = Field(20.0, description="Probe offset from edge (mm)")
-    origin_corner: Optional[str] = Field("lower_left", description="Origin location for pocket")
-
-
-class ProbeOut(BaseModel):
-    """Probe G-code output."""
-    gcode: str
-    stats: Dict[str, Any]
-
+from ..schemas.probe_schemas import (
+    ProbePointIn, CornerProbeIn, BossProbeIn, SurfaceZProbeIn,
+    PocketProbeIn, ViseSquareProbeIn, SetupSheetIn, ProbeOut,
+)
 
 @router.post("/corner/gcode", response_model=ProbeOut)
 async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
