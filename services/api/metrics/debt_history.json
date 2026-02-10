@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-02-10T15:23:38.877841",
+    "endpoints": 730,
+    "bare_except": 1,
+    "large_files": 9,
+    "god_objects": 10
+  },
+  {
+    "timestamp": "2026-02-10T15:36:20.222847",
+    "endpoints": 717,
+    "bare_except": 1,
+    "large_files": 9,
+    "god_objects": 10
+  }
+]
