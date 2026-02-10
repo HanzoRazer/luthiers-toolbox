@@ -28,7 +28,7 @@ TARGET_MAX_ENDPOINTS = 730  # Current: 730, goal: 400
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 1  # Current: 1, goal: 0
 TARGET_MAX_LARGE_FILES = 9  # Current: 9, goal: 5
-TARGET_MAX_DUPLICATE_ROUTES = 102  # Current: 102, goal: 0 (legacy routers)
+TARGET_MAX_DUPLICATE_ROUTES = 93  # Current: 93, goal: 0 (legacy routers)
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)

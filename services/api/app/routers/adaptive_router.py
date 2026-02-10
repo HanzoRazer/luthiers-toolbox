@@ -93,7 +93,7 @@ from ..services.jobint_artifacts import build_jobint_payload
 from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
 from .geometry_router import GcodeExportIn, export_gcode
-from .machine_router import get_profile
+from .machines_consolidated_router import get_profile
 
 # Import run artifact persistence (OPERATION lane requirement)
 from ..rmos.runs import (

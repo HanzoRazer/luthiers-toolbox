@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from ...energy_model import energy_breakdown
 from ...heat_timeseries import heat_timeseries
-from ....routers.machine_router import get_profile
+from ....routers.machines_consolidated_router import get_profile
 from ....routers.material_router import get_material
 from ....util.names import safe_stem
 
