@@ -17,9 +17,7 @@ from .ai_cam.advisor import CAMAdvisor
 from .ai_cam.explain_gcode import GCodeExplainer
 from .ai_cam.optimize import CAMOptimizer
 
-
 router = APIRouter(prefix="/ai-cam", tags=["AI-CAM"])
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Request/Response Models
@@ -36,12 +34,10 @@ class CutOperationPayload(BaseModel):
     width_of_cut_mm: Optional[float] = Field(None, gt=0, description="Width of cut in mm")
     machine_id: Optional[str] = Field(None, description="Machine profile ID")
 
-
 class GCodePayload(BaseModel):
     """Payload for G-code explanation."""
     gcode_text: str = Field(..., description="Raw G-code text to explain")
     safe_z: float = Field(5.0, description="Z height considered safe (mm)")
-
 
 class OptimizePayload(BaseModel):
     """Payload for parameter optimization."""
@@ -55,20 +51,17 @@ class OptimizePayload(BaseModel):
     machine_id: Optional[str] = None
     search_pct: float = Field(0.10, ge=0.01, le=0.50, description="Search range (0.10 = ±10%)")
 
-
 class AdvisoryResponse(BaseModel):
     """Single advisory in response."""
     message: str
     severity: str
     context: Optional[Dict[str, Any]] = None
 
-
 class AnalyzeResponse(BaseModel):
     """Response from analyze-operation endpoint."""
     advisories: List[AdvisoryResponse]
     recommended_changes: Dict[str, Any]
     physics: Dict[str, Any]
-
 
 class GCodeLineResponse(BaseModel):
     """Single G-code line explanation."""
@@ -77,12 +70,10 @@ class GCodeLineResponse(BaseModel):
     explanation: str
     risk: Optional[str] = None
 
-
 class ExplainGCodeResponse(BaseModel):
     """Response from explain-gcode endpoint."""
     overall_risk: str
     explanations: List[GCodeLineResponse]
-
 
 class OptimizationCandidateResponse(BaseModel):
     """Single optimization candidate."""
@@ -94,12 +85,10 @@ class OptimizationCandidateResponse(BaseModel):
     physics: Dict[str, Any]
     notes: List[str]
 
-
 class OptimizeResponse(BaseModel):
     """Response from optimize endpoint."""
     candidates: List[OptimizationCandidateResponse]
     best: Optional[OptimizationCandidateResponse] = None
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Endpoints
@@ -143,7 +132,6 @@ def analyze_operation(payload: CutOperationPayload) -> AnalyzeResponse:
         physics=result.physics_results,
     )
 
-
 @router.post("/explain-gcode", response_model=ExplainGCodeResponse)
 def explain_gcode(payload: GCodePayload) -> ExplainGCodeResponse:
     """
@@ -176,7 +164,6 @@ def explain_gcode(payload: GCodePayload) -> ExplainGCodeResponse:
             for e in result.explanations
         ],
     )
-
 
 @router.post("/optimize", response_model=OptimizeResponse)
 def optimize_parameters(payload: OptimizePayload) -> OptimizeResponse:
@@ -220,8 +207,3 @@ def optimize_parameters(payload: OptimizePayload) -> OptimizeResponse:
         best=best,
     )
 
-
-@router.get("/health")
-def health_check() -> Dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "ok", "module": "ai-cam", "version": "wave-11"}

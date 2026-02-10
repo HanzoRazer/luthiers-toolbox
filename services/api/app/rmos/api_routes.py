@@ -21,9 +21,7 @@ try:
 except (ImportError, AttributeError, ModuleNotFoundError):
     from .api_contracts import RosetteParamSpec
 
-
 router = APIRouter()
-
 
 # ======================
 # Request Models
@@ -34,18 +32,15 @@ class FeasibilityRequest(BaseModel):
     design: RosetteParamSpec = Field(..., description="Rosette design parameters")
     context: Optional[RmosContext] = Field(None, description="Manufacturing context (optional)")
 
-
 class BomRequest(BaseModel):
     """Request body for BOM generation"""
     design: RosetteParamSpec = Field(..., description="Rosette design parameters")
     context: Optional[RmosContext] = Field(None, description="Manufacturing context (optional)")
 
-
 class ToolpathRequest(BaseModel):
     """Request body for toolpath generation"""
     design: RosetteParamSpec = Field(..., description="Rosette design parameters")
     context: Optional[RmosContext] = Field(None, description="Manufacturing context (optional)")
-
 
 # ======================
 # Endpoints
@@ -92,7 +87,6 @@ async def check_feasibility(request: FeasibilityRequest):
             detail=f"Feasibility computation failed: {str(e)}"
         )
 
-
 @router.post("/bom", response_model=RmosBomResult, tags=["RMOS"])
 async def generate_bom(request: BomRequest):
     """
@@ -128,7 +122,6 @@ async def generate_bom(request: BomRequest):
             status_code=500,
             detail=f"BOM generation failed: {str(e)}"
         )
-
 
 @router.post("/toolpaths", response_model=RmosToolpathPlan, tags=["RMOS"])
 async def generate_toolpaths(request: ToolpathRequest):
@@ -169,18 +162,3 @@ async def generate_toolpaths(request: ToolpathRequest):
             detail=f"Toolpath generation failed: {str(e)}"
         )
 
-
-@router.get("/health", tags=["RMOS"])
-async def health_check():
-    """
-    RMOS health check endpoint.
-    
-    Returns:
-        Status message confirming RMOS 2.0 is operational
-    """
-    return {
-        "status": "ok",
-        "module": "RMOS 2.0",
-        "version": "2.0.0",
-        "endpoints": ["/feasibility", "/bom", "/toolpaths"]
-    }

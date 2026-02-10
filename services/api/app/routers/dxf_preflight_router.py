@@ -28,19 +28,6 @@ from ..dxf.preflight_service import (
     _mm_diag, _validate_layer_name, _biarc_metrics,
 )
 
-
-
-@router.get("/health")
-def preflight_health():
-    """Health check for DXF preflight service"""
-    return {
-        "service": "dxf_preflight",
-        "version": "1.0",
-        "ezdxf_available": EZDXF_AVAILABLE,
-        "status": "ok" if EZDXF_AVAILABLE else "degraded"
-    }
-
-
 @router.post("/curve_report", response_model=CurvePreflightResponse)
 def curve_preflight_report(body: CurvePreflightRequest):
     """Validate in-memory CurveLab geometry before DXF export."""
@@ -155,7 +142,6 @@ def curve_preflight_report(body: CurvePreflightRequest):
         recommended_actions=recommendations,
     )
 
-
 @router.post("/validate", response_model=ValidationReport)
 async def validate_dxf(file: UploadFile = File(...)):
     """
@@ -190,7 +176,6 @@ async def validate_dxf(file: UploadFile = File(...)):
     finally:
         tmp_path.unlink()  # Clean up temp file
 
-
 @router.post("/validate_base64", response_model=ValidationReport)
 def validate_dxf_base64(request: ValidateBase64Request):
     """
@@ -218,7 +203,6 @@ def validate_dxf_base64(request: ValidateBase64Request):
         return report
     finally:
         tmp_path.unlink()
-
 
 @router.post("/auto_fix")
 async def auto_fix_dxf(request: AutoFixRequest):

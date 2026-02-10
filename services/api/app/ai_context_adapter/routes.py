@@ -45,7 +45,6 @@ FORBIDDEN_PATTERNS: List[re.Pattern] = [
     re.compile(r"X-?\d+\.?\d*\s*Y-?\d+\.?\d*", re.IGNORECASE),  # Coordinates
 ]
 
-
 def _contains_forbidden_content(obj: Any, path: str = "") -> List[str]:
     """Check for forbidden manufacturing content. Returns violations."""
     violations: List[str] = []
@@ -69,7 +68,6 @@ def _contains_forbidden_content(obj: Any, path: str = "") -> List[str]:
 
     return violations
 
-
 def enforce_boundary_gate(context: Dict[str, Any]) -> None:
     """Enforce hard boundary rule. Raises HTTPException if violations found."""
     violations = _contains_forbidden_content(context)
@@ -82,7 +80,6 @@ def enforce_boundary_gate(context: Dict[str, Any]) -> None:
                 "violations": violations[:10],  # Limit to first 10
             },
         )
-
 
 def _get_git_commit() -> str:
     """Get current git commit hash."""
@@ -99,7 +96,6 @@ def _get_git_commit() -> str:
         pass
     return "unknown"
 
-
 def _get_environment() -> str:
     """Determine current environment."""
     env = os.getenv("TOOLBOX_ENV", os.getenv("ENVIRONMENT", "dev"))
@@ -108,7 +104,6 @@ def _get_environment() -> str:
     if env in ("ci", "test", "testing"):
         return "ci"
     return "dev"
-
 
 def _fetch_run(run_id: str) -> Optional[Dict[str, Any]]:
     """
@@ -135,7 +130,6 @@ def _fetch_run(run_id: str) -> Optional[Dict[str, Any]]:
 
     return None
 
-
 def _fetch_design_intent(run_id: str) -> Dict[str, Any]:
     """
     Extract design intent from run artifacts or metadata.
@@ -148,7 +142,6 @@ def _fetch_design_intent(run_id: str) -> Dict[str, Any]:
         "summary": "No design intent summary available.",
         "spec_refs": [],
     }
-
 
 def _fetch_artifacts_summary(run_id: str) -> tuple[Dict[str, int], list[Dict[str, Any]]]:
     """
@@ -185,17 +178,6 @@ def _fetch_artifacts_summary(run_id: str) -> tuple[Dict[str, int], list[Dict[str
 
     return counts, recent
 
-
-@router.get("/health")
-def health() -> Dict[str, Any]:
-    """Health check for AI context endpoint."""
-    return {
-        "status": "ok",
-        "schema_version": "v1",
-        "environment": _get_environment(),
-    }
-
-
 @router.get("")
 def get_context(
     run_id: str = Query(..., min_length=6, max_length=128, description="Run ID to get context for"),
@@ -226,11 +208,9 @@ def get_context(
 
     return envelope
 
-
 # =============================================================================
 # POST /build - Bounded Context Assembly
 # =============================================================================
-
 
 # Allowlisted includes (explicit opt-in)
 ALLOWED_INCLUDES: Set[str] = {
@@ -248,7 +228,6 @@ ALLOWED_INCLUDES: Set[str] = {
 # Supported modes
 ALLOWED_MODES: Set[str] = {"run_first", "art_studio_first"}
 
-
 def _build_run_summary(run_id: str) -> Dict[str, Any]:
     """Build run summary context (no manufacturing secrets)."""
     run = _fetch_run(run_id)
@@ -256,11 +235,9 @@ def _build_run_summary(run_id: str) -> Dict[str, Any]:
         return {"status": "not_found", "run_id": run_id}
     return run
 
-
 def _build_design_intent(pattern_id: str) -> Dict[str, Any]:
     """Build design intent context."""
     return _fetch_design_intent(pattern_id)
-
 
 def _build_rosette_param_spec(snapshot_id: Optional[str]) -> Dict[str, Any]:
     """Build rosette parameter spec context."""
@@ -301,7 +278,6 @@ def _build_rosette_param_spec(snapshot_id: Optional[str]) -> Dict[str, Any]:
 
     return {"status": "not_found", "snapshot_id": snapshot_id}
 
-
 def _build_manufacturing_candidates(run_id: Optional[str]) -> Dict[str, Any]:
     """
     Build manufacturing candidates summary (counts only, no details).
@@ -322,7 +298,6 @@ def _build_manufacturing_candidates(run_id: Optional[str]) -> Dict[str, Any]:
         # Note: actual candidate details are NOT included
     }
 
-
 def _build_governance_notes(intent: str = "") -> Dict[str, Any]:
     """Build governance notes for common topics."""
     return {
@@ -334,7 +309,6 @@ def _build_governance_notes(intent: str = "") -> Dict[str, Any]:
         ],
         "note": "Wire to full governance_notes provider for detailed explanations.",
     }
-
 
 def _build_diff_summary(run_id: str, compare_run_id: Optional[str] = None) -> Dict[str, Any]:
     """Build diff summary context (safe text only, no manufacturing data)."""
@@ -372,7 +346,6 @@ def _build_diff_summary(run_id: str, compare_run_id: Optional[str] = None) -> Di
         return {"status": "unavailable", "summary": "Diff engine not available."}
     except (KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return {"status": "error", "summary": str(e)[:200]}
-
 
 def _build_artifact_manifest(run_id: str) -> Dict[str, Any]:
     """
@@ -413,7 +386,6 @@ def _build_artifact_manifest(run_id: str) -> Dict[str, Any]:
         return {"status": "unavailable", "run_id": run_id, "artifact_count": 0, "artifacts": []}
     except (KeyError, TypeError, AttributeError, ValueError) as e:  # WP-1: narrowed from except Exception
         return {"status": "error", "run_id": run_id, "artifact_count": 0, "error": str(e)[:200], "artifacts": []}
-
 
 @router.post("/build", response_model=AiContextBuildResponse)
 def build_context(payload: AiContextBuildRequest) -> AiContextBuildResponse:

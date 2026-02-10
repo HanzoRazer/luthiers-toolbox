@@ -469,18 +469,3 @@ def evaluate_cut_alias(payload: CutOperationPayload) -> CalculatorBundleResponse
     """
     return evaluate_cut_operation(payload)
 
-@router.get("/health")
-def calculator_health():
-    """Health check for calculator service."""
-    return {
-        "status": "ok",
-        "calculators": [
-            "chipload",
-            "heat_risk",
-            "deflection",
-            "rim_speed",
-            "bite_per_tooth",
-            "kickback_risk",
-        ],
-        "tool_kinds": ["router_bit", "saw_blade"],
-    }

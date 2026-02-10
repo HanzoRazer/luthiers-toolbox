@@ -22,7 +22,6 @@ from ..instrument_geometry.body.parametric import (
 
 router = APIRouter(prefix="/guitar/design", tags=["parametric", "guitar"])
 
-
 # ============================================================================
 # Pydantic Models
 # ============================================================================
@@ -40,7 +39,6 @@ class GuitarDimensions(BaseModel):
     fretCount: Optional[int] = Field(None, ge=12, le=27, description="Fret count")
     neckAngle: Optional[float] = Field(None, ge=0, le=10, description="Neck angle (degrees)")
 
-
 class GuitarDesignRequest(BaseModel):
     """Request to generate parametric guitar body outline"""
     dimensions: GuitarDimensions
@@ -48,7 +46,6 @@ class GuitarDesignRequest(BaseModel):
     units: Literal["mm", "inch"] = "mm"
     format: Literal["dxf", "svg", "json"] = "dxf"
     resolution: Optional[int] = Field(48, ge=16, le=128, description="Points per curve segment")
-
 
 class BodyOutlineResponse(BaseModel):
     """Generated body outline data"""
@@ -59,7 +56,6 @@ class BodyOutlineResponse(BaseModel):
     boundingBox: dict
     metadata: dict
     message: str
-
 
 # ============================================================================
 # Parametric Body Generation - Delegated to body/parametric.py (Fortran Rule)
@@ -92,7 +88,6 @@ def generate_body_outline(
         scale_length_mm=dimensions.scaleLength,
     )
     return _generate_body_outline(body_dims, guitar_type, resolution)
-
 
 def outline_to_dxf_r12(outline: List[Tuple[float, float]], metadata: dict) -> str:
     """
@@ -140,7 +135,6 @@ def outline_to_dxf_r12(outline: List[Tuple[float, float]], metadata: dict) -> st
     
     return "\n".join(dxf_lines)
 
-
 def outline_to_svg(outline: List[Tuple[float, float]], metadata: dict) -> str:
     """
     Convert outline to SVG format.
@@ -187,7 +181,6 @@ def outline_to_svg(outline: List[Tuple[float, float]], metadata: dict) -> str:
 </svg>"""
     
     return svg
-
 
 # ============================================================================
 # API Endpoints
@@ -268,7 +261,6 @@ async def generate_parametric_body(request: GuitarDesignRequest) -> BodyOutlineR
     except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
-
 @router.post("/parametric/export")
 async def export_parametric_body(request: GuitarDesignRequest) -> Response:
     """
@@ -334,7 +326,6 @@ async def export_parametric_body(request: GuitarDesignRequest) -> Response:
         raise
     except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
-
 
 @router.post("/parametric/to-cam")
 async def generate_and_plan_cam(request: GuitarDesignRequest) -> Dict[str, Any]:
@@ -474,13 +465,3 @@ async def generate_and_plan_cam(request: GuitarDesignRequest) -> Dict[str, Any]:
     except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=500, detail=f"CAM planning failed: {str(e)}")
 
-
-@router.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "Parametric Guitar Design",
-        "version": "1.0",
-        "features": ["body_outline_generation", "dxf_export", "svg_export", "cam_integration"]
-    }

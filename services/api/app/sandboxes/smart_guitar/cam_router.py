@@ -20,14 +20,11 @@ from .geometry_resolver import resolve_geometry, generate_combined_dxf
 from .schemas import SmartGuitarSpec, Handedness
 from .generate_gcode import generate_smart_guitar_gcode, GCodeConfig, GCodeEmitter
 
-
 router = APIRouter()
-
 
 # =============================================================================
 # RESPONSE MODELS
 # =============================================================================
-
 
 class TemplatesResponse(BaseModel):
     """Available CAM templates response."""
@@ -36,11 +33,9 @@ class TemplatesResponse(BaseModel):
     channels: List[str]
     notes: List[str]
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
 
 @router.get("/templates", response_model=TemplatesResponse)
 def templates():
@@ -74,7 +69,6 @@ def templates():
         notes=["Templates are intent-level in v0.1; no DXF export yet."],
     )
 
-
 @router.post("/plan")
 def plan(spec: SmartGuitarSpec):
     """
@@ -91,34 +85,9 @@ def plan(spec: SmartGuitarSpec):
     """
     return generate_plan(spec).model_dump()
 
-
-@router.get("/health")
-def health():
-    """CAM subsystem health check."""
-    return {
-        "ok": True,
-        "subsystem": "smart_guitar_cam",
-        "model_id": "smart_guitar",
-        "contract_version": "1.0",
-        "capabilities": [
-            "plan",
-            "templates",
-            "geometry",
-            "gcode",
-        ],
-        "notes": ["v1.0: Full CAM pipeline with G-code generation."],
-    }
-
-
-# =============================================================================
-# GEOMETRY ENDPOINTS
-# =============================================================================
-
-
 class GeometryRequest(BaseModel):
     """Request for geometry resolution."""
     handedness: str = Field("RH", description="RH or LH")
-
 
 @router.post("/geometry")
 def geometry(req: GeometryRequest):
@@ -134,11 +103,9 @@ def geometry(req: GeometryRequest):
     resolved = resolve_geometry(plan)
     return resolved.to_dict()
 
-
 # =============================================================================
 # G-CODE GENERATION ENDPOINTS
 # =============================================================================
-
 
 class GCodeRequest(BaseModel):
     """Request for G-code generation."""
@@ -146,7 +113,6 @@ class GCodeRequest(BaseModel):
     post_processor: str = Field("GRBL", description="GRBL, Mach4, or LinuxCNC")
     safe_z_mm: float = Field(10.0, description="Safe Z height in mm")
     units: str = Field("mm", description="mm or inch")
-
 
 class GCodeResponse(BaseModel):
     """G-code generation response."""
@@ -156,7 +122,6 @@ class GCodeResponse(BaseModel):
     tools_used: List[str]
     gcode: str
     notes: List[str]
-
 
 @router.post("/gcode", response_model=GCodeResponse)
 def gcode(req: GCodeRequest):
@@ -281,7 +246,6 @@ def gcode(req: GCodeRequest):
             f"Units: {req.units}",
         ],
     )
-
 
 @router.post("/gcode.nc")
 def gcode_download(req: GCodeRequest):

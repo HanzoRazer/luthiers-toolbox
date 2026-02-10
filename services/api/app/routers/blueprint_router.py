@@ -718,7 +718,6 @@ async def analyze_blueprint(file: UploadFile = File(...)):
         logger.error(f"Error analyzing blueprint: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-
 @router.post("/to-svg")
 async def export_to_svg(request: ExportRequest) -> FileResponse:
     """
@@ -908,7 +907,6 @@ async def export_to_dxf(request: ExportRequest) -> FileResponse:
         status_code=501,
         detail="DXF export endpoint under development. Use /vectorize-geometry for now."
     )
-
 
 @router.post("/vectorize-geometry", response_model=VectorizeResponse)
 async def vectorize_geometry(
@@ -1125,112 +1123,3 @@ async def vectorize_geometry(
 # API ENDPOINTS - SERVICE HEALTH & DIAGNOSTICS
 # =============================================================================
 
-@router.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """
-    Check blueprint import service health and feature availability.
-    
-    Returns service status, available features, and API key configuration.
-    Used for monitoring, diagnostics, and feature detection.
-    
-    Returns:
-        dict with:
-        - status: str ("healthy", "degraded", "unhealthy")
-        - message: str (human-readable status description)
-        - phase: str ("1", "1+2" - indicates available feature set)
-        - features: List[str] (available endpoint names)
-        - phase2_available: bool (True if OpenCV vectorization enabled)
-    
-    Status Values:
-        - "healthy": API key configured, all features operational
-        - "degraded": API key missing (Phase 1 limited, Phase 2 may work)
-        - "unhealthy": Critical error or service unavailable
-    
-    Feature Detection:
-        - Phase 1 (always available):
-          * "analyze" - AI blueprint analysis with Claude
-          * "to-svg" - SVG export with dimension annotations
-        
-        - Phase 2 (optional, requires opencv-python):
-          * "vectorize-geometry" - OpenCV edge detection + DXF export
-    
-    API Key Check:
-        - EMERGENT_LLM_KEY: Preferred (Emergent Nexus API)
-        - ANTHROPIC_API_KEY: Fallback (direct Anthropic API)
-        - If neither set: status="degraded" (Phase 1 limited)
-    
-    Example (Healthy with Phase 2):
-        GET /api/blueprint/health
-        => {
-          "status": "healthy",
-          "message": "Blueprint import service ready",
-          "phase": "1+2",
-          "features": ["analyze", "to-svg", "vectorize-geometry"],
-          "phase2_available": true
-        }
-    
-    Example (Degraded, no API key):
-        GET /api/blueprint/health
-        => {
-          "status": "degraded",
-          "message": "API key not configured (EMERGENT_LLM_KEY or ANTHROPIC_API_KEY)",
-          "phase": "1",
-          "features": ["analyze", "to-svg"],
-          "phase2_available": false
-        }
-    
-    Example (Unhealthy):
-        GET /api/blueprint/health
-        => {
-          "status": "unhealthy",
-          "message": "Failed to import analyzer: ModuleNotFoundError"
-        }
-    
-    Notes:
-        - Always returns HTTP 200 (status in response body, not HTTP code)
-        - Used by monitoring systems and UI feature detection
-        - Phase 2 availability checked via import attempt (PHASE2_AVAILABLE flag)
-        - API key not exposed in response (security)
-    
-    Use Cases:
-        - Pre-flight check before /analyze (validate API key configured)
-        - UI feature toggling (show/hide Phase 2 options)
-        - Monitoring alerts (detect service degradation)
-        - Deployment validation (confirm dependencies installed)
-    
-    Side Effects:
-        - Logs health check errors at ERROR level
-        - No state changes or API consumption
-    """
-    try:
-        # Check if EMERGENT_LLM_KEY or ANTHROPIC_API_KEY is set
-        api_key = os.environ.get('EMERGENT_LLM_KEY') or os.environ.get('ANTHROPIC_API_KEY')
-        if not api_key:
-            status = "degraded"
-            message = "API key not configured (EMERGENT_LLM_KEY or ANTHROPIC_API_KEY)"
-        else:
-            status = "healthy"
-            message = "Blueprint import service ready"
-        
-        # Build feature list
-        features = ["analyze", "to-svg"]
-        if PHASE2_AVAILABLE:
-            features.append("vectorize-geometry")
-            phase = "1+2"
-        else:
-            phase = "1"
-        
-        return {
-            "status": status,
-            "message": message,
-            "phase": phase,
-            "features": features,
-            "phase2_available": PHASE2_AVAILABLE
-        }
-    
-    except (OSError, ValueError, KeyError) as e:  # WP-1: narrowed from bare Exception
-        logger.error(f"Health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "message": str(e)
-        }

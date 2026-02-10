@@ -16,9 +16,7 @@ from pydantic import BaseModel, Field
 from ..data_registry import Registry, Edition as RegistryEdition, EntitlementError
 from ..middleware import get_edition, require_feature, EditionContext
 
-
 router = APIRouter()
-
 
 # ============================================================================
 # Response Models
@@ -32,25 +30,21 @@ class RegistryInfoResponse(BaseModel):
     system_datasets: List[str] = Field(..., description="System tier datasets available")
     edition_datasets: List[str] = Field(..., description="Edition tier datasets (if entitled)")
 
-
 class ScaleLengthResponse(BaseModel):
     """Scale length data response."""
     scales: Dict[str, Any] = Field(..., description="Scale length specifications")
     count: int = Field(..., description="Number of scales")
-
 
 class WoodSpeciesResponse(BaseModel):
     """Wood species reference data response."""
     species: Dict[str, Any] = Field(..., description="Wood species data")
     count: int = Field(..., description="Number of species")
 
-
 class EmpiricalLimitsResponse(BaseModel):
     """Empirical limits response (Pro/Enterprise only)."""
     limits: Dict[str, Any] = Field(..., description="Feed/speed limits per wood species")
     count: int = Field(..., description="Number of species with limits")
     edition_required: str = Field(default="pro", description="Minimum edition required")
-
 
 # ============================================================================
 # Endpoints
@@ -98,7 +92,6 @@ def get_registry_info(
         edition_datasets=edition_datasets
     )
 
-
 @router.get("/scale_lengths", response_model=ScaleLengthResponse)
 def get_scale_lengths(
     edition: str = Query(default="express", description="Edition (all editions have access)")
@@ -123,7 +116,6 @@ def get_scale_lengths(
         count=len(scales)
     )
 
-
 @router.get("/wood_species", response_model=WoodSpeciesResponse)
 def get_wood_species(
     edition: str = Query(default="express", description="Edition (all editions have access)")
@@ -147,7 +139,6 @@ def get_wood_species(
         species=species,
         count=len(species)
     )
-
 
 @router.get("/empirical_limits", response_model=EmpiricalLimitsResponse)
 def get_empirical_limits(
@@ -184,7 +175,6 @@ def get_empirical_limits(
         count=len(limits),
         edition_required="pro"
     )
-
 
 @router.get("/empirical_limits/{wood_id}")
 def get_empirical_limit_by_wood(
@@ -229,7 +219,6 @@ def get_empirical_limit_by_wood(
         "edition": ctx.edition.value
     }
 
-
 @router.get("/fret_formulas")
 def get_fret_formulas(
     edition: str = Query(default="express", description="Edition (all editions have access)")
@@ -254,41 +243,3 @@ def get_fret_formulas(
         "edition": edition
     }
 
-
-@router.get("/health")
-def registry_health() -> Dict[str, Any]:
-    """
-    Health check for registry system.
-    
-    Verifies that registry can load data from all tiers.
-    """
-    health = {
-        "status": "healthy",
-        "checks": {}
-    }
-    
-    # Test Express (system tier)
-    try:
-        registry = Registry(edition="express")
-        scales = registry.get_scale_lengths()
-        health["checks"]["system_tier"] = {
-            "status": "ok",
-            "scales_loaded": len(scales.get("scales", {}))
-        }
-    except (ValueError, OSError) as e:  # WP-1: narrowed — data loading
-        health["status"] = "degraded"
-        health["checks"]["system_tier"] = {"status": "error", "error": str(e)}
-    
-    # Test Pro (edition tier)
-    try:
-        registry = Registry(edition="pro")
-        limits = registry.get_empirical_limits()
-        health["checks"]["edition_tier"] = {
-            "status": "ok",
-            "limits_loaded": len(limits.get("limits", {}))
-        }
-    except (ValueError, OSError) as e:  # WP-1: narrowed — data loading
-        health["status"] = "degraded"
-        health["checks"]["edition_tier"] = {"status": "error", "error": str(e)}
-    
-    return health

@@ -25,7 +25,6 @@ from ..schemas.calculators_schemas import (
 
 router = APIRouter(tags=["calculators"])
 
-
 # CAM Cutting Endpoints
 @router.post("/cam/evaluate", response_model=CAMCalculatorBundleResponse)
 def cam_evaluate_cut(payload: CutOperationPayload) -> CAMCalculatorBundleResponse:
@@ -40,18 +39,15 @@ def cam_evaluate_cut(payload: CutOperationPayload) -> CAMCalculatorBundleRespons
     )
     return CAMCalculatorBundleResponse(**result)
 
-
 @router.post("/cam/evaluate-cut", response_model=CAMCalculatorBundleResponse)
 def cam_evaluate_cut_alias(payload: CutOperationPayload) -> CAMCalculatorBundleResponse:
     """Alias for /cam/evaluate."""
     return cam_evaluate_cut(payload)
 
-
 @router.get("/cam/health")
 def cam_calculator_health():
     """Health check for CAM calculator service."""
     return {"status": "ok", "calculators": ["chipload", "heat_risk", "deflection", "rim_speed", "bite_per_tooth", "kickback_risk"], "tool_kinds": ["router_bit", "saw_blade"]}
-
 
 # Math Endpoints
 @router.post("/math/evaluate", response_model=MathEvaluateResponse)
@@ -61,7 +57,6 @@ async def math_evaluate_expression(request: MathEvaluateRequest):
     result = calc.evaluate(request.expression)
     return MathEvaluateResponse(result=result, display=calc.display, error=calc.error)
 
-
 @router.post("/math/fraction/convert", response_model=FractionResponse)
 async def fraction_convert(request: FractionRequest):
     """Convert decimal to woodworker fraction."""
@@ -69,7 +64,6 @@ async def fraction_convert(request: FractionRequest):
     result = calc.to_fraction(request.decimal)
     return FractionResponse(decimal=request.decimal, fraction=str(result),
                             numerator=result.numerator, denominator=result.denominator, whole=result.whole)
-
 
 @router.get("/math/fraction/parse/{text:path}")
 async def fraction_parse(text: str):
@@ -79,7 +73,6 @@ async def fraction_parse(text: str):
     if calc.error:
         raise HTTPException(status_code=400, detail=calc.error)
     return {"input": text, "decimal": value, "fraction": calc.display_fraction}
-
 
 @router.post("/math/tvm", response_model=TVMResponse)
 async def math_tvm(request: TVMRequest):
@@ -101,7 +94,6 @@ async def math_tvm(request: TVMRequest):
     return TVMResponse(result=result, variable=request.solve_for,
                        inputs={"n": calc.n, "i_y": calc.i_y, "pv": calc.pv, "pmt": calc.pmt, "fv": calc.fv})
 
-
 # Luthier Endpoints
 @router.post("/luthier/radius/from-3-points")
 async def luthier_radius_from_3_points(request: RadiusFrom3PointsRequest):
@@ -109,13 +101,11 @@ async def luthier_radius_from_3_points(request: RadiusFrom3PointsRequest):
     calc = LTBLuthierCalculator()
     return {"radius": calc.radius_from_3_points(request.p1, request.p2, request.p3), "unit": "same as input"}
 
-
 @router.post("/luthier/radius/from-chord")
 async def luthier_radius_from_chord(request: RadiusFromChordRequest):
     """Calculate radius from chord length and arc height."""
     calc = LTBLuthierCalculator()
     return {"radius": calc.radius_from_chord(request.chord_length, request.height), "unit": "same as input"}
-
 
 @router.post("/luthier/radius/compound")
 async def luthier_compound_radius(request: CompoundRadiusRequest):
@@ -124,7 +114,6 @@ async def luthier_compound_radius(request: CompoundRadiusRequest):
     return {"radius": calc.compound_radius(request.nut_radius, request.saddle_radius, request.scale_length, request.position),
             "position": request.position, "nut_radius": request.nut_radius, "saddle_radius": request.saddle_radius}
 
-
 @router.post("/luthier/wedge/angle")
 async def luthier_wedge_angle(request: WedgeAngleRequest):
     """Calculate wedge angle from dimensions."""
@@ -132,25 +121,21 @@ async def luthier_wedge_angle(request: WedgeAngleRequest):
     return {"angle_degrees": calc.wedge_angle(request.length, request.thick_end, request.thin_end),
             "taper_per_foot": calc.taper_per_foot(request.thick_end, request.thin_end, request.length)}
 
-
 @router.post("/luthier/board-feet")
 async def luthier_board_feet(request: BoardFeetRequest):
     """Calculate board feet."""
     calc = LTBLuthierCalculator()
     return {"board_feet": calc.board_feet(request.thickness, request.width, request.length, quarters=request.quarters)}
 
-
 @router.get("/luthier/miter/{num_sides}")
 async def luthier_miter_angle(num_sides: int):
     """Calculate miter angle for n-sided polygon."""
     return {"sides": num_sides, "miter_angle": LTBLuthierCalculator().miter_angle(num_sides)}
 
-
 @router.get("/luthier/dovetail/{ratio}")
 async def luthier_dovetail_angle(ratio: str):
     """Calculate dovetail angle from ratio (e.g., '1:8')."""
     return {"ratio": ratio, "angle_degrees": LTBLuthierCalculator().dovetail_angle(ratio)}
-
 
 # Legacy Compatibility Endpoints
 @router.post("/evaluate", response_model=CAMCalculatorBundleResponse)
@@ -161,6 +146,3 @@ def legacy_evaluate_cut(payload: CutOperationPayload) -> CAMCalculatorBundleResp
 def legacy_evaluate_cut_alias(payload: CutOperationPayload) -> CAMCalculatorBundleResponse:
     return cam_evaluate_cut(payload)
 
-@router.get("/health")
-def legacy_health():
-    return cam_calculator_health()

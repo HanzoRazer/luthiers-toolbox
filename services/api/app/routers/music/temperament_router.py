@@ -41,7 +41,6 @@ from ...calculators.alternative_temperaments import (
 
 router = APIRouter(tags=["Music", "Temperaments"])
 
-
 # =============================================================================
 # MODELS
 # =============================================================================
@@ -54,7 +53,6 @@ class FretPositionResponse(BaseModel):
     deviation_cents: float
     interval_name: str
     ratio: List[int]
-
 
 class TemperamentComparisonRequest(BaseModel):
     """Request for temperament comparison."""
@@ -75,7 +73,6 @@ class TemperamentComparisonRequest(BaseModel):
         description="Alternative temperament system to compare against 12-TET"
     )
 
-
 class TemperamentComparisonResponse(BaseModel):
     """Response with fret positions for comparison."""
     scale_length_mm: float
@@ -85,7 +82,6 @@ class TemperamentComparisonResponse(BaseModel):
     positions: List[FretPositionResponse]
     summary: dict
 
-
 class TemperamentSystemInfo(BaseModel):
     """Information about a temperament system."""
     id: str
@@ -94,38 +90,15 @@ class TemperamentSystemInfo(BaseModel):
     best_for: str
     tradeoffs: str
 
-
 class AllTemperamentsResponse(BaseModel):
     """Response comparing all temperament systems."""
     scale_length_mm: float
     fret_count: int
     systems: dict
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
-@router.get("/health")
-def temperament_health():
-    """
-    Get temperament subsystem health status.
-    """
-    return {
-        "ok": True,
-        "subsystem": "music_temperament",
-        "version": "2.0.0",
-        "wave": "Wave 15 (Option C)",
-        "capabilities": [
-            "temperament_comparison",
-            "key_optimization", 
-            "tuning_reference"
-        ],
-        "supported_temperaments": [t.value for t in TemperamentSystem if t != TemperamentSystem.CUSTOM],
-        "supported_keys": NOTE_NAMES,
-        "note": "Global temperament API - not model-locked"
-    }
-
 
 @router.get("/systems", response_model=List[TemperamentSystemInfo])
 def get_temperament_systems():
@@ -135,7 +108,6 @@ def get_temperament_systems():
     Returns descriptions, use cases, and tradeoffs for each system.
     """
     return list_temperament_systems()
-
 
 @router.get("/keys")
 def get_available_keys():
@@ -147,7 +119,6 @@ def get_available_keys():
         "default": "E",
         "description": "Root note for key-optimized temperament calculations"
     }
-
 
 @router.get("/tunings")
 def get_standard_tunings():
@@ -182,7 +153,6 @@ def get_standard_tunings():
         },
         "note": "For bass, mandolin, and other instruments, use /resolve endpoint with instrument_type"
     }
-
 
 @router.post("/compare", response_model=TemperamentComparisonResponse)
 def compare_temperament(req: TemperamentComparisonRequest):
@@ -235,7 +205,6 @@ def compare_temperament(req: TemperamentComparisonRequest):
         summary=summary
     )
 
-
 @router.get("/compare-all", response_model=AllTemperamentsResponse)
 def compare_all_temperaments(
     scale_length_mm: float = Query(default=648.0, ge=400.0, le=900.0),
@@ -254,7 +223,6 @@ def compare_all_temperaments(
         fret_count=fret_count,
         systems=analysis
     )
-
 
 @router.get("/equal-temperament")
 def get_equal_temperament_positions(
@@ -283,7 +251,6 @@ def get_equal_temperament_positions(
         "fret_count": fret_count,
         "positions": positions
     }
-
 
 @router.get("/resolve")
 def resolve_temperament(
@@ -337,7 +304,6 @@ def resolve_temperament(
         "endpoint_for_positions": f"/api/music/temperament/{'compare' if temperament != 'equal' else 'equal-temperament'}",
         "note": "Use resolved values with /compare or /equal-temperament endpoints"
     }
-
 
 @router.get("/tables")
 def get_temperament_tables(

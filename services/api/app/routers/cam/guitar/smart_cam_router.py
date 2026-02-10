@@ -21,7 +21,6 @@ from pydantic import BaseModel
 
 router = APIRouter(tags=["Smart Guitar", "CAM"])
 
-
 # =============================================================================
 # MODELS
 # =============================================================================
@@ -33,30 +32,9 @@ class SmartGuitarToolpath(BaseModel):
     description: str
     component: str  # 'electronics_cavity', 'battery', 'led_channel'
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
-@router.get("/health")
-def smart_guitar_cam_health() -> Dict[str, Any]:
-    """
-    Get Smart Guitar CAM subsystem health status.
-    """
-    return {
-        "ok": True,
-        "subsystem": "smart_guitar_cam",
-        "model_id": "smart",
-        "capabilities": [
-            "toolpaths",
-            "preview",
-            "electronics_routing"
-        ],
-        "status": "Development - toolpath generation in progress",
-        "instrument_spec": "/api/instruments/guitar/smart/spec",
-        "temperament_api": "/api/music/temperament/health"
-    }
-
 
 @router.get("/toolpaths")
 def list_smart_guitar_toolpaths() -> Dict[str, Any]:
@@ -105,7 +83,6 @@ def list_smart_guitar_toolpaths() -> Dict[str, Any]:
         "count": len(toolpaths),
         "note": "Toolpath generation requires specific body dimensions - see /spec endpoint"
     }
-
 
 @router.post("/preview")
 def generate_toolpath_preview(

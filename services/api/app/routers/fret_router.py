@@ -46,9 +46,7 @@ from ..calculators.alternative_temperaments import (
 # Import LTB calculator for additional fret utilities
 from ..ltb_calculators.luthier_calculator import LTBLuthierCalculator
 
-
 router = APIRouter(prefix="/fret", tags=["Fret Design"])
-
 
 # ============================================================================
 # ENUMS
@@ -62,7 +60,6 @@ class TemperamentEnum(str, Enum):
     PYTHAGOREAN = "pythagorean"
     MEANTONE = "meantone_1/4"
 
-
 # ============================================================================
 # REQUEST MODELS
 # ============================================================================
@@ -72,13 +69,11 @@ class FretPositionRequest(BaseModel):
     scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
     fret_number: int = Field(..., ge=1, le=36, description="Fret number (1-36)")
 
-
 class FretTableRequest(BaseModel):
     """Request for complete fret table generation."""
     scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
     num_frets: int = Field(22, ge=1, le=36, description="Number of frets")
     compensation_mm: float = Field(0.0, ge=0, description="Bridge compensation in mm")
-
 
 class FretboardOutlineRequest(BaseModel):
     """Request for fretboard outline calculation."""
@@ -89,14 +84,12 @@ class FretboardOutlineRequest(BaseModel):
     extension_mm: float = Field(10.0, ge=0, description="Extension past last fret in mm")
     overhang_mm: float = Field(2.0, ge=0, description="Edge overhang on each side in mm")
 
-
 class FretSlotsRequest(BaseModel):
     """Request for fret slot line calculation."""
     scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
     nut_width_mm: float = Field(42.0, gt=0, description="Width at nut in mm")
     heel_width_mm: float = Field(56.0, gt=0, description="Width at heel in mm")
     num_frets: int = Field(22, ge=1, le=36, description="Number of frets")
-
 
 class FanFretCalculateRequest(BaseModel):
     """Request for fan-fret (multi-scale) position calculation."""
@@ -107,7 +100,6 @@ class FanFretCalculateRequest(BaseModel):
     heel_width_mm: float = Field(56.0, gt=0, description="Heel width in mm")
     perpendicular_fret: int = Field(7, ge=0, le=24, description="Fret that remains perpendicular")
 
-
 class FanFretValidateRequest(BaseModel):
     """Request for fan-fret geometry validation."""
     treble_scale_mm: float = Field(..., gt=0, description="Treble side scale length")
@@ -115,14 +107,12 @@ class FanFretValidateRequest(BaseModel):
     num_frets: int = Field(24, ge=1, le=36, description="Number of frets")
     perpendicular_fret: int = Field(7, ge=0, description="Perpendicular fret number")
 
-
 class CompoundRadiusRequest(BaseModel):
     """Request for compound radius at specific fret."""
     nut_radius_mm: float = Field(..., gt=0, description="Radius at nut in mm")
     heel_radius_mm: float = Field(..., gt=0, description="Radius at heel in mm")
     fret_number: int = Field(..., ge=0, description="Fret number to calculate radius at")
     total_frets: int = Field(22, ge=1, le=36, description="Total number of frets")
-
 
 class StaggeredFretsRequest(BaseModel):
     """Request for staggered (angled) fret calculation."""
@@ -138,7 +128,6 @@ class StaggeredFretsRequest(BaseModel):
     nut_width_mm: float = Field(42.0, gt=0, description="Nut width in mm")
     fret_width_mm: float = Field(2.4, gt=0, description="Fret wire width in mm")
 
-
 # ============================================================================
 # RESPONSE MODELS
 # ============================================================================
@@ -150,7 +139,6 @@ class FretPositionResponse(BaseModel):
     spacing_from_previous_mm: float
     remaining_to_bridge_mm: float
 
-
 class FretTableResponse(BaseModel):
     """Complete fret table response."""
     scale_length_mm: float
@@ -159,12 +147,10 @@ class FretTableResponse(BaseModel):
     frets: List[FretPositionResponse]
     spacings_mm: List[float]
 
-
 class OutlinePoint(BaseModel):
     """2D point for outline geometry."""
     x: float
     y: float
-
 
 class FretboardOutlineResponse(BaseModel):
     """Fretboard outline geometry response."""
@@ -172,7 +158,6 @@ class FretboardOutlineResponse(BaseModel):
     fretboard_length_mm: float
     nut_width_mm: float
     heel_width_mm: float
-
 
 class FretSlot(BaseModel):
     """Single fret slot geometry."""
@@ -182,13 +167,11 @@ class FretSlot(BaseModel):
     right: OutlinePoint
     slot_width_mm: float = 0.6
 
-
 class FretSlotsResponse(BaseModel):
     """Fret slot positions response."""
     scale_length_mm: float
     num_frets: int
     slots: List[FretSlot]
-
 
 class FanFretPoint(BaseModel):
     """Single fan-fret position data."""
@@ -201,7 +184,6 @@ class FanFretPoint(BaseModel):
     center_y: float
     is_perpendicular: bool
 
-
 class FanFretCalculateResponse(BaseModel):
     """Fan-fret calculation response."""
     treble_scale_mm: float
@@ -211,13 +193,11 @@ class FanFretCalculateResponse(BaseModel):
     fret_points: List[FanFretPoint]
     max_angle_deg: float
 
-
 class FanFretValidateResponse(BaseModel):
     """Fan-fret validation response."""
     valid: bool
     message: str
     warnings: Optional[List[str]] = None
-
 
 class CompoundRadiusResponse(BaseModel):
     """Compound radius calculation response."""
@@ -227,20 +207,17 @@ class CompoundRadiusResponse(BaseModel):
     nut_radius_mm: float
     heel_radius_mm: float
 
-
 class StaggeredFretPosition(BaseModel):
     """Single string position within a staggered fret."""
     string_index: int
     x_mm: float
     y_mm: float
 
-
 class StaggeredFret(BaseModel):
     """Single staggered fret with per-string positions."""
     fret_number: int
     string_positions: List[StaggeredFretPosition]
     endpoints: List[List[float]]
-
 
 class StaggeredFretsResponse(BaseModel):
     """Staggered frets calculation response."""
@@ -250,7 +227,6 @@ class StaggeredFretsResponse(BaseModel):
     string_count: int
     fret_count: int
     frets: List[StaggeredFret]
-
 
 # ============================================================================
 # ENDPOINTS: Basic Fret Calculations
@@ -274,7 +250,6 @@ async def calculate_fret_position(request: FretPositionRequest):
         spacing_from_previous_mm=round(spacing, 4),
         remaining_to_bridge_mm=round(request.scale_length_mm - position, 4),
     )
-
 
 @router.post("/table", response_model=FretTableResponse)
 async def generate_fret_table(request: FretTableRequest):
@@ -313,7 +288,6 @@ async def generate_fret_table(request: FretTableRequest):
         spacings_mm=[round(s, 4) for s in spacings],
     )
 
-
 # ============================================================================
 # ENDPOINTS: Fretboard Geometry
 # ============================================================================
@@ -344,7 +318,6 @@ async def calculate_fretboard_outline(request: FretboardOutlineRequest):
         nut_width_mm=request.nut_width_mm,
         heel_width_mm=request.heel_width_mm,
     )
-
 
 @router.post("/board/slots", response_model=FretSlotsResponse)
 async def calculate_fret_slots(request: FretSlotsRequest):
@@ -383,7 +356,6 @@ async def calculate_fret_slots(request: FretSlotsRequest):
         slots=slots,
     )
 
-
 # ============================================================================
 # ENDPOINTS: Compound Radius
 # ============================================================================
@@ -411,7 +383,6 @@ async def calculate_compound_radius(request: CompoundRadiusRequest):
         heel_radius_mm=request.heel_radius_mm,
     )
 
-
 @router.get("/radius/presets")
 async def get_compound_radius_presets():
     """
@@ -430,7 +401,6 @@ async def get_compound_radius_presets():
         ],
         "count": 6,
     }
-
 
 # ============================================================================
 # ENDPOINTS: Fan-Fret (Multi-Scale)
@@ -490,7 +460,6 @@ async def calculate_fan_fret(request: FanFretCalculateRequest):
         max_angle_deg=round(max_angle_deg, 4),
     )
 
-
 @router.post("/fan/validate", response_model=FanFretValidateResponse)
 async def validate_fan_fret(request: FanFretValidateRequest):
     """
@@ -517,7 +486,6 @@ async def validate_fan_fret(request: FanFretValidateRequest):
         warnings=result.get("warnings"),
     )
 
-
 @router.get("/fan/presets")
 async def get_fan_fret_presets():
     """
@@ -532,7 +500,6 @@ async def get_fan_fret_presets():
         "presets": FAN_FRET_PRESETS,
         "count": len(FAN_FRET_PRESETS),
     }
-
 
 # ============================================================================
 # ENDPOINTS: Staggered Frets (Alternative Temperaments)
@@ -605,7 +572,6 @@ async def calculate_staggered_frets(request: StaggeredFretsRequest):
         frets=fret_responses,
     )
 
-
 @router.get("/temperaments")
 async def list_temperaments():
     """
@@ -649,7 +615,6 @@ async def list_temperaments():
         "count": 6,
     }
 
-
 # ============================================================================
 # UTILITY ENDPOINTS
 # ============================================================================
@@ -677,20 +642,3 @@ async def get_scale_length_presets():
         "count": 10,
     }
 
-
-@router.get("/health")
-async def health_check():
-    """Health check endpoint for fret router."""
-    return {
-        "status": "healthy",
-        "module": "Fret Design Router",
-        "version": "1.0.0",
-        "features": [
-            "Fret position calculation (12-TET)",
-            "Fretboard outline geometry",
-            "Fret slot line generation",
-            "Fan-fret (multi-scale) support",
-            "Compound radius interpolation",
-            "Staggered frets for alternative temperaments",
-        ],
-    }
