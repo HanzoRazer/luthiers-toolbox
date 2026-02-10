@@ -24,11 +24,11 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 700  # Current: 700, goal: 400 (was 708)
+TARGET_MAX_ENDPOINTS = 670  # Current: 670, goal: 400 (was 700)
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 1  # Current: 1, goal: 0
 TARGET_MAX_LARGE_FILES = 9  # Current: 9, goal: 5
-TARGET_MAX_DUPLICATE_ROUTES = 80  # Current: 80, goal: 0 (was 84)
+TARGET_MAX_DUPLICATE_ROUTES = 72  # Current: 72, goal: 0 (was 80)
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)
