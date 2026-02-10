@@ -77,22 +77,18 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Adaptive Pocketing"],
         category="cam_core",
     ),
+    # CAM Monitoring (consolidated from cam_metrics_router + cam_logs_router)
     RouterSpec(
-        module="app.routers.cam_opt_router",
-        prefix="/api/cam/opt",
-        tags=["CAM Optimization"],
+        module="app.cam.routers.monitoring",
+        prefix="/api/cam",
+        tags=["CAM Monitoring"],
         category="cam_core",
     ),
+    # CAM Utility (consolidated from cam_opt_router + cam_settings, cam_backup, cam_benchmark)
     RouterSpec(
-        module="app.routers.cam_metrics_router",
-        prefix="/api/cam/metrics",
-        tags=["CAM Metrics"],
-        category="cam_core",
-    ),
-    RouterSpec(
-        module="app.routers.cam_logs_router",
-        prefix="/api/cam/logs",
-        tags=["CAM Logs"],
+        module="app.cam.routers.utility",
+        prefix="/api/cam",
+        tags=["CAM Utility"],
         category="cam_core",
     ),
     RouterSpec(
