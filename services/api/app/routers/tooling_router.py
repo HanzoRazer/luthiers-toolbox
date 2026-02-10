@@ -1,5 +1,4 @@
 """Tooling and Post-Processor Management Router."""
-"""
 import json
 import logging
 import os

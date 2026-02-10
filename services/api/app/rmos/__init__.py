@@ -24,7 +24,7 @@ Phase C Additions:
 - constraint_profiles: YAML-based profile management
 - profile_history: JSONL change journal
 - api_constraint_profiles: Profile CRUD endpoints
-- api_profile_history: History/rollback endpoints
+# api_profile_history: removed
 """
 
 # Core API contracts
@@ -83,7 +83,6 @@ from .profile_history import (
 # Routers
 from .api_ai_routes import router as ai_router
 from .api_constraint_profiles import router as profiles_router
-from .api_profile_history import router as history_router
 from .api_routes import router as rmos_router  # Existing core RMOS router
 
 # Runs Module (Phase D - Audit Trail)
@@ -354,7 +353,6 @@ __all__ = [
     # Routers
     "ai_router",
     "profiles_router",
-    "history_router",
     "rmos_router",
     "runs_router",
     # Runs Module (Phase D - v1/v2 conditional)
