@@ -8,16 +8,16 @@
 
 ---
 
-## Current State (Phase 12 Verified - 2026-02-09)
+## Current State (Phase 14 Complete - 2026-02-09)
 
-| Metric | Snap 15 | Snap 16 | Target | Gap |
-|--------|---------|---------|--------|-----|
-| Root directory items | 38 | **40** | <25 | -15 |
-| Files >500 lines (app/) | 16 | **16** | <10 | -6 |
-| Broad `except Exception` | 725 | **602** | <200 | -402 |
-| Route decorators | ~992 | **1,004** | <500 | -504 |
-| @safety_critical sites | 0 | **13** | 20+ | +7 |
-| .txt/.jpg at root | 22+14MB | **0** | 0 | ✅ |
+| Metric | Snap 15 | Snap 16 | Current | Target | Gap |
+|--------|---------|---------|---------|--------|-----|
+| Root directory items | 38 | 40 | **40** | <25 | -15 |
+| Files >500 lines (app/) | 16 | 16 | **16** | <10 | -6 |
+| Broad `except Exception` | 725 | 602 | **602** | <200 | -402 |
+| Route decorators | ~992 | 1,004 | **1,004** | <500 | -504 |
+| @safety_critical sites | 0 | 13 | **26** | 20+ | ✅ |
+| .txt/.jpg at root | 22+14MB | 0 | **0** | 0 | ✅ |
 
 **Methodology:**
 - Files >500: `find app/ -name "*.py" | xargs wc -l | awk '$1>500'`
@@ -167,7 +167,7 @@ Files still >500 lines requiring future decomposition:
 
 ---
 
-## Success Metrics (Phase 12 Corrected)
+## Success Metrics (Phase 14 Complete)
 
 | Metric | Original | Current | Target | Phase | Status |
 |--------|----------|---------|--------|-------|--------|
@@ -175,7 +175,7 @@ Files still >500 lines requiring future decomposition:
 | Files >500 lines | 19+ | **16** | <10 | 9/13 | -6 to go |
 | main.py lines | 915 | **207** | <200 | 9 | ✅ Done |
 | except Exception | 725 | **602** | <200 | 8/15 | -402 to go |
-| @safety_critical sites | 0 | **13** | 20+ | 14 | +7 to go |
+| @safety_critical sites | 0 | **26** | 20+ | 14 | ✅ Done |
 | Startup validation | None | **Fail-fast** | Fail-fast | 10 | ✅ Done |
 | /api/features endpoint | Missing | **Implemented** | Implemented | 11 | ✅ Done |
 | Route decorators | ~992 | **1,004** | <500 | 16 | -504 to go |
@@ -191,6 +191,8 @@ Files still >500 lines requiring future decomposition:
 | 9 | God-object decomposition | ✅ Complete | b3e388c, 1ef6d44, 8c0d8c3 |
 | 10 | Startup validation | ✅ Complete | 848c7fc |
 | 11 | API documentation | ✅ Complete | 29d9e56 |
+| 12 | Metrics accuracy fix | ✅ Complete | 25863c0 |
+| 14 | @safety_critical expansion | ✅ Complete | 78a0bc6 |
 
 ---
 
@@ -198,8 +200,8 @@ Files still >500 lines requiring future decomposition:
 
 | Commit | Description |
 |--------|-------------|
-| 1ef6d44 | Schema extraction for geometry + blueprint_cam_bridge |
-| 8c0d8c3 | main.py simplification (915 → 207 lines) |
+| 25863c0 | Phase 12: Metrics accuracy fix |
+| 78a0bc6 | Phase 14: @safety_critical expansion (13 → 26 sites) |
 
 ---
 
@@ -226,8 +228,9 @@ Files still >500 lines requiring future decomposition:
 2. **router_registry.py:** New 519-line file is intentional (manifest for 53 routers)
 3. **Remaining files >500:** 16 files require decomposition (target <10)
 4. **Exception hardening:** 602 broad exceptions remain (target <200)
-5. **@safety_critical:** 13 sites decorated (target 20+)
+5. **@safety_critical:** ✅ 26 sites decorated (target 20+ achieved)
 6. **Route consolidation:** 1,004 decorators (target <500)
 7. **External review:** Score 6.68/10, gap of 0.32 to 7.0+ target
 8. **Release:** toolbox-v0.38.0
 9. **Phase 12:** Metrics accuracy fix applied 2026-02-09
+10. **Phase 14:** @safety_critical expansion complete (13 → 26 sites)
