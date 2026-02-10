@@ -16,6 +16,7 @@ from .schemas_advisories import (
     IndexRunAdvisorySummaryV1,
     IndexAdvisoryLookupV1,
 )
+from .advisory_link_store import AdvisoryLinkStore
 from .delete_audit import append_delete_audit, build_delete_audit_event
 from .attachment_meta import AttachmentMetaIndex
 
@@ -96,6 +97,14 @@ class RunStoreV2:
         self._advisory_lookup_path = self.root / "_advisory_lookup.json"
         self._attachment_meta = AttachmentMetaIndex(self.root)
 
+        # Delegate advisory operations to AdvisoryLinkStore (SRP extraction)
+        self._advisory_store = AdvisoryLinkStore(
+            root=self.root,
+            read_index=self._read_index,
+            write_index=self._write_index,
+            get_artifact=self.get,
+        )
+
     def _read_index(self) -> Dict[str, Dict[str, Any]]:
         """Read the global index file."""
         with _INDEX_LOCK:
@@ -163,87 +172,20 @@ class RunStoreV2:
         self._update_index_entry(artifact.run_id, index_meta)
 
     # =========================================================================
-    # Advisory Link + Index Glue Methods
+    # Advisory Link Methods (delegated to AdvisoryLinkStore for SRP)
     # =========================================================================
 
-    def _read_advisory_lookup(self) -> Dict[str, Dict[str, Any]]:
-        """Read global advisory lookup mapping advisory_id -> entry dict."""
-        if not self._advisory_lookup_path.exists(): return {}
-        try:
-            txt = self._advisory_lookup_path.read_text(encoding="utf-8")
-            obj = json.loads(txt) if txt.strip() else {}
-            return obj if isinstance(obj, dict) else {}
-        except (json.JSONDecodeError, OSError): return {}
-
-    def _write_advisory_lookup(self, lookup: Dict[str, Dict[str, Any]]) -> None:
-        """Write advisory lookup atomically."""
-        tmp = self._advisory_lookup_path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(lookup, indent=2, sort_keys=True), encoding="utf-8")
-        os.replace(str(tmp), str(self._advisory_lookup_path))
-
-    def _upsert_advisory_lookup(self, entry: IndexAdvisoryLookupV1) -> None:
-        lookup = self._read_advisory_lookup()
-        lookup[entry.advisory_id] = entry.dict()
-        self._write_advisory_lookup(lookup)
-
-    def _append_run_advisory_rollup(self, run_id: str, summary: IndexRunAdvisorySummaryV1) -> None:
-        """Store run-local advisory summaries in _index.json for fast listing."""
-        index = self._read_index()
-        meta = index.get(run_id) or {}
-        advs = meta.get("advisories") or []
-        existing_ids = {a.get("advisory_id") for a in advs if isinstance(a, dict)}
-        if summary.advisory_id not in existing_ids:
-            advs.append(summary.dict()); meta["advisories"] = advs; index[run_id] = meta; self._write_index(index)
-
     def put_advisory_link(self, link: RunAdvisoryLinkV1) -> None:
-        """Append-only: write a run_<run_id>_advisory_<advisory_id>.json link file,"""
-        # Determine partition directory from the run artifact location
-        artifact = self.get(link.run_id)
-        if artifact is None:
-            raise FileNotFoundError(f"run_id not found: {link.run_id}")
-
-        # Compute the date partition dir
-        created = getattr(artifact, "created_at_utc", None)
-        if created is None:
-            raise ValueError("run artifact missing created_at_utc")
-
-        # created may be datetime; normalize:
-        try:
-            date_part = created.date().isoformat()
-        except (AttributeError, TypeError):  # WP-1: narrowed from except Exception
-            # fallback: assume ISO string with date prefix
-            date_part = str(created)[:10]
-
-        part_dir = self.root / date_part
-        part_dir.mkdir(parents=True, exist_ok=True)
-
-        link_path = part_dir / f"run_{link.run_id}_advisory_{link.advisory_id}.json"
-        tmp = link_path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(link.dict(), indent=2, sort_keys=True), encoding="utf-8")
-        os.replace(str(tmp), str(link_path))
-
-        # Update run-local rollup in _index.json
-        summary = IndexRunAdvisorySummaryV1(advisory_id=link.advisory_id, sha256=link.advisory_sha256, kind=link.kind,
-            mime=link.mime, size_bytes=link.size_bytes, created_at_utc=link.created_at_utc, status=link.status,
-            tags=link.tags, confidence_max=link.confidence_max)
-        self._append_run_advisory_rollup(link.run_id, summary)
-
-        # Update global advisory lookup
-        lookup_entry = IndexAdvisoryLookupV1(advisory_id=link.advisory_id, run_id=link.run_id, sha256=link.advisory_sha256,
-            kind=link.kind, mime=link.mime, size_bytes=link.size_bytes, created_at_utc=link.created_at_utc, status=link.status,
-            tags=link.tags, confidence_max=link.confidence_max, bundle_sha256=link.bundle_sha256, manifest_sha256=link.manifest_sha256)
-        self._upsert_advisory_lookup(lookup_entry)
+        """Append-only: write advisory link file. Delegated to AdvisoryLinkStore."""
+        return self._advisory_store.put_advisory_link(link)
 
     def list_run_advisories(self, run_id: str) -> List[Dict[str, Any]]:
-        """Fast path: read from _index.json rollup."""
-        meta = self._read_index().get(run_id) or {}
-        advs = meta.get("advisories") or []
-        return [a for a in advs if isinstance(a, dict)] if isinstance(advs, list) else []
+        """Fast path: read from _index.json rollup. Delegated to AdvisoryLinkStore."""
+        return self._advisory_store.list_run_advisories(run_id)
 
     def resolve_advisory(self, advisory_id: str) -> Optional[Dict[str, Any]]:
-        """Resolve advisory_id -> lookup entry dict."""
-        entry = self._read_advisory_lookup().get(advisory_id)
-        return entry if isinstance(entry, dict) else None
+        """Resolve advisory_id -> lookup entry dict. Delegated to AdvisoryLinkStore."""
+        return self._advisory_store.resolve_advisory(advisory_id)
 
     def _date_partition(self, dt: datetime) -> str:
         """Get date partition string from datetime."""
@@ -252,12 +194,6 @@ class RunStoreV2:
     def _path_for(self, run_id: str, created_at: datetime) -> Path:
         """Get the file path for a run artifact."""
         return self.root / self._date_partition(created_at) / f"{run_id.replace('/', '_').replace(chr(92), '_')}.json"
-
-    def _advisory_link_path(self, run_id: str, advisory_id: str, created_at: datetime) -> Path:
-        """Get the file path for an advisory link."""
-        partition = self._date_partition(created_at)
-        safe = lambda s: s.replace("/", "_").replace(chr(92), "_")
-        return self.root / partition / f"{safe(run_id)}_advisory_{safe(advisory_id)}.json"
 
     def put(self, artifact: RunArtifact) -> None:
         """Write a run artifact to storage."""
@@ -311,37 +247,17 @@ class RunStoreV2:
         return None
 
     def _load_advisory_links(self, artifact: RunArtifact, partition: Path) -> RunArtifact:
-        """Load append-only advisory links for an artifact."""
-        safe_id = artifact.run_id.replace("/", "_").replace(chr(92), "_")
-        advisory_inputs = list(artifact.advisory_inputs) if artifact.advisory_inputs else []
-        for link_path in partition.glob(f"{safe_id}_advisory_*.json"):
-            try:
-                ref = AdvisoryInputRef.model_validate(json.loads(link_path.read_text(encoding="utf-8")))
-                if not any(a.advisory_id == ref.advisory_id for a in advisory_inputs): advisory_inputs.append(ref)
-            except (json.JSONDecodeError, ValueError, OSError, KeyError): continue
-        return artifact.model_copy(update={"advisory_inputs": advisory_inputs})
+        """Load append-only advisory links for an artifact. Delegated to AdvisoryLinkStore."""
+        return self._advisory_store.load_advisory_links(artifact, partition)
 
     def attach_advisory(self, run_id: str, advisory_id: str, kind: str = "unknown",
                         engine_id: Optional[str] = None, engine_version: Optional[str] = None,
                         request_id: Optional[str] = None) -> Optional[AdvisoryInputRef]:
-        """Attach an advisory reference to a run (append-only)."""
-        artifact = self.get(run_id)
-        if artifact is None: return None
-        existing = artifact.advisory_inputs or []
-        if any(a.advisory_id == advisory_id for a in existing):
-            return next(a for a in existing if a.advisory_id == advisory_id)
-        ref = AdvisoryInputRef(advisory_id=advisory_id, kind=kind, engine_id=engine_id,
-            engine_version=engine_version, request_id=request_id)
-        link_path = self._advisory_link_path(run_id, advisory_id, artifact.created_at_utc)
-        link_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = link_path.with_suffix(".json.tmp")
-        try:
-            tmp.write_text(ref.model_dump_json(indent=2), encoding="utf-8")
-            os.replace(tmp, link_path)
-        except OSError:
-            if tmp.exists(): tmp.unlink()
-            raise
-        return ref
+        """Attach an advisory reference to a run (append-only). Delegated to AdvisoryLinkStore."""
+        return self._advisory_store.attach_advisory(
+            run_id=run_id, advisory_id=advisory_id, kind=kind,
+            engine_id=engine_id, engine_version=engine_version, request_id=request_id
+        )
 
     def delete_run(self, run_id: str, *, mode: str = "soft", reason: str, actor: Optional[str] = None,
                    request_id: Optional[str] = None, rate_limit_key: Optional[str] = None, cascade: bool = True) -> Dict[str, Any]:
