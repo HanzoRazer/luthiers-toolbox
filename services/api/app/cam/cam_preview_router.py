@@ -24,9 +24,7 @@ from ..instrument_geometry.neck.neck_profiles import FretboardSpec
 from ..rmos.context import RmosContext
 from ..rmos.feasibility_fusion import evaluate_feasibility
 
-
 router = APIRouter()
-
 
 # ============================================================================
 # Request/Response Models
@@ -62,7 +60,6 @@ class FretSlotPreviewRequest(BaseModel):
         }
     )
 
-
 class ToolpathSummary(BaseModel):
     """Summary of a single fret slot toolpath."""
     fret_number: int
@@ -70,7 +67,6 @@ class ToolpathSummary(BaseModel):
     width_mm: float
     slot_depth_mm: float
     feed_rate_mmpm: float
-
 
 class FretSlotPreviewResponse(BaseModel):
     """Unified CAM preview response with feasibility scoring."""
@@ -92,7 +88,6 @@ class FretSlotPreviewResponse(BaseModel):
         default_factory=dict,
         description="URLs for downloading full DXF/G-code files",
     )
-
 
 # ============================================================================
 # Endpoints
@@ -244,7 +239,6 @@ async def preview_fret_slot_cam(request: FretSlotPreviewRequest):
             detail=f"CAM preview generation failed: {str(e)}"
         )
 
-
 @router.get("/fret_slots/example")
 async def get_fret_slot_example():
     """
@@ -296,44 +290,3 @@ async def get_fret_slot_example():
         },
     }
 
-
-@router.get("/health")
-async def cam_preview_health():
-    """
-    Health check endpoint for CAM preview router.
-    
-    GET /api/cam/health
-    
-    Response:
-    ```json
-    {
-      "status": "healthy",
-      "phase_c_available": true,
-      "phase_d_available": true,
-      "phase_e_available": true
-    }
-    ```
-    """
-    # Test imports
-    phase_c_ok = True
-    phase_d_ok = True
-    
-    try:
-        from ..calculators.fret_slots_cam import generate_fret_slot_cam
-    except ImportError:
-        phase_c_ok = False
-    
-    try:
-        from ..rmos.feasibility_fusion import evaluate_feasibility
-    except ImportError:
-        phase_d_ok = False
-    
-    status = "healthy" if (phase_c_ok and phase_d_ok) else "degraded"
-    
-    return {
-        "status": status,
-        "phase_c_available": phase_c_ok,
-        "phase_d_available": phase_d_ok,
-        "phase_e_available": True,  # This endpoint itself
-        "message": "CAM Preview router operational" if status == "healthy" else "Some components unavailable",
-    }

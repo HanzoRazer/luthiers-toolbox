@@ -18,16 +18,13 @@ router = APIRouter(prefix="/cam/bridge", tags=["Bridge Calculator", "CAM"])
 
 IN_TO_MM = 25.4
 
-
 def inches_to_mm(value: float) -> float:
     """Convert inches to millimeters with 2 decimal precision."""
     return round(value * IN_TO_MM, 2)
 
-
 # ============================================================================
 # Pydantic Models
 # ============================================================================
-
 
 class Point(BaseModel):
     """2D point coordinates."""
@@ -35,13 +32,11 @@ class Point(BaseModel):
     x: float
     y: float
 
-
 class BridgeEndpoints(BaseModel):
     """Saddle line endpoints (treble and bass sides)."""
 
     treble: Point
     bass: Point
-
 
 class BridgeGeometry(BaseModel):
     """Bridge saddle compensation geometry."""
@@ -67,7 +62,6 @@ class BridgeGeometry(BaseModel):
         ..., description="Slot rectangle polygon (4 vertices)"
     )
 
-
 class BridgeExportRequest(BaseModel):
     """Request body for DXF export."""
 
@@ -75,7 +69,6 @@ class BridgeExportRequest(BaseModel):
     filename: Optional[str] = Field(
         None, description="Optional output filename (without extension)"
     )
-
 
 class PresetFamily(BaseModel):
     """Guitar family preset definition."""
@@ -89,7 +82,6 @@ class PresetFamily(BaseModel):
     slotWidth: float  # mm slot width
     slotLength: float  # mm slot length
 
-
 class PresetGauge(BaseModel):
     """String gauge preset."""
 
@@ -98,7 +90,6 @@ class PresetGauge(BaseModel):
     compAdjust: float  # Legacy aggregate adjustment (mm)
     trebleAdjust: float  # mm delta applied to treble compensation
     bassAdjust: float  # mm delta applied to bass compensation
-
 
 class PresetAction(BaseModel):
     """Action height preset."""
@@ -109,14 +100,12 @@ class PresetAction(BaseModel):
     trebleAdjust: float  # mm delta applied to treble compensation
     bassAdjust: float  # mm delta applied to bass compensation
 
-
 class PresetsResponse(BaseModel):
     """Available presets for bridge calculator."""
 
     families: List[PresetFamily]
     gauges: List[PresetGauge]
     actions: List[PresetAction]
-
 
 # ============================================================================
 # Preset Data
@@ -223,11 +212,9 @@ ACTION_PRESETS = [
     },
 ]
 
-
 # ============================================================================
 # API Endpoints
 # ============================================================================
-
 
 @router.post("/export_dxf", response_class=Response)
 def export_bridge_dxf(request: BridgeExportRequest) -> Response:
@@ -312,7 +299,6 @@ def export_bridge_dxf(request: BridgeExportRequest) -> Response:
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
-
 @router.get("/presets", response_model=PresetsResponse)
 def get_bridge_presets() -> Dict[str, Any]:
     """
@@ -327,40 +313,3 @@ def get_bridge_presets() -> Dict[str, Any]:
         "actions": ACTION_PRESETS,
     }
 
-
-@router.get("/health")
-def bridge_health() -> Dict[str, Any]:
-    """
-    Health check for bridge calculator module.
-
-    Verifies:
-    - bridge_to_dxf.py script exists
-    - ezdxf library is importable
-    """
-    script_path = Path("server/pipelines/bridge/bridge_to_dxf.py")
-    script_exists = script_path.exists()
-
-    # Check ezdxf availability
-    try:
-        import ezdxf
-
-        ezdxf_available = True
-        ezdxf_version = ezdxf.__version__
-    except ImportError:
-        ezdxf_available = False
-        ezdxf_version = None
-
-    return {
-        "status": "ok",
-        "ok": True,
-        "module": "bridge_calculator",
-        "script_exists": script_exists,
-        "script_path": str(script_path),
-        "ezdxf_available": ezdxf_available,
-        "ezdxf_version": ezdxf_version,
-        "presets_count": {
-            "families": len(FAMILY_PRESETS),
-            "gauges": len(GAUGE_PRESETS),
-            "actions": len(ACTION_PRESETS),
-        },
-    }

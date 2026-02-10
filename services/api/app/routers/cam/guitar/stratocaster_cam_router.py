@@ -25,10 +25,8 @@ from pydantic import BaseModel
 
 router = APIRouter(tags=["Stratocaster", "CAM"])
 
-
 # Base path to Stratocaster assets
 STRAT_BASE = Path("Stratocaster")
-
 
 # =============================================================================
 # MODELS
@@ -43,7 +41,6 @@ class StratocasterBOMItem(BaseModel):
     est_high_usd: float
     notes: str
 
-
 class StratocasterBOMResponse(BaseModel):
     """BOM with cost estimates"""
     ok: bool
@@ -52,31 +49,9 @@ class StratocasterBOMResponse(BaseModel):
     total_high: float
     series: str
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
-@router.get("/health")
-def stratocaster_cam_health() -> Dict[str, Any]:
-    """
-    Get Stratocaster CAM subsystem health status.
-    """
-    return {
-        "ok": STRAT_BASE.exists(),
-        "subsystem": "stratocaster_cam",
-        "model_id": "stratocaster",
-        "strat_path": str(STRAT_BASE),
-        "strat_exists": STRAT_BASE.exists(),
-        "capabilities": [
-            "templates",
-            "bom",
-            "preview",
-            "file_download"
-        ],
-        "instrument_spec": "/api/instruments/guitar/stratocaster/spec"
-    }
-
 
 @router.get("/templates")
 def list_stratocaster_templates() -> Dict[str, Any]:
@@ -152,7 +127,6 @@ def list_stratocaster_templates() -> Dict[str, Any]:
         "templates": templates,
         "total_count": sum(len(v) for v in templates.values())
     }
-
 
 @router.get("/bom")
 def get_stratocaster_bom(series: str = "standard") -> StratocasterBOMResponse:
@@ -258,7 +232,6 @@ def get_stratocaster_bom(series: str = "standard") -> StratocasterBOMResponse:
         series=series
     )
 
-
 @router.get("/preview")
 def get_stratocaster_preview() -> Dict[str, Any]:
     """
@@ -277,7 +250,6 @@ def get_stratocaster_preview() -> Dict[str, Any]:
             "scale_length_mm": 648.0
         }
     }
-
 
 @router.get("/download/{file_path:path}")
 def download_stratocaster_file(file_path: str) -> FileResponse:

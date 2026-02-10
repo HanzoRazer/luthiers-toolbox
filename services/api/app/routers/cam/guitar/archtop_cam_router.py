@@ -28,7 +28,6 @@ from pydantic import BaseModel
 
 router = APIRouter(tags=["Archtop", "CAM"])
 
-
 # =============================================================================
 # REQUEST/RESPONSE MODELS
 # =============================================================================
@@ -40,14 +39,12 @@ class ArchtopContourCSVRequest(BaseModel):
     resolution: float = 1.5  # Grid resolution in mm
     out_prefix: str = "archtop_contours"
 
-
 class ArchtopContourOutlineRequest(BaseModel):
     """Generate scaled contours from DXF outline (Mottola-style)"""
     dxf_path: str
     scales: str = "0.90,0.78,0.66,0.54,0.37"  # Scale factors for rings
     origin: str = "0,0"  # Origin point
     out_prefix: str = "archtop_outline"
-
 
 class ArchtopFitRequest(BaseModel):
     """Calculate neck angle and bridge parameters"""
@@ -56,7 +53,6 @@ class ArchtopFitRequest(BaseModel):
     body_thickness_mm: float = 45.0
     top_arch_height_mm: float = 18.0
     fingerboard_extension_mm: float = 70.0
-
 
 class ArchtopBridgeRequest(BaseModel):
     """Generate floating bridge DXF"""
@@ -67,7 +63,6 @@ class ArchtopBridgeRequest(BaseModel):
     string_spacing_mm: float = 52.0
     out_dir: str = "storage/exports/archtop_bridge"
 
-
 class ArchtopSaddleRequest(BaseModel):
     """Generate compensated saddle profile"""
     fit_json_path: str
@@ -75,39 +70,9 @@ class ArchtopSaddleRequest(BaseModel):
     string_spacing_mm: float = 52.0
     out_dir: str = "storage/exports/archtop_saddle"
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
-@router.get("/health")
-def archtop_cam_health() -> Dict[str, Any]:
-    """
-    Get archtop CAM subsystem health status.
-    
-    Checks availability of contour generator scripts and dependencies.
-    """
-    script = Path("services/api/app/cam/archtop_contour_generator.py")
-    legacy_script = Path("Archtop/archtop_contour_generator.py")
-    
-    return {
-        "ok": True,
-        "subsystem": "archtop_cam",
-        "model_id": "archtop",
-        "capabilities": [
-            "contour_csv",
-            "contour_outline",
-            "bridge_fit",
-            "bridge_dxf",
-            "saddle_profile"
-        ],
-        "scripts": {
-            "contour_generator": script.exists() or legacy_script.exists(),
-            "contour_generator_path": str(script) if script.exists() else str(legacy_script) if legacy_script.exists() else None
-        },
-        "instrument_spec": "/api/instruments/guitar/archtop/spec"
-    }
-
 
 @router.post("/contours/csv")
 def generate_contours_from_csv(req: ArchtopContourCSVRequest) -> Dict[str, Any]:
@@ -163,7 +128,6 @@ def generate_contours_from_csv(req: ArchtopContourCSVRequest) -> Dict[str, Any]:
             detail=f"Contour generation failed: {e.stderr}"
         )
 
-
 @router.post("/contours/outline")
 def generate_contours_from_outline(req: ArchtopContourOutlineRequest) -> Dict[str, Any]:
     """
@@ -218,7 +182,6 @@ def generate_contours_from_outline(req: ArchtopContourOutlineRequest) -> Dict[st
             detail=f"Contour generation failed: {e.stderr}"
         )
 
-
 @router.post("/fit")
 def calculate_bridge_fit(req: ArchtopFitRequest) -> Dict[str, Any]:
     """
@@ -263,7 +226,6 @@ def calculate_bridge_fit(req: ArchtopFitRequest) -> Dict[str, Any]:
     
     return fit_data
 
-
 @router.post("/bridge")
 def generate_bridge_dxf(req: ArchtopBridgeRequest) -> Dict[str, Any]:
     """
@@ -286,7 +248,6 @@ def generate_bridge_dxf(req: ArchtopBridgeRequest) -> Dict[str, Any]:
         "error": "Bridge generator not yet implemented",
         "requested": req.model_dump()
     }
-
 
 @router.post("/saddle")
 def generate_saddle_profile(req: ArchtopSaddleRequest) -> Dict[str, Any]:

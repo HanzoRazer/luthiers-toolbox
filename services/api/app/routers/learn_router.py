@@ -74,9 +74,7 @@ except ImportError:
     )
     from _experimental.cnc_production.learn.live_learn_ingestor import ingest_run_telemetry_by_id
 
-
 router = APIRouter(prefix="/learn", tags=["learn", "telemetry"])
-
 
 @router.post("/ingest", response_model=TelemetryIngestResponse)
 def ingest_telemetry(req: TelemetryIngestRequest) -> TelemetryIngestResponse:
@@ -185,23 +183,3 @@ def ingest_telemetry(req: TelemetryIngestRequest) -> TelemetryIngestResponse:
             detail=f"Telemetry ingestion failed: {str(e)}"
         )
 
-
-@router.get("/health")
-def health_check():
-    """
-    Health check endpoint for Live Learn system.
-    
-    Returns:
-        Status and version information
-    """
-    return {
-        "status": "healthy",
-        "module": "CP-S60 Live Learn Ingestor",
-        "version": "1.0.0",
-        "features": [
-            "Telemetry ingestion",
-            "Lane-scale learning",
-            "Risk scoring",
-            "Automatic feed/speed optimization"
-        ]
-    }

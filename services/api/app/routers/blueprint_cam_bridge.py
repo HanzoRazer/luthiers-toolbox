@@ -601,7 +601,6 @@ def extract_loops_from_dxf(dxf_bytes: bytes, layer_name: str = "GEOMETRY") -> Tu
     
     return loops, warnings
 
-
 # ============================================================================
 # Endpoints
 # ============================================================================
@@ -916,22 +915,3 @@ async def blueprint_to_adaptive(
 # API ENDPOINTS - SERVICE HEALTH & DIAGNOSTICS
 # =============================================================================
 
-@router.get("/health")
-def health_check() -> Dict[str, Any]:
-    """Health check for blueprint CAM bridge"""
-    return {
-        "status": "ok",
-        "bridge": "blueprint-to-cam",
-        "phase": "3.2",
-        "endpoints": [
-            "/reconstruct-contours",
-            "/preflight", 
-            "/to-adaptive"
-        ],
-        "features": {
-            "contour_reconstruction": "Phase 3.1 - LINE/SPLINE chaining",
-            "dxf_preflight": "Phase 3.2 - Validation system",
-            "adaptive_l1": "Available - Robust pyclipper offsetting",
-            "n17_offset": "Planned",
-        }
-    }

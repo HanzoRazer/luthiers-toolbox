@@ -8,12 +8,10 @@ from .store import summarize_by_batch, summarize_by_instrument
 
 router = APIRouter(prefix="/api/cost", tags=["Cost Attribution"])
 
-
 def _repo_root() -> Path:
     """Get repository root path."""
     # services/api/app/cost_attribution/api.py -> repo root
     return Path(__file__).resolve().parents[4]
-
 
 @router.get("/summary")
 def get_cost_summary(
@@ -38,8 +36,3 @@ def get_cost_summary(
         "detail": "Provide manufacturing_batch_id or instrument_id"
     }
 
-
-@router.get("/health")
-def cost_health() -> Dict[str, str]:
-    """Health check for cost attribution module."""
-    return {"status": "ok", "module": "cost_attribution"}

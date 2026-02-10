@@ -27,9 +27,7 @@ from .schemas import (
 )
 from .assembler import default_assembler
 
-
 router = APIRouter(prefix="/api/ai/context", tags=["AI Context"])
-
 
 # -------------------------
 # Request/Response Models
@@ -40,14 +38,12 @@ class ContextEnvelopeResponse(BaseModel):
     envelope: Dict[str, Any] = Field(..., description="The context envelope")
     warnings: List[Dict[str, Any]] = Field(default_factory=list, description="Any warnings generated")
 
-
 class RunSummaryResponse(BaseModel):
     """Response containing run summary context."""
     source_id: str
     kind: str = "run_summary"
     content_type: str = "application/json"
     payload: Dict[str, Any]
-
 
 class DesignIntentResponse(BaseModel):
     """Response containing design intent context."""
@@ -56,16 +52,13 @@ class DesignIntentResponse(BaseModel):
     content_type: str = "application/json"
     payload: Dict[str, Any]
 
-
 class GovernanceNotesResponse(BaseModel):
     """Response containing governance notes."""
     sources: List[Dict[str, Any]]
 
-
 class DocsExcerptResponse(BaseModel):
     """Response containing documentation excerpts."""
     sources: List[Dict[str, Any]]
-
 
 class HealthResponse(BaseModel):
     """Health check response."""
@@ -74,31 +67,9 @@ class HealthResponse(BaseModel):
     providers: List[str]
     redaction_mode: str = "read_only"
 
-
 # -------------------------
 # Endpoints
 # -------------------------
-
-@router.get("/health", response_model=HealthResponse)
-def get_health() -> HealthResponse:
-    """
-    Health check for AI Context Adapter.
-    
-    Returns adapter version and available providers.
-    """
-    return HealthResponse(
-        status="ok",
-        version="v1",
-        providers=[
-            "run_summary",
-            "design_intent",
-            "governance_notes",
-            "docs_excerpt",
-            "ui_state_hint",
-        ],
-        redaction_mode="read_only",
-    )
-
 
 @router.get("/envelope", response_model=ContextEnvelopeResponse)
 def get_context_envelope(
@@ -148,7 +119,6 @@ def get_context_envelope(
         warnings=[w.to_dict() for w in result.warnings],
     )
 
-
 @router.get("/run_summary", response_model=RunSummaryResponse)
 def get_run_summary(
     run_id: str = Query(..., description="RMOS run ID"),
@@ -191,7 +161,6 @@ def get_run_summary(
         content_type=source.content_type,
         payload=source.payload,
     )
-
 
 @router.get("/design_intent", response_model=DesignIntentResponse)
 def get_design_intent(
@@ -236,7 +205,6 @@ def get_design_intent(
         payload=source.payload,
     )
 
-
 @router.get("/governance_notes", response_model=GovernanceNotesResponse)
 def get_governance_notes(
     topic: Optional[str] = Query(None, description="Specific topic (feasibility, boundary, etc.)"),
@@ -272,7 +240,6 @@ def get_governance_notes(
     return GovernanceNotesResponse(
         sources=[s.to_dict() for s in sources],
     )
-
 
 @router.get("/docs_excerpt", response_model=DocsExcerptResponse)
 def get_docs_excerpt(

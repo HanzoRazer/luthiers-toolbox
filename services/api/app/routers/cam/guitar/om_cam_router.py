@@ -24,10 +24,8 @@ from pydantic import BaseModel
 
 router = APIRouter(tags=["OM", "CAM"])
 
-
 # Base path to OM project assets
 OM_BASE = Path(__file__).parent.parent.parent.parent / "OM Project"
-
 
 # =============================================================================
 # MODELS
@@ -41,7 +39,6 @@ class OMTemplate(BaseModel):
     path: str
     description: Optional[str] = None
 
-
 class OMGraduationMap(BaseModel):
     """OM graduation thickness map"""
     name: str
@@ -50,7 +47,6 @@ class OMGraduationMap(BaseModel):
     grid: bool  # True for grid version, False for plain
     path: str
 
-
 class OMKit(BaseModel):
     """OM CNC kit metadata"""
     name: str
@@ -58,7 +54,6 @@ class OMKit(BaseModel):
     files: List[str]
     zip_available: bool
     path: Optional[str] = None
-
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -98,7 +93,6 @@ def _scan_templates() -> List[OMTemplate]:
     
     return templates
 
-
 def _scan_graduation_maps() -> List[OMGraduationMap]:
     """Scan for graduation thickness maps (SVG and PDF)"""
     maps = []
@@ -131,7 +125,6 @@ def _scan_graduation_maps() -> List[OMGraduationMap]:
         ))
     
     return maps
-
 
 def _scan_kits() -> List[OMKit]:
     """Scan for organized CNC kits"""
@@ -168,33 +161,9 @@ def _scan_kits() -> List[OMKit]:
     
     return kits
 
-
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
-
-@router.get("/health")
-def om_cam_health() -> Dict[str, Any]:
-    """
-    Get OM CAM subsystem health status.
-    
-    Checks availability of OM Project assets.
-    """
-    return {
-        "ok": OM_BASE.exists(),
-        "subsystem": "om_cam",
-        "model_id": "om",
-        "om_project_path": str(OM_BASE),
-        "om_project_exists": OM_BASE.exists(),
-        "capabilities": [
-            "templates",
-            "graduation_maps",
-            "cnc_kits",
-            "file_download"
-        ],
-        "instrument_spec": "/api/instruments/guitar/om/spec"
-    }
-
 
 @router.get("/templates")
 def list_om_templates() -> Dict[str, Any]:
@@ -213,7 +182,6 @@ def list_om_templates() -> Dict[str, Any]:
         "base_path": str(OM_BASE)
     }
 
-
 @router.get("/graduation")
 def list_graduation_maps() -> Dict[str, Any]:
     """
@@ -231,7 +199,6 @@ def list_graduation_maps() -> Dict[str, Any]:
         "note": "Graduation maps show target thicknesses in mm for hand/CNC carving"
     }
 
-
 @router.get("/kits")
 def list_cnc_kits() -> Dict[str, Any]:
     """
@@ -247,7 +214,6 @@ def list_cnc_kits() -> Dict[str, Any]:
         "kits": [k.model_dump() for k in kits],
         "count": len(kits)
     }
-
 
 @router.get("/download/{file_path:path}")
 def download_om_file(file_path: str) -> FileResponse:

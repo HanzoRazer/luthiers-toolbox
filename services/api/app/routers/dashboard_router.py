@@ -15,9 +15,7 @@ except ImportError:
     # Direct testing import
     from _experimental.cnc_production.learn.saw_live_learn_dashboard import list_run_summaries
 
-
 router = APIRouter(prefix="/dashboard/saw", tags=["dashboard", "saw_lab"])
-
 
 # ============================================================================
 # RESPONSE MODELS
@@ -29,7 +27,6 @@ class LaneScaleHistoryPoint(BaseModel):
     lane_scale: float = Field(..., description="Scale factor (0.5-1.5)")
     source: Optional[str] = Field(None, description="Source of adjustment (manual/auto)")
 
-
 class MetricsSummary(BaseModel):
     """Aggregated telemetry metrics."""
     n_samples: int = Field(..., description="Number of cutting samples")
@@ -40,13 +37,11 @@ class MetricsSummary(BaseModel):
     avg_vibration_rms: Optional[float] = Field(None, description="Average vibration (mm/s RMS)")
     max_vibration_rms: Optional[float] = Field(None, description="Peak vibration (mm/s RMS)")
 
-
 class RiskBucketInfo(BaseModel):
     """Risk classification bucket."""
     id: str = Field(..., description="Bucket ID (unknown/green/yellow/orange/red)")
     label: str = Field(..., description="Human-readable label")
     description: str = Field(..., description="Risk level explanation")
-
 
 class RunSummaryItem(BaseModel):
     """Dashboard item for a single CNC run."""
@@ -110,13 +105,11 @@ class RunSummaryItem(BaseModel):
             }
         }
 
-
 class DashboardSummary(BaseModel):
     """Dashboard response with run summaries."""
     total_runs: int = Field(..., description="Total runs in system")
     returned_runs: int = Field(..., description="Number of runs in this response")
     runs: List[RunSummaryItem] = Field(..., description="Run summaries with metrics")
-
 
 # ============================================================================
 # ENDPOINTS
@@ -252,22 +245,3 @@ def get_dashboard_runs(
         runs=run_items,
     )
 
-
-@router.get("/health")
-def health_check():
-    """
-    Health check for dashboard API.
-    
-    Returns:
-        Status object with module info
-    """
-    return {
-        "status": "healthy",
-        "module": "CP-S61/62 Dashboard + Risk Actions",
-        "features": [
-            "Run summaries with risk classifications",
-            "Telemetry metrics aggregation",
-            "Risk bucket color coding",
-            "Lane-scale history tracking"
-        ]
-    }

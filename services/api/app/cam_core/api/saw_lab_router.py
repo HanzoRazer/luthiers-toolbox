@@ -37,7 +37,6 @@ from app._experimental.cnc_production.joblog.storage import get_run, list_runs
 
 router = APIRouter(prefix="/saw-lab", tags=["cam-core", "saw-lab"])
 
-
 # ============================================================================
 # Request/Response Models
 # ============================================================================
@@ -52,11 +51,9 @@ class CreateRunRequest(BaseModel):
     gcode: Optional[str] = Field(None, description="G-code program")
     comment: Optional[str] = Field(None, description="Job description")
 
-
 class UpdateStatusRequest(BaseModel):
     """Request to update run status."""
     status: str = Field(..., description="New status: running, completed, failed")
-
 
 class TelemetrySampleRequest(BaseModel):
     """Request to add telemetry sample."""
@@ -70,7 +67,6 @@ class TelemetrySampleRequest(BaseModel):
     temp_c: Optional[float] = None
     vibration_rms: Optional[float] = None
 
-
 class LearningRequest(BaseModel):
     """Request to analyze telemetry for learning."""
     tool_id: str
@@ -78,7 +74,6 @@ class LearningRequest(BaseModel):
     machine_profile: str = "default"
     current_scale: float = 1.0
     apply: bool = False
-
 
 # ============================================================================
 # Run Management Endpoints
@@ -95,7 +90,6 @@ def create_run(request: CreateRunRequest) -> Dict[str, Any]:
     job = request.model_dump()
     return plan_cut_operation(job)
 
-
 @router.get("/runs", response_model=List[Dict[str, Any]])
 def list_runs_endpoint(
     limit: int = Query(20, ge=1, le=100),
@@ -107,7 +101,6 @@ def list_runs_endpoint(
     """
     return list_recent_runs(limit=limit, status=status, op_type=op_type)
 
-
 @router.get("/runs/{run_id}", response_model=Dict[str, Any])
 def get_run_endpoint(run_id: str) -> Dict[str, Any]:
     """
@@ -117,7 +110,6 @@ def get_run_endpoint(run_id: str) -> Dict[str, Any]:
     if details is None:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
     return details
-
 
 @router.post("/runs/{run_id}/start", response_model=Dict[str, Any])
 def start_run_endpoint(run_id: str) -> Dict[str, Any]:
@@ -129,7 +121,6 @@ def start_run_endpoint(run_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
 
-
 @router.post("/runs/{run_id}/complete", response_model=Dict[str, Any])
 def complete_run_endpoint(run_id: str, success: bool = Query(True)) -> Dict[str, Any]:
     """
@@ -139,7 +130,6 @@ def complete_run_endpoint(run_id: str, success: bool = Query(True)) -> Dict[str,
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
-
 
 @router.patch("/runs/{run_id}/status", response_model=Dict[str, Any])
 def update_run_status_endpoint(run_id: str, request: UpdateStatusRequest) -> Dict[str, Any]:
@@ -153,7 +143,6 @@ def update_run_status_endpoint(run_id: str, request: UpdateStatusRequest) -> Dic
     else:
         raise HTTPException(status_code=400, detail=f"Invalid status: {request.status}")
 
-
 # ============================================================================
 # Telemetry Endpoints
 # ============================================================================
@@ -166,7 +155,6 @@ def add_telemetry_endpoint(run_id: str, request: TelemetrySampleRequest) -> Dict
     sample = request.model_dump(exclude_none=True)
     return add_telemetry(run_id, sample)
 
-
 @router.get("/runs/{run_id}/metrics", response_model=Dict[str, Any])
 def get_run_metrics_endpoint(run_id: str) -> Dict[str, Any]:
     """
@@ -176,7 +164,6 @@ def get_run_metrics_endpoint(run_id: str) -> Dict[str, Any]:
     if metrics is None:
         raise HTTPException(status_code=404, detail=f"No telemetry found for run {run_id}")
     return metrics
-
 
 # ============================================================================
 # Learning Endpoints
@@ -199,7 +186,6 @@ def analyze_run_endpoint(run_id: str, request: LearningRequest) -> Dict[str, Any
         apply_adjustment=request.apply,
     )
 
-
 @router.post("/learn", response_model=Dict[str, Any])
 def compute_learning_endpoint(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
@@ -210,16 +196,7 @@ def compute_learning_endpoint(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     return compute_learning_lanes(events)
 
-
 # ============================================================================
 # Health Check
 # ============================================================================
 
-@router.get("/health")
-def health_check() -> Dict[str, str]:
-    """Check Saw Lab service health."""
-    return {
-        "status": "healthy",
-        "service": "saw-lab",
-        "version": "1.0.0",
-    }
