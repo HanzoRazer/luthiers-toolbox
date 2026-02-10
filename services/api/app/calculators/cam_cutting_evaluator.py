@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Literal, Optional
+from ..core.safety import safety_critical
 
 
 # ============================================================================
@@ -75,6 +76,7 @@ ToolKind = Literal["router_bit", "saw_blade"]
 # Pure Calculation Functions
 # ============================================================================
 
+@safety_critical
 def calculate_chipload(
     feed_mm_min: float, rpm: float, flute_count: int,
     min_chipload: float = 0.05, max_chipload: float = 0.25,
@@ -99,6 +101,7 @@ def calculate_chipload(
     )
 
 
+@safety_critical
 def calculate_heat_risk(
     chipload_mm: Optional[float], rpm: float, depth_of_cut_mm: float,
     material_heat_sensitivity: float = 0.5,
@@ -121,6 +124,7 @@ def calculate_heat_risk(
         return HeatResult(heat_risk=heat_risk, category="HOT", message="High heat risk - reduce RPM or increase feed")
 
 
+@safety_critical
 def calculate_deflection(
     tool_diameter_mm: float, depth_of_cut_mm: float,
     width_of_cut_mm: Optional[float], stickout_mm: float = 25.0,
@@ -142,6 +146,7 @@ def calculate_deflection(
         return DeflectionResult(deflection_mm=deflection_mm, risk="RED", message=f"High deflection ({deflection_mm:.4f}mm)")
 
 
+@safety_critical
 def calculate_rim_speed(blade_diameter_mm: float, rpm: float, max_rim_speed: float = 80.0) -> RimSpeedResult:
     """Calculate saw blade rim speed."""
     if blade_diameter_mm <= 0 or rpm <= 0:
@@ -161,6 +166,7 @@ def calculate_rim_speed(blade_diameter_mm: float, rpm: float, max_rim_speed: flo
     )
 
 
+@safety_critical
 def calculate_bite_per_tooth(
     feed_mm_min: float, rpm: float, tooth_count: int,
     min_bite: float = 0.05, max_bite: float = 0.20,
@@ -185,6 +191,7 @@ def calculate_bite_per_tooth(
     )
 
 
+@safety_critical
 def calculate_kickback_risk(
     depth_of_cut_mm: float, blade_diameter_mm: float,
     tooth_count: int, feed_mm_min: float,
@@ -206,6 +213,7 @@ def calculate_kickback_risk(
         return KickbackRiskResult(risk_score=risk_score, category="HIGH", message="HIGH kickback risk - reduce depth/feed")
 
 
+@safety_critical
 def evaluate_cut_operation(
     tool_id: str,
     material_id: str,

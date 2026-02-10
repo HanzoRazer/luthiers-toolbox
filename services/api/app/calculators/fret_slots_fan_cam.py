@@ -9,6 +9,7 @@ from __future__ import annotations
 from math import pi
 from typing import Callable, List, Optional
 
+from ..core.safety import safety_critical
 from ..instrument_geometry.neck.fret_math import (
     compute_fan_fret_positions,
     validate_fan_fret_geometry,
@@ -21,6 +22,7 @@ from ..instrument_geometry.neck.neck_profiles import FretboardSpec
 from ..rmos.context import RmosContext
 
 
+@safety_critical
 def generate_fan_fret_cam(
     spec: FretboardSpec,
     context: RmosContext,

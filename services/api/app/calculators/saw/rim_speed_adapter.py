@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from ...core.safety import safety_critical
 
 # Try to import from Saw Lab if available
 try:
@@ -38,6 +39,7 @@ class SawRimSpeedResult:
     message: str
 
 
+@safety_critical
 def compute_saw_rim_speed(
     blade_diameter_mm: float,
     rpm: float,

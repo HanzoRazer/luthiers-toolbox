@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
+from ...core.safety import safety_critical
 
 RiskLevel = Literal["GREEN", "YELLOW", "RED"]
 
@@ -35,6 +36,7 @@ class BladeDeflectionResult:
     message: str
 
 
+@safety_critical
 def estimate_blade_deflection(
     blade_diameter_mm: float,
     kerf_mm: float,
@@ -109,6 +111,7 @@ def estimate_blade_deflection(
     )
 
 
+@safety_critical
 def estimate_feed_force_n(
     bite_mm: float,
     depth_mm: float,

@@ -11,9 +11,10 @@ Wave 17: Phase C - Fretboard CAM Operations
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import
-from app.core.safety import safety_critical List, Tuple, Dict, Any, Optional, Literal
+from typing import List, Tuple, Dict, Any, Optional, Literal
 from math import sqrt, pi
+
+from ..core.safety import safety_critical
 
 from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
 from ..instrument_geometry.body.fretboard_geometry import (
@@ -97,6 +98,7 @@ def compute_radius_blended_depth(
     return max(nominal_depth_mm * 0.9, min(nominal_depth_mm * 1.1, adjusted_depth))
 
 
+@safety_critical
 def generate_fret_slot_toolpaths(
     spec: FretboardSpec,
     context: RmosContext,
@@ -422,6 +424,7 @@ def compute_cam_statistics(
     }
 
 
+@safety_critical
 def generate_fret_slot_cam(
     spec: FretboardSpec,
     context: RmosContext,
