@@ -17,9 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
 
-# =============================================================================
 # Test Fixtures
-# =============================================================================
 
 @pytest.fixture(scope="module")
 def test_db():
@@ -50,7 +48,6 @@ def test_db():
     # Cleanup
     os.unlink(db_path)
 
-
 @pytest.fixture
 def db_session(test_db):
     """Provide a transactional database session."""
@@ -64,10 +61,7 @@ def db_session(test_db):
     finally:
         session.close()
 
-
-# =============================================================================
 # Helper Functions
-# =============================================================================
 
 def sha256_hash(data: Any) -> str:
     """Create SHA256 hash of JSON-serialized data."""
@@ -76,7 +70,6 @@ def sha256_hash(data: Any) -> str:
     else:
         content = json.dumps(data, sort_keys=True, default=str)
     return hashlib.sha256(content.encode()).hexdigest()
-
 
 def create_test_design() -> Dict[str, Any]:
     """Create a test rosette design specification."""
@@ -92,7 +85,6 @@ def create_test_design() -> Dict[str, Any]:
         "depth_mm": 2.5,
     }
 
-
 def create_test_context() -> Dict[str, Any]:
     """Create a test manufacturing context."""
     return {
@@ -103,10 +95,7 @@ def create_test_context() -> Dict[str, Any]:
         "feed_rate_mm_min": 1500,
     }
 
-
-# =============================================================================
 # Test: Complete Workflow Flow
-# =============================================================================
 
 class TestEndToEndWorkflowIntegration:
     """End-to-end test of workflow → artifact chain."""
@@ -143,10 +132,7 @@ class TestEndToEndWorkflowIntegration:
         workflow_store = DbWorkflowSessionStore()
         run_store = DbRunArtifactStore()
         
-        # ---------------------------------------------------------------------
         # Step 1: Create workflow session
-        # ---------------------------------------------------------------------
-        print("\n📋 Step 1: Creating workflow session...")
         
         session = WorkflowSession(
             mode=WorkflowMode.DESIGN_FIRST,
@@ -159,12 +145,8 @@ class TestEndToEndWorkflowIntegration:
         
         assert session.state == WorkflowState.DRAFT
         assert session.mode == WorkflowMode.DESIGN_FIRST
-        print(f"   ✅ Session created: {session.session_id[:8]}...")
         
-        # ---------------------------------------------------------------------
         # Step 2: Set design and context
-        # ---------------------------------------------------------------------
-        print("\n🎨 Step 2: Setting design and context...")
         
         design = create_test_design()
         context = create_test_context()
@@ -183,17 +165,12 @@ class TestEndToEndWorkflowIntegration:
             "machine_id": context["machine_id"],
         })
         
-        print(f"   ✅ Design: {design['ring_count']} rings, {design['outer_diameter_mm']}mm")
-        print(f"   ✅ Context: {context['tool_id']}")
         
         # Persist session
         workflow_store.put(db_session, session)
         db_session.flush()
         
-        # ---------------------------------------------------------------------
         # Step 3: Request and store feasibility
-        # ---------------------------------------------------------------------
-        print("\n🔍 Step 3: Evaluating feasibility...")
         
         session = request_feasibility(session, actor=ActorRole.USER)
         assert session.state == WorkflowState.FEASIBILITY_REQUESTED
@@ -267,30 +244,20 @@ class TestEndToEndWorkflowIntegration:
             status=RunStatus.OK,
         )
         
-        print(f"   ✅ Feasibility score: {feasibility_result.score}")
-        print(f"   ✅ Risk bucket: {feasibility_result.risk_bucket.value}")
-        print(f"   ✅ Artifact stored: {run_id_feasibility[:8]}...")
         
         # Update session in store
         workflow_store.put(db_session, session)
         
-        # ---------------------------------------------------------------------
         # Step 4: Approve design
-        # ---------------------------------------------------------------------
-        print("\n✅ Step 4: Approving design...")
         
         session = approve(session, actor=ActorRole.OPERATOR, note="Looks good for production")
         assert session.state == WorkflowState.APPROVED
         assert session.approval.approved is True
         
-        print(f"   ✅ Approved by: {session.approval.approved_by.value}")
         
         workflow_store.put(db_session, session)
         
-        # ---------------------------------------------------------------------
         # Step 5: Request and store toolpaths
-        # ---------------------------------------------------------------------
-        print("\n🛠️ Step 5: Generating toolpaths...")
         
         session = request_toolpaths(session, actor=ActorRole.USER)
         assert session.state == WorkflowState.TOOLPATHS_REQUESTED
@@ -360,19 +327,13 @@ class TestEndToEndWorkflowIntegration:
             status=RunStatus.OK,
         )
         
-        print(f"   ✅ Toolpath segments: {toolpath_data['segments']}")
-        print(f"   ✅ Estimated time: {toolpath_data['estimated_time_min']} min")
-        print(f"   ✅ Artifact stored: {run_id_toolpaths[:8]}...")
         
         workflow_store.put(db_session, session)
         
         # Flush to ensure data is written
         db_session.flush()
         
-        # ---------------------------------------------------------------------
         # Step 6: Verify artifact chain
-        # ---------------------------------------------------------------------
-        print("\n🔗 Step 6: Verifying artifact chain...")
         
         # Reload session from store
         reloaded_session = workflow_store.get(db_session, session.session_id)
@@ -381,7 +342,6 @@ class TestEndToEndWorkflowIntegration:
         assert reloaded_session.last_feasibility_artifact is not None
         assert reloaded_session.last_toolpaths_artifact is not None
         
-        print(f"   ✅ Session state: {reloaded_session.state.value}")
         
         # Reload feasibility artifact
         feasibility_reloaded = run_store.get(db_session, run_id_feasibility)
@@ -390,7 +350,6 @@ class TestEndToEndWorkflowIntegration:
         assert feasibility_reloaded.decision.risk_level == "GREEN"
         assert feasibility_reloaded.hashes.feasibility_sha256 == feasibility_hash
         
-        print(f"   ✅ Feasibility artifact verified")
         
         # Reload toolpaths artifact
         toolpaths_reloaded = run_store.get(db_session, run_id_toolpaths)
@@ -399,7 +358,6 @@ class TestEndToEndWorkflowIntegration:
         assert toolpaths_reloaded.hashes.toolpaths_sha256 == toolpath_hash
         assert toolpaths_reloaded.hashes.gcode_sha256 == gcode_hash
         
-        print(f"   ✅ Toolpaths artifact verified")
         
         # List artifacts for session
         session_artifacts, total = run_store.list(
@@ -409,15 +367,10 @@ class TestEndToEndWorkflowIntegration:
         assert total == 2
         assert len(session_artifacts) == 2
         
-        print(f"   ✅ Session has {total} artifacts")
         
         # Verify events logged
         assert len(reloaded_session.events) >= 5  # design, context, feasibility, approve, toolpaths
-        print(f"   ✅ {len(reloaded_session.events)} workflow events recorded")
         
-        print("\n" + "="*60)
-        print("🎉 END-TO-END TEST PASSED!")
-        print("="*60)
         
         # Return artifacts for further testing
         return {
@@ -433,7 +386,6 @@ class TestEndToEndWorkflowIntegration:
         
         run_store = DbRunArtifactStore()
         
-        print("\n📊 Testing run artifact queries...")
         
         session_id = f"query-test-{uuid4().hex[:8]}"
         
@@ -464,48 +416,36 @@ class TestEndToEndWorkflowIntegration:
             run_store.put(db_session, artifact)
         
         db_session.flush()
-        print(f"   ✅ Created {len(artifacts_data)} test artifacts")
         
         # Query by status
         ok_artifacts, ok_count = run_store.list(db_session, status="OK")
         assert ok_count >= 3
-        print(f"   ✅ Status=OK: {ok_count} artifacts")
         
         # Query by mode
         router_artifacts, router_count = run_store.list(db_session, mode="router")
         assert router_count >= 3
-        print(f"   ✅ Mode=router: {router_count} artifacts")
         
         # Query by risk level
         green_artifacts, green_count = run_store.list(db_session, risk_level="GREEN")
         assert green_count >= 2
-        print(f"   ✅ Risk=GREEN: {green_count} artifacts")
         
         # Query by score range
         high_score, high_count = run_store.list(db_session, min_score=80)
-        print(f"   ✅ Score>=80: {high_count} artifacts")
         
         # Query by session
         session_artifacts, session_count = run_store.list(
             db_session, workflow_session_id=session_id
         )
         assert session_count == len(artifacts_data)
-        print(f"   ✅ Session artifacts: {session_count}")
         
         # Count by status
         status_counts = run_store.count_by_status(db_session)
-        print(f"   ✅ Status distribution: {status_counts}")
         
         # Count by risk
         risk_counts = run_store.count_by_risk(db_session)
-        print(f"   ✅ Risk distribution: {risk_counts}")
         
-        print("\n   🎉 Run artifact query test passed!")
 
-
-# =============================================================================
 # Standalone Execution
-# =============================================================================
 
 def run_standalone():
     """Run tests without pytest for quick validation."""
@@ -513,9 +453,6 @@ def run_standalone():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     
-    print("="*60)
-    print("🧪 Running End-to-End Integration Tests (Standalone)")
-    print("="*60)
     
     # Create temp database
     fd, db_path = tempfile.mkstemp(suffix=".sqlite3")
@@ -532,7 +469,6 @@ def run_standalone():
         
         # Create tables
         Base.metadata.create_all(engine)
-        print("\n✅ Database tables created")
         
         Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
         
@@ -555,13 +491,9 @@ def run_standalone():
             test.test_run_artifact_queries(db)
             db.commit()
         
-        print("\n" + "="*60)
-        print("✅ ALL TESTS PASSED!")
-        print("="*60)
         
     finally:
         os.unlink(db_path)
-
 
 if __name__ == "__main__":
     run_standalone()
