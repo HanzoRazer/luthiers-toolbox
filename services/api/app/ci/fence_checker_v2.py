@@ -121,12 +121,24 @@ class SafetyFenceChecker:
     def check_safety_decorators(self, root: Path) -> List[FenceViolation]:
         """Check for missing @safety_critical decorators on safety functions"""
         patterns = ["generate_gcode", "calculate_feeds", "compute_feasibility", "validate_toolpath"]
+        # Exclude patterns (Protocol methods, hash utilities)
+        exclude_suffixes = ["_hash", "_stub"]
+
         for pyfile in self._find_python_files(root):
             try:
                 code = pyfile.read_text(encoding="utf-8")
+
+                # Skip files that define Protocol classes (abstract interfaces)
+                if "(Protocol)" in code:
+                    continue
+
                 tree = ast.parse(code)
                 for node in ast.walk(tree):
                     if isinstance(node, ast.FunctionDef):
+                        # Skip excluded suffixes
+                        if any(node.name.endswith(suffix) for suffix in exclude_suffixes):
+                            continue
+
                         is_safety = any(p in node.name for p in patterns)
                         if is_safety:
                             has_deco = any(

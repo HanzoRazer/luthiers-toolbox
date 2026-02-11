@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.safety import safety_critical
+
 
 _RE_FLOAT = re.compile(r"([-+]?\d+(?:\.\d+)?)")
 
@@ -319,6 +321,7 @@ def validate_gcode_static(
     }
 
 
+@safety_critical
 def validate_toolpaths_artifact_static(
     *,
     toolpaths_artifact_id: str,

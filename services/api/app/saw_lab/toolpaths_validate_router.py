@@ -5,6 +5,8 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.safety import safety_critical
+
 
 router = APIRouter(prefix="/api/saw/batch", tags=["Saw", "Batch"])
 
@@ -40,6 +42,7 @@ class ToolpathsValidateResponse(BaseModel):
 
 
 @router.post("/toolpaths/validate", response_model=ToolpathsValidateResponse)
+@safety_critical
 def validate_toolpaths(req: ToolpathsValidateRequest) -> ToolpathsValidateResponse:
     if not req.toolpaths_artifact_id:
         raise HTTPException(status_code=400, detail="toolpaths_artifact_id required")
