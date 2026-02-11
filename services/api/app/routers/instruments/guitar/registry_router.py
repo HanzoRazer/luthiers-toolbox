@@ -26,6 +26,9 @@ router = APIRouter(tags=["Instruments", "Registry"])
 # Load registry at module load
 REGISTRY_PATH = Path(__file__).parent.parent.parent.parent / "instrument_geometry" / "instrument_model_registry.json"
 
+# ID aliases for backward compatibility with legacy routers
+MODEL_ALIASES = {"om": "om_000"}
+
 def _load_registry() -> Dict[str, Any]:
     """Load instrument model registry."""
     if not REGISTRY_PATH.exists():
@@ -38,6 +41,7 @@ def _get_model(model_id: str) -> Dict[str, Any]:
     """Get a specific model from registry, including variants."""
     registry = _load_registry()
     models = registry.get("models", {})
+
     
     # Normalize ID
     check_ids = [model_id, model_id.replace("-", "_"), model_id.replace("_", "-")]
@@ -67,6 +71,7 @@ def _get_all_models_flat() -> Dict[str, Any]:
     """Get all models including variants as flat dict."""
     registry = _load_registry()
     models = registry.get("models", {})
+
     flat = {}
     
     for model_id, model in models.items():
@@ -245,6 +250,7 @@ def list_all_models() -> Dict[str, Any]:
     """
     registry = _load_registry()
     models = registry.get("models", {})
+
     
     items = []
     categories = {}
@@ -294,6 +300,28 @@ def list_all_models() -> Dict[str, Any]:
         "hierarchy": hierarchy,
         "registry_version": registry.get("version", "unknown")
     }
+
+
+@router.get("/smart/bundle")
+def get_smart_guitar_bundle() -> Dict[str, Any]:
+    """Get Smart Guitar IoT bundle information."""
+    model = _get_model("smart_guitar")
+    if not model:
+        raise HTTPException(status_code=404, detail="Smart Guitar model not found")
+    return {
+        "ok": True,
+        "model_id": "smart_guitar",
+        "display_name": model.get("display_name", "Smart Guitar"),
+        "iot": model.get("iot", {}),
+        "connectivity": model.get("connectivity", {}),
+        "audio": model.get("audio", {}),
+        "sensors": model.get("sensors", {}),
+        "power": model.get("power", {}),
+        "features": model.get("features", []),
+        "daw_integration": model.get("daw_integration", {}),
+        "cam_features": model.get("cam_features", {}),
+    }
+
 
 
 @router.get("/{model_id}/spec")
@@ -378,3 +406,62 @@ def get_model_info(model_id: str) -> InstrumentInfo:
             "cam": f"/api/cam/guitar/{model_id}/health"
         }
     )
+
+
+# =============================================================================
+# TEMPLATES DATA
+# =============================================================================
+
+TEMPLATES_BY_CATEGORY = {
+    "electric_guitar": [
+        {"name": "body_outline", "type": "body", "format": "dxf"},
+        {"name": "neck_pocket", "type": "body", "format": "dxf"},
+        {"name": "pickup_routes", "type": "body", "format": "dxf"},
+    ],
+    "acoustic_guitar": [
+        {"name": "body_outline", "type": "body", "format": "dxf"},
+        {"name": "mold_inner", "type": "mold", "format": "dxf"},
+        {"name": "soundhole", "type": "body", "format": "dxf"},
+        {"name": "bracing_pattern", "type": "bracing", "format": "dxf"},
+    ],
+    "archtop": [
+        {"name": "body_outline", "type": "body", "format": "dxf"},
+        {"name": "f_holes", "type": "f_hole", "format": "dxf"},
+        {"name": "graduation_map", "type": "graduation", "format": "json"},
+    ],
+    "bass": [
+        {"name": "body_outline", "type": "body", "format": "dxf"},
+        {"name": "neck_pocket", "type": "body", "format": "dxf"},
+    ],
+    "ukulele": [
+        {"name": "body_outline", "type": "body", "format": "dxf"},
+        {"name": "soundhole", "type": "body", "format": "dxf"},
+    ],
+}
+
+
+def _get_templates(model: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Get templates for a model based on category and assets."""
+    category = model.get("category", "electric_guitar")
+    assets = model.get("assets", [])
+    templates = [t.copy() for t in TEMPLATES_BY_CATEGORY.get(category, TEMPLATES_BY_CATEGORY["electric_guitar"])]
+    for asset in assets:
+        if isinstance(asset, str):
+            templates.append({"name": Path(asset).stem, "type": "asset", "format": Path(asset).suffix.lstrip("."), "path": asset})
+    return templates
+
+
+@router.get("/{model_id}/templates")
+def get_model_templates(model_id: str) -> Dict[str, Any]:
+    """Get available templates for a model."""
+    model = _get_model(model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail=f"Model not found: {model_id}")
+    templates = _get_templates(model)
+    return {
+        "ok": True,
+        "model_id": model["id"],
+        "category": model.get("category", "unknown"),
+        "template_count": len(templates),
+        "templates": templates,
+    }
