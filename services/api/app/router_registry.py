@@ -376,6 +376,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["CAM", "Pipeline"],
         category="misc",
     ),
+    RouterSpec(
+        module="app.routers.probe",
+        prefix="/api",
+        tags=["Probe", "CAM"],
+        category="cam",
+    ),
     # -------------------------------------------------------------------------
     # CONSOLIDATED AGGREGATORS (Wave 18+19)
     # -------------------------------------------------------------------------
