@@ -187,7 +187,7 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     # BLUEPRINT & DXF
     # -------------------------------------------------------------------------
     RouterSpec(
-        module="app.routers.blueprint_router",
+        module="app.routers.blueprint",
         prefix="/api",
         tags=["Blueprint"],
         category="blueprint",

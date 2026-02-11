@@ -27,7 +27,7 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 TARGET_MAX_ENDPOINTS = 564  # Current: 564, goal: 400 (was 577)
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 1  # Current: 1, goal: 0
-TARGET_MAX_LARGE_FILES = 5  # Current: 5, goal: 4 (was 6)
+TARGET_MAX_LARGE_FILES = 4  # Current: 4, goal: 3 (was 5)
 TARGET_MAX_DUPLICATE_ROUTES = 53  # Current: 53, goal: 0 (was 54)
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
