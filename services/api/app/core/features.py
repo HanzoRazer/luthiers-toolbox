@@ -41,7 +41,7 @@ FEATURES: Dict[str, FeatureConfig] = {
     ),
     "geometry": FeatureConfig(
         name="geometry",
-        module_path="app.routers.geometry_router",
+        module_path="app.routers.geometry",
         prefix="/api/geometry",
         tags=["Geometry"],
     ),
