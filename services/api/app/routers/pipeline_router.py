@@ -31,7 +31,7 @@ except ImportError:
     class PreflightGeometryError(Exception): pass
 
 try:
-    from ..routers.blueprint_cam_bridge import extract_loops_from_dxf
+    from ..routers.blueprint_cam import extract_loops_from_dxf
 except ImportError:
     def extract_loops_from_dxf(*a, **k): raise NotImplementedError("DXF loop extraction not implemented")
 
