@@ -14,7 +14,7 @@ Note: The original 1958 Moderne was never commercially produced.
 Gibson released reissues starting in 1982.
 """
 
-from ..neck.neck_profiles import InstrumentSpec
+from . import spec_from_model_info
 
 MODEL_INFO = {
     "id": "moderne",
@@ -32,12 +32,6 @@ MODEL_INFO = {
 }
 
 
-def get_spec() -> InstrumentSpec:
+def get_spec():
     """Get default InstrumentSpec for Moderne."""
-    return InstrumentSpec(
-        instrument_type="electric",
-        scale_length_mm=628.65,
-        fret_count=22,
-        string_count=6,
-        base_radius_mm=304.8,
-    )
+    return spec_from_model_info(MODEL_INFO)

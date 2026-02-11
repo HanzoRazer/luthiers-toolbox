@@ -21,6 +21,30 @@ from pydantic import BaseModel, Field, validator
 
 _SHA256_LEN = 64
 
+def _normalize_tags_list(v):
+    """
+    Normalize tags list: dedupe, strip, remove empties.
+
+    Shared validator logic for all advisory schemas.
+    """
+    if v is None:
+        return None
+    if not isinstance(v, list):
+        raise ValueError("tags must be a list[str]")
+    out = []
+    seen = set()
+    for t in v:
+        if t is None:
+            continue
+        tt = str(t).strip()
+        if not tt:
+            continue
+        if tt in seen:
+            continue
+        seen.add(tt)
+        out.append(tt)
+    return out or None
+
 
 def _is_lower_hex(s: str) -> bool:
     try:
@@ -61,23 +85,7 @@ class AdvisoryAttachmentRefV1(BaseModel):
 
     @validator("tags", pre=True)
     def _normalize_tags(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, list):
-            raise ValueError("tags must be a list[str]")
-        out = []
-        seen = set()
-        for t in v:
-            if t is None:
-                continue
-            tt = str(t).strip()
-            if not tt:
-                continue
-            if tt in seen:
-                continue
-            seen.add(tt)
-            out.append(tt)
-        return out or None
+        return _normalize_tags_list(v)
 
     class Config:
         extra = "forbid"
@@ -132,23 +140,7 @@ class RunAdvisoryLinkV1(BaseModel):
 
     @validator("tags", pre=True)
     def _normalize_tags(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, list):
-            raise ValueError("tags must be a list[str]")
-        out = []
-        seen = set()
-        for t in v:
-            if t is None:
-                continue
-            tt = str(t).strip()
-            if not tt:
-                continue
-            if tt in seen:
-                continue
-            seen.add(tt)
-            out.append(tt)
-        return out or None
+        return _normalize_tags_list(v)
 
     class Config:
         extra = "forbid"
@@ -184,23 +176,7 @@ class IndexRunAdvisorySummaryV1(BaseModel):
 
     @validator("tags", pre=True)
     def _normalize_tags(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, list):
-            raise ValueError("tags must be a list[str]")
-        out = []
-        seen = set()
-        for t in v:
-            if t is None:
-                continue
-            tt = str(t).strip()
-            if not tt:
-                continue
-            if tt in seen:
-                continue
-            seen.add(tt)
-            out.append(tt)
-        return out or None
+        return _normalize_tags_list(v)
 
     class Config:
         extra = "forbid"
@@ -244,23 +220,7 @@ class IndexAdvisoryLookupV1(BaseModel):
 
     @validator("tags", pre=True)
     def _normalize_tags(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, list):
-            raise ValueError("tags must be a list[str]")
-        out = []
-        seen = set()
-        for t in v:
-            if t is None:
-                continue
-            tt = str(t).strip()
-            if not tt:
-                continue
-            if tt in seen:
-                continue
-            seen.add(tt)
-            out.append(tt)
-        return out or None
+        return _normalize_tags_list(v)
 
     class Config:
         extra = "forbid"

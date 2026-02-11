@@ -296,6 +296,187 @@ def get_post_processor(dialect: Union[str, Dialect]) -> Any:
     return _POST_PROCESSORS[dialect_enum]
 
 
+# =============================================================================
+# SHARED FORMATTING FUNCTIONS
+# =============================================================================
+# These functions are used by multiple post-processors to reduce duplication.
+
+
+def format_coord(axis: str, value: float, decimals: int = 3) -> str:
+    """Format axis coordinate with specified decimal places."""
+    return f"{axis}{value:.{decimals}f}"
+
+
+def format_feed(feed: float) -> str:
+    """Format feedrate value."""
+    if feed == int(feed):
+        return f"F{int(feed)}"
+    return f"F{feed:.1f}"
+
+
+def format_speed(speed: int) -> str:
+    """Format spindle speed value."""
+    return f"S{speed}"
+
+
+def render_comment(text: str, style: str = "semicolon") -> str:
+    """
+    Render comment in dialect-specific style.
+
+    Args:
+        text: Comment text
+        style: "semicolon" for GRBL/LinuxCNC, "parentheses" for FANUC
+    """
+    if style == "parentheses":
+        return f"({text})"
+    return f"; {text}"
+
+
+def render_spindle_start(speed: int, direction: str) -> str:
+    """Render spindle start command."""
+    spindle_code = "M3" if direction.upper() == "CW" else "M4"
+    return f"{format_speed(speed)} {spindle_code}"
+
+
+def render_footer() -> List[str]:
+    """Render standard program footer."""
+    return [
+        "",
+        "; END OF PROGRAM",
+        "M5",   # Spindle stop
+        "M9",   # Coolant off
+        "M2",   # Program end
+    ]
+
+
+def render_moves_base(
+    moves: List[Dict[str, Any]],
+    feed_xy: float,
+    feed_z: float,
+    *,
+    coord_decimals: int = 3,
+    dwell_in_seconds: bool = True,
+) -> List[str]:
+    """
+    Render a series of moves to G-code lines.
+
+    This is the shared move rendering logic used by GRBL, LinuxCNC, etc.
+
+    Args:
+        moves: List of move dicts with type, x, y, z, i, j, r keys
+        feed_xy: XY plane feedrate
+        feed_z: Z axis feedrate
+        coord_decimals: Decimal places for coordinates
+        dwell_in_seconds: True for G4 P in seconds, False for milliseconds
+    """
+    lines = []
+
+    for move in moves:
+        move_type = move.get("type", "linear")
+
+        if move_type == "rapid":
+            parts = ["G0"]
+            if "x" in move:
+                parts.append(format_coord("X", move["x"], coord_decimals))
+            if "y" in move:
+                parts.append(format_coord("Y", move["y"], coord_decimals))
+            if "z" in move:
+                parts.append(format_coord("Z", move["z"], coord_decimals))
+            lines.append(" ".join(parts))
+
+        elif move_type == "linear":
+            parts = ["G1"]
+            if "x" in move:
+                parts.append(format_coord("X", move["x"], coord_decimals))
+            if "y" in move:
+                parts.append(format_coord("Y", move["y"], coord_decimals))
+            if "z" in move:
+                parts.append(format_coord("Z", move["z"], coord_decimals))
+                parts.append(format_feed(feed_z))
+            else:
+                parts.append(format_feed(feed_xy))
+            lines.append(" ".join(parts))
+
+        elif move_type in ("cw_arc", "ccw_arc"):
+            arc_code = "G2" if move_type == "cw_arc" else "G3"
+            parts = [arc_code]
+            parts.append(format_coord("X", move["x"], coord_decimals))
+            parts.append(format_coord("Y", move["y"], coord_decimals))
+            if "z" in move:
+                parts.append(format_coord("Z", move["z"], coord_decimals))
+            if "i" in move:
+                parts.append(format_coord("I", move["i"], coord_decimals))
+            if "j" in move:
+                parts.append(format_coord("J", move["j"], coord_decimals))
+            if "r" in move:
+                parts.append(format_coord("R", move["r"], coord_decimals))
+            parts.append(format_feed(feed_xy))
+            lines.append(" ".join(parts))
+
+        elif move_type == "dwell":
+            if dwell_in_seconds:
+                dwell_sec = move.get("seconds", move.get("p", 0) / 1000.0)
+                lines.append(f"G4 P{dwell_sec:.3f}")
+            else:
+                dwell_ms = move.get("p", move.get("seconds", 0) * 1000)
+                lines.append(f"G4 P{dwell_ms:.0f}")
+
+    return lines
+
+
+def render_segments_base(
+    segments: List[Dict[str, Any]],
+    context: Dict[str, Any],
+    *,
+    coord_decimals: int = 3,
+    dwell_in_seconds: bool = True,
+    comment_style: str = "semicolon",
+) -> List[str]:
+    """
+    Render all segments (operations) to G-code.
+
+    Shared segment rendering logic for GRBL, LinuxCNC, etc.
+    """
+    lines = []
+
+    feed_xy = context.get("feed_xy", 1000)
+    feed_z = context.get("feed_z", 200)
+    safe_z = context.get("safe_z", 10.0)
+
+    for idx, seg in enumerate(segments):
+        # Segment comment
+        seg_name = seg.get("name", f"Segment {idx + 1}")
+        lines.append("")
+        lines.append(render_comment(f"--- {seg_name} ---", comment_style))
+
+        # Optional coolant on
+        if seg.get("coolant", False):
+            coolant_type = seg.get("coolant_type", "flood")
+            coolant_code = "M7" if coolant_type == "mist" else "M8"
+            lines.append(coolant_code)
+
+        # Retract to safe Z
+        lines.append(f"G0 {format_coord('Z', safe_z, coord_decimals)}")
+
+        # Render moves
+        moves = seg.get("moves", [])
+        move_lines = render_moves_base(
+            moves, feed_xy, feed_z,
+            coord_decimals=coord_decimals,
+            dwell_in_seconds=dwell_in_seconds,
+        )
+        lines.extend(move_lines)
+
+        # Retract after segment
+        lines.append(f"G0 {format_coord('Z', safe_z, coord_decimals)}")
+
+        # Optional coolant off
+        if seg.get("coolant", False):
+            lines.append("M9")
+
+    return lines
+
+
 def render_gcode(
     moves: List[GCodeMove],
     dialect: Union[str, Dialect] = Dialect.GRBL,
