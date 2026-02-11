@@ -85,7 +85,7 @@ def main() -> int:
 
         if run_imports:
             rc = _run_checker(
-                "app.ci.check_boundary_imports",
+                "app.ci.boundary_imports",
                 ["--write-baseline", IMPORT_BASELINE],
                 "Import Baseline"
             )
@@ -114,7 +114,7 @@ def main() -> int:
     if run_imports:
         import_args = [] if args.strict else ["--baseline", IMPORT_BASELINE]
         rc = _run_checker(
-            "app.ci.check_boundary_imports",
+            "app.ci.boundary_imports",
             import_args,
             "Boundary Import Check" + (" (strict)" if args.strict else " (baseline)")
         )
