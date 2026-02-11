@@ -46,7 +46,7 @@
     {
       "id": "compat-geometry",
       "description": "Legacy /geometry/* compat mount",
-      "module": "app.routers.geometry_router",
+      "module": "app.routers.geometry.export_router",
       "old_prefix": "/geometry/*",
       "new_prefix": "/api/geometry/*",
       "deprecated_date": "2025-06-01",

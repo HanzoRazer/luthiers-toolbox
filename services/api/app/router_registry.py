@@ -60,7 +60,7 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam_core",
     ),
     RouterSpec(
-        module="app.routers.geometry_router",
+        module="app.routers.geometry",
         prefix="/api/geometry",
         tags=["Geometry"],
         category="cam_core",

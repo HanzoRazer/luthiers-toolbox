@@ -92,7 +92,8 @@ from ..cam.trochoid_l3 import insert_trochoids
 from ..services.jobint_artifacts import build_jobint_payload
 from ..util.exporters import export_dxf, export_svg
 from ..util.units import scale_geom_units
-from .geometry_router import GcodeExportIn, export_gcode
+from .geometry_schemas import GcodeExportIn
+from .geometry.export_router import export_gcode
 from .machines_consolidated_router import get_profile
 
 # Import run artifact persistence (OPERATION lane requirement)
