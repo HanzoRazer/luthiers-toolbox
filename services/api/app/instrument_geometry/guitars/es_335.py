@@ -11,7 +11,7 @@ Specifications:
 - Category: Electric Guitar (Semi-hollow)
 """
 
-from ..neck.neck_profiles import InstrumentSpec
+from . import spec_from_model_info
 
 MODEL_INFO = {
     "id": "es_335",
@@ -29,12 +29,6 @@ MODEL_INFO = {
 }
 
 
-def get_spec() -> InstrumentSpec:
-    """Get default InstrumentSpec for ES-335."""
-    return InstrumentSpec(
-        instrument_type="electric",
-        scale_length_mm=628.65,
-        fret_count=22,
-        string_count=6,
-        base_radius_mm=304.8,
-    )
+def get_spec():
+    """Get default InstrumentSpec for Es-335."""
+    return spec_from_model_info(MODEL_INFO)

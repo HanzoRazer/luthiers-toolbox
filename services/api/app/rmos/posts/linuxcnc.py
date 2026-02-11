@@ -16,54 +16,15 @@ import math
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from .base import DialectConfig, Dialect, DIALECT_CONFIGS
+from .base import (
+    DialectConfig, Dialect, DIALECT_CONFIGS,
+    format_coord, format_feed, format_speed,
+    render_comment, render_spindle_start, render_footer,
+    render_moves_base, render_segments_base,
+)
 
-# LinuxCNC G-code constants
-RAPID_MOVE = "G0"
-LINEAR_MOVE = "G1"
-CW_ARC = "G2"
-CCW_ARC = "G3"
-DWELL = "G4"
-ABSOLUTE_MODE = "G90"
-INCREMENTAL_MODE = "G91"
-UNITS_MM = "G21"
-UNITS_INCH = "G20"
-XY_PLANE = "G17"
-XZ_PLANE = "G18"
-YZ_PLANE = "G19"
-PATH_BLEND = "G64"
-EXACT_STOP = "G61"
-SPINDLE_CW = "M3"
-SPINDLE_CCW = "M4"
-SPINDLE_STOP = "M5"
-COOLANT_FLOOD = "M8"
-COOLANT_MIST = "M7"
-COOLANT_OFF = "M9"
-PROGRAM_END = "M2"
-PROGRAM_STOP = "M0"
-OPTIONAL_STOP = "M1"
-
-
-def _format_coord(axis: str, value: float, decimals: int = 4) -> str:
-    """Format axis coordinate."""
-    return f"{axis}{value:.{decimals}f}"
-
-
-def _format_feed(feed: float) -> str:
-    """Format feedrate value."""
-    if feed == int(feed):
-        return f"F{int(feed)}"
-    return f"F{feed:.1f}"
-
-
-def _format_speed(speed: int) -> str:
-    """Format spindle speed value."""
-    return f"S{speed}"
-
-
-def _render_comment(text: str) -> str:
-    """Render LinuxCNC-style semicolon comment."""
-    return f"; {text}"
+# LinuxCNC-specific constants
+COORD_DECIMALS = 4  # LinuxCNC uses 4 decimal places
 
 
 def _render_header(
@@ -75,158 +36,35 @@ def _render_header(
 
     # Header comment
     if comment:
-        lines.append(_render_comment(comment))
+        lines.append(render_comment(comment))
 
     # Timestamp
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines.append(_render_comment(f"Generated: {ts}"))
-    lines.append(_render_comment("Post: LinuxCNC (RS274NGC)"))
+    lines.append(render_comment(f"Generated: {ts}"))
+    lines.append(render_comment("Post: LinuxCNC (RS274NGC)"))
 
     # Tool info if provided
     if "tool" in context:
         tool = context["tool"]
         tool_desc = tool.get("description", f"Tool #{tool.get('number', 1)}")
-        lines.append(_render_comment(f"Tool: {tool_desc}"))
+        lines.append(render_comment(f"Tool: {tool_desc}"))
 
     # Material info if provided
     if "material" in context:
         mat = context["material"]
         mat_name = mat.get("name", "Unknown")
-        lines.append(_render_comment(f"Material: {mat_name}"))
+        lines.append(render_comment(f"Material: {mat_name}"))
 
     # Setup block
     lines.append("")
-    units = UNITS_MM if context.get("units", "mm") == "mm" else UNITS_INCH
-    lines.append(f"{units} {ABSOLUTE_MODE} {XY_PLANE}")
+    units = "G21" if context.get("units", "mm") == "mm" else "G20"
+    lines.append(f"{units} G90 G17")  # G17 = XY plane
 
     # Path blending (LinuxCNC-specific)
     path_tolerance = context.get("path_tolerance", 0.002)
     if context.get("enable_path_blending", True):
-        lines.append(f"{PATH_BLEND} P{path_tolerance}")
-        lines.append(_render_comment(f"Path blending tolerance: {path_tolerance}mm"))
-
-    return lines
-
-
-def _render_footer() -> List[str]:
-    """Render LinuxCNC program footer."""
-    return [
-        "",
-        _render_comment("END OF PROGRAM"),
-        SPINDLE_STOP,
-        COOLANT_OFF,
-        PROGRAM_END,
-    ]
-
-
-def _render_spindle_start(
-    speed: int,
-    direction: str,
-) -> str:
-    """Render spindle start command."""
-    spindle_code = SPINDLE_CW if direction.upper() == "CW" else SPINDLE_CCW
-    return f"{_format_speed(speed)} {spindle_code}"
-
-
-def _render_moves(
-    moves: List[Dict[str, Any]],
-    feed_xy: float,
-    feed_z: float,
-) -> List[str]:
-    """Render a series of moves."""
-    lines = []
-
-    for move in moves:
-        move_type = move.get("type", "linear")
-
-        if move_type == "rapid":
-            # Rapid move
-            parts = [RAPID_MOVE]
-            if "x" in move:
-                parts.append(_format_coord("X", move["x"]))
-            if "y" in move:
-                parts.append(_format_coord("Y", move["y"]))
-            if "z" in move:
-                parts.append(_format_coord("Z", move["z"]))
-            lines.append(" ".join(parts))
-
-        elif move_type == "linear":
-            # Linear interpolation
-            parts = [LINEAR_MOVE]
-            if "x" in move:
-                parts.append(_format_coord("X", move["x"]))
-            if "y" in move:
-                parts.append(_format_coord("Y", move["y"]))
-            if "z" in move:
-                parts.append(_format_coord("Z", move["z"]))
-                parts.append(_format_feed(feed_z))
-            else:
-                parts.append(_format_feed(feed_xy))
-            lines.append(" ".join(parts))
-
-        elif move_type in ("cw_arc", "ccw_arc"):
-            # Arc interpolation (LinuxCNC prefers I/J mode)
-            arc_code = CW_ARC if move_type == "cw_arc" else CCW_ARC
-            parts = [arc_code]
-            parts.append(_format_coord("X", move["x"]))
-            parts.append(_format_coord("Y", move["y"]))
-            if "z" in move:
-                parts.append(_format_coord("Z", move["z"]))
-            if "i" in move:
-                parts.append(_format_coord("I", move["i"]))
-            if "j" in move:
-                parts.append(_format_coord("J", move["j"]))
-            if "r" in move:
-                parts.append(_format_coord("R", move["r"]))
-            parts.append(_format_feed(feed_xy))
-            lines.append(" ".join(parts))
-
-        elif move_type == "dwell":
-            # Dwell (P in seconds for LinuxCNC)
-            dwell_ms = move.get("p", move.get("seconds", 0) * 1000)
-            dwell_sec = dwell_ms / 1000.0
-            lines.append(f"{DWELL} P{dwell_sec:.3f}")
-
-    return lines
-
-
-def _render_segments(
-    segments: List[Dict[str, Any]],
-    context: Dict[str, Any],
-) -> List[str]:
-    """Render all segments (operations)."""
-    lines = []
-
-    feed_xy = context.get("feed_xy", 1000)
-    feed_z = context.get("feed_z", 200)
-    safe_z = context.get("safe_z", 10.0)
-
-    for idx, seg in enumerate(segments):
-        # Segment comment
-        seg_name = seg.get("name", f"Segment {idx + 1}")
-        lines.append("")
-        lines.append(_render_comment(f"--- {seg_name} ---"))
-
-        # Optional coolant on
-        if seg.get("coolant", False):
-            coolant_type = seg.get("coolant_type", "flood")
-            coolant_code = COOLANT_MIST if coolant_type == "mist" else COOLANT_FLOOD
-            lines.append(coolant_code)
-
-        # Retract to safe Z
-        lines.append(f"{RAPID_MOVE} {_format_coord('Z', safe_z)}")
-
-        # Render moves
-        moves = seg.get("moves", [])
-        move_lines = _render_moves(moves, feed_xy, feed_z)
-        lines.extend(move_lines)
-
-        # Retract after segment
-        lines.append(f"{RAPID_MOVE} {_format_coord('Z', safe_z)}")
-
-        # Optional coolant off
-        if seg.get("coolant", False):
-            lines.append(COOLANT_OFF)
+        lines.append(f"G64 P{path_tolerance}")
+        lines.append(render_comment(f"Path blending tolerance: {path_tolerance}mm"))
 
     return lines
 
@@ -266,17 +104,21 @@ def render(
         spindle_speed = tool.get("spindle_speed", 18000)
         spindle_dir = tool.get("spindle_direction", "CW")
         lines.append("")
-        lines.append(_render_spindle_start(spindle_speed, spindle_dir))
+        lines.append(render_spindle_start(spindle_speed, spindle_dir))
 
-    # Segments
+    # Segments (use shared function)
     segments = toolpaths.get("segments", [])
-    seg_lines = _render_segments(segments, context)
+    seg_lines = render_segments_base(
+        segments, context,
+        coord_decimals=COORD_DECIMALS,
+        dwell_in_seconds=True,  # LinuxCNC uses seconds for G4
+    )
     lines.extend(seg_lines)
 
     # Footer
-    lines.extend(_render_footer())
+    lines.extend(render_footer())
 
-    return "\n".join(lines)
+    return chr(10).join(lines)
 
 
 def render_moves(
@@ -290,7 +132,11 @@ def render_moves(
     """
     feed_xy = context.get("feed_xy", 1000)
     feed_z = context.get("feed_z", 200)
-    return _render_moves(moves, feed_xy, feed_z)
+    return render_moves_base(
+        moves, feed_xy, feed_z,
+        coord_decimals=COORD_DECIMALS,
+        dwell_in_seconds=True,
+    )
 
 
 def get_dialect_config() -> DialectConfig:

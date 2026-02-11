@@ -16,6 +16,41 @@ Models by Category:
 """
 
 from ..models import InstrumentModelId
+from ..neck.neck_profiles import InstrumentSpec
+
+
+def spec_from_model_info(model_info: dict) -> InstrumentSpec:
+    """
+    Create an InstrumentSpec from a MODEL_INFO dict.
+
+    This helper reduces duplication across guitar model modules.
+
+    Args:
+        model_info: Dict with keys: category, scale_length_mm, fret_count,
+                   string_count, radius_mm
+
+    Returns:
+        InstrumentSpec configured from the model info
+    """
+    # Map category to instrument_type
+    category = model_info.get("category", "electric_guitar")
+    if "bass" in category:
+        instrument_type = "bass"
+    elif "acoustic" in category or "classical" in category:
+        instrument_type = "acoustic"
+    elif "ukulele" in category:
+        instrument_type = "ukulele"
+    else:
+        instrument_type = "electric"
+
+    return InstrumentSpec(
+        instrument_type=instrument_type,
+        scale_length_mm=model_info["scale_length_mm"],
+        fret_count=model_info["fret_count"],
+        string_count=model_info["string_count"],
+        base_radius_mm=model_info["radius_mm"],
+    )
+
 
 # Model imports - each provides get_spec() and MODEL_INFO
 from .strat import get_spec as get_strat_spec, MODEL_INFO as STRAT_INFO
