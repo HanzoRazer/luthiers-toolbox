@@ -53,7 +53,7 @@ FEATURES: Dict[str, FeatureConfig] = {
     ),
     "adaptive": FeatureConfig(
         name="adaptive",
-        module_path="app.routers.adaptive_router",
+        module_path="app.routers.adaptive",
         prefix="/api",
         tags=["Adaptive Pocketing"],
     ),

@@ -308,7 +308,8 @@ async def photo_to_gcode(
     post_processor: str = Form("GRBL", description="Post processor"),
 ) -> PhotoToGcodeResponse:
     """Complete pipeline: Photo → AI Segmentation → DXF → G-code"""
-    from app.routers.adaptive_router import Loop, PlanIn, plan
+    from app.routers.adaptive_schemas import Loop, PlanIn
+    from app.routers.adaptive.plan_router import plan
 
     # Validate file type
     if file.content_type not in ("image/png", "image/jpeg", "image/webp"):
