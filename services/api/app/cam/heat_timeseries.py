@@ -233,37 +233,15 @@ PATCH HISTORY:
 import math
 from typing import List, Dict, Any
 
+from .move_helpers import length_annotate as _length_annotate
+
 
 # ============================================================================
 # MOVE ANNOTATION (LENGTH METADATA)
 # ============================================================================
 
 
-def _length_annotate(moves: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Annotate moves with _len_mm field (XY distance from previous point).
-    
-    Args:
-        moves: List of move dicts
-    
-    Returns:
-        Annotated moves with _len_mm field added
-    """
-    out = []
-    last = None
-    
-    for m in moves:
-        mm = dict(m)
-        if "x" in mm and "y" in mm:
-            p = (mm["x"], mm["y"])
-            if last is None:
-                mm["_len_mm"] = 0.0
-            else:
-                mm["_len_mm"] = math.hypot(p[0] - last[0], p[1] - last[1])
-            last = p
-        out.append(mm)
-    
-    return out
+
 
 
 # ============================================================================

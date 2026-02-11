@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from .latest_batch_chain_service import resolve_latest_execution_for_batch
+
 
 def _as_dict(x: Any) -> Dict[str, Any]:
     return x if isinstance(x, dict) else {}
@@ -178,40 +180,7 @@ def resolve_latest_toolpaths_for_execution(
     return cands[0]
 
 
-def resolve_latest_execution_for_batch(
-    *,
-    session_id: str,
-    batch_label: str,
-    tool_kind: str = "saw",
-    limit: int = 20000,
-) -> Optional[Dict[str, Any]]:
-    """
-    batch -> latest execution artifact (no decision required).
-    """
-    from app.rmos.runs_v2 import store as runs_store
 
-    res = runs_store.list_runs_filtered(
-        session_id=session_id,
-        batch_label=batch_label,
-        tool_kind=tool_kind,
-        limit=limit,
-    )
-    items = res.get("items") if isinstance(res, dict) else res
-    items = items if isinstance(items, list) else []
-
-    execs: List[Dict[str, Any]] = []
-    for a in items:
-        if not isinstance(a, dict):
-            continue
-        if "execution" not in _kind(a).lower():
-            continue
-        execs.append(a)
-
-    if not execs:
-        return None
-
-    execs.sort(key=lambda a: (_created_utc(a) or "9999", str(_id(a) or "")), reverse=True)
-    return execs[0]
 
 
 def resolve_latest_toolpaths_for_batch(
