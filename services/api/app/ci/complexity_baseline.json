@@ -1,0 +1,1056 @@
+{
+  "threshold": 15,
+  "violation_count": 150,
+  "violations": [
+    {
+      "file": "app\\saw_lab\\toolpaths_validate_service.py",
+      "function": "validate_gcode_static",
+      "complexity": 62,
+      "line": 133,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\cam_post_v155_router.py",
+      "function": "post_v155",
+      "complexity": 59,
+      "line": 145,
+      "letter": "F"
+    },
+    {
+      "file": "app\\dxf\\preflight_service.py",
+      "function": "validate_dxf_file",
+      "complexity": 53,
+      "line": 20,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\store_filter.py",
+      "function": "matches_index_meta",
+      "complexity": 46,
+      "line": 9,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\adaptive\\plan_router.py",
+      "function": "plan",
+      "complexity": 46,
+      "line": 61,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\batch_router_helpers.py",
+      "function": "extract_base_context",
+      "complexity": 39,
+      "line": 40,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\compare.py",
+      "function": "compare_run_artifacts",
+      "complexity": 38,
+      "line": 108,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\sim_validate.py",
+      "function": "simulate",
+      "complexity": 38,
+      "line": 125,
+      "letter": "F"
+    },
+    {
+      "file": "app\\util\\gcode_parser.py",
+      "function": "simulate",
+      "complexity": 38,
+      "line": 265,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\router_zip_export.py",
+      "function": "export_run_attachments_zip",
+      "complexity": 35,
+      "line": 209,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\compat.py",
+      "function": "convert_v1_to_v2",
+      "complexity": 32,
+      "line": 30,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\cnc_production\\learn\\live_learn_ingestor.py",
+      "function": "compute_lane_metrics",
+      "complexity": 32,
+      "line": 117,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ltb_calculators\\financial_calculator_cli.py",
+      "function": "calculator_repl",
+      "complexity": 31,
+      "line": 166,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\store_delete.py",
+      "function": "execute_delete",
+      "complexity": 31,
+      "line": 18,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_summary.py",
+      "function": "build_batch_summary",
+      "complexity": 30,
+      "line": 118,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\routers\\toolpath\\vcarve_router.py",
+      "function": "preview_infill",
+      "complexity": 29,
+      "line": 136,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\variant_review_service.py",
+      "function": "list_variants",
+      "complexity": 29,
+      "line": 94,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_e2e_workflow_integration.py",
+      "function": "test_complete_workflow_chain",
+      "complexity": 29,
+      "line": 103,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\persist_glue.py",
+      "function": "_update_attachment_meta_index",
+      "complexity": 28,
+      "line": 251,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_tree.py",
+      "function": "resolve_batch_root",
+      "complexity": 27,
+      "line": 37,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\plan_choose_service.py",
+      "function": "find_latest_plan_choose",
+      "complexity": 27,
+      "line": 23,
+      "letter": "F"
+    },
+    {
+      "file": "app\\workflow\\sessions\\store.py",
+      "function": "create",
+      "complexity": 27,
+      "line": 133,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\ai_search.py",
+      "function": "run_constraint_first_search",
+      "complexity": 26,
+      "line": 127,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\executions_lookup_service.py",
+      "function": "get_latest_execution_for_decision",
+      "complexity": 26,
+      "line": 43,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\tuning_decision_service.py",
+      "function": "apply_approved_tuning_to_plan_payload",
+      "complexity": 26,
+      "line": 159,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_art_studio_promotion_intent_export_contract.py",
+      "function": "test_canonical_export_returns_strict_v1_shape_when_approved",
+      "complexity": 26,
+      "line": 113,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\feedtime_l3.py",
+      "function": "jerk_aware_time",
+      "complexity": 25,
+      "line": 26,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\attachment_meta.py",
+      "function": "rebuild_from_run_artifacts",
+      "complexity": 25,
+      "line": 184,
+      "letter": "M"
+    },
+    {
+      "file": "app\\saw_lab\\batch_router.py",
+      "function": "create_batch_plan",
+      "complexity": 25,
+      "line": 84,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\toolpaths_lookup_service.py",
+      "function": "get_latest_toolpaths_for_decision",
+      "complexity": 25,
+      "line": 46,
+      "letter": "F"
+    },
+    {
+      "file": "app\\vision\\router.py",
+      "function": "photo_to_gcode",
+      "complexity": 25,
+      "line": 299,
+      "letter": "F"
+    },
+    {
+      "file": "app\\workflow\\sessions\\store.py",
+      "function": "patch",
+      "complexity": 25,
+      "line": 221,
+      "letter": "M"
+    },
+    {
+      "file": "app\\_experimental\\analytics\\advanced_analytics.py",
+      "function": "_extract_metric_pairs",
+      "complexity": 25,
+      "line": 23,
+      "letter": "M"
+    },
+    {
+      "file": "app\\ai\\transport\\vision_client.py",
+      "function": "analyze",
+      "complexity": 24,
+      "line": 207,
+      "letter": "M"
+    },
+    {
+      "file": "app\\art_studio\\prompts\\validators.py",
+      "function": "validate_svg",
+      "complexity": 24,
+      "line": 85,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\contour_reconstructor.py",
+      "function": "reconstruct_contours_from_dxf",
+      "complexity": 24,
+      "line": 305,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\routers\\utility\\settings_router.py",
+      "function": "cam_settings_import",
+      "complexity": 24,
+      "line": 196,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ci\\boundary_imports\\parser.py",
+      "function": "parse_imports_and_symbols",
+      "complexity": 24,
+      "line": 87,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\persist_glue.py",
+      "function": "load_run_artifact",
+      "complexity": 23,
+      "line": 414,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\explain_ai\\engine.py",
+      "function": "generate_assistant_explanation",
+      "complexity": 23,
+      "line": 69,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\pipeline\\services_execution.py",
+      "function": "execute_pipeline",
+      "complexity": 23,
+      "line": 30,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\audit_export.py",
+      "function": "build_batch_audit_zip",
+      "complexity": 23,
+      "line": 43,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_tree.py",
+      "function": "list_batch_tree",
+      "complexity": 23,
+      "line": 99,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\index_meta.py",
+      "function": "validate_index_meta",
+      "complexity": 23,
+      "line": 126,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\router_query.py",
+      "function": "list_runs_v2",
+      "complexity": 23,
+      "line": 116,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_dxf_r12_roundtrip.py",
+      "function": "test_dxf_r12_roundtrip_closed_and_open",
+      "complexity": 23,
+      "line": 24,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\analytics\\material_analytics.py",
+      "function": "get_dimensional_analysis",
+      "complexity": 23,
+      "line": 74,
+      "letter": "M"
+    },
+    {
+      "file": "app\\post_injection_dropin.py",
+      "function": "PostInjectionMiddleware",
+      "complexity": 22,
+      "line": 124,
+      "letter": "C"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_dashboard.py",
+      "function": "_group_key_from_kind",
+      "complexity": 22,
+      "line": 32,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\dxf_preflight_router.py",
+      "function": "auto_fix_dxf",
+      "complexity": 22,
+      "line": 208,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\blueprint_cam\\extraction.py",
+      "function": "extract_loops_from_dxf",
+      "complexity": 22,
+      "line": 17,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\decision_intelligence_service.py",
+      "function": "build_suggestion_for_execution",
+      "complexity": 22,
+      "line": 139,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\decision_intel_apply_service.py",
+      "function": "find_latest_approved_tuning_decision",
+      "complexity": 22,
+      "line": 28,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\analytics\\pattern_analytics.py",
+      "function": "get_geometry_metrics",
+      "complexity": 22,
+      "line": 123,
+      "letter": "M"
+    },
+    {
+      "file": "app\\post_injection_dropin.py",
+      "function": "dispatch",
+      "complexity": 21,
+      "line": 132,
+      "letter": "M"
+    },
+    {
+      "file": "app\\art_studio\\services\\rosette_preview_renderer.py",
+      "function": "render_rosette_preview_svg",
+      "complexity": 21,
+      "line": 27,
+      "letter": "F"
+    },
+    {
+      "file": "app\\calculators\\wiring\\switch_validator.py",
+      "function": "validate_switch_config",
+      "complexity": 21,
+      "line": 56,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\routers\\toolpath\\helical_router.py",
+      "function": "helical_gcode",
+      "complexity": 21,
+      "line": 153,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ltb_calculators\\fraction_calculator_cli.py",
+      "function": "calculator_repl",
+      "complexity": 21,
+      "line": 176,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\pipeline\\feedback\\learning.py",
+      "function": "resolve_multipliers",
+      "complexity": 21,
+      "line": 312,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_timeline.py",
+      "function": "build_batch_timeline",
+      "complexity": 21,
+      "line": 70,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\index_meta.py",
+      "function": "normalize_index_meta",
+      "complexity": 21,
+      "line": 52,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\router_query.py",
+      "function": "diff_runs",
+      "complexity": 21,
+      "line": 224,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\run_artifacts\\store.py",
+      "function": "query_run_artifacts",
+      "complexity": 21,
+      "line": 78,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\validation\\harness.py",
+      "function": "translate_scenario_to_feasibility_input",
+      "complexity": 21,
+      "line": 87,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\dxf_preflight_router.py",
+      "function": "curve_preflight_report",
+      "complexity": 21,
+      "line": 32,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\pipeline_router.py",
+      "function": "run_pipeline",
+      "complexity": 21,
+      "line": 71,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ai_context_adapter\\routes.py",
+      "function": "build_context",
+      "complexity": 20,
+      "line": 391,
+      "letter": "F"
+    },
+    {
+      "file": "app\\art_studio\\svg_ingest_service.py",
+      "function": "_parse_path_d",
+      "complexity": 20,
+      "line": 185,
+      "letter": "F"
+    },
+    {
+      "file": "app\\art_studio\\services\\design_snapshot_store.py",
+      "function": "list_recent",
+      "complexity": 20,
+      "line": 171,
+      "letter": "M"
+    },
+    {
+      "file": "app\\cam\\helical_core.py",
+      "function": "helical_validate",
+      "complexity": 20,
+      "line": 199,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam_core\\saw_lab\\saw_blade_registry.py",
+      "function": "search",
+      "complexity": 20,
+      "line": 245,
+      "letter": "M"
+    },
+    {
+      "file": "app\\generators\\lespaul_dxf_reader.py",
+      "function": "_entity_to_points",
+      "complexity": 20,
+      "line": 69,
+      "letter": "M"
+    },
+    {
+      "file": "app\\instrument_geometry\\fan_fret_guard.py",
+      "function": "compute_fan_fret_geometry_guard",
+      "complexity": 20,
+      "line": 31,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\api_runs_explain.py",
+      "function": "explain_run_on_demand",
+      "complexity": 20,
+      "line": 23,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\run_logs\\exporters.py",
+      "function": "_flatten_entry_for_csv",
+      "complexity": 20,
+      "line": 29,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\tuning_decision_service.py",
+      "function": "find_latest_approved_tuning_decision",
+      "complexity": 20,
+      "line": 43,
+      "letter": "F"
+    },
+    {
+      "file": "app\\services\\compare_risk_aggregate.py",
+      "function": "aggregate_compare_history",
+      "complexity": 20,
+      "line": 28,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\ai_cam\\explain_gcode.py",
+      "function": "_explain_line",
+      "complexity": 20,
+      "line": 156,
+      "letter": "M"
+    },
+    {
+      "file": "scripts\\validate_endpoint_truth.py",
+      "function": "main",
+      "complexity": 20,
+      "line": 18,
+      "letter": "F"
+    },
+    {
+      "file": "app\\art_studio\\services\\pattern_store.py",
+      "function": "list_patterns",
+      "complexity": 19,
+      "line": 163,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\engines\\feasibility_baseline_v1.py",
+      "function": "compute",
+      "complexity": 19,
+      "line": 56,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\posts\\linuxcnc.py",
+      "function": "validate_for_linuxcnc",
+      "complexity": 19,
+      "line": 147,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\advisory_router.py",
+      "function": "review_advisory_variant",
+      "complexity": 19,
+      "line": 123,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\run_artifacts\\index.py",
+      "function": "_match_filters",
+      "complexity": 19,
+      "line": 116,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\neck_router.py",
+      "function": "export_neck_dxf",
+      "complexity": 19,
+      "line": 253,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\polygon_offset_router.py",
+      "function": "polygon_offset_preview",
+      "complexity": 19,
+      "line": 178,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\saw_lab_toolpaths_from_decision_service.py",
+      "function": "generate_toolpaths_from_decision",
+      "complexity": 19,
+      "line": 82,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\calculators\\saw_kickback.py",
+      "function": "SawKickbackCalculator",
+      "complexity": 19,
+      "line": 11,
+      "letter": "C"
+    },
+    {
+      "file": "app\\services\\saw_lab_toolpaths_from_decision_service.py",
+      "function": "generate_toolpaths_from_decision",
+      "complexity": 19,
+      "line": 91,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_e2e_workflow_integration.py",
+      "function": "TestEndToEndWorkflowIntegration",
+      "complexity": 19,
+      "line": 100,
+      "letter": "C"
+    },
+    {
+      "file": "app\\tests\\instrument_geometry\\test_instrument_geometry_imports.py",
+      "function": "test_instrument_geometry_public_api_imports",
+      "complexity": 19,
+      "line": 3,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\cnc_production\\joblog\\storage.py",
+      "function": "compute_telemetry_stats",
+      "complexity": 19,
+      "line": 297,
+      "letter": "F"
+    },
+    {
+      "file": "app\\art_studio\\svg_ingest_service.py",
+      "function": "parse_svg_to_polylines",
+      "complexity": 18,
+      "line": 24,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\trochoid_l3.py",
+      "function": "insert_trochoids",
+      "complexity": 18,
+      "line": 183,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\router_query.py",
+      "function": "get_run",
+      "complexity": 18,
+      "line": 145,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\posts\\base.py",
+      "function": "render_moves_base",
+      "complexity": 18,
+      "line": 352,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\posts\\grbl.py",
+      "function": "validate_for_grbl",
+      "complexity": 18,
+      "line": 156,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\advisory_router.py",
+      "function": "bulk_review",
+      "complexity": 18,
+      "line": 205,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\attachment_meta.py",
+      "function": "update_from_artifact",
+      "complexity": 18,
+      "line": 101,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\bind_art_studio_service.py",
+      "function": "bind_art_studio_candidate",
+      "complexity": 18,
+      "line": 103,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\exports.py",
+      "function": "export_operator_pack",
+      "complexity": 18,
+      "line": 265,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\ingest_audit.py",
+      "function": "get_event",
+      "complexity": 18,
+      "line": 345,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\db\\store.py",
+      "function": "list",
+      "complexity": 18,
+      "line": 140,
+      "letter": "M"
+    },
+    {
+      "file": "app\\routers\\adaptive\\helpers.py",
+      "function": "_apply_adaptive_feed",
+      "complexity": 18,
+      "line": 96,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\geometry\\import_router.py",
+      "function": "parity",
+      "complexity": 18,
+      "line": 273,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\executions_list_service.py",
+      "function": "list_executions_for_decision",
+      "complexity": 18,
+      "line": 59,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\calculators\\saw_heat.py",
+      "function": "SawHeatCalculator",
+      "complexity": 18,
+      "line": 55,
+      "letter": "C"
+    },
+    {
+      "file": "app\\saw_lab\\calculators\\saw_kickback.py",
+      "function": "calculate",
+      "complexity": 18,
+      "line": 26,
+      "letter": "M"
+    },
+    {
+      "file": "scripts\\check_routing_truth.py",
+      "function": "_validate_truth_shape",
+      "complexity": 18,
+      "line": 101,
+      "letter": "F"
+    },
+    {
+      "file": "scripts\\saw_lab_enhance_blades_and_overrides.py",
+      "function": "learn_overrides_from_samples",
+      "complexity": 18,
+      "line": 282,
+      "letter": "F"
+    },
+    {
+      "file": "app\\advisory\\store.py",
+      "function": "list_assets",
+      "complexity": 17,
+      "line": 148,
+      "letter": "M"
+    },
+    {
+      "file": "app\\ci\\check_all_fences.py",
+      "function": "main",
+      "complexity": 17,
+      "line": 47,
+      "letter": "F"
+    },
+    {
+      "file": "app\\generators\\lespaul_gcode\\perimeter.py",
+      "function": "generate_body_perimeter",
+      "complexity": 17,
+      "line": 29,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\feasibility_scorer.py",
+      "function": "_score_router_feasibility",
+      "complexity": 17,
+      "line": 163,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\cam\\normalize_intent.py",
+      "function": "_normalize_router_3axis_design",
+      "complexity": 17,
+      "line": 104,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_timeline.py",
+      "function": "get_batch_progress",
+      "complexity": 17,
+      "line": 177,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\validation\\harness.py",
+      "function": "run_validation",
+      "complexity": 17,
+      "line": 316,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\cam_post_v155_router.py",
+      "function": "_axis_modal_emit",
+      "complexity": 17,
+      "line": 90,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\geometry\\import_router.py",
+      "function": "_svg_path_to_segments",
+      "complexity": 17,
+      "line": 54,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\batch_router_toolpaths.py",
+      "function": "choose_batch_plan",
+      "complexity": 17,
+      "line": 53,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\decision_intelligence_router.py",
+      "function": "approve_suggestion",
+      "complexity": 17,
+      "line": 89,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\decision_intelligence_service.py",
+      "function": "_extract_signals_from_job_log",
+      "complexity": 17,
+      "line": 77,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\calculators\\saw_heat.py",
+      "function": "calculate",
+      "complexity": 17,
+      "line": 71,
+      "letter": "M"
+    },
+    {
+      "file": "app\\services\\geometry_diff.py",
+      "function": "annotate_geometries_with_colors",
+      "complexity": 17,
+      "line": 65,
+      "letter": "F"
+    },
+    {
+      "file": "app\\services\\relief_kernels.py",
+      "function": "plan_relief_finishing",
+      "complexity": 17,
+      "line": 245,
+      "letter": "F"
+    },
+    {
+      "file": "app\\workflow\\sessions\\routes.py",
+      "function": "workflow_advisory_summary",
+      "complexity": 17,
+      "line": 261,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\ai_cam\\optimize.py",
+      "function": "_score_physics",
+      "complexity": 17,
+      "line": 163,
+      "letter": "M"
+    },
+    {
+      "file": "scripts\\check_routing_truth.py",
+      "function": "main",
+      "complexity": 17,
+      "line": 168,
+      "letter": "F"
+    },
+    {
+      "file": "tests\\test_compare_risk_aggregate.py",
+      "function": "test_aggregate_multiple_buckets",
+      "complexity": 17,
+      "line": 88,
+      "letter": "F"
+    },
+    {
+      "file": "tests\\test_compare_risk_aggregate.py",
+      "function": "test_aggregate_risk_labels",
+      "complexity": 17,
+      "line": 136,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ai\\transport\\image_client.py",
+      "function": "generate",
+      "complexity": 16,
+      "line": 291,
+      "letter": "M"
+    },
+    {
+      "file": "app\\calculators\\fret_slots_export.py",
+      "function": "export_fret_slots",
+      "complexity": 16,
+      "line": 314,
+      "letter": "F"
+    },
+    {
+      "file": "app\\calculators\\inlay_calc.py",
+      "function": "calculate_fretboard_inlays",
+      "complexity": 16,
+      "line": 245,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\feedtime.py",
+      "function": "estimate_time",
+      "complexity": 16,
+      "line": 114,
+      "letter": "F"
+    },
+    {
+      "file": "app\\governance\\endpoint_middleware.py",
+      "function": "EndpointGovernanceMiddleware",
+      "complexity": 16,
+      "line": 50,
+      "letter": "C"
+    },
+    {
+      "file": "app\\rmos\\fret_cam_guard.py",
+      "function": "run_fret_cam_guard",
+      "complexity": 16,
+      "line": 179,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\moves.py",
+      "function": "move_to_gcode",
+      "complexity": 16,
+      "line": 151,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\posts\\fanuc.py",
+      "function": "_render_moves",
+      "complexity": 16,
+      "line": 138,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\api_runs_advisory.py",
+      "function": "suggest_and_attach",
+      "complexity": 16,
+      "line": 140,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_dashboard.py",
+      "function": "_try_extract_metrics_for_execution",
+      "complexity": 16,
+      "line": 118,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\migration_utils.py",
+      "function": "migrate_v1_to_v2",
+      "complexity": 16,
+      "line": 106,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\store.py",
+      "function": "list_runs",
+      "complexity": 16,
+      "line": 271,
+      "letter": "M"
+    },
+    {
+      "file": "app\\routers\\geometry\\import_router.py",
+      "function": "import_geometry",
+      "complexity": 16,
+      "line": 204,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\batch_router_toolpaths.py",
+      "function": "generate_batch_toolpaths",
+      "complexity": 16,
+      "line": 193,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\execution_complete_router.py",
+      "function": "complete_execution",
+      "complexity": 16,
+      "line": 47,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\execution_metrics_rollup_service.py",
+      "function": "write_execution_metrics_rollup_artifact",
+      "complexity": 16,
+      "line": 112,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_art_studio_cam_promotion_contract.py",
+      "function": "test_promote_succeeds_when_approved",
+      "complexity": 16,
+      "line": 81,
+      "letter": "F"
+    },
+    {
+      "file": "scripts\\saw_lab_enhance_blades_and_overrides.py",
+      "function": "_extract_training_samples_from_artifacts",
+      "complexity": 16,
+      "line": 210,
+      "letter": "F"
+    },
+    {
+      "file": "tests\\test_runs_v2_delete_audit.py",
+      "function": "test_hard_delete_removes_artifact_and_updates_index",
+      "complexity": 16,
+      "line": 82,
+      "letter": "F"
+    }
+  ]
+}
