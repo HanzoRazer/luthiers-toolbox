@@ -72,7 +72,7 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam_core",
     ),
     RouterSpec(
-        module="app.routers.adaptive_router",
+        module="app.routers.adaptive",
         prefix="/api",
         tags=["Adaptive Pocketing"],
         category="cam_core",
