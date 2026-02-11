@@ -18,6 +18,7 @@ This module implements three distinct workflow modes for rosette/pattern design:
 
 Part of RMOS 2.0.
 """
+from app.safety import safety_critical
 
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -216,6 +217,7 @@ def get_mode_constraints(
     )
 
 
+@safety_critical
 def compute_feasibility_for_mode(
     request: ModePreviewRequest,
 ) -> ModePreviewResult:

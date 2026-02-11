@@ -13,6 +13,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from typing import Any, Dict, Optional
 
+from app.safety import safety_critical
+
 router = APIRouter()
 
 
@@ -33,6 +35,7 @@ def rmos_feasibility(req: Dict[str, Any]) -> Dict[str, Any]:
     return compute_feasibility_internal(tool_id=tool_id, req=req, context="api")
 
 
+@safety_critical
 def compute_feasibility_internal(
     *,
     tool_id: str,

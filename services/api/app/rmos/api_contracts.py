@@ -6,6 +6,8 @@ from typing import Optional, List, Dict, Any
 from enum import Enum
 from pydantic import BaseModel, Field
 
+from app.safety import safety_critical
+
 
 # ======================
 # Risk & Feasibility Types
@@ -123,6 +125,7 @@ class RmosServices:
 # Core API Functions
 # ======================
 
+@safety_critical
 def compute_feasibility_for_design(
     design: RosetteParamSpec,
     ctx: RmosContext
