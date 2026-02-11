@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Literal, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from ..cam.dxf_preflight import DXFPreflight
-from ..routers.blueprint_cam_bridge import extract_loops_from_dxf
+from ..routers.blueprint_cam import extract_loops_from_dxf
 
 router = APIRouter(prefix="/cam", tags=["cam", "dxf", "adaptive"])
 

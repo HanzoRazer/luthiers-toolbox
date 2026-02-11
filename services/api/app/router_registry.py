@@ -193,6 +193,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="blueprint",
     ),
     RouterSpec(
+        module="app.routers.blueprint_cam",
+        prefix="/api",
+        tags=["Blueprint CAM Bridge"],
+        category="blueprint",
+    ),
+    RouterSpec(
         module="app.routers.legacy_dxf_exports_router",
         prefix="",
         tags=["DXF", "Exports"],
