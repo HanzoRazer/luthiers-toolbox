@@ -15,7 +15,8 @@ export interface CandidateRow {
   decided_by?: string | null
   decided_at_utc?: string | null
   advisory_id?: string | null
-  status?: string
+  status?: string | null
+  // Allow additional properties for type compatibility with extended types
   [key: string]: unknown
 }
 
@@ -158,7 +159,7 @@ export function useCandidateFilters(runId: () => string) {
     return String(s ?? '').trim().toLowerCase()
   }
 
-  function matchesSearch(c: CandidateRow, q: string): boolean {
+  function matchesSearch<T extends CandidateRow>(c: T, q: string): boolean {
     if (!q) return true
     const hay = [
       c.candidate_id,
@@ -169,11 +170,11 @@ export function useCandidateFilters(runId: () => string) {
     return hay.includes(q)
   }
 
-  function filterCandidates(
-    candidates: CandidateRow[],
+  function filterCandidates<T extends CandidateRow>(
+    candidates: T[],
     selectedIds: Set<string>,
     effectiveOperatorId: string
-  ): CandidateRow[] {
+  ): T[] {
     const q = normalize(searchText.value)
     return candidates.filter((c) => {
       // Decision filter
@@ -213,7 +214,7 @@ export function useCandidateFilters(runId: () => string) {
     })
   }
 
-  function sortCandidates(candidates: CandidateRow[]): CandidateRow[] {
+  function sortCandidates<T extends CandidateRow>(candidates: T[]): T[] {
     const sk = sortKey.value
     return [...candidates].sort((a, b) => {
       switch (sk) {

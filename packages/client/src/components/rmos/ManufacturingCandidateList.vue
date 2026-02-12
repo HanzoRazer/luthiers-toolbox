@@ -11,6 +11,7 @@ import {
 } from "@/sdk/rmos/runs";
 import JSZip from "jszip";
 import { useCandidateSelection } from "./composables/useCandidateSelection";
+import { useCandidateFilters, type DecisionFilter, type StatusFilter } from "./composables/useCandidateFilters";
 
 const props = defineProps<{
   runId: string;
@@ -28,19 +29,7 @@ const requestId = ref<string>("");
 
 const candidates = ref<CandidateRow[]>([]);
 
-// -------------------------
-// Filters (product-only)
-// -------------------------
-type DecisionFilter = "ALL" | "UNDECIDED" | "GREEN" | "YELLOW" | "RED";
-type StatusFilter = "ALL" | "PROPOSED" | "ACCEPTED" | "REJECTED";
-
-const decisionFilter = ref<DecisionFilter>("ALL");
-const statusFilter = ref<StatusFilter>("ALL");
-const showSelectedOnly = ref(false);
-const searchText = ref("");
-
-// micro-follow: decided-by filter (product-only)
-const filterDecidedBy = ref<string>("ALL");
+// decidedByOptions: derived from candidates list
 const decidedByOptions = computed(() => {
   const set = new Set<string>();
   for (const c of candidates.value) {
@@ -65,7 +54,6 @@ watch(myOperatorId, (v) => {
     localStorage.setItem(OPERATOR_ID_KEY, String(v || ""));
   } catch { }
 });
-const filterOnlyMine = ref<boolean>(false);
 
 // Effective operator: prop overrides localStorage
 const effectiveOperatorId = computed(() => {
@@ -82,64 +70,8 @@ function _decidedByOrNull(): string | null {
   return v ? v : null;
 }
 
-// micro-follow: density toggle (compact mode) for long runs
-const compact = ref<boolean>(false);
-
-// micro-follow: persist view prefs (filters + density) to localStorage (product-only)
-const PREF_KEY = computed(() => `rmos:candidates:prefs:${props.runId || "unknown"}`);
-type PrefsV1 = {
-  decisionFilter: string;
-  statusFilter: string;
-  searchText: string;
-  showSelectedOnly: boolean;
-  compact: boolean;
-  sortKey: string;
-};
-function _readPrefs(): PrefsV1 | null {
-  try {
-    const raw = localStorage.getItem(PREF_KEY.value);
-    if (!raw) return null;
-    const obj = JSON.parse(raw) as Partial<PrefsV1>;
-    if (!obj) return null;
-    return {
-      decisionFilter: obj.decisionFilter ?? "ALL",
-      statusFilter: obj.statusFilter ?? "ALL",
-      searchText: obj.searchText ?? "",
-      showSelectedOnly: obj.showSelectedOnly ?? false,
-      compact: obj.compact ?? false,
-      sortKey: obj.sortKey ?? "id",
-    };
-  } catch {
-    return null;
-  }
-}
-function _writePrefs(p: PrefsV1) {
-  try { localStorage.setItem(PREF_KEY.value, JSON.stringify(p)); } catch { /* ignore */ }
-}
-
-let _prefsTimer: number | null = null;
-function schedulePrefsSave() {
-  if (_prefsTimer) window.clearTimeout(_prefsTimer);
-  _prefsTimer = window.setTimeout(() => {
-    _writePrefs({
-      decisionFilter: decisionFilter.value,
-      statusFilter: statusFilter.value,
-      searchText: searchText.value,
-      showSelectedOnly: showSelectedOnly.value,
-      compact: compact.value,
-      sortKey: sortKey.value,
-    });
-  }, 250);
-}
-
 function resetViewPrefs() {
-  decisionFilter.value = "ALL";
-  statusFilter.value = "ALL";
-  searchText.value = "";
-  showSelectedOnly.value = false;
-  compact.value = false;
-  sortKey.value = "id";
-  schedulePrefsSave();
+  resetPrefs();
   showToast("View reset");
 }
 
@@ -151,39 +83,6 @@ function showToast(msg: string, _variant?: "ok" | "err") {
   if (_toastTimer) window.clearTimeout(_toastTimer);
   _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
 }
-
-type SortKey = "id" | "id_desc" | "created" | "created_desc" | "decided_at" | "decided_at_desc" | "decided_by" | "decided_by_desc" | "status" | "decision";
-const sortKey = ref<SortKey>("id");
-
-// Audit header click cycles through: decided_at_desc → decided_at → decided_by → decided_by_desc → id (reset)
-const AUDIT_SORT_CYCLE: SortKey[] = ["decided_at_desc", "decided_at", "decided_by", "decided_by_desc"];
-function cycleAuditSort() {
-  const current = sortKey.value;
-  const idx = AUDIT_SORT_CYCLE.indexOf(current);
-  if (idx === -1) {
-    // not in audit cycle, start at newest-first
-    sortKey.value = "decided_at_desc";
-  } else if (idx === AUDIT_SORT_CYCLE.length - 1) {
-    // end of cycle, reset to default
-    sortKey.value = "id";
-  } else {
-    sortKey.value = AUDIT_SORT_CYCLE[idx + 1];
-  }
-}
-const auditSortLabel = computed(() => {
-  const sk = sortKey.value;
-  if (sk === "decided_at_desc") return "Time ↓";
-  if (sk === "decided_at") return "Time ↑";
-  if (sk === "decided_by") return "Operator A→Z";
-  if (sk === "decided_by_desc") return "Operator Z→A";
-  return "none";
-});
-const auditSortArrow = computed(() => {
-  const sk = sortKey.value;
-  if (sk === "decided_at_desc" || sk === "decided_by_desc") return "↓";
-  if (sk === "decided_at" || sk === "decided_by") return "↑";
-  return "";
-});
 
 // Save / decision state
 const saving = ref(false);
@@ -323,6 +222,30 @@ const {
   toggleAllFiltered: composableToggleAllFiltered,
   getSelectedCandidates,
 } = useCandidateSelection();
+
+// Filter state (from composable)
+const {
+  decisionFilter,
+  statusFilter,
+  showSelectedOnly,
+  searchText,
+  filterDecidedBy,
+  filterOnlyMine,
+  compact,
+  sortKey,
+  auditSortLabel,
+  auditSortArrow,
+  loadPrefs,
+  resetPrefs,
+  clearFilters: composableClearFilters,
+  quickUndecided: composableQuickUndecided,
+  cycleAuditSort,
+  filterCandidates,
+  sortCandidates,
+  normalize,
+  matchesSearch,
+} = useCandidateFilters(() => props.runId);
+
 const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
 
 // Undo stack for bulk decisions (client-side)
@@ -486,20 +409,6 @@ function decisionBadge(decision: RiskLevel | null | undefined) {
   return decision;
 }
 
-function normalize(s: unknown) {
-  return String(s ?? "").trim().toLowerCase();
-}
-
-function matchesSearch(c: CandidateRow, q: string) {
-  if (!q) return true;
-  const hay = [
-    c.candidate_id,
-    c.advisory_id ?? "",
-    c.decision_note ?? "",
-    c.decided_by ?? "",
-  ].map(normalize).join(" | ");
-  return hay.includes(q);
-}
 
 function statusText(c: CandidateRow) {
   if (c.decision == null) return "Needs decision";
@@ -576,16 +485,7 @@ async function load() {
 
 onMounted(() => {
   // restore prefs first (so first render matches user intent)
-  const p = _readPrefs();
-  if (p) {
-    decisionFilter.value = p.decisionFilter as DecisionFilter;
-    statusFilter.value = p.statusFilter as StatusFilter;
-    searchText.value = p.searchText;
-    showSelectedOnly.value = p.showSelectedOnly;
-    compact.value = p.compact;
-    sortKey.value = (p.sortKey as SortKey) || "id";
-  }
-
+  loadPrefs();
   load();
   window.addEventListener("keydown", _onKeydown, { capture: true });
 });
@@ -593,14 +493,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", _onKeydown, { capture: true } as any);
   if (_toastTimer) window.clearTimeout(_toastTimer);
-  if (_prefsTimer) window.clearTimeout(_prefsTimer);
 });
 
 watch(() => props.runId, load);
-
-watch([decisionFilter, statusFilter, searchText, showSelectedOnly, compact, sortKey], () => {
-  schedulePrefsSave();
-});
 
 function startEdit(c: CandidateRow) {
   // Spine-locked: don't allow note editing until a decision exists
@@ -743,11 +638,9 @@ const summary = computed(() => {
 
 function setDecisionFilter(v: string) {
   decisionFilter.value = v as DecisionFilter;
-  schedulePrefsSave();
 }
 function setStatusFilter(v: string) {
   statusFilter.value = v as StatusFilter;
-  schedulePrefsSave();
 }
 
 function chipClass(active: boolean, kind: "neutral" | "good" | "warn" | "bad" | "muted" = "neutral") {
@@ -766,46 +659,12 @@ function chipClass(active: boolean, kind: "neutral" | "good" | "warn" | "bad" | 
 // Filtered view (product-only)
 // -------------------------
 const filteredCandidates = computed(() => {
-  const df = decisionFilter.value;
-  const sf = statusFilter.value;
-  const onlySel = showSelectedOnly.value;
-  const sel = selectedIds.value;
-  const q = normalize(searchText.value);
+  // Filter using composable (handles decision, status, search, decidedBy, onlyMine, selectedOnly)
+  const filtered = filterCandidates(candidates.value, selectedIds.value, effectiveOperatorId.value);
 
-  let arr = candidates.value.filter((c) => {
-    if (onlySel && !sel.has(c.candidate_id)) return false;
-
-    // decision filter
-    if (df === "UNDECIDED") {
-      if (c.decision != null) return false;
-    } else if (df === "GREEN" || df === "YELLOW" || df === "RED") {
-      if (c.decision !== df) return false;
-    }
-
-    // status filter
-    if (sf !== "ALL") {
-      if ((c.status ?? null) !== sf) return false;
-    }
-
-    // decided-by filter
-    if (filterDecidedBy.value !== "ALL") {
-      if ((c.decided_by ?? "") !== filterDecidedBy.value) return false;
-    }
-
-    // "only mine" filter
-    if (filterOnlyMine.value) {
-      const mine = effectiveOperatorId.value;
-      if (!mine || (c.decided_by ?? "") !== mine) return false;
-    }
-
-    // search
-    if (!matchesSearch(c, q)) return false;
-    return true;
-  });
-
-  // sort
+  // Sort (includes 'created' sorts not in composable)
   const sk = sortKey.value;
-  arr = [...arr].sort((a, b) => {
+  return [...filtered].sort((a, b) => {
     if (sk === "id") return a.candidate_id.localeCompare(b.candidate_id);
     if (sk === "id_desc") return b.candidate_id.localeCompare(a.candidate_id);
     if (sk === "created") return (a.created_at_utc ?? "").localeCompare(b.created_at_utc ?? "");
@@ -818,8 +677,6 @@ const filteredCandidates = computed(() => {
     if (sk === "decision") return (a.decision ?? "ZZZ").localeCompare(b.decision ?? "ZZZ");
     return 0;
   });
-
-  return arr;
 });
 
 const filteredCount = computed(() => filteredCandidates.value.length);
@@ -844,14 +701,11 @@ function invertSelectionFiltered() {
 }
 
 function quickUndecided() {
-  decisionFilter.value = "UNDECIDED";
+  composableQuickUndecided();
 }
 
 function clearFilters() {
-  decisionFilter.value = "ALL";
-  statusFilter.value = "ALL";
-  showSelectedOnly.value = false;
-  searchText.value = "";
+  composableClearFilters();
 }
 
 // -----------------------------------------------------------------------------
