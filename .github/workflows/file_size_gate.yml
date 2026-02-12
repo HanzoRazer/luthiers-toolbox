@@ -1,0 +1,38 @@
+name: File Size Gate
+
+on:
+  pull_request:
+    paths:
+      - 'services/api/app/**/*.py'
+      - 'packages/client/src/**/*.vue'
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/app/**/*.py'
+      - 'packages/client/src/**/*.vue'
+
+jobs:
+  file-size-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run file size gate
+        run: python ci/file_size_gate.py
+
+      - name: Summary on failure
+        if: failure()
+        run: |
+          echo "## File Size Gate Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "One or more files exceed their baseline size." >> $GITHUB_STEP_SUMMARY
+          echo "This prevents accidental growth of god-object files." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**To fix:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Split the file into smaller modules" >> $GITHUB_STEP_SUMMARY
+          echo "2. Or run \`python ci/file_size_gate.py --update\` to accept new baseline (requires justification)" >> $GITHUB_STEP_SUMMARY
