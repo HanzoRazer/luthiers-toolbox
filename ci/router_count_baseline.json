@@ -33,10 +33,10 @@
     "routers\\instruments\\guitar": 2,
     "routers\\music": 1,
     "routers\\probe": 6,
-    "saw_lab": 24,
+    "saw_lab": 14,
     "vision": 1,
     "workflow": 1
   },
   "route_decorators": 582,
-  "router_files": 143
+  "router_files": 133
 }
