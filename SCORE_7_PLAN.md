@@ -321,7 +321,17 @@ Audit and fix all components for dark mode support.
 Week 1:
   [x] Phase 1.1: Dead code purge (1 day)
   [x] Phase 1.2: File size gate CI (1 day)
-  [ ] Phase 1.3: Split top 3 god files (3 days)
+  [~] Phase 1.3: Split god files (in progress)
+      [x] Extract composables as building blocks (1,566 lines)
+          - useCandidateFilters.ts, useCandidateSelection.ts
+          - CandidateFiltersBar.vue, CandidateBulkBar.vue
+          - usePocketSettings.ts, PocketSettingsPanel.vue
+          - useDxfWorkflow.ts
+      [ ] Wire composables into parent files (reduces line counts)
+          - Requires careful refactoring to avoid breaking functionality
+          - ManufacturingCandidateList.vue: 2,987 lines (target: <1,500)
+          - AdaptivePocketLab.vue: 2,418 lines (target: <1,500)
+          - DxfToGcodeView.vue: 1,846 lines (target: <1,000)
 
 Week 2:
   [ ] Phase 1.4: Router consolidation (2 days)
