@@ -80,7 +80,7 @@ export function usePocketSettings() {
 
   const chipload = computed(() => {
     const flutes = 2 // Assume 2-flute for now
-    if (spindleRpm.value === 0 || flutes === 0) return 0
+    if (spindleRpm.value === 0) return 0
     return feedXY.value / (spindleRpm.value * flutes)
   })
 
