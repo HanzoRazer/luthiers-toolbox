@@ -3,9 +3,13 @@
  * Extracted from ManufacturingCandidateList.vue
  */
 import { computed, ref } from 'vue'
-import type { CandidateRow } from './useCandidateFilters'
 
-export function useCandidateSelection() {
+// Generic interface - any object with candidate_id works
+export interface SelectableCandidate {
+  candidate_id: string
+}
+
+export function useCandidateSelection<T extends SelectableCandidate = SelectableCandidate>() {
   const selectedIds = ref<Set<string>>(new Set())
   const lastClickedId = ref<string | null>(null)
 
@@ -24,7 +28,7 @@ export function useCandidateSelection() {
     lastClickedId.value = id
   }
 
-  function selectRange(candidates: CandidateRow[], toId: string) {
+  function selectRange(candidates: T[], toId: string) {
     if (!lastClickedId.value) {
       toggleSelection(toId)
       return
@@ -55,11 +59,11 @@ export function useCandidateSelection() {
     lastClickedId.value = null
   }
 
-  function selectAll(candidates: CandidateRow[]) {
+  function selectAll(candidates: T[]) {
     selectedIds.value = new Set(candidates.map(c => c.candidate_id))
   }
 
-  function selectAllFiltered(filteredCandidates: CandidateRow[]) {
+  function selectAllFiltered(filteredCandidates: T[]) {
     const newSet = new Set(selectedIds.value)
     for (const c of filteredCandidates) {
       newSet.add(c.candidate_id)
@@ -67,7 +71,7 @@ export function useCandidateSelection() {
     selectedIds.value = newSet
   }
 
-  function clearAllFiltered(filteredCandidates: CandidateRow[]) {
+  function clearAllFiltered(filteredCandidates: T[]) {
     const filteredIds = new Set(filteredCandidates.map(c => c.candidate_id))
     const newSet = new Set(selectedIds.value)
     for (const id of filteredIds) {
@@ -76,7 +80,7 @@ export function useCandidateSelection() {
     selectedIds.value = newSet
   }
 
-  function invertSelectionFiltered(filteredCandidates: CandidateRow[]) {
+  function invertSelectionFiltered(filteredCandidates: T[]) {
     const newSet = new Set(selectedIds.value)
     for (const c of filteredCandidates) {
       if (newSet.has(c.candidate_id)) {
@@ -88,7 +92,7 @@ export function useCandidateSelection() {
     selectedIds.value = newSet
   }
 
-  function toggleAllFiltered(filteredCandidates: CandidateRow[]) {
+  function toggleAllFiltered(filteredCandidates: T[]) {
     const filteredIds = filteredCandidates.map(c => c.candidate_id)
     const allSelected = filteredIds.every(id => selectedIds.value.has(id))
 
@@ -99,7 +103,7 @@ export function useCandidateSelection() {
     }
   }
 
-  function getSelectedCandidates(candidates: CandidateRow[]): CandidateRow[] {
+  function getSelectedCandidates(candidates: T[]): T[] {
     return candidates.filter(c => selectedIds.value.has(c.candidate_id))
   }
 

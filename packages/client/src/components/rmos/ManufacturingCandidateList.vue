@@ -10,6 +10,7 @@ import {
   type RiskLevel,
 } from "@/sdk/rmos/runs";
 import JSZip from "jszip";
+import { useCandidateSelection } from "./composables/useCandidateSelection";
 
 const props = defineProps<{
   runId: string;
@@ -212,7 +213,7 @@ function _isTypingContext(): boolean {
 }
 
 function _clearSelection() {
-  selectedIds.value = new Set();
+  clearSelection();
 }
 
 function _hotkeyHelp(): string {
@@ -307,9 +308,21 @@ async function copyText(label: string, value: string) {
 const exporting = ref(false);
 const exportError = ref<string | null>(null);
 
-// Selection state (bulk decision)
-const selectedIds = ref<Set<string>>(new Set());
-const lastClickedId = ref<string | null>(null);
+// Selection state (from composable)
+const {
+  selectedIds,
+  lastClickedId,
+  selectedCount,
+  isSelected,
+  toggleSelection,
+  selectRange: composableSelectRange,
+  clearSelection,
+  selectAllFiltered: composableSelectAllFiltered,
+  clearAllFiltered: composableClearAllFiltered,
+  invertSelectionFiltered: composableInvertSelectionFiltered,
+  toggleAllFiltered: composableToggleAllFiltered,
+  getSelectedCandidates,
+} = useCandidateSelection();
 const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
 
 // Undo stack for bulk decisions (client-side)
@@ -371,8 +384,7 @@ function _mkId(prefix = "bulk"): string {
   return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 }
 function _selectedCandidates(): CandidateRow[] {
-  const ids = selectedIds.value;
-  return candidates.value.filter((c) => ids.has(c.candidate_id));
+  return getSelectedCandidates(candidates.value);
 }
 function _findCandidate(id: string): CandidateRow | null {
   return candidates.value.find((c) => c.candidate_id === id) ?? null;
@@ -820,48 +832,15 @@ const allFilteredSelected = computed(() => {
   return true;
 });
 
-// Selection helpers
-function idxById(id: string): number {
-  return filteredCandidates.value.findIndex((c) => c.candidate_id === id);
-}
-function setSelected(id: string, on: boolean) {
-  const next = new Set(selectedIds.value);
-  if (on) next.add(id);
-  else next.delete(id);
-  selectedIds.value = next;
-}
-function toggleSelected(id: string) {
-  setSelected(id, !selectedIds.value.has(id));
-}
-function selectRange(fromId: string, toId: string) {
-  const a = idxById(fromId);
-  const b = idxById(toId);
-  if (a < 0 || b < 0) return;
-  const lo = Math.min(a, b);
-  const hi = Math.max(a, b);
-  const next = new Set(selectedIds.value);
-  for (let i = lo; i <= hi; i++) next.add(filteredCandidates.value[i].candidate_id);
-  selectedIds.value = next;
-}
+// Selection helpers (wrappers around composable)
 function selectAllFiltered() {
-  const next = new Set(selectedIds.value);
-  for (const id of filteredIds.value) next.add(id);
-  selectedIds.value = next;
+  composableSelectAllFiltered(filteredCandidates.value);
 }
 function clearAllFiltered() {
-  const f = filteredIds.value;
-  const next = new Set(selectedIds.value);
-  for (const id of f) next.delete(id);
-  selectedIds.value = next;
+  composableClearAllFiltered(filteredCandidates.value);
 }
 function invertSelectionFiltered() {
-  const f = filteredIds.value;
-  const next = new Set(selectedIds.value);
-  for (const id of f) {
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-  }
-  selectedIds.value = next;
+  composableInvertSelectionFiltered(filteredCandidates.value);
 }
 
 function quickUndecided() {
@@ -1005,16 +984,14 @@ async function undoLastBulkAction() {
 
 function toggleOne(id: string, ev?: MouseEvent) {
   if (ev?.shiftKey && lastClickedId.value && lastClickedId.value !== id) {
-    selectRange(lastClickedId.value, id);
+    composableSelectRange(filteredCandidates.value, id);
   } else {
-    toggleSelected(id);
+    toggleSelection(id);
   }
-  lastClickedId.value = id;
 }
 
 function toggleAllFiltered() {
-  if (allFilteredSelected.value) clearAllFiltered();
-  else selectAllFiltered();
+  composableToggleAllFiltered(filteredCandidates.value);
 }
 
 function utcNowIso() {
