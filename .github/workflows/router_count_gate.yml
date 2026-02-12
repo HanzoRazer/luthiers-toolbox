@@ -1,0 +1,36 @@
+name: Router Count Gate
+
+on:
+  pull_request:
+    paths:
+      - 'services/api/app/**/*.py'
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/app/**/*.py'
+
+jobs:
+  router-count-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run router count gate
+        run: python ci/router_count_gate.py
+
+      - name: Summary on failure
+        if: failure()
+        run: |
+          echo "## Router Count Gate Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Router file count or route decorator count exceeds baseline." >> $GITHUB_STEP_SUMMARY
+          echo "This prevents uncontrolled API sprawl." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**To fix:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Consolidate routers before adding new ones" >> $GITHUB_STEP_SUMMARY
+          echo "2. Or run \`python ci/router_count_gate.py --update\` to accept new baseline (requires justification)" >> $GITHUB_STEP_SUMMARY
