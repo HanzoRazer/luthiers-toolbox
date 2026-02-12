@@ -423,3 +423,13 @@ services/api/data/telemetry/
 *.png
 !services/api/static/**/*.png
 !services/api/static/**/*.jpg
+
+# Dead code prevention (added by cleanup)
+*_backup_*
+*.backup
+*.bak
+__ARCHIVE__/
+__REFERENCE__/
+.archive_*/
+*_phase[0-9]*_[0-9]*.vue
+*_phase[0-9]*_[0-9]*.py
