@@ -31,6 +31,5 @@
   "packages/client/src/views/SawLabDashboard.vue": 1062,
   "packages/client/src/views/art/RiskDashboardCrossLab.vue": 2062,
   "packages/client/src/views/tools/AudioAnalyzerLibrary.vue": 828,
-  "packages/client/src/views/tools/AudioAnalyzerViewer.vue": 1269,
-  "services/api/app/rmos/posts/base.py": 583
+  "packages/client/src/views/tools/AudioAnalyzerViewer.vue": 1269
 }
