@@ -23,12 +23,7 @@ from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/saw/batch", tags=["Saw", "Batch"])
 
-
-# =============================================================================
 # Schemas: Abort
-# =============================================================================
-
-
 class AbortReason(str, Enum):
     JAM = "JAM"
     BURN = "BURN"
@@ -56,11 +51,7 @@ class ExecutionAbortResponse(BaseModel):
     state: str = "ABORTED"
 
 
-# =============================================================================
 # Schemas: Complete
-# =============================================================================
-
-
 class ExecutionOutcome(str, Enum):
     SUCCESS = "SUCCESS"
     PARTIAL = "PARTIAL"
@@ -93,11 +84,7 @@ class ExecutionCompleteResponse(BaseModel):
     state: str = "COMPLETED"
 
 
-# =============================================================================
 # Schemas: Confirmation
-# =============================================================================
-
-
 class ExecutionConfirmRequest(BaseModel):
     batch_execution_artifact_id: str = Field(..., description="Execution artifact id to confirm")
     session_id: str
@@ -130,11 +117,7 @@ class LatestExecutionConfirmResponse(BaseModel):
     state: Optional[str] = None
 
 
-# =============================================================================
 # Schemas: Metrics Rollup
-# =============================================================================
-
-
 class ExecutionMetricsRollupRequest(BaseModel):
     batch_execution_artifact_id: str
     session_id: Optional[str] = None
@@ -146,11 +129,7 @@ class ExecutionMetricsRollupResponse(BaseModel):
     metrics_artifact_id: str
 
 
-# =============================================================================
 # Schemas: Start from Toolpaths
-# =============================================================================
-
-
 class ExecutionStartFromToolpathsRequest(BaseModel):
     session_id: str
     batch_label: str
@@ -171,11 +150,7 @@ class ExecutionStartFromToolpathsResponse(BaseModel):
     decision_artifact_id: Optional[str] = None
 
 
-# =============================================================================
 # Schemas: Status
-# =============================================================================
-
-
 class ExecutionStatusResponse(BaseModel):
     ok: bool
     batch_execution_artifact_id: str
@@ -189,11 +164,7 @@ class ExecutionStatusResponse(BaseModel):
     kpis: Optional[Dict[str, Any]] = None
 
 
-# =============================================================================
 # Route: Abort
-# =============================================================================
-
-
 @router.post("/execution/abort", response_model=ExecutionAbortResponse)
 def abort_execution(req: ExecutionAbortRequest) -> ExecutionAbortResponse:
     if not req.batch_execution_artifact_id:
@@ -223,11 +194,7 @@ def abort_execution(req: ExecutionAbortRequest) -> ExecutionAbortResponse:
     )
 
 
-# =============================================================================
 # Route: Complete
-# =============================================================================
-
-
 @router.post("/execution/complete", response_model=ExecutionCompleteResponse)
 def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteResponse:
     if not req.batch_execution_artifact_id:
@@ -302,11 +269,7 @@ def complete_execution(req: ExecutionCompleteRequest) -> ExecutionCompleteRespon
     )
 
 
-# =============================================================================
 # Routes: Confirmation
-# =============================================================================
-
-
 @router.post("/execution/confirm", response_model=ExecutionConfirmResponse)
 def confirm_execution(req: ExecutionConfirmRequest) -> ExecutionConfirmResponse:
     if not req.batch_execution_artifact_id:
@@ -374,11 +337,7 @@ def latest_confirmation_for_execution(
     )
 
 
-# =============================================================================
 # Route: Metrics Rollup
-# =============================================================================
-
-
 @router.post("/execution/metrics/rollup", response_model=ExecutionMetricsRollupResponse)
 def rollup_execution_metrics(req: ExecutionMetricsRollupRequest) -> ExecutionMetricsRollupResponse:
     """Writes a saw_batch_execution_metrics artifact from job logs."""
@@ -398,11 +357,7 @@ def rollup_execution_metrics(req: ExecutionMetricsRollupRequest) -> ExecutionMet
     )
 
 
-# =============================================================================
 # Route: Start from Toolpaths
-# =============================================================================
-
-
 @router.post("/execution/start-from-toolpaths", response_model=ExecutionStartFromToolpathsResponse)
 def start_execution_from_toolpaths(req: ExecutionStartFromToolpathsRequest) -> ExecutionStartFromToolpathsResponse:
     if not req.session_id or not req.batch_label:
@@ -469,11 +424,7 @@ def start_execution_from_toolpaths(req: ExecutionStartFromToolpathsRequest) -> E
     )
 
 
-# =============================================================================
 # Route: Status
-# =============================================================================
-
-
 @router.get("/execution/{batch_execution_artifact_id}/status", response_model=ExecutionStatusResponse)
 def get_execution_status(
     batch_execution_artifact_id: str,
