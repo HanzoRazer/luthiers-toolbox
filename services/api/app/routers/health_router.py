@@ -208,3 +208,80 @@ def module_status() -> Dict[str, Any]:
     - modules: Detailed status of each module
     """
     return get_startup_summary()
+
+
+# =============================================================================
+# Kubernetes-style probes
+# =============================================================================
+
+
+@router.get("/health/live", summary="Liveness probe (K8s)")
+def liveness_probe() -> Dict[str, Any]:
+    """
+    Kubernetes liveness probe.
+
+    Returns 200 if the process is running and can handle requests.
+    This should ALWAYS succeed unless the process is deadlocked.
+
+    Use: livenessProbe in K8s deployment
+    """
+    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@router.get("/health/ready", summary="Readiness probe (K8s)")
+def readiness_probe() -> Dict[str, Any]:
+    """
+    Kubernetes readiness probe.
+
+    Returns 200 if the service is ready to accept traffic.
+    Checks critical dependencies are available.
+
+    Use: readinessProbe in K8s deployment
+    """
+    checks = {
+        "paths": all(_collect_path_state().values()),
+    }
+
+    # Check circuit breakers if any are open
+    try:
+        from ..core.reliability import CircuitBreaker
+        breaker_status = CircuitBreaker.all_status()
+        open_circuits = [
+            name for name, status in breaker_status.items()
+            if status.get("state") == "open"
+        ]
+        checks["circuits"] = len(open_circuits) == 0
+        if open_circuits:
+            checks["open_circuits"] = open_circuits
+    except ImportError:
+        checks["circuits"] = True
+
+    ready = all(v for k, v in checks.items() if k != "open_circuits")
+
+    return {
+        "status": "ready" if ready else "not_ready",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "checks": checks,
+    }
+
+
+@router.get("/health/circuits", summary="Circuit breaker status")
+def circuit_status() -> Dict[str, Any]:
+    """
+    Return status of all circuit breakers.
+
+    Circuit breakers protect against cascading failures by failing fast
+    when a dependency is unhealthy.
+    """
+    try:
+        from ..core.reliability import CircuitBreaker
+        return {
+            "circuits": CircuitBreaker.all_status(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except ImportError:
+        return {
+            "circuits": {},
+            "message": "Circuit breaker module not loaded",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }

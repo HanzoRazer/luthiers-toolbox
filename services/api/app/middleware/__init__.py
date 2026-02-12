@@ -13,6 +13,7 @@ from .edition_middleware import (
     FEATURE_REQUIREMENTS,
 )
 from .deprecation import DeprecationHeadersMiddleware
+from .request_id import RequestIdMiddleware, get_request_id_from_request
 
 __all__ = [
     "Edition",
@@ -24,4 +25,6 @@ __all__ = [
     "EDITION_FEATURES",
     "FEATURE_REQUIREMENTS",
     "DeprecationHeadersMiddleware",
+    "RequestIdMiddleware",
+    "get_request_id_from_request",
 ]
