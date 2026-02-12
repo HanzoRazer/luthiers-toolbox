@@ -169,6 +169,10 @@ for router, prefix, tags in load_all_routers():
 # Prometheus metrics endpoint - no prefix, accessible at /metrics
 app.include_router(metrics_router)
 
+# Curated API v1 - stable, documented endpoints for golden path workflows
+from .api_v1 import router as api_v1_router
+app.include_router(api_v1_router)
+
 
 # =============================================================================
 # HEALTH ENDPOINTS (fallback for basic CI compatibility)
