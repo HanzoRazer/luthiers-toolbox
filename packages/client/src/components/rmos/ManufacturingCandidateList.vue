@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
 import CandidateRowItem from "@/components/rmos/CandidateRowItem.vue";
+import CandidateFiltersSection from "@/components/rmos/CandidateFiltersSection.vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 // Bundle D: JSZip for bulk packaging GREEN candidates into single operator-grade export
 import {
@@ -1387,384 +1388,34 @@ async function exportGreenOnlyPackageZip() {
       class="table"
       :class="{ compact }"
     >
-      <!-- Filters -->
-      <div class="filters">
-        <div class="filters-left">
-          <!-- micro-follow: quick chips -->
-          <div
-            v-if="summary.total > 0"
-            class="chipsRow"
-          >
-            <div class="chipsGroup">
-              <div class="small muted">
-                Decision:
-              </div>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'ALL', 'neutral')"
-                title="Show all decisions"
-                @click="setDecisionFilter('ALL')"
-              >
-                All <span class="count">{{ summary.total }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'UNDECIDED', 'muted')"
-                title="Show candidates that still need an explicit decision"
-                @click="setDecisionFilter('UNDECIDED')"
-              >
-                Needs decision <span class="count">{{ summary.decisionCounts.NEEDS_DECISION }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'GREEN', 'good')"
-                title="Show GREEN-only"
-                @click="setDecisionFilter('GREEN')"
-              >
-                GREEN <span class="count">{{ summary.decisionCounts.GREEN }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'YELLOW', 'warn')"
-                title="Show YELLOW-only"
-                @click="setDecisionFilter('YELLOW')"
-              >
-                YELLOW <span class="count">{{ summary.decisionCounts.YELLOW }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(decisionFilter === 'RED', 'bad')"
-                title="Show RED-only"
-                @click="setDecisionFilter('RED')"
-              >
-                RED <span class="count">{{ summary.decisionCounts.RED }}</span>
-              </button>
-            </div>
-
-            <div class="chipsGroup">
-              <div class="small muted">
-                Status:
-              </div>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'ALL', 'neutral')"
-                title="Show all statuses"
-                @click="setStatusFilter('ALL')"
-              >
-                All <span class="count">{{ summary.total }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'PROPOSED', 'muted')"
-                title="Show PROPOSED-only"
-                @click="setStatusFilter('PROPOSED')"
-              >
-                PROPOSED <span class="count">{{ summary.statusCounts.PROPOSED }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'ACCEPTED', 'good')"
-                title="Show ACCEPTED-only"
-                @click="setStatusFilter('ACCEPTED')"
-              >
-                ACCEPTED <span class="count">{{ summary.statusCounts.ACCEPTED }}</span>
-              </button>
-              <button
-                type="button"
-                :class="chipClass(statusFilter === 'REJECTED', 'bad')"
-                title="Show REJECTED-only"
-                @click="setStatusFilter('REJECTED')"
-              >
-                REJECTED <span class="count">{{ summary.statusCounts.REJECTED }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="muted">Decision</label>
-            <select
-              v-model="decisionFilter"
-              :disabled="saving || exporting || undoBusy"
-            >
-              <option value="ALL">
-                All
-              </option>
-              <option value="UNDECIDED">
-                Undecided
-              </option>
-              <option value="GREEN">
-                GREEN
-              </option>
-              <option value="YELLOW">
-                YELLOW
-              </option>
-              <option value="RED">
-                RED
-              </option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="muted">Status</label>
-            <select
-              v-model="statusFilter"
-              :disabled="saving || exporting || undoBusy"
-            >
-              <option value="ALL">
-                All
-              </option>
-              <option value="PROPOSED">
-                PROPOSED
-              </option>
-              <option value="ACCEPTED">
-                ACCEPTED
-              </option>
-              <option value="REJECTED">
-                REJECTED
-              </option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="muted">Decided by</label>
-            <select
-              v-model="filterDecidedBy"
-              :disabled="saving || exporting || undoBusy"
-              title="Filter by operator identity"
-            >
-              <option value="ALL">
-                All
-              </option>
-              <option
-                v-for="op in decidedByOptions"
-                :key="op"
-                :value="op"
-              >
-                {{ op }}
-              </option>
-            </select>
-          </div>
-
-          <div class="field grow">
-            <label class="muted">Search</label>
-            <input
-              v-model="searchText"
-              type="text"
-              placeholder="candidate id, advisory id, note, decided_by…"
-              :disabled="saving || exporting || undoBusy"
-            >
-          </div>
-
-          <div class="field">
-            <label class="muted">Sort</label>
-            <select
-              v-model="sortKey"
-              :disabled="saving || exporting || undoBusy"
-            >
-              <option value="id">
-                ID ↑
-              </option>
-              <option value="id_desc">
-                ID ↓
-              </option>
-              <option value="created">
-                Created ↑
-              </option>
-              <option value="created_desc">
-                Created ↓
-              </option>
-              <option value="decided_at">
-                Decided at ↑
-              </option>
-              <option value="decided_at_desc">
-                Decided at ↓
-              </option>
-              <option value="decided_by">
-                Decided by (A→Z)
-              </option>
-              <option value="status">
-                Status
-              </option>
-              <option value="decision">
-                Decision
-              </option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="muted">My operator id</label>
-            <input
-              v-model="myOperatorId"
-              type="text"
-              placeholder="e.g., operator_jane"
-              title="Stored locally in this browser. Used by 'Only mine' filter."
-              :disabled="saving || exporting || undoBusy"
-            >
-          </div>
-
-          <div class="field">
-            <label class="muted">Stamp</label>
-            <label
-              class="inlineCheck"
-              :title="stampDecisionsWithOperator
-                ? (effectiveOperatorId
-                  ? `Will send decided_by=${effectiveOperatorId} on decisions`
-                  : 'Enable stamping, then set an operator id to actually stamp')
-                : 'Decisions will not send decided_by (backend may still set it elsewhere)'"
-            >
-              <input
-                v-model="stampDecisionsWithOperator"
-                type="checkbox"
-                :disabled="saving || exporting || undoBusy"
-              >
-              decided_by on save
-            </label>
-          </div>
-
-          <div class="field">
-            <label class="muted">Only mine</label>
-            <label
-              class="inlineCheck"
-              title="Show only candidates decided by your operator id"
-            >
-              <input
-                v-model="filterOnlyMine"
-                type="checkbox"
-                :disabled="!myOperatorId.trim() || saving || exporting || undoBusy"
-              >
-              my decisions
-            </label>
-          </div>
-        </div>
-
-        <div class="filters-right">
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0"
-            title="Select all shown rows"
-            @click="selectAllFiltered"
-          >
-            Select shown
-          </button>
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0"
-            title="Clear selection for shown rows"
-            @click="clearAllFiltered"
-          >
-            Clear shown
-          </button>
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0"
-            title="Invert selection (shown rows)"
-            @click="invertSelectionFiltered"
-          >
-            Invert
-          </button>
-
-          <label class="check">
-            <input
-              v-model="showSelectedOnly"
-              type="checkbox"
-              :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
-            >
-            <span class="muted">Selected only</span>
-          </label>
-
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy"
-            title="Jump to undecided candidates"
-            @click="quickUndecided"
-          >
-            Undecided-only
-          </button>
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy"
-            title="Clear all filters"
-            @click="clearFilters"
-          >
-            Clear filters
-          </button>
-
-          <div class="muted small">
-            Showing <strong>{{ filteredCount }}</strong> / {{ candidates.length }}
-          </div>
-          <label
-            class="check"
-            :title="compact ? 'Compact rows (more visible)' : 'Comfortable rows (more spacing)'"
-          >
-            <input
-              v-model="compact"
-              type="checkbox"
-            >
-            <span class="muted">{{ compact ? 'Compact' : 'Comfortable' }}</span>
-          </label>
-          <div
-            class="small muted"
-            style="margin-top:4px;"
-          >
-            <span
-              class="kbdhint"
-              :title="_hotkeyHelp()"
-            >
-              Hotkeys: g/y/r · u · b · e · a · c · i · x · h · esc
-            </span>
-          </div>
-          <div style="margin-top:8px;">
-            <button
-              class="btn small"
-              title="Reset filters, density, and sort (persisted)"
-              @click="resetViewPrefs"
-            >
-              Reset view
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="row head">
-        <div class="sel">
-          <input
-            type="checkbox"
-            :checked="allFilteredSelected"
-            :disabled="saving || exporting || undoBusy || filteredCount === 0"
-            title="Toggle select all shown"
-            @change="toggleAllFiltered"
-          >
-        </div>
-        <div>Candidate</div>
-        <div>Advisory</div>
-        <div>Decision</div>
-        <div
-          class="audit auditHeader"
-          role="button"
-          tabindex="0"
-          :title="`Sort by audit fields (current: ${auditSortLabel})`"
-          @click="cycleAuditSort"
-          @keydown.enter="cycleAuditSort"
-          @keydown.space.prevent="cycleAuditSort"
-        >
-          Audit
-          <span
-            v-if="sortKey.startsWith('decided_')"
-            class="sortHint"
-          >{{ auditSortArrow }}</span>
-        </div>
-        <div>History</div>
-        <div>Status</div>
-        <div class="note">
-          Decision Note
-        </div>
-        <div class="copyCol">
-          Copy
-        </div>
-        <div class="actions">
-          Actions
-        </div>
-      </div>
+      <CandidateFiltersSection
+        v-model:decision-filter="decisionFilter"
+        v-model:status-filter="statusFilter"
+        v-model:filter-decided-by="filterDecidedBy"
+        v-model:search-text="searchText"
+        v-model:sort-key="sortKey"
+        v-model:my-operator-id="myOperatorId"
+        v-model:stamp-decisions-with-operator="stampDecisionsWithOperator"
+        v-model:filter-only-mine="filterOnlyMine"
+        v-model:show-selected-only="showSelectedOnly"
+        v-model:compact="compact"
+        :decided-by-options="decidedByOptions"
+        :summary="summary"
+        :effective-operator-id="effectiveOperatorId"
+        :filtered-count="filteredCount"
+        :selected-count="selectedIds.size"
+        :total-count="candidates.length"
+        :all-filtered-selected="allFilteredSelected"
+        :disabled="saving || exporting || undoBusy"
+        @select-all-filtered="selectAllFiltered"
+        @clear-all-filtered="clearAllFiltered"
+        @invert-selection-filtered="invertSelectionFiltered"
+        @quick-undecided="quickUndecided"
+        @clear-filters="clearFilters"
+        @reset-view-prefs="resetViewPrefs"
+        @toggle-all-filtered="toggleAllFiltered"
+        @cycle-audit-sort="cycleAuditSort"
+      />
 
       <!-- Bulk decision bar -->
       <div
