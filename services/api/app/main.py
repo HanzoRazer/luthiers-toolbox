@@ -31,6 +31,9 @@ from .ai.availability import get_ai_status
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
 from .governance.metrics_router import router as metrics_router
 
+# Route analytics middleware (for router consolidation analysis)
+from .middleware.route_analytics_middleware import RouteAnalyticsMiddleware, analytics_router
+
 # Centralized router loading (Phase 9)
 from .router_registry import load_all_routers, get_router_health
 
@@ -123,6 +126,11 @@ app.add_middleware(DeprecationHeadersMiddleware)
 # Endpoint governance middleware (H4) - logs warnings for legacy/shadow endpoints
 app.add_middleware(EndpointGovernanceMiddleware)
 
+# Route analytics middleware - captures usage metrics for router consolidation
+# Access via /api/_analytics/summary, /api/_analytics/export
+# TODO: Remove before production or gate behind ENABLE_ROUTE_ANALYTICS env var
+app.add_middleware(RouteAnalyticsMiddleware)
+
 
 # =============================================================================
 # STARTUP EVENTS
@@ -168,6 +176,10 @@ for router, prefix, tags in load_all_routers():
 
 # Prometheus metrics endpoint - no prefix, accessible at /metrics
 app.include_router(metrics_router)
+
+# Route analytics endpoints - for router consolidation analysis
+# Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset
+app.include_router(analytics_router, prefix="/api/_analytics", tags=["internal"])
 
 # Curated API v1 - stable, documented endpoints for golden path workflows
 from .api_v1 import router as api_v1_router
