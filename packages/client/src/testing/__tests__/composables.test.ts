@@ -191,7 +191,7 @@ describe('useCandidateSelection', () => {
 
     const selected = selection.getSelectedCandidates(candidates)
     expect(selected.length).toBe(2)
-    expect(selected.map(c => c.name)).toEqual(['Alpha', 'Gamma'])
+    expect(selected.map(c => c.candidate_id)).toEqual(['a', 'c'])
   })
 })
 

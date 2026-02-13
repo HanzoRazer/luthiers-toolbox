@@ -778,7 +778,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { useScaleLengthCalculator } from './composables/useScaleLengthCalculator'
 
 // Tab management
 const tabs = [
@@ -790,93 +791,29 @@ const tabs = [
 
 const activeTab = ref('presets')
 
-// Tension calculator state
-const customScale = ref(25.5)
-const scaleUnit = ref('in')
+// Tension calculator (from composable)
+const {
+  customScale,
+  scaleUnit,
+  strings,
+  totalTension,
+  averageTension,
+  tensionRange,
+  getTension: calculateTension,
+  getTensionClass,
+  applyGaugeSet,
+  applyScalePreset
+} = useScaleLengthCalculator()
 
-interface StringData {
-  name: string
-  note: string
-  freq: number
-  gauge: number
-  linearDensity?: number // lb/in (calculated from gauge)
+// Map getTensionClass return to CSS class names
+function tensionCssClass(tension: number): string {
+  const level = getTensionClass(tension)
+  return `tension-${level}`
 }
 
-const strings = ref<StringData[]>([
-  { name: 'High E', note: 'E4', freq: 329.63, gauge: 0.010 },
-  { name: 'B', note: 'B3', freq: 246.94, gauge: 0.013 },
-  { name: 'G', note: 'G3', freq: 196.00, gauge: 0.017 },
-  { name: 'D', note: 'D3', freq: 146.83, gauge: 0.026 },
-  { name: 'A', note: 'A2', freq: 110.00, gauge: 0.036 },
-  { name: 'Low E', note: 'E2', freq: 82.41, gauge: 0.046 }
-])
-
-// Gauge presets
-const gaugePresets: Record<string, number[]> = {
-  light: [0.009, 0.011, 0.016, 0.024, 0.032, 0.042],
-  regular: [0.010, 0.013, 0.017, 0.026, 0.036, 0.046],
-  medium: [0.011, 0.014, 0.018, 0.028, 0.038, 0.049],
-  heavy: [0.012, 0.016, 0.020, 0.032, 0.042, 0.053],
-  baritone: [0.013, 0.017, 0.026, 0.036, 0.046, 0.062]
-}
-
-function applyGaugeSet(preset: string) {
-  const gauges = gaugePresets[preset]
-  if (gauges) {
-    strings.value.forEach((string, idx) => {
-      string.gauge = gauges[idx]
-    })
-  }
-}
-
-// Calculate string tension using Mersenne's Law
-// T = (μ × (2 × L × f)²) ÷ 4
-function calculateTension(stringIndex: number): number {
-  const string = strings.value[stringIndex]
-  const scaleInches = scaleUnit.value === 'mm' ? customScale.value / 25.4 : customScale.value
-  
-  // Linear mass density approximation for steel strings (empirical)
-  // μ ≈ 0.00001294 × (gauge in inches)² lb/in
-  const mu = 0.00001294 * Math.pow(string.gauge, 2)
-  
-  // Mersenne's Law: T = (μ × (2 × L × f)²) ÷ 4
-  const tension = (mu * Math.pow(2 * scaleInches * string.freq, 2)) / 4
-  
-  return tension
-}
-
-function getTensionClass(tension: number): string {
-  if (tension < 13) return 'tension-low'
-  if (tension > 16) return 'tension-high'
-  return 'tension-good'
-}
-
-const totalTension = computed(() => {
-  return strings.value.reduce((sum, _, idx) => sum + calculateTension(idx), 0)
-})
-
-const averageTension = computed(() => {
-  return totalTension.value / strings.value.length
-})
-
-const tensionRange = computed(() => {
-  const tensions = strings.value.map((_, idx) => calculateTension(idx))
-  return Math.max(...tensions) - Math.min(...tensions)
-})
-
-// Scale selection (for future interactive features)
+// Scale selection - switch tab after selecting
 function selectScale(scaleType: string) {
-  const scales: Record<string, number> = {
-    fender: 25.5,
-    gibson: 24.75,
-    prs: 25.0,
-    short: 24.0,
-    baritone: 27.0,
-    multiscale: 26.25 // Average of 25.5-27
-  }
-  
-  customScale.value = scales[scaleType] || 25.5
-  scaleUnit.value = 'in'
+  applyScalePreset(scaleType)
   activeTab.value = 'tension'
 }
 </script>
