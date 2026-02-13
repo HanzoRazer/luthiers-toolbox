@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
+import CandidateRowItem from "@/components/rmos/CandidateRowItem.vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 // Bundle D: JSZip for bulk packaging GREEN candidates into single operator-grade export
 import {
@@ -1946,175 +1947,24 @@ async function exportGreenOnlyPackageZip() {
         </div>
       </div>
 
-      <div
+      <CandidateRowItem
         v-for="c in filteredCandidates"
         :key="c.candidate_id"
-        class="row clickable"
-        :title="auditHover(c)"
-        @click="toggleOne(c.candidate_id, $event)"
-      >
-        <div class="sel">
-          <input
-            type="checkbox"
-            :checked="selectedIds.has(c.candidate_id)"
-            :disabled="saving || exporting || undoBusy"
-            :title="selectedIds.has(c.candidate_id) ? 'Selected' : 'Select'"
-            @click.stop="toggleOne(c.candidate_id, $event)"
-          >
-        </div>
-        <div class="mono">
-          {{ c.candidate_id }}
-        </div>
-        <div class="mono">
-          {{ c.advisory_id ?? "—" }}
-        </div>
-
-        <div class="decision-cell">
-          <span
-            class="badge"
-            :data-badge="decisionBadge(c.decision)"
-          >
-            {{ decisionBadge(c.decision) }}
-          </span>
-          <span
-            v-if="c.decision_history && c.decision_history.length > 0"
-            class="history-count"
-            :title="`${c.decision_history.length} history entries`"
-            @click.stop="openDecisionHistory(c.candidate_id)"
-          >
-            ({{ c.decision_history.length }})
-          </span>
-        </div>
-
-        <!-- Audit column -->
-        <div
-          class="audit"
-          :title="(c.decided_by || c.decided_at_utc)
-            ? `Decided by: ${c.decided_by || '—'}\nDecided at: ${c.decided_at_utc || '—'}\nLatest note: ${notePreview(c.decision_note)}`
-            : 'No decision yet (decision=null) — export is blocked until explicit operator decision.'"
-        >
-          <div class="auditBy">
-            {{ c.decided_by || "—" }}
-          </div>
-          <div class="auditAt mono">
-            {{ c.decided_at_utc ? c.decided_at_utc.slice(0, 19).replace('T', ' ') : '—' }}
-          </div>
-        </div>
-
-        <div class="history">
-          <button
-            class="btn ghost smallbtn"
-            :disabled="saving || exporting || undoBusy"
-            @click.stop="openDecisionHistory(c.candidate_id)"
-          >
-            {{ openHistoryFor === c.candidate_id ? "Hide" : "View" }}
-          </button>
-          <div
-            v-if="openHistoryFor === c.candidate_id"
-            class="popover"
-          >
-            <CandidateDecisionHistoryPopover
-              :items="c.decision_history ?? null"
-              :current-decision="c.decision ?? null"
-              :current-note="c.decision_note ?? null"
-              :current-by="c.decided_by ?? null"
-              :current-at="c.decided_at_utc ?? null"
-            />
-          </div>
-        </div>
-
-        <div class="muted">
-          {{ statusText(c) }}
-        </div>
-
-        <div class="note">
-          <div
-            v-if="editingId === c.candidate_id"
-            class="editor"
-          >
-            <textarea
-              v-model="editValue"
-              rows="2"
-            />
-            <div class="editor-actions">
-              <button
-                class="btn"
-                :disabled="saving || exporting"
-                @click="saveEdit(c)"
-              >
-                Save
-              </button>
-              <button
-                class="btn ghost"
-                :disabled="saving || exporting"
-                @click="cancelEdit"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-          <div
-            v-else
-            class="note-display"
-          >
-            <span
-              v-if="!c.decision_note"
-              class="muted"
-            >—</span>
-            <span v-else>{{ notePreview(c.decision_note) }}</span>
-          </div>
-        </div>
-
-        <div class="copyCol">
-          <button
-            class="btn ghost smallbtn"
-            title="Copy candidate_id"
-            @click="copyText('candidate_id', c.candidate_id)"
-          >
-            📋 candidate_id
-          </button>
-          <button
-            class="btn ghost smallbtn"
-            title="Copy advisory_id"
-            @click="copyText('advisory_id', c.advisory_id || '')"
-          >
-            📋 advisory_id
-          </button>
-        </div>
-
-        <div class="actions">
-          <button
-            class="btn"
-            :disabled="saving || exporting"
-            @click="decide(c, 'GREEN')"
-          >
-            GREEN
-          </button>
-          <button
-            class="btn"
-            :disabled="saving || exporting"
-            @click="decide(c, 'YELLOW')"
-          >
-            YELLOW
-          </button>
-          <button
-            class="btn danger"
-            :disabled="saving || exporting"
-            @click="decide(c, 'RED')"
-          >
-            RED
-          </button>
-
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || c.decision == null"
-            :title="c.decision == null ? 'Decide first to enable note editing' : 'Edit decision note'"
-            @click="startEdit(c)"
-          >
-            Edit Note
-          </button>
-        </div>
-      </div>
+        :candidate="c"
+        :is-selected="selectedIds.has(c.candidate_id)"
+        :disabled="saving || exporting || undoBusy"
+        :is-history-open="openHistoryFor === c.candidate_id"
+        :is-editing="editingId === c.candidate_id"
+        :edit-value="editValue"
+        @toggle="toggleOne"
+        @open-history="openDecisionHistory"
+        @decide="decide"
+        @start-edit="startEdit"
+        @save-edit="saveEdit"
+        @cancel-edit="cancelEdit"
+        @copy="copyText"
+        @update:edit-value="editValue = $event"
+      />
     </div>
 
     <!-- Export policy explainers (visible, not just hover) -->
