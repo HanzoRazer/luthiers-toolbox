@@ -600,7 +600,6 @@
             <input
               v-model.number="boardFeet.length"
               type="number"
-              @input="calculateBoardFeet"
             >
           </div>
           <div class="input-row">
@@ -608,7 +607,6 @@
             <input
               v-model.number="boardFeet.width"
               type="number"
-              @input="calculateBoardFeet"
             >
           </div>
           <div class="input-row">
@@ -616,7 +614,6 @@
             <input
               v-model.number="boardFeet.thickness"
               type="number"
-              @input="calculateBoardFeet"
             >
           </div>
           <div class="result-box">
@@ -632,7 +629,6 @@
             <input
               v-model.number="boardFeet.pricePerBF"
               type="number"
-              @input="calculateBoardFeet"
             >
           </div>
           <div class="result-box">
@@ -640,7 +636,7 @@
               Total Cost:
             </div>
             <div class="result-value">
-              ${{ (boardFeetResult * boardFeet.pricePerBF).toFixed(2) }}
+              ${{ boardCostResult.toFixed(2) }}
             </div>
           </div>
         </div>
@@ -656,7 +652,6 @@
             <input
               v-model.number="woodVolume.length"
               type="number"
-              @input="calculateWoodWeight"
             >
           </div>
           <div class="input-row">
@@ -664,7 +659,6 @@
             <input
               v-model.number="woodVolume.width"
               type="number"
-              @input="calculateWoodWeight"
             >
           </div>
           <div class="input-row">
@@ -672,21 +666,17 @@
             <input
               v-model.number="woodVolume.thickness"
               type="number"
-              @input="calculateWoodWeight"
             >
           </div>
           <div class="input-row">
             <label>Species:</label>
-            <select
-              v-model="woodVolume.species"
-              @change="calculateWoodWeight"
-            >
+            <select v-model="woodVolume.species">
               <option
-                v-for="(density, name) in woodSpecies"
-                :key="name"
-                :value="name"
+                v-for="(spec, key) in woodSpecies"
+                :key="key"
+                :value="key"
               >
-                {{ name }} (ρ={{ density }} g/cm³)
+                {{ spec.name }} (ρ={{ spec.density }} g/cm³)
               </option>
             </select>
           </div>
@@ -719,7 +709,6 @@
             <input
               v-model.number="miterAngle.rise"
               type="number"
-              @input="calculateMiterAngle"
             >
           </div>
           <div class="input-row">
@@ -727,7 +716,6 @@
             <input
               v-model.number="miterAngle.run"
               type="number"
-              @input="calculateMiterAngle"
             >
           </div>
           <div class="result-box">
@@ -748,7 +736,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useWoodworkCalculator, WOOD_SPECIES } from './composables/useWoodworkCalculator'
 
 // ============================================================================
 // STATE MANAGEMENT
@@ -872,35 +861,26 @@ const units = {
 }
 
 // ============================================================================
-// WOODWORK STATE
+// WOODWORK STATE (via composable)
 // ============================================================================
 
 const woodworkCategories = ['Board Feet', 'Volume', 'Angles']
 const woodworkType = ref('Board Feet')
 
-// Board Feet
-const boardFeet = ref({ length: 48, width: 6, thickness: 1, pricePerBF: 8.5 })
-const boardFeetResult = ref(0)
+const {
+  boardFeet,
+  boardFeetResult,
+  boardCostResult,
+  woodVolume,
+  volumeResult: woodVolumeResult,
+  weightResult: woodWeightResult,
+  miter: miterAngle,
+  miterAngle: miterAngleResult,
+  complementaryAngle
+} = useWoodworkCalculator()
 
-// Wood Volume/Weight
-const woodVolume = ref({ length: 650, width: 200, thickness: 3, species: 'Spruce' })
-const woodVolumeResult = ref(0)
-const woodWeightResult = ref(0)
-
-const woodSpecies = {
-  'Spruce': 0.42,
-  'Cedar': 0.38,
-  'Mahogany': 0.56,
-  'Maple': 0.63,
-  'Rosewood': 0.85,
-  'Ebony': 1.05,
-  'Walnut': 0.65,
-  'MDF': 0.70
-}
-
-// Miter Angles
-const miterAngle = ref({ rise: 12, run: 100 })
-const miterAngleResult = ref(0)
+// Expose species for template dropdown
+const woodSpecies = WOOD_SPECIES
 
 // ============================================================================
 // BASIC CALCULATOR FUNCTIONS
@@ -1113,35 +1093,8 @@ function applyPreset(value: string, unit: string) {
 }
 
 // ============================================================================
-// WOODWORK FUNCTIONS
+// WOODWORK - computed results from composable are auto-reactive
 // ============================================================================
-
-function calculateBoardFeet() {
-  const { length, width, thickness } = boardFeet.value
-  boardFeetResult.value = (length * width * thickness) / 144
-}
-
-function calculateWoodWeight() {
-  const { length, width, thickness, species } = woodVolume.value
-  const volumeCM3 = (length * width * thickness) / 1000 // mm³ to cm³
-  const density = woodSpecies[species as keyof typeof woodSpecies] || 0.5
-  
-  woodVolumeResult.value = volumeCM3
-  woodWeightResult.value = volumeCM3 * density
-}
-
-function calculateMiterAngle() {
-  const { rise, run } = miterAngle.value
-  miterAngleResult.value = Math.atan(rise / run) * (180 / Math.PI)
-}
-
-// ============================================================================
-// LIFECYCLE - Initialize calculations
-// ============================================================================
-
-calculateBoardFeet()
-calculateWoodWeight()
-calculateMiterAngle()
 
 </script>
 
