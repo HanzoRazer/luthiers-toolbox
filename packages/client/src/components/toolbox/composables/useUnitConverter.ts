@@ -10,7 +10,7 @@ export interface UnitDef {
   toBase: number  // multiply by this to convert to base unit
 }
 
-export const UNIT_CATEGORIES = ['Length', 'Area', 'Volume', 'Mass', 'Temperature', 'Speed', 'Time'] as const
+export const UNIT_CATEGORIES = ['Length', 'Area', 'Volume', 'Mass', 'Temperature', 'Speed', 'Time', 'Data'] as const
 export type UnitCategory = typeof UNIT_CATEGORIES[number]
 
 export const UNITS: Record<UnitCategory, UnitDef[]> = {
@@ -69,6 +69,20 @@ export const UNITS: Record<UnitCategory, UnitDef[]> = {
     { key: 'hr', label: 'Hours', toBase: 3600 },
     { key: 'day', label: 'Days', toBase: 86400 },
     { key: 'wk', label: 'Weeks', toBase: 604800 }
+  ],
+  Data: [
+    { key: 'b', label: 'Bits (b)', toBase: 1 },
+    { key: 'B', label: 'Bytes (B)', toBase: 8 },
+    { key: 'KB', label: 'Kilobytes (KB)', toBase: 8000 },
+    { key: 'KiB', label: 'Kibibytes (KiB)', toBase: 8192 },
+    { key: 'MB', label: 'Megabytes (MB)', toBase: 8000000 },
+    { key: 'MiB', label: 'Mebibytes (MiB)', toBase: 8388608 },
+    { key: 'GB', label: 'Gigabytes (GB)', toBase: 8000000000 },
+    { key: 'GiB', label: 'Gibibytes (GiB)', toBase: 8589934592 },
+    { key: 'TB', label: 'Terabytes (TB)', toBase: 8000000000000 },
+    { key: 'TiB', label: 'Tebibytes (TiB)', toBase: 8796093022208 },
+    { key: 'PB', label: 'Petabytes (PB)', toBase: 8000000000000000 },
+    { key: 'PiB', label: 'Pebibytes (PiB)', toBase: 9007199254740992 }
   ]
 }
 

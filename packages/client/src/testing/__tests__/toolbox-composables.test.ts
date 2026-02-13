@@ -191,6 +191,24 @@ describe('useUnitConverter', () => {
     expect(converter.availableUnits.value.some(u => u.key === 'kg')).toBe(true)
     expect(converter.availableUnits.value.some(u => u.key === 'mm')).toBe(false)
   })
+
+  it('converts Data units correctly', () => {
+    const byteDef = UNITS.Data.find(u => u.key === 'B')!
+    const kbDef = UNITS.Data.find(u => u.key === 'KB')!
+
+    // 1000 bytes = 1 KB (decimal)
+    const result = convert(1000, byteDef, kbDef, 'Data')
+    expect(result).toBeCloseTo(1, 2)
+  })
+
+  it('converts binary Data units correctly', () => {
+    const byteDef = UNITS.Data.find(u => u.key === 'B')!
+    const kibDef = UNITS.Data.find(u => u.key === 'KiB')!
+
+    // 1024 bytes = 1 KiB (binary)
+    const result = convert(1024, byteDef, kibDef, 'Data')
+    expect(result).toBeCloseTo(1, 2)
+  })
 })
 
 // =============================================================================
