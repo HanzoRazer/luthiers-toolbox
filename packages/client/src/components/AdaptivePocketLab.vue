@@ -1152,6 +1152,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, reactive } from 'vue'
+import { usePocketSettings } from './adaptive/composables/usePocketSettings'
 
 import PreviewNcDrawer from './PreviewNcDrawer.vue'
 import CompareAfModes from './CompareAfModes.vue'
@@ -1161,21 +1162,25 @@ import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
 
 const cv = ref<HTMLCanvasElement|null>(null)
-const toolD = ref(6)
-const stepoverPct = ref(45)
-const stepdown = ref(1.5)
-const margin = ref(0.5)
-const strategy = ref<'Spiral'|'Lanes'>('Spiral')
-const climb = ref(true)
-const cornerRadiusMin = ref(1.0)
-const slowdownFeedPct = ref(60.0)
+
+// Pocket settings (from composable)
+const {
+  toolD,
+  stepoverPct,
+  stepdown,
+  margin,
+  strategy,
+  climb,
+  cornerRadiusMin,
+  slowdownFeedPct,
+  feedXY,
+  units,
+} = usePocketSettings()
 
 const overlays = ref<any[]>([])
 const showTight = ref(true)
 const showSlow = ref(true)
 const showFillets = ref(true)
-const feedXY = ref(1200)
-const units = ref<'mm'|'inch'>('mm')
 const postId = ref('GRBL')
 
 // L.3 state
