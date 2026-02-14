@@ -397,4 +397,13 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["AI Context"],
         category="ai",
     ),
+    # -------------------------------------------------------------------------
+    # PROJECT ASSETS (stub for AI Images feature)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.routers.project_assets_router",
+        prefix="/api",
+        tags=["Projects"],
+        category="projects",
+    ),
 ]
