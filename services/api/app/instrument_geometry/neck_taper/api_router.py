@@ -28,7 +28,7 @@ def get_neck_outline(
     nut_width: float,
     end_fret: int,
     end_width: float,
-    frets: List[int] = list(range(0, 13))
+    frets: List[int] = None
 ):
     """
     Generate tapered neck outline as JSON coordinates.
@@ -54,6 +54,8 @@ def get_neck_outline(
           "end_width": 57.0
         }
     """
+    if frets is None:
+        frets = list(range(0, 13))
     inputs = TaperInputs(
         scale_length=scale_length,
         nut_width=nut_width,
@@ -71,7 +73,7 @@ def get_neck_outline_dxf(
     nut_width: float,
     end_fret: int,
     end_width: float,
-    frets: List[int] = list(range(0, 13)),
+    frets: List[int] = None,
     layer: str = "NECK_TAPER",
 ):
     """
@@ -101,6 +103,8 @@ def get_neck_outline_dxf(
         
     Clients can save the response as .dxf and open in CAD/CAM software.
     """
+    if frets is None:
+        frets = list(range(0, 13))
     inputs = TaperInputs(
         scale_length=scale_length,
         nut_width=nut_width,
