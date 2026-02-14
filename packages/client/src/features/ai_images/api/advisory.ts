@@ -9,7 +9,8 @@
 
 import { fetchWithTimeout, postJson, getJson, patchJson, deleteJson } from './http';
 
-const API_BASE = '/api/advisory';
+const BASE = (import.meta as any).env?.VITE_API_BASE || '';
+const API_BASE = `${BASE}/api/advisory`;
 
 // =============================================================================
 // TYPES

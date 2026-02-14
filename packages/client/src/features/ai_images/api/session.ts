@@ -9,7 +9,8 @@
 
 import { getJson, postJson } from './http';
 
-const API_BASE = '/api/ai/session';
+const BASE = (import.meta as any).env?.VITE_API_BASE || '';
+const API_BASE = `${BASE}/api/ai/session`;
 
 // =============================================================================
 // TYPES

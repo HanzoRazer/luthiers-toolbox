@@ -28,8 +28,9 @@ import type {
 // CONFIGURATION
 // =============================================================================
 
-/** Base URL for API calls */
-const API_BASE = '/api';
+/** Base URL for API calls - uses VITE_API_BASE for cross-origin deployments */
+const BASE = (import.meta as any).env?.VITE_API_BASE || '';
+const API_BASE = `${BASE}/api`;
 
 /** Default timeout for generation (images can take a while) */
 const GENERATION_TIMEOUT_MS = 60000;
