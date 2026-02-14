@@ -12,6 +12,13 @@
 // NOTE: keep this file widget-scoped (ai_images); RMOS typed SDK lives in sdk/rmos/runs.ts
 
 // ---------------------------------------------------------------------------
+// BASE URL CONFIGURATION
+// ---------------------------------------------------------------------------
+
+/** Base URL for API calls - uses VITE_API_BASE for cross-origin deployments */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+
+// ---------------------------------------------------------------------------
 // RMOS Runs helpers (used by AiImageGallery auto-create on attach)
 // ---------------------------------------------------------------------------
 
@@ -34,7 +41,7 @@ export type CreateRunResponse = {
 export async function createRun(
   request: CreateRunRequest = {}
 ): Promise<CreateRunResponse> {
-  const r = await fetch("/api/rmos/runs", {
+  const r = await fetch(`${API_BASE}/api/rmos/runs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
@@ -209,7 +216,7 @@ async function fetchJson<T>(
  * List available AI image providers.
  */
 export async function getProviders(): Promise<VisionProvidersResponse> {
-  return fetchJson<VisionProvidersResponse>("/api/vision/providers");
+  return fetchJson<VisionProvidersResponse>(`${API_BASE}/api/vision/providers`);
 }
 
 /**
@@ -219,7 +226,7 @@ export async function getProviders(): Promise<VisionProvidersResponse> {
 export async function generateImages(
   request: VisionGenerateRequest
 ): Promise<VisionGenerateResponse> {
-  return fetchJson<VisionGenerateResponse>("/api/vision/generate", {
+  return fetchJson<VisionGenerateResponse>(`${API_BASE}/api/vision/generate`, {
     method: "POST",
     body: JSON.stringify(request),
     timeout: GENERATION_TIMEOUT_MS,
@@ -238,7 +245,7 @@ export async function attachAdvisoryToRun(
   request: AdvisoryAttachRequest
 ): Promise<AdvisoryAttachResponse> {
   return fetchJson<AdvisoryAttachResponse>(
-    `/api/rmos/runs/${runId}/advisory/attach`,
+    `${API_BASE}/api/rmos/runs/${runId}/advisory/attach`,
     {
       method: "POST",
       body: JSON.stringify(request),
@@ -255,7 +262,7 @@ export async function reviewAdvisory(
   request: AdvisoryReviewRequest
 ): Promise<AdvisoryReviewRecord> {
   return fetchJson<AdvisoryReviewRecord>(
-    `/api/rmos/runs/${runId}/advisory/${advisoryId}/review`,
+    `${API_BASE}/api/rmos/runs/${runId}/advisory/${advisoryId}/review`,
     {
       method: "POST",
       body: JSON.stringify(request),
@@ -271,7 +278,7 @@ export async function promoteAdvisory(
   advisoryId: string
 ): Promise<PromoteResponse> {
   return fetchJson<PromoteResponse>(
-    `/api/rmos/runs/${runId}/advisory/${advisoryId}/promote`,
+    `${API_BASE}/api/rmos/runs/${runId}/advisory/${advisoryId}/promote`,
     {
       method: "POST",
       body: JSON.stringify({}),
@@ -312,7 +319,7 @@ export async function queryRecentRuns(params?: {
   if (params?.event_type) p.set("event_type", params.event_type);
   if (params?.q) p.set("q", params.q);
   const qs = p.toString();
-  return fetchJson<RecentRunsQueryResponse>(`/api/rmos/runs/query/recent${qs ? `?${qs}` : ""}`, {
+  return fetchJson<RecentRunsQueryResponse>(`${API_BASE}/api/rmos/runs/query/recent${qs ? `?${qs}` : ""}`, {
     method: "GET",
   });
 }
@@ -335,5 +342,5 @@ export async function listRecentRuns(
     limit: String(limit),
     offset: String(offset),
   });
-  return fetchJson<RunsListResponse>(`/api/rmos/runs?${params}`);
+  return fetchJson<RunsListResponse>(`${API_BASE}/api/rmos/runs?${params}`);
 }

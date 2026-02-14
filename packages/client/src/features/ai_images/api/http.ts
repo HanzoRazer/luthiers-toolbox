@@ -10,8 +10,19 @@
 // CONFIGURATION
 // =============================================================================
 
+/** Base URL for API calls - uses VITE_API_BASE for cross-origin deployments */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+
 /** Default timeout for requests */
 const DEFAULT_TIMEOUT_MS = 10000;
+
+/** Prepend base URL if path is relative */
+function resolveUrl(url: string): string {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  return `${API_BASE}${url}`;
+}
 
 /** Extended timeout for generation requests */
 export const GENERATION_TIMEOUT_MS = 60000;
