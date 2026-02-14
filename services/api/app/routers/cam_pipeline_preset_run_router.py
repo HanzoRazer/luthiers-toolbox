@@ -1,31 +1,92 @@
 """
 Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
-CAM Pipeline Preset Run Router - Execute saved pipeline presets
+CAM Pipeline Preset Router - CRUD + Execute saved pipeline presets
 
 Part of Phase 25.0: Pipeline Preset Integration
 Repository: HanzoRazer/luthiers-toolbox
 Created: January 2025
 
 Features:
+- List, create, delete pipeline presets
 - Run saved pipeline presets by ID
 - Forward preset spec to /cam/pipeline/run
 - Unified pipeline execution via internal HTTP call
 - Error handling with proper HTTP status codes
 - Returns complete pipeline run result
+
+Endpoints:
+    GET  /presets                - List all saved presets
+    POST /presets                - Create a new preset
+    DELETE /presets/{preset_id}  - Delete a preset
+    POST /presets/{preset_id}/run - Run a preset
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
 
 from ..services.pipeline_preset_store import PipelinePresetStore
 
 router = APIRouter(prefix="/cam/pipeline", tags=["cam", "pipeline", "presets"])
 
 _preset_store = PipelinePresetStore()
+
+
+class PresetCreate(BaseModel):
+    """Schema for creating a pipeline preset."""
+    name: str
+    description: str = ""
+    spec: Dict[str, Any]
+
+
+@router.get("/presets")
+def list_presets() -> List[Dict[str, Any]]:
+    """
+    List all saved pipeline presets.
+
+    Returns:
+        List of preset objects with id, name, description, spec
+    """
+    return _preset_store.list()
+
+
+@router.post("/presets")
+def create_preset(payload: PresetCreate) -> Dict[str, Any]:
+    """
+    Create a new pipeline preset.
+
+    Args:
+        payload: Preset data with name, description, and spec
+
+    Returns:
+        Created preset with generated id
+    """
+    return _preset_store.save(payload.model_dump())
+
+
+@router.delete("/presets/{preset_id}")
+def delete_preset(preset_id: str) -> Dict[str, Any]:
+    """
+    Delete a pipeline preset by ID.
+
+    Args:
+        preset_id: The preset ID to delete
+
+    Returns:
+        Confirmation with deleted preset ID
+
+    Raises:
+        HTTPException: 404 if preset not found
+    """
+    preset = _preset_store.get(preset_id)
+    if not preset:
+        raise HTTPException(status_code=404, detail=f"Preset {preset_id!r} not found")
+    _preset_store.delete(preset_id)
+    return {"ok": True, "deleted": preset_id}
 
 
 @router.post("/presets/{preset_id}/run")

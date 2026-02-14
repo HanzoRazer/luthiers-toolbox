@@ -27,11 +27,12 @@ COPY . /app
 # Create non-root user first (needed for chown below)
 RUN useradd -m app
 
-# Ensure data directory exists and is writable by app user
-RUN mkdir -p /app/app/data/runs/rmos && chown -R app:app /app/app/data
+# Ensure data directories exist and are writable by app user
+RUN mkdir -p /app/app/data/runs/rmos /app/app/data/backups/cam && chown -R app:app /app/app/data
 
-# Set RMOS runs directory to the writable path (not the repo-relative default)
+# Set data directories to writable paths (not the repo-relative defaults)
 ENV RMOS_RUNS_DIR=/app/app/data/runs/rmos
+ENV CAM_BACKUP_DIR=/app/app/data/backups/cam
 
 # Switch to non-root user
 USER app

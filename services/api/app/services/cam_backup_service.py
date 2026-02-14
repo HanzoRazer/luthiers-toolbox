@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-# Backup directory (relative to services/api)
-BACKUP_DIR = Path(__file__).parent.parent.parent / "data" / "backups" / "cam"
+# Backup directory - use env var for container compatibility (like RMOS_RUNS_DIR)
+# Default to relative path for local dev
+_DEFAULT_BACKUP_DIR = Path(__file__).parent.parent.parent / "data" / "backups" / "cam"
+BACKUP_DIR = Path(os.environ.get("CAM_BACKUP_DIR", str(_DEFAULT_BACKUP_DIR)))
 
 
 def ensure_dir() -> None:
