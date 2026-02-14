@@ -133,8 +133,8 @@ def get_settings_summary() -> Dict[str, Any]:
     # PipelinePresetStore should always exist
     try:
         pps = PipelinePresetStore()
-        pipeline_presets_count = len(pps.list_all())
-    except (ImportError, OSError):
+        pipeline_presets_count = len(pps.list())
+    except (ImportError, OSError, AttributeError):
         pass  # gracefully fallback to 0
 
     return {
@@ -180,8 +180,8 @@ async def cam_settings_export() -> Dict[str, Any]:
     # Presets
     try:
         pps = PipelinePresetStore()
-        presets = list(pps.list_all() or [])
-    except (ImportError, OSError):
+        presets = list(pps.list() or [])
+    except (ImportError, OSError, AttributeError):
         presets = []
 
     return {
@@ -257,7 +257,7 @@ async def cam_settings_import(
     # --- Presets ---
     try:
         pps = PipelinePresetStore()
-        existing = {pr.get("id") for pr in (pps.list_all() or [])}
+        existing = {pr.get("id") for pr in (pps.list() or [])}
         for pr in payload.pipeline_presets:
             try:
                 pid = pr.id or pps.new_id(pr.name)
