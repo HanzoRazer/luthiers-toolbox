@@ -1,0 +1,54 @@
+name: API Contract Check
+
+on:
+  pull_request:
+    paths:
+      - 'packages/client/src/**'
+      - 'services/api/app/**'
+      - 'contracts/api_endpoints.json'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/client/src/**'
+      - 'services/api/app/**'
+      - 'contracts/api_endpoints.json'
+
+jobs:
+  validate-api-contracts:
+    name: Validate API Contracts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run API Contract Validation
+        run: |
+          # Use baseline mode: only fail on NEW violations, not existing ones
+          # This allows gradual cleanup without blocking all PRs
+          python scripts/validate_api_contracts.py --baseline contracts/api_calls_baseline.json
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## API Contract Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Validates that all frontend \`fetch('/api/...')\` calls have matching backend endpoints." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Contract file:** \`contracts/api_endpoints.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ All frontend API calls matched endpoint definitions." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some frontend API calls have no matching endpoint." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Fix options:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Add missing endpoint to \`contracts/api_endpoints.json\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Create the missing API endpoint in backend" >> $GITHUB_STEP_SUMMARY
+            echo "3. Fix frontend to use correct endpoint path" >> $GITHUB_STEP_SUMMARY
+          fi
