@@ -185,6 +185,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     # MACHINE & POST CONFIGURATION
     # -------------------------------------------------------------------------
     RouterSpec(
+        module="app.routers.machines_router",
+        prefix="/api",
+        tags=["CAM Machines"],
+        category="config",
+    ),
+    RouterSpec(
         module="app.routers.machines_consolidated_router",
         prefix="/api/machines",
         tags=["Machines"],

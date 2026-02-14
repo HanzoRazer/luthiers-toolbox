@@ -341,26 +341,28 @@ function inToMm(value: number): number {
 }
 
 async function loadPresets() {
+  // Fallback presets are already loaded by default initialization
+  // API presets endpoint is optional - silently use fallbacks if unavailable
   try {
     presetsLoading.value = true
     presetError.value = null
     const response = await fetch('/api/cam/bridge/presets')
-    if (!response.ok) {
-      throw new Error('Failed to load bridge presets')
+    if (response.ok) {
+      const data = await response.json()
+      if (Array.isArray(data?.families) && data.families.length) {
+        familyPresets.value = data.families
+      }
+      if (Array.isArray(data?.gauges) && data.gauges.length) {
+        gaugePresets.value = data.gauges
+      }
+      if (Array.isArray(data?.actions) && data.actions.length) {
+        actionPresets.value = data.actions
+      }
     }
-    const data = await response.json()
-    if (Array.isArray(data?.families) && data.families.length) {
-      familyPresets.value = data.families
-    }
-    if (Array.isArray(data?.gauges) && data.gauges.length) {
-      gaugePresets.value = data.gauges
-    }
-    if (Array.isArray(data?.actions) && data.actions.length) {
-      actionPresets.value = data.actions
-    }
-  } catch (error) {
-    console.error('Preset load error', error)
-    presetError.value = error instanceof Error ? error.message : 'Unknown preset error'
+    // Non-2xx response silently uses fallbacks (no error shown to user)
+  } catch {
+    // Network errors silently use fallbacks (no error shown to user)
+    console.debug('Bridge presets API unavailable, using fallback presets')
   } finally {
     presetsLoading.value = false
   }
