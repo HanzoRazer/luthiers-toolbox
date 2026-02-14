@@ -418,7 +418,7 @@ async function validateFile() {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
     
-    const response = await fetch('/dxf/preflight/validate', {
+    const response = await fetch('/api/dxf/preflight/validate', {
       method: 'POST',
       body: formData
     })
@@ -463,7 +463,7 @@ async function applyAutoFix() {
     if (fixes.value.set_units_mm) fixList.push('set_units_mm')
     if (fixes.value.explode_splines) fixList.push('explode_splines')
     
-    const response = await fetch('/dxf/preflight/auto_fix', {
+    const response = await fetch('/api/dxf/preflight/auto_fix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -513,7 +513,7 @@ async function validateFixedDxf() {
   error.value = null
   
   try {
-    const response = await fetch('/dxf/preflight/validate_base64', {
+    const response = await fetch('/api/dxf/preflight/validate_base64', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
