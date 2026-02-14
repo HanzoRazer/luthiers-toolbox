@@ -25,7 +25,7 @@ import type {
   RunDetailResponse,
 } from "@/types/rmosAcoustics";
 
-const BASE = "/rmos/acoustics";
+const BASE = "/api/rmos/acoustics";
 
 // ─────────────────────────────────────────────────────────────
 // Import
