@@ -121,6 +121,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["RMOS", "Logs v2"],
         category="rmos",
     ),
+    RouterSpec(
+        module="app.rmos.stub_routes",
+        prefix="/api/rmos",
+        tags=["RMOS", "Stubs"],
+        category="rmos",
+    ),
     # -------------------------------------------------------------------------
     # CAM SUBSYSTEM
     # -------------------------------------------------------------------------
@@ -387,6 +393,15 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     # -------------------------------------------------------------------------
+    # CAM STUBS (for missing frontend endpoints)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.cam.routers.stub_routes",
+        prefix="/api/cam",
+        tags=["CAM", "Stubs"],
+        category="cam",
+    ),
+    # -------------------------------------------------------------------------
     # CONSOLIDATED AGGREGATORS (Wave 18+19)
     # -------------------------------------------------------------------------
     RouterSpec(
@@ -421,4 +436,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Projects"],
         category="projects",
     ),
+    # -------------------------------------------------------------------------
+    # MISC STUBS (for remaining missing endpoints)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.routers.misc_stub_routes",
+        prefix="/api",
+        tags=["Stubs"],
+        category="stubs",
+    ),
+
 ]
