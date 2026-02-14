@@ -1,0 +1,112 @@
+{
+  "$schema": "./api_endpoints.schema.json",
+  "version": "1.0.0",
+  "description": "API endpoint contract - single source of truth for frontend-backend integration",
+  "generated": "2026-02-14",
+  "endpoints": {
+    "/api/health": {
+      "methods": ["GET"],
+      "description": "API health check",
+      "category": "core"
+    },
+    "/api/cam/machines": {
+      "methods": ["GET"],
+      "description": "List CNC machine profiles",
+      "category": "config"
+    },
+    "/api/cam/machines/{machine_id}": {
+      "methods": ["GET"],
+      "description": "Get specific machine profile",
+      "category": "config"
+    },
+    "/api/cam/bridge/presets": {
+      "methods": ["GET"],
+      "description": "Bridge saddle compensation presets",
+      "category": "config"
+    },
+    "/api/posts/": {
+      "methods": ["GET"],
+      "description": "List post-processors",
+      "category": "config",
+      "response_format": {"posts": "array"}
+    },
+    "/api/posts/{post_id}": {
+      "methods": ["GET", "PUT", "DELETE"],
+      "description": "Post-processor CRUD",
+      "category": "config"
+    },
+    "/api/machines/profiles": {
+      "methods": ["GET", "POST"],
+      "description": "Machine profiles CRUD",
+      "category": "config"
+    },
+    "/api/cam/dxf_adaptive_plan_run": {
+      "methods": ["POST"],
+      "description": "Run adaptive toolpath planning on DXF",
+      "category": "cam"
+    },
+    "/api/cam/toolpath/roughing/gcode": {
+      "methods": ["POST"],
+      "description": "Export toolpath to G-code",
+      "category": "cam"
+    },
+    "/api/cam/simulate_gcode": {
+      "methods": ["POST"],
+      "description": "Simulate G-code file",
+      "category": "cam"
+    },
+    "/api/geometry/dxf/preflight": {
+      "methods": ["POST"],
+      "description": "DXF preflight validation",
+      "category": "cam"
+    },
+    "/api/rmos/runs_v2/runs": {
+      "methods": ["GET", "POST"],
+      "description": "RMOS runs list and create",
+      "category": "rmos"
+    },
+    "/api/rmos/runs_v2/runs/{run_id}": {
+      "methods": ["GET"],
+      "description": "Get specific RMOS run",
+      "category": "rmos"
+    },
+    "/api/rmos/acoustics/import-zip": {
+      "methods": ["POST"],
+      "description": "Import acoustics viewer pack",
+      "category": "acoustics"
+    },
+    "/api/rmos/acoustics/browse": {
+      "methods": ["GET"],
+      "description": "Browse acoustics library",
+      "category": "acoustics"
+    },
+    "/api/rmos/acoustics/facets": {
+      "methods": ["GET"],
+      "description": "Get acoustics facets for filtering",
+      "category": "acoustics"
+    }
+  },
+  "frontend_patterns": {
+    "description": "Patterns used in frontend fetch calls that should map to endpoints above",
+    "exact_matches": [
+      "/api/cam/machines",
+      "/api/cam/bridge/presets",
+      "/api/posts/",
+      "/api/health"
+    ],
+    "parameterized": [
+      {
+        "pattern": "/api/cam/machines/{id}",
+        "endpoint": "/api/cam/machines/{machine_id}"
+      },
+      {
+        "pattern": "/api/posts/{id}",
+        "endpoint": "/api/posts/{post_id}"
+      },
+      {
+        "pattern": "/api/rmos/runs_v2/runs/{id}",
+        "endpoint": "/api/rmos/runs_v2/runs/{run_id}"
+      }
+    ]
+  }
+}
