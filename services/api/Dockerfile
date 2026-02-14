@@ -33,12 +33,15 @@ RUN mkdir -p /app/app/data && chown -R app:app /app/app/data
 # Switch to non-root user
 USER app
 
-ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
+# Railway provides $PORT dynamically - default to 8080 for Railway compatibility
+ENV PORT=8080
 ENV PYTHONPATH=/app
-EXPOSE 8000
+EXPOSE 8080
 
 # health endpoint baked in app
 HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=10 \
-  CMD curl -fsS http://127.0.0.1:${UVICORN_PORT}/health || exit 1
+  CMD curl -fsS http://127.0.0.1:${PORT}/health || exit 1
 
-CMD ["python","-m","uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]
+# CRITICAL: Use shell form to allow $PORT expansion at runtime
+# Railway injects PORT env var - we MUST use it
+CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
