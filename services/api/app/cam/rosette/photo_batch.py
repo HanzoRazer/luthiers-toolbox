@@ -66,9 +66,11 @@ class BatchProcessor:
         input_path: str,
         output_name: Optional[str] = None,
         settings: Optional[ConversionSettings] = None,
-        output_formats: List[str] = ["svg"],
+        output_formats: List[str] = None,
     ) -> BatchJob:
         """Add a single file to the batch queue."""
+        if output_formats is None:
+            output_formats = ["svg"]
         input_path = str(Path(input_path).resolve())
 
         if output_name is None:
@@ -90,9 +92,11 @@ class BatchProcessor:
         pattern: str = "*.png",
         recursive: bool = False,
         settings: Optional[ConversionSettings] = None,
-        output_formats: List[str] = ["svg"],
+        output_formats: List[str] = None,
     ) -> List[BatchJob]:
         """Add all matching files from a directory."""
+        if output_formats is None:
+            output_formats = ["svg"]
         dir_path = Path(directory)
 
         if recursive:
@@ -125,9 +129,11 @@ class BatchProcessor:
         self,
         file_paths: List[str],
         settings: Optional[ConversionSettings] = None,
-        output_formats: List[str] = ["svg"],
+        output_formats: List[str] = None,
     ) -> List[BatchJob]:
         """Add multiple specific files."""
+        if output_formats is None:
+            output_formats = ["svg"]
         jobs = []
         for path in file_paths:
             job = self.add_file(path, settings=settings, output_formats=output_formats)
@@ -297,7 +303,7 @@ def batch_convert(
     input_paths: List[str],
     output_dir: str = "./batch_output",
     output_width_mm: float = 100.0,
-    output_formats: List[str] = ["svg", "dxf"],
+    output_formats: List[str] = None,
     parallel: bool = True,
     fit_to_ring: bool = False,
     ring_inner_mm: float = 45.0,
@@ -307,6 +313,8 @@ def batch_convert(
     progress_callback=None,
 ) -> BatchResult:
     """Convenience function for batch conversion."""
+    if output_formats is None:
+        output_formats = ["svg", "dxf"]
     settings = ConversionSettings(
         output_width_mm=output_width_mm,
         fit_to_circle=fit_to_ring,
