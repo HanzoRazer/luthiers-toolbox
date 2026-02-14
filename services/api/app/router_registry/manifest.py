@@ -185,6 +185,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     # MACHINE & POST CONFIGURATION
     # -------------------------------------------------------------------------
     RouterSpec(
+        module="app.routers.bridge_presets_router",
+        prefix="/api",
+        tags=["CAM Bridge"],
+        category="config",
+    ),
+    RouterSpec(
         module="app.routers.machines_router",
         prefix="/api",
         tags=["CAM Machines"],
