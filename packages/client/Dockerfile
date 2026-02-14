@@ -6,8 +6,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --production=false
 COPY . ./
+
+# Set env vars for Vite build (reads from .env.production automatically)
 ENV NODE_ENV=production
-RUN npm run build
+# Explicit fallback in case .env.production isn't read
+ARG VITE_API_BASE=https://luthiers-toolbox-production.up.railway.app
+ENV VITE_API_BASE=${VITE_API_BASE}
+
+RUN echo "Building with VITE_API_BASE=${VITE_API_BASE}" && npm run build
 RUN test -f /app/dist/index.html || (echo "Build failed" && exit 1)
 
 # Production with nginx
