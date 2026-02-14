@@ -28,7 +28,10 @@ COPY . /app
 RUN useradd -m app
 
 # Ensure data directory exists and is writable by app user
-RUN mkdir -p /app/app/data && chown -R app:app /app/app/data
+RUN mkdir -p /app/app/data/runs/rmos && chown -R app:app /app/app/data
+
+# Set RMOS runs directory to the writable path (not the repo-relative default)
+ENV RMOS_RUNS_DIR=/app/app/data/runs/rmos
 
 # Switch to non-root user
 USER app
