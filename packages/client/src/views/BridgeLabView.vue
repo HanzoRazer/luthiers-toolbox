@@ -586,9 +586,13 @@ async function sendToAdaptive() {
 // Stage 3: Export G-code
 async function loadPosts() {
   try {
-    const response = await fetch('/api/cam/posts')
+    const response = await fetch('/api/posts/all')
     if (response.ok) {
-      availablePosts.value = await response.json()
+      const data = await response.json()
+      // /api/posts/all returns array directly
+      availablePosts.value = Array.isArray(data) ? data : (data.posts || [])
+    } else {
+      throw new Error('Failed to load posts')
     }
   } catch (error) {
     console.error('Failed to load posts:', error)
