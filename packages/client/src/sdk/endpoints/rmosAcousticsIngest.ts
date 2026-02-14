@@ -14,7 +14,7 @@ import type {
   IngestEventSummary,
 } from "@/types/rmosAcousticsIngest";
 
-const BASE = "/rmos/acoustics/ingest";
+const BASE = "/api/rmos/acoustics/ingest";
 
 // ─────────────────────────────────────────────────────────────
 // Browse Events
