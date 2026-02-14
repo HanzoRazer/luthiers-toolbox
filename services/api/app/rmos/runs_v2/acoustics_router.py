@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 
@@ -75,6 +77,92 @@ class BrowseResponse(BaseModel):
     returned: int = 0
     cursor: Optional[str] = None
     entries: List[Dict[str, Any]] = []
+
+
+class ImportResponse(BaseModel):
+    ok: bool = True
+    run_id: str
+    attachment_count: int = 0
+    message: str = ""
+
+
+# =============================================================================
+# Import Endpoint
+# =============================================================================
+
+@router.post("/import-zip", response_model=ImportResponse)
+async def import_zip(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form(default=None),
+    batch_label: Optional[str] = Form(default=None),
+) -> ImportResponse:
+    """
+    Import a viewer_pack ZIP containing manifest.json + attachments.
+    Creates a new run with the imported attachments.
+    """
+    runs_root = _get_runs_root()
+    runs_root.mkdir(parents=True, exist_ok=True)
+
+    # Generate run ID
+    run_id = f"acoustics_{uuid.uuid4().hex[:12]}"
+    date_str = datetime.utcnow().strftime("%Y-%m-%d")
+    date_dir = runs_root / date_str
+    date_dir.mkdir(parents=True, exist_ok=True)
+
+    # For now, create a stub run file (full ZIP extraction would go here)
+    run_data = {
+        "run_id": run_id,
+        "session_id": session_id,
+        "batch_label": batch_label,
+        "created_at_utc": datetime.utcnow().isoformat() + "Z",
+        "mode": "acoustics",
+        "attachments": [],
+        "meta": {
+            "source_filename": file.filename,
+            "import_status": "stub",
+        },
+    }
+
+    run_file = date_dir / f"run_{run_id}.json"
+    run_file.write_text(json.dumps(run_data, indent=2), encoding="utf-8")
+
+    return ImportResponse(
+        ok=True,
+        run_id=run_id,
+        attachment_count=0,
+        message=f"Stub import created for {file.filename}. Full ZIP extraction not yet implemented.",
+    )
+
+
+# =============================================================================
+# Attachment Download Endpoint
+# =============================================================================
+
+@router.get("/attachments/{sha256}")
+def download_attachment(sha256: str):
+    """
+    Download an attachment by its SHA256 hash.
+    Searches the attachment store for the file.
+    """
+    runs_root = _get_runs_root()
+    attachments_dir = runs_root / "attachments"
+
+    # Check common locations for the attachment
+    possible_paths = [
+        attachments_dir / sha256,
+        attachments_dir / f"{sha256}.bin",
+        attachments_dir / sha256[:2] / sha256,  # Sharded by first 2 chars
+    ]
+
+    for path in possible_paths:
+        if path.exists() and path.is_file():
+            return FileResponse(
+                path=str(path),
+                filename=sha256,
+                media_type="application/octet-stream",
+            )
+
+    raise HTTPException(status_code=404, detail=f"Attachment not found: {sha256}")
 
 
 # =============================================================================
