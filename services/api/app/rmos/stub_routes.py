@@ -72,8 +72,10 @@ def get_risk_timeline(
 # =============================================================================
 
 @router.post("/rosette/segment-ring")
-def generate_segment_ring(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def generate_segment_ring(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Generate rosette segment ring geometry."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "segments": [],
@@ -82,8 +84,10 @@ def generate_segment_ring(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/rosette/generate-slices")
-def generate_slices(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def generate_slices(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Generate rosette slices for manufacturing."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "slices": [],
@@ -92,8 +96,10 @@ def generate_slices(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/rosette/preview")
-def preview_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Generate rosette preview image."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "preview_url": None,
@@ -102,8 +108,10 @@ def preview_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/rosette/export-cnc")
-def export_rosette_cnc(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Export rosette to CNC-ready format."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "gcode": None,
@@ -154,8 +162,10 @@ def get_live_monitor_drilldown(job_id: str) -> Dict[str, Any]:
 # =============================================================================
 
 @router.post("/wrap/mvp/dxf-to-grbl")
-def dxf_to_grbl(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def dxf_to_grbl(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Convert DXF to GRBL G-code (MVP workflow)."""
+    if payload is None:
+        payload = {}
     return {
         "ok": False,
         "gcode": None,
@@ -169,8 +179,10 @@ def dxf_to_grbl(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 # =============================================================================
 
 @router.post("/safety/evaluate")
-def evaluate_safety(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def evaluate_safety(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Evaluate safety constraints for an operation."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "decision": "ALLOW",
@@ -191,8 +203,10 @@ def get_safety_mode() -> Dict[str, Any]:
 
 
 @router.post("/safety/create-override")
-def create_safety_override(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def create_safety_override(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Create a safety override for a blocked operation."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "override_id": None,

@@ -27,8 +27,10 @@ router = APIRouter(tags=["stubs"])
 # =============================================================================
 
 @router.post("/ai/advisories/request")
-def request_advisory(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def request_advisory(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Request an AI advisory for design decisions."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "advisory_id": None,
@@ -42,8 +44,10 @@ def request_advisory(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 # =============================================================================
 
 @router.post("/ai/context/build")
-def build_ai_context(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def build_ai_context(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Build AI context packet for design assistance."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "context_id": None,
@@ -57,8 +61,10 @@ def build_ai_context(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 # =============================================================================
 
 @router.post("/blueprint/analyze")
-def analyze_blueprint(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def analyze_blueprint(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Analyze a blueprint image or PDF."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "analysis": {},
@@ -68,8 +74,10 @@ def analyze_blueprint(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/blueprint/to-svg")
-def blueprint_to_svg(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def blueprint_to_svg(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Convert blueprint to SVG."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "svg": None,
@@ -78,8 +86,10 @@ def blueprint_to_svg(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/blueprint/vectorize-geometry")
-def vectorize_geometry(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def vectorize_geometry(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Vectorize geometry from blueprint."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "vectors": [],
@@ -115,8 +125,10 @@ def list_rosette_presets() -> Dict[str, Any]:
 
 
 @router.post("/art/rosette/preview")
-def preview_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Generate rosette preview."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "preview_url": None,
@@ -125,8 +137,10 @@ def preview_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/art/rosette/save")
-def save_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def save_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Save rosette design."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "rosette_id": None,
@@ -135,8 +149,10 @@ def save_rosette(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 @router.post("/art/rosette/compare")
-def compare_rosettes(payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+def compare_rosettes(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Compare two rosette designs."""
+    if payload is None:
+        payload = {}
     return {
         "ok": True,
         "diffs": [],
