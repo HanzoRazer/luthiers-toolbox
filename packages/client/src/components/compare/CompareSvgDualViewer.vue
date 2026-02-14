@@ -288,7 +288,7 @@ async function onExportDiffReport() {
       diffLabel: "diff-overlay",
     };
 
-    const resp = await fetch("/export/diff-report", {
+    const resp = await fetch("/api/export/diff-report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
