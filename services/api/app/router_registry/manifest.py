@@ -371,6 +371,15 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["CAM", "Risk"],
         category="cam",
     ),
+    # -------------------------------------------------------------------------
+    # ACOUSTICS LIBRARY (Wave 22)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.rmos.runs_v2.acoustics_router",
+        prefix="/api/rmos/acoustics",
+        tags=["RMOS", "Acoustics"],
+        category="rmos",
+    ),
     RouterSpec(
         module="app.routers.probe",
         prefix="/api",
