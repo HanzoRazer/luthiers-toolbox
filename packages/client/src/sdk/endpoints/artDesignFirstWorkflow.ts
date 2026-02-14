@@ -15,7 +15,7 @@ import type {
   TransitionDesignFirstResponse,
 } from "@/types/designFirstWorkflow";
 
-const BASE = "/art/design-first-workflow";
+const BASE = "/api/art/design-first-workflow";
 
 /**
  * Start a new design-first workflow session.
