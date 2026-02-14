@@ -18,6 +18,77 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/QuickCutView.vue"),
   },
 
+  // ============================================================================
+  // LAB ROUTES (match AppNav.vue links)
+  // ============================================================================
+
+  // Bridge Lab
+  {
+    path: "/lab/bridge",
+    name: "LabBridge",
+    component: () => import("@/views/BridgeLabView.vue"),
+  },
+
+  // Adaptive Lab
+  {
+    path: "/lab/adaptive",
+    name: "LabAdaptive",
+    component: () => import("@/views/AdaptiveLabView.vue"),
+  },
+
+  // Pipeline Lab
+  {
+    path: "/lab/pipeline",
+    name: "LabPipeline",
+    component: () => import("@/views/PipelineLabView.vue"),
+  },
+
+  // Saw Lab routes
+  {
+    path: "/lab/saw/slice",
+    name: "LabSawSlice",
+    component: () => import("@/views/SawLabView.vue"),
+    props: { mode: "slice" },
+  },
+  {
+    path: "/lab/saw/batch",
+    name: "LabSawBatch",
+    component: () => import("@/views/SawLabView.vue"),
+    props: { mode: "batch" },
+  },
+  {
+    path: "/lab/saw/contour",
+    name: "LabSawContour",
+    component: () => import("@/views/SawLabView.vue"),
+    props: { mode: "contour" },
+  },
+
+  // Risk Timeline Lab
+  {
+    path: "/lab/risk-timeline",
+    name: "LabRiskTimeline",
+    component: () => import("@/views/lab/RiskTimelineLab.vue"),
+  },
+
+  // CAM Settings (match nav link)
+  {
+    path: "/settings/cam",
+    name: "SettingsCam",
+    component: () => import("@/views/CamSettingsView.vue"),
+  },
+
+  // Calculator Hub
+  {
+    path: "/calculators",
+    name: "Calculators",
+    component: () => import("@/views/CalculatorHubView.vue"),
+  },
+
+  // ============================================================================
+  // LEGACY ROUTES (keep for backwards compatibility)
+  // ============================================================================
+
+
   // RMOS main view as its own route (optional)
   {
     path: "/rmos",
