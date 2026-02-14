@@ -3,8 +3,11 @@ Simple in-memory PipelinePresetStore used for testing and development.
 
 Provides a minimal interface expected by the pipeline preset run router:
 - get(preset_id) -> dict | None
-- save(preset_id, payload) -> dict
+- save(payload) -> dict
 - list() -> list[dict]
+- delete(preset_id) -> bool
+- upsert(payload) -> dict
+- new_id(name) -> str
 
 This is intentionally lightweight. Production should replace with DB-backed store.
 """
@@ -28,13 +31,33 @@ class PipelinePresetStore:
 
     def save(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         # Ensure an id exists
-        preset_id = payload.get("id") or payload.get("name") or f"preset_{uuid4().hex[:8]}"
+        preset_id = payload.get("id") or self.new_id(payload.get("name", "preset"))
         record = {"id": preset_id, **payload}
         self._store[preset_id] = record
         return record
 
+    def upsert(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Insert or update a preset."""
+        preset_id = payload.get("id")
+        if preset_id:
+            self._store[preset_id] = payload
+            return payload
+        return self.save(payload)
+
     def list(self) -> list[Dict[str, Any]]:
         return list(self._store.values())
+
+    def delete(self, preset_id: str) -> bool:
+        """Delete a preset by ID. Returns True if deleted, False if not found."""
+        if preset_id in self._store:
+            del self._store[preset_id]
+            return True
+        return False
+
+    def new_id(self, name: str = "preset") -> str:
+        """Generate a new unique ID based on name."""
+        safe_name = "".join(c if c.isalnum() else "_" for c in name.lower())
+        return f"{safe_name}_{uuid4().hex[:8]}"
 
 
 _default_store = PipelinePresetStore()

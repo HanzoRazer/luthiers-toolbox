@@ -1,4 +1,4 @@
-"""Router manifest — declarative list of all routers to load."""
+"""Router manifest â€” declarative list of all routers to load."""
 
 from typing import List
 
@@ -364,6 +364,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         prefix="/api",
         tags=["CAM", "Pipeline"],
         category="misc",
+    ),
+    RouterSpec(
+        module="app.routers.cam_risk_router",
+        prefix="/api",
+        tags=["CAM", "Risk"],
+        category="cam",
     ),
     RouterSpec(
         module="app.routers.probe",
