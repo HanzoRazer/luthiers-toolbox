@@ -112,9 +112,22 @@ def create_app() -> FastAPI:
 app.add_middleware(RequestIdMiddleware)
 
 # CORS configuration
+# NOTE: allow_origins=["*"] with allow_credentials=True is NOT allowed by browsers
+# Must specify explicit origins for cross-origin deployments (Railway, etc.)
+CORS_ORIGINS = [
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:4173",  # Vite preview
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
+    "https://luthiers-toolboxclient-production-309d.up.railway.app",  # Railway client
+]
+# Also allow from env var for flexibility
+if os.getenv("CORS_ALLOWED_ORIGIN"):
+    CORS_ORIGINS.append(os.getenv("CORS_ALLOWED_ORIGIN"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
