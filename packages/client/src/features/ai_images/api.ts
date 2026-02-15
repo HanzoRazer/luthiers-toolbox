@@ -225,12 +225,13 @@ export async function getVocabulary(): Promise<VocabularyResponse> {
  */
 export async function getProviders(): Promise<ProvidersResponse> {
   const response = await getJson<any>(`${API_BASE}/vision/providers`);
-  
+
   return {
     providers: response.providers.map((p: any) => ({
-      id: p.id,
+      id: p.id ?? p.name,
       name: p.name,
-      available: p.available,
+      // API returns "configured" not "available" - map correctly
+      available: p.available ?? p.configured ?? false,
       reason: p.reason,
       costs: p.costs,
     })),
