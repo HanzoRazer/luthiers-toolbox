@@ -28,6 +28,7 @@ pytest-mock>=3.11.0
 
 # Blueprint Import Service (Phase 1 & 2) - AI features use HTTP transport layer
 # anthropic>=0.70.0  # OPTIONAL: Not imported; AI uses raw HTTP via app/ai/transport/
+openai>=1.0.0  # Required for DALL-E image generation
 pdf2image>=1.16.0
 Pillow>=10.0.0
 opencv-python>=4.8.0
