@@ -41,6 +41,18 @@ function _isBusy(sha: string) {
 
 const items = computed(() => props.assets ?? []);
 
+/** Base URL for cross-origin API deployments */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+
+/** Resolve asset URL to full URL (handles cross-origin deployments). */
+function resolveAssetUrl(url: string | undefined): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `${API_BASE}${url}`;
+}
+
 function _guardRunId(): boolean {
   if (!props.runId || !props.runId.trim()) {
     emit("error", "No run selected. Provide runId to AiImageGalleryRmos.");
@@ -151,7 +163,7 @@ async function promoteAsset(a: VisionAsset) {
     >
       <img
         v-if="a.url"
-        :src="a.url"
+        :src="resolveAssetUrl(a.url)"
         class="thumb"
       >
       <div class="meta">
