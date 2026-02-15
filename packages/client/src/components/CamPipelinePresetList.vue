@@ -79,6 +79,7 @@ Updated: November 2025
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, onMounted, ref } from 'vue'
 
 interface PipelinePreset {
@@ -114,7 +115,7 @@ async function loadPresets () {
   error.value = null
 
   try {
-    const resp = await fetch('/api/cam/pipeline/presets')
+    const resp = await api('/api/cam/pipeline/presets')
     if (!resp.ok) {
       const text = await resp.text()
       throw new Error(text || `HTTP ${resp.status}`)

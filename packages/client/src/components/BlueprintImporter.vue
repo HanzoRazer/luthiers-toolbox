@@ -218,6 +218,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, onUnmounted } from 'vue'
 
 // State
@@ -274,7 +275,7 @@ const uploadBlueprint = async (file: File) => {
     formData.append('file', file)
 
     // Call API
-    const response = await fetch('/api/blueprint/analyze', {
+    const response = await api('/api/blueprint/analyze', {
       method: 'POST',
       body: formData
     })
@@ -311,7 +312,7 @@ const exportSVG = async () => {
     isExporting.value = true
     error.value = null
 
-    const response = await fetch('/api/blueprint/to-svg', {
+    const response = await api('/api/blueprint/to-svg', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

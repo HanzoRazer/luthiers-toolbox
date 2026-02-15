@@ -439,6 +439,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -764,7 +765,7 @@ async function generateAndExportDXF() {
   statusType.value = 'info'
 
   try {
-    const response = await fetch('/api/guitar/design/parametric/export', {
+    const response = await api('/api/guitar/design/parametric/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -817,7 +818,7 @@ async function generateAndExportSVG() {
   statusType.value = 'info'
 
   try {
-    const response = await fetch('/api/guitar/design/parametric/export', {
+    const response = await api('/api/guitar/design/parametric/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -872,7 +873,7 @@ async function generateAndSendToCAM() {
     status.value = '⏳ Planning adaptive toolpath with Module L.2...'
     statusType.value = 'info'
 
-    const response = await fetch('/api/guitar/design/parametric/to-cam', {
+    const response = await api('/api/guitar/design/parametric/to-cam', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

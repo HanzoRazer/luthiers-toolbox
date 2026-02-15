@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 
 interface Backup {
@@ -79,7 +80,7 @@ onMounted(loadBackups)
 async function loadBackups() {
   loading.value = true
   try {
-    const res = await fetch('/api/cam/backup/list')
+    const res = await api('/api/cam/backup/list')
     if (res.ok) {
       const data = await res.json()
       backups.value = data.backups || []
@@ -94,7 +95,7 @@ async function loadBackups() {
 async function snapshotNow() {
   loading.value = true
   try {
-    const res = await fetch('/api/cam/backup/snapshot', { method: 'POST' })
+    const res = await api('/api/cam/backup/snapshot', { method: 'POST' })
     if (!res.ok) throw new Error('Snapshot failed')
     
     const data = await res.json()

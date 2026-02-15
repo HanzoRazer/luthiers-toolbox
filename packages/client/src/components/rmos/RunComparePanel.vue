@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, ref, watch } from "vue"
 
 type ComparePayload = any
@@ -78,7 +79,7 @@ async function runCompare() {
   showDeep.value = false
 
   try {
-    const resp = await fetch(`/api/rmos/runs_v2/compare/${encodeURIComponent(a)}/${encodeURIComponent(b)}`)
+    const resp = await api(`/api/rmos/runs_v2/compare/${encodeURIComponent(a)}/${encodeURIComponent(b)}`)
     if (!resp.ok) {
       let msg = `Compare failed (HTTP ${resp.status})`
       try {

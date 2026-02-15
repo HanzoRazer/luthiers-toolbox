@@ -394,6 +394,7 @@ Features:
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import BridgeCalculatorPanel from '@/components/BridgeCalculatorPanel.vue'
 import CamBridgePreflightPanel from '@/components/CamBridgePreflightPanel.vue'
@@ -564,7 +565,7 @@ async function sendToAdaptive() {
     formData.append('safe_z', adaptiveParams.value.safe_z.toString())
     formData.append('z_rough', adaptiveParams.value.z_rough.toString())
     
-    const response = await fetch('/api/cam/dxf_adaptive_plan_run', {
+    const response = await api('/api/cam/dxf_adaptive_plan_run', {
       method: 'POST',
       body: formData
     })
@@ -586,7 +587,7 @@ async function sendToAdaptive() {
 // Stage 3: Export G-code
 async function loadPosts() {
   try {
-    const response = await fetch('/api/posts/')
+    const response = await api('/api/posts/')
     if (response.ok) {
       const data = await response.json()
       // /api/posts/ returns {"posts": [...]}
@@ -614,7 +615,7 @@ async function exportGcode() {
   currentStage.value = 3
   
   try {
-    const response = await fetch('/api/cam/toolpath/roughing/gcode', {
+    const response = await api('/api/cam/toolpath/roughing/gcode', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -672,7 +673,7 @@ async function simulateGcode() {
     formData.append('file', gcodeFile.value)
     formData.append('units', adaptiveParams.value.units)
     
-    const response = await fetch('/api/cam/simulate_gcode', {
+    const response = await api('/api/cam/simulate_gcode', {
       method: 'POST',
       body: formData
     })

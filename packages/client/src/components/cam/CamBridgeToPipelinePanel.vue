@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from "vue";
 
 interface MachineLimits {
@@ -186,7 +187,7 @@ async function savePreset() {
       spec: spec.value,
     };
 
-    const response = await fetch("/api/cam/pipeline/presets", {
+    const response = await api("/api/cam/pipeline/presets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

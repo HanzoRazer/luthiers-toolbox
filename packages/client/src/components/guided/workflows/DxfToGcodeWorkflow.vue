@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 /**
  * DxfToGcodeWorkflow - Guided workflow for DXF → G-code conversion
  *
@@ -113,7 +114,7 @@ async function validateGeometry() {
 
   isValidating.value = true
   try {
-    const response = await fetch('/api/v1/dxf/validate', {
+    const response = await api('/api/v1/dxf/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -132,7 +133,7 @@ async function validateGeometry() {
 // Safety check
 async function runSafetyCheck() {
   try {
-    const response = await fetch('/api/v1/rmos/check', {
+    const response = await api('/api/v1/rmos/check', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -155,7 +156,7 @@ async function runSafetyCheck() {
 // G-code generation
 async function generateGcode() {
   try {
-    const response = await fetch('/api/v1/dxf/cam/gcode', {
+    const response = await api('/api/v1/dxf/cam/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

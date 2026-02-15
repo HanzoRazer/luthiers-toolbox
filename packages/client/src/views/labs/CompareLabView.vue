@@ -112,6 +112,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import DualSvgDisplay from '@/components/compare/DualSvgDisplay.vue'
@@ -144,7 +145,7 @@ onMounted(async () => {
     return
   }
   try {
-    const resp = await fetch(`/api/cam/compare/diff?baseline=${baseId}&compare=${candId}`)
+    const resp = await api(`/api/cam/compare/diff?baseline=${baseId}&compare=${candId}`)
     if (!resp.ok) throw new Error('API error')
     const data = await resp.json()
     baseline.value = parseBaseline(data.baseline)

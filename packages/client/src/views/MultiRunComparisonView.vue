@@ -347,6 +347,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 
@@ -510,7 +511,7 @@ const chartData = computed(() => {
 
 async function fetchPresets() {
   try {
-    const response = await fetch('/api/presets')
+    const response = await api('/api/presets')
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     allPresets.value = await response.json()
   } catch (error) {
@@ -530,7 +531,7 @@ async function runComparison() {
   comparisonResult.value = null
 
   try {
-    const response = await fetch('/api/presets/compare-runs', {
+    const response = await api('/api/presets/compare-runs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

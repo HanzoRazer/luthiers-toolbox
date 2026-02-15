@@ -567,6 +567,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { explainRule } from '@/lib/feasibilityRuleRegistry'
@@ -902,7 +903,7 @@ const generateGcode = async () => {
       }
     }
 
-    const response = await fetch('/api/rmos/wrap/mvp/dxf-to-grbl', {
+    const response = await api('/api/rmos/wrap/mvp/dxf-to-grbl', {
       method: 'POST',
       body: fd,
       signal: abortController.value.signal

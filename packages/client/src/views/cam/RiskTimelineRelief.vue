@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from "vue";
 import CamRiskJobList from "@/components/cam/CamRiskJobList.vue";
 import CamRiskPresetTrend from "@/components/cam/CamRiskPresetTrend.vue";
@@ -382,7 +383,7 @@ async function fetchJobs() {
   loading.value = true;
   try {
     // Adjust endpoint to match your backend if needed
-    const res = await fetch("/api/cam/jobs/risk_report");
+    const res = await api("/api/cam/jobs/risk_report");
     if (!res.ok) {
       console.error("Failed to fetch risk jobs:", await res.text());
       jobs.value = [];

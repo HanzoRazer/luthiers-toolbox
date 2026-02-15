@@ -1151,6 +1151,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, watch, computed, reactive } from 'vue'
 import { usePocketSettings } from './adaptive/composables/usePocketSettings'
 
@@ -1444,7 +1445,7 @@ async function batchExport(){
   }
   
   try {
-    const r = await fetch('/api/cam/pocket/adaptive/batch_export', {
+    const r = await api('/api/cam/pocket/adaptive/batch_export', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -1674,7 +1675,7 @@ async function plan(){
   const body = patchBodyWithSessionOverride(baseBody)
   
   try {
-    const r = await fetch('/api/cam/pocket/adaptive/plan', { 
+    const r = await api('/api/cam/pocket/adaptive/plan', { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
       body: JSON.stringify(body) 
@@ -1743,7 +1744,7 @@ async function previewNc() {
   const body = patchBodyWithSessionOverride(baseBody)
   
   try {
-    const r = await fetch('/api/cam/pocket/adaptive/gcode', { 
+    const r = await api('/api/cam/pocket/adaptive/gcode', { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
       body: JSON.stringify(body) 
@@ -1792,7 +1793,7 @@ async function exportProgram(){
   const body = patchBodyWithSessionOverride(baseBody)
   
   try {
-    const r = await fetch('/api/cam/pocket/adaptive/gcode', { 
+    const r = await api('/api/cam/pocket/adaptive/gcode', { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
       body: JSON.stringify(body) 
@@ -1840,7 +1841,7 @@ async function onMachineSaved(id: string) {
   machineId.value = id
   // Refresh machine list
   try {
-    const r = await fetch('/api/machine/profiles')
+    const r = await api('/api/machine/profiles')
     machines.value = await r.json()
   } catch (e) {
     console.error('Failed to refresh machines:', e)
@@ -1892,7 +1893,7 @@ async function runWhatIf() {
       body.tolerance_chip_mm = chipTol.value
     }
     
-    const r = await fetch('/api/cam/opt/what_if', {
+    const r = await api('/api/cam/opt/what_if', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -1950,7 +1951,7 @@ async function runEnergy() {
       job_name: jobName.value || undefined
     }
     
-    const r = await fetch('/api/cam/metrics/energy', {
+    const r = await api('/api/cam/metrics/energy', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -1992,7 +1993,7 @@ async function exportEnergyCsv() {
       job_name: jobName.value || undefined
     }
     
-    const r = await fetch('/api/cam/metrics/energy_csv', {
+    const r = await api('/api/cam/metrics/energy_csv', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -2031,7 +2032,7 @@ async function runHeatTS() {
       bins: 120
     }
     
-    const r = await fetch('/api/cam/metrics/heat_timeseries', {
+    const r = await api('/api/cam/metrics/heat_timeseries', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -2082,7 +2083,7 @@ async function exportBottleneckCsv() {
       job_name: 'pocket'
     }
     
-    const r = await fetch('/api/cam/metrics/bottleneck_csv', {
+    const r = await api('/api/cam/metrics/bottleneck_csv', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -2128,7 +2129,7 @@ async function exportThermalReport() {
       include_csv_links: includeCsvLinks.value
     }
     
-    const r = await fetch('/api/cam/metrics/thermal_report_md', {
+    const r = await api('/api/cam/metrics/thermal_report_md', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -2174,7 +2175,7 @@ async function exportThermalBundle() {
       include_csv_links: includeCsvLinks.value
     }
     
-    const r = await fetch('/api/cam/metrics/thermal_report_bundle', {
+    const r = await api('/api/cam/metrics/thermal_report_bundle', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -2251,7 +2252,7 @@ async function logCurrentRun(actualSeconds?: number) {
       notes: null
     }
     
-    const r = await fetch('/api/cam/logs/write', {
+    const r = await api('/api/cam/logs/write', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ run, segments: segs })
@@ -2288,7 +2289,7 @@ async function trainOverrides() {
   }
   
   try {
-    const r = await fetch('/api/cam/learn/train', {
+    const r = await api('/api/cam/learn/train', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ machine_profile: profileId.value, r_min_mm: 5 })
@@ -2355,12 +2356,12 @@ async function openCompareSettings() {
     
     // Fetch baseline NC and plan
     const [baselineNc, baselinePlan] = await Promise.all([
-      fetch('/api/cam/pocket/adaptive/gcode', {
+      api('/api/cam/pocket/adaptive/gcode', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(baseBody)
       }).then(r => r.text()),
-      fetch('/api/cam/pocket/adaptive/plan', {
+      api('/api/cam/pocket/adaptive/plan', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(baseBody)
@@ -2369,12 +2370,12 @@ async function openCompareSettings() {
     
     // Fetch recommendation NC and plan
     const [optNc, optPlan] = await Promise.all([
-      fetch('/api/cam/pocket/adaptive/gcode', {
+      api('/api/cam/pocket/adaptive/gcode', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(recBody)
       }).then(r => r.text()),
-      fetch('/api/cam/pocket/adaptive/plan', {
+      api('/api/cam/pocket/adaptive/plan', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(recBody)
@@ -2412,7 +2413,7 @@ onMounted(async () => {
   
   // M.1: Load machine profiles
   try {
-    const r = await fetch('/api/machine/profiles')
+    const r = await api('/api/machine/profiles')
     machines.value = await r.json()
   } catch (e) {
     console.error('Failed to load machine profiles:', e)

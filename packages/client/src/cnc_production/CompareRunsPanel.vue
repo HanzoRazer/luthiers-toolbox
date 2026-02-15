@@ -276,6 +276,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { onMounted, ref } from 'vue'
 
 const jobs = ref<any[]>([])
@@ -290,7 +291,7 @@ async function refreshJobs() {
   loading.value = true
   error.value = null
   try {
-    const resp = await fetch('/api/cam/job-int/log')
+    const resp = await api('/api/cam/job-int/log')
     if (!resp.ok) throw new Error(await resp.text())
     const data = await resp.json()
     jobs.value = data.items || []
@@ -308,7 +309,7 @@ async function compare() {
   error.value = null
   try {
     const idsParam = selectedIds.value.join(',')
-    const resp = await fetch(`/api/cnc/jobs/compare?ids=${encodeURIComponent(idsParam)}`)
+    const resp = await api(`/api/cnc/jobs/compare?ids=${encodeURIComponent(idsParam)}`)
     if (!resp.ok) throw new Error(await resp.text())
     comparisonResult.value = await resp.json()
   } catch (err: any) {

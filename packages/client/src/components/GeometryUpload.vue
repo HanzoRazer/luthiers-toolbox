@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 const resp = ref<string>('')
@@ -33,7 +34,7 @@ async function onFile(e: Event) {
   if (!files || !files[0]) return
   const fd = new FormData()
   fd.append('file', files[0])
-  const r = await fetch('/api/geometry/import', { method: 'POST', body: fd })
+  const r = await api('/api/geometry/import', { method: 'POST', body: fd })
   resp.value = await r.text()
 }
 
@@ -45,7 +46,7 @@ async function sendJson() {
       { type: 'arc', cx: 30, cy: 20, r: 20, start: 180, end: 0, cw: false }
     ]
   }
-  const r = await fetch('/api/geometry/import', {
+  const r = await api('/api/geometry/import', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)

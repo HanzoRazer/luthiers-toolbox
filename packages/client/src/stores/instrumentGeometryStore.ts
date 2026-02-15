@@ -12,6 +12,7 @@
 
 import { defineStore } from "pinia";
 import { ref, computed, onMounted } from "vue";
+import { api } from '@/services/apiBase';
 import {
   fetchInstrumentModels,
   FALLBACK_MODELS,
@@ -293,7 +294,7 @@ export const useInstrumentGeometryStore = defineStore(
           requestBody.scale_length_mm = fretboardSpec.value.scale_length_mm;
         }
 
-        const response = await fetch("/api/cam/fret_slots/preview", {
+        const response = await api("/api/cam/fret_slots/preview", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

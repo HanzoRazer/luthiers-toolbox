@@ -120,6 +120,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 /**
  * GeometryToolbar Component - Floating action panel for geometry operations.
  * 
@@ -308,7 +309,7 @@ async function exportDXF(): Promise<void> {
   isLoading.value = true
 
   try {
-    const response = await fetch('/api/geometry/export', {
+    const response = await api('/api/geometry/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

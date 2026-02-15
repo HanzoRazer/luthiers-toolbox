@@ -5,6 +5,7 @@
  */
 
 import { defineStore } from "pinia";
+import { api } from '@/services/apiBase';
 import type {
   SafetyModeState,
   SafetyMode,
@@ -62,7 +63,7 @@ export const useRmosSafetyStore = defineStore("rmosSafety", {
       this.loadingMode = true;
       this.errorMode = null;
       try {
-        const res = await fetch("/api/rmos/safety/mode");
+        const res = await api("/api/rmos/safety/mode");
         if (!res.ok) throw new Error(`Failed to fetch safety mode: ${res.status}`);
         this.modeState = (await res.json()) as SafetyModeState;
       } catch (e: any) {
@@ -82,7 +83,7 @@ export const useRmosSafetyStore = defineStore("rmosSafety", {
       this.loadingMode = true;
       this.errorMode = null;
       try {
-        const res = await fetch("/api/rmos/safety/mode", {
+        const res = await api("/api/rmos/safety/mode", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mode, set_by: setBy ?? null }),
@@ -109,7 +110,7 @@ export const useRmosSafetyStore = defineStore("rmosSafety", {
       this.evalError = null;
       this.lastDecision = null;
       try {
-        const res = await fetch("/api/rmos/safety/evaluate", {
+        const res = await api("/api/rmos/safety/evaluate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...ctx, override_token: overrideToken ?? null }),
@@ -140,7 +141,7 @@ export const useRmosSafetyStore = defineStore("rmosSafety", {
      * @throws Error if creation fails
      */
     async createOverride(action: string, createdBy?: string, ttlMinutes = 15): Promise<OverrideToken> {
-      const res = await fetch("/api/rmos/safety/create-override", {
+      const res = await api("/api/rmos/safety/create-override", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, created_by: createdBy ?? null, ttl_minutes: ttlMinutes }),
@@ -174,7 +175,7 @@ export const useRmosSafetyStore = defineStore("rmosSafety", {
      *   await safety.guardedAction(
      *     { action: "promote_preset", lane: "safe", fragility_score: 0.8 },
      *     async () => {
-     *       await fetch("/api/rmos/presets/123/promote", { ... })
+     *       await api("/api/rmos/presets/123/promote", { ... })
      *     }
      *   )
      */

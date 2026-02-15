@@ -525,6 +525,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 // Roughing Parameters
@@ -585,7 +586,7 @@ const retract = ref({
 // Export Functions
 async function exportRoughing() {
   try {
-    const response = await fetch('/api/cam/toolpath/roughing/gcode', {
+    const response = await api('/api/cam/toolpath/roughing/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(roughing.value)
@@ -609,7 +610,7 @@ async function exportDrilling() {
       post: 'GRBL'
     }
     
-    const response = await fetch('/api/cam/drilling/gcode', {
+    const response = await api('/api/cam/drilling/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -672,7 +673,7 @@ async function exportBiarc() {
       post: 'GRBL'
     }
     
-    const response = await fetch('/api/cam/toolpath/biarc/gcode', {
+    const response = await api('/api/cam/toolpath/biarc/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -733,7 +734,7 @@ async function exportProbeSVG() {
       estimated_diameter: probe.value.diameter
     }
     
-    const response = await fetch('/api/cam/probe/svg_setup_sheet', {
+    const response = await api('/api/cam/probe/svg_setup_sheet', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -758,7 +759,7 @@ async function exportRetractGcode() {
       helix_pitch: retract.value.helix_pitch
     }
     
-    const response = await fetch('/api/cam/retract/gcode', {
+    const response = await api('/api/cam/retract/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

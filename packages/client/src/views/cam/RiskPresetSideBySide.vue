@@ -186,6 +186,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from "vue";
 import CamRiskJobList from "@/components/cam/CamRiskJobList.vue";
 import CamPresetEvolutionTrend from "@/components/cam/CamPresetEvolutionTrend.vue";
@@ -434,7 +435,7 @@ async function exportCsv(which: "A" | "B" | "Both") {
 // API
 async function fetchJobs() {
   try {
-    const response = await fetch("/api/cam/jobs/risk_report");
+    const response = await api("/api/cam/jobs/risk_report");
     if (!response.ok) {
       console.error("Failed to fetch risk jobs:", response.statusText);
       return;

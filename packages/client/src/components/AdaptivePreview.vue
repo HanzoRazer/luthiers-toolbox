@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 const spiral = ref({
@@ -149,7 +150,7 @@ async function plotSpiral() {
   spiralError.value = ''
   
   try {
-    const res = await fetch('/api/cam/adaptive/spiral.svg', {
+    const res = await api('/api/cam/adaptive/spiral.svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(spiral.value)
@@ -170,7 +171,7 @@ async function plotTrochoid() {
   trochoidError.value = ''
   
   try {
-    const res = await fetch('/api/cam/adaptive/trochoid.svg', {
+    const res = await api('/api/cam/adaptive/trochoid.svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(trochoid.value)

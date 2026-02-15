@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from "vue";
 import { useToastStore } from "@/stores/toastStore";
 
@@ -104,7 +105,7 @@ async function convertPhoto() {
       invert: invert.value.toString(),
     });
 
-    const response = await fetch(`/api/cam/rosette/import_photo?${params}`, {
+    const response = await api(`/api/cam/rosette/import_photo?${params}`, {
       method: "POST",
       body: formData,
     });

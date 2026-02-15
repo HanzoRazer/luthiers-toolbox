@@ -12,6 +12,7 @@
 
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { api } from '@/services/apiBase';
 import type {
   FretSlotsPreviewRequest,
   FretSlotsPreviewResponse,
@@ -49,7 +50,7 @@ export const useFretSlotsCamStore = defineStore("fretSlotsCam", () => {
     lastRequest.value = req;
 
     try {
-      const res = await fetch("/api/cam/fret_slots/preview", {
+      const res = await api("/api/cam/fret_slots/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),

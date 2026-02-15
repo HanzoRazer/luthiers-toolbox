@@ -149,6 +149,7 @@ FUTURE ENHANCEMENTS:
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 
 interface MachineProfile {
@@ -167,7 +168,7 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    const resp = await fetch('/api/cam/machines')
+    const resp = await api('/api/cam/machines')
     if (!resp.ok) {
       const text = await resp.text()
       throw new Error(text || `HTTP ${resp.status}`)

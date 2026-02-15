@@ -107,6 +107,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 
 const summary = ref<{machines_count: number; posts_count: number; pipeline_presets_count: number}>({
@@ -124,7 +125,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 // Load summary on mount
 onMounted(async () => {
   try {
-    const res = await fetch('/api/cam/settings/summary')
+    const res = await api('/api/cam/settings/summary')
     if (res.ok) {
       summary.value = await res.json()
     }
@@ -136,7 +137,7 @@ onMounted(async () => {
 async function exportSettings() {
   loading.value = true
   try {
-    const res = await fetch('/api/cam/settings/export')
+    const res = await api('/api/cam/settings/export')
     if (!res.ok) throw new Error('Export failed')
     
     const data = await res.json()
@@ -170,7 +171,7 @@ async function importSettings() {
     const text = await selectedFile.value.text()
     const payload = JSON.parse(text)
     
-    const res = await fetch(`/api/cam/settings/import?overwrite=${overwriteMode.value}`, {
+    const res = await api(`/api/cam/settings/import?overwrite=${overwriteMode.value}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -181,7 +182,7 @@ async function importSettings() {
     importResults.value = await res.json()
     
     // Reload summary
-    const summaryRes = await fetch('/api/cam/settings/summary')
+    const summaryRes = await api('/api/cam/settings/summary')
     if (summaryRes.ok) {
       summary.value = await summaryRes.json()
     }

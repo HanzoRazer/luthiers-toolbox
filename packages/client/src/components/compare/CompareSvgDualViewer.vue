@@ -121,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, watch, ref } from "vue";
 import type { CanonicalGeometry } from "@/utils/geometry";
 
@@ -288,7 +289,7 @@ async function onExportDiffReport() {
       diffLabel: "diff-overlay",
     };
 
-    const resp = await fetch("/api/export/diff-report", {
+    const resp = await api("/api/export/diff-report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

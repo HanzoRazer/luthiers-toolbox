@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 const rawJson = ref<string>('')
@@ -58,7 +59,7 @@ async function loadTemplates() {
   feedback.value = { message: '', type: '' }
   
   try {
-    const res = await fetch('/api/posts')
+    const res = await api('/api/posts')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     
     const data = await res.json()
@@ -100,7 +101,7 @@ async function saveTemplates() {
     }
     
     // Send to server
-    const res = await fetch('/api/posts', {
+    const res = await api('/api/posts', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: rawJson.value

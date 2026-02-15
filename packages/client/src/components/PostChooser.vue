@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, watch } from 'vue'
 
 type PostInfo = { id: string; title?: string }
@@ -50,7 +51,7 @@ const selectedIds = ref<string[]>([])
 
 async function loadPosts(){
   // Expecting `/tooling/posts` → [{id,title,header,footer}, ...]
-  const r = await fetch('/api/tooling/posts')
+  const r = await api('/api/tooling/posts')
   const arr = await r.json() as any[]
   posts.value = (arr || []).map(x => ({ id: x.id || x.name || 'POST', title: x.title || x.id }))
   // seed from storage

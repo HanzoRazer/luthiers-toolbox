@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, watch } from 'vue'
 import PreviewPane from './PreviewPane.vue'
 
@@ -80,7 +81,7 @@ async function refresh(){
   const base = JSON.parse(JSON.stringify(props.requestBody || {}))
   async function fetchNC(mode:'comment'|'inline_f'|'mcode'){
     const body = { ...base, adaptive_feed_override: { mode } }
-    const r = await fetch('/api/cam/pocket/adaptive/gcode', {
+    const r = await api('/api/cam/pocket/adaptive/gcode', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
     })
     return await r.text()
@@ -99,7 +100,7 @@ async function batchExportFromModal(){
   const body = JSON.parse(JSON.stringify(props.requestBody || {}))
   
   try {
-    const r = await fetch('/api/cam/pocket/adaptive/batch_export', {
+    const r = await api('/api/cam/pocket/adaptive/batch_export', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)

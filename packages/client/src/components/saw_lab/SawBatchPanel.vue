@@ -448,6 +448,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 
 // ============================================================================
@@ -585,7 +586,7 @@ function formatTime(seconds: number): string {
 
 async function loadBlades() {
   try {
-    const response = await fetch('/api/saw/blades')
+    const response = await api('/api/saw/blades')
     blades.value = await response.json()
   } catch (err) {
     console.error('Failed to load blades:', err)
@@ -612,7 +613,7 @@ async function validateBatch() {
   }
   
   try {
-    const response = await fetch('/api/saw/validate/operation', {
+    const response = await api('/api/saw/validate/operation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -639,7 +640,7 @@ async function mergeLearnedParams() {
   }
   
   try {
-    const response = await fetch('/api/feeds/learned/merge', {
+    const response = await api('/api/feeds/learned/merge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lane_key: laneKey, baseline })
@@ -714,7 +715,7 @@ async function sendToJobLog() {
   }
   
   try {
-    const response = await fetch('/api/saw/joblog/run', {
+    const response = await api('/api/saw/joblog/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

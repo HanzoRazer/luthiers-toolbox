@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 const props = defineProps<{ 
@@ -124,7 +125,7 @@ async function run() {
     const b = JSON.parse(JSON.stringify(props.body))
     b.machine_profile_id = pid.value
     
-    const r = await fetch('/api/cam/pocket/adaptive/plan', {
+    const r = await api('/api/cam/pocket/adaptive/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(b)

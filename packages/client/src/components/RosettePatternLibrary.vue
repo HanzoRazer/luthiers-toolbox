@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, computed } from "vue";
 import { useToastStore } from "@/stores/toastStore";
 
@@ -58,7 +59,7 @@ onMounted(async () => {
 async function loadPatterns() {
   isLoading.value = true;
   try {
-    const response = await fetch("/api/cam/rosette/patterns/patterns");
+    const response = await api("/api/cam/rosette/patterns/patterns");
     if (!response.ok) {
       throw new Error("Failed to load patterns");
     }
@@ -104,8 +105,7 @@ async function generateTraditional() {
 
   isLoading.value = true;
   try {
-    const response = await fetch(
-      "/api/cam/rosette/patterns/generate_traditional",
+    const response = await api("/api/cam/rosette/patterns/generate_traditional",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -144,7 +144,7 @@ async function generateTraditional() {
 async function generateModern() {
   isLoading.value = true;
   try {
-    const response = await fetch("/api/cam/rosette/patterns/generate_modern", {
+    const response = await api("/api/cam/rosette/patterns/generate_modern", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

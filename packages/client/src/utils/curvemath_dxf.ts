@@ -6,7 +6,10 @@
  * browser downloads.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// Support both VITE_API_BASE and legacy VITE_API_BASE_URL for compatibility
+const API_BASE = import.meta.env.VITE_API_BASE
+  || import.meta.env.VITE_API_BASE_URL
+  || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : '')
 
 /**
  * Download blob from fetch Response

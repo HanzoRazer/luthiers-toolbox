@@ -503,6 +503,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch } from 'vue'
 
 interface Hole {
@@ -810,7 +811,7 @@ async function generateGCodePreview() {
       thread_pitch: params.value.cycle === 'G84' ? params.value.threadPitch : undefined
     }
 
-    const response = await fetch('/api/cam/drilling/gcode', {
+    const response = await api('/api/cam/drilling/gcode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -847,7 +848,7 @@ async function exportGCode() {
       thread_pitch: params.value.cycle === 'G84' ? params.value.threadPitch : undefined
     }
 
-    const response = await fetch('/api/cam/drilling/gcode/download', {
+    const response = await api('/api/cam/drilling/gcode/download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

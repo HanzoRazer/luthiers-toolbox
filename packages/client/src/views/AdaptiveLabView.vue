@@ -355,6 +355,7 @@ FUTURE ENHANCEMENTS:
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
@@ -417,7 +418,7 @@ async function importFromDxf () {
     }
     form.append('auto_scale', 'true')
 
-    const resp = await fetch('/api/cam/plan_from_dxf', {
+    const resp = await api('/api/cam/plan_from_dxf', {
       method: 'POST',
       body: form
     })
@@ -502,7 +503,7 @@ async function runAdaptive () {
       z_rough: zRough.value
     }
 
-    const resp = await fetch('/api/cam/pocket/adaptive/plan', {
+    const resp = await api('/api/cam/pocket/adaptive/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

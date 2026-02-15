@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { ManufacturingPlan } from '@/models/rmos';
+import { api } from '@/services/apiBase';
 
 interface PlanRequest {
   pattern_id: string;
@@ -20,7 +21,7 @@ export const useManufacturingPlanStore = defineStore('manufacturingPlan', () => 
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch('/api/rosette/manufacturing-plan', {
+      const res = await api('/api/rosette/manufacturing-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),

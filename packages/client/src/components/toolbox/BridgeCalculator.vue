@@ -273,6 +273,7 @@ Features:
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, reactive, ref } from 'vue';
 
 /** -------------------------
@@ -497,7 +498,7 @@ async function exportDXF(){
       filename: `bridge_${model.scaleLength.toFixed(1)}${model.units}_ct${model.compTreble.toFixed(1)}_cb${model.compBass.toFixed(1)}`
     };
     
-    const response = await fetch('/api/cam/bridge/export_dxf', {
+    const response = await api('/api/cam/bridge/export_dxf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
