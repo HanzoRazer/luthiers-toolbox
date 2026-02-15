@@ -28,11 +28,15 @@ COPY . /app
 RUN useradd -m app
 
 # Ensure data directories exist and are writable by app user
-RUN mkdir -p /app/app/data/runs/rmos /app/app/data/backups/cam && chown -R app:app /app/app/data
+RUN mkdir -p /app/app/data/runs/rmos \
+             /app/app/data/backups/cam \
+             /app/app/data/run_attachments && \
+    chown -R app:app /app/app/data
 
 # Set data directories to writable paths (not the repo-relative defaults)
 ENV RMOS_RUNS_DIR=/app/app/data/runs/rmos
 ENV CAM_BACKUP_DIR=/app/app/data/backups/cam
+ENV RMOS_RUN_ATTACHMENTS_DIR=/app/app/data/run_attachments
 
 # Switch to non-root user
 USER app
