@@ -472,6 +472,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -606,7 +607,7 @@ const getTabCount = (kind: string) => {
 async function refreshPresets() {
   loading.value = true
   try {
-    const response = await fetch('/api/presets')
+    const response = await api('/api/presets')
     presets.value = await response.json()
   } catch (error) {
     console.error('Failed to load presets:', error)
@@ -620,7 +621,7 @@ async function fetchJobDetails(runId: string) {
   if (jobDetailsCache.value[runId]) return
   
   try {
-    const response = await fetch(`/api/cam/job-int/log/${encodeURIComponent(runId)}`)
+    const response = await api(`/api/cam/job-int/log/${encodeURIComponent(runId)}`)
     if (response.ok) {
       jobDetailsCache.value[runId] = await response.json()
     }
@@ -777,7 +778,7 @@ async function deletePreset(preset: any) {
   }
 
   try {
-    const response = await fetch(`/api/presets/${preset.id}`, {
+    const response = await api(`/api/presets/${preset.id}`, {
       method: 'DELETE'
     })
 

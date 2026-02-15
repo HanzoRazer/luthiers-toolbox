@@ -190,6 +190,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 
 const machines = ref<any[]>([])
@@ -200,7 +201,7 @@ const error = ref('')
 
 async function loadMachines() {
   try {
-    const r = await fetch('/api/machines')
+    const r = await api('/api/machines')
     const j = await r.json()
     machines.value = j.machines || []
     if (machines.value.length) {
@@ -214,7 +215,7 @@ async function loadMachines() {
 async function refresh() {
   if (!mid.value) return
   try {
-    const r = await fetch('/api/machines/tools/' + encodeURIComponent(mid.value))
+    const r = await api('/api/machines/tools/' + encodeURIComponent(mid.value))
     const j = await r.json()
     tools.value = j.tools || []
     saved.value = false
@@ -248,7 +249,7 @@ function rm(i: number) {
 
 async function save() {
   try {
-    const r = await fetch('/api/machines/tools/' + encodeURIComponent(mid.value), { 
+    const r = await api('/api/machines/tools/' + encodeURIComponent(mid.value), { 
       method: 'PUT', 
       headers: { 'Content-Type': 'application/json' }, 
       body: JSON.stringify(tools.value) 
@@ -270,7 +271,7 @@ async function importCsv(e: Event) {
   try {
     const fd = new FormData()
     fd.append('file', f)
-    const r = await fetch('/api/machines/tools/' + encodeURIComponent(mid.value) + '/import_csv', { 
+    const r = await api('/api/machines/tools/' + encodeURIComponent(mid.value) + '/import_csv', { 
       method: 'POST', 
       body: fd 
     })

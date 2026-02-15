@@ -15,6 +15,7 @@ Features:
 -->
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 const props = defineProps<{
@@ -72,7 +73,7 @@ async function savePreset(runAfterSave = false) {
   lastRunId.value = ''
 
   try {
-    const response = await fetch('/api/cam/pipeline/presets', {
+    const response = await api('/api/cam/pipeline/presets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -107,7 +108,7 @@ async function runPreset(presetId: string) {
   error.value = ''
 
   try {
-    const response = await fetch(`/api/cam/pipeline/presets/${presetId}/run`, {
+    const response = await api(`/api/cam/pipeline/presets/${presetId}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})

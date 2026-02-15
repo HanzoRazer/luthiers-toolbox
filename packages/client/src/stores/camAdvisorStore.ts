@@ -7,6 +7,7 @@
  * - Parameter optimization
  */
 import { defineStore } from "pinia";
+import { api } from '@/services/apiBase';
 
 export type CamSeverity = "info" | "warning" | "error";
 
@@ -140,7 +141,7 @@ export const useCamAdvisorStore = defineStore("camAdvisor", {
       this.physics = null;
 
       try {
-        const res = await fetch("/api/ai-cam/analyze-operation", {
+        const res = await api("/api/ai-cam/analyze-operation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -177,7 +178,7 @@ export const useCamAdvisorStore = defineStore("camAdvisor", {
       this.gcode.overallRisk = null;
 
       try {
-        const res = await fetch("/api/ai-cam/explain-gcode", {
+        const res = await api("/api/ai-cam/explain-gcode", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ gcode_text: gcodeText, safe_z: safeZ }),
@@ -217,7 +218,7 @@ export const useCamAdvisorStore = defineStore("camAdvisor", {
       this.optimization.best = null;
 
       try {
-        const res = await fetch("/api/ai-cam/optimize", {
+        const res = await api("/api/ai-cam/optimize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...payload, search_pct: searchPct }),

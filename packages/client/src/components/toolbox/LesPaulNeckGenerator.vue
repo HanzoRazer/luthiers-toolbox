@@ -389,6 +389,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { reactive, ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { 
@@ -478,7 +479,7 @@ async function exportDXF() {
   }
 
   try {
-    const response = await fetch('/api/neck/export_dxf', {
+    const response = await api('/api/neck/export_dxf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -508,7 +509,7 @@ async function exportDXF() {
 // Preset loading functions
 async function fetchNeckPresets() {
   try {
-    const response = await fetch('/api/presets?kind=neck')
+    const response = await api('/api/presets?kind=neck')
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     
     const data = await response.json()
@@ -523,7 +524,7 @@ async function loadPresetParams() {
   if (!selectedPresetId.value) return
   
   try {
-    const response = await fetch(`/api/presets/${selectedPresetId.value}`)
+    const response = await api(`/api/presets/${selectedPresetId.value}`)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     
     const preset = await response.json()

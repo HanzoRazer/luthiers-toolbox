@@ -289,7 +289,7 @@ def check_docker_directories(report: ValidationReport, verbose: bool = False):
             ))
 
 
-def check_cross_origin_urls(report: ValidationReport, verbose: bool = False):
+def check_cross_origin_urls(report: ValidationReport, verbose: bool = False, full_scan: bool = False):
     """Check for frontend patterns that may break in cross-origin deployments."""
     src_path = CLIENT_ROOT / "src"
 
@@ -302,18 +302,22 @@ def check_cross_origin_urls(report: ValidationReport, verbose: bool = False):
         ))
         return
 
-    # Only check specific high-risk directories
-    high_risk_dirs = ["features/ai_images", "views", "components/ai"]
-    files_to_check = []
+    if full_scan:
+        # Scan ALL frontend files
+        files_to_check = list(src_path.rglob("*.vue")) + list(src_path.rglob("*.ts"))
+    else:
+        # Only check specific high-risk directories
+        high_risk_dirs = ["features/ai_images", "views", "components/ai"]
+        files_to_check = []
 
-    for risk_dir in high_risk_dirs:
-        check_path = src_path / risk_dir
-        if check_path.exists():
-            files_to_check.extend(check_path.rglob("*.vue"))
-            files_to_check.extend(check_path.rglob("*.ts"))
+        for risk_dir in high_risk_dirs:
+            check_path = src_path / risk_dir
+            if check_path.exists():
+                files_to_check.extend(check_path.rglob("*.vue"))
+                files_to_check.extend(check_path.rglob("*.ts"))
 
     if verbose:
-        print(f"Checking {len(files_to_check)} high-risk files for cross-origin issues")
+        print(f"Checking {len(files_to_check)} {'total' if full_scan else 'high-risk'} files for cross-origin issues")
 
     for file_path in files_to_check:
         try:
@@ -435,15 +439,98 @@ def _get_stdlib_modules() -> set:
 # MAIN
 # =============================================================================
 
+def check_hardcoded_urls(report: ValidationReport, verbose: bool = False):
+    """Check for hardcoded localhost/production URLs that should use env vars."""
+    src_path = CLIENT_ROOT / "src"
+
+    if not src_path.exists():
+        return
+
+    hardcoded_patterns = [
+        (r'https?://localhost:\d+', "Hardcoded localhost URL"),
+        (r'https?://127\.0\.0\.1:\d+', "Hardcoded 127.0.0.1 URL"),
+        (r'https?://[a-z0-9-]+\.up\.railway\.app', "Hardcoded Railway URL"),
+        (r'https?://[a-z0-9-]+\.vercel\.app', "Hardcoded Vercel URL"),
+    ]
+
+    files_checked = 0
+    for file_path in src_path.rglob("*.ts"):
+        if "node_modules" in str(file_path) or ".spec." in str(file_path):
+            continue
+        try:
+            with open(file_path, encoding="utf-8") as f:
+                content = f.read()
+            files_checked += 1
+
+            for pattern, message in hardcoded_patterns:
+                for match in re.finditer(pattern, content):
+                    line_num = content[:match.start()].count("\n") + 1
+                    report.add(ValidationResult(
+                        category="hardcoded-url",
+                        severity="warning",
+                        message=f"{message}: {match.group()}",
+                        file_path=str(file_path),
+                        line_number=line_num,
+                        fix_hint="Use VITE_API_BASE environment variable instead",
+                    ))
+        except UnicodeDecodeError:
+            continue
+
+    if verbose:
+        print(f"Checked {files_checked} TypeScript files for hardcoded URLs")
+
+
+def check_env_var_usage(report: ValidationReport, verbose: bool = False):
+    """Check that critical env vars are used consistently."""
+    src_path = CLIENT_ROOT / "src"
+
+    if not src_path.exists():
+        return
+
+    # Count files that make API calls vs files that use VITE_API_BASE
+    api_call_files = set()
+    env_var_files = set()
+
+    for file_path in src_path.rglob("*.ts"):
+        if "node_modules" in str(file_path):
+            continue
+        try:
+            with open(file_path, encoding="utf-8") as f:
+                content = f.read()
+
+            if re.search(r"fetch\(['\"]\/api", content):
+                api_call_files.add(str(file_path))
+            if "VITE_API_BASE" in content or "API_BASE" in content:
+                env_var_files.add(str(file_path))
+        except UnicodeDecodeError:
+            continue
+
+    # Files making API calls without API_BASE
+    missing_base = api_call_files - env_var_files
+
+    if verbose:
+        print(f"Files with API calls: {len(api_call_files)}, Files with API_BASE: {len(env_var_files)}")
+
+    if missing_base and verbose:
+        report.add(ValidationResult(
+            category="env-vars",
+            severity="info",
+            message=f"{len(missing_base)} files make API calls without explicit API_BASE import",
+            fix_hint="Consider centralizing API calls through SDK modules that handle base URL",
+        ))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Validate deployment configuration")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
+    parser.add_argument("--full", action="store_true", help="Full codebase scan (slower, more comprehensive)")
     args = parser.parse_args()
 
     report = ValidationReport()
 
-    print("Running deployment validation checks...\n")
+    mode = "FULL CODEBASE" if args.full else "TARGETED"
+    print(f"Running deployment validation checks ({mode})...\n")
 
     print("1. Checking Python dependencies...")
     check_python_dependencies(report, args.verbose)
@@ -452,10 +539,17 @@ def main():
     check_docker_directories(report, args.verbose)
 
     print("3. Checking cross-origin URL patterns...")
-    check_cross_origin_urls(report, args.verbose)
+    check_cross_origin_urls(report, args.verbose, full_scan=args.full)
 
     print("4. Checking API field mappings...")
     check_api_field_mapping(report, args.verbose)
+
+    if args.full:
+        print("5. Checking for hardcoded URLs...")
+        check_hardcoded_urls(report, args.verbose)
+
+        print("6. Checking environment variable usage...")
+        check_env_var_usage(report, args.verbose)
 
     if args.json:
         results = [

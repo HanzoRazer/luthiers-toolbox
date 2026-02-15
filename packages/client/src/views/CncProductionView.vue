@@ -163,6 +163,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import CompareRunsPanel from '@/components/compare/CompareRunsPanel.vue'
 
@@ -220,7 +221,7 @@ async function loadJobs() {
     params.append('limit', filters.value.limit.toString())
     params.append('offset', filters.value.offset.toString())
 
-    const response = await fetch(`/api/jobint/log?${params}`)
+    const response = await api(`/api/jobint/log?${params}`)
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
@@ -267,7 +268,7 @@ function clearSelection() {
 
 async function toggleFavorite(runId: string, favorite: boolean) {
   try {
-    const response = await fetch(`/api/jobint/favorites/${runId}`, {
+    const response = await api(`/api/jobint/favorites/${runId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ favorite }),

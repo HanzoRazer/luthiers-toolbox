@@ -604,6 +604,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -706,7 +707,7 @@ const analyzeBlueprint = async () => {
     const formData = new FormData()
     formData.append('file', uploadedFile.value)
 
-    const response = await fetch('/api/blueprint/analyze', {
+    const response = await api('/api/blueprint/analyze', {
       method: 'POST',
       body: formData
     })
@@ -751,7 +752,7 @@ const vectorizeGeometry = async () => {
     formData.append('high_threshold', vectorParams.value.highThreshold.toString())
     formData.append('min_area', vectorParams.value.minArea.toString())
 
-    const response = await fetch('/api/blueprint/vectorize-geometry', {
+    const response = await api('/api/blueprint/vectorize-geometry', {
       method: 'POST',
       body: formData
     })
@@ -780,7 +781,7 @@ const exportSVGBasic = async () => {
     isExporting.value = true
     error.value = null
 
-    const response = await fetch('/api/blueprint/to-svg', {
+    const response = await api('/api/blueprint/to-svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -910,7 +911,7 @@ const sendToCAM = async () => {
 
     // Fetch the DXF file from server
     const dxfFilename = vectorizedGeometry.value.dxf_path.split('/').pop()
-    const dxfResponse = await fetch(`/api/blueprint/static/${dxfFilename}`)
+    const dxfResponse = await api(`/api/blueprint/static/${dxfFilename}`)
     if (!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
     const dxfBlob = await dxfResponse.blob()
 
@@ -928,7 +929,7 @@ const sendToCAM = async () => {
     }
 
     // Call MVP wrapper endpoint
-    const response = await fetch('/api/rmos/wrap/mvp/dxf-to-grbl', {
+    const response = await api('/api/rmos/wrap/mvp/dxf-to-grbl', {
       method: 'POST',
       body: fd
     })

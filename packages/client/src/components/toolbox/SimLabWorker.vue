@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, computed } from 'vue'
 
 /**
@@ -157,7 +158,7 @@ G0 Z5
 `
   
   try {
-    const res = await fetch('/api/cam/simulate_gcode', { 
+    const res = await api('/api/cam/simulate_gcode', { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
       body: JSON.stringify({ gcode }) 

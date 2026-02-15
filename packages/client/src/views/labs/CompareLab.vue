@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
 import { ref, onMounted, watch } from 'vue'
@@ -84,7 +85,7 @@ onMounted(async () => {
     return
   }
   try {
-    const resp = await fetch(`/api/cam/compare/diff?baseline=${baseId}&compare=${compId}`)
+    const resp = await api(`/api/cam/compare/diff?baseline=${baseId}&compare=${compId}`)
     if (!resp.ok) throw new Error('API error')
     const data = await resp.json()
     baseline.value = data.baseline
@@ -112,7 +113,7 @@ function downloadBlob(blob: Blob, filename: string) {
 
 async function exportDXF() {
   if (!delta.value) return
-  const r = await fetch('/api/geometry/export?fmt=dxf', {
+  const r = await api('/api/geometry/export?fmt=dxf', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ geometry: delta.value })
@@ -122,7 +123,7 @@ async function exportDXF() {
 }
 async function exportSVG() {
   if (!delta.value) return
-  const r = await fetch('/api/geometry/export?fmt=svg', {
+  const r = await api('/api/geometry/export?fmt=svg', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ geometry: delta.value })
@@ -132,7 +133,7 @@ async function exportSVG() {
 }
 async function exportGcode() {
   if (!compare.value || !compare.value.gcode) return
-  const r = await fetch('/api/geometry/export_gcode', {
+  const r = await api('/api/geometry/export_gcode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ gcode: compare.value.gcode, units: 'mm', post_id: 'GRBL' })

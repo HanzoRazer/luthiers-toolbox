@@ -71,9 +71,18 @@ export class RmosApiError extends Error {
 
 function getApiBaseUrl(): string {
   // Vite: import.meta.env is available in the browser build.
-  // Fallback keeps local dev simple.
-  const v = (import.meta as any)?.env?.VITE_API_URL;
-  return typeof v === "string" && v.length > 0 ? v : "http://localhost:8000/api";
+  // Support both VITE_API_BASE and VITE_API_URL for compatibility
+  const v = (import.meta as any)?.env?.VITE_API_BASE
+    || (import.meta as any)?.env?.VITE_API_URL;
+  // Return base URL + /api suffix, or empty string for same-origin
+  if (typeof v === "string" && v.length > 0) {
+    return v.endsWith('/api') ? v : `${v}/api`;
+  }
+  // Local dev fallback (only on localhost)
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return "http://localhost:8000/api";
+  }
+  return "/api";
 }
 
 function pickRequestIdHeader(): Record<string, string> {

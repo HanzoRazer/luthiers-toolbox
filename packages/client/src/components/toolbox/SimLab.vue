@@ -91,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 
 /**
@@ -288,7 +289,7 @@ function togglePlay(){
 }
 
 async function runSim(){
-  const res = await fetch('/api/cam/simulate_gcode', { 
+  const res = await api('/api/cam/simulate_gcode', { 
     method:'POST', 
     headers:{'Content-Type':'application/json'}, 
     body: JSON.stringify({ gcode: code.value }) 
@@ -325,7 +326,7 @@ async function runSim(){
 }
 
 async function downloadCSV(){
-  const res = await fetch('/api/cam/simulate_gcode', { 
+  const res = await api('/api/cam/simulate_gcode', { 
     method:'POST', 
     headers:{'Content-Type':'application/json'}, 
     body: JSON.stringify({ gcode: code.value, as_csv: true }) 

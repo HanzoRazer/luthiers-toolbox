@@ -19,6 +19,7 @@ Features:
 -->
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from "vue";
 
 // Phase 24.7: Preset definitions for comparison
@@ -131,13 +132,13 @@ async function loadHeightmap() {
   formData.append("file", file.value);
   
   try {
-    const uploadRes = await fetch("/api/upload/heightmap", {
+    const uploadRes = await api("/api/upload/heightmap", {
       method: "POST",
       body: formData,
     });
     const { path } = await uploadRes.json();
 
-    const res = await fetch("/api/cam/relief/map_from_heightfield", {
+    const res = await api("/api/cam/relief/map_from_heightfield", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -180,7 +181,7 @@ async function runFinish() {
   };
   
   try {
-    const res = await fetch("/api/cam/relief/finishing", {
+    const res = await api("/api/cam/relief/finishing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -215,7 +216,7 @@ async function runSimBridge() {
   };
 
   try {
-    const res = await fetch("/api/cam/relief/sim_bridge", {
+    const res = await api("/api/cam/relief/sim_bridge", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(simPayload),
@@ -261,7 +262,7 @@ async function runPresetComparison() {
         scallop_max: 0.08,
       };
 
-      const finishRes = await fetch("/api/cam/relief/finishing", {
+      const finishRes = await api("/api/cam/relief/finishing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(finishPayload),
@@ -283,7 +284,7 @@ async function runPresetComparison() {
         med_load_index: preset.med_load_index,
       };
 
-      const simRes = await fetch("/api/cam/relief/sim_bridge", {
+      const simRes = await api("/api/cam/relief/sim_bridge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(simPayload),
@@ -417,7 +418,7 @@ async function pushSnapshot() {
   };
 
   try {
-    await fetch("/api/cam/jobs/risk_report", {
+    await api("/api/cam/jobs/risk_report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(snapshot),

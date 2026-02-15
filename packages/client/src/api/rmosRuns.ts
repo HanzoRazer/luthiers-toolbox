@@ -9,6 +9,8 @@
  * - Download run as JSON
  */
 
+import { api } from '@/services/apiBase';
+
 const BASE_URL = "/api/rmos/runs";
 
 // =============================================================================
@@ -141,7 +143,7 @@ export async function fetchRun(runId: string): Promise<RunArtifactDetail> {
  * Calls the runs_v2 diff endpoint and transforms to UI-friendly format.
  */
 export async function fetchRunDiff(runIdA: string, runIdB: string): Promise<RunDiffResult> {
-  const response = await fetch(`/api/rmos/runs_v2/diff/${encodeURIComponent(runIdA)}/${encodeURIComponent(runIdB)}`);
+  const response = await api(`/api/rmos/runs_v2/diff/${encodeURIComponent(runIdA)}/${encodeURIComponent(runIdB)}`);
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`One or both runs not found`);

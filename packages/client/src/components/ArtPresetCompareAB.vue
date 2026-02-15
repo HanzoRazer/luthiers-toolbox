@@ -255,6 +255,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -328,7 +329,7 @@ async function fetchData() {
     const presetAId = route.query.presetA as string
     const presetBId = route.query.presetB as string
     
-    const response = await fetch('/api/art/presets_aggregate')
+    const response = await api('/api/art/presets_aggregate')
     const data: PresetAggRow[] = await response.json()
     
     presetA.value = data.find(p => p.preset_id === presetAId) || null

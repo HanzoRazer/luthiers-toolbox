@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { LaneAnalyticsResponse, RiskTimelineResponse } from '@/models/rmos_analytics';
+import { api } from '@/services/apiBase';
 
 export const useRmosAnalyticsStore = defineStore('rmosAnalytics', () => {
   const riskAnalytics = ref<LaneAnalyticsResponse | null>(null);
@@ -18,7 +19,7 @@ export const useRmosAnalyticsStore = defineStore('rmosAnalytics', () => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await fetch(`/api/rmos/analytics/lane-analytics?limit_recent=${limitRecent}`);
+      const response = await api(`/api/rmos/analytics/lane-analytics?limit_recent=${limitRecent}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -35,7 +36,7 @@ export const useRmosAnalyticsStore = defineStore('rmosAnalytics', () => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await fetch(`/api/rmos/analytics/risk-timeline/${presetId}?limit=${limit}`);
+      const response = await api(`/api/rmos/analytics/risk-timeline/${presetId}?limit=${limit}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }

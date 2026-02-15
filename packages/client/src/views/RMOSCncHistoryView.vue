@@ -122,6 +122,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -147,7 +148,7 @@ async function loadHistory() {
   loading.value = true
   error.value = null
   try {
-    const resp = await fetch(`/api/rmos/rosette/cnc-history?limit=${limit.value}`)
+    const resp = await api(`/api/rmos/rosette/cnc-history?limit=${limit.value}`)
     if (!resp.ok) throw new Error(`History request failed: ${resp.status}`)
     const data = await resp.json()
     items.value = data.items ?? []

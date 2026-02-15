@@ -2,6 +2,7 @@
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { api } from '@/services/apiBase';
 
 export interface RosetteRing {
   ring_id: number
@@ -126,7 +127,7 @@ export const useRosetteDesignerStore = defineStore('rosetteDesigner', () => {
     error.value = null
 
     try {
-      const resp = await fetch('/api/rmos/rosette/segment-ring', {
+      const resp = await api('/api/rmos/rosette/segment-ring', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ring }),
@@ -158,7 +159,7 @@ export const useRosetteDesignerStore = defineStore('rosetteDesigner', () => {
         kerf_mm: ring.kerf_mm,
         herringbone_angle_deg: ring.herringbone_angle_deg,
       }
-      const resp = await fetch('/api/rmos/rosette/generate-slices', {
+      const resp = await api('/api/rmos/rosette/generate-slices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -184,7 +185,7 @@ export const useRosetteDesignerStore = defineStore('rosetteDesigner', () => {
         rings: rings.value,
       }
 
-      const resp = await fetch('/api/rmos/rosette/preview', {
+      const resp = await api('/api/rmos/rosette/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -248,7 +249,7 @@ export const useRosetteDesignerStore = defineStore('rosetteDesigner', () => {
         envelope: null, // use server defaults for now
       }
 
-      const resp = await fetch('/api/rmos/rosette/export-cnc', {
+      const resp = await api('/api/rmos/rosette/export-cnc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

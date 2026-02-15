@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 // Parameters
@@ -255,7 +256,7 @@ async function generateSpiral() {
       corner_fillet: cornerFillet.value
     }
 
-    const response = await fetch('/api/cam/adaptive2/offset_spiral.svg', {
+    const response = await api('/api/cam/adaptive2/offset_spiral.svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
@@ -291,7 +292,7 @@ async function generateTrochoid() {
       amp: amplitude.value
     }
 
-    const response = await fetch('/api/cam/adaptive2/trochoid_corners.svg', {
+    const response = await api('/api/cam/adaptive2/trochoid_corners.svg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
@@ -327,7 +328,7 @@ async function runBenchmark() {
       runs: benchRuns.value
     }
 
-    const response = await fetch('/api/cam/adaptive2/bench', {
+    const response = await api('/api/cam/adaptive2/bench', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)

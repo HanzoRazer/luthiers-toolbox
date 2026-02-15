@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 interface Job {
@@ -173,7 +174,7 @@ async function loadComparison() {
 
   try {
     const ids = props.selectedRunIds.join(',')
-    const response = await fetch(`/api/cnc/jobs/compare?ids=${encodeURIComponent(ids)}`)
+    const response = await api(`/api/cnc/jobs/compare?ids=${encodeURIComponent(ids)}`)
 
     if (!response.ok) {
       const text = await response.text()
@@ -215,7 +216,7 @@ function setBaseline() {
 
 async function markAsBaseline(runId: string) {
   try {
-    const response = await fetch(`/api/cnc/jobs/${runId}/set-baseline`, {
+    const response = await api(`/api/cnc/jobs/${runId}/set-baseline`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ baseline_id: runId })

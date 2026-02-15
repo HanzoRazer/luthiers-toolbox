@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 import PostChooser from './PostChooser.vue'
 import PostPreviewDrawer from './PostPreviewDrawer.vue'
@@ -248,14 +249,14 @@ function draw(geom: any[], path: any[]) {
 }
 
 async function checkParity(){
-  const res = await fetch('/api/geometry/parity', {
+  const res = await api('/api/geometry/parity', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ geometry: geometry.value, gcode: gcode.value, tolerance_mm: 0.1 })
   })
   report.value = await res.json()
 
-  const sim = await fetch('/api/cam/simulate_gcode', {
+  const sim = await api('/api/cam/simulate_gcode', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ gcode: gcode.value })
   }).then(r=>r.json())
@@ -263,7 +264,7 @@ async function checkParity(){
 }
 
 async function exportDXF(){
-  const r = await fetch('/api/geometry/export?fmt=dxf', {
+  const r = await api('/api/geometry/export?fmt=dxf', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ geometry: geometry.value, post_id: postId.value })
@@ -272,7 +273,7 @@ async function exportDXF(){
   downloadBlob(blob, 'export.dxf')
 }
 async function exportSVG(){
-  const r = await fetch('/api/geometry/export?fmt=svg', {
+  const r = await api('/api/geometry/export?fmt=svg', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ geometry: geometry.value, post_id: postId.value })
@@ -281,7 +282,7 @@ async function exportSVG(){
   downloadBlob(blob, 'export.svg')
 }
 async function exportGcode(){
-  const r = await fetch('/api/geometry/export_gcode', {
+  const r = await api('/api/geometry/export_gcode', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ gcode: gcode.value, units: units.value, post_id: postId.value })
@@ -290,7 +291,7 @@ async function exportGcode(){
   downloadBlob(blob, 'program.nc')
 }
 async function exportBundle(){
-  const r = await fetch('/api/geometry/export_bundle', {
+  const r = await api('/api/geometry/export_bundle', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ geometry: geometry.value, gcode: gcode.value, post_id: postId.value })
@@ -301,7 +302,7 @@ async function exportBundle(){
 
 async function exportMultiPostBundle(){
   const posts = selectedPosts.value?.length ? selectedPosts.value : ['GRBL']
-  const r = await fetch('/api/geometry/export_bundle_multi', {
+  const r = await api('/api/geometry/export_bundle_multi', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({

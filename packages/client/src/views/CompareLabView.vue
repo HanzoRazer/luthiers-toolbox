@@ -351,6 +351,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import CompareBaselinePicker from '@/components/compare/CompareBaselinePicker.vue'
@@ -707,7 +708,7 @@ async function saveAsPreset() {
       source: 'manual'
     }
     
-    const response = await fetch('/api/presets', {
+    const response = await api('/api/presets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -754,7 +755,7 @@ async function saveAsPreset() {
 // Template engine integration
 async function loadExportPresets() {
   try {
-    const response = await fetch('/api/presets?kind=export')
+    const response = await api('/api/presets?kind=export')
     exportPresets.value = await response.json()
   } catch (error) {
     console.error('Failed to load export presets:', error)
@@ -768,7 +769,7 @@ async function loadPresetTemplate() {
   }
   
   try {
-    const response = await fetch(`/api/presets/${selectedPresetId.value}`)
+    const response = await api(`/api/presets/${selectedPresetId.value}`)
     const preset = await response.json()
     if (preset.export_params?.filename_template) {
       filenameTemplate.value = preset.export_params.filename_template
@@ -782,7 +783,7 @@ async function validateTemplate() {
   if (!filenameTemplate.value) return
   
   try {
-    const response = await fetch('/api/presets/validate-template', {
+    const response = await api('/api/presets/validate-template', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ template: filenameTemplate.value })

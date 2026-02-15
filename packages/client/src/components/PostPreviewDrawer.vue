@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
@@ -70,7 +71,7 @@ async function refresh(){
   if (!props.postId) return
 
   // fetch post catalog (assumes /tooling/posts returns headers/footers)
-  const cat = await fetch('/api/tooling/posts').then(r => r.json()) as any[]
+  const cat = await api('/api/tooling/posts').then(r => r.json()) as any[]
   const post = (cat || []).find(x => (x.id || x.name) === props.postId)
   header.value = (post?.header || []).slice(0, 20)
   footer.value = (post?.footer || []).slice(0, 20)
@@ -81,7 +82,7 @@ async function refresh(){
     units: props.units === 'inch' ? 'inch' : 'mm',
     post_id: props.postId
   })
-  const nc = await fetch('/api/geometry/export_gcode', { method:'POST', headers:{'Content-Type':'application/json'}, body })
+  const nc = await api('/api/geometry/export_gcode', { method:'POST', headers:{'Content-Type':'application/json'}, body })
                 .then(r => r.text())
   previewText.value = (nc.split('\n').slice(0, 20)).join('\n')
 }

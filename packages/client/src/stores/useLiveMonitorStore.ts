@@ -8,6 +8,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { LiveMonitorEvent } from '@/models/live_monitor'
 import type { DrilldownResponse } from '@/models/live_monitor_drilldown'
+import { api } from '@/services/apiBase';
 
 export const useLiveMonitorStore = defineStore('liveMonitor', () => {
   // Event stream state
@@ -50,7 +51,7 @@ export const useLiveMonitorStore = defineStore('liveMonitor', () => {
     drilldownError.value = null
 
     try {
-      const res = await fetch(`/api/rmos/live-monitor/${jobId}/drilldown`)
+      const res = await api(`/api/rmos/live-monitor/${jobId}/drilldown`)
       if (!res.ok) throw new Error(`Drilldown failed: ${res.status}`)
       const data = (await res.json()) as DrilldownResponse
       activeDrilldown.value = data

@@ -211,6 +211,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 // Parameters
@@ -286,7 +287,7 @@ async function generate() {
     }
 
     // Call API
-    const response = await fetch('/api/cam/polygon_offset.nc', {
+    const response = await api('/api/cam/polygon_offset.nc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)

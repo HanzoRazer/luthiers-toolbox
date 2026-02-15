@@ -235,6 +235,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import CamOffsetVisualizer from '@/components/CamOffsetVisualizer.vue'
@@ -293,7 +294,7 @@ async function preview() {
   try {
     const pts = JSON.parse(polyJson.value || '[]') as Pt[]
     const body = { polygon: pts, tool_dia: toolDia.value, stepover: stepover.value, link_mode: linkMode.value, units: units.value }
-    const resp = await fetch('/api/cam/polygon_offset.preview', {
+    const resp = await api('/api/cam/polygon_offset.preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -320,7 +321,7 @@ async function getGcode() {
   try {
     const pts = JSON.parse(polyJson.value || '[]') as Pt[]
     const body = { polygon: pts, tool_dia: toolDia.value, stepover: stepover.value, link_mode: linkMode.value, units: units.value }
-    const resp = await fetch('/api/cam/polygon_offset.nc', {
+    const resp = await api('/api/cam/polygon_offset.nc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

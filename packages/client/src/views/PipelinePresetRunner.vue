@@ -14,6 +14,7 @@ Features:
 -->
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -48,7 +49,7 @@ async function runPreset() {
   result.value = null
 
   try {
-    const response = await fetch(`/api/cam/pipeline/presets/${presetId.value.trim()}/run`, {
+    const response = await api(`/api/cam/pipeline/presets/${presetId.value.trim()}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})

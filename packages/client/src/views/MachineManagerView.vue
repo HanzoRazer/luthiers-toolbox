@@ -218,6 +218,7 @@ Updated: November 2025
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, onMounted, ref } from 'vue'
 
 interface MachineLimits {
@@ -295,7 +296,7 @@ async function loadMachines () {
   error.value = null
 
   try {
-    const resp = await fetch('/api/cam/machines')
+    const resp = await api('/api/cam/machines')
     if (!resp.ok) {
       const text = await resp.text()
       throw new Error(text || `HTTP ${resp.status}`)

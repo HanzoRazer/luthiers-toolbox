@@ -129,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
@@ -192,7 +193,7 @@ async function loadJob() {
   error.value = null
 
   try {
-    const resp = await fetch(`/api/rmos/rosette/cnc-job/${encodeURIComponent(jobId)}`)
+    const resp = await api(`/api/rmos/rosette/cnc-job/${encodeURIComponent(jobId)}`)
     if (!resp.ok) throw new Error(`Job detail request failed: ${resp.status}`)
     const data = await resp.json()
     job.value = data as CNCJobDetail

@@ -726,6 +726,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 const ARTSTUDIO_ADAPTIVE_KEY = 'ltb:artstudio:lastAdaptiveRequest'
@@ -842,7 +843,7 @@ async function runPreflight() {
     formData.append('file', dxfFile.value)
     formData.append('format', 'json')
     
-    const response = await fetch('/api/cam/blueprint/preflight', {
+    const response = await api('/api/cam/blueprint/preflight', {
       method: 'POST',
       body: formData
     })
@@ -865,7 +866,7 @@ async function downloadHTMLReport() {
   formData.append('file', dxfFile.value)
   formData.append('format', 'html')
   
-  const response = await fetch('/api/cam/blueprint/preflight', {
+  const response = await api('/api/cam/blueprint/preflight', {
     method: 'POST',
     body: formData
   })
@@ -891,7 +892,7 @@ async function runReconstruction() {
     formData.append('tolerance', reconstructionParams.value.tolerance.toString())
     formData.append('min_loop_points', reconstructionParams.value.min_loop_points.toString())
     
-    const response = await fetch('/api/cam/blueprint/reconstruct-contours', {
+    const response = await api('/api/cam/blueprint/reconstruct-contours', {
       method: 'POST',
       body: formData
     })
@@ -918,7 +919,7 @@ async function generateToolpath() {
       formData.append(key, String(value))
     })
     
-    const response = await fetch('/api/cam/blueprint/to-adaptive', {
+    const response = await api('/api/cam/blueprint/to-adaptive', {
       method: 'POST',
       body: formData
     })
@@ -1004,7 +1005,7 @@ async function runBlueprintPresetPipeline() {
     form.append('z_rough', String(blueprintCfg.value.z_rough))
     form.append('feed_xy', String(blueprintCfg.value.feed_xy))
 
-    const res = await fetch('/api/pipeline/blueprint_to_adaptive', {
+    const res = await api('/api/pipeline/blueprint_to_adaptive', {
       method: 'POST',
       body: form
     })

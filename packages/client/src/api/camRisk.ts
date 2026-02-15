@@ -1,9 +1,11 @@
 // client/src/api/camRisk.ts
 /**
  * CAM Risk Analytics API Client - Phase 18.0
- * 
+ *
  * Client for job risk reporting and timeline browsing.
  */
+
+import { api } from '@/services/apiBase';
 
 export interface RiskIssue {
   index: number
@@ -96,7 +98,7 @@ export interface CamRiskTimelineQuery {
  * Called after simulation to log risk analytics.
  */
 export async function postRiskReport(report: RiskReportIn): Promise<RiskReportOut> {
-  const response = await fetch('/api/cam/jobs/risk_report', {
+  const response = await api('/api/cam/jobs/risk_report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(report)
@@ -118,7 +120,7 @@ export async function getJobRiskTimeline(
   jobId: string,
   limit: number = 50
 ): Promise<RiskReportOut[]> {
-  const response = await fetch(`/api/cam/jobs/${jobId}/risk_timeline?limit=${limit}`)
+  const response = await api(`/api/cam/jobs/${jobId}/risk_timeline?limit=${limit}`)
 
   if (!response.ok) {
     const text = await response.text()
@@ -135,7 +137,7 @@ export async function getJobRiskTimeline(
 export async function getRecentRiskReports(
   limit: number = 100
 ): Promise<RiskReportSummary[]> {
-  const response = await fetch(`/api/cam/jobs/recent?limit=${limit}`)
+  const response = await api(`/api/cam/jobs/recent?limit=${limit}`)
 
   if (!response.ok) {
     const text = await response.text()

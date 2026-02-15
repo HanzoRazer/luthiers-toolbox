@@ -176,6 +176,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { computed, reactive, ref, onMounted, watch } from 'vue'
 
 type UnitMode = 'mm' | 'inch'
@@ -346,7 +347,7 @@ async function loadPresets() {
   try {
     presetsLoading.value = true
     presetError.value = null
-    const response = await fetch('/api/cam/bridge/presets')
+    const response = await api('/api/cam/bridge/presets')
     if (response.ok) {
       const data = await response.json()
       if (Array.isArray(data?.families) && data.families.length) {
@@ -464,7 +465,7 @@ async function exportDXF() {
       geometry: model,
       filename: `bridge_${model.scaleLength.toFixed(1)}${model.units}_ct${model.compTreble.toFixed(1)}_cb${model.compBass.toFixed(1)}`
     }
-    const response = await fetch('/api/cam/bridge/export_dxf', {
+    const response = await api('/api/cam/bridge/export_dxf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

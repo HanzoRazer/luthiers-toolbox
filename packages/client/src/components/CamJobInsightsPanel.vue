@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
 
 const props = defineProps<{
@@ -126,7 +127,7 @@ async function loadInsights() {
   error.value = null
   
   try {
-    const res = await fetch(`/api/cam/job_log/insights/${props.jobId}`)
+    const res = await api(`/api/cam/job_log/insights/${props.jobId}`)
     if (!res.ok) throw new Error('Failed to load insights')
     
     insights.value = await res.json()

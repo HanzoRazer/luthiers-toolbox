@@ -447,6 +447,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { onMounted, reactive, ref, computed } from "vue";
 import {
   fetchJobIntLog,
@@ -637,7 +638,7 @@ async function executeClone() {
   
   try {
     // First fetch detailed job data
-    const detailResponse = await fetch(`/api/cam/job-int/log/${encodeURIComponent(selectedEntry.value.run_id)}`);
+    const detailResponse = await api(`/api/cam/job-int/log/${encodeURIComponent(selectedEntry.value.run_id)}`);
     if (!detailResponse.ok) {
       throw new Error(`Failed to fetch job details: ${detailResponse.statusText}`);
     }
@@ -667,7 +668,7 @@ async function executeClone() {
     };
     
     // Create preset via API
-    const createResponse = await fetch('/api/presets', {
+    const createResponse = await api('/api/presets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(presetPayload),

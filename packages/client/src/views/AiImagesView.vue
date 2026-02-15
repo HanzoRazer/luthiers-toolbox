@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 /**
  * AI Images View — Production Visual Analyzer Interface
  *
@@ -81,7 +82,7 @@ async function buildAiContext() {
   aiContextResult.value = null;
 
   try {
-    const res = await fetch("/api/ai/context/build", {
+    const res = await api("/api/ai/context/build", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

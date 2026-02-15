@@ -187,6 +187,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref } from 'vue'
 
 // Component events
@@ -261,7 +262,7 @@ async function runPreflight() {
     formData.append('file', file.value)
     formData.append('format', 'json')
     
-    const response = await fetch('/api/cam/blueprint/preflight', {
+    const response = await api('/api/cam/blueprint/preflight', {
       method: 'POST',
       body: formData
     })
@@ -289,7 +290,7 @@ async function downloadHTMLReport() {
     formData.append('file', file.value)
     formData.append('format', 'html')
     
-    const response = await fetch('/api/cam/blueprint/preflight', {
+    const response = await api('/api/cam/blueprint/preflight', {
       method: 'POST',
       body: formData
     })

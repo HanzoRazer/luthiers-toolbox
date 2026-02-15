@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { api } from '@/services/apiBase';
 import { ref, watch, computed } from 'vue'
 
 const props = defineProps<{ 
@@ -117,7 +118,7 @@ watch(() => props.profile, (p) => {
 async function save() {
   try {
     const obj = JSON.parse(jsonText.value)
-    const r = await fetch('/api/machine/profiles', {
+    const r = await api('/api/machine/profiles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(obj)
