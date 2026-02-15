@@ -44,7 +44,7 @@ jobs:
       - name: Deploy API to Railway
         run: |
           cd services/api
-          railway up --service api --environment production --detach
+          railway up --service 8bf704e2-3d14-4a25-b6f9-18891f452999 --environment production --detach
         env:
           RAILWAY_PROJECT_ID: 46251fb7-0c41-4400-88e7-2412859ddb5b
 
