@@ -222,9 +222,13 @@ export async function getVocabulary(): Promise<VocabularyResponse> {
 
 /**
  * Get available providers and their status.
+ * FIX: Maps API's "configured" field to frontend's "available" field.
  */
 export async function getProviders(): Promise<ProvidersResponse> {
   const response = await getJson<any>(`${API_BASE}/vision/providers`);
+
+  // Debug: log raw API response (remove after verification)
+  console.log('[ai-images/api] getProviders raw response:', response);
 
   return {
     providers: response.providers.map((p: any) => ({
