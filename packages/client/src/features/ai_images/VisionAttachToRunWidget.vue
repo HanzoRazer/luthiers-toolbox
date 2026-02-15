@@ -34,6 +34,22 @@ const DEFAULT_EVENT_TYPE = "vision_image_review";
 const RECENT_RUNS_PAGE_SIZE = 10;
 const LS_SELECTED_RUN = "tb.visionAttach.selectedRunId";
 
+/** Base URL for cross-origin API deployments */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+
+/**
+ * Resolve asset URL to full URL (handles cross-origin deployments).
+ * If url is relative (starts with /), prepend API_BASE.
+ */
+function resolveAssetUrl(url: string): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  // Relative URL - prepend API_BASE
+  return `${API_BASE}${url}`;
+}
+
 // =============================================================================
 // PROPS & EMITS
 // =============================================================================
@@ -435,7 +451,7 @@ watch(selectedRunId, (v) => {
         >
           <div class="asset-preview">
             <img
-              :src="asset.url"
+              :src="resolveAssetUrl(asset.url)"
               :alt="asset.filename"
               loading="lazy"
               @error="($event.target as HTMLImageElement).src = '/placeholder.svg'"

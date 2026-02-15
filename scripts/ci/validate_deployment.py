@@ -1,0 +1,437 @@
+#!/usr/bin/env python3
+"""
+Deployment Validation Harness
+
+Systematically checks for common deployment issues:
+1. Missing Python dependencies (imports vs requirements.txt)
+2. Missing Docker directories (env vars need corresponding mkdir)
+3. Missing environment variable definitions
+4. Frontend cross-origin URL patterns (relative URLs in deployed clients)
+5. API field mapping mismatches (backend snake_case vs frontend camelCase)
+
+Usage:
+    python scripts/ci/validate_deployment.py [--fix] [--verbose]
+
+Exit codes:
+    0 = All checks passed
+    1 = Warnings found (non-blocking)
+    2 = Errors found (blocking)
+"""
+
+import argparse
+import ast
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+API_ROOT = REPO_ROOT / "services" / "api"
+CLIENT_ROOT = REPO_ROOT / "packages" / "client"
+
+# Known optional dependencies that may not be installed in all environments
+OPTIONAL_DEPS = {
+    "anthropic",  # Optional AI provider
+    "psycopg2",   # PostgreSQL driver (not needed for SQLite)
+    "psycopg2-binary",
+}
+
+# Directories that must exist in Docker for corresponding env vars
+DOCKER_DIR_ENV_MAPPING = {
+    "RMOS_RUNS_DIR": "/app/app/data/runs/rmos",
+    "CAM_BACKUP_DIR": "/app/app/data/backups/cam",
+    "RMOS_RUN_ATTACHMENTS_DIR": "/app/app/data/run_attachments",
+}
+
+# Frontend patterns that indicate cross-origin URL issues
+CROSS_ORIGIN_PATTERNS = [
+    # Direct relative URL usage in img/src without API_BASE check
+    (r':src="[^"]*\.url"', "Possible relative URL in :src binding - ensure API_BASE prefix for deployed clients"),
+    (r"fetch\(['\"]\/api", "Relative URL in fetch() - ensure API_BASE prefix"),
+]
+
+# API field mapping rules (backend → frontend)
+FIELD_MAPPING_RULES = {
+    "configured": "available",  # Vision provider status
+    "created_at_utc": "createdAt",
+    "updated_at_utc": "updatedAt",
+    "run_id": "runId",
+}
+
+
+@dataclass
+class ValidationResult:
+    """Result of a single validation check."""
+    category: str
+    severity: str  # "error", "warning", "info"
+    message: str
+    file_path: Optional[str] = None
+    line_number: Optional[int] = None
+    fix_hint: Optional[str] = None
+
+
+@dataclass
+class ValidationReport:
+    """Aggregated validation results."""
+    results: list = field(default_factory=list)
+
+    def add(self, result: ValidationResult):
+        self.results.append(result)
+
+    def errors(self) -> list:
+        return [r for r in self.results if r.severity == "error"]
+
+    def warnings(self) -> list:
+        return [r for r in self.results if r.severity == "warning"]
+
+    def print_report(self, verbose: bool = False):
+        """Print human-readable report."""
+        errors = self.errors()
+        warnings = self.warnings()
+
+        if not self.results:
+            print("✓ All deployment checks passed")
+            return
+
+        if errors:
+            print(f"\n{'='*60}")
+            print(f"ERRORS ({len(errors)}) - These MUST be fixed before deployment")
+            print(f"{'='*60}")
+            for r in errors:
+                self._print_result(r, verbose)
+
+        if warnings:
+            print(f"\n{'='*60}")
+            print(f"WARNINGS ({len(warnings)}) - Review recommended")
+            print(f"{'='*60}")
+            for r in warnings:
+                self._print_result(r, verbose)
+
+        print(f"\nSummary: {len(errors)} errors, {len(warnings)} warnings")
+
+    def _print_result(self, r: ValidationResult, verbose: bool):
+        icon = "✗" if r.severity == "error" else "⚠"
+        print(f"\n{icon} [{r.category}] {r.message}")
+        if r.file_path:
+            loc = r.file_path
+            if r.line_number:
+                loc += f":{r.line_number}"
+            print(f"  Location: {loc}")
+        if r.fix_hint and verbose:
+            print(f"  Fix: {r.fix_hint}")
+
+
+# =============================================================================
+# VALIDATORS
+# =============================================================================
+
+def check_python_dependencies(report: ValidationReport, verbose: bool = False):
+    """Check that all imported packages are in requirements.txt."""
+    requirements_path = API_ROOT / "requirements.txt"
+
+    if not requirements_path.exists():
+        report.add(ValidationResult(
+            category="dependencies",
+            severity="error",
+            message="requirements.txt not found",
+            file_path=str(requirements_path),
+        ))
+        return
+
+    # Parse requirements.txt
+    installed_packages = set()
+    with open(requirements_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            # Handle various requirement formats
+            # package>=1.0, package==1.0, package[extra], git+...
+            match = re.match(r'^([a-zA-Z0-9_-]+)', line)
+            if match:
+                installed_packages.add(match.group(1).lower().replace("-", "_"))
+
+    if verbose:
+        print(f"Found {len(installed_packages)} packages in requirements.txt")
+
+    # Scan Python files for imports
+    imports_found = set()
+    app_path = API_ROOT / "app"
+
+    for py_file in app_path.rglob("*.py"):
+        try:
+            with open(py_file, encoding="utf-8") as f:
+                content = f.read()
+
+            tree = ast.parse(content)
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        imports_found.add((alias.name.split(".")[0], str(py_file), node.lineno))
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module:
+                        imports_found.add((node.module.split(".")[0], str(py_file), node.lineno))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+    # Check for missing dependencies
+    stdlib_modules = _get_stdlib_modules()
+
+    for pkg, file_path, line in imports_found:
+        pkg_normalized = pkg.lower().replace("-", "_")
+
+        # Skip standard library
+        if pkg in stdlib_modules:
+            continue
+
+        # Skip internal imports
+        if pkg == "app" or pkg.startswith("app."):
+            continue
+
+        # Skip optional deps
+        if pkg in OPTIONAL_DEPS or pkg_normalized in OPTIONAL_DEPS:
+            continue
+
+        # Check if in requirements
+        if pkg_normalized not in installed_packages:
+            report.add(ValidationResult(
+                category="dependencies",
+                severity="error",
+                message=f"Package '{pkg}' is imported but not in requirements.txt",
+                file_path=file_path,
+                line_number=line,
+                fix_hint=f"Add '{pkg}' to services/api/requirements.txt",
+            ))
+
+
+def check_docker_directories(report: ValidationReport, verbose: bool = False):
+    """Check that Dockerfile creates directories for all env vars."""
+    dockerfile_path = API_ROOT / "Dockerfile"
+
+    if not dockerfile_path.exists():
+        report.add(ValidationResult(
+            category="docker",
+            severity="warning",
+            message="API Dockerfile not found",
+            file_path=str(dockerfile_path),
+        ))
+        return
+
+    with open(dockerfile_path) as f:
+        dockerfile_content = f.read()
+
+    # Find ENV declarations
+    env_vars = re.findall(r'ENV\s+(\w+)=([^\n]+)', dockerfile_content)
+    env_dict = {k: v for k, v in env_vars}
+
+    # Find mkdir commands
+    mkdir_paths = set()
+    for match in re.finditer(r'mkdir\s+-p\s+([^\s\\&]+)', dockerfile_content):
+        mkdir_paths.add(match.group(1))
+
+    if verbose:
+        print(f"Found ENV vars: {list(env_dict.keys())}")
+        print(f"Found mkdir paths: {mkdir_paths}")
+
+    # Check known directory mappings
+    for env_var, expected_path in DOCKER_DIR_ENV_MAPPING.items():
+        if env_var in env_dict:
+            actual_path = env_dict[env_var].strip('"').strip("'")
+            if actual_path not in mkdir_paths:
+                report.add(ValidationResult(
+                    category="docker",
+                    severity="error",
+                    message=f"ENV {env_var}={actual_path} but directory not created by mkdir",
+                    file_path=str(dockerfile_path),
+                    fix_hint=f"Add 'mkdir -p {actual_path}' to Dockerfile before setting ENV",
+                ))
+        else:
+            report.add(ValidationResult(
+                category="docker",
+                severity="warning",
+                message=f"Expected ENV {env_var} not found in Dockerfile",
+                file_path=str(dockerfile_path),
+                fix_hint=f"Add 'ENV {env_var}={expected_path}' to Dockerfile",
+            ))
+
+
+def check_cross_origin_urls(report: ValidationReport, verbose: bool = False):
+    """Check for frontend patterns that may break in cross-origin deployments."""
+    src_path = CLIENT_ROOT / "src"
+
+    if not src_path.exists():
+        report.add(ValidationResult(
+            category="cross-origin",
+            severity="warning",
+            message="Client src directory not found",
+            file_path=str(src_path),
+        ))
+        return
+
+    for vue_file in src_path.rglob("*.vue"):
+        try:
+            with open(vue_file, encoding="utf-8") as f:
+                content = f.read()
+
+            for pattern, message in CROSS_ORIGIN_PATTERNS:
+                for match in re.finditer(pattern, content):
+                    # Get line number
+                    line_start = content[:match.start()].count("\n") + 1
+
+                    # Check if this is already handled (look for resolveAssetUrl or API_BASE nearby)
+                    context_start = max(0, match.start() - 200)
+                    context_end = min(len(content), match.end() + 200)
+                    context = content[context_start:context_end]
+
+                    if "resolveAssetUrl" in context or "API_BASE" in context or "VITE_API_BASE" in context:
+                        continue  # Already handled
+
+                    report.add(ValidationResult(
+                        category="cross-origin",
+                        severity="warning",
+                        message=message,
+                        file_path=str(vue_file),
+                        line_number=line_start,
+                        fix_hint="Use resolveAssetUrl() or prepend VITE_API_BASE to relative URLs",
+                    ))
+        except UnicodeDecodeError:
+            continue
+
+
+def check_api_field_mapping(report: ValidationReport, verbose: bool = False):
+    """Check for potential field mapping issues between backend and frontend."""
+    # This is a heuristic check - looks for patterns that commonly cause issues
+
+    src_path = CLIENT_ROOT / "src"
+    if not src_path.exists():
+        return
+
+    # Look for response mapping code
+    for ts_file in src_path.rglob("*.ts"):
+        try:
+            with open(ts_file, encoding="utf-8") as f:
+                content = f.read()
+
+            # Look for response mapping patterns
+            # e.g., "p.available" when API returns "p.configured"
+            for backend_field, frontend_field in FIELD_MAPPING_RULES.items():
+                # Check if frontend code references the backend field directly
+                # This would indicate a potential mismatch
+                pattern = rf'[a-z]\.' + backend_field + r'\b'
+                if re.search(pattern, content):
+                    # Now check if there's proper mapping
+                    mapping_pattern = rf'{frontend_field}.*{backend_field}|{backend_field}.*{frontend_field}'
+                    if not re.search(mapping_pattern, content, re.IGNORECASE):
+                        # Check for fallback patterns like "?? false" or "|| false"
+                        if f".{backend_field}" in content and f"?? " not in content and f"|| " not in content:
+                            report.add(ValidationResult(
+                                category="field-mapping",
+                                severity="warning",
+                                message=f"Potential field mapping issue: '{backend_field}' used without fallback",
+                                file_path=str(ts_file),
+                                fix_hint=f"Consider: {frontend_field}: p.{frontend_field} ?? p.{backend_field} ?? defaultValue",
+                            ))
+        except UnicodeDecodeError:
+            continue
+
+
+def _get_stdlib_modules() -> set:
+    """Get set of Python standard library module names."""
+    # Common stdlib modules - not exhaustive but covers most cases
+    return {
+        "abc", "aifc", "argparse", "array", "ast", "asyncio", "atexit",
+        "base64", "binascii", "bisect", "builtins", "bz2",
+        "calendar", "cgi", "cgitb", "chunk", "cmath", "cmd", "code",
+        "codecs", "codeop", "collections", "colorsys", "compileall",
+        "concurrent", "configparser", "contextlib", "contextvars", "copy",
+        "copyreg", "cProfile", "crypt", "csv", "ctypes", "curses",
+        "dataclasses", "datetime", "dbm", "decimal", "difflib", "dis",
+        "distutils", "doctest", "email", "encodings", "enum", "errno",
+        "faulthandler", "fcntl", "filecmp", "fileinput", "fnmatch",
+        "fractions", "ftplib", "functools", "gc", "getopt", "getpass",
+        "gettext", "glob", "graphlib", "grp", "gzip", "hashlib", "heapq",
+        "hmac", "html", "http", "idlelib", "imaplib", "imghdr", "imp",
+        "importlib", "inspect", "io", "ipaddress", "itertools", "json",
+        "keyword", "lib2to3", "linecache", "locale", "logging", "lzma",
+        "mailbox", "mailcap", "marshal", "math", "mimetypes", "mmap",
+        "modulefinder", "multiprocessing", "netrc", "nis", "nntplib",
+        "numbers", "operator", "optparse", "os", "ossaudiodev", "pathlib",
+        "pdb", "pickle", "pickletools", "pipes", "pkgutil", "platform",
+        "plistlib", "poplib", "posix", "posixpath", "pprint", "profile",
+        "pstats", "pty", "pwd", "py_compile", "pyclbr", "pydoc", "queue",
+        "quopri", "random", "re", "readline", "reprlib", "resource",
+        "rlcompleter", "runpy", "sched", "secrets", "select", "selectors",
+        "shelve", "shlex", "shutil", "signal", "site", "smtpd", "smtplib",
+        "sndhdr", "socket", "socketserver", "spwd", "sqlite3", "ssl",
+        "stat", "statistics", "string", "stringprep", "struct", "subprocess",
+        "sunau", "symtable", "sys", "sysconfig", "syslog", "tabnanny",
+        "tarfile", "telnetlib", "tempfile", "termios", "test", "textwrap",
+        "threading", "time", "timeit", "tkinter", "token", "tokenize",
+        "trace", "traceback", "tracemalloc", "tty", "turtle", "turtledemo",
+        "types", "typing", "unicodedata", "unittest", "urllib", "uu", "uuid",
+        "venv", "warnings", "wave", "weakref", "webbrowser", "winreg",
+        "winsound", "wsgiref", "xdrlib", "xml", "xmlrpc", "zipapp",
+        "zipfile", "zipimport", "zlib", "_thread",
+    }
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(description="Validate deployment configuration")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--json", action="store_true", help="Output JSON report")
+    args = parser.parse_args()
+
+    report = ValidationReport()
+
+    print("Running deployment validation checks...\n")
+
+    print("1. Checking Python dependencies...")
+    check_python_dependencies(report, args.verbose)
+
+    print("2. Checking Docker directory configuration...")
+    check_docker_directories(report, args.verbose)
+
+    print("3. Checking cross-origin URL patterns...")
+    check_cross_origin_urls(report, args.verbose)
+
+    print("4. Checking API field mappings...")
+    check_api_field_mapping(report, args.verbose)
+
+    if args.json:
+        results = [
+            {
+                "category": r.category,
+                "severity": r.severity,
+                "message": r.message,
+                "file_path": r.file_path,
+                "line_number": r.line_number,
+                "fix_hint": r.fix_hint,
+            }
+            for r in report.results
+        ]
+        print(json.dumps({"results": results}, indent=2))
+    else:
+        report.print_report(args.verbose)
+
+    # Exit code
+    if report.errors():
+        sys.exit(2)
+    elif report.warnings():
+        sys.exit(1)
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
