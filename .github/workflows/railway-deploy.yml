@@ -46,7 +46,7 @@ jobs:
           cd services/api
           railway up --service api --environment production --detach
         env:
-          RAILWAY_PROJECT_ID: 644a5eb9-dd6d-4e61-9ee7-4248d49697b1
+          RAILWAY_PROJECT_ID: 46251fb7-0c41-4400-88e7-2412859ddb5b
 
   deploy-client:
     name: Deploy Client
@@ -65,7 +65,7 @@ jobs:
           cd packages/client
           railway up --service client --environment production --detach
         env:
-          RAILWAY_PROJECT_ID: 644a5eb9-dd6d-4e61-9ee7-4248d49697b1
+          RAILWAY_PROJECT_ID: 46251fb7-0c41-4400-88e7-2412859ddb5b
 
   notify:
     name: Deployment Status
