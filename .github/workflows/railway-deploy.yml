@@ -63,7 +63,7 @@ jobs:
       - name: Deploy Client to Railway
         run: |
           cd packages/client
-          railway up --service luthiers-toolbox-client --environment production --detach
+          railway up --service 78b2aaab-9cff-4f34-abcb-cc18a056f5f4 --environment production --detach
         env:
           RAILWAY_PROJECT_ID: 46251fb7-0c41-4400-88e7-2412859ddb5b
 
