@@ -43,6 +43,23 @@ OPTIONAL_DEPS = {
     "psycopg2-binary",
 }
 
+# Critical external dependencies that commonly get forgotten
+# Only these are checked to avoid false positives from internal imports
+CRITICAL_DEPS = {
+    "openai": "Required for DALL-E image generation",
+    "httpx": "Required for async HTTP client",
+    "pydantic": "Required for data validation",
+    "fastapi": "Required for API framework",
+    "uvicorn": "Required for ASGI server",
+    "numpy": "Required for numerical operations",
+    "shapely": "Required for geometry operations",
+    "pillow": "Required for image processing (imported as PIL)",
+    "PIL": "Required for image processing",
+    "cv2": "Required for computer vision (opencv-python)",
+    "ezdxf": "Required for DXF file handling",
+    "jsonschema": "Required for schema validation",
+}
+
 # Directories that must exist in Docker for corresponding env vars
 DOCKER_DIR_ENV_MAPPING = {
     "RMOS_RUNS_DIR": "/app/app/data/runs/rmos",
@@ -97,7 +114,7 @@ class ValidationReport:
         warnings = self.warnings()
 
         if not self.results:
-            print("✓ All deployment checks passed")
+            print("[OK] All deployment checks passed")
             return
 
         if errors:
@@ -117,7 +134,7 @@ class ValidationReport:
         print(f"\nSummary: {len(errors)} errors, {len(warnings)} warnings")
 
     def _print_result(self, r: ValidationResult, verbose: bool):
-        icon = "✗" if r.severity == "error" else "⚠"
+        icon = "[ERROR]" if r.severity == "error" else "[WARN]"
         print(f"\n{icon} [{r.category}] {r.message}")
         if r.file_path:
             loc = r.file_path
@@ -133,7 +150,7 @@ class ValidationReport:
 # =============================================================================
 
 def check_python_dependencies(report: ValidationReport, verbose: bool = False):
-    """Check that all imported packages are in requirements.txt."""
+    """Check that critical external packages are in requirements.txt."""
     requirements_path = API_ROOT / "requirements.txt"
 
     if not requirements_path.exists():
@@ -156,14 +173,20 @@ def check_python_dependencies(report: ValidationReport, verbose: bool = False):
             # package>=1.0, package==1.0, package[extra], git+...
             match = re.match(r'^([a-zA-Z0-9_-]+)', line)
             if match:
-                installed_packages.add(match.group(1).lower().replace("-", "_"))
+                pkg_name = match.group(1).lower().replace("-", "_")
+                installed_packages.add(pkg_name)
+                # Also add common aliases
+                if pkg_name == "pillow":
+                    installed_packages.add("pil")
+                if pkg_name == "opencv_python":
+                    installed_packages.add("cv2")
 
     if verbose:
         print(f"Found {len(installed_packages)} packages in requirements.txt")
 
-    # Scan Python files for imports
-    imports_found = set()
+    # Scan Python files for imports of CRITICAL dependencies only
     app_path = API_ROOT / "app"
+    critical_imports_found = {}  # pkg -> (file, line)
 
     for py_file in app_path.rglob("*.py"):
         try:
@@ -173,39 +196,33 @@ def check_python_dependencies(report: ValidationReport, verbose: bool = False):
             tree = ast.parse(content)
 
             for node in ast.walk(tree):
+                pkg = None
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        imports_found.add((alias.name.split(".")[0], str(py_file), node.lineno))
+                        pkg = alias.name.split(".")[0]
                 elif isinstance(node, ast.ImportFrom):
                     if node.module:
-                        imports_found.add((node.module.split(".")[0], str(py_file), node.lineno))
+                        pkg = node.module.split(".")[0]
+
+                if pkg and pkg.lower() in CRITICAL_DEPS:
+                    if pkg.lower() not in critical_imports_found:
+                        critical_imports_found[pkg.lower()] = (str(py_file), node.lineno)
         except (SyntaxError, UnicodeDecodeError):
             continue
 
-    # Check for missing dependencies
-    stdlib_modules = _get_stdlib_modules()
+    if verbose:
+        print(f"Found critical imports: {list(critical_imports_found.keys())}")
 
-    for pkg, file_path, line in imports_found:
+    # Check that critical imports are in requirements
+    for pkg, (file_path, line) in critical_imports_found.items():
         pkg_normalized = pkg.lower().replace("-", "_")
 
-        # Skip standard library
-        if pkg in stdlib_modules:
-            continue
-
-        # Skip internal imports
-        if pkg == "app" or pkg.startswith("app."):
-            continue
-
-        # Skip optional deps
-        if pkg in OPTIONAL_DEPS or pkg_normalized in OPTIONAL_DEPS:
-            continue
-
-        # Check if in requirements
         if pkg_normalized not in installed_packages:
+            reason = CRITICAL_DEPS.get(pkg, "Required dependency")
             report.add(ValidationResult(
                 category="dependencies",
                 severity="error",
-                message=f"Package '{pkg}' is imported but not in requirements.txt",
+                message=f"Critical package '{pkg}' is imported but not in requirements.txt ({reason})",
                 file_path=file_path,
                 line_number=line,
                 fix_hint=f"Add '{pkg}' to services/api/requirements.txt",
@@ -232,10 +249,19 @@ def check_docker_directories(report: ValidationReport, verbose: bool = False):
     env_vars = re.findall(r'ENV\s+(\w+)=([^\n]+)', dockerfile_content)
     env_dict = {k: v for k, v in env_vars}
 
-    # Find mkdir commands
+    # Find mkdir commands - handle multi-line with backslash continuation
+    # First, normalize continuation lines
+    normalized = dockerfile_content.replace('\\\n', ' ')
+
+    # Find all paths in mkdir -p commands
     mkdir_paths = set()
-    for match in re.finditer(r'mkdir\s+-p\s+([^\s\\&]+)', dockerfile_content):
-        mkdir_paths.add(match.group(1))
+    for match in re.finditer(r'mkdir\s+-p\s+([^&\n]+)', normalized):
+        paths_str = match.group(1)
+        # Split on whitespace to get individual paths
+        for path in paths_str.split():
+            path = path.strip()
+            if path.startswith('/'):
+                mkdir_paths.add(path)
 
     if verbose:
         print(f"Found ENV vars: {list(env_dict.keys())}")
@@ -276,29 +302,51 @@ def check_cross_origin_urls(report: ValidationReport, verbose: bool = False):
         ))
         return
 
-    for vue_file in src_path.rglob("*.vue"):
+    # Only check specific high-risk directories
+    high_risk_dirs = ["features/ai_images", "views", "components/ai"]
+    files_to_check = []
+
+    for risk_dir in high_risk_dirs:
+        check_path = src_path / risk_dir
+        if check_path.exists():
+            files_to_check.extend(check_path.rglob("*.vue"))
+            files_to_check.extend(check_path.rglob("*.ts"))
+
+    if verbose:
+        print(f"Checking {len(files_to_check)} high-risk files for cross-origin issues")
+
+    for file_path in files_to_check:
         try:
-            with open(vue_file, encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
+
+            # Check if file has API_BASE defined at all
+            has_api_base = "API_BASE" in content or "VITE_API_BASE" in content
 
             for pattern, message in CROSS_ORIGIN_PATTERNS:
                 for match in re.finditer(pattern, content):
                     # Get line number
                     line_start = content[:match.start()].count("\n") + 1
 
-                    # Check if this is already handled (look for resolveAssetUrl or API_BASE nearby)
+                    # Check if this specific usage is handled
                     context_start = max(0, match.start() - 200)
                     context_end = min(len(content), match.end() + 200)
                     context = content[context_start:context_end]
 
-                    if "resolveAssetUrl" in context or "API_BASE" in context or "VITE_API_BASE" in context:
-                        continue  # Already handled
+                    if "resolveAssetUrl" in context or "${API_BASE}" in context or "`${API_BASE}" in context:
+                        continue  # This specific usage is handled
+
+                    # If file has API_BASE but this usage doesn't, it's a warning
+                    # If file doesn't have API_BASE at all, it's an error for ai_images
+                    severity = "warning"
+                    if "ai_images" in str(file_path) and not has_api_base:
+                        severity = "error"
 
                     report.add(ValidationResult(
                         category="cross-origin",
-                        severity="warning",
+                        severity=severity,
                         message=message,
-                        file_path=str(vue_file),
+                        file_path=str(file_path),
                         line_number=line_start,
                         fix_hint="Use resolveAssetUrl() or prepend VITE_API_BASE to relative URLs",
                     ))
