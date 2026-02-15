@@ -1,0 +1,62 @@
+name: Deployment Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/requirements.txt'
+      - 'services/api/Dockerfile'
+      - 'packages/client/Dockerfile'
+      - 'packages/client/src/features/ai_images/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/api/requirements.txt'
+      - 'services/api/Dockerfile'
+      - 'packages/client/Dockerfile'
+      - 'packages/client/src/features/ai_images/**'
+  workflow_dispatch:
+
+jobs:
+  validate-deployment:
+    name: Deployment Readiness Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Deployment Validation (Python)
+        working-directory: .
+        run: |
+          python scripts/ci/validate_deployment.py --verbose
+        continue-on-error: true
+        id: python_check
+
+      - name: Run Quick Deployment Check (Shell)
+        run: |
+          chmod +x scripts/ci/check_deployment_ready.sh
+          scripts/ci/check_deployment_ready.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Deployment Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.python_check.outcome }}" == "success" ]; then
+            echo "✅ All deployment checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Some deployment checks had warnings - see job output for details" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Checks performed:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Python dependencies vs requirements.txt" >> $GITHUB_STEP_SUMMARY
+          echo "2. Dockerfile directory creation" >> $GITHUB_STEP_SUMMARY
+          echo "3. Environment variable definitions" >> $GITHUB_STEP_SUMMARY
+          echo "4. Cross-origin URL patterns" >> $GITHUB_STEP_SUMMARY
+          echo "5. API field mapping consistency" >> $GITHUB_STEP_SUMMARY
