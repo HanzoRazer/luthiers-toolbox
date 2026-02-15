@@ -71,13 +71,30 @@ def add_api_import(content: str) -> str:
 
     # Find the best place to add the import
     # After other imports, or at the start of the script
+    # IMPORTANT: Handle multi-line imports (import { ... } from or import type { ... } from)
     lines = content.split('\n')
     insert_idx = 0
+    in_multiline_import = False
 
     for i, line in enumerate(lines):
-        if line.strip().startswith('import '):
+        stripped = line.strip()
+
+        # Track multi-line imports (opening { without closing })
+        if (stripped.startswith('import ') or stripped.startswith('import{')) and '{' in stripped and '}' not in stripped:
+            in_multiline_import = True
+            continue
+
+        # End of multi-line import
+        if in_multiline_import:
+            if '}' in stripped:
+                in_multiline_import = False
+                insert_idx = i + 1
+            continue
+
+        # Single-line import
+        if stripped.startswith('import '):
             insert_idx = i + 1
-        elif line.strip().startswith('<script'):
+        elif stripped.startswith('<script'):
             insert_idx = i + 1
             break
 
