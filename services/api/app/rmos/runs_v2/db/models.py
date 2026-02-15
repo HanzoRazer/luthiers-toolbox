@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Text, String, DateTime, Float, Boolean, Index
+from sqlalchemy import Text, String, DateTime, Float, Boolean, Index, Integer, Column
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -36,9 +36,10 @@ class RunArtifactRow(Base):
     - artifact_json: Full serialized RunArtifact
     """
     __tablename__ = "run_artifacts"
+    id = Column(Integer, primary_key=True)
 
-    # Primary key
-    run_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    # Unique run identifier (indexed)
+    run_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
 
     # Core fields (indexed for queries)
     status: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
@@ -90,7 +91,7 @@ class AdvisoryAttachmentRow(Base):
     """
     __tablename__ = "run_advisory_attachments"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     run_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     advisory_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     kind: Mapped[str] = mapped_column(String(32), default="unknown", nullable=False)

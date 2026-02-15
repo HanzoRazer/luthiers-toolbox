@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Text, String, DateTime, Integer
+from sqlalchemy import Text, String, DateTime, Integer, Column
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -30,8 +30,9 @@ class WorkflowSessionRow(Base):
     - tool_id, material_id, machine_id (from index_meta)
     """
     __tablename__ = "workflow_sessions"
+    id = Column(Integer, primary_key=True)
 
-    session_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    session_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
     mode: Mapped[str] = mapped_column(String(64), nullable=False)
     state: Mapped[str] = mapped_column(String(64), nullable=False)
 
