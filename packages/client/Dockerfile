@@ -1,7 +1,10 @@
 # Railway Dockerfile for Vue Client
-# Cache bust: 2026-02-15-v2
 ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-alpine AS builder
+
+# Force rebuild - DO NOT CACHE
+ARG CACHEBUST=1
+RUN echo "Cache bust: ${CACHEBUST}"
 
 WORKDIR /app
 COPY package*.json ./
