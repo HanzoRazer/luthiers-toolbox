@@ -41,6 +41,18 @@ type RunSummary = {
   status?: string;
 };
 
+/** Base URL for cross-origin API deployments */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+
+/** Resolve asset URL to full URL (handles cross-origin deployments). */
+function resolveAssetUrl(url: string | undefined): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `${API_BASE}${url}`;
+}
+
 // -----------------------------
 // State
 // -----------------------------
@@ -499,7 +511,7 @@ onMounted(async () => {
         <img
           v-if="(a as any).url"
           class="img"
-          :src="(a as any).url"
+          :src="resolveAssetUrl((a as any).url)"
         >
         <div class="meta">
           <div class="mono small">
