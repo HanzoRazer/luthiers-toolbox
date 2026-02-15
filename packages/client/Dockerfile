@@ -1,4 +1,5 @@
 # Railway Dockerfile for Vue Client
+# Cache bust: 2026-02-15-v2
 ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-alpine AS builder
 
@@ -9,8 +10,8 @@ COPY . ./
 
 # Set env vars for Vite build (reads from .env.production automatically)
 ENV NODE_ENV=production
-# Explicit fallback in case .env.production isn't read
-ARG VITE_API_BASE=https://luthiers-toolbox-production.up.railway.app
+# Updated API URL for new Railway project
+ARG VITE_API_BASE=https://adequate-adaptation-production-921f.up.railway.app
 ENV VITE_API_BASE=${VITE_API_BASE}
 
 RUN echo "Building with VITE_API_BASE=${VITE_API_BASE}" && npm run build
