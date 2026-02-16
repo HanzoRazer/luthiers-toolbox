@@ -27,7 +27,7 @@ SANITIZATION RULES:
 
 **Removed/Replaced:**
 - Spaces → _ (underscore)
-- Special characters: !@#$%^&*()+=[]{}|;:'"<>,?/\ → _ (underscore)
+- Special characters: !@#$%^&*()+=[]{}|;:'"<>,?/\\ → _ (underscore)
 - Path separators: / and \ → _ (prevents directory traversal)
 - Control characters: \n, \t, etc. → _ (prevents injection)
 
