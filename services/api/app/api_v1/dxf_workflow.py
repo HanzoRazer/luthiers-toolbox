@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+from app.core.safety import safety_critical
+
 router = APIRouter(prefix="/dxf", tags=["DXF Workflow"])
 
 
@@ -252,6 +254,7 @@ def create_cam_plan(req: CamPlanRequest) -> CamPlanResponse:
 
 
 @router.post("/cam/gcode", response_model=GcodeResponse)
+@safety_critical
 def generate_gcode(req: GcodeRequest) -> GcodeResponse:
     """
     Generate G-code from a CAM plan or DXF file.
