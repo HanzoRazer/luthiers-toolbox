@@ -28,8 +28,8 @@ SANITIZATION RULES:
 **Removed/Replaced:**
 - Spaces → _ (underscore)
 - Special characters: !@#$%^&*()+=[]{}|;:'"<>,?/\\ → _ (underscore)
-- Path separators: / and \ → _ (prevents directory traversal)
-- Control characters: \n, \t, etc. → _ (prevents injection)
+- Path separators: / and \\ → _ (prevents directory traversal)
+- Control characters: \\n, \\t, etc. → _ (prevents injection)
 
 **Length Limits:**
 - Maximum: 50 characters (safe for all filesystems)
@@ -111,8 +111,8 @@ SECURITY CONSIDERATIONS:
 **Attack Scenarios Mitigated:**
 1. Path Traversal: "../../../etc/passwd" → Safe
 2. Command Injection: "file; rm -rf /" → Safe
-3. Null Byte Injection: "file\x00.txt" → Safe (removed)
-4. Unicode Exploits: "file\u202e.txt" → Safe (replaced with _)
+3. Null Byte Injection: "file\\x00.txt" → Safe (removed)
+4. Unicode Exploits: "file\\u202e.txt" → Safe (replaced with _)
 5. Windows Reserved Names: Handled by 50-char truncation
 
 **Not Handled (Caller Responsibility):**
