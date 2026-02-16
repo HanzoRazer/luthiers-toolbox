@@ -55,8 +55,8 @@ def count_routes(root: Path) -> int:
         try:
             content = f.read_text(encoding="utf-8")
             count += content.count("@router.")
-        except Exception:
-            pass
+        except (OSError, UnicodeDecodeError) as e:
+            print(f"Warning: Could not read {f}: {e}", file=sys.stderr)
 
     return count
 

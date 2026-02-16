@@ -90,9 +90,9 @@ def check_complexity(
                         "letter": block.letter,  # A-F grade
                     })
         except SyntaxError:
-            pass  # Skip files with syntax errors
-        except Exception:
-            pass  # Skip files that can't be parsed
+            pass  # Skip files with syntax errors (expected for some generated files)
+        except (OSError, UnicodeDecodeError):
+            pass  # Skip files that can't be read
 
     # Sort by complexity (worst first)
     violations.sort(key=lambda x: -x["complexity"])

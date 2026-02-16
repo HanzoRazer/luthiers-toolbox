@@ -105,7 +105,7 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
                     # Always emit to structured logs (cheap)
                     try:
                         logger.info("endpoint_sample=%s", json.dumps(payload, separators=(",", ":")))
-                    except Exception:  # WP-1: keep broad — middleware must never interfere with request lifecycle
+                    except (TypeError, ValueError, OSError):  # WP-1: serialization/IO errors - middleware must not crash
                         pass
 
                     # Optional JSONL file append (best-effort)

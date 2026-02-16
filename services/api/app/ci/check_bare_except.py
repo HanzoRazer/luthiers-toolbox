@@ -89,9 +89,9 @@ def check_bare_except(
                             "code": line_content,
                         })
         except SyntaxError:
-            pass  # Skip files with syntax errors
-        except Exception:
-            pass  # Skip files that can't be parsed
+            pass  # Skip files with syntax errors (expected for some generated files)
+        except (OSError, UnicodeDecodeError):
+            pass  # Skip files that can't be read
 
     # Sort by file then line
     violations.sort(key=lambda x: (x["file"], x["line"]))

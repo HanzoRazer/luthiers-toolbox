@@ -158,11 +158,11 @@ def record_hit(
                 method=str(method),
                 path_pattern=str(path_pattern),
             )
-        except Exception:  # WP-1: keep broad — optional OTEL telemetry must never crash
+        except (ImportError, AttributeError, RuntimeError):  # WP-1: OTEL not installed/configured - non-fatal
             pass
 
-    except Exception:  # WP-1: keep broad — record_hit is non-fatal by design
-        # Non-fatal by design
+    except (KeyError, TypeError, ValueError):  # WP-1: record_hit is non-fatal by design
+        # Non-fatal by design - stats collection should not crash requests
         return
 
 
