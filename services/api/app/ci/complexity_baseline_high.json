@@ -1,0 +1,181 @@
+{
+  "threshold": 25,
+  "violation_count": 25,
+  "violations": [
+    {
+      "file": "app\\dxf\\preflight_service.py",
+      "function": "validate_dxf_file",
+      "complexity": 53,
+      "line": 20,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\adaptive\\plan_router.py",
+      "function": "plan",
+      "complexity": 46,
+      "line": 61,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\store_filter.py",
+      "function": "matches_index_meta",
+      "complexity": 46,
+      "line": 9,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\batch_router_helpers.py",
+      "function": "extract_base_context",
+      "complexity": 39,
+      "line": 40,
+      "letter": "F"
+    },
+    {
+      "file": "app\\routers\\sim_validate.py",
+      "function": "simulate",
+      "complexity": 38,
+      "line": 125,
+      "letter": "F"
+    },
+    {
+      "file": "app\\util\\gcode_parser.py",
+      "function": "simulate",
+      "complexity": 38,
+      "line": 265,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\compare.py",
+      "function": "compare_run_artifacts",
+      "complexity": 38,
+      "line": 108,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\router_zip_export.py",
+      "function": "export_run_attachments_zip",
+      "complexity": 35,
+      "line": 209,
+      "letter": "F"
+    },
+    {
+      "file": "app\\_experimental\\cnc_production\\learn\\live_learn_ingestor.py",
+      "function": "compute_lane_metrics",
+      "complexity": 32,
+      "line": 117,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\compat.py",
+      "function": "convert_v1_to_v2",
+      "complexity": 32,
+      "line": 30,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ltb_calculators\\financial_calculator_cli.py",
+      "function": "calculator_repl",
+      "complexity": 31,
+      "line": 166,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\store_delete.py",
+      "function": "execute_delete",
+      "complexity": 31,
+      "line": 18,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_summary.py",
+      "function": "build_batch_summary",
+      "complexity": 30,
+      "line": 118,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_e2e_workflow_integration.py",
+      "function": "test_complete_workflow_chain",
+      "complexity": 29,
+      "line": 103,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\variant_review_service.py",
+      "function": "list_variants",
+      "complexity": 29,
+      "line": 94,
+      "letter": "F"
+    },
+    {
+      "file": "app\\cam\\routers\\toolpath\\vcarve_router.py",
+      "function": "preview_infill",
+      "complexity": 29,
+      "line": 136,
+      "letter": "F"
+    },
+    {
+      "file": "app\\ci\\generate_debt_report.py",
+      "function": "generate_report",
+      "complexity": 28,
+      "line": 74,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\acoustics\\persist_glue.py",
+      "function": "_update_attachment_meta_index",
+      "complexity": 28,
+      "line": 251,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\plan_choose_service.py",
+      "function": "find_latest_plan_choose",
+      "complexity": 27,
+      "line": 23,
+      "letter": "F"
+    },
+    {
+      "file": "app\\workflow\\sessions\\store.py",
+      "function": "create",
+      "complexity": 27,
+      "line": 133,
+      "letter": "M"
+    },
+    {
+      "file": "app\\rmos\\runs_v2\\batch_tree.py",
+      "function": "resolve_batch_root",
+      "complexity": 27,
+      "line": 37,
+      "letter": "F"
+    },
+    {
+      "file": "app\\rmos\\ai_search.py",
+      "function": "run_constraint_first_search",
+      "complexity": 26,
+      "line": 127,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\executions_lookup_service.py",
+      "function": "get_latest_execution_for_decision",
+      "complexity": 26,
+      "line": 43,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\tuning_decision_service.py",
+      "function": "apply_approved_tuning_to_plan_payload",
+      "complexity": 26,
+      "line": 159,
+      "letter": "F"
+    },
+    {
+      "file": "app\\tests\\test_art_studio_promotion_intent_export_contract.py",
+      "function": "test_canonical_export_returns_strict_v1_shape_when_approved",
+      "complexity": 26,
+      "line": 113,
+      "letter": "F"
+    }
+  ]
+}
