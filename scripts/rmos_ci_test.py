@@ -45,8 +45,8 @@ def wait_for_server(timeout: float = 20.0) -> None:
             if resp.status_code in (200, 404):  # health endpoint may not exist yet
                 log("Server is up.")
                 return
-        except Exception:
-            pass
+        except requests.RequestException:
+            pass  # Expected during server startup - retry
         time.sleep(1.0)
     raise RuntimeError("Server did not become ready in time")
 
@@ -123,8 +123,8 @@ def main() -> int:
             log("Shutting down uvicorn...")
             try:
                 proc.send_signal(signal.SIGINT)
-            except Exception:
-                pass
+            except OSError:
+                pass  # Process may have already exited
             try:
                 proc.wait(timeout=5.0)
             except Exception:

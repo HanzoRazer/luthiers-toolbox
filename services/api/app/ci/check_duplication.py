@@ -103,8 +103,8 @@ def find_duplicates(
                     "end": end,
                     "lines": end - start,
                 })
-        except Exception:
-            pass
+        except (OSError, UnicodeDecodeError, SyntaxError):
+            pass  # Skip files that can't be read or parsed
 
     # Filter to only duplicates (2+ occurrences)
     duplicates = {

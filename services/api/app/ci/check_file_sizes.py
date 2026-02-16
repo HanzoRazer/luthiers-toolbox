@@ -78,7 +78,7 @@ def check_file_sizes(
                     "lines": line_count,
                     "over_by": line_count - threshold,
                 })
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             pass  # Skip files that can't be read
 
     # Sort by line count (largest first)
