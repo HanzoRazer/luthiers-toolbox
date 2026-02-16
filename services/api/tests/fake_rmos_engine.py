@@ -6,6 +6,8 @@ Provides deterministic feasibility and toolpath generation for tests.
 from __future__ import annotations
 from typing import Any, Dict
 
+from app.core.safety import safety_critical
+
 
 class FakeEngine:
     """
@@ -17,6 +19,7 @@ class FakeEngine:
     - other: YELLOW (50.0)
     """
 
+    @safety_critical
     def compute_feasibility_for_design(
         self,
         design: Dict[str, Any],
