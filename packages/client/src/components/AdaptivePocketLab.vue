@@ -105,96 +105,19 @@
           @compare="compareMachinesFunc"
         />
         
-        <label class="block text-sm font-medium mt-2">Post-Processor</label>
-        <select
-          v-model="postId"
-          class="border px-2 py-1 rounded w-full"
-        >
-          <option
-            v-for="p in posts"
-            :key="p"
-            :value="p"
-          >
-            {{ p }}
-          </option>
-        </select>
-
-        <div class="flex gap-2 mt-2">
-          <button
-            class="px-2 py-1 border rounded"
-            @click="savePresetForPost(postId)"
-          >
-            Save preset
-          </button>
-          <button
-            class="px-2 py-1 border rounded"
-            @click="loadPresetForPost(postId)"
-          >
-            Load preset
-          </button>
-          <button
-            class="px-2 py-1 border rounded"
-            @click="resetPresetForPost(postId)"
-          >
-            Reset
-          </button>
-        </div>
-
-        <label class="block text-sm font-medium mt-2">Adaptive Feed Mode <span class="text-xs text-gray-500">Override</span></label>
-        <select
-          v-model="afMode"
-          class="border px-2 py-1 rounded w-full"
-        >
-          <option value="inherit">
-            Inherit from post
-          </option>
-          <option value="comment">
-            Comment mode
-          </option>
-          <option value="inline_f">
-            Inline F
-          </option>
-          <option value="mcode">
-            M-code
-          </option>
-        </select>
-        
-        <div
-          v-if="afMode === 'inline_f'"
-          class="pl-4"
-        >
-          <label class="block text-xs">Min feed (mm/min)</label>
-          <input
-            v-model.number="afInlineMinF"
-            type="number"
-            step="50"
-            class="border px-2 py-1 rounded w-full"
-          >
-        </div>
-        
-        <div
-          v-if="afMode === 'mcode'"
-          class="pl-4 grid grid-cols-2 gap-2"
-        >
-          <div>
-            <label class="block text-xs">M-code start</label>
-            <input
-              v-model="afMStart"
-              type="text"
-              class="border px-2 py-1 rounded w-full"
-              placeholder="M52 P"
-            >
-          </div>
-          <div>
-            <label class="block text-xs">M-code end</label>
-            <input
-              v-model="afMEnd"
-              type="text"
-              class="border px-2 py-1 rounded w-full"
-              placeholder="M52 P100"
-            >
-          </div>
-        </div>
+        <!-- Post-Processor & Adaptive Feed (extracted component) -->
+        <PostProcessorConfig
+          v-model:post-id="postId"
+          v-model:af-mode="afMode"
+          v-model:af-inline-min-f="afInlineMinF"
+          v-model:af-m-start="afMStart"
+          v-model:af-m-end="afMEnd"
+          :posts="posts"
+          :disabled="false"
+          @save-preset="savePresetForPost(postId)"
+          @load-preset="loadPresetForPost(postId)"
+          @reset-preset="resetPresetForPost(postId)"
+        />
         
         <div class="flex gap-2 pt-2 flex-wrap">
           <button
@@ -1125,7 +1048,7 @@ import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
-import { MachineSelector } from './adaptive'
+import { MachineSelector, PostProcessorConfig } from './adaptive'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
