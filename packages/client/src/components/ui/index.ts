@@ -23,3 +23,6 @@ export { default as CardPanel } from './CardPanel.vue'
 // Form Controls
 export { default as LabeledInput } from './LabeledInput.vue'
 export { default as ActionButton } from './ActionButton.vue'
+
+// Dashboard
+export { default as SavedViewsPanel } from './SavedViewsPanel.vue'
