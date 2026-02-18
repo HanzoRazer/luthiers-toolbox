@@ -14,7 +14,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 |-----------|-----|------|--------|
 | AdaptivePocketLab.vue | 2424 | Lab | Needs decomposition |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
-| RiskDashboardCrossLab.vue | 1345 | Dashboard | ✅ Wired SavedViewsPanel (-35% LOC) |
+| RiskDashboardCrossLab.vue | 1209 | Dashboard | ✅ Wired SavedViewsPanel + FiltersBar (-41% LOC) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
 | DxfToGcodeView.vue | 1503 | View | ✅ Wired components (-344 LOC) |
 | ScientificCalculator.vue | 1562 | Toolbox | Needs review |
@@ -47,6 +47,9 @@ Created components in `components/dxf/`:
 - `DxfUploadZone.vue` - Drag/drop upload zone
 - `CamParametersForm.vue` - CAM parameter inputs
 - `RunCompareCard.vue` - Run comparison display
+
+Created components in `components/dashboard/`:
+- `FiltersBar.vue` - Lane/preset/date/quick-range filters (new)
 
 ### 3. Use Composables for Logic
 
@@ -96,26 +99,28 @@ Pattern: Extract template sections into focused components that:
 
 **Commit:** `8c552bd` - Reduced from 1847 → 1503 LOC (-19%)
 
-### RiskDashboardCrossLab.vue (1345 LOC) ✅ WIRED
+### RiskDashboardCrossLab.vue (1209 LOC) ✅ WIRED
 
 **Completed:**
 - ✅ `useSavedViews` composable created (~450 LOC of logic with legacy migration)
 - ✅ `SavedViewsPanel` component created (~370 LOC of template)
-- ✅ Wired into dashboard with legacy data migration
+- ✅ `FiltersBar` component created (~230 LOC)
+- ✅ Wired both components into dashboard
 - ✅ Removed ~287 lines of inline saved views template
 - ✅ Removed ~370 lines of saved views helper functions
+- ✅ Removed ~125 lines of inline filters template
 
 **Legacy Migration:** Composable auto-converts old format (`{lane, preset, jobHint, since, until}`)
 to new format (`{filters: Record<string, string>}`) on load.
 
 **Remaining extractions:**
-- `FiltersBar.vue` - Lane/preset/date filters (~125 lines)
 - `BucketsTable.vue` - Risk buckets with sparklines (~120 lines)
 - `BucketDetailsPanel.vue` - Selected bucket drill-down (~120 lines)
 
 **Commits:**
 - `1be2d8c` - Composable + component created
-- `35baec8` - Wired component, reduced 2062 → 1345 LOC (-35%)
+- `35baec8` - Wired SavedViewsPanel, reduced 2062 → 1345 LOC (-35%)
+- `14d7d51` - Wired FiltersBar, reduced 1345 → 1209 LOC (-41% total)
 
 ### ManufacturingCandidateList.vue (2319 LOC)
 
