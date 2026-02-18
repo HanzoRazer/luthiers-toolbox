@@ -14,7 +14,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 |-----------|-----|------|--------|
 | AdaptivePocketLab.vue | 2424 | Lab | Needs decomposition |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
-| RiskDashboardCrossLab.vue | 2062 | Dashboard | Composable ready (see below) |
+| RiskDashboardCrossLab.vue | 1345 | Dashboard | ✅ Wired SavedViewsPanel (-35% LOC) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
 | DxfToGcodeView.vue | 1503 | View | ✅ Wired components (-344 LOC) |
 | ScientificCalculator.vue | 1562 | Toolbox | Needs review |
@@ -96,22 +96,26 @@ Pattern: Extract template sections into focused components that:
 
 **Commit:** `8c552bd` - Reduced from 1847 → 1503 LOC (-19%)
 
-### RiskDashboardCrossLab.vue (2062 LOC) - READY TO WIRE
+### RiskDashboardCrossLab.vue (1345 LOC) ✅ WIRED
 
 **Completed:**
-- ✅ `useSavedViews` composable created (~400 LOC of logic)
-- ✅ `SavedViewsPanel` component created (~300 LOC of template)
+- ✅ `useSavedViews` composable created (~450 LOC of logic with legacy migration)
+- ✅ `SavedViewsPanel` component created (~370 LOC of template)
+- ✅ Wired into dashboard with legacy data migration
+- ✅ Removed ~287 lines of inline saved views template
+- ✅ Removed ~370 lines of saved views helper functions
 
-**Blocker:** Existing user data uses legacy format (lane, preset, jobHint, since, until
-as top-level fields). New composable uses generic `filters: Record<string, string>`.
-Data migration strategy needed before wiring.
+**Legacy Migration:** Composable auto-converts old format (`{lane, preset, jobHint, since, until}`)
+to new format (`{filters: Record<string, string>}`) on load.
 
 **Remaining extractions:**
 - `FiltersBar.vue` - Lane/preset/date filters (~125 lines)
 - `BucketsTable.vue` - Risk buckets with sparklines (~120 lines)
 - `BucketDetailsPanel.vue` - Selected bucket drill-down (~120 lines)
 
-**Commit:** `1be2d8c` - Composable + component ready
+**Commits:**
+- `1be2d8c` - Composable + component created
+- `35baec8` - Wired component, reduced 2062 → 1345 LOC (-35%)
 
 ### ManufacturingCandidateList.vue (2319 LOC)
 
