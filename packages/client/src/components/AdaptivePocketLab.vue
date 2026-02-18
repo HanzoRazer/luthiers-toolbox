@@ -209,136 +209,30 @@
           </div>
         </div>
         
-        <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">
-            HUD Overlays (L.2)
-          </h3>
-          <div class="flex items-center gap-2">
-            <input
-              id="showTight"
-              v-model="showTight"
-              type="checkbox"
-              class="w-4 h-4"
-            >
-            <label
-              for="showTight"
-              class="text-sm"
-            >🔴 Tight Radius</label>
-          </div>
-          <div class="flex items-center gap-2">
-            <input
-              id="showSlow"
-              v-model="showSlow"
-              type="checkbox"
-              class="w-4 h-4"
-            >
-            <label
-              for="showSlow"
-              class="text-sm"
-            >🟠 Slowdown Zone</label>
-          </div>
-          <div class="flex items-center gap-2">
-            <input
-              id="showFillets"
-              v-model="showFillets"
-              type="checkbox"
-              class="w-4 h-4"
-            >
-            <label
-              for="showFillets"
-              class="text-sm"
-            >🟢 Fillets</label>
-          </div>
-        </div>
+        <!-- HUD Overlays (extracted component) -->
+        <HudOverlayControls
+          v-model:show-tight="showTight"
+          v-model:show-slow="showSlow"
+          v-model:show-fillets="showFillets"
+          :disabled="false"
+        />
         
-        <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">
-            Trochoids (L.3)
-          </h3>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              v-model="useTrochoids"
-              type="checkbox"
-            >
-            <span>Use trochoids</span>
-          </label>
-          
-          <div
-            v-if="useTrochoids"
-            class="grid grid-cols-2 gap-2 pl-4"
-          >
-            <div>
-              <label class="block text-xs">Trochoid radius (mm)</label>
-              <input
-                v-model.number="trochoidRadius"
-                type="number"
-                step="0.1"
-                min="0.3"
-                class="border px-2 py-1 rounded w-full"
-              >
-            </div>
-            <div>
-              <label class="block text-xs">Trochoid pitch (mm)</label>
-              <input
-                v-model.number="trochoidPitch"
-                type="number"
-                step="0.1"
-                min="0.6"
-                class="border px-2 py-1 rounded w-full"
-              >
-            </div>
-          </div>
-        </div>
+        <!-- Trochoid Settings (extracted component) -->
+        <TrochoidSettings
+          v-model:use-trochoids="useTrochoids"
+          v-model:trochoid-radius="trochoidRadius"
+          v-model:trochoid-pitch="trochoidPitch"
+          :disabled="false"
+        />
         
-        <div class="mt-4 pt-4 border-t space-y-2">
-          <h3 class="font-semibold text-sm">
-            Jerk-Aware Time (L.3)
-          </h3>
-          <label class="flex items-center gap-2 text-sm">
-            <input
-              v-model="jerkAware"
-              type="checkbox"
-            >
-            <span>Jerk-aware time</span>
-          </label>
-          
-          <div
-            v-if="jerkAware"
-            class="grid grid-cols-2 gap-2 pl-4"
-          >
-            <div>
-              <label class="block text-xs">Accel (mm/s²)</label>
-              <input
-                v-model.number="machineAccel"
-                type="number"
-                step="10"
-                min="100"
-                class="border px-2 py-1 rounded w-full"
-              >
-            </div>
-            <div>
-              <label class="block text-xs">Jerk (mm/s³)</label>
-              <input
-                v-model.number="machineJerk"
-                type="number"
-                step="100"
-                min="100"
-                class="border px-2 py-1 rounded w-full"
-              >
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs">Corner tol (mm)</label>
-              <input
-                v-model.number="cornerTol"
-                type="number"
-                step="0.05"
-                min="0.05"
-                max="1.0"
-                class="border px-2 py-1 rounded w-full"
-              >
-            </div>
-          </div>
-        </div>
+        <!-- Jerk-Aware Settings (extracted component) -->
+        <JerkAwareSettings
+          v-model:jerk-aware="jerkAware"
+          v-model:machine-accel="machineAccel"
+          v-model:machine-jerk="machineJerk"
+          v-model:corner-tol="cornerTol"
+          :disabled="false"
+        />
         
         <!-- M.2: Optimize for Machine -->
         <div class="mt-4 border rounded-xl p-3 bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -1048,7 +942,7 @@ import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
-import { MachineSelector, PostProcessorConfig } from './adaptive'
+import { MachineSelector, PostProcessorConfig, TrochoidSettings, JerkAwareSettings, HudOverlayControls } from './adaptive'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
