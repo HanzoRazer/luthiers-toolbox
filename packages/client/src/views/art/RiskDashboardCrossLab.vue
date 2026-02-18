@@ -57,130 +57,19 @@
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-col gap-2 text-[11px] text-gray-700">
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2">
-          <span class="font-semibold">Lane:</span>
-          <select
-            v-model="laneFilter"
-            class="px-2 py-1 border rounded text-[11px]"
-          >
-            <option value="">
-              All
-            </option>
-            <option
-              v-for="laneOpt in allLanes"
-              :key="laneOpt"
-              :value="laneOpt"
-            >
-              {{ laneOpt }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span class="font-semibold">Preset:</span>
-          <select
-            v-model="presetFilter"
-            class="px-2 py-1 border rounded text-[11px]"
-          >
-            <option value="">
-              All
-            </option>
-            <option
-              v-for="presetOpt in allPresets"
-              :key="presetOpt"
-              :value="presetOpt"
-            >
-              {{ presetOpt }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span class="font-semibold">Job hint:</span>
-          <input
-            v-model="jobFilter"
-            type="text"
-            placeholder="rosette_, neck_pocket..."
-            class="px-2 py-1 border rounded text-[11px] w-48"
-          >
-          <span class="text-[10px] text-gray-500">
-            Used for deep links &amp; bucket details (not filtering aggregates).
-          </span>
-        </div>
-      </div>
-
-      <!-- Date + quick range row -->
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2">
-          <span class="font-semibold">Since:</span>
-          <input
-            v-model="since"
-            type="date"
-            class="px-2 py-1 border rounded text-[11px]"
-          >
-          <span class="font-semibold">Until:</span>
-          <input
-            v-model="until"
-            type="date"
-            class="px-2 py-1 border rounded text-[11px]"
-          >
-        </div>
-
-        <!-- Quick time range chips -->
-        <div class="flex flex-wrap items-center gap-1">
-          <span class="text-[10px] text-gray-500 mr-1">
-            Quick range:
-          </span>
-          <button
-            v-for="mode in quickRangeModes"
-            :key="mode.id"
-            class="px-2 py-0.5 rounded-full border text-[10px] transition"
-            :class="quickRangeMode === mode.id
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'"
-            @click="applyQuickRange(mode.id)"
-          >
-            {{ mode.label }}
-          </button>
-        </div>
-
-        <span class="text-[10px] text-gray-500">
-          Quick ranges set dates &amp; reload aggregates; manual edits still work.
-        </span>
-      </div>
-
-      <!-- Lane preset chips -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[10px] text-gray-500 mr-1">
-          Lane presets:
-        </span>
-        <button
-          v-for="p in lanePresets"
-          :key="p.id"
-          class="px-2 py-0.5 rounded-full border text-[10px] transition inline-flex items-center gap-1"
-          :class="isLanePresetActive(p)
-            ? 'bg-emerald-600 text-white border-emerald-600'
-            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'"
-          @click="applyLanePreset(p.id)"
-        >
-          <span>{{ p.label }}</span>
-          <span
-            v-if="p.badge"
-            class="px-1 rounded-full text-[9px]"
-            :class="isLanePresetActive(p)
-              ? 'bg-emerald-500 text-white'
-              : 'bg-gray-100 text-gray-700'"
-          >
-            {{ p.badge }}
-          </span>
-        </button>
-        <span class="text-[10px] text-gray-500">
-          One-click lane + preset + window presets (editable in code).
-        </span>
-      </div>
-    </div>
+    <FiltersBar
+      v-model:lane="laneFilter"
+      v-model:preset="presetFilter"
+      v-model:job-hint="jobFilter"
+      v-model:since="since"
+      v-model:until="until"
+      v-model:quick-range="quickRangeMode"
+      :all-lanes="allLanes"
+      :all-presets="allPresets"
+      :lane-presets="lanePresets"
+      @apply-quick-range="applyQuickRange"
+      @apply-lane-preset="applyLanePreset"
+    />
 
     <!-- Saved Views -->
     <SavedViewsPanel
@@ -476,6 +365,7 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import axios from "axios";
 import { useRouter, useRoute } from "vue-router";
 import { SavedViewsPanel } from "@/components/ui";
+import { FiltersBar, type LanePresetDef, type QuickRangeMode } from "@/components/dashboard";
 
 interface RiskAggregateBucketResponse {
   lane: string;
@@ -519,16 +409,7 @@ interface BucketEntry {
   unchanged_paths: number;
 }
 
-type QuickRangeMode = "" | "all" | "last7" | "last30" | "last90" | "year";
-
-interface LanePresetDef {
-  id: string;
-  label: string;
-  lane: string;
-  preset?: string;
-  defaultQuickRange?: QuickRangeMode;
-  badge?: string;
-}
+// QuickRangeMode and LanePresetDef imported from FiltersBar
 
 const router = useRouter();
 const route = useRoute();
@@ -728,23 +609,6 @@ function applyLanePreset(id: string) {
   syncFiltersToQuery();
   clearBucketDetails();
   refresh();
-}
-
-function isLanePresetActive(p: LanePresetDef): boolean {
-  const laneMatch = Boolean(
-    laneFilter.value &&
-    laneFilter.value.toLowerCase() === p.lane.toLowerCase()
-  );
-
-  const presetVal = p.preset ?? "";
-  const presetMatch =
-    (presetVal || "") === (presetFilter.value || "");
-
-  // quick-range "match": we only check that if preset has a mode and we are on that mode
-  const mode = p.defaultQuickRange || "last30";
-  const rangeMatch = quickRangeMode.value === mode;
-
-  return laneMatch && presetMatch && rangeMatch;
 }
 
 // computed: whether any filters are active
