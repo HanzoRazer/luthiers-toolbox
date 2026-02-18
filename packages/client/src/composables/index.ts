@@ -25,3 +25,6 @@ export type { FormulaParam, FormulaPreset, ThresholdRange, UseFormulaCalculatorO
 
 export { useUnitConverter, convert, UNITS, UNIT_CATEGORIES } from './useUnitConverter'
 export type { UnitDef, UnitCategory } from './useUnitConverter'
+
+export { useSavedViews } from './useSavedViews'
+export type { SavedView, ViewSortMode, UseSavedViewsOptions } from './useSavedViews'
