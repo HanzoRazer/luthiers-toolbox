@@ -37,7 +37,7 @@ luthiers-toolbox/
 ├── services/
 │   └── api/                 # FastAPI backend
 │       ├── app/             # Application code (1,200+ Python files)
-│       └── tests/           # Test suite (1,069 tests passing)
+│       └── tests/           # Test suite (753+ tests)
 ├── contracts/               # JSON schema contracts
 ├── docker/                  # Container configurations
 ├── docs/                    # Documentation (30 files)
@@ -131,7 +131,7 @@ curl -X POST http://localhost:8000/api/art/generators/rosette \
 ```bash
 cd services/api
 pytest tests/ -v
-# Expected: 1,069 passed
+# Expected: 753+ passed (20% coverage)
 ```
 
 ### Type Checking
