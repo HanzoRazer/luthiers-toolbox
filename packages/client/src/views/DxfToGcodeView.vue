@@ -5,147 +5,19 @@
       Shop-floor quick path: upload DXF, set params, download G-code
     </p>
 
-    <!-- Upload Zone -->
-    <div
-      class="upload-zone"
-      :class="{ 'drag-over': isDragOver, 'has-file': !!dxfFile }"
-      @drop.prevent="handleDrop"
-      @dragover.prevent="isDragOver = true"
-      @dragleave="isDragOver = false"
-    >
-      <input
-        ref="fileInput"
-        type="file"
-        accept=".dxf"
-        style="display: none"
-        @change="handleFileSelect"
-      >
+    <!-- Upload Zone (extracted component) -->
+    <DxfUploadZone
+      v-model:file="dxfFile"
+      :disabled="isGenerating"
+      class="mb-8"
+      @error="uploadError = $event"
+    />
 
-      <div
-        v-if="!dxfFile"
-        class="upload-prompt"
-      >
-        <p>
-          <strong>Drop DXF here</strong> or <button
-            class="link-btn"
-            @click="($refs.fileInput as HTMLInputElement).click()"
-          >
-            browse
-          </button>
-        </p>
-        <p class="hint">
-          DXF R12/R2000 format
-        </p>
-      </div>
-
-      <div
-        v-else
-        class="file-info"
-      >
-        <span class="filename">{{ dxfFile.name }}</span>
-        <span class="filesize">({{ (dxfFile.size / 1024).toFixed(1) }} KB)</span>
-        <button
-          class="clear-btn"
-          @click="clearFile"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-
-    <!-- CAM Parameters -->
-    <div
-      class="params-section"
-      :class="{ disabled: isGenerating }"
-    >
-      <h2>CAM Parameters</h2>
-      <div class="params-grid">
-        <div class="param">
-          <label>Tool Diameter (mm)</label>
-          <input
-            v-model.number="params.tool_d"
-            type="number"
-            step="0.5"
-            min="0.5"
-            max="25"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Stepover (0-1)</label>
-          <input
-            v-model.number="params.stepover"
-            type="number"
-            step="0.05"
-            min="0.1"
-            max="0.9"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Stepdown (mm)</label>
-          <input
-            v-model.number="params.stepdown"
-            type="number"
-            step="0.5"
-            min="0.5"
-            max="10"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Target Depth (mm)</label>
-          <input
-            v-model.number="params.z_rough"
-            type="number"
-            step="0.5"
-            max="0"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Feed XY (mm/min)</label>
-          <input
-            v-model.number="params.feed_xy"
-            type="number"
-            step="100"
-            min="100"
-            max="5000"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Feed Z (mm/min)</label>
-          <input
-            v-model.number="params.feed_z"
-            type="number"
-            step="50"
-            min="50"
-            max="1000"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Safe Z (mm)</label>
-          <input
-            v-model.number="params.safe_z"
-            type="number"
-            step="1"
-            min="1"
-            max="50"
-            :disabled="isGenerating"
-          >
-        </div>
-        <div class="param">
-          <label>Layer Name</label>
-          <input
-            v-model="params.layer_name"
-            type="text"
-            :disabled="isGenerating"
-          >
-        </div>
-      </div>
-    </div>
+    <!-- CAM Parameters (extracted component) -->
+    <CamParametersForm
+      v-model="params"
+      :disabled="isGenerating"
+    />
 
     <!-- Generate Button -->
     <div class="action-section">
@@ -243,183 +115,15 @@
         class="mt-3"
       />
 
-      <!-- Run-to-run compare (minimal operator UI) -->
-      <div
+      <!-- Run-to-run compare (extracted component) -->
+      <RunCompareCard
         v-if="hasCompare || compareError"
-        class="compare-shell"
-      >
-        <div class="compare-header-row">
-          <h3>Compare with Previous Run</h3>
-          <div class="muted">
-            {{ previousRunId?.slice(0, 8) }}… → {{ result?.run_id?.slice(0, 8) }}…
-          </div>
-          <button
-            class="btn-clear"
-            @click="clearCompare"
-          >
-            Clear
-          </button>
-        </div>
-
-        <div
-          v-if="compareError"
-          class="compare-error"
-        >
-          {{ compareError }}
-        </div>
-
-        <div
-          v-else
-          class="compare-content"
-        >
-          <!-- Summary chips -->
-          <div
-            v-if="compareSummary"
-            class="pill-row"
-          >
-            <template
-              v-for="(v, k) in compareSummary"
-              :key="k"
-            >
-              <span
-                v-if="v"
-                class="pill ok"
-              >{{ pillLabel(String(k)) }}</span>
-            </template>
-            <span
-              v-if="Object.values(compareSummary).every((x: any) => !x)"
-              class="pill muted"
-            >
-              No changes detected
-            </span>
-          </div>
-
-          <!-- Decision -->
-          <div
-            v-if="compareDecision"
-            class="compare-section"
-          >
-            <div class="section-title">
-              Decision
-            </div>
-            <div class="kv-row">
-              <div class="kv-label">
-                Risk
-              </div>
-              <div class="kv-value">
-                <span class="pill">{{ compareDecision.before?.risk_level }}</span>
-                <span class="arrow">→</span>
-                <span class="pill">{{ compareDecision.after?.risk_level }}</span>
-              </div>
-            </div>
-            <div
-              v-if="compareDecision.before?.block_reason || compareDecision.after?.block_reason"
-              class="kv-row"
-            >
-              <div class="kv-label">
-                Block reason
-              </div>
-              <div class="kv-value muted">
-                {{ compareDecision.before?.block_reason || '—' }}
-                <span class="arrow">→</span>
-                {{ compareDecision.after?.block_reason || '—' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Feasibility rules -->
-          <div
-            v-if="compareFeasibility"
-            class="compare-section"
-          >
-            <div class="section-title">
-              Feasibility rules
-            </div>
-            <div class="kv-row">
-              <div class="kv-label">
-                Added
-              </div>
-              <div class="kv-value">
-                <span
-                  v-if="(compareFeasibility.rules_added || []).length === 0"
-                  class="muted"
-                >—</span>
-                <span
-                  v-for="rid in (compareFeasibility.rules_added || [])"
-                  :key="rid"
-                  class="pill ok"
-                >{{ rid }}</span>
-              </div>
-            </div>
-            <div class="kv-row">
-              <div class="kv-label">
-                Removed
-              </div>
-              <div class="kv-value">
-                <span
-                  v-if="(compareFeasibility.rules_removed || []).length === 0"
-                  class="muted"
-                >—</span>
-                <span
-                  v-for="rid in (compareFeasibility.rules_removed || [])"
-                  :key="rid"
-                  class="pill"
-                >{{ rid }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Parameter changes -->
-          <div class="compare-section">
-            <div class="section-title">
-              Parameter changes
-            </div>
-            <div
-              v-if="paramDiffRows.length === 0"
-              class="muted"
-            >
-              No parameter changes detected.
-            </div>
-            <div
-              v-else
-              class="diff-grid"
-            >
-              <div class="diff-row diff-head">
-                <div>Field</div><div>Previous</div><div>Current</div>
-              </div>
-              <div
-                v-for="row in paramDiffRows"
-                :key="row.key"
-                class="diff-row"
-              >
-                <div class="k">
-                  {{ row.key }}
-                </div>
-                <div class="vcell">
-                  {{ row.a ?? '—' }}
-                </div>
-                <div class="vcell">
-                  {{ row.b ?? '—' }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Deep diff toggle -->
-          <button
-            class="compare-toggle"
-            @click="showDeepCompare = !showDeepCompare"
-          >
-            <span class="chev">{{ showDeepCompare ? '▾' : '▸' }}</span>
-            <span>Show deep diffs</span>
-            <span class="muted">(request/feasibility/decision/hashes/attachments)</span>
-          </button>
-          <pre
-            v-if="showDeepCompare"
-            class="code"
-          >{{ JSON.stringify(compareResult, null, 2) }}</pre>
-        </div>
-      </div>
+        :compare-result="compareResult"
+        :compare-error="compareError"
+        :previous-run-id="previousRunId"
+        :current-run-id="result?.run_id"
+        @clear="clearCompare"
+      />
 
       <!-- Action row with risk badge + downloads -->
       <div class="action-row">
@@ -575,12 +279,12 @@ import { runs as rmosRuns } from '@/sdk/rmos'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import OverrideBanner from '@/components/ui/OverrideBanner.vue'
 import WhyPanel from '@/components/rmos/WhyPanel.vue'
+import { DxfUploadZone, CamParametersForm, RunCompareCard } from '@/components/dxf'
 
 const router = useRouter()
 
-const fileInput = ref<HTMLInputElement | null>(null)
-const isDragOver = ref(false)
 const dxfFile = ref<File | null>(null)
+const uploadError = ref<string | null>(null)
 const isGenerating = ref(false)
 const result = ref<any>(null)
 const error = ref<string | null>(null)
@@ -589,7 +293,6 @@ const previousRunId = ref<string | null>(null)
 const isComparing = ref(false)
 const compareError = ref<string | null>(null)
 const compareResult = ref<any | null>(null)
-const showDeepCompare = ref(false)
 const showWhy = ref(false)
 
 const params = ref({
@@ -696,7 +399,6 @@ async function compareWithPreviousRun() {
   isComparing.value = true
   compareError.value = null
   compareResult.value = null
-  showDeepCompare.value = false
 
   try {
     const diffResult = await rmosRuns.compareRuns(prev, runId)
@@ -711,32 +413,10 @@ async function compareWithPreviousRun() {
 function clearCompare() {
   compareResult.value = null
   compareError.value = null
-  showDeepCompare.value = false
 }
 
-// ─── Compare Helpers (Minimal UI) ───────────────────────────────────────────
+// ─── Compare Helpers ───────────────────────────────────────────
 const hasCompare = computed(() => !!compareResult.value && !compareError.value)
-const compareSummary = computed(() => compareResult.value?.summary ?? null)
-const compareDecision = computed(() => compareResult.value?.decision_diff ?? null)
-const compareFeasibility = computed(() => compareResult.value?.feasibility_diff ?? null)
-const compareParamDiff = computed(() => compareResult.value?.param_diff ?? {})
-const paramDiffRows = computed(() => {
-  const obj = compareParamDiff.value || {}
-  return Object.keys(obj).sort().map((k) => ({ key: k, a: obj[k]?.[0], b: obj[k]?.[1] }))
-})
-
-function pillLabel(k: string) {
-  const map: Record<string, string> = {
-    risk_changed: 'Risk changed',
-    blocking_changed: 'Block reason changed',
-    feasibility_changed: 'Feasibility changed',
-    cam_changed: 'CAM changed',
-    gcode_changed: 'G-code changed',
-    attachments_changed: 'Attachments changed',
-    override_changed: 'Override changed',
-  }
-  return map[k] ?? k
-}
 
 const explainSummary = computed(() => {
   const n = triggeredRuleIds.value.length
@@ -818,42 +498,18 @@ async function submitOverrideAndRetryPack() {
   }
 }
 
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    setFile(target.files[0])
-  }
-}
-
-const handleDrop = (event: DragEvent) => {
-  isDragOver.value = false
-  if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-    setFile(event.dataTransfer.files[0])
-  }
-}
-
-const setFile = (file: File) => {
-  if (!file.name.toLowerCase().endsWith('.dxf')) {
-    error.value = 'Please select a DXF file'
-    return
-  }
+// Watch for file changes (from DxfUploadZone component)
+watch(dxfFile, (newFile) => {
   // Abort any in-flight request
   if (abortController.value) {
     abortController.value.abort()
     abortController.value = null
   }
-  // Reset all state for new file
-  dxfFile.value = file
+  // Reset state when file changes
   result.value = null
   error.value = null
   isGenerating.value = false
-}
-
-const clearFile = () => {
-  dxfFile.value = null
-  result.value = null
-  if (fileInput.value) fileInput.value.value = ''
-}
+})
 
 const parseErrorResponse = async (response: Response): Promise<string> => {
   const status = response.status
