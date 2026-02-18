@@ -257,422 +257,48 @@
           @apply-recommendation="applyRecommendation"
         />
 
-        <!-- M.3: Energy & Heat -->
-        <div class="mt-4 border rounded-xl p-3">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-sm">
-              Energy & Heat
-            </h3>
-            <div class="flex items-center gap-2">
-              <select
-                v-model="materialId"
-                class="border px-2 py-1 rounded text-xs"
-              >
-                <option value="maple_hard">
-                  Maple (hard)
-                </option>
-                <option value="mahogany">
-                  Mahogany
-                </option>
-                <option value="al_6061">
-                  Al 6061
-                </option>
-                <option value="custom">
-                  Custom
-                </option>
-              </select>
-              <button
-                class="px-3 py-1 border rounded text-xs bg-emerald-600 text-white hover:bg-emerald-700" 
-                :disabled="!moves.length" 
-                @click="runEnergy"
-              >
-                Compute
-              </button>
-              <button
-                class="px-3 py-1 border rounded text-xs bg-white hover:bg-gray-50" 
-                :disabled="!energyOut" 
-                @click="exportEnergyCsv"
-              >
-                Export CSV
-              </button>
-            </div>
-          </div>
-
-          <div
-            v-if="energyOut"
-            class="mt-3 grid md:grid-cols-3 gap-3"
-          >
-            <!-- Totals Card -->
-            <div class="border rounded p-2 text-sm bg-white">
-              <div class="font-medium mb-2">
-                Totals
-              </div>
-              <div>Volume: <b>{{ energyOut.totals.volume_mm3.toFixed(0) }} mm³</b></div>
-              <div>Energy: <b>{{ energyOut.totals.energy_j.toFixed(1) }} J</b></div>
-              <div class="mt-2 text-xs text-gray-600">
-                <div>Heat (J):</div>
-                <div>• chip {{ energyOut.totals.heat.chip_j.toFixed(1) }}</div>
-                <div>• tool {{ energyOut.totals.heat.tool_j.toFixed(1) }}</div>
-                <div>• work {{ energyOut.totals.heat.work_j.toFixed(1) }}</div>
-              </div>
-            </div>
-
-            <!-- Heat Partition Bar -->
-            <div class="border rounded p-2 bg-white">
-              <div class="text-sm font-medium mb-2">
-                Heat Partition
-              </div>
-              <div class="w-full h-5 bg-slate-100 rounded overflow-hidden flex">
-                <div
-                  :style="{width: chipPct+'%'}"
-                  class="bg-amber-400"
-                  :title="`Chip: ${chipPct.toFixed(1)}%`"
-                />
-                <div
-                  :style="{width: toolPct+'%'}"
-                  class="bg-rose-400"
-                  :title="`Tool: ${toolPct.toFixed(1)}%`"
-                />
-                <div
-                  :style="{width: workPct+'%'}"
-                  class="bg-emerald-400"
-                  :title="`Work: ${workPct.toFixed(1)}%`"
-                />
-              </div>
-              <div class="text-xs mt-2 flex gap-3">
-                <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-amber-400 inline-block rounded" />
-                  chip {{ chipPct.toFixed(0) }}%
-                </span>
-                <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-rose-400 inline-block rounded" />
-                  tool {{ toolPct.toFixed(0) }}%
-                </span>
-                <span class="inline-flex items-center gap-1">
-                  <i class="w-3 h-3 bg-emerald-400 inline-block rounded" />
-                  work {{ workPct.toFixed(0) }}%
-                </span>
-              </div>
-            </div>
-
-            <!-- Cumulative Energy Chart -->
-            <div class="border rounded p-2 bg-white">
-              <div class="text-sm font-medium mb-2">
-                Cumulative Energy
-              </div>
-              <svg
-                viewBox="0 0 300 120"
-                class="w-full h-28"
-              >
-                <polyline
-                  :points="energyPolyline"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+        <!-- M.3: Energy & Heat (extracted component) -->
+        <EnergyHeatPanel
+          v-model:material-id="materialId"
+          :has-toolpath="moves.length > 0"
+          :energy-out="energyOut"
+          :chip-pct="chipPct"
+          :tool-pct="toolPct"
+          :work-pct="workPct"
+          :energy-polyline="energyPolyline"
+          @run-energy="runEnergy"
+          @export-csv="exportEnergyCsv"
+        />
       </div>
 
-      <!-- M.3 Heat over Time Card -->
-      <div class="border rounded-lg p-4 bg-white shadow-sm">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold">
-            Heat over Time
-          </h2>
-          <div class="space-y-2">
-            <div class="flex gap-2">
-              <button
-                class="px-3 py-1 rounded bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!planOut?.moves || !materialId || !profileId"
-                @click="runHeatTS"
-              >
-                Compute
-              </button>
-              <button
-                class="px-3 py-1 rounded border border-purple-600 text-purple-600 text-sm hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!planOut?.moves"
-                title="Export Thermal Report (Markdown)"
-                @click="exportThermalReport"
-              >
-                Export Report (MD)
-              </button>
-            </div>
-            <label class="text-xs flex items-center gap-2">
-              <input
-                v-model="includeCsvLinks"
-                type="checkbox"
-              >
-              Include CSV download links in report
-            </label>
-            <div class="flex gap-2">
-              <button
-                class="px-3 py-1 rounded border border-blue-600 text-blue-600 text-sm hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!planOut?.moves"
-                title="Export Thermal Bundle (MD + moves.json ZIP)"
-                @click="exportThermalBundle"
-              >
-                Export Bundle (ZIP)
-              </button>
-              <button
-                class="px-3 py-1 rounded border border-green-600 text-green-600 text-sm hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!planOut?.moves"
-                title="Log this plan to database"
-                @click="logCurrentRun()"
-              >
-                Log Plan
-              </button>
-              <button
-                class="px-3 py-1 rounded border border-orange-600 text-orange-600 text-sm hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!profileId"
-                title="Train feed overrides from logged runs"
-                @click="trainOverrides"
-              >
-                Train Overrides
-              </button>
-            </div>
-            <label class="text-xs flex items-center gap-2">
-              <input
-                v-model="adoptOverrides"
-                type="checkbox"
-              >
-              Adopt learned feed overrides
-            </label>
-            
-            <!-- Live Learn Controls -->
-            <div class="mt-3 pt-3 border-t border-gray-200 space-y-2">
-              <div class="flex items-center gap-3">
-                <label class="text-xs flex items-center gap-2">
-                  <input 
-                    v-model="liveLearnApplied" 
-                    type="checkbox" 
-                    :disabled="!sessionOverrideFactor"
-                    title="Apply session-only feed override from measured runtime"
-                  >
-                  Live learn (session only)
-                </label>
-                <span 
-                  v-if="sessionOverrideFactor" 
-                  class="text-xs px-2 py-0.5 border rounded bg-amber-50 text-amber-900 font-mono"
-                  title="Session feed scale factor (actual/estimated time)"
-                >
-                  ×{{ sessionOverrideFactor.toFixed(3) }}
-                </span>
-                <button
-                  v-if="sessionOverrideFactor"
-                  class="text-xs px-2 py-0.5 rounded border border-gray-400 text-gray-600 hover:bg-gray-50"
-                  title="Reset session override"
-                  @click="() => { liveLearnApplied = false; sessionOverrideFactor = null; measuredSeconds = null }"
-                >
-                  Reset
-                </button>
-              </div>
-              <div class="flex items-center gap-2">
-                <input 
-                  v-model.number="measuredSeconds" 
-                  type="number" 
-                  step="0.1" 
-                  placeholder="Actual sec"
-                  class="px-2 py-1 border rounded text-xs w-28"
-                  title="Enter measured runtime in seconds"
-                >
-                <button
-                  class="px-3 py-1 rounded border border-amber-600 text-amber-600 text-xs hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  :disabled="!planOut?.moves || !measuredSeconds"
-                  title="Log plan with measured runtime (computes session override)"
-                  @click="logCurrentRun(measuredSeconds ?? undefined)"
-                >
-                  Log with actual time
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div
-          v-if="heatTS"
-          class="space-y-3"
-        >
-          <!-- Summary -->
-          <div class="grid grid-cols-3 gap-3 text-sm p-2 bg-purple-50 rounded">
-            <div>
-              <div class="text-xs text-gray-600">
-                Total Time
-              </div>
-              <div class="font-medium">
-                {{ heatTS.total_s?.toFixed(1) || 0 }} s
-              </div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-600">
-                Peak Chip Power
-              </div>
-              <div class="font-medium">
-                {{ Math.max(...(heatTS.p_chip || [0])).toFixed(1) }} W
-              </div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-600">
-                Peak Tool Power
-              </div>
-              <div class="font-medium">
-                {{ Math.max(...(heatTS.p_tool || [0])).toFixed(1) }} W
-              </div>
-            </div>
-          </div>
-
-          <!-- Power Chart -->
-          <div class="border rounded p-2 bg-white">
-            <div class="text-sm font-medium mb-2">
-              Power over Time
-            </div>
-            <svg
-              viewBox="0 0 300 120"
-              class="w-full h-32"
-            >
-              <polyline
-                :points="tsPolyline('p_chip')"
-                fill="none"
-                stroke="#f59e0b"
-                stroke-width="2"
-                opacity="0.9"
-              />
-              <polyline
-                :points="tsPolyline('p_tool')"
-                fill="none"
-                stroke="#ef4444"
-                stroke-width="2"
-                opacity="0.9"
-              />
-              <polyline
-                :points="tsPolyline('p_work')"
-                fill="none"
-                stroke="#14b8a6"
-                stroke-width="2"
-                opacity="0.9"
-              />
-            </svg>
-            <div class="text-xs mt-2 flex items-center gap-3">
-              <span class="flex items-center gap-1">
-                <i
-                  class="inline-block w-3 h-3 rounded"
-                  style="background:#f59e0b"
-                />
-                Chip heat
-              </span>
-              <span class="flex items-center gap-1">
-                <i
-                  class="inline-block w-3 h-3 rounded"
-                  style="background:#ef4444"
-                />
-                Tool heat
-              </span>
-              <span class="flex items-center gap-1">
-                <i
-                  class="inline-block w-3 h-3 rounded"
-                  style="background:#14b8a6"
-                />
-                Work heat
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- M.3 Heat over Time Card (extracted component) -->
+      <HeatTimeSeriesPanel
+        :has-moves="!!planOut?.moves"
+        :material-id="materialId"
+        :profile-id="profileId"
+        :heat-ts="heatTS"
+        v-model:include-csv-links="includeCsvLinks"
+        v-model:adopt-overrides="adoptOverrides"
+        v-model:live-learn-applied="liveLearnApplied"
+        v-model:measured-seconds="measuredSeconds"
+        :session-override-factor="sessionOverrideFactor"
+        @run-heat-ts="runHeatTS"
+        @export-report="exportThermalReport"
+        @export-bundle="exportThermalBundle"
+        @log-run="logCurrentRun"
+        @train-overrides="trainOverrides"
+        @reset-live-learn="() => { liveLearnApplied = false; sessionOverrideFactor = null; measuredSeconds = null }"
+      />
 
       <div class="md:col-span-2">
-        <!-- M.1.1 Bottleneck Map Toggle -->
-        <div class="flex items-center gap-4 mb-2">
-          <label class="text-sm flex items-center gap-2">
-            <input
-              v-model="showBottleneckMap"
-              type="checkbox"
-            > Bottleneck Map
-          </label>
-          <div
-            v-if="showBottleneckMap"
-            class="text-xs text-gray-600 flex items-center gap-3"
-          >
-            <span class="flex items-center gap-1">
-              <span
-                class="inline-block w-3 h-3 rounded"
-                style="background:#f59e0b"
-              />
-              feed cap
-            </span>
-            <span class="flex items-center gap-1">
-              <span
-                class="inline-block w-3 h-3 rounded"
-                style="background:#14b8a6"
-              />
-              accel
-            </span>
-            <span class="flex items-center gap-1">
-              <span
-                class="inline-block w-3 h-3 rounded"
-                style="background:#ec4899"
-              />
-              jerk
-            </span>
-          </div>
-          
-          <!-- M.3 Export Bottleneck CSV -->
-          <button
-            v-if="showBottleneckMap && planOut?.moves"
-            class="ml-auto px-3 py-1 rounded bg-slate-600 text-white text-xs hover:bg-slate-700"
-            @click="exportBottleneckCsv"
-          >
-            Export CSV
-          </button>
-          
-          <!-- M.3 Bottleneck Pie Chart -->
-          <div
-            v-if="showBottleneckMap && planOut?.stats?.caps"
-            class="ml-auto border rounded p-2 bg-white"
-          >
-            <div class="text-sm font-medium mb-1">
-              Bottleneck Share
-            </div>
-            <svg
-              viewBox="0 0 120 120"
-              class="w-28 h-28 mx-auto"
-            >
-              <g transform="translate(60,60)">
-                <template
-                  v-for="(s, i) in capsPie"
-                  :key="i"
-                >
-                  <path
-                    :d="arcPath(i)"
-                    :fill="s.color"
-                    :title="s.label + ': ' + Math.round(s.pct*100) + '%'"
-                  />
-                </template>
-                <circle
-                  cx="0"
-                  cy="0"
-                  r="26"
-                  fill="#fff"
-                />
-              </g>
-            </svg>
-            <div class="text-xs mt-2 grid grid-cols-2 gap-1">
-              <div
-                v-for="s in capsPie"
-                :key="s.label"
-                class="flex items-center gap-1"
-              >
-                <i
-                  class="inline-block w-3 h-3 rounded"
-                  :style="{background: s.color}"
-                />
-                <span>{{ s.label }} {{ Math.round(s.pct*100) }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
+        <!-- M.1.1 Bottleneck Map Toggle (extracted component) -->
+        <BottleneckMapPanel
+          v-model:show-map="showBottleneckMap"
+          :has-moves="!!planOut?.moves"
+          :stats="planOut?.stats"
+          @export-csv="exportBottleneckCsv"
+        />
+
         <canvas
           ref="cv"
           class="w-full h-[420px] border rounded bg-gray-50"
@@ -729,6 +355,9 @@ import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
 import { MachineSelector, PostProcessorConfig, TrochoidSettings, JerkAwareSettings, HudOverlayControls, OptimizeForMachinePanel, ToolpathStatsPanel } from './adaptive'
+import EnergyHeatPanel from './pocket/EnergyHeatPanel.vue'
+import HeatTimeSeriesPanel from './pocket/HeatTimeSeriesPanel.vue'
+import BottleneckMapPanel from './pocket/BottleneckMapPanel.vue'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
@@ -789,18 +418,6 @@ const energyPolyline = computed(() => {
     const y = H - (v / maxY) * H
     return `${x},${y}`
   }).join(' ')
-})
-
-// M.3 Bottleneck pie chart data
-const capsPie = computed(() => {
-  const c = planOut.value?.stats?.caps || {feed_cap: 0, accel: 0, jerk: 0, none: 0}
-  const total = Math.max(1, c.feed_cap + c.accel + c.jerk + c.none)
-  return [
-    {label: 'Feed cap', v: c.feed_cap, color: '#f59e0b'},
-    {label: 'Accel', v: c.accel, color: '#14b8a6'},
-    {label: 'Jerk', v: c.jerk, color: '#ec4899'},
-    {label: 'None', v: c.none, color: '#9ca3af'}
-  ].map(s => ({...s, pct: s.v / total}))
 })
 
 watch(machineId, (v: string) => {
@@ -1188,24 +805,6 @@ function draw(){
       ctx.fill()
     }
   }
-}
-
-// M.3 Bottleneck pie chart arc path generator
-function arcPath(index: number): string {
-  const slices = capsPie.value
-  const tau = Math.PI * 2
-  let a0 = 0
-  for (let i = 0; i < index; i++) {
-    a0 += slices[i].pct * tau
-  }
-  const a1 = a0 + slices[index].pct * tau
-  const R = 50
-  const x0 = Math.cos(a0) * R
-  const y0 = Math.sin(a0) * R
-  const x1 = Math.cos(a1) * R
-  const y1 = Math.sin(a1) * R
-  const large = (a1 - a0) > Math.PI ? 1 : 0
-  return `M0,0 L${x0},${y0} A${R},${R} 0 ${large} 1 ${x1},${y1} Z`
 }
 
 async function plan(){
@@ -1614,27 +1213,6 @@ async function runHeatTS() {
   } catch (e: any) {
     alert('Heat timeseries failed: ' + e)
   }
-}
-
-// M.3: Convert heat timeseries to SVG polyline
-function tsPolyline(field: 'p_chip' | 'p_tool' | 'p_work'): string {
-  if (!heatTS.value?.[field]) return '0,0'
-  
-  const data = heatTS.value[field] as number[]
-  const tAxis = heatTS.value.t as number[]
-  const maxT = Math.max(...tAxis)
-  const maxP = Math.max(...data)
-  
-  if (maxT <= 0 || maxP <= 0) return '0,0'
-  
-  // Map to 300×120 viewBox
-  const pts = data.map((p, i) => {
-    const x = (tAxis[i] / maxT) * 300
-    const y = 120 - (p / maxP) * 110
-    return `${x},${y}`
-  })
-  
-  return pts.join(' ')
 }
 
 // M.3: Export bottleneck CSV
