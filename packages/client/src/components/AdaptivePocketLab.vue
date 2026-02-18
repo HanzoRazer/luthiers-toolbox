@@ -6,96 +6,20 @@
 
     <div class="grid md:grid-cols-3 gap-3">
       <div class="space-y-2">
-        <label class="block text-sm font-medium">Tool Ø (mm)</label>
-        <input
-          v-model.number="toolD"
-          type="number"
-          step="0.1"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Step-over (%)</label>
-        <input
-          v-model.number="stepoverPct"
-          type="number"
-          step="1"
-          min="5"
-          max="95"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Step-down (mm)</label>
-        <input
-          v-model.number="stepdown"
-          type="number"
-          step="0.1"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Margin (mm)</label>
-        <input
-          v-model.number="margin"
-          type="number"
-          step="0.1"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Strategy</label>
-        <select
-          v-model="strategy"
-          class="border px-2 py-1 rounded w-full"
-        >
-          <option>Spiral</option>
-          <option>Lanes</option>
-        </select>
-        
-        <label class="block text-sm font-medium">Corner Radius Min (mm) <span class="text-xs text-gray-500">L.2</span></label>
-        <input
-          v-model.number="cornerRadiusMin"
-          type="number"
-          step="0.1"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Slowdown Feed (%) <span class="text-xs text-gray-500">L.2</span></label>
-        <input
-          v-model.number="slowdownFeedPct"
-          type="number"
-          step="5"
-          min="30"
-          max="100"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="flex items-center gap-2 text-sm">
-          <input
-            v-model="climb"
-            type="checkbox"
-          >
-          <span>Climb milling</span>
-        </label>
-        
-        <label class="block text-sm font-medium">Feed XY (mm/min)</label>
-        <input
-          v-model.number="feedXY"
-          type="number"
-          step="100"
-          class="border px-2 py-1 rounded w-full"
-        >
-        
-        <label class="block text-sm font-medium">Units</label>
-        <select
-          v-model="units"
-          class="border px-2 py-1 rounded w-full"
-        >
-          <option value="mm">
-            mm (G21)
-          </option>
-          <option value="inch">
-            inch (G20)
-          </option>
-        </select>
-        
+        <!-- Tool Parameters (extracted component) -->
+        <ToolParametersPanel
+          v-model:tool-d="toolD"
+          v-model:stepover-pct="stepoverPct"
+          v-model:stepdown="stepdown"
+          v-model:margin="margin"
+          v-model:strategy="strategy"
+          v-model:corner-radius-min="cornerRadiusMin"
+          v-model:slowdown-feed-pct="slowdownFeedPct"
+          v-model:climb="climb"
+          v-model:feed-x-y="feedXY"
+          v-model:units="units"
+        />
+
         <!-- M.1 Machine Selector (extracted component) -->
         <MachineSelector
           v-model="machineId"
@@ -119,95 +43,23 @@
           @reset-preset="resetPresetForPost(postId)"
         />
         
-        <div class="flex gap-2 pt-2 flex-wrap">
-          <button
-            class="px-3 py-1 border rounded bg-blue-50"
-            @click="plan"
-          >
-            Plan
-          </button>
-          <button
-            class="px-3 py-1 border rounded bg-purple-50"
-            :disabled="!moves.length"
-            @click="previewNc"
-          >
-            Preview NC
-          </button>
-          <button
-            class="px-3 py-1 border rounded"
-            :disabled="!moves.length"
-            aria-label="Open compare modes"
-            @click="openCompare"
-          >
-            Compare modes
-          </button>
-          <CompareModeButton
-            v-if="moves.length"
-            :baseline-id="jobName || 'baseline'"
-            :candidate-id="'candidate'"
-            class="ml-2"
-            aria-label="Go to Compare Lab"
-          >
-            Compare in Lab
-          </CompareModeButton>
-          <button
-            class="px-3 py-1 border rounded bg-green-50"
-            :disabled="!moves.length"
-            aria-label="Export G-code"
-            @click="exportProgram"
-          >
-            Export G-code
-          </button>
-        </div>
-        
-        <div class="space-y-2 pt-2 border-t">
-          <div class="flex items-center gap-2">
-            <label class="text-sm font-medium">Job name:</label>
-            <input
-              v-model="jobName" 
-              placeholder="e.g., LP_top_pocket_R3" 
-              class="border px-2 py-1 rounded w-56 text-sm"
-            >
-            <span class="text-xs text-gray-500">(optional filename stem)</span>
-          </div>
-          
-          <div class="flex items-center gap-3 flex-wrap">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium">Export modes:</label>
-              <label class="text-xs flex items-center gap-1">
-                <input
-                  v-model="exportModes.comment"
-                  type="checkbox"
-                  class="w-3 h-3"
-                >
-                comment
-              </label>
-              <label class="text-xs flex items-center gap-1">
-                <input
-                  v-model="exportModes.inline_f"
-                  type="checkbox"
-                  class="w-3 h-3"
-                >
-                inline_f
-              </label>
-              <label class="text-xs flex items-center gap-1">
-                <input
-                  v-model="exportModes.mcode"
-                  type="checkbox"
-                  class="w-3 h-3"
-                >
-                mcode
-              </label>
-            </div>
-            <button
-              class="px-3 py-1 border rounded bg-orange-50"
-              :disabled="!moves.length"
-              @click="batchExport"
-            >
-              Batch Export (subset ZIP)
-            </button>
-          </div>
-        </div>
+        <!-- Action Buttons (extracted component) -->
+        <ActionButtonsBar
+          :has-moves="moves.length > 0"
+          :job-name="jobName"
+          @plan="plan"
+          @preview-nc="previewNc"
+          @compare="openCompare"
+          @export="exportProgram"
+        />
+
+        <!-- Export Config (extracted component) -->
+        <ExportConfigPanel
+          v-model:job-name="jobName"
+          v-model:export-modes="exportModes"
+          :has-moves="moves.length > 0"
+          @batch-export="batchExport"
+        />
         
         <!-- HUD Overlays (extracted component) -->
         <HudOverlayControls
@@ -353,11 +205,13 @@ import CompareAfModes from './CompareAfModes.vue'
 import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
-import CompareModeButton from '@/components/compare/CompareModeButton.vue'
 import { MachineSelector, PostProcessorConfig, TrochoidSettings, JerkAwareSettings, HudOverlayControls, OptimizeForMachinePanel, ToolpathStatsPanel } from './adaptive'
 import EnergyHeatPanel from './pocket/EnergyHeatPanel.vue'
 import HeatTimeSeriesPanel from './pocket/HeatTimeSeriesPanel.vue'
 import BottleneckMapPanel from './pocket/BottleneckMapPanel.vue'
+import ToolParametersPanel from './pocket/ToolParametersPanel.vue'
+import ActionButtonsBar from './pocket/ActionButtonsBar.vue'
+import ExportConfigPanel from './pocket/ExportConfigPanel.vue'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
