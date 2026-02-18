@@ -14,9 +14,9 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 |-----------|-----|------|--------|
 | AdaptivePocketLab.vue | 2424 | Lab | Needs decomposition |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
-| RiskDashboardCrossLab.vue | 2062 | Dashboard | Needs decomposition |
+| RiskDashboardCrossLab.vue | 2062 | Dashboard | Composable ready (see below) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
-| DxfToGcodeView.vue | 1847 | View | Has composable available |
+| DxfToGcodeView.vue | 1503 | View | ✅ Wired components (-344 LOC) |
 | ScientificCalculator.vue | 1562 | Toolbox | Needs review |
 | DesignFirstWorkflowPanel.vue | 1548 | Art Studio | Needs review |
 | PipelineLab.vue | 1466 | Lab | Needs decomposition |
@@ -41,6 +41,12 @@ Created components in `components/ui/`:
 - `ActionButton.vue` - Buttons with loading states
 - `RiskBadge.vue` - Risk level display
 - `RmosTooltip.vue` - Educational tooltips
+- `SavedViewsPanel.vue` - Saved filter views panel (new)
+
+Created components in `components/dxf/`:
+- `DxfUploadZone.vue` - Drag/drop upload zone
+- `CamParametersForm.vue` - CAM parameter inputs
+- `RunCompareCard.vue` - Run comparison display
 
 ### 3. Use Composables for Logic
 
@@ -50,6 +56,7 @@ Existing composables:
 - `useScaleLengthCalculator` - Scale length math
 - `useCandidateFilters` - RMOS candidate filtering
 - `useCandidateSelection` - Batch selection
+- `useSavedViews` - Saved filter views with localStorage (new)
 
 ### 4. Create Child Components
 
@@ -76,16 +83,35 @@ Pattern: Extract template sections into focused components that:
 - Multiple modals with cross-dependencies
 - Already uses `usePocketSettings` composable
 
-### DxfToGcodeView.vue (1847 LOC)
+### DxfToGcodeView.vue (1503 LOC) ✅ WIRED
 
-**Suggested splits:**
-1. `DxfUploadZone.vue` - Drag/drop upload (already pattern in QuickCutView)
-2. `CamParametersForm.vue` - CAM parameter inputs
-3. `RunResultPanel.vue` - Result display with risk badge
-4. `CompareRunPanel.vue` - Run comparison UI
-5. `OverrideModal.vue` - Override submission
+**Completed:**
+- ✅ `DxfUploadZone.vue` - Wired (46 lines removed)
+- ✅ `CamParametersForm.vue` - Wired (92 lines removed)
+- ✅ `RunCompareCard.vue` - Wired (176 lines removed)
 
-**Note:** `useDxfWorkflow` composable exists but isn't used. Consider migrating.
+**Remaining:**
+- `RunResultPanel.vue` - Result display with risk badge
+- `OverrideModal.vue` - Override submission
+
+**Commit:** `8c552bd` - Reduced from 1847 → 1503 LOC (-19%)
+
+### RiskDashboardCrossLab.vue (2062 LOC) - READY TO WIRE
+
+**Completed:**
+- ✅ `useSavedViews` composable created (~400 LOC of logic)
+- ✅ `SavedViewsPanel` component created (~300 LOC of template)
+
+**Blocker:** Existing user data uses legacy format (lane, preset, jobHint, since, until
+as top-level fields). New composable uses generic `filters: Record<string, string>`.
+Data migration strategy needed before wiring.
+
+**Remaining extractions:**
+- `FiltersBar.vue` - Lane/preset/date filters (~125 lines)
+- `BucketsTable.vue` - Risk buckets with sparklines (~120 lines)
+- `BucketDetailsPanel.vue` - Selected bucket drill-down (~120 lines)
+
+**Commit:** `1be2d8c` - Composable + component ready
 
 ### ManufacturingCandidateList.vue (2319 LOC)
 
