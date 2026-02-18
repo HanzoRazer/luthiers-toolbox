@@ -96,50 +96,14 @@
           </option>
         </select>
         
-        <!-- M.1 Machine Selector -->
-        <label class="block text-sm font-medium mt-2">Machine Profile</label>
-        <select
+        <!-- M.1 Machine Selector (extracted component) -->
+        <MachineSelector
           v-model="machineId"
-          class="border px-2 py-1 rounded w-full"
-        >
-          <option
-            v-for="m in machines"
-            :key="m.id"
-            :value="m.id"
-          >
-            {{ m.title }}
-          </option>
-          <option value="">
-            (Custom from knobs)
-          </option>
-        </select>
-        <div
-          v-if="selMachine"
-          class="text-xs text-gray-500 mt-1"
-        >
-          Feed {{ selMachine.limits.feed_xy }} mm/min · 
-          Accel {{ selMachine.limits.accel }} mm/s² · 
-          Jerk {{ selMachine.limits.jerk }} mm/s³ · 
-          Rapid {{ selMachine.limits.rapid }} mm/min
-        </div>
-        
-        <!-- M.1.1 Machine Editor & Compare Buttons -->
-        <div class="flex gap-2 mt-2">
-          <button
-            class="px-2 py-1 text-sm border rounded hover:bg-gray-50"
-            :disabled="!selMachine"
-            @click="openMachineEditor"
-          >
-            Edit Machine
-          </button>
-          <button
-            class="px-2 py-1 text-sm border rounded hover:bg-gray-50"
-            :disabled="!moves.length"
-            @click="compareMachinesFunc"
-          >
-            Compare Machines
-          </button>
-        </div>
+          :machines="machines"
+          :disabled="false"
+          @edit="openMachineEditor"
+          @compare="compareMachinesFunc"
+        />
         
         <label class="block text-sm font-medium mt-2">Post-Processor</label>
         <select
@@ -1161,6 +1125,7 @@ import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
+import { MachineSelector } from './adaptive'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
