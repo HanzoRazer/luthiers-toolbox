@@ -12,7 +12,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 
 | Component | LOC | Type | Status |
 |-----------|-----|------|--------|
-| AdaptivePocketLab.vue | 2424 | Lab | Needs decomposition |
+| AdaptivePocketLab.vue | 1570 | Lab | ✅ Extracted 3 components (-21%) |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
 | RiskDashboardCrossLab.vue | 948 | Dashboard | ✅ COMPLETE (-54% LOC) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
@@ -53,6 +53,11 @@ Created components in `components/dashboard/`:
 - `BucketsTable.vue` - Risk buckets table with sparklines
 - `BucketDetailsPanel.vue` - Bucket drill-down details panel
 
+Created components in `components/pocket/`:
+- `EnergyHeatPanel.vue` - Energy totals, heat partition, cumulative chart
+- `HeatTimeSeriesPanel.vue` - Power chart, live learn controls
+- `BottleneckMapPanel.vue` - Bottleneck toggle, legend, pie chart
+
 ### 3. Use Composables for Logic
 
 Existing composables:
@@ -74,19 +79,19 @@ Pattern: Extract template sections into focused components that:
 
 ## Priority Decomposition Targets
 
-### AdaptivePocketLab.vue (2424 LOC)
+### AdaptivePocketLab.vue (1570 LOC) ✅ IN PROGRESS
 
-**Suggested splits:**
-1. `ToolParametersPanel.vue` - Tool Ø, stepover, stepdown inputs
-2. `MachineSelector.vue` - Machine profile dropdown + editor
-3. `OptimizerPanel.vue` - Feed/stepover optimizer
-4. `EnergyHeatPanel.vue` - M.3 energy & heat display
-5. `BottleneckChart.vue` - Capacitance pie chart
+**Completed:**
+- ✅ `EnergyHeatPanel.vue` (177 LOC) - M.3 energy & heat display
+- ✅ `HeatTimeSeriesPanel.vue` (291 LOC) - M.3 heat over time with live learn
+- ✅ `BottleneckMapPanel.vue` (169 LOC) - M.1.1 bottleneck toggle + pie chart
 
-**Blockers:**
-- Complex state sharing between panels
-- Multiple modals with cross-dependencies
-- Already uses `usePocketSettings` composable
+**Remaining:**
+- `ToolParametersPanel.vue` - Tool Ø, stepover, stepdown inputs
+- `MachineSelector.vue` - Already extracted, needs wiring review
+- `OptimizerPanel.vue` - Feed/stepover optimizer
+
+**Commit:** `0013437` - Reduced from 1992 → 1570 LOC (-21%)
 
 ### DxfToGcodeView.vue (1503 LOC) ✅ WIRED
 
