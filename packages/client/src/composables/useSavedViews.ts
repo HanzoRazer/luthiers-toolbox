@@ -101,6 +101,52 @@ export function useSavedViews(options: UseSavedViewsOptions) {
   // Persistence
   // ─────────────────────────────────────────────────────────────────────────
 
+  /**
+   * Known legacy filter field names that should be migrated to `filters` object.
+   * RiskDashboardCrossLab used: lane, preset, jobHint, since, until
+   */
+  const LEGACY_FILTER_FIELDS = ['lane', 'preset', 'jobHint', 'since', 'until']
+
+  /**
+   * Detect if a view object is in legacy format (filter fields at top level)
+   * vs new format (filter fields nested in `filters` object)
+   */
+  function isLegacyFormat(v: Record<string, unknown>): boolean {
+    // If it has a `filters` object, it's new format
+    if (v.filters && typeof v.filters === 'object') {
+      return false
+    }
+    // If any legacy field exists at top level, it's legacy format
+    return LEGACY_FILTER_FIELDS.some((field) => field in v)
+  }
+
+  /**
+   * Migrate a legacy view to new format by moving filter fields into `filters` object
+   */
+  function migrateLegacyView(v: Record<string, unknown>): SavedView {
+    const filters: Record<string, string> = {}
+
+    // Extract legacy filter fields
+    for (const field of LEGACY_FILTER_FIELDS) {
+      if (field in v && v[field]) {
+        filters[field] = String(v[field])
+      }
+    }
+
+    return {
+      id: String(v.id || makeViewId()),
+      name: String(v.name || 'Unnamed'),
+      filters,
+      description: String(v.description || ''),
+      tags: Array.isArray(v.tags)
+        ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
+        : [],
+      createdAt: String(v.createdAt || nowIso()),
+      lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
+      isDefault: Boolean(v.isDefault),
+    }
+  }
+
   function loadSavedViews(): void {
     try {
       const raw = localStorage.getItem(storageKey)
@@ -110,20 +156,37 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       }
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
+        let needsMigration = false
+
         savedViews.value = parsed
           .filter((v: unknown) => v && typeof v === 'object')
-          .map((v: Record<string, unknown>) => ({
-            id: String(v.id || makeViewId()),
-            name: String(v.name || 'Unnamed'),
-            filters: (v.filters as Record<string, string>) || {},
-            description: String(v.description || ''),
-            tags: Array.isArray(v.tags)
-              ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
-              : [],
-            createdAt: String(v.createdAt || nowIso()),
-            lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
-            isDefault: Boolean(v.isDefault),
-          }))
+          .map((v: Record<string, unknown>) => {
+            // Check if this view needs migration from legacy format
+            if (isLegacyFormat(v)) {
+              needsMigration = true
+              return migrateLegacyView(v)
+            }
+
+            // New format - just normalize
+            return {
+              id: String(v.id || makeViewId()),
+              name: String(v.name || 'Unnamed'),
+              filters: (v.filters as Record<string, string>) || {},
+              description: String(v.description || ''),
+              tags: Array.isArray(v.tags)
+                ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
+                : [],
+              createdAt: String(v.createdAt || nowIso()),
+              lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
+              isDefault: Boolean(v.isDefault),
+            }
+          })
+
+        // If any views were migrated, persist the new format
+        if (needsMigration) {
+          console.log(`[useSavedViews] Migrated ${savedViews.value.length} views from legacy format`)
+          persistSavedViews()
+        }
       } else {
         savedViews.value = []
       }

@@ -1,13 +1,3 @@
-Clears bucket details and reloads aggregates
-
-
-
-
-You can edit the preset list to match your actual lane / preset names.
-
-1️⃣ Frontend – RiskDashboardCrossLab.vue
-File: client/src/views/RiskDashboardCrossLab.vue
-Action: Replace the entire file with this version.
 <template>
   <div class="p-4 flex flex-col gap-4">
     <!-- Header -->
@@ -193,293 +183,12 @@ Action: Replace the entire file with this version.
     </div>
 
     <!-- Saved Views -->
-    <div class="flex flex-col gap-2 text-[11px] text-gray-700 border rounded bg-gray-50/60 p-2">
-      <div class="flex flex-wrap items-start gap-3">
-        <span class="font-semibold text-gray-800 mt-1">Saved Views:</span>
-
-        <!-- Create view block -->
-        <div class="flex flex-col gap-1 w-full max-w-lg">
-          <div class="flex items-center gap-2">
-            <input
-              v-model="newViewName"
-              type="text"
-              placeholder="e.g. Rosette Safe Last 30d"
-              class="px-2 py-1 border rounded text-[11px] w-52"
-            >
-            <button
-              class="px-2 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-              :disabled="!canSaveCurrentView"
-              @click="saveCurrentView"
-            >
-              Save current view
-            </button>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input
-              v-model="newViewDescription"
-              type="text"
-              placeholder="Optional description (e.g. 'High-risk Adaptive night jobs')"
-              class="px-2 py-1 border rounded text-[11px] flex-1 min-w-[220px]"
-            >
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input
-              v-model="newViewTags"
-              type="text"
-              placeholder="Tags (comma-separated: rosette, safe, q4, maple)"
-              class="px-2 py-1 border rounded text-[11px] flex-1 min-w-[220px]"
-            >
-            <span class="text-[10px] text-gray-500">
-              Tags help you remember intent (e.g., <span class="font-mono">rosette, safe, test</span>).
-            </span>
-          </div>
-        </div>
-
-        <!-- View list controls -->
-        <div class="flex flex-col gap-1 ml-auto min-w-[260px]">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] text-gray-500">Sort views by:</span>
-            <select
-              v-model="viewSortMode"
-              class="px-2 py-1 border rounded text-[10px]"
-            >
-              <option value="default">
-                Default priority
-              </option>
-              <option value="name">
-                Name
-              </option>
-              <option value="created">
-                Created time
-              </option>
-              <option value="lastUsed">
-                Last used
-              </option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] text-gray-500">Filter views:</span>
-            <input
-              v-model="viewSearch"
-              type="text"
-              placeholder="Search name/description/tags"
-              class="px-2 py-1 border rounded text-[10px] flex-1"
-            >
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] text-gray-500">Tag:</span>
-            <select
-              v-model="viewTagFilter"
-              class="px-2 py-1 border rounded text-[10px] flex-1"
-            >
-              <option value="">
-                All tags
-              </option>
-              <option
-                v-for="tag in allViewTags"
-                :key="tag"
-                :value="tag"
-              >
-                {{ tag }}
-              </option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <input
-              ref="importInputRef"
-              type="file"
-              accept="application/json"
-              class="hidden"
-              @change="handleImportFile"
-            >
-            <button
-              class="px-2 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-100"
-              @click="triggerImport"
-            >
-              Import views
-            </button>
-            <button
-              class="px-2 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-              :disabled="!savedViews.length"
-              @click="exportViews"
-            >
-              Export views
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recently used strip -->
-      <div
-        v-if="recentViews.length"
-        class="flex flex-wrap items-center gap-2 mt-1"
-      >
-        <span class="text-[10px] text-gray-500">
-          Recently used:
-        </span>
-        <button
-          v-for="view in recentViews"
-          :key="view.id"
-          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-white text-[10px] text-gray-800 hover:bg-gray-100"
-          :title="viewTooltip(view)"
-          @click="applySavedView(view)"
-        >
-          <span class="font-mono truncate max-w-[160px]">
-            {{ view.name }}
-          </span>
-          <span class="text-[9px] text-gray-500">
-            ({{ formatRelativeMetaTime(view.lastUsedAt || view.createdAt) }})
-          </span>
-        </button>
-      </div>
-
-      <!-- Saved views status line -->
-      <div class="flex flex-wrap items-center gap-2 mt-1">
-        <span
-          v-if="saveError"
-          class="text-[10px] text-rose-600"
-        >
-          {{ saveError }}
-        </span>
-        <span
-          v-else-if="saveHint"
-          class="text-[10px] text-gray-500"
-        >
-          {{ saveHint }}
-        </span>
-        <span
-          v-else
-          class="text-[10px] text-gray-500"
-        >
-          Default view:
-          <span class="font-mono">{{ defaultViewLabel }}</span>
-          <span
-            v-if="viewSearch || viewTagFilter"
-            class="ml-2"
-          >
-            · Filtered showing
-            <span class="font-mono">{{ sortedViews.length }}</span>
-            of
-            <span class="font-mono">{{ savedViews.length }}</span>
-            saved views
-          </span>
-        </span>
-      </div>
-
-      <!-- Saved views chips + metadata -->
-      <div
-        v-if="sortedViews.length"
-        class="flex flex-col gap-1"
-      >
-        <div class="text-[10px] text-gray-500">
-          Click name to apply · ✏ rename · ⧉ duplicate · ⭐ set default · 🗑 remove · hover for filters, description &amp; tags
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <div
-            v-for="view in sortedViews"
-            :key="view.id"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-white shadow-sm"
-          >
-            <button
-              class="text-[10px] text-gray-800 font-medium hover:underline"
-              :title="viewTooltip(view)"
-              @click="applySavedView(view)"
-            >
-              {{ view.name }}
-            </button>
-            <span
-              v-if="view.tags && view.tags.length"
-              class="inline-flex items-center gap-0.5 ml-1"
-            >
-              <span
-                v-for="tag in view.tags"
-                :key="view.id + ':' + tag"
-                class="px-1 rounded-full bg-sky-50 border border-sky-100 text-[9px] text-sky-700 cursor-pointer"
-                :title="`Filter by tag '${tag}'`"
-                @click.stop="toggleTagFilter(tag)"
-              >
-                {{ tag }}
-              </span>
-            </span>
-            <button
-              class="text-[10px] text-gray-500 hover:text-gray-700"
-              title="Rename view"
-              @click="renameView(view.id)"
-            >
-              ✏
-            </button>
-            <button
-              class="text-[10px] text-gray-500 hover:text-gray-700"
-              title="Duplicate view"
-              @click="duplicateView(view.id)"
-            >
-              ⧉
-            </button>
-            <button
-              class="text-[10px]"
-              :class="view.isDefault ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'"
-              :title="view.isDefault ? 'Default view' : 'Set as default view'"
-              @click="setDefaultView(view.id)"
-            >
-              ⭐
-            </button>
-            <button
-              class="text-[10px] text-gray-500 hover:text-rose-600"
-              title="Delete this view"
-              @click="deleteSavedView(view.id)"
-            >
-              🗑
-            </button>
-          </div>
-        </div>
-
-        <div class="text-[10px] text-gray-500 mt-1 max-w-full space-y-0.5">
-          <div
-            v-for="view in sortedViews"
-            :key="view.id + 'meta'"
-            class="flex flex-wrap items-center gap-2"
-          >
-            <span class="font-mono text-[10px]">
-              {{ view.name }}
-            </span>
-            <span
-              v-if="view.isDefault"
-              class="text-amber-600 text-[10px]"
-            >
-              (default)
-            </span>
-            <span
-              v-if="view.description"
-              class="text-gray-600 text-[10px]"
-            >
-              — {{ view.description }}
-            </span>
-            <span class="text-gray-500 text-[10px]">
-              created: {{ formatMetaTime(view.createdAt) }}
-            </span>
-            <span class="text-gray-500 text-[10px]">
-              last used: {{ formatMetaTime(view.lastUsedAt || view.createdAt) }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-else
-        class="text-[10px] text-gray-500 italic"
-      >
-        No saved views match the current view filters.
-        <span v-if="savedViews.length">
-          Try clearing search or tag filter.
-        </span>
-        <span v-else>
-          Create your first view above.
-        </span>
-      </div>
-    </div>
+    <SavedViewsPanel
+      ref="savedViewsPanelRef"
+      storage-key="ltb_crosslab_risk_views"
+      :get-current-filters="getCurrentFilters"
+      @apply="handleApplyFilters"
+    />
 
     <!-- Summary chips -->
     <div
@@ -763,9 +472,10 @@ Action: Replace the entire file with this version.
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import axios from "axios";
 import { useRouter, useRoute } from "vue-router";
+import { SavedViewsPanel } from "@/components/ui";
 
 interface RiskAggregateBucketResponse {
   lane: string;
@@ -809,22 +519,6 @@ interface BucketEntry {
   unchanged_paths: number;
 }
 
-interface SavedView {
-  id: string;
-  name: string;
-  lane: string;
-  preset: string;
-  jobHint: string;
-  since: string;
-  until: string;
-  description?: string;
-  tags?: string[];
-  createdAt: string;
-  lastUsedAt?: string | null;
-  isDefault?: boolean;
-}
-
-type ViewSortMode = "default" | "name" | "created" | "lastUsed";
 type QuickRangeMode = "" | "all" | "last7" | "last30" | "last90" | "year";
 
 interface LanePresetDef {
@@ -863,26 +557,34 @@ const bucketEntries = ref<BucketEntry[]>([]);
 const bucketEntriesLoading = ref<boolean>(false);
 const bucketEntriesError = ref<string | null>(null);
 
-// saved views
-const savedViews = ref<SavedView[]>([]);
-const newViewName = ref<string>("");
-const newViewDescription = ref<string>("");
-const newViewTags = ref<string>("");
-const saveError = ref<string | null>(null);
-const saveHint = ref<string>("");
+// saved views panel ref
+const savedViewsPanelRef = ref<InstanceType<typeof SavedViewsPanel> | null>(null);
 
-// view filters
-const viewSearch = ref<string>("");
-const viewTagFilter = ref<string>("");
+// saved views integration
+function getCurrentFilters(): Record<string, string> {
+  return {
+    lane: laneFilter.value,
+    preset: presetFilter.value,
+    jobHint: jobFilter.value,
+    since: since.value,
+    until: until.value,
+  };
+}
 
-// sort mode for views
-const viewSortMode = ref<ViewSortMode>("default");
+function handleApplyFilters(filters: Record<string, string>) {
+  laneFilter.value = filters.lane || "";
+  presetFilter.value = filters.preset || "";
+  jobFilter.value = filters.jobHint || "";
+  since.value = filters.since || "";
+  until.value = filters.until || "";
 
-// file input ref for import
-const importInputRef = ref<HTMLInputElement | null>(null);
+  // Derive quick range mode
+  quickRangeMode.value = !since.value && !until.value ? "all" : "";
 
-// localStorage key
-const STORAGE_KEY = "ltb_crosslab_risk_views";
+  syncFiltersToQuery();
+  clearBucketDetails();
+  refresh();
+}
 
 // quick range modes
 const quickRangeModes = [
@@ -1056,17 +758,6 @@ const hasAnyFilter = computed(() => {
   );
 });
 
-// can save current view?
-const canSaveCurrentView = computed(() => {
-  return !!newViewName.value.trim();
-});
-
-// default view label
-const defaultViewLabel = computed(() => {
-  const d = savedViews.value.find((v) => v.isDefault);
-  return d ? d.name : "none";
-});
-
 // URL <-> filter sync helpers
 function applyQueryToFilters() {
   const q = route.query;
@@ -1103,416 +794,6 @@ function syncFiltersToQuery() {
   setOrDelete("until", until.value);
 
   router.replace({ query: q }).catch(() => {});
-}
-
-// saved views helpers
-function loadSavedViews() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      savedViews.value = [];
-      return;
-    }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      savedViews.value = parsed
-        .filter((v: any) => v && typeof v === "object")
-        .map((v: any) => ({
-          ...v,
-          isDefault: !!v.isDefault,
-          lastUsedAt: v.lastUsedAt || null,
-          description: v.description || "",
-          tags: Array.isArray(v.tags)
-            ? v.tags.map((t: any) => String(t)).filter((t: string) => t.trim().length > 0)
-            : [],
-        }));
-    } else {
-      savedViews.value = [];
-    }
-  } catch (err) {
-    console.error("Failed to load saved views", err);
-    savedViews.value = [];
-  }
-}
-
-function persistSavedViews() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedViews.value));
-  } catch (err) {
-    console.error("Failed to persist saved views", err);
-  }
-}
-
-function makeViewId(): string {
-  return `view_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-function parseTags(input: string): string[] {
-  if (!input.trim()) return [];
-  return input
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
-function saveCurrentView() {
-  saveError.value = null;
-  saveHint.value = "";
-  const name = newViewName.value.trim();
-  if (!name) {
-    saveError.value = "Name is required.";
-    return;
-  }
-
-  const existing = savedViews.value.find(
-    (v) => v.name.toLowerCase() === name.toLowerCase()
-  );
-  if (existing) {
-    saveError.value = "A view with this name already exists.";
-    return;
-  }
-
-  const now = nowIso();
-
-  const view: SavedView = {
-    id: makeViewId(),
-    name,
-    lane: laneFilter.value || "",
-    preset: presetFilter.value || "",
-    jobHint: jobFilter.value || "",
-    since: since.value || "",
-    until: until.value || "",
-    description: newViewDescription.value.trim() || "",
-    tags: parseTags(newViewTags.value),
-    createdAt: now,
-    lastUsedAt: null,
-    isDefault: savedViews.value.length === 0,
-  };
-
-  savedViews.value = [...savedViews.value, view];
-  persistSavedViews();
-  newViewName.value = "";
-  newViewDescription.value = "";
-  newViewTags.value = "";
-  saveHint.value = "View saved.";
-}
-
-function applySavedView(view: SavedView) {
-  laneFilter.value = view.lane || "";
-  presetFilter.value = view.preset || "";
-  jobFilter.value = view.jobHint || "";
-  since.value = view.since || "";
-  until.value = view.until || "";
-
-  // when a view is applied, we consider the range "custom" unless both dates are empty
-  quickRangeMode.value = !since.value && !until.value ? "all" : "";
-
-  const now = nowIso();
-  savedViews.value = savedViews.value.map((v) =>
-    v.id === view.id ? { ...v, lastUsedAt: now } : v
-  );
-  persistSavedViews();
-
-  syncFiltersToQuery();
-  clearBucketDetails();
-  refresh();
-}
-
-function renameView(id: string) {
-  const view = savedViews.value.find((v) => v.id === id);
-  if (!view) return;
-  const currentName = view.name;
-  const newName = window.prompt("Rename view:", currentName);
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed) {
-    saveError.value = "Name cannot be empty.";
-    return;
-  }
-
-  const exists = savedViews.value.find(
-    (v) =>
-      v.id !== id && v.name.toLowerCase() === trimmed.toLowerCase()
-  );
-  if (exists) {
-    saveError.value = "Another view already uses that name.";
-    return;
-  }
-
-  savedViews.value = savedViews.value.map((v) =>
-    v.id === id ? { ...v, name: trimmed } : v
-  );
-  persistSavedViews();
-  saveHint.value = "View renamed.";
-  saveError.value = null;
-}
-
-function duplicateView(id: string) {
-  const original = savedViews.value.find((v) => v.id === id);
-  if (!original) return;
-
-  const now = nowIso();
-  const baseName = `${original.name} copy`;
-  let candidate = baseName;
-  let counter = 2;
-  while (
-    savedViews.value.some(
-      (v) => v.name.toLowerCase() === candidate.toLowerCase()
-    )
-  ) {
-    candidate = `${baseName} ${counter}`;
-    counter += 1;
-  }
-
-  const clone: SavedView = {
-    ...original,
-    id: makeViewId(),
-    name: candidate,
-    createdAt: now,
-    lastUsedAt: null,
-    isDefault: false,
-  };
-
-  savedViews.value = [...savedViews.value, clone];
-  persistSavedViews();
-  saveHint.value = "View duplicated.";
-  saveError.value = null;
-}
-
-function deleteSavedView(id: string) {
-  const wasDefault = savedViews.value.find((v) => v.id === id)?.isDefault;
-  savedViews.value = savedViews.value.filter((v) => v.id !== id);
-
-  if (wasDefault && savedViews.value.length > 0) {
-    savedViews.value = savedViews.value.map((v) => ({ ...v, isDefault: false }));
-  }
-
-  persistSavedViews();
-}
-
-function setDefaultView(id: string) {
-  let found = false;
-  savedViews.value = savedViews.value.map((v) => {
-    if (v.id === id) {
-      found = true;
-      return { ...v, isDefault: true };
-    }
-    return { ...v, isDefault: false };
-  });
-  if (found) {
-    persistSavedViews();
-    saveHint.value = "Default view updated.";
-    saveError.value = null;
-  }
-}
-
-function viewTooltip(view: SavedView): string {
-  const parts: string[] = [];
-  if (view.lane) parts.push(`lane=${view.lane}`);
-  if (view.preset) parts.push(`preset=${view.preset}`);
-  if (view.jobHint) parts.push(`job_hint=${view.jobHint}`);
-  if (view.since) parts.push(`since=${view.since}`);
-  if (view.until) parts.push(`until=${view.until}`);
-  if (view.description) parts.push(`desc=${view.description}`);
-  if (view.tags && view.tags.length) {
-    parts.push(`tags=${view.tags.join(", ")}`);
-  }
-  return parts.length ? parts.join(" · ") : "No filters";
-}
-
-const allViewTags = computed<string[]>(() => {
-  const set = new Set<string>();
-  for (const v of savedViews.value) {
-    if (Array.isArray(v.tags)) {
-      for (const tag of v.tags) {
-        const t = tag.trim();
-        if (t) set.add(t);
-      }
-    }
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
-});
-
-function viewMatchesFilter(view: SavedView): boolean {
-  const s = viewSearch.value.trim().toLowerCase();
-  const tagFilter = viewTagFilter.value.trim();
-
-  if (tagFilter) {
-    const tags = view.tags || [];
-    if (!tags.some((t) => t === tagFilter)) {
-      return false;
-    }
-  }
-
-  if (!s) return true;
-
-  const haystackParts: string[] = [];
-  haystackParts.push(view.name || "");
-  if (view.description) haystackParts.push(view.description);
-  if (view.tags && view.tags.length) haystackParts.push(view.tags.join(" "));
-
-  const haystack = haystackParts.join(" ").toLowerCase();
-  return haystack.includes(s);
-}
-
-const sortedViews = computed<SavedView[]>(() => {
-  const base = savedViews.value.filter(viewMatchesFilter);
-  const arr = [...base];
-
-  function parseTime(t?: string | null): number {
-    if (!t) return 0;
-    const d = Date.parse(t);
-    return isNaN(d) ? 0 : d;
-  }
-
-  if (viewSortMode.value === "name") {
-    return arr.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-    );
-  }
-
-  if (viewSortMode.value === "created") {
-    return arr.sort((a, b) => parseTime(b.createdAt) - parseTime(a.createdAt));
-  }
-
-  if (viewSortMode.value === "lastUsed") {
-    return arr.sort((a, b) => {
-      const at = parseTime(a.lastUsedAt || a.createdAt);
-      const bt = parseTime(b.lastUsedAt || b.createdAt);
-      return bt - at;
-    });
-  }
-
-  return arr.sort((a, b) => {
-    if (a.isDefault && !b.isDefault) return -1;
-    if (!a.isDefault && b.isDefault) return 1;
-
-    const at = parseTime(a.lastUsedAt || a.createdAt);
-    const bt = parseTime(b.lastUsedAt || b.createdAt);
-    if (bt !== at) return bt - at;
-
-    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-  });
-});
-
-// recent views (top 5 by lastUsedAt, fallback to createdAt)
-const recentViews = computed<SavedView[]>(() => {
-  function parseTime(t?: string | null): number {
-    if (!t) return 0;
-    const d = Date.parse(t);
-    return isNaN(d) ? 0 : d;
-  }
-  const withTime = savedViews.value
-    .map((v) => ({
-      view: v,
-      t: parseTime(v.lastUsedAt || v.createdAt),
-    }))
-    .filter((x) => x.t > 0);
-  withTime.sort((a, b) => b.t - a.t);
-  return withTime.slice(0, 5).map((x) => x.view);
-});
-
-// import/export views
-function triggerImport() {
-  if (importInputRef.value) {
-    importInputRef.value.value = "";
-    importInputRef.value.click();
-  }
-}
-
-function handleImportFile(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files && input.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const text = String(reader.result || "");
-      const data = JSON.parse(text);
-      if (!Array.isArray(data)) {
-        saveError.value = "Invalid views file (expected an array).";
-        return;
-      }
-
-      const incoming: SavedView[] = data
-        .filter((v: any) => v && typeof v === "object")
-        .map((v: any) => ({
-          id: v.id || makeViewId(),
-          name: String(v.name || "Unnamed view"),
-          lane: v.lane || "",
-          preset: v.preset || "",
-          jobHint: v.jobHint || "",
-          since: v.since || "",
-          until: v.until || "",
-          description: v.description || "",
-          tags: Array.isArray(v.tags)
-            ? v.tags.map((t: any) => String(t)).filter((t: string) => t.trim().length > 0)
-            : [],
-          createdAt: v.createdAt || nowIso(),
-          lastUsedAt: v.lastUsedAt || null,
-          isDefault: !!v.isDefault,
-        }));
-
-      const byName = new Map<string, SavedView>();
-      for (const v of savedViews.value) {
-        byName.set(v.name.toLowerCase(), v);
-      }
-      for (const v of incoming) {
-        byName.set(v.name.toLowerCase(), v);
-      }
-
-      const merged = Array.from(byName.values());
-
-      let defaultSeen = false;
-      const normalized = merged.map((v) => {
-        if (v.isDefault) {
-          if (defaultSeen) {
-            return { ...v, isDefault: false };
-          }
-          defaultSeen = true;
-          return v;
-        }
-        return v;
-      });
-
-      savedViews.value = normalized;
-      persistSavedViews();
-      saveError.value = null;
-      saveHint.value = "Views imported.";
-    } catch (err) {
-      console.error("Failed to import views", err);
-      saveError.value = "Failed to import views.";
-    }
-  };
-  reader.readAsText(file);
-}
-
-function exportViews() {
-  if (!savedViews.value.length) return;
-  try {
-    const blob = new Blob([JSON.stringify(savedViews.value, null, 2)], {
-      type: "application/json",
-    });
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = `crosslab_risk_views_${stamp}.json`;
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error("Failed to export views", err);
-    saveError.value = "Failed to export views.";
-  }
 }
 
 const allLanes = computed(() => {
@@ -2021,18 +1302,20 @@ function applyDefaultViewIfNeeded() {
   if (hasQuery) return;
   if (!filtersAreEmpty()) return;
 
-  const def = savedViews.value.find((v) => v.isDefault);
+  // Access default view from the panel component
+  const def = savedViewsPanelRef.value?.defaultView;
   if (!def) {
     // if no default view, default quick range is "all"
     quickRangeMode.value = "all";
     return;
   }
-  applySavedView(def);
+  handleApplyFilters(def.filters);
 }
 
-onMounted(() => {
-  loadSavedViews();
+onMounted(async () => {
   applyQueryToFilters();
+  // Wait for panel to mount and load views before applying default
+  await nextTick();
   applyDefaultViewIfNeeded();
   refresh();
 });
