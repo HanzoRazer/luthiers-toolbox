@@ -115,248 +115,23 @@
     </div>
 
     <!-- Buckets table -->
-    <div
-      v-if="filteredBuckets.length"
-      class="overflow-x-auto"
-    >
-      <table class="min-w-full text-[11px] text-left">
-        <thead class="border-b bg-gray-50">
-          <tr>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Lane
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Preset
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Entries
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Avg +Added
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Avg -Removed
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Avg =Unchanged
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Risk
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Trend (Added)
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Trend (Removed)
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="bucket in filteredBuckets"
-            :key="bucket.key"
-            class="border-b last:border-0 hover:bg-gray-50"
-          >
-            <td
-              class="px-2 py-1 whitespace-nowrap cursor-pointer"
-              :title="`Open ${bucket.lane} lab for preset '${bucket.preset}'`"
-              @click="goToLab(bucket)"
-            >
-              {{ bucket.lane }}
-            </td>
-            <td
-              class="px-2 py-1 whitespace-nowrap cursor-pointer"
-              :title="`Open ${bucket.lane} lab for preset '${bucket.preset}'`"
-              @click="goToLab(bucket)"
-            >
-              {{ bucket.preset }}
-            </td>
-            <td class="px-2 py-1 text-right">
-              {{ bucket.count }}
-            </td>
-            <td class="px-2 py-1 text-right text-emerald-700">
-              {{ bucket.avgAdded.toFixed(1) }}
-            </td>
-            <td class="px-2 py-1 text-right text-rose-700">
-              {{ bucket.avgRemoved.toFixed(1) }}
-            </td>
-            <td class="px-2 py-1 text-right">
-              {{ bucket.avgUnchanged.toFixed(1) }}
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap">
-              <span
-                class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
-                :class="riskChipClass(bucket.riskScore)"
-              >
-                {{ bucket.riskLabel }}
-              </span>
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap">
-              <svg
-                :width="sparkWidth"
-                :height="sparkHeight"
-                viewBox="0 0 60 20"
-              >
-                <polyline
-                  v-if="bucket.addedPath"
-                  :points="bucket.addedPath"
-                  fill="none"
-                  stroke="#22c55e"
-                  stroke-width="1.2"
-                />
-              </svg>
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap">
-              <svg
-                :width="sparkWidth"
-                :height="sparkHeight"
-                viewBox="0 0 60 20"
-              >
-                <polyline
-                  v-if="bucket.removedPath"
-                  :points="bucket.removedPath"
-                  fill="none"
-                  stroke="#ef4444"
-                  stroke-width="1.2"
-                />
-              </svg>
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap">
-              <button
-                class="px-2 py-0.5 rounded border text-[10px] text-gray-700 hover:bg-gray-100"
-                @click="loadBucketDetails(bucket)"
-              >
-                Details
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <BucketsTable
+      :buckets="filteredBuckets"
+      @select-bucket="loadBucketDetails"
+      @go-to-lab="goToLab"
+    />
 
     <!-- Bucket details panel -->
-    <div
-      v-if="selectedBucket"
-      class="mt-3 border rounded bg-white shadow-sm p-3 flex flex-col gap-2 text-[11px]"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <div class="font-semibold text-gray-900">
-            Bucket Details – {{ selectedBucket.lane }} / {{ selectedBucket.preset }}
-          </div>
-          <div class="text-[10px] text-gray-600">
-            Showing underlying compare snapshots for this lane + preset.
-            <span v-if="jobFilter">
-              Filtered by job hint: <span class="font-mono">{{ jobFilter }}</span>
-            </span>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            class="px-2 py-0.5 rounded border text-[10px] text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            :disabled="!bucketEntries.length"
-            @click="exportBucketCsv"
-          >
-            Export entries CSV
-          </button>
-          <button
-            class="px-2 py-0.5 rounded border text-[10px] text-gray-700 hover:bg-gray-100"
-            @click="downloadBucketJson"
-          >
-            Download JSON report
-          </button>
-          <button
-            class="px-2 py-0.5 rounded border text-[10px] text-gray-700 hover:bg-gray-100"
-            @click="clearBucketDetails"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-
-      <div
-        v-if="bucketEntriesLoading"
-        class="text-[10px] text-gray-500 italic"
-      >
-        Loading bucket entries…
-      </div>
-      <div
-        v-else-if="bucketEntriesError"
-        class="text-[10px] text-rose-600"
-      >
-        {{ bucketEntriesError }}
-      </div>
-      <div
-        v-else-if="!bucketEntries.length"
-        class="text-[10px] text-gray-500 italic"
-      >
-        No entries found for this bucket (with current job hint).
-      </div>
-      <div
-        v-else
-        class="overflow-x-auto max-h-64 border-t pt-2"
-      >
-        <table class="min-w-full text-[10px] text-left">
-          <thead class="">
-            <tr class="border-b bg-gray-50">
-              <th class="px-2 py-1 whitespace-nowrap">
-                Time
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap">
-                Job ID
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">
-                Baseline
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">
-                Current
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">
-                +Added
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">
-                -Removed
-              </th>
-              <th class="px-2 py-1 whitespace-nowrap text-right">
-                =Unchanged
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="entry in bucketEntries"
-              :key="entry.ts + '::' + (entry.job_id || '') + '::' + entry.baseline_id"
-              class="border-b last:border-0"
-            >
-              <td class="px-2 py-1 whitespace-nowrap">
-                {{ formatTime(entry.ts) }}
-              </td>
-              <td class="px-2 py-1 whitespace-nowrap font-mono">
-                {{ entry.job_id || '—' }}
-              </td>
-              <td class="px-2 py-1 text-right font-mono">
-                {{ entry.baseline_path_count }}
-              </td>
-              <td class="px-2 py-1 text-right font-mono">
-                {{ entry.current_path_count }}
-              </td>
-              <td class="px-2 py-1 text-right text-emerald-700 font-mono">
-                {{ entry.added_paths }}
-              </td>
-              <td class="px-2 py-1 text-right text-rose-700 font-mono">
-                {{ entry.removed_paths }}
-              </td>
-              <td class="px-2 py-1 text-right font-mono">
-                {{ entry.unchanged_paths }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <BucketDetailsPanel
+      :bucket="selectedBucket"
+      :entries="bucketEntries"
+      :loading="bucketEntriesLoading"
+      :error="bucketEntriesError"
+      :job-filter="jobFilter"
+      @export-csv="exportBucketCsv"
+      @download-json="downloadBucketJson"
+      @close="clearBucketDetails"
+    />
   </div>
 </template>
 
@@ -365,7 +140,15 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import axios from "axios";
 import { useRouter, useRoute } from "vue-router";
 import { SavedViewsPanel } from "@/components/ui";
-import { FiltersBar, type LanePresetDef, type QuickRangeMode } from "@/components/dashboard";
+import {
+  FiltersBar,
+  BucketsTable,
+  BucketDetailsPanel,
+  type LanePresetDef,
+  type QuickRangeMode,
+  type Bucket,
+  type BucketEntry,
+} from "@/components/dashboard";
 
 interface RiskAggregateBucketResponse {
   lane: string;
@@ -380,35 +163,7 @@ interface RiskAggregateBucketResponse {
   removed_series: number[];
 }
 
-interface Bucket {
-  key: string;
-  lane: string;
-  preset: string;
-  count: number;
-  avgAdded: number;
-  avgRemoved: number;
-  avgUnchanged: number;
-  riskScore: number;
-  riskLabel: string;
-  addedSeries: number[];
-  removedSeries: number[];
-  addedPath: string;
-  removedPath: string;
-}
-
-interface BucketEntry {
-  ts: string;
-  job_id: string | null;
-  lane: string;
-  preset: string | null;
-  baseline_id: string;
-  baseline_path_count: number;
-  current_path_count: number;
-  added_paths: number;
-  removed_paths: number;
-  unchanged_paths: number;
-}
-
+// Bucket and BucketEntry imported from dashboard components
 // QuickRangeMode and LanePresetDef imported from FiltersBar
 
 const router = useRouter();
@@ -695,13 +450,6 @@ function computeRiskScoreLabel(score: number): string {
   return "Extreme";
 }
 
-function riskChipClass(score: number): string {
-  if (score < 1) return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-  if (score < 3) return "bg-amber-50 text-amber-700 border border-amber-200";
-  if (score < 6) return "bg-orange-50 text-orange-700 border border-orange-200";
-  return "bg-rose-50 text-rose-700 border border-rose-200";
-}
-
 function buildSparklineFromSeries(
   values: number[],
   width: number,
@@ -903,15 +651,6 @@ function clearBucketDetails() {
   bucketEntries.value = [];
   bucketEntriesError.value = null;
   bucketEntriesLoading.value = false;
-}
-
-function formatTime(ts: string): string {
-  try {
-    const d = new Date(ts);
-    return d.toLocaleString();
-  } catch {
-    return ts;
-  }
 }
 
 function formatMetaTime(ts?: string | null): string {
