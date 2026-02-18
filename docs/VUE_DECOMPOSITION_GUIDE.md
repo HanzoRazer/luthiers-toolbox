@@ -14,7 +14,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 |-----------|-----|------|--------|
 | AdaptivePocketLab.vue | 2424 | Lab | Needs decomposition |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
-| RiskDashboardCrossLab.vue | 1209 | Dashboard | ✅ Wired SavedViewsPanel + FiltersBar (-41% LOC) |
+| RiskDashboardCrossLab.vue | 948 | Dashboard | ✅ COMPLETE (-54% LOC) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
 | DxfToGcodeView.vue | 1503 | View | ✅ Wired components (-344 LOC) |
 | ScientificCalculator.vue | 1562 | Toolbox | Needs review |
@@ -49,7 +49,9 @@ Created components in `components/dxf/`:
 - `RunCompareCard.vue` - Run comparison display
 
 Created components in `components/dashboard/`:
-- `FiltersBar.vue` - Lane/preset/date/quick-range filters (new)
+- `FiltersBar.vue` - Lane/preset/date/quick-range filters
+- `BucketsTable.vue` - Risk buckets table with sparklines
+- `BucketDetailsPanel.vue` - Bucket drill-down details panel
 
 ### 3. Use Composables for Logic
 
@@ -99,28 +101,23 @@ Pattern: Extract template sections into focused components that:
 
 **Commit:** `8c552bd` - Reduced from 1847 → 1503 LOC (-19%)
 
-### RiskDashboardCrossLab.vue (1209 LOC) ✅ WIRED
+### RiskDashboardCrossLab.vue (948 LOC) ✅ COMPLETE
 
 **Completed:**
-- ✅ `useSavedViews` composable created (~450 LOC of logic with legacy migration)
-- ✅ `SavedViewsPanel` component created (~370 LOC of template)
-- ✅ `FiltersBar` component created (~230 LOC)
-- ✅ Wired both components into dashboard
-- ✅ Removed ~287 lines of inline saved views template
-- ✅ Removed ~370 lines of saved views helper functions
-- ✅ Removed ~125 lines of inline filters template
+- ✅ `useSavedViews` composable (~450 LOC with legacy migration)
+- ✅ `SavedViewsPanel` component (~370 LOC)
+- ✅ `FiltersBar` component (~230 LOC)
+- ✅ `BucketsTable` component (~175 LOC)
+- ✅ `BucketDetailsPanel` component (~195 LOC)
 
 **Legacy Migration:** Composable auto-converts old format (`{lane, preset, jobHint, since, until}`)
 to new format (`{filters: Record<string, string>}`) on load.
 
-**Remaining extractions:**
-- `BucketsTable.vue` - Risk buckets with sparklines (~120 lines)
-- `BucketDetailsPanel.vue` - Selected bucket drill-down (~120 lines)
-
 **Commits:**
 - `1be2d8c` - Composable + component created
-- `35baec8` - Wired SavedViewsPanel, reduced 2062 → 1345 LOC (-35%)
-- `14d7d51` - Wired FiltersBar, reduced 1345 → 1209 LOC (-41% total)
+- `35baec8` - Wired SavedViewsPanel (2062 → 1345, -35%)
+- `14d7d51` - Wired FiltersBar (1345 → 1209, -41%)
+- `822a93b` - Wired BucketsTable + BucketDetailsPanel (1209 → 948, -54%)
 
 ### ManufacturingCandidateList.vue (2319 LOC)
 
