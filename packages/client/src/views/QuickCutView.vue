@@ -10,6 +10,8 @@
  * Uses real RMOS API for safety gating.
  */
 import { ref, computed } from 'vue'
+import RiskBadge from '@/components/ui/RiskBadge.vue'
+import RmosTooltip from '@/components/rmos/RmosTooltip.vue'
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || ''
 
@@ -325,19 +327,24 @@ function reset() {
       <!-- Safety Summary -->
       <div class="safety-summary" :class="riskClass">
         <div class="safety-header">
-          <span class="safety-icon">{{ riskIcon }}</span>
-          <span class="safety-level">{{ riskLevel || 'UNKNOWN' }}</span>
-          <span class="safety-label">Safety Check</span>
+          <RiskBadge :level="riskLevel" size="lg" />
+          <span class="safety-label">
+            Safety Check
+            <RmosTooltip concept="feasibility" :inline="true" />
+          </span>
         </div>
 
         <div v-if="riskLevel === 'GREEN'" class="safety-message">
           All checks passed. Safe to run on machine.
+          <RmosTooltip concept="risk-green" :inline="true" />
         </div>
         <div v-else-if="riskLevel === 'YELLOW'" class="safety-message">
           Review warnings before proceeding. Download available.
+          <RmosTooltip concept="risk-yellow" :inline="true" />
         </div>
         <div v-else-if="riskLevel === 'RED'" class="safety-message">
           Blocked for safety. Review parameters and try again.
+          <RmosTooltip concept="risk-red" :inline="true" />
         </div>
 
         <ul v-if="warnings.length > 0" class="warnings-list">
@@ -357,7 +364,10 @@ function reset() {
         <p><strong>Machine:</strong> {{ machines.find(m => m.id === selectedMachine)?.name }}</p>
         <p><strong>Material:</strong> {{ materials.find(m => m.id === selectedMaterial)?.name }}</p>
         <p><strong>Tool:</strong> {{ toolDiameter }}mm, {{ stepdown }}mm stepdown</p>
-        <p v-if="result?.run_id" class="run-id"><strong>Run ID:</strong> {{ result.run_id }}</p>
+        <p v-if="result?.run_id" class="run-id">
+          <strong>Run ID:</strong> {{ result.run_id }}
+          <RmosTooltip concept="run-id" :inline="true" />
+        </p>
       </div>
 
       <div class="step-actions">
