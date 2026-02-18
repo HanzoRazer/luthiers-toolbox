@@ -1,9 +1,9 @@
-# Luthier's Tool Box – Architecture
+# Luthier's Tool Box - Architecture
 
 > System design, data flows, and integration patterns for the CNC guitar lutherie platform.
 
-**Last Updated**: November 3, 2025  
-**Version**: Multi-project mono-repo architecture
+**Last Updated**: February 2026
+**Version**: 2.0 - RMOS Safety Architecture
 
 ---
 
@@ -11,503 +11,424 @@
 
 1. [System Overview](#system-overview)
 2. [Repository Organization](#repository-organization)
-3. [Core Application Architecture](#core-application-architecture)
-4. [Pipeline System](#pipeline-system)
-5. [Feature Catalog](#feature-catalog)
-6. [Data Flows](#data-flows)
+3. [RMOS Decision Pipeline](#rmos-decision-pipeline)
+4. [Data Flows](#data-flows)
+5. [API Architecture](#api-architecture)
+6. [Frontend Architecture](#frontend-architecture)
 7. [CAM Integration](#cam-integration)
-8. [Smart Guitar Project](#smart-guitar-project)
-9. [Extension Points](#extension-points)
-10. [Design Decisions](#design-decisions)
+8. [Feature Flags](#feature-flags)
+9. [Design Decisions](#design-decisions)
 
 ---
 
 ## System Overview
 
-### **High-Level Architecture**
+### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    BROWSER CLIENT                           │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Vue 3 + Vite (TypeScript)                         │    │
-│  │  ├── CadCanvas.vue      (Design interface)         │    │
-│  │  ├── LuthierCalculator  (String spacing, etc.)     │    │
-│  │  └── ExportView         (DXF queue management)     │    │
-│  └────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                          │ HTTP/WS
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    FASTAPI SERVER                           │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  app.py (FastAPI application)                      │    │
-│  │  ├── /projects, /documents, /versions             │    │
-│  │  ├── /boolean (Shapely operations)                │    │
-│  │  ├── /exports/queue (DXF generation)              │    │
-│  │  └── WebSocket (real-time presence)               │    │
-│  └────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 PIPELINE ECOSYSTEM                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  Rosette    │  │  Bracing    │  │  Hardware   │        │
-│  │  Calculator │  │  Analysis   │  │  Layout     │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  G-code     │  │  DXF        │  │  Export     │        │
-│  │  Explainer  │  │  Cleaner    │  │  Queue      │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   CAM SOFTWARE                              │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │ Fusion   │ │  Mach4   │ │  VCarve  │ │ LinuxCNC │      │
-│  │  360     │ │          │ │          │ │  (EMC2)  │      │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
-│  ┌──────────┐                                               │
-│  │  Masso   │  (Hot Folder: C:\CAM\HotFolder)             │
-│  └──────────┘                                               │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         BROWSER CLIENT                               │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  Vue 3 + Vite (TypeScript)                                    │  │
+│  │  ├── DxfToGcodeView      (DXF → G-code workflow)              │  │
+│  │  ├── AdaptivePocketLab   (Toolpath configuration)             │  │
+│  │  ├── RmosRunViewer       (Run inspection + audit)             │  │
+│  │  └── ScaleLengthDesigner (Parametric calculations)            │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                             │ HTTP API
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FASTAPI SERVER                               │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  services/api/app/                                            │  │
+│  │  ├── rmos/           (RMOS Safety System - Core)              │  │
+│  │  │   ├── feasibility/  (22 rules: F001-F029)                  │  │
+│  │  │   ├── runs_v2/      (Immutable run artifacts)              │  │
+│  │  │   └── operations/   (Export gates, overrides)              │  │
+│  │  ├── cam/            (CAM Operations)                         │  │
+│  │  │   ├── adaptive_pocket  (Spiral/trochoidal toolpaths)       │  │
+│  │  │   └── posts/           (GRBL, Mach4, LinuxCNC, etc.)       │  │
+│  │  ├── saw_lab/        (Batch sawing + decision intelligence)   │  │
+│  │  └── calculators/    (Fret, scale length, chipload)           │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      ARTIFACT STORAGE                                │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │
+│  │  Run        │  │  Content-   │  │  Audit      │                 │
+│  │  Artifacts  │  │  Addressed  │  │  Trail      │                 │
+│  │  (JSON)     │  │  Store      │  │  (Append)   │                 │
+│  └─────────────┘  └─────────────┘  └─────────────┘                 │
+│                                                                      │
+│  Paths:                                                              │
+│  - {RMOS_RUNS_DIR}/runs/{run_id}/run.json                           │
+│  - {RMOS_RUNS_DIR}/attachments/{sha256}                             │
+│  - {RMOS_RUNS_DIR}/validation_logs/                                 │
+└─────────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      CNC CONTROLLERS                                 │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│  │   GRBL   │ │  Mach4   │ │ LinuxCNC │ │ PathPilot│ │  MASSO   │ │
+│  │  (Hobby) │ │          │ │  (EMC2)  │ │ (Tormach)│ │          │ │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Repository Organization
 
-### **Mono-Repo Structure**
+### Monorepo Structure
 
-The repository contains **three types of projects**:
-
-#### **1. Core Application** (Active Development)
-- **Path**: Extracted from MVP builds → `server/`, `client/`
-- **Purpose**: Web-based CAD/CAM interface
-- **Status**: Under active integration
-
-#### **2. Feature Libraries** (MVP Builds)
-- **Paths**: `Luthiers Tool Box/MVP Build_10-11-2025/`, `MVP Build_1012-2025/`
-- **Purpose**: Reference implementations for cherry-picking features
-- **Structure**:
-  ```
-  MVP Build_*/
-  ├── MVP_scaffold_bracing_hardware/     # Bracing + hardware tools
-  ├── MVP_GCode_Explainer_Addon/         # G-code analysis
-  ├── rosette_pack/                      # Rosette calculator
-  ├── qrm_pack/                          # Mesh retopology presets
-  └── Luthiers_Tool_Box_Full_GitHubReady_Plus_Integrated_Rosette_Queue/
-  ```
-
-#### **3. Design Archives**
-- **Paths**: `Lutherier Project/`, `Guitar Design HTML app/`
-- **Purpose**: CAD files, Fusion 360 setups, DXF templates
-- **Contents**:
-  - Les Paul / J-45 project files
-  - DXF cleaning scripts
-  - Fusion 360 tool libraries and post-processors
-
-#### **4. Smart Guitar Project** (Separate)
-- **Path**: `Smart Guitar Build/`
-- **Purpose**: IoT/embedded guitar with Raspberry Pi 5
-- **Tech Stack**: Python, MIDI, Bluetooth, GPIO
-- **Integration**: Rear cavity DXF templates for CNC machining
-
----
-
-## Core Application Architecture
-
-### **Technology Stack**
-
-#### **Frontend (Client)**
-- **Framework**: Vue 3.4+ with Composition API (`<script setup>`)
-- **Build Tool**: Vite 5.0+
-- **Language**: TypeScript
-- **Key Libraries**: None (vanilla Vue + native Canvas API)
-
-#### **Backend (Server)**
-- **Framework**: FastAPI (Python 3.11+)
-- **Validation**: Pydantic models
-- **Geometry**: Shapely (boolean operations)
-- **DXF**: ezdxf (R12/AC1009 format)
-- **Server**: Uvicorn (ASGI)
-
-#### **Deployment**
-- **Primary**: GitHub Pages (static) + GitHub Actions
-- **Alternative**: Docker Compose, Railway, Vercel
-- **Storage**: File-based (JSON + DXF files in `server/storage/`)
-
-### **API Endpoints**
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/projects` | POST | Create project container |
-| `/documents` | POST | Create document within project |
-| `/versions/save` | POST | Save snapshot with geometry (mm units) |
-| `/versions/{doc_id}` | GET | List all versions |
-| `/boolean` | POST | Shapely union/intersect operations |
-| `/exports/queue` | POST | Queue DXF export job |
-| `/exports/list` | GET | List queued/ready exports |
-| `/files/{export_id}` | GET | Download generated DXF |
-| `/ws` | WebSocket | Real-time presence updates |
-
-### **Data Models**
-
-#### **Project → Document → Version Hierarchy**
-```python
-Project {
-  id: str (UUID)
-  name: str
-  created_at: datetime
-}
-
-Document {
-  id: str (UUID)
-  project_id: str
-  name: str
-  head_version: int
-}
-
-Version {
-  version_no: int
-  is_snapshot: bool
-  payload_json: {
-    units: "mm"
-    polylines: [[[x,y], [x,y], ...]]
-    metadata: {...}
-  }
-  author: str
-  created_at: datetime
-}
+```
+luthiers-toolbox/
+├── packages/
+│   └── client/                 # Vue 3 frontend
+│       └── src/
+│           ├── components/     # Reusable UI components
+│           │   ├── dxf/        # DXF workflow components
+│           │   ├── rmos/       # RMOS-specific components
+│           │   ├── toolbox/    # Calculator components
+│           │   └── ui/         # Generic UI (badges, panels)
+│           ├── views/          # Page-level components
+│           ├── stores/         # Pinia state management
+│           └── sdk/            # API client endpoints
+│
+├── services/
+│   └── api/
+│       └── app/                # FastAPI backend (236 LOC main.py)
+│           ├── rmos/           # RMOS Safety System
+│           ├── cam/            # CAM operations
+│           ├── saw_lab/        # Saw Lab decision intelligence
+│           ├── calculators/    # Parametric calculators
+│           ├── feasibility/    # Feasibility engine
+│           ├── vision/         # AI Vision (experimental)
+│           └── routers/        # API route handlers
+│
+├── contracts/                  # JSON Schema contracts
+├── docs/                       # Documentation
+├── tests/                      # Test suites
+└── ci/                         # CI/CD scripts and fences
 ```
 
 ---
 
-## Pipeline System
+## RMOS Decision Pipeline
 
-### **Design Pattern**
+### Overview
 
-Each pipeline is a **standalone CLI tool** that:
-1. Reads JSON configuration
-2. Performs calculations
-3. Outputs JSON report + artifact (DXF/SVG/G-code)
-4. Updates `queue.json` for UI integration
+RMOS (Run Manufacturing Operations System) is the safety-critical decision layer that gates all CNC operations.
 
-### **Pipeline Template**
-
-```python
-# pipelines/<tool>/<tool>_calc.py
-import argparse, json, pathlib
-
-def compute(params: dict) -> dict:
-    """Core calculation logic"""
-    # Extract params
-    # Perform math
-    # Return results
-    pass
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("json_in")
-    ap.add_argument("--out-dir", default="out")
-    args = ap.parse_args()
-    
-    params = json.loads(pathlib.Path(args.json_in).read_text())
-    result = compute(params)
-    
-    out_dir = pathlib.Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "result.json").write_text(json.dumps(result, indent=2))
-
-if __name__ == "__main__":
-    main()
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     RMOS DECISION PIPELINE                           │
+│                                                                      │
+│   DXF Input                                                          │
+│       │                                                              │
+│       ▼                                                              │
+│   ┌─────────────┐                                                    │
+│   │  Preflight  │  Validate DXF geometry, layer names, closure      │
+│   │  Checks     │                                                    │
+│   └──────┬──────┘                                                    │
+│          │                                                           │
+│          ▼                                                           │
+│   ┌─────────────┐    ┌──────────────────────────────────────────┐   │
+│   │ Feasibility │───▶│  22 Rules (F001-F029)                    │   │
+│   │   Engine    │    │  ├─ F001-F007: RED (blocking)            │   │
+│   └──────┬──────┘    │  ├─ F010-F013: YELLOW (warnings)         │   │
+│          │           │  ├─ F020-F029: RED (adversarial)         │   │
+│          │           │  └─ F030-F041: YELLOW/RED (edge cases)   │   │
+│          │           └──────────────────────────────────────────┘   │
+│          ▼                                                           │
+│   ┌─────────────┐                                                    │
+│   │  Decision   │  risk_level: GREEN | YELLOW | RED                 │
+│   │  Authority  │  export_allowed: true | false                     │
+│   └──────┬──────┘                                                    │
+│          │                                                           │
+│          ├────────────────┬────────────────┐                        │
+│          │                │                │                        │
+│          ▼                ▼                ▼                        │
+│   ┌───────────┐    ┌───────────┐    ┌───────────┐                  │
+│   │   GREEN   │    │  YELLOW   │    │    RED    │                  │
+│   │  Proceed  │    │  Override │    │  BLOCKED  │                  │
+│   │           │    │  Required │    │           │                  │
+│   └─────┬─────┘    └─────┬─────┘    └───────────┘                  │
+│         │                │                                          │
+│         ▼                ▼                                          │
+│   ┌─────────────────────────────────────┐                           │
+│   │         CAM Execution               │                           │
+│   │  ├─ Generate toolpaths              │                           │
+│   │  ├─ Post-process G-code             │                           │
+│   │  └─ Create operator pack            │                           │
+│   └──────────────┬──────────────────────┘                           │
+│                  │                                                   │
+│                  ▼                                                   │
+│   ┌─────────────────────────────────────┐                           │
+│   │       Artifact Store                │                           │
+│   │  ├─ Run artifact (immutable)        │                           │
+│   │  ├─ G-code (content-addressed)      │                           │
+│   │  └─ Audit trail (append-only)       │                           │
+│   └─────────────────────────────────────┘                           │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Risk Levels
 
-## Feature Catalog
+| Level | Meaning | Export Allowed | Action Required |
+|-------|---------|----------------|-----------------|
+| **GREEN** | All checks pass | Yes | None |
+| **YELLOW** | Warnings present | Yes (with override) | Review warnings, acknowledge |
+| **RED** | Safety violation | No | Fix parameters or abort |
 
-### **Integration Status Matrix**
+### Key Rules
 
-| Feature | MVP Build | Status | Priority | Notes |
-|---------|-----------|--------|----------|-------|
-| **Rosette Calculator** | 10-11-2025, 1012-2025 | 🔄 Integrating | Medium | DXF + G-code generation ready |
-| **Bracing Analysis** | 10-11-2025 | 📦 Available | Low | Mass/glue area calculations |
-| **Hardware Layout** | 10-11-2025 | 📦 Available | Low | Electronics cavity planning |
-| **G-code Explainer** | 10-11-2025 | 📦 Available | Medium | Web UI + CLI tool |
-| **DXF Cleaner** | Lutherier Project/ | ✅ Complete | High | CAM prep utility |
-| **Export Queue** | 1012-2025 | 🔄 Integrating | High | Unified export management |
-| **WiringWorkbench** | Integration_Patch_v1 | 🔜 Planned | Low | Electronics wiring diagrams |
-| **FinishPlanner** | Integration_Patch_v1 | 🔜 Planned | Low | Finishing schedule calculator |
-| **QRM Retopology** | 10-11-2025 | 📦 Available | Low | Blender mesh retopology |
-| **Smart Guitar** | Smart Guitar Build/ | 🔀 Separate Project | N/A | IoT integration |
+| Rule ID | Level | Trigger |
+|---------|-------|---------|
+| F001 | RED | Invalid tool diameter (<0.5mm or >50mm) |
+| F002 | RED | Stepover out of range (<10% or >100%) |
+| F003 | RED | Stepdown exceeds safe limit |
+| F020 | RED | Excessive DOC in hardwood |
+| F021 | RED | Tool breakage risk (DOC:diameter >5:1) |
+| F010 | YELLOW | feed_z > feed_xy |
+| F011 | YELLOW | High loop count (>50) |
 
-**Legend**: ✅ Complete | 🔄 In Progress | 📦 Available in MVP | 🔜 Planned | 🔀 Separate
+Full reference: `docs/RMOS_FEASIBILITY_RULES_v1.md`
 
 ---
 
 ## Data Flows
 
-### **1. Design → Export Workflow**
+### DXF → G-code Workflow
 
 ```
-User creates geometry in CadCanvas.vue
-  ↓
-POST /versions/save { polylines: [...], units: "mm" }
-  ↓
-Server stores version with head_version++
-  ↓
-User clicks "Export DXF"
-  ↓
-POST /exports/queue { document_id, version_no, kind: "dxf" }
-  ↓
-Server generates R12 DXF with closed LWPolylines
-  ↓
-Export status → "ready"
-  ↓
-GET /files/{export_id} → Download DXF
-  ↓
-(Optional) poller.py copies to C:\CAM\HotFolder
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  DXF File   │────▶│  Preflight  │────▶│ Feasibility │────▶│    CAM      │
+│  (Upload)   │     │  Validation │     │   Check     │     │  Execution  │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                                                                   │
+                                                                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Download   │◀────│  Operator   │◀────│   G-code    │◀────│  Post-      │
+│  .nc file   │     │   Pack      │     │  Generation │     │  Process    │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-### **2. Pipeline Execution Workflow**
+### API Endpoints (Golden Path)
+
+```bash
+# 1. Upload DXF and get feasibility + plan
+POST /api/rmos/wrap/mvp/dxf-to-grbl
+  -F "file=@design.dxf"
+  -F "tool_d=6.0"
+  -F "stepover=0.4"
+  -F "z_rough=-3.0"
+
+# Response:
+{
+  "ok": true,
+  "run_id": "run_abc123...",
+  "decision": {
+    "risk_level": "GREEN",
+    "warnings": []
+  },
+  "gcode": { "inline": true, "text": "G90\nG17\n..." }
+}
+
+# 2. Download operator pack
+GET /api/rmos/runs_v2/{run_id}/operator-pack
+# Returns ZIP: manifest.json, input.dxf, output.nc, feasibility.json
+```
+
+### Run Artifact Structure
+
+```json
+{
+  "run_id": "run_20260218T143022_abc123",
+  "created_at": "2026-02-18T14:30:22Z",
+  "request_summary": {
+    "tool_d": 6.0,
+    "stepover": 0.4,
+    "z_rough": -3.0
+  },
+  "feasibility": {
+    "risk_level": "GREEN",
+    "rules_triggered": [],
+    "export_allowed": true
+  },
+  "decision": {
+    "risk_level": "GREEN",
+    "block_reason": null
+  },
+  "attachments": {
+    "gcode_sha256": "abc123...",
+    "input_dxf_sha256": "def456..."
+  }
+}
+```
+
+---
+
+## API Architecture
+
+### Router Organization
+
+The API uses 64 routers organized by domain:
+
+| Prefix | Domain | Key Endpoints |
+|--------|--------|---------------|
+| `/api/rmos/` | Safety system | runs_v2, feasibility, override |
+| `/api/cam/` | CAM operations | pocket/adaptive, posts |
+| `/api/saw/` | Saw Lab | batch, toolpaths, execution |
+| `/api/calculators/` | Tools | fret, scale-length, chipload |
+| `/api/health/` | Operations | status, detailed, features |
+
+### Safety Decorators
+
+```python
+@safety_critical(fail_closed=True)
+def compute_feasibility(input: FeasibilityInput) -> FeasibilityResult:
+    """
+    Decorated functions:
+    - Log all invocations
+    - Fail closed on any exception (return RED)
+    - Cannot be bypassed
+    """
+    pass
+```
+
+36 functions are marked `@safety_critical` across the codebase.
+
+---
+
+## Frontend Architecture
+
+### Component Hierarchy
 
 ```
-User prepares JSON config (example_params.json)
-  ↓
-python pipeline_tool.py example_params.json --out-dir out/
-  ↓
-Tool computes results (rosette channels, brace mass, etc.)
-  ↓
-Outputs:
-  - out/result.json (numeric results)
-  - out/artifact.dxf (CAM-ready geometry)
-  - out/queue.json (export queue metadata)
-  ↓
-UI reads queue.json → displays "Ready Exports"
+App.vue
+├── AppNav.vue (navigation)
+├── Views/
+│   ├── DxfToGcodeView.vue (main workflow)
+│   │   ├── DxfUploadZone.vue
+│   │   ├── CamParametersForm.vue
+│   │   ├── RunCompareCard.vue
+│   │   ├── RiskBadge.vue
+│   │   ├── OverrideBanner.vue
+│   │   └── WhyPanel.vue
+│   │
+│   ├── AdaptivePocketLab.vue (advanced CAM)
+│   │   ├── ToolLibraryPanel.vue
+│   │   ├── ParameterGrid.vue
+│   │   └── (5 more extracted components)
+│   │
+│   └── ScaleLengthDesigner.vue (calculators)
+│       ├── ScalePresetsPanel.vue
+│       ├── TensionCalculatorPanel.vue
+│       ├── IntonationPanel.vue
+│       └── MultiscalePanel.vue
 ```
 
-### **3. CAM Integration Workflow**
+### State Management
 
-```
-DXF file (R12, closed LWPolylines, mm units)
-  ↓
-Import into Fusion 360 / VCarve / Mach4
-  ↓
-Apply tool library (FusionSetup_Base_LP_Mach4.json)
-  ↓
-Generate toolpaths (profile, pocket, drill)
-  ↓
-Post-process to G-code
-  ↓
-(Optional) G-code Explainer for validation
-  ↓
-Send to CNC controller
-```
+- **Pinia stores** for global state
+- **Composables** for reusable logic (`useScaleLengthCalculator`, `usePocketSettings`)
+- **SDK endpoints** for API calls (`packages/client/src/sdk/`)
 
 ---
 
 ## CAM Integration
 
-### **Supported Platforms**
+### Supported Post-Processors
 
-#### **1. Fusion 360** (Primary)
-- **Setup Files**: `Lutherier Project/Les Paul_Project/09252025/Base_LP_Fusion_Package/`
-- **Tool Library**: `FusionSetup_Base_LP_Mach4.json`
-- **Post-Processor**: Generic Fanuc/Haas → Mach4 compatible
-- **Workflow**: DXF import → CAM operations → G-code export
+| Post ID | Machine | Spindle | End Code |
+|---------|---------|---------|----------|
+| GRBL | Hobby CNC | M3 S18000 | M30 |
+| Mach4 | Industrial | M3 S18000 | M30 |
+| LinuxCNC | EMC2 | M3 S18000 | M2 |
+| PathPilot | Tormach | M3 S18000 | M30 |
+| MASSO | MASSO G3 | M3 S18000 | M30 |
 
-#### **2. Mach4**
-- **Safety Macros**: `plugins/gibson/nc_lint_autovars.py`
-- **Features**: Auto-variable validation, stepdown checks
-- **G-code Dialect**: Mach3/4 compatible (G0/G1, M3/M5)
+### DXF Requirements
 
-#### **3. VCarve**
-- **Post-Processor**: Standard Mach3-compatible
-- **Features**: Profile, pocket, V-carve toolpaths
-- **DXF Import**: Native support for R12 format
-
-#### **4. LinuxCNC (EMC2)** [Placeholder]
-- **G-code Dialect**: RS274/NGC (NIST standard)
-- **Status**: Post-processor TBD
-- **Integration**: Custom tool table and axis configuration
-
-#### **5. Masso Controller** [Placeholder]
-- **G-code Dialect**: Masso G3 variant
-- **Status**: Adapter script TBD
-- **Integration**: Direct USB/Ethernet connection
-
-### **DXF Requirements for CAM**
-
-All DXF exports MUST follow these rules:
-
-1. **Format**: R12 (AC1009) – maximum compatibility
-2. **Units**: Millimeters (INSUNITS=4)
-3. **Geometry**: Closed LWPOLYLINEs (no open paths)
-4. **Tolerance**: ±0.12mm for segment chaining
-5. **Layers**: Named by operation (PROFILE, POCKET, DRILL)
-
-**Why R12?** Legacy CAM software (Mach4, VCarve) has inconsistent support for newer DXF versions (R13+). R12 guarantees universal import.
+- **Format**: R12 (AC1009) for maximum compatibility
+- **Units**: Millimeters (INSUNITS=4)
+- **Geometry**: Closed LWPOLYLINE entities
+- **Layers**: Named by operation (GEOMETRY, PROFILE, POCKET)
 
 ---
 
-## Smart Guitar Project
+## Feature Flags
 
-### **Separation Rationale**
+| Flag | Default | Description |
+|------|---------|-------------|
+| `RMOS_RUNS_V2_ENABLED` | true | Use v2 run artifact store |
+| `AI_CONTEXT_ENABLED` | true | Enable AI context adapter |
+| `SAW_LAB_LEARNING_HOOK_ENABLED` | false | Enable learning hooks |
+| `RMOS_ALLOW_RED_OVERRIDE` | false | Allow RED override (dangerous) |
 
-The Smart Guitar is a **separate hardware project** with its own:
-- **Tech Stack**: Python + Raspberry Pi GPIO, MIDI libraries
-- **Hardware**: Pi 5, 4×18650 batteries, BMS, cooling fan
-- **Integration Point**: Rear cavity DXF template for CNC machining
-
-### **Architecture**
-
-```
-┌─────────────────────────────────────────────┐
-│        Smart Guitar Electronics Bay         │
-│  ┌────────────────────────────────────┐    │
-│  │  Raspberry Pi 5                    │    │
-│  │  ├── MIDI I/O (USB)                │    │
-│  │  ├── Bluetooth 5.0                 │    │
-│  │  ├── Audio processing (ALSA/JACK)  │    │
-│  │  └── Web UI (Flask/FastAPI)        │    │
-│  └────────────────────────────────────┘    │
-│  ┌────────────────────────────────────┐    │
-│  │  Power System                      │    │
-│  │  ├── 4×18650 batteries (2×2)       │    │
-│  │  ├── BMS (battery management)      │    │
-│  │  └── 5V/3A regulator              │    │
-│  └────────────────────────────────────┘    │
-└─────────────────────────────────────────────┘
-```
-
-### **DXF Template**
-
-**File**: `smart_guitar_rear_cavity_template.dxf`
-
-**Layers**:
-- `COVER_OUTLINE` – Plastic cover profile (180×110mm)
-- `CAVITY_REBATE` – Ledge for cover (3mm inset)
-- `POCKETS` – Pi bay (100×70mm), battery bay (45.2×73mm), BMS (60×25mm)
-- `HOLES` – Fan mount (Ø50mm), screws (Ø3mm)
-- `GUIDES` – Cable channels (8mm wide)
-
-### **Integration with Main Project**
-
-The Smart Guitar DXF template is **generated by the main Luthier's Tool Box** hardware layout pipeline, then used for CNC routing of the guitar body.
-
----
-
-## Extension Points
-
-### **Adding a New Pipeline**
-
-1. **Create directory**: `server/pipelines/<tool>/`
-2. **Implement CLI tool**: `<tool>_calc.py` (see template above)
-3. **Add config examples**: `server/configs/examples/<tool>/`
-4. **Update queue**: Append to `exports/queue.json`
-5. **Document**: Add to `ARCHITECTURE.md` feature catalog
-
-### **Adding a New CAM Platform**
-
-1. **Create post-processor**: `plugins/<platform>/post_<platform>.py`
-2. **Add G-code dialect**: Document special commands (e.g., Masso `G38.2`)
-3. **Test with DXF**: Verify closed-path import
-4. **Update docs**: Add to CAM Integration section
-
-### **Adding a Vue Component**
-
-1. **Create component**: `client/src/components/toolbox/<Feature>.vue`
-2. **Add to App.vue**: Register in navigation
-3. **Connect to API**: Use `utils/api.ts` SDK functions
-4. **Test**: Verify units are always `mm`
+Access via: `GET /api/features/catalog`
 
 ---
 
 ## Design Decisions
 
-### **1. Why Millimeters Only?**
+### 1. Why RMOS?
 
-**Decision**: All internal storage and calculations use millimeters.
-
-**Rationale**:
-- CNC machines operate in metric (mm or µm)
-- Avoids floating-point errors from unit conversions
-- Fusion 360 / Mach4 default to mm
-- Inches can be added as UI-only display layer
-
-**Future**: Add inch display with fractional notation (e.g., `1 3/16"`)
-
-### **2. Why R12 DXF Format?**
-
-**Decision**: Always export DXF R12 (AC1009), never R13+.
+**Decision**: All CNC operations go through a safety decision layer.
 
 **Rationale**:
-- Maximum compatibility with legacy CAM software
-- VCarve / Mach4 have parsing bugs with R13+ features (splines, hatches)
-- R12 only supports basic entities (LINE, ARC, CIRCLE, POLYLINE) – perfect for CAM
+- CNC errors can damage expensive materials and machines
+- Operators need clear guidance on risk
+- Audit trail enables post-incident analysis
+- Consistent safety checks across all workflows
 
-**Trade-off**: No advanced features (blocks, xrefs), but CAM doesn't need them.
+### 2. Why Content-Addressed Storage?
 
-### **3. Why Closed LWPolylines?**
-
-**Decision**: All geometry is converted to closed LWPOLYLINE entities.
-
-**Rationale**:
-- CNC operations require closed paths for toolpath generation
-- Open paths cause "unsafe cut" errors in CAM software
-- Shapely `unify_and_close()` function ensures valid polygons
-
-**Implementation**: DXF cleaning scripts chain segments with 0.12mm tolerance.
-
-### **4. Why Pipeline Pattern?**
-
-**Decision**: Each tool is a standalone CLI script, not integrated into FastAPI.
+**Decision**: Artifacts stored by SHA256 hash.
 
 **Rationale**:
-- Easier to test in isolation
-- Users can run pipelines without web server
-- Parallel development by multiple contributors
-- Future: Add FastAPI wrappers for web UI
+- Immutable: same hash = same content
+- Deduplication: identical G-code stored once
+- Verifiable: detect tampering
+- Cacheable: safe to cache forever
 
-**Trade-off**: Less tight integration, but more modularity.
+### 3. Why Component Extraction?
 
-### **5. Why Feature Library Model?**
-
-**Decision**: MVP builds are "libraries" to cherry-pick from, not active code.
+**Decision**: Large Vue components split into focused child components.
 
 **Rationale**:
-- Allows experimentation without breaking main codebase
-- Each MVP build is a frozen snapshot of working features
-- Clear separation between "reference" and "production"
-
-**Process**: Extract → Test → Integrate → Document
+- Maintainability: <500 LOC per component
+- Testability: isolated units
+- Reusability: shared components (RiskBadge, WhyPanel)
+- Performance: better tree-shaking
 
 ---
 
 ## Next Steps
 
-### **Near-Term (v1.0)**
-- [ ] Integrate rosette calculator into main app
-- [ ] Add export queue UI component
-- [ ] Deploy to GitHub Pages
-- [ ] Add LinuxCNC post-processor
+### Completed
+- [x] RMOS v2 with 22 feasibility rules
+- [x] Multi-post G-code generation
+- [x] Run artifact persistence
+- [x] Vue component decomposition (Phase 3)
 
-### **Mid-Term (v2.0)**
-- [ ] Inch/fractional display in UI
-- [ ] Database backend (PostgreSQL)
-- [ ] Multi-user collaboration (WebSocket sync)
-- [ ] Blender add-on integration
+### In Progress
+- [ ] Quick Cut onboarding flow
+- [ ] Test coverage improvement (36% → 50%)
+- [ ] RMOS concept tooltips
 
-### **Long-Term (v3.0)**
-- [ ] Smart Guitar web interface
+### Planned
 - [ ] Real-time toolpath simulation
-- [ ] AI-assisted brace design
-- [ ] Mobile app (React Native)
+- [ ] Machine profiles UI
+- [ ] Offline-capable PWA
 
 ---
 
-**Document Maintained By**: AI Agent + Human Collaborator  
-**Last Review**: November 3, 2025
+**Document Maintained By**: AI Agent + Human Collaborator
+**Last Review**: February 2026
