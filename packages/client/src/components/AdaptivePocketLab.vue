@@ -234,197 +234,28 @@
           :disabled="false"
         />
         
-        <!-- M.2: Optimize for Machine -->
-        <div class="mt-4 border rounded-xl p-3 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-sm">
-              Optimize for Machine
-            </h3>
-            <div class="flex gap-2">
-              <button
-                class="px-3 py-1 text-sm border rounded bg-white hover:bg-gray-50 disabled:opacity-50" 
-                :disabled="!moves.length || !machineId" 
-                @click="runWhatIf"
-              >
-                Run What-If
-              </button>
-              <button
-                class="px-3 py-1 text-sm border rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50" 
-                :disabled="!optOut" 
-                @click="openCompareSettings"
-              >
-                Compare Settings
-              </button>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-3 gap-3 text-xs">
-            <div>
-              <label class="block mb-1">Feed (mm/min)</label>
-              <div class="flex gap-1">
-                <input
-                  v-model.number="optFeedLo"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-                <input
-                  v-model.number="optFeedHi"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-              </div>
-            </div>
-            <div>
-              <label class="block mb-1">Stepover (0..1)</label>
-              <div class="flex gap-1">
-                <input
-                  v-model.number="optStpLo"
-                  type="number"
-                  step="0.01"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-                <input
-                  v-model.number="optStpHi"
-                  type="number"
-                  step="0.01"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-              </div>
-            </div>
-            <div>
-              <label class="block mb-1">RPM</label>
-              <div class="flex gap-1">
-                <input
-                  v-model.number="optRpmLo"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-                <input
-                  v-model.number="optRpmHi"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-              </div>
-            </div>
-            <div>
-              <label class="block mb-1">Flutes</label>
-              <input
-                v-model.number="optFlutes"
-                type="number"
-                class="border px-1 py-1 rounded w-full text-xs"
-              >
-            </div>
-            <div>
-              <label class="block mb-1">Chipload (mm)</label>
-              <input
-                v-model.number="optChip"
-                type="number"
-                step="0.005"
-                class="border px-1 py-1 rounded w-full text-xs"
-              >
-            </div>
-            <div>
-              <label class="block mb-1">Grid (F×S)</label>
-              <div class="flex gap-1">
-                <input
-                  v-model.number="optGridF"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-                <input
-                  v-model.number="optGridS"
-                  type="number"
-                  class="border px-1 py-1 rounded w-full text-xs"
-                >
-              </div>
-            </div>
-          </div>
-          
-          <!-- M.3 Chipload enforcement controls -->
-          <div class="flex items-center gap-3 mt-2 text-xs">
-            <label class="flex items-center gap-1">
-              <input
-                v-model="enforceChip"
-                type="checkbox"
-              >
-              <span>Enforce chipload</span>
-            </label>
-            <label class="flex items-center gap-1">
-              <span>Tolerance (mm/tooth)</span>
-              <input
-                v-model.number="chipTol"
-                type="number"
-                step="0.005"
-                class="border px-2 py-1 rounded w-20"
-                :disabled="!enforceChip"
-              >
-            </label>
-          </div>
-
-          <div
-            v-if="optOut"
-            class="mt-3 grid md:grid-cols-3 gap-2 text-xs"
-          >
-            <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">
-                Baseline
-              </div>
-              <div><b>Time:</b> {{ optOut.baseline.time_s }} s</div>
-              <div class="text-gray-600">
-                Passes: {{ optOut.baseline.passes }}
-              </div>
-              <div class="text-gray-600">
-                Hops: {{ optOut.baseline.hop_count }}
-              </div>
-            </div>
-            <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">
-                Recommended
-              </div>
-              <ul class="space-y-0.5">
-                <li><b>Feed:</b> {{ optOut.opt.best.feed_mm_min }} mm/min</li>
-                <li><b>Stepover:</b> {{ (optOut.opt.best.stepover*100).toFixed(1) }}%</li>
-                <li><b>RPM:</b> {{ optOut.opt.best.rpm }}</li>
-                <li><b>Time:</b> {{ optOut.opt.best.time_s }} s</li>
-              </ul>
-              <button
-                class="mt-2 px-2 py-1 border rounded text-xs bg-blue-600 text-white hover:bg-blue-700" 
-                @click="applyRecommendation"
-              >
-                Apply to Job
-              </button>
-            </div>
-            <div class="border rounded p-2 bg-white">
-              <div class="font-medium mb-1">
-                Sensitivity (near best)
-              </div>
-              <table class="w-full mt-1">
-                <thead>
-                  <tr>
-                    <th class="text-left">
-                      Feed
-                    </th><th class="text-left">
-                      Stp%
-                    </th><th class="text-left">
-                      Time
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="n in optOut.opt.neighbors.slice(0,4)"
-                    :key="n.feed_mm_min+'-'+n.stepover"
-                    class="text-xs"
-                  >
-                    <td>{{ n.feed_mm_min }}</td>
-                    <td>{{ (n.stepover*100).toFixed(0) }}</td>
-                    <td>{{ n.time_s }}s</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <!-- M.2: Optimize for Machine (extracted component) -->
+        <OptimizeForMachinePanel
+          :opt-out="optOut"
+          :has-toolpath="moves.length > 0"
+          :has-machine="!!machineId"
+          v-model:opt-feed-lo="optFeedLo"
+          v-model:opt-feed-hi="optFeedHi"
+          v-model:opt-stp-lo="optStpLo"
+          v-model:opt-stp-hi="optStpHi"
+          v-model:opt-rpm-lo="optRpmLo"
+          v-model:opt-rpm-hi="optRpmHi"
+          v-model:opt-flutes="optFlutes"
+          v-model:opt-chip="optChip"
+          v-model:opt-grid-f="optGridF"
+          v-model:opt-grid-s="optGridS"
+          v-model:enforce-chip="enforceChip"
+          v-model:chip-tol="chipTol"
+          :disabled="false"
+          @run-what-if="runWhatIf"
+          @compare-settings="openCompareSettings"
+          @apply-recommendation="applyRecommendation"
+        />
 
         <!-- M.3: Energy & Heat -->
         <div class="mt-4 border rounded-xl p-3">
@@ -942,7 +773,7 @@ import MachineEditorModal from './MachineEditorModal.vue'
 import CompareMachines from './CompareMachines.vue'
 import CompareSettings from './CompareSettings.vue'
 import CompareModeButton from '@/components/compare/CompareModeButton.vue'
-import { MachineSelector, PostProcessorConfig, TrochoidSettings, JerkAwareSettings, HudOverlayControls } from './adaptive'
+import { MachineSelector, PostProcessorConfig, TrochoidSettings, JerkAwareSettings, HudOverlayControls, OptimizeForMachinePanel } from './adaptive'
 
 const cv = ref<HTMLCanvasElement|null>(null)
 
