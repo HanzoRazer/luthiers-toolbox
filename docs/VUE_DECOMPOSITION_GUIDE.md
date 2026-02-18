@@ -12,7 +12,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 
 | Component | LOC | Type | Status |
 |-----------|-----|------|--------|
-| AdaptivePocketLab.vue | 1570 | Lab | ✅ Extracted 3 components (-21%) |
+| AdaptivePocketLab.vue | 1424 | Lab | ✅ Extracted 6 components (-29%) |
 | ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
 | RiskDashboardCrossLab.vue | 948 | Dashboard | ✅ COMPLETE (-54% LOC) |
 | ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
@@ -57,6 +57,9 @@ Created components in `components/pocket/`:
 - `EnergyHeatPanel.vue` - Energy totals, heat partition, cumulative chart
 - `HeatTimeSeriesPanel.vue` - Power chart, live learn controls
 - `BottleneckMapPanel.vue` - Bottleneck toggle, legend, pie chart
+- `ToolParametersPanel.vue` - Tool Ø, stepover, stepdown, margin, etc.
+- `ActionButtonsBar.vue` - Plan, Preview NC, Compare, Export buttons
+- `ExportConfigPanel.vue` - Job name, export modes, batch export
 
 ### 3. Use Composables for Logic
 
@@ -79,19 +82,23 @@ Pattern: Extract template sections into focused components that:
 
 ## Priority Decomposition Targets
 
-### AdaptivePocketLab.vue (1570 LOC) ✅ IN PROGRESS
+### AdaptivePocketLab.vue (1424 LOC) ✅ IN PROGRESS
 
 **Completed:**
 - ✅ `EnergyHeatPanel.vue` (177 LOC) - M.3 energy & heat display
 - ✅ `HeatTimeSeriesPanel.vue` (291 LOC) - M.3 heat over time with live learn
 - ✅ `BottleneckMapPanel.vue` (169 LOC) - M.1.1 bottleneck toggle + pie chart
+- ✅ `ToolParametersPanel.vue` (145 LOC) - Tool Ø, stepover, stepdown, etc.
+- ✅ `ActionButtonsBar.vue` (72 LOC) - Plan, Preview NC, Compare, Export
+- ✅ `ExportConfigPanel.vue` (85 LOC) - Job name, export modes, batch export
 
 **Remaining:**
-- `ToolParametersPanel.vue` - Tool Ø, stepover, stepdown inputs
 - `MachineSelector.vue` - Already extracted, needs wiring review
 - `OptimizerPanel.vue` - Feed/stepover optimizer
 
-**Commit:** `0013437` - Reduced from 1992 → 1570 LOC (-21%)
+**Commits:**
+- `0013437` - Reduced from 1992 → 1570 LOC (-21%)
+- `7d08eb9` - Reduced from 1570 → 1424 LOC (-10%)
 
 ### DxfToGcodeView.vue (1503 LOC) ✅ WIRED
 
