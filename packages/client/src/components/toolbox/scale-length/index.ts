@@ -1,8 +1,4 @@
-/**
- * Scale Length Designer Components
- * Extracted from ScaleLengthDesigner.vue for better maintainability.
- */
-export { default as ScalePresetsPanel } from './ScalePresetsPanel.vue'
-export { default as TensionCalculatorPanel } from './TensionCalculatorPanel.vue'
-export { default as IntonationPanel } from './IntonationPanel.vue'
-export { default as MultiscalePanel } from './MultiscalePanel.vue'
+export { default as ScalePresetsTab } from './ScalePresetsTab.vue'
+export { default as TensionCalculatorTab } from './TensionCalculatorTab.vue'
+export { default as IntonationTab } from './IntonationTab.vue'
+export { default as MultiScaleTab } from './MultiScaleTab.vue'
