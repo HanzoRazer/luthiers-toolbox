@@ -28,3 +28,13 @@ export type { UnitDef, UnitCategory } from './useUnitConverter'
 
 export { useSavedViews } from './useSavedViews'
 export type { SavedView, ViewSortMode, UseSavedViewsOptions } from './useSavedViews'
+
+export { useBulkDecision } from './useBulkDecision'
+export type {
+  RiskDecision,
+  BulkUndoItem,
+  BulkActionRecord,
+  BulkProgress,
+  CandidateMinimal,
+  UseBulkDecisionOptions,
+} from './useBulkDecision'

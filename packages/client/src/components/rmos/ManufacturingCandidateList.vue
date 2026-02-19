@@ -2,6 +2,11 @@
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
 import CandidateRowItem from "@/components/rmos/CandidateRowItem.vue";
 import CandidateFiltersSection from "@/components/rmos/CandidateFiltersSection.vue";
+import BulkDecisionBar from "@/components/rmos/BulkDecisionBar.vue";
+import BulkDecisionControlsV2 from "@/components/rmos/BulkDecisionControlsV2.vue";
+import BulkHistoryPanel, { type BulkHistoryRecord } from "@/components/rmos/BulkHistoryPanel.vue";
+import UndoHistoryPanel from "@/components/rmos/UndoHistoryPanel.vue";
+import ExportPolicyCard from "@/components/rmos/ExportPolicyCard.vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 // Bundle D: JSZip for bulk packaging GREEN candidates into single operator-grade export
 import {
@@ -1418,185 +1423,54 @@ async function exportGreenOnlyPackageZip() {
       />
 
       <!-- Bulk decision bar -->
-      <div
+      <BulkDecisionBar
         v-if="candidates.length > 0"
-        class="bulkbar"
-      >
-        <div class="bulk-left">
-          <span class="muted">
-            Selected: <strong>{{ selectedIds.size }}</strong>
-          </span>
-          <span
-            v-if="selectedIds.size === 0"
-            class="muted"
-          > (select rows to bulk-set decision)</span>
-        </div>
-        <div class="bulk-actions">
-          <button
-            class="btn"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
-            title="Set selected to GREEN"
-            @click="bulkSetDecision('GREEN')"
-          >
-            Bulk GREEN
-          </button>
-          <button
-            class="btn"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
-            title="Set selected to YELLOW"
-            @click="bulkSetDecision('YELLOW')"
-          >
-            Bulk YELLOW
-          </button>
-          <button
-            class="btn danger"
-            :disabled="saving || exporting || undoBusy || selectedIds.size === 0"
-            title="Set selected to RED"
-            @click="bulkSetDecision('RED')"
-          >
-            Bulk RED
-          </button>
-          <button
-            class="btn ghost"
-            :disabled="saving || exporting || undoBusy || !canBulkClearDecision().ok"
-            :title="bulkClearBlockedHover()"
-            @click="bulkClearDecision"
-          >
-            Clear decision
-          </button>
-          <button
-            class="btn ghost"
-            :disabled="undoBusy || saving || exporting || undoStack.length === 0"
-            :title="undoStack.length ? undoStackHover(undoStack[0]) : 'Nothing to undo'"
-            @click="undoLast"
-          >
-            {{ undoBusy ? "Undoing…" : "Undo last" }}
-          </button>
-        </div>
-      </div>
+        :selected-count="selectedIds.size"
+        :disabled="saving || exporting || undoBusy"
+        :undo-stack-length="undoStack.length"
+        :undo-busy="undoBusy"
+        :last-undo-label="undoStack.length ? undoStackHover(undoStack[0]) : undefined"
+        @bulk-green="bulkSetDecision('GREEN')"
+        @bulk-yellow="bulkSetDecision('YELLOW')"
+        @bulk-red="bulkSetDecision('RED')"
+        @clear-decision="bulkClearDecision"
+        @undo-last="undoLast"
+      />
 
       <!-- Undo history display -->
-      <div
+      <UndoHistoryPanel
         v-if="undoStack.length > 0"
-        class="undolist"
-      >
-        <div class="undotitle muted">
-          Undo history (most recent first)
-        </div>
-        <div
-          v-for="(u, idx) in undoStack.slice(0, 5)"
-          :key="u.ts_utc + ':' + idx"
-          class="undoitem"
-          :title="undoStackHover(u)"
-        >
-          <span class="mono">{{ u.ts_utc }}</span>
-          <span>—</span>
-          <span>{{ u.label }}</span>
-        </div>
-      </div>
+        :history="undoStack"
+        :max-items="5"
+      />
 
       <!-- Bulk decision v2 controls -->
-      <div
+      <BulkDecisionControlsV2
         v-if="selectedIds.size > 0"
-        class="bulkbar2"
-      >
-        <div class="bulk-row">
-          <label class="muted">Bulk Decision:</label>
-          <select
-            v-model="bulkDecision"
-            class="selectSmall"
-            :disabled="bulkApplying || saving || exporting"
-          >
-            <option value="">
-              — pick —
-            </option>
-            <option value="GREEN">
-              GREEN
-            </option>
-            <option value="YELLOW">
-              YELLOW
-            </option>
-            <option value="RED">
-              RED
-            </option>
-          </select>
-          <input
-            v-model="bulkNote"
-            class="inputSmall"
-            placeholder="Shared note (optional)"
-            :disabled="bulkApplying || saving || exporting"
-          >
-          <button
-            class="btn small"
-            :disabled="bulkApplying || saving || exporting || !bulkDecision"
-            @click="applyBulkDecision"
-          >
-            {{ bulkApplying ? `Applying… (${bulkProgress?.done ?? 0}/${bulkProgress?.total ?? 0})` : 'Apply' }}
-          </button>
-          <label
-            class="inlineCheck"
-            title="When clearing decisions, also clear decision notes"
-          >
-            <input
-              v-model="bulkClearNoteToo"
-              type="checkbox"
-              :disabled="bulkApplying"
-            >
-            clear note too
-          </label>
-          <button
-            class="btn small"
-            :disabled="bulkApplying || saving || exporting || selectedIds.size === 0"
-            :title="selectedIds.size ? 'Clear decision (set to null) for selected candidates (hotkey: b)' : 'Select one or more candidates first'"
-            @click="clearBulkDecision"
-          >
-            Clear decision
-          </button>
-          <button
-            class="btn ghost small"
-            :disabled="bulkApplying || saving || exporting || bulkHistory.length === 0"
-            title="Undo last bulk action"
-            @click="undoLastBulkAction"
-          >
-            Undo
-          </button>
-          <button
-            class="btn ghost small"
-            :title="showBulkHistory ? 'Hide bulk history' : 'Show bulk history (hotkey: h)'"
-            @click="showBulkHistory = !showBulkHistory"
-          >
-            {{ showBulkHistory ? 'Hide history' : `History (${bulkHistory.length})` }}
-          </button>
-        </div>
-      </div>
+        :selected-count="selectedIds.size"
+        :bulk-decision="bulkDecision"
+        :bulk-note="bulkNote"
+        :bulk-clear-note-too="bulkClearNoteToo"
+        :bulk-applying="bulkApplying"
+        :bulk-progress="bulkProgress"
+        :saving="saving"
+        :exporting="exporting"
+        :bulk-history-length="bulkHistory.length"
+        :show-bulk-history="showBulkHistory"
+        @update:bulk-decision="bulkDecision = $event"
+        @update:bulk-note="bulkNote = $event"
+        @update:bulk-clear-note-too="bulkClearNoteToo = $event"
+        @update:show-bulk-history="showBulkHistory = $event"
+        @apply="applyBulkDecision"
+        @clear="clearBulkDecision"
+        @undo="undoLastBulkAction"
+      />
 
       <!-- Bulk history panel -->
-      <div
+      <BulkHistoryPanel
         v-if="showBulkHistory && bulkHistory.length > 0"
-        class="bulkHistory"
-      >
-        <div class="bulkHistoryHeader muted">
-          Bulk history (newest first)
-        </div>
-        <div class="bulkHistoryList">
-          <div
-            v-for="rec in bulkHistory"
-            :key="rec.id"
-            class="bulkHistoryRow"
-          >
-            <span class="mono small">{{ rec.at_utc }}</span>
-            <span
-              class="badge"
-              :class="'b' + rec.decision"
-            >{{ rec.decision }}</span>
-            <span>{{ rec.selected_count }} items</span>
-            <span
-              v-if="rec.note"
-              class="muted"
-            >— {{ rec.note }}</span>
-          </div>
-        </div>
-      </div>
+        :history="bulkHistory as BulkHistoryRecord[]"
+      />
 
       <CandidateRowItem
         v-for="c in filteredCandidates"
@@ -1619,17 +1493,7 @@ async function exportGreenOnlyPackageZip() {
     </div>
 
     <!-- Export policy explainers (visible, not just hover) -->
-    <div
-      v-if="candidates.length > 0"
-      class="policy muted"
-    >
-      <div><strong>Export policy:</strong></div>
-      <ul>
-        <li>Export is blocked while any candidate is <span class="mono">NEEDS_DECISION</span>.</li>
-        <li>Export downloads zips for <strong>GREEN</strong> candidates only.</li>
-        <li>Hover the export button to see the exact block reason.</li>
-      </ul>
-    </div>
+    <ExportPolicyCard v-if="candidates.length > 0" />
 
     <!-- Copy toast -->
     <div
