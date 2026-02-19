@@ -86,8 +86,8 @@
 
       <!-- Always-visible override banner (if any) -->
       <OverrideBanner
-        v-if="result?.override_reason || result?.explanation?.override_reason || result?.decision?.details?.override_reason"
-        :reason="result?.override_reason || result?.explanation?.override_reason || result?.decision?.details?.override_reason"
+        v-if="overrideReason"
+        :reason="overrideReason"
       />
 
       <div
@@ -155,7 +155,7 @@
         <button
           :disabled="!canCompare"
           class="btn-compare"
-          :title="previousRunId ? `Compare ${previousRunId} → ${result?.run_id}` : 'No previous run found yet'"
+          :title="compareTitle"
           @click="compareWithPreviousRun"
         >
           {{ isComparing ? 'Comparing…' : 'Compare w/ Previous' }}
@@ -204,453 +204,73 @@
     </div>
 
     <!-- Override Modal (YELLOW gate) -->
-    <div
-      v-if="showOverrideModal"
-      class="modal-backdrop"
-      @click.self="closeOverrideModal"
-    >
-      <div class="modal">
-        <div class="modal-header">
-          <h3>Override Required</h3>
-          <button
-            class="icon-btn"
-            :disabled="isSubmittingOverride"
-            @click="closeOverrideModal"
-          >
-            ×
-          </button>
-        </div>
-        <p class="muted">
-          This run is <strong>YELLOW</strong>. To download an operator pack, record an override reason for audit.
-        </p>
-
-        <label class="field">
-          <div class="label">Reason (required)</div>
-          <textarea
-            v-model="overrideReason"
-            rows="4"
-            placeholder="Why is it safe to proceed?"
-          />
-        </label>
-
-        <label class="field">
-          <div class="label">Operator (optional)</div>
-          <input
-            v-model="overrideOperator"
-            type="text"
-            placeholder="Name / initials"
-          >
-        </label>
-
-        <div
-          v-if="overrideError"
-          class="override-error"
-        >
-          {{ overrideError }}
-        </div>
-
-        <div class="modal-actions">
-          <button
-            class="btn-secondary"
-            :disabled="isSubmittingOverride"
-            @click="closeOverrideModal"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn-primary"
-            :disabled="isSubmittingOverride"
-            @click="submitOverrideAndRetryPack"
-          >
-            {{ isSubmittingOverride ? 'Submitting...' : 'Submit Override & Download' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <OverrideModal
+      :show="showOverrideModal"
+      :is-submitting="isSubmittingOverride"
+      :error="overrideError"
+      @close="closeOverrideModal"
+      @submit="submitOverride"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { api } from '@/services/apiBase';
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { explainRule } from '@/lib/feasibilityRuleRegistry'
-import { runs as rmosRuns } from '@/sdk/rmos'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import OverrideBanner from '@/components/ui/OverrideBanner.vue'
 import WhyPanel from '@/components/rmos/WhyPanel.vue'
-import { DxfUploadZone, CamParametersForm, RunCompareCard } from '@/components/dxf'
+import {
+  DxfUploadZone,
+  CamParametersForm,
+  RunCompareCard,
+  OverrideModal,
+  useDxfToGcode
+} from '@/components/dxf'
 
-const router = useRouter()
-
-const dxfFile = ref<File | null>(null)
-const uploadError = ref<string | null>(null)
-const isGenerating = ref(false)
-const result = ref<any>(null)
-const error = ref<string | null>(null)
-const abortController = ref<AbortController | null>(null)
-const previousRunId = ref<string | null>(null)
-const isComparing = ref(false)
-const compareError = ref<string | null>(null)
-const compareResult = ref<any | null>(null)
-const showWhy = ref(false)
-
-const params = ref({
-  tool_d: 6.0,
-  stepover: 0.45,
-  stepdown: 1.5,
-  z_rough: -3.0,
-  feed_xy: 1200,
-  feed_z: 300,
-  rapid: 3000,
-  safe_z: 5.0,
-  strategy: 'Spiral',
-  layer_name: 'GEOMETRY',
-  climb: true,
-  smoothing: 0.1,
-  margin: 0.0
-})
-
-const canDownload = computed(() => result.value?.gcode?.inline && !!result.value?.gcode?.text)
-
-const canCompare = computed(() => {
-  const runId = String(result.value?.run_id || '').trim()
-  return !!runId && !!previousRunId.value && !isGenerating.value && !isComparing.value
-})
-
-const canDownloadOperatorPack = computed(() => {
-  const runId = (result.value?.run_id || '').trim()
-  return !!runId && !isGenerating.value
-})
-
-const riskLevel = computed(() => String(result.value?.decision?.risk_level || '').toUpperCase())
-const hasOverrideAttachment = computed(() => {
-  const atts = result.value?.attachments || []
-  return Array.isArray(atts) && atts.some((a: any) => a?.kind === 'override')
-})
-
-// Phase 3.3: Explainability - triggered rules
-const triggeredRuleIds = computed<string[]>(() => {
-  const ids = result.value?.feasibility?.rules_triggered
-  if (!Array.isArray(ids)) return []
-  return ids.map((x: any) => String(x).trim().toUpperCase()).filter(Boolean)
-})
-
-const triggeredRules = computed(() => {
-  return triggeredRuleIds.value.map((rid) => explainRule(rid))
-})
-
-const hasExplainability = computed(() => triggeredRuleIds.value.length > 0)
-
-// Auto-open Why on YELLOW/RED when explainability exists; close on GREEN/UNKNOWN
-watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
-  if (!result.value) return
-  if (!hasExp) return
-  showWhy.value = rl === 'YELLOW' || rl === 'RED'
-}, { immediate: true })
-
-const canViewRun = computed(() => {
-  const runId = String(result.value?.run_id || '').trim()
-  return !!runId
-})
-
-function viewRunNewTab() {
-  const runId = String(result.value?.run_id || '').trim()
-  if (!runId) return
-  const href = router.resolve(`/rmos/runs/${encodeURIComponent(runId)}`).href
-  window.open(href, '_blank', 'noopener,noreferrer')
-}
-
-async function refreshPreviousRunId(currentRunId: string) {
-  // Uses SDK helper. We only need the previous run in the same mode.
-  try {
-    previousRunId.value = null
-    const { items } = await rmosRuns.listRuns({ limit: 20 })
-    const list = Array.isArray(items) ? items : []
-    // Prefer matching mode (if present in wrapper result, else just "previous by time")
-    const mode = String(result.value?.mode || '').trim()
-
-    let filtered = list
-    if (mode) {
-      filtered = list.filter((it: any) => String(it?.mode || '').trim() === mode)
-    }
-
-    // Find current run in list, then pick the next item after it (newest-first).
-    const idx = filtered.findIndex((it: any) => String(it?.run_id || '').trim() === currentRunId)
-    if (idx >= 0 && idx + 1 < filtered.length) {
-      previousRunId.value = String(filtered[idx + 1]?.run_id || '').trim() || null
-      return
-    }
-
-    // Fallback: take the first run that isn't current
-    const alt = filtered.find((it: any) => String(it?.run_id || '').trim() && String(it?.run_id || '').trim() !== currentRunId)
-    previousRunId.value = alt ? String(alt.run_id).trim() : null
-  } catch {
-    // Non-fatal
-    previousRunId.value = null
-  }
-}
-
-async function compareWithPreviousRun() {
-  const runId = String(result.value?.run_id || '').trim()
-  const prev = String(previousRunId.value || '').trim()
-  if (!runId || !prev) return
-
-  isComparing.value = true
-  compareError.value = null
-  compareResult.value = null
-
-  try {
-    const diffResult = await rmosRuns.compareRuns(prev, runId)
-    compareResult.value = diffResult
-  } catch (e: any) {
-    compareError.value = e?.message || 'Failed to compare runs.'
-  } finally {
-    isComparing.value = false
-  }
-}
-
-function clearCompare() {
-  compareResult.value = null
-  compareError.value = null
-}
-
-// ─── Compare Helpers ───────────────────────────────────────────
-const hasCompare = computed(() => !!compareResult.value && !compareError.value)
-
-const explainSummary = computed(() => {
-  const n = triggeredRuleIds.value.length
-  if (!n) return null
-  const rl = riskLevel.value || 'UNKNOWN'
-  return `${n} feasibility rule(s) triggered → ${rl}`
-})
-
-// Override Modal state
-const showOverrideModal = ref(false)
-const overrideReason = ref('')
-const overrideOperator = ref('')
-const isSubmittingOverride = ref(false)
-const overrideError = ref<string | null>(null)
-
-function openOverrideModal() {
-  overrideError.value = null
-  overrideReason.value = ''
-  overrideOperator.value = ''
-  showOverrideModal.value = true
-}
-
-function closeOverrideModal() {
-  if (isSubmittingOverride.value) return
-  showOverrideModal.value = false
-}
-
-async function refreshRunCanonical(runId: string) {
-  try {
-    const run = await rmosRuns.getRun(runId)
-    
-    // Merge strategy: preserve wrapper envelope, patch in canonical fields
-    result.value = {
-      ...result.value,
-      attachments: run.attachments ?? result.value?.attachments,
-      hashes: run.hashes ?? result.value?.hashes,
-      decision: run.decision ?? result.value?.decision,
-      feasibility: run.feasibility ?? result.value?.feasibility,
-      mode: run.mode ?? result.value?.mode,
-    }
-    await refreshPreviousRunId(runId)
-  } catch {
-    // Non-fatal: refresh failure doesn't block operator action
-  }
-}
-
-async function onRunProduced(runId: string) {
-  // Best-effort: refresh mode + previous run id
-  await refreshPreviousRunId(runId)
-}
-
-async function submitOverrideAndRetryPack() {
-  const runId = String(result.value?.run_id || '').trim()
-  if (!runId) return
-
-  const reason = overrideReason.value.trim()
-  if (!reason) {
-    overrideError.value = 'Please enter an override reason.'
-    return
-  }
-
-  isSubmittingOverride.value = true
-  overrideError.value = null
-  try {
-    await rmosRuns.addOverride(runId, {
-      reason,
-      operator: overrideOperator.value.trim() || undefined
-    })
-
-    // Canonical refresh from Runs v2 so attachments list is authoritative
-    await refreshRunCanonical(runId)
-
-    showOverrideModal.value = false
-    await doDownloadOperatorPack() // retry download
-  } catch (e: any) {
-    overrideError.value = e?.message || 'Override failed.'
-  } finally {
-    isSubmittingOverride.value = false
-  }
-}
-
-// Watch for file changes (from DxfUploadZone component)
-watch(dxfFile, (newFile) => {
-  // Abort any in-flight request
-  if (abortController.value) {
-    abortController.value.abort()
-    abortController.value = null
-  }
-  // Reset state when file changes
-  result.value = null
-  error.value = null
-  isGenerating.value = false
-})
-
-const parseErrorResponse = async (response: Response): Promise<string> => {
-  const status = response.status
-  try {
-    const data = await response.json()
-    if (typeof data.detail === 'string') {
-      return data.detail
-    } else if (Array.isArray(data.detail)) {
-      return data.detail.map((d: any) => d.msg || JSON.stringify(d)).join('; ')
-    } else if (data.detail) {
-      return JSON.stringify(data.detail)
-    }
-    return `HTTP ${status}`
-  } catch {
-    // JSON parse failed, try text
-    try {
-      const text = await response.text()
-      return text || `HTTP ${status}`
-    } catch {
-      return `HTTP ${status}`
-    }
-  }
-}
-
-const generateGcode = async () => {
-  if (!dxfFile.value) return
-
-  // Abort any prior in-flight request
-  if (abortController.value) {
-    abortController.value.abort()
-  }
-  abortController.value = new AbortController()
-
-  isGenerating.value = true
-  error.value = null
-  result.value = null
-
-  try {
-    const fd = new FormData()
-    fd.append('file', dxfFile.value)
-
-    for (const [k, v] of Object.entries(params.value)) {
-      if (typeof v === 'boolean') {
-        fd.append(k, v ? 'true' : 'false')
-      } else {
-        fd.append(k, String(v))
-      }
-    }
-
-    const response = await api('/api/rmos/wrap/mvp/dxf-to-grbl', {
-      method: 'POST',
-      body: fd,
-      signal: abortController.value.signal
-    })
-
-    if (!response.ok) {
-      const errMsg = await parseErrorResponse(response)
-      throw new Error(errMsg)
-    }
-
-    result.value = await response.json()
-    await onRunProduced(String(result.value?.run_id || '').trim())
-
-  } catch (err: any) {
-    // Ignore abort errors (user changed file or re-submitted)
-    if (err.name === 'AbortError') return
-    error.value = err.message || 'Failed to generate G-code'
-  } finally {
-    isGenerating.value = false
-    abortController.value = null
-  }
-}
-
-const downloadGcode = () => {
-  if (!canDownload.value) return
-
-  const blob = new Blob([result.value.gcode.text], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  const baseName = (dxfFile.value?.name || 'output').replace(/\.dxf$/i, '')
-  a.download = `${baseName}_GRBL.nc`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-const copyRunId = async () => {
-  if (!result.value?.run_id) return
-  try {
-    await navigator.clipboard.writeText(result.value.run_id)
-  } catch {
-    // Fallback for older browsers
-    const input = document.createElement('input')
-    input.value = result.value.run_id
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-  }
-}
-
-const gcodeAttachment = computed(() => {
-  if (!result.value?.attachments) return null
-  return result.value.attachments.find((a: any) => a.kind === 'gcode_output')
-})
-
-const downloadOperatorPack = async () => {
-  const runId = (result.value?.run_id || '').trim()
-  if (!runId) return
-
-  // If YELLOW and no override, prompt modal
-  if (riskLevel.value === 'YELLOW' && !hasOverrideAttachment.value) {
-    openOverrideModal()
-    return
-  }
-
-  await doDownloadOperatorPack()
-}
-
-const doDownloadOperatorPack = async () => {
-  const runId = (result.value?.run_id || '').trim()
-  if (!runId) return
-
-  try {
-    const { blob } = await rmosRuns.downloadOperatorPack(runId)
-    
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `operator_pack_${runId}.zip`
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch (e: any) {
-    // Check if 403 and YELLOW without override — open modal
-    if (e?.status === 403 && riskLevel.value === 'YELLOW' && !hasOverrideAttachment.value) {
-      openOverrideModal()
-      return
-    }
-    error.value = String(e?.message || e)
-  }
-}
+const {
+  // File
+  dxfFile,
+  uploadError,
+  // Params
+  params,
+  // Generation
+  isGenerating,
+  result,
+  error,
+  generateGcode,
+  // Download
+  canDownload,
+  downloadGcode,
+  canDownloadOperatorPack,
+  downloadOperatorPack,
+  // Run
+  canViewRun,
+  viewRunNewTab,
+  copyRunId,
+  gcodeAttachment,
+  // Risk/Explainability
+  riskLevel,
+  triggeredRuleIds,
+  hasExplainability,
+  showWhy,
+  hasOverrideAttachment,
+  overrideReason,
+  // Compare
+  previousRunId,
+  isComparing,
+  compareError,
+  compareResult,
+  hasCompare,
+  canCompare,
+  compareTitle,
+  compareWithPreviousRun,
+  clearCompare,
+  // Override modal
+  showOverrideModal,
+  isSubmittingOverride,
+  overrideError,
+  submitOverride,
+  closeOverrideModal,
+} = useDxfToGcode()
 </script>
 
 <style scoped>
@@ -669,59 +289,6 @@ h1 {
   margin-bottom: 2rem;
 }
 
-.upload-zone {
-  border: 2px dashed #d1d5db;
-  border-radius: 0.5rem;
-  padding: 2rem;
-  text-align: center;
-  background: #f9fafb;
-  transition: all 0.2s;
-  margin-bottom: 2rem;
-}
-
-.upload-zone.drag-over {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.upload-zone.has-file {
-  border-color: #10b981;
-  background: #f0fdf4;
-}
-
-.upload-prompt p {
-  margin: 0.5rem 0;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  color: #3b82f6;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: inherit;
-}
-
-.hint {
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.filename {
-  font-weight: 600;
-  color: #059669;
-}
-
-.filesize {
-  color: #6b7280;
-}
 
 .clear-btn {
   background: none;
@@ -736,49 +303,6 @@ h1 {
   color: #dc2626;
 }
 
-.params-section {
-  margin-bottom: 2rem;
-}
-
-.params-section.disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.params-section h2 {
-  font-size: 1.125rem;
-  margin-bottom: 1rem;
-}
-
-.params-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-.param {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.param label {
-  font-size: 0.875rem;
-  color: #374151;
-  font-weight: 500;
-}
-
-.param input {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-}
-
-.param input:disabled {
-  background: #f3f4f6;
-  cursor: not-allowed;
-}
 
 .action-section {
   margin-bottom: 2rem;
@@ -1027,226 +551,7 @@ h1 {
   gap: 0.5rem;
 }
 
-/* Override Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  z-index: 50;
-}
 
-.modal {
-  width: 100%;
-  max-width: 560px;
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.125rem;
-}
-
-.icon-btn {
-  border: none;
-  background: transparent;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 8px;
-  color: #6b7280;
-}
-
-.icon-btn:hover {
-  color: #374151;
-}
-
-.muted {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin: 0 0 16px 0;
-}
-
-.field {
-  display: block;
-  margin-top: 12px;
-}
-
-.field .label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-
-.field textarea,
-.field input {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 0.875rem;
-  box-sizing: border-box;
-}
-
-.field textarea:focus,
-.field input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.override-error {
-  margin-top: 12px;
-  color: #b91c1c;
-  font-size: 0.875rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  background: #e5e7eb;
-  color: #374151;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #d1d5db;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Phase 3.3: Explainability Card */
-.explain-card {
-  margin: 1rem 0;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #fff;
-}
-
-.explain-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.explain-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.explain-summary {
-  font-size: 0.875rem;
-  opacity: 0.75;
-}
-
-.explain-list {
-  margin: 0.75rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.explain-item {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-}
-
-.rule-pill {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid #d1d5db;
-}
-
-.rule-pill[data-level="RED"] {
-  color: #b91c1c;
-  border-color: #fca5a5;
-  background: #fef2f2;
-}
-
-.rule-pill[data-level="YELLOW"] {
-  color: #92400e;
-  border-color: #fcd34d;
-  background: #fefce8;
-}
-
-.rule-id {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.75rem;
-  opacity: 0.9;
-}
-
-.rule-summary {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.rule-hint {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  font-style: italic;
-}
-
-.explain-hint {
-  margin-top: 0.75rem;
-  font-size: 0.8125rem;
-  opacity: 0.8;
-}
-
-.explain-hint-ok {
-  color: #059669;
-}
 
 .btn-view-run {
   padding: 0.5rem 1rem;
@@ -1341,163 +646,5 @@ h1 {
   cursor: not-allowed;
 }
 
-/* ─── Minimal Compare UI ──────────────────────────────────────────────────── */
-.compare-shell {
-  margin-top: 1.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 1rem;
-  background: #fafafa;
-  padding: 1rem;
-}
-
-.compare-header-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.compare-header-row h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.compare-content {
-  margin-top: 0.75rem;
-}
-
-.pill-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.pill {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: #e5e7eb;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.pill.ok {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.pill.muted {
-  background: #f3f4f6;
-  color: #9ca3af;
-}
-
-.compare-section {
-  margin-top: 1rem;
-}
-
-.section-title {
-  font-weight: 700;
-  font-size: 0.8125rem;
-  margin-bottom: 0.5rem;
-}
-
-.kv-row {
-  display: grid;
-  grid-template-columns: 8rem 1fr;
-  gap: 0.75rem;
-  margin: 0.375rem 0;
-  align-items: start;
-}
-
-.kv-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.kv-value {
-  font-size: 0.8125rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.arrow {
-  color: #9ca3af;
-}
-
-.diff-grid {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.diff-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.diff-head {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.vcell {
-  font-size: 0.75rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  padding: 0.5rem;
-  word-break: break-word;
-}
-
-.compare-toggle {
-  width: 100%;
-  text-align: left;
-  margin-top: 1rem;
-  padding: 0.625rem 0.875rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.875rem;
-  cursor: pointer;
-  display: flex;
-  gap: 0.625rem;
-  align-items: center;
-  font-size: 0.8125rem;
-}
-
-.compare-toggle:hover {
-  background: #f9fafb;
-}
-
-.chev {
-  width: 1.125rem;
-  display: inline-block;
-}
-
-.compare-error {
-  color: #b91c1c;
-  margin-top: 0.75rem;
-}
-
-.muted {
-  color: #9ca3af;
-}
-
-.code {
-  margin-top: 0.75rem;
-  padding: 1rem;
-  background: #1f2937;
-  color: #f9fafb;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
 
 </style>
