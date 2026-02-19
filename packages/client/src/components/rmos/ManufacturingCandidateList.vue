@@ -7,18 +7,18 @@ import BulkDecisionControlsV2 from "@/components/rmos/BulkDecisionControlsV2.vue
 import BulkHistoryPanel, { type BulkHistoryRecord } from "@/components/rmos/BulkHistoryPanel.vue";
 import UndoHistoryPanel from "@/components/rmos/UndoHistoryPanel.vue";
 import ExportPolicyCard from "@/components/rmos/ExportPolicyCard.vue";
+import ManufacturingSummaryBar from "@/components/rmos/ManufacturingSummaryBar.vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-// Bundle D: JSZip for bulk packaging GREEN candidates into single operator-grade export
 import {
   decideManufacturingCandidate,
-  downloadManufacturingCandidateZip,
   listManufacturingCandidates,
   type ManufacturingCandidate,
   type RiskLevel,
 } from "@/sdk/rmos/runs";
-import JSZip from "jszip";
 import { useCandidateSelection } from "./composables/useCandidateSelection";
 import { useCandidateFilters, type DecisionFilter, type StatusFilter } from "./composables/useCandidateFilters";
+import { useBulkExport } from "./composables/useBulkExport";
+import { useBulkDecisionV2 } from "./composables/useBulkDecisionV2";
 
 const props = defineProps<{
   runId: string;
@@ -176,7 +176,7 @@ function _onKeydown(ev: KeyboardEvent) {
   if (k === "b") {
     if (selectedIds.value.size > 0) {
       ev.preventDefault();
-      void clearBulkDecision();
+      void clearBulkDecisionV2();
     }
     return;
   }
@@ -209,10 +209,6 @@ async function copyText(label: string, value: string) {
     showToast("Copy failed");
   }
 }
-
-// Bulk export state
-const exporting = ref(false);
-const exportError = ref<string | null>(null);
 
 // Selection state (from composable)
 const {
@@ -253,6 +249,52 @@ const {
   matchesSearch,
 } = useCandidateFilters(() => props.runId);
 
+// Bulk Export composable
+const {
+  exporting,
+  exportError,
+  bulkPackaging,
+  bulkPackageName,
+  greenCandidates,
+  undecidedCount,
+  yellowCount,
+  redCount,
+  runReadyLabel,
+  runReadyHover,
+  exportBlockedReason,
+  exportPackageDisabledReason,
+  canExportGreenOnly,
+  runReadyBadgeClass,
+  exportGreenOnlyZips,
+  exportGreenOnlyPackageZip,
+} = useBulkExport(
+  () => props.runId,
+  candidates,
+  loading,
+  showToast
+);
+
+// Bulk Decision V2 composable
+const {
+  bulkDecision,
+  bulkNote,
+  bulkClearNoteToo,
+  bulkApplying,
+  bulkProgress,
+  bulkHistory,
+  showBulkHistory,
+  applyBulkDecision,
+  undoLastBulkAction,
+  clearBulkDecision: clearBulkDecisionV2,
+} = useBulkDecisionV2(
+  () => props.runId,
+  candidates,
+  selectedIds,
+  _decidedByOrNull,
+  showToast,
+  _updateCandidateFromDecisionResponse
+);
+
 const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
 
 // Undo stack for bulk decisions (client-side)
@@ -275,50 +317,12 @@ const undoStack = ref<UndoItem[]>([]);
 const undoBusy = ref(false);
 const undoError = ref<string | null>(null);
 
-// -----------------------------------------------------------------------------
-// micro-follow: bulk set decision v2 (dropdown + shared note + history panel)
-// + undo history display (product-only, still wired to runs.ts)
-// -----------------------------------------------------------------------------
-type RiskDecision = "GREEN" | "YELLOW" | "RED";
-type BulkUndoItem = {
-  candidate_id: string;
-  prev_decision: RiskDecision | null;
-  prev_note: string | null;
-  next_decision: RiskDecision | null;
-  next_note: string | null;
-};
-type BulkActionRecord = {
-  id: string;
-  at_utc: string;
-  decision: RiskDecision | null;
-  note: string | null;
-  selected_count: number;
-  applied_count: number;
-  failed_count: number;
-  items: BulkUndoItem[];
-};
-
-const bulkDecision = ref<RiskDecision | null>(null);
-const bulkNote = ref<string>("");
-const bulkApplying = ref(false);
-const bulkProgress = ref<{ total: number; done: number; fail: number } | null>(null);
-const bulkHistory = ref<BulkActionRecord[]>([]);
-const showBulkHistory = ref(false);
-
-const bulkClearNoteToo = ref<boolean>(false);
-
-function _utcNowIso(): string {
-  return new Date().toISOString();
-}
-function _mkId(prefix = "bulk"): string {
-  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
-}
+// Helper: get selected candidates
 function _selectedCandidates(): CandidateRow[] {
   return getSelectedCandidates(candidates.value);
 }
-function _findCandidate(id: string): CandidateRow | null {
-  return candidates.value.find((c) => c.candidate_id === id) ?? null;
-}
+
+// Helper: update candidate from decision response (used by composable and inline functions)
 function _updateCandidateFromDecisionResponse(id: string, res: any) {
   const idx = candidates.value.findIndex((x) => x.candidate_id === id);
   if (idx === -1) return;
@@ -331,84 +335,6 @@ function _updateCandidateFromDecisionResponse(id: string, res: any) {
     decided_by: (res.decided_by ?? null) as any,
     decision_history: (res.decision_history ?? candidates.value[idx].decision_history ?? null) as any,
   };
-}
-
-// -----------------------------------------------------------------------------
-// micro-follow: bulk CLEAR decision (set decision=null) for selected candidates
-// (keeps UI + backend perfectly aligned to "needs explicit operator decision")
-// -----------------------------------------------------------------------------
-async function clearBulkDecision() {
-  if (bulkApplying.value) return;
-  const sel = _selectedCandidates();
-  if (!sel.length) {
-    showToast("No candidates selected", "err");
-    return;
-  }
-
-  bulkApplying.value = true;
-  bulkProgress.value = { total: sel.length, done: 0, fail: 0 };
-
-  const record: BulkActionRecord = {
-    id: _mkId("bulk_clear"),
-    at_utc: _utcNowIso(),
-    decision: null,
-    note: null,
-    selected_count: sel.length,
-    applied_count: 0,
-    failed_count: 0,
-    items: [],
-  };
-
-  try {
-    for (const c of sel) {
-      const prev_decision = (c.decision ?? null) as any;
-      const prev_note = (c.decision_note ?? null) as any;
-      const next_decision = null;
-      const next_note = bulkClearNoteToo.value ? null : prev_note;
-
-      record.items.push({
-        candidate_id: c.candidate_id,
-        prev_decision,
-        prev_note,
-        next_decision: (next_decision as any),
-        next_note,
-      });
-
-      try {
-        const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-          decision: next_decision,
-          note: next_note,
-          decided_by: _decidedByOrNull(),
-        } as any);
-        _updateCandidateFromDecisionResponse(c.candidate_id, res);
-        record.applied_count += 1;
-      } catch (e) {
-        record.failed_count += 1;
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done,
-          fail: bulkProgress.value!.fail + 1,
-        };
-      } finally {
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done + 1,
-          fail: bulkProgress.value!.fail,
-        };
-      }
-    }
-
-    bulkHistory.value = [record, ...bulkHistory.value].slice(0, 10);
-    showToast(
-      record.failed_count
-        ? `Bulk clear done (${record.applied_count} ok, ${record.failed_count} failed)`
-        : "Cleared decision for selected candidates",
-      record.failed_count ? "err" : "ok"
-    );
-  } finally {
-    bulkApplying.value = false;
-    window.setTimeout(() => (bulkProgress.value = null), 900);
-  }
 }
 
 function decisionBadge(decision: RiskLevel | null | undefined) {
@@ -715,134 +641,6 @@ function clearFilters() {
   composableClearFilters();
 }
 
-// -----------------------------------------------------------------------------
-// micro-follow: bulk decision v2 - apply + undo (with progress + history panel)
-// -----------------------------------------------------------------------------
-async function applyBulkDecision() {
-  if (bulkApplying.value) return;
-  const sel = _selectedCandidates();
-  if (!sel.length) {
-    showToast("No candidates selected", "err");
-    return;
-  }
-  if (bulkDecision.value == null) {
-    showToast("Choose GREEN/YELLOW/RED", "err");
-    return;
-  }
-
-  bulkApplying.value = true;
-  bulkProgress.value = { total: sel.length, done: 0, fail: 0 };
-
-  const record: BulkActionRecord = {
-    id: _mkId("bulk_decision"),
-    at_utc: _utcNowIso(),
-    decision: bulkDecision.value,
-    note: bulkNote.value.trim() ? bulkNote.value.trim() : null,
-    selected_count: sel.length,
-    applied_count: 0,
-    failed_count: 0,
-    items: [],
-  };
-
-  try {
-    for (const c of sel) {
-      const prev_decision = (c.decision ?? null) as RiskDecision | null;
-      const prev_note = (c.decision_note ?? null) as string | null;
-      const next_decision = bulkDecision.value;
-      const next_note = record.note;
-
-      // store undo snapshot *before* mutating
-      record.items.push({
-        candidate_id: c.candidate_id,
-        prev_decision,
-        prev_note,
-        next_decision,
-        next_note,
-      });
-
-      try {
-        const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-          decision: next_decision,
-          note: next_note,
-          decided_by: _decidedByOrNull(),
-        } as any);
-        _updateCandidateFromDecisionResponse(c.candidate_id, res);
-        record.applied_count += 1;
-      } catch (e) {
-        record.failed_count += 1;
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done,
-          fail: bulkProgress.value!.fail + 1,
-        };
-      } finally {
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done + 1,
-          fail: bulkProgress.value!.fail,
-        };
-      }
-    }
-
-    // push record to history (cap to 10)
-    bulkHistory.value = [record, ...bulkHistory.value].slice(0, 10);
-    showToast(
-      record.failed_count
-        ? `Bulk set done (${record.applied_count} ok, ${record.failed_count} failed)`
-        : `Bulk set decision: ${record.decision}`,
-      record.failed_count ? "err" : "ok"
-    );
-  } finally {
-    bulkApplying.value = false;
-    // keep progress visible briefly; user can also open history
-    window.setTimeout(() => (bulkProgress.value = null), 900);
-  }
-}
-
-async function undoLastBulkAction() {
-  if (bulkApplying.value) return;
-  const rec = bulkHistory.value[0];
-  if (!rec) {
-    showToast("No bulk history to undo", "err");
-    return;
-  }
-
-  bulkApplying.value = true;
-  bulkProgress.value = { total: rec.items.length, done: 0, fail: 0 };
-
-  try {
-    for (const it of rec.items) {
-      try {
-        const res = await decideManufacturingCandidate(props.runId, it.candidate_id, {
-          decision: it.prev_decision,
-          note: it.prev_note,
-          decided_by: _decidedByOrNull(),
-        } as any);
-        _updateCandidateFromDecisionResponse(it.candidate_id, res);
-      } catch (e) {
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done,
-          fail: bulkProgress.value!.fail + 1,
-        };
-      } finally {
-        bulkProgress.value = {
-          total: bulkProgress.value!.total,
-          done: bulkProgress.value!.done + 1,
-          fail: bulkProgress.value!.fail,
-        };
-      }
-    }
-
-    // remove the record we just undid
-    bulkHistory.value = bulkHistory.value.slice(1);
-    showToast("Undid last bulk decision");
-  } finally {
-    bulkApplying.value = false;
-    window.setTimeout(() => (bulkProgress.value = null), 900);
-  }
-}
-
 function toggleOne(id: string, ev?: MouseEvent) {
   if (ev?.shiftKey && lastClickedId.value && lastClickedId.value !== id) {
     composableSelectRange(filteredCandidates.value, id);
@@ -1038,203 +836,7 @@ function undoStackHover(item: UndoItem) {
   ].join("\n");
 }
 
-// -------------------------
-// Bulk export (GREEN-only)
-// -------------------------
-const undecidedCount = computed(() => candidates.value.filter((c) => c.decision == null).length);
-const greenCandidates = computed(() => candidates.value.filter((c) => c.decision === "GREEN"));
-const yellowCount = computed(() => candidates.value.filter((c) => c.decision === "YELLOW").length);
-const redCount = computed(() => candidates.value.filter((c) => c.decision === "RED").length);
 
-// ---------------------------------------------------------------------------
-// Micro-follow: Run Ready badge + hover explainers (product-only)
-// "READY" means: at least one GREEN, and zero undecided (explicit decision made)
-// ---------------------------------------------------------------------------
-type RunReadyStatus = "READY" | "BLOCKED" | "EMPTY";
-
-const runReadyStatus = computed<RunReadyStatus>(() => {
-  if (loading.value) return "BLOCKED";
-  if (!candidates.value.length) return "EMPTY";
-  if (greenCandidates.value.length > 0 && undecidedCount.value === 0) return "READY";
-  return "BLOCKED";
-});
-
-const runReadyLabel = computed(() => {
-  if (runReadyStatus.value === "READY") return "RUN READY";
-  if (runReadyStatus.value === "EMPTY") return "NO CANDIDATES";
-  return "RUN BLOCKED";
-});
-
-const runReadyHover = computed(() => {
-  if (loading.value) return "Loading candidates…";
-  if (!candidates.value.length) return "No manufacturing candidates yet. Promote variants to create candidates.";
-
-  // Block reasons (most actionable first)
-  if (greenCandidates.value.length === 0) {
-    if (undecidedCount.value > 0) {
-      return `No GREEN candidates yet.\n${undecidedCount.value} candidate(s) are undecided.\nDecide GREEN/YELLOW/RED to proceed.`;
-    }
-    if (yellowCount.value > 0 || redCount.value > 0) {
-      return `No GREEN candidates.\nYELLOW: ${yellowCount.value}, RED: ${redCount.value}.\nSet at least one candidate to GREEN to enable export.`;
-    }
-    return "No GREEN candidates. Decide at least one candidate as GREEN to proceed.";
-  }
-
-  if (undecidedCount.value > 0) {
-    return `Export is gated by undecided candidates.\n${greenCandidates.value.length} GREEN candidate(s) available,\nbut ${undecidedCount.value} candidate(s) still need an explicit decision.`;
-  }
-
-  return `Ready:\nGREEN: ${greenCandidates.value.length}\nYELLOW: ${yellowCount.value}\nRED: ${redCount.value}\nNo undecided candidates.`;
-});
-
-function runReadyBadgeClass() {
-  if (runReadyStatus.value === "READY") return "badgeReady";
-  if (runReadyStatus.value === "EMPTY") return "badgeEmpty";
-  return "badgeBlocked";
-}
-
-const exportBlockedReason = computed(() => {
-  if (candidates.value.length === 0) return "No candidates to export.";
-  if (undecidedCount.value > 0) {
-    return `Export blocked: ${undecidedCount.value} candidate(s) still NEED DECISION. Decide all candidates before exporting.`;
-  }
-  if (greenCandidates.value.length === 0) {
-    return "Export blocked: there are no GREEN candidates to export.";
-  }
-  return null;
-});
-
-const canExportGreenOnly = computed(() => exportBlockedReason.value == null && !exporting.value);
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // give the browser a beat before revoking
-  setTimeout(() => URL.revokeObjectURL(url), 2500);
-}
-
-async function exportGreenOnlyZips() {
-  if (!props.runId) return;
-  exportError.value = null;
-
-  const reason = exportBlockedReason.value;
-  if (reason) {
-    exportError.value = reason;
-    return;
-  }
-
-  exporting.value = true;
-  try {
-    // Download each GREEN candidate zip. (Product-only: no server-side bundling.)
-    for (const c of greenCandidates.value) {
-      const res = await downloadManufacturingCandidateZip(props.runId, c.candidate_id);
-      requestId.value = res.requestId ?? requestId.value;
-      const fname = `rmos_${props.runId}_candidate_${c.candidate_id}_GREEN.zip`;
-      downloadBlob(res.blob, fname);
-      // small delay to avoid browser throttling
-      await new Promise((r) => setTimeout(r, 250));
-    }
-  } catch (e: any) {
-    exportError.value = e?.message ?? String(e);
-  } finally {
-    exporting.value = false;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// Bundle D: Bulk Export Package (single ZIP containing all GREEN candidate zips)
-// - One click → produces a single operator-grade ZIP
-// - Contains each candidate's existing /download-zip payload as nested files
-// - Includes manifest.json (run_id, exported_at, candidate list, advisory_ids)
-// - Export gating: if nothing GREEN, button disabled + tooltip explains why
-// -----------------------------------------------------------------------------
-const bulkPackaging = ref(false);
-const bulkPackageName = ref<string>("");
-
-const exportPackageDisabledReason = computed(() => {
-  if (loading.value) return "Still loading candidates.";
-  if (bulkPackaging.value) return "Package export already in progress.";
-  if (!candidates.value.length) return "No candidates available for this run.";
-
-  // Keep export logic spine-aligned with "RUN READY" semantics:
-  // exporting while undecided exist is ambiguous and breaks operator discipline.
-  if (undecidedCount.value > 0) {
-    return `Export blocked: ${undecidedCount.value} candidate(s) are undecided. Decide GREEN/YELLOW/RED to proceed.`;
-  }
-
-  if (!greenCandidates.value.length) {
-    return "Export blocked: no GREEN candidates.";
-  }
-  return null;
-});
-
-async function exportGreenOnlyPackageZip() {
-  const deny = exportPackageDisabledReason.value;
-  if (deny) {
-    showToast(deny, "err");
-    return;
-  }
-
-  bulkPackaging.value = true;
-  exportError.value = null;
-
-  try {
-    const zip = new JSZip();
-    const exportedAtUtc = new Date().toISOString();
-    const run_id = props.runId;
-
-    // Safe filename base
-    const safeRun = (run_id || "run").replace(/[^a-zA-Z0-9._-]/g, "_");
-    const baseName =
-      bulkPackageName.value.trim() ||
-      `${safeRun}_GREEN_candidates_${exportedAtUtc.slice(0, 19).replace(/[:T]/g, "-")}`;
-
-    // Manifest helps downstream tools/operators understand what's inside
-    const manifest = {
-      run_id,
-      exported_at_utc: exportedAtUtc,
-      count: greenCandidates.value.length,
-      items: greenCandidates.value.map((c) => ({
-        candidate_id: c.candidate_id,
-        advisory_id: c.advisory_id ?? null,
-        decision: c.decision ?? null,
-        decided_by: c.decided_by ?? null,
-        decided_at_utc: c.decided_at_utc ?? null,
-        decision_note: c.decision_note ?? null,
-      })),
-    };
-    zip.file("manifest.json", JSON.stringify(manifest, null, 2));
-
-    // Add each candidate's existing zip as a nested file.
-    // This keeps backend unchanged and uses canonical API surface.
-    for (const c of greenCandidates.value) {
-      try {
-        const res = await downloadManufacturingCandidateZip(props.runId, c.candidate_id);
-        requestId.value = res.requestId ?? requestId.value;
-        zip.file(`candidates/${c.candidate_id}.zip`, res.blob);
-      } catch (e: any) {
-        // Keep going; partial exports are still valuable, but surfaced.
-        zip.file(
-          `errors/${c.candidate_id}.error.txt`,
-          String(e?.message || e || "download failed")
-        );
-      }
-    }
-
-    const out = await zip.generateAsync({ type: "blob" });
-    downloadBlob(out, `${baseName}.zip`);
-    showToast(`Exported ${greenCandidates.value.length} GREEN candidate(s) as package`, "ok");
-  } catch (e: any) {
-    exportError.value = e?.message ?? String(e);
-  } finally {
-    bulkPackaging.value = false;
-  }
-}
 </script>
 
 <template>
@@ -1297,83 +899,23 @@ async function exportGreenOnlyPackageZip() {
       Undo: {{ undoError }}
     </p>
 
-    <!-- Bundle D: Manufacturing Summary + Bulk Package Export -->
-    <div
+    <!-- Manufacturing Summary Bar (extracted component) -->
+    <ManufacturingSummaryBar
       v-if="!loading && candidates.length > 0"
-      class="mfg-topbar"
-    >
-      <div class="mfg-summary">
-        <!-- Run Ready Badge -->
-        <div class="runReady">
-          <span class="runReadyLabel">Run:</span>
-          <span
-            class="runReadyBadge"
-            :class="runReadyBadgeClass()"
-            :title="runReadyHover"
-          >
-            {{ runReadyLabel }}
-          </span>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">
-            Total
-          </div>
-          <div class="kpi-value">
-            {{ candidates.length }}
-          </div>
-        </div>
-        <div class="kpi kpi-green">
-          <div class="kpi-label">
-            GREEN
-          </div>
-          <div class="kpi-value">
-            {{ greenCandidates.length }}
-          </div>
-        </div>
-        <div class="kpi kpi-muted">
-          <div class="kpi-label">
-            Undecided
-          </div>
-          <div class="kpi-value">
-            {{ undecidedCount }}
-          </div>
-        </div>
-        <div class="kpi kpi-yellow">
-          <div class="kpi-label">
-            YELLOW
-          </div>
-          <div class="kpi-value">
-            {{ yellowCount }}
-          </div>
-        </div>
-        <div class="kpi kpi-red">
-          <div class="kpi-label">
-            RED
-          </div>
-          <div class="kpi-value">
-            {{ redCount }}
-          </div>
-        </div>
-      </div>
-
-      <div class="mfg-export">
-        <input
-          v-model="bulkPackageName"
-          class="inputSmall"
-          placeholder="Optional package name…"
-          :disabled="bulkPackaging"
-        >
-        <button
-          class="btn primary"
-          type="button"
-          :disabled="!!exportPackageDisabledReason"
-          :title="exportPackageDisabledReason || 'Download one ZIP containing all GREEN candidate zips + manifest.json'"
-          @click="exportGreenOnlyPackageZip"
-        >
-          {{ bulkPackaging ? "Packaging…" : "Export GREEN-only package" }}
-        </button>
-      </div>
-    </div>
+      :total-count="candidates.length"
+      :green-count="greenCandidates.length"
+      :undecided-count="undecidedCount"
+      :yellow-count="yellowCount"
+      :red-count="redCount"
+      :run-ready-label="runReadyLabel"
+      :run-ready-hover="runReadyHover"
+      :run-ready-badge-class="runReadyBadgeClass()"
+      :package-name="bulkPackageName"
+      :bulk-packaging="bulkPackaging"
+      :export-disabled-reason="exportPackageDisabledReason"
+      @update:package-name="bulkPackageName = $event"
+      @export-package="exportGreenOnlyPackageZip"
+    />
 
     <p
       v-if="loading"
@@ -1462,7 +1004,7 @@ async function exportGreenOnlyPackageZip() {
         @update:bulk-clear-note-too="bulkClearNoteToo = $event"
         @update:show-bulk-history="showBulkHistory = $event"
         @apply="applyBulkDecision"
-        @clear="clearBulkDecision"
+        @clear="clearBulkDecisionV2"
         @undo="undoLastBulkAction"
       />
 
@@ -2013,171 +1555,5 @@ async function exportGreenOnlyPackageZip() {
 .badge.bRED {
   background: #fee2e2;
   color: #991b1b;
-}
-
-/* Bundle D: Manufacturing Summary Topbar */
-.mfg-topbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-}
-
-.mfg-summary {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.runReady {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 14px;
-  padding: 8px 10px;
-}
-
-.runReadyLabel {
-  font-size: 11px;
-  opacity: 0.65;
-}
-
-.runReadyBadge {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  border-radius: 999px;
-  padding: 6px 10px;
-  user-select: none;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.badgeReady {
-  background: rgba(34, 197, 94, 0.14);
-}
-
-.badgeBlocked {
-  background: rgba(239, 68, 68, 0.12);
-}
-
-.badgeEmpty {
-  background: rgba(107, 114, 128, 0.12);
-}
-
-.kpi {
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 10px;
-  padding: 8px 12px;
-  min-width: 72px;
-  background: white;
-  text-align: center;
-}
-
-.kpi-label {
-  font-size: 11px;
-  opacity: 0.65;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.kpi-value {
-  font-size: 18px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.kpi-green {
-  border-color: #22c55e;
-}
-
-.kpi-green .kpi-value {
-  color: #16a34a;
-}
-
-.kpi-yellow {
-  border-color: #eab308;
-}
-
-.kpi-yellow .kpi-value {
-  color: #ca8a04;
-}
-
-.kpi-red {
-  border-color: #ef4444;
-}
-
-.kpi-red .kpi-value {
-  color: #dc2626;
-}
-
-.kpi-muted {
-  border-color: #9ca3af;
-}
-
-.kpi-muted .kpi-value {
-  color: #6b7280;
-}
-
-.runReady {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 14px;
-  padding: 8px 10px;
-}
-
-.runReadyLabel {
-  font-size: 11px;
-  opacity: 0.65;
-}
-
-.runReadyBadge {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  border-radius: 999px;
-  padding: 6px 10px;
-  user-select: none;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.badgeReady {
-  background: rgba(34, 197, 94, 0.14);
-}
-
-.badgeBlocked {
-  background: rgba(239, 68, 68, 0.12);
-}
-
-.badgeEmpty {
-  background: rgba(107, 114, 128, 0.12);
-}
-
-.mfg-export {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.btn.primary {
-  background: #2563eb;
-  color: white;
-  border-color: #1d4ed8;
-}
-
-.btn.primary:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.btn.primary:disabled {
-  background: #93c5fd;
-  border-color: #93c5fd;
 }
 </style>

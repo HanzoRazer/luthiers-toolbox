@@ -4,3 +4,5 @@
  */
 export * from './useCandidateFilters'
 export * from './useCandidateSelection'
+export * from './useBulkExport'
+export * from './useBulkDecisionV2'
