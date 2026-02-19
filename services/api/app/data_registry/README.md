@@ -75,7 +75,8 @@ data_registry/
 │   │   ├── body_templates.json     # 7 body templates
 │   │   └── neck_profiles.json      # 7 neck profiles
 │   ├── materials/
-│   │   └── wood_species.json       # 13 wood species
+│   │   ├── wood_species.json       # 472 wood species (v4.0.0)
+│   │   └── SOURCES.md              # Data sources & methodology
 │   └── references/
 │       ├── fret_formulas.json      # 12-TET, compensation
 │       └── scale_lengths.json      # 8 standard scales
@@ -213,7 +214,7 @@ except EntitlementError as e:
 
 | Edition | Templates | Tools | Machines | Species | Other |
 |---------|-----------|-------|----------|---------|-------|
-| System | 7 bodies, 7 necks | - | - | 13 | 8 scales, formulas |
+| System | 7 bodies, 7 necks | - | - | 472 | 8 scales, formulas |
 | Pro | - | 11 | 3 | 11 limits | 8 presets, 4 posts |
 | Parametric | 4 guitars | - | - | - | constraints |
 | Neck | 5 necks | - | - | - | 4 truss specs |
