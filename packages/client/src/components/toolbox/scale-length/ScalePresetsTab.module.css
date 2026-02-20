@@ -1,0 +1,219 @@
+/**
+ * ScalePresetsTab CSS Module
+ * Scale length presets and physics education styles
+ */
+
+/* =============================================================================
+   Animation & Container
+   ============================================================================= */
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   Section Header
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Scale Grid
+   ============================================================================= */
+
+.scaleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.scaleCard {
+  background: #292a2d;
+  padding: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.scaleCard:hover {
+  border-color: #8ab4f8;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.3);
+}
+
+.scaleName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 6px;
+}
+
+.scaleValue {
+  font-size: 16px;
+  color: #8ab4f8;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.scaleInfo {
+  font-size: 13px;
+  color: #9aa0a6;
+  line-height: 1.6;
+}
+
+.scaleTrait {
+  margin-bottom: 4px;
+}
+
+/* =============================================================================
+   Education Section
+   ============================================================================= */
+
+.educationSection {
+  margin-top: 32px;
+}
+
+.eduTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 20px;
+}
+
+.eduCard {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 4px solid #8ab4f8;
+}
+
+.eduCard h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 16px;
+}
+
+.eduCard p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+/* =============================================================================
+   Formula Box
+   ============================================================================= */
+
+.formulaBox {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.formula {
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #ffd700;
+}
+
+.formulaLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.formulaLegend strong {
+  color: #8ab4f8;
+}
+
+.eduNote {
+  background: rgba(138, 180, 248, 0.1);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  border-left: 3px solid #8ab4f8;
+}
+
+.eduNote strong {
+  color: #8ab4f8;
+}
+
+/* =============================================================================
+   Example Grid
+   ============================================================================= */
+
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.exampleItem {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.exampleScale {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffd700;
+  margin-bottom: 8px;
+}
+
+.exampleTension {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.exampleNote {
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .scaleGrid {
+    grid-template-columns: 1fr;
+  }
+  .exampleGrid {
+    grid-template-columns: 1fr;
+  }
+}

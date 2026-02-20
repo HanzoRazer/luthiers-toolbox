@@ -1,0 +1,309 @@
+/**
+ * IntonationTab CSS Module
+ * Intonation compensation education styles
+ */
+
+/* =============================================================================
+   Animation & Container
+   ============================================================================= */
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   Section Header
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Education Container
+   ============================================================================= */
+
+.intonationEducation {
+  max-width: 1000px;
+}
+
+/* =============================================================================
+   Critical Concept
+   ============================================================================= */
+
+.criticalConcept {
+  background: linear-gradient(135deg, rgba(234, 67, 53, 0.2) 0%, rgba(234, 67, 53, 0.1) 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #ea4335;
+  margin-bottom: 24px;
+}
+
+.criticalConcept h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+
+.criticalConcept p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+.criticalConcept strong {
+  color: #8ab4f8;
+}
+
+/* =============================================================================
+   Compensation Table
+   ============================================================================= */
+
+.compensationTable {
+  background: #292a2d;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.compHeader {
+  margin-bottom: 16px;
+}
+
+.compTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 6px;
+}
+
+.compSubtitle {
+  font-size: 13px;
+  color: #9aa0a6;
+  font-style: italic;
+}
+
+.compGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compRow {
+  display: grid;
+  grid-template-columns: 100px 80px 120px 120px 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+  align-items: center;
+}
+
+.compHeaderRow {
+  composes: compRow;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 12px;
+}
+
+.highlightReference {
+  composes: compRow;
+  background: rgba(138, 180, 248, 0.2);
+  border: 2px solid #8ab4f8;
+  font-weight: 500;
+}
+
+.highlightMax {
+  composes: compRow;
+  background: rgba(234, 67, 53, 0.2);
+  border: 2px solid #ea4335;
+  font-weight: 600;
+}
+
+/* =============================================================================
+   Bridge Placement
+   ============================================================================= */
+
+.bridgePlacement {
+  background: linear-gradient(135deg, rgba(52, 168, 83, 0.2) 0%, rgba(52, 168, 83, 0.1) 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #34a853;
+  margin-bottom: 24px;
+}
+
+.bridgePlacement h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #51cf66;
+  margin-bottom: 16px;
+}
+
+.placementBox {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.formula {
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  color: #ffd700;
+}
+
+.formulaExample {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #51cf66;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.formulaExample strong {
+  font-size: 18px;
+}
+
+.placementNote {
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.placementNote:last-child {
+  margin-bottom: 0;
+}
+
+.placementNoteWarning {
+  composes: placementNote;
+  background: rgba(234, 67, 53, 0.2);
+  border-left: 4px solid #ea4335;
+}
+
+.placementNoteWarning strong {
+  color: #ff6b6b;
+}
+
+.placementNoteSuccess {
+  composes: placementNote;
+  background: rgba(52, 168, 83, 0.2);
+  border-left: 4px solid #34a853;
+}
+
+.placementNoteSuccess strong {
+  color: #51cf66;
+}
+
+/* =============================================================================
+   Compensation Factors
+   ============================================================================= */
+
+.compensationFactors {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.compensationFactors h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 16px;
+}
+
+.factorList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.factorItem {
+  font-size: 13px;
+  line-height: 1.6;
+  padding-left: 16px;
+  border-left: 3px solid rgba(138, 180, 248, 0.5);
+}
+
+.factorItem strong {
+  color: #8ab4f8;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+/* =============================================================================
+   Innovation Connection
+   ============================================================================= */
+
+.innovationConnection {
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2) 0%, rgba(138, 180, 248, 0.1) 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #8ab4f8;
+}
+
+.innovationConnection h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.innovationConnection p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+.innovationConnection p:last-child {
+  margin-bottom: 0;
+}
+
+.innovationConnection strong {
+  color: #8ab4f8;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .compRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .compRow > div {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .compRow > div:last-child {
+    border-bottom: none;
+  }
+}

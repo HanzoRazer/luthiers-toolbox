@@ -1,0 +1,395 @@
+/**
+ * MultiScaleTab CSS Module
+ * Multi-scale (fanned fret) education styles
+ */
+
+/* =============================================================================
+   Animation & Container
+   ============================================================================= */
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   Section Header
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Education Container
+   ============================================================================= */
+
+.multiscaleEducation {
+  max-width: 1000px;
+}
+
+/* =============================================================================
+   Problem / Solution Cards
+   ============================================================================= */
+
+.problemSolution {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.problemCard,
+.solutionCard {
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.problemCard {
+  background: linear-gradient(135deg, rgba(234, 67, 53, 0.2) 0%, rgba(234, 67, 53, 0.1) 100%);
+  border: 2px solid #ea4335;
+}
+
+.solutionCard {
+  background: linear-gradient(135deg, rgba(52, 168, 83, 0.2) 0%, rgba(52, 168, 83, 0.1) 100%);
+  border: 2px solid #34a853;
+}
+
+.problemCard h3 { color: #ff6b6b; }
+.solutionCard h3 { color: #51cf66; }
+
+.problemCard h3,
+.solutionCard h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.problemCard p,
+.solutionCard p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+.problemCard ul,
+.solutionCard ul {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.problemCard li,
+.solutionCard li {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+/* =============================================================================
+   Example Box
+   ============================================================================= */
+
+.example {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+}
+
+.example strong {
+  display: block;
+  font-size: 13px;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+}
+
+.calcResult {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.calcResultProblem {
+  composes: calcResult;
+  background: rgba(234, 67, 53, 0.3);
+  color: #ff6b6b;
+}
+
+.calcResultSolution {
+  composes: calcResult;
+  background: rgba(52, 168, 83, 0.3);
+  color: #51cf66;
+}
+
+/* =============================================================================
+   Diagram
+   ============================================================================= */
+
+.multiscaleDiagram {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.multiscaleDiagram h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.fretVisualization {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.fretLine {
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.fretLineTreble {
+  composes: fretLine;
+  background: rgba(138, 180, 248, 0.2);
+}
+
+.fretLineBass {
+  composes: fretLine;
+  background: rgba(52, 168, 83, 0.2);
+}
+
+.fretLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffd700;
+  margin-bottom: 6px;
+}
+
+.fretVisual {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.fretTension {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.diagramNote {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #9aa0a6;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Tension Comparison
+   ============================================================================= */
+
+.tensionComparison {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.tensionComparison h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.comparisonTable {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.comparisonHeader {
+  display: grid;
+  grid-template-columns: 120px 110px 140px 110px;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: 120px 110px 140px 110px;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+  align-items: center;
+}
+
+.comparisonRow div:last-child {
+  text-align: center;
+  font-weight: 600;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.neutral { color: #9aa0a6; }
+.slight { background: rgba(138, 180, 248, 0.2); color: #8ab4f8; }
+.good { background: rgba(52, 168, 83, 0.2); color: #51cf66; }
+.excellent { background: rgba(52, 168, 83, 0.3); color: #51cf66; font-weight: bold; }
+
+.comparisonNote {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e8eaed;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Ergonomic Benefits
+   ============================================================================= */
+
+.ergonomicBenefits {
+  margin-bottom: 32px;
+}
+
+.ergonomicBenefits h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.benefitGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.benefitCard {
+  background: #292a2d;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.benefitCard:hover {
+  border-color: #8ab4f8;
+  transform: translateY(-4px);
+}
+
+.benefitIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.benefitTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 8px;
+}
+
+.benefitText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e8eaed;
+}
+
+/* =============================================================================
+   Custom Scale Exploration
+   ============================================================================= */
+
+.customScaleExploration {
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2) 0%, rgba(138, 180, 248, 0.1) 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #8ab4f8;
+  text-align: center;
+}
+
+.customScaleExploration h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.customScaleExploration p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+.customScaleExploration strong {
+  color: #ffd700;
+}
+
+.btnExplore {
+  background: linear-gradient(135deg, #1a73e8 0%, #8ab4f8 100%);
+  color: #fff;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+
+.btnExplore:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.4);
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .problemSolution {
+    grid-template-columns: 1fr;
+  }
+  .comparisonHeader,
+  .comparisonRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .benefitGrid {
+    grid-template-columns: 1fr;
+  }
+}

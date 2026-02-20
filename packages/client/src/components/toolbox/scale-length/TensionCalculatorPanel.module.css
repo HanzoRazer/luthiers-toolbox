@@ -1,0 +1,266 @@
+/**
+ * TensionCalculatorPanel CSS Module
+ * String tension calculator panel styles
+ */
+
+/* =============================================================================
+   Section Header
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Calculator Section
+   ============================================================================= */
+
+.calculatorSection {
+  max-width: 900px;
+}
+
+.calcInputs {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+/* =============================================================================
+   Input Group
+   ============================================================================= */
+
+.inputGroup {
+  margin-bottom: 24px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.inputWithUnit {
+  display: flex;
+  gap: 8px;
+}
+
+.inputWithUnit input {
+  flex: 1;
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+  font-size: 16px;
+}
+
+.inputWithUnit select {
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+}
+
+/* =============================================================================
+   String Inputs
+   ============================================================================= */
+
+.stringInputs h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.stringRow {
+  display: grid;
+  grid-template-columns: 80px 100px 150px 100px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.stringRow:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stringLabel {
+  font-weight: 500;
+  color: #8ab4f8;
+}
+
+.stringRow input {
+  padding: 6px 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 4px;
+  color: #e8eaed;
+  text-align: center;
+}
+
+.stringFreq {
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.stringTension {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.tooLoose {
+  composes: stringTension;
+  background: rgba(234, 67, 53, 0.2);
+  color: #ff6b6b;
+}
+
+.good {
+  composes: stringTension;
+  background: rgba(52, 168, 83, 0.2);
+  color: #51cf66;
+}
+
+.tooTight {
+  composes: stringTension;
+  background: rgba(251, 188, 5, 0.2);
+  color: #ffc107;
+}
+
+/* =============================================================================
+   Preset Gauges
+   ============================================================================= */
+
+.presetGauges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btnGauge {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #8ab4f8;
+  border-radius: 20px;
+  color: #8ab4f8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnGauge:hover {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+/* =============================================================================
+   Tension Summary
+   ============================================================================= */
+
+.tensionSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, #1a73e8 0%, #8ab4f8 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+}
+
+.summaryValue {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* =============================================================================
+   Tension Guide
+   ============================================================================= */
+
+.tensionGuide {
+  background: #292a2d;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.tensionGuide h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.guideRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.guideRowTooLoose {
+  composes: guideRow;
+  background: rgba(234, 67, 53, 0.1);
+}
+
+.guideRowGood {
+  composes: guideRow;
+  background: rgba(52, 168, 83, 0.1);
+}
+
+.guideRowTooTight {
+  composes: guideRow;
+  background: rgba(251, 188, 5, 0.1);
+}
+
+.guideIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.guideRowTooLoose .guideIndicator { background: #ff6b6b; }
+.guideRowGood .guideIndicator { background: #51cf66; }
+.guideRowTooTight .guideIndicator { background: #ffc107; }
+
+.guideText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e8eaed;
+}
+
+.guideText strong {
+  color: #8ab4f8;
+}
