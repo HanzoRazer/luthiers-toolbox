@@ -1,0 +1,461 @@
+/**
+ * PipelineLab CSS Module
+ * Blueprint → CAM Complete Workflow styles
+ */
+
+/* =============================================================================
+   Layout & Container
+   ============================================================================= */
+
+.pipelineLab {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 2.5em;
+  margin: 0;
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 10px;
+}
+
+/* =============================================================================
+   Stage Progress
+   ============================================================================= */
+
+.stageProgress {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 40px;
+  justify-content: center;
+}
+
+.stageItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  opacity: 0.5;
+}
+
+.stageItemActive {
+  composes: stageItem;
+  background: #2196F3;
+  color: white;
+  opacity: 1;
+}
+
+.stageItemCompleted {
+  composes: stageItem;
+  background: #4CAF50;
+  color: white;
+  opacity: 1;
+}
+
+.stageNumber {
+  width: 30px;
+  height: 30px;
+  background: white;
+  color: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.stageItemActive .stageNumber,
+.stageItemCompleted .stageNumber {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.stageLabel {
+  /* Stage label text */
+}
+
+/* =============================================================================
+   Drop Zone
+   ============================================================================= */
+
+.dropZone {
+  border: 3px dashed #ccc;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  transition: all 0.3s;
+  background: #fafafa;
+}
+
+.dropZoneDragging {
+  composes: dropZone;
+  border-color: #2196F3;
+  background: #e3f2fd;
+}
+
+.uploadIcon {
+  font-size: 4em;
+  margin-bottom: 20px;
+}
+
+.orText {
+  color: #999;
+  margin: 20px 0;
+}
+
+.uploadButton {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #2196F3;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.uploadButton:hover {
+  background: #1976D2;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.fileIcon {
+  font-size: 3em;
+}
+
+.clearButton {
+  margin-left: auto;
+  padding: 10px 15px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+
+/* =============================================================================
+   Status Badges
+   ============================================================================= */
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.statusBadgePassed {
+  composes: statusBadge;
+  background: #4CAF50;
+  color: white;
+}
+
+.statusBadgeFailed {
+  composes: statusBadge;
+  background: #f44336;
+  color: white;
+}
+
+/* =============================================================================
+   Summary Grid
+   ============================================================================= */
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.statCard {
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  background: #f5f5f5;
+}
+
+.statCardError {
+  composes: statCard;
+  border-left: 4px solid #f44336;
+}
+
+.statCardWarning {
+  composes: statCard;
+  border-left: 4px solid #ff9800;
+}
+
+.statCardInfo {
+  composes: statCard;
+  border-left: 4px solid #2196F3;
+}
+
+.statCardNeutral {
+  composes: statCard;
+  border-left: 4px solid #9e9e9e;
+}
+
+.statValue {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.statLabel {
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* =============================================================================
+   Issues
+   ============================================================================= */
+
+.issueItem {
+  border-left: 4px solid #ccc;
+  padding: 15px;
+  margin: 10px 0;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.issueItemError {
+  composes: issueItem;
+  border-left-color: #f44336;
+}
+
+.issueItemWarning {
+  composes: issueItem;
+  border-left-color: #ff9800;
+}
+
+.issueItemInfo {
+  composes: issueItem;
+  border-left-color: #2196F3;
+}
+
+.issueBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: bold;
+  color: white;
+  background: #666;
+}
+
+.issueItemError .issueBadge {
+  background: #f44336;
+}
+
+.issueItemWarning .issueBadge {
+  background: #ff9800;
+}
+
+.issueItemInfo .issueBadge {
+  background: #2196F3;
+}
+
+.issueCategory {
+  color: #666;
+  font-size: 0.9em;
+  margin-left: 10px;
+}
+
+.issueSuggestion {
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.95em;
+}
+
+/* =============================================================================
+   Controls
+   ============================================================================= */
+
+.controlGroup {
+  margin: 15px 0;
+}
+
+.controlGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.controlGroup input,
+.controlGroup select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+.controlGroup small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+}
+
+.paramsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.actionButtons {
+  display: flex;
+  gap: 15px;
+  margin: 30px 0;
+  justify-content: center;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #2196F3;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #1976D2;
+}
+
+.btnSecondary {
+  composes: btn;
+  background: #9e9e9e;
+  color: white;
+}
+
+.btnSecondary:hover {
+  background: #757575;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.navigationButtons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+/* =============================================================================
+   Entity Chips
+   ============================================================================= */
+
+.entityGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.entityChip {
+  display: flex;
+  gap: 10px;
+  padding: 8px 15px;
+  background: #e3f2fd;
+  border-radius: 20px;
+  font-size: 0.9em;
+}
+
+.entityType {
+  font-weight: 500;
+}
+
+.entityCount {
+  color: #666;
+}
+
+/* =============================================================================
+   Loop Cards
+   ============================================================================= */
+
+.loopCard {
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.loopHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.badgeOuter {
+  padding: 3px 8px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.badgeIsland {
+  padding: 3px 8px;
+  background: #ff9800;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* =============================================================================
+   Animations
+   ============================================================================= */
+
+.stagePanel {
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
