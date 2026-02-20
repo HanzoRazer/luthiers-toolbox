@@ -14,30 +14,30 @@
 
     <!-- Log Viewer split pane drawer (Bundle 32.7.4 + 32.7.5) -->
     <SideDrawer
-      :open="logDrawerOpen"
-      :title="drawerTitle"
-      @close="closeDrawer"
+      :open="logDrawer.isOpen.value"
+      :title="logDrawer.drawerTitle.value"
+      @close="logDrawer.closeDrawer"
     >
       <template #actions>
         <button
           class="btn ghost"
-          :class="{ active: isPinned }"
+          :class="{ active: logDrawer.isPinned.value }"
           title="Pin to this run (keep logs stable)"
-          @click="togglePin"
+          @click="logDrawer.togglePin"
         >
-          {{ isPinned ? "📌" : "📍" }}
+          {{ logDrawer.isPinned.value ? "📌" : "📍" }}
         </button>
         <button
           class="btn ghost"
           title="Open in new tab"
-          @click="openLogsNewTab"
+          @click="logDrawer.openLogsNewTab"
         >
           ↗
         </button>
       </template>
       <iframe
-        v-if="logDrawerOpen && logsUrl"
-        :src="logsUrl"
+        v-if="logDrawer.isOpen.value && logDrawer.logsUrl.value"
+        :src="logDrawer.logsUrl.value"
         class="log-iframe"
       />
     </SideDrawer>
@@ -102,7 +102,7 @@
       </div>
 
       <select
-        v-model="overrideToolId"
+        v-model="overrides.toolId.value"
         class="sel"
         title="Override tool_id"
       >
@@ -116,7 +116,7 @@
       </select>
 
       <select
-        v-model="overrideMaterialId"
+        v-model="overrides.materialId.value"
         class="sel"
         title="Override material_id"
       >
@@ -130,7 +130,7 @@
       </select>
 
       <select
-        v-model="overrideMachineProfileId"
+        v-model="overrides.machineProfileId.value"
         class="sel"
         title="Override machine_profile_id"
       >
@@ -144,7 +144,7 @@
       </select>
 
       <select
-        v-model="overrideCamProfileId"
+        v-model="overrides.camProfileId.value"
         class="sel"
         title="Override requested_cam_profile_id"
       >
@@ -158,7 +158,7 @@
       </select>
 
       <select
-        v-model="overrideRiskTolerance"
+        v-model="overrides.riskTolerance.value"
         class="sel"
         title="Override risk_tolerance"
       >
@@ -174,7 +174,7 @@
       <button
         class="btn ghost"
         title="Clear overrides"
-        @click="clearOverrides"
+        @click="handleClearOverrides"
       >
         Clear
       </button>
@@ -355,125 +355,39 @@
  * UI panel for managing design-first workflow state.
  * Displays workflow state, history, and promotion intent.
  *
- * Bundle 32.7.2: Added session hydration on mount + Clear button.
- * Bundle 32.7.3: Added Copy cURL + Open in Log Viewer deep-link.
- * Bundle 32.7.4: Open logs in split pane drawer (iframe).
- * Bundle 32.7.5: Pin a run in drawer (iframe stays on pinned run_id).
- * Bundle 32.7.7: Session picker for jumping between sessions.
- * Bundle 32.8.4.1: Download Intent as JSON file.
- * Bundle 32.8.4.2: Download intent with overrides (tool/material/profile dropdowns).
- * Bundle 32.8.4.3: Remember overrides (localStorage persistence).
- * Bundle 32.8.4.5: Export URL preview + Copy URL for testers.
- * Bundle 32.8.4.8: Copy PowerShell Invoke-WebRequest command (Windows-first shops).
+ * REFACTORED: Now uses composables for cleaner separation of concerns:
+ * - useLogDrawer: Log viewer drawer state and actions
+ * - useWorkflowOverrides: Override state with localStorage persistence
+ * - useExportSnippets: Code snippet builders (PowerShell, Python, Node, GHA)
  */
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted } from "vue";
 import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
 import { useToastStore } from "@/stores/toastStore";
 import SideDrawer from "@/components/ui/SideDrawer.vue";
 import WorkflowSessionPicker from "@/components/rosette/WorkflowSessionPicker.vue";
 
+// Composables
+import { useLogDrawer } from "./composables/useLogDrawer";
+import {
+  useWorkflowOverrides,
+  TOOL_OPTIONS,
+  MATERIAL_OPTIONS,
+  MACHINE_OPTIONS,
+  CAM_PROFILE_OPTIONS,
+  RISK_TOLERANCE_OPTIONS,
+} from "./composables/useWorkflowOverrides";
+import { useClipboardExport } from "./composables/useClipboardExport";
+
+// ==========================================================================
+// Store + Toast
+// ==========================================================================
+
 const wf = useArtDesignFirstWorkflowStore();
 const toast = useToastStore();
 
 // ==========================================================================
-// Bundle 32.8.4.2: Download intent with overrides
+// Computed state from store
 // ==========================================================================
-
-type Option = { id: string; label: string };
-
-const TOOL_OPTIONS: Option[] = [
-  { id: "", label: "Tool (default)" },
-  { id: "vbit_60", label: "V-bit 60°" },
-  { id: "downcut_2mm", label: "Downcut 2mm" },
-  { id: "upcut_2mm", label: "Upcut 2mm" },
-];
-
-const MATERIAL_OPTIONS: Option[] = [
-  { id: "", label: "Material (default)" },
-  { id: "ebony", label: "Ebony" },
-  { id: "rosewood", label: "Rosewood" },
-  { id: "maple", label: "Maple" },
-  { id: "spruce", label: "Spruce" },
-];
-
-const MACHINE_OPTIONS: Option[] = [
-  { id: "", label: "Machine (default)" },
-  { id: "shopbot_alpha", label: "ShopBot Alpha" },
-  { id: "shapeoko_pro", label: "Shapeoko Pro" },
-];
-
-const CAM_PROFILE_OPTIONS: Option[] = [
-  { id: "", label: "CAM profile (default)" },
-  { id: "vbit_60_ebony_safe", label: "V-bit 60 / Ebony / Safe" },
-  { id: "downcut_maple_fast", label: "Downcut / Maple / Fast" },
-];
-
-const RISK_TOLERANCE_OPTIONS: Option[] = [
-  { id: "", label: "Risk tolerance (default)" },
-  { id: "GREEN_ONLY", label: "GREEN only" },
-  { id: "ALLOW_YELLOW", label: "Allow YELLOW" },
-];
-
-// Selected overrides (empty = not sent)
-const overrideToolId = ref<string>("");
-const overrideMaterialId = ref<string>("");
-const overrideMachineProfileId = ref<string>("");
-const overrideCamProfileId = ref<string>("");
-const overrideRiskTolerance = ref<string>("");
-
-// ==========================================================================
-// Bundle 32.8.4.3 + 32.8.4.4: Remember overrides (per-mode localStorage)
-// ==========================================================================
-
-/** Prefix used for per-mode storage keys */
-const OVERRIDES_LS_KEY_PREFIX = "artStudio.promotionIntentExport.overrides.v1";
-
-function _overridesKeyForMode(mode: string | undefined | null): string {
-  const m = (mode || "unknown").trim() || "unknown";
-  return `${OVERRIDES_LS_KEY_PREFIX}:${m}`;
-}
-
-type ExportOverrides = {
-  tool_id: string;
-  material_id: string;
-  machine_profile_id: string;
-  requested_cam_profile_id: string;
-  risk_tolerance: string;
-};
-
-function _readOverridesFromStorage(key: string): ExportOverrides | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const j = JSON.parse(raw);
-    if (!j || typeof j !== "object") return null;
-    return {
-      tool_id: String((j as any).tool_id ?? ""),
-      material_id: String((j as any).material_id ?? ""),
-      machine_profile_id: String((j as any).machine_profile_id ?? ""),
-      requested_cam_profile_id: String((j as any).requested_cam_profile_id ?? ""),
-      risk_tolerance: String((j as any).risk_tolerance ?? ""),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function _writeOverridesToStorage(key: string, v: ExportOverrides) {
-  try {
-    localStorage.setItem(key, JSON.stringify(v));
-  } catch {
-    // ignore (private browsing / storage disabled)
-  }
-}
-
-function _clearOverridesStorage(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
-}
 
 const session = computed(() => wf.session);
 const state = computed(() => wf.stateName);
@@ -483,99 +397,43 @@ const hasSession = computed(() => wf.hasSession);
 const canIntent = computed(() => wf.canRequestIntent);
 const lastIntent = computed(() => wf.lastPromotionIntent);
 
-// Per-mode storage key (Bundle 32.8.4.4)
-const currentMode = computed(() => (wf.session?.mode as any) ?? "design_first");
-const overridesStorageKey = computed(() => _overridesKeyForMode(String(currentMode.value)));
+// ==========================================================================
+// Composables
+// ==========================================================================
 
-// Log Viewer drawer state (Bundle 32.7.4 + 32.7.5)
-const logDrawerOpen = ref(false);
+// Log drawer
+const logDrawer = useLogDrawer(() => wf.sessionId || "");
 
-// Pinned run_id for the drawer — keeps iframe stable across workflow changes (Bundle 32.7.5)
-const pinnedRunId = ref<string>("");
+// Workflow overrides with localStorage persistence
+const overrides = useWorkflowOverrides(
+  () => (wf.session?.mode as string) ?? "design_first",
+  (mode) => toast.info(`Loaded export overrides for mode: ${mode}`)
+);
 
-const effectiveRunId = computed(() => {
-  // If pinned, use pinned; else follow current sessionId
-  return pinnedRunId.value || wf.sessionId || "";
-});
+// Clipboard export with URL building
+const clipboard = useClipboardExport(
+  () => wf.sessionId,
+  () => wf.lastPromotionIntent,
+  overrides,
+  toast
+);
 
-const logsUrl = computed(() => {
-  const id = effectiveRunId.value;
-  if (!id) return "";
-  return buildLogViewerUrl(id);
-});
+// Convenience aliases
+const exportUrlPreview = clipboard.exportUrlPreview;
+const getApiBaseUrl = clipboard.getApiBaseUrl;
 
-const isPinned = computed(() => !!pinnedRunId.value);
+// ==========================================================================
+// Lifecycle
+// ==========================================================================
 
-const drawerTitle = computed(() => {
-  if (isPinned.value) {
-    return `Log Viewer (pinned: ${pinnedRunId.value.slice(0, 8)}…)`;
-  }
-  return "Log Viewer";
-});
-
-// Hydrate session from localStorage on mount (Bundle 32.7.2)
-// + Hydrate overrides from localStorage (Bundle 32.8.4.3 + 32.8.4.4 per-mode)
 onMounted(() => {
   wf.hydrateFromLocalStorage();
-
-  // Restore saved overrides for current mode (32.8.4.4)
-  const saved = _readOverridesFromStorage(overridesStorageKey.value);
-  if (saved) {
-    overrideToolId.value = saved.tool_id;
-    overrideMaterialId.value = saved.material_id;
-    overrideMachineProfileId.value = saved.machine_profile_id;
-    overrideCamProfileId.value = saved.requested_cam_profile_id;
-    overrideRiskTolerance.value = saved.risk_tolerance;
-  }
+  overrides.hydrateOverrides();
 });
 
-// When mode changes, swap overrides (load the saved set for that mode) (32.8.4.4)
-watch(
-  overridesStorageKey,
-  (newKey, oldKey) => {
-    if (newKey === oldKey) return;
-    const saved = _readOverridesFromStorage(newKey);
-
-    if (saved) {
-      overrideToolId.value = saved.tool_id;
-      overrideMaterialId.value = saved.material_id;
-      overrideMachineProfileId.value = saved.machine_profile_id;
-      overrideCamProfileId.value = saved.requested_cam_profile_id;
-      overrideRiskTolerance.value = saved.risk_tolerance;
-      toast.info(`Loaded export overrides for mode: ${String(currentMode.value)}`);
-    } else {
-      // No saved overrides for this mode -> reset to default empty overrides
-      overrideToolId.value = "";
-      overrideMaterialId.value = "";
-      overrideMachineProfileId.value = "";
-      overrideCamProfileId.value = "";
-      overrideRiskTolerance.value = "";
-    }
-  },
-  { immediate: false }
-);
-
-// Auto-save overrides to current mode key when changed (Bundle 32.8.4.3 + 32.8.4.4)
-watch(
-  [
-    overrideToolId,
-    overrideMaterialId,
-    overrideMachineProfileId,
-    overrideCamProfileId,
-    overrideRiskTolerance,
-    overridesStorageKey,
-  ],
-  () => {
-    _writeOverridesToStorage(overridesStorageKey.value, {
-      tool_id: overrideToolId.value || "",
-      material_id: overrideMaterialId.value || "",
-      machine_profile_id: overrideMachineProfileId.value || "",
-      requested_cam_profile_id: overrideCamProfileId.value || "",
-      risk_tolerance: overrideRiskTolerance.value || "",
-    });
-  },
-  { deep: false }
-);
+// ==========================================================================
+// Workflow actions
+// ==========================================================================
 
 async function ensure() {
   if (wf.hasSession) {
@@ -621,33 +479,33 @@ async function promoteToCam() {
     toast.error("No session available");
     return;
   }
-  
+
   try {
-    const base = _baseUrl();
-    const camProfileId = overrideCamProfileId.value || undefined;
+    const base = getApiBaseUrl();
+    const camProfileId = overrides.camProfileId.value || undefined;
     const params = new URLSearchParams();
     if (camProfileId) params.set("cam_profile_id", camProfileId);
-    
+
     const url = `${base}/art/design-first-workflow/sessions/${encodeURIComponent(sid)}/promote_to_cam${params.toString() ? "?" + params.toString() : ""}`;
-    
+
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });
-    
+
     if (!resp.ok) {
       const errData = await resp.json().catch(() => ({}));
       toast.error(`Promotion failed: ${errData.detail || resp.statusText}`);
       return;
     }
-    
+
     const data = await resp.json();
-    
+
     if (!data.ok) {
       toast.warning(`Promotion blocked: ${data.blocked_reason || "unknown"}`);
       return;
     }
-    
+
     const requestId = data.request?.promotion_request_id;
     toast.success(`CAM promotion request created: ${requestId?.slice(0, 8) || "OK"}…`);
     console.log("[ArtStudio] CAM promotion request:", data.request);
@@ -656,25 +514,29 @@ async function promoteToCam() {
   }
 }
 
-async function copyIntent() {
-  if (!lastIntent.value) return;
-  try {
-    await navigator.clipboard.writeText(JSON.stringify(lastIntent.value, null, 2));
-    toast.success("Intent JSON copied to clipboard");
-  } catch {
-    toast.error("Failed to copy to clipboard");
-  }
-}
+// ==========================================================================
+// Clipboard actions (delegated to composable)
+// ==========================================================================
 
-async function copySessionId() {
-  const sid = wf.sessionId;
-  if (!sid) return;
-  try {
-    await navigator.clipboard.writeText(sid);
-    toast.success("Session ID copied to clipboard");
-  } catch {
-    toast.error("Failed to copy to clipboard");
-  }
+const copyIntent = clipboard.copyIntent;
+const copySessionId = clipboard.copySessionId;
+const copyIntentCurl = clipboard.copyIntentCurl;
+const copyExportUrl = clipboard.copyExportUrl;
+const copyExportPowerShell = clipboard.copyExportPowerShell;
+const copyExportPython = clipboard.copyExportPython;
+const copyExportNode = clipboard.copyExportNode;
+const copyExportGitHubActionsStep = clipboard.copyExportGitHubActionsStep;
+const copyExportGitHubActionsJob = clipboard.copyExportGitHubActionsJob;
+const copyExportGitHubActionsWorkflow = clipboard.copyExportGitHubActionsWorkflow;
+const copyGitHubActionsWorkflowFile = clipboard.copyGitHubActionsWorkflowFile;
+
+// ==========================================================================
+// Override + Intent actions
+// ==========================================================================
+
+function handleClearOverrides() {
+  overrides.clearOverrides();
+  toast.info("Download overrides cleared");
 }
 
 function clearIntent() {
@@ -682,650 +544,13 @@ function clearIntent() {
   toast.info("Session cleared");
 }
 
-// ==========================================================================
-// Bundle 32.7.3: Copy cURL + Open in Log Viewer
-// ==========================================================================
-
-function _baseUrl(): string {
-  // Prefer explicit VITE_API_URL if provided; otherwise assume same-origin /api
-  const envBase = (import.meta as any).env?.VITE_API_URL;
-  const base = envBase && typeof envBase === "string" ? envBase : "/api";
-  const origin = window.location.origin;
-  if (base.startsWith("http://") || base.startsWith("https://")) return base;
-  return origin + base;
-}
-
-function buildPromotionIntentCurl(session_id: string): string {
-  const url = `${_baseUrl()}/art/workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent`;
-  return [
-    `curl -X POST "${url}"`,
-    `  -H "Accept: application/json"`,
-    `  -H "Content-Type: application/json"`,
-  ].join(" \\\n");
-}
-
-async function copyIntentCurl() {
-  const sid = wf.sessionId;
-  if (!sid) return;
-  const curl = buildPromotionIntentCurl(sid);
-  try {
-    await navigator.clipboard.writeText(curl);
-    toast.success("cURL copied to clipboard");
-  } catch {
-    toast.error("Failed to copy cURL");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.1 + 32.8.4.2: Download Intent as JSON file with overrides
-// ==========================================================================
-
-function buildPromotionIntentExportUrl(session_id: string): string {
-  const base = _baseUrl();
-  const url = new URL(
-    `${base}/art/design-first-workflow/sessions/${encodeURIComponent(session_id)}/promotion_intent.json`,
-    window.location.origin
-  );
-
-  // Append only if provided (32.8.4.2)
-  if (overrideToolId.value) url.searchParams.set("tool_id", overrideToolId.value);
-  if (overrideMaterialId.value) url.searchParams.set("material_id", overrideMaterialId.value);
-  if (overrideMachineProfileId.value) url.searchParams.set("machine_profile_id", overrideMachineProfileId.value);
-  if (overrideCamProfileId.value) url.searchParams.set("requested_cam_profile_id", overrideCamProfileId.value);
-  if (overrideRiskTolerance.value) url.searchParams.set("risk_tolerance", overrideRiskTolerance.value);
-
-  return url.toString();
-}
-
-function clearOverrides() {
-  overrideToolId.value = "";
-  overrideMaterialId.value = "";
-  overrideMachineProfileId.value = "";
-  overrideCamProfileId.value = "";
-  overrideRiskTolerance.value = "";
-
-  _clearOverridesStorage(overridesStorageKey.value); // (32.8.4.4 per-mode)
-  toast.info(`Download overrides cleared for mode: ${String(currentMode.value)}`);
-}
-
-// ==========================================================================
-// Bundle 32.8.4.5: Export URL preview + Copy URL
-// ==========================================================================
-
-const exportUrlPreview = computed(() => {
-  const sid = wf.sessionId;
-  if (!sid) return "";
-  return buildPromotionIntentExportUrl(sid);
-});
-
-async function copyExportUrl() {
-  const url = exportUrlPreview.value;
-  if (!url) return;
-  try {
-    await navigator.clipboard.writeText(url);
-    toast.success("Export URL copied to clipboard");
-  } catch {
-    toast.error("Failed to copy URL");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.8: Copy PowerShell Invoke-WebRequest (Windows-first shops)
-// ==========================================================================
-
-function _psEscape(s: string): string {
-  // Single-quote safe for PowerShell: ' becomes ''
-  return `'${String(s).replace(/'/g, "''")}'`;
-}
-
-function _safeFilenameFromSession(session_id: string): string {
-  const cleaned = (session_id || "session").trim().slice(0, 32).replace(/[^a-zA-Z0-9._-]+/g, "_");
-  return `art_studio_export_intent_${cleaned}.json`;
-}
-
-function buildExportPowerShellIwr(url: string, session_id: string): string {
-  const out = _safeFilenameFromSession(session_id);
-
-  // Use Invoke-WebRequest with -OutFile
-  // Add -UseBasicParsing for older PS compatibility (harmless on newer)
-  return [
-    `$url = ${_psEscape(url)}`,
-    `$out = ${_psEscape(out)}`,
-    `Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing`,
-    `Write-Host ("Saved: " + $out)`,
-  ].join("\r\n");
-}
-
-async function copyExportPowerShell() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const cmd = buildExportPowerShellIwr(url, sid);
-
-  const combined = [
-    "# Promotion intent export (PowerShell)",
-    cmd,
-    "",
-  ].join("\n");
-
-  try {
-    await navigator.clipboard.writeText(combined);
-    toast.success("Copied PowerShell command.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.9: Copy Python requests snippet (CI/script repro)
-// ==========================================================================
-
-function _pyEscape(s: string): string {
-  // Safe for python triple-quoted strings
-  return String(s).replace(/\\/g, "\\\\").replace(/"""/g, '\\"\\"\\"');
-}
-
-function buildExportPythonRequests(url: string, session_id: string): string {
-  const out = _safeFilenameFromSession(session_id);
-  const u = _pyEscape(url);
-
-  return [
-    "# Promotion intent export (Python requests)",
-    "import sys",
-    "import json",
-    "import requests",
-    "",
-    `url = """${u}"""`,
-    `out = r"""${out}"""`,
-    "",
-    "resp = requests.get(url, headers={'Accept': 'application/json'}, timeout=30)",
-    "resp.raise_for_status()",
-    "",
-    "# Save raw body",
-    "with open(out, 'wb') as f:",
-    "    f.write(resp.content)",
-    "",
-    "# Optional: quick sanity parse",
-    "try:",
-    "    data = resp.json()",
-    "    print('Downloaded intent:', data.get('intent_version'), 'session_id=', data.get('session_id'))",
-    "except Exception as e:",
-    "    print('Downloaded file saved, but JSON parse failed:', e, file=sys.stderr)",
-    "",
-    "print('Saved:', out)",
-    "",
-  ].join("\n");
-}
-
-async function copyExportPython() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const snippet = buildExportPythonRequests(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(snippet);
-    toast.success("Copied Python requests snippet.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.10: Copy Node fetch snippet (Node 18+ / JS CI runners)
-// ==========================================================================
-
-function _jsEscape(s: string): string {
-  // Escape for JS template literal (backticks)
-  return String(s).replace(/\\/g, "\\\\").replace(new RegExp(String.fromCharCode(96), "g"), "\\" + String.fromCharCode(96));
-}
-
-function buildExportNodeFetch(url: string, session_id: string): string {
-  const out = _safeFilenameFromSession(session_id);
-  const u = _jsEscape(url);
-
-  return [
-    "// Promotion intent export (Node fetch, Node 18+)",
-    "import fs from 'node:fs';",
-    "",
-    "const url = '" + u + "';",
-    "const out = " + JSON.stringify(out) + ";",
-    "",
-    "const res = await fetch(url, {",
-    "  method: 'GET',",
-    "  headers: { 'Accept': 'application/json' },",
-    "});",
-    "",
-    "if (!res.ok) {",
-    "  const ct = res.headers.get('content-type') || '';",
-    "  let body = '';",
-    "  try { body = ct.includes('application/json') ? JSON.stringify(await res.json()) : await res.text(); } catch {}",
-    "  throw new Error('HTTP ' + res.status + ' ' + res.statusText + ' :: ' + body);",
-    "}",
-    "",
-    "const buf = Buffer.from(await res.arrayBuffer());",
-    "fs.writeFileSync(out, buf);",
-    "",
-    "// Optional: sanity parse",
-    "try {",
-    "  const json = JSON.parse(buf.toString('utf8'));",
-    "  console.log('Downloaded intent:', json.intent_version, 'session_id=', json.session_id);",
-    "} catch (e) {",
-    "  console.warn('Saved file but JSON parse failed:', e?.message || e);",
-    "}",
-    "",
-    "console.log('Saved:', out);",
-    "",
-  ].join("\n");
-}
-
-async function copyExportNode() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const snippet = buildExportNodeFetch(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(snippet);
-    toast.success("Copied Node fetch snippet.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-/** Escape single quotes for YAML single-quoted strings */
-function _yamlEscapeSingleQuotes(s: string): string {
-  return s.replace(/'/g, "''");
-}
-
-/**
- * Best-effort repo name detection for workflow header.
- * Priority: VITE_REPO_NAME env → BASE_URL → pathname heuristic → fallback.
- */
-function _detectRepoNameForHeader(): string {
-  try {
-    // Vite env (available at build-time)
-    const viteRepo =
-      (import.meta as any)?.env?.VITE_REPO_NAME ||
-      (import.meta as any)?.env?.REPO_NAME;
-
-    if (typeof viteRepo === "string" && viteRepo.trim()) {
-      return viteRepo.trim();
-    }
-
-    const baseUrl = (import.meta as any)?.env?.BASE_URL;
-    if (typeof baseUrl === "string" && baseUrl !== "/" && baseUrl.trim()) {
-      // If BASE_URL looks like "/luthiers-toolbox/", treat that as repo name.
-      const m = baseUrl.match(/^\/([^/]+)\/?$/);
-      if (m?.[1]) return m[1];
-    }
-
-    const path = window.location?.pathname || "";
-    // Common case: deployed at /<repo>/...
-    const parts = path.split("/").filter(Boolean);
-    if (parts.length >= 1) {
-      // If your app is hosted under a repo subpath, first segment is often the repo.
-      return parts[0];
-    }
-  } catch {
-    // ignore
-  }
-
-  return "UNKNOWN_REPO";
-}
-
-/** Build GitHub Actions step YAML for downloading export + artifact upload */
-function buildExportGitHubActionsStep(url: string, session_id: string): string {
-  const out = _safeFilenameFromSession(session_id);
-  const safeUrl = _yamlEscapeSingleQuotes(url);
-  return [
-    "- name: Download RMOS promotion-intent",
-    "  run: |",
-    `    curl -sSfL '${safeUrl}' -o ${out}`,
-    "",
-    "- name: Upload promotion-intent artifact",
-    "  uses: actions/upload-artifact@v4",
-    "  with:",
-    "    name: promotion-intent",
-    `    path: ${out}`,
-  ].join("\n");
-}
-
-async function copyExportGitHubActionsStep() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const snippet = buildExportGitHubActionsStep(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(snippet);
-    toast.success("Copied GitHub Actions step YAML.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.12: Copy GitHub Actions Job (full job block + optional auth)
-// ==========================================================================
-
-function buildExportGitHubActionsJob(url: string, session_id: string): string {
-  const safeOut = _safeFilenameFromSession(session_id);
-  const u = _yamlEscapeSingleQuotes(url);
-  const out = _yamlEscapeSingleQuotes(safeOut);
-
-  // Repo-aligned conventions:
-  // - secret: TOOLBOX_API_TOKEN (SCREAMING_SNAKE_CASE)
-  // - artifact name: kebab-case
-  // - job id: kebab-case
-  return [
-    "art-studio-export-intent:",
-    "  name: Download Art Studio export intent",
-    "  runs-on: ubuntu-latest",
-    "  steps:",
-    "    - name: Download export intent JSON",
-    "      env:",
-    "        TOOLBOX_API_TOKEN: ${{ secrets.TOOLBOX_API_TOKEN }}",
-    "      run: |",
-    "        set -euo pipefail",
-    `        URL='${u}'`,
-    `        OUT='${out}'`,
-    "        HDR=()",
-    '        if [ -n "${TOOLBOX_API_TOKEN:-}" ]; then',
-    '          HDR+=(-H "Authorization: Bearer ${TOOLBOX_API_TOKEN}")',
-    "        fi",
-    '        curl -sSfL "${HDR[@]}" "$URL" -o "$OUT"',
-    '        echo "Saved ${OUT}"',
-    "    - name: Upload artifact",
-    "      uses: actions/upload-artifact@v4",
-    "      with:",
-    "        name: art-studio-export-intent",
-    `        path: ${out}`,
-    "        retention-days: 7",
-    "",
-  ].join("\n");
-}
-
-async function copyExportGitHubActionsJob() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const snippet = buildExportGitHubActionsJob(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(snippet);
-    toast.success("Copied GitHub Actions job YAML.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-// ==========================================================================
-// Bundle 32.8.4.13: Copy GitHub Actions Workflow (full .yml file)
-// Bundle 32.8.4.14: Add validation job + repo auto-detect in header
-// ==========================================================================
-
-function buildExportGitHubActionsWorkflow(url: string, session_id: string): string {
-  const safeOut = _safeFilenameFromSession(session_id);
-
-  // YAML single-quote escaping for scalar strings
-  const u = _yamlEscapeSingleQuotes(url);
-  const out = _yamlEscapeSingleQuotes(safeOut);
-
-  // We keep the filename configurable via workflow_dispatch inputs, but we also
-  // use it consistently across both jobs.
-  return [
-    `name: Art Studio — Download + Validate Export Intent`,
-    ``,
-    `on:`,
-    `  workflow_dispatch:`,
-    `    inputs:`,
-    `      export_url:`,
-    `        description: 'Override export URL (optional)'`,
-    `        required: false`,
-    `        default: '${u}'`,
-    `      out_file:`,
-    `        description: 'Output filename (optional)'`,
-    `        required: false`,
-    `        default: '${out}'`,
-    ``,
-    `permissions:`,
-    `  contents: read`,
-    ``,
-    `jobs:`,
-    `  art-studio-export-intent:`,
-    `    name: Download export intent`,
-    `    runs-on: ubuntu-latest`,
-    `    steps:`,
-    `      - name: Download export intent JSON`,
-    `        env:`,
-    `          TOOLBOX_API_TOKEN: \${{ secrets.TOOLBOX_API_TOKEN }}`,
-    `          EXPORT_URL: \${{ inputs.export_url }}`,
-    `          OUT_FILE: \${{ inputs.out_file }}`,
-    `        run: |`,
-    `          set -euo pipefail`,
-    `          URL="\${EXPORT_URL}"`,
-    `          OUT="\${OUT_FILE}"`,
-    `          HDR=()`,
-    `          if [ -n "\${TOOLBOX_API_TOKEN:-}" ]; then`,
-    `            HDR+=(-H "Authorization: Bearer \${TOOLBOX_API_TOKEN}")`,
-    `          fi`,
-    `          curl -L "\${HDR[@]}" "\${URL}" -o "\${OUT}"`,
-    `          echo "Saved \${OUT}"`,
-    `          ls -la`,
-    ``,
-    `      - name: Upload artifact`,
-    `        uses: actions/upload-artifact@v4`,
-    `        with:`,
-    `          name: art-studio-export-intent`,
-    `          path: \${{ inputs.out_file }}`,
-    `          retention-days: 7`,
-    ``,
-    `  validate-export-intent:`,
-    `    name: Validate PromotionIntentV1 (strict)`,
-    `    runs-on: ubuntu-latest`,
-    `    needs: [art-studio-export-intent]`,
-    `    steps:`,
-    `      - name: Download artifact`,
-    `        uses: actions/download-artifact@v4`,
-    `        with:`,
-    `          name: art-studio-export-intent`,
-    ``,
-    `      - name: Strict schema validation`,
-    `        env:`,
-    `          OUT_FILE: \${{ inputs.out_file }}`,
-    `        run: |`,
-    `          set -euo pipefail`,
-    `          python - <<'PY'`,
-    `          import json, os, sys`,
-    `          `,
-    `          # Locate the file`,
-    `          path = os.environ.get("OUT_FILE")`,
-    `          if not path or not os.path.exists(path):`,
-    `              candidates = [p for p in os.listdir(".") if p.lower().endswith(".json")]`,
-    `              if len(candidates) == 1:`,
-    `                  path = candidates[0]`,
-    `              else:`,
-    `                  raise SystemExit(f"Could not locate OUT_FILE. OUT_FILE={path!r}, candidates={candidates}")`,
-    `          `,
-    `          # Parse JSON`,
-    `          with open(path, "r", encoding="utf-8") as f:`,
-    `              data = json.load(f)`,
-    `          `,
-    `          if not isinstance(data, dict):`,
-    `              raise SystemExit(f"PromotionIntentV1 must be an object, got {type(data).__name__}")`,
-    `          `,
-    `          # =================== STRICT CONTRACT VALIDATION ===================`,
-    `          # Required top-level keys (PromotionIntentV1 contract)`,
-    `          REQUIRED_TOP = [`,
-    `              "intent_version", "session_id", "mode", "created_at",`,
-    `              "design", "feasibility", "design_fingerprint",`,
-    `              "feasibility_fingerprint", "fingerprint_algo",`,
-    `          ]`,
-    `          missing_top = [k for k in REQUIRED_TOP if k not in data]`,
-    `          if missing_top:`,
-    `              raise SystemExit(f"STRICT FAIL: Missing required top-level keys: {missing_top}")`,
-    `          `,
-    `          # intent_version must be "v1"`,
-    `          if data.get("intent_version") != "v1":`,
-    `              raise SystemExit(f"STRICT FAIL: intent_version must be 'v1', got {data.get('intent_version')!r}")`,
-    `          `,
-    `          # Required nested keys in design`,
-    `          design = data.get("design")`,
-    `          if not isinstance(design, dict):`,
-    `              raise SystemExit(f"STRICT FAIL: 'design' must be an object, got {type(design).__name__}")`,
-    `          REQUIRED_DESIGN = ["outer_diameter_mm", "inner_diameter_mm", "ring_params"]`,
-    `          missing_design = [k for k in REQUIRED_DESIGN if k not in design]`,
-    `          if missing_design:`,
-    `              raise SystemExit(f"STRICT FAIL: Missing required design keys: {missing_design}")`,
-    `          `,
-    `          # Required nested keys in feasibility`,
-    `          feas = data.get("feasibility")`,
-    `          if not isinstance(feas, dict):`,
-    `              raise SystemExit(f"STRICT FAIL: 'feasibility' must be an object, got {type(feas).__name__}")`,
-    `          REQUIRED_FEAS = ["overall_score", "risk_bucket", "material_efficiency", "estimated_cut_time_min", "warnings"]`,
-    `          missing_feas = [k for k in REQUIRED_FEAS if k not in feas]`,
-    `          if missing_feas:`,
-    `              raise SystemExit(f"STRICT FAIL: Missing required feasibility keys: {missing_feas}")`,
-    `          `,
-    `          # =================== VALIDATION PASSED ===================`,
-    `          print(f"OK: PromotionIntentV1 strict validation passed for {path}")`,
-    `          print(f"    intent_version={data['intent_version']}")`,
-    `          print(f"    session_id={data['session_id']}")`,
-    `          print(f"    mode={data['mode']}")`,
-    `          print(f"    design_fingerprint={data['design_fingerprint'][:16]}...")`,
-    `          print(f"    feasibility.risk_bucket={feas['risk_bucket']}")`,
-    `          PY`,
-    ``,
-  ].join("\n");
-}
-
-async function copyExportGitHubActionsWorkflow() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const workflow = buildExportGitHubActionsWorkflow(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(workflow);
-    toast.success("Copied GitHub Actions workflow YAML.");
-  } catch {
-    toast.error("Copy failed.");
-  }
-}
-
-// ==========================================================================
-// Phase 32.0: Copy GH Workflow (File-Ready) — strict PromotionIntentV1 validator
-// ==========================================================================
-
-function buildRepoReadyWorkflowBundle(url: string, session_id: string): string {
-  const filename = "art-studio-export-intent.yml";
-  const repoName = _detectRepoNameForHeader();
-  const workflow = buildExportGitHubActionsWorkflow(url, session_id);
-
-  return [
-    `# =====================================================================`,
-    `# Art Studio — Promotion Intent Export Contract (Phase 32.0)`,
-    `#`,
-    `# Detected repo (best-effort): ${repoName}`,
-    `# Recommended path: .github/workflows/${filename}`,
-    `#`,
-    `# Optional secret (only needed if your export URL requires auth):`,
-    `#   TOOLBOX_API_TOKEN = <your API token>`,
-    `#`,
-    `# This workflow:`,
-    `#   Job 1) Downloads PromotionIntentV1 JSON and uploads as artifact`,
-    `#   Job 2) Downloads artifact and runs STRICT schema validation`,
-    `#          (fails pipeline if required keys missing or intent_version != "v1")`,
-    `# =====================================================================`,
-    ``,
-    workflow,
-  ].join("\n");
-}
-
-async function copyGitHubActionsWorkflowFile() {
-  const sid = wf.sessionId;
-  const url = exportUrlPreview.value;
-  if (!sid || !url) return;
-
-  const bundle = buildRepoReadyWorkflowBundle(url, sid);
-
-  try {
-    await navigator.clipboard.writeText(bundle);
-    toast.success("Repo-ready GitHub Actions workflow copied");
-  } catch {
-    toast.error("Failed to copy workflow");
-  }
-}
-
-async function downloadIntent() {
-  const sid = wf.sessionId;
-  if (!sid) return;
-  const url = buildPromotionIntentExportUrl(sid);
-  try {
-    const resp = await fetch(url, { method: "GET" });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error(`HTTP ${resp.status}: ${txt}`);
-    }
-    const blob = await resp.blob();
-    const filename = `promotion_intent_${sid.slice(0, 8)}.json`;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-    toast.success(`Downloaded ${filename}`);
-  } catch (e: any) {
-    toast.error(`Download failed: ${e.message || e}`);
-  }
-}
-
-function buildLogViewerUrl(session_id: string): string {
-  const u = new URL(window.location.href);
-  u.pathname = "/rmos/logs";
-  u.searchParams.set("mode", "art_studio");
-  u.searchParams.set("run_id", session_id);
-  return u.toString();
-}
-
 function openInLogViewer() {
   const sid = wf.sessionId;
   if (!sid) return;
-  // Bundle 32.7.5: Pin to the current session when opening
-  pinnedRunId.value = sid;
-  logDrawerOpen.value = true;
+  logDrawer.openDrawer(sid);
 }
 
-function openLogsNewTab() {
-  if (logsUrl.value) {
-    window.open(logsUrl.value, "_blank");
-  }
-}
-
-function togglePin() {
-  if (isPinned.value) {
-    // Unpin: follow current session
-    pinnedRunId.value = "";
-  } else {
-    // Pin to current effective run_id
-    pinnedRunId.value = effectiveRunId.value;
-  }
-}
-
-function closeDrawer() {
-  logDrawerOpen.value = false;
-  // Clear pin when closing (optional: remove this line to persist pin)
-  pinnedRunId.value = "";
-}
+const downloadIntent = clipboard.downloadIntent;
 </script>
 
 <style scoped>
@@ -1484,14 +709,12 @@ function closeDrawer() {
   padding: 4px 8px;
 }
 
-/* Bundle 32.7.4: Log viewer iframe in drawer */
 .log-iframe {
   flex: 1;
   width: 100%;
   border: none;
 }
 
-/* Bundle 32.8.4.2: Download overrides */
 .overrides {
   margin-top: 10px;
   padding-top: 10px;
@@ -1502,7 +725,6 @@ function closeDrawer() {
   align-items: center;
 }
 
-/* Bundle 32.8.4.5: Export URL preview */
 .export-url-preview {
   margin-top: 10px;
   padding-top: 10px;
