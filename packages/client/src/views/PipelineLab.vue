@@ -1,24 +1,23 @@
 <template>
-  <div class="pipeline-lab">
-    <div class="header">
+  <div :class="styles.pipelineLab">
+    <div :class="styles.header">
       <h1>🔧 Pipeline Lab</h1>
-      <p class="subtitle">
+      <p :class="styles.subtitle">
         Blueprint → CAM Complete Workflow (Phase 3.2)
       </p>
     </div>
 
     <!-- Stage Progress Tracker -->
-    <div class="stage-progress">
-      <div 
-        v-for="(stage, idx) in stages" 
-        :key="idx" 
-        class="stage-item"
-        :class="{ active: currentStage === idx, completed: currentStage > idx }"
+    <div :class="styles.stageProgress">
+      <div
+        v-for="(stage, idx) in stages"
+        :key="idx"
+        :class="stageItemClass(idx, currentStage)"
       >
-        <div class="stage-number">
+        <div :class="styles.stageNumber">
           {{ idx + 1 }}
         </div>
-        <div class="stage-label">
+        <div :class="styles.stageLabel">
           {{ stage }}
         </div>
       </div>
@@ -65,16 +64,16 @@
     />
 
     <!-- Navigation -->
-    <div class="navigation-buttons">
+    <div :class="styles.navigationButtons">
       <button
         v-if="currentStage > 0"
-        class="btn btn-secondary"
+        :class="styles.btnSecondary"
         @click="prevStage()"
       >
         ⬅️ Previous Stage
       </button>
       <button
-        class="btn btn-secondary"
+        :class="styles.btnSecondary"
         @click="resetPipeline"
       >
         🔄 Reset Pipeline
@@ -98,6 +97,14 @@ import Stage2PreflightPanel from '@/components/pipeline/Stage2PreflightPanel.vue
 import Stage3ReconstructionPanel from '@/components/pipeline/Stage3ReconstructionPanel.vue'
 import Stage4ToolpathPanel from '@/components/pipeline/Stage4ToolpathPanel.vue'
 import BlueprintPresetPanel from '@/components/pipeline/BlueprintPresetPanel.vue'
+import styles from './PipelineLab.module.css'
+
+// CSS Module class helpers
+function stageItemClass(idx: number, currentStage: number): string {
+  if (currentStage === idx) return styles.stageItemActive
+  if (currentStage > idx) return styles.stageItemCompleted
+  return styles.stageItem
+}
 
 // Stage workflow (extracted composable)
 const {
@@ -320,375 +327,3 @@ function resetPipeline() {
 
 </script>
 
-<style scoped>
-.pipeline-lab {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.header h1 {
-  font-size: 2.5em;
-  margin: 0;
-}
-
-.subtitle {
-  color: #666;
-  margin-top: 10px;
-}
-
-/* Stage Progress */
-.stage-progress {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 40px;
-  justify-content: center;
-}
-
-.stage-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  opacity: 0.5;
-}
-
-.stage-item.active {
-  background: #2196F3;
-  color: white;
-  opacity: 1;
-}
-
-.stage-item.completed {
-  background: #4CAF50;
-  color: white;
-  opacity: 1;
-}
-
-.stage-number {
-  width: 30px;
-  height: 30px;
-  background: white;
-  color: #333;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.stage-item.active .stage-number,
-.stage-item.completed .stage-number {
-  background: rgba(255,255,255,0.3);
-  color: white;
-}
-
-/* Drop Zone */
-.drop-zone {
-  border: 3px dashed #ccc;
-  border-radius: 12px;
-  padding: 60px;
-  text-align: center;
-  transition: all 0.3s;
-  background: #fafafa;
-}
-
-.drop-zone.dragging {
-  border-color: #2196F3;
-  background: #e3f2fd;
-}
-
-.upload-icon {
-  font-size: 4em;
-  margin-bottom: 20px;
-}
-
-.or-text {
-  color: #999;
-  margin: 20px 0;
-}
-
-.upload-button {
-  display: inline-block;
-  padding: 12px 24px;
-  background: #2196F3;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.upload-button:hover {
-  background: #1976D2;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.file-icon {
-  font-size: 3em;
-}
-
-.clear-button {
-  margin-left: auto;
-  padding: 10px 15px;
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.2em;
-}
-
-/* Status Badges */
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 1.2em;
-  font-weight: bold;
-}
-
-.status-badge.passed {
-  background: #4CAF50;
-  color: white;
-}
-
-.status-badge.failed {
-  background: #f44336;
-  color: white;
-}
-
-/* Summary Grid */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.stat-card {
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-  background: #f5f5f5;
-}
-
-.stat-card.error { border-left: 4px solid #f44336; }
-.stat-card.warning { border-left: 4px solid #ff9800; }
-.stat-card.info { border-left: 4px solid #2196F3; }
-.stat-card.neutral { border-left: 4px solid #9e9e9e; }
-
-.stat-value {
-  font-size: 2.5em;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.stat-label {
-  color: #666;
-  font-size: 0.9em;
-}
-
-/* Issues */
-.issue-item {
-  border-left: 4px solid #ccc;
-  padding: 15px;
-  margin: 10px 0;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.issue-item.error { border-left-color: #f44336; }
-.issue-item.warning { border-left-color: #ff9800; }
-.issue-item.info { border-left-color: #2196F3; }
-
-.issue-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.85em;
-  font-weight: bold;
-  color: white;
-  background: #666;
-}
-
-.issue-item.error .issue-badge { background: #f44336; }
-.issue-item.warning .issue-badge { background: #ff9800; }
-.issue-item.info .issue-badge { background: #2196F3; }
-
-.issue-category {
-  color: #666;
-  font-size: 0.9em;
-  margin-left: 10px;
-}
-
-.issue-suggestion {
-  margin-top: 10px;
-  color: #666;
-  font-size: 0.95em;
-}
-
-/* Controls */
-.control-group {
-  margin: 15px 0;
-}
-
-.control-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #333;
-}
-
-.control-group input,
-.control-group select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1em;
-}
-
-.control-group small {
-  display: block;
-  margin-top: 5px;
-  color: #666;
-}
-
-.params-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
-}
-
-/* Buttons */
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  margin: 30px 0;
-  justify-content: center;
-}
-
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: #2196F3;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1976D2;
-}
-
-.btn-secondary {
-  background: #9e9e9e;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #757575;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.navigation-buttons {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #ddd;
-}
-
-/* Entity Chips */
-.entity-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.entity-chip {
-  display: flex;
-  gap: 10px;
-  padding: 8px 15px;
-  background: #e3f2fd;
-  border-radius: 20px;
-  font-size: 0.9em;
-}
-
-.entity-type {
-  font-weight: 500;
-}
-
-.entity-count {
-  color: #666;
-}
-
-/* Loop Cards */
-.loop-card {
-  padding: 15px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin: 10px 0;
-}
-
-.loop-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.badge-outer {
-  padding: 3px 8px;
-  background: #4CAF50;
-  color: white;
-  border-radius: 4px;
-  font-size: 0.85em;
-}
-
-.badge-island {
-  padding: 3px 8px;
-  background: #ff9800;
-  color: white;
-  border-radius: 4px;
-  font-size: 0.85em;
-}
-
-.stage-panel {
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>
