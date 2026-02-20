@@ -1,7 +1,7 @@
 <template>
-  <div class="dxf-to-gcode">
+  <div :class="styles.dxfToGcode">
     <h1>DXF → G-code (GRBL)</h1>
-    <p class="subtitle">
+    <p :class="styles.subtitle">
       Shop-floor quick path: upload DXF, set params, download G-code
     </p>
 
@@ -9,7 +9,7 @@
     <DxfUploadZone
       v-model:file="dxfFile"
       :disabled="isGenerating"
-      class="mb-8"
+      :class="styles.mb8"
       @error="uploadError = $event"
     />
 
@@ -20,27 +20,27 @@
     />
 
     <!-- Generate Button -->
-    <div class="action-section">
+    <div :class="styles.actionSection">
       <button
         :disabled="!dxfFile || isGenerating"
-        class="btn-generate"
+        :class="styles.btnGenerate"
         @click="generateGcode"
       >
         {{ isGenerating ? 'Generating...' : 'Generate G-code' }}
       </button>
-      <p class="generate-hint">
-        Uses GRBL profile � Units: mm � Output: .nc
+      <p :class="styles.generateHint">
+        Uses GRBL profile · Units: mm · Output: .nc
       </p>
     </div>
 
     <!-- Result -->
     <div
       v-if="result"
-      class="result-section"
+      :class="styles.resultSection"
     >
       <!-- Results Header: Title+Badge -> Run ID/Copy/View/Why? -> Override -> Warnings -> WhyPanel -->
-      <div class="results-header">
-        <div class="results-title">
+      <div :class="styles.resultsHeader">
+        <div :class="styles.resultsTitle">
           <h2>Result</h2>
           <RiskBadge
             v-if="result.decision?.risk_level"
@@ -48,10 +48,10 @@
           />
         </div>
 
-        <div class="result-meta">
-          <span class="run-id">Run: {{ result.run_id }}</span>
+        <div :class="styles.resultMeta">
+          <span :class="styles.runId">Run: {{ result.run_id }}</span>
           <button
-            class="copy-btn"
+            :class="styles.copyBtn"
             title="Copy Run ID"
             @click="copyRunId"
           >
@@ -59,22 +59,22 @@
           </button>
           <button
             v-if="canViewRun"
-            class="btn-link"
+            :class="styles.btnLink"
             title="Open canonical RMOS run record"
             @click="viewRunNewTab"
           >
             View Run <span
-              class="ext"
+              :class="styles.ext"
               aria-hidden="true"
             >↗</span>
           </button>
           <span
             v-if="!result.rmos_persisted"
-            class="not-persisted"
+            :class="styles.notPersisted"
           >RMOS not persisted</span>
           <button
             v-if="hasExplainability"
-            class="btn-link"
+            :class="styles.btnLink"
             :aria-expanded="showWhy"
             title="Show why this decision happened"
             @click="showWhy = !showWhy"
@@ -92,7 +92,7 @@
 
       <div
         v-if="result.decision?.warnings?.length"
-        class="warnings"
+        :class="styles.warnings"
       >
         <strong>Warnings:</strong>
         <ul>
@@ -112,7 +112,7 @@
         :risk-level="riskLevel"
         :show-override-hint="riskLevel === 'YELLOW' && !hasOverrideAttachment"
         :has-override="hasOverrideAttachment"
-        class="mt-3"
+        :class="styles.mt3"
       />
 
       <!-- Run-to-run compare (extracted component) -->
@@ -126,10 +126,9 @@
       />
 
       <!-- Action row with risk badge + downloads -->
-      <div class="action-row">
+      <div :class="styles.actionRow">
         <span
-          class="action-risk-badge"
-          :class="riskLevel.toLowerCase()"
+          :class="riskBadgeClass"
           title="Decision from feasibility engine (RMOS)"
         >
           {{ riskLevel || 'N/A' }}
@@ -137,7 +136,7 @@
 
         <button
           :disabled="!canDownload"
-          class="btn-download"
+          :class="styles.btnDownload"
           @click="downloadGcode"
         >
           Download G-code (.nc)
@@ -145,7 +144,7 @@
 
         <button
           :disabled="!canDownloadOperatorPack"
-          class="btn-operator-pack"
+          :class="styles.btnOperatorPack"
           title="Downloads input.dxf + plan.json + manifest.json + output.nc"
           @click="downloadOperatorPack"
         >
@@ -154,7 +153,7 @@
 
         <button
           :disabled="!canCompare"
-          class="btn-compare"
+          :class="styles.btnCompare"
           :title="compareTitle"
           @click="compareWithPreviousRun"
         >
@@ -164,22 +163,22 @@
 
       <button
         v-if="canViewRun"
-        class="btn-view-run"
+        :class="styles.btnViewRun"
         title="Open canonical RMOS run record in a new tab"
         @click="viewRunNewTab"
       >
         View Run <span
-          class="ext"
+          :class="styles.ext"
           aria-hidden="true"
         >↗</span>
       </button>
 
       <div
         v-if="result && !result.gcode?.inline"
-        class="attachment-hint"
+        :class="styles.attachmentHint"
       >
         <p>G-code stored as RMOS attachment (too large for inline).</p>
-        <p class="attachment-meta">
+        <p :class="styles.attachmentMeta">
           Run ID: <code>{{ result.run_id }}</code>
           <span v-if="gcodeAttachment">
             · SHA: <code>{{ gcodeAttachment.sha256?.slice(0, 12) }}…</code>
@@ -192,11 +191,11 @@
     <!-- Error -->
     <div
       v-if="error"
-      class="error"
+      :class="styles.error"
     >
       <strong>Error:</strong> {{ error }}
       <button
-        class="clear-btn"
+        :class="styles.clearBtn"
         @click="error = null"
       >
         ×
@@ -215,6 +214,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import OverrideBanner from '@/components/ui/OverrideBanner.vue'
 import WhyPanel from '@/components/rmos/WhyPanel.vue'
@@ -225,6 +225,7 @@ import {
   OverrideModal,
   useDxfToGcode
 } from '@/components/dxf'
+import styles from './DxfToGcodeView.module.css'
 
 const {
   // File
@@ -271,380 +272,15 @@ const {
   submitOverride,
   closeOverrideModal,
 } = useDxfToGcode()
+
+// Computed class for risk badge
+const riskBadgeClass = computed(() => {
+  const level = riskLevel.value?.toLowerCase() || ''
+  return {
+    [styles.actionRiskBadgeGreen]: level === 'green',
+    [styles.actionRiskBadgeYellow]: level === 'yellow',
+    [styles.actionRiskBadgeRed]: level === 'red',
+    [styles.actionRiskBadge]: !['green', 'yellow', 'red'].includes(level),
+  }
+})
 </script>
-
-<style scoped>
-.dxf-to-gcode {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-h1 {
-  margin: 0 0 0.5rem 0;
-}
-
-.subtitle {
-  color: #6b7280;
-  margin-bottom: 2rem;
-}
-
-
-.clear-btn {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: #9ca3af;
-  cursor: pointer;
-  padding: 0 0.25rem;
-}
-
-.clear-btn:hover {
-  color: #dc2626;
-}
-
-
-.action-section {
-  margin-bottom: 2rem;
-}
-
-.generate-hint {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-.btn-generate {
-  width: 100%;
-  padding: 1rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-generate:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-generate:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.result-section {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-/* Risk Banner - prominent at top */
-.risk-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.risk-banner.green {
-  background: #d1fae5;
-  border: 1px solid #10b981;
-}
-
-.risk-banner.yellow {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-}
-
-.risk-banner.red {
-  background: #fee2e2;
-  border: 1px solid #ef4444;
-}
-
-.risk-label {
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.risk-banner.green .risk-label {
-  color: #065f46;
-}
-
-.risk-banner.yellow .risk-label {
-  color: #92400e;
-}
-
-.risk-banner.red .risk-label {
-  color: #991b1b;
-}
-
-.risk-text {
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.results-header {
-  margin-bottom: 1rem;
-}
-
-.results-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.results-title h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.result-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.mt-3 {
-  margin-top: 0.75rem;
-}
-
-.run-id {
-  font-family: monospace;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.copy-btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  background: #e5e7eb;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  color: #374151;
-}
-
-.copy-btn:hover {
-  background: #d1d5db;
-}
-
-.view-run-link {
-  font-size: 0.75rem;
-  color: #3b82f6;
-  text-decoration: none;
-}
-
-.view-run-link:hover {
-  text-decoration: underline;
-}
-
-.not-persisted {
-  color: #f59e0b;
-  font-size: 0.875rem;
-}
-
-.warnings {
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.warnings ul {
-  margin: 0.5rem 0 0 1.25rem;
-  padding: 0;
-}
-
-.warnings li {
-  color: #92400e;
-  font-size: 0.875rem;
-}
-
-.btn-download {
-  padding: 0.75rem 1.5rem;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-download:hover:not(:disabled) {
-  background: #059669;
-}
-
-.btn-download:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.btn-operator-pack {
-  padding: 0.75rem 1.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-
-.btn-operator-pack:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-operator-pack:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.attachment-hint {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-  margin-top: 1rem;
-}
-
-.attachment-hint p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #92400e;
-}
-
-.attachment-meta {
-  margin-top: 0.5rem !important;
-}
-
-.attachment-meta code {
-  background: #fde68a;
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-}
-
-.error {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  color: #991b1b;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-
-
-.btn-view-run {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  background: #e5e7eb;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  color: #374151;
-  opacity: 0.9;
-}
-
-.btn-view-run:hover {
-  background: #d1d5db;
-}
-
-.btn-link {
-  padding: 0 4px;
-  font-size: 13px;
-  background: none;
-  border: none;
-  color: #3b82f6;
-  text-decoration: underline;
-  cursor: pointer;
-  opacity: 0.85;
-}
-
-.btn-link:hover {
-  opacity: 1;
-}
-
-.ext {
-  display: inline-block;
-  margin-left: 4px;
-  font-size: 12px;
-  opacity: 0.8;
-  transform: translateY(-1px);
-}
-
-/* Action row with risk badge + download buttons */
-.action-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.action-risk-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  cursor: help;
-}
-
-.action-risk-badge.green {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #10b981;
-}
-
-.action-risk-badge.yellow {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #f59e0b;
-}
-
-.action-risk-badge.red {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #ef4444;
-}
-
-.btn-compare {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-compare:hover:not(:disabled) {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.btn-compare:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-
-</style>
