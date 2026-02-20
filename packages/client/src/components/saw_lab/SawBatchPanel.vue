@@ -448,16 +448,25 @@
 </template>
 
 <script setup lang="ts">
-import { api } from '@/services/apiBase';
+/**
+ * SawBatchPanel.vue - Batch saw operations with optimization
+ *
+ * REFACTORED: Uses composables for cleaner separation:
+ * - useSawBladeRegistry: Blade loading and selection
+ * - useSawBatchStats: Batch statistics and slice path generation
+ * - useSawBatchGcode: G-code generation and download
+ */
+import { api } from '@/services/apiBase'
 import { ref, computed, onMounted } from 'vue'
+import {
+  useSawBladeRegistry,
+  useSawBatchStats,
+  useSawBatchGcode,
+} from './composables'
 
 // ============================================================================
-// State
+// Form State
 // ============================================================================
-
-const blades = ref<any[]>([])
-const selectedBladeId = ref<string>('')
-const selectedBlade = ref<any>(null)
 
 const machineProfile = ref<string>('bcam_router_2030')
 const materialFamily = ref<string>('hardwood')
@@ -467,7 +476,7 @@ const sliceSpacing = ref<number>(25)
 const sliceLength = ref<number>(150)
 const startX = ref<number>(0)
 const startY = ref<number>(0)
-const orientation = ref<string>('horizontal')
+const orientation = ref<'horizontal' | 'vertical'>('horizontal')
 
 const totalDepth = ref<number>(12)
 const depthPerPass = ref<number>(3)
@@ -478,11 +487,70 @@ const safeZ = ref<number>(5)
 
 const validationResult = ref<any>(null)
 const mergedParams = ref<any>(null)
-const gcode = ref<string>('')
 const runId = ref<string>('')
 
 // ============================================================================
-// Computed
+// Composables
+// ============================================================================
+
+// Blade registry
+const bladeRegistry = useSawBladeRegistry(() => {
+  validationResult.value = null
+  mergedParams.value = null
+})
+
+const { blades, selectedBladeId, selectedBlade, loadBlades, onBladeChange } = bladeRegistry
+
+// Batch statistics
+const batchStats = useSawBatchStats(
+  () => ({
+    numSlices: numSlices.value,
+    sliceSpacing: sliceSpacing.value,
+    sliceLength: sliceLength.value,
+    startX: startX.value,
+    startY: startY.value,
+    orientation: orientation.value,
+    totalDepth: totalDepth.value,
+    depthPerPass: depthPerPass.value,
+    feedIpm: feedIpm.value,
+  }),
+  () => selectedBlade.value
+)
+
+const {
+  depthPasses,
+  totalPasses,
+  totalLengthMm,
+  estimatedTimeSec,
+  totalVolumeMm3,
+  kerfLossMm3,
+  slicePaths,
+  svgViewBox,
+  formatTime,
+} = batchStats
+
+// G-code generation
+const gcodeGen = useSawBatchGcode(
+  () => ({
+    numSlices: numSlices.value,
+    sliceLength: sliceLength.value,
+    sliceSpacing: sliceSpacing.value,
+    totalDepth: totalDepth.value,
+    depthPerPass: depthPerPass.value,
+    feedIpm: feedIpm.value,
+    safeZ: safeZ.value,
+  }),
+  () => selectedBlade.value,
+  () => materialFamily.value,
+  () => slicePaths.value,
+  () => depthPasses.value,
+  () => totalLengthMm.value
+)
+
+const { gcode, hasGcode, gcodePreview, generateBatchGcode, downloadGcode } = gcodeGen
+
+// ============================================================================
+// Computed (validation gates)
 // ============================================================================
 
 const canValidate = computed(() => {
@@ -497,126 +565,27 @@ const isValid = computed(() => {
   return validationResult.value && validationResult.value.overall_result !== 'ERROR'
 })
 
-const hasGcode = computed(() => {
-  return gcode.value.length > 0
-})
-
-const depthPasses = computed(() => {
-  return Math.ceil(totalDepth.value / depthPerPass.value)
-})
-
-const totalPasses = computed(() => {
-  return numSlices.value * depthPasses.value
-})
-
-const totalLengthMm = computed(() => {
-  return sliceLength.value * numSlices.value * depthPasses.value
-})
-
-const estimatedTimeSec = computed(() => {
-  const feedMmMin = feedIpm.value * 25.4
-  const cuttingTime = (totalLengthMm.value / feedMmMin) * 60
-  // Add overhead for retracts and rapids
-  const overheadTime = totalPasses.value * 3 // 3s per pass
-  return cuttingTime + overheadTime
-})
-
-const totalVolumeMm3 = computed(() => {
-  if (!selectedBlade.value) return 0
-  const kerf = selectedBlade.value.kerf_mm
-  return sliceLength.value * kerf * totalDepth.value * numSlices.value
-})
-
-const kerfLossMm3 = computed(() => {
-  return totalVolumeMm3.value // All material is kerf loss in slicing
-})
-
-const slicePaths = computed(() => {
-  const paths: { x1: number; y1: number; x2: number; y2: number }[] = []
-  for (let i = 0; i < numSlices.value; i++) {
-    if (orientation.value === 'horizontal') {
-      paths.push({
-        x1: startX.value,
-        y1: startY.value + (i * sliceSpacing.value),
-        x2: startX.value + sliceLength.value,
-        y2: startY.value + (i * sliceSpacing.value)
-      })
-    } else {
-      paths.push({
-        x1: startX.value + (i * sliceSpacing.value),
-        y1: startY.value,
-        x2: startX.value + (i * sliceSpacing.value),
-        y2: startY.value + sliceLength.value
-      })
-    }
-  }
-  return paths
-})
-
-const svgViewBox = computed(() => {
-  if (slicePaths.value.length === 0) return '0 0 200 200'
-  
-  const allX = slicePaths.value.flatMap(s => [s.x1, s.x2])
-  const allY = slicePaths.value.flatMap(s => [s.y1, s.y2])
-  
-  const padding = 30
-  const minX = Math.min(...allX) - padding
-  const minY = Math.min(...allY) - padding
-  const maxX = Math.max(...allX) + padding
-  const maxY = Math.max(...allY) + padding
-  
-  return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
-})
-
-const gcodePreview = computed(() => {
-  if (!gcode.value) return ''
-  const lines = gcode.value.split('\n')
-  return lines.slice(0, 20).join('\n') + '\n...\n' + lines.slice(-5).join('\n')
-})
-
 // ============================================================================
-// Functions
+// API Functions
 // ============================================================================
-
-function formatTime(seconds: number): string {
-  const min = Math.floor(seconds / 60)
-  const sec = Math.floor(seconds % 60)
-  return `${min}m ${sec}s`
-}
-
-async function loadBlades() {
-  try {
-    const response = await api('/api/saw/blades')
-    blades.value = await response.json()
-  } catch (err) {
-    console.error('Failed to load blades:', err)
-  }
-}
-
-async function onBladeChange() {
-  const blade = blades.value.find(b => b.blade_id === selectedBladeId.value)
-  selectedBlade.value = blade
-  validationResult.value = null
-  mergedParams.value = null
-}
 
 async function validateBatch() {
   if (!selectedBlade.value) return
-  
+
   const payload = {
     blade: selectedBlade.value,
     op_type: 'batch',
     material_family: materialFamily.value,
     planned_rpm: rpm.value,
     planned_feed_ipm: feedIpm.value,
-    planned_doc_mm: depthPerPass.value
+    planned_doc_mm: depthPerPass.value,
   }
-  
+
   try {
     const response = await api('/api/saw/validate/operation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     })
     validationResult.value = await response.json()
   } catch (err) {
@@ -629,74 +598,31 @@ async function mergeLearnedParams() {
     tool_id: selectedBladeId.value,
     material: materialFamily.value,
     mode: 'batch',
-    machine_profile: machineProfile.value
+    machine_profile: machineProfile.value,
   }
-  
+
   const baseline = {
     rpm: rpm.value,
     feed_ipm: feedIpm.value,
     doc_mm: depthPerPass.value,
-    safe_z: safeZ.value
+    safe_z: safeZ.value,
   }
-  
+
   try {
     const response = await api('/api/feeds/learned/merge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lane_key: laneKey, baseline })
+      body: JSON.stringify({ lane_key: laneKey, baseline }),
     })
     const result = await response.json()
     mergedParams.value = result.merged
-    
+
     rpm.value = result.merged.rpm
     feedIpm.value = result.merged.feed_ipm
     depthPerPass.value = result.merged.doc_mm
   } catch (err) {
     console.error('Failed to merge learned params:', err)
   }
-}
-
-async function generateBatchGcode() {
-  const lines: string[] = []
-  
-  // Header
-  lines.push('G21  ; Metric units')
-  lines.push('G90  ; Absolute positioning')
-  lines.push('G17  ; XY plane')
-  lines.push(`(Saw Batch: ${numSlices.value} slices)`)
-  lines.push(`(Blade: ${selectedBlade.value.vendor} ${selectedBlade.value.model_code})`)
-  lines.push(`(Material: ${materialFamily.value})`)
-  lines.push(`(Total length: ${totalLengthMm.value.toFixed(0)}mm)`)
-  lines.push('')
-  
-  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Safe Z`)
-  lines.push('')
-  
-  // Process each slice
-  slicePaths.value.forEach((slice, sliceIdx) => {
-    lines.push(`; === Slice ${sliceIdx + 1} of ${numSlices.value} ===`)
-    lines.push(`G0 X${slice.x1.toFixed(3)} Y${slice.y1.toFixed(3)}  ; Move to slice start`)
-    
-    // Multi-pass depth for this slice
-    for (let pass = 1; pass <= depthPasses.value; pass++) {
-      const depth = Math.min(pass * depthPerPass.value, totalDepth.value)
-      lines.push(`; Pass ${pass}/${depthPasses.value} (depth: ${depth}mm)`)
-      lines.push(`G1 Z${-depth.toFixed(3)} F${(feedIpm.value * 25.4 / 5).toFixed(1)}  ; Plunge`)
-      lines.push(`G1 X${slice.x2.toFixed(3)} Y${slice.y2.toFixed(3)} F${(feedIpm.value * 25.4).toFixed(1)}  ; Cut`)
-      lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Retract`)
-      
-      if (pass < depthPasses.value) {
-        lines.push(`G0 X${slice.x1.toFixed(3)} Y${slice.y1.toFixed(3)}  ; Return to start`)
-      }
-    }
-    lines.push('')
-  })
-  
-  // Footer
-  lines.push(`G0 Z${safeZ.value.toFixed(3)}  ; Final retract`)
-  lines.push('M30  ; Program end')
-  
-  gcode.value = lines.join('\n')
 }
 
 async function sendToJobLog() {
@@ -711,33 +637,25 @@ async function sendToJobLog() {
     planned_rpm: rpm.value,
     planned_feed_ipm: feedIpm.value,
     planned_doc_mm: depthPerPass.value,
-    operator_notes: `Batch: ${numSlices.value} slices, ${sliceLength.value}mm each, ${sliceSpacing.value}mm spacing`
+    operator_notes: `Batch: ${numSlices.value} slices, ${sliceLength.value}mm each, ${sliceSpacing.value}mm spacing`,
   }
-  
+
   try {
     const response = await api('/api/saw/joblog/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     })
     const run = await response.json()
     runId.value = run.run_id
 
-    alert(`Batch sent to job log! Run ID: ${run.run_id}\n\nSlices: ${numSlices.value}\nTotal time: ${formatTime(estimatedTimeSec.value)}`)
+    alert(
+      `Batch sent to job log! Run ID: ${run.run_id}\n\nSlices: ${numSlices.value}\nTotal time: ${formatTime(estimatedTimeSec.value)}`
+    )
   } catch (err) {
     console.error('Failed to send to job log:', err)
     alert('Failed to send to job log')
   }
-}
-
-function downloadGcode() {
-  const blob = new Blob([gcode.value], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `saw_batch_${numSlices.value}slices_${selectedBlade.value?.model_code || 'unknown'}.nc`
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 // ============================================================================
