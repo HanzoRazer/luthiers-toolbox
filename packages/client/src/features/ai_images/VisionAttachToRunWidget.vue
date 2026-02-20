@@ -13,26 +13,13 @@
  * @package features/ai_images
  */
 
-import { ref, computed, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
 import {
-  generateImages,
-  attachAdvisoryToRun,
-  listRecentRuns,
-  queryRecentRuns,
-  createRun,
-  getProviders,
-  type VisionAsset,
-  type VisionGenerateRequest,
-  type RunSummary,
-  type VisionProvider,
-  type ProviderName,
-} from "./api/visionApi";
-
-const router = useRouter();
-const DEFAULT_EVENT_TYPE = "vision_image_review";
-const RECENT_RUNS_PAGE_SIZE = 10;
-const LS_SELECTED_RUN = "tb.visionAttach.selectedRunId";
+  useVisionProviders,
+  useVisionGeneration,
+  useRunSelection,
+  useVisionAttach,
+} from "./composables";
 
 /** Base URL for cross-origin API deployments */
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
@@ -73,64 +60,71 @@ const emit = defineEmits<{
 }>();
 
 // =============================================================================
-// STATE
+// COMPOSABLES
 // =============================================================================
-
-// Generation
-const prompt = ref(props.initialPrompt || "");
-const provider = ref<ProviderName>("openai");
-const numImages = ref(1);
-const size = ref("1024x1024");
-const quality = ref("standard");
-
-// Generated assets
-const generatedAssets = ref<VisionAsset[]>([]);
-const selectedAssetSha = ref<string | null>(null);
-
-// Runs
-const runs = ref<RunSummary[]>([]);
-const selectedRunId = ref<string | null>(props.runId || null);
-const runSearch = ref<string>("");
-const runsCursor = ref<string | null>(null);
-const runsHasMore = ref<boolean>(false);
-const lastAttached = ref<{ runId: string; advisoryId: string } | null>(null);
 
 // Providers
-const providers = ref<VisionProvider[]>([]);
+const {
+  providers,
+  provider,
+  configuredProviders,
+  loadProviders,
+} = useVisionProviders();
 
-// UI state
-const isGenerating = ref(false);
-const isAttaching = ref(false);
-const isLoadingRuns = ref(false);
+// Generation
+const {
+  prompt,
+  numImages,
+  size,
+  quality,
+  generatedAssets,
+  selectedAssetSha,
+  isGenerating,
+  canGenerate,
+  selectedAsset,
+  generate: doGenerate,
+  selectAsset,
+} = useVisionGeneration(() => provider.value, props.initialPrompt);
+
+// Runs
+const {
+  runs,
+  selectedRunId,
+  runSearch,
+  runsHasMore,
+  isLoadingRuns,
+  loadRuns,
+  loadMoreRuns,
+  createAndSelectRun: doCreateAndSelectRun,
+  selectRun,
+} = useRunSelection(props.runId, (msg) => {
+  error.value = msg;
+  emit("error", msg);
+});
+
+// Computed for auto-navigate
+const autoNavigate = computed(() => props.autoNavigateToReview !== false);
+
+// Attach
+const {
+  isAttaching,
+  lastAttached,
+  canAttach,
+  attachToRun: doAttachToRun,
+  goToReview,
+} = useVisionAttach(
+  () => selectedAssetSha.value,
+  () => selectedRunId.value,
+  () => selectedAsset.value,
+  () => autoNavigate.value
+);
+
+// =============================================================================
+// LOCAL STATE (UI messages)
+// =============================================================================
+
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
-
-// =============================================================================
-// COMPUTED
-// =============================================================================
-
-const canGenerate = computed(() => {
-  return prompt.value.trim().length > 0 && !isGenerating.value;
-});
-
-const canAttach = computed(() => {
-  return (
-    selectedAssetSha.value !== null &&
-    selectedRunId.value !== null &&
-    !isAttaching.value
-  );
-});
-
-const selectedAsset = computed(() => {
-  if (!selectedAssetSha.value) return null;
-  return generatedAssets.value.find((a) => a.sha256 === selectedAssetSha.value);
-});
-
-const configuredProviders = computed(() => {
-  return providers.value.filter((p) => p.configured);
-});
-
-const autoNavigate = computed(() => props.autoNavigateToReview !== false);
 
 // =============================================================================
 // LIFECYCLE
@@ -141,206 +135,58 @@ onMounted(async () => {
 });
 
 // =============================================================================
-// METHODS
+// METHODS (wrapped for error/success handling)
 // =============================================================================
 
-async function loadProviders() {
-  try {
-    const res = await getProviders();
-    providers.value = res.providers;
-
-    // Default to first configured provider
-    const configured = res.providers.find((p) => p.configured);
-    if (configured) {
-      provider.value = configured.name as ProviderName;
-    }
-  } catch (e: any) {
-    console.warn("Failed to load providers:", e);
-  }
-}
-
-async function loadRuns() {
+async function generate() {
   error.value = null;
-  isLoadingRuns.value = true;
-  try {
-    // Prefer cursor endpoint when available; fallback to legacy listRecentRuns().
-    try {
-      const res = await queryRecentRuns({
-        cursor: null,
-        limit: RECENT_RUNS_PAGE_SIZE,
-        q: runSearch.value.trim() || null,
-      });
-      runs.value = res.items || [];
-      runsCursor.value = res.next_cursor ?? null;
-      runsHasMore.value = !!res.next_cursor;
-    } catch {
-      const list = await listRecentRuns(20);
-      runs.value = list.runs || [];
-      runsCursor.value = null;
-      runsHasMore.value = false;
-    }
+  successMessage.value = null;
 
-    // Selection preference:
-    // 1) explicit prop
-    // 2) localStorage remembered selection (if present in list)
-    // 3) newest (first)
-    if (!selectedRunId.value && runs.value.length > 0) {
-      const remembered = window.localStorage.getItem(LS_SELECTED_RUN);
-      const inList = remembered && runs.value.some((r) => r.run_id === remembered);
-      selectedRunId.value = inList ? remembered : runs.value[0].run_id;
-    }
-  } catch (e: any) {
-    const msg = e?.message ?? "Failed to load runs";
-    error.value = msg;
-    emit("error", msg);
-  } finally {
-    isLoadingRuns.value = false;
-  }
-}
-
-async function loadMoreRuns() {
-  if (isLoadingRuns.value) return;
-  if (!runsHasMore.value) return;
-  if (!runsCursor.value) return;
-
-  error.value = null;
-  isLoadingRuns.value = true;
-  try {
-    const res = await queryRecentRuns({
-      cursor: runsCursor.value,
-      limit: RECENT_RUNS_PAGE_SIZE,
-      q: runSearch.value.trim() || null,
-    });
-    const nextItems = res.items || [];
-    // de-dupe by run_id
-    const seen = new Set(runs.value.map((r) => r.run_id));
-    for (const r of nextItems) {
-      if (!seen.has(r.run_id)) runs.value.push(r);
-    }
-    runsCursor.value = res.next_cursor ?? null;
-    runsHasMore.value = !!res.next_cursor;
-  } catch (e: any) {
-    const msg = e?.message ?? "Failed to load more runs";
-    error.value = msg;
-    emit("error", msg);
-  } finally {
-    isLoadingRuns.value = false;
+  const result = await doGenerate();
+  if (result.success) {
+    successMessage.value = `Generated ${result.count} image(s)`;
+  } else {
+    error.value = result.error || "Failed to generate images";
+    emit("error", error.value);
   }
 }
 
 async function createAndSelectRun() {
   error.value = null;
   successMessage.value = null;
-  isLoadingRuns.value = true;
-  try {
-    const res = await createRun({ event_type: DEFAULT_EVENT_TYPE });
-    selectedRunId.value = res.run_id;
-    await loadRuns();
-    successMessage.value = `Created run ${res.run_id}`;
-  } catch (e: any) {
-    const msg = e?.message ?? "Failed to create run";
-    error.value = msg;
-    emit("error", msg);
-  } finally {
-    isLoadingRuns.value = false;
-  }
-}
 
-async function generate() {
-  if (!canGenerate.value) return;
-
-  error.value = null;
-  successMessage.value = null;
-  isGenerating.value = true;
-
-  try {
-    const request: VisionGenerateRequest = {
-      prompt: prompt.value.trim(),
-      provider: provider.value,
-      num_images: numImages.value,
-      size: size.value,
-      quality: quality.value,
-    };
-
-    const res = await generateImages(request);
-    generatedAssets.value = [...res.assets, ...generatedAssets.value];
-
-    // Auto-select first generated asset
-    if (res.assets.length > 0) {
-      selectedAssetSha.value = res.assets[0].sha256;
-    }
-
-    successMessage.value = `Generated ${res.assets.length} image(s)`;
-  } catch (e: any) {
-    error.value = e.message || "Failed to generate images";
-    emit("error", error.value || "Unknown error");
-  } finally {
-    isGenerating.value = false;
+  const result = await doCreateAndSelectRun();
+  if (result.runId) {
+    successMessage.value = `Created run ${result.runId}`;
+  } else if (result.error) {
+    error.value = result.error;
+    emit("error", result.error);
   }
 }
 
 async function attachToRun() {
-  if (!canAttach.value || !selectedAssetSha.value || !selectedRunId.value) return;
-
   error.value = null;
   successMessage.value = null;
-  isAttaching.value = true;
 
-  try {
-    const asset = selectedAsset.value;
-    const res = await attachAdvisoryToRun(selectedRunId.value, {
-      advisory_id: selectedAssetSha.value,
-      kind: "advisory",
-      mime: asset?.mime,
-      filename: asset?.filename,
-      size_bytes: asset?.size_bytes,
-    });
-
-    if (res.attached) {
-      lastAttached.value = { runId: res.run_id, advisoryId: res.advisory_id };
-      emit("attached", { runId: res.run_id, advisoryId: res.advisory_id });
-      successMessage.value = `Attached advisory ${res.advisory_id.slice(0, 10)}… to run ${res.run_id}`;
-      if (autoNavigate.value) {
-        router.push({ name: "RunVariantsReview", params: { run_id: res.run_id } });
-      }
-    } else {
-      successMessage.value = res.message || "Already attached";
+  const result = await doAttachToRun();
+  if (result.success) {
+    successMessage.value = result.message || "Attached";
+    if (lastAttached.value) {
+      emit("attached", { runId: lastAttached.value.runId, advisoryId: lastAttached.value.advisoryId });
     }
-  } catch (e: any) {
-    error.value = e.message || "Failed to attach to run";
-    emit("error", error.value || "Unknown error");
-  } finally {
-    isAttaching.value = false;
+  } else {
+    error.value = result.error || "Failed to attach to run";
+    emit("error", error.value);
   }
 }
 
-function selectAsset(sha: string) {
-  selectedAssetSha.value = sha;
-}
-
-function selectRun(runId: string) {
-  selectedRunId.value = runId;
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
+// =============================================================================
+// UTILITIES
+// =============================================================================
 
 function truncate(s: string, len: number): string {
   return s.length > len ? s.slice(0, len) + "..." : s;
 }
-
-function goToReview(runId: string) {
-  router.push({ name: "RunVariantsReview", params: { run_id: runId } });
-}
-
-watch(selectedRunId, (v) => {
-  if (v) window.localStorage.setItem(LS_SELECTED_RUN, v);
-});
 </script>
 
 <template>
