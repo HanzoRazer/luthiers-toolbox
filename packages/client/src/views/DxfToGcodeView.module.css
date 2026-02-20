@@ -1,0 +1,409 @@
+/**
+ * DxfToGcodeView CSS Module
+ * Extracted from scoped styles for better maintainability.
+ */
+
+/* =============================================================================
+   Layout
+   ============================================================================= */
+
+.dxfToGcode {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.dxfToGcode h1 {
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.mb8 {
+  margin-bottom: 2rem;
+}
+
+.mt3 {
+  margin-top: 0.75rem;
+}
+
+/* =============================================================================
+   Action Section (Generate Button)
+   ============================================================================= */
+
+.actionSection {
+  margin-bottom: 2rem;
+}
+
+.generateHint {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.btnGenerate {
+  width: 100%;
+  padding: 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnGenerate:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btnGenerate:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   Result Section
+   ============================================================================= */
+
+.resultSection {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.resultsHeader {
+  margin-bottom: 1rem;
+}
+
+.resultsTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.resultsTitle h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.runId {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.notPersisted {
+  color: #f59e0b;
+  font-size: 0.875rem;
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.copyBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: #374151;
+}
+
+.copyBtn:hover {
+  background: #d1d5db;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.clearBtn:hover {
+  color: #dc2626;
+}
+
+.btnLink {
+  padding: 0 4px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.btnLink:hover {
+  opacity: 1;
+}
+
+.ext {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+.btnViewRun {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #374151;
+  opacity: 0.9;
+}
+
+.btnViewRun:hover {
+  background: #d1d5db;
+}
+
+.btnDownload {
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnDownload:hover:not(:disabled) {
+  background: #059669;
+}
+
+.btnDownload:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btnOperatorPack {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 0.5rem;
+}
+
+.btnOperatorPack:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btnOperatorPack:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btnCompare {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnCompare:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btnCompare:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   Warnings
+   ============================================================================= */
+
+.warnings {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.warnings ul {
+  margin: 0.5rem 0 0 1.25rem;
+  padding: 0;
+}
+
+.warnings li {
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+/* =============================================================================
+   Action Row (Risk Badge + Downloads)
+   ============================================================================= */
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.actionRiskBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  cursor: help;
+}
+
+.actionRiskBadgeGreen {
+  composes: actionRiskBadge;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.actionRiskBadgeYellow {
+  composes: actionRiskBadge;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.actionRiskBadgeRed {
+  composes: actionRiskBadge;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+/* =============================================================================
+   Attachment Hint
+   ============================================================================= */
+
+.attachmentHint {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.attachmentHint p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.attachmentMeta {
+  margin-top: 0.5rem;
+}
+
+.attachmentMeta code {
+  background: #fde68a;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+/* =============================================================================
+   Error
+   ============================================================================= */
+
+.error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* =============================================================================
+   Risk Banner (Unused but kept for reference)
+   ============================================================================= */
+
+.riskBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.riskBannerGreen {
+  composes: riskBanner;
+  background: #d1fae5;
+  border: 1px solid #10b981;
+}
+
+.riskBannerYellow {
+  composes: riskBanner;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+}
+
+.riskBannerRed {
+  composes: riskBanner;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+.riskLabel {
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.riskLabelGreen {
+  composes: riskLabel;
+  color: #065f46;
+}
+
+.riskLabelYellow {
+  composes: riskLabel;
+  color: #92400e;
+}
+
+.riskLabelRed {
+  composes: riskLabel;
+  color: #991b1b;
+}
+
+.riskText {
+  font-size: 0.875rem;
+  color: #374151;
+}
