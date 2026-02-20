@@ -1,17 +1,17 @@
 <template>
-  <div class="page">
-    <header class="header">
-      <div class="header-row">
+  <div :class="styles.page">
+    <header :class="styles.header">
+      <div :class="styles.headerRow">
         <h1>🎛️ Audio Analyzer Evidence Viewer</h1>
         <div
           v-if="cursorFreqHz !== null"
-          class="cursor-pill"
+          :class="styles.cursorPill"
           :title="`Linked cursor @ ${cursorFreqHz.toFixed(2)} Hz`"
         >
-          <span class="cursor-pill-label">Cursor</span>
-          <code class="cursor-pill-val">{{ cursorFreqHz.toFixed(2) }} Hz</code>
+          <span :class="styles.cursorPillLabel">Cursor</span>
+          <code :class="styles.cursorPillVal">{{ cursorFreqHz.toFixed(2) }} Hz</code>
           <button
-            class="cursor-pill-clear"
+            :class="styles.cursorPillClear"
             aria-label="Clear cursor"
             @click="clearCursorOnly"
           >
@@ -19,22 +19,22 @@
           </button>
         </div>
       </div>
-      <p class="sub">
+      <p :class="styles.sub">
         Evidence-pack viewer (ZIP). Supports both
         <code>viewer_pack_v1</code> and <code>toolbox_evidence_manifest_v1</code> schemas.
       </p>
     </header>
 
     <section
-      class="drop"
+      :class="styles.drop"
       @dragover.prevent
       @drop.prevent="onDrop"
     >
-      <div class="drop-inner">
-        <div class="drop-title">
+      <div :class="styles.dropInner">
+        <div :class="styles.dropTitle">
           Drop an evidence ZIP here
         </div>
-        <div class="drop-sub">
+        <div :class="styles.dropSub">
           or
         </div>
         <input
@@ -47,19 +47,19 @@
 
     <section
       v-if="err"
-      class="err"
+      :class="styles.err"
     >
       <strong>Error:</strong> {{ err }}
     </section>
 
     <section
       v-if="pack"
-      class="grid"
+      :class="styles.grid"
     >
       <!-- Pack Metadata -->
-      <div class="card">
+      <div :class="styles.card">
         <h2>Pack Summary</h2>
-        <div class="kv">
+        <div :class="styles.kv">
           <div><span>schema</span><code>{{ pack.schema_id }}</code></div>
           <div><span>created_at_utc</span><code>{{ pack.created_at_utc || "-" }}</code></div>
           <div v-if="pack.source_capdir">
@@ -77,36 +77,30 @@
       </div>
 
       <!-- Validation Report -->
-      <div
-        class="card validation-card"
-        :class="validationStatusClass"
-      >
+      <div :class="[styles.validationCard, validationStatusClass]">
         <h2>
-          <span class="validation-icon">{{ validationIcon }}</span>
+          <span :class="styles.validationIcon">{{ validationIcon }}</span>
           Validation Report
         </h2>
         <div
           v-if="!pack.validation"
-          class="validation-unknown"
+          :class="styles.validationUnknown"
         >
           <p>No validation_report.json found in pack.</p>
-          <p class="muted">
+          <p :class="styles.muted">
             Legacy packs may not include validation data.
           </p>
         </div>
         <div
           v-else
-          class="validation-content"
+          :class="styles.validationContent"
         >
-          <div class="validation-status">
-            <span
-              class="validation-badge"
-              :class="{ pass: pack.validation.passed, fail: !pack.validation.passed }"
-            >
+          <div :class="styles.validationStatus">
+            <span :class="pack.validation.passed ? styles.validationBadgePass : styles.validationBadgeFail">
               {{ pack.validation.passed ? "PASS" : "FAIL" }}
             </span>
           </div>
-          <div class="kv">
+          <div :class="styles.kv">
             <div><span>errors</span><code>{{ pack.validation.errors.length }}</code></div>
             <div><span>warnings</span><code>{{ pack.validation.warnings.length }}</code></div>
             <div v-if="pack.validation.schema_id">
@@ -118,10 +112,10 @@
           </div>
           <details
             v-if="pack.validation.errors.length > 0"
-            class="validation-details"
+            :class="styles.validationDetails"
           >
             <summary>Errors ({{ pack.validation.errors.length }})</summary>
-            <ul class="validation-list">
+            <ul :class="styles.validationList">
               <li
                 v-for="(e, i) in pack.validation.errors"
                 :key="'err-' + i"
@@ -132,10 +126,10 @@
           </details>
           <details
             v-if="pack.validation.warnings.length > 0"
-            class="validation-details"
+            :class="styles.validationDetails"
           >
             <summary>Warnings ({{ pack.validation.warnings.length }})</summary>
-            <ul class="validation-list">
+            <ul :class="styles.validationList">
               <li
                 v-for="(w, i) in pack.validation.warnings"
                 :key="'warn-' + i"
@@ -148,12 +142,12 @@
       </div>
 
       <!-- File List -->
-      <div class="card">
+      <div :class="styles.card">
         <h2>Files</h2>
-        <div class="filter-bar">
+        <div :class="styles.filterBar">
           <select
             v-model="kindFilter"
-            class="filter-select"
+            :class="styles.filterSelect"
           >
             <option value="">
               All kinds
@@ -166,9 +160,9 @@
               {{ k }}
             </option>
           </select>
-          <span class="file-count">{{ filteredFiles.length }} file(s)</span>
+          <span :class="styles.fileCount">{{ filteredFiles.length }} file(s)</span>
         </div>
-        <table class="tbl">
+        <table :class="styles.tbl">
           <thead>
             <tr>
               <th>kind</th>
@@ -181,26 +175,26 @@
             <tr
               v-for="f in filteredFiles"
               :key="f.relpath"
-              :class="{ active: activePath === f.relpath }"
+              :class="{ [styles.active]: activePath === f.relpath }"
             >
               <td>
                 <code
-                  class="kind-badge"
+                  :class="styles.kindBadge"
                   :data-category="getCategory(f.kind)"
                 >{{ f.kind }}</code>
               </td>
               <td
-                class="mono path-cell"
+                :class="styles.pathCell"
                 :title="f.relpath"
               >
                 {{ f.relpath }}
               </td>
-              <td class="mono">
+              <td :class="styles.mono">
                 {{ formatBytes(f.bytes) }}
               </td>
               <td>
                 <button
-                  class="btn"
+                  :class="styles.btn"
                   @click="selectFile(f.relpath)"
                 >
                   View
@@ -212,14 +206,14 @@
       </div>
 
       <!-- Preview Panel -->
-      <div class="card wide">
+      <div :class="styles.wide">
         <h2>Preview</h2>
         <div
           v-if="activePath && activeEntry"
-          class="preview-container"
+          :class="styles.previewContainer"
         >
-          <div class="preview-split">
-            <div class="preview-main">
+          <div :class="styles.previewSplit">
+            <div :class="styles.previewMain">
               <component
                 :is="currentRenderer"
                 :entry="activeEntry"
@@ -230,13 +224,13 @@
               />
             </div>
 
-            <aside class="preview-side">
-              <div class="side-header">
-                <div class="side-title">
+            <aside :class="styles.previewSide">
+              <div :class="styles.sideHeader">
+                <div :class="styles.sideTitle">
                   Selection Details
                 </div>
                 <button
-                  class="btn btn-small"
+                  :class="styles.btnSmall"
                   :disabled="!selectedPeak"
                   @click="clearSelectedPeak"
                 >
@@ -246,18 +240,18 @@
 
               <div
                 v-if="!selectedPeak"
-                class="side-empty"
+                :class="styles.sideEmpty"
               >
-                <p class="muted">
+                <p :class="styles.muted">
                   Click a peak marker in the spectrum chart to inspect it here.
                 </p>
               </div>
 
               <div
                 v-else
-                class="side-body"
+                :class="styles.sideBody"
               >
-                <div class="side-kv">
+                <div :class="styles.sideKv">
                   <div><span>source</span><code>{{ selectionSource }}</code></div>
                   <div><span>point</span><code>{{ selectedPeak.pointId || "—" }}</code></div>
                   <div>
@@ -267,21 +261,21 @@
                   <div v-if="selectedPeak.label">
                     <span>label</span><code>{{ selectedPeak.label }}</code>
                   </div>
-                  <div><span>file</span><code class="mono">{{ selectedPeak.spectrumRelpath }}</code></div>
+                  <div><span>file</span><code :class="styles.mono">{{ selectedPeak.spectrumRelpath }}</code></div>
                   <div v-if="selectedPeak.peaksRelpath">
-                    <span>analysis</span><code class="mono">{{ selectedPeak.peaksRelpath }}</code>
+                    <span>analysis</span><code :class="styles.mono">{{ selectedPeak.peaksRelpath }}</code>
                   </div>
                 </div>
 
                 <details
                   v-if="selectionSource === 'wsi'"
-                  class="side-raw"
+                  :class="styles.sideRaw"
                   open
                 >
-                  <summary class="side-summary">
+                  <summary :class="styles.sideSummary">
                     WSI row fields
                   </summary>
-                  <div class="side-kv">
+                  <div :class="styles.sideKv">
                     <div><span>wsi</span><code>{{ fmtNum(selectedWsiRow?.wsi) }}</code></div>
                     <div><span>coh_mean</span><code>{{ fmtNum(selectedWsiRow?.coh_mean) }}</code></div>
                     <div><span>phase_disorder</span><code>{{ fmtNum(selectedWsiRow?.phase_disorder) }}</code></div>
@@ -291,9 +285,9 @@
                   </div>
                 </details>
 
-                <div class="side-actions">
+                <div :class="styles.sideActions">
                   <button
-                    class="btn"
+                    :class="styles.btn"
                     :disabled="!selectedPeak.pointId"
                     @click="jumpToPointAudio"
                   >
@@ -301,20 +295,20 @@
                   </button>
                   <div
                     v-if="audioJumpError"
-                    class="side-warn"
+                    :class="styles.sideWarn"
                   >
                     {{ audioJumpError }}
                   </div>
                 </div>
 
                 <details
-                  class="side-raw"
+                  :class="styles.sideRaw"
                   open
                 >
-                  <summary class="side-summary">
+                  <summary :class="styles.sideSummary">
                     Raw selection JSON
                   </summary>
-                  <pre class="side-pre">{{ selectedPeak.rawPretty }}</pre>
+                  <pre :class="styles.sidePre">{{ selectedPeak.rawPretty }}</pre>
                 </details>
               </div>
             </aside>
@@ -322,37 +316,37 @@
         </div>
         <div
           v-else
-          class="placeholder"
+          :class="styles.placeholder"
         >
           <p>Select a file from the list above to preview.</p>
         </div>
       </div>
 
       <!-- Pack Debug Panel -->
-      <details class="card wide pack-debug">
-        <summary class="debug-summary">
+      <details :class="styles.packDebug">
+        <summary :class="styles.debugSummary">
           🔍 Pack Debug Info
         </summary>
-        <div class="debug-content">
-          <div class="debug-grid">
-            <div class="debug-section">
+        <div :class="styles.debugContent">
+          <div :class="styles.debugGrid">
+            <div :class="styles.debugSection">
               <h3>Schema</h3>
-              <div class="debug-kv">
+              <div :class="styles.debugKv">
                 <span>schema_id</span>
                 <code>{{ pack.schema_id }}</code>
               </div>
-              <div class="debug-kv">
+              <div :class="styles.debugKv">
                 <span>bundle_sha256</span>
-                <code class="hash">{{ pack.bundle_sha256 || "—" }}</code>
+                <code :class="styles.hash">{{ pack.bundle_sha256 || "—" }}</code>
               </div>
             </div>
-            <div class="debug-section">
+            <div :class="styles.debugSection">
               <h3>Kinds Present ({{ uniqueKinds.length }})</h3>
-              <div class="kind-chips">
+              <div :class="styles.kindChips">
                 <code
                   v-for="k in uniqueKinds"
                   :key="k"
-                  class="kind-chip"
+                  :class="styles.kindChip"
                   :data-category="getCategory(k)"
                 >
                   {{ k }} ({{ kindCounts[k] }})
@@ -360,9 +354,9 @@
               </div>
             </div>
           </div>
-          <div class="debug-section">
+          <div :class="styles.debugSection">
             <h3>All Files ({{ pack.files.length }})</h3>
-            <table class="debug-tbl">
+            <table :class="styles.debugTbl">
               <thead>
                 <tr>
                   <th>kind</th>
@@ -378,17 +372,17 @@
                 >
                   <td>
                     <code
-                      class="kind-badge"
+                      :class="styles.kindBadge"
                       :data-category="getCategory(f.kind)"
                     >{{ f.kind }}</code>
                   </td>
-                  <td class="mono">
+                  <td :class="styles.mono">
                     {{ f.relpath }}
                   </td>
-                  <td class="mono">
+                  <td :class="styles.mono">
                     {{ f.bytes }}
                   </td>
-                  <td class="mono hash">
+                  <td :class="[styles.mono, styles.hash]">
                     {{ f.sha256?.slice(0, 12) || "—" }}…
                   </td>
                 </tr>
@@ -408,6 +402,7 @@ import { loadNormalizedPack, type NormalizedPack, type NormalizedFileEntry } fro
 import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/renderers";
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
 import { getDownloadUrl } from "@/sdk/endpoints/rmosAcoustics";
+import styles from "./AudioAnalyzerViewer.module.css";
 
 // Agentic M1 events
 import { useAgenticEvents } from "@/composables/useAgenticEvents";
@@ -429,8 +424,8 @@ const kindFilter = ref<string>("");
 
 // Validation display computed properties
 const validationStatusClass = computed(() => {
-  if (!pack.value?.validation) return "validation-unknown";
-  return pack.value.validation.passed ? "validation-pass" : "validation-fail";
+  if (!pack.value?.validation) return styles.validationUnknownBorder;
+  return pack.value.validation.passed ? styles.validationPass : styles.validationFail;
 });
 
 const validationIcon = computed(() => {
@@ -718,552 +713,3 @@ onMounted(async () => {
   }
 });
 </script>
-
-<style scoped>
-.page {
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.header h1 {
-  margin: 0;
-}
-
-.sub {
-  opacity: 0.8;
-  margin-top: 6px;
-}
-
-.sub code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.125rem 0.35rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.cursor-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-}
-.cursor-pill-label {
-  font-size: 0.8rem;
-  opacity: 0.75;
-}
-.cursor-pill-val {
-  font-size: 0.85rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 6px;
-  background: rgba(147, 197, 253, 0.12);
-  border: 1px solid rgba(147, 197, 253, 0.18);
-}
-.cursor-pill-clear {
-  appearance: none;
-  border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
-  border-radius: 999px;
-  padding: 2px 7px;
-  cursor: pointer;
-  line-height: 1.2;
-}
-.cursor-pill-clear:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-@media (max-width: 720px) {
-  .cursor-pill {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-.drop {
-  border: 2px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 14px;
-  padding: 18px;
-  margin: 14px 0;
-}
-
-.drop-inner {
-  display: grid;
-  gap: 8px;
-  justify-items: start;
-}
-
-.drop-title {
-  font-weight: 700;
-}
-
-.drop-sub {
-  opacity: 0.75;
-}
-
-.err {
-  background: rgba(255, 0, 0, 0.12);
-  border: 1px solid rgba(255, 0, 0, 0.25);
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: start;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-.card.wide {
-  grid-column: 1 / -1;
-}
-
-.kv {
-  display: grid;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.kv > div {
-  display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.kv span {
-  opacity: 0.75;
-}
-
-.kv code {
-  word-break: break-all;
-}
-
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 8px 0;
-}
-
-.filter-select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
-  font-size: 0.9rem;
-}
-
-.file-count {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-.tbl {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-}
-
-.tbl th,
-.tbl td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 8px;
-  text-align: left;
-}
-
-.tbl tbody tr:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.tbl tbody tr.active {
-  background: rgba(66, 184, 131, 0.15);
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.path-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.kind-badge {
-  display: inline-block;
-  padding: 0.125rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.kind-badge[data-category="audio"] {
-  background: rgba(66, 184, 131, 0.2);
-  color: #42b883;
-}
-
-.kind-badge[data-category="image"] {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
-}
-
-.kind-badge[data-category="csv"] {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-}
-
-.kind-badge[data-category="spectrum_chart"] {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.kind-badge[data-category="json"] {
-  background: rgba(156, 39, 176, 0.2);
-  color: #ce93d8;
-}
-
-.kind-badge[data-category="markdown"] {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-.btn {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  color: inherit;
-}
-
-.btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.preview-container {
-  margin-top: 12px;
-}
-.preview-split {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 12px;
-  align-items: start;
-}
-.preview-main {
-  min-width: 0;
-}
-.preview-side {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  padding-left: 12px;
-}
-.side-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.side-title {
-  font-weight: 650;
-}
-.btn-small {
-  padding: 5px 8px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-}
-.side-empty {
-  padding: 10px 0;
-}
-.muted {
-  opacity: 0.75;
-}
-.side-body {
-  display: grid;
-  gap: 12px;
-}
-.side-kv {
-  display: grid;
-  gap: 6px;
-}
-.side-kv > div {
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-.side-kv span {
-  opacity: 0.75;
-}
-.side-actions {
-  display: grid;
-  gap: 8px;
-}
-.side-warn {
-  font-size: 0.85rem;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  padding: 8px 10px;
-  border-radius: 10px;
-}
-.side-raw {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 10px;
-}
-.side-summary {
-  cursor: pointer;
-  user-select: none;
-  opacity: 0.9;
-  margin-bottom: 8px;
-}
-.side-pre {
-  max-height: 280px;
-  overflow: auto;
-  font-size: 0.8rem;
-  line-height: 1.35;
-  margin: 0;
-}
-.placeholder {
-  padding: 2rem;
-  text-align: center;
-  opacity: 0.7;
-}
-
-@media (max-width: 980px) {
-  .preview-split {
-    grid-template-columns: 1fr;
-  }
-  .preview-side {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 12px;
-  }
-}
-
-/* Pack Debug Panel */
-.pack-debug {
-  margin-top: 8px;
-}
-
-.debug-summary {
-  cursor: pointer;
-  font-weight: 600;
-  padding: 8px 0;
-  user-select: none;
-}
-
-.debug-summary:hover {
-  color: #42b883;
-}
-
-.debug-content {
-  margin-top: 12px;
-}
-
-.debug-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.debug-section h3 {
-  font-size: 0.9rem;
-  margin: 0 0 8px 0;
-  opacity: 0.8;
-}
-
-.debug-kv {
-  display: flex;
-  gap: 8px;
-  font-size: 0.85rem;
-  margin-bottom: 4px;
-}
-
-.debug-kv span {
-  opacity: 0.6;
-  min-width: 100px;
-}
-
-.debug-kv code {
-  word-break: break-all;
-}
-
-.hash {
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-.kind-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.kind-chip {
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.kind-chip[data-category="audio"] {
-  background: rgba(66, 184, 131, 0.2);
-  color: #42b883;
-}
-
-.kind-chip[data-category="spectrum_chart"] {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.kind-chip[data-category="csv"] {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-}
-
-.kind-chip[data-category="json"] {
-  background: rgba(156, 39, 176, 0.2);
-  color: #ce93d8;
-}
-
-.kind-chip[data-category="image"] {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
-}
-
-.debug-tbl {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-
-.debug-tbl th,
-.debug-tbl td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 6px 8px;
-  text-align: left;
-}
-
-.debug-tbl th {
-  opacity: 0.6;
-  font-weight: 500;
-}
-
-.debug-tbl tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* Validation Panel Styles */
-.validation-card {
-  border-left: 4px solid #888;
-}
-
-.validation-card.validation-pass {
-  border-left-color: #10b981;
-}
-
-.validation-card.validation-fail {
-  border-left-color: #ef4444;
-}
-
-.validation-card.validation-unknown {
-  border-left-color: #6b7280;
-}
-
-.validation-card h2 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.validation-icon {
-  font-size: 1.2rem;
-}
-
-.validation-unknown {
-  color: #9ca3af;
-}
-
-.validation-unknown .muted {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-.validation-status {
-  margin-bottom: 0.75rem;
-}
-
-.validation-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.validation-badge.pass {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.validation-badge.fail {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.validation-details {
-  margin-top: 0.75rem;
-}
-
-.validation-details summary {
-  cursor: pointer;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.validation-list {
-  list-style: disc;
-  padding-left: 1.5rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.validation-list li {
-  margin-bottom: 0.25rem;
-}
-
-.validation-list code {
-  color: #fbbf24;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  font-size: 0.85em;
-}
-</style>
