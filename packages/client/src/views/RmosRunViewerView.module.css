@@ -1,0 +1,684 @@
+/**
+ * RmosRunViewerView CSS Module
+ * Read-only viewer for a single Run Artifact
+ */
+
+/* =============================================================================
+   Layout & Container
+   ============================================================================= */
+
+.runViewer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.viewerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.headerLeft h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.runContent {
+  /* Container for run details sections */
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  background: #f8f9fa;
+}
+
+.btnBack {
+  composes: btn;
+  color: #6c757d;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #0066cc;
+  border-color: #0066cc;
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: #0052a3;
+}
+
+.btnSuccess {
+  composes: btn;
+  background: #28a745;
+  border-color: #28a745;
+  color: #fff;
+}
+
+.btnSuccess:hover {
+  background: #218838;
+}
+
+.btnSm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* =============================================================================
+   States
+   ============================================================================= */
+
+.stateLoading,
+.stateError,
+.stateEmpty {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #dee2e6;
+  border-top-color: #0066cc;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stateError {
+  background: #f8d7da;
+  border-radius: 8px;
+  color: #721c24;
+}
+
+/* =============================================================================
+   ID Banner
+   ============================================================================= */
+
+.idBanner {
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.runId {
+  font-size: 0.95rem;
+  background: #e9ecef;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.statusBadges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.badgeCompleted,
+.badgeSuccess {
+  composes: badge;
+  background: #d4edda;
+  color: #155724;
+}
+
+.badgePending,
+.badgeInProgress {
+  composes: badge;
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badgeFailed,
+.badgeError {
+  composes: badge;
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.badgeMode {
+  composes: badge;
+  background: #e7f1ff;
+  color: #004085;
+}
+
+/* =============================================================================
+   Decision Section
+   ============================================================================= */
+
+.decisionSection {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.decisionSection h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #495057;
+}
+
+.decisionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.decisionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.decisionItemLabel {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.gateBadge,
+.riskBadge {
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.gateBadgeApproved,
+.riskBadgeGreen {
+  background: #d4edda;
+  color: #155724;
+}
+
+.gateBadgeBlocked,
+.riskBadgeRed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.gateBadgePending,
+.riskBadgeYellow {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.decisionItemWarnings {
+  composes: decisionItem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.decisionItemWarnings ul {
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+  color: #856404;
+}
+
+.blockText {
+  color: #721c24;
+  font-weight: 500;
+}
+
+/* =============================================================================
+   Info Sections
+   ============================================================================= */
+
+.infoSection {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoSection h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #495057;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.hashGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.hashGrid code {
+  background: #f4f4f4;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.emptyState {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Drift Section
+   ============================================================================= */
+
+.driftSection {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.driftSection h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #856404;
+}
+
+.driftSection p {
+  margin: 0;
+  color: #856404;
+}
+
+/* =============================================================================
+   Attachments
+   ============================================================================= */
+
+.attachmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attachmentItem {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  align-items: center;
+}
+
+.attKind {
+  background: #e9ecef;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.attName {
+  flex: 1;
+  font-family: monospace;
+}
+
+.attMime {
+  color: #6c757d;
+}
+
+.attSize {
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+/* =============================================================================
+   Code Block & Notes
+   ============================================================================= */
+
+.codeBlock {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow: auto;
+  font-size: 0.8rem;
+  max-height: 300px;
+  margin: 0;
+}
+
+.notesText {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   Error Section
+   ============================================================================= */
+
+.errorSection {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.errorSection h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #721c24;
+}
+
+.errorSection ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #721c24;
+}
+
+/* =============================================================================
+   Dark Mode
+   ============================================================================= */
+
+@media (prefers-color-scheme: dark) {
+  .viewerHeader {
+    border-bottom-color: #495057;
+  }
+
+  .headerLeft h1 {
+    color: #f8f9fa;
+  }
+
+  .btn {
+    background: #343a40;
+    border-color: #495057;
+    color: #f8f9fa;
+  }
+
+  .btn:hover {
+    background: #495057;
+  }
+
+  .btnPrimary {
+    background: #0066cc;
+    border-color: #0066cc;
+  }
+
+  .idBanner {
+    background: #343a40;
+  }
+
+  .runId {
+    background: #495057;
+    color: #f8f9fa;
+  }
+
+  .decisionSection,
+  .infoSection {
+    background: #343a40;
+    border-color: #495057;
+  }
+
+  .decisionSection h2,
+  .infoSection h2 {
+    color: #adb5bd;
+    border-bottom-color: #495057;
+  }
+
+  .infoGrid {
+    color: #f8f9fa;
+  }
+
+  .hashGrid code {
+    background: #495057;
+    color: #f8f9fa;
+  }
+
+  .codeBlock {
+    background: #2d3748;
+    color: #f8f9fa;
+  }
+
+  .attachmentItem {
+    background: #495057;
+  }
+
+  .attKind {
+    background: #6c757d;
+  }
+}
+
+/* =============================================================================
+   Phase 3.3: Explainability Section
+   ============================================================================= */
+
+.explainSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.explainSection h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.explainList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.explainItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.rulePill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+}
+
+.rulePillRed {
+  composes: rulePill;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.rulePillYellow {
+  composes: rulePill;
+  color: #92400e;
+  border-color: #fcd34d;
+  background: #fefce8;
+}
+
+.ruleId {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.ruleSummary {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.ruleHint {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.overrideInfo {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overrideText {
+  font-size: 0.875rem;
+  color: #059669;
+}
+
+.overrideText code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 4px;
+}
+
+/* =============================================================================
+   Phase 5: Advisory Explanation
+   ============================================================================= */
+
+.advisorySection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.advisoryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.advisoryHead h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.advisoryActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.advisoryError {
+  color: #b00020;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisoryLoading {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisoryBox {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.advisorySummary {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.advisorySubsection {
+  margin-top: 0.75rem;
+}
+
+.advisorySubsection h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.advisorySubsection ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.advisoryDisclaimer {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.advisoryPlaceholder {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.advisoryPlaceholder code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 4px;
+}
+
+.advisoryEmpty {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}

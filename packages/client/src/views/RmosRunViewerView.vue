@@ -21,6 +21,7 @@ import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
 import RiskBadge from "@/components/ui/RiskBadge.vue";
 import OverrideBanner from "@/components/ui/OverrideBanner.vue";
 import WhyPanel from "@/components/rmos/WhyPanel.vue";
+import styles from "./RmosRunViewerView.module.css";
 
 const route = useRoute();
 const router = useRouter();
@@ -48,6 +49,38 @@ const hasExplainability = computed(() => triggeredRuleIds.value.length > 0);
 const riskLevel = computed(() => {
   return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
 });
+
+// CSS Module class helpers
+function statusBadgeClass(status: string): string {
+  const s = status?.toLowerCase();
+  if (s === "completed" || s === "success") return styles.badgeCompleted;
+  if (s === "pending" || s === "in_progress") return styles.badgePending;
+  if (s === "failed" || s === "error") return styles.badgeFailed;
+  return styles.badge;
+}
+
+function gateBadgeClass(gate: string): string {
+  const g = gate?.toLowerCase();
+  if (g === "approved" || g === "green") return styles.gateBadgeApproved;
+  if (g === "blocked" || g === "red") return styles.gateBadgeBlocked;
+  if (g === "pending" || g === "yellow") return styles.gateBadgePending;
+  return styles.gateBadge;
+}
+
+function riskBadgeClass(level: string): string {
+  const l = level?.toLowerCase();
+  if (l === "green") return styles.riskBadgeGreen;
+  if (l === "yellow") return styles.riskBadgeYellow;
+  if (l === "red") return styles.riskBadgeRed;
+  return styles.riskBadge;
+}
+
+function rulePillClass(level: string): string {
+  const l = level?.toUpperCase();
+  if (l === "RED") return styles.rulePillRed;
+  if (l === "YELLOW") return styles.rulePillYellow;
+  return styles.rulePill;
+}
 
 // Auto-open Why on YELLOW/RED when explainability exists; close for GREEN/UNKNOWN.
 watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
@@ -180,12 +213,12 @@ async function downloadAttachment(att: any) {
 </script>
 
 <template>
-  <div class="run-viewer">
+  <div :class="styles.runViewer">
     <!-- Header -->
-    <header class="viewer-header">
-      <div class="header-left">
+    <header :class="styles.viewerHeader">
+      <div :class="styles.headerLeft">
         <button
-          class="btn btn-back"
+          :class="styles.btnBack"
           @click="goBack"
         >
           &larr; Back to Runs
@@ -194,11 +227,11 @@ async function downloadAttachment(att: any) {
       </div>
       <div
         v-if="run"
-        class="header-actions"
+        :class="styles.headerActions"
       >
         <button
           v-if="hasExplainability"
-          class="btn btn-secondary"
+          :class="styles.btn"
           :aria-expanded="showWhy"
           title="Show why this decision happened"
           @click="showWhy = !showWhy"
@@ -206,27 +239,27 @@ async function downloadAttachment(att: any) {
           Why?
         </button>
         <button
-          class="btn"
+          :class="styles.btn"
           @click="handleDownload"
         >
           Download JSON
         </button>
         <button
-          class="btn btn-success"
+          :class="styles.btnSuccess"
           :disabled="loading"
           @click="downloadOperatorPack"
         >
           Operator Pack (.zip)
         </button>
         <button
-          class="btn btn-primary"
+          :class="styles.btnPrimary"
           @click="goToDiff"
         >
           Compare (Diff)
         </button>
-        <button 
-          class="btn btn-secondary" 
-          :disabled="!parentRunId" 
+        <button
+          :class="styles.btn"
+          :disabled="!parentRunId"
           :title="parentRunId ? 'Compare with parent run: ' + parentRunId.slice(0, 16) + '...' : 'No parent run'"
           @click="goToDiffWithParent"
         >
@@ -238,21 +271,21 @@ async function downloadAttachment(att: any) {
     <!-- Loading State -->
     <div
       v-if="loading"
-      class="state-loading"
+      :class="styles.stateLoading"
     >
-      <div class="spinner" />
+      <div :class="styles.spinner" />
       <p>Loading run artifact...</p>
     </div>
 
     <!-- Error State -->
     <div
       v-else-if="error"
-      class="state-error"
+      :class="styles.stateError"
     >
       <h2>Error</h2>
       <p>{{ error }}</p>
       <button
-        class="btn"
+        :class="styles.btn"
         @click="loadRun"
       >
         Retry
@@ -262,19 +295,16 @@ async function downloadAttachment(att: any) {
     <!-- Run Details -->
     <div
       v-else-if="run"
-      class="run-content"
+      :class="styles.runContent"
     >
       <!-- Run ID Banner -->
-      <section class="id-banner">
-        <code class="run-id">{{ run.run_id }}</code>
-        <div class="status-badges">
-          <span
-            class="badge"
-            :class="run.status?.toLowerCase()"
-          >{{ run.status }}</span>
+      <section :class="styles.idBanner">
+        <code :class="styles.runId">{{ run.run_id }}</code>
+        <div :class="styles.statusBadges">
+          <span :class="statusBadgeClass(run.status)">{{ run.status }}</span>
           <span
             v-if="run.workflow_mode"
-            class="badge mode"
+            :class="styles.badgeMode"
           >{{ run.workflow_mode }}</span>
         </div>
       </section>
@@ -282,39 +312,33 @@ async function downloadAttachment(att: any) {
       <!-- Gate Decision (Risk Level) -->
       <section
         v-if="run.gate_decision || run.feasibility"
-        class="decision-section"
+        :class="styles.decisionSection"
       >
         <h2>Decision</h2>
-        <div class="decision-grid">
+        <div :class="styles.decisionGrid">
           <div
             v-if="run.gate_decision"
-            class="decision-item"
+            :class="styles.decisionItem"
           >
-            <span class="label">Gate:</span>
-            <span
-              class="gate-badge"
-              :class="run.gate_decision.toLowerCase()"
-            >
+            <span :class="styles.decisionItemLabel">Gate:</span>
+            <span :class="gateBadgeClass(run.gate_decision)">
               {{ run.gate_decision }}
             </span>
           </div>
           <div
             v-if="run.feasibility?.risk_level"
-            class="decision-item"
+            :class="styles.decisionItem"
           >
-            <span class="label">Risk Level:</span>
-            <span
-              class="risk-badge"
-              :class="run.feasibility.risk_level.toLowerCase()"
-            >
+            <span :class="styles.decisionItemLabel">Risk Level:</span>
+            <span :class="riskBadgeClass(run.feasibility.risk_level)">
               {{ run.feasibility.risk_level }}
             </span>
           </div>
           <div
             v-if="run.feasibility?.warnings?.length"
-            class="decision-item warnings"
+            :class="styles.decisionItemWarnings"
           >
-            <span class="label">Warnings:</span>
+            <span :class="styles.decisionItemLabel">Warnings:</span>
             <ul>
               <li
                 v-for="(w, i) in run.feasibility.warnings"
@@ -326,10 +350,10 @@ async function downloadAttachment(att: any) {
           </div>
           <div
             v-if="run.feasibility?.block_reason"
-            class="decision-item block-reason"
+            :class="styles.decisionItem"
           >
-            <span class="label">Block Reason:</span>
-            <span class="block-text">{{ run.feasibility.block_reason }}</span>
+            <span :class="styles.decisionItemLabel">Block Reason:</span>
+            <span :class="styles.blockText">{{ run.feasibility.block_reason }}</span>
           </div>
         </div>
 
@@ -344,24 +368,24 @@ async function downloadAttachment(att: any) {
         <!-- Phase 3.3: Explainability - Legacy Why section (shown when WhyPanel is closed) -->
         <div
           v-if="hasExplainability && !showWhy"
-          class="explain-section"
+          :class="styles.explainSection"
         >
           <h3>Why</h3>
-          <ul class="explain-list">
+          <ul :class="styles.explainList">
             <li
               v-for="r in triggeredRules"
               :key="r.rule_id"
-              class="explain-item"
+              :class="styles.explainItem"
             >
               <span
-                class="rule-pill"
+                :class="rulePillClass(r.level)"
                 :data-level="r.level"
               >{{ r.level }}</span>
-              <span class="rule-id">{{ r.rule_id }}</span>
-              <span class="rule-summary">{{ r.summary }}</span>
+              <span :class="styles.ruleId">{{ r.rule_id }}</span>
+              <span :class="styles.ruleSummary">{{ r.summary }}</span>
               <span
                 v-if="r.operator_hint"
-                class="rule-hint"
+                :class="styles.ruleHint"
               >{{ r.operator_hint }}</span>
             </li>
           </ul>
@@ -370,28 +394,28 @@ async function downloadAttachment(att: any) {
         <!-- Override info -->
         <div
           v-if="overrideAttachment"
-          class="override-info"
+          :class="styles.overrideInfo"
         >
-          <span class="label">Override:</span>
-          <span class="override-text">
+          <span :class="styles.decisionItemLabel">Override:</span>
+          <span :class="styles.overrideText">
             Recorded (sha: <code>{{ overrideAttachment.sha256?.slice(0, 12) }}…</code>)
           </span>
         </div>
 
         <!-- Phase 5: Advisory Explanation -->
-        <div class="advisory-section">
-          <div class="advisory-head">
+        <div :class="styles.advisorySection">
+          <div :class="styles.advisoryHead">
             <h3>Advisory Explanation</h3>
-            <div class="advisory-actions">
+            <div :class="styles.advisoryActions">
               <button
-                class="btn btn-sm"
+                :class="styles.btnSm"
                 :disabled="isExplaining"
                 @click="generateAdvisoryExplanation(false)"
               >
                 {{ assistantExplanationAttachment ? 'Refresh Advisory' : 'Generate Advisory' }}
               </button>
               <button
-                class="btn btn-sm"
+                :class="styles.btnSm"
                 :disabled="isExplaining"
                 title="Regenerate even if one exists"
                 @click="generateAdvisoryExplanation(true)"
@@ -402,27 +426,27 @@ async function downloadAttachment(att: any) {
           </div>
           <div
             v-if="explainError"
-            class="advisory-error"
+            :class="styles.advisoryError"
           >
             {{ explainError }}
           </div>
           <div
             v-else-if="isExplaining"
-            class="advisory-loading"
+            :class="styles.advisoryLoading"
           >
             Generating advisory explanation…
           </div>
 
           <div
             v-if="assistantExplanation"
-            class="advisory-box"
+            :class="styles.advisoryBox"
           >
-            <div class="advisory-summary">
+            <div :class="styles.advisorySummary">
               {{ assistantExplanation.summary }}
             </div>
             <div
               v-if="assistantExplanation.operator_notes?.length"
-              class="advisory-subsection"
+              :class="styles.advisorySubsection"
             >
               <h4>Operator Notes</h4>
               <ul>
@@ -436,7 +460,7 @@ async function downloadAttachment(att: any) {
             </div>
             <div
               v-if="assistantExplanation.suggested_actions?.length"
-              class="advisory-subsection"
+              :class="styles.advisorySubsection"
             >
               <h4>Suggested Actions</h4>
               <ul>
@@ -448,20 +472,20 @@ async function downloadAttachment(att: any) {
                 </li>
               </ul>
             </div>
-            <div class="advisory-disclaimer">
+            <div :class="styles.advisoryDisclaimer">
               {{ assistantExplanation.disclaimer }}
             </div>
           </div>
           <div
             v-else-if="assistantExplanationAttachment"
-            class="advisory-placeholder"
+            :class="styles.advisoryPlaceholder"
           >
             assistant_explanation.json attached (sha: <code>{{ assistantExplanationAttachment.sha256?.slice(0, 12) }}</code>…)
             — click "Refresh Advisory" to load it.
           </div>
           <div
             v-else
-            class="advisory-empty"
+            :class="styles.advisoryEmpty"
           >
             No advisory explanation generated for this run.
           </div>
@@ -469,9 +493,9 @@ async function downloadAttachment(att: any) {
       </section>
 
       <!-- Run Info -->
-      <section class="info-section">
+      <section :class="styles.infoSection">
         <h2>Run Info</h2>
-        <div class="info-grid">
+        <div :class="styles.infoGrid">
           <div><strong>Created:</strong> {{ formatDate(run.created_at_utc) }}</div>
           <div><strong>Event Type:</strong> {{ run.event_type }}</div>
           <div><strong>Tool ID:</strong> {{ run.tool_id || "---" }}</div>
@@ -486,9 +510,9 @@ async function downloadAttachment(att: any) {
       </section>
 
       <!-- Hashes -->
-      <section class="info-section">
+      <section :class="styles.infoSection">
         <h2>Hashes</h2>
-        <div class="hash-grid">
+        <div :class="styles.hashGrid">
           <div v-if="run.request_hash">
             <strong>Request:</strong>
             <code>{{ run.request_hash }}</code>
@@ -511,7 +535,7 @@ async function downloadAttachment(att: any) {
           </div>
           <div
             v-if="!run.request_hash && !run.toolpaths_hash && !run.gcode_hash && !run.geometry_hash && !run.config_fingerprint"
-            class="empty-state"
+            :class="styles.emptyState"
           >
             No hashes recorded
           </div>
@@ -521,30 +545,30 @@ async function downloadAttachment(att: any) {
       <!-- Drift Warning -->
       <section
         v-if="run.drift_detected"
-        class="drift-section"
+        :class="styles.driftSection"
       >
         <h2>Drift Detected</h2>
         <p>{{ run.drift_summary || "Configuration drift detected from parent run." }}</p>
       </section>
 
       <!-- Attachments -->
-      <section class="info-section">
+      <section :class="styles.infoSection">
         <h2>Attachments ({{ run.attachments?.length || 0 }})</h2>
         <div
           v-if="run.attachments?.length"
-          class="attachment-list"
+          :class="styles.attachmentList"
         >
           <div
             v-for="att in run.attachments"
             :key="att.sha256"
-            class="attachment-item"
+            :class="styles.attachmentItem"
           >
-            <span class="att-kind">{{ att.kind }}</span>
-            <span class="att-name">{{ att.filename }}</span>
-            <span class="att-mime">{{ att.mime }}</span>
-            <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
+            <span :class="styles.attKind">{{ att.kind }}</span>
+            <span :class="styles.attName">{{ att.filename }}</span>
+            <span :class="styles.attMime">{{ att.mime }}</span>
+            <span :class="styles.attSize">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
             <button
-              class="btn btn-sm"
+              :class="styles.btnSm"
               :disabled="loading"
               @click="downloadAttachment(att)"
             >
@@ -554,7 +578,7 @@ async function downloadAttachment(att: any) {
         </div>
         <div
           v-else
-          class="empty-state"
+          :class="styles.emptyState"
         >
           No attachments
         </div>
@@ -563,19 +587,19 @@ async function downloadAttachment(att: any) {
       <!-- Feasibility Details -->
       <section
         v-if="run.feasibility"
-        class="info-section"
+        :class="styles.infoSection"
       >
         <h2>Feasibility</h2>
-        <pre class="code-block">{{ JSON.stringify(run.feasibility, null, 2) }}</pre>
+        <pre :class="styles.codeBlock">{{ JSON.stringify(run.feasibility, null, 2) }}</pre>
       </section>
 
       <!-- Notes -->
       <section
         v-if="run.notes"
-        class="info-section"
+        :class="styles.infoSection"
       >
         <h2>Notes</h2>
-        <p class="notes-text">
+        <p :class="styles.notesText">
           {{ run.notes }}
         </p>
       </section>
@@ -583,7 +607,7 @@ async function downloadAttachment(att: any) {
       <!-- Errors -->
       <section
         v-if="run.errors?.length"
-        class="error-section"
+        :class="styles.errorSection"
       >
         <h2>Errors</h2>
         <ul>
@@ -597,7 +621,7 @@ async function downloadAttachment(att: any) {
       </section>
 
       <!-- Inline Compare Panel -->
-      <section class="info-section">
+      <section :class="styles.infoSection">
         <RunComparePanel
           :current-run-id="runId"
           :default-other-run-id="parentRunId"
@@ -608,11 +632,11 @@ async function downloadAttachment(att: any) {
     <!-- No Run State -->
     <div
       v-else
-      class="state-empty"
+      :class="styles.stateEmpty"
     >
       <p>No run ID provided</p>
       <button
-        class="btn"
+        :class="styles.btn"
         @click="goBack"
       >
         Go to Runs List
@@ -621,630 +645,3 @@ async function downloadAttachment(att: any) {
   </div>
 </template>
 
-<style scoped>
-.run-viewer {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 2rem;
-}
-
-.viewer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-left h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.btn:hover {
-  background: #f8f9fa;
-}
-
-.btn-back {
-  color: #6c757d;
-}
-
-.btn-primary {
-  background: #0066cc;
-  border-color: #0066cc;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #0052a3;
-}
-
-.btn-success {
-  background: #28a745;
-  border-color: #28a745;
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: #218838;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
-
-/* States */
-.state-loading,
-.state-error,
-.state-empty {
-  text-align: center;
-  padding: 3rem;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #dee2e6;
-  border-top-color: #0066cc;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.state-error {
-  background: #f8d7da;
-  border-radius: 8px;
-  color: #721c24;
-}
-
-/* ID Banner */
-.id-banner {
-  background: #f8f9fa;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.run-id {
-  font-size: 0.95rem;
-  background: #e9ecef;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  word-break: break-all;
-}
-
-.status-badges {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.badge {
-  padding: 0.3rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
-.badge.completed,
-.badge.success {
-  background: #d4edda;
-  color: #155724;
-}
-
-.badge.pending,
-.badge.in_progress {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.badge.failed,
-.badge.error {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.badge.mode {
-  background: #e7f1ff;
-  color: #004085;
-}
-
-/* Decision Section */
-.decision-section {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.decision-section h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-  color: #495057;
-}
-
-.decision-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.decision-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.decision-item .label {
-  font-weight: 600;
-  color: #6c757d;
-}
-
-.gate-badge,
-.risk-badge {
-  padding: 0.3rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.gate-badge.approved,
-.risk-badge.green {
-  background: #d4edda;
-  color: #155724;
-}
-
-.gate-badge.blocked,
-.risk-badge.red {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.gate-badge.pending,
-.risk-badge.yellow {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.decision-item.warnings {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.decision-item.warnings ul {
-  margin: 0.25rem 0 0 1rem;
-  padding: 0;
-  color: #856404;
-}
-
-.decision-item.block-reason .block-text {
-  color: #721c24;
-  font-weight: 500;
-}
-
-/* Info Sections */
-.info-section {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.info-section h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-  color: #495057;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.5rem;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.hash-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.hash-grid code {
-  background: #f4f4f4;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  word-break: break-all;
-}
-
-.empty-state {
-  color: #6c757d;
-  font-style: italic;
-}
-
-/* Drift Section */
-.drift-section {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.drift-section h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  color: #856404;
-}
-
-.drift-section p {
-  margin: 0;
-  color: #856404;
-}
-
-/* Attachments */
-.attachment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.attachment-item {
-  display: flex;
-  gap: 1rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  align-items: center;
-}
-
-.att-kind {
-  background: #e9ecef;
-  padding: 0.15rem 0.5rem;
-  border-radius: 3px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.att-name {
-  flex: 1;
-  font-family: monospace;
-}
-
-.att-mime {
-  color: #6c757d;
-}
-
-.att-size {
-  color: #6c757d;
-  white-space: nowrap;
-}
-
-/* Code Block */
-.code-block {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 6px;
-  overflow: auto;
-  font-size: 0.8rem;
-  max-height: 300px;
-  margin: 0;
-}
-
-/* Notes */
-.notes-text {
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* Error Section */
-.error-section {
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.error-section h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  color: #721c24;
-}
-
-.error-section ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: #721c24;
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .viewer-header {
-    border-bottom-color: #495057;
-  }
-
-  .header-left h1 {
-    color: #f8f9fa;
-  }
-
-  .btn {
-    background: #343a40;
-    border-color: #495057;
-    color: #f8f9fa;
-  }
-
-  .btn:hover {
-    background: #495057;
-  }
-
-  .btn-primary {
-    background: #0066cc;
-    border-color: #0066cc;
-  }
-
-  .id-banner {
-    background: #343a40;
-  }
-
-  .run-id {
-    background: #495057;
-    color: #f8f9fa;
-  }
-
-  .decision-section,
-  .info-section {
-    background: #343a40;
-    border-color: #495057;
-  }
-
-  .decision-section h2,
-  .info-section h2 {
-    color: #adb5bd;
-    border-bottom-color: #495057;
-  }
-
-  .info-grid {
-    color: #f8f9fa;
-  }
-
-  .hash-grid code {
-    background: #495057;
-    color: #f8f9fa;
-  }
-
-  .code-block {
-    background: #2d3748;
-    color: #f8f9fa;
-  }
-
-  .attachment-item {
-    background: #495057;
-  }
-
-  .att-kind {
-    background: #6c757d;
-  }
-}
-
-/* Phase 3.3: Explainability section */
-.explain-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #dee2e6;
-}
-
-.explain-section h3 {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #495057;
-}
-
-.explain-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.explain-item {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-}
-
-.rule-pill {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid #d1d5db;
-}
-
-.rule-pill[data-level="RED"] {
-  color: #b91c1c;
-  border-color: #fca5a5;
-  background: #fef2f2;
-}
-
-.rule-pill[data-level="YELLOW"] {
-  color: #92400e;
-  border-color: #fcd34d;
-  background: #fefce8;
-}
-
-.rule-id {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.75rem;
-  opacity: 0.9;
-}
-
-.rule-summary {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.rule-hint {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  font-style: italic;
-}
-
-.override-info {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.override-text {
-  font-size: 0.875rem;
-  color: #059669;
-}
-
-.override-text code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.75rem;
-  background: #f1f5f9;
-  padding: 0.125rem 0.25rem;
-  border-radius: 4px;
-}
-
-/* Phase 5: Advisory Explanation */
-.advisory-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.advisory-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.75rem;
-}
-
-.advisory-head h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.advisory-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.advisory-error {
-  color: #b00020;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.advisory-loading {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.advisory-box {
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #fafafa;
-}
-
-.advisory-summary {
-  font-size: 0.9rem;
-  color: #374151;
-  margin-bottom: 0.75rem;
-}
-
-.advisory-subsection {
-  margin-top: 0.75rem;
-}
-
-.advisory-subsection h4 {
-  margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.advisory-subsection ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.advisory-disclaimer {
-  margin-top: 1rem;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.advisory-placeholder {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.advisory-placeholder code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.75rem;
-  background: #f1f5f9;
-  padding: 0.125rem 0.25rem;
-  border-radius: 4px;
-}
-
-.advisory-empty {
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-</style>
