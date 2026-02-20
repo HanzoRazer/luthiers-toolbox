@@ -1,0 +1,393 @@
+.compareLab {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.labHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.labGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.6fr 1.2fr;
+  gap: 1.5rem;
+}
+
+.middle {
+  border: 1px solid #1f2937;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hint {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .labGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* B23: Export Dialog Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.exportDialog {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dialogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dialogHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  color: #1f2937;
+}
+
+.dialogContent {
+  padding: 1.5rem;
+}
+
+.namingSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.textInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.exportOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.exportOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exportOption:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.exportOption input[type='radio'] {
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.exportOption input[type='radio']:checked + .optionLabel {
+  color: #1f2937;
+}
+
+.optionLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #6b7280;
+}
+
+.optionLabel strong {
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.optionDesc {
+  font-size: 0.875rem;
+}
+
+.filenamePreview {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.filenamePreview label {
+  display: block;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.filenamePreview code {
+  display: block;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dialogActions button {
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* CompareLab: Preset summary styles */
+.presetSummary {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.presetSummary h3 {
+  margin: 0 0 0.5rem 0;
+  color: #0c4a6e;
+}
+
+.presetSummary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.presetSummary li {
+  color: #0c4a6e;
+  padding: 0.25rem 0;
+}
+
+.presetSummary code {
+  font-family: 'Monaco', 'Courier New', monospace;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Extension Validation Styles */
+.extensionWarning {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+}
+
+.warningBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.warningIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.warningContent {
+  flex: 1;
+}
+
+.warningContent strong {
+  display: block;
+  color: #92400e;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.warningContent p {
+  margin: 0;
+  color: #78350f;
+  font-size: 0.813rem;
+  line-height: 1.4;
+}
+
+.warningContent code {
+  background-color: #fde68a;
+  color: #92400e;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.813rem;
+}
+
+.warningActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fixButton {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.813rem;
+  font-weight: 500;
+  border-radius: 4px;
+  border: 1px solid #f59e0b;
+  background-color: #fbbf24;
+  color: #78350f;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fixButton:hover {
+  background-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.fixButtonSecondary {
+  composes: fixButton;
+  background-color: #fef3c7;
+  border-color: #d97706;
+}
+
+.fixButtonSecondary:hover {
+  background-color: #fde68a;
+}
+
+/* Status message styles */
+.statusMessage {
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.statusSuccess {
+  composes: statusMessage;
+  background: rgb(240, 253, 244);
+  color: rgb(21, 128, 61);
+}
+
+.statusError {
+  composes: statusMessage;
+  background: rgb(254, 242, 242);
+  color: rgb(185, 28, 28);
+}

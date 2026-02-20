@@ -1,35 +1,35 @@
 <template>
-  <div class="compare-lab">
-    <header class="lab-header">
+  <div :class="styles.compareLab">
+    <header :class="styles.labHeader">
       <div>
         <h1>Compare Lab</h1>
-        <p class="hint">
+        <p :class="styles.hint">
           Load Adaptive geometry, capture baselines, and inspect SVG diffs.
         </p>
       </div>
-      <div class="header-actions">
+      <div :class="styles.headerActions">
         <input
           ref="fileInput"
           type="file"
-          class="hidden"
+          :class="styles.hidden"
           accept="application/json"
           @change="handleFile"
         >
         <button
-          class="ghost"
+          :class="styles.ghost"
           @click="triggerFileDialog"
         >
           Import Geometry JSON
         </button>
         <button
-          class="primary"
+          :class="styles.primary"
           :disabled="!hasStoredGeometry"
           @click="loadPersistedGeometry"
         >
           Load From Adaptive Lab
         </button>
         <button
-          class="secondary"
+          :class="styles.secondary"
           :disabled="!diffResult"
           title="Export comparison as SVG, PNG, or CSV"
           @click="showExportDialog = true"
@@ -37,7 +37,7 @@
           Export Diff
         </button>
         <button
-          class="primary"
+          :class="styles.primary"
           :disabled="!diffResult || !filenameTemplate"
           title="Save current comparison configuration as preset"
           @click="showSavePresetModal = true"
@@ -47,14 +47,14 @@
       </div>
     </header>
 
-    <section class="lab-grid">
+    <section :class="styles.labGrid">
       <CompareBaselinePicker
         :current-geometry="currentGeometry"
         @diff-computed="(payload: any) => (diffResult = payload)"
       />
 
       <CompareSvgDualViewer
-        class="middle"
+        :class="styles.middle"
         :diff="diffResult as any"
       />
 
@@ -67,27 +67,27 @@
     <!-- B23: Export Dialog -->
     <div
       v-if="showExportDialog"
-      class="modal-overlay"
+      :class="styles.modalOverlay"
       @click.self="showExportDialog = false"
     >
-      <div class="export-dialog">
-        <header class="dialog-header">
+      <div :class="styles.exportDialog">
+        <header :class="styles.dialogHeader">
           <h2>Export Comparison</h2>
           <button
-            class="close-btn"
+            :class="styles.closeBtn"
             @click="showExportDialog = false"
           >
             ✕
           </button>
         </header>
 
-        <div class="dialog-content">
-          <div class="naming-section">
-            <label class="field-label">
+        <div :class="styles.dialogContent">
+          <div :class="styles.namingSection">
+            <label :class="styles.fieldLabel">
               Export Preset (optional):
               <select
                 v-model="selectedPresetId"
-                class="text-input"
+                :class="styles.textInput"
                 @change="loadPresetTemplate"
               >
                 <option value="">-- Use custom template --</option>
@@ -100,37 +100,37 @@
                 </option>
               </select>
             </label>
-            
-            <label class="field-label">
+
+            <label :class="styles.fieldLabel">
               Filename Template:
               <input
                 v-model="filenameTemplate"
                 type="text"
                 placeholder="{preset}__{compare_mode}__{date}"
-                class="text-input"
+                :class="styles.textInput"
                 @blur="validateTemplate"
               >
             </label>
-            
+
             <!-- Extension Mismatch Warning -->
             <div
               v-if="extensionMismatch"
-              class="extension-warning"
+              :class="styles.extensionWarning"
             >
-              <div class="warning-banner">
-                <span class="warning-icon">⚠️</span>
-                <div class="warning-content">
+              <div :class="styles.warningBanner">
+                <span :class="styles.warningIcon">⚠️</span>
+                <div :class="styles.warningContent">
                   <strong>Extension Mismatch Detected</strong>
                   <p>
-                    Template has <code>.{{ extensionMismatch.templateExt }}</code> extension 
+                    Template has <code>.{{ extensionMismatch.templateExt }}</code> extension
                     but export format is <strong>{{ extensionMismatch.expectedExt.toUpperCase() }}</strong>
                   </p>
                 </div>
               </div>
-              <div class="warning-actions">
+              <div :class="styles.warningActions">
                 <button
                   type="button"
-                  class="fix-button"
+                  :class="styles.fixButton"
                   title="Change template extension to match format"
                   @click="fixTemplateExtension"
                 >
@@ -138,7 +138,7 @@
                 </button>
                 <button
                   type="button"
-                  class="fix-button secondary"
+                  :class="styles.fixButtonSecondary"
                   title="Change format to match template extension"
                   @click="fixExportFormat"
                 >
@@ -146,87 +146,86 @@
                 </button>
               </div>
             </div>
-            
+
             <p
               v-if="templateValidation"
-              class="field-hint"
-              :class="{'text-red-600': templateValidation.warnings?.length}"
+              :class="styles.fieldHint"
             >
               <span v-if="templateValidation.valid">✓ Valid template</span>
               <span v-else>⚠ {{ templateValidation.warnings?.join(', ') }}</span>
             </p>
-            <p class="field-hint text-xs text-gray-500">
+            <p :class="styles.fieldHint">
               Tokens: {preset}, {compare_mode}, {neck_profile}, {neck_section}, {date}, {timestamp}
             </p>
             <p
               v-if="neckProfileContext || neckSectionContext"
-              class="field-hint text-xs text-blue-600"
+              :class="styles.fieldHint"
             >
-              ℹ Neck context: 
-              <span v-if="neckProfileContext">Profile: <code class="bg-blue-50 px-1 rounded">{{ neckProfileContext }}</code></span>
-              <span v-if="neckSectionContext">Section: <code class="bg-blue-50 px-1 rounded">{{ neckSectionContext }}</code></span>
+              ℹ Neck context:
+              <span v-if="neckProfileContext">Profile: <code>{{ neckProfileContext }}</code></span>
+              <span v-if="neckSectionContext">Section: <code>{{ neckSectionContext }}</code></span>
             </p>
             <p
               v-else
-              class="field-hint text-xs text-amber-600"
+              :class="styles.fieldHint"
             >
               ⚠ No neck context detected. Tokens {neck_profile} and {neck_section} will be empty.
             </p>
           </div>
 
-          <div class="export-options">
-            <label class="export-option">
+          <div :class="styles.exportOptions">
+            <label :class="styles.exportOption">
               <input
                 v-model="exportFormat"
                 type="radio"
                 value="svg"
               >
-              <span class="option-label">
+              <span :class="styles.optionLabel">
                 <strong>SVG</strong>
-                <span class="option-desc">Dual-pane layout with delta annotations (vector)</span>
+                <span :class="styles.optionDesc">Dual-pane layout with delta annotations (vector)</span>
               </span>
             </label>
 
-            <label class="export-option">
+            <label :class="styles.exportOption">
               <input
                 v-model="exportFormat"
                 type="radio"
                 value="png"
               >
-              <span class="option-label">
+              <span :class="styles.optionLabel">
                 <strong>PNG</strong>
-                <span class="option-desc">Rasterized screenshot at 300 DPI</span>
+                <span :class="styles.optionDesc">Rasterized screenshot at 300 DPI</span>
               </span>
             </label>
 
-            <label class="export-option">
+            <label :class="styles.exportOption">
               <input
                 v-model="exportFormat"
                 type="radio"
                 value="csv"
               >
-              <span class="option-label">
+              <span :class="styles.optionLabel">
                 <strong>CSV</strong>
-                <span class="option-desc">Delta metrics table (Excel compatible)</span>
+                <span :class="styles.optionDesc">Delta metrics table (Excel compatible)</span>
               </span>
             </label>
           </div>
 
-          <div class="filename-preview">
+          <div :class="styles.filenamePreview">
             <label>Filename Preview:</label>
             <code>{{ exportFilename }}</code>
           </div>
         </div>
 
-        <div class="dialog-actions">
+        <div :class="styles.dialogActions">
           <button
-            class="ghost"
+            :class="styles.ghost"
             @click="showExportDialog = false"
           >
             Cancel
           </button>
           <button
-            class="primary"
+            :class="styles.primary"
             :disabled="exportInProgress"
             @click="executeExport"
           >
@@ -239,106 +238,103 @@
     <!-- CompareLab: Save as Preset Modal -->
     <div
       v-if="showSavePresetModal"
-      class="modal-overlay"
+      :class="styles.modalOverlay"
       @click.self="showSavePresetModal = false"
     >
-      <div class="export-dialog">
-        <header class="dialog-header">
+      <div :class="styles.exportDialog">
+        <header :class="styles.dialogHeader">
           <h2>Save Comparison as Preset</h2>
           <button
-            class="close-btn"
+            :class="styles.closeBtn"
             @click="showSavePresetModal = false"
           >
             ✕
           </button>
         </header>
 
-        <div class="dialog-content">
-          <div class="naming-section">
-            <label class="field-label">
+        <div :class="styles.dialogContent">
+          <div :class="styles.namingSection">
+            <label :class="styles.fieldLabel">
               Preset Name:
               <input
                 v-model="presetForm.name"
                 type="text"
                 placeholder="e.g., Les Paul Neck Comparison Template"
-                class="text-input"
+                :class="styles.textInput"
                 required
               >
             </label>
 
-            <label class="field-label">
+            <label :class="styles.fieldLabel">
               Description (optional):
               <textarea
                 v-model="presetForm.description"
                 placeholder="Describe this comparison preset..."
-                class="text-input"
+                :class="styles.textInput"
                 rows="3"
               />
             </label>
 
-            <label class="field-label">
+            <label :class="styles.fieldLabel">
               Tags (comma-separated):
               <input
                 v-model="presetForm.tagsInput"
                 type="text"
                 placeholder="comparison, neck, les-paul"
-                class="text-input"
+                :class="styles.textInput"
               >
             </label>
 
-            <label class="field-label">
+            <label :class="styles.fieldLabel">
               Preset Kind:
               <select
                 v-model="presetForm.kind"
-                class="text-input"
+                :class="styles.textInput"
               >
                 <option value="export">Export Only (template + format)</option>
                 <option value="combo">Combo (comparison mode + export)</option>
               </select>
             </label>
-            <p class="field-hint text-xs text-gray-500">
+            <p :class="styles.fieldHint">
               Export: Saves only export settings (template, format)<br>
               Combo: Saves comparison mode + export settings
             </p>
           </div>
 
-          <div class="preset-summary">
-            <h3 class="text-sm font-semibold mb-2">
-              Preset Will Include:
-            </h3>
-            <ul class="text-xs space-y-1">
-              <li>✓ Filename Template: <code class="bg-gray-100 px-1">{{ filenameTemplate }}</code></li>
-              <li>✓ Export Format: <code class="bg-gray-100 px-1">{{ exportFormat }}</code></li>
+          <div :class="styles.presetSummary">
+            <h3>Preset Will Include:</h3>
+            <ul>
+              <li>✓ Filename Template: <code>{{ filenameTemplate }}</code></li>
+              <li>✓ Export Format: <code>{{ exportFormat }}</code></li>
               <li v-if="neckProfileContext">
-                ✓ Neck Profile Context: <code class="bg-gray-100 px-1">{{ neckProfileContext }}</code>
+                ✓ Neck Profile Context: <code>{{ neckProfileContext }}</code>
               </li>
               <li v-if="neckSectionContext">
-                ✓ Neck Section Context: <code class="bg-gray-100 px-1">{{ neckSectionContext }}</code>
+                ✓ Neck Section Context: <code>{{ neckSectionContext }}</code>
               </li>
               <li v-if="presetForm.kind === 'combo'">
-                ✓ Compare Mode: <code class="bg-gray-100 px-1">{{ diffResult?.mode || 'neck_diff' }}</code>
+                ✓ Compare Mode: <code>{{ diffResult?.mode || 'neck_diff' }}</code>
               </li>
             </ul>
           </div>
 
           <div
             v-if="presetSaveMessage"
-            class="p-3 rounded text-sm"
-            :class="presetSaveMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+            :class="presetSaveMessage.type === 'success' ? styles.statusSuccess : styles.statusError"
           >
             {{ presetSaveMessage.text }}
           </div>
         </div>
 
-        <div class="dialog-actions">
+        <div :class="styles.dialogActions">
           <button
-            class="ghost"
+            :class="styles.ghost"
             @click="showSavePresetModal = false"
           >
             Cancel
           </button>
           <button
-            class="primary"
+            :class="styles.primary"
             :disabled="!presetForm.name || presetSaveInProgress"
             @click="saveAsPreset"
           >
@@ -359,6 +355,7 @@ import CompareDiffViewer from '@/components/compare/CompareDiffViewer.vue'
 import CompareSvgDualViewer from '@/components/compare/CompareSvgDualViewer.vue'
 import type { CanonicalGeometry } from '@/utils/geometry'
 import { normalizeGeometryPayload } from '@/utils/geometry'
+import styles from './CompareLabView.module.css'
 
 interface DiffResult {
   baseline_id: string
@@ -920,379 +917,3 @@ watch([selectedPresetId, filenameTemplate, exportFormat], () => {
   saveExportState()
 })
 </script>
-
-<style scoped>
-.compare-lab {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.lab-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.lab-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1.6fr 1.2fr;
-  gap: 1.5rem;
-}
-
-.middle {
-  border: 1px solid #1f2937;
-  padding: 1rem;
-  border-radius: 12px;
-}
-
-.primary {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 0.45rem 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.secondary {
-  background: #10b981;
-  color: #fff;
-  border: none;
-  padding: 0.45rem 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ghost {
-  background: transparent;
-  border: 1px solid #444;
-  color: #ddd;
-  padding: 0.45rem 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.hint {
-  color: #9ca3af;
-  margin: 0;
-}
-
-.hidden {
-  display: none;
-}
-
-@media (max-width: 1100px) {
-  .lab-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* B23: Export Dialog Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.export-dialog {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dialog-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1f2937;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: #1f2937;
-}
-
-.dialog-content {
-  padding: 1.5rem;
-}
-
-.naming-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.field-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.text-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.text-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.field-hint {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
-}
-
-.export-options {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.export-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.export-option:hover {
-  border-color: #3b82f6;
-  background: #f0f9ff;
-}
-
-.export-option input[type='radio'] {
-  margin-top: 0.25rem;
-  cursor: pointer;
-}
-
-.export-option input[type='radio']:checked + .option-label {
-  color: #1f2937;
-}
-
-.option-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  color: #6b7280;
-}
-
-.option-label strong {
-  font-size: 1rem;
-  color: #1f2937;
-}
-
-.option-desc {
-  font-size: 0.875rem;
-}
-
-.filename-preview {
-  background: #f9fafb;
-  padding: 1rem;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-}
-
-.filename-preview label {
-  display: block;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-}
-
-.filename-preview code {
-  display: block;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.875rem;
-  color: #1f2937;
-  background: white;
-  padding: 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #e5e7eb;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.dialog-actions button {
-  padding: 0.5rem 1.25rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* CompareLab: Preset summary styles */
-.preset-summary {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.preset-summary h3 {
-  margin: 0 0 0.5rem 0;
-  color: #0c4a6e;
-}
-
-.preset-summary ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.preset-summary li {
-  color: #0c4a6e;
-  padding: 0.25rem 0;
-}
-
-.preset-summary code {
-  font-family: 'Monaco', 'Courier New', monospace;
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-
-/* Extension Validation Styles */
-.extension-warning {
-  margin: 0.75rem 0;
-  padding: 0.75rem;
-  background-color: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 6px;
-}
-
-.warning-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.warning-icon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.warning-content {
-  flex: 1;
-}
-
-.warning-content strong {
-  display: block;
-  color: #92400e;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-}
-
-.warning-content p {
-  margin: 0;
-  color: #78350f;
-  font-size: 0.813rem;
-  line-height: 1.4;
-}
-
-.warning-content code {
-  background-color: #fde68a;
-  color: #92400e;
-  padding: 0.125rem 0.375rem;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.813rem;
-}
-
-.warning-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.fix-button {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.813rem;
-  font-weight: 500;
-  border-radius: 4px;
-  border: 1px solid #f59e0b;
-  background-color: #fbbf24;
-  color: #78350f;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.fix-button:hover {
-  background-color: #f59e0b;
-  transform: translateY(-1px);
-}
-
-.fix-button.secondary {
-  background-color: #fef3c7;
-  border-color: #d97706;
-}
-
-.fix-button.secondary:hover {
-  background-color: #fde68a;
-}
-</style>
