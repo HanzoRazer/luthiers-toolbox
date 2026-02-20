@@ -1,0 +1,311 @@
+/**
+ * MultiscalePanel CSS Module
+ * Multi-scale/fanned fret education styles
+ */
+
+/* =============================================================================
+   Section Header
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Problem / Solution Cards
+   ============================================================================= */
+
+.problemSolution {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .problemSolution {
+    grid-template-columns: 1fr;
+  }
+}
+
+.problemCard,
+.solutionCard {
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.problemCard {
+  background: rgba(234, 67, 53, 0.1);
+  border-left: 4px solid #ea4335;
+}
+
+.solutionCard {
+  background: rgba(52, 168, 83, 0.1);
+  border-left: 4px solid #34a853;
+}
+
+.problemCard h3 {
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+
+.solutionCard h3 {
+  color: #51cf66;
+  margin-bottom: 12px;
+}
+
+.problemCard p,
+.solutionCard p {
+  color: #bdc1c6;
+  margin-bottom: 12px;
+}
+
+.problemCard ul,
+.solutionCard ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.problemCard li,
+.solutionCard li {
+  padding: 4px 0;
+  color: #9aa0a6;
+  font-size: 14px;
+}
+
+/* =============================================================================
+   Example
+   ============================================================================= */
+
+.example {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.example strong {
+  display: block;
+  font-size: 13px;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+}
+
+.calcResult {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.calcResultProblem {
+  composes: calcResult;
+  color: #ff6b6b;
+  background: rgba(234, 67, 53, 0.2);
+}
+
+.calcResultSolution {
+  composes: calcResult;
+  color: #51cf66;
+  background: rgba(52, 168, 83, 0.2);
+}
+
+/* =============================================================================
+   Diagram
+   ============================================================================= */
+
+.multiscaleDiagram {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.multiscaleDiagram h3 {
+  color: #e8eaed;
+  margin-bottom: 20px;
+}
+
+.fretVisualization {
+  font-family: 'Courier New', monospace;
+  margin-bottom: 16px;
+}
+
+.fretLine {
+  margin-bottom: 16px;
+}
+
+.fretLabel {
+  font-size: 12px;
+  color: #8ab4f8;
+  margin-bottom: 4px;
+}
+
+.fretVisual {
+  font-size: 14px;
+  color: #e8eaed;
+  margin-bottom: 4px;
+}
+
+.fretTension {
+  font-size: 12px;
+  color: #51cf66;
+}
+
+.diagramNote {
+  font-size: 14px;
+  color: #9aa0a6;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   Tension Comparison
+   ============================================================================= */
+
+.tensionComparison {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.tensionComparison h3 {
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.comparisonTable {
+  margin-bottom: 16px;
+}
+
+.comparisonHeader,
+.comparisonRow {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr;
+  gap: 16px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.comparisonHeader {
+  background: #35363a;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  color: #8ab4f8;
+}
+
+.comparisonRow {
+  border-bottom: 1px solid #3c4043;
+  color: #bdc1c6;
+}
+
+.comparisonRow:last-child {
+  border-bottom: none;
+}
+
+.neutral { color: #9aa0a6; }
+.slight { color: #ffc107; }
+.good { color: #8ab4f8; }
+.excellent { color: #51cf66; font-weight: 600; }
+
+.comparisonNote {
+  font-size: 14px;
+  color: #9aa0a6;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   Ergonomic Benefits
+   ============================================================================= */
+
+.ergonomicBenefits {
+  margin-bottom: 24px;
+}
+
+.ergonomicBenefits h3 {
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.benefitGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.benefitCard {
+  background: #292a2d;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.benefitIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.benefitTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 8px;
+}
+
+.benefitText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Custom Scale Exploration
+   ============================================================================= */
+
+.customScaleExploration {
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2), rgba(138, 180, 248, 0.1));
+  padding: 24px;
+  border-radius: 12px;
+  border-left: 4px solid #8ab4f8;
+}
+
+.customScaleExploration h3 {
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.customScaleExploration p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #bdc1c6;
+  margin-bottom: 12px;
+}
+
+.btnExplore {
+  padding: 12px 24px;
+  background: #8ab4f8;
+  color: #202124;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnExplore:hover {
+  background: #aecbfa;
+}
