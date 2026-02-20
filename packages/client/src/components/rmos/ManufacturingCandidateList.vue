@@ -8,7 +8,7 @@ import BulkHistoryPanel, { type BulkHistoryRecord } from "@/components/rmos/Bulk
 import UndoHistoryPanel from "@/components/rmos/UndoHistoryPanel.vue";
 import ExportPolicyCard from "@/components/rmos/ExportPolicyCard.vue";
 import ManufacturingSummaryBar from "@/components/rmos/ManufacturingSummaryBar.vue";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import {
   decideManufacturingCandidate,
   listManufacturingCandidates,
@@ -19,6 +19,10 @@ import { useCandidateSelection } from "./composables/useCandidateSelection";
 import { useCandidateFilters, type DecisionFilter, type StatusFilter } from "./composables/useCandidateFilters";
 import { useBulkExport } from "./composables/useBulkExport";
 import { useBulkDecisionV2 } from "./composables/useBulkDecisionV2";
+import { useUndoStack, type CandidateRow } from "./composables/useUndoStack";
+import { useCandidateKeyboard, getHotkeyHelp } from "./composables/useCandidateKeyboard";
+import { useClipboardToast } from "./composables/useClipboardToast";
+import { useCandidateHelpers } from "./composables/useCandidateHelpers";
 
 const props = defineProps<{
   runId: string;
@@ -26,30 +30,14 @@ const props = defineProps<{
   currentOperator?: string | null;
 }>();
 
-type CandidateRow = ManufacturingCandidate & {
-  candidate_id: string;
-};
-
 const loading = ref(false);
 const error = ref<string | null>(null);
 const requestId = ref<string>("");
 
 const candidates = ref<CandidateRow[]>([]);
 
-// decidedByOptions: derived from candidates list
-const decidedByOptions = computed(() => {
-  const set = new Set<string>();
-  for (const c of candidates.value) {
-    const v = (c.decided_by ?? "").trim();
-    if (v) set.add(v);
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
-});
-
 // -----------------------------------------------------------------------------
 // Product micro-follow: "Show only my decisions"
-// - We do not assume auth is wired yet.
-// - Operator id is user-provided and persisted locally.
 // -----------------------------------------------------------------------------
 const OPERATOR_ID_KEY = "rmos.operator_id";
 const myOperatorId = ref<string>("");
@@ -77,18 +65,12 @@ function _decidedByOrNull(): string | null {
   return v ? v : null;
 }
 
+// Toast/clipboard composable
+const { toast, showToast, copyText } = useClipboardToast();
+
 function resetViewPrefs() {
   resetPrefs();
   showToast("View reset");
-}
-
-// Copy-to-clipboard toast
-const toast = ref<string | null>(null);
-let _toastTimer: number | null = null;
-function showToast(msg: string, _variant?: "ok" | "err") {
-  toast.value = msg;
-  if (_toastTimer) window.clearTimeout(_toastTimer);
-  _toastTimer = window.setTimeout(() => { toast.value = null; }, 2000);
 }
 
 // Save / decision state
@@ -101,114 +83,6 @@ const openHistoryFor = ref<string | null>(null);
 // Inline note editor state
 const editingId = ref<string | null>(null);
 const editValue = ref<string>("");
-
-// micro-follow: keyboard shortcuts (product-only)
-// - g/y/r: bulk set decision GREEN/YELLOW/RED for selected
-// - u: clear decision (NEEDS_DECISION) for selected
-// - e: export GREEN-only zips (requires all decided)
-// - a: select all shown (post-filter)
-// - c: clear shown (post-filter)
-// - esc: clear selection
-function _isTypingContext(): boolean {
-  const el = document.activeElement as HTMLElement | null;
-  if (!el) return false;
-  const tag = (el.tagName || "").toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if ((el as any).isContentEditable) return true;
-  return false;
-}
-
-function _clearSelection() {
-  clearSelection();
-}
-
-function _hotkeyHelp(): string {
-  return [
-    "Hotkeys:",
-    "g/y/r = Bulk decision GREEN/YELLOW/RED",
-    "u = Clear decision (NEEDS_DECISION)",
-    "b = Bulk clear decision (selected)",
-    "e = Export GREEN-only (all must be decided)",
-    "a = Select shown (post-filter)",
-    "c = Clear shown (post-filter)",
-    "i = Invert selection (shown rows)",
-    "x = Clear all selection",
-    "h = Toggle bulk history panel",
-    "esc = Clear selection",
-  ].join("\n");
-}
-
-function _onKeydown(ev: KeyboardEvent) {
-  if (ev.defaultPrevented) return;
-  if (_isTypingContext()) return;
-
-  const k = (ev.key || "").toLowerCase();
-  if (k === "escape") {
-    ev.preventDefault();
-    _clearSelection();
-    return;
-  }
-  if (k === "a") {
-    ev.preventDefault();
-    selectAllFiltered();
-    return;
-  }
-  if (k === "c") {
-    ev.preventDefault();
-    clearAllFiltered();
-    return;
-  }
-  if (k === "i") {
-    ev.preventDefault();
-    invertSelectionFiltered();
-    return;
-  }
-  if (k === "x") {
-    ev.preventDefault();
-    _clearSelection();
-    return;
-  }
-  if (k === "h") {
-    ev.preventDefault();
-    showBulkHistory.value = !showBulkHistory.value;
-    return;
-  }
-  if (k === "b") {
-    if (selectedIds.value.size > 0) {
-      ev.preventDefault();
-      void clearBulkDecisionV2();
-    }
-    return;
-  }
-  if (selectedIds.value.size === 0) return; // decision hotkeys require selection
-  if (k === "g") { ev.preventDefault(); bulkSetDecision("GREEN"); return; }
-  if (k === "y") { ev.preventDefault(); bulkSetDecision("YELLOW"); return; }
-  if (k === "r") { ev.preventDefault(); bulkSetDecision("RED"); return; }
-  if (k === "u") { ev.preventDefault(); bulkClearDecision(); return; }
-  if (k === "e") { ev.preventDefault(); exportGreenOnlyZips(); return; }
-}
-
-// Copy-to-clipboard helper
-async function copyText(label: string, value: string) {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(value);
-    } else {
-      // fallback for older browsers
-      const ta = document.createElement("textarea");
-      ta.value = value;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    }
-    showToast(`Copied ${label}`);
-  } catch {
-    showToast("Copy failed");
-  }
-}
 
 // Selection state (from composable)
 const {
@@ -249,6 +123,17 @@ const {
   matchesSearch,
 } = useCandidateFilters(() => props.runId);
 
+// Helper functions (from composable)
+const {
+  summary,
+  decidedByOptions,
+  decisionBadge,
+  statusText,
+  notePreview,
+  auditHover,
+  chipClass,
+} = useCandidateHelpers(candidates);
+
 // Bulk Export composable
 const {
   exporting,
@@ -274,6 +159,21 @@ const {
   showToast
 );
 
+// Helper: update candidate from decision response
+function _updateCandidateFromDecisionResponse(id: string, res: any) {
+  const idx = candidates.value.findIndex((x) => x.candidate_id === id);
+  if (idx === -1) return;
+  candidates.value[idx] = {
+    ...candidates.value[idx],
+    decision: (res.decision ?? null) as any,
+    status: (res.status ?? candidates.value[idx].status) as any,
+    decision_note: (res.decision_note ?? null) as any,
+    decided_at_utc: (res.decided_at_utc ?? null) as any,
+    decided_by: (res.decided_by ?? null) as any,
+    decision_history: (res.decision_history ?? candidates.value[idx].decision_history ?? null) as any,
+  };
+}
+
 // Bulk Decision V2 composable
 const {
   bulkDecision,
@@ -295,298 +195,28 @@ const {
   _updateCandidateFromDecisionResponse
 );
 
+// Undo stack composable
+const {
+  undoStack,
+  undoBusy,
+  undoError,
+  saving: undoSaving,
+  saveError: undoSaveError,
+  bulkSetDecision,
+  bulkClearDecision,
+  undoLast,
+  undoStackHover,
+  clearErrors: clearUndoErrors,
+} = useUndoStack(
+  () => props.runId,
+  candidates,
+  selectedIds,
+  _decidedByOrNull,
+  _updateCandidateFromDecisionResponse,
+  showToast
+);
+
 const selectingAll = computed(() => candidates.value.length > 0 && selectedIds.value.size === candidates.value.length);
-
-// Undo stack for bulk decisions (client-side)
-type UndoItem = {
-  ts_utc: string;
-  run_id: string;
-  label: string;
-  applied_decision: RiskLevel;
-  candidate_ids: string[];
-  // snapshot needed to restore
-  prev: Record<
-    string,
-    {
-      decision: RiskLevel | null;
-      decision_note: string | null;
-    }
-  >;
-};
-const undoStack = ref<UndoItem[]>([]);
-const undoBusy = ref(false);
-const undoError = ref<string | null>(null);
-
-// Helper: get selected candidates
-function _selectedCandidates(): CandidateRow[] {
-  return getSelectedCandidates(candidates.value);
-}
-
-// Helper: update candidate from decision response (used by composable and inline functions)
-function _updateCandidateFromDecisionResponse(id: string, res: any) {
-  const idx = candidates.value.findIndex((x) => x.candidate_id === id);
-  if (idx === -1) return;
-  candidates.value[idx] = {
-    ...candidates.value[idx],
-    decision: (res.decision ?? null) as any,
-    status: (res.status ?? candidates.value[idx].status) as any,
-    decision_note: (res.decision_note ?? null) as any,
-    decided_at_utc: (res.decided_at_utc ?? null) as any,
-    decided_by: (res.decided_by ?? null) as any,
-    decision_history: (res.decision_history ?? candidates.value[idx].decision_history ?? null) as any,
-  };
-}
-
-function decisionBadge(decision: RiskLevel | null | undefined) {
-  if (decision == null) return "NEEDS_DECISION";
-  return decision;
-}
-
-
-function statusText(c: CandidateRow) {
-  if (c.decision == null) return "Needs decision";
-  if (c.decision === "GREEN") return "Accepted";
-  if (c.decision === "YELLOW") return "Caution";
-  if (c.decision === "RED") return "Rejected";
-  return "—";
-}
-
-function notePreview(note?: string | null) {
-  const n = note ?? "";
-  if (!n) return "—";
-  return n.length > 120 ? n.slice(0, 120) + "…" : n;
-}
-
-function _fmtAuditLine(h: { decision?: string | null; decided_by?: string | null; decided_at_utc?: string | null; note?: string | null }) {
-  const d = h.decision ?? "—";
-  const who = h.decided_by ?? "—";
-  const when = h.decided_at_utc ?? "—";
-  const note = h.note ? ` "${h.note.slice(0, 40)}${h.note.length > 40 ? '…' : ''}"` : "";
-  return `${d} · ${who} · ${when}${note}`;
-}
-
-function auditHover(c: CandidateRow) {
-  const who = c.decided_by ?? "—";
-  const when = c.decided_at_utc ?? "—";
-  const note = c.decision_note ?? "";
-  const preview = note ? (note.length > 80 ? note.slice(0, 80) + "…" : note) : "—";
-
-  const lines = [
-    `Decision: ${decisionBadge(c.decision)}`,
-    `By: ${who}`,
-    `At: ${when}`,
-    `Note: ${preview}`,
-  ];
-
-  if (c.decision_history && c.decision_history.length > 0) {
-    lines.push("History:");
-    for (const h of c.decision_history.slice(-5)) {
-      lines.push(`  ${_fmtAuditLine(h)}`);
-    }
-  }
-
-  return lines.join("\n");
-}
-
-function openDecisionHistory(id: string) {
-  openHistoryFor.value = openHistoryFor.value === id ? null : id;
-}
-
-async function load() {
-  if (!props.runId) return;
-  loading.value = true;
-  error.value = null;
-  exportError.value = null;
-  undoError.value = null;
-  try {
-    const res = await listManufacturingCandidates(props.runId);
-    candidates.value = (res.items ?? []) as CandidateRow[];
-    requestId.value = res.requestId ?? "";
-    // prune selection set to only existing candidates
-    const existing = new Set(candidates.value.map((c) => c.candidate_id));
-    const next = new Set<string>();
-    for (const id of selectedIds.value) if (existing.has(id)) next.add(id);
-    selectedIds.value = next;
-    // If you were in "selected only" mode and selection got emptied, auto-disable it.
-    if (showSelectedOnly.value && selectedIds.value.size === 0) showSelectedOnly.value = false;
-  } catch (e: any) {
-    error.value = e?.message ?? String(e);
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(() => {
-  // restore prefs first (so first render matches user intent)
-  loadPrefs();
-  load();
-  window.addEventListener("keydown", _onKeydown, { capture: true });
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", _onKeydown, { capture: true } as any);
-  if (_toastTimer) window.clearTimeout(_toastTimer);
-});
-
-watch(() => props.runId, load);
-
-function startEdit(c: CandidateRow) {
-  // Spine-locked: don't allow note editing until a decision exists
-  if (c.decision == null) return;
-  editingId.value = c.candidate_id;
-  editValue.value = c.decision_note ?? "";
-  saveError.value = null;
-}
-
-function cancelEdit() {
-  editingId.value = null;
-  editValue.value = "";
-  saveError.value = null;
-}
-
-async function saveEdit(c: CandidateRow) {
-  if (!props.runId) return;
-  if (c.decision == null) return;
-  saving.value = true;
-  saveError.value = null;
-  try {
-    const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-      decision: c.decision, // keep decision stable; update note only
-      note: editValue.value,
-      decided_by: _decidedByOrNull(),
-    });
-    requestId.value = res.requestId ?? requestId.value;
-
-    const idx = candidates.value.findIndex((x) => x.candidate_id === c.candidate_id);
-    if (idx >= 0) {
-      candidates.value[idx] = {
-        ...candidates.value[idx],
-        decision: (res.decision ?? candidates.value[idx].decision ?? null) as any,
-        status: (res.status ?? candidates.value[idx].status ?? null) as any,
-        decision_note: res.decision_note ?? editValue.value,
-        decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
-        decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
-        decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
-      };
-    }
-    cancelEdit();
-  } catch (e: any) {
-    saveError.value = e?.message ?? String(e);
-  } finally {
-    saving.value = false;
-  }
-}
-
-async function decide(c: CandidateRow, decision: RiskLevel) {
-  if (!props.runId) return;
-  saving.value = true;
-  saveError.value = null;
-  try {
-    const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-      decision,
-      note: c.decision_note ?? null,
-      decided_by: _decidedByOrNull(),
-    });
-    requestId.value = res.requestId ?? requestId.value;
-
-    const idx = candidates.value.findIndex((x) => x.candidate_id === c.candidate_id);
-    if (idx >= 0) {
-      candidates.value[idx] = {
-        ...candidates.value[idx],
-        decision: (res.decision ?? decision) as any,
-        status: (res.status ?? candidates.value[idx].status ?? null) as any,
-        decision_note: res.decision_note ?? candidates.value[idx].decision_note ?? null,
-        decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
-        decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
-        decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
-      };
-    }
-  } catch (e: any) {
-    saveError.value = e?.message ?? String(e);
-  } finally {
-    saving.value = false;
-  }
-}
-
-// -------------------------
-// Bulk decision (GREEN/YELLOW/RED) with undo
-// -------------------------
-const selectedRows = computed(() => {
-  const s = selectedIds.value;
-  return candidates.value.filter((c) => s.has(c.candidate_id));
-});
-
-// micro-follow: bulk clear decision (set to null) for selected
-// This aligns with migration: decision=null == NEEDS_DECISION
-// Clears decision_note as well (note is tied to decision record).
-// Uses decideManufacturingCandidate() only (runs.ts lockpoint).
-
-function canBulkClearDecision(): { ok: boolean; reason?: string } {
-  const sel = selectedRows.value;
-  if (sel.length === 0) return { ok: false, reason: "Select candidates to clear decision." };
-  // allow clearing any decided candidate; no-op if already undecided
-  const anyDecided = sel.some((c) => c.decision !== null);
-  if (!anyDecided) return { ok: false, reason: "All selected candidates are already undecided." };
-  return { ok: true };
-}
-
-function bulkClearBlockedHover(): string {
-  const chk = canBulkClearDecision();
-  return chk.ok ? "Clear decision → NEEDS_DECISION (decision=null). Note cleared too." : (chk.reason ?? "Blocked");
-}
-
-// micro-follow: summary chips (counts) + one-click filters (product-only)
-function _decisionKey(c: CandidateRow): "NEEDS_DECISION" | "GREEN" | "YELLOW" | "RED" | "OTHER" {
-  const d = (c.decision ?? null) as any;
-  if (d === null) return "NEEDS_DECISION";
-  if (d === "GREEN" || d === "YELLOW" || d === "RED") return d;
-  return "OTHER";
-}
-function _statusKey(c: CandidateRow): "PROPOSED" | "ACCEPTED" | "REJECTED" | "OTHER" {
-  const s = (c.status ?? null) as any;
-  if (s === "PROPOSED" || s === "ACCEPTED" || s === "REJECTED") return s;
-  return "OTHER";
-}
-
-const summary = computed(() => {
-  const decisionCounts: Record<string, number> = {
-    NEEDS_DECISION: 0,
-    GREEN: 0,
-    YELLOW: 0,
-    RED: 0,
-    OTHER: 0,
-  };
-  const statusCounts: Record<string, number> = {
-    PROPOSED: 0,
-    ACCEPTED: 0,
-    REJECTED: 0,
-    OTHER: 0,
-  };
-  for (const c of candidates.value) {
-    decisionCounts[_decisionKey(c)] = (decisionCounts[_decisionKey(c)] || 0) + 1;
-    statusCounts[_statusKey(c)] = (statusCounts[_statusKey(c)] || 0) + 1;
-  }
-  return { decisionCounts, statusCounts, total: candidates.value.length };
-});
-
-function setDecisionFilter(v: string) {
-  decisionFilter.value = v as DecisionFilter;
-}
-function setStatusFilter(v: string) {
-  statusFilter.value = v as StatusFilter;
-}
-
-function chipClass(active: boolean, kind: "neutral" | "good" | "warn" | "bad" | "muted" = "neutral") {
-  return {
-    chip: true,
-    active,
-    neutral: kind === "neutral",
-    good: kind === "good",
-    warn: kind === "warn",
-    bad: kind === "bad",
-    muted: kind === "muted",
-  };
-}
 
 // -------------------------
 // Filtered view (product-only)
@@ -653,67 +283,82 @@ function toggleAllFiltered() {
   composableToggleAllFiltered(filteredCandidates.value);
 }
 
-function utcNowIso() {
-  return new Date().toISOString();
+// Keyboard shortcuts (from composable)
+useCandidateKeyboard(selectedIds, showBulkHistory, {
+  clearSelection,
+  selectAllFiltered,
+  clearAllFiltered,
+  invertSelectionFiltered,
+  toggleBulkHistory: () => { showBulkHistory.value = !showBulkHistory.value; },
+  bulkSetDecision,
+  bulkClearDecision,
+  exportGreenOnlyZips,
+});
+
+function openDecisionHistory(id: string) {
+  openHistoryFor.value = openHistoryFor.value === id ? null : id;
 }
 
-async function bulkSetDecision(decision: RiskLevel) {
+async function load() {
   if (!props.runId) return;
-  undoError.value = null;
-  saveError.value = null;
-
-  const rows = selectedRows.value;
-  if (rows.length === 0) {
-    undoError.value = "Select at least one candidate first.";
-    return;
-  }
-
-  // Snapshot previous states (for undo)
-  const prev: UndoItem["prev"] = {};
-  for (const r of rows) {
-    prev[r.candidate_id] = {
-      decision: (r.decision ?? null) as any,
-      decision_note: (r.decision_note ?? null) as any,
-    };
-  }
-
-  saving.value = true;
+  loading.value = true;
+  error.value = null;
+  exportError.value = null;
+  clearUndoErrors();
   try {
-    // Sequential, deterministic updates (keeps audit clean and avoids request bursts)
-    for (const r of rows) {
-      const res = await decideManufacturingCandidate(props.runId, r.candidate_id, {
-        decision,
-        note: r.decision_note ?? null,
-        decided_by: _decidedByOrNull(),
-      });
-      requestId.value = res.requestId ?? requestId.value;
+    const res = await listManufacturingCandidates(props.runId);
+    candidates.value = (res.items ?? []) as CandidateRow[];
+    requestId.value = res.requestId ?? "";
+    // prune selection set to only existing candidates
+    const existing = new Set(candidates.value.map((c) => c.candidate_id));
+    const next = new Set<string>();
+    for (const id of selectedIds.value) if (existing.has(id)) next.add(id);
+    selectedIds.value = next;
+    // If you were in "selected only" mode and selection got emptied, auto-disable it.
+    if (showSelectedOnly.value && selectedIds.value.size === 0) showSelectedOnly.value = false;
+  } catch (e: any) {
+    error.value = e?.message ?? String(e);
+  } finally {
+    loading.value = false;
+  }
+}
 
-      const idx = candidates.value.findIndex((x) => x.candidate_id === r.candidate_id);
-      if (idx >= 0) {
-        candidates.value[idx] = {
-          ...candidates.value[idx],
-          decision: (res.decision ?? decision) as any,
-          status: (res.status ?? candidates.value[idx].status ?? null) as any,
-          decision_note: res.decision_note ?? candidates.value[idx].decision_note ?? null,
-          decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
-          decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
-          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
-        };
-      }
-      await new Promise((rr) => setTimeout(rr, 40));
-    }
+onMounted(() => {
+  // restore prefs first (so first render matches user intent)
+  loadPrefs();
+  load();
+});
 
-    // push undo record
-    undoStack.value.unshift({
-      ts_utc: utcNowIso(),
-      run_id: props.runId,
-      label: `Bulk set ${rows.length} → ${decision}`,
-      applied_decision: decision,
-      candidate_ids: rows.map((x) => x.candidate_id),
-      prev,
+watch(() => props.runId, load);
+
+function startEdit(c: CandidateRow) {
+  // Spine-locked: don't allow note editing until a decision exists
+  if (c.decision == null) return;
+  editingId.value = c.candidate_id;
+  editValue.value = c.decision_note ?? "";
+  saveError.value = null;
+}
+
+function cancelEdit() {
+  editingId.value = null;
+  editValue.value = "";
+  saveError.value = null;
+}
+
+async function saveEdit(c: CandidateRow) {
+  if (!props.runId) return;
+  if (c.decision == null) return;
+  saving.value = true;
+  saveError.value = null;
+  try {
+    const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
+      decision: c.decision, // keep decision stable; update note only
+      note: editValue.value,
+      decided_by: _decidedByOrNull(),
     });
-    // keep stack small/high-signal
-    if (undoStack.value.length > 20) undoStack.value = undoStack.value.slice(0, 20);
+    requestId.value = res.requestId ?? requestId.value;
+    _updateCandidateFromDecisionResponse(c.candidate_id, res);
+    cancelEdit();
   } catch (e: any) {
     saveError.value = e?.message ?? String(e);
   } finally {
@@ -721,61 +366,18 @@ async function bulkSetDecision(decision: RiskLevel) {
   }
 }
 
-async function bulkClearDecision() {
-  const chk = canBulkClearDecision();
-  if (!chk.ok) return;
-
+async function decide(c: CandidateRow, decision: RiskLevel) {
+  if (!props.runId) return;
   saving.value = true;
   saveError.value = null;
-
-  const sel = selectedRows.value;
-  const nowIso = utcNowIso();
-
-  // Snapshot "before" for undo per candidate that is changing
-  const changed = sel.filter((c) => c.decision !== null);
-  const prev: UndoItem["prev"] = {};
-  for (const c of changed) {
-    prev[c.candidate_id] = {
-      decision: (c.decision ?? null) as any,
-      decision_note: (c.decision_note ?? null) as any,
-    };
-  }
-
   try {
-    for (const c of changed) {
-      const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
-        decision: null,
-        note: null,
-        decided_by: _decidedByOrNull(),
-      });
-      requestId.value = res.requestId ?? requestId.value;
-
-      // optimistic local update
-      const idx = candidates.value.findIndex((x) => x.candidate_id === c.candidate_id);
-      if (idx >= 0) {
-        candidates.value[idx] = {
-          ...candidates.value[idx],
-          decision: (res.decision ?? null) as any,
-          status: (res.status ?? candidates.value[idx].status ?? null) as any,
-          decision_note: res.decision_note ?? null,
-          decided_at_utc: res.decided_at_utc ?? null,
-          decided_by: res.decided_by ?? null,
-          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
-        };
-      }
-      await new Promise((rr) => setTimeout(rr, 40));
-    }
-
-    // push undo record
-    undoStack.value.unshift({
-      ts_utc: nowIso,
-      run_id: props.runId,
-      label: `Bulk clear ${changed.length} → NEEDS_DECISION`,
-      applied_decision: null as any,
-      candidate_ids: changed.map((x) => x.candidate_id),
-      prev,
+    const res = await decideManufacturingCandidate(props.runId, c.candidate_id, {
+      decision,
+      note: c.decision_note ?? null,
+      decided_by: _decidedByOrNull(),
     });
-    if (undoStack.value.length > 20) undoStack.value = undoStack.value.slice(0, 20);
+    requestId.value = res.requestId ?? requestId.value;
+    _updateCandidateFromDecisionResponse(c.candidate_id, res);
   } catch (e: any) {
     saveError.value = e?.message ?? String(e);
   } finally {
@@ -783,60 +385,12 @@ async function bulkClearDecision() {
   }
 }
 
-async function undoLast() {
-  if (!props.runId) return;
-  if (undoStack.value.length === 0) return;
-  undoBusy.value = true;
-  undoError.value = null;
-
-  const item = undoStack.value[0];
-  try {
-    for (const id of item.candidate_ids) {
-      const snap = item.prev[id];
-      if (!snap) continue;
-      const res = await decideManufacturingCandidate(props.runId, id, {
-        decision: snap.decision, // may be null (back to NEEDS_DECISION)
-        note: snap.decision_note,
-        decided_by: _decidedByOrNull(),
-      });
-      requestId.value = res.requestId ?? requestId.value;
-
-      const idx = candidates.value.findIndex((x) => x.candidate_id === id);
-      if (idx >= 0) {
-        candidates.value[idx] = {
-          ...candidates.value[idx],
-          decision: (res.decision ?? snap.decision ?? null) as any,
-          status: (res.status ?? candidates.value[idx].status ?? null) as any,
-          decision_note: res.decision_note ?? snap.decision_note ?? null,
-          decided_at_utc: res.decided_at_utc ?? candidates.value[idx].decided_at_utc ?? null,
-          decided_by: res.decided_by ?? candidates.value[idx].decided_by ?? null,
-          decision_history: res.decision_history ?? candidates.value[idx].decision_history ?? null,
-        };
-      }
-      await new Promise((rr) => setTimeout(rr, 40));
-    }
-    // pop after successful undo
-    undoStack.value.shift();
-  } catch (e: any) {
-    undoError.value = e?.message ?? String(e);
-  } finally {
-    undoBusy.value = false;
-  }
+function setDecisionFilter(v: string) {
+  decisionFilter.value = v as DecisionFilter;
 }
-
-function undoStackHover(item: UndoItem) {
-  const ids = item.candidate_ids.slice(0, 6).join(", ");
-  const more = item.candidate_ids.length > 6 ? ` …(+${item.candidate_ids.length - 6})` : "";
-  return [
-    `When: ${item.ts_utc}`,
-    `Run: ${item.run_id}`,
-    `Action: ${item.label}`,
-    `Candidates: ${ids}${more}`,
-    `Undo applies previous decision + note (including null).`,
-  ].join("\n");
+function setStatusFilter(v: string) {
+  statusFilter.value = v as StatusFilter;
 }
-
-
 </script>
 
 <template>
