@@ -1,22 +1,22 @@
 <template>
-  <div class="instrument-geometry-panel">
-    <div class="panel-header">
+  <div :class="styles.instrumentGeometryPanel">
+    <div :class="styles.panelHeader">
       <h2>Instrument Geometry Designer</h2>
-      <p class="subtitle">
+      <p :class="styles.subtitle">
         Fretboard CAM with Feasibility Analysis (Waves 15-16)
       </p>
     </div>
 
     <!-- Main Layout: Left Controls + Right Preview -->
-    <div class="layout-grid">
+    <div :class="styles.layoutGrid">
       <!-- ===== LEFT PANEL: Controls ===== -->
-      <div class="controls-panel">
+      <div :class="styles.controlsPanel">
         <!-- Model Selection -->
-        <section class="control-section">
+        <section :class="styles.controlSection">
           <h3>Instrument Model</h3>
           <select
             v-model="store.selectedModelId"
-            class="select-input"
+            :class="styles.selectInput"
             @change="handleModelChange"
           >
             <option
@@ -28,31 +28,31 @@
             </option>
           </select>
 
-          <div class="model-info">
-            <div class="info-row">
-              <span class="label">Scale Length:</span>
-              <span class="value">{{ store.selectedModel.scale_length_mm.toFixed(1) }} mm</span>
+          <div :class="styles.modelInfo">
+            <div :class="styles.infoRow">
+              <span :class="styles.infoRowLabel">Scale Length:</span>
+              <span :class="styles.infoRowValue">{{ store.selectedModel.scale_length_mm.toFixed(1) }} mm</span>
             </div>
-            <div class="info-row">
-              <span class="label">Frets:</span>
-              <span class="value">{{ store.selectedModel.num_frets }}</span>
+            <div :class="styles.infoRow">
+              <span :class="styles.infoRowLabel">Frets:</span>
+              <span :class="styles.infoRowValue">{{ store.selectedModel.num_frets }}</span>
             </div>
-            <div class="info-row">
-              <span class="label">Nut Width:</span>
-              <span class="value">{{ store.selectedModel.nut_width_mm.toFixed(1) }} mm</span>
+            <div :class="styles.infoRow">
+              <span :class="styles.infoRowLabel">Nut Width:</span>
+              <span :class="styles.infoRowValue">{{ store.selectedModel.nut_width_mm.toFixed(1) }} mm</span>
             </div>
-            <div class="info-row">
-              <span class="label">Bridge Width:</span>
-              <span class="value">{{ store.selectedModel.bridge_width_mm.toFixed(1) }} mm</span>
+            <div :class="styles.infoRow">
+              <span :class="styles.infoRowLabel">Bridge Width:</span>
+              <span :class="styles.infoRowValue">{{ store.selectedModel.bridge_width_mm.toFixed(1) }} mm</span>
             </div>
           </div>
         </section>
 
         <!-- Fretboard Parameters -->
-        <section class="control-section">
+        <section :class="styles.controlSection">
           <h3>Fretboard Geometry</h3>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Base Radius (Nut)</label>
             <input
               v-model.number="store.fretboardSpec.base_radius_inches"
@@ -60,12 +60,12 @@
               step="0.5"
               min="7"
               max="20"
-              class="number-input"
+              :class="styles.numberInput"
             >
-            <span class="unit">"</span>
+            <span :class="styles.unit">"</span>
           </div>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>End Radius (Heel)</label>
             <input
               v-model.number="store.fretboardSpec.end_radius_inches"
@@ -73,12 +73,12 @@
               step="0.5"
               min="7"
               max="20"
-              class="number-input"
+              :class="styles.numberInput"
             >
-            <span class="unit">"</span>
+            <span :class="styles.unit">"</span>
           </div>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Slot Width</label>
             <input
               v-model.number="store.fretboardSpec.slot_width_mm"
@@ -86,12 +86,12 @@
               step="0.05"
               min="0.4"
               max="1.0"
-              class="number-input"
+              :class="styles.numberInput"
             >
-            <span class="unit">mm</span>
+            <span :class="styles.unit">mm</span>
           </div>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Slot Depth</label>
             <input
               v-model.number="store.fretboardSpec.slot_depth_mm"
@@ -99,16 +99,16 @@
               step="0.1"
               min="2.0"
               max="4.0"
-              class="number-input"
+              :class="styles.numberInput"
             >
-            <span class="unit">mm</span>
+            <span :class="styles.unit">mm</span>
           </div>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Material</label>
             <select
               v-model="store.fretboardSpec.material_id"
-              class="select-input"
+              :class="styles.selectInput"
             >
               <option value="rosewood">
                 Rosewood
@@ -127,13 +127,13 @@
         </section>
 
         <!-- Fan-Fret Controls (Wave 16) -->
-        <section class="control-section">
+        <section :class="styles.controlSection">
           <h3>
-            <label class="checkbox-label">
+            <label :class="styles.checkboxLabel">
               <input
                 v-model="store.fanFretEnabled"
                 type="checkbox"
-                class="checkbox-input"
+                :class="styles.checkboxInput"
               >
               Fan-Fret (Multi-Scale)
             </label>
@@ -141,9 +141,9 @@
 
           <div
             v-if="store.fanFretEnabled"
-            class="fan-fret-controls"
+            :class="styles.fanFretControls"
           >
-            <div class="input-group">
+            <div :class="styles.inputGroup">
               <label>Treble Scale</label>
               <input
                 v-model.number="store.trebleScaleLength"
@@ -151,12 +151,12 @@
                 step="1"
                 min="610"
                 max="685"
-                class="number-input"
+                :class="styles.numberInput"
               >
-              <span class="unit">mm</span>
+              <span :class="styles.unit">mm</span>
             </div>
 
-            <div class="input-group">
+            <div :class="styles.inputGroup">
               <label>Bass Scale</label>
               <input
                 v-model.number="store.bassScaleLength"
@@ -164,12 +164,12 @@
                 step="1"
                 min="610"
                 max="685"
-                class="number-input"
+                :class="styles.numberInput"
               >
-              <span class="unit">mm</span>
+              <span :class="styles.unit">mm</span>
             </div>
 
-            <div class="input-group">
+            <div :class="styles.inputGroup">
               <label>Perpendicular Fret</label>
               <input
                 v-model.number="store.perpendicularFret"
@@ -177,22 +177,22 @@
                 step="1"
                 min="0"
                 :max="store.selectedModel.num_frets"
-                class="number-input"
+                :class="styles.numberInput"
               >
-              <span class="unit">fret #</span>
+              <span :class="styles.unit">fret #</span>
             </div>
 
-            <div class="info-banner info">
+            <div :class="styles.infoBanner">
               ℹ️ Fan-fret CAM with per-fret risk analysis (Wave 19)
             </div>
           </div>
         </section>
 
         <!-- Generate Button -->
-        <section class="control-section">
+        <section :class="styles.controlSection">
           <button
             :disabled="store.isLoadingPreview"
-            class="btn-primary btn-large"
+            :class="styles.btnLarge"
             @click="handleGeneratePreview"
           >
             <span v-if="store.isLoadingPreview">⏳ Generating...</span>
@@ -201,7 +201,7 @@
 
           <div
             v-if="store.previewError"
-            class="error-banner"
+            :class="styles.errorBanner"
           >
             ❌ {{ store.previewError }}
           </div>
@@ -209,45 +209,45 @@
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
-      <div class="preview-panel">
+      <div :class="styles.previewPanel">
         <!-- Loading State -->
         <div
           v-if="store.isLoadingPreview"
-          class="loading-state"
+          :class="styles.loadingState"
         >
-          <div class="spinner" />
+          <div :class="styles.spinner" />
           <p>Generating CAM toolpaths and feasibility analysis...</p>
         </div>
 
         <!-- Preview Content -->
         <div
           v-else-if="store.previewResponse"
-          class="preview-content"
+          :class="styles.previewContent"
         >
           <!-- Feasibility Header -->
-          <section class="feasibility-header">
+          <section :class="styles.feasibilityHeader">
             <div
-              class="risk-badge"
+              :class="styles.riskBadge"
               :style="{ backgroundColor: store.riskColor }"
             >
               {{ store.riskLabel }}
             </div>
-            <div class="score-display">
+            <div :class="styles.scoreDisplay">
               Score: {{ store.feasibility.overall_score.toFixed(1) }}
             </div>
-            <div class="status-flags">
+            <div :class="styles.statusFlags">
               <span
                 v-if="store.feasibility.is_feasible"
-                class="flag-good"
+                :class="styles.flagGood"
               >✓ Feasible</span>
               <span
                 v-else
-                class="flag-bad"
+                :class="styles.flagBad"
               >✗ Not Feasible</span>
 
               <span
                 v-if="store.feasibility.needs_review"
-                class="flag-warning"
+                :class="styles.flagWarning"
               >⚠ Needs Review</span>
             </div>
           </section>
@@ -255,7 +255,7 @@
           <!-- Recommendations -->
           <section
             v-if="store.feasibility.recommendations.length > 0"
-            class="recommendations"
+            :class="styles.recommendations"
           >
             <h4>Recommendations</h4>
             <ul>
@@ -269,7 +269,7 @@
           </section>
 
           <!-- Fretboard SVG Preview -->
-          <section class="fretboard-preview">
+          <section :class="styles.fretboardPreview">
             <h4>Fretboard Preview ({{ store.toolpaths.length }} frets)</h4>
             <FretboardPreviewSvg
               :spec="store.fretboardSpec"
@@ -284,66 +284,66 @@
           </section>
 
           <!-- Statistics -->
-          <section class="statistics-grid">
-            <div class="stat-card">
-              <div class="stat-label">
+          <section :class="styles.statisticsGrid">
+            <div :class="styles.statCard">
+              <div :class="styles.statLabel">
                 Total Time
               </div>
-              <div class="stat-value">
+              <div :class="styles.statValue">
                 {{ formatTime(store.statistics.total_time_s) }}
               </div>
             </div>
 
-            <div class="stat-card">
-              <div class="stat-label">
+            <div :class="styles.statCard">
+              <div :class="styles.statLabel">
                 Total Cost
               </div>
-              <div class="stat-value">
+              <div :class="styles.statValue">
                 ${{ store.statistics.total_cost_usd.toFixed(2) }}
               </div>
             </div>
 
-            <div class="stat-card">
-              <div class="stat-label">
+            <div :class="styles.statCard">
+              <div :class="styles.statLabel">
                 Energy
               </div>
-              <div class="stat-value">
+              <div :class="styles.statValue">
                 {{ store.statistics.total_energy_kwh.toFixed(3) }} kWh
               </div>
             </div>
 
-            <div class="stat-card">
-              <div class="stat-label">
+            <div :class="styles.statCard">
+              <div :class="styles.statLabel">
                 Cut Length
               </div>
-              <div class="stat-value">
+              <div :class="styles.statValue">
                 {{ store.statistics.total_length_mm.toFixed(1) }} mm
               </div>
             </div>
           </section>
 
           <!-- DXF/G-code Previews -->
-          <section class="code-previews">
-            <div class="preview-column">
+          <section :class="styles.codePreviews">
+            <div :class="styles.previewColumn">
               <h4>DXF Preview</h4>
-              <pre class="code-preview">{{
+              <pre :class="styles.codePreview">{{
                 store.previewResponse.dxf_preview
               }}</pre>
               <button
-                class="btn-secondary"
+                :class="styles.btnSecondary"
                 @click="store.downloadDxf"
               >
                 📥 Download DXF
               </button>
             </div>
 
-            <div class="preview-column">
+            <div :class="styles.previewColumn">
               <h4>G-code Preview</h4>
-              <pre class="code-preview">{{
+              <pre :class="styles.codePreview">{{
                 store.previewResponse.gcode_preview
               }}</pre>
               <button
-                class="btn-secondary"
+                :class="styles.btnSecondary"
                 @click="store.downloadGcode"
               >
                 📥 Download G-code
@@ -352,36 +352,36 @@
           </section>
 
           <!-- Toolpath Details Table -->
-          <section class="toolpath-table">
+          <section :class="styles.toolpathTable">
             <h4>Toolpath Details ({{ store.toolpaths.length }} slots)</h4>
-            <div class="table-wrapper">
-              <table>
-                <thead>
+            <div :class="styles.tableWrapper">
+              <table :class="styles.table">
+                <thead :class="styles.tableHead">
                   <tr>
-                    <th>Fret #</th>
-                    <th>Position (mm)</th>
-                    <th>Width (mm)</th>
-                    <th>Depth (mm)</th>
-                    <th>Feed (mm/min)</th>
-                    <th>RPM</th>
-                    <th>Time (s)</th>
-                    <th>Cost ($)</th>
+                    <th :class="styles.th">Fret #</th>
+                    <th :class="styles.th">Position (mm)</th>
+                    <th :class="styles.th">Width (mm)</th>
+                    <th :class="styles.th">Depth (mm)</th>
+                    <th :class="styles.th">Feed (mm/min)</th>
+                    <th :class="styles.th">RPM</th>
+                    <th :class="styles.th">Time (s)</th>
+                    <th :class="styles.th">Cost ($)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr
                     v-for="tp in store.toolpaths"
                     :key="tp.fret_number"
-                    :class="{ 'row-highlight': tp.fret_number % 12 === 0 }"
+                    :class="[styles.tableRow, tp.fret_number % 12 === 0 && styles.rowHighlight]"
                   >
-                    <td>{{ tp.fret_number }}</td>
-                    <td>{{ tp.position_mm.toFixed(2) }}</td>
-                    <td>{{ tp.width_mm.toFixed(2) }}</td>
-                    <td>{{ tp.depth_mm.toFixed(2) }}</td>
-                    <td>{{ tp.feed_rate }}</td>
-                    <td>{{ tp.spindle_rpm }}</td>
-                    <td>{{ tp.cut_time_s.toFixed(1) }}</td>
-                    <td>{{ tp.cost_usd.toFixed(3) }}</td>
+                    <td :class="styles.td">{{ tp.fret_number }}</td>
+                    <td :class="styles.td">{{ tp.position_mm.toFixed(2) }}</td>
+                    <td :class="styles.td">{{ tp.width_mm.toFixed(2) }}</td>
+                    <td :class="styles.td">{{ tp.depth_mm.toFixed(2) }}</td>
+                    <td :class="styles.td">{{ tp.feed_rate }}</td>
+                    <td :class="styles.td">{{ tp.spindle_rpm }}</td>
+                    <td :class="styles.td">{{ tp.cut_time_s.toFixed(1) }}</td>
+                    <td :class="styles.td">{{ tp.cost_usd.toFixed(3) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -392,9 +392,9 @@
         <!-- Empty State -->
         <div
           v-else
-          class="empty-state"
+          :class="styles.emptyState"
         >
-          <div class="empty-icon">
+          <div :class="styles.emptyIcon">
             🎸
           </div>
           <h3>No Preview Generated</h3>
@@ -415,6 +415,7 @@ import {
   INSTRUMENT_MODELS,
 } from "@/stores/instrumentGeometryStore";
 import FretboardPreviewSvg from "@/components/FretboardPreviewSvg.vue";
+import styles from "./InstrumentGeometryPanel.module.css";
 
 const store = useInstrumentGeometryStore();
 
@@ -450,493 +451,3 @@ onMounted(() => {
   store.selectModel("strat_25_5");
 });
 </script>
-
-<style scoped>
-.instrument-geometry-panel {
-  padding: 20px;
-  background: #0a0a0a;
-  min-height: 100vh;
-  color: #e5e5e5;
-}
-
-.panel-header {
-  margin-bottom: 24px;
-}
-
-.panel-header h2 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.subtitle {
-  margin: 8px 0 0 0;
-  font-size: 14px;
-  color: #999;
-}
-
-/* ===== Layout Grid ===== */
-.layout-grid {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 24px;
-}
-
-/* ===== Controls Panel ===== */
-.controls-panel {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-.control-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.control-section h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  border-bottom: 1px solid #333;
-  padding-bottom: 8px;
-}
-
-.select-input {
-  width: 100%;
-  padding: 10px;
-  background: #0a0a0a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.select-input:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.model-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  background: #0a0a0a;
-  border-radius: 4px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-}
-
-.info-row .label {
-  color: #999;
-}
-
-.info-row .value {
-  color: #fff;
-  font-weight: 500;
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.input-group label {
-  flex: 1;
-  font-size: 13px;
-  color: #ccc;
-}
-
-.number-input {
-  width: 80px;
-  padding: 6px 8px;
-  background: #0a0a0a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
-  font-size: 13px;
-  text-align: right;
-}
-
-.number-input:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.unit {
-  width: 30px;
-  font-size: 13px;
-  color: #999;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 0;
-}
-
-.checkbox-input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.fan-fret-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-left: 12px;
-}
-
-.info-banner {
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  background: #1e3a8a;
-  color: #93c5fd;
-  border: 1px solid #3b82f6;
-}
-
-.info-banner.warning {
-  background: #78350f;
-  color: #fcd34d;
-  border-color: #f59e0b;
-}
-
-.error-banner {
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 13px;
-  background: #7f1d1d;
-  color: #fca5a5;
-  border: 1px solid #ef4444;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #0ea5e9;
-  color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0284c7;
-  transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-  background: #444;
-  color: #888;
-  cursor: not-allowed;
-}
-
-.btn-large {
-  width: 100%;
-  padding: 14px 20px;
-  font-size: 16px;
-}
-
-.btn-secondary {
-  background: #374151;
-  color: #e5e5e5;
-  font-size: 13px;
-  padding: 8px 16px;
-}
-
-.btn-secondary:hover {
-  background: #4b5563;
-}
-
-/* ===== Preview Panel ===== */
-.preview-panel {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 24px;
-  min-height: 600px;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #333;
-  border-top-color: #0ea5e9;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-  color: #666;
-}
-
-.empty-icon {
-  font-size: 64px;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 20px;
-  color: #999;
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.preview-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* ===== Feasibility Header ===== */
-.feasibility-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: #0a0a0a;
-  border-radius: 6px;
-  border: 1px solid #333;
-}
-
-.risk-badge {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #fff;
-}
-
-.score-display {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.status-flags {
-  display: flex;
-  gap: 12px;
-  margin-left: auto;
-}
-
-.flag-good,
-.flag-bad,
-.flag-warning {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.flag-good {
-  background: #065f46;
-  color: #6ee7b7;
-}
-
-.flag-bad {
-  background: #7f1d1d;
-  color: #fca5a5;
-}
-
-.flag-warning {
-  background: #78350f;
-  color: #fcd34d;
-}
-
-/* ===== Recommendations ===== */
-.recommendations {
-  padding: 16px;
-  background: #0a0a0a;
-  border-radius: 6px;
-  border: 1px solid #333;
-}
-
-.recommendations h4 {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  color: #fff;
-}
-
-.recommendations ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.recommendations li {
-  font-size: 13px;
-  color: #ccc;
-  margin-bottom: 6px;
-}
-
-/* ===== Fretboard Preview ===== */
-.fretboard-preview h4 {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  color: #fff;
-}
-
-/* ===== Statistics ===== */
-.statistics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.stat-card {
-  padding: 16px;
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 8px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0ea5e9;
-}
-
-/* ===== Code Previews ===== */
-.code-previews {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.preview-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.preview-column h4 {
-  margin: 0;
-  font-size: 15px;
-  color: #fff;
-}
-
-.code-preview {
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 12px;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  color: #10b981;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-/* ===== Toolpath Table ===== */
-.toolpath-table h4 {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  color: #fff;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 6px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background: #1a1a1a;
-  position: sticky;
-  top: 0;
-}
-
-th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: #999;
-  border-bottom: 1px solid #333;
-}
-
-td {
-  padding: 10px 16px;
-  font-size: 13px;
-  color: #ccc;
-  border-bottom: 1px solid #222;
-}
-
-tbody tr:hover {
-  background: #1a1a1a;
-}
-
-.row-highlight {
-  background: #1e293b !important;
-}
-
-.row-highlight:hover {
-  background: #334155 !important;
-}
-</style>
