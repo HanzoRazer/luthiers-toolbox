@@ -20,6 +20,12 @@ import {
   useRunSelection,
   useVisionAttach,
 } from "./composables";
+import styles from "./VisionAttachToRunWidget.module.css";
+
+// CSS Module class helper for asset card selection
+function assetCardClass(sha: string, selectedSha: string | null): string {
+  return selectedSha === sha ? styles.assetCardSelected : styles.assetCard;
+}
 
 /** Base URL for cross-origin API deployments */
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
@@ -190,12 +196,12 @@ function truncate(s: string, len: number): string {
 </script>
 
 <template>
-  <div class="vision-attach-widget">
+  <div :class="styles.visionAttachWidget">
     <!-- Header -->
-    <div class="widget-header">
+    <div :class="styles.widgetHeader">
       <h3>Vision &rarr; Attach to Run</h3>
       <button
-        class="close-btn"
+        :class="styles.closeBtn"
         title="Close"
         @click="emit('close')"
       >
@@ -206,21 +212,21 @@ function truncate(s: string, len: number): string {
     <!-- Messages -->
     <div
       v-if="error"
-      class="message error"
+      :class="styles.messageError"
     >
       {{ error }}
     </div>
     <div
       v-if="successMessage"
-      class="message success"
+      :class="styles.messageSuccess"
     >
       {{ successMessage }}
     </div>
 
     <!-- Generation Section -->
-    <section class="section">
+    <section :class="styles.section">
       <h4>1. Generate Image</h4>
-      <div class="form-row">
+      <div :class="styles.formRow">
         <label>Prompt</label>
         <textarea
           v-model="prompt"
@@ -229,8 +235,8 @@ function truncate(s: string, len: number): string {
         />
       </div>
 
-      <div class="form-row-inline">
-        <div class="form-field">
+      <div :class="styles.formRowInline">
+        <div :class="styles.formField">
           <label>Provider</label>
           <select v-model="provider">
             <option
@@ -243,7 +249,7 @@ function truncate(s: string, len: number): string {
           </select>
         </div>
 
-        <div class="form-field">
+        <div :class="styles.formField">
           <label>Count</label>
           <select v-model="numImages">
             <option :value="1">
@@ -258,7 +264,7 @@ function truncate(s: string, len: number): string {
           </select>
         </div>
 
-        <div class="form-field">
+        <div :class="styles.formField">
           <label>Quality</label>
           <select v-model="quality">
             <option value="standard">
@@ -272,7 +278,7 @@ function truncate(s: string, len: number): string {
       </div>
 
       <button
-        class="btn primary"
+        :class="styles.btnPrimary"
         :disabled="!canGenerate"
         @click="generate"
       >
@@ -284,18 +290,17 @@ function truncate(s: string, len: number): string {
     <!-- Assets Section -->
     <section
       v-if="generatedAssets.length > 0"
-      class="section"
+      :class="styles.section"
     >
       <h4>2. Select Asset</h4>
-      <div class="assets-grid">
+      <div :class="styles.assetsGrid">
         <div
           v-for="asset in generatedAssets"
           :key="asset.sha256"
-          class="asset-card"
-          :class="{ selected: selectedAssetSha === asset.sha256 }"
+          :class="assetCardClass(asset.sha256, selectedAssetSha)"
           @click="selectAsset(asset.sha256)"
         >
-          <div class="asset-preview">
+          <div :class="styles.assetPreview">
             <img
               :src="resolveAssetUrl(asset.url)"
               :alt="asset.filename"
@@ -303,26 +308,26 @@ function truncate(s: string, len: number): string {
               @error="($event.target as HTMLImageElement).src = '/placeholder.svg'"
             >
           </div>
-          <div class="asset-info">
+          <div :class="styles.assetInfo">
             <div
-              class="asset-filename"
+              :class="styles.assetFilename"
               :title="asset.filename"
             >
               {{ truncate(asset.filename, 20) }}
             </div>
-            <div class="asset-meta">
+            <div :class="styles.assetMeta">
               <span
-                class="sha"
+                :class="styles.assetSha"
                 :title="asset.sha256"
               >
                 {{ asset.sha256.slice(0, 8) }}...
               </span>
-              <span class="provider">{{ asset.provider }}</span>
+              <span :class="styles.assetProvider">{{ asset.provider }}</span>
             </div>
           </div>
           <div
             v-if="selectedAssetSha === asset.sha256"
-            class="check-badge"
+            :class="styles.checkBadge"
           >
             &#10003;
           </div>
@@ -333,12 +338,12 @@ function truncate(s: string, len: number): string {
     <!-- Run Selection Section -->
     <section
       v-if="selectedAssetSha"
-      class="section"
+      :class="styles.section"
     >
-      <div class="step-header">
+      <div :class="styles.stepHeader">
         <h4>3. Select Run</h4>
         <button
-          class="btn"
+          :class="styles.btn"
           type="button"
           :disabled="isLoadingRuns"
           @click="loadRuns"
@@ -348,16 +353,16 @@ function truncate(s: string, len: number): string {
       </div>
 
       <!-- Search + Create row -->
-      <div class="run-tools">
+      <div :class="styles.runTools">
         <input
           v-model="runSearch"
-          class="run-search-input"
+          :class="styles.runSearchInput"
           placeholder="Search runs (id / event_type)…"
           :disabled="isLoadingRuns"
           @keydown.enter.prevent="loadRuns"
         >
         <button
-          class="btn"
+          :class="styles.btn"
           type="button"
           :disabled="isLoadingRuns"
           @click="loadRuns"
@@ -365,7 +370,7 @@ function truncate(s: string, len: number): string {
           Search
         </button>
         <button
-          class="btn primary"
+          :class="styles.btnPrimary"
           type="button"
           :disabled="isLoadingRuns"
           @click="createAndSelectRun"
@@ -377,10 +382,10 @@ function truncate(s: string, len: number): string {
       <!-- Empty state message -->
       <div
         v-if="runs.length === 0 && !isLoadingRuns"
-        class="empty-hint"
+        :class="styles.emptyHint"
       >
         No runs available.
-        <div class="hint-tip">
+        <div :class="styles.hintTip">
           Tip: click <strong>+ Create Run</strong> to start a <code>vision_image_review</code> run.
         </div>
       </div>
@@ -388,12 +393,12 @@ function truncate(s: string, len: number): string {
       <!-- Run dropdown selector -->
       <div
         v-else-if="runs.length > 0"
-        class="run-selector"
+        :class="styles.runSelector"
       >
-        <label class="form-label">Recent runs</label>
+        <label :class="styles.formLabel">Recent runs</label>
         <select
           v-model="selectedRunId"
-          class="run-select"
+          :class="styles.runSelect"
         >
           <option
             :value="null"
@@ -410,10 +415,10 @@ function truncate(s: string, len: number): string {
           </option>
         </select>
 
-        <div class="run-picker-footer">
+        <div :class="styles.runPickerFooter">
           <button
             v-if="runsHasMore"
-            class="btn"
+            :class="styles.btn"
             type="button"
             :disabled="isLoadingRuns"
             @click="loadMoreRuns"
@@ -422,7 +427,7 @@ function truncate(s: string, len: number): string {
           </button>
           <div
             v-else
-            class="runs-count"
+            :class="styles.runsCount"
           >
             Showing {{ runs.length }} run(s)
           </div>
@@ -433,21 +438,21 @@ function truncate(s: string, len: number): string {
     <!-- Attach Action -->
     <section
       v-if="selectedAssetSha && selectedRunId"
-      class="section action-section"
+      :class="styles.actionSection"
     >
       <h4>4. Attach</h4>
-      <div class="attach-summary">
-        <div class="summary-item">
-          <span class="label">Asset:</span>
-          <span class="value">{{ selectedAsset?.sha256.slice(0, 12) }}...</span>
+      <div :class="styles.attachSummary">
+        <div :class="styles.summaryItem">
+          <span :class="styles.summaryItemLabel">Asset:</span>
+          <span :class="styles.summaryItemValue">{{ selectedAsset?.sha256.slice(0, 12) }}...</span>
         </div>
-        <div class="summary-item">
-          <span class="label">Run:</span>
-          <span class="value">{{ selectedRunId?.slice(0, 12) }}...</span>
+        <div :class="styles.summaryItem">
+          <span :class="styles.summaryItemLabel">Run:</span>
+          <span :class="styles.summaryItemValue">{{ selectedRunId?.slice(0, 12) }}...</span>
         </div>
       </div>
       <button
-        class="btn primary attach-btn"
+        :class="styles.attachBtn"
         :disabled="!canAttach"
         @click="attachToRun"
       >
@@ -456,10 +461,10 @@ function truncate(s: string, len: number): string {
       </button>
       <div
         v-if="successMessage && !autoNavigate && lastAttached"
-        class="success-actions"
+        :class="styles.successActions"
       >
         <button
-          class="btn"
+          :class="styles.btn"
           type="button"
           @click="goToReview(lastAttached.runId)"
         >
@@ -469,417 +474,3 @@ function truncate(s: string, len: number): string {
     </section>
   </div>
 </template>
-
-<style scoped>
-.vision-attach-widget {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 16px;
-  max-width: 600px;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.widget-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.widget-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #999;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-.close-btn:hover {
-  background: #f5f5f5;
-  color: #333;
-}
-
-.message {
-  padding: 10px 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  font-weight: 500;
-}
-.message.error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-.message.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.section {
-  margin-bottom: 20px;
-}
-.section h4 {
-  margin: 0 0 12px 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.form-row {
-  margin-bottom: 12px;
-}
-.form-row label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 4px;
-}
-.form-row textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  resize: vertical;
-  font-family: inherit;
-}
-.form-row textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-row-inline {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.form-field {
-  flex: 1;
-}
-.form-field label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 4px;
-}
-.form-field select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-  background: #fff;
-}
-
-.btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.btn.primary {
-  background: #3b82f6;
-  color: #fff;
-}
-.btn.primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.assets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.asset-card {
-  position: relative;
-  border: 2px solid #e5e5e5;
-  border-radius: 10px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.asset-card:hover {
-  border-color: #bbb;
-}
-.asset-card.selected {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.asset-preview {
-  aspect-ratio: 1;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.asset-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.asset-info {
-  padding: 8px;
-  background: #fafafa;
-}
-.asset-filename {
-  font-size: 11px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.asset-meta {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 10px;
-  color: #888;
-}
-.asset-meta .sha {
-  font-family: monospace;
-}
-
-.check-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 20px;
-  height: 20px;
-  background: #3b82f6;
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.runs-list {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-}
-
-.run-item {
-  position: relative;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.run-item:last-child {
-  border-bottom: none;
-}
-.run-item:hover {
-  background: #fafafa;
-}
-.run-item.selected {
-  background: #eff6ff;
-}
-
-.run-id {
-  font-family: monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
-}
-.run-meta {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-  font-size: 11px;
-  color: #666;
-}
-.run-status {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 10px;
-}
-.run-status.ok {
-  background: #dcfce7;
-  color: #166534;
-}
-.run-status.blocked {
-  background: #fef3c7;
-  color: #92400e;
-}
-.run-status.error {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.loading,
-.empty {
-  padding: 20px;
-  text-align: center;
-  color: #888;
-  font-size: 13px;
-}
-
-.run-actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.step-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.step-header h4 {
-  margin: 0;
-}
-
-.run-tools {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.run-search-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-}
-.run-search-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.run-picker-footer {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.runs-count {
-  font-size: 12px;
-  color: #888;
-}
-
-.success-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.hint-tip {
-  margin-top: 8px;
-  font-size: 12px;
-}
-.hint-tip code {
-  background: #f3f4f6;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
-}
-
-.run-selector {
-  margin-top: 12px;
-}
-
-.form-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.run-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: monospace;
-  background: #fff;
-  cursor: pointer;
-}
-.run-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.empty-hint {
-  margin-top: 12px;
-  padding: 16px;
-  text-align: center;
-  color: #666;
-  font-size: 13px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 1px dashed #e5e5e5;
-}
-
-.action-section {
-  background: #f8fafc;
-  margin: 0 -16px -16px -16px;
-  padding: 16px;
-  border-radius: 0 0 12px 12px;
-  border-top: 1px solid #e5e5e5;
-}
-
-.attach-summary {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 12px;
-}
-.summary-item {
-  font-size: 12px;
-}
-.summary-item .label {
-  color: #666;
-}
-.summary-item .value {
-  font-family: monospace;
-  font-weight: 600;
-  color: #333;
-}
-
-.attach-btn {
-  width: 100%;
-}
-</style>
