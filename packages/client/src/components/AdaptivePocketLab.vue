@@ -198,7 +198,15 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, onMounted, watch, computed, reactive } from 'vue'
-import { usePocketSettings } from './adaptive/composables/usePocketSettings'
+import {
+  usePocketSettings,
+  useAdaptiveFeedPresets,
+  useToolpathRenderer,
+  useToolpathExport,
+  useEnergyMetrics,
+  useLiveLearning,
+  type Move,
+} from './adaptive/composables'
 
 import PreviewNcDrawer from './PreviewNcDrawer.vue'
 import CompareAfModes from './CompareAfModes.vue'
@@ -229,10 +237,40 @@ const {
   units,
 } = usePocketSettings()
 
-const overlays = ref<any[]>([])
-const showTight = ref(true)
-const showSlow = ref(true)
-const showFillets = ref(true)
+// Adaptive feed presets (from composable)
+const afPresets = useAdaptiveFeedPresets()
+const {
+  afMode,
+  afInlineMinF,
+  afMStart,
+  afMEnd,
+  savePresetForPost,
+  loadPresetForPost,
+  resetPresetForPost,
+  buildAdaptiveOverride,
+  loadPrefs: loadAfPrefs,
+} = afPresets
+
+// Toolpath renderer (from composable)
+const renderer = useToolpathRenderer()
+const { overlays, showTight, showSlow, showFillets, showBottleneckMap } = renderer
+
+// Toolpath export (from composable)
+const exporter = useToolpathExport()
+const { ncOpen, ncText, jobName, exportModes, selectedModes } = exporter
+
+// Energy metrics (from composable)
+const energyMetrics = useEnergyMetrics()
+const { materialId, energyOut, heatTS, includeCsvLinks, chipPct, toolPct, workPct, energyPolyline } = energyMetrics
+
+// Live learning (from composable)
+const learning = useLiveLearning()
+const { adoptOverrides, sessionOverrideFactor, liveLearnApplied, measuredSeconds, patchBodyWithSessionOverride, resetLiveLearning, computeLiveLearnFactor } = learning
+
+// ==========================================================================
+// Local State (remaining)
+// ==========================================================================
+
 const postId = ref('GRBL')
 
 // L.3 state
@@ -250,30 +288,6 @@ const machines = ref<any[]>([])
 const machineId = ref<string>(localStorage.getItem('toolbox.machine') || 'Mach4_Router_4x8')
 const selMachine = computed(() => machines.value.find(m => m.id === machineId.value))
 
-// M.3 Energy & Heat computed properties
-const chipPct = computed(() => !energyOut.value ? 0 : 100 * energyOut.value.totals.heat.chip_j / energyOut.value.totals.energy_j)
-const toolPct = computed(() => !energyOut.value ? 0 : 100 * energyOut.value.totals.heat.tool_j / energyOut.value.totals.energy_j)
-const workPct = computed(() => !energyOut.value ? 0 : 100 * energyOut.value.totals.heat.work_j / energyOut.value.totals.energy_j)
-
-const energyPolyline = computed(() => {
-  if (!energyOut.value) return ''
-  const seg = energyOut.value.segments
-  const cum: number[] = []
-  let s = 0
-  for (const k of seg) {
-    s += k.energy_j
-    cum.push(s)
-  }
-  if (!cum.length) return ''
-  const maxY = cum[cum.length - 1]
-  const W = 300, H = 120
-  return cum.map((v, i) => {
-    const x = (i / (cum.length - 1)) * W
-    const y = H - (v / maxY) * H
-    return `${x},${y}`
-  }).join(' ')
-})
-
 watch(machineId, (v: string) => {
   localStorage.setItem('toolbox.machine', v || '')
   // Auto-select matching post if profile has default
@@ -283,23 +297,12 @@ watch(machineId, (v: string) => {
   }
 })
 
-// Adaptive feed override state
-const afMode = ref<'inherit'|'comment'|'inline_f'|'mcode'>('inherit')
-const afInlineMinF = ref(600)
-const afMStart = ref('M52 P')
-const afMEnd = ref('M52 P100')
-
-// NC preview drawer state
-const ncOpen = ref(false)
-const ncText = ref('')
-
 // Compare modal state
 const compareOpen = ref(false)
 
 // M.1.1 Machine editor and compare state
 const machineEditorOpen = ref(false)
 const compareMachinesOpen = ref(false)
-const showBottleneckMap = ref(true)
 
 // M.3 Compare settings modal state
 const compareSettingsOpen = ref(false)
@@ -327,41 +330,6 @@ const optGridF = ref(6)
 const optGridS = ref(6)
 const optOut = ref<any>(null)
 
-// M.3 Energy & Heat state
-const materialId = ref('maple_hard')
-const energyOut = ref<any>(null)
-const heatTS = ref<any>(null)
-const includeCsvLinks = ref(true)  // Include CSV download links in thermal report
-
-// M.4 CAM Logs & Learning state
-const adoptOverrides = ref(true)  // Apply learned feed overrides
-const sessionOverrideFactor = ref<number | null>(null)  // Live learn session-only feed scale
-const liveLearnApplied = ref(false)  // Enable/disable live learn factor
-const measuredSeconds = ref<number | null>(null)  // Actual runtime for live learn
-
-// Live learn clamps (safety)
-const LL_MIN = 0.80  // -20%
-const LL_MAX = 1.25  // +25%
-
-// Batch export mode selection state (localStorage persisted)
-const exportModes = ref<{comment: boolean, inline_f: boolean, mcode: boolean}>((() => {
-  try {
-    return JSON.parse(localStorage.getItem('toolbox.af.modes') || '')
-  } catch {
-    return {comment: true, inline_f: true, mcode: true}
-  }
-})())
-
-watch(exportModes, () => {
-  localStorage.setItem('toolbox.af.modes', JSON.stringify(exportModes.value))
-}, { deep: true })
-
-// Job name for filename stem (localStorage persisted)
-const jobName = ref(localStorage.getItem('toolbox.job_name') || '')
-watch(jobName, (v: string) => {
-  localStorage.setItem('toolbox.job_name', v || '')
-})
-
 // Demo outer rectangle - can be replaced with real geometry from upload
 const loops = ref([ 
   { pts: [ [0,0],[100,0],[100,60],[0,60] ] } 
@@ -378,54 +346,8 @@ const planOut = computed(() => ({
 }))
 const profileId = computed(() => machineId.value)
 
-// Per-post adaptive-feed preset store (localStorage)
-type AfPreset = {
-  mode: 'inherit'|'comment'|'inline_f'|'mcode'
-  slowdown_threshold?: number|null
-  inline_min_f?: number|null
-  mcode_start?: string|null
-  mcode_end?: string|null
-}
-
-const PRESETS_KEY = 'toolbox.af.presets'
-function readPresets(): Record<string,AfPreset> {
-  try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || '{}') } catch { return {} }
-}
-function writePresets(p: Record<string,AfPreset>) {
-  localStorage.setItem(PRESETS_KEY, JSON.stringify(p))
-}
-
-function savePresetForPost(pid: string) {
-  if (!pid) return
-  const presets = readPresets()
-  presets[pid] = {
-    mode: afMode.value,
-    slowdown_threshold: undefined,
-    inline_min_f: afMode.value==='inline_f' ? afInlineMinF.value : undefined,
-    mcode_start: afMode.value==='mcode' ? afMStart.value : undefined,
-    mcode_end:   afMode.value==='mcode' ? afMEnd.value   : undefined
-  }
-  writePresets(presets)
-}
-
-function loadPresetForPost(pid: string) {
-  if (!pid) return false
-  const p = readPresets()[pid]
-  if (!p) return false
-  afMode.value = (p.mode || 'inherit') as any
-  if (p.inline_min_f != null) afInlineMinF.value = p.inline_min_f
-  if (p.mcode_start) afMStart.value = p.mcode_start
-  if (p.mcode_end)   afMEnd.value   = p.mcode_end
-  return true
-}
-
-function resetPresetForPost(pid: string) {
-  if (!pid) return
-  const presets = readPresets()
-  delete presets[pid]
-  writePresets(presets)
-  afMode.value = 'inherit'
-}
+// NOTE: AfPreset functions (savePresetForPost, loadPresetForPost, resetPresetForPost) 
+// now from useAdaptiveFeedPresets composable
 
 // Auto-load per-post preset when user changes post
 watch(postId, (pid: string)=>{ if (!pid) return; loadPresetForPost(pid) })
@@ -466,13 +388,7 @@ function handleMakeDefault(mode: string){
   compareOpen.value = false
 }
 
-function selectedModes(): string[] {
-  const sel: string[] = []
-  if (exportModes.value.comment) sel.push('comment')
-  if (exportModes.value.inline_f) sel.push('inline_f')
-  if (exportModes.value.mcode) sel.push('mcode')
-  return sel
-}
+// NOTE: selectedModes() now from useToolpathExport composable
 
 async function batchExport(){
   const base = buildBaseExportBody()
@@ -712,24 +628,7 @@ async function plan(){
   }
 }
 
-function buildAdaptiveOverride() {
-  if (afMode.value === 'inherit') {
-    return null
-  }
-  
-  const override: any = { mode: afMode.value }
-  
-  if (afMode.value === 'inline_f') {
-    override.inline_min_f = afInlineMinF.value
-  }
-  
-  if (afMode.value === 'mcode') {
-    override.mcode_start = afMStart.value
-    override.mcode_end = afMEnd.value
-  }
-  
-  return override
-}
+// NOTE: buildAdaptiveOverride() now from useAdaptiveFeedPresets composable
 
 async function previewNc() {
   const baseBody = {
@@ -837,21 +736,7 @@ async function exportProgram(){
   }
 }
 
-// Load adaptive feed preferences from localStorage
-function loadAfPrefs() {
-  const saved = localStorage.getItem('toolbox.adaptiveFeed')
-  if (saved) {
-    try {
-      const prefs = JSON.parse(saved)
-      afMode.value = prefs.mode || 'inherit'
-      afInlineMinF.value = prefs.inline_min_f || 600
-      afMStart.value = prefs.mcode_start || 'M52 P'
-      afMEnd.value = prefs.mcode_end || 'M52 P100'
-    } catch (e) {
-      console.warn('Failed to load adaptive feed prefs:', e)
-    }
-  }
-}
+// NOTE: loadAfPrefs() now from useAdaptiveFeedPresets composable
 
 // M.1.1 Machine editor and compare functions
 function openMachineEditor() {
@@ -1197,25 +1082,8 @@ async function exportThermalBundle() {
 }
 
 // M.4: Compute live learn session factor from estimated vs actual time
-function computeLiveLearnFactor(estimatedSeconds: number, actualSeconds: number): number | null {
-  if (!estimatedSeconds || !actualSeconds) return null
-  // time ~ 1 / feed ⇒ feed scale ≈ actual / estimated
-  // if slower than predicted (actual > est), raw > 1 ⇒ need MORE feed
-  const raw = actualSeconds / estimatedSeconds
-  const clamped = Math.max(LL_MIN, Math.min(LL_MAX, raw))
-  return Number(clamped.toFixed(3))
-}
-
-// M.4: Patch request body with session override and learned rules
-function patchBodyWithSessionOverride(body: any): any {
-  if (liveLearnApplied.value && sessionOverrideFactor.value) {
-    body.session_override_factor = sessionOverrideFactor.value
-  }
-  if (adoptOverrides.value) {
-    body.adopt_overrides = true
-  }
-  return body
-}
+// NOTE: computeLiveLearnFactor() and patchBodyWithSessionOverride() 
+// now from useLiveLearning composable
 
 // M.4: Log current run to database
 async function logCurrentRun(actualSeconds?: number) {
@@ -1395,18 +1263,8 @@ async function openCompareSettings() {
   }
 }
 
-// Save adaptive feed preferences to localStorage
-function saveAfPrefs() {
-  localStorage.setItem('toolbox.adaptiveFeed', JSON.stringify({
-    mode: afMode.value,
-    inline_min_f: afInlineMinF.value,
-    mcode_start: afMStart.value,
-    mcode_end: afMEnd.value
-  }))
-}
-
-// Watch for changes and save
-watch([afMode, afInlineMinF, afMStart, afMEnd], saveAfPrefs)
+// NOTE: saveAfPrefs() now internal to useAdaptiveFeedPresets composable
+// (auto-saves on change via watcher)
 
 onMounted(async () => {
   loadAfPrefs()
