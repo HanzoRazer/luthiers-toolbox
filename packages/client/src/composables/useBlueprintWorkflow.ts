@@ -118,8 +118,8 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const isExporting = ref(false)
 
   // Computed
-  const gcodeReady = computed(
-    () => rmosResult.value?.gcode?.inline && !!rmosResult.value?.gcode?.text
+  const gcodeReady = computed<boolean>(
+    () => !!(rmosResult.value?.gcode?.inline && rmosResult.value?.gcode?.text)
   )
 
   const currentPhase = computed(() => {
