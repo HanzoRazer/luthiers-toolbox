@@ -12,9 +12,17 @@
  * - Sort modes (default priority, name, created, lastUsed)
  * - Import/export as JSON
  * - Recently used views tracking
+ * - View versioning and migration
+ * - Usage statistics
  */
 
 import { computed, ref, type Ref } from 'vue'
+
+// ────────────────────────────────────────────────────────────────────────────
+// Constants
+// ────────────────────────────────────────────────────────────────────────────
+
+const CURRENT_VERSION = 2
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -28,8 +36,11 @@ export interface SavedView {
   description?: string
   tags?: string[]
   createdAt: string
+  updatedAt?: string
   lastUsedAt?: string | null
   isDefault?: boolean
+  version?: number
+  metadata?: Record<string, unknown>
 }
 
 export type ViewSortMode = 'default' | 'name' | 'created' | 'lastUsed'
@@ -55,6 +66,8 @@ export function useSavedViews(options: UseSavedViewsOptions) {
   // ─────────────────────────────────────────────────────────────────────────
 
   const savedViews = ref<SavedView[]>([])
+  const isLoading = ref(false)
+  const lastSyncTime = ref<number | null>(null)
 
   // Create form
   const newViewName = ref('')
@@ -62,6 +75,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
   const newViewTags = ref('')
   const saveError = ref<string | null>(null)
   const saveHint = ref('')
+  const validationErrors = ref<Record<string, string>>({})
 
   // View list filters
   const viewSearch = ref('')
@@ -133,6 +147,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       }
     }
 
+    const now = nowIso()
     return {
       id: String(v.id || makeViewId()),
       name: String(v.name || 'Unnamed'),
@@ -141,13 +156,49 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       tags: Array.isArray(v.tags)
         ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
         : [],
-      createdAt: String(v.createdAt || nowIso()),
+      createdAt: String(v.createdAt || now),
+      updatedAt: String(v.updatedAt || v.createdAt || now),
       lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
       isDefault: Boolean(v.isDefault),
+      version: CURRENT_VERSION,
+      metadata: (v.metadata as Record<string, unknown>) || {},
+    }
+  }
+
+  /**
+   * Migrate view to current version
+   */
+  function migrateToCurrent(v: Record<string, unknown>): SavedView {
+    const version = (v.version as number) || 1
+    const now = nowIso()
+
+    // Handle legacy format (v1)
+    if (version < 2 || isLegacyFormat(v)) {
+      return migrateLegacyView(v)
+    }
+
+    // Current format - normalize fields
+    return {
+      id: String(v.id || makeViewId()),
+      name: String(v.name || 'Unnamed'),
+      filters: (v.filters as Record<string, string>) || {},
+      description: String(v.description || ''),
+      tags: Array.isArray(v.tags)
+        ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
+        : [],
+      createdAt: String(v.createdAt || now),
+      updatedAt: String(v.updatedAt || v.createdAt || now),
+      lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
+      isDefault: Boolean(v.isDefault),
+      version: CURRENT_VERSION,
+      metadata: (v.metadata as Record<string, unknown>) || {},
     }
   }
 
   function loadSavedViews(): void {
+    isLoading.value = true
+    saveError.value = null
+
     try {
       const raw = localStorage.getItem(storageKey)
       if (!raw) {
@@ -161,38 +212,30 @@ export function useSavedViews(options: UseSavedViewsOptions) {
         savedViews.value = parsed
           .filter((v: unknown) => v && typeof v === 'object')
           .map((v: Record<string, unknown>) => {
-            // Check if this view needs migration from legacy format
-            if (isLegacyFormat(v)) {
+            const version = (v.version as number) || 1
+            if (version < CURRENT_VERSION || isLegacyFormat(v)) {
               needsMigration = true
-              return migrateLegacyView(v)
+              return migrateToCurrent(v)
             }
-
-            // New format - just normalize
-            return {
-              id: String(v.id || makeViewId()),
-              name: String(v.name || 'Unnamed'),
-              filters: (v.filters as Record<string, string>) || {},
-              description: String(v.description || ''),
-              tags: Array.isArray(v.tags)
-                ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
-                : [],
-              createdAt: String(v.createdAt || nowIso()),
-              lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
-              isDefault: Boolean(v.isDefault),
-            }
+            return migrateToCurrent(v)
           })
 
         // If any views were migrated, persist the new format
         if (needsMigration) {
-          console.log(`[useSavedViews] Migrated ${savedViews.value.length} views from legacy format`)
+          console.log(`[useSavedViews] Migrated ${savedViews.value.length} views to v${CURRENT_VERSION}`)
           persistSavedViews()
         }
+
+        lastSyncTime.value = Date.now()
       } else {
         savedViews.value = []
       }
     } catch (err) {
       console.error('Failed to load saved views', err)
+      saveError.value = 'Failed to load saved views. Data may be corrupted.'
       savedViews.value = []
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -201,6 +244,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       localStorage.setItem(storageKey, JSON.stringify(savedViews.value))
     } catch (err) {
       console.error('Failed to persist saved views', err)
+      saveError.value = 'Failed to save views. Local storage may be full.'
     }
   }
 
@@ -211,10 +255,12 @@ export function useSavedViews(options: UseSavedViewsOptions) {
   function saveCurrentView(): boolean {
     saveError.value = null
     saveHint.value = ''
+    validationErrors.value = {}
 
     const name = newViewName.value.trim()
     if (!name) {
       saveError.value = 'Name is required.'
+      validationErrors.value.name = 'Name is required.'
       return false
     }
 
@@ -223,6 +269,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     )
     if (existing) {
       saveError.value = 'A view with this name already exists.'
+      validationErrors.value.name = 'A view with this name already exists.'
       return false
     }
 
@@ -234,8 +281,11 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       description: newViewDescription.value.trim() || '',
       tags: parseTags(newViewTags.value),
       createdAt: now,
+      updatedAt: now,
       lastUsedAt: null,
       isDefault: savedViews.value.length === 0,
+      version: CURRENT_VERSION,
+      metadata: {},
     }
 
     savedViews.value = [...savedViews.value, view]
@@ -254,7 +304,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     // Update last used timestamp
     const now = nowIso()
     savedViews.value = savedViews.value.map((v) =>
-      v.id === view.id ? { ...v, lastUsedAt: now } : v
+      v.id === view.id ? { ...v, lastUsedAt: now, updatedAt: now } : v
     )
     persistSavedViews()
 
@@ -285,8 +335,9 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       return
     }
 
+    const now = nowIso()
     savedViews.value = savedViews.value.map((v) =>
-      v.id === id ? { ...v, name: trimmed } : v
+      v.id === id ? { ...v, name: trimmed, updatedAt: now } : v
     )
     persistSavedViews()
     saveHint.value = 'View renamed.'
@@ -315,6 +366,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
       id: makeViewId(),
       name: candidate,
       createdAt: now,
+      updatedAt: now,
       lastUsedAt: null,
       isDefault: false,
     }
@@ -342,10 +394,11 @@ export function useSavedViews(options: UseSavedViewsOptions) {
 
   function setDefaultView(id: string): void {
     let found = false
+    const now = nowIso()
     savedViews.value = savedViews.value.map((v) => {
       if (v.id === id) {
         found = true
-        return { ...v, isDefault: true }
+        return { ...v, isDefault: true, updatedAt: now }
       }
       return { ...v, isDefault: false }
     })
@@ -387,6 +440,20 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     return Array.from(set).sort((a, b) => a.localeCompare(b))
   })
 
+  /** Tag usage counts for display */
+  const tagCounts = computed<Map<string, number>>(() => {
+    const counts = new Map<string, number>()
+    for (const v of savedViews.value) {
+      if (Array.isArray(v.tags)) {
+        for (const tag of v.tags) {
+          const t = tag.trim().toLowerCase()
+          if (t) counts.set(t, (counts.get(t) || 0) + 1)
+        }
+      }
+    }
+    return counts
+  })
+
   function viewMatchesFilter(view: SavedView): boolean {
     const s = viewSearch.value.trim().toLowerCase()
     const tagFilter = viewTagFilter.value.trim()
@@ -409,8 +476,12 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     return haystack.includes(s)
   }
 
+  const filteredViews = computed<SavedView[]>(() => {
+    return savedViews.value.filter(viewMatchesFilter)
+  })
+
   const sortedViews = computed<SavedView[]>(() => {
-    const base = savedViews.value.filter(viewMatchesFilter)
+    const base = filteredViews.value
     const arr = [...base]
 
     if (viewSortMode.value === 'name') {
@@ -457,6 +528,17 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     return withTime.slice(0, 5).map((x) => x.view)
   })
 
+  /** Usage statistics */
+  const stats = computed(() => ({
+    total: savedViews.value.length,
+    filtered: filteredViews.value.length,
+    withTags: savedViews.value.filter((v) => v.tags?.length).length,
+    withDescription: savedViews.value.filter((v) => v.description).length,
+    defaultExists: !!defaultView.value,
+    lastSync: lastSyncTime.value,
+    storageUsed: new Blob([JSON.stringify(savedViews.value)]).size,
+  }))
+
   // ─────────────────────────────────────────────────────────────────────────
   // Import/Export
   // ─────────────────────────────────────────────────────────────────────────
@@ -485,18 +567,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
 
         const incoming: SavedView[] = data
           .filter((v: unknown) => v && typeof v === 'object')
-          .map((v: Record<string, unknown>) => ({
-            id: String(v.id || makeViewId()),
-            name: String(v.name || 'Unnamed view'),
-            filters: (v.filters as Record<string, string>) || {},
-            description: String(v.description || ''),
-            tags: Array.isArray(v.tags)
-              ? (v.tags as string[]).map(String).filter((t) => t.trim().length > 0)
-              : [],
-            createdAt: String(v.createdAt || nowIso()),
-            lastUsedAt: v.lastUsedAt ? String(v.lastUsedAt) : null,
-            isDefault: Boolean(v.isDefault),
-          }))
+          .map((v: Record<string, unknown>) => migrateToCurrent(v))
 
         // Merge by name (incoming overwrites)
         const byName = new Map<string, SavedView>()
@@ -525,7 +596,7 @@ export function useSavedViews(options: UseSavedViewsOptions) {
         savedViews.value = normalized
         persistSavedViews()
         saveError.value = null
-        saveHint.value = 'Views imported.'
+        saveHint.value = `${incoming.length} views imported.`
       } catch (err) {
         console.error('Failed to import views', err)
         saveError.value = 'Failed to import views.'
@@ -581,7 +652,13 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     if (!ts) return '—'
     try {
       const d = new Date(ts)
-      return d.toLocaleString()
+      return d.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
     } catch {
       return ts
     }
@@ -597,7 +674,13 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     const diffMin = Math.floor(diffSec / 60)
     const diffHr = Math.floor(diffMin / 60)
     const diffDay = Math.floor(diffHr / 24)
+    const diffWeek = Math.floor(diffDay / 7)
+    const diffMonth = Math.floor(diffDay / 30)
+    const diffYear = Math.floor(diffDay / 365)
 
+    if (diffYear > 0) return `${diffYear}y ago`
+    if (diffMonth > 0) return `${diffMonth}mo ago`
+    if (diffWeek > 0) return `${diffWeek}w ago`
     if (diffDay > 0) return `${diffDay}d ago`
     if (diffHr > 0) return `${diffHr}h ago`
     if (diffMin > 0) return `${diffMin}m ago`
@@ -611,11 +694,14 @@ export function useSavedViews(options: UseSavedViewsOptions) {
   return {
     // State
     savedViews,
+    isLoading,
+    lastSyncTime,
     newViewName,
     newViewDescription,
     newViewTags,
     saveError,
     saveHint,
+    validationErrors,
     viewSearch,
     viewTagFilter,
     viewSortMode,
@@ -626,8 +712,11 @@ export function useSavedViews(options: UseSavedViewsOptions) {
     defaultViewLabel,
     defaultView,
     allViewTags,
+    tagCounts,
+    filteredViews,
     sortedViews,
     recentViews,
+    stats,
 
     // Methods
     loadSavedViews,
