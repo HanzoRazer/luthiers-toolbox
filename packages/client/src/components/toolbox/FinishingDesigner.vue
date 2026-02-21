@@ -23,107 +23,11 @@
     </div>
 
     <!-- Tab 1: Finish Types & Planning -->
-    <div
+    <FinishTypesPanel
       v-if="activeTab === 'types'"
-      :class="styles.tabContent"
-    >
-      <div :class="styles.sectionHeader">
-        <h2>Finish Types</h2>
-        <p>Select a finishing technique and explore its requirements</p>
-      </div>
-
-      <div :class="styles.finishGrid">
-        <div
-          :class="styles.finishCard"
-          @click="selectFinish('varnish')"
-        >
-          <div :class="styles.finishName">
-            Simple Varnish
-          </div>
-          <div :class="styles.finishTime">
-            8-12 hours labor
-          </div>
-          <div :class="styles.finishInfo">
-            <div>• Easiest for beginners</div>
-            <div>• 3-5 coats</div>
-            <div>• Wipe-on or brush application</div>
-            <div>• Good durability</div>
-          </div>
-        </div>
-
-        <div
-          :class="styles.finishCard"
-          @click="selectFinish('french')"
-        >
-          <div :class="styles.finishName">
-            French Polish (Shellac)
-          </div>
-          <div :class="styles.finishTime">
-            20-40 hours labor
-          </div>
-          <div :class="styles.finishInfo">
-            <div>• Traditional hand-rubbed</div>
-            <div>• 50-100+ applications</div>
-            <div>• Requires skill and patience</div>
-            <div>• Beautiful thin finish</div>
-          </div>
-        </div>
-
-        <div
-          :class="styles.finishCard"
-          @click="selectFinish('nitro')"
-        >
-          <div :class="styles.finishName">
-            Nitrocellulose Lacquer
-          </div>
-          <div :class="styles.finishTime">
-            15-25 hours labor
-          </div>
-          <div :class="styles.finishInfo">
-            <div>• Classic guitar finish</div>
-            <div>• 6-12 coats + sanding</div>
-            <div>• Spray gun required</div>
-            <div>• Vintage tone reputation</div>
-          </div>
-        </div>
-
-        <div
-          :class="styles.finishCard"
-          @click="selectFinish('poly')"
-        >
-          <div :class="styles.finishName">
-            Polyurethane
-          </div>
-          <div :class="styles.finishTime">
-            10-18 hours labor
-          </div>
-          <div :class="styles.finishInfo">
-            <div>• Modern durable finish</div>
-            <div>• 3-6 coats</div>
-            <div>• Spray or wipe-on</div>
-            <div>• Thick protective layer</div>
-          </div>
-        </div>
-
-        <div
-          :class="styles.finishCard"
-          @click="selectFinish('oil')"
-        >
-          <div :class="styles.finishName">
-            Oil Finish (Tung/Linseed)
-          </div>
-          <div :class="styles.finishTime">
-            12-20 hours labor
-          </div>
-          <div :class="styles.finishInfo">
-            <div>• Natural "in-the-wood" finish</div>
-            <div>• 5-8 coats + buffing</div>
-            <div>• Hand application</div>
-            <div>• Easy to repair</div>
-          </div>
-        </div>
-      </div>
-    </div>
+      :styles="styles"
+      @select="selectFinish"
+    />
 
     <!-- Tab 2: Process Workflow -->
     <div
@@ -211,134 +115,23 @@
       </div>
 
       <div :class="styles.laborCalculator">
-        <div :class="styles.inputSection">
-          <h3>Your Labor Rate</h3>
-          <div :class="styles.inputGroup">
-            <label>Hourly Rate ($/hr)</label>
-            <input
-              v-model.number="hourlyRate"
-              type="number"
-              step="5"
-              min="10"
-              max="200"
-            >
-          </div>
-          <div :class="styles.ratePresets">
-            <button
-              :class="styles.btnPreset"
-              @click="hourlyRate = 25"
-            >
-              Hobbyist ($25)
-            </button>
-            <button
-              :class="styles.btnPreset"
-              @click="hourlyRate = 50"
-            >
-              Semi-Pro ($50)
-            </button>
-            <button
-              :class="styles.btnPreset"
-              @click="hourlyRate = 75"
-            >
-              Professional ($75)
-            </button>
-            <button
-              :class="styles.btnPreset"
-              @click="hourlyRate = 100"
-            >
-              Master ($100)
-            </button>
-          </div>
+        <LaborInputSection
+          :styles="styles"
+          v-model:hourly-rate="hourlyRate"
+          v-model:instrument-type="instrumentType"
+          v-model:finish-type="laborFinishType"
+        />
 
-          <h3>Project Size</h3>
-          <div :class="styles.inputGroup">
-            <label>Instrument Type</label>
-            <select v-model="instrumentType">
-              <option value="full-body">
-                Full Body Electric (Strat/Les Paul)
-              </option>
-              <option value="neck">
-                Neck Only
-              </option>
-              <option value="acoustic">
-                Acoustic Guitar
-              </option>
-              <option value="classical">
-                Classical Guitar
-              </option>
-              <option value="bass">
-                Bass Guitar
-              </option>
-              <option value="violin">
-                Violin
-              </option>
-            </select>
-          </div>
-
-          <div :class="styles.inputGroup">
-            <label>Finish Type</label>
-            <select v-model="laborFinishType">
-              <option value="varnish">
-                Simple Varnish
-              </option>
-              <option value="french">
-                French Polish
-              </option>
-              <option value="nitro">
-                Nitrocellulose
-              </option>
-              <option value="poly">
-                Polyurethane
-              </option>
-              <option value="oil">
-                Oil Finish
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div :class="styles.resultsSection">
-          <h3>Labor Cost Breakdown</h3>
-          <div :class="styles.costBreakdown">
-            <div :class="styles.costRow">
-              <span>Surface Preparation</span>
-              <span :class="styles.costHours">{{ prepHours }} hrs</span>
-              <span :class="styles.costValue">${{ (prepHours * hourlyRate).toFixed(2) }}</span>
-            </div>
-            <div :class="styles.costRow">
-              <span>Finish Application</span>
-              <span :class="styles.costHours">{{ applicationHours }} hrs</span>
-              <span :class="styles.costValue">${{ (applicationHours * hourlyRate).toFixed(2) }}</span>
-            </div>
-            <div :class="styles.costRow">
-              <span>Sanding Between Coats</span>
-              <span :class="styles.costHours">{{ sandingHours }} hrs</span>
-              <span :class="styles.costValue">${{ (sandingHours * hourlyRate).toFixed(2) }}</span>
-            </div>
-            <div :class="styles.costRow">
-              <span>Final Buffing/Polishing</span>
-              <span :class="styles.costHours">{{ buffingHours }} hrs</span>
-              <span :class="styles.costValue">${{ (buffingHours * hourlyRate).toFixed(2) }}</span>
-            </div>
-            <div :class="styles.costRowTotal">
-              <span><strong>Total Labor</strong></span>
-              <span :class="styles.costHours"><strong>{{ totalHours }} hrs</strong></span>
-              <span :class="styles.costValue"><strong>${{ totalLaborCost.toFixed(2) }}</strong></span>
-            </div>
-          </div>
-
-          <div :class="styles.insightBox">
-            <h4>💡 Pricing Insight</h4>
-            <p>
-              At ${{ hourlyRate }}/hr, your finishing labor adds <strong>${{ totalLaborCost.toFixed(2) }}</strong>
-              to the instrument cost. This doesn't include materials (~$30-150) or overhead.
-            </p>
-            <p>
-              Many builders undercharge by 30-50% by not tracking finishing time accurately.
-              This calculator helps you price realistically.
-            </p>
-          </div>
-        </div>
+        <LaborResultsSection
+          :styles="styles"
+          :hourly-rate="hourlyRate"
+          :prep-hours="prepHours"
+          :application-hours="applicationHours"
+          :sanding-hours="sandingHours"
+          :buffing-hours="buffingHours"
+          :total-hours="totalHours"
+          :total-labor-cost="totalLaborCost"
+        />
       </div>
     </div>
 
@@ -460,61 +253,13 @@
           </button>
         </div>
 
-        <div :class="styles.burstPreview">
-          <h3>Preview</h3>
-          <div :class="styles.previewCanvas">
-            <svg
-              width="300"
-              height="400"
-              viewBox="0 0 300 400"
-            >
-              <!-- Body outline -->
-              <ellipse
-                cx="150"
-                cy="200"
-                rx="140"
-                ry="180"
-                fill="none"
-                stroke="#333"
-                stroke-width="2"
-              />
-              
-              <!-- Burst gradient (simplified visual) -->
-              <defs>
-                <radialGradient
-                  :id="'burst-gradient'"
-                  cx="50%"
-                  cy="40%"
-                >
-                  <stop
-                    offset="0%"
-                    :stop-color="centerColor"
-                  />
-                  <stop
-                    v-if="midColor && burstType !== 'solid'"
-                    offset="50%"
-                    :stop-color="midColor"
-                  />
-                  <stop
-                    offset="100%"
-                    :stop-color="edgeColor"
-                  />
-                </radialGradient>
-              </defs>
-              <ellipse
-                cx="150"
-                cy="160"
-                rx="140"
-                ry="180"
-                :fill="`url(#burst-gradient)`"
-                opacity="0.8"
-              />
-            </svg>
-          </div>
-          <p :class="styles.previewNote">
-            Simplified preview - actual burst will blend more smoothly
-          </p>
-        </div>
+        <BurstPreviewCanvas
+          :styles="styles"
+          :center-color="centerColor"
+          :mid-color="midColor"
+          :edge-color="edgeColor"
+          :burst-type="burstType"
+        />
       </div>
     </div>
   </div>
@@ -523,6 +268,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import styles from './FinishingDesigner.module.css'
+import FinishTypesPanel from './finishing/FinishTypesPanel.vue'
+import LaborInputSection from './finishing/LaborInputSection.vue'
+import LaborResultsSection from './finishing/LaborResultsSection.vue'
+import BurstPreviewCanvas from './finishing/BurstPreviewCanvas.vue'
 
 // Tab management
 const tabs = [
