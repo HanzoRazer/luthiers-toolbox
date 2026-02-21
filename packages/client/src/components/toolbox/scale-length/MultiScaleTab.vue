@@ -1,13 +1,13 @@
 <template>
-  <div :class="styles.tabContent">
-    <div :class="styles.sectionHeader">
+  <div :class="shared.tabContent">
+    <div :class="shared.sectionHeader">
       <h2>Multi-Scale (Fanned Fret) Innovation</h2>
       <p>Why modern guitars are moving beyond single scale lengths</p>
     </div>
 
     <div :class="styles.multiscaleEducation">
       <div :class="styles.problemSolution">
-        <div :class="styles.problemCard">
+        <div :class="shared.highlightCardDanger">
           <h3>🔴 The Single-Scale Compromise</h3>
           <p>Traditional guitars force all strings to use the same scale length:</p>
           <ul>
@@ -21,7 +21,7 @@
           </div>
         </div>
 
-        <div :class="styles.solutionCard">
+        <div :class="shared.highlightCardSuccess">
           <h3>✅ The Multi-Scale Solution</h3>
           <p>Different scale length for each string, optimized independently:</p>
           <ul>
@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      <div :class="styles.multiscaleDiagram">
+      <div :class="shared.card">
         <h3>Visual: How Fanned Frets Work</h3>
         <div :class="styles.fretVisualization">
           <div :class="styles.fretLineTreble">
@@ -56,7 +56,7 @@
         </p>
       </div>
 
-      <div :class="styles.tensionComparison">
+      <div :class="shared.card">
         <h3>Tension Comparison: Single vs Multi-Scale</h3>
         <div :class="styles.comparisonTable">
           <div :class="styles.comparisonHeader">
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <div :class="styles.customScaleExploration">
+      <div :class="shared.highlightCardInfo">
         <h3>Custom Scale Exploration</h3>
         <p>
           Want to innovate? Consider a 24.9" hybrid scale:
@@ -103,7 +103,7 @@
           Or go extreme: 28" baritone for drop G# tuning, 22" travel guitar for portability.
           The math is your guide!
         </p>
-        <button :class="styles.btnExplore" @click="$emit('goToTension')">
+        <button :class="shared.btnPrimary" @click="$emit('goToTension')">
           Explore Custom Scales in Tension Calculator →
         </button>
       </div>
@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import styles from "./MultiScaleTab.module.css";
+import shared from "./scale-length-shared.module.css";
 
 defineEmits<{
   goToTension: []
