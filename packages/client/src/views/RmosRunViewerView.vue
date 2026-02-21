@@ -22,6 +22,7 @@ import RiskBadge from "@/components/ui/RiskBadge.vue";
 import OverrideBanner from "@/components/ui/OverrideBanner.vue";
 import WhyPanel from "@/components/rmos/WhyPanel.vue";
 import styles from "./RmosRunViewerView.module.css";
+import { buttons, badges, loaders } from "@/styles/shared";
 
 const route = useRoute();
 const router = useRouter();
@@ -53,26 +54,26 @@ const riskLevel = computed(() => {
 // CSS Module class helpers
 function statusBadgeClass(status: string): string {
   const s = status?.toLowerCase();
-  if (s === "completed" || s === "success") return styles.badgeCompleted;
-  if (s === "pending" || s === "in_progress") return styles.badgePending;
-  if (s === "failed" || s === "error") return styles.badgeFailed;
-  return styles.badge;
+  if (s === "completed" || s === "success") return badges.badgeSuccess;
+  if (s === "pending" || s === "in_progress") return badges.badgeWarning;
+  if (s === "failed" || s === "error") return badges.badgeError;
+  return badges.badge;
 }
 
 function gateBadgeClass(gate: string): string {
   const g = gate?.toLowerCase();
-  if (g === "approved" || g === "green") return styles.gateBadgeApproved;
-  if (g === "blocked" || g === "red") return styles.gateBadgeBlocked;
-  if (g === "pending" || g === "yellow") return styles.gateBadgePending;
-  return styles.gateBadge;
+  if (g === "approved" || g === "green") return badges.badgeGreen;
+  if (g === "blocked" || g === "red") return badges.badgeRed;
+  if (g === "pending" || g === "yellow") return badges.badgeYellow;
+  return badges.badge;
 }
 
 function riskBadgeClass(level: string): string {
   const l = level?.toLowerCase();
-  if (l === "green") return styles.riskBadgeGreen;
-  if (l === "yellow") return styles.riskBadgeYellow;
-  if (l === "red") return styles.riskBadgeRed;
-  return styles.riskBadge;
+  if (l === "green") return badges.badgeGreen;
+  if (l === "yellow") return badges.badgeYellow;
+  if (l === "red") return badges.badgeRed;
+  return badges.badge;
 }
 
 function rulePillClass(level: string): string {
@@ -231,7 +232,7 @@ async function downloadAttachment(att: any) {
       >
         <button
           v-if="hasExplainability"
-          :class="styles.btn"
+          :class="buttons.btn"
           :aria-expanded="showWhy"
           title="Show why this decision happened"
           @click="showWhy = !showWhy"
@@ -239,26 +240,26 @@ async function downloadAttachment(att: any) {
           Why?
         </button>
         <button
-          :class="styles.btn"
+          :class="buttons.btn"
           @click="handleDownload"
         >
           Download JSON
         </button>
         <button
-          :class="styles.btnSuccess"
+          :class="buttons.btnSuccess"
           :disabled="loading"
           @click="downloadOperatorPack"
         >
           Operator Pack (.zip)
         </button>
         <button
-          :class="styles.btnPrimary"
+          :class="buttons.btnPrimary"
           @click="goToDiff"
         >
           Compare (Diff)
         </button>
         <button
-          :class="styles.btn"
+          :class="buttons.btn"
           :disabled="!parentRunId"
           :title="parentRunId ? 'Compare with parent run: ' + parentRunId.slice(0, 16) + '...' : 'No parent run'"
           @click="goToDiffWithParent"
@@ -273,7 +274,7 @@ async function downloadAttachment(att: any) {
       v-if="loading"
       :class="styles.stateLoading"
     >
-      <div :class="styles.spinner" />
+      <div :class="loaders.spinnerLg" />
       <p>Loading run artifact...</p>
     </div>
 
@@ -285,7 +286,7 @@ async function downloadAttachment(att: any) {
       <h2>Error</h2>
       <p>{{ error }}</p>
       <button
-        :class="styles.btn"
+        :class="buttons.btn"
         @click="loadRun"
       >
         Retry
@@ -408,14 +409,14 @@ async function downloadAttachment(att: any) {
             <h3>Advisory Explanation</h3>
             <div :class="styles.advisoryActions">
               <button
-                :class="styles.btnSm"
+                :class="buttons.btnSm"
                 :disabled="isExplaining"
                 @click="generateAdvisoryExplanation(false)"
               >
                 {{ assistantExplanationAttachment ? 'Refresh Advisory' : 'Generate Advisory' }}
               </button>
               <button
-                :class="styles.btnSm"
+                :class="buttons.btnSm"
                 :disabled="isExplaining"
                 title="Regenerate even if one exists"
                 @click="generateAdvisoryExplanation(true)"
@@ -568,7 +569,7 @@ async function downloadAttachment(att: any) {
             <span :class="styles.attMime">{{ att.mime }}</span>
             <span :class="styles.attSize">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
             <button
-              :class="styles.btnSm"
+              :class="buttons.btnSm"
               :disabled="loading"
               @click="downloadAttachment(att)"
             >
@@ -636,7 +637,7 @@ async function downloadAttachment(att: any) {
     >
       <p>No run ID provided</p>
       <button
-        :class="styles.btn"
+        :class="buttons.btn"
         @click="goBack"
       >
         Go to Runs List

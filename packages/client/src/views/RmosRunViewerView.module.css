@@ -46,49 +46,20 @@
    Buttons
    ============================================================================= */
 
-.btn {
+/* btn, btnPrimary, btnSuccess, btnSm: moved to @/styles/shared/buttons.module.css */
+
+.btnBack {
   padding: 0.5rem 1rem;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   background: #fff;
   cursor: pointer;
   font-size: 0.9rem;
-}
-
-.btn:hover {
-  background: #f8f9fa;
-}
-
-.btnBack {
-  composes: btn;
   color: #6c757d;
 }
 
-.btnPrimary {
-  composes: btn;
-  background: #0066cc;
-  border-color: #0066cc;
-  color: #fff;
-}
-
-.btnPrimary:hover {
-  background: #0052a3;
-}
-
-.btnSuccess {
-  composes: btn;
-  background: #28a745;
-  border-color: #28a745;
-  color: #fff;
-}
-
-.btnSuccess:hover {
-  background: #218838;
-}
-
-.btnSm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
+.btnBack:hover {
+  background: #f8f9fa;
 }
 
 /* =============================================================================
@@ -102,19 +73,7 @@
   padding: 3rem;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #dee2e6;
-  border-top-color: #0066cc;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+/* spinner: moved to @/styles/shared/loaders.module.css */
 
 .stateError {
   background: #f8d7da;
@@ -151,37 +110,14 @@
   gap: 0.5rem;
 }
 
-.badge {
+/* badge, badgeCompleted, badgeSuccess, badgePending, badgeFailed: moved to @/styles/shared/badges.module.css */
+
+.badgeMode {
   padding: 0.3rem 0.75rem;
   border-radius: 4px;
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
-}
-
-.badgeCompleted,
-.badgeSuccess {
-  composes: badge;
-  background: #d4edda;
-  color: #155724;
-}
-
-.badgePending,
-.badgeInProgress {
-  composes: badge;
-  background: #fff3cd;
-  color: #856404;
-}
-
-.badgeFailed,
-.badgeError {
-  composes: badge;
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.badgeMode {
-  composes: badge;
   background: #e7f1ff;
   color: #004085;
 }
@@ -222,31 +158,7 @@
   color: #6c757d;
 }
 
-.gateBadge,
-.riskBadge {
-  padding: 0.3rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.gateBadgeApproved,
-.riskBadgeGreen {
-  background: #d4edda;
-  color: #155724;
-}
-
-.gateBadgeBlocked,
-.riskBadgeRed {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.gateBadgePending,
-.riskBadgeYellow {
-  background: #fff3cd;
-  color: #856404;
-}
+/* gateBadge, riskBadge: moved to @/styles/shared/badges.module.css (badgeGreen, badgeYellow, badgeRed) */
 
 .decisionItemWarnings {
   composes: decisionItem;
@@ -434,19 +346,16 @@
     color: #f8f9fa;
   }
 
-  .btn {
+  /* btn dark mode: handled in shared/buttons.module.css */
+
+  .btnBack {
     background: #343a40;
     border-color: #495057;
     color: #f8f9fa;
   }
 
-  .btn:hover {
+  .btnBack:hover {
     background: #495057;
-  }
-
-  .btnPrimary {
-    background: #0066cc;
-    border-color: #0066cc;
   }
 
   .idBanner {
