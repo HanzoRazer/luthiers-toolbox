@@ -19,7 +19,7 @@
             @change="onFileChange"
           >
           <button
-            :class="styles.btn"
+            :class="buttons.btn"
             :disabled="!selectedFile || importing"
             @click="doImport"
           >
@@ -66,7 +66,7 @@
       <h2>Facets</h2>
       <div
         v-if="facetsLoading"
-        :class="styles.muted"
+        :class="loaders.muted"
       >
         Loading facets...
       </div>
@@ -117,7 +117,7 @@
       <h2>Recent</h2>
       <div
         v-if="recentLoading"
-        :class="styles.muted"
+        :class="loaders.muted"
       >
         Loading...
       </div>
@@ -129,7 +129,7 @@
       </div>
       <div
         v-else-if="!recentData?.entries?.length"
-        :class="styles.muted"
+        :class="loaders.muted"
       >
         No recent attachments. Import a viewer_pack to get started.
       </div>
@@ -153,13 +153,13 @@
           <div :class="styles.recentActions">
             <a
               v-if="isViewerPack(entry)"
-              :class="[styles.btn, styles.btnSm]"
+              :class="[buttons.btn, buttons.btnSm]"
               :href="`/tools/audio-analyzer?sha256=${entry.sha256}`"
             >
               Open
             </a>
             <a
-              :class="[styles.btn, styles.btnSm]"
+              :class="[buttons.btn, buttons.btnSm]"
               :href="getDownloadUrl(entry.sha256)"
               download
             >
@@ -169,7 +169,7 @@
         </div>
         <button
           v-if="recentData.next_cursor"
-          :class="styles.btn"
+          :class="buttons.btn"
           @click="loadMoreRecent"
         >
           More
@@ -200,7 +200,7 @@
 
       <div
         v-if="browseLoading"
-        :class="styles.muted"
+        :class="loaders.muted"
       >
         Loading...
       </div>
@@ -239,10 +239,10 @@
             <td>
               <span
                 v-if="isViewerPack(entry)"
-                :class="[styles.validationBadge, {
-                  [styles.badgePass]: entry.validation_passed === true,
-                  [styles.badgeFail]: entry.validation_passed === false,
-                  [styles.badgeUnknown]: entry.validation_passed === undefined
+                :class="[badges.badge, {
+                  [badges.badgePass]: entry.validation_passed === true,
+                  [badges.badgeFail]: entry.validation_passed === false,
+                  [badges.badgeUnknown]: entry.validation_passed === undefined
                 }]"
                 :title="getValidationTooltip(entry)"
               >
@@ -262,13 +262,13 @@
             <td :class="styles.actionsCell">
               <a
                 v-if="isViewerPack(entry)"
-                :class="styles.btn"
+                :class="buttons.btn"
                 :href="`/tools/audio-analyzer?sha256=${entry.sha256}`"
               >
                 Open
               </a>
               <a
-                :class="styles.btn"
+                :class="buttons.btn"
                 :href="getDownloadUrl(entry.sha256)"
                 download
               >
@@ -285,7 +285,7 @@
         :class="styles.pagination"
       >
         <button
-          :class="styles.btn"
+          :class="buttons.btn"
           :disabled="!browseData.next_cursor"
           @click="loadNextPage"
         >
@@ -315,6 +315,7 @@ import type {
   AttachmentMetaEntry,
 } from "@/types/rmosAcoustics";
 import styles from "./AudioAnalyzerLibrary.module.css";
+import { buttons, badges, loaders } from "@/styles/shared";
 
 // Import state
 const fileInput = ref<HTMLInputElement | null>(null);

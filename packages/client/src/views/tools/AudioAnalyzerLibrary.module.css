@@ -183,10 +183,7 @@
   flex-shrink: 0;
 }
 
-.btnSm {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-}
+/* btnSm: moved to @/styles/shared/buttons.module.css */
 
 /* Browse Table */
 .filterBar {
@@ -271,25 +268,7 @@
   gap: 6px;
 }
 
-.btn {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  color: inherit;
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-.btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* btn: moved to @/styles/shared/buttons.module.css */
 
 .pagination {
   margin-top: 12px;
@@ -297,36 +276,8 @@
   justify-content: flex-end;
 }
 
-.muted {
-  opacity: 0.7;
-  padding: 8px 0;
-}
-
-/* Validation badge styles */
-.validationBadge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.badgePass {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.badgeFail {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.badgeUnknown {
-  background: rgba(107, 114, 128, 0.2);
-  color: #9ca3af;
-}
+/* muted: moved to @/styles/shared/loaders.module.css */
+/* validationBadge, badgePass, badgeFail, badgeUnknown: moved to @/styles/shared/badges.module.css */
 
 .validationNa {
   color: #6b7280;

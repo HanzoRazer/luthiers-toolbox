@@ -67,13 +67,13 @@
     <div :class="styles.navigationButtons">
       <button
         v-if="currentStage > 0"
-        :class="styles.btnSecondary"
+        :class="buttons.btnSecondary"
         @click="prevStage()"
       >
         ⬅️ Previous Stage
       </button>
       <button
-        :class="styles.btnSecondary"
+        :class="buttons.btnSecondary"
         @click="resetPipeline"
       >
         🔄 Reset Pipeline
@@ -98,6 +98,7 @@ import Stage3ReconstructionPanel from '@/components/pipeline/Stage3Reconstructio
 import Stage4ToolpathPanel from '@/components/pipeline/Stage4ToolpathPanel.vue'
 import BlueprintPresetPanel from '@/components/pipeline/BlueprintPresetPanel.vue'
 import styles from './PipelineLab.module.css'
+import { buttons } from '@/styles/shared'
 
 // CSS Module class helpers
 function stageItemClass(idx: number, currentStage: number): string {

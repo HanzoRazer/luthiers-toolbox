@@ -1,0 +1,74 @@
+/* Shared Loader/Spinner Styles
+ * Used across 3+ components - consolidated to reduce duplication
+ */
+
+.spinner {
+  border: 2px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinnerSm {
+  composes: spinner;
+  width: 16px;
+  height: 16px;
+}
+
+.spinnerMd {
+  composes: spinner;
+  width: 24px;
+  height: 24px;
+}
+
+.spinnerLg {
+  composes: spinner;
+  width: 40px;
+  height: 40px;
+}
+
+.spinnerXl {
+  composes: spinner;
+  width: 60px;
+  height: 60px;
+  border-width: 4px;
+}
+
+/* Centered spinner container */
+.spinnerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* Loading overlay */
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Loading text */
+.loadingText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+/* Muted/placeholder text */
+.muted {
+  opacity: 0.7;
+  padding: 0.5rem 0;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
