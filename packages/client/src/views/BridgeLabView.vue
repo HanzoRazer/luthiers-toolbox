@@ -213,40 +213,11 @@ Features:
           </button>
           
           <!-- Toolpath Results -->
-          <div
-            v-if="toolpathResult"
-            class="toolpath-results"
-          >
-            <h4>Toolpath Generated</h4>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="label">Moves:</span>
-                <span class="value">{{ toolpathResult.stats?.move_count || 0 }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Length:</span>
-                <span class="value">{{ (toolpathResult.stats?.length_mm || 0).toFixed(1) }} mm</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Time:</span>
-                <span class="value">{{ (toolpathResult.stats?.time_s || 0).toFixed(1) }} s</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Area:</span>
-                <span class="value">{{ (toolpathResult.stats?.area_mm2 || 0).toFixed(1) }} mm²</span>
-              </div>
-            </div>
-            
-            <!-- Backplot Viewer -->
-            <div class="backplot-container">
-              <CamBackplotViewer 
-                :moves="toolpathResult.moves || []"
-                :stats="toolpathResult.stats"
-                :units="adaptiveParams.units"
-                :machine-limits="machineLimits"
-              />
-            </div>
-          </div>
+          <ToolpathResultsPanel
+            :toolpath-result="toolpathResult"
+            :units="adaptiveParams.units"
+            :machine-limits="machineLimits"
+          />
         </div>
       </div>
 
@@ -263,49 +234,14 @@ Features:
           >3</span>
         </div>
         
-        <div class="export-panel">
-          <h3>Post-Processor Selection</h3>
-          
-          <div class="post-selector">
-            <label>Select Post-Processor</label>
-            <select v-model="selectedPostId">
-              <option
-                v-for="post in availablePosts"
-                :key="post.id"
-                :value="post.id"
-              >
-                {{ post.name || post.id }}
-              </option>
-            </select>
-          </div>
-          
-          <div class="post-mode-selector">
-            <label>Export Mode</label>
-            <select v-model="postMode">
-              <option value="standard">
-                Standard (Full G-code)
-              </option>
-              <option value="dry_run">
-                Dry Run (Rapid only)
-              </option>
-            </select>
-          </div>
-          
-          <button 
-            class="btn-primary" 
-            :disabled="exportRunning || !selectedPostId"
-            @click="exportGcode"
-          >
-            {{ exportRunning ? 'Exporting...' : '📤 Export G-code' }}
-          </button>
-          
-          <p
-            v-if="exportedFilename"
-            class="success-message"
-          >
-            ✅ Exported: {{ exportedFilename }}
-          </p>
-        </div>
+        <GcodeExportPanel
+          v-model:selected-post-id="selectedPostId"
+          v-model:post-mode="postMode"
+          :available-posts="availablePosts"
+          :export-running="exportRunning"
+          :exported-filename="exportedFilename"
+          @export="exportGcode"
+        />
       </div>
 
       <!-- Stage 4: Simulate G-code -->
@@ -353,40 +289,7 @@ Features:
           </button>
           
           <!-- Simulation Results -->
-          <div
-            v-if="simResult"
-            class="sim-results"
-          >
-            <h4>Simulation Results</h4>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="label">Moves:</span>
-                <span class="value">{{ simResult.move_count || 0 }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Length:</span>
-                <span class="value">{{ (simResult.length_mm || 0).toFixed(1) }} mm</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Time:</span>
-                <span class="value">{{ (simResult.time_s || 0).toFixed(1) }} s</span>
-              </div>
-              <div class="stat-item">
-                <span class="label">Units:</span>
-                <span class="value">{{ simResult.units }}</span>
-              </div>
-            </div>
-            
-            <!-- Simulation Backplot -->
-            <div class="backplot-container">
-              <CamBackplotViewer 
-                :moves="simResult.moves || []"
-                :stats="{ move_count: simResult.move_count, time_s: simResult.time_s }"
-                :sim-issues="simResult.issues"
-                :units="simResult.units || 'mm'"
-              />
-            </div>
-          </div>
+          <SimulationResultsPanel :sim-result="simResult" />
         </div>
       </div>
     </div>
@@ -398,9 +301,11 @@ import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
 import BridgeCalculatorPanel from '@/components/BridgeCalculatorPanel.vue'
 import CamBridgePreflightPanel from '@/components/CamBridgePreflightPanel.vue'
-import CamBackplotViewer from '@/components/CamBackplotViewer.vue'
 import CamMachineEnvelopePanel from '@/components/CamMachineEnvelopePanel.vue'
 import CamBridgeToPipelinePanel from '@/components/cam/CamBridgeToPipelinePanel.vue'
+import ToolpathResultsPanel from './bridge_lab/ToolpathResultsPanel.vue'
+import GcodeExportPanel from './bridge_lab/GcodeExportPanel.vue'
+import SimulationResultsPanel from './bridge_lab/SimulationResultsPanel.vue'
 
 interface MachineLimits {
   min_x?: number | null
@@ -834,81 +739,6 @@ async function simulateGcode() {
   cursor: not-allowed;
 }
 
-.toolpath-results, .sim-results {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.toolpath-results h4, .sim-results h4 {
-  margin: 0 0 1rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-item {
-  display: flex;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.stat-item .label {
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.stat-item .value {
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.backplot-container {
-  margin-top: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-/* Export Panel */
-.post-selector, .post-mode-selector {
-  margin-bottom: 1rem;
-}
-
-.post-selector label, .post-mode-selector label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.post-selector select, .post-mode-selector select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.success-message {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #d1fae5;
-  color: #065f46;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
 
 /* Simulate Panel */
 .help-text {
