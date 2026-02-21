@@ -225,108 +225,41 @@
       <!-- Right Column: Preview & Validation -->
       <div :class="styles.previewSection">
         <!-- Radius Validation -->
-        <div
+        <ContourRadiusValidation
           v-if="radiusValidation"
-          :class="styles.radiusValidation"
-        >
-          <h3>Radius Validation</h3>
-          <div :class="[styles.validationBadge, styles[`validationBadge${radiusValidation.status.charAt(0).toUpperCase()}${radiusValidation.status.slice(1)}`]]">
-            {{ radiusValidation.status.toUpperCase() }}
-          </div>
-          <div :class="styles.validationDetails">
-            <div :class="styles.detailRow">
-              <span :class="styles.label">Minimum radius:</span>
-              <span :class="styles.value">{{ radiusValidation.min_radius?.toFixed(1) || 'N/A' }} mm</span>
-            </div>
-            <div :class="styles.detailRow">
-              <span :class="styles.label">Requested radius:</span>
-              <span :class="styles.value">{{ radiusValidation.requested_radius?.toFixed(1) || 'N/A' }} mm</span>
-            </div>
-            <div :class="styles.detailRow">
-              <span :class="styles.label">Safety margin:</span>
-              <span :class="styles.value">{{ radiusValidation.safety_margin?.toFixed(1) || 'N/A' }}%</span>
-            </div>
-          </div>
-          <div :class="styles.validationMessage">
-            {{ radiusValidation.message }}
-          </div>
-        </div>
+          :status="radiusValidation.status"
+          :min-radius="radiusValidation.min_radius"
+          :requested-radius="radiusValidation.requested_radius"
+          :safety-margin="radiusValidation.safety_margin"
+          :message="radiusValidation.message"
+        />
 
         <!-- Validation Results -->
-        <div
+        <ContourValidationResults
           v-if="validationResult"
-          :class="styles.validationResults"
-        >
-          <h3>Full Validation Results</h3>
-          <div :class="[styles.validationBadge, styles[`validationBadge${validationResult.overall_result.charAt(0).toUpperCase()}${validationResult.overall_result.slice(1).toLowerCase()}`]]">
-            {{ validationResult.overall_result }}
-          </div>
-          <div :class="styles.validationChecks">
-            <div
-              v-for="(check, key) in validationResult.checks"
-              :key="key"
-              :class="[styles.checkItem, styles[`checkItem${check.result.charAt(0).toUpperCase()}${check.result.slice(1).toLowerCase()}`]]"
-            >
-              <span :class="styles.checkIcon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
-              <span :class="styles.checkName">{{ formatCheckName(String(key)) }}</span>
-              <span :class="styles.checkMessage">{{ check.message }}</span>
-            </div>
-          </div>
-        </div>
+          :overall-result="validationResult.overall_result"
+          :checks="validationResult.checks"
+        />
 
         <!-- Learned Parameters -->
-        <div
+        <ContourLearnedParams
           v-if="mergedParams"
-          :class="styles.learnedParams"
-        >
-          <h3>Learned Parameters Applied</h3>
-          <div :class="styles.paramComparison">
-            <div :class="styles.paramRow">
-              <span :class="styles.label">RPM:</span>
-              <span :class="styles.baseline">{{ rpm }}</span>
-              <span :class="styles.arrow">→</span>
-              <span :class="styles.merged">{{ mergedParams.rpm?.toFixed(0) || rpm }}</span>
-            </div>
-            <div :class="styles.paramRow">
-              <span :class="styles.label">Feed:</span>
-              <span :class="styles.baseline">{{ feedIpm }}</span>
-              <span :class="styles.arrow">→</span>
-              <span :class="styles.merged">{{ mergedParams.feed_ipm?.toFixed(1) || feedIpm }}</span>
-            </div>
-            <div :class="styles.paramRow">
-              <span :class="styles.label">DOC:</span>
-              <span :class="styles.baseline">{{ depthPerPass }}</span>
-              <span :class="styles.arrow">→</span>
-              <span :class="styles.merged">{{ mergedParams.doc_mm?.toFixed(1) || depthPerPass }}</span>
-            </div>
-          </div>
-        </div>
+          :baseline-rpm="rpm"
+          :baseline-feed-ipm="feedIpm"
+          :baseline-depth-per-pass="depthPerPass"
+          :merged-rpm="mergedParams.rpm"
+          :merged-feed-ipm="mergedParams.feed_ipm"
+          :merged-doc-mm="mergedParams.doc_mm"
+        />
 
         <!-- Path Statistics -->
-        <div
+        <ContourPathStats
           v-if="pathStats"
-          :class="styles.pathStats"
-        >
-          <h3>Path Statistics</h3>
-          <div :class="styles.statsGrid">
-            <div :class="styles.statItem">
-              <span :class="styles.statLabel">Path Length:</span>
-              <span :class="styles.statValue">{{ pathStats.length_mm.toFixed(1) }} mm</span>
-            </div>
-            <div :class="styles.statItem">
-              <span :class="styles.statLabel">Depth Passes:</span>
-              <span :class="styles.statValue">{{ depthPasses }}</span>
-            </div>
-            <div :class="styles.statItem">
-              <span :class="styles.statLabel">Total Length:</span>
-              <span :class="styles.statValue">{{ totalLengthMm.toFixed(1) }} mm</span>
-            </div>
-            <div :class="styles.statItem">
-              <span :class="styles.statLabel">Est. Time:</span>
-              <span :class="styles.statValue">{{ estimatedTimeSec.toFixed(0) }}s</span>
-            </div>
-          </div>
-        </div>
+          :path-length-mm="pathStats.length_mm"
+          :depth-passes="depthPasses"
+          :total-length-mm="totalLengthMm"
+          :estimated-time-sec="estimatedTimeSec"
+        />
 
         <!-- SVG Preview -->
         <ContourSvgPreview
@@ -380,6 +313,10 @@ import ContourArcParams from './ContourArcParams.vue'
 import ContourCircleParams from './ContourCircleParams.vue'
 import ContourRosetteParams from './ContourRosetteParams.vue'
 import ContourSvgPreview from './ContourSvgPreview.vue'
+import ContourRadiusValidation from './ContourRadiusValidation.vue'
+import ContourValidationResults from './ContourValidationResults.vue'
+import ContourLearnedParams from './ContourLearnedParams.vue'
+import ContourPathStats from './ContourPathStats.vue'
 import {
   useSawContourPath,
   useSawContourGcode,
