@@ -21,6 +21,10 @@ Features:
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from "vue";
+import ParametersGrid from './relief_kernel_lab/ParametersGrid.vue'
+import RunButtonsPanel from './relief_kernel_lab/RunButtonsPanel.vue'
+import PresetComparisonTable from './relief_kernel_lab/PresetComparisonTable.vue'
+import SimBridgeResultsPanel from './relief_kernel_lab/SimBridgeResultsPanel.vue'
 
 // Phase 24.7: Preset definitions for comparison
 const PRESETS = {
@@ -478,177 +482,35 @@ function selectComparison(name: string) {
     </div>
 
     <!-- Parameters -->
-    <div
+    <ParametersGrid
       v-if="map"
-      class="grid grid-cols-4 gap-3 border rounded p-3"
-    >
-      <div>
-        <label class="block text-xs font-medium">Tool Ø ({{ map.units }})</label>
-        <input 
-          v-model.number="toolD" 
-          type="number" 
-          step="0.1"
-          class="w-full border rounded px-2 py-1" 
-        >
-      </div>
-      <div>
-        <label class="block text-xs font-medium">Step-down ({{ map.units }})</label>
-        <input 
-          v-model.number="stepdown" 
-          type="number" 
-          step="0.1"
-          class="w-full border rounded px-2 py-1" 
-        >
-      </div>
-      <div>
-        <label class="block text-xs font-medium">Scallop ({{ map.units }})</label>
-        <input 
-          v-model.number="scallop" 
-          type="number" 
-          step="0.01"
-          class="w-full border rounded px-2 py-1" 
-        >
-      </div>
-      <div>
-        <label class="block text-xs font-medium">Stock ({{ map.units }})</label>
-        <input 
-          v-model.number="stockThickness" 
-          type="number" 
-          step="0.1"
-          class="w-full border rounded px-2 py-1" 
-        >
-      </div>
-      
-      <!-- Phase 24.6: Dynamic Scallop Control -->
-      <div class="col-span-4 flex items-center gap-2 mt-1">
-        <label class="flex items-center gap-1 text-xs text-gray-700">
-          <input 
-            v-model="useDynamicScallop" 
-            type="checkbox" 
-            class="align-middle" 
-          >
-          <span>Use dynamic scallop (slope-aware spacing)</span>
-        </label>
-      </div>
-    </div>
+      v-model:tool-d="toolD"
+      v-model:stepdown="stepdown"
+      v-model:scallop="scallop"
+      v-model:stock-thickness="stockThickness"
+      v-model:use-dynamic-scallop="useDynamicScallop"
+      :units="map.units"
+    />
 
     <!-- Run Buttons -->
-    <div
+    <RunButtonsPanel
       v-if="map"
-      class="space-x-2"
-    >
-      <button 
-        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-        @click="runFinish"
-      >
-        Generate Finishing
-      </button>
-      <button 
-        v-if="result"
-        class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        @click="runSimBridge"
-      >
-        Run Sim Bridge
-      </button>
-      <button 
-        v-if="reliefSimBridgeOut"
-        class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
-        @click="pushSnapshot"
-      >
-        Push Snapshot to Timeline
-      </button>
-      
-      <!-- Phase 24.7: Preset Comparison Button -->
-      <button 
-        :disabled="isComparing"
-        class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50"
-        @click="runPresetComparison"
-      >
-        {{ isComparing ? "Comparing..." : "Run Preset Comparison" }}
-      </button>
-    </div>
+      :has-result="!!result"
+      :has-sim-bridge-out="!!reliefSimBridgeOut"
+      :is-comparing="isComparing"
+      @run-finish="runFinish"
+      @run-sim-bridge="runSimBridge"
+      @push-snapshot="pushSnapshot"
+      @run-preset-comparison="runPresetComparison"
+    />
 
     <!-- Phase 24.7: Comparison Results -->
-    <div
+    <PresetComparisonTable
       v-if="comparisons.length > 0"
-      class="border rounded p-3"
-    >
-      <h2 class="text-lg font-bold mb-2">
-        Preset Comparison Results
-      </h2>
-      <table class="w-full text-xs border-collapse">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="border px-2 py-1">
-              Preset
-            </th>
-            <th class="border px-2 py-1">
-              Time (s)
-            </th>
-            <th class="border px-2 py-1">
-              Risk
-            </th>
-            <th class="border px-2 py-1">
-              Thin Floor
-            </th>
-            <th class="border px-2 py-1">
-              High Load
-            </th>
-            <th class="border px-2 py-1">
-              Avg Floor (mm)
-            </th>
-            <th class="border px-2 py-1">
-              Min Floor (mm)
-            </th>
-            <th class="border px-2 py-1">
-              Max Load
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr 
-            v-for="row in comparisons" 
-            :key="row.name"
-            :class="{
-              'bg-blue-50 cursor-pointer hover:bg-blue-100': selectedComparisonName === row.name,
-              'hover:bg-gray-50 cursor-pointer': selectedComparisonName !== row.name
-            }"
-            @click="selectComparison(row.name)"
-          >
-            <td class="border px-2 py-1 font-medium">
-              {{ row.name }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.est_time_s.toFixed(1) }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.risk_score.toFixed(2) }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.thin_floor_count }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.high_load_count }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.avg_floor_thickness.toFixed(2) }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.min_floor_thickness.toFixed(2) }}
-            </td>
-            <td class="border px-2 py-1 text-right">
-              {{ row.max_load_index.toFixed(2) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p
-        v-if="selectedComparisonName"
-        class="text-xs text-gray-600 mt-2"
-      >
-        Selected: <strong>{{ selectedComparisonName }}</strong>
-      </p>
-    </div>
+      :comparisons="comparisons"
+      :selected-name="selectedComparisonName"
+      @select="selectComparison"
+    />
 
     <!-- Canvas -->
     <div
@@ -673,38 +535,10 @@ function selectComparison(name: string) {
     </div>
 
     <!-- Sim Bridge Results (Phase 24.4) -->
-    <div
+    <SimBridgeResultsPanel
       v-if="reliefSimBridgeOut"
-      class="text-xs border rounded p-3 space-y-1"
-    >
-      <h2 class="font-bold text-sm mb-2">
-        Relief Sim Bridge Results (Risk: {{ reliefSimBridgeOut.risk_score.toFixed(2) }})
-      </h2>
-      <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-        <div>
-          <span class="text-gray-500">Floor:</span>
-          avg {{ reliefSimBridgeOut.stats.avg_floor_thickness.toFixed(2) }} mm,
-          min {{ reliefSimBridgeOut.stats.min_floor_thickness.toFixed(2) }} mm
-        </div>
-        <div>
-          <span class="text-gray-500">Load:</span>
-          max {{ reliefSimBridgeOut.stats.max_load_index.toFixed(2) }},
-          avg {{ reliefSimBridgeOut.stats.avg_load_index.toFixed(2) }}
-        </div>
-        <div>
-          <span class="text-gray-500">Removed:</span>
-          {{ reliefSimBridgeOut.stats.total_removed_volume.toFixed(1) }} mm³
-        </div>
-        <div>
-          <span class="text-gray-500">Grid cells:</span>
-          {{ reliefSimBridgeOut.stats.cell_count }}
-        </div>
-        <div class="col-span-2">
-          <span class="text-gray-500">Issues:</span>
-          {{ reliefSimBridgeOut.issues.length }} (thin floors + high loads)
-        </div>
-      </div>
-    </div>
+      :sim-bridge-out="reliefSimBridgeOut"
+    />
 
     <!-- Map Info -->
     <div
