@@ -273,51 +273,10 @@
           </div>
 
           <!-- Metrics (if telemetry available) -->
-          <div
+          <RunTelemetryCard
             v-if="run.has_telemetry && run.metrics"
-            class="pt-2 border-t border-gray-100"
-          >
-            <div class="text-xs text-gray-600 mb-2 font-semibold">
-              Telemetry Metrics
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">
-                  Avg Load
-                </div>
-                <div class="font-semibold text-gray-900">
-                  {{ run.metrics.avg_spindle_load_pct?.toFixed(1) || 'N/A' }}%
-                </div>
-              </div>
-              <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">
-                  Max Load
-                </div>
-                <div class="font-semibold text-gray-900">
-                  {{ run.metrics.max_spindle_load_pct?.toFixed(1) || 'N/A' }}%
-                </div>
-              </div>
-              <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">
-                  Avg RPM
-                </div>
-                <div class="font-semibold text-gray-900">
-                  {{ run.metrics.avg_rpm?.toFixed(0) || 'N/A' }}
-                </div>
-              </div>
-              <div class="bg-gray-50 rounded p-2">
-                <div class="text-gray-500">
-                  Vibration
-                </div>
-                <div class="font-semibold text-gray-900">
-                  {{ run.metrics.avg_vibration_rms?.toFixed(2) || 'N/A' }} mm/s
-                </div>
-              </div>
-            </div>
-            <div class="text-xs text-gray-500 mt-1">
-              {{ run.metrics.n_samples }} samples
-            </div>
-          </div>
+            :metrics="run.metrics"
+          />
 
           <!-- No Telemetry Message -->
           <div
@@ -477,116 +436,16 @@
           </div>
 
           <!-- Telemetry Metrics -->
-          <div
+          <TelemetryMetricsPanel
             v-if="selectedRun.has_telemetry && selectedRun.metrics"
-            class="bg-blue-50 rounded-lg p-4"
-          >
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">
-              Telemetry Metrics
-            </h3>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Average Spindle Load
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.avg_spindle_load_pct?.toFixed(1) }}%
-                </div>
-              </div>
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Max Spindle Load
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.max_spindle_load_pct?.toFixed(1) }}%
-                </div>
-              </div>
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Average RPM
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.avg_rpm?.toFixed(0) }}
-                </div>
-              </div>
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Max RPM
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ (selectedRun.metrics as any).max_rpm?.toFixed(0) }}
-                </div>
-              </div>
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Average Feed Rate
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.avg_feed_mm_min?.toFixed(0) }} mm/min
-                </div>
-              </div>
-              <div class="bg-white rounded p-3">
-                <div class="text-sm text-gray-600">
-                  Vibration (RMS)
-                </div>
-                <div class="text-2xl font-bold text-gray-900">
-                  {{ selectedRun.metrics.avg_vibration_rms?.toFixed(2) }} mm/s
-                </div>
-              </div>
-            </div>
-            <div class="mt-3 text-sm text-gray-600">
-              📊 {{ selectedRun.metrics.n_samples }} telemetry samples recorded
-            </div>
-          </div>
+            :metrics="selectedRun.metrics"
+          />
 
           <!-- Lane Scale History -->
-          <div
+          <LaneScaleHistoryTable
             v-if="selectedRun.lane_scale_history.length > 0"
-            class="bg-purple-50 rounded-lg p-4"
-          >
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">
-              Lane Scale History
-            </h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-300">
-                <thead>
-                  <tr class="bg-white">
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
-                      Timestamp
-                    </th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
-                      Scale
-                    </th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
-                      Source
-                    </th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-900">
-                      Reason
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
-                  <tr
-                    v-for="(hist, idx) in selectedRun.lane_scale_history"
-                    :key="idx"
-                  >
-                    <td class="px-3 py-2 text-sm text-gray-900">
-                      {{ formatDateTime((hist as any).timestamp || hist.ts) }}
-                    </td>
-                    <td class="px-3 py-2 text-sm font-semibold text-gray-900">
-                      {{ hist.lane_scale.toFixed(2) }}
-                    </td>
-                    <td class="px-3 py-2 text-sm text-gray-600">
-                      {{ hist.source }}
-                    </td>
-                    <td class="px-3 py-2 text-sm text-gray-600">
-                      {{ (hist as any).meta?.reason || 'N/A' }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+            :history="selectedRun.lane_scale_history"
+          />
         </div>
 
         <!-- Modal Footer -->
@@ -758,6 +617,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getDashboardRuns, type DashboardSummary, type RunSummaryItem, type RiskBucketId } from '@/api/sawLab'
+import RunTelemetryCard from './saw_lab_dashboard/RunTelemetryCard.vue'
+import TelemetryMetricsPanel from './saw_lab_dashboard/TelemetryMetricsPanel.vue'
+import LaneScaleHistoryTable from './saw_lab_dashboard/LaneScaleHistoryTable.vue'
 
 // ============================================================================
 // STATE
