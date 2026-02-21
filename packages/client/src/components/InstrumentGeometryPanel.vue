@@ -1,5 +1,5 @@
 <template>
-  <div :class="styles.instrumentGeometryPanel">
+  <div :class="shared.pageDark">
     <div :class="styles.panelHeader">
       <h2>Instrument Geometry Designer</h2>
       <p :class="styles.subtitle">
@@ -8,15 +8,15 @@
     </div>
 
     <!-- Main Layout: Left Controls + Right Preview -->
-    <div :class="styles.layoutGrid">
+    <div :class="shared.layoutGrid">
       <!-- ===== LEFT PANEL: Controls ===== -->
-      <div :class="styles.controlsPanel">
+      <div :class="shared.controlsPanel">
         <!-- Model Selection -->
-        <section :class="styles.controlSection">
+        <section :class="shared.controlSection">
           <h3>Instrument Model</h3>
           <select
             v-model="store.selectedModelId"
-            :class="styles.selectInput"
+            :class="shared.selectDark"
             @change="handleModelChange"
           >
             <option
@@ -49,10 +49,10 @@
         </section>
 
         <!-- Fretboard Parameters -->
-        <section :class="styles.controlSection">
+        <section :class="shared.controlSection">
           <h3>Fretboard Geometry</h3>
 
-          <div :class="styles.inputGroup">
+          <div :class="shared.inputRow">
             <label>Base Radius (Nut)</label>
             <input
               v-model.number="store.fretboardSpec.base_radius_inches"
@@ -60,12 +60,12 @@
               step="0.5"
               min="7"
               max="20"
-              :class="styles.numberInput"
+              :class="shared.inputNumber"
             >
-            <span :class="styles.unit">"</span>
+            <span :class="shared.unit">"</span>
           </div>
 
-          <div :class="styles.inputGroup">
+          <div :class="shared.inputRow">
             <label>End Radius (Heel)</label>
             <input
               v-model.number="store.fretboardSpec.end_radius_inches"
@@ -73,12 +73,12 @@
               step="0.5"
               min="7"
               max="20"
-              :class="styles.numberInput"
+              :class="shared.inputNumber"
             >
-            <span :class="styles.unit">"</span>
+            <span :class="shared.unit">"</span>
           </div>
 
-          <div :class="styles.inputGroup">
+          <div :class="shared.inputRow">
             <label>Slot Width</label>
             <input
               v-model.number="store.fretboardSpec.slot_width_mm"
@@ -86,12 +86,12 @@
               step="0.05"
               min="0.4"
               max="1.0"
-              :class="styles.numberInput"
+              :class="shared.inputNumber"
             >
-            <span :class="styles.unit">mm</span>
+            <span :class="shared.unit">mm</span>
           </div>
 
-          <div :class="styles.inputGroup">
+          <div :class="shared.inputRow">
             <label>Slot Depth</label>
             <input
               v-model.number="store.fretboardSpec.slot_depth_mm"
@@ -99,16 +99,16 @@
               step="0.1"
               min="2.0"
               max="4.0"
-              :class="styles.numberInput"
+              :class="shared.inputNumber"
             >
-            <span :class="styles.unit">mm</span>
+            <span :class="shared.unit">mm</span>
           </div>
 
-          <div :class="styles.inputGroup">
+          <div :class="shared.inputRow">
             <label>Material</label>
             <select
               v-model="store.fretboardSpec.material_id"
-              :class="styles.selectInput"
+              :class="shared.selectDark"
             >
               <option value="rosewood">
                 Rosewood
@@ -127,13 +127,13 @@
         </section>
 
         <!-- Fan-Fret Controls (Wave 16) -->
-        <section :class="styles.controlSection">
+        <section :class="shared.controlSection">
           <h3>
-            <label :class="styles.checkboxLabel">
+            <label :class="shared.checkboxLabel">
               <input
                 v-model="store.fanFretEnabled"
                 type="checkbox"
-                :class="styles.checkboxInput"
+                :class="shared.checkboxInput"
               >
               Fan-Fret (Multi-Scale)
             </label>
@@ -143,7 +143,7 @@
             v-if="store.fanFretEnabled"
             :class="styles.fanFretControls"
           >
-            <div :class="styles.inputGroup">
+            <div :class="shared.inputRow">
               <label>Treble Scale</label>
               <input
                 v-model.number="store.trebleScaleLength"
@@ -151,12 +151,12 @@
                 step="1"
                 min="610"
                 max="685"
-                :class="styles.numberInput"
+                :class="shared.inputNumber"
               >
-              <span :class="styles.unit">mm</span>
+              <span :class="shared.unit">mm</span>
             </div>
 
-            <div :class="styles.inputGroup">
+            <div :class="shared.inputRow">
               <label>Bass Scale</label>
               <input
                 v-model.number="store.bassScaleLength"
@@ -164,12 +164,12 @@
                 step="1"
                 min="610"
                 max="685"
-                :class="styles.numberInput"
+                :class="shared.inputNumber"
               >
-              <span :class="styles.unit">mm</span>
+              <span :class="shared.unit">mm</span>
             </div>
 
-            <div :class="styles.inputGroup">
+            <div :class="shared.inputRow">
               <label>Perpendicular Fret</label>
               <input
                 v-model.number="store.perpendicularFret"
@@ -177,22 +177,22 @@
                 step="1"
                 min="0"
                 :max="store.selectedModel.num_frets"
-                :class="styles.numberInput"
+                :class="shared.inputNumber"
               >
-              <span :class="styles.unit">fret #</span>
+              <span :class="shared.unit">fret #</span>
             </div>
 
-            <div :class="styles.infoBanner">
+            <div :class="shared.bannerInfo">
               ℹ️ Fan-fret CAM with per-fret risk analysis (Wave 19)
             </div>
           </div>
         </section>
 
         <!-- Generate Button -->
-        <section :class="styles.controlSection">
+        <section :class="shared.controlSection">
           <button
             :disabled="store.isLoadingPreview"
-            :class="styles.btnLarge"
+            :class="shared.btnLarge"
             @click="handleGeneratePreview"
           >
             <span v-if="store.isLoadingPreview">⏳ Generating...</span>
@@ -201,7 +201,7 @@
 
           <div
             v-if="store.previewError"
-            :class="styles.errorBanner"
+            :class="shared.bannerError"
           >
             ❌ {{ store.previewError }}
           </div>
@@ -213,9 +213,9 @@
         <!-- Loading State -->
         <div
           v-if="store.isLoadingPreview"
-          :class="styles.loadingState"
+          :class="shared.loadingState"
         >
-          <div :class="styles.spinner" />
+          <div :class="shared.spinner" />
           <p>Generating CAM toolpaths and feasibility analysis...</p>
         </div>
 
@@ -238,16 +238,16 @@
             <div :class="styles.statusFlags">
               <span
                 v-if="store.feasibility.is_feasible"
-                :class="styles.flagGood"
+                :class="shared.flagGood"
               >✓ Feasible</span>
               <span
                 v-else
-                :class="styles.flagBad"
+                :class="shared.flagBad"
               >✗ Not Feasible</span>
 
               <span
                 v-if="store.feasibility.needs_review"
-                :class="styles.flagWarning"
+                :class="shared.flagWarning"
               >⚠ Needs Review</span>
             </div>
           </section>
@@ -284,39 +284,39 @@
           </section>
 
           <!-- Statistics -->
-          <section :class="styles.statisticsGrid">
-            <div :class="styles.statCard">
-              <div :class="styles.statLabel">
+          <section :class="shared.statsGrid">
+            <div :class="shared.statCard">
+              <div :class="shared.statLabel">
                 Total Time
               </div>
-              <div :class="styles.statValue">
+              <div :class="shared.statValue">
                 {{ formatTime(store.statistics.total_time_s) }}
               </div>
             </div>
 
-            <div :class="styles.statCard">
-              <div :class="styles.statLabel">
+            <div :class="shared.statCard">
+              <div :class="shared.statLabel">
                 Total Cost
               </div>
-              <div :class="styles.statValue">
+              <div :class="shared.statValue">
                 ${{ store.statistics.total_cost_usd.toFixed(2) }}
               </div>
             </div>
 
-            <div :class="styles.statCard">
-              <div :class="styles.statLabel">
+            <div :class="shared.statCard">
+              <div :class="shared.statLabel">
                 Energy
               </div>
-              <div :class="styles.statValue">
+              <div :class="shared.statValue">
                 {{ store.statistics.total_energy_kwh.toFixed(3) }} kWh
               </div>
             </div>
 
-            <div :class="styles.statCard">
-              <div :class="styles.statLabel">
+            <div :class="shared.statCard">
+              <div :class="shared.statLabel">
                 Cut Length
               </div>
-              <div :class="styles.statValue">
+              <div :class="shared.statValue">
                 {{ store.statistics.total_length_mm.toFixed(1) }} mm
               </div>
             </div>
@@ -326,11 +326,11 @@
           <section :class="styles.codePreviews">
             <div :class="styles.previewColumn">
               <h4>DXF Preview</h4>
-              <pre :class="styles.codePreview">{{
+              <pre :class="shared.codePreview">{{
                 store.previewResponse.dxf_preview
               }}</pre>
               <button
-                :class="styles.btnSecondary"
+                :class="shared.btnSecondary"
                 @click="store.downloadDxf"
               >
                 📥 Download DXF
@@ -339,11 +339,11 @@
 
             <div :class="styles.previewColumn">
               <h4>G-code Preview</h4>
-              <pre :class="styles.codePreview">{{
+              <pre :class="shared.codePreview">{{
                 store.previewResponse.gcode_preview
               }}</pre>
               <button
-                :class="styles.btnSecondary"
+                :class="shared.btnSecondary"
                 @click="store.downloadGcode"
               >
                 📥 Download G-code
@@ -354,7 +354,7 @@
           <!-- Toolpath Details Table -->
           <section :class="styles.toolpathTable">
             <h4>Toolpath Details ({{ store.toolpaths.length }} slots)</h4>
-            <div :class="styles.tableWrapper">
+            <div :class="shared.tableWrapper">
               <table :class="styles.table">
                 <thead :class="styles.tableHead">
                   <tr>
@@ -392,9 +392,9 @@
         <!-- Empty State -->
         <div
           v-else
-          :class="styles.emptyState"
+          :class="shared.emptyState"
         >
-          <div :class="styles.emptyIcon">
+          <div :class="shared.emptyIcon">
             🎸
           </div>
           <h3>No Preview Generated</h3>
@@ -416,6 +416,7 @@ import {
 } from "@/stores/instrumentGeometryStore";
 import FretboardPreviewSvg from "@/components/FretboardPreviewSvg.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
+import shared from "@/styles/dark-theme-shared.module.css";
 
 const store = useInstrumentGeometryStore();
 
