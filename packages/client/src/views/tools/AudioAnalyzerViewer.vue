@@ -1,7 +1,7 @@
 <template>
-  <div :class="styles.page">
+  <div :class="shared.page">
     <header :class="styles.header">
-      <div :class="styles.headerRow">
+      <div :class="shared.headerRow">
         <h1>🎛️ Audio Analyzer Evidence Viewer</h1>
         <div
           v-if="cursorFreqHz !== null"
@@ -19,22 +19,22 @@
           </button>
         </div>
       </div>
-      <p :class="styles.sub">
+      <p :class="shared.sub">
         Evidence-pack viewer (ZIP). Supports both
         <code>viewer_pack_v1</code> and <code>toolbox_evidence_manifest_v1</code> schemas.
       </p>
     </header>
 
     <section
-      :class="styles.drop"
+      :class="shared.dropZone"
       @dragover.prevent
       @drop.prevent="onDrop"
     >
-      <div :class="styles.dropInner">
-        <div :class="styles.dropTitle">
+      <div :class="shared.dropZoneInner">
+        <div :class="shared.dropZoneTitle">
           Drop an evidence ZIP here
         </div>
-        <div :class="styles.dropSub">
+        <div :class="shared.dropZoneSub">
           or
         </div>
         <input
@@ -57,9 +57,9 @@
       :class="styles.grid"
     >
       <!-- Pack Metadata -->
-      <div :class="styles.card">
+      <div :class="shared.cardTransparent">
         <h2>Pack Summary</h2>
-        <div :class="styles.kv">
+        <div :class="shared.kv">
           <div><span>schema</span><code>{{ pack.schema_id }}</code></div>
           <div><span>created_at_utc</span><code>{{ pack.created_at_utc || "-" }}</code></div>
           <div v-if="pack.source_capdir">
@@ -87,7 +87,7 @@
           :class="styles.validationUnknown"
         >
           <p>No validation_report.json found in pack.</p>
-          <p :class="styles.muted">
+          <p :class="shared.muted">
             Legacy packs may not include validation data.
           </p>
         </div>
@@ -100,7 +100,7 @@
               {{ pack.validation.passed ? "PASS" : "FAIL" }}
             </span>
           </div>
-          <div :class="styles.kv">
+          <div :class="shared.kv">
             <div><span>errors</span><code>{{ pack.validation.errors.length }}</code></div>
             <div><span>warnings</span><code>{{ pack.validation.warnings.length }}</code></div>
             <div v-if="pack.validation.schema_id">
@@ -142,12 +142,12 @@
       </div>
 
       <!-- File List -->
-      <div :class="styles.card">
+      <div :class="shared.cardTransparent">
         <h2>Files</h2>
-        <div :class="styles.filterBar">
+        <div :class="shared.filterBar">
           <select
             v-model="kindFilter"
-            :class="styles.filterSelect"
+            :class="shared.filterSelect"
           >
             <option value="">
               All kinds
@@ -160,9 +160,9 @@
               {{ k }}
             </option>
           </select>
-          <span :class="styles.fileCount">{{ filteredFiles.length }} file(s)</span>
+          <span :class="shared.filterCount">{{ filteredFiles.length }} file(s)</span>
         </div>
-        <table :class="styles.tbl">
+        <table :class="shared.tbl">
           <thead>
             <tr>
               <th>kind</th>
@@ -175,7 +175,7 @@
             <tr
               v-for="f in filteredFiles"
               :key="f.relpath"
-              :class="{ [styles.active]: activePath === f.relpath }"
+              :class="{ [shared.rowActive]: activePath === f.relpath }"
             >
               <td>
                 <code
@@ -189,12 +189,12 @@
               >
                 {{ f.relpath }}
               </td>
-              <td :class="styles.mono">
+              <td :class="shared.mono">
                 {{ formatBytes(f.bytes) }}
               </td>
               <td>
                 <button
-                  :class="styles.btn"
+                  :class="shared.btnSmall"
                   @click="selectFile(f.relpath)"
                 >
                   View
@@ -206,14 +206,14 @@
       </div>
 
       <!-- Preview Panel -->
-      <div :class="styles.wide">
+      <div :class="shared.cardTransparentWide">
         <h2>Preview</h2>
         <div
           v-if="activePath && activeEntry"
-          :class="styles.previewContainer"
+          :class="shared.previewContainer"
         >
-          <div :class="styles.previewSplit">
-            <div :class="styles.previewMain">
+          <div :class="shared.previewSplit">
+            <div :class="shared.previewMain">
               <component
                 :is="currentRenderer"
                 :entry="activeEntry"
@@ -224,13 +224,13 @@
               />
             </div>
 
-            <aside :class="styles.previewSide">
-              <div :class="styles.sideHeader">
-                <div :class="styles.sideTitle">
+            <aside :class="shared.previewSide">
+              <div :class="shared.sideHeader">
+                <div :class="shared.sideTitle">
                   Selection Details
                 </div>
                 <button
-                  :class="styles.btnSmall"
+                  :class="shared.btnSmall"
                   :disabled="!selectedPeak"
                   @click="clearSelectedPeak"
                 >
@@ -242,16 +242,16 @@
                 v-if="!selectedPeak"
                 :class="styles.sideEmpty"
               >
-                <p :class="styles.muted">
+                <p :class="shared.muted">
                   Click a peak marker in the spectrum chart to inspect it here.
                 </p>
               </div>
 
               <div
                 v-else
-                :class="styles.sideBody"
+                :class="shared.sideBody"
               >
-                <div :class="styles.sideKv">
+                <div :class="shared.kvCompact">
                   <div><span>source</span><code>{{ selectionSource }}</code></div>
                   <div><span>point</span><code>{{ selectedPeak.pointId || "—" }}</code></div>
                   <div>
@@ -261,9 +261,9 @@
                   <div v-if="selectedPeak.label">
                     <span>label</span><code>{{ selectedPeak.label }}</code>
                   </div>
-                  <div><span>file</span><code :class="styles.mono">{{ selectedPeak.spectrumRelpath }}</code></div>
+                  <div><span>file</span><code :class="shared.mono">{{ selectedPeak.spectrumRelpath }}</code></div>
                   <div v-if="selectedPeak.peaksRelpath">
-                    <span>analysis</span><code :class="styles.mono">{{ selectedPeak.peaksRelpath }}</code>
+                    <span>analysis</span><code :class="shared.mono">{{ selectedPeak.peaksRelpath }}</code>
                   </div>
                 </div>
 
@@ -275,7 +275,7 @@
                   <summary :class="styles.sideSummary">
                     WSI row fields
                   </summary>
-                  <div :class="styles.sideKv">
+                  <div :class="shared.kvCompact">
                     <div><span>wsi</span><code>{{ fmtNum(selectedWsiRow?.wsi) }}</code></div>
                     <div><span>coh_mean</span><code>{{ fmtNum(selectedWsiRow?.coh_mean) }}</code></div>
                     <div><span>phase_disorder</span><code>{{ fmtNum(selectedWsiRow?.phase_disorder) }}</code></div>
@@ -285,9 +285,9 @@
                   </div>
                 </details>
 
-                <div :class="styles.sideActions">
+                <div :class="shared.sideActions">
                   <button
-                    :class="styles.btn"
+                    :class="shared.btnSmall"
                     :disabled="!selectedPeak.pointId"
                     @click="jumpToPointAudio"
                   >
@@ -308,7 +308,7 @@
                   <summary :class="styles.sideSummary">
                     Raw selection JSON
                   </summary>
-                  <pre :class="styles.sidePre">{{ selectedPeak.rawPretty }}</pre>
+                  <pre :class="shared.codePre">{{ selectedPeak.rawPretty }}</pre>
                 </details>
               </div>
             </aside>
@@ -316,19 +316,19 @@
         </div>
         <div
           v-else
-          :class="styles.placeholder"
+          :class="shared.placeholder"
         >
           <p>Select a file from the list above to preview.</p>
         </div>
       </div>
 
       <!-- Pack Debug Panel -->
-      <details :class="styles.packDebug">
-        <summary :class="styles.debugSummary">
+      <details :class="shared.debugPanel">
+        <summary :class="shared.debugSummary">
           🔍 Pack Debug Info
         </summary>
-        <div :class="styles.debugContent">
-          <div :class="styles.debugGrid">
+        <div :class="shared.debugContent">
+          <div :class="shared.debugGrid">
             <div :class="styles.debugSection">
               <h3>Schema</h3>
               <div :class="styles.debugKv">
@@ -337,16 +337,16 @@
               </div>
               <div :class="styles.debugKv">
                 <span>bundle_sha256</span>
-                <code :class="styles.hash">{{ pack.bundle_sha256 || "—" }}</code>
+                <code :class="shared.hash">{{ pack.bundle_sha256 || "—" }}</code>
               </div>
             </div>
             <div :class="styles.debugSection">
               <h3>Kinds Present ({{ uniqueKinds.length }})</h3>
-              <div :class="styles.kindChips">
+              <div :class="shared.chips">
                 <code
                   v-for="k in uniqueKinds"
                   :key="k"
-                  :class="styles.kindChip"
+                  :class="shared.chip"
                   :data-category="getCategory(k)"
                 >
                   {{ k }} ({{ kindCounts[k] }})
@@ -376,13 +376,13 @@
                       :data-category="getCategory(f.kind)"
                     >{{ f.kind }}</code>
                   </td>
-                  <td :class="styles.mono">
+                  <td :class="shared.mono">
                     {{ f.relpath }}
                   </td>
-                  <td :class="styles.mono">
+                  <td :class="shared.mono">
                     {{ f.bytes }}
                   </td>
-                  <td :class="[styles.mono, styles.hash]">
+                  <td :class="[shared.mono, shared.hash]">
                     {{ f.sha256?.slice(0, 12) || "—" }}…
                   </td>
                 </tr>
@@ -403,6 +403,7 @@ import { pickRenderer, getRendererCategory } from "@/tools/audio_analyzer/render
 import { findSiblingPeaksRelpath } from "@/tools/audio_analyzer/packHelpers";
 import { getDownloadUrl } from "@/sdk/endpoints/rmosAcoustics";
 import styles from "./AudioAnalyzerViewer.module.css";
+import shared from "@/styles/dark-theme-shared.module.css";
 
 // Agentic M1 events
 import { useAgenticEvents } from "@/composables/useAgenticEvents";

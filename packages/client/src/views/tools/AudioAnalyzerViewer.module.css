@@ -1,32 +1,19 @@
-.page {
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/**
+ * AudioAnalyzerViewer CSS Module
+ * Component-specific styles (shared styles in @/styles/dark-theme-shared.module.css)
+ */
 
-.headerRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* =============================================================================
+   Header
+   ============================================================================= */
 
 .header h1 {
   margin: 0;
 }
 
-.sub {
-  opacity: 0.8;
-  margin-top: 6px;
-}
-
-.sub code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.125rem 0.35rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
+/* =============================================================================
+   Cursor Pill (component-specific navigation indicator)
+   ============================================================================= */
 
 .cursorPill {
   display: inline-flex;
@@ -73,26 +60,9 @@
   }
 }
 
-.drop {
-  border: 2px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 14px;
-  padding: 18px;
-  margin: 14px 0;
-}
-
-.dropInner {
-  display: grid;
-  gap: 8px;
-  justify-items: start;
-}
-
-.dropTitle {
-  font-weight: 700;
-}
-
-.dropSub {
-  opacity: 0.75;
-}
+/* =============================================================================
+   Error Display
+   ============================================================================= */
 
 .err {
   background: rgba(255, 0, 0, 0.12);
@@ -101,6 +71,10 @@
   border-radius: 10px;
 }
 
+/* =============================================================================
+   Grid Layout (component-specific 2-column grid)
+   ============================================================================= */
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -108,92 +82,9 @@
   align-items: start;
 }
 
-.card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-.wide {
-  composes: card;
-  grid-column: 1 / -1;
-}
-
-.kv {
-  display: grid;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.kv > div {
-  display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.kv span {
-  opacity: 0.75;
-}
-
-.kv code {
-  word-break: break-all;
-}
-
-.filterBar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 8px 0;
-}
-
-.filterSelect {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
-  font-size: 0.9rem;
-}
-
-.fileCount {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-.tbl {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-}
-
-.tbl th,
-.tbl td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 8px;
-  text-align: left;
-}
-
-.tbl tbody tr:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.active {
-  background: rgba(66, 184, 131, 0.15);
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.pathCell {
-  composes: mono;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* =============================================================================
+   Kind Badges (component-specific category coloring)
+   ============================================================================= */
 
 .kindBadge {
   display: inline-block;
@@ -233,90 +124,24 @@
   color: #fff;
 }
 
-.btn {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  color: inherit;
+/* =============================================================================
+   Path Cell (truncation for file paths)
+   ============================================================================= */
+
+.pathCell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btnSmall {
-  composes: btn;
-  padding: 5px 8px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-}
-
-.previewContainer {
-  margin-top: 12px;
-}
-
-.previewSplit {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 12px;
-  align-items: start;
-}
-
-.previewMain {
-  min-width: 0;
-}
-
-.previewSide {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  padding-left: 12px;
-}
-
-.sideHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.sideTitle {
-  font-weight: 650;
-}
+/* =============================================================================
+   Side Panel Extras
+   ============================================================================= */
 
 .sideEmpty {
   padding: 10px 0;
-}
-
-.muted {
-  opacity: 0.75;
-}
-
-.sideBody {
-  display: grid;
-  gap: 12px;
-}
-
-.sideKv {
-  display: grid;
-  gap: 6px;
-}
-
-.sideKv > div {
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.sideKv span {
-  opacity: 0.75;
-}
-
-.sideActions {
-  display: grid;
-  gap: 8px;
 }
 
 .sideWarn {
@@ -342,60 +167,9 @@
   margin-bottom: 8px;
 }
 
-.sidePre {
-  max-height: 280px;
-  overflow: auto;
-  font-size: 0.8rem;
-  line-height: 1.35;
-  margin: 0;
-}
-
-.placeholder {
-  padding: 2rem;
-  text-align: center;
-  opacity: 0.7;
-}
-
-@media (max-width: 980px) {
-  .previewSplit {
-    grid-template-columns: 1fr;
-  }
-  .previewSide {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 12px;
-  }
-}
-
-/* Pack Debug Panel */
-.packDebug {
-  composes: card;
-  composes: wide;
-  margin-top: 8px;
-}
-
-.debugSummary {
-  cursor: pointer;
-  font-weight: 600;
-  padding: 8px 0;
-  user-select: none;
-}
-
-.debugSummary:hover {
-  color: #42b883;
-}
-
-.debugContent {
-  margin-top: 12px;
-}
-
-.debugGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
+/* =============================================================================
+   Debug Panel Extras
+   ============================================================================= */
 
 .debugSection h3 {
   font-size: 0.9rem;
@@ -417,49 +191,6 @@
 
 .debugKv code {
   word-break: break-all;
-}
-
-.hash {
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-.kindChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.kindChip {
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.kindChip[data-category="audio"] {
-  background: rgba(66, 184, 131, 0.2);
-  color: #42b883;
-}
-
-.kindChip[data-category="spectrum_chart"] {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.kindChip[data-category="csv"] {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-}
-
-.kindChip[data-category="json"] {
-  background: rgba(156, 39, 176, 0.2);
-  color: #ce93d8;
-}
-
-.kindChip[data-category="image"] {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
 }
 
 .debugTbl {
@@ -484,9 +215,15 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Validation Panel Styles */
+/* =============================================================================
+   Validation Panel (component-specific)
+   ============================================================================= */
+
 .validationCard {
-  composes: card;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
   border-left: 4px solid #888;
 }
 
@@ -514,11 +251,6 @@
 
 .validationUnknown {
   color: #9ca3af;
-}
-
-.validationUnknown .muted {
-  font-size: 0.85rem;
-  opacity: 0.7;
 }
 
 .validationContent {
