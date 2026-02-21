@@ -25,250 +25,63 @@
       <!-- Left Panel -->
       <div :class="styles.leftPanel">
         <!-- Tool Setup -->
-        <section :class="styles.panelSection">
-          <h3>Tool Setup</h3>
-          <div :class="styles.toolTypeSelector">
-            <label
-              v-for="tool in toolTypes"
-              :key="tool.value"
-            >
-              <input
-                v-model="params.toolType"
-                type="radio"
-                :value="tool.value"
-                @change="updatePreview"
-              >
-              <span>{{ tool.label }}</span>
-            </label>
-          </div>
-
-          <div :class="styles.formGroup">
-            <label>Tool Diameter (mm)</label>
-            <input
-              v-model.number="params.toolDiameter"
-              type="number"
-              step="0.1"
-              min="0.1"
-              @input="updatePreview"
-            >
-          </div>
-
-          <div :class="styles.formGroup">
-            <label>Spindle RPM</label>
-            <input
-              v-model.number="params.spindleRpm"
-              type="number"
-              step="100"
-              min="100"
-              @input="updatePreview"
-            >
-          </div>
-
-          <div :class="styles.formGroup">
-            <label>Feed Rate (mm/min)</label>
-            <input
-              v-model.number="params.feedRate"
-              type="number"
-              step="10"
-              min="10"
-              @input="updatePreview"
-            >
-          </div>
-        </section>
+        <DrillToolSetup
+          :styles="styles"
+          v-model:tool-type="params.toolType"
+          v-model:tool-diameter="params.toolDiameter"
+          v-model:spindle-rpm="params.spindleRpm"
+          v-model:feed-rate="params.feedRate"
+          @update:tool-type="updatePreview"
+          @update:tool-diameter="updatePreview"
+          @update:spindle-rpm="updatePreview"
+          @update:feed-rate="updatePreview"
+        />
 
         <!-- Cycle Type -->
-        <section :class="styles.panelSection">
-          <h3>Cycle Type</h3>
-          <div :class="styles.cycleSelector">
-            <label
-              v-for="cycle in cycleTypes"
-              :key="cycle.value"
-            >
-              <input
-                v-model="params.cycle"
-                type="radio"
-                :value="cycle.value"
-                @change="updatePreview"
-              >
-              <span>{{ cycle.label }}</span>
-              <small>{{ cycle.description }}</small>
-            </label>
-          </div>
-
-          <div
-            v-if="params.cycle === 'G83'"
-            :class="styles.formGroup"
-          >
-            <label>Peck Depth (mm)</label>
-            <input
-              v-model.number="params.peckDepth"
-              type="number"
-              step="1"
-              min="1"
-              @input="updatePreview"
-            >
-          </div>
-
-          <div
-            v-if="params.cycle === 'G84'"
-            :class="styles.formGroup"
-          >
-            <label>Thread Pitch (mm)</label>
-            <input
-              v-model.number="params.threadPitch"
-              type="number"
-              step="0.1"
-              min="0.1"
-              @input="updatePreview"
-            >
-          </div>
-        </section>
+        <DrillCycleType
+          :styles="styles"
+          v-model:cycle-value="params.cycle"
+          v-model:peck-depth="params.peckDepth"
+          v-model:thread-pitch="params.threadPitch"
+          @update:cycle-value="updatePreview"
+          @update:peck-depth="updatePreview"
+          @update:thread-pitch="updatePreview"
+        />
 
         <!-- Depth Settings -->
-        <section :class="styles.panelSection">
-          <h3>Depth Settings</h3>
-          <div :class="styles.formGroup">
-            <label>Hole Depth (mm, negative)</label>
-            <input
-              v-model.number="params.depth"
-              type="number"
-              step="1"
-              max="0"
-              @input="updatePreview"
-            >
-          </div>
-
-          <div :class="styles.formGroup">
-            <label>Retract Plane (mm)</label>
-            <input
-              v-model.number="params.retract"
-              type="number"
-              step="1"
-              min="0"
-              @input="updatePreview"
-            >
-          </div>
-
-          <div :class="styles.formGroup">
-            <label>Safe Z (mm)</label>
-            <input
-              v-model.number="params.safeZ"
-              type="number"
-              step="1"
-              min="0"
-              @input="updatePreview"
-            >
-          </div>
-        </section>
+        <DrillDepthSettings
+          :styles="styles"
+          v-model:depth="params.depth"
+          v-model:retract="params.retract"
+          v-model:safe-z="params.safeZ"
+          @update:depth="updatePreview"
+          @update:retract="updatePreview"
+          @update:safe-z="updatePreview"
+        />
 
         <!-- Pattern Generator -->
-        <section :class="styles.panelSection">
-          <h3>Pattern Generator</h3>
-          <select
-            v-model="patternType"
-            :class="styles.patternSelector"
-          >
-            <option value="manual">
-              Manual (Click Canvas)
-            </option>
-            <option value="linear">
-              Linear Array
-            </option>
-            <option value="circular">
-              Circular Pattern
-            </option>
-            <option value="grid">
-              Grid Array
-            </option>
-            <option value="csv">
-              CSV Import
-            </option>
-          </select>
-
-          <!-- Linear Pattern -->
-          <DrillPatternLinear
-            v-if="patternType === 'linear'"
-            v-model:direction="linearPattern.direction"
-            v-model:startX="linearPattern.startX"
-            v-model:startY="linearPattern.startY"
-            v-model:spacing="linearPattern.spacing"
-            v-model:count="linearPattern.count"
-            @generate="generateLinearPattern"
-          />
-
-          <!-- Circular Pattern -->
-          <DrillPatternCircular
-            v-if="patternType === 'circular'"
-            v-model:centerX="circularPattern.centerX"
-            v-model:centerY="circularPattern.centerY"
-            v-model:radius="circularPattern.radius"
-            v-model:count="circularPattern.count"
-            v-model:startAngle="circularPattern.startAngle"
-            @generate="generateCircularPattern"
-          />
-
-          <!-- Grid Pattern -->
-          <DrillPatternGrid
-            v-if="patternType === 'grid'"
-            v-model:startX="gridPattern.startX"
-            v-model:startY="gridPattern.startY"
-            v-model:spacingX="gridPattern.spacingX"
-            v-model:spacingY="gridPattern.spacingY"
-            v-model:countX="gridPattern.countX"
-            v-model:countY="gridPattern.countY"
-            @generate="generateGridPattern"
-          />
-
-          <!-- CSV Import -->
-          <div
-            v-if="patternType === 'csv'"
-            :class="styles.patternControls"
-          >
-            <textarea
-              v-model="csvInput"
-              rows="6"
-              placeholder="x,y&#10;10,10&#10;30,10&#10;50,10"
-              :class="styles.csvInput"
-            />
-            <button
-              :class="styles.btnGenerate"
-              @click="importCsv"
-            >
-              Import CSV
-            </button>
-            <small :class="styles.hint">Format: x,y (one hole per line)</small>
-          </div>
-        </section>
+        <DrillPatternSelector
+          :styles="styles"
+          v-model:pattern-type="patternType"
+          v-model:csv-input="csvInput"
+          :linear-pattern="linearPattern"
+          :circular-pattern="circularPattern"
+          :grid-pattern="gridPattern"
+          @generate-linear="generateLinearPattern"
+          @generate-circular="generateCircularPattern"
+          @generate-grid="generateGridPattern"
+          @import-csv="importCsv"
+        />
 
         <!-- Hole List -->
-        <section :class="[styles.panelSection, styles.holeList]">
-          <h3>Holes ({{ holes.length }})</h3>
-          <div :class="styles.holeItems">
-            <div
-              v-for="(hole, index) in holes"
-              :key="index"
-              :class="[styles.holeItem, { [styles.holeItemSelected]: selectedHole === index }]"
-              @click="selectHole(index)"
-            >
-              <input
-                v-model="hole.enabled"
-                type="checkbox"
-                @click.stop
-                @change="updatePreview"
-              >
-              <div :class="styles.holeInfo">
-                <strong>H{{ index + 1 }}</strong>
-                <small>X{{ hole.x.toFixed(1) }} Y{{ hole.y.toFixed(1) }}</small>
-              </div>
-              <button
-                :class="styles.btnRemove"
-                @click.stop="removeHole(index)"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </section>
+        <DrillHoleList
+          :styles="styles"
+          :holes="holes"
+          :selected-hole="selectedHole"
+          @select-hole="selectHole"
+          @remove-hole="removeHole"
+          @toggle-hole="toggleHole"
+        />
 
         <!-- Post Processor -->
         <section :class="styles.panelSection">
@@ -358,32 +171,17 @@
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch } from 'vue'
 import styles from './DrillingLab.module.css'
-import DrillPatternLinear from './drilling/DrillPatternLinear.vue'
-import DrillPatternCircular from './drilling/DrillPatternCircular.vue'
-import DrillPatternGrid from './drilling/DrillPatternGrid.vue'
+import DrillToolSetup from './drilling/DrillToolSetup.vue'
+import DrillCycleType from './drilling/DrillCycleType.vue'
+import DrillDepthSettings from './drilling/DrillDepthSettings.vue'
+import DrillPatternSelector from './drilling/DrillPatternSelector.vue'
+import DrillHoleList from './drilling/DrillHoleList.vue'
 
 interface Hole {
   x: number
   y: number
   enabled: boolean
 }
-
-// Tool types
-const toolTypes = [
-  { value: 'drill', label: 'Drill' },
-  { value: 'tap', label: 'Tap' },
-  { value: 'spot', label: 'Spot Drill' },
-  { value: 'boring', label: 'Boring Bar' }
-]
-
-// Cycle types
-const cycleTypes = [
-  { value: 'G81', label: 'G81', description: 'Simple Drill' },
-  { value: 'G83', label: 'G83', description: 'Peck Drill' },
-  { value: 'G73', label: 'G73', description: 'Chip Break' },
-  { value: 'G84', label: 'G84', description: 'Tapping' },
-  { value: 'G85', label: 'G85', description: 'Boring' }
-]
 
 // State
 const params = ref({
@@ -489,6 +287,11 @@ function onCanvasHover(event: MouseEvent) {
 
 function selectHole(index: number) {
   selectedHole.value = index === selectedHole.value ? null : index
+}
+
+function toggleHole(index: number, enabled: boolean) {
+  holes.value[index].enabled = enabled
+  updatePreview()
 }
 
 function removeHole(index: number) {
