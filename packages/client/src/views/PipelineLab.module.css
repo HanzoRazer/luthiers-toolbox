@@ -156,28 +156,7 @@
    Status Badges
    ============================================================================= */
 
-.statusBadge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 1.2em;
-  font-weight: bold;
-}
-
-.statusBadgePassed {
-  composes: statusBadge;
-  background: #4CAF50;
-  color: white;
-}
-
-.statusBadgeFailed {
-  composes: statusBadge;
-  background: #f44336;
-  color: white;
-}
+/* statusBadge, statusBadgePassed, statusBadgeFailed: moved to @/styles/shared/badges.module.css */
 
 /* =============================================================================
    Summary Grid
@@ -337,39 +316,7 @@
   justify-content: center;
 }
 
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btnPrimary {
-  composes: btn;
-  background: #2196F3;
-  color: white;
-}
-
-.btnPrimary:hover:not(:disabled) {
-  background: #1976D2;
-}
-
-.btnSecondary {
-  composes: btn;
-  background: #9e9e9e;
-  color: white;
-}
-
-.btnSecondary:hover {
-  background: #757575;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* btn, btnPrimary, btnSecondary: moved to @/styles/shared/buttons.module.css */
 
 .navigationButtons {
   display: flex;

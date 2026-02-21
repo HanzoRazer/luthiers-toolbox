@@ -226,6 +226,7 @@ import {
   useDxfToGcode
 } from '@/components/dxf'
 import styles from './DxfToGcodeView.module.css'
+import { buttons, badges } from '@/styles/shared'
 
 const {
   // File

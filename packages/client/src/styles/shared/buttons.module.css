@@ -1,0 +1,139 @@
+/* Shared Button Styles
+ * Used across 12+ components - consolidated to reduce duplication
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSm {
+  composes: btn;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.btnLg {
+  composes: btn;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Primary - Blue */
+.btnPrimary {
+  composes: btn;
+  background: #2563eb;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+/* Secondary - Gray */
+.btnSecondary {
+  composes: btn;
+  background: #6b7280;
+  color: white;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+/* Success - Green */
+.btnSuccess {
+  composes: btn;
+  background: #10b981;
+  color: white;
+}
+
+.btnSuccess:hover:not(:disabled) {
+  background: #059669;
+}
+
+/* Danger - Red */
+.btnDanger {
+  composes: btn;
+  background: #ef4444;
+  color: white;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+/* Warning - Amber */
+.btnWarning {
+  composes: btn;
+  background: #f59e0b;
+  color: white;
+}
+
+.btnWarning:hover:not(:disabled) {
+  background: #d97706;
+}
+
+/* Ghost - Transparent with border */
+.btnGhost {
+  composes: btn;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+/* Link style */
+.btnLink {
+  composes: btn;
+  background: transparent;
+  color: #2563eb;
+  padding: 0;
+}
+
+.btnLink:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+/* Icon button */
+.btnIcon {
+  composes: btn;
+  padding: 0.5rem;
+  background: transparent;
+  color: #6b7280;
+}
+
+.btnIcon:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Close button (X) */
+.btnClose {
+  composes: btnIcon;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Full width */
+.btnBlock {
+  width: 100%;
+}
