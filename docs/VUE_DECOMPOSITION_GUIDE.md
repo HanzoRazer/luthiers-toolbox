@@ -186,6 +186,173 @@ const { params, updateParam, resetParams } = useCamParameters()
 
 ---
 
+## Systematic Extraction Workflow (Claude Code Add-on)
+
+This section documents the automated extraction workflow using `analyze_vue_extraction.py`.
+
+### Quick Start
+
+```bash
+# 1. Find candidates in components over 500 lines
+python scripts/analyze_vue_extraction.py packages/client/src/components --recursive --min-lines 500
+
+# 2. Find candidates in views over 500 lines
+python scripts/analyze_vue_extraction.py packages/client/src/views --recursive --min-lines 500
+
+# 3. Choose file with most HIGH candidates, then extract
+```
+
+### v-model Pattern for Two-Way Binding
+
+When extracting form sections, use Vue's v-model pattern:
+
+**Child component:**
+```vue
+<template>
+  <input
+    :value="toolDiameter"
+    type="number"
+    @input="emit('update:toolDiameter', parseFloat(($event.target as HTMLInputElement).value))"
+  >
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  toolDiameter: number
+}>()
+
+const emit = defineEmits<{
+  'update:toolDiameter': [value: number]
+}>()
+</script>
+```
+
+**Parent usage:**
+```vue
+<ToolSetup
+  v-model:tool-diameter="params.toolDiameter"
+  @update:tool-diameter="onParamChange"
+/>
+```
+
+**Key rules:**
+- Prop name: `camelCase` in defineProps (e.g., `toolDiameter`)
+- v-model binding: `kebab-case` (e.g., `v-model:tool-diameter`)
+- Emit name must match prop: `update:toolDiameter`
+
+### CSS Modules Handling
+
+When parent uses CSS Modules, pass styles object as prop:
+
+**Child:**
+```vue
+<template>
+  <section :class="styles.panelSection">
+    <div :class="styles.formGroup">...</div>
+  </section>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  styles: Record<string, string>
+}>()
+</script>
+```
+
+**Parent:**
+```vue
+<ChildPanel :styles="styles" />
+```
+
+### Nested Candidate Consolidation
+
+When analyzer shows nested HIGH candidates, extract the **outermost** as one component:
+
+```
+1. [HIGH] Lines 100-250 - HistorySidebar (contains nested)
+   2. [HIGH] Lines 120-160 - RiskMetrics (nested)
+   3. [HIGH] Lines 170-220 - PresetScorecard (nested)
+```
+
+→ Extract lines 100-250 as `HistorySidebar.vue` containing both nested sections.
+
+### Helper Function Migration
+
+Move helper functions to child when **only used by that section**:
+
+**Before (parent):**
+```typescript
+function formatDate(iso: string) { /* ... */ }
+function riskColor(score: number) { /* ... */ }
+// Used only in one section
+```
+
+**After (child):**
+```typescript
+// Moved from parent - only used here
+function formatDate(iso: string) { /* ... */ }
+function riskColor(score: number) { /* ... */ }
+```
+
+### Type Interface Co-location
+
+Move TypeScript interfaces to child when only used there:
+
+```vue
+<script setup lang="ts">
+// Interfaces moved from parent
+interface Hole {
+  x: number
+  y: number
+  enabled: boolean
+}
+
+defineProps<{
+  holes: Hole[]
+}>()
+</script>
+```
+
+### Subdirectory Organization
+
+Create subdirectory for multiple child extractions:
+
+```
+components/
+  DrillingLab.vue              # Parent (743 → 546 lines)
+  drilling/
+    DrillToolSetup.vue         # Extracted
+    DrillCycleType.vue         # Extracted
+    DrillDepthSettings.vue     # Extracted
+```
+
+### Extraction Checklist
+
+Before committing:
+- [ ] All extracted components pass type-check
+- [ ] v-model prop names match emit names
+- [ ] CSS Modules styles passed if needed
+- [ ] Helper functions moved to appropriate component
+- [ ] Type interfaces moved to appropriate component
+- [ ] Line count reduction verified
+
+### Commit Message Template
+
+```
+refactor(ui): extract N HIGH candidates from ComponentName.vue
+
+Extract sections into focused child components:
+- ChildA.vue (XX lines): description
+- ChildB.vue (XX lines): description
+
+ComponentName.vue: XXX → YYY lines (ZZ% reduction)
+
+All components use v-model pattern for two-way binding.
+Passes type-check.
+```
+
+---
+
 ## Success Metrics
 
 | Metric | Before | Target |
