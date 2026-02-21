@@ -1,18 +1,11 @@
 /**
  * InstrumentGeometryPanel CSS Module
- * Dark theme instrument geometry designer styles
+ * Component-specific styles (shared styles in @/styles/dark-theme-shared.module.css)
  */
 
 /* =============================================================================
-   Layout & Container
+   Header (component-specific)
    ============================================================================= */
-
-.instrumentGeometryPanel {
-  padding: 20px;
-  background: #0a0a0a;
-  min-height: 100vh;
-  color: #e5e5e5;
-}
 
 .panelHeader {
   margin-bottom: 24px;
@@ -31,62 +24,9 @@
   color: #999;
 }
 
-.layoutGrid {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 24px;
-}
-
 /* =============================================================================
-   Controls Panel (Left)
+   Model Info (component-specific display layout)
    ============================================================================= */
-
-.controlsPanel {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-.controlSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.controlSection h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  border-bottom: 1px solid #333;
-  padding-bottom: 8px;
-}
-
-/* =============================================================================
-   Form Inputs
-   ============================================================================= */
-
-.selectInput {
-  width: 100%;
-  padding: 10px;
-  background: #0a0a0a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.selectInput:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
 
 .modelInfo {
   display: flex;
@@ -112,58 +52,9 @@
   font-weight: 500;
 }
 
-.inputGroup {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.inputGroup label {
-  flex: 1;
-  font-size: 13px;
-  color: #ccc;
-}
-
-.numberInput {
-  width: 80px;
-  padding: 6px 8px;
-  background: #0a0a0a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e5e5e5;
-  font-size: 13px;
-  text-align: right;
-}
-
-.numberInput:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.unit {
-  width: 30px;
-  font-size: 13px;
-  color: #999;
-}
-
 /* =============================================================================
-   Checkbox & Fan-Fret
+   Fan-Fret Controls (component-specific indent)
    ============================================================================= */
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 0;
-}
-
-.checkboxInput {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
 
 .fanFretControls {
   display: flex;
@@ -173,86 +64,7 @@
 }
 
 /* =============================================================================
-   Banners & Alerts
-   ============================================================================= */
-
-.infoBanner {
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  background: #1e3a8a;
-  color: #93c5fd;
-  border: 1px solid #3b82f6;
-}
-
-.infoBannerWarning {
-  composes: infoBanner;
-  background: #78350f;
-  color: #fcd34d;
-  border-color: #f59e0b;
-}
-
-.errorBanner {
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 13px;
-  background: #7f1d1d;
-  color: #fca5a5;
-  border: 1px solid #ef4444;
-}
-
-/* =============================================================================
-   Buttons
-   ============================================================================= */
-
-.btnPrimary {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #0ea5e9;
-  color: #fff;
-}
-
-.btnPrimary:hover:not(:disabled) {
-  background: #0284c7;
-  transform: translateY(-1px);
-}
-
-.btnPrimary:disabled {
-  background: #444;
-  color: #888;
-  cursor: not-allowed;
-}
-
-.btnLarge {
-  composes: btnPrimary;
-  width: 100%;
-  padding: 14px 20px;
-  font-size: 16px;
-}
-
-.btnSecondary {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #374151;
-  color: #e5e5e5;
-}
-
-.btnSecondary:hover {
-  background: #4b5563;
-}
-
-/* =============================================================================
-   Preview Panel (Right)
+   Preview Panel (component-specific sizing)
    ============================================================================= */
 
 .previewPanel {
@@ -263,56 +75,6 @@
   min-height: 600px;
 }
 
-.loadingState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #333;
-  border-top-color: #0ea5e9;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-  color: #666;
-}
-
-.emptyIcon {
-  font-size: 64px;
-}
-
-.emptyState h3 {
-  margin: 0;
-  font-size: 20px;
-  color: #999;
-}
-
-.emptyState p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
 .previewContent {
   display: flex;
   flex-direction: column;
@@ -320,7 +82,7 @@
 }
 
 /* =============================================================================
-   Feasibility Header
+   Feasibility Header (component-specific layout)
    ============================================================================= */
 
 .feasibilityHeader {
@@ -353,33 +115,8 @@
   margin-left: auto;
 }
 
-.flagBase {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.flagGood {
-  composes: flagBase;
-  background: #065f46;
-  color: #6ee7b7;
-}
-
-.flagBad {
-  composes: flagBase;
-  background: #7f1d1d;
-  color: #fca5a5;
-}
-
-.flagWarning {
-  composes: flagBase;
-  background: #78350f;
-  color: #fcd34d;
-}
-
 /* =============================================================================
-   Recommendations
+   Recommendations (component-specific)
    ============================================================================= */
 
 .recommendations {
@@ -407,7 +144,7 @@
 }
 
 /* =============================================================================
-   Fretboard Preview
+   Fretboard Preview (component-specific)
    ============================================================================= */
 
 .fretboardPreview h4 {
@@ -417,37 +154,7 @@
 }
 
 /* =============================================================================
-   Statistics Grid
-   ============================================================================= */
-
-.statisticsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.statCard {
-  padding: 16px;
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.statLabel {
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 8px;
-}
-
-.statValue {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0ea5e9;
-}
-
-/* =============================================================================
-   Code Previews
+   Code Previews (component-specific 2-col grid)
    ============================================================================= */
 
 .codePreviews {
@@ -468,35 +175,14 @@
   color: #fff;
 }
 
-.codePreview {
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 12px;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  color: #10b981;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
 /* =============================================================================
-   Toolpath Table
+   Toolpath Table (component-specific)
    ============================================================================= */
 
 .toolpathTable h4 {
   margin: 0 0 12px 0;
   font-size: 15px;
   color: #fff;
-}
-
-.tableWrapper {
-  overflow-x: auto;
-  background: #0a0a0a;
-  border: 1px solid #333;
-  border-radius: 6px;
 }
 
 .table {
