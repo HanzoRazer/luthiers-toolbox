@@ -1,17 +1,17 @@
 <template>
-  <div class="page">
-    <header class="header">
+  <div :class="styles.page">
+    <header :class="styles.header">
       <h1>Acoustics Library</h1>
-      <p class="sub">
+      <p :class="styles.sub">
         Upload, browse, and open <code>viewer_pack</code> evidence bundles.
       </p>
     </header>
 
     <!-- Import Panel -->
-    <section class="card">
+    <section :class="styles.card">
       <h2>Import ZIP</h2>
-      <div class="import-form">
-        <div class="import-row">
+      <div :class="styles.importForm">
+        <div :class="styles.importRow">
           <input
             ref="fileInput"
             type="file"
@@ -19,14 +19,14 @@
             @change="onFileChange"
           >
           <button
-            class="btn"
+            :class="styles.btn"
             :disabled="!selectedFile || importing"
             @click="doImport"
           >
             {{ importing ? "Importing..." : "Import" }}
           </button>
         </div>
-        <div class="import-options">
+        <div :class="styles.importOptions">
           <label>
             <span>Session ID (optional)</span>
             <input
@@ -46,7 +46,7 @@
         </div>
         <div
           v-if="importResult"
-          class="import-result"
+          :class="styles.importResult"
         >
           Imported <code>{{ importResult.run_id }}</code> —
           {{ importResult.attachments_written }} written,
@@ -54,7 +54,7 @@
         </div>
         <div
           v-if="importError"
-          class="import-error"
+          :class="styles.importError"
         >
           {{ importError }}
         </div>
@@ -62,106 +62,104 @@
     </section>
 
     <!-- Facets Panel -->
-    <section class="card">
+    <section :class="styles.card">
       <h2>Facets</h2>
       <div
         v-if="facetsLoading"
-        class="muted"
+        :class="styles.muted"
       >
         Loading facets...
       </div>
       <div
         v-else-if="facetsError"
-        class="import-error"
+        :class="styles.importError"
       >
         {{ facetsError }}
       </div>
       <div
         v-else
-        class="facets-grid"
+        :class="styles.facetsGrid"
       >
-        <div class="facet-group">
+        <div :class="styles.facetGroup">
           <h3>Kind</h3>
-          <div class="facet-chips">
+          <div :class="styles.facetChips">
             <button
               v-for="item in facets?.kinds"
               :key="item.kind"
-              class="facet-chip"
-              :class="{ active: kindFilter === item.kind }"
+              :class="kindFilter === item.kind ? styles.facetChipActive : styles.facetChip"
               @click="toggleKindFilter(item.kind)"
             >
               {{ item.kind }} ({{ item.count }})
             </button>
           </div>
         </div>
-        <div class="facet-group">
+        <div :class="styles.facetGroup">
           <h3>MIME</h3>
-          <div class="facet-chips">
+          <div :class="styles.facetChips">
             <button
               v-for="item in facets?.mime_exact"
               :key="item.mime"
-              class="facet-chip"
-              :class="{ active: mimeFilter === item.mime }"
+              :class="mimeFilter === item.mime ? styles.facetChipActive : styles.facetChip"
               @click="toggleMimeFilter(item.mime)"
             >
               {{ item.mime }} ({{ item.count }})
             </button>
           </div>
         </div>
-        <div class="facet-total">
+        <div :class="styles.facetTotal">
           Total: {{ facets?.total ?? 0 }} attachments
         </div>
       </div>
     </section>
 
     <!-- Recent Panel -->
-    <section class="card">
+    <section :class="styles.card">
       <h2>Recent</h2>
       <div
         v-if="recentLoading"
-        class="muted"
+        :class="styles.muted"
       >
         Loading...
       </div>
       <div
         v-else-if="recentError"
-        class="import-error"
+        :class="styles.importError"
       >
         {{ recentError }}
       </div>
       <div
         v-else-if="!recentData?.entries?.length"
-        class="muted"
+        :class="styles.muted"
       >
         No recent attachments. Import a viewer_pack to get started.
       </div>
       <div
         v-else
-        class="recent-list"
+        :class="styles.recentList"
       >
         <div
           v-for="entry in recentData.entries"
           :key="entry.sha256"
-          class="recent-item"
+          :class="styles.recentItem"
         >
-          <div class="recent-info">
+          <div :class="styles.recentInfo">
             <span
-              class="recent-filename"
+              :class="styles.recentFilename"
               :title="entry.filename"
             >{{ entry.filename }}</span>
-            <code class="kind-badge">{{ entry.kind }}</code>
-            <span class="recent-meta">{{ formatSize(entry.size_bytes) }}</span>
+            <code :class="styles.kindBadge">{{ entry.kind }}</code>
+            <span :class="styles.recentMeta">{{ formatSize(entry.size_bytes) }}</span>
           </div>
-          <div class="recent-actions">
+          <div :class="styles.recentActions">
             <a
               v-if="isViewerPack(entry)"
-              class="btn btn-sm"
+              :class="[styles.btn, styles.btnSm]"
               :href="`/tools/audio-analyzer?sha256=${entry.sha256}`"
             >
               Open
             </a>
             <a
-              class="btn btn-sm"
+              :class="[styles.btn, styles.btnSm]"
               :href="getDownloadUrl(entry.sha256)"
               download
             >
@@ -171,7 +169,7 @@
         </div>
         <button
           v-if="recentData.next_cursor"
-          class="btn"
+          :class="styles.btn"
           @click="loadMoreRecent"
         >
           More
@@ -180,41 +178,41 @@
     </section>
 
     <!-- Browse Table -->
-    <section class="card wide">
+    <section :class="styles.cardWide">
       <h2>Browse Attachments</h2>
-      <div class="filter-bar">
+      <div :class="styles.filterBar">
         <span
           v-if="kindFilter || mimeFilter"
-          class="active-filters"
+          :class="styles.activeFilters"
         >
           Filters:
           <code v-if="kindFilter">kind={{ kindFilter }}</code>
           <code v-if="mimeFilter">mime={{ mimeFilter }}</code>
           <button
-            class="btn-clear"
+            :class="styles.btnClear"
             @click="clearFilters"
           >Clear</button>
         </span>
-        <span class="browse-count">
+        <span :class="styles.browseCount">
           Showing {{ browseData?.count ?? 0 }} of {{ browseData?.total_in_index ?? 0 }}
         </span>
       </div>
 
       <div
         v-if="browseLoading"
-        class="muted"
+        :class="styles.muted"
       >
         Loading...
       </div>
       <div
         v-else-if="browseError"
-        class="import-error"
+        :class="styles.importError"
       >
         {{ browseError }}
       </div>
       <table
         v-else
-        class="tbl"
+        :class="styles.tbl"
       >
         <thead>
           <tr>
@@ -232,42 +230,45 @@
             :key="entry.sha256"
           >
             <td
-              class="mono filename-cell"
+              :class="[styles.mono, styles.filenameCell]"
               :title="entry.filename"
             >
               {{ entry.filename }}
             </td>
-            <td><code class="kind-badge">{{ entry.kind }}</code></td>
+            <td><code :class="styles.kindBadge">{{ entry.kind }}</code></td>
             <td>
               <span
                 v-if="isViewerPack(entry)"
-                class="validation-badge"
-                :class="getValidationClass(entry)"
+                :class="[styles.validationBadge, {
+                  [styles.badgePass]: entry.validation_passed === true,
+                  [styles.badgeFail]: entry.validation_passed === false,
+                  [styles.badgeUnknown]: entry.validation_passed === undefined
+                }]"
                 :title="getValidationTooltip(entry)"
               >
                 {{ getValidationLabel(entry) }}
               </span>
               <span
                 v-else
-                class="validation-na"
+                :class="styles.validationNa"
               >—</span>
             </td>
-            <td class="mono">
+            <td :class="styles.mono">
               {{ entry.mime }}
             </td>
-            <td class="mono">
+            <td :class="styles.mono">
               {{ formatSize(entry.size_bytes) }}
             </td>
-            <td class="actions-cell">
+            <td :class="styles.actionsCell">
               <a
                 v-if="isViewerPack(entry)"
-                class="btn"
+                :class="styles.btn"
                 :href="`/tools/audio-analyzer?sha256=${entry.sha256}`"
               >
                 Open
               </a>
               <a
-                class="btn"
+                :class="styles.btn"
                 :href="getDownloadUrl(entry.sha256)"
                 download
               >
@@ -281,10 +282,10 @@
       <!-- Pagination -->
       <div
         v-if="browseData"
-        class="pagination"
+        :class="styles.pagination"
       >
         <button
-          class="btn"
+          :class="styles.btn"
           :disabled="!browseData.next_cursor"
           @click="loadNextPage"
         >
@@ -313,6 +314,7 @@ import type {
   RecentResponse,
   AttachmentMetaEntry,
 } from "@/types/rmosAcoustics";
+import styles from "./AudioAnalyzerLibrary.module.css";
 
 // Import state
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -464,12 +466,6 @@ function loadNextPage() {
 }
 
 // Validation badge helpers
-function getValidationClass(entry: AttachmentMetaEntry): string {
-  if (entry.validation_passed === true) return "badge-pass";
-  if (entry.validation_passed === false) return "badge-fail";
-  return "badge-unknown";
-}
-
 function getValidationLabel(entry: AttachmentMetaEntry): string {
   if (entry.validation_passed === true) return "PASS";
   if (entry.validation_passed === false) return "FAIL";
@@ -491,338 +487,3 @@ onMounted(() => {
   loadBrowse();
 });
 </script>
-
-<style scoped>
-.page {
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header h1 {
-  margin: 0;
-}
-
-.sub {
-  opacity: 0.8;
-  margin-top: 6px;
-}
-
-.sub code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.125rem 0.35rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 12px;
-  margin-top: 12px;
-}
-
-.card.wide {
-  margin-top: 12px;
-}
-
-.card h2 {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
-}
-
-/* Import Form */
-.import-form {
-  display: grid;
-  gap: 12px;
-}
-
-.import-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.import-options {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.import-options label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-}
-
-.import-options label span {
-  opacity: 0.75;
-}
-
-.import-options input {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
-}
-
-.import-result {
-  padding: 8px 12px;
-  background: rgba(66, 184, 131, 0.15);
-  border: 1px solid rgba(66, 184, 131, 0.25);
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.import-error {
-  padding: 8px 12px;
-  background: rgba(255, 0, 0, 0.12);
-  border: 1px solid rgba(255, 0, 0, 0.25);
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-/* Facets */
-.facets-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.facet-group h3 {
-  margin: 0 0 8px 0;
-  font-size: 0.85rem;
-  opacity: 0.75;
-}
-
-.facet-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.facet-chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.facet-chip:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.facet-chip.active {
-  background: rgba(66, 184, 131, 0.2);
-  border-color: rgba(66, 184, 131, 0.4);
-}
-
-.facet-total {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-/* Recent Panel */
-.recent-list {
-  display: grid;
-  gap: 8px;
-}
-
-.recent-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  gap: 12px;
-}
-
-.recent-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.recent-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
-}
-
-.recent-filename {
-  font-family: monospace;
-  font-size: 0.85rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 280px;
-}
-
-.recent-meta {
-  font-size: 0.8rem;
-  opacity: 0.6;
-  white-space: nowrap;
-}
-
-.recent-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-}
-
-/* Browse Table */
-.filter-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.active-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-}
-
-.active-filters code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.btn-clear {
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: transparent;
-  color: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.btn-clear:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.browse-count {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-.tbl {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tbl th,
-.tbl td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 8px;
-  text-align: left;
-}
-
-.tbl tbody tr:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85rem;
-}
-
-.filename-cell {
-  max-width: 250px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.kind-badge {
-  display: inline-block;
-  padding: 0.125rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.actions-cell {
-  display: flex;
-  gap: 6px;
-}
-
-.btn {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  color: inherit;
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-.btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination {
-  margin-top: 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.muted {
-  opacity: 0.7;
-  padding: 8px 0;
-}
-
-/* Validation badge styles */
-.validation-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.validation-badge.badge-pass {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.validation-badge.badge-fail {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.validation-badge.badge-unknown {
-  background: rgba(107, 114, 128, 0.2);
-  color: #9ca3af;
-}
-
-.validation-na {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-</style>
