@@ -1,0 +1,529 @@
+.finishingDesigner {
+  background: #202124;
+  color: #e8eaed;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.designerHeader {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.designerTitle {
+  font-size: 32px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 8px;
+}
+
+.designerSubtitle {
+  font-size: 16px;
+  color: #9aa0a6;
+  line-height: 1.5;
+}
+
+.designerTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #3c4043;
+  overflow-x: auto;
+}
+
+.designerTab {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #9aa0a6;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.designerTab:hover {
+  color: #e8eaed;
+  background: rgba(138, 180, 248, 0.1);
+}
+
+.designerTabActive {
+  composes: designerTab;
+  color: #8ab4f8;
+  border-bottom-color: #8ab4f8;
+}
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.finishGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.finishCard {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.finishCard:hover {
+  border-color: #8ab4f8;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.3);
+}
+
+.finishName {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.finishTime {
+  font-size: 14px;
+  color: #8ab4f8;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.finishInfo {
+  font-size: 13px;
+  color: #9aa0a6;
+  line-height: 1.8;
+}
+
+.workflowSection {
+  max-width: 900px;
+}
+
+.workflowStep {
+  display: flex;
+  gap: 20px;
+  background: #292a2d;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1a73e8, #8ab4f8);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.stepDesc {
+  font-size: 14px;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.stepTime {
+  font-size: 13px;
+  color: #8ab4f8;
+}
+
+.workflowSummary {
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.2), rgba(138, 180, 248, 0.1));
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 24px;
+  border: 2px solid #8ab4f8;
+}
+
+.workflowSummary h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 16px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.summaryItem {
+  text-align: center;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+}
+
+.summaryValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #e8eaed;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9aa0a6;
+  font-size: 16px;
+}
+
+.laborCalculator {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+}
+
+.inputSection,
+.resultsSection {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.inputSection h3,
+.resultsSection h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.inputGroup input,
+.inputGroup select {
+  width: 100%;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.ratePresets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.btnPreset {
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPreset:hover {
+  background: #8ab4f8;
+  color: #202124;
+  border-color: #8ab4f8;
+}
+
+.costBreakdown {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.costRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+}
+
+.costRow:last-child {
+  border-bottom: none;
+}
+
+.costRowTotal {
+  composes: costRow;
+  background: rgba(138, 180, 248, 0.2);
+  font-size: 16px;
+}
+
+.costHours {
+  color: #8ab4f8;
+  text-align: right;
+}
+
+.costValue {
+  color: #51cf66;
+  text-align: right;
+  font-weight: 600;
+}
+
+.insightBox {
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.2), rgba(138, 180, 248, 0.1));
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #8ab4f8;
+}
+
+.insightBox h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.insightBox p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e8eaed;
+  margin-bottom: 12px;
+}
+
+.insightBox p:last-child {
+  margin-bottom: 0;
+}
+
+.burstDesigner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+}
+
+.burstControls h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin: 20px 0 12px 0;
+}
+
+.burstControls h3:first-child {
+  margin-top: 0;
+}
+
+.burstTypeSelector {
+  display: flex;
+  gap: 12px;
+}
+
+.burstTypeCard {
+  flex: 1;
+  background: #3c4043;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  font-size: 14px;
+}
+
+.burstTypeCard:hover {
+  background: #4a4d50;
+}
+
+.burstTypeCardActive {
+  composes: burstTypeCard;
+  background: #8ab4f8;
+  color: #202124;
+  border-color: #8ab4f8;
+  font-weight: 600;
+}
+
+.colorInputs,
+.paramInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.colorInput,
+.paramInput {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.colorInput label,
+.paramInput label {
+  flex: 1;
+  font-size: 14px;
+  color: #e8eaed;
+}
+
+.colorInput input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.colorInput span {
+  font-family: monospace;
+  font-size: 13px;
+  color: #9aa0a6;
+}
+
+.paramInput input {
+  width: 120px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.burstPresets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btnBurst {
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnBurst:hover {
+  background: #8ab4f8;
+  color: #202124;
+  border-color: #8ab4f8;
+}
+
+.btnExport {
+  background: linear-gradient(135deg, #1a73e8, #8ab4f8);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.btnExport:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.4);
+}
+
+.burstPreview {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.burstPreview h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.previewCanvas {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.previewNote {
+  font-size: 12px;
+  color: #9aa0a6;
+  text-align: center;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+@media (max-width: 1024px) {
+  .laborCalculator,
+  .burstDesigner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .designerTabs {
+    overflow-x: auto;
+  }
+
+  .finishGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .burstPresets {
+    grid-template-columns: 1fr;
+  }
+}

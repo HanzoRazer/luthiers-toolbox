@@ -1,22 +1,21 @@
 <template>
-  <div class="finishing-designer">
+  <div :class="styles.finishingDesigner">
     <!-- Header -->
-    <div class="designer-header">
-      <h1 class="designer-title">
+    <div :class="styles.designerHeader">
+      <h1 :class="styles.designerTitle">
         🎨 Finishing Designer
       </h1>
-      <p class="designer-subtitle">
+      <p :class="styles.designerSubtitle">
         Plan finishes, track labor hours, and understand the true value of your craftsmanship
       </p>
     </div>
 
     <!-- Tab Navigation -->
-    <div class="designer-tabs">
-      <div 
-        v-for="tab in tabs" 
+    <div :class="styles.designerTabs">
+      <div
+        v-for="tab in tabs"
         :key="tab.id"
-        class="designer-tab" 
-        :class="{ active: activeTab === tab.id }"
+        :class="[styles.designerTab, { [styles.designerTabActive]: activeTab === tab.id }]"
         @click="activeTab = tab.id"
       >
         {{ tab.label }}
@@ -26,25 +25,25 @@
     <!-- Tab 1: Finish Types & Planning -->
     <div
       v-if="activeTab === 'types'"
-      class="tab-content"
+      :class="styles.tabContent"
     >
-      <div class="section-header">
+      <div :class="styles.sectionHeader">
         <h2>Finish Types</h2>
         <p>Select a finishing technique and explore its requirements</p>
       </div>
 
-      <div class="finish-grid">
+      <div :class="styles.finishGrid">
         <div
-          class="finish-card"
+          :class="styles.finishCard"
           @click="selectFinish('varnish')"
         >
-          <div class="finish-name">
+          <div :class="styles.finishName">
             Simple Varnish
           </div>
-          <div class="finish-time">
+          <div :class="styles.finishTime">
             8-12 hours labor
           </div>
-          <div class="finish-info">
+          <div :class="styles.finishInfo">
             <div>• Easiest for beginners</div>
             <div>• 3-5 coats</div>
             <div>• Wipe-on or brush application</div>
@@ -53,16 +52,16 @@
         </div>
 
         <div
-          class="finish-card"
+          :class="styles.finishCard"
           @click="selectFinish('french')"
         >
-          <div class="finish-name">
+          <div :class="styles.finishName">
             French Polish (Shellac)
           </div>
-          <div class="finish-time">
+          <div :class="styles.finishTime">
             20-40 hours labor
           </div>
-          <div class="finish-info">
+          <div :class="styles.finishInfo">
             <div>• Traditional hand-rubbed</div>
             <div>• 50-100+ applications</div>
             <div>• Requires skill and patience</div>
@@ -71,16 +70,16 @@
         </div>
 
         <div
-          class="finish-card"
+          :class="styles.finishCard"
           @click="selectFinish('nitro')"
         >
-          <div class="finish-name">
+          <div :class="styles.finishName">
             Nitrocellulose Lacquer
           </div>
-          <div class="finish-time">
+          <div :class="styles.finishTime">
             15-25 hours labor
           </div>
-          <div class="finish-info">
+          <div :class="styles.finishInfo">
             <div>• Classic guitar finish</div>
             <div>• 6-12 coats + sanding</div>
             <div>• Spray gun required</div>
@@ -89,16 +88,16 @@
         </div>
 
         <div
-          class="finish-card"
+          :class="styles.finishCard"
           @click="selectFinish('poly')"
         >
-          <div class="finish-name">
+          <div :class="styles.finishName">
             Polyurethane
           </div>
-          <div class="finish-time">
+          <div :class="styles.finishTime">
             10-18 hours labor
           </div>
-          <div class="finish-info">
+          <div :class="styles.finishInfo">
             <div>• Modern durable finish</div>
             <div>• 3-6 coats</div>
             <div>• Spray or wipe-on</div>
@@ -107,16 +106,16 @@
         </div>
 
         <div
-          class="finish-card"
+          :class="styles.finishCard"
           @click="selectFinish('oil')"
         >
-          <div class="finish-name">
+          <div :class="styles.finishName">
             Oil Finish (Tung/Linseed)
           </div>
-          <div class="finish-time">
+          <div :class="styles.finishTime">
             12-20 hours labor
           </div>
-          <div class="finish-info">
+          <div :class="styles.finishInfo">
             <div>• Natural "in-the-wood" finish</div>
             <div>• 5-8 coats + buffing</div>
             <div>• Hand application</div>
@@ -129,63 +128,63 @@
     <!-- Tab 2: Process Workflow -->
     <div
       v-if="activeTab === 'workflow'"
-      class="tab-content"
+      :class="styles.tabContent"
     >
-      <div class="section-header">
+      <div :class="styles.sectionHeader">
         <h2>Finishing Workflow: {{ finishTypes[selectedFinish]?.name || 'Select a finish type' }}</h2>
         <p>Step-by-step process with labor time estimates</p>
       </div>
 
       <div
         v-if="selectedFinish"
-        class="workflow-section"
+        :class="styles.workflowSection"
       >
         <div
           v-for="(step, idx) in finishTypes[selectedFinish].steps"
           :key="idx"
-          class="workflow-step"
+          :class="styles.workflowStep"
         >
-          <div class="step-number">
+          <div :class="styles.stepNumber">
             {{ idx + 1 }}
           </div>
-          <div class="step-content">
-            <div class="step-title">
+          <div :class="styles.stepContent">
+            <div :class="styles.stepTitle">
               {{ step.title }}
             </div>
-            <div class="step-desc">
+            <div :class="styles.stepDesc">
               {{ step.description }}
             </div>
-            <div class="step-time">
-              <strong>Time:</strong> {{ step.time }} | 
+            <div :class="styles.stepTime">
+              <strong>Time:</strong> {{ step.time }} |
               <strong>Cure:</strong> {{ step.cure }}
             </div>
           </div>
         </div>
 
-        <div class="workflow-summary">
+        <div :class="styles.workflowSummary">
           <h3>Total Labor Estimate</h3>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <div class="summary-label">
+          <div :class="styles.summaryGrid">
+            <div :class="styles.summaryItem">
+              <div :class="styles.summaryLabel">
                 Active Work Time
               </div>
-              <div class="summary-value">
+              <div :class="styles.summaryValue">
                 {{ finishTypes[selectedFinish].totalLabor }}
               </div>
             </div>
-            <div class="summary-item">
-              <div class="summary-label">
+            <div :class="styles.summaryItem">
+              <div :class="styles.summaryLabel">
                 Cure/Wait Time
               </div>
-              <div class="summary-value">
+              <div :class="styles.summaryValue">
                 {{ finishTypes[selectedFinish].totalCure }}
               </div>
             </div>
-            <div class="summary-item">
-              <div class="summary-label">
+            <div :class="styles.summaryItem">
+              <div :class="styles.summaryLabel">
                 Calendar Days
               </div>
-              <div class="summary-value">
+              <div :class="styles.summaryValue">
                 {{ finishTypes[selectedFinish].calendarDays }}
               </div>
             </div>
@@ -195,7 +194,7 @@
 
       <div
         v-else
-        class="empty-state"
+        :class="styles.emptyState"
       >
         Select a finish type from the Finish Types tab to see the workflow
       </div>
@@ -204,17 +203,17 @@
     <!-- Tab 3: Labor & Cost -->
     <div
       v-if="activeTab === 'labor'"
-      class="tab-content"
+      :class="styles.tabContent"
     >
-      <div class="section-header">
+      <div :class="styles.sectionHeader">
         <h2>Labor Value Calculator</h2>
         <p>Understand what your time and skill are worth</p>
       </div>
 
-      <div class="labor-calculator">
-        <div class="input-section">
+      <div :class="styles.laborCalculator">
+        <div :class="styles.inputSection">
           <h3>Your Labor Rate</h3>
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Hourly Rate ($/hr)</label>
             <input
               v-model.number="hourlyRate"
@@ -224,27 +223,27 @@
               max="200"
             >
           </div>
-          <div class="rate-presets">
+          <div :class="styles.ratePresets">
             <button
-              class="btn-preset"
+              :class="styles.btnPreset"
               @click="hourlyRate = 25"
             >
               Hobbyist ($25)
             </button>
             <button
-              class="btn-preset"
+              :class="styles.btnPreset"
               @click="hourlyRate = 50"
             >
               Semi-Pro ($50)
             </button>
             <button
-              class="btn-preset"
+              :class="styles.btnPreset"
               @click="hourlyRate = 75"
             >
               Professional ($75)
             </button>
             <button
-              class="btn-preset"
+              :class="styles.btnPreset"
               @click="hourlyRate = 100"
             >
               Master ($100)
@@ -252,7 +251,7 @@
           </div>
 
           <h3>Project Size</h3>
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Instrument Type</label>
             <select v-model="instrumentType">
               <option value="full-body">
@@ -276,7 +275,7 @@
             </select>
           </div>
 
-          <div class="input-group">
+          <div :class="styles.inputGroup">
             <label>Finish Type</label>
             <select v-model="laborFinishType">
               <option value="varnish">
@@ -298,44 +297,44 @@
           </div>
         </div>
 
-        <div class="results-section">
+        <div :class="styles.resultsSection">
           <h3>Labor Cost Breakdown</h3>
-          <div class="cost-breakdown">
-            <div class="cost-row">
+          <div :class="styles.costBreakdown">
+            <div :class="styles.costRow">
               <span>Surface Preparation</span>
-              <span class="cost-hours">{{ prepHours }} hrs</span>
-              <span class="cost-value">${{ (prepHours * hourlyRate).toFixed(2) }}</span>
+              <span :class="styles.costHours">{{ prepHours }} hrs</span>
+              <span :class="styles.costValue">${{ (prepHours * hourlyRate).toFixed(2) }}</span>
             </div>
-            <div class="cost-row">
+            <div :class="styles.costRow">
               <span>Finish Application</span>
-              <span class="cost-hours">{{ applicationHours }} hrs</span>
-              <span class="cost-value">${{ (applicationHours * hourlyRate).toFixed(2) }}</span>
+              <span :class="styles.costHours">{{ applicationHours }} hrs</span>
+              <span :class="styles.costValue">${{ (applicationHours * hourlyRate).toFixed(2) }}</span>
             </div>
-            <div class="cost-row">
+            <div :class="styles.costRow">
               <span>Sanding Between Coats</span>
-              <span class="cost-hours">{{ sandingHours }} hrs</span>
-              <span class="cost-value">${{ (sandingHours * hourlyRate).toFixed(2) }}</span>
+              <span :class="styles.costHours">{{ sandingHours }} hrs</span>
+              <span :class="styles.costValue">${{ (sandingHours * hourlyRate).toFixed(2) }}</span>
             </div>
-            <div class="cost-row">
+            <div :class="styles.costRow">
               <span>Final Buffing/Polishing</span>
-              <span class="cost-hours">{{ buffingHours }} hrs</span>
-              <span class="cost-value">${{ (buffingHours * hourlyRate).toFixed(2) }}</span>
+              <span :class="styles.costHours">{{ buffingHours }} hrs</span>
+              <span :class="styles.costValue">${{ (buffingHours * hourlyRate).toFixed(2) }}</span>
             </div>
-            <div class="cost-row total">
+            <div :class="styles.costRowTotal">
               <span><strong>Total Labor</strong></span>
-              <span class="cost-hours"><strong>{{ totalHours }} hrs</strong></span>
-              <span class="cost-value"><strong>${{ totalLaborCost.toFixed(2) }}</strong></span>
+              <span :class="styles.costHours"><strong>{{ totalHours }} hrs</strong></span>
+              <span :class="styles.costValue"><strong>${{ totalLaborCost.toFixed(2) }}</strong></span>
             </div>
           </div>
 
-          <div class="insight-box">
+          <div :class="styles.insightBox">
             <h4>💡 Pricing Insight</h4>
             <p>
-              At ${{ hourlyRate }}/hr, your finishing labor adds <strong>${{ totalLaborCost.toFixed(2) }}</strong> 
+              At ${{ hourlyRate }}/hr, your finishing labor adds <strong>${{ totalLaborCost.toFixed(2) }}</strong>
               to the instrument cost. This doesn't include materials (~$30-150) or overhead.
             </p>
             <p>
-              Many builders undercharge by 30-50% by not tracking finishing time accurately. 
+              Many builders undercharge by 30-50% by not tracking finishing time accurately.
               This calculator helps you price realistically.
             </p>
           </div>
@@ -346,22 +345,21 @@
     <!-- Tab 4: Burst Patterns -->
     <div
       v-if="activeTab === 'burst'"
-      class="tab-content"
+      :class="styles.tabContent"
     >
-      <div class="section-header">
+      <div :class="styles.sectionHeader">
         <h2>Sunburst Pattern Designer</h2>
         <p>Plan color bursts and export for robotic application</p>
       </div>
 
-      <div class="burst-designer">
-        <div class="burst-controls">
+      <div :class="styles.burstDesigner">
+        <div :class="styles.burstControls">
           <h3>Burst Type</h3>
-          <div class="burst-type-selector">
-            <div 
-              v-for="type in burstTypes" 
+          <div :class="styles.burstTypeSelector">
+            <div
+              v-for="type in burstTypes"
               :key="type.id"
-              class="burst-type-card"
-              :class="{ active: burstType === type.id }"
+              :class="[styles.burstTypeCard, { [styles.burstTypeCardActive]: burstType === type.id }]"
               @click="burstType = type.id"
             >
               {{ type.name }}
@@ -369,8 +367,8 @@
           </div>
 
           <h3>Colors</h3>
-          <div class="color-inputs">
-            <div class="color-input">
+          <div :class="styles.colorInputs">
+            <div :class="styles.colorInput">
               <label>Center Color</label>
               <input
                 v-model="centerColor"
@@ -380,7 +378,7 @@
             </div>
             <div
               v-if="burstType !== 'solid'"
-              class="color-input"
+              :class="styles.colorInput"
             >
               <label>Mid Color (optional)</label>
               <input
@@ -391,7 +389,7 @@
             </div>
             <div
               v-if="burstType !== 'solid'"
-              class="color-input"
+              :class="styles.colorInput"
             >
               <label>Edge Color</label>
               <input
@@ -403,8 +401,8 @@
           </div>
 
           <h3>Burst Parameters</h3>
-          <div class="param-inputs">
-            <div class="param-input">
+          <div :class="styles.paramInputs">
+            <div :class="styles.paramInput">
               <label>Fade Start (mm from center)</label>
               <input
                 v-model.number="fadeStart"
@@ -414,7 +412,7 @@
                 max="150"
               >
             </div>
-            <div class="param-input">
+            <div :class="styles.paramInput">
               <label>Fade End (mm from center)</label>
               <input
                 v-model.number="fadeEnd"
@@ -427,27 +425,27 @@
           </div>
 
           <h3>Classic Presets</h3>
-          <div class="burst-presets">
+          <div :class="styles.burstPresets">
             <button
-              class="btn-burst"
+              :class="styles.btnBurst"
               @click="applyBurstPreset('tobacco')"
             >
               Tobacco Sunburst
             </button>
             <button
-              class="btn-burst"
+              :class="styles.btnBurst"
               @click="applyBurstPreset('cherry')"
             >
               Cherry Sunburst
             </button>
             <button
-              class="btn-burst"
+              :class="styles.btnBurst"
               @click="applyBurstPreset('honeyburst')"
             >
               Honeyburst
             </button>
             <button
-              class="btn-burst"
+              :class="styles.btnBurst"
               @click="applyBurstPreset('lemondrop')"
             >
               Lemon Drop
@@ -455,16 +453,16 @@
           </div>
 
           <button
-            class="btn-export"
+            :class="styles.btnExport"
             @click="exportBurstCSV"
           >
             Export CSV for Robotic Spray
           </button>
         </div>
 
-        <div class="burst-preview">
+        <div :class="styles.burstPreview">
           <h3>Preview</h3>
-          <div class="preview-canvas">
+          <div :class="styles.previewCanvas">
             <svg
               width="300"
               height="400"
@@ -513,7 +511,7 @@
               />
             </svg>
           </div>
-          <p class="preview-note">
+          <p :class="styles.previewNote">
             Simplified preview - actual burst will blend more smoothly
           </p>
         </div>
@@ -524,6 +522,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import styles from './FinishingDesigner.module.css'
 
 // Tab management
 const tabs = [
@@ -721,525 +720,3 @@ function exportBurstCSV() {
   URL.revokeObjectURL(url)
 }
 </script>
-
-<style scoped>
-.finishing-designer {
-  background: #202124;
-  color: #e8eaed;
-  min-height: 100vh;
-  padding: 24px;
-}
-
-.designer-header {
-  margin-bottom: 32px;
-  text-align: center;
-}
-
-.designer-title {
-  font-size: 32px;
-  font-weight: 600;
-  color: #8ab4f8;
-  margin-bottom: 8px;
-}
-
-.designer-subtitle {
-  font-size: 16px;
-  color: #9aa0a6;
-  line-height: 1.5;
-}
-
-.designer-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 32px;
-  border-bottom: 2px solid #3c4043;
-  overflow-x: auto;
-}
-
-.designer-tab {
-  padding: 12px 24px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #9aa0a6;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.designer-tab:hover {
-  color: #e8eaed;
-  background: rgba(138, 180, 248, 0.1);
-}
-
-.designer-tab.active {
-  color: #8ab4f8;
-  border-bottom-color: #8ab4f8;
-}
-
-.section-header {
-  margin-bottom: 24px;
-}
-
-.section-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.section-header p {
-  font-size: 14px;
-  color: #9aa0a6;
-}
-
-.tab-content {
-  animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.finish-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.finish-card {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-}
-
-.finish-card:hover {
-  border-color: #8ab4f8;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.3);
-}
-
-.finish-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.finish-time {
-  font-size: 14px;
-  color: #8ab4f8;
-  margin-bottom: 16px;
-  font-weight: 500;
-}
-
-.finish-info {
-  font-size: 13px;
-  color: #9aa0a6;
-  line-height: 1.8;
-}
-
-.workflow-section {
-  max-width: 900px;
-}
-
-.workflow-step {
-  display: flex;
-  gap: 20px;
-  background: #292a2d;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.step-number {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #1a73e8, #8ab4f8);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.step-content {
-  flex: 1;
-}
-
-.step-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.step-desc {
-  font-size: 14px;
-  color: #9aa0a6;
-  margin-bottom: 8px;
-  line-height: 1.6;
-}
-
-.step-time {
-  font-size: 13px;
-  color: #8ab4f8;
-}
-
-.workflow-summary {
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.2), rgba(138, 180, 248, 0.1));
-  padding: 24px;
-  border-radius: 12px;
-  margin-top: 24px;
-  border: 2px solid #8ab4f8;
-}
-
-.workflow-summary h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #8ab4f8;
-  margin-bottom: 16px;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.summary-item {
-  text-align: center;
-}
-
-.summary-label {
-  font-size: 13px;
-  color: #9aa0a6;
-  margin-bottom: 8px;
-}
-
-.summary-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #e8eaed;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #9aa0a6;
-  font-size: 16px;
-}
-
-.labor-calculator {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  max-width: 1200px;
-}
-
-.input-section, .results-section {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-}
-
-.input-section h3, .results-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 16px;
-}
-
-.input-group {
-  margin-bottom: 20px;
-}
-
-.input-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.input-group input, .input-group select {
-  width: 100%;
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  color: #e8eaed;
-  padding: 10px 12px;
-  border-radius: 6px;
-  font-size: 15px;
-}
-
-.rate-presets {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.btn-preset {
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  color: #e8eaed;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-preset:hover {
-  background: #8ab4f8;
-  color: #202124;
-  border-color: #8ab4f8;
-}
-
-.cost-breakdown {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.cost-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 14px;
-}
-
-.cost-row:last-child {
-  border-bottom: none;
-}
-
-.cost-row.total {
-  background: rgba(138, 180, 248, 0.2);
-  font-size: 16px;
-}
-
-.cost-hours {
-  color: #8ab4f8;
-  text-align: right;
-}
-
-.cost-value {
-  color: #51cf66;
-  text-align: right;
-  font-weight: 600;
-}
-
-.insight-box {
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.2), rgba(138, 180, 248, 0.1));
-  padding: 20px;
-  border-radius: 8px;
-  margin-top: 20px;
-  border-left: 4px solid #8ab4f8;
-}
-
-.insight-box h4 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #8ab4f8;
-  margin-bottom: 12px;
-}
-
-.insight-box p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #e8eaed;
-  margin-bottom: 12px;
-}
-
-.insight-box p:last-child {
-  margin-bottom: 0;
-}
-
-.burst-designer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  max-width: 1200px;
-}
-
-.burst-controls h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin: 20px 0 12px 0;
-}
-
-.burst-controls h3:first-child {
-  margin-top: 0;
-}
-
-.burst-type-selector {
-  display: flex;
-  gap: 12px;
-}
-
-.burst-type-card {
-  flex: 1;
-  background: #3c4043;
-  padding: 16px;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-  font-size: 14px;
-}
-
-.burst-type-card:hover {
-  background: #4a4d50;
-}
-
-.burst-type-card.active {
-  background: #8ab4f8;
-  color: #202124;
-  border-color: #8ab4f8;
-  font-weight: 600;
-}
-
-.color-inputs, .param-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.color-input, .param-input {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.color-input label, .param-input label {
-  flex: 1;
-  font-size: 14px;
-  color: #e8eaed;
-}
-
-.color-input input[type="color"] {
-  width: 60px;
-  height: 40px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.color-input span {
-  font-family: monospace;
-  font-size: 13px;
-  color: #9aa0a6;
-}
-
-.param-input input {
-  width: 120px;
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  color: #e8eaed;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.burst-presets {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.btn-burst {
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  color: #e8eaed;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-burst:hover {
-  background: #8ab4f8;
-  color: #202124;
-  border-color: #8ab4f8;
-}
-
-.btn-export {
-  background: linear-gradient(135deg, #1a73e8, #8ab4f8);
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 20px;
-  width: 100%;
-}
-
-.btn-export:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(138, 180, 248, 0.4);
-}
-
-.burst-preview {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-}
-
-.burst-preview h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 16px;
-}
-
-.preview-canvas {
-  background: #1a1a1a;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.preview-note {
-  font-size: 12px;
-  color: #9aa0a6;
-  text-align: center;
-  margin-top: 12px;
-  font-style: italic;
-}
-
-@media (max-width: 1024px) {
-  .labor-calculator, .burst-designer {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .designer-tabs {
-    overflow-x: auto;
-  }
-
-  .finish-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .burst-presets {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
