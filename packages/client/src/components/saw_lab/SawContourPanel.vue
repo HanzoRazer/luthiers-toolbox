@@ -1,19 +1,19 @@
 <template>
-  <div class="saw-contour-panel">
-    <div class="panel-header">
+  <div :class="styles.sawContourPanel">
+    <div :class="styles.panelHeader">
       <h2>Saw Contour Operation</h2>
-      <p class="subtitle">
+      <p :class="styles.subtitle">
         Curved paths for rosettes and binding with radius validation
       </p>
     </div>
 
-    <div class="panel-content">
+    <div :class="styles.panelContent">
       <!-- Left Column: Parameters -->
-      <div class="parameters-section">
+      <div :class="styles.parametersSection">
         <h3>Contour Parameters</h3>
 
         <!-- Blade Selection -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Saw Blade</label>
           <select
             v-model="selectedBladeId"
@@ -32,14 +32,14 @@
           </select>
           <div
             v-if="selectedBlade"
-            class="blade-info"
+            :class="styles.bladeInfo"
           >
             Min radius: {{ (selectedBlade.diameter_mm / 2).toFixed(1) }}mm | Kerf: {{ selectedBlade.kerf_mm }}mm
           </div>
         </div>
 
         <!-- Machine & Material -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Machine Profile</label>
           <select v-model="machineProfile">
             <option value="bcam_router_2030">
@@ -54,7 +54,7 @@
           </select>
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Material Family</label>
           <select v-model="materialFamily">
             <option value="hardwood">
@@ -73,7 +73,7 @@
         </div>
 
         <!-- Contour Type -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Contour Type</label>
           <select
             v-model="contourType"
@@ -93,7 +93,7 @@
 
         <!-- Arc Parameters -->
         <div v-if="contourType === 'arc'">
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center X (mm)</label>
             <input
               v-model.number="centerX"
@@ -103,7 +103,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center Y (mm)</label>
             <input
               v-model.number="centerY"
@@ -113,7 +113,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Radius (mm)</label>
             <input
               v-model.number="radius"
@@ -124,13 +124,13 @@
             >
             <div
               v-if="radiusValidation"
-              :class="['validation-hint', radiusValidation.status]"
+              :class="[styles.validationHint, styles[`validationHint${radiusValidation.status.charAt(0).toUpperCase()}${radiusValidation.status.slice(1)}`]]"
             >
               {{ radiusValidation.message }}
             </div>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Start Angle (degrees)</label>
             <input
               v-model.number="startAngle"
@@ -142,7 +142,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>End Angle (degrees)</label>
             <input
               v-model.number="endAngle"
@@ -157,7 +157,7 @@
 
         <!-- Circle Parameters -->
         <div v-if="contourType === 'circle'">
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center X (mm)</label>
             <input
               v-model.number="centerX"
@@ -167,7 +167,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center Y (mm)</label>
             <input
               v-model.number="centerY"
@@ -177,7 +177,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Radius (mm)</label>
             <input
               v-model.number="radius"
@@ -188,7 +188,7 @@
             >
             <div
               v-if="radiusValidation"
-              :class="['validation-hint', radiusValidation.status]"
+              :class="[styles.validationHint, styles[`validationHint${radiusValidation.status.charAt(0).toUpperCase()}${radiusValidation.status.slice(1)}`]]"
             >
               {{ radiusValidation.message }}
             </div>
@@ -197,7 +197,7 @@
 
         <!-- Rosette Parameters -->
         <div v-if="contourType === 'rosette'">
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center X (mm)</label>
             <input
               v-model.number="centerX"
@@ -207,7 +207,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Center Y (mm)</label>
             <input
               v-model.number="centerY"
@@ -217,7 +217,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Outer Radius (mm)</label>
             <input
               v-model.number="outerRadius"
@@ -228,7 +228,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Inner Radius (mm)</label>
             <input
               v-model.number="innerRadius"
@@ -239,13 +239,13 @@
             >
             <div
               v-if="radiusValidation"
-              :class="['validation-hint', radiusValidation.status]"
+              :class="[styles.validationHint, styles[`validationHint${radiusValidation.status.charAt(0).toUpperCase()}${radiusValidation.status.slice(1)}`]]"
             >
               {{ radiusValidation.message }}
             </div>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Number of Petals</label>
             <input
               v-model.number="petalCount"
@@ -259,7 +259,7 @@
         </div>
 
         <!-- Depth Parameters -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Total Depth (mm)</label>
           <input
             v-model.number="totalDepth"
@@ -269,7 +269,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Depth Per Pass (mm)</label>
           <input
             v-model.number="depthPerPass"
@@ -280,7 +280,7 @@
         </div>
 
         <!-- Feeds & Speeds -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>RPM</label>
           <input
             v-model.number="rpm"
@@ -291,7 +291,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Feed Rate (IPM)</label>
           <input
             v-model.number="feedIpm"
@@ -302,7 +302,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Safe Z (mm)</label>
           <input
             v-model.number="safeZ"
@@ -313,31 +313,31 @@
         </div>
 
         <!-- Actions -->
-        <div class="actions">
+        <div :class="styles.actions">
           <button
             :disabled="!canValidate"
-            class="btn-primary"
+            :class="styles.btnPrimary"
             @click="validateContour"
           >
             Validate Contour
           </button>
           <button
             :disabled="!canMerge"
-            class="btn-secondary"
+            :class="styles.btnSecondary"
             @click="mergeLearnedParams"
           >
             Apply Learned Overrides
           </button>
           <button
             :disabled="!isValid"
-            class="btn-primary"
+            :class="styles.btnPrimary"
             @click="generateGcode"
           >
             Generate G-code
           </button>
           <button
             :disabled="!hasGcode"
-            class="btn-success"
+            :class="styles.btnSuccess"
             @click="sendToJobLog"
           >
             Send to JobLog
@@ -346,31 +346,31 @@
       </div>
 
       <!-- Right Column: Preview & Validation -->
-      <div class="preview-section">
+      <div :class="styles.previewSection">
         <!-- Radius Validation -->
         <div
           v-if="radiusValidation"
-          class="radius-validation"
+          :class="styles.radiusValidation"
         >
           <h3>Radius Validation</h3>
-          <div :class="['validation-badge', radiusValidation.status]">
+          <div :class="[styles.validationBadge, styles[`validationBadge${radiusValidation.status.charAt(0).toUpperCase()}${radiusValidation.status.slice(1)}`]]">
             {{ radiusValidation.status.toUpperCase() }}
           </div>
-          <div class="validation-details">
-            <div class="detail-row">
-              <span class="label">Minimum radius:</span>
-              <span class="value">{{ radiusValidation.min_radius?.toFixed(1) || 'N/A' }} mm</span>
+          <div :class="styles.validationDetails">
+            <div :class="styles.detailRow">
+              <span :class="styles.label">Minimum radius:</span>
+              <span :class="styles.value">{{ radiusValidation.min_radius?.toFixed(1) || 'N/A' }} mm</span>
             </div>
-            <div class="detail-row">
-              <span class="label">Requested radius:</span>
-              <span class="value">{{ radiusValidation.requested_radius?.toFixed(1) || 'N/A' }} mm</span>
+            <div :class="styles.detailRow">
+              <span :class="styles.label">Requested radius:</span>
+              <span :class="styles.value">{{ radiusValidation.requested_radius?.toFixed(1) || 'N/A' }} mm</span>
             </div>
-            <div class="detail-row">
-              <span class="label">Safety margin:</span>
-              <span class="value">{{ radiusValidation.safety_margin?.toFixed(1) || 'N/A' }}%</span>
+            <div :class="styles.detailRow">
+              <span :class="styles.label">Safety margin:</span>
+              <span :class="styles.value">{{ radiusValidation.safety_margin?.toFixed(1) || 'N/A' }}%</span>
             </div>
           </div>
-          <div class="validation-message">
+          <div :class="styles.validationMessage">
             {{ radiusValidation.message }}
           </div>
         </div>
@@ -378,21 +378,21 @@
         <!-- Validation Results -->
         <div
           v-if="validationResult"
-          class="validation-results"
+          :class="styles.validationResults"
         >
           <h3>Full Validation Results</h3>
-          <div :class="['validation-badge', validationResult.overall_result.toLowerCase()]">
+          <div :class="[styles.validationBadge, styles[`validationBadge${validationResult.overall_result.charAt(0).toUpperCase()}${validationResult.overall_result.slice(1).toLowerCase()}`]]">
             {{ validationResult.overall_result }}
           </div>
-          <div class="validation-checks">
+          <div :class="styles.validationChecks">
             <div
               v-for="(check, key) in validationResult.checks"
-              :key="key" 
-              :class="['check-item', check.result.toLowerCase()]"
+              :key="key"
+              :class="[styles.checkItem, styles[`checkItem${check.result.charAt(0).toUpperCase()}${check.result.slice(1).toLowerCase()}`]]"
             >
-              <span class="check-icon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
-              <span class="check-name">{{ formatCheckName(String(key)) }}</span>
-              <span class="check-message">{{ check.message }}</span>
+              <span :class="styles.checkIcon">{{ check.result === 'OK' ? '✓' : check.result === 'WARN' ? '⚠' : '✗' }}</span>
+              <span :class="styles.checkName">{{ formatCheckName(String(key)) }}</span>
+              <span :class="styles.checkMessage">{{ check.message }}</span>
             </div>
           </div>
         </div>
@@ -400,27 +400,27 @@
         <!-- Learned Parameters -->
         <div
           v-if="mergedParams"
-          class="learned-params"
+          :class="styles.learnedParams"
         >
           <h3>Learned Parameters Applied</h3>
-          <div class="param-comparison">
-            <div class="param-row">
-              <span class="label">RPM:</span>
-              <span class="baseline">{{ rpm }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.rpm?.toFixed(0) || rpm }}</span>
+          <div :class="styles.paramComparison">
+            <div :class="styles.paramRow">
+              <span :class="styles.label">RPM:</span>
+              <span :class="styles.baseline">{{ rpm }}</span>
+              <span :class="styles.arrow">→</span>
+              <span :class="styles.merged">{{ mergedParams.rpm?.toFixed(0) || rpm }}</span>
             </div>
-            <div class="param-row">
-              <span class="label">Feed:</span>
-              <span class="baseline">{{ feedIpm }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.feed_ipm?.toFixed(1) || feedIpm }}</span>
+            <div :class="styles.paramRow">
+              <span :class="styles.label">Feed:</span>
+              <span :class="styles.baseline">{{ feedIpm }}</span>
+              <span :class="styles.arrow">→</span>
+              <span :class="styles.merged">{{ mergedParams.feed_ipm?.toFixed(1) || feedIpm }}</span>
             </div>
-            <div class="param-row">
-              <span class="label">DOC:</span>
-              <span class="baseline">{{ depthPerPass }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{ mergedParams.doc_mm?.toFixed(1) || depthPerPass }}</span>
+            <div :class="styles.paramRow">
+              <span :class="styles.label">DOC:</span>
+              <span :class="styles.baseline">{{ depthPerPass }}</span>
+              <span :class="styles.arrow">→</span>
+              <span :class="styles.merged">{{ mergedParams.doc_mm?.toFixed(1) || depthPerPass }}</span>
             </div>
           </div>
         </div>
@@ -428,37 +428,37 @@
         <!-- Path Statistics -->
         <div
           v-if="pathStats"
-          class="path-stats"
+          :class="styles.pathStats"
         >
           <h3>Path Statistics</h3>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-label">Path Length:</span>
-              <span class="stat-value">{{ pathStats.length_mm.toFixed(1) }} mm</span>
+          <div :class="styles.statsGrid">
+            <div :class="styles.statItem">
+              <span :class="styles.statLabel">Path Length:</span>
+              <span :class="styles.statValue">{{ pathStats.length_mm.toFixed(1) }} mm</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Depth Passes:</span>
-              <span class="stat-value">{{ depthPasses }}</span>
+            <div :class="styles.statItem">
+              <span :class="styles.statLabel">Depth Passes:</span>
+              <span :class="styles.statValue">{{ depthPasses }}</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Total Length:</span>
-              <span class="stat-value">{{ totalLengthMm.toFixed(1) }} mm</span>
+            <div :class="styles.statItem">
+              <span :class="styles.statLabel">Total Length:</span>
+              <span :class="styles.statValue">{{ totalLengthMm.toFixed(1) }} mm</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Est. Time:</span>
-              <span class="stat-value">{{ estimatedTimeSec.toFixed(0) }}s</span>
+            <div :class="styles.statItem">
+              <span :class="styles.statLabel">Est. Time:</span>
+              <span :class="styles.statValue">{{ estimatedTimeSec.toFixed(0) }}s</span>
             </div>
           </div>
         </div>
 
         <!-- SVG Preview -->
-        <div class="svg-preview">
+        <div :class="styles.svgPreview">
           <h3>Contour Preview</h3>
           <svg
             :viewBox="svgViewBox"
             width="100%"
             height="400"
-            class="preview-canvas"
+            :class="styles.previewCanvas"
           >
             <!-- Grid -->
             <defs>
@@ -525,17 +525,17 @@
               text-anchor="middle"
             >R={{ radius }}</text>
           </svg>
-          <div class="legend">
+          <div :class="styles.legend">
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #2196F3;"
             /> Cut path</span>
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #F44336;"
             /> Center</span>
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #9C27B0;"
             /> Radius</span>
           </div>
@@ -544,12 +544,12 @@
         <!-- G-code Preview -->
         <div
           v-if="gcode"
-          class="gcode-preview"
+          :class="styles.gcodePreview"
         >
           <h3>G-code Preview</h3>
-          <pre class="gcode-text">{{ gcodePreview }}</pre>
+          <pre :class="styles.gcodeText">{{ gcodePreview }}</pre>
           <button
-            class="btn-secondary"
+            :class="styles.btnSecondary"
             @click="downloadGcode"
           >
             Download G-code
@@ -559,13 +559,13 @@
         <!-- Run Artifact Link -->
         <div
           v-if="runId"
-          class="run-artifact-link"
+          :class="styles.runArtifactLink"
         >
           <h3>Run Artifact</h3>
           <p>Job logged with Run ID: <code>{{ runId }}</code></p>
           <router-link
             :to="`/rmos/runs?run_id=${runId}`"
-            class="btn-primary"
+            :class="styles.btnPrimary"
           >
             View Run Artifact
           </router-link>
@@ -578,6 +578,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
+import styles from './SawContourPanel.module.css'
 
 // ============================================================================
 // State
@@ -916,361 +917,3 @@ onMounted(() => {
   updateContourPath()
 })
 </script>
-
-<style scoped>
-.saw-contour-panel {
-  padding: 20px;
-}
-
-.panel-header {
-  margin-bottom: 30px;
-}
-
-.panel-header h2 {
-  margin: 0 0 5px 0;
-  color: #2c3e50;
-}
-
-.subtitle {
-  margin: 0;
-  color: #7f8c8d;
-  font-size: 14px;
-}
-
-.panel-content {
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 30px;
-}
-
-h3 {
-  margin: 0 0 15px 0;
-  color: #34495e;
-  font-size: 16px;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 5px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.blade-info {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.validation-hint {
-  margin-top: 5px;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.validation-hint.ok {
-  background: #d4edda;
-  color: #155724;
-}
-
-.validation-hint.warn {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.validation-hint.error {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn-primary,
-.btn-secondary,
-.btn-success {
-  padding: 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.btn-secondary {
-  background: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #7f8c8d;
-}
-
-.btn-success {
-  background: #27ae60;
-  color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-  background: #229954;
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled,
-.btn-success:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.radius-validation,
-.validation-results,
-.learned-params,
-.path-stats,
-.svg-preview,
-.gcode-preview {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 15px;
-  margin-bottom: 20px;
-}
-
-.validation-badge {
-  display: inline-block;
-  padding: 5px 15px;
-  border-radius: 4px;
-  font-weight: 600;
-  margin-bottom: 15px;
-}
-
-.validation-badge.ok {
-  background: #d4edda;
-  color: #155724;
-}
-
-.validation-badge.warn {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.validation-badge.error {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.validation-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-}
-
-.detail-row .label {
-  color: #7f8c8d;
-}
-
-.detail-row .value {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.validation-message {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #dee2e6;
-  font-size: 13px;
-  color: #495057;
-}
-
-.validation-checks {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.check-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.check-item.ok {
-  background: #d4edda;
-}
-
-.check-item.warn {
-  background: #fff3cd;
-}
-
-.check-item.error {
-  background: #f8d7da;
-}
-
-.check-icon {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.check-name {
-  font-weight: 600;
-  min-width: 150px;
-}
-
-.param-comparison {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.param-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.param-row .label {
-  font-weight: 600;
-  min-width: 60px;
-}
-
-.param-row .baseline {
-  color: #7f8c8d;
-}
-
-.param-row .arrow {
-  color: #3498db;
-}
-
-.param-row .merged {
-  color: #27ae60;
-  font-weight: 600;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.stat-label {
-  color: #7f8c8d;
-}
-
-.stat-value {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.preview-canvas {
-  border: 1px solid #dee2e6;
-  background: white;
-  border-radius: 4px;
-}
-
-.legend {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.legend span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.color-box {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-}
-
-.gcode-text {
-  background: #2c3e50;
-  color: #ecf0f1;
-  padding: 15px;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  overflow-x: auto;
-  margin-bottom: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.run-artifact-link {
-  background: #e8f5e9;
-  border: 1px solid #4caf50;
-  border-radius: 4px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.run-artifact-link code {
-  background: #c8e6c9;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.run-artifact-link a {
-  display: inline-block;
-  margin-top: 10px;
-  text-decoration: none;
-}
-</style>

@@ -1,0 +1,355 @@
+.mixedMaterialEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.editorHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.errorBanner {
+  padding: 0.75rem;
+  background: #fee;
+  border-left: 4px solid #c33;
+  color: #c33;
+  font-weight: 500;
+}
+
+.loadingOverlay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #e3f2fd;
+  border-radius: 4px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #1976d2;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.editorLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.templateLibrary,
+.familyEditor {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.templateLibrary h3,
+.familyEditor h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  color: #2c3e50;
+}
+
+.libraryHint {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+}
+
+.templateGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.templateCard {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem;
+  background: #fafafa;
+}
+
+.templateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.templateHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.templateBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+}
+
+.templateMaterials {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.materialPreview {
+  flex: 1;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.templateMeta {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.btnApply {
+  width: 100%;
+  padding: 0.5rem;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btnApply:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.btnApply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editorPlaceholder {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #999;
+}
+
+.editorContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.editorSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.inputText,
+.inputSelect,
+.inputTextarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.inputColor {
+  width: 60px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.materialEditor {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem;
+  background: #fafafa;
+}
+
+.materialHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.materialIndex {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.btnRemove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.materialFields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.visualDetails summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #1976d2;
+  margin-bottom: 0.5rem;
+}
+
+.editorActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btnPrimary,
+.btnSecondary {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btnPrimary {
+  background: #1976d2;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: #e0e0e0;
+  color: #555;
+}
+
+.btnSecondary:hover {
+  background: #d0d0d0;
+}
+
+.existingFamilies {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.existingFamilies h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.125rem;
+  color: #2c3e50;
+}
+
+.familiesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.familyItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.familyItem:hover {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.familyItemSelected {
+  composes: familyItem;
+  background: #1976d2;
+  color: white;
+  border-color: #1565c0;
+}
+
+.familyBadge {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  background: #e0e0e0;
+  border-radius: 8px;
+}
+
+.familyItemSelected .familyBadge {
+  background: rgba(255,255,255,0.3);
+}
+
+.familyLane {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #666;
+}
+
+.familyItemSelected .familyLane {
+  color: rgba(255,255,255,0.9);
+}

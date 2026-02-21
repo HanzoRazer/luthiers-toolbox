@@ -1,9 +1,9 @@
 <template>
-  <div class="mixed-material-editor">
+  <div :class="styles.mixedMaterialEditor">
     <!-- Header -->
-    <div class="editor-header">
+    <div :class="styles.editorHeader">
       <h2>Mixed-Material Strip Family Lab</h2>
-      <p class="subtitle">
+      <p :class="styles.subtitle">
         Create rosette strip families from curated templates or design custom combinations
       </p>
     </div>
@@ -11,7 +11,7 @@
     <!-- Error Display -->
     <div
       v-if="store.error"
-      class="error-banner"
+      :class="styles.errorBanner"
     >
       {{ store.error }}
     </div>
@@ -19,62 +19,62 @@
     <!-- Loading Overlay -->
     <div
       v-if="store.loading"
-      class="loading-overlay"
+      :class="styles.loadingOverlay"
     >
-      <div class="spinner" />
+      <div :class="styles.spinner" />
       <span>Loading...</span>
     </div>
 
-    <div class="editor-layout">
+    <div :class="styles.editorLayout">
       <!-- Left Panel: Template Library -->
-      <div class="template-library">
+      <div :class="styles.templateLibrary">
         <h3>Template Library</h3>
-        <p class="library-hint">
+        <p :class="styles.libraryHint">
           Click "Apply" to instantiate a template into your workspace
         </p>
-        
+
         <div
           v-if="store.templates.length === 0 && !store.loading"
-          class="empty-state"
+          :class="styles.emptyState"
         >
           <button
-            class="btn-primary"
+            :class="styles.btnPrimary"
             @click="store.fetchTemplates()"
           >
             Load Templates
           </button>
         </div>
 
-        <div class="template-grid">
-          <div 
-            v-for="tpl in store.templates" 
+        <div :class="styles.templateGrid">
+          <div
+            v-for="tpl in store.templates"
             :key="tpl.id"
-            class="template-card"
+            :class="styles.templateCard"
           >
-            <div class="template-header">
+            <div :class="styles.templateHeader">
               <h4>{{ tpl.name }}</h4>
-              <span class="template-badge">{{ tpl.materials?.length || 0 }} materials</span>
+              <span :class="styles.templateBadge">{{ tpl.materials?.length || 0 }} materials</span>
             </div>
-            
-            <div class="template-materials">
-              <div 
-                v-for="(mat, idx) in tpl.materials?.slice(0, 3)" 
+
+            <div :class="styles.templateMaterials">
+              <div
+                v-for="(mat, idx) in tpl.materials?.slice(0, 3)"
                 :key="idx"
-                class="material-preview"
+                :class="styles.materialPreview"
                 :style="{ backgroundColor: mat.visual?.base_color || '#ccc' }"
               >
-                <span class="material-label">{{ mat.species || mat.type }}</span>
+                <span :class="styles.materialLabel">{{ mat.species || mat.type }}</span>
               </div>
             </div>
 
-            <div class="template-meta">
+            <div :class="styles.templateMeta">
               <span>Width: {{ tpl.default_width_mm || 0 }}mm</span>
               <span>Seq: {{ tpl.sequence || 0 }}</span>
               <span>Lane: {{ tpl.lane || 'experimental' }}</span>
             </div>
 
-            <button 
-              class="btn-apply" 
+            <button
+              :class="styles.btnApply"
               :disabled="store.loading"
               @click="applyTemplate(tpl.id)"
             >
@@ -85,27 +85,27 @@
       </div>
 
       <!-- Right Panel: Selected Family Editor -->
-      <div class="family-editor">
+      <div :class="styles.familyEditor">
         <div
           v-if="!store.selected"
-          class="editor-placeholder"
+          :class="styles.editorPlaceholder"
         >
           <p>Select a template to begin editing</p>
         </div>
 
         <div
           v-else
-          class="editor-content"
+          :class="styles.editorContent"
         >
           <h3>Editing: {{ workingFamily.name }}</h3>
 
           <!-- Basic Properties -->
-          <div class="editor-section">
+          <div :class="styles.editorSection">
             <label>Name</label>
             <input
               v-model="workingFamily.name"
               type="text"
-              class="input-text"
+              :class="styles.inputText"
             >
 
             <label>Default Width (mm)</label>
@@ -113,20 +113,20 @@
               v-model.number="workingFamily.default_width_mm"
               type="number"
               step="0.1"
-              class="input-text"
+              :class="styles.inputText"
             >
 
             <label>Sequence</label>
             <input
               v-model.number="workingFamily.sequence"
               type="number"
-              class="input-text"
+              :class="styles.inputText"
             >
 
             <label>Quality Lane</label>
             <select
               v-model="workingFamily.lane"
-              class="input-select"
+              :class="styles.inputSelect"
             >
               <option value="experimental">
                 Experimental
@@ -148,43 +148,43 @@
             <label>Description</label>
             <textarea
               v-model="workingFamily.description"
-              class="input-textarea"
+              :class="styles.inputTextarea"
               rows="3"
             />
           </div>
 
           <!-- Materials Editor -->
-          <div class="editor-section">
-            <div class="section-header">
+          <div :class="styles.editorSection">
+            <div :class="styles.sectionHeader">
               <h4>Materials ({{ workingFamily.materials?.length || 0 }})</h4>
               <button
-                class="btn-secondary"
+                :class="styles.btnSecondary"
                 @click="addMaterial"
               >
                 + Add Material
               </button>
             </div>
 
-            <div 
-              v-for="(mat, idx) in workingFamily.materials" 
+            <div
+              v-for="(mat, idx) in workingFamily.materials"
               :key="idx"
-              class="material-editor"
+              :class="styles.materialEditor"
             >
-              <div class="material-header">
-                <span class="material-index">#{{ idx + 1 }}</span>
+              <div :class="styles.materialHeader">
+                <span :class="styles.materialIndex">#{{ idx + 1 }}</span>
                 <button
-                  class="btn-remove"
+                  :class="styles.btnRemove"
                   @click="removeMaterial(idx)"
                 >
                   ×
                 </button>
               </div>
 
-              <div class="material-fields">
+              <div :class="styles.materialFields">
                 <label>Material Type</label>
                 <select
                   v-model="mat.type"
-                  class="input-select"
+                  :class="styles.inputSelect"
                 >
                   <option value="wood">
                     Wood
@@ -216,7 +216,7 @@
                 <input
                   v-model="mat.species"
                   type="text"
-                  class="input-text"
+                  :class="styles.inputText"
                   placeholder="e.g. Rosewood, Abalone, Copper"
                 >
 
@@ -225,14 +225,14 @@
                   v-model.number="mat.thickness_mm"
                   type="number"
                   step="0.01"
-                  class="input-text"
+                  :class="styles.inputText"
                 >
 
                 <label>Finish</label>
                 <input
                   v-model="mat.finish"
                   type="text"
-                  class="input-text"
+                  :class="styles.inputText"
                   placeholder="e.g. polished, matte, oxidized"
                 >
 
@@ -240,21 +240,21 @@
                 <input
                   v-model="mat.cam_profile"
                   type="text"
-                  class="input-text"
+                  :class="styles.inputText"
                   placeholder="e.g. hardwood_fast, metal_slow"
                 >
 
                 <!-- Visual Properties -->
                 <details
                   v-if="mat.visual"
-                  class="visual-details"
+                  :class="styles.visualDetails"
                 >
                   <summary>Visual Properties</summary>
                   <label>Base Color</label>
                   <input
                     v-model="mat.visual.base_color"
                     type="color"
-                    class="input-color"
+                    :class="styles.inputColor"
                   >
 
                   <label>Reflectivity (0-1)</label>
@@ -264,7 +264,7 @@
                     step="0.1"
                     min="0"
                     max="1"
-                    class="input-text"
+                    :class="styles.inputText"
                   >
 
                   <label>Iridescence (0-1)</label>
@@ -274,21 +274,21 @@
                     step="0.1"
                     min="0"
                     max="1"
-                    class="input-text"
+                    :class="styles.inputText"
                   >
 
                   <label>Texture Map URL</label>
                   <input
                     v-model="mat.visual.texture_map"
                     type="text"
-                    class="input-text"
+                    :class="styles.inputText"
                     placeholder="Optional texture URL"
                   >
 
                   <label>Burn Gradient (optional JSON)</label>
                   <textarea
                     v-model="(mat.visual as any).burn_gradient"
-                    class="input-textarea"
+                    :class="styles.inputTextarea"
                     rows="2"
                     placeholder="{&quot;start&quot;:&quot;#000&quot;,&quot;end&quot;:&quot;#8b4513&quot;}"
                   />
@@ -298,16 +298,16 @@
           </div>
 
           <!-- Actions -->
-          <div class="editor-actions">
+          <div :class="styles.editorActions">
             <button
-              class="btn-primary"
+              :class="styles.btnPrimary"
               :disabled="store.loading"
               @click="saveChanges"
             >
               Save Changes
             </button>
             <button
-              class="btn-secondary"
+              :class="styles.btnSecondary"
               @click="cancelEdit"
             >
               Cancel
@@ -318,19 +318,18 @@
     </div>
 
     <!-- Bottom Panel: Existing Families -->
-    <div class="existing-families">
+    <div :class="styles.existingFamilies">
       <h3>Existing Strip Families ({{ store.families.length }})</h3>
-      <div class="families-list">
-        <div 
-          v-for="family in store.families" 
+      <div :class="styles.familiesList">
+        <div
+          v-for="family in store.families"
           :key="family.id"
-          class="family-item"
-          :class="{ selected: store.selected?.id === family.id }"
+          :class="[styles.familyItem, { [styles.familyItemSelected]: store.selected?.id === family.id }]"
           @click="selectFamily(family)"
         >
-          <span class="family-name">{{ family.name }}</span>
-          <span class="family-badge">{{ family.materials?.length || 0 }} mats</span>
-          <span class="family-lane">{{ family.lane }}</span>
+          <span :class="styles.familyName">{{ family.name }}</span>
+          <span :class="styles.familyBadge">{{ family.materials?.length || 0 }} mats</span>
+          <span :class="styles.familyLane">{{ family.lane }}</span>
         </div>
       </div>
     </div>
@@ -340,6 +339,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useStripFamilyStore } from '@/stores/useStripFamilyStore'
+import styles from './MixedMaterialStripFamilyEditor.module.css'
 import type { StripFamily, MaterialSpec } from '@/models/strip_family'
 
 const store = useStripFamilyStore()
@@ -406,366 +406,3 @@ function cancelEdit() {
   store.select(null)
 }
 </script>
-
-<style scoped>
-.mixed-material-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: #f8f9fa;
-}
-
-.editor-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #2c3e50;
-}
-
-.subtitle {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  color: #666;
-}
-
-.error-banner {
-  padding: 0.75rem;
-  background: #fee;
-  border-left: 4px solid #c33;
-  color: #c33;
-  font-weight: 500;
-}
-
-.loading-overlay {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: #e3f2fd;
-  border-radius: 4px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #1976d2;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.editor-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.template-library,
-.family-editor {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.template-library h3,
-.family-editor h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  color: #2c3e50;
-}
-
-.library-hint {
-  font-size: 0.875rem;
-  color: #666;
-  margin-bottom: 1rem;
-}
-
-.empty-state {
-  padding: 2rem;
-  text-align: center;
-}
-
-.template-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.template-card {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.75rem;
-  background: #fafafa;
-}
-
-.template-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.template-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #2c3e50;
-}
-
-.template-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  background: #e3f2fd;
-  color: #1976d2;
-  border-radius: 12px;
-}
-
-.template-materials {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.material-preview {
-  flex: 1;
-  height: 40px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-
-.template-meta {
-  display: flex;
-  gap: 0.75rem;
-  font-size: 0.75rem;
-  color: #666;
-  margin-bottom: 0.5rem;
-}
-
-.btn-apply {
-  width: 100%;
-  padding: 0.5rem;
-  background: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-apply:hover:not(:disabled) {
-  background: #1565c0;
-}
-
-.btn-apply:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.editor-placeholder {
-  padding: 4rem 2rem;
-  text-align: center;
-  color: #999;
-}
-
-.editor-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.editor-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #2c3e50;
-}
-
-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #555;
-}
-
-.input-text,
-.input-select,
-.input-textarea {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.875rem;
-}
-
-.input-color {
-  width: 60px;
-  height: 36px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.material-editor {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.75rem;
-  background: #fafafa;
-}
-
-.material-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.material-index {
-  font-weight: 600;
-  color: #1976d2;
-}
-
-.btn-remove {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.material-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.visual-details summary {
-  cursor: pointer;
-  font-weight: 500;
-  color: #1976d2;
-  margin-bottom: 0.5rem;
-}
-
-.editor-actions {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: #1976d2;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1565c0;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #e0e0e0;
-  color: #555;
-}
-
-.btn-secondary:hover {
-  background: #d0d0d0;
-}
-
-.existing-families {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.existing-families h3 {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.125rem;
-  color: #2c3e50;
-}
-
-.families-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.family-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.family-item:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
-}
-
-.family-item.selected {
-  background: #1976d2;
-  color: white;
-  border-color: #1565c0;
-}
-
-.family-badge {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-  background: #e0e0e0;
-  border-radius: 8px;
-}
-
-.family-item.selected .family-badge {
-  background: rgba(255,255,255,0.3);
-}
-
-.family-lane {
-  font-size: 0.75rem;
-  font-style: italic;
-  color: #666;
-}
-
-.family-item.selected .family-lane {
-  color: rgba(255,255,255,0.9);
-}
-</style>

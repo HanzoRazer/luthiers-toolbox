@@ -1,33 +1,33 @@
 <template>
-  <div class="drilling-lab">
+  <div :class="styles.drillingLab">
     <!-- Header -->
-    <div class="lab-header">
-      <h2>🔩 Drilling Lab</h2>
-      <div class="header-actions">
+    <div :class="styles.labHeader">
+      <h2>Drilling Lab</h2>
+      <div :class="styles.headerActions">
         <button
-          class="btn-primary"
+          :class="styles.btnPrimary"
           :disabled="holes.length === 0"
           @click="exportGCode"
         >
-          <span class="icon">📥</span> Export G-Code
+          Export G-Code
         </button>
         <button
-          class="btn-secondary"
+          :class="styles.btnSecondary"
           @click="clearAll"
         >
-          <span class="icon">🗑️</span> Clear
+          Clear
         </button>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="lab-content">
+    <div :class="styles.labContent">
       <!-- Left Panel -->
-      <div class="left-panel">
+      <div :class="styles.leftPanel">
         <!-- Tool Setup -->
-        <section class="panel-section">
+        <section :class="styles.panelSection">
           <h3>Tool Setup</h3>
-          <div class="tool-type-selector">
+          <div :class="styles.toolTypeSelector">
             <label
               v-for="tool in toolTypes"
               :key="tool.value"
@@ -42,7 +42,7 @@
             </label>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Tool Diameter (mm)</label>
             <input
               v-model.number="params.toolDiameter"
@@ -53,7 +53,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Spindle RPM</label>
             <input
               v-model.number="params.spindleRpm"
@@ -64,7 +64,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Feed Rate (mm/min)</label>
             <input
               v-model.number="params.feedRate"
@@ -77,9 +77,9 @@
         </section>
 
         <!-- Cycle Type -->
-        <section class="panel-section">
+        <section :class="styles.panelSection">
           <h3>Cycle Type</h3>
-          <div class="cycle-selector">
+          <div :class="styles.cycleSelector">
             <label
               v-for="cycle in cycleTypes"
               :key="cycle.value"
@@ -97,7 +97,7 @@
 
           <div
             v-if="params.cycle === 'G83'"
-            class="form-group"
+            :class="styles.formGroup"
           >
             <label>Peck Depth (mm)</label>
             <input
@@ -111,7 +111,7 @@
 
           <div
             v-if="params.cycle === 'G84'"
-            class="form-group"
+            :class="styles.formGroup"
           >
             <label>Thread Pitch (mm)</label>
             <input
@@ -125,9 +125,9 @@
         </section>
 
         <!-- Depth Settings -->
-        <section class="panel-section">
+        <section :class="styles.panelSection">
           <h3>Depth Settings</h3>
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Hole Depth (mm, negative)</label>
             <input
               v-model.number="params.depth"
@@ -138,7 +138,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Retract Plane (mm)</label>
             <input
               v-model.number="params.retract"
@@ -149,7 +149,7 @@
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Safe Z (mm)</label>
             <input
               v-model.number="params.safeZ"
@@ -162,11 +162,11 @@
         </section>
 
         <!-- Pattern Generator -->
-        <section class="panel-section">
+        <section :class="styles.panelSection">
           <h3>Pattern Generator</h3>
           <select
             v-model="patternType"
-            class="pattern-selector"
+            :class="styles.patternSelector"
           >
             <option value="manual">
               Manual (Click Canvas)
@@ -188,9 +188,9 @@
           <!-- Linear Pattern -->
           <div
             v-if="patternType === 'linear'"
-            class="pattern-controls"
+            :class="styles.patternControls"
           >
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Direction</label>
               <select v-model="linearPattern.direction">
                 <option value="x">
@@ -201,9 +201,9 @@
                 </option>
               </select>
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Start Position</label>
-              <div class="input-group">
+              <div :class="styles.inputGroup">
                 <input
                   v-model.number="linearPattern.startX"
                   type="number"
@@ -218,7 +218,7 @@
                 >
               </div>
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Spacing (mm)</label>
               <input
                 v-model.number="linearPattern.spacing"
@@ -227,7 +227,7 @@
                 min="1"
               >
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Count</label>
               <input
                 v-model.number="linearPattern.count"
@@ -237,7 +237,7 @@
               >
             </div>
             <button
-              class="btn-generate"
+              :class="styles.btnGenerate"
               @click="generateLinearPattern"
             >
               Generate
@@ -247,11 +247,11 @@
           <!-- Circular Pattern -->
           <div
             v-if="patternType === 'circular'"
-            class="pattern-controls"
+            :class="styles.patternControls"
           >
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Center Position</label>
-              <div class="input-group">
+              <div :class="styles.inputGroup">
                 <input
                   v-model.number="circularPattern.centerX"
                   type="number"
@@ -266,7 +266,7 @@
                 >
               </div>
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Radius (mm)</label>
               <input
                 v-model.number="circularPattern.radius"
@@ -275,7 +275,7 @@
                 min="1"
               >
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Count</label>
               <input
                 v-model.number="circularPattern.count"
@@ -284,7 +284,7 @@
                 min="3"
               >
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Start Angle (°)</label>
               <input
                 v-model.number="circularPattern.startAngle"
@@ -293,7 +293,7 @@
               >
             </div>
             <button
-              class="btn-generate"
+              :class="styles.btnGenerate"
               @click="generateCircularPattern"
             >
               Generate
@@ -303,11 +303,11 @@
           <!-- Grid Pattern -->
           <div
             v-if="patternType === 'grid'"
-            class="pattern-controls"
+            :class="styles.patternControls"
           >
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Start Position</label>
-              <div class="input-group">
+              <div :class="styles.inputGroup">
                 <input
                   v-model.number="gridPattern.startX"
                   type="number"
@@ -322,9 +322,9 @@
                 >
               </div>
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Spacing</label>
-              <div class="input-group">
+              <div :class="styles.inputGroup">
                 <input
                   v-model.number="gridPattern.spacingX"
                   type="number"
@@ -339,9 +339,9 @@
                 >
               </div>
             </div>
-            <div class="form-group">
+            <div :class="styles.formGroup">
               <label>Grid Size</label>
-              <div class="input-group">
+              <div :class="styles.inputGroup">
                 <input
                   v-model.number="gridPattern.countX"
                   type="number"
@@ -359,7 +359,7 @@
               </div>
             </div>
             <button
-              class="btn-generate"
+              :class="styles.btnGenerate"
               @click="generateGridPattern"
             >
               Generate
@@ -369,32 +369,32 @@
           <!-- CSV Import -->
           <div
             v-if="patternType === 'csv'"
-            class="pattern-controls"
+            :class="styles.patternControls"
           >
             <textarea
               v-model="csvInput"
               rows="6"
               placeholder="x,y&#10;10,10&#10;30,10&#10;50,10"
-              class="csv-input"
+              :class="styles.csvInput"
             />
             <button
-              class="btn-generate"
+              :class="styles.btnGenerate"
               @click="importCsv"
             >
               Import CSV
             </button>
-            <small class="hint">Format: x,y (one hole per line)</small>
+            <small :class="styles.hint">Format: x,y (one hole per line)</small>
           </div>
         </section>
 
         <!-- Hole List -->
-        <section class="panel-section hole-list">
+        <section :class="[styles.panelSection, styles.holeList]">
           <h3>Holes ({{ holes.length }})</h3>
-          <div class="hole-items">
+          <div :class="styles.holeItems">
             <div
               v-for="(hole, index) in holes"
               :key="index"
-              :class="['hole-item', { selected: selectedHole === index }]"
+              :class="[styles.holeItem, { [styles.holeItemSelected]: selectedHole === index }]"
               @click="selectHole(index)"
             >
               <input
@@ -403,12 +403,12 @@
                 @click.stop
                 @change="updatePreview"
               >
-              <div class="hole-info">
+              <div :class="styles.holeInfo">
                 <strong>H{{ index + 1 }}</strong>
                 <small>X{{ hole.x.toFixed(1) }} Y{{ hole.y.toFixed(1) }}</small>
               </div>
               <button
-                class="btn-remove"
+                :class="styles.btnRemove"
                 @click.stop="removeHole(index)"
               >
                 ✕
@@ -418,11 +418,11 @@
         </section>
 
         <!-- Post Processor -->
-        <section class="panel-section">
+        <section :class="styles.panelSection">
           <h3>Post Processor</h3>
           <select
             v-model="params.postId"
-            class="post-selector"
+            :class="styles.postSelector"
             @change="updatePreview"
           >
             <option value="GRBL">
@@ -445,7 +445,7 @@
       </div>
 
       <!-- Canvas Preview -->
-      <div class="canvas-container">
+      <div :class="styles.canvasContainer">
         <canvas
           ref="canvas"
           width="600"
@@ -455,14 +455,14 @@
         />
 
         <!-- Stats Overlay -->
-        <div class="stats-overlay">
-          <div class="stat">
+        <div :class="styles.statsOverlay">
+          <div :class="styles.stat">
             <strong>Holes:</strong> {{ enabledHoles.length }}
           </div>
-          <div class="stat">
+          <div :class="styles.stat">
             <strong>Depth:</strong> {{ totalDepth.toFixed(1) }} mm
           </div>
-          <div class="stat">
+          <div :class="styles.stat">
             <strong>Time:</strong> {{ estimatedTime.toFixed(1) }} min
           </div>
         </div>
@@ -471,30 +471,29 @@
 
     <!-- G-Code Preview (Collapsible) -->
     <div
-      class="bottom-panel"
-      :class="{ collapsed: gcodeCollapsed }"
+      :class="[styles.bottomPanel, { [styles.bottomPanelCollapsed]: gcodeCollapsed }]"
     >
       <div
-        class="panel-header"
+        :class="styles.panelHeader"
         @click="gcodeCollapsed = !gcodeCollapsed"
       >
         <h3>G-Code Preview</h3>
-        <div class="panel-actions">
+        <div :class="styles.panelActions">
           <button
-            class="btn-icon"
+            :class="styles.btnIcon"
             title="Copy to clipboard"
             @click.stop="copyGCode"
           >
-            📋
+            Copy
           </button>
-          <button class="btn-icon toggle">
+          <button :class="styles.btnIcon">
             {{ gcodeCollapsed ? '▲' : '▼' }}
           </button>
         </div>
       </div>
       <div
         v-if="!gcodeCollapsed"
-        class="gcode-content"
+        :class="styles.gcodeContent"
       >
         <pre>{{ gcodePreview }}</pre>
       </div>
@@ -505,6 +504,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch } from 'vue'
+import styles from './DrillingLab.module.css'
 
 interface Hole {
   x: number
@@ -885,345 +885,3 @@ onMounted(() => {
 // Watch for parameter changes
 watch(params, () => updatePreview(), { deep: true })
 </script>
-
-<style scoped>
-.drilling-lab {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #ffffff;
-}
-
-.lab-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.lab-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-primary, .btn-secondary {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #22c55e;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #16a34a;
-}
-
-.btn-primary:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #dc2626;
-}
-
-.lab-content {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.left-panel {
-  width: 350px;
-  overflow-y: auto;
-  border-right: 2px solid #e2e8f0;
-  background: #f8f9fa;
-}
-
-.panel-section {
-  padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.panel-section h3 {
-  margin: 0 0 0.75rem 0;
-  font-size: 1rem;
-  color: #1e293b;
-}
-
-.tool-type-selector, .cycle-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.tool-type-selector label, .cycle-selector label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.tool-type-selector label:hover, .cycle-selector label:hover {
-  background: #e2e8f0;
-}
-
-.cycle-selector label {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.cycle-selector label small {
-  color: #64748b;
-  font-size: 0.75rem;
-}
-
-.form-group {
-  margin-bottom: 0.75rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-  color: #475569;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group select,
-.pattern-selector,
-.post-selector {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 0.875rem;
-}
-
-.input-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.input-group input {
-  flex: 1;
-}
-
-.pattern-controls {
-  margin-top: 1rem;
-}
-
-.btn-generate {
-  width: 100%;
-  padding: 0.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.btn-generate:hover {
-  background: #2563eb;
-}
-
-.csv-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 0.875rem;
-  resize: vertical;
-}
-
-.hint {
-  display: block;
-  margin-top: 0.25rem;
-  color: #64748b;
-  font-size: 0.75rem;
-}
-
-.hole-list .hole-items {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.hole-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.hole-item:hover {
-  background: #e2e8f0;
-}
-
-.hole-item.selected {
-  background: #dbeafe;
-  border: 1px solid #3b82f6;
-}
-
-.hole-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.hole-info strong {
-  font-size: 0.875rem;
-}
-
-.hole-info small {
-  color: #64748b;
-  font-size: 0.75rem;
-}
-
-.btn-remove {
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  font-size: 0.75rem;
-}
-
-.btn-remove:hover {
-  background: #dc2626;
-}
-
-.canvas-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  position: relative;
-}
-
-canvas {
-  border: 2px solid #cbd5e1;
-  border-radius: 8px;
-  cursor: crosshair;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.stats-overlay {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.stat {
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.stat:last-child {
-  margin-bottom: 0;
-}
-
-.stat strong {
-  color: #1e293b;
-}
-
-.bottom-panel {
-  border-top: 2px solid #e2e8f0;
-  background: #f8f9fa;
-  transition: all 0.3s;
-}
-
-.bottom-panel.collapsed {
-  max-height: 50px;
-}
-
-.bottom-panel .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.bottom-panel .panel-header:hover {
-  background: #e2e8f0;
-}
-
-.bottom-panel h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.panel-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-icon {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.btn-icon:hover {
-  background: #cbd5e1;
-}
-
-.gcode-content {
-  padding: 1rem 1.5rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.gcode-content pre {
-  margin: 0;
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: #1e293b;
-  white-space: pre-wrap;
-}
-</style>
