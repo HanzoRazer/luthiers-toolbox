@@ -6,6 +6,8 @@ import {
   type AdaptivePlanOut,
   type Loop,
 } from "@/api/adaptive";
+import LoopsPreviewSvg from "./adaptive_kernel/LoopsPreviewSvg.vue";
+import KernelOutputPanel from "./adaptive_kernel/KernelOutputPanel.vue";
 
 const ADAPTIVE_PIPELINE_PRESET_KEY = "ltb_pipeline_adaptive_preset_v1";
 
@@ -256,16 +258,6 @@ const viewBox = computed(() => {
     h: maxY - minY + 2 * pad,
   };
 });
-
-function overlayColor(o: any): string {
-  if (o.type === "tight_radius") {
-    if (o.severity === "high") return "#ef4444";
-    if (o.severity === "medium") return "#f97316";
-    return "#facc15";
-  }
-  if (o.type === "slowdown") return "#3b82f6";
-  return "#22c55e";
-}
 
 // Toolpath preview from result.moves
 type ToolpathSegment = {
@@ -552,54 +544,14 @@ onMounted(() => {
           <div
             class="border rounded bg-gray-50 flex items-center justify-center min-h-[220px]"
           >
-            <svg
+            <LoopsPreviewSvg
               v-if="previewLoops.length"
-              :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`"
-              class="w-full h-full"
-            >
-              <!-- pocket loops -->
-              <g
-                fill="none"
-                stroke="#0f766e"
-                stroke-width="0.3"
-              >
-                <polyline
-                  v-for="(loop, idx) in previewLoops"
-                  :key="idx"
-                  :points="loop.pts.map(([x,y]: any) => `${x},${y}`).join(' ')"
-                />
-              </g>
-
-              <!-- toolpath preview -->
-              <g
-                v-if="showToolpathPreview && previewToolpathSegments.length"
-                fill="none"
-              >
-                <polyline
-                  v-for="(seg, idx) in previewToolpathSegments"
-                  :key="`tp-${idx}`"
-                  :points="seg.pts.map(([x,y]) => `${x},${y}`).join(' ')"
-                  :stroke="seg.kind === 'rapid' ? '#9ca3af' : '#1d4ed8'"
-                  :stroke-width="seg.kind === 'rapid' ? 0.2 : 0.35"
-                  :stroke-dasharray="seg.kind === 'rapid' ? '1,1' : 'none'"
-                />
-              </g>
-
-              <!-- overlays -->
-              <g v-if="previewOverlays.length">
-                <circle
-                  v-for="(o, idx) in previewOverlays"
-                  :key="`ov-${idx}`"
-                  :cx="o.x"
-                  :cy="o.y"
-                  :r="(o.radius || 2)"
-                  :fill="overlayColor(o)"
-                  fill-opacity="0.35"
-                  stroke="#111827"
-                  stroke-width="0.2"
-                />
-              </g>
-            </svg>
+              :preview-loops="previewLoops"
+              :view-box="viewBox"
+              :show-toolpath-preview="showToolpathPreview"
+              :toolpath-segments="previewToolpathSegments"
+              :overlays="previewOverlays"
+            />
             <div
               v-else
               class="text-xs text-gray-500"
@@ -630,68 +582,11 @@ onMounted(() => {
     </section>
 
     <!-- Stats + raw JSON -->
-    <section
+    <KernelOutputPanel
       v-if="result"
-      class="border rounded p-4 bg-white space-y-4"
-    >
-      <h2 class="font-semibold text-lg">
-        Kernel Output
-      </h2>
-      <div class="grid gap-4 md:grid-cols-2 text-xs">
-        <div class="space-y-1">
-          <h3 class="font-semibold text-sm">
-            Stats
-          </h3>
-          <p v-if="result.stats.length_mm != null">
-            <b>Length:</b> {{ result.stats.length_mm.toFixed?.(1) ?? result.stats.length_mm }}
-            mm
-          </p>
-          <p v-if="result.stats.area_mm2 != null">
-            <b>Area:</b> {{ result.stats.area_mm2.toFixed?.(1) ?? result.stats.area_mm2 }}
-            mm²
-          </p>
-          <p v-if="result.stats.time_s != null">
-            <b>Time:</b> {{ result.stats.time_s.toFixed?.(1) ?? result.stats.time_s }}
-            s
-          </p>
-          <p v-if="result.stats.time_jerk_s != null">
-            <b>Time (jerk-aware):</b> {{ result.stats.time_jerk_s.toFixed?.(1) ?? result.stats.time_jerk_s }}
-            s
-          </p>
-          <p v-if="result.stats.volume_mm3 != null">
-            <b>Volume:</b> {{ result.stats.volume_mm3.toFixed?.(1) ?? result.stats.volume_mm3 }}
-            mm³
-          </p>
-          <p v-if="result.stats.move_count != null">
-            <b>Moves:</b> {{ result.stats.move_count }}
-          </p>
-          <p v-if="result.stats.tight_count != null">
-            <b>Tight segments:</b> {{ result.stats.tight_count }}
-          </p>
-          <p v-if="result.stats.trochoid_count != null">
-            <b>Trochoid arcs:</b> {{ result.stats.trochoid_count }}
-          </p>
-        </div>
-        <div>
-          <details>
-            <summary class="cursor-pointer text-sm font-semibold">
-              Raw Output JSON
-            </summary>
-            <pre class="bg-gray-50 p-2 rounded mt-2 whitespace-pre-wrap text-[10px]">
-{{ JSON.stringify(result, null, 2) }}
-            </pre>
-          </details>
-          <details v-if="lastRequest">
-            <summary class="cursor-pointer text-sm font-semibold mt-2">
-              Last Request JSON
-            </summary>
-            <pre class="bg-gray-50 p-2 rounded mt-2 whitespace-pre-wrap text-[10px]">
-{{ JSON.stringify(lastRequest, null, 2) }}
-            </pre>
-          </details>
-        </div>
-      </div>
-    </section>
+      :result="result"
+      :last-request="lastRequest"
+    />
 
     <!-- Pipeline op export -->
     <section class="border rounded p-4 bg-white space-y-2">
