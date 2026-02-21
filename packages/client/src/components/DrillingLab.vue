@@ -186,185 +186,38 @@
           </select>
 
           <!-- Linear Pattern -->
-          <div
+          <DrillPatternLinear
             v-if="patternType === 'linear'"
-            :class="styles.patternControls"
-          >
-            <div :class="styles.formGroup">
-              <label>Direction</label>
-              <select v-model="linearPattern.direction">
-                <option value="x">
-                  Horizontal (X)
-                </option>
-                <option value="y">
-                  Vertical (Y)
-                </option>
-              </select>
-            </div>
-            <div :class="styles.formGroup">
-              <label>Start Position</label>
-              <div :class="styles.inputGroup">
-                <input
-                  v-model.number="linearPattern.startX"
-                  type="number"
-                  step="1"
-                  placeholder="X"
-                >
-                <input
-                  v-model.number="linearPattern.startY"
-                  type="number"
-                  step="1"
-                  placeholder="Y"
-                >
-              </div>
-            </div>
-            <div :class="styles.formGroup">
-              <label>Spacing (mm)</label>
-              <input
-                v-model.number="linearPattern.spacing"
-                type="number"
-                step="1"
-                min="1"
-              >
-            </div>
-            <div :class="styles.formGroup">
-              <label>Count</label>
-              <input
-                v-model.number="linearPattern.count"
-                type="number"
-                step="1"
-                min="1"
-              >
-            </div>
-            <button
-              :class="styles.btnGenerate"
-              @click="generateLinearPattern"
-            >
-              Generate
-            </button>
-          </div>
+            v-model:direction="linearPattern.direction"
+            v-model:startX="linearPattern.startX"
+            v-model:startY="linearPattern.startY"
+            v-model:spacing="linearPattern.spacing"
+            v-model:count="linearPattern.count"
+            @generate="generateLinearPattern"
+          />
 
           <!-- Circular Pattern -->
-          <div
+          <DrillPatternCircular
             v-if="patternType === 'circular'"
-            :class="styles.patternControls"
-          >
-            <div :class="styles.formGroup">
-              <label>Center Position</label>
-              <div :class="styles.inputGroup">
-                <input
-                  v-model.number="circularPattern.centerX"
-                  type="number"
-                  step="1"
-                  placeholder="X"
-                >
-                <input
-                  v-model.number="circularPattern.centerY"
-                  type="number"
-                  step="1"
-                  placeholder="Y"
-                >
-              </div>
-            </div>
-            <div :class="styles.formGroup">
-              <label>Radius (mm)</label>
-              <input
-                v-model.number="circularPattern.radius"
-                type="number"
-                step="1"
-                min="1"
-              >
-            </div>
-            <div :class="styles.formGroup">
-              <label>Count</label>
-              <input
-                v-model.number="circularPattern.count"
-                type="number"
-                step="1"
-                min="3"
-              >
-            </div>
-            <div :class="styles.formGroup">
-              <label>Start Angle (°)</label>
-              <input
-                v-model.number="circularPattern.startAngle"
-                type="number"
-                step="1"
-              >
-            </div>
-            <button
-              :class="styles.btnGenerate"
-              @click="generateCircularPattern"
-            >
-              Generate
-            </button>
-          </div>
+            v-model:centerX="circularPattern.centerX"
+            v-model:centerY="circularPattern.centerY"
+            v-model:radius="circularPattern.radius"
+            v-model:count="circularPattern.count"
+            v-model:startAngle="circularPattern.startAngle"
+            @generate="generateCircularPattern"
+          />
 
           <!-- Grid Pattern -->
-          <div
+          <DrillPatternGrid
             v-if="patternType === 'grid'"
-            :class="styles.patternControls"
-          >
-            <div :class="styles.formGroup">
-              <label>Start Position</label>
-              <div :class="styles.inputGroup">
-                <input
-                  v-model.number="gridPattern.startX"
-                  type="number"
-                  step="1"
-                  placeholder="X"
-                >
-                <input
-                  v-model.number="gridPattern.startY"
-                  type="number"
-                  step="1"
-                  placeholder="Y"
-                >
-              </div>
-            </div>
-            <div :class="styles.formGroup">
-              <label>Spacing</label>
-              <div :class="styles.inputGroup">
-                <input
-                  v-model.number="gridPattern.spacingX"
-                  type="number"
-                  step="1"
-                  placeholder="X"
-                >
-                <input
-                  v-model.number="gridPattern.spacingY"
-                  type="number"
-                  step="1"
-                  placeholder="Y"
-                >
-              </div>
-            </div>
-            <div :class="styles.formGroup">
-              <label>Grid Size</label>
-              <div :class="styles.inputGroup">
-                <input
-                  v-model.number="gridPattern.countX"
-                  type="number"
-                  step="1"
-                  min="1"
-                  placeholder="Cols"
-                >
-                <input
-                  v-model.number="gridPattern.countY"
-                  type="number"
-                  step="1"
-                  min="1"
-                  placeholder="Rows"
-                >
-              </div>
-            </div>
-            <button
-              :class="styles.btnGenerate"
-              @click="generateGridPattern"
-            >
-              Generate
-            </button>
-          </div>
+            v-model:startX="gridPattern.startX"
+            v-model:startY="gridPattern.startY"
+            v-model:spacingX="gridPattern.spacingX"
+            v-model:spacingY="gridPattern.spacingY"
+            v-model:countX="gridPattern.countX"
+            v-model:countY="gridPattern.countY"
+            @generate="generateGridPattern"
+          />
 
           <!-- CSV Import -->
           <div
@@ -505,6 +358,9 @@
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted, watch } from 'vue'
 import styles from './DrillingLab.module.css'
+import DrillPatternLinear from './drilling/DrillPatternLinear.vue'
+import DrillPatternCircular from './drilling/DrillPatternCircular.vue'
+import DrillPatternGrid from './drilling/DrillPatternGrid.vue'
 
 interface Hole {
   x: number
