@@ -38,48 +38,12 @@
     </p>
 
     <!-- Job Selection List -->
-    <div
+    <JobSelectionList
       v-if="!comparisonResult"
-      class="job-list"
-    >
-      <div 
-        v-for="job in jobs" 
-        :key="job.run_id" 
-        class="job-row"
-        :class="{ selected: selectedIds.includes(job.run_id) }"
-      >
-        <label class="checkbox-label">
-          <input 
-            v-model="selectedIds" 
-            type="checkbox"
-            :value="job.run_id"
-            :disabled="selectedIds.length >= 4 && !selectedIds.includes(job.run_id)"
-          >
-          <div class="job-info">
-            <div class="job-name">{{ job.job_name || job.run_id }}</div>
-            <div class="job-meta">
-              <span>{{ job.machine_id || '—' }}</span>
-              <span>{{ job.material || '—' }}</span>
-              <span>{{ job.post_id || '—' }}</span>
-              <span v-if="job.sim_time_s">{{ formatTime(job.sim_time_s) }}</span>
-              <span
-                v-if="job.sim_issue_count !== undefined"
-                :class="issueClass(job.sim_issue_count)"
-              >
-                {{ job.sim_issue_count }} issues
-              </span>
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <p
-        v-if="!loading && jobs.length === 0"
-        class="empty"
-      >
-        No jobs found. Run some adaptive pocket or pipeline operations first.
-      </p>
-    </div>
+      v-model="selectedIds"
+      :jobs="jobs"
+      :loading="loading"
+    />
 
     <!-- Comparison Table -->
     <div
@@ -105,172 +69,7 @@
         </div>
       </div>
 
-      <div class="comparison-table-wrapper">
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th
-                v-for="(job, idx) in comparisonResult.jobs"
-                :key="job.run_id"
-              >
-                Job {{ idx + 1 }}
-                <div class="job-id">
-                  {{ job.job_name || job.run_id.slice(0, 8) }}
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="metric-name">
-                Machine
-              </td>
-              <td
-                v-for="(val, idx) in comparisonResult.comparison.machine?.values"
-                :key="idx"
-              >
-                {{ val }}
-              </td>
-            </tr>
-            <tr>
-              <td class="metric-name">
-                Material
-              </td>
-              <td
-                v-for="(val, idx) in comparisonResult.comparison.material?.values"
-                :key="idx"
-              >
-                {{ val }}
-              </td>
-            </tr>
-            <tr>
-              <td class="metric-name">
-                Post Processor
-              </td>
-              <td
-                v-for="(val, idx) in comparisonResult.comparison.post?.values"
-                :key="idx"
-              >
-                {{ val }}
-              </td>
-            </tr>
-            <tr v-if="comparisonResult.comparison.predicted_time_s">
-              <td class="metric-name">
-                Predicted Time
-              </td>
-              <td 
-                v-for="(val, idx) in comparisonResult.comparison.predicted_time_s.values" 
-                :key="idx"
-                :class="winnerClass(idx, comparisonResult.comparison.predicted_time_s.winner)"
-              >
-                {{ val !== null ? formatTime(val) : '—' }}
-                <span
-                  v-if="idx === comparisonResult.comparison.predicted_time_s.winner"
-                  class="winner-badge"
-                >✓</span>
-              </td>
-            </tr>
-            <tr v-if="comparisonResult.comparison.energy_j">
-              <td class="metric-name">
-                Energy (J)
-              </td>
-              <td 
-                v-for="(val, idx) in comparisonResult.comparison.energy_j.values" 
-                :key="idx"
-                :class="winnerClass(idx, comparisonResult.comparison.energy_j.winner)"
-              >
-                {{ val !== null ? val.toFixed(1) : '—' }}
-                <span
-                  v-if="idx === comparisonResult.comparison.energy_j.winner"
-                  class="winner-badge"
-                >✓</span>
-              </td>
-            </tr>
-            <tr v-if="comparisonResult.comparison.move_count">
-              <td class="metric-name">
-                Move Count
-              </td>
-              <td 
-                v-for="(val, idx) in comparisonResult.comparison.move_count.values" 
-                :key="idx"
-                :class="winnerClass(idx, comparisonResult.comparison.move_count.winner)"
-              >
-                {{ val !== null ? val : '—' }}
-                <span
-                  v-if="idx === comparisonResult.comparison.move_count.winner"
-                  class="winner-badge"
-                >✓</span>
-              </td>
-            </tr>
-            <tr v-if="comparisonResult.comparison.issue_count">
-              <td class="metric-name">
-                Issue Count
-              </td>
-              <td 
-                v-for="(val, idx) in comparisonResult.comparison.issue_count.values" 
-                :key="idx"
-                :class="winnerClass(idx, comparisonResult.comparison.issue_count.winner)"
-              >
-                {{ val !== null ? val : '—' }}
-                <span
-                  v-if="idx === comparisonResult.comparison.issue_count.winner"
-                  class="winner-badge"
-                >✓</span>
-              </td>
-            </tr>
-            <tr v-if="comparisonResult.comparison.max_deviation_pct">
-              <td class="metric-name">
-                Max Deviation (%)
-              </td>
-              <td 
-                v-for="(val, idx) in comparisonResult.comparison.max_deviation_pct.values" 
-                :key="idx"
-                :class="winnerClass(idx, comparisonResult.comparison.max_deviation_pct.winner)"
-              >
-                {{ val !== null ? val.toFixed(2) : '—' }}
-                <span
-                  v-if="idx === comparisonResult.comparison.max_deviation_pct.winner"
-                  class="winner-badge"
-                >✓</span>
-              </td>
-            </tr>
-            <tr>
-              <td class="metric-name">
-                Notes
-              </td>
-              <td
-                v-for="(val, idx) in comparisonResult.comparison.notes?.values"
-                :key="idx"
-                class="notes-cell"
-              >
-                {{ val || '—' }}
-              </td>
-            </tr>
-            <tr>
-              <td class="metric-name">
-                Tags
-              </td>
-              <td
-                v-for="(val, idx) in comparisonResult.comparison.tags?.values"
-                :key="idx"
-              >
-                <span v-if="val.length === 0">—</span>
-                <span
-                  v-else
-                  class="tag-list"
-                >
-                  <span
-                    v-for="tag in val"
-                    :key="tag"
-                    class="tag"
-                  >#{{ tag }}</span>
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ComparisonTable :result="comparisonResult" />
     </div>
   </div>
 </template>
@@ -278,6 +77,8 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { onMounted, ref } from 'vue'
+import JobSelectionList from './compare_runs_panel/JobSelectionList.vue'
+import ComparisonTable from './compare_runs_panel/ComparisonTable.vue'
 
 const jobs = ref<any[]>([])
 const selectedIds = ref<string[]>([])
@@ -378,23 +179,6 @@ function escapeCSV(val: any): string {
   return str
 }
 
-function formatTime(seconds: number): string {
-  if (seconds < 60) return `${seconds.toFixed(1)}s`
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}m ${secs}s`
-}
-
-function issueClass(count: number): string {
-  if (count === 0) return 'no-issues'
-  if (count <= 2) return 'minor-issues'
-  return 'major-issues'
-}
-
-function winnerClass(idx: number, winnerIdx: number | null | undefined): string {
-  return idx === winnerIdx ? 'winner' : ''
-}
-
 onMounted(() => {
   refreshJobs()
 })
@@ -484,64 +268,6 @@ button:disabled {
   margin-bottom: 16px;
 }
 
-.job-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.job-row {
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.job-row.selected {
-  border-color: #4f46e5;
-  background: #f0f0ff;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px;
-  cursor: pointer;
-  gap: 12px;
-}
-
-.checkbox-label input[type="checkbox"] {
-  margin-top: 4px;
-  cursor: pointer;
-}
-
-.job-info {
-  flex: 1;
-}
-
-.job-name {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.job-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 13px;
-  color: #666;
-}
-
-.no-issues { color: #059669; font-weight: 500; }
-.minor-issues { color: #d97706; }
-.major-issues { color: #dc2626; font-weight: 500; }
-
-.empty {
-  text-align: center;
-  color: #9ca3af;
-  padding: 40px 20px;
-  font-style: italic;
-}
 
 .comparison-view {
   margin-top: 20px;
@@ -564,74 +290,4 @@ button:disabled {
   gap: 8px;
 }
 
-.comparison-table-wrapper {
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.comparison-table th {
-  background: #f9fafb;
-  padding: 12px;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.comparison-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.metric-name {
-  font-weight: 500;
-  background: #fafafa;
-  white-space: nowrap;
-}
-
-.job-id {
-  font-size: 11px;
-  color: #6b7280;
-  font-weight: normal;
-  margin-top: 2px;
-}
-
-.winner {
-  background: #d1fae5;
-  font-weight: 600;
-  position: relative;
-}
-
-.winner-badge {
-  color: #059669;
-  margin-left: 4px;
-  font-weight: bold;
-}
-
-.notes-cell {
-  max-width: 200px;
-  white-space: normal;
-  word-wrap: break-word;
-  font-size: 13px;
-}
-
-.tag-list {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  background: #e0e7ff;
-  color: #4338ca;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-}
 </style>
