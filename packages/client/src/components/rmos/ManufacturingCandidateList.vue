@@ -8,6 +8,7 @@ import BulkHistoryPanel, { type BulkHistoryRecord } from "@/components/rmos/Bulk
 import UndoHistoryPanel from "@/components/rmos/UndoHistoryPanel.vue";
 import ExportPolicyCard from "@/components/rmos/ExportPolicyCard.vue";
 import ManufacturingSummaryBar from "@/components/rmos/ManufacturingSummaryBar.vue";
+import styles from "./ManufacturingCandidateList.module.css";
 import { computed, onMounted, ref, watch } from "vue";
 import {
   decideManufacturingCandidate,
@@ -394,22 +395,22 @@ function setStatusFilter(v: string) {
 </script>
 
 <template>
-  <section class="rmos-candidates">
-    <div class="header">
-      <div class="title">
+  <section :class="styles.rmosCandidates">
+    <div :class="styles.header">
+      <div :class="styles.title">
         <h3>Manufacturing Candidates</h3>
-        <div class="subtitle muted">
-          Decision is <span class="mono">null</span> until operator decides (spine-locked).
+        <div :class="[styles.subtitle, styles.muted]">
+          Decision is <span :class="styles.mono">null</span> until operator decides (spine-locked).
         </div>
       </div>
-      <div class="meta">
+      <div :class="styles.meta">
         <span
           v-if="requestId"
-          class="reqid"
+          :class="styles.reqid"
           title="X-Request-Id"
         >req: {{ requestId }}</span>
         <button
-          class="btn"
+          :class="styles.btn"
           :disabled="loading || exporting"
           @click="load"
         >
@@ -418,7 +419,7 @@ function setStatusFilter(v: string) {
 
         <!-- Bulk export (GREEN-only), blocked if any undecided -->
         <button
-          class="btn"
+          :class="styles.btn"
           :disabled="!canExportGreenOnly"
           :title="exportBlockedReason ?? 'Download zips for GREEN candidates only'"
           @click="exportGreenOnlyZips"
@@ -430,25 +431,25 @@ function setStatusFilter(v: string) {
 
     <p
       v-if="error"
-      class="error"
+      :class="styles.error"
     >
       Error: {{ error }}
     </p>
     <p
       v-if="saveError"
-      class="error"
+      :class="styles.error"
     >
       Save error: {{ saveError }}
     </p>
     <p
       v-if="exportError"
-      class="error"
+      :class="styles.error"
     >
       Export: {{ exportError }}
     </p>
     <p
       v-if="undoError"
-      class="error"
+      :class="styles.error"
     >
       Undo: {{ undoError }}
     </p>
@@ -473,21 +474,20 @@ function setStatusFilter(v: string) {
 
     <p
       v-if="loading"
-      class="muted"
+      :class="styles.muted"
     >
       Loading candidates…
     </p>
     <p
       v-else-if="candidates.length === 0"
-      class="muted"
+      :class="styles.muted"
     >
       No candidates yet.
     </p>
 
     <div
       v-else
-      class="table"
-      :class="{ compact }"
+      :class="[styles.table, { [styles.tableCompact]: compact }]"
     >
       <CandidateFiltersSection
         v-model:decision-filter="decisionFilter"
@@ -594,520 +594,9 @@ function setStatusFilter(v: string) {
     <!-- Copy toast -->
     <div
       v-if="toast"
-      class="toast"
+      :class="styles.toast"
     >
       {{ toast }}
     </div>
   </section>
 </template>
-
-<style scoped>
-.rmos-candidates {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.subtitle {
-  font-size: 12px;
-}
-
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.reqid {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-.error {
-  color: #b00020;
-}
-
-.muted {
-  opacity: 0.75;
-}
-
-.small {
-  font-size: 12px;
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 12px;
-}
-
-.table {
-  display: grid;
-  gap: 6px;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 34px 140px 1fr 140px 120px 140px 2fr 190px 360px;
-  gap: 10px;
-  align-items: start;
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 10px;
-  position: relative;
-  background: white;
-}
-
-.row.head {
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  border-radius: 10px;
-  backdrop-filter: blur(6px);
-}
-
-.row.clickable {
-  cursor: pointer;
-}
-
-/* micro-follow: compact density */
-.table.compact .row {
-  padding: 6px;
-  gap: 8px;
-}
-
-.table.compact .mono {
-  font-size: 11px;
-}
-
-.table.compact .btn {
-  padding: 4px 8px;
-}
-
-.table.compact .copyCol {
-  gap: 4px;
-}
-
-/* copyCol layout */
-.copyCol {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Audit column layout                                                        */
-/* -------------------------------------------------------------------------- */
-.audit {
-  min-width: 140px;
-  max-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.auditBy {
-  font-weight: 600;
-}
-
-.auditAt {
-  font-size: 11px;
-  line-height: 1.15;
-  opacity: 0.75;
-}
-
-.auditHeader {
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.auditHeader:hover {
-  color: var(--vscode-textLink-foreground, #3794ff);
-}
-
-.sortHint {
-  opacity: 0.6;
-  font-size: 12px;
-}
-
-.kbdhint {
-  cursor: help;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 2px 8px;
-  border-radius: 999px;
-  display: inline-block;
-}
-
-.sel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-top: 2px;
-}
-
-.filters {
-  display: flex;
-  gap: 10px;
-  align-items: end;
-  justify-content: space-between;
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 10px;
-}
-
-.filters-left {
-  display: flex;
-  gap: 10px;
-  align-items: end;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.filters-right {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.field.grow {
-  min-width: 280px;
-  flex: 1;
-}
-
-.field label {
-  font-size: 12px;
-}
-
-.field select,
-.field input {
-  padding: 6px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 10px;
-  background: white;
-}
-
-.check {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.btn {
-  padding: 6px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 10px;
-  background: white;
-  cursor: pointer;
-}
-
-.btn.ghost {
-  background: transparent;
-}
-
-.btn.danger {
-  border-color: rgba(176, 0, 32, 0.35);
-}
-
-.smallbtn {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-}
-
-.badge[data-badge="NEEDS_DECISION"] {
-  opacity: 0.75;
-}
-
-.note textarea {
-  width: 100%;
-  resize: vertical;
-  padding: 6px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-}
-
-.editor-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.bulkbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px;
-  border: 1px dashed rgba(0, 0, 0, 0.18);
-  border-radius: 10px;
-}
-
-.bulk-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.undolist {
-  display: grid;
-  gap: 4px;
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 10px;
-}
-
-.undotitle {
-  font-size: 12px;
-}
-
-.undoitem {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  font-size: 12px;
-}
-
-.policy ul {
-  margin: 6px 0 0 18px;
-}
-
-.history {
-  position: relative;
-}
-
-.popover {
-  position: absolute;
-  z-index: 50;
-  top: 30px;
-  left: 0;
-}
-
-/* toast (copy feedback) */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #323232;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  z-index: 100;
-  font-size: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-}
-
-.chipsRow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.chipsGroup {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: white;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chip .count {
-  font-variant-numeric: tabular-nums;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.chip.active {
-  border-color: rgba(0, 0, 0, 0.28);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
-}
-
-.chip.good.active {
-  border-color: #22c55e;
-}
-
-.chip.warn.active {
-  border-color: #eab308;
-}
-
-.chip.bad.active {
-  border-color: #ef4444;
-}
-
-.chip.muted.active {
-  border-color: #6b7280;
-}
-
-.chip:hover {
-  border-color: rgba(0, 0, 0, 0.22);
-}
-
-/* Decision cell with history count badge */
-.decision-cell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.history-count {
-  font-size: 11px;
-  color: #6b7280;
-  cursor: pointer;
-}
-
-.history-count:hover {
-  color: #374151;
-  text-decoration: underline;
-}
-
-/* Bulk decision v2 */
-.bulkbar2 {
-  padding: 10px 14px;
-  background: #f0f7ff;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.bulk-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.selectSmall {
-  padding: 4px 8px;
-  font-size: 13px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.inputSmall {
-  padding: 4px 8px;
-  font-size: 13px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  min-width: 180px;
-}
-
-.inlineCheck {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.66);
-  user-select: none;
-}
-
-.tiny {
-  font-size: 11px;
-  line-height: 1.15;
-  opacity: 0.85;
-}
-
-/* Bulk history panel */
-.bulkHistory {
-  background: #fafafa;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-}
-
-.bulkHistoryHeader {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.bulkHistoryList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.bulkHistoryRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.badge.bGREEN {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.badge.bYELLOW {
-  background: #fef9c3;
-  color: #854d0e;
-}
-
-.badge.bRED {
-  background: #fee2e2;
-  color: #991b1b;
-}
-</style>

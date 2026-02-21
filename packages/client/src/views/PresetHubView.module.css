@@ -1,0 +1,630 @@
+/* B20: Job Tooltip Styles */
+.jobTooltip {
+  position: fixed;
+  z-index: 9999;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  min-width: 320px;
+  max-width: 400px;
+  pointer-events: auto;
+  transform: translate(10px, -50%);
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tooltipHeader .icon {
+  font-size: 16px;
+}
+
+.tooltipBody {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.tooltipRow .label {
+  color: #666;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.tooltipRow .value {
+  color: #1a1a1a;
+  font-weight: 600;
+  text-align: right;
+}
+
+.tooltipRow .valueCode {
+  composes: value;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.tooltipRow .valueSuccess {
+  composes: value;
+  color: #10b981;
+}
+
+.tooltipRow .valueWarning {
+  composes: value;
+  color: #f59e0b;
+}
+
+.tooltipRow .valueNeutral {
+  composes: value;
+  color: #6b7280;
+}
+
+.tooltipFooter {
+  padding: 12px 16px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tooltipLink {
+  background: transparent;
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+}
+
+.tooltipLink:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+/* Enhanced hover styles for lineage info */
+.lineageInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+  color: #92400e;
+  cursor: help;
+  transition: background-color 0.2s;
+}
+
+.lineageInfo:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.lineageText {
+  /* lineage text styling */
+}
+
+.tooltipHint {
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.lineageInfo:hover .tooltipHint {
+  opacity: 1;
+}
+
+/* Main container */
+.presetHub {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Header */
+.hubHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.headerContent h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #333;
+}
+
+.subtitle {
+  margin: 0.25rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Tab Bar */
+.tabBar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.tabButton:hover {
+  color: #333;
+  background: #f5f5f5;
+}
+
+.tabButtonActive {
+  composes: tabButton;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  font-weight: 600;
+}
+
+.tabIcon {
+  /* tab icon styling */
+}
+
+.tabLabel {
+  /* tab label styling */
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  background: #e0e0e0;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tabButtonActive .tabBadge {
+  background: #2563eb;
+  color: white;
+}
+
+/* Filters */
+.filtersBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filterGroup {
+  flex: 1;
+}
+
+.filterGroup label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.searchInput,
+.tagFilter {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+/* States */
+.loadingState,
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid #e0e0e0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+/* Presets Grid */
+.presetsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.presetCard {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  transition: all 0.2s;
+  border-left: 4px solid #ddd;
+}
+
+.presetCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.presetCardKindCam {
+  composes: presetCard;
+  border-left-color: #2563eb;
+}
+
+.presetCardKindExport {
+  composes: presetCard;
+  border-left-color: #16a34a;
+}
+
+.presetCardKindNeck {
+  composes: presetCard;
+  border-left-color: #dc2626;
+}
+
+.presetCardKindCombo {
+  composes: presetCard;
+  border-left-color: #9333ea;
+}
+
+/* Card Header */
+.cardHeader {
+  /* card header container */
+}
+
+.cardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  word-break: break-word;
+}
+
+.kindBadge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kindBadgeKindCam {
+  composes: kindBadge;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.kindBadgeKindExport {
+  composes: kindBadge;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.kindBadgeKindNeck {
+  composes: kindBadge;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.kindBadgeKindCombo {
+  composes: kindBadge;
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.cardDescription {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Card Metadata */
+.cardMetadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.metadataItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.metadataItem .icon {
+  font-size: 1rem;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tag {
+  padding: 0.125rem 0.5rem;
+  background: #e0e0e0;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+/* Card Actions */
+.cardActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+.actionBtnDanger {
+  composes: actionBtn;
+}
+
+.actionBtnDanger:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+/* Buttons */
+.btnPrimary,
+.btnSecondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  background: #2563eb;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.icon {
+  /* icon styling */
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.closeBtn:hover {
+  background: #f3f4f6;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+/* Form */
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.helpText {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.formSection {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.formSection h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
