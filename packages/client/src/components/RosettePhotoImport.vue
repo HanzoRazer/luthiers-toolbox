@@ -2,6 +2,8 @@
 import { api } from '@/services/apiBase';
 import { ref, computed } from "vue";
 import { useToastStore } from "@/stores/toastStore";
+import SettingsGrid from './rosette_photo_import/SettingsGrid.vue'
+import StatsGrid from './rosette_photo_import/StatsGrid.vue'
 
 // Adapter for PrimeVue-style toast API
 const _toastStore = useToastStore();
@@ -236,51 +238,13 @@ const canConvert = computed(
         <div class="settings-section">
           <h3>2. Configure Settings</h3>
 
-          <div class="settings-grid">
-            <div class="field">
-              <label for="outputWidth">Output Width (mm)</label>
-              <InputNumber
-                id="outputWidth"
-                v-model="outputWidth"
-                :min="10"
-                :max="500"
-                :disabled="isUploading"
-              />
-            </div>
-
-            <div class="field">
-              <label for="simplify">Simplification</label>
-              <InputNumber
-                id="simplify"
-                v-model="simplify"
-                :min="0.1"
-                :max="10"
-                :step="0.1"
-                :disabled="isUploading"
-              />
-              <small>Higher = simpler paths</small>
-            </div>
-
-            <div class="field checkbox">
-              <Checkbox
-                id="fitToRing"
-                v-model="fitToRing"
-                :binary="true"
-                :disabled="isUploading"
-              />
-              <label for="fitToRing">Fit to Circular Ring</label>
-            </div>
-
-            <div class="field checkbox">
-              <Checkbox
-                id="invert"
-                v-model="invert"
-                :binary="true"
-                :disabled="isUploading"
-              />
-              <label for="invert">Invert Colors</label>
-            </div>
-          </div>
+          <SettingsGrid
+            v-model:output-width="outputWidth"
+            v-model:simplify="simplify"
+            v-model:fit-to-ring="fitToRing"
+            v-model:invert="invert"
+            :disabled="isUploading"
+          />
 
           <!-- Ring Dimensions (conditional) -->
           <div
@@ -335,40 +299,10 @@ const canConvert = computed(
           <h3>4. Results</h3>
 
           <!-- Stats -->
-          <div
+          <StatsGrid
             v-if="stats"
-            class="stats-grid"
-          >
-            <div class="stat-card">
-              <i class="pi pi-chart-line" />
-              <div class="stat-value">
-                {{ stats.contour_count }}
-              </div>
-              <div class="stat-label">
-                Contours
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <i class="pi pi-circle" />
-              <div class="stat-value">
-                {{ stats.total_points }}
-              </div>
-              <div class="stat-label">
-                Points
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <i class="pi pi-arrows-h" />
-              <div class="stat-value">
-                {{ stats.output_width_mm }}mm
-              </div>
-              <div class="stat-label">
-                Width
-              </div>
-            </div>
-          </div>
+            :stats="stats"
+          />
 
           <!-- SVG Preview -->
           <div class="svg-preview">
@@ -468,36 +402,6 @@ const canConvert = computed(
   border-radius: 4px;
 }
 
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.field.checkbox {
-  flex-direction: row;
-  align-items: center;
-}
-
-.field.checkbox label {
-  margin-left: 0.5rem;
-}
-
-.field label {
-  font-weight: 500;
-  color: #495057;
-}
-
-.field small {
-  color: #6c757d;
-  font-size: 0.85rem;
-}
 
 .ring-settings {
   margin-top: 1rem;
@@ -511,37 +415,6 @@ const canConvert = computed(
   font-size: 1rem;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-card {
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.stat-card i {
-  font-size: 2rem;
-  color: #007bff;
-  margin-bottom: 0.5rem;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #495057;
-}
-
-.stat-label {
-  color: #6c757d;
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
-}
 
 .svg-preview {
   margin-bottom: 1.5rem;
