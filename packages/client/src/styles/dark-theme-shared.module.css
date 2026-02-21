@@ -1,0 +1,1250 @@
+/**
+ * Dark Theme Shared CSS Module
+ * Generic dark theme styles for ToolBox components
+ *
+ * Supports three theme variants:
+ * - Default: Solid dark backgrounds (#292a2d) - educational panels
+ * - Transparent: Glass-morphism style (rgba) - evidence viewers
+ * - Darker: Extra dark (#0a0a0a) - CAM/technical panels
+ */
+
+/* =============================================================================
+   PAGE LAYOUTS
+   ============================================================================= */
+
+.page {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageDark {
+  composes: page;
+  background: #0a0a0a;
+  min-height: 100vh;
+  color: #e5e5e5;
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+}
+
+.layoutSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* =============================================================================
+   SECTION HEADERS
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =============================================================================
+   TAB ANIMATION
+   ============================================================================= */
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   CARDS - Default (Solid Dark)
+   ============================================================================= */
+
+.card {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.cardSmall {
+  composes: card;
+  padding: 20px;
+}
+
+/* =============================================================================
+   CARDS - Transparent (Glass-morphism)
+   ============================================================================= */
+
+.cardTransparent {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.cardTransparentWide {
+  composes: cardTransparent;
+  grid-column: 1 / -1;
+}
+
+/* =============================================================================
+   CARDS - Darker (Technical/CAM)
+   ============================================================================= */
+
+.cardDark {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cardDarker {
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+/* =============================================================================
+   HIGHLIGHT CARDS (Problem/Solution/Info)
+   ============================================================================= */
+
+.highlightCard {
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.highlightCardDanger {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(234, 67, 53, 0.2), rgba(234, 67, 53, 0.1));
+  border-left: 4px solid #ea4335;
+}
+
+.highlightCardDanger h3 {
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+
+.highlightCardSuccess {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(52, 168, 83, 0.2), rgba(52, 168, 83, 0.1));
+  border-left: 4px solid #34a853;
+}
+
+.highlightCardSuccess h3 {
+  color: #51cf66;
+  margin-bottom: 12px;
+}
+
+.highlightCardInfo {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2), rgba(138, 180, 248, 0.1));
+  border-left: 4px solid #8ab4f8;
+}
+
+.highlightCardInfo h3 {
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.highlightCardWarning {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(251, 188, 5, 0.2), rgba(251, 188, 5, 0.1));
+  border-left: 4px solid #f59e0b;
+}
+
+.highlightCardWarning h3 {
+  color: #fcd34d;
+  margin-bottom: 12px;
+}
+
+.highlightCard p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #bdc1c6;
+  margin-bottom: 12px;
+}
+
+/* =============================================================================
+   KEY-VALUE DISPLAYS
+   ============================================================================= */
+
+.kv {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.kv > div {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.kv span {
+  opacity: 0.75;
+}
+
+.kv code {
+  word-break: break-all;
+}
+
+.kvCompact {
+  composes: kv;
+}
+
+.kvCompact > div {
+  grid-template-columns: 90px 1fr;
+}
+
+/* =============================================================================
+   DATA GRID / TABLE ROWS
+   ============================================================================= */
+
+.dataGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dataRow {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+  align-items: center;
+}
+
+.dataRowHeader {
+  composes: dataRow;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 12px;
+}
+
+/* =============================================================================
+   TABLES
+   ============================================================================= */
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.tbl th,
+.tbl td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px;
+  text-align: left;
+}
+
+.tbl tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tblDark {
+  composes: tbl;
+}
+
+.tblDark th {
+  background: #1a1a1a;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  border-bottom: 1px solid #333;
+}
+
+.tblDark td {
+  font-size: 13px;
+  color: #ccc;
+  border-bottom: 1px solid #222;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.rowActive {
+  background: rgba(66, 184, 131, 0.15);
+}
+
+.rowHighlight {
+  background: #1e293b;
+}
+
+.rowHighlight:hover {
+  background: #334155;
+}
+
+/* =============================================================================
+   FILTER BARS
+   ============================================================================= */
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 8px 0;
+}
+
+.filterSelect {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.filterCount {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* =============================================================================
+   DARK THEME INPUTS
+   ============================================================================= */
+
+.inputGroup {
+  margin-bottom: 24px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.input {
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+  font-size: 16px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #8ab4f8;
+}
+
+.inputDark {
+  padding: 10px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 14px;
+}
+
+.inputDark:focus {
+  outline: none;
+  border-color: #0ea5e9;
+}
+
+.inputNumber {
+  composes: inputDark;
+  width: 80px;
+  text-align: right;
+}
+
+.select {
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+  cursor: pointer;
+}
+
+.selectDark {
+  width: 100%;
+  padding: 10px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.selectDark:focus {
+  outline: none;
+  border-color: #0ea5e9;
+}
+
+.inputWithUnit {
+  display: flex;
+  gap: 8px;
+}
+
+.inputWithUnit input {
+  flex: 1;
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inputRow label {
+  flex: 1;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.unit {
+  width: 30px;
+  font-size: 13px;
+  color: #999;
+}
+
+/* =============================================================================
+   CHECKBOXES
+   ============================================================================= */
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* =============================================================================
+   BUTTONS
+   ============================================================================= */
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #8ab4f8;
+  color: #202124;
+}
+
+.btnPrimary:hover {
+  background: #aecbfa;
+}
+
+.btnPrimarySky {
+  composes: btn;
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.btnPrimarySky:hover:not(:disabled) {
+  background: #0284c7;
+  transform: translateY(-1px);
+}
+
+.btnPrimarySky:disabled {
+  background: #444;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #374151;
+  color: #e5e5e5;
+}
+
+.btnSecondary:hover {
+  background: #4b5563;
+}
+
+.btnOutline {
+  composes: btn;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #8ab4f8;
+  color: #8ab4f8;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.btnOutline:hover {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+.btnSmall {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.8rem;
+}
+
+.btnSmall:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btnLarge {
+  composes: btnPrimarySky;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 16px;
+}
+
+/* =============================================================================
+   BADGES
+   ============================================================================= */
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.badgeAudio {
+  composes: badge;
+  background: rgba(66, 184, 131, 0.2);
+  color: #42b883;
+}
+
+.badgeImage {
+  composes: badge;
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.badgeCsv {
+  composes: badge;
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+}
+
+.badgeJson {
+  composes: badge;
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+}
+
+.badgeSpectrum {
+  composes: badge;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.badgePass {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.badgeFail {
+  composes: badgePass;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* =============================================================================
+   FLAGS (Risk/Status indicators)
+   ============================================================================= */
+
+.flag {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.flagGood {
+  composes: flag;
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.flagBad {
+  composes: flag;
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.flagWarning {
+  composes: flag;
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.riskBadge {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+}
+
+/* =============================================================================
+   STATUS COLORS
+   ============================================================================= */
+
+.statusDanger {
+  background: rgba(234, 67, 53, 0.2);
+  color: #ff6b6b;
+}
+
+.statusSuccess {
+  background: rgba(52, 168, 83, 0.2);
+  color: #51cf66;
+}
+
+.statusWarning {
+  background: rgba(251, 188, 5, 0.2);
+  color: #ffc107;
+}
+
+.statusInfo {
+  background: rgba(138, 180, 248, 0.2);
+  color: #8ab4f8;
+}
+
+/* =============================================================================
+   BANNERS / ALERTS
+   ============================================================================= */
+
+.banner {
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.bannerInfo {
+  composes: banner;
+  background: #1e3a8a;
+  color: #93c5fd;
+  border: 1px solid #3b82f6;
+}
+
+.bannerWarning {
+  composes: banner;
+  background: #78350f;
+  color: #fcd34d;
+  border: 1px solid #f59e0b;
+}
+
+.bannerError {
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #ef4444;
+}
+
+/* =============================================================================
+   PREVIEW PANELS (Split layout)
+   ============================================================================= */
+
+.previewContainer {
+  margin-top: 12px;
+}
+
+.previewSplit {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 12px;
+  align-items: start;
+}
+
+.previewMain {
+  min-width: 0;
+}
+
+.previewSide {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 12px;
+}
+
+.sideHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sideTitle {
+  font-weight: 650;
+}
+
+.sideBody {
+  display: grid;
+  gap: 12px;
+}
+
+.sideActions {
+  display: grid;
+  gap: 8px;
+}
+
+/* =============================================================================
+   LOADING STATES
+   ============================================================================= */
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #333;
+  border-top-color: #0ea5e9;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+  color: #666;
+}
+
+.emptyIcon {
+  font-size: 64px;
+}
+
+.emptyState h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #999;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.placeholder {
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* =============================================================================
+   STATISTICS GRID
+   ============================================================================= */
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.statCard {
+  padding: 16px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0ea5e9;
+}
+
+.statValueBlue {
+  composes: statValue;
+  color: #8ab4f8;
+}
+
+/* Summary cards with gradient */
+.summaryCard {
+  background: linear-gradient(135deg, #1a73e8 0%, #8ab4f8 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+}
+
+.summaryValue {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* =============================================================================
+   CODE PREVIEWS
+   ============================================================================= */
+
+.codePreview {
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  color: #10b981;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.codePre {
+  max-height: 280px;
+  overflow: auto;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* =============================================================================
+   DEBUG PANELS
+   ============================================================================= */
+
+.debugPanel {
+  composes: cardTransparent;
+  margin-top: 8px;
+}
+
+.debugSummary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.debugSummary:hover {
+  color: #42b883;
+}
+
+.debugContent {
+  margin-top: 12px;
+}
+
+.debugGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.debugSection h3 {
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   DROP ZONES
+   ============================================================================= */
+
+.dropZone {
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 14px 0;
+}
+
+.dropZoneInner {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.dropZoneTitle {
+  font-weight: 700;
+}
+
+.dropZoneSub {
+  opacity: 0.75;
+}
+
+/* =============================================================================
+   FORMULA BOX
+   ============================================================================= */
+
+.formulaBox {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.formula {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  color: #8ab4f8;
+  text-align: center;
+}
+
+/* =============================================================================
+   NOTES / CALLOUTS
+   ============================================================================= */
+
+.note {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.noteWarning {
+  composes: note;
+  background: rgba(251, 188, 5, 0.1);
+  border-left: 3px solid #ffc107;
+  color: #ffc107;
+}
+
+.noteSuccess {
+  composes: note;
+  background: rgba(52, 168, 83, 0.1);
+  border-left: 3px solid #51cf66;
+  color: #51cf66;
+}
+
+.noteInfo {
+  composes: note;
+  background: rgba(138, 180, 248, 0.1);
+  border-left: 3px solid #8ab4f8;
+}
+
+.noteDanger {
+  composes: note;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+  color: #fca5a5;
+}
+
+/* =============================================================================
+   TEXT UTILITIES
+   ============================================================================= */
+
+.textMuted {
+  color: #9aa0a6;
+}
+
+.textPrimary {
+  color: #e8eaed;
+}
+
+.textAccent {
+  color: #8ab4f8;
+}
+
+.textAccentSky {
+  color: #0ea5e9;
+}
+
+.textAccentVue {
+  color: #42b883;
+}
+
+.textDanger {
+  color: #ff6b6b;
+}
+
+.textSuccess {
+  color: #51cf66;
+}
+
+.textWarning {
+  color: #ffc107;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.hash {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.muted {
+  opacity: 0.75;
+}
+
+.sub {
+  opacity: 0.8;
+  margin-top: 6px;
+}
+
+.sub code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.125rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* =============================================================================
+   CONTROL SECTIONS (for CAM panels)
+   ============================================================================= */
+
+.controlsPanel {
+  composes: cardDark;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.controlSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.controlSection h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+/* =============================================================================
+   VALIDATION PANELS
+   ============================================================================= */
+
+.validationCard {
+  composes: cardTransparent;
+  border-left: 4px solid #888;
+}
+
+.validationPass {
+  border-left-color: #10b981;
+}
+
+.validationFail {
+  border-left-color: #ef4444;
+}
+
+.validationUnknown {
+  border-left-color: #6b7280;
+}
+
+.validationIcon {
+  font-size: 1.2rem;
+}
+
+.validationDetails {
+  margin-top: 0.75rem;
+}
+
+.validationDetails summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.validationList {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.validationList li {
+  margin-bottom: 0.25rem;
+}
+
+.validationList code {
+  color: #fbbf24;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+/* =============================================================================
+   CHIPS
+   ============================================================================= */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* =============================================================================
+   PILL (cursor indicator)
+   ============================================================================= */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pillLabel {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.pillValue {
+  font-size: 0.85rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(147, 197, 253, 0.12);
+  border: 1px solid rgba(147, 197, 253, 0.18);
+}
+
+.pillClear {
+  appearance: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  border-radius: 999px;
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.pillClear:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* =============================================================================
+   RESPONSIVE
+   ============================================================================= */
+
+@media (max-width: 980px) {
+  .previewSplit {
+    grid-template-columns: 1fr;
+  }
+  .previewSide {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+  }
+  .layoutGrid {
+    grid-template-columns: 1fr;
+  }
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .pill {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .layoutSplit {
+    grid-template-columns: 1fr;
+  }
+  .debugGrid {
+    grid-template-columns: 1fr;
+  }
+}
