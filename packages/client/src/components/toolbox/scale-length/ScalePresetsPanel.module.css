@@ -1,27 +1,7 @@
 /**
  * ScalePresetsPanel CSS Module
- * Scale length presets panel styles
+ * Component-specific styles (shared styles in scale-length-shared.module.css)
  */
-
-/* =============================================================================
-   Section Header
-   ============================================================================= */
-
-.sectionHeader {
-  margin-bottom: 24px;
-}
-
-.sectionHeader h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.sectionHeader p {
-  font-size: 14px;
-  color: #9aa0a6;
-}
 
 /* =============================================================================
    Scale Grid
@@ -86,45 +66,6 @@
   margin-bottom: 24px;
 }
 
-.eduCard {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.eduCard h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 12px;
-}
-
-.eduCard p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #bdc1c6;
-  margin-bottom: 16px;
-}
-
-/* =============================================================================
-   Formula Box
-   ============================================================================= */
-
-.formulaBox {
-  background: #1e1e1e;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 16px 0;
-}
-
-.formula {
-  font-family: 'Courier New', monospace;
-  font-size: 18px;
-  color: #8ab4f8;
-  margin-bottom: 16px;
-  text-align: center;
-}
 
 .formulaLegend {
   display: grid;
@@ -132,14 +73,6 @@
   gap: 8px;
   font-size: 13px;
   color: #9aa0a6;
-}
-
-.eduNote {
-  background: rgba(138, 180, 248, 0.1);
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 3px solid #8ab4f8;
-  margin-top: 16px;
 }
 
 /* =============================================================================

@@ -4,6 +4,7 @@
  * Extracted from ScaleLengthDesigner.vue
  */
 import styles from "./TensionCalculatorPanel.module.css";
+import shared from "./scale-length-shared.module.css";
 
 interface StringData {
   name: string
@@ -47,16 +48,16 @@ function getTensionClass(tension: number): string {
 
 <template>
   <div :class="styles.tensionCalculator">
-    <div :class="styles.sectionHeader">
+    <div :class="shared.sectionHeader">
       <h2>String Tension Calculator</h2>
       <p>Calculate tension for custom scale lengths and string gauges</p>
     </div>
 
     <div :class="styles.calculatorSection">
-      <div :class="styles.calcInputs">
-        <div :class="styles.inputGroup">
+      <div :class="shared.card">
+        <div :class="shared.inputGroup">
           <label>Scale Length</label>
-          <div :class="styles.inputWithUnit">
+          <div :class="shared.inputWithUnit">
             <input
               :value="customScale"
               type="number"
@@ -100,31 +101,31 @@ function getTensionClass(tension: number): string {
 
         <div :class="styles.presetGauges">
           <button
-            :class="styles.btnGauge"
+            :class="shared.btnOutline"
             @click="emit('applyGaugeSet', 'light')"
           >
             Light (.009-.042)
           </button>
           <button
-            :class="styles.btnGauge"
+            :class="shared.btnOutline"
             @click="emit('applyGaugeSet', 'regular')"
           >
             Regular (.010-.046)
           </button>
           <button
-            :class="styles.btnGauge"
+            :class="shared.btnOutline"
             @click="emit('applyGaugeSet', 'medium')"
           >
             Medium (.011-.049)
           </button>
           <button
-            :class="styles.btnGauge"
+            :class="shared.btnOutline"
             @click="emit('applyGaugeSet', 'heavy')"
           >
             Heavy (.012-.053)
           </button>
           <button
-            :class="styles.btnGauge"
+            :class="shared.btnOutline"
             @click="emit('applyGaugeSet', 'baritone')"
           >
             Baritone (.013-.062)
@@ -147,7 +148,7 @@ function getTensionClass(tension: number): string {
         </div>
       </div>
 
-      <div :class="styles.tensionGuide">
+      <div :class="shared.cardSmall">
         <h3>Tension Guidelines</h3>
         <div :class="[styles.guideRow, styles.guideRowTooLoose]">
           <div :class="styles.guideIndicator" />

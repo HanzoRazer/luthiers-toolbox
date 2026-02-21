@@ -4,6 +4,7 @@
  * Extracted from ScaleLengthDesigner.vue
  */
 import styles from "./ScalePresetsPanel.module.css";
+import shared from "./scale-length-shared.module.css";
 
 const emit = defineEmits<{
   'selectScale': [scaleType: string]
@@ -12,7 +13,7 @@ const emit = defineEmits<{
 
 <template>
   <div :class="styles.scalePresetsPanel">
-    <div :class="styles.sectionHeader">
+    <div :class="shared.sectionHeader">
       <h2>Standard Scale Lengths</h2>
       <p>Click a card to explore how scale length affects string tension and tone</p>
     </div>
@@ -83,11 +84,11 @@ const emit = defineEmits<{
     <div :class="styles.educationSection">
       <div :class="styles.eduTitle">Why Scale Length Matters for Innovation</div>
 
-      <div :class="styles.eduCard">
+      <div :class="shared.card">
         <h3>The Physics: Mersenne's Law</h3>
         <p>String tension is determined by a precise mathematical relationship:</p>
-        <div :class="styles.formulaBox">
-          <div :class="styles.formula">T = (μ × (2 × L × f)²) ÷ 4</div>
+        <div :class="shared.formulaBox">
+          <div :class="shared.formula">T = (μ × (2 × L × f)²) ÷ 4</div>
           <div :class="styles.formulaLegend">
             <div><strong>T</strong> = Tension (lbs)</div>
             <div><strong>μ</strong> = Linear mass density (lb/in)</div>
@@ -95,13 +96,13 @@ const emit = defineEmits<{
             <div><strong>f</strong> = Frequency (Hz)</div>
           </div>
         </div>
-        <p :class="styles.eduNote">
+        <p :class="shared.noteInfo">
           <strong>Key insight:</strong> Tension increases with the <em>square</em> of scale length.
           Every 0.75" longer scale = ~6% more tension!
         </p>
       </div>
 
-      <div :class="styles.eduCard">
+      <div :class="shared.card">
         <h3>Real-World Examples</h3>
         <div :class="styles.exampleGrid">
           <div :class="styles.exampleItem">
@@ -120,7 +121,7 @@ const emit = defineEmits<{
             <div :class="styles.exampleNote">+6.3% tension</div>
           </div>
         </div>
-        <p :class="styles.eduNote">
+        <p :class="shared.noteInfo">
           That 0.75" difference between Gibson and Fender creates noticeable feel and tone differences!
         </p>
       </div>

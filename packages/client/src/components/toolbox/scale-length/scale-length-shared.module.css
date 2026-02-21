@@ -1,0 +1,322 @@
+/**
+ * Scale-Length Shared CSS Module
+ * Dark theme styles shared across all scale-length panels/tabs
+ * Consolidates duplicates from 8 files (~400 lines saved)
+ */
+
+/* =============================================================================
+   Section Header (used in ALL 8 files)
+   ============================================================================= */
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.sectionHeader p {
+  font-size: 14px;
+  color: #9aa0a6;
+}
+
+/* =============================================================================
+   Tab Animation
+   ============================================================================= */
+
+.tabContent {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   Dark Cards / Panels
+   ============================================================================= */
+
+.card {
+  background: #292a2d;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e8eaed;
+  margin-bottom: 16px;
+}
+
+.cardSmall {
+  composes: card;
+  padding: 20px;
+}
+
+/* =============================================================================
+   Highlight Cards (Problem/Solution pattern)
+   ============================================================================= */
+
+.highlightCard {
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.highlightCardDanger {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(234, 67, 53, 0.2), rgba(234, 67, 53, 0.1));
+  border-left: 4px solid #ea4335;
+}
+
+.highlightCardDanger h3 {
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+
+.highlightCardSuccess {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(52, 168, 83, 0.2), rgba(52, 168, 83, 0.1));
+  border-left: 4px solid #34a853;
+}
+
+.highlightCardSuccess h3 {
+  color: #51cf66;
+  margin-bottom: 12px;
+}
+
+.highlightCardInfo {
+  composes: highlightCard;
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2), rgba(138, 180, 248, 0.1));
+  border-left: 4px solid #8ab4f8;
+}
+
+.highlightCardInfo h3 {
+  color: #8ab4f8;
+  margin-bottom: 12px;
+}
+
+.highlightCard p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #bdc1c6;
+  margin-bottom: 12px;
+}
+
+/* =============================================================================
+   Data Grid / Table Rows
+   ============================================================================= */
+
+.dataGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dataRow {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+  align-items: center;
+}
+
+.dataRowHeader {
+  composes: dataRow;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 12px;
+}
+
+/* =============================================================================
+   Dark Theme Inputs
+   ============================================================================= */
+
+.inputGroup {
+  margin-bottom: 24px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+  margin-bottom: 8px;
+}
+
+.input {
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+  font-size: 16px;
+}
+
+.select {
+  padding: 10px;
+  background: #3c4043;
+  border: 1px solid #5f6368;
+  border-radius: 6px;
+  color: #e8eaed;
+}
+
+.inputWithUnit {
+  display: flex;
+  gap: 8px;
+}
+
+.inputWithUnit input {
+  flex: 1;
+}
+
+/* =============================================================================
+   Buttons (dark theme)
+   ============================================================================= */
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #8ab4f8;
+  color: #202124;
+}
+
+.btnPrimary:hover {
+  background: #aecbfa;
+}
+
+.btnOutline {
+  composes: btn;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #8ab4f8;
+  color: #8ab4f8;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.btnOutline:hover {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+/* =============================================================================
+   Status Colors
+   ============================================================================= */
+
+.statusDanger {
+  background: rgba(234, 67, 53, 0.2);
+  color: #ff6b6b;
+}
+
+.statusSuccess {
+  background: rgba(52, 168, 83, 0.2);
+  color: #51cf66;
+}
+
+.statusWarning {
+  background: rgba(251, 188, 5, 0.2);
+  color: #ffc107;
+}
+
+.statusInfo {
+  background: rgba(138, 180, 248, 0.2);
+  color: #8ab4f8;
+}
+
+/* =============================================================================
+   Formula Box
+   ============================================================================= */
+
+.formulaBox {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.formula {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  color: #8ab4f8;
+  text-align: center;
+}
+
+/* =============================================================================
+   Notes / Callouts
+   ============================================================================= */
+
+.note {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.noteWarning {
+  composes: note;
+  background: rgba(251, 188, 5, 0.1);
+  border-left: 3px solid #ffc107;
+  color: #ffc107;
+}
+
+.noteSuccess {
+  composes: note;
+  background: rgba(52, 168, 83, 0.1);
+  border-left: 3px solid #51cf66;
+  color: #51cf66;
+}
+
+.noteInfo {
+  composes: note;
+  background: rgba(138, 180, 248, 0.1);
+  border-left: 3px solid #8ab4f8;
+}
+
+/* =============================================================================
+   Text Colors
+   ============================================================================= */
+
+.textMuted {
+  color: #9aa0a6;
+}
+
+.textPrimary {
+  color: #e8eaed;
+}
+
+.textAccent {
+  color: #8ab4f8;
+}
+
+.textDanger {
+  color: #ff6b6b;
+}
+
+.textSuccess {
+  color: #51cf66;
+}
+
+.textWarning {
+  color: #ffc107;
+}

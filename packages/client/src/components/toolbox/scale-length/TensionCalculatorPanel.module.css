@@ -1,27 +1,7 @@
 /**
  * TensionCalculatorPanel CSS Module
- * String tension calculator panel styles
+ * Component-specific styles (shared styles in scale-length-shared.module.css)
  */
-
-/* =============================================================================
-   Section Header
-   ============================================================================= */
-
-.sectionHeader {
-  margin-bottom: 24px;
-}
-
-.sectionHeader h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.sectionHeader p {
-  font-size: 14px;
-  color: #9aa0a6;
-}
 
 /* =============================================================================
    Calculator Section
@@ -29,52 +9,6 @@
 
 .calculatorSection {
   max-width: 900px;
-}
-
-.calcInputs {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-/* =============================================================================
-   Input Group
-   ============================================================================= */
-
-.inputGroup {
-  margin-bottom: 24px;
-}
-
-.inputGroup label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.inputWithUnit {
-  display: flex;
-  gap: 8px;
-}
-
-.inputWithUnit input {
-  flex: 1;
-  padding: 10px;
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  border-radius: 6px;
-  color: #e8eaed;
-  font-size: 16px;
-}
-
-.inputWithUnit select {
-  padding: 10px;
-  background: #3c4043;
-  border: 1px solid #5f6368;
-  border-radius: 6px;
-  color: #e8eaed;
 }
 
 /* =============================================================================
@@ -157,22 +91,6 @@
   margin-top: 16px;
 }
 
-.btnGauge {
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid #8ab4f8;
-  border-radius: 20px;
-  color: #8ab4f8;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btnGauge:hover {
-  background: #8ab4f8;
-  color: #202124;
-}
-
 /* =============================================================================
    Tension Summary
    ============================================================================= */
@@ -204,21 +122,8 @@
 }
 
 /* =============================================================================
-   Tension Guide
+   Tension Guide (component-specific guide rows)
    ============================================================================= */
-
-.tensionGuide {
-  background: #292a2d;
-  padding: 20px;
-  border-radius: 12px;
-}
-
-.tensionGuide h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 16px;
-}
 
 .guideRow {
   display: flex;
