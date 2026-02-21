@@ -156,45 +156,11 @@
         </div>
       </div>
 
-      <div
+      <AmortizationSection
         v-if="showAmortization"
-        class="amortization-section"
-      >
-        <button
-          class="toggle-btn"
-          @click="showAmortization = !showAmortization"
-        >
-          {{ showAmortization ? '▼' : '▶' }} Hide Amortization Schedule
-        </button>
-        <div class="amortization-table">
-          <div class="table-header">
-            <div>Payment #</div>
-            <div>Date</div>
-            <div>Principal</div>
-            <div>Interest</div>
-            <div>Balance</div>
-          </div>
-          <div
-            v-for="payment in amortizationSchedule.slice(0, 12)"
-            :key="payment.number"
-            class="table-row"
-          >
-            <div>{{ payment.number }}</div>
-            <div>{{ payment.date }}</div>
-            <div>${{ payment.principal.toFixed(2) }}</div>
-            <div>${{ payment.interest.toFixed(2) }}</div>
-            <div>${{ payment.balance.toFixed(2) }}</div>
-          </div>
-          <div
-            v-if="amortizationSchedule.length > 12"
-            class="table-row summary"
-          >
-            <div colspan="5">
-              ... {{ amortizationSchedule.length - 12 }} more payments ...
-            </div>
-          </div>
-        </div>
-      </div>
+        :schedule="amortizationSchedule"
+        @update:show="showAmortization = $event"
+      />
       <button
         v-else
         class="toggle-btn"
@@ -316,52 +282,14 @@
     </div>
 
     <!-- Tab 3: Pricing Strategy -->
-    <div
+    <PricingStrategyPanel
       v-if="activeTab === 'pricing'"
-      class="tab-content"
-    >
-      <h2>🏷️ Pricing Strategy</h2>
-      
-      <div class="section">
-        <h3>Target Pricing</h3>
-        <div class="input-row">
-          <label>Build Cost:</label>
-          <input
-            v-model.number="pricing.buildCost"
-            type="number"
-            step="10"
-          >
-          <span class="unit">$</span>
-        </div>
-        <div class="input-row">
-          <label>Desired Margin (%):</label>
-          <input
-            v-model.number="pricing.margin"
-            type="number"
-            step="5"
-            min="10"
-            max="200"
-          >
-          <span class="unit">%</span>
-        </div>
-      </div>
-
-      <div class="results">
-        <h3>Recommended Pricing</h3>
-        <div class="result-item">
-          <span>Selling Price:</span>
-          <strong>${{ sellingPrice.toFixed(2) }}</strong>
-        </div>
-        <div class="result-item">
-          <span>Profit per Unit:</span>
-          <strong>${{ profit.toFixed(2) }}</strong>
-        </div>
-        <div class="result-item">
-          <span>Units to Break Even:</span>
-          <strong>{{ breakEvenUnits }}</strong>
-        </div>
-      </div>
-    </div>
+      v-model:build-cost="pricing.buildCost"
+      v-model:margin="pricing.margin"
+      :selling-price="sellingPrice"
+      :profit="profit"
+      :break-even-units="breakEvenUnits"
+    />
 
     <!-- Tab 4: Cash Flow -->
     <div
@@ -480,6 +408,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import AmortizationSection from './business/AmortizationSection.vue'
+import PricingStrategyPanel from './business/PricingStrategyPanel.vue'
 
 const tabs = [
   { id: 'startup', label: '🚀 Startup' },
