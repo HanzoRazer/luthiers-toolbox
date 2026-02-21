@@ -4,17 +4,18 @@
  * Extracted from ScaleLengthDesigner.vue
  */
 import styles from "./IntonationPanel.module.css";
+import shared from "./scale-length-shared.module.css";
 </script>
 
 <template>
   <div :class="styles.intonationPanel">
-    <div :class="styles.sectionHeader">
+    <div :class="shared.sectionHeader">
       <h2>Intonation Compensation</h2>
       <p>Understanding the "dead zone" and why bridges aren't placed at the exact scale length</p>
     </div>
 
     <div :class="styles.intonationEducation">
-      <div :class="styles.criticalConcept">
+      <div :class="shared.highlightCardDanger">
         <h3>The Dead Zone Problem</h3>
         <p>
           String stiffness creates a non-vibrating "dead zone" near the saddle. This zone doesn't
@@ -27,7 +28,7 @@ import styles from "./IntonationPanel.module.css";
         </p>
       </div>
 
-      <div :class="styles.compensationTable">
+      <div :class="shared.card">
         <div :class="styles.compHeader">
           <div :class="styles.compTitle">Intonation Compensation Chart</div>
           <div :class="styles.compSubtitle">For 25.5" scale (Fender) with standard .010-.046 gauges</div>
@@ -92,25 +93,25 @@ import styles from "./IntonationPanel.module.css";
         </div>
       </div>
 
-      <div :class="styles.bridgePlacement">
+      <div :class="shared.card">
         <h3>Bridge Placement Formula</h3>
-        <div :class="styles.placementBox">
-          <div :class="styles.formula">Bridge Center = Scale Length + (Low E Compensation ÷ 2)</div>
+        <div :class="shared.formulaBox">
+          <div :class="shared.formula">Bridge Center = Scale Length + (Low E Compensation ÷ 2)</div>
           <div :class="styles.formulaExample">
             Example: 25.5" + (0.25" ÷ 2) = <strong>25.625"</strong> from nut to bridge center
           </div>
         </div>
-        <div :class="[styles.placementNote, styles.placementNoteWarning]">
+        <div :class="shared.noteWarning">
           <strong>Common Mistake:</strong> Placing the bridge at exactly 25.5" from the nut.
           This forces all saddles backward, limiting adjustment range and causing intonation issues.
         </div>
-        <div :class="[styles.placementNote, styles.placementNoteSuccess]">
+        <div :class="shared.noteSuccess">
           <strong>Correct Approach:</strong> Place bridge center at scale + (max_comp ÷ 2), allowing
           saddles to move both forward (high E, B) and backward (low E) for perfect intonation.
         </div>
       </div>
 
-      <div :class="styles.compensationFactors">
+      <div :class="shared.card">
         <h3>5 Physical Factors Affecting Compensation</h3>
         <div :class="styles.factorList">
           <div :class="styles.factorItem">
@@ -151,7 +152,7 @@ import styles from "./IntonationPanel.module.css";
         </div>
       </div>
 
-      <div :class="styles.innovationConnection">
+      <div :class="shared.highlightCardInfo">
         <h3>Why Multi-Scale Guitars Excel at Intonation</h3>
         <p>
           Multi-scale (fanned fret) guitars optimize scale length independently for each string.

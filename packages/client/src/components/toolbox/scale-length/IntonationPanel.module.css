@@ -1,61 +1,11 @@
 /**
  * IntonationPanel CSS Module
- * Intonation compensation education styles
+ * Component-specific styles (shared styles in scale-length-shared.module.css)
  */
 
 /* =============================================================================
-   Section Header
+   Compensation Table (component-specific grid layout)
    ============================================================================= */
-
-.sectionHeader {
-  margin-bottom: 24px;
-}
-
-.sectionHeader h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #e8eaed;
-  margin-bottom: 8px;
-}
-
-.sectionHeader p {
-  font-size: 14px;
-  color: #9aa0a6;
-}
-
-/* =============================================================================
-   Critical Concept
-   ============================================================================= */
-
-.criticalConcept {
-  background: linear-gradient(135deg, rgba(234, 67, 53, 0.2), rgba(234, 67, 53, 0.1));
-  padding: 24px;
-  border-radius: 12px;
-  border-left: 4px solid #ea4335;
-  margin-bottom: 24px;
-}
-
-.criticalConcept h3 {
-  color: #ff6b6b;
-  margin-bottom: 12px;
-}
-
-.criticalConcept p {
-  line-height: 1.6;
-  color: #bdc1c6;
-  margin-bottom: 12px;
-}
-
-/* =============================================================================
-   Compensation Table
-   ============================================================================= */
-
-.compensationTable {
-  background: #292a2d;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 24px;
-}
 
 .compHeader {
   padding: 20px;
@@ -115,77 +65,17 @@
 }
 
 /* =============================================================================
-   Bridge Placement
+   Formula Example (component-specific text styling)
    ============================================================================= */
-
-.bridgePlacement {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-.bridgePlacement h3 {
-  color: #e8eaed;
-  margin-bottom: 16px;
-}
-
-.placementBox {
-  background: #1e1e1e;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.formula {
-  font-family: 'Courier New', monospace;
-  font-size: 16px;
-  color: #8ab4f8;
-  margin-bottom: 12px;
-}
 
 .formulaExample {
   font-size: 14px;
   color: #9aa0a6;
 }
 
-.placementNote {
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.placementNoteWarning {
-  composes: placementNote;
-  background: rgba(251, 188, 5, 0.1);
-  border-left: 3px solid #ffc107;
-  color: #ffc107;
-}
-
-.placementNoteSuccess {
-  composes: placementNote;
-  background: rgba(52, 168, 83, 0.1);
-  border-left: 3px solid #51cf66;
-  color: #51cf66;
-}
-
 /* =============================================================================
-   Compensation Factors
+   Compensation Factors (component-specific)
    ============================================================================= */
-
-.compensationFactors {
-  background: #292a2d;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-.compensationFactors h3 {
-  color: #e8eaed;
-  margin-bottom: 20px;
-}
 
 .factorList {
   display: flex;
@@ -211,25 +101,3 @@
   color: #9aa0a6;
 }
 
-/* =============================================================================
-   Innovation Connection
-   ============================================================================= */
-
-.innovationConnection {
-  background: linear-gradient(135deg, rgba(138, 180, 248, 0.2), rgba(138, 180, 248, 0.1));
-  padding: 24px;
-  border-radius: 12px;
-  border-left: 4px solid #8ab4f8;
-}
-
-.innovationConnection h3 {
-  color: #8ab4f8;
-  margin-bottom: 12px;
-}
-
-.innovationConnection p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #bdc1c6;
-  margin-bottom: 12px;
-}
