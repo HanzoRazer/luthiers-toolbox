@@ -304,53 +304,60 @@ describe('useGuitarDimensions', () => {
 
     expect(dims.selectedType.value).toBe('acoustic')
     expect(dims.units.value).toBe('mm')
-    expect(dims.dimensions.value.bodyLength).toBe(400)
+    // DEFAULT_DIMENSIONS starts with 0 (no preset loaded)
+    expect(dims.dimensions.value.bodyLength).toBe(0)
   })
 
   it('hasValidDimensions validates correctly', () => {
     const dims = useGuitarDimensions()
 
+    // Starts invalid (bodyLength = 0)
+    expect(dims.hasValidDimensions.value).toBe(false)
+
+    // Load a preset to get valid dimensions
+    dims.loadPreset('telecaster')
     expect(dims.hasValidDimensions.value).toBe(true)
 
     dims.dimensions.value.bodyLength = 0
     expect(dims.hasValidDimensions.value).toBe(false)
-
-    dims.dimensions.value.bodyLength = 400
-    expect(dims.hasValidDimensions.value).toBe(true)
   })
 
   it('toggleUnits converts mm to inches', () => {
     const dims = useGuitarDimensions()
 
-    // Start with 400mm body length
-    expect(dims.dimensions.value.bodyLength).toBe(400)
+    // Load a preset first (default is 0)
+    dims.loadPreset('telecaster')
+    expect(dims.dimensions.value.bodyLength).toBe(470) // telecaster bodyLength
 
     dims.toggleUnits('inch')
 
-    // 400mm ≈ 15.75 inches
-    expect(dims.dimensions.value.bodyLength).toBeCloseTo(15.75, 1)
+    // 470mm ≈ 18.5 inches
+    expect(dims.dimensions.value.bodyLength).toBeCloseTo(18.5, 1)
     expect(dims.units.value).toBe('inch')
   })
 
   it('toggleUnits converts inches to mm', () => {
     const dims = useGuitarDimensions()
 
-    dims.toggleUnits('inch') // First convert to inches
-    const inchValue = dims.dimensions.value.bodyLength
+    // Load a preset first
+    dims.loadPreset('telecaster')
+    const originalMm = dims.dimensions.value.bodyLength
 
+    dims.toggleUnits('inch') // Convert to inches
     dims.toggleUnits('mm') // Convert back to mm
 
-    // Should be close to original 400mm
-    expect(dims.dimensions.value.bodyLength).toBeCloseTo(400, 0)
+    // Should be close to original
+    expect(dims.dimensions.value.bodyLength).toBeCloseTo(originalMm, 0)
   })
 
   it('loadPreset applies preset dimensions', () => {
     const dims = useGuitarDimensions()
 
-    dims.loadPreset('lesPaul')
+    // Note: preset keys use snake_case
+    dims.loadPreset('les_paul')
 
-    expect(dims.dimensions.value.bodyLength).toBe(440)
-    expect(dims.dimensions.value.scaleLength).toBe(629)
+    expect(dims.dimensions.value.bodyLength).toBe(475)
+    expect(dims.dimensions.value.scaleLength).toBe(628)
   })
 
   it('loadPreset converts to current units', () => {
@@ -359,8 +366,8 @@ describe('useGuitarDimensions', () => {
     dims.toggleUnits('inch')
     dims.loadPreset('telecaster')
 
-    // 400mm ≈ 15.75 inches
-    expect(dims.dimensions.value.bodyLength).toBeCloseTo(15.75, 1)
+    // 470mm ≈ 18.5 inches
+    expect(dims.dimensions.value.bodyLength).toBeCloseTo(18.5, 1)
   })
 
   it('exportAsObject returns correct structure', () => {
@@ -371,7 +378,8 @@ describe('useGuitarDimensions', () => {
 
     expect(exported.type).toBe('electric')
     expect(exported.units).toBe('mm')
-    expect(exported.dimensions.bodyLength).toBe(400)
+    // Default is 0 (no preset loaded)
+    expect(exported.dimensions.bodyLength).toBe(0)
   })
 
   it('exportAsCSV returns valid CSV', () => {
@@ -380,9 +388,11 @@ describe('useGuitarDimensions', () => {
     const csv = dims.exportAsCSV()
     const lines = csv.split('\n')
 
+
     expect(lines[0]).toBe('Dimension,Value,Unit')
     expect(lines.length).toBeGreaterThan(5)
-    expect(lines.some(l => l.includes('bodyLength'))).toBe(true)
+    // CSV uses human-readable labels like "Body Length"
+    expect(lines.some(l => l.includes('Body Length'))).toBe(true)
   })
 
   it('reset restores all defaults', () => {
@@ -390,13 +400,14 @@ describe('useGuitarDimensions', () => {
 
     dims.selectType('bass')
     dims.toggleUnits('inch')
-    dims.loadPreset('lesPaul')
+    dims.loadPreset('les_paul')
 
     dims.reset()
 
     expect(dims.selectedType.value).toBe('acoustic')
     expect(dims.units.value).toBe('mm')
-    expect(dims.dimensions.value.bodyLength).toBe(400)
+    // Default bodyLength is 0
+    expect(dims.dimensions.value.bodyLength).toBe(0)
   })
 
   it('GUITAR_TYPES has expected entries', () => {
@@ -408,7 +419,8 @@ describe('useGuitarDimensions', () => {
   it('DIMENSION_PRESETS has expected presets', () => {
     expect(DIMENSION_PRESETS.telecaster).toBeDefined()
     expect(DIMENSION_PRESETS.stratocaster).toBeDefined()
-    expect(DIMENSION_PRESETS.lesPaul).toBeDefined()
+    // Note: preset keys use snake_case
+    expect(DIMENSION_PRESETS.les_paul).toBeDefined()
     expect(DIMENSION_PRESETS.dreadnought).toBeDefined()
   })
 })
