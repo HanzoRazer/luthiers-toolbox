@@ -204,414 +204,91 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import axios from "axios";
-import GlobalSparklines from "./rosette_compare_history/GlobalSparklines.vue";
-import PresetSparklines from "./rosette_compare_history/PresetSparklines.vue";
-import PairStatsBadges from "./rosette_compare_history/PairStatsBadges.vue";
-import HistoryTable from "./rosette_compare_history/HistoryTable.vue";
+/**
+ * RosetteCompareHistory - Compare history panel with sparklines.
+ *
+ * REFACTORED: Uses composables for cleaner separation of concerns.
+ */
+import { onMounted, watch } from 'vue'
+import GlobalSparklines from './rosette_compare_history/GlobalSparklines.vue'
+import PresetSparklines from './rosette_compare_history/PresetSparklines.vue'
+import PairStatsBadges from './rosette_compare_history/PairStatsBadges.vue'
+import HistoryTable from './rosette_compare_history/HistoryTable.vue'
 
-interface CompareHistoryEntry {
-  ts: string;
-  job_id: string | null;
-  lane: string;
-  baseline_id: string;
-  baseline_path_count: number;
-  current_path_count: number;
-  added_paths: number;
-  removed_paths: number;
-  unchanged_paths: number;
-  preset?: string | null; // Phase 27.4: preset label (Safe, Aggressive, etc.)
-}
+import {
+  useRosetteCompareState,
+  useRosetteCompareStats,
+  useRosetteComparePresets,
+  useRosetteCompareSparklines,
+  useRosetteCompareActions
+} from './rosette_compare_history/composables'
+
+// =============================================================================
+// PROPS
+// =============================================================================
 
 const props = defineProps<{
-  lane?: string;
-  jobId?: string | null;
-}>();
+  lane?: string
+  jobId?: string | null
+}>()
 
-const lane = computed(() => props.lane ?? "rosette");
-const effectiveJobId = computed(() =>
-  (props.jobId && props.jobId.trim()) || null
-);
+// =============================================================================
+// COMPOSABLES
+// =============================================================================
 
-const entries = ref<CompareHistoryEntry[]>([]);
+// State
+const {
+  entries,
+  comparePresets,
+  presetCompareA,
+  presetCompareB,
+  lane,
+  effectiveJobId
+} = useRosetteCompareState(
+  () => props.lane,
+  () => props.jobId
+)
 
-const avgAdded = computed(() => {
-  if (!entries.value.length) return 0;
-  const sum = entries.value.reduce((acc, e) => acc + (e.added_paths || 0), 0);
-  return (sum / entries.value.length).toFixed(1);
-});
+// Stats
+const { avgAdded, avgRemoved, avgUnchanged } = useRosetteCompareStats(entries)
 
-const avgRemoved = computed(() => {
-  if (!entries.value.length) return 0;
-  const sum = entries.value.reduce((acc, e) => acc + (e.removed_paths || 0), 0);
-  return (sum / entries.value.length).toFixed(1);
-});
+// Presets
+const {
+  presetBuckets,
+  presetCompareAEntries,
+  presetCompareBEntries,
+  pairStats
+} = useRosetteComparePresets(entries, presetCompareA, presetCompareB)
 
-const avgUnchanged = computed(() => {
-  if (!entries.value.length) return 0;
-  const sum = entries.value.reduce((acc, e) => acc + (e.unchanged_paths || 0), 0);
-  return (sum / entries.value.length).toFixed(1);
-});
+// Sparklines
+const {
+  sparkWidth,
+  sparkHeight,
+  addedSparkPath,
+  removedSparkPath,
+  presetSparklines,
+  pairAddedOverlay,
+  pairRemovedOverlay
+} = useRosetteCompareSparklines(
+  entries,
+  presetBuckets,
+  presetCompareAEntries,
+  presetCompareBEntries
+)
 
-// Sparkline configuration
-const sparkWidth = 60;
-const sparkHeight = 20;
+// Actions
+const { refresh, exportCsv } = useRosetteCompareActions(
+  entries,
+  lane,
+  effectiveJobId
+)
 
-// Global sparklines (all entries)
-const addedSparkPath = computed(() =>
-  buildSparkline(entries.value, "added_paths", sparkWidth, sparkHeight)
-);
-const removedSparkPath = computed(() =>
-  buildSparkline(entries.value, "removed_paths", sparkWidth, sparkHeight)
-);
+// =============================================================================
+// LIFECYCLE & WATCHERS
+// =============================================================================
 
-// === Phase 27.4/27.5: Preset grouping & compare mode ===
+onMounted(refresh)
 
-const comparePresets = ref<boolean>(false);
-
-function normalizePresetName(e: CompareHistoryEntry): string {
-  return (e.preset && e.preset.trim()) || "(none)";
-}
-
-const presetBuckets = computed(() => {
-  const map = new Map<string, CompareHistoryEntry[]>();
-  for (const e of entries.value) {
-    const key = normalizePresetName(e);
-    if (!map.has(key)) {
-      map.set(key, []);
-    }
-    map.get(key)!.push(e);
-  }
-  const sortedKeys = Array.from(map.keys()).sort();
-  return sortedKeys.map((name) => ({
-    name,
-    entries: map.get(name)!,
-  }));
-});
-
-const presetSparklines = computed(() =>
-  presetBuckets.value.map((bucket) => ({
-    name: bucket.name,
-    addedPath: buildSparkline(bucket.entries, "added_paths", sparkWidth, sparkHeight),
-    removedPath: buildSparkline(
-      bucket.entries,
-      "removed_paths",
-      sparkWidth,
-      sparkHeight
-    ),
-  }))
-);
-
-// Phase 27.5: A/B preset compare selection
-const presetCompareA = ref<string | null>(null);
-const presetCompareB = ref<string | null>(null);
-
-// keep A/B in range when buckets change
-watch(
-  () => presetBuckets.value,
-  (buckets) => {
-    if (!buckets.length) {
-      presetCompareA.value = null;
-      presetCompareB.value = null;
-      return;
-    }
-    const names = buckets.map((b) => b.name);
-    if (!presetCompareA.value || !names.includes(presetCompareA.value)) {
-      presetCompareA.value = names[0];
-    }
-    if (names.length > 1) {
-      if (!presetCompareB.value || !names.includes(presetCompareB.value)) {
-        presetCompareB.value = names[1];
-      }
-    } else {
-      presetCompareB.value = null;
-    }
-  },
-  { immediate: true }
-);
-
-const presetCompareAEntries = computed(() => {
-  if (!presetCompareA.value) return [];
-  return entries.value.filter(
-    (e) => normalizePresetName(e) === presetCompareA.value
-  );
-});
-
-const presetCompareBEntries = computed(() => {
-  if (!presetCompareB.value) return [];
-  return entries.value.filter(
-    (e) => normalizePresetName(e) === presetCompareB.value
-  );
-});
-
-const pairAddedOverlay = computed(() =>
-  buildOverlaySparkline(
-    presetCompareAEntries.value,
-    presetCompareBEntries.value,
-    "added_paths",
-    sparkWidth,
-    sparkHeight
-  )
-);
-
-const pairRemovedOverlay = computed(() =>
-  buildOverlaySparkline(
-    presetCompareAEntries.value,
-    presetCompareBEntries.value,
-    "removed_paths",
-    sparkWidth,
-    sparkHeight
-  )
-);
-
-function formatTime(ts: string): string {
-  try {
-    const d = new Date(ts);
-    return d.toLocaleString();
-  } catch {
-    return ts;
-  }
-}
-
-async function refresh() {
-  try {
-    const params: any = { lane: lane.value };
-    if (effectiveJobId.value) {
-      params.job_id = effectiveJobId.value;
-    }
-    const res = await axios.get<CompareHistoryEntry[]>("/api/compare/history", {
-      params,
-    });
-    entries.value = res.data;
-  } catch (err) {
-    console.error("Failed to load compare history", err);
-  }
-}
-
-function exportCsv() {
-  if (!entries.value.length) return;
-
-  const headers = [
-    "ts",
-    "job_id",
-    "lane",
-    "baseline_id",
-    "baseline_path_count",
-    "current_path_count",
-    "added_paths",
-    "removed_paths",
-    "unchanged_paths",
-    "preset",
-  ];
-
-  const rows = entries.value.map((e) =>
-    [
-      e.ts,
-      e.job_id ?? "",
-      e.lane,
-      e.baseline_id,
-      e.baseline_path_count,
-      e.current_path_count,
-      e.added_paths,
-      e.removed_paths,
-      e.unchanged_paths,
-      e.preset ?? "",
-    ]
-      .map((val) => csvEscape(val))
-      .join(",")
-  );
-
-  const csvContent = [headers.join(","), ...rows].join("\r\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const nameParts = [
-    "compare_history",
-    lane.value,
-    effectiveJobId.value || "all",
-    stamp,
-  ];
-  const filename = nameParts.join("_") + ".csv";
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-function csvEscape(val: unknown): string {
-  if (val === null || val === undefined) return "";
-  const s = String(val);
-  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
-}
-
-// Phase 27.6: A/B delta badge helpers
-function averageMetric(
-  data: CompareHistoryEntry[],
-  key: keyof CompareHistoryEntry
-): number {
-  if (!data.length) return 0;
-  const nums = data.map((e) => {
-    const v = e[key];
-    return typeof v === "number" ? v : 0;
-  });
-  const sum = nums.reduce((acc, v) => acc + v, 0);
-  return sum / data.length;
-}
-
-function formatDelta(delta: number): string {
-  if (delta === 0) return "0.0";
-  const s = delta.toFixed(1);
-  return delta > 0 ? `+${s}` : s;
-}
-
-const pairStats = computed(() => {
-  if (!presetCompareA.value || !presetCompareB.value) return null;
-  if (!presetCompareAEntries.value.length && !presetCompareBEntries.value.length) {
-    return null;
-  }
-
-  const aName = presetCompareA.value;
-  const bName = presetCompareB.value;
-
-  const aAdded = averageMetric(presetCompareAEntries.value, "added_paths");
-  const bAdded = averageMetric(presetCompareBEntries.value, "added_paths");
-  const deltaAdded = bAdded - aAdded;
-
-  const aRemoved = averageMetric(presetCompareAEntries.value, "removed_paths");
-  const bRemoved = averageMetric(presetCompareBEntries.value, "removed_paths");
-  const deltaRemoved = bRemoved - aRemoved;
-
-  const aUnchanged = averageMetric(presetCompareAEntries.value, "unchanged_paths");
-  const bUnchanged = averageMetric(presetCompareBEntries.value, "unchanged_paths");
-  const deltaUnchanged = bUnchanged - aUnchanged;
-
-  return {
-    aName,
-    bName,
-    aAdded,
-    bAdded,
-    deltaAdded,
-    aRemoved,
-    bRemoved,
-    deltaRemoved,
-    aUnchanged,
-    bUnchanged,
-    deltaUnchanged,
-  };
-});
-
-/**
- * Build a simple polyline "x,y x,y ..." for a sparkline.
- * key: 'added_paths' | 'removed_paths' | ...
- */
-function buildSparkline(
-  data: CompareHistoryEntry[],
-  key: keyof CompareHistoryEntry,
-  width: number,
-  height: number
-): string {
-  if (!data.length) return "";
-
-  const values: number[] = data.map((e) => {
-    const v = e[key];
-    return typeof v === "number" ? v : 0;
-  });
-
-  const maxVal = Math.max(...values, 1);
-  const n = values.length;
-
-  if (n === 1) {
-    const y = height / 2;
-    return `0,${y} ${width},${y}`;
-  }
-
-  const stepX = width / (n - 1);
-  const points: string[] = [];
-
-  for (let i = 0; i < n; i++) {
-    const x = stepX * i;
-    const v = values[i];
-    const norm = maxVal > 0 ? v / maxVal : 0;
-    const y = height - norm * (height - 2) - 1;
-    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-  }
-
-  return points.join(" ");
-}
-
-/**
- * Phase 27.5: Build overlay sparkline paths for A and B sharing the same scale.
- */
-function buildOverlaySparkline(
-  dataA: CompareHistoryEntry[],
-  dataB: CompareHistoryEntry[],
-  key: keyof CompareHistoryEntry,
-  width: number,
-  height: number
-): { a: string; b: string } {
-  const empty = { a: "", b: "" };
-  if (!dataA.length && !dataB.length) return empty;
-
-  const toValues = (data: CompareHistoryEntry[]) =>
-    data.map((e) => {
-      const v = e[key];
-      return typeof v === "number" ? v : 0;
-    });
-
-  const valuesA = toValues(dataA);
-  const valuesB = toValues(dataB);
-  const allVals = [...valuesA, ...valuesB];
-  const maxVal = Math.max(...allVals, 1);
-
-  const buildForSeries = (values: number[]): string => {
-    if (!values.length) return "";
-    const n = values.length;
-    if (n === 1) {
-      const y = height / 2;
-      return `0,${y} ${width},${y}`;
-    }
-    const stepX = width / (n - 1);
-    const points: string[] = [];
-    for (let i = 0; i < n; i++) {
-      const x = stepX * i;
-      const v = values[i];
-      const norm = maxVal > 0 ? v / maxVal : 0;
-      const y = height - norm * (height - 2) - 1;
-      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-    }
-    return points.join(" ");
-  };
-
-  return {
-    a: buildForSeries(valuesA),
-    b: buildForSeries(valuesB),
-  };
-}
-
-onMounted(() => {
-  refresh();
-});
-
-watch(
-  () => effectiveJobId.value,
-  () => {
-    refresh();
-  }
-);
-
-watch(
-  () => lane.value,
-  () => {
-    refresh();
-  }
-);
+watch(() => effectiveJobId.value, refresh)
+watch(() => lane.value, refresh)
 </script>
