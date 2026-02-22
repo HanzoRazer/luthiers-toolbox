@@ -2,8 +2,8 @@
 import { api } from '@/services/apiBase';
 import { ref, computed } from "vue";
 import { useToastStore } from "@/stores/toastStore";
-import SettingsGrid from './rosette_photo_import/SettingsGrid.vue'
-import StatsGrid from './rosette_photo_import/StatsGrid.vue'
+import SettingsGrid from '@/components/rosette_photo_import/SettingsGrid.vue'
+import StatsGrid from '@/components/rosette_photo_import/StatsGrid.vue'
 
 // Adapter for PrimeVue-style toast API
 const _toastStore = useToastStore();

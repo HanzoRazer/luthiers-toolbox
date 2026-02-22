@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import PreviewPane from './PreviewPane.vue'
+import PreviewPane from '@/components/PreviewPane.vue'
 
 const props = defineProps<{
   modelValue: boolean

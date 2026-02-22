@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import MachinePane from './MachinePane.vue'
+import MachinePane from '@/components/MachinePane.vue'
 
 const props = defineProps<{ 
   modelValue: boolean

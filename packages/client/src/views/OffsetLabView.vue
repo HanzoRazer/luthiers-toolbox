@@ -238,7 +238,7 @@
 import { api } from '@/services/apiBase';
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import CamOffsetVisualizer from '@/components/CamOffsetVisualizer.vue'
+import CamOffsetVisualizer from '@/components/cam/CamOffsetVisualizer.vue'
 
 type Pt = [number, number]
 type Pass = { idx: number; pts: Pt[] }
