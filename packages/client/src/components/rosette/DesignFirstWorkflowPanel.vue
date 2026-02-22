@@ -355,202 +355,112 @@
  * UI panel for managing design-first workflow state.
  * Displays workflow state, history, and promotion intent.
  *
- * REFACTORED: Now uses composables for cleaner separation of concerns:
+ * REFACTORED: Uses composables for cleaner separation of concerns:
+ * - useWorkflowActions: Workflow state and transitions
  * - useLogDrawer: Log viewer drawer state and actions
  * - useWorkflowOverrides: Override state with localStorage persistence
- * - useExportSnippets: Code snippet builders (PowerShell, Python, Node, GHA)
+ * - useClipboardExport: Code snippet builders (PowerShell, Python, Node, GHA)
+ * - useCamPromotion: CAM promotion request
  */
-import { computed, onMounted } from "vue";
-import { useArtDesignFirstWorkflowStore } from "@/stores/artDesignFirstWorkflowStore";
-import { useToastStore } from "@/stores/toastStore";
-import SideDrawer from "@/components/ui/SideDrawer.vue";
-import WorkflowSessionPicker from "@/components/rosette/WorkflowSessionPicker.vue";
+import { onMounted } from 'vue'
+import { useToastStore } from '@/stores/toastStore'
+import SideDrawer from '@/components/ui/SideDrawer.vue'
+import WorkflowSessionPicker from '@/components/rosette/WorkflowSessionPicker.vue'
 
 // Composables
-import { useLogDrawer } from "./composables/useLogDrawer";
 import {
+  useWorkflowActions,
+  useLogDrawer,
   useWorkflowOverrides,
+  useClipboardExport,
+  useCamPromotion,
   TOOL_OPTIONS,
   MATERIAL_OPTIONS,
   MACHINE_OPTIONS,
   CAM_PROFILE_OPTIONS,
-  RISK_TOLERANCE_OPTIONS,
-} from "./composables/useWorkflowOverrides";
-import { useClipboardExport } from "./composables/useClipboardExport";
+  RISK_TOLERANCE_OPTIONS
+} from './composables'
 
-// ==========================================================================
-// Store + Toast
-// ==========================================================================
+const toast = useToastStore()
 
-const wf = useArtDesignFirstWorkflowStore();
-const toast = useToastStore();
-
-// ==========================================================================
-// Computed state from store
-// ==========================================================================
-
-const session = computed(() => wf.session);
-const state = computed(() => wf.stateName);
-const busy = computed(() => wf.loading);
-const err = computed(() => wf.error);
-const hasSession = computed(() => wf.hasSession);
-const canIntent = computed(() => wf.canRequestIntent);
-const lastIntent = computed(() => wf.lastPromotionIntent);
-
-// ==========================================================================
-// Composables
-// ==========================================================================
+// Workflow state and actions
+const {
+  session,
+  state,
+  busy,
+  err,
+  hasSession,
+  canIntent,
+  lastIntent,
+  sessionId,
+  ensure,
+  toReview,
+  approve,
+  reject,
+  reopen,
+  intent,
+  clearIntent,
+  hydrateFromLocalStorage
+} = useWorkflowActions()
 
 // Log drawer
-const logDrawer = useLogDrawer(() => wf.sessionId || "");
+const logDrawer = useLogDrawer(() => sessionId.value || '')
 
 // Workflow overrides with localStorage persistence
 const overrides = useWorkflowOverrides(
-  () => (wf.session?.mode as string) ?? "design_first",
+  () => (session.value?.mode as string) ?? 'design_first',
   (mode) => toast.info(`Loaded export overrides for mode: ${mode}`)
-);
+)
 
 // Clipboard export with URL building
 const clipboard = useClipboardExport(
-  () => wf.sessionId,
-  () => wf.lastPromotionIntent,
+  () => sessionId.value,
+  () => lastIntent.value,
   overrides,
   toast
-);
+)
+
+// CAM promotion
+const { promoteToCam } = useCamPromotion(
+  () => sessionId.value,
+  clipboard.getApiBaseUrl,
+  () => overrides.camProfileId.value
+)
 
 // Convenience aliases
-const exportUrlPreview = clipboard.exportUrlPreview;
-const getApiBaseUrl = clipboard.getApiBaseUrl;
+const exportUrlPreview = clipboard.exportUrlPreview
+const {
+  copyIntent,
+  copySessionId,
+  copyIntentCurl,
+  copyExportUrl,
+  copyExportPowerShell,
+  copyExportPython,
+  copyExportNode,
+  copyExportGitHubActionsStep,
+  copyExportGitHubActionsJob,
+  copyExportGitHubActionsWorkflow,
+  copyGitHubActionsWorkflowFile,
+  downloadIntent
+} = clipboard
 
-// ==========================================================================
 // Lifecycle
-// ==========================================================================
-
 onMounted(() => {
-  wf.hydrateFromLocalStorage();
-  overrides.hydrateOverrides();
-});
+  hydrateFromLocalStorage()
+  overrides.hydrateOverrides()
+})
 
-// ==========================================================================
-// Workflow actions
-// ==========================================================================
-
-async function ensure() {
-  if (wf.hasSession) {
-    wf.clearSession();
-  }
-  await wf.ensureSessionDesignFirst();
+// Handlers
+function handleClearOverrides(): void {
+  overrides.clearOverrides()
+  toast.info('Download overrides cleared')
 }
 
-async function toReview() {
-  if (!wf.hasSession) {
-    await wf.ensureSessionDesignFirst();
-  }
-  await wf.transition("in_review");
+function openInLogViewer(): void {
+  const sid = sessionId.value
+  if (!sid) return
+  logDrawer.openDrawer(sid)
 }
-
-async function approve() {
-  await wf.transition("approved");
-}
-
-async function reject() {
-  await wf.transition("rejected", "Design needs revision");
-}
-
-async function reopen() {
-  await wf.transition("draft");
-}
-
-async function intent() {
-  const payload = await wf.requestPromotionIntent();
-  if (payload) {
-    toast.info("Intent payload ready. Use Log Viewer / CAM lane to consume.");
-    console.log("[ArtStudio] CAM handoff intent:", payload);
-  }
-}
-
-// ==========================================================================
-// Phase 33.0: Promote to CAM Request
-// ==========================================================================
-
-async function promoteToCam() {
-  const sid = wf.sessionId;
-  if (!sid) {
-    toast.error("No session available");
-    return;
-  }
-
-  try {
-    const base = getApiBaseUrl();
-    const camProfileId = overrides.camProfileId.value || undefined;
-    const params = new URLSearchParams();
-    if (camProfileId) params.set("cam_profile_id", camProfileId);
-
-    const url = `${base}/art/design-first-workflow/sessions/${encodeURIComponent(sid)}/promote_to_cam${params.toString() ? "?" + params.toString() : ""}`;
-
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      toast.error(`Promotion failed: ${errData.detail || resp.statusText}`);
-      return;
-    }
-
-    const data = await resp.json();
-
-    if (!data.ok) {
-      toast.warning(`Promotion blocked: ${data.blocked_reason || "unknown"}`);
-      return;
-    }
-
-    const requestId = data.request?.promotion_request_id;
-    toast.success(`CAM promotion request created: ${requestId?.slice(0, 8) || "OK"}…`);
-    console.log("[ArtStudio] CAM promotion request:", data.request);
-  } catch (e: any) {
-    toast.error(`Promotion error: ${e.message || e}`);
-  }
-}
-
-// ==========================================================================
-// Clipboard actions (delegated to composable)
-// ==========================================================================
-
-const copyIntent = clipboard.copyIntent;
-const copySessionId = clipboard.copySessionId;
-const copyIntentCurl = clipboard.copyIntentCurl;
-const copyExportUrl = clipboard.copyExportUrl;
-const copyExportPowerShell = clipboard.copyExportPowerShell;
-const copyExportPython = clipboard.copyExportPython;
-const copyExportNode = clipboard.copyExportNode;
-const copyExportGitHubActionsStep = clipboard.copyExportGitHubActionsStep;
-const copyExportGitHubActionsJob = clipboard.copyExportGitHubActionsJob;
-const copyExportGitHubActionsWorkflow = clipboard.copyExportGitHubActionsWorkflow;
-const copyGitHubActionsWorkflowFile = clipboard.copyGitHubActionsWorkflowFile;
-
-// ==========================================================================
-// Override + Intent actions
-// ==========================================================================
-
-function handleClearOverrides() {
-  overrides.clearOverrides();
-  toast.info("Download overrides cleared");
-}
-
-function clearIntent() {
-  wf.clearSession();
-  toast.info("Session cleared");
-}
-
-function openInLogViewer() {
-  const sid = wf.sessionId;
-  if (!sid) return;
-  logDrawer.openDrawer(sid);
-}
-
-const downloadIntent = clipboard.downloadIntent;
 </script>
 
 <style scoped>
