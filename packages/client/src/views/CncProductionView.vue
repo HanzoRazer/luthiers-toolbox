@@ -165,7 +165,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from 'vue'
-import CompareRunsPanel from '@/components/compare/CompareRunsPanel.vue'
+import CompareRunsPanel from '@/cnc_production/CompareRunsPanel.vue'
 
 interface Job {
   run_id: string
