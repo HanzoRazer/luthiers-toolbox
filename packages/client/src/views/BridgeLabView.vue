@@ -299,8 +299,8 @@ Features:
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import BridgeCalculatorPanel from '@/components/bridge_calculator_panel/BridgeCalculatorPanel.vue'
-import CamBridgePreflightPanel from '@/components/CamBridgePreflightPanel.vue'
-import CamMachineEnvelopePanel from '@/components/CamMachineEnvelopePanel.vue'
+import CamBridgePreflightPanel from '@/components/cam/CamBridgePreflightPanel.vue'
+import CamMachineEnvelopePanel from '@/components/cam/CamMachineEnvelopePanel.vue'
 import CamBridgeToPipelinePanel from '@/components/cam/CamBridgeToPipelinePanel.vue'
 import ToolpathResultsPanel from './bridge_lab/ToolpathResultsPanel.vue'
 import GcodeExportPanel from './bridge_lab/GcodeExportPanel.vue'

@@ -172,7 +172,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { offsetPolycurve, autoFillet, fairCurve, blendClothoid } from '../utils/curvemath'
+import { offsetPolycurve, autoFillet, fairCurve, blendClothoid } from '@/utils/curvemath'
 
 type Point = { x: number; y: number }
 type Mode = 'draw' | 'offset' | 'fillet' | 'fair' | 'clothoid'

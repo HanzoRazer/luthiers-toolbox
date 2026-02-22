@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, watch } from 'vue'
-import PreviewPane from './PreviewPane.vue'
+import PreviewPane from '@/components/PreviewPane.vue'
 
 const props = defineProps<{
   modelValue: boolean,

@@ -166,13 +166,13 @@ import {
   useToolpathExport,
   useEnergyMetrics,
   useLiveLearning,
-} from './adaptive/composables'
+} from './composables'
 
-import PreviewNcDrawer from './PreviewNcDrawer.vue'
-import CompareAfModes from './CompareAfModes.vue'
-import MachineEditorModal from './MachineEditorModal.vue'
-import CompareMachines from './CompareMachines.vue'
-import CompareSettings from './CompareSettings.vue'
+import PreviewNcDrawer from '@/components/PreviewNcDrawer.vue'
+import CompareAfModes from '@/components/compare/CompareAfModes.vue'
+import MachineEditorModal from '@/components/MachineEditorModal.vue'
+import CompareMachines from '@/components/compare/CompareMachines.vue'
+import CompareSettings from '@/components/compare/CompareSettings.vue'
 import {
   MachineSelector,
   PostProcessorConfig,
@@ -181,13 +181,13 @@ import {
   HudOverlayControls,
   OptimizeForMachinePanel,
   ToolpathStatsPanel,
-} from './adaptive'
-import EnergyHeatPanel from './pocket/EnergyHeatPanel.vue'
-import HeatTimeSeriesPanel from './pocket/HeatTimeSeriesPanel.vue'
-import BottleneckMapPanel from './pocket/BottleneckMapPanel.vue'
-import ToolParametersPanel from './pocket/ToolParametersPanel.vue'
-import ActionButtonsBar from './pocket/ActionButtonsBar.vue'
-import ExportConfigPanel from './pocket/ExportConfigPanel.vue'
+} from '.'
+import EnergyHeatPanel from '@/components/pocket/EnergyHeatPanel.vue'
+import HeatTimeSeriesPanel from '@/components/pocket/HeatTimeSeriesPanel.vue'
+import BottleneckMapPanel from '@/components/pocket/BottleneckMapPanel.vue'
+import ToolParametersPanel from '@/components/pocket/ToolParametersPanel.vue'
+import ActionButtonsBar from '@/components/pocket/ActionButtonsBar.vue'
+import ExportConfigPanel from '@/components/pocket/ExportConfigPanel.vue'
 
 // Canvas ref
 const cv = ref<HTMLCanvasElement | null>(null)

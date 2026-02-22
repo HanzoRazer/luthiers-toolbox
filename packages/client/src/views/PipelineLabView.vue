@@ -166,7 +166,7 @@ FUTURE ENHANCEMENTS:
 import { ref, computed } from 'vue'
 import CamPipelineRunner from '@/components/cam/CamPipelineRunner.vue'
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
-import CamBackupPanel from '@/components/CamBackupPanel.vue'
+import CamBackupPanel from '@/components/cam/CamBackupPanel.vue'
 
 const adaptiveMoves = ref<any[]>([])
 const adaptiveStats = ref<any | null>(null)
