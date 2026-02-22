@@ -417,385 +417,103 @@ FUTURE ENHANCEMENTS:
 </template>
 
 <script setup lang="ts">
-import { api } from '@/services/apiBase';
-import { ref, computed, onMounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import CamPipelineGraph from '@/components/cam/CamPipelineGraph.vue'
-import { normalizeCamIntent } from '@/services/rmosCamIntentApi'
+import {
+  useCamPipelineState,
+  useCamPipelineNormalize,
+  useCamPipelineInspector,
+  useCamPipelinePresets,
+  useCamPipelineExecution,
+  useCamPipelineHelpers,
+  type CamPipelineEmits
+} from './composables'
 
-// H7.2: normalize-first adoption controls / visibility
-const strictNormalize = ref(false)
-const normalizationIssues = ref<
-  { path: string; issues: Array<{ code?: string; message: string; severity?: string; path?: string }> }[]
->([])
+// Emits
+const emit = defineEmits<CamPipelineEmits>()
 
-function _isPlainObject(v: unknown): v is Record<string, any> {
-  return !!v && typeof v === "object" && !Array.isArray(v)
-}
+// State
+const {
+  file,
+  loading,
+  error,
+  toolDia,
+  units,
+  bridgeProfile,
+  machineId,
+  postId,
+  results,
+  summary,
+  openPayloadIndex,
+  presets,
+  selectedPresetId,
+  newPresetName,
+  newPresetDesc,
+  inspectorMachine,
+  inspectorPost,
+  strictNormalize,
+  normalizationIssues,
+  selectedPreset,
+  summaryLabel
+} = useCamPipelineState()
 
-// Heuristic: identify "intent-like" objects without importing CamIntent types here.
-function _looksLikeCamIntent(obj: Record<string, any>): boolean {
-  if ("operation" in obj) return true
-  if ("operation_type" in obj) return true
-  if ("op" in obj) return true
-  if ("tool_id" in obj && ("material_id" in obj || "stock" in obj)) return true
-  if ("mode" in obj && (obj.mode === "router_3axis" || obj.mode === "saw")) return true
-  return false
-}
+// Normalize
+const { normalizePipelineSpecDeep } = useCamPipelineNormalize()
 
-async function _normalizePipelineSpecDeep(spec: any): Promise<{
-  normalized: any
-  issues: { path: string; issues: Array<{ code?: string; message: string; severity?: string; path?: string }> }[]
-}> {
-  const collected: {
-    path: string
-    issues: Array<{ code?: string; message: string; severity?: string; path?: string }>
-  }[] = []
-
-  async function walk(node: any, path: string): Promise<any> {
-    if (node == null) return node
-
-    if (Array.isArray(node)) {
-      const out: any[] = []
-      for (let i = 0; i < node.length; i++) {
-        out.push(await walk(node[i], `${path}[${i}]`))
-      }
-      return out
-    }
-
-    if (_isPlainObject(node)) {
-      // Normalize directly if it looks like a CamIntent
-      if (_looksLikeCamIntent(node)) {
-        try {
-          const resp = await normalizeCamIntent(
-            { intent: node as any, strict: false },
-            { requestId: `CamPipelineRunner.normalizePipelineSpec.${Date.now()}` }
-          )
-          if (resp.issues?.length) {
-            collected.push({ path, issues: resp.issues })
-          }
-          return resp.intent
-        } catch {
-          // If normalization fails, keep original
-          return node
-        }
-      }
-
-      // Otherwise deep-walk properties (and normalize nested intents)
-      const out: Record<string, any> = { ...node }
-      for (const key of Object.keys(out)) {
-        out[key] = await walk(out[key], path ? `${path}.${key}` : key)
-      }
-      return out
-    }
-
-    // primitives
-    return node
-  }
-
-  const normalized = await walk(spec, "pipeline")
-  return { normalized, issues: collected }
-}
-
-type PipelineOpKind =
-  | 'dxf_preflight'
-  | 'adaptive_plan'
-  | 'adaptive_plan_run'
-  | 'export_post'
-  | 'simulate_gcode'
-
-interface PipelineOpResult {
-  kind: PipelineOpKind
-  ok: boolean
-  error?: string | null
-  payload?: any
-}
-
-interface PipelineResponse {
-  ops: PipelineOpResult[]
-  summary: Record<string, any>
-}
-
-interface PipelinePreset {
-  id: string
-  name: string
-  description?: string | null
-  units: 'mm' | 'inch'
-  machine_id?: string | null
-  post_id?: string | null
-}
-
-interface MachineProfile {
-  id: string
-  name: string
-  max_feed_xy?: number
-  rapid?: number
-  accel?: number
-  jerk?: number
-  safe_z_default?: number
-  [key: string]: any
-}
-
-interface PostProfile {
-  id: string
-  name: string
-  post?: string
-  post_mode?: string
-  line_numbers?: boolean
-  [key: string]: any
-}
-
-const emit = defineEmits<{
-  (e: 'adaptive-plan-ready', payload: { moves: any[]; stats: any; overlays?: any[] }): void
-  (e: 'sim-result-ready', payload: { issues: any[]; moves: any[]; summary: any }): void
-}>()
-
-const file = ref<File | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-const toolDia = ref(6.0)
-const units = ref<'mm' | 'inch'>('mm')
-const bridgeProfile = ref(false)
-const machineId = ref<string | null>(null)
-const postId = ref<string | null>(null)
-
-const results = ref<PipelineOpResult[] | null>(null)
-const summary = ref<Record<string, any> | null>(null)
-const openPayloadIndex = ref<number | null>(null)
-
-const presets = ref<PipelinePreset[]>([])
-const selectedPresetId = ref<string | null>(null)
-const newPresetName = ref('')
-const newPresetDesc = ref('')
-
-const inspectorMachine = ref<MachineProfile | null>(null)
-const inspectorPost = ref<PostProfile | null>(null)
-
-const selectedPreset = computed(() =>
-  presets.value.find(p => p.id === selectedPresetId.value) ?? null
+// Inspector
+const { refreshInspector } = useCamPipelineInspector(
+  machineId,
+  postId,
+  inspectorMachine,
+  inspectorPost
 )
 
-const summaryLabel = computed(() => {
-  if (!summary.value) return ''
-  const s = summary.value
-  const time = (s.time_s ?? s.time_jerk_s ?? 0).toFixed(1)
-  const moves = s.move_count ?? '—'
-  return `time: ${time}s, moves: ${moves}`
+// Presets
+const { loadPresets, applyPreset, savePreset } = useCamPipelinePresets(
+  presets,
+  selectedPresetId,
+  newPresetName,
+  newPresetDesc,
+  units,
+  machineId,
+  postId,
+  error,
+  refreshInspector
+)
+
+// Execution
+const { runPipeline } = useCamPipelineExecution(
+  file,
+  loading,
+  error,
+  results,
+  summary,
+  openPayloadIndex,
+  toolDia,
+  units,
+  bridgeProfile,
+  machineId,
+  postId,
+  strictNormalize,
+  normalizationIssues,
+  normalizePipelineSpecDeep,
+  emit
+)
+
+// Helpers
+const { onFileChange, formatPayload, togglePayload } = useCamPipelineHelpers(
+  file,
+  openPayloadIndex
+)
+
+// Lifecycle
+onMounted(() => {
+  loadPresets()
 })
-
-onMounted(async () => {
-  try {
-    const resp = await api('/api/cam/pipeline/presets')
-    if (!resp.ok) return
-    const data = await resp.json() as PipelinePreset[]
-    presets.value = data
-  } catch {
-    // ignore
-  }
-})
-
-function onFileChange (ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const f = input.files?.[0]
-  if (f) file.value = f
-}
-
-function buildPipelineSpec () {
-  const ops: any[] = []
-
-  ops.push({
-    kind: 'dxf_preflight',
-    params: {
-      profile: bridgeProfile.value ? 'bridge' : null,
-      cam_layer_prefix: 'CAM_',
-      debug: true
-    }
-  })
-
-  ops.push({ kind: 'adaptive_plan', params: {} })
-  ops.push({ kind: 'adaptive_plan_run', params: {} })
-
-  ops.push({
-    kind: 'export_post',
-    params: {
-      endpoint: '/cam/roughing_gcode',
-      post_id: postId.value ?? undefined,
-      units: units.value
-    }
-  })
-
-  ops.push({
-    kind: 'simulate_gcode',
-    params: {
-      machine_id: machineId.value ?? undefined
-    }
-  })
-
-  return {
-    ops,
-    tool_d: toolDia.value || 6.0,
-    units: units.value,
-    geometry_layer: null,
-    auto_scale: true,
-    cam_layer_prefix: 'CAM_',
-    machine_id: machineId.value ?? undefined,
-    post_id: postId.value ?? undefined
-  }
-}
-
-function formatPayload (payload: any): string {
-  try {
-    return JSON.stringify(payload, null, 2)
-  } catch {
-    return String(payload)
-  }
-}
-
-function togglePayload (idx: number) {
-  openPayloadIndex.value = openPayloadIndex.value === idx ? null : idx
-}
-
-async function runPipeline () {
-  if (!file.value) return
-  loading.value = true
-  error.value = null
-  results.value = null
-  summary.value = null
-  openPayloadIndex.value = null
-  normalizationIssues.value = []
-
-  try {
-    const form = new FormData()
-    form.append('file', file.value)
-
-    // H7.2: normalize CamIntent(s) inside the pipeline before submit
-    const pipelineDraft = buildPipelineSpec()
-    const { normalized: pipelineNormalized, issues } = await _normalizePipelineSpecDeep(pipelineDraft)
-    normalizationIssues.value = issues
-
-    if (strictNormalize.value && issues.length > 0) {
-      // strict mode: fail early (non-breaking because default strict=false)
-      const msg =
-        issues
-          .slice(0, 10)
-          .map((x) => `${x.path}: ${x.issues.map((i) => i.message).join("; ")}`)
-          .join(" | ") + (issues.length > 10 ? " | ..." : "")
-      throw new Error(`CAM intent normalization failed (strict): ${msg}`)
-    }
-
-    form.append('pipeline', JSON.stringify(pipelineNormalized))
-
-    const resp = await api('/api/cam/pipeline/run', {
-      method: 'POST',
-      body: form
-    })
-
-    if (!resp.ok) {
-      const text = await resp.text()
-      throw new Error(text || `HTTP ${resp.status}`)
-    }
-
-    const data = await resp.json() as PipelineResponse
-    results.value = data.ops
-    summary.value = data.summary ?? {}
-
-    // Emit adaptive-plan-ready event for backplot
-    const lastAdaptive = [...(data.ops || [])].reverse()
-      .find(op => op.kind === 'adaptive_plan_run' && op.ok && op.payload)
-    if (lastAdaptive && lastAdaptive.payload) {
-      const moves = lastAdaptive.payload.moves ?? []
-      const stats = lastAdaptive.payload.stats ?? {}
-      const overlays = lastAdaptive.payload.overlays ?? []
-      emit('adaptive-plan-ready', { moves, stats, overlays })
-    }
-
-    // Emit sim-result-ready event for backplot severity coloring
-    const lastSim = [...(data.ops || [])].reverse()
-      .find(op => op.kind === 'simulate_gcode' && op.ok && op.payload)
-    if (lastSim && lastSim.payload) {
-      const issues = lastSim.payload.issues ?? []
-      const moves = lastSim.payload.moves ?? []
-      const summarySim = lastSim.payload.summary ?? {}
-      emit('sim-result-ready', { issues, moves, summary: summarySim })
-    }
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-async function refreshInspector () {
-  inspectorMachine.value = null
-  inspectorPost.value = null
-
-  try {
-    if (machineId.value) {
-      const resp = await fetch(`/cam/machines/${machineId.value}`)
-      if (resp.ok) inspectorMachine.value = await resp.json() as MachineProfile
-    }
-  } catch {
-    // ignore
-  }
-
-  try {
-    if (postId.value) {
-      const resp = await fetch(`/cam/posts/${postId.value}`)
-      if (resp.ok) inspectorPost.value = await resp.json() as PostProfile
-    }
-  } catch {
-    // ignore
-  }
-}
-
-const applyPreset = async (id: string | null) => {
-  if (!id) return
-  const preset = presets.value.find(p => p.id === id)
-  if (!preset) return
-  selectedPresetId.value = id
-  units.value = preset.units
-  machineId.value = preset.machine_id ?? null
-  postId.value = preset.post_id ?? null
-  await refreshInspector()
-}
 
 watch([machineId, postId], () => {
   refreshInspector()
 })
-
-async function savePreset () {
-  if (!newPresetName.value.trim()) {
-    error.value = 'Preset name is required.'
-    return
-  }
-  error.value = null
-  try {
-    const body = {
-      name: newPresetName.value.trim(),
-      description: newPresetDesc.value.trim() || null,
-      units: units.value,
-      machine_id: machineId.value,
-      post_id: postId.value
-    }
-    const resp = await api('/api/cam/pipeline/presets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    })
-    if (!resp.ok) {
-      const text = await resp.text()
-      throw new Error(text || `HTTP ${resp.status}`)
-    }
-    const created = await resp.json() as PipelinePreset
-    presets.value.push(created)
-    selectedPresetId.value = created.id
-    newPresetName.value = ''
-    newPresetDesc.value = ''
-    await refreshInspector()
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
-  }
-}
 </script>
 
 <style scoped>
