@@ -12,205 +12,87 @@
  * - attachments list
  * - outputs summary
  */
-import { ref, computed, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
-import { explainRule } from "@/lib/feasibilityRuleRegistry";
-import { runs as rmosRuns } from "@/sdk/rmos";
-import RunComparePanel from "@/components/rmos/RunComparePanel.vue";
-import RiskBadge from "@/components/ui/RiskBadge.vue";
-import OverrideBanner from "@/components/ui/OverrideBanner.vue";
-import WhyPanel from "@/components/rmos/WhyPanel.vue";
-import styles from "./RmosRunViewerView.module.css";
-import { buttons, badges, loaders } from "@/styles/shared";
+import { onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import RunComparePanel from '@/components/rmos/RunComparePanel.vue'
+import RiskBadge from '@/components/ui/RiskBadge.vue'
+import OverrideBanner from '@/components/ui/OverrideBanner.vue'
+import WhyPanel from '@/components/rmos/WhyPanel.vue'
+import styles from './RmosRunViewerView.module.css'
+import { buttons, badges, loaders } from '@/styles/shared'
 
-const route = useRoute();
-const router = useRouter();
+import {
+  useRmosRunViewerState,
+  useRmosRunViewerStyles,
+  useRmosRunViewerActions
+} from './rmos_run_viewer/composables'
 
-const run = ref<RunArtifactDetail | null>(null);
-const loading = ref(false);
-const error = ref<string | null>(null);
-const showWhy = ref(false);
+const route = useRoute()
+const router = useRouter()
 
-const runId = computed(() => route.params.id as string);
+// State
+const {
+  run,
+  loading,
+  error,
+  showWhy,
+  runId,
+  triggeredRuleIds,
+  triggeredRules,
+  hasExplainability,
+  riskLevel,
+  overrideAttachment,
+  parentRunId,
+  explainError,
+  isExplaining,
+  assistantExplanation,
+  assistantExplanationAttachment
+} = useRmosRunViewerState(route)
 
-// Phase 3.3: Explainability - triggered rules
-const triggeredRuleIds = computed<string[]>(() => {
-  const ids = run.value?.feasibility?.rules_triggered;
-  if (!Array.isArray(ids)) return [];
-  return ids.map((x: any) => String(x).trim().toUpperCase()).filter(Boolean);
-});
+// Styles
+const {
+  statusBadgeClass,
+  gateBadgeClass,
+  riskBadgeClass,
+  rulePillClass
+} = useRmosRunViewerStyles()
 
-const triggeredRules = computed(() => {
-  return triggeredRuleIds.value.map((rid) => explainRule(rid));
-});
+// Actions
+const {
+  loadRun,
+  generateAdvisoryExplanation,
+  formatDate,
+  handleDownload,
+  goToDiff,
+  goToDiffWithParent,
+  goBack,
+  downloadOperatorPack,
+  downloadAttachment
+} = useRmosRunViewerActions(
+  router,
+  runId,
+  parentRunId,
+  run,
+  loading,
+  error,
+  isExplaining,
+  explainError,
+  assistantExplanation
+)
 
-const hasExplainability = computed(() => triggeredRuleIds.value.length > 0);
+// Auto-open Why on YELLOW/RED when explainability exists
+watch(
+  [riskLevel, hasExplainability],
+  ([rl, hasExp]) => {
+    if (!run.value) return
+    if (!hasExp) return
+    showWhy.value = rl === 'YELLOW' || rl === 'RED'
+  },
+  { immediate: true }
+)
 
-const riskLevel = computed(() => {
-  return String(run.value?.feasibility?.risk_level || run.value?.gate_decision || "").toUpperCase();
-});
-
-// CSS Module class helpers
-function statusBadgeClass(status: string): string {
-  const s = status?.toLowerCase();
-  if (s === "completed" || s === "success") return badges.badgeSuccess;
-  if (s === "pending" || s === "in_progress") return badges.badgeWarning;
-  if (s === "failed" || s === "error") return badges.badgeError;
-  return badges.badge;
-}
-
-function gateBadgeClass(gate: string): string {
-  const g = gate?.toLowerCase();
-  if (g === "approved" || g === "green") return badges.badgeGreen;
-  if (g === "blocked" || g === "red") return badges.badgeRed;
-  if (g === "pending" || g === "yellow") return badges.badgeYellow;
-  return badges.badge;
-}
-
-function riskBadgeClass(level: string): string {
-  const l = level?.toLowerCase();
-  if (l === "green") return badges.badgeGreen;
-  if (l === "yellow") return badges.badgeYellow;
-  if (l === "red") return badges.badgeRed;
-  return badges.badge;
-}
-
-function rulePillClass(level: string): string {
-  const l = level?.toUpperCase();
-  if (l === "RED") return styles.rulePillRed;
-  if (l === "YELLOW") return styles.rulePillYellow;
-  return styles.rulePill;
-}
-
-// Auto-open Why on YELLOW/RED when explainability exists; close for GREEN/UNKNOWN.
-watch([riskLevel, hasExplainability], ([rl, hasExp]) => {
-  if (!run.value) return;
-  if (!hasExp) return;
-  showWhy.value = rl === "YELLOW" || rl === "RED";
-}, { immediate: true });
-
-
-const overrideAttachment = computed(() => {
-  const atts = run.value?.attachments || [];
-  if (!Array.isArray(atts)) return null;
-  return atts.find((a: any) => a?.kind === "override") ?? null;
-});
-
-// Parent run for "Compare with Parent" button
-const parentRunId = computed(() => run.value?.parent_run_id || null);
-
-// Phase 5: Advisory Explanation state
-const explainError = ref<string | null>(null);
-const isExplaining = ref(false);
-const assistantExplanation = ref<any | null>(null);
-
-const assistantExplanationAttachment = computed(() => {
-  const atts = run.value?.attachments || [];
-  if (!Array.isArray(atts)) return null;
-  return atts.find((a: any) => a?.kind === "assistant_explanation") ?? null;
-});
-
-async function loadRun() {
-  if (!runId.value) return;
-  loading.value = true;
-  error.value = null;
-  try {
-    run.value = await rmosRuns.getRun(runId.value) as RunArtifactDetail;
-  } catch (e: any) {
-    error.value = e.message || "Failed to load run";
-    run.value = null;
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(loadRun);
-watch(runId, loadRun);
-
-// Phase 5: Generate advisory explanation
-async function generateAdvisoryExplanation(force: boolean) {
-  const id = runId.value;
-  if (!id) return;
-  isExplaining.value = true;
-  explainError.value = null;
-  try {
-    const result = await rmosRuns.explainRun(id, force);
-    assistantExplanation.value = result.explanation ?? null;
-    // Refresh run to pick up new attachment
-    await loadRun();
-  } catch (e: any) {
-    explainError.value = e?.message || "Failed to generate advisory explanation.";
-  } finally {
-    isExplaining.value = false;
-  }
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
-function handleDownload() {
-  if (runId.value) {
-    downloadRun(runId.value);
-  }
-}
-
-function goToDiff() {
-  router.push({ path: "/rmos/runs/diff", query: { a: runId.value } });
-}
-
-function goToDiffWithParent() {
-  if (parentRunId.value) {
-    router.push({ path: "/rmos/runs/diff", query: { a: parentRunId.value, b: runId.value } });
-  }
-}
-
-function goBack() {
-  router.push("/rmos/runs");
-}
-
-async function downloadOperatorPack() {
-  if (!runId.value) return;
-  error.value = null;
-  let url: string | null = null;
-  try {
-    const { blob } = await rmosRuns.downloadOperatorPack(runId.value);
-    url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `operator_pack_${runId.value}.zip`;
-    a.click();
-  } catch (e: any) {
-    error.value = String(e?.message || e);
-  } finally {
-    if (url) URL.revokeObjectURL(url);
-  }
-}
-
-async function downloadAttachment(att: any) {
-  if (!att?.sha256) return;
-  error.value = null;
-  let url: string | null = null;
-  try {
-    const { blob } = await rmosRuns.downloadAttachment(att.sha256);
-    url = URL.createObjectURL(blob);
-    const dl = document.createElement("a");
-    dl.href = url;
-    // Prefer original filename if present, else sha-based
-    const safeName = (att.filename || `${att.sha256}`).replace(/[^\w.\-]+/g, "_");
-    dl.download = safeName;
-    dl.click();
-  } catch (e: any) {
-    error.value = String(e?.message || e);
-  } finally {
-    if (url) URL.revokeObjectURL(url);
-  }
-}
+onMounted(loadRun)
+watch(runId, loadRun)
 </script>
 
 <template>
@@ -645,4 +527,3 @@ async function downloadAttachment(att: any) {
     </div>
   </div>
 </template>
-
