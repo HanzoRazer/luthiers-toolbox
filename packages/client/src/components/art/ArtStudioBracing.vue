@@ -5,234 +5,72 @@
  * Guitar bracing section calculator.
  * Computes section properties, mass, and stiffness for various brace profiles.
  */
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, watch, onMounted } from 'vue'
+import { COMMON_WOODS } from '@/api/art-studio'
 import {
-  previewBracing,
-  batchBracing,
-  exportBracingDXF,
-  listBracingPresets,
-  downloadBlob,
-  COMMON_WOODS,
-  type BracingPreviewResponse,
-  type BracingPresetInfo,
-  type BraceProfileType,
-  type BracingPreviewRequest,
-} from "@/api/art-studio";
+  PROFILE_TYPES,
+  useSingleBrace,
+  useBraceBatch,
+  useBracingExport,
+  useBracingPresets
+} from './bracing'
 
-// Types
-interface BraceEntry extends BracingPreviewRequest {
-  id: number;
-  name: string;
-  x_mm: number;
-  y_mm: number;
-  angle_deg: number;
-  result?: BracingPreviewResponse;
+// Shared state
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// Single brace composable
+const {
+  profileType,
+  width,
+  height,
+  length,
+  density,
+  singleResult,
+  selectedWood,
+  setSelectedWood,
+  previewSingle
+} = useSingleBrace(loading, error)
+
+// Batch composable
+const { braces, batchName, batchResult, addBrace, removeBrace, calculateBatch } =
+  useBraceBatch(loading, error)
+
+// Export composable
+const { dxfVersion, includeCenterlines, includeLabels, exportDXF } =
+  useBracingExport(loading, error)
+
+// Presets composable
+const { presets, loadPresets, applyPreset } = useBracingPresets(profileType, density)
+
+// Profile types for template
+const profileTypes = PROFILE_TYPES
+
+// Helper to copy current single brace to batch
+function copyCurrentToBrace(): void {
+  addBrace({
+    profileType: profileType.value,
+    width: width.value,
+    height: height.value,
+    length: length.value,
+    density: density.value
+  })
 }
 
-// State
-const loading = ref(false);
-const error = ref<string | null>(null);
-const presets = ref<BracingPresetInfo[]>([]);
-
-// Single brace preview
-const profileType = ref<BraceProfileType>("parabolic");
-const width = ref(12.0);
-const height = ref(8.0);
-const length = ref(300.0);
-const density = ref(420.0);
-const singleResult = ref<BracingPreviewResponse | null>(null);
-
-// Batch mode
-const braces = ref<BraceEntry[]>([]);
-const batchName = ref("X-Brace Set");
-const batchResult = ref<{
-  total_mass_grams: number;
-  total_stiffness: number;
-} | null>(null);
-const nextBraceId = ref(1);
-
-// Export options
-const dxfVersion = ref("R12");
-const includeCenterlines = ref(true);
-const includeLabels = ref(true);
-
-// Profile types
-const profileTypes: { value: BraceProfileType; label: string; desc: string }[] =
-  [
-    {
-      value: "rectangular",
-      label: "Rectangular",
-      desc: "Standard rectangular cross-section",
-    },
-    {
-      value: "triangular",
-      label: "Triangular",
-      desc: "Peaked top for stiffness",
-    },
-    {
-      value: "parabolic",
-      label: "Parabolic",
-      desc: "Curved top, classic design",
-    },
-    {
-      value: "scalloped",
-      label: "Scalloped",
-      desc: "Tapered ends for flexibility",
-    },
-  ];
-
-// Computed
-const selectedWood = computed({
-  get: () => {
-    const found = COMMON_WOODS.find(
-      (w) => Math.abs(w.density - density.value) < 5
-    );
-    return found?.name || null;
-  },
-  set: (name: string | null) => {
-    const found = COMMON_WOODS.find((w) => w.name === name);
-    if (found) density.value = found.density;
-  },
-});
-
-// Methods
-async function loadPresets() {
-  try {
-    presets.value = await listBracingPresets();
-  } catch (e: any) {
-    console.warn("Failed to load presets:", e);
-  }
-}
-
-async function previewSingle() {
-  loading.value = true;
-  error.value = null;
-  try {
-    singleResult.value = await previewBracing({
-      profile_type: profileType.value,
-      width_mm: width.value,
-      height_mm: height.value,
-      length_mm: length.value,
-      density_kg_m3: density.value,
-    });
-  } catch (e: any) {
-    error.value = e.message || "Preview failed";
-  } finally {
-    loading.value = false;
-  }
-}
-
-function addBrace() {
-  const newBrace: BraceEntry = {
-    id: nextBraceId.value++,
-    name: `Brace ${braces.value.length + 1}`,
-    profile_type: profileType.value,
-    width_mm: width.value,
-    height_mm: height.value,
-    length_mm: length.value,
-    density_kg_m3: density.value,
-    x_mm: 0,
-    y_mm: 0,
-    angle_deg: 0,
-  };
-  braces.value.push(newBrace);
-}
-
-function removeBrace(id: number) {
-  const idx = braces.value.findIndex((b) => b.id === id);
-  if (idx >= 0) braces.value.splice(idx, 1);
-}
-
-function copyCurrentToBrace() {
-  addBrace();
-}
-
-async function calculateBatch() {
-  if (braces.value.length === 0) {
-    error.value = "Add at least one brace to calculate batch";
-    return;
-  }
-
-  loading.value = true;
-  error.value = null;
-  try {
-    const result = await batchBracing({
-      name: batchName.value,
-      braces: braces.value.map((b) => ({
-        profile_type: b.profile_type,
-        width_mm: b.width_mm,
-        height_mm: b.height_mm,
-        length_mm: b.length_mm,
-        density_kg_m3: b.density_kg_m3,
-      })),
-    });
-
-    // Update individual brace results
-    result.braces.forEach((res, idx) => {
-      if (braces.value[idx]) {
-        braces.value[idx].result = res;
-      }
-    });
-
-    batchResult.value = {
-      total_mass_grams: result.total_mass_grams,
-      total_stiffness: result.total_stiffness,
-    };
-  } catch (e: any) {
-    error.value = e.message || "Batch calculation failed";
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function exportDXF() {
-  if (braces.value.length === 0) {
-    error.value = "Add at least one brace to export";
-    return;
-  }
-
-  loading.value = true;
-  error.value = null;
-  try {
-    const blob = await exportBracingDXF({
-      braces: braces.value.map((b) => ({
-        profile_type: b.profile_type,
-        width_mm: b.width_mm,
-        height_mm: b.height_mm,
-        length_mm: b.length_mm,
-        x_mm: b.x_mm,
-        y_mm: b.y_mm,
-        angle_deg: b.angle_deg,
-      })),
-      dxf_version: dxfVersion.value,
-      include_centerlines: includeCenterlines.value,
-      include_labels: includeLabels.value,
-    });
-    downloadBlob(blob, `bracing_${batchName.value.replace(/\s+/g, "_")}.dxf`);
-  } catch (e: any) {
-    error.value = e.message || "Export failed";
-  } finally {
-    loading.value = false;
-  }
-}
-
-function applyPresetProfile(preset: BracingPresetInfo) {
-  profileType.value = preset.profile_type;
-  const wood = COMMON_WOODS.find((w) =>
-    w.name.toLowerCase().includes(preset.typical_wood.toLowerCase())
-  );
-  if (wood) density.value = wood.density;
+// Helper to export with current braces
+function handleExportDXF(): void {
+  exportDXF(braces.value, batchName.value)
 }
 
 // Watchers
 watch([profileType, width, height, length, density], () => previewSingle(), {
-  debounce: 300,
-} as any);
+  debounce: 300
+} as any)
 
 onMounted(() => {
-  loadPresets();
-  previewSingle();
-});
+  loadPresets()
+  previewSingle()
+})
 </script>
 
 <template>
@@ -272,7 +110,7 @@ onMounted(() => {
               :key="p.name"
               class="text-xs px-2 py-1 bg-white border rounded hover:bg-gray-100"
               :title="p.description"
-              @click="applyPresetProfile(p)"
+              @click="applyPreset(p)"
             >
               {{ p.name }}
             </button>
@@ -365,8 +203,9 @@ onMounted(() => {
           </h3>
 
           <select
-            v-model="selectedWood"
+            :value="selectedWood"
             class="w-full border rounded px-3 py-2 text-sm"
+            @change="setSelectedWood(($event.target as HTMLSelectElement).value || null)"
           >
             <option :value="null">
               Custom
@@ -704,7 +543,7 @@ onMounted(() => {
         <button
           class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
           :disabled="loading || braces.length === 0"
-          @click="exportDXF"
+          @click="handleExportDXF"
         >
           Export DXF Layout
         </button>
