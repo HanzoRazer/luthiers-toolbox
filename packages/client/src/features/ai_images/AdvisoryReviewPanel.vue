@@ -1,188 +1,105 @@
 <script setup lang="ts">
 /**
  * Advisory Review Panel — Human-in-the-loop Review Workflow
- * 
+ *
  * Displays pending AI-generated assets for approval/rejection.
  * Wires to /api/advisory/* endpoints.
- * 
+ *
+ * REFACTORED: Uses composables for cleaner separation of concerns.
+ *
  * @package features/ai_images
  */
 
-import { ref, computed, onMounted } from 'vue';
+import { onMounted } from 'vue'
+import type { AdvisoryAsset } from './api/advisory'
 import {
-  listAssets,
-  approveAsset,
-  rejectAsset,
-  bulkReview,
-  getPendingAssets,
-  attachToRun,
-  getStats as getAdvisoryStats,
-  type AdvisoryAsset,
-  type AdvisoryStats,
-} from './api/advisory';
+  useAdvisoryReviewState,
+  useAdvisoryReviewActions,
+  useAdvisoryReviewModals
+} from './advisory_review/composables'
 
 // =============================================================================
 // PROPS & EMITS
 // =============================================================================
 
 const props = defineProps<{
-  projectId?: string;
-}>();
+  projectId?: string
+}>()
 
 const emit = defineEmits<{
-  (e: 'asset:approved', asset: AdvisoryAsset): void;
-  (e: 'asset:rejected', asset: AdvisoryAsset): void;
-  (e: 'asset:attached', assetId: string, runId: string): void;
-}>();
+  (e: 'asset:approved', asset: AdvisoryAsset): void
+  (e: 'asset:rejected', asset: AdvisoryAsset): void
+  (e: 'asset:attached', assetId: string, runId: string): void
+}>()
 
 // =============================================================================
-// STATE
+// COMPOSABLES
 // =============================================================================
 
-const pendingAssets = ref<AdvisoryAsset[]>([]);
-const stats = ref<AdvisoryStats | null>(null);
-const selectedIds = ref<Set<string>>(new Set());
-const isLoading = ref(false);
-const error = ref<string | null>(null);
+// State
+const {
+  pendingAssets,
+  stats,
+  selectedIds,
+  isLoading,
+  error,
+  showRejectModal,
+  rejectingAssetId,
+  rejectionReason,
+  showAttachModal,
+  attachingAssetId,
+  targetRunId,
+  hasSelection,
+  allSelected
+} = useAdvisoryReviewState()
 
-// Rejection modal state
-const showRejectModal = ref(false);
-const rejectingAssetId = ref<string | null>(null);
-const rejectionReason = ref('');
-
-// Attachment modal state
-const showAttachModal = ref(false);
-const attachingAssetId = ref<string | null>(null);
-const targetRunId = ref('');
-
-// =============================================================================
-// COMPUTED
-// =============================================================================
-
-const hasSelection = computed(() => selectedIds.value.size > 0);
-const allSelected = computed(() => 
-  pendingAssets.value.length > 0 && 
-  selectedIds.value.size === pendingAssets.value.length
-);
-
-// =============================================================================
-// METHODS
-// =============================================================================
-
-async function loadPending(): Promise<void> {
-  isLoading.value = true;
-  error.value = null;
-  
-  try {
-    pendingAssets.value = await getPendingAssets(props.projectId, 50);
-    stats.value = await getAdvisoryStats(props.projectId);
-  } catch (err) {
-    error.value = `Failed to load: ${err}`;
-  } finally {
-    isLoading.value = false;
+// Actions
+const {
+  loadPending,
+  handleApprove,
+  confirmReject,
+  handleBulkApprove,
+  handleBulkReject,
+  confirmAttach,
+  toggleSelect,
+  toggleSelectAll
+} = useAdvisoryReviewActions(
+  props.projectId,
+  pendingAssets,
+  stats,
+  selectedIds,
+  isLoading,
+  error,
+  showRejectModal,
+  rejectingAssetId,
+  rejectionReason,
+  showAttachModal,
+  attachingAssetId,
+  targetRunId,
+  hasSelection,
+  allSelected,
+  {
+    onApproved: (asset) => emit('asset:approved', asset),
+    onRejected: (asset) => emit('asset:rejected', asset),
+    onAttached: (assetId, runId) => emit('asset:attached', assetId, runId)
   }
-}
+)
 
-async function handleApprove(assetId: string): Promise<void> {
-  try {
-    const approved = await approveAsset(assetId);
-    pendingAssets.value = pendingAssets.value.filter((a: AdvisoryAsset) => a.id !== assetId);
-    selectedIds.value.delete(assetId);
-    emit('asset:approved', approved);
-  } catch (err) {
-    error.value = `Failed to approve: ${err}`;
-  }
-}
-
-function openRejectModal(assetId: string): void {
-  rejectingAssetId.value = assetId;
-  rejectionReason.value = '';
-  showRejectModal.value = true;
-}
-
-async function confirmReject(): Promise<void> {
-  if (!rejectingAssetId.value || !rejectionReason.value.trim()) return;
-  
-  try {
-    const rejected = await rejectAsset(rejectingAssetId.value, rejectionReason.value);
-    pendingAssets.value = pendingAssets.value.filter((a: AdvisoryAsset) => a.id !== rejectingAssetId.value);
-    selectedIds.value.delete(rejectingAssetId.value!);
-    showRejectModal.value = false;
-    emit('asset:rejected', rejected);
-  } catch (err) {
-    error.value = `Failed to reject: ${err}`;
-  }
-}
-
-async function handleBulkApprove(): Promise<void> {
-  if (!hasSelection.value) return;
-  
-  try {
-    const ids = Array.from(selectedIds.value) as string[];
-    await bulkReview(ids, 'approve');
-    pendingAssets.value = pendingAssets.value.filter((a: AdvisoryAsset) => !selectedIds.value.has(a.id));
-    selectedIds.value.clear();
-  } catch (err) {
-    error.value = `Bulk approve failed: ${err}`;
-  }
-}
-
-async function handleBulkReject(): Promise<void> {
-  if (!hasSelection.value) return;
-  
-  const reason = prompt('Enter rejection reason for all selected:');
-  if (!reason) return;
-  
-  try {
-    const ids = Array.from(selectedIds.value) as string[];
-    await bulkReview(ids, 'reject', reason);
-    pendingAssets.value = pendingAssets.value.filter((a: AdvisoryAsset) => !selectedIds.value.has(a.id));
-    selectedIds.value.clear();
-  } catch (err) {
-    error.value = `Bulk reject failed: ${err}`;
-  }
-}
-
-function openAttachModal(assetId: string): void {
-  attachingAssetId.value = assetId;
-  targetRunId.value = '';
-  showAttachModal.value = true;
-}
-
-async function confirmAttach(): Promise<void> {
-  if (!attachingAssetId.value || !targetRunId.value.trim()) return;
-  
-  try {
-    await attachToRun(attachingAssetId.value, targetRunId.value);
-    showAttachModal.value = false;
-    emit('asset:attached', attachingAssetId.value, targetRunId.value);
-    await loadPending(); // Refresh list
-  } catch (err) {
-    error.value = `Failed to attach: ${err}`;
-  }
-}
-
-function toggleSelect(assetId: string): void {
-  if (selectedIds.value.has(assetId)) {
-    selectedIds.value.delete(assetId);
-  } else {
-    selectedIds.value.add(assetId);
-  }
-}
-
-function toggleSelectAll(): void {
-  if (allSelected.value) {
-    selectedIds.value.clear();
-  } else {
-    selectedIds.value = new Set(pendingAssets.value.map((a: AdvisoryAsset) => a.id));
-  }
-}
+// Modal helpers
+const { openRejectModal, openAttachModal } = useAdvisoryReviewModals(
+  showRejectModal,
+  rejectingAssetId,
+  rejectionReason,
+  showAttachModal,
+  attachingAssetId,
+  targetRunId
+)
 
 // =============================================================================
 // LIFECYCLE
 // =============================================================================
 
-onMounted(loadPending);
+onMounted(loadPending)
 </script>
 
 <template>
