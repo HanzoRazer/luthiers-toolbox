@@ -447,261 +447,69 @@
 </template>
 
 <script setup lang="ts">
-import { api } from '@/services/apiBase';
-import { onMounted, reactive, ref, computed } from "vue";
+import { onMounted } from 'vue'
 import {
-  fetchJobIntLog,
-  updateJobIntFavorite,
-  type JobIntLogEntry,
-  type JobIntLogListResponse,
-} from "@/api/job_int";
+  useJobIntHistoryState,
+  useJobIntHistoryStats,
+  useJobIntHistoryLoad,
+  useJobIntHistoryActions,
+  useJobIntHistoryClone,
+  useJobIntHistoryHelpers
+} from './composables'
 
-const items = ref<JobIntLogEntry[]>([]);
-const total = ref(0);
-const loading = ref(false);
-const errorMessage = ref<string | null>(null);
+// State
+const {
+  items,
+  total,
+  loading,
+  errorMessage,
+  filters,
+  limit,
+  offset,
+  showCloneModal,
+  selectedEntry,
+  cloning,
+  cloneSuccess,
+  cloneError,
+  cloneForm
+} = useJobIntHistoryState()
 
-const filters = reactive({
-  machine_id: "",
-  post_id: "",
-  helical_only: false,
-  favorites_only: false,
-});
+// Stats
+const {
+  helicalCount,
+  nonHelicalCount,
+  helicalPct,
+  nonHelicalPct,
+  avgTimeLabel,
+  avgMaxDevPct
+} = useJobIntHistoryStats(items)
 
-const limit = ref(50);
-const offset = ref(0);
+// Load/pagination
+const { load, reload, applyFilters, resetFilters, prevPage, nextPage } = useJobIntHistoryLoad(
+  items,
+  total,
+  loading,
+  errorMessage,
+  filters,
+  limit,
+  offset
+)
 
-// Clone modal state
-const showCloneModal = ref(false);
-const selectedEntry = ref<JobIntLogEntry | null>(null);
-const cloning = ref(false);
-const cloneSuccess = ref(false);
-const cloneError = ref<string | null>(null);
-const cloneForm = reactive({
-  name: '',
-  description: '',
-  kind: 'cam' as 'cam' | 'combo',
-  tagsInput: '',
-  cam_params: {} as Record<string, any>,
-});
+// Entry actions
+const { selectEntry, toggleFavorite } = useJobIntHistoryActions(errorMessage)
 
-// Stats computed properties
-const helicalCount = computed(() => {
-  return items.value.filter((e) => e.use_helical).length;
-});
+// Clone modal
+const { openCloneModal, closeCloneModal, executeClone } = useJobIntHistoryClone(
+  showCloneModal,
+  selectedEntry,
+  cloning,
+  cloneSuccess,
+  cloneError,
+  cloneForm
+)
 
-const nonHelicalCount = computed(() => {
-  return items.value.filter((e) => !e.use_helical).length;
-});
+// Helpers
+const { formatTime } = useJobIntHistoryHelpers()
 
-const helicalPct = computed(() => {
-  if (items.value.length === 0) return 0;
-  return (helicalCount.value / items.value.length) * 100;
-});
-
-const nonHelicalPct = computed(() => {
-  if (items.value.length === 0) return 0;
-  return (nonHelicalCount.value / items.value.length) * 100;
-});
-
-const avgTimeSeconds = computed(() => {
-  const vals = items.value
-    .map((e) => e.sim_time_s)
-    .filter((v): v is number => v != null && !Number.isNaN(v));
-  if (vals.length === 0) return null;
-  const sum = vals.reduce((a, b) => a + b, 0);
-  return sum / vals.length;
-});
-
-const avgTimeLabel = computed(() => {
-  const v = avgTimeSeconds.value;
-  if (v == null) return "—";
-  if (v < 1) return `${(v * 1000).toFixed(0)} ms`;
-  if (v < 60) return `${v.toFixed(2)} s`;
-  const m = Math.floor(v / 60);
-  const s = v - m * 60;
-  return `${m}m ${s.toFixed(0)}s`;
-});
-
-const avgMaxDevPct = computed(() => {
-  const vals = items.value
-    .map((e) => e.sim_max_dev_pct)
-    .filter((v): v is number => v != null && !Number.isNaN(v));
-  if (vals.length === 0) return null;
-  const sum = vals.reduce((a, b) => a + b, 0);
-  return sum / vals.length;
-});
-
-// Load function
-async function load() {
-  loading.value = true;
-  errorMessage.value = null;
-
-  try {
-    const res: JobIntLogListResponse = await fetchJobIntLog({
-      machine_id: filters.machine_id || undefined,
-      post_id: filters.post_id || undefined,
-      helical_only: filters.helical_only || undefined,
-      favorites_only: filters.favorites_only || undefined,
-      limit: limit.value,
-      offset: offset.value,
-    });
-    items.value = res.items;
-    total.value = res.total;
-  } catch (err: any) {
-    console.error("JobIntHistory load error", err);
-    errorMessage.value = err?.message ?? "Failed to load job history.";
-  } finally {
-    loading.value = false;
-  }
-}
-
-function reload() {
-  offset.value = 0;
-  load();
-}
-
-function applyFilters() {
-  offset.value = 0;
-  load();
-}
-
-function resetFilters() {
-  filters.machine_id = "";
-  filters.post_id = "";
-  filters.helical_only = false;
-  filters.favorites_only = false;
-  offset.value = 0;
-  load();
-}
-
-function prevPage() {
-  if (offset.value >= limit.value) {
-    offset.value -= limit.value;
-    load();
-  }
-}
-
-function nextPage() {
-  if (offset.value + limit.value < total.value) {
-    offset.value += limit.value;
-    load();
-  }
-}
-
-function selectEntry(entry: JobIntLogEntry) {
-  console.log("Selected job:", entry.run_id);
-  // TODO: Open detail modal or navigate to detail view
-}
-
-async function toggleFavorite(entry: JobIntLogEntry) {
-  const target = !entry.favorite;
-  try {
-    const detail = await updateJobIntFavorite(entry.run_id, target);
-    // Prefer server's value, but fallback to requested target
-    entry.favorite = detail.favorite ?? target;
-    errorMessage.value = null;
-  } catch (err: any) {
-    console.error("Failed to update favorite", err);
-    errorMessage.value =
-      err?.message ?? "Failed to update favorite flag for this job.";
-  }
-}
-
-function openCloneModal(entry: JobIntLogEntry) {
-  selectedEntry.value = entry;
-  cloneForm.name = `${entry.job_name || 'Job'} - ${entry.machine_id || 'Machine'}`;
-  cloneForm.description = `Cloned from job run ${entry.run_id.slice(0, 8)} on ${new Date().toLocaleDateString()}`;
-  cloneForm.kind = 'cam';
-  cloneForm.tagsInput = entry.use_helical ? 'helical, cloned' : 'cloned';
-  cloneSuccess.value = false;
-  cloneError.value = null;
-  showCloneModal.value = true;
-}
-
-function closeCloneModal() {
-  showCloneModal.value = false;
-  selectedEntry.value = null;
-  cloneForm.name = '';
-  cloneForm.description = '';
-  cloneForm.tagsInput = '';
-  cloneSuccess.value = false;
-  cloneError.value = null;
-}
-
-async function executeClone() {
-  if (!selectedEntry.value || !cloneForm.name) return;
-  
-  cloning.value = true;
-  cloneError.value = null;
-  cloneSuccess.value = false;
-  
-  try {
-    // First fetch detailed job data
-    const detailResponse = await api(`/api/cam/job-int/log/${encodeURIComponent(selectedEntry.value.run_id)}`);
-    if (!detailResponse.ok) {
-      throw new Error(`Failed to fetch job details: ${detailResponse.statusText}`);
-    }
-    const jobDetail = await detailResponse.json();
-    
-    // Build preset payload
-    const tags = cloneForm.tagsInput
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-    
-    const presetPayload = {
-      name: cloneForm.name,
-      kind: cloneForm.kind,
-      description: cloneForm.description,
-      tags: tags,
-      machine_id: selectedEntry.value.machine_id || null,
-      post_id: selectedEntry.value.post_id || null,
-      units: 'mm', // Default, could be extracted from job if available
-      job_source_id: selectedEntry.value.run_id,
-      cam_params: {
-        strategy: 'Spiral', // Default, could be extracted from job
-        use_helical: selectedEntry.value.use_helical,
-        // Add more params from jobDetail.sim_stats if available
-        ...(jobDetail.sim_stats || {}),
-      },
-    };
-    
-    // Create preset via API
-    const createResponse = await api('/api/presets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(presetPayload),
-    });
-    
-    if (!createResponse.ok) {
-      const errorData = await createResponse.json().catch(() => ({}));
-      throw new Error(errorData.detail || `Failed to create preset: ${createResponse.statusText}`);
-    }
-    
-    cloneSuccess.value = true;
-    
-    // Auto-close after 2 seconds on success
-    setTimeout(() => {
-      closeCloneModal();
-    }, 2000);
-    
-  } catch (err: any) {
-    console.error('Clone preset error:', err);
-    cloneError.value = err?.message || 'Failed to clone job as preset';
-  } finally {
-    cloning.value = false;
-  }
-}
-
-function formatTime(seconds: number | null): string {
-  if (seconds == null) return "—";
-  if (seconds < 1) return `${(seconds * 1000).toFixed(0)} ms`;
-  if (seconds < 60) return `${seconds.toFixed(2)} s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds - m * 60;
-  return `${m}m ${s.toFixed(0)}s`;
-}
-
-onMounted(load);
+onMounted(load)
 </script>
