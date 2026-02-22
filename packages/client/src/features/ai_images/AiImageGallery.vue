@@ -7,390 +7,149 @@
  *
  * @package features/ai_images
  */
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import VariantReviewPanel from "./components/VariantReviewPanel.vue";
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import VariantReviewPanel from './components/VariantReviewPanel.vue'
+import { getProviders, listRecentRuns } from './api/visionApi'
+import type { RejectReasonCode } from '@/sdk/rmos/runs'
 
-const router = useRouter();
-
-// Vision feature API (existing module)
+// Composables
 import {
-  generateImages,
-  attachAdvisoryToRun,
-  createRun,
-  listRecentRuns,
-  getProviders,
-  type VisionAsset,
-  type ProviderName,
-} from "./api/visionApi";
+  useGalleryState,
+  useVariantHelpers,
+  useVariantActions,
+  useImageGeneration,
+  useAssetAttachment
+} from './composables'
 
-// RMOS typed SDK (canonical)
-import {
-  listAdvisoryVariants,
-  reviewAdvisoryVariant,
-  promoteAdvisoryVariant,
-  type AdvisoryVariantSummary,
-  type RejectReasonCode,
-} from "@/sdk/rmos/runs";
-
-// Local type for run summaries from visionApi
-type RunSummary = {
-  run_id: string;
-  created_at_utc?: string;
-  event_type?: string;
-  status?: string;
-};
+const router = useRouter()
 
 /** Base URL for cross-origin API deployments */
-const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || ''
 
 /** Resolve asset URL to full URL (handles cross-origin deployments). */
 function resolveAssetUrl(url: string | undefined): string {
-  if (!url) return '/placeholder.svg';
+  if (!url) return '/placeholder.svg'
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
+    return url
   }
-  return `${API_BASE}${url}`;
+  return `${API_BASE}${url}`
 }
 
-// -----------------------------
-// State
-// -----------------------------
-const prompt = ref("");
-const provider = ref<ProviderName>("openai");
-const numImages = ref(2);
-const size = ref("1024x1024");
-const quality = ref("standard");
-
-const generatedAssets = ref<VisionAsset[]>([]);
-const selectedRunId = ref<string | null>(null);
-const runs = ref<RunSummary[]>([]);
-const providers = ref<any[]>([]);
-
-const isGenerating = ref(false);
-const isAttaching = ref<string | null>(null); // sha256 being attached
-const isPromoting = ref<string | null>(null); // advisory_id being promoted
-const error = ref<string | null>(null);
-const success = ref<string | null>(null);
-
-// inline review panel toggles per advisory_id
-const openReviewFor = ref<string | null>(null);
-
-// authoritative run-side summaries keyed by advisory_id
-const variantById = ref<Record<string, AdvisoryVariantSummary>>({});
-
-// reconcile map: asset sha256 -> advisory_id (trust attach response)
-const advisoryIdByAssetSha = ref<Record<string, string>>({});
-
-// micro-follow: quick actions use per-row busy flags (prevents double clicks)
-const busyByAdvisoryId = ref<Record<string, "review" | "promote" | null>>({});
-
-// micro-follow: track last run we attached to (for fallback navigation)
-const lastAttachedRunId = ref<string | null>(null);
-
-// -----------------------------
-// Helpers
-// -----------------------------
+// Toast helpers
 function _toastOk(msg: string) {
-  success.value = msg;
-  window.setTimeout(() => (success.value = null), 1600);
+  success.value = msg
+  window.setTimeout(() => (success.value = null), 1600)
 }
 
 function _toastErr(msg: string) {
-  error.value = msg;
-  window.setTimeout(() => (error.value = null), 2200);
+  error.value = msg
+  window.setTimeout(() => (error.value = null), 2200)
 }
 
+// Gallery state
+const {
+  prompt,
+  provider,
+  numImages,
+  size,
+  quality,
+  generatedAssets,
+  selectedRunId,
+  runs,
+  providers,
+  isGenerating,
+  isAttaching,
+  isPromoting,
+  error,
+  success,
+  openReviewFor,
+  variantById,
+  advisoryIdByAssetSha,
+  busyByAdvisoryId,
+  lastAttachedRunId,
+  canGenerate
+} = useGalleryState()
+
+// Variant helpers
+const {
+  advisoryIdForAsset: _advisoryIdForAsset,
+  variantForAsset: _variantForAsset,
+  attachDisabledReason,
+  promoteDisabledReason,
+  rejectionHover,
+  canUndoReject
+} = useVariantHelpers(selectedRunId, variantById, advisoryIdByAssetSha, busyByAdvisoryId)
+
+// Variant actions
+const { refreshVariants, quickReject, undoReject, quickPromote } = useVariantActions(
+  selectedRunId,
+  variantById,
+  busyByAdvisoryId,
+  _toastOk,
+  _toastErr
+)
+
+// Image generation
+const { doGenerate } = useImageGeneration(
+  prompt,
+  provider,
+  numImages,
+  size,
+  quality,
+  generatedAssets,
+  isGenerating,
+  canGenerate,
+  selectedRunId,
+  refreshVariants,
+  _toastOk,
+  _toastErr
+)
+
+// Asset attachment
+const { doAttach, doPromote, toggleReview } = useAssetAttachment(
+  selectedRunId,
+  runs,
+  isAttaching,
+  isPromoting,
+  advisoryIdByAssetSha,
+  lastAttachedRunId,
+  openReviewFor,
+  attachDisabledReason,
+  promoteDisabledReason,
+  _advisoryIdForAsset,
+  _variantForAsset,
+  refreshVariants,
+  _toastOk,
+  _toastErr
+)
+
+// Navigation helpers
 function goToRunReview(runId: string) {
-  router.push({ name: "RunVariantsReview", params: { run_id: runId } });
+  router.push({ name: 'RunVariantsReview', params: { run_id: runId } })
 }
 
-// micro-follow: toolbar Open Review with fallback to lastAttachedRunId
 function goToReview(runId?: string | null) {
-  const id = runId ?? selectedRunId.value ?? lastAttachedRunId.value;
-  if (!id) return;
-  router.push({ name: "RunVariantsReview", params: { run_id: id } });
+  const id = runId ?? selectedRunId.value ?? lastAttachedRunId.value
+  if (!id) return
+  router.push({ name: 'RunVariantsReview', params: { run_id: id } })
 }
 
-function _advisoryIdForAsset(a: VisionAsset): string | null {
-  const sha = (a as any).sha256 as string | undefined;
-  if (!sha) return null;
-  return advisoryIdByAssetSha.value[sha] ?? sha; // sha is typical advisory_id
-}
-
-function _variantForAsset(a: VisionAsset): AdvisoryVariantSummary | null {
-  const advisoryId = _advisoryIdForAsset(a);
-  if (!advisoryId) return null;
-  return variantById.value[advisoryId] ?? null;
-}
-
-const canGenerate = computed(() => prompt.value.trim().length > 0 && !isGenerating.value);
-
-function attachDisabledReason(a: VisionAsset): string | null {
-  if (!selectedRunId.value) return "Select a run first.";
-  const v = _variantForAsset(a);
-  if (v) return "Already attached to this run.";
-  return null;
-}
-
-function promoteDisabledReason(a: VisionAsset): string | null {
-  const v = _variantForAsset(a);
-  if (!v) return "Attach to a run first.";
-  if (v.rejected) return "Rejected variants cannot be promoted.";
-  if (v.promoted) return "Already promoted.";
-  if (v.status !== "REVIEWED") return "Must be reviewed first (status=REVIEWED).";
-  return null;
-}
-
-function rejectionHover(v: AdvisoryVariantSummary | null | undefined): string {
-  if (!v) return "";
-  if (!v.rejected) return "Not rejected.";
-  const parts: string[] = [];
-  if ((v as any).rejection_reason_code) parts.push(`Code: ${(v as any).rejection_reason_code}`);
-  if ((v as any).rejection_reason_detail) parts.push(`Detail: ${(v as any).rejection_reason_detail}`);
-  if ((v as any).rejection_operator_note) parts.push(`Note: ${(v as any).rejection_operator_note}`);
-  if ((v as any).rejected_at_utc) parts.push(`At: ${(v as any).rejected_at_utc}`);
-  return parts.length ? parts.join("\n") : "Rejected.";
-}
-
-function canUndoReject(v: AdvisoryVariantSummary | null | undefined): string | null {
-  if (!v) return "Attach first";
-  if (!v.rejected) return "Not rejected";
-  if (v.status === "PROMOTED" || v.promoted) return "Already promoted";
-  return null;
-}
-
-// cherry-pick: DRY helpers for busy state (from redundant diff)
-function isRowBusy(advisoryId: string, kind: "review" | "promote"): boolean {
-  return busyByAdvisoryId.value[advisoryId] === kind;
-}
-
-function _setBusy(advisoryId: string, v: "review" | "promote" | null) {
-  busyByAdvisoryId.value = { ...busyByAdvisoryId.value, [advisoryId]: v };
-}
-
-async function quickReject(advisoryId: string, code: RejectReasonCode) {
-  const runId = selectedRunId.value;
-  if (!runId) return;
-  if (busyByAdvisoryId.value[advisoryId]) return;
-  _setBusy(advisoryId, "review");
-  try {
-    const res = await reviewAdvisoryVariant(runId, advisoryId, {
-      rejected: true,
-      rejection_reason_code: code,
-      status: "REJECTED",
-    });
-    await refreshVariants();
-    _toastOk(`Rejected (${code}).${res.requestId ? ` req:${res.requestId}` : ""}`);
-  } catch (e: any) {
-    _toastErr(e?.message || "Reject failed.");
-  } finally {
-    _setBusy(advisoryId, null);
-  }
-}
-
-async function undoReject(advisoryId: string) {
-  const runId = selectedRunId.value;
-  if (!runId) return;
-  if (busyByAdvisoryId.value[advisoryId]) return;
-  _setBusy(advisoryId, "review");
-  try {
-    // IMPORTANT: undo reject uses the same canonical review endpoint
-    const res = await reviewAdvisoryVariant(runId, advisoryId, {
-      rejected: false,
-      status: "REVIEWED",
-      // clear reason fields server-side is preferred; client sets nulls defensively
-      rejection_reason_code: null as any,
-      rejection_reason_detail: null as any,
-      rejection_operator_note: null as any,
-    });
-    await refreshVariants();
-    _toastOk(`Rejection cleared.${res.requestId ? ` req:${res.requestId}` : ""}`);
-  } catch (e: any) {
-    _toastErr(e?.message || "Undo reject failed.");
-  } finally {
-    _setBusy(advisoryId, null);
-  }
-}
-
-async function quickPromote(advisoryId: string) {
-  const runId = selectedRunId.value;
-  if (!runId) return;
-  if (busyByAdvisoryId.value[advisoryId]) return;
-  _setBusy(advisoryId, "promote");
-  try {
-    const res = await promoteAdvisoryVariant(runId, advisoryId);
-    await refreshVariants();
-    _toastOk(`Promoted.${res.requestId ? ` req:${res.requestId}` : ""}`);
-  } catch (e: any) {
-    _toastErr(e?.message || "Promote failed.");
-  } finally {
-    _setBusy(advisoryId, null);
-  }
-}
-
-async function refreshVariants() {
-  if (!selectedRunId.value) return;
-
-  try {
-    const res = await listAdvisoryVariants(selectedRunId.value);
-    const next: Record<string, AdvisoryVariantSummary> = {};
-    for (const it of res.items ?? []) next[it.advisory_id] = it;
-    variantById.value = next;
-  } catch (e: any) {
-    _toastErr(e?.message || "Failed to load run variants.");
-  }
-}
-
-// -----------------------------
-// Actions
-// -----------------------------
-async function doGenerate() {
-  if (!canGenerate.value) return;
-  isGenerating.value = true;
-  try {
-    const req = {
-      prompt: prompt.value,
-      provider: provider.value,
-      num_images: numImages.value,
-      size: size.value,
-      quality: quality.value,
-    };
-    const res = await generateImages(req as any);
-    generatedAssets.value = res.assets ?? [];
-    _toastOk(`Generated ${generatedAssets.value.length} asset(s).`);
-
-    // If a run is selected, refresh so state-aware buttons work immediately
-    if (selectedRunId.value) await refreshVariants();
-  } catch (e: any) {
-    _toastErr(e?.message || "Generate failed.");
-  } finally {
-    isGenerating.value = false;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// micro-follow: auto-create run on first attach (extracted for reusability)
-// -----------------------------------------------------------------------------
-async function ensureRunSelected(): Promise<string | null> {
-  if (selectedRunId.value) return selectedRunId.value;
-
-  try {
-    const created = await createRun({ event_type: "vision_image_review" });
-    selectedRunId.value = created.run_id;
-
-    // keep dropdown in sync (best-effort, non-blocking)
-    try {
-      runs.value = (await listRecentRuns()).runs;
-    } catch {
-      // ignore
-    }
-
-    _toastOk("Created new run.");
-    return created.run_id;
-  } catch (e: any) {
-    _toastErr(e?.message || "Create run failed.");
-    return null;
-  }
-}
-
-async function doAttach(a: VisionAsset) {
-  const sha = (a as any).sha256 as string | undefined;
-  if (!sha) {
-    _toastErr("Asset missing sha256.");
-    return;
-  }
-  const deny = attachDisabledReason(a);
-  if (deny) {
-    _toastErr(deny);
-    return;
-  }
-
-  const runId = await ensureRunSelected();
-  if (!runId) return;
-
-  isAttaching.value = sha;
-  try {
-    // IMPORTANT: trust attach response for advisory_id
-    const res = await attachAdvisoryToRun(runId, {
-      advisory_id: sha, // canonical
-      kind: "advisory",
-    });
-
-    const advisoryId = (res?.advisory_id ?? sha) as string;
-    advisoryIdByAssetSha.value = { ...advisoryIdByAssetSha.value, [sha]: advisoryId };
-    lastAttachedRunId.value = selectedRunId.value;
-
-    await refreshVariants();
-
-    // micro-follow: auto-deeplink to review surface immediately after attach
-    // Canonical route: /rmos/runs/:run_id/variants (name: RunVariantsReview)
-    try {
-      router.push({ name: "RunVariantsReview", params: { run_id: selectedRunId.value } });
-    } catch {
-      // non-fatal; keep UX usable even if route name differs in local forks
-    }
-
-    _toastOk("Attached to run.");
-  } catch (e: any) {
-    _toastErr(e?.message || "Attach failed.");
-  } finally {
-    isAttaching.value = null;
-  }
-}
-
-async function doPromote(a: VisionAsset) {
-  const deny = promoteDisabledReason(a);
-  if (deny) {
-    _toastErr(deny);
-    return;
-  }
-  if (!selectedRunId.value) return;
-
-  const advisoryId = _advisoryIdForAsset(a);
-  if (!advisoryId) {
-    _toastErr("Missing advisory id.");
-    return;
-  }
-
-  isPromoting.value = advisoryId;
-  try {
-    await promoteAdvisoryVariant(selectedRunId.value, advisoryId);
-    await refreshVariants();
-    _toastOk("Promoted to manufacturing.");
-  } catch (e: any) {
-    _toastErr(e?.message || "Promote failed.");
-  } finally {
-    isPromoting.value = null;
-  }
-}
-
-function toggleReview(a: VisionAsset) {
-  const v = _variantForAsset(a);
-  if (!v) {
-    _toastErr("Attach to a run first.");
-    return;
-  }
-  openReviewFor.value = openReviewFor.value === v.advisory_id ? null : v.advisory_id;
-}
-
-// -----------------------------
 // Init
-// -----------------------------
 onMounted(async () => {
   try {
-    const res = await getProviders();
-    providers.value = res.providers ?? [];
+    const res = await getProviders()
+    providers.value = res.providers ?? []
   } catch {}
   try {
-    const res = await listRecentRuns();
-    runs.value = (res as any).runs ?? [];
+    const res = await listRecentRuns()
+    runs.value = (res as any).runs ?? []
     if (!selectedRunId.value && runs.value.length) {
-      selectedRunId.value = runs.value[0].run_id as any;
+      selectedRunId.value = runs.value[0].run_id as any
     }
   } catch {}
-  if (selectedRunId.value) await refreshVariants();
-});
+  if (selectedRunId.value) await refreshVariants()
+})
 </script>
 
 <template>
