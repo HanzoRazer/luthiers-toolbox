@@ -297,8 +297,7 @@ Features:
 </template>
 
 <script setup lang="ts">
-import { api } from '@/services/apiBase';
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import BridgeCalculatorPanel from '@/components/BridgeCalculatorPanel.vue'
 import CamBridgePreflightPanel from '@/components/CamBridgePreflightPanel.vue'
 import CamMachineEnvelopePanel from '@/components/CamMachineEnvelopePanel.vue'
@@ -306,100 +305,57 @@ import CamBridgeToPipelinePanel from '@/components/cam/CamBridgeToPipelinePanel.
 import ToolpathResultsPanel from './bridge_lab/ToolpathResultsPanel.vue'
 import GcodeExportPanel from './bridge_lab/GcodeExportPanel.vue'
 import SimulationResultsPanel from './bridge_lab/SimulationResultsPanel.vue'
+import {
+  useBridgeLabWorkflow,
+  useMachineEnvelope,
+  useAdaptiveToolpath,
+  useGcodeExport,
+  useGcodeSimulation
+} from './bridge_lab/composables'
 
-interface MachineLimits {
-  min_x?: number | null
-  max_x?: number | null
-  min_y?: number | null
-  max_y?: number | null
-  min_z?: number | null
-  max_z?: number | null
-}
+// Workflow state
+const {
+  currentStage,
+  dxfFile,
+  toolpathResult,
+  exportedGcode,
+  exportedFilename,
+  gcodeFile,
+  simResult,
+  calculatorStatus,
+  preflightPassed,
+  onDxfFileChanged,
+  onPreflightResult
+} = useBridgeLabWorkflow()
 
-interface MachineCamDefaults {
-  tool_d?: number | null
-  stepover?: number | null
-  stepdown?: number | null
-  feed_xy?: number | null
-  safe_z?: number | null
-  z_rough?: number | null
-}
+// Adaptive toolpath
+const { adaptiveParams, adaptiveRunning, sendToAdaptive } = useAdaptiveToolpath(
+  dxfFile,
+  currentStage,
+  toolpathResult
+)
 
-interface Machine {
-  id: string
-  name: string
-  controller?: string | null
-  units?: string | null
-  limits?: MachineLimits | null
-  camDefaults?: MachineCamDefaults | null
-}
+// Machine envelope
+const { machine, machineLimits, onMachineSelected, onLimitsChanged, onCamDefaultsChanged } =
+  useMachineEnvelope(adaptiveParams)
 
-// State
-const currentStage = ref(1)
-const dxfFile = ref<File | null>(null)
-const preflightResult = ref<any>(null)
-const toolpathResult = ref<any>(null)
-const exportedGcode = ref<string | null>(null)
-const exportedFilename = ref<string | null>(null)
-const gcodeFile = ref<File | null>(null)
-const simResult = ref<any>(null)
-const calculatorStatus = ref<string | null>(null)
+// G-code export
+const { availablePosts, selectedPostId, postMode, exportRunning, loadPosts, exportGcode } =
+  useGcodeExport(toolpathResult, adaptiveParams, currentStage, exportedGcode, exportedFilename)
+
+// G-code simulation
+const { simRunning, onGcodeFileChange, simulateGcode } = useGcodeSimulation(
+  gcodeFile,
+  simResult,
+  adaptiveParams,
+  currentStage
+)
+
+// Preflight panel ref
 const preflightPanelRef = ref<{ loadExternalFile: (file: File | null) => void } | null>(null)
 
-// Machine envelope state
-const machine = ref<Machine | null>(null)
-const machineLimits = ref<MachineLimits | null>(null)
-const machineCamDefaults = ref<MachineCamDefaults | null>(null)
-
-// Adaptive parameters
-const adaptiveParams = ref({
-  tool_d: 6.0,
-  units: 'mm' as 'mm' | 'inch',
-  geometry_layer: 'GEOMETRY',
-  stepover: 0.45,
-  stepdown: 2.0,
-  margin: 0.5,
-  strategy: 'Spiral' as 'Spiral' | 'Lanes',
-  feed_xy: 1200,
-  safe_z: 5.0,
-  z_rough: -1.5
-})
-
-// Post processor
-const availablePosts = ref<any[]>([])
-const selectedPostId = ref('GRBL')
-const postMode = ref('standard')
-
-// Loading states
-const adaptiveRunning = ref(false)
-const exportRunning = ref(false)
-const simRunning = ref(false)
-
-// Computed
-const preflightPassed = computed(() => {
-  return preflightResult.value?.passed === true
-})
-
-// Lifecycle
-onMounted(async () => {
-  await loadPosts()
-})
-
-// Event handlers
-function onDxfFileChanged(file: File | null) {
-  dxfFile.value = file
-  toolpathResult.value = null
-  exportedGcode.value = null
-  exportedFilename.value = null
-  gcodeFile.value = null
-  simResult.value = null
-  currentStage.value = 1
-  if (!file) {
-    calculatorStatus.value = null
-  }
-}
-
-function onCalculatorDxfGenerated(file: File) {
+// Calculator DXF generated handler
+function onCalculatorDxfGenerated(file: File): void {
   calculatorStatus.value = `DXF generated: ${file.name}`
   currentStage.value = 1
   if (preflightPanelRef.value?.loadExternalFile) {
@@ -409,192 +365,10 @@ function onCalculatorDxfGenerated(file: File) {
   }
 }
 
-function onMachineSelected(m: Machine | null) {
-  machine.value = m
-}
-
-function onLimitsChanged(limits: MachineLimits | null) {
-  machineLimits.value = limits
-}
-
-function onCamDefaultsChanged(defaults: MachineCamDefaults | null) {
-  machineCamDefaults.value = defaults
-  if (!defaults) return
-
-  // Auto-fill adaptive params from machine CAM defaults
-  if (defaults.tool_d != null) {
-    adaptiveParams.value.tool_d = defaults.tool_d
-  }
-  if (defaults.stepover != null) {
-    adaptiveParams.value.stepover = defaults.stepover
-  }
-  if (defaults.stepdown != null) {
-    adaptiveParams.value.stepdown = defaults.stepdown
-  }
-  if (defaults.feed_xy != null) {
-    adaptiveParams.value.feed_xy = defaults.feed_xy
-  }
-  if (defaults.safe_z != null) {
-    adaptiveParams.value.safe_z = defaults.safe_z
-  }
-  if (defaults.z_rough != null) {
-    adaptiveParams.value.z_rough = defaults.z_rough
-  }
-}
-
-function onPreflightResult(result: any) {
-  preflightResult.value = result
-  if (result.passed) {
-    currentStage.value = 2
-  }
-}
-
-// Stage 2: Send to Adaptive
-async function sendToAdaptive() {
-  if (!dxfFile.value) return
-  
-  adaptiveRunning.value = true
-  currentStage.value = 2
-  
-  try {
-    const formData = new FormData()
-    formData.append('file', dxfFile.value)
-    formData.append('units', adaptiveParams.value.units)
-    formData.append('tool_d', adaptiveParams.value.tool_d.toString())
-    formData.append('geometry_layer', adaptiveParams.value.geometry_layer)
-    formData.append('stepover', adaptiveParams.value.stepover.toString())
-    formData.append('stepdown', adaptiveParams.value.stepdown.toString())
-    formData.append('margin', adaptiveParams.value.margin.toString())
-    formData.append('strategy', adaptiveParams.value.strategy)
-    formData.append('feed_xy', adaptiveParams.value.feed_xy.toString())
-    formData.append('safe_z', adaptiveParams.value.safe_z.toString())
-    formData.append('z_rough', adaptiveParams.value.z_rough.toString())
-    
-    const response = await api('/api/cam/dxf_adaptive_plan_run', {
-      method: 'POST',
-      body: formData
-    })
-    
-    if (!response.ok) {
-      throw new Error(`Adaptive planning failed: ${response.statusText}`)
-    }
-    
-    toolpathResult.value = await response.json()
-    currentStage.value = 3
-  } catch (error) {
-    console.error('Adaptive error:', error)
-    alert(`Toolpath generation failed: ${error}`)
-  } finally {
-    adaptiveRunning.value = false
-  }
-}
-
-// Stage 3: Export G-code
-async function loadPosts() {
-  try {
-    const response = await api('/api/posts/')
-    if (response.ok) {
-      const data = await response.json()
-      // /api/posts/ returns {"posts": [...]}
-      availablePosts.value = data.posts || []
-    } else {
-      throw new Error('Failed to load posts')
-    }
-  } catch (error) {
-    console.error('Failed to load posts:', error)
-    // Fallback to default posts
-    availablePosts.value = [
-      { id: 'GRBL', name: 'GRBL' },
-      { id: 'Mach4', name: 'Mach4' },
-      { id: 'LinuxCNC', name: 'LinuxCNC' },
-      { id: 'PathPilot', name: 'PathPilot' },
-      { id: 'MASSO', name: 'MASSO' }
-    ]
-  }
-}
-
-async function exportGcode() {
-  if (!toolpathResult.value || !selectedPostId.value) return
-  
-  exportRunning.value = true
-  currentStage.value = 3
-  
-  try {
-    const response = await api('/api/cam/toolpath/roughing/gcode', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        moves: toolpathResult.value.moves,
-        units: adaptiveParams.value.units,
-        post: selectedPostId.value,
-        post_mode: postMode.value
-      })
-    })
-    
-    if (!response.ok) {
-      throw new Error(`G-code export failed: ${response.statusText}`)
-    }
-    
-    const gcode = await response.text()
-    exportedGcode.value = gcode
-    
-    // Download file
-    const blob = new Blob([gcode], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const filename = `bridge_${selectedPostId.value.toLowerCase()}_${Date.now()}.nc`
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
-    
-    exportedFilename.value = filename
-    currentStage.value = 4
-  } catch (error) {
-    console.error('Export error:', error)
-    alert(`G-code export failed: ${error}`)
-  } finally {
-    exportRunning.value = false
-  }
-}
-
-// Stage 4: Simulate G-code
-function onGcodeFileChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  gcodeFile.value = input.files?.[0] ?? null
-  simResult.value = null
-}
-
-async function simulateGcode() {
-  if (!gcodeFile.value) return
-  
-  simRunning.value = true
-  currentStage.value = 4
-  
-  try {
-    const formData = new FormData()
-    formData.append('file', gcodeFile.value)
-    formData.append('units', adaptiveParams.value.units)
-    
-    const response = await api('/api/cam/simulate_gcode', {
-      method: 'POST',
-      body: formData
-    })
-    
-    if (!response.ok) {
-      throw new Error(`Simulation failed: ${response.statusText}`)
-    }
-    
-    simResult.value = await response.json()
-  } catch (error) {
-    console.error('Simulation error:', error)
-    alert(`G-code simulation failed: ${error}`)
-  } finally {
-    simRunning.value = false
-  }
-}
+// Lifecycle
+onMounted(async () => {
+  await loadPosts()
+})
 </script>
 
 <style scoped>
