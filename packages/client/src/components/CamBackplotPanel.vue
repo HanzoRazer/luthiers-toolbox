@@ -45,20 +45,17 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import CamBackplotViewer from './CamBackplotViewer.vue'
+import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
 import CamBackplot3D from './CamBackplot3D.vue'
+import type { BackplotMove, BackplotOverlay } from '@/types/cam'
 
-type Move = { code: string, x?: number, y?: number, z?: number, f?: number }
-type SimIssue = any
-type Stats = Record<string, any>
-type Overlay = Record<string, any>
 type Metrics = Record<string, any>
 
 defineProps<{
-  moves: Move[] | null
-  stats?: Stats | null
-  overlays?: Overlay[] | null
-  simIssues?: SimIssue[] | null
+  moves: BackplotMove[] | null
+  stats?: { move_count?: number; time_s?: number } | null
+  overlays?: BackplotOverlay[] | null
+  simIssues?: any[] | null
   metrics?: Metrics | null
   units?: 'mm' | 'inch'
   toolD?: number

@@ -8,4 +8,9 @@ export * from './useSawBatchStats'
 export * from './useSawBatchGcode'
 export * from './useSawContourPath'
 export * from './useSawContourGcode'
-export * from './useSawContourApi'
+// Explicit re-exports to resolve name conflicts (MergedParams, ValidationCheck)
+export {
+  useSawContourApi,
+  type MergedParams as ContourMergedParams,
+  type ValidationCheck as ContourValidationCheck,
+} from './useSawContourApi'

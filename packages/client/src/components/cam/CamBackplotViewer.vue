@@ -146,7 +146,7 @@ interface Segment {
 }
 
 const props = withDefaults(defineProps<{
-  loops: BackplotLoop[]
+  loops?: BackplotLoop[]
   moves: BackplotMove[]
   overlays?: BackplotOverlay[] | null
   simIssues?: any[] | null
@@ -154,11 +154,18 @@ const props = withDefaults(defineProps<{
   showOverlays?: boolean
   autoFit?: boolean
   boundaryColor?: string
+  stats?: { move_count?: number; time_s?: number } | null
+  units?: 'mm' | 'inch'
+  machineLimits?: { min_x?: number | null; max_x?: number | null; min_y?: number | null; max_y?: number | null } | null
 }>(), {
+  loops: () => [],
   showToolpath: true,
   showOverlays: true,
   autoFit: true,
-  boundaryColor: '#0f766e'
+  boundaryColor: '#0f766e',
+  stats: null,
+  units: 'mm',
+  machineLimits: null
 })
 
 const emit = defineEmits<{
