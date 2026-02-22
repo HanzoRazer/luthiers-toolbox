@@ -1,0 +1,340 @@
+/**
+ * BlueprintImporter CSS Module
+ * Phase 1 blueprint analysis and import styles
+ */
+
+.blueprintImporter {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.phaseBadge {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.uploadZone {
+  border: 3px dashed #d1d5db;
+  border-radius: 1rem;
+  padding: 3rem;
+  text-align: center;
+  background: #f9fafb;
+  transition: all 0.3s;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploadZoneDragOver {
+  composes: uploadZone;
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.uploadZoneUploading {
+  composes: uploadZone;
+}
+
+.uploadIcon {
+  width: 64px;
+  height: 64px;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.uploadPrompt {
+  /* upload prompt container */
+}
+
+.uploadText {
+  font-size: 1.125rem;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.browseBtn {
+  color: #3b82f6;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.uploadHint {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.uploadProgress {
+  text-align: center;
+}
+
+.spinner {
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.progressTime {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.analysisResults {
+  margin-top: 2rem;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.scaleInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.infoCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.infoLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.infoValue {
+  font-size: 1.125rem;
+  color: #111827;
+}
+
+.confidence {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.confidenceHigh {
+  composes: confidence;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.confidenceMedium {
+  composes: confidence;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.confidenceLow {
+  composes: confidence;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dimensionsSection {
+  margin-bottom: 2rem;
+}
+
+.dimensionsTable {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  align-items: center;
+}
+
+.tableRowDetected {
+  composes: tableRow;
+  background: #f0fdf4;
+}
+
+.tableRowEstimated {
+  composes: tableRow;
+  background: #fffbeb;
+}
+
+.dimLabel {
+  /* dimension label */
+}
+
+.dimValue {
+  /* dimension value */
+}
+
+.dimType {
+  text-transform: capitalize;
+  font-size: 0.875rem;
+}
+
+.dimTypeDetected {
+  composes: dimType;
+  color: #059669;
+}
+
+.dimTypeEstimated {
+  composes: dimType;
+  color: #d97706;
+}
+
+.dimConfidence {
+  /* dimension confidence badge */
+}
+
+.exportActions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  composes: btn;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimary svg,
+.btnSecondary svg {
+  width: 20px;
+  height: 20px;
+}
+
+.analysisNotes {
+  background: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.analysisNotes h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #1e40af;
+}
+
+.errorMessage {
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: start;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.errorMessage svg {
+  width: 24px;
+  height: 24px;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.btnClose {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #991b1b;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,32 +1,32 @@
 <template>
   <div
-    class="modal-overlay"
+    :class="styles.modalOverlay"
     @click="$emit('close')"
   >
     <div
-      class="modal-dialog"
+      :class="styles.modalDialog"
       @click.stop
     >
-      <div class="dialog-header">
+      <div :class="styles.dialogHeader">
         <h2>{{ isEditMode ? 'Edit Post' : 'Create New Post' }}</h2>
         <button
-          class="btn-close"
+          :class="styles.btnClose"
           @click="$emit('close')"
         >
           ×
         </button>
       </div>
 
-      <div class="dialog-body">
+      <div :class="styles.dialogBody">
         <div
           v-if="loading"
-          class="loading"
+          :class="styles.loading"
         >
           Loading...
         </div>
         <div
           v-if="error"
-          class="error"
+          :class="styles.error"
         >
           {{ error }}
         </div>
@@ -35,11 +35,11 @@
           v-if="!loading"
           @submit.prevent="handleSave"
         >
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Post ID *</label>
-            <input 
-              v-model="form.id" 
-              type="text" 
+            <input
+              v-model="form.id"
+              type="text"
               placeholder="e.g., CUSTOM_HAAS"
               pattern="[A-Z0-9_]+"
               :disabled="isEditMode"
@@ -48,32 +48,32 @@
             <small>Uppercase letters, numbers, and underscores only</small>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Name *</label>
-            <input 
-              v-model="form.name" 
-              type="text" 
+            <input
+              v-model="form.name"
+              type="text"
               placeholder="e.g., Haas VF-2 with Tool Changer"
               required
             >
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Description</label>
-            <textarea 
-              v-model="form.description" 
+            <textarea
+              v-model="form.description"
               placeholder="Brief description of this post-processor..."
               rows="2"
             />
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Header Lines *</label>
-            <div class="array-editor">
+            <div :class="styles.arrayEditor">
               <div
                 v-for="(line, i) in form.header"
                 :key="`header-${i}`"
-                class="array-item"
+                :class="styles.arrayItem"
               >
                 <input
                   v-model="form.header[i]"
@@ -82,7 +82,7 @@
                 >
                 <button
                   type="button"
-                  class="btn-remove"
+                  :class="styles.btnRemove"
                   @click="removeHeaderLine(i)"
                 >
                   ×
@@ -90,7 +90,7 @@
               </div>
               <button
                 type="button"
-                class="btn-add"
+                :class="styles.btnAdd"
                 @click="addHeaderLine"
               >
                 + Add Header Line
@@ -99,13 +99,13 @@
             <small>G-code lines or comments to insert at program start</small>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Footer Lines *</label>
-            <div class="array-editor">
+            <div :class="styles.arrayEditor">
               <div
                 v-for="(line, i) in form.footer"
                 :key="`footer-${i}`"
-                class="array-item"
+                :class="styles.arrayItem"
               >
                 <input
                   v-model="form.footer[i]"
@@ -114,7 +114,7 @@
                 >
                 <button
                   type="button"
-                  class="btn-remove"
+                  :class="styles.btnRemove"
                   @click="removeFooterLine(i)"
                 >
                   ×
@@ -122,7 +122,7 @@
               </div>
               <button
                 type="button"
-                class="btn-add"
+                :class="styles.btnAdd"
                 @click="addFooterLine"
               >
                 + Add Footer Line
@@ -131,10 +131,10 @@
             <small>G-code lines or comments to insert at program end</small>
           </div>
 
-          <div class="form-group">
+          <div :class="styles.formGroup">
             <label>Metadata (Optional)</label>
-            <div class="metadata-fields">
-              <div class="metadata-row">
+            <div :class="styles.metadataFields">
+              <div :class="styles.metadataRow">
                 <input
                   v-model="form.metadata.controller_family"
                   type="text"
@@ -146,15 +146,15 @@
                   placeholder="G-code dialect (e.g., LinuxCNC)"
                 >
               </div>
-              <div class="metadata-row">
-                <label class="checkbox-label">
+              <div :class="styles.metadataRow">
+                <label :class="styles.checkboxLabel">
                   <input
                     v-model="form.metadata.supports_arcs"
                     type="checkbox"
                   >
                   Supports Arcs (G2/G3)
                 </label>
-                <label class="checkbox-label">
+                <label :class="styles.checkboxLabel">
                   <input
                     v-model="form.metadata.has_tool_changer"
                     type="checkbox"
@@ -167,11 +167,11 @@
 
           <div
             v-if="validationResult"
-            class="validation-messages"
+            :class="styles.validationMessages"
           >
             <div
               v-if="validationResult.errors.length > 0"
-              class="errors"
+              :class="styles.errors"
             >
               <strong>Errors:</strong>
               <ul>
@@ -185,7 +185,7 @@
             </div>
             <div
               v-if="validationResult.warnings.length > 0"
-              class="warnings"
+              :class="styles.warnings"
             >
               <strong>Warnings:</strong>
               <ul>
@@ -199,24 +199,24 @@
             </div>
           </div>
 
-          <div class="dialog-actions">
+          <div :class="styles.dialogActions">
             <button
               type="button"
-              class="btn-cancel"
+              :class="styles.btnCancel"
               @click="$emit('close')"
             >
               Cancel
             </button>
             <button
               type="button"
-              class="btn-validate"
+              :class="styles.btnValidate"
               @click="handleValidate"
             >
               Validate
             </button>
             <button
               type="submit"
-              class="btn-save"
+              :class="styles.btnSave"
               :disabled="saving"
             >
               {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }}
@@ -224,13 +224,13 @@
           </div>
         </form>
 
-        <div class="token-helper">
+        <div :class="styles.tokenHelper">
           <h4>Available Tokens</h4>
-          <div class="token-list">
+          <div :class="styles.tokenList">
             <div
               v-for="(desc, token) in availableTokens"
               :key="token"
-              class="token-item"
+              :class="styles.tokenItem"
             >
               <code>{{ formatToken(token) }}</code>
               <span>{{ desc }}</span>
@@ -245,6 +245,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { getPost, createPost, updatePost, validatePost, listTokens, type PostConfig, type ValidationResult } from '@/api/post';
+import styles from './PostEditor.module.css';
 
 const props = defineProps<{
   postId?: string | null;
@@ -388,280 +389,3 @@ onMounted(() => {
   loadTokens();
 });
 </script>
-
-<style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  overflow-y: auto;
-}
-
-.modal-dialog {
-  background: white;
-  border-radius: 8px;
-  max-width: 800px;
-  width: 90%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #ddd;
-}
-
-.dialog-header h2 {
-  margin: 0;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 32px;
-  cursor: pointer;
-  color: #666;
-  line-height: 1;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-}
-
-.btn-close:hover {
-  color: #333;
-}
-
-.dialog-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.loading, .error {
-  padding: 20px;
-  text-align: center;
-}
-
-.error {
-  color: #f44336;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.form-group input[type="text"],
-.form-group textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: inherit;
-}
-
-.form-group small {
-  display: block;
-  margin-top: 4px;
-  color: #666;
-  font-size: 0.9em;
-}
-
-.array-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.array-item {
-  display: flex;
-  gap: 8px;
-}
-
-.array-item input {
-  flex: 1;
-}
-
-.btn-remove {
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 8px 12px;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.btn-remove:hover {
-  background: #d32f2f;
-}
-
-.btn-add {
-  align-self: flex-start;
-  padding: 8px 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-add:hover {
-  background: #45a049;
-}
-
-.metadata-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.metadata-row {
-  display: flex;
-  gap: 10px;
-}
-
-.metadata-row input[type="text"] {
-  flex: 1;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: normal;
-}
-
-.validation-messages {
-  margin-top: 20px;
-  padding: 12px;
-  border-radius: 4px;
-}
-
-.validation-messages .errors {
-  background: #ffebee;
-  color: #c62828;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.validation-messages .warnings {
-  background: #fff3e0;
-  color: #e65100;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.validation-messages ul {
-  margin: 8px 0 0 20px;
-  padding: 0;
-}
-
-.dialog-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #ddd;
-  margin-top: 20px;
-}
-
-.btn-cancel, .btn-validate, .btn-save {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-cancel {
-  background: #ddd;
-}
-
-.btn-cancel:hover {
-  background: #ccc;
-}
-
-.btn-validate {
-  background: #FF9800;
-  color: white;
-}
-
-.btn-validate:hover {
-  background: #F57C00;
-}
-
-.btn-save {
-  background: #4CAF50;
-  color: white;
-}
-
-.btn-save:hover:not(:disabled) {
-  background: #45a049;
-}
-
-.btn-save:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.token-helper {
-  margin-top: 30px;
-  padding: 16px;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.token-helper h4 {
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-.token-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 10px;
-}
-
-.token-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
-  font-size: 0.9em;
-}
-
-.token-item code {
-  background: #e0e0e0;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.95em;
-  font-weight: 600;
-}
-
-.token-item span {
-  color: #666;
-}
-</style>

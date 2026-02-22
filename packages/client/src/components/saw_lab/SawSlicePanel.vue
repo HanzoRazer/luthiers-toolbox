@@ -1,19 +1,19 @@
 <template>
-  <div class="saw-slice-panel">
-    <div class="panel-header">
+  <div :class="styles.sawSlicePanel">
+    <div :class="styles.panelHeader">
       <h2>Saw Slice Operation</h2>
-      <p class="subtitle">
+      <p :class="styles.subtitle">
         Kerf-aware straight cuts with multi-pass depth control
       </p>
     </div>
 
-    <div class="panel-content">
+    <div :class="styles.panelContent">
       <!-- Left Column: Parameters -->
-      <div class="parameters-section">
+      <div :class="styles.parametersSection">
         <h3>Cut Parameters</h3>
 
         <!-- Blade Selection -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Saw Blade</label>
           <select
             v-model="selectedBladeId"
@@ -34,7 +34,7 @@
           </select>
           <div
             v-if="selectedBlade"
-            class="blade-info"
+            :class="styles.bladeInfo"
           >
             Kerf: {{ selectedBlade.kerf_mm }}mm | Teeth:
             {{ selectedBlade.teeth }}
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Machine Profile -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Machine Profile</label>
           <select v-model="machineProfile">
             <option value="bcam_router_2030">
@@ -58,7 +58,7 @@
         </div>
 
         <!-- Material -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Material Family</label>
           <select v-model="materialFamily">
             <option value="hardwood">
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Geometry -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Start X (mm)</label>
           <input
             v-model.number="startX"
@@ -86,7 +86,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Start Y (mm)</label>
           <input
             v-model.number="startY"
@@ -95,7 +95,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>End X (mm)</label>
           <input
             v-model.number="endX"
@@ -104,7 +104,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>End Y (mm)</label>
           <input
             v-model.number="endY"
@@ -113,7 +113,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Total Depth (mm)</label>
           <input
             v-model.number="totalDepth"
@@ -123,7 +123,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Depth Per Pass (mm)</label>
           <input
             v-model.number="depthPerPass"
@@ -134,7 +134,7 @@
         </div>
 
         <!-- Feeds & Speeds -->
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>RPM</label>
           <input
             v-model.number="rpm"
@@ -145,7 +145,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Feed Rate (IPM)</label>
           <input
             v-model.number="feedIpm"
@@ -156,7 +156,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div :class="styles.formGroup">
           <label>Safe Z (mm)</label>
           <input
             v-model.number="safeZ"
@@ -167,31 +167,31 @@
         </div>
 
         <!-- Actions -->
-        <div class="actions">
+        <div :class="styles.actions">
           <button
             :disabled="!canValidate"
-            class="btn-primary"
+            :class="styles.btnPrimary"
             @click="validateOperation"
           >
             Validate Parameters
           </button>
           <button
             :disabled="!canMerge"
-            class="btn-secondary"
+            :class="styles.btnSecondary"
             @click="mergeLearnedParams"
           >
             Apply Learned Overrides
           </button>
           <button
             :disabled="!isValid"
-            class="btn-primary"
+            :class="styles.btnPrimary"
             @click="generateGcode"
           >
             Generate G-code
           </button>
           <button
             :disabled="!hasGcode"
-            class="btn-success"
+            :class="styles.btnSuccess"
             @click="sendToJobLog"
           >
             Send to JobLog
@@ -200,36 +200,33 @@
       </div>
 
       <!-- Right Column: Preview & Validation -->
-      <div class="preview-section">
+      <div :class="styles.previewSection">
         <!-- Validation Results -->
         <div
           v-if="validationResult"
-          class="validation-results"
+          :class="styles.validationResults"
         >
           <h3>Validation Results</h3>
           <div
-            :class="[
-              'validation-badge',
-              validationResult.overall_result.toLowerCase(),
-            ]"
+            :class="validationResult.overall_result.toLowerCase() === 'ok' ? styles.validationBadgeOk : validationResult.overall_result.toLowerCase() === 'warn' ? styles.validationBadgeWarn : styles.validationBadgeError"
           >
             {{ validationResult.overall_result }}
           </div>
-          <div class="validation-checks">
+          <div :class="styles.validationChecks">
             <div
               v-for="(check, key) in validationResult.checks"
               :key="key"
-              :class="['check-item', check.result.toLowerCase()]"
+              :class="check.result.toLowerCase() === 'ok' ? styles.checkItemOk : check.result.toLowerCase() === 'warn' ? styles.checkItemWarn : styles.checkItemError"
             >
-              <span class="check-icon">{{
+              <span :class="styles.checkIcon">{{
                 check.result === "OK"
                   ? "✓"
                   : check.result === "WARN"
                     ? "⚠"
                     : "✗"
               }}</span>
-              <span class="check-name">{{ formatCheckName(String(key)) }}</span>
-              <span class="check-message">{{ check.message }}</span>
+              <span :class="styles.checkName">{{ formatCheckName(String(key)) }}</span>
+              <span :class="styles.checkMessage">{{ check.message }}</span>
             </div>
           </div>
         </div>
@@ -237,36 +234,36 @@
         <!-- Learned Parameters -->
         <div
           v-if="mergedParams"
-          class="learned-params"
+          :class="styles.learnedParams"
         >
           <h3>Learned Parameters Applied</h3>
-          <div class="param-comparison">
-            <div class="param-row">
-              <span class="label">RPM:</span>
-              <span class="baseline">{{ rpm }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{
+          <div :class="styles.paramComparison">
+            <div :class="styles.paramRow">
+              <span :class="styles.paramLabel">RPM:</span>
+              <span :class="styles.paramBaseline">{{ rpm }}</span>
+              <span :class="styles.paramArrow">→</span>
+              <span :class="styles.paramMerged">{{
                 mergedParams.rpm?.toFixed(0) || rpm
               }}</span>
             </div>
-            <div class="param-row">
-              <span class="label">Feed:</span>
-              <span class="baseline">{{ feedIpm }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{
+            <div :class="styles.paramRow">
+              <span :class="styles.paramLabel">Feed:</span>
+              <span :class="styles.paramBaseline">{{ feedIpm }}</span>
+              <span :class="styles.paramArrow">→</span>
+              <span :class="styles.paramMerged">{{
                 mergedParams.feed_ipm?.toFixed(1) || feedIpm
               }}</span>
             </div>
-            <div class="param-row">
-              <span class="label">DOC:</span>
-              <span class="baseline">{{ depthPerPass }}</span>
-              <span class="arrow">→</span>
-              <span class="merged">{{
+            <div :class="styles.paramRow">
+              <span :class="styles.paramLabel">DOC:</span>
+              <span :class="styles.paramBaseline">{{ depthPerPass }}</span>
+              <span :class="styles.paramArrow">→</span>
+              <span :class="styles.paramMerged">{{
                 mergedParams.doc_mm?.toFixed(1) || depthPerPass
               }}</span>
             </div>
           </div>
-          <div class="lane-info">
+          <div :class="styles.laneInfo">
             Lane scale: {{ mergedParams.lane_scale?.toFixed(2) || "1.00" }}
           </div>
         </div>
@@ -274,26 +271,26 @@
         <!-- G-code Preview -->
         <div
           v-if="gcode"
-          class="gcode-preview"
+          :class="styles.gcodePreview"
         >
           <h3>G-code Preview</h3>
-          <div class="preview-stats">
-            <div class="stat">
-              <span class="label">Total Length:</span>
-              <span class="value">{{ totalLengthMm.toFixed(1) }} mm</span>
+          <div :class="styles.previewStats">
+            <div :class="styles.stat">
+              <span :class="styles.statLabel">Total Length:</span>
+              <span :class="styles.statValue">{{ totalLengthMm.toFixed(1) }} mm</span>
             </div>
-            <div class="stat">
-              <span class="label">Depth Passes:</span>
-              <span class="value">{{ depthPasses }}</span>
+            <div :class="styles.stat">
+              <span :class="styles.statLabel">Depth Passes:</span>
+              <span :class="styles.statValue">{{ depthPasses }}</span>
             </div>
-            <div class="stat">
-              <span class="label">Est. Time:</span>
-              <span class="value">{{ estimatedTimeSec.toFixed(0) }}s</span>
+            <div :class="styles.stat">
+              <span :class="styles.statLabel">Est. Time:</span>
+              <span :class="styles.statValue">{{ estimatedTimeSec.toFixed(0) }}s</span>
             </div>
           </div>
-          <pre class="gcode-text">{{ gcodePreview }}</pre>
+          <pre :class="styles.gcodeText">{{ gcodePreview }}</pre>
           <button
-            class="btn-secondary"
+            :class="styles.btnSecondary"
             @click="downloadGcode"
           >
             Download G-code
@@ -303,7 +300,7 @@
         <!-- Run Artifact Link -->
         <div
           v-if="runId"
-          class="run-artifact-link"
+          :class="styles.runArtifactLink"
         >
           <h3>Run Artifact</h3>
           <p>
@@ -311,20 +308,20 @@
           </p>
           <router-link
             :to="`/rmos/runs?run_id=${runId}`"
-            class="btn-primary"
+            :class="styles.btnPrimary"
           >
             View Run Artifact
           </router-link>
         </div>
 
         <!-- SVG Preview -->
-        <div class="svg-preview">
+        <div :class="styles.svgPreview">
           <h3>Path Preview</h3>
           <svg
             :viewBox="svgViewBox"
             width="400"
             height="300"
-            class="preview-canvas"
+            :class="styles.previewCanvas"
           >
             <!-- Grid -->
             <defs>
@@ -397,24 +394,24 @@
               fill="#F44336"
             />
           </svg>
-          <div class="legend">
+          <div :class="styles.legend">
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #2196f3"
             /> Cut
               path</span>
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #ff9800"
             /> Kerf
               boundary</span>
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #4caf50"
             />
               Start</span>
             <span><span
-              class="color-box"
+              :class="styles.colorBox"
               style="background: #f44336"
             />
               End</span>
@@ -440,6 +437,7 @@ import {
   useSawSliceGcode,
   useSawSliceApi,
 } from './composables'
+import styles from './SawSlicePanel.module.css'
 
 // ============================================================================
 // Form State (not extracted - tightly coupled to template)
@@ -559,315 +557,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.saw-slice-panel {
-  padding: 20px;
-}
-
-.panel-header {
-  margin-bottom: 30px;
-}
-
-.panel-header h2 {
-  margin: 0 0 5px 0;
-  color: #2c3e50;
-}
-
-.subtitle {
-  margin: 0;
-  color: #7f8c8d;
-  font-size: 14px;
-}
-
-.panel-content {
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 30px;
-}
-
-.parameters-section h3,
-.preview-section h3 {
-  margin: 0 0 15px 0;
-  color: #34495e;
-  font-size: 16px;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 5px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.blade-info {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn-primary,
-.btn-secondary,
-.btn-success {
-  padding: 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.btn-secondary {
-  background: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #7f8c8d;
-}
-
-.btn-success {
-  background: #27ae60;
-  color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-  background: #229954;
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled,
-.btn-success:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.validation-results,
-.learned-params,
-.gcode-preview,
-.run-artifact-link,
-.svg-preview {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 15px;
-  margin-bottom: 20px;
-}
-
-.validation-badge {
-  display: inline-block;
-  padding: 5px 15px;
-  border-radius: 4px;
-  font-weight: 600;
-  margin-bottom: 15px;
-}
-
-.validation-badge.ok {
-  background: #d4edda;
-  color: #155724;
-}
-
-.validation-badge.warn {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.validation-badge.error {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.validation-checks {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.check-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.check-item.ok {
-  background: #d4edda;
-}
-
-.check-item.warn {
-  background: #fff3cd;
-}
-
-.check-item.error {
-  background: #f8d7da;
-}
-
-.check-icon {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.check-name {
-  font-weight: 600;
-  min-width: 150px;
-}
-
-.param-comparison {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.param-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.param-row .label {
-  font-weight: 600;
-  min-width: 60px;
-}
-
-.param-row .baseline {
-  color: #7f8c8d;
-}
-
-.param-row .arrow {
-  color: #3498db;
-}
-
-.param-row .merged {
-  color: #27ae60;
-  font-weight: 600;
-}
-
-.lane-info {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #dee2e6;
-  font-size: 13px;
-  color: #7f8c8d;
-}
-
-.preview-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.stat .label {
-  font-size: 12px;
-  color: #7f8c8d;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat .value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.gcode-text {
-  background: #2c3e50;
-  color: #ecf0f1;
-  padding: 15px;
-  border-radius: 4px;
-  font-family: "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  overflow-x: auto;
-  margin-bottom: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.preview-canvas {
-  border: 1px solid #dee2e6;
-  background: white;
-  border-radius: 4px;
-}
-
-.legend {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.legend span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.color-box {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-}
-
-.run-artifact-link {
-  background: #e8f5e9;
-  border-color: #4caf50;
-}
-
-.run-artifact-link code {
-  background: #c8e6c9;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.run-artifact-link a {
-  display: inline-block;
-  margin-top: 10px;
-  text-decoration: none;
-}
-</style>

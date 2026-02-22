@@ -1,0 +1,342 @@
+/**
+ * AcousticsIngestEvents CSS Module
+ * Ingest audit log viewer styles
+ */
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  margin: 0 0 0.5rem 0;
+}
+
+.sub {
+  color: var(--color-text-muted, #666);
+  margin: 0;
+}
+
+.card {
+  background: var(--color-bg-secondary, #1a1a1a);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cardWide {
+  composes: card;
+  max-width: none;
+}
+
+.card h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+/* Outcome filters */
+.outcomeFilters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.outcomeChip {
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  border: 1px solid var(--color-border, #444);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+}
+
+.outcomeChip:hover {
+  background: var(--color-bg-hover, #333);
+}
+
+.outcomeChipActive {
+  border-color: currentColor;
+}
+
+.outcomeChipGreen {
+  color: var(--color-success, #4caf50);
+}
+
+.outcomeChipRed {
+  color: var(--color-error, #f44336);
+}
+
+.outcomeChipYellow {
+  color: var(--color-warning, #ff9800);
+}
+
+.chipIcon {
+  /* icon wrapper */
+}
+
+.btnClear {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, #888);
+  cursor: pointer;
+}
+
+.btnClear:hover {
+  color: var(--color-text, #fff);
+}
+
+/* List header */
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.listCount {
+  color: var(--color-text-muted, #888);
+  font-size: 0.9rem;
+}
+
+/* Table */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tbl th,
+.tbl td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.tbl th {
+  font-weight: 600;
+  color: var(--color-text-muted, #888);
+}
+
+.eventRowAccepted {
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.eventRowRejected {
+  background: rgba(244, 67, 54, 0.05);
+}
+
+.eventRowQuarantined {
+  background: rgba(255, 152, 0, 0.05);
+}
+
+/* Outcome badge */
+.outcomeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.outcomeBadgeAccepted {
+  composes: outcomeBadge;
+  background: rgba(76, 175, 80, 0.2);
+  color: var(--color-success, #4caf50);
+}
+
+.outcomeBadgeRejected {
+  composes: outcomeBadge;
+  background: rgba(244, 67, 54, 0.2);
+  color: var(--color-error, #f44336);
+}
+
+.outcomeBadgeQuarantined {
+  composes: outcomeBadge;
+  background: rgba(255, 152, 0, 0.2);
+  color: var(--color-warning, #ff9800);
+}
+
+/* Cells */
+.timeCell {
+  white-space: nowrap;
+}
+
+.filenameCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sizeCell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.runCell {
+  /* run cell container */
+}
+
+.errorCell {
+  /* error cell container */
+}
+
+.actionsCell {
+  /* actions cell container */
+}
+
+.runLink {
+  color: var(--color-primary, #4a9eff);
+  text-decoration: none;
+}
+
+.runLink:hover {
+  text-decoration: underline;
+}
+
+.errorCode {
+  color: var(--color-error, #f44336);
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.muted {
+  color: var(--color-text-muted, #888);
+}
+
+.error {
+  color: var(--color-error, #f44336);
+}
+
+.ok {
+  color: var(--color-success, #4caf50);
+}
+
+/* Load more */
+.loadMore {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border, #444);
+  background: var(--color-bg-secondary, #2a2a2a);
+  color: var(--color-text, #fff);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-bg-hover, #333);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSm {
+  composes: btn;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--color-bg-secondary, #1a1a1a);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.modalHeader h3 {
+  margin: 0;
+}
+
+.modalClose {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, #888);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.modalBody {
+  padding: 1rem;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.detailGrid dt {
+  font-weight: 600;
+  color: var(--color-text-muted, #888);
+}
+
+.detailGrid dd {
+  margin: 0;
+  word-break: break-all;
+}
+
+.sha {
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.detailPre {
+  background: var(--color-bg, #111);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  overflow-x: auto;
+  max-height: 200px;
+}
+
+.code {
+  background: var(--color-bg, #111);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}

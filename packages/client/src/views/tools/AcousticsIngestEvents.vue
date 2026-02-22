@@ -1,29 +1,34 @@
 <template>
-  <div class="page">
-    <header class="header">
+  <div :class="styles.page">
+    <header :class="styles.header">
       <h1>Ingest Audit Log</h1>
-      <p class="sub">
-        Browse all <code>/import-zip</code> events with outcome status.
+      <p :class="styles.sub">
+        Browse all <code :class="styles.code">/import-zip</code> events with outcome status.
       </p>
     </header>
 
     <!-- Outcome Filter -->
-    <section class="card">
+    <section :class="styles.card">
       <h2>Filter by Outcome</h2>
-      <div class="outcome-filters">
+      <div :class="styles.outcomeFilters">
         <button
           v-for="o in outcomes"
           :key="o.value"
-          class="outcome-chip"
-          :class="{ active: outcomeFilter === o.value, [o.color]: true }"
+          :class="[
+            styles.outcomeChip,
+            outcomeFilter === o.value && styles.outcomeChipActive,
+            o.color === 'green' && styles.outcomeChipGreen,
+            o.color === 'red' && styles.outcomeChipRed,
+            o.color === 'yellow' && styles.outcomeChipYellow,
+          ]"
           @click="toggleOutcome(o.value)"
         >
-          <span class="chip-icon">{{ o.icon }}</span>
+          <span :class="styles.chipIcon">{{ o.icon }}</span>
           {{ o.label }}
         </button>
         <button
           v-if="outcomeFilter"
-          class="btn-clear"
+          :class="styles.btnClear"
           @click="outcomeFilter = null"
         >
           Clear
@@ -32,15 +37,15 @@
     </section>
 
     <!-- Events List -->
-    <section class="card wide">
+    <section :class="styles.cardWide">
       <h2>Events</h2>
-      <div class="list-header">
-        <span class="list-count">
+      <div :class="styles.listHeader">
+        <span :class="styles.listCount">
           Showing {{ events.length }} events
           <template v-if="outcomeFilter"> ({{ outcomeFilter }})</template>
         </span>
         <button
-          class="btn"
+          :class="styles.btn"
           :disabled="loading"
           @click="loadEvents"
         >
@@ -50,26 +55,26 @@
 
       <div
         v-if="loading && !events.length"
-        class="muted"
+        :class="styles.muted"
       >
         Loading events...
       </div>
       <div
         v-else-if="error"
-        class="error"
+        :class="styles.error"
       >
         {{ error }}
       </div>
       <div
         v-else-if="!events.length"
-        class="muted"
+        :class="styles.muted"
       >
         No events found. Import a viewer_pack to create events.
       </div>
 
       <table
         v-else
-        class="tbl"
+        :class="styles.tbl"
       >
         <thead>
           <tr>
@@ -86,61 +91,60 @@
           <tr
             v-for="evt in events"
             :key="evt.event_id"
-            :class="['event-row', evt.outcome]"
+            :class="getEventRowClass(evt.outcome)"
           >
             <td>
               <span
-                class="outcome-badge"
-                :class="evt.outcome"
+                :class="getOutcomeBadgeClass(evt.outcome)"
                 :title="getOutcomeTooltip(evt.outcome)"
               >
                 {{ getOutcomeIcon(evt.outcome) }} {{ evt.outcome }}
               </span>
             </td>
             <td
-              class="time-cell"
+              :class="styles.timeCell"
               :title="evt.created_at_utc"
             >
               {{ formatRelative(evt.created_at_utc) }}
             </td>
             <td
-              class="filename-cell"
+              :class="styles.filenameCell"
               :title="evt.uploader_filename || '-'"
             >
               {{ truncate(evt.uploader_filename || "-", 30) }}
             </td>
-            <td class="size-cell">
+            <td :class="styles.sizeCell">
               {{ formatSize(evt.zip_size_bytes) }}
             </td>
-            <td class="run-cell">
+            <td :class="styles.runCell">
               <router-link
                 v-if="evt.run_id"
                 :to="`/rmos/run/${evt.run_id}`"
-                class="run-link"
+                :class="styles.runLink"
               >
                 {{ evt.run_id.slice(0, 8) }}...
               </router-link>
               <span
                 v-else
-                class="muted"
+                :class="styles.muted"
               >-</span>
             </td>
-            <td class="error-cell">
+            <td :class="styles.errorCell">
               <span
                 v-if="evt.error_code"
-                class="error-code"
+                :class="styles.errorCode"
                 :title="evt.error_message ?? undefined"
               >
                 {{ evt.error_code }}
               </span>
               <span
                 v-else
-                class="muted"
+                :class="styles.muted"
               >-</span>
             </td>
-            <td class="actions-cell">
+            <td :class="styles.actionsCell">
               <button
-                class="btn btn-sm"
+                :class="styles.btnSm"
                 @click="showDetail(evt)"
               >
                 Detail
@@ -152,10 +156,10 @@
 
       <div
         v-if="nextCursor"
-        class="load-more"
+        :class="styles.loadMore"
       >
         <button
-          class="btn"
+          :class="styles.btn"
           :disabled="loadingMore"
           @click="loadMore"
         >
@@ -167,33 +171,30 @@
     <!-- Detail Modal -->
     <div
       v-if="detailEvent"
-      class="modal-overlay"
+      :class="styles.modalOverlay"
       @click.self="detailEvent = null"
     >
-      <div class="modal">
-        <header class="modal-header">
+      <div :class="styles.modal">
+        <header :class="styles.modalHeader">
           <h3>Event Detail</h3>
           <button
-            class="modal-close"
+            :class="styles.modalClose"
             @click="detailEvent = null"
           >
             X
           </button>
         </header>
-        <div class="modal-body">
-          <dl class="detail-grid">
+        <div :class="styles.modalBody">
+          <dl :class="styles.detailGrid">
             <dt>Event ID</dt>
-            <dd><code>{{ detailEvent.event_id }}</code></dd>
+            <dd><code :class="styles.code">{{ detailEvent.event_id }}</code></dd>
 
             <dt>Created</dt>
             <dd>{{ detailEvent.created_at_utc }}</dd>
 
             <dt>Outcome</dt>
             <dd>
-              <span
-                class="outcome-badge"
-                :class="detailEvent.outcome"
-              >
+              <span :class="getOutcomeBadgeClass(detailEvent.outcome)">
                 {{ getOutcomeIcon(detailEvent.outcome) }} {{ detailEvent.outcome }}
               </span>
             </dd>
@@ -208,7 +209,7 @@
             <dd>
               <code
                 v-if="detailEvent.zip_sha256"
-                class="sha"
+                :class="styles.sha"
               >
                 {{ detailEvent.zip_sha256 }}
               </code>
@@ -235,31 +236,31 @@
 
             <template v-if="detailEvent.bundle_id">
               <dt>Bundle ID</dt>
-              <dd><code>{{ detailEvent.bundle_id }}</code></dd>
+              <dd><code :class="styles.code">{{ detailEvent.bundle_id }}</code></dd>
             </template>
 
             <template v-if="detailEvent.error">
               <dt>Error Code</dt>
-              <dd class="error">
+              <dd :class="styles.error">
                 {{ detailEvent.error.code }}
               </dd>
 
               <dt>Error Message</dt>
-              <dd class="error">
+              <dd :class="styles.error">
                 {{ detailEvent.error.message }}
               </dd>
 
               <template v-if="detailEvent.error.detail">
                 <dt>Error Detail</dt>
                 <dd>
-                  <pre class="detail-pre">{{ JSON.stringify(detailEvent.error.detail, null, 2) }}</pre>
+                  <pre :class="styles.detailPre">{{ JSON.stringify(detailEvent.error.detail, null, 2) }}</pre>
                 </dd>
               </template>
             </template>
 
             <template v-if="detailEvent.validation">
               <dt>Validation Passed</dt>
-              <dd :class="detailEvent.validation.passed ? 'ok' : 'error'">
+              <dd :class="detailEvent.validation.passed ? styles.ok : styles.error">
                 {{ detailEvent.validation.passed ? "Yes" : "No" }}
               </dd>
 
@@ -293,6 +294,7 @@ import type {
   IngestEventSummary,
   IngestEventDetail,
 } from "@/types/rmosAcousticsIngest";
+import styles from "./AcousticsIngestEvents.module.css";
 
 // State
 const events = ref<IngestEventSummary[]>([]);
@@ -396,6 +398,32 @@ function getOutcomeTooltip(outcome: string): string {
   }
 }
 
+function getEventRowClass(outcome: string): string {
+  switch (outcome) {
+    case "accepted":
+      return styles.eventRowAccepted;
+    case "rejected":
+      return styles.eventRowRejected;
+    case "quarantined":
+      return styles.eventRowQuarantined;
+    default:
+      return "";
+  }
+}
+
+function getOutcomeBadgeClass(outcome: string): string {
+  switch (outcome) {
+    case "accepted":
+      return styles.outcomeBadgeAccepted;
+    case "rejected":
+      return styles.outcomeBadgeRejected;
+    case "quarantined":
+      return styles.outcomeBadgeQuarantined;
+    default:
+      return styles.outcomeBadge;
+  }
+}
+
 // Watch filter changes
 watch(outcomeFilter, () => {
   loadEvents();
@@ -406,321 +434,3 @@ onMounted(() => {
   loadEvents();
 });
 </script>
-
-<style scoped>
-.page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.header {
-  margin-bottom: 1.5rem;
-}
-
-.header h1 {
-  margin: 0 0 0.5rem 0;
-}
-
-.sub {
-  color: var(--color-text-muted, #666);
-  margin: 0;
-}
-
-.card {
-  background: var(--color-bg-secondary, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.card.wide {
-  max-width: none;
-}
-
-.card h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-}
-
-/* Outcome filters */
-.outcome-filters {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.outcome-chip {
-  padding: 0.4rem 0.8rem;
-  border-radius: 16px;
-  border: 1px solid var(--color-border, #444);
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.outcome-chip:hover {
-  background: var(--color-bg-hover, #333);
-}
-
-.outcome-chip.active {
-  border-color: currentColor;
-}
-
-.outcome-chip.green {
-  color: var(--color-success, #4caf50);
-}
-
-.outcome-chip.red {
-  color: var(--color-error, #f44336);
-}
-
-.outcome-chip.yellow {
-  color: var(--color-warning, #ff9800);
-}
-
-.btn-clear {
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted, #888);
-  cursor: pointer;
-}
-
-.btn-clear:hover {
-  color: var(--color-text, #fff);
-}
-
-/* List header */
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.list-count {
-  color: var(--color-text-muted, #888);
-  font-size: 0.9rem;
-}
-
-/* Table */
-.tbl {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.tbl th,
-.tbl td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border, #333);
-}
-
-.tbl th {
-  font-weight: 600;
-  color: var(--color-text-muted, #888);
-}
-
-.event-row.accepted {
-  background: rgba(76, 175, 80, 0.05);
-}
-
-.event-row.rejected {
-  background: rgba(244, 67, 54, 0.05);
-}
-
-.event-row.quarantined {
-  background: rgba(255, 152, 0, 0.05);
-}
-
-/* Outcome badge */
-.outcome-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.outcome-badge.accepted {
-  background: rgba(76, 175, 80, 0.2);
-  color: var(--color-success, #4caf50);
-}
-
-.outcome-badge.rejected {
-  background: rgba(244, 67, 54, 0.2);
-  color: var(--color-error, #f44336);
-}
-
-.outcome-badge.quarantined {
-  background: rgba(255, 152, 0, 0.2);
-  color: var(--color-warning, #ff9800);
-}
-
-/* Cells */
-.time-cell {
-  white-space: nowrap;
-}
-
-.filename-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.size-cell {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.run-link {
-  color: var(--color-primary, #4a9eff);
-  text-decoration: none;
-}
-
-.run-link:hover {
-  text-decoration: underline;
-}
-
-.error-code {
-  color: var(--color-error, #f44336);
-  font-family: monospace;
-  font-size: 0.8rem;
-}
-
-.muted {
-  color: var(--color-text-muted, #888);
-}
-
-.error {
-  color: var(--color-error, #f44336);
-}
-
-.ok {
-  color: var(--color-success, #4caf50);
-}
-
-/* Load more */
-.load-more {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-/* Buttons */
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-border, #444);
-  background: var(--color-bg-secondary, #2a2a2a);
-  color: var(--color-text, #fff);
-  cursor: pointer;
-}
-
-.btn:hover:not(:disabled) {
-  background: var(--color-bg-hover, #333);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: var(--color-bg-secondary, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 8px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid var(--color-border, #333);
-}
-
-.modal-header h3 {
-  margin: 0;
-}
-
-.modal-close {
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted, #888);
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.modal-body {
-  padding: 1rem;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem 1rem;
-  margin: 0;
-}
-
-.detail-grid dt {
-  font-weight: 600;
-  color: var(--color-text-muted, #888);
-}
-
-.detail-grid dd {
-  margin: 0;
-  word-break: break-all;
-}
-
-.sha {
-  font-size: 0.75rem;
-  word-break: break-all;
-}
-
-.detail-pre {
-  background: var(--color-bg, #111);
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  overflow-x: auto;
-  max-height: 200px;
-}
-
-code {
-  background: var(--color-bg, #111);
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  font-size: 0.85em;
-}
-</style>
