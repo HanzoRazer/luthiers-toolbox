@@ -17,34 +17,34 @@
           Total Runs
         </div>
         <div class="text-2xl font-bold text-gray-900">
-          {{ dashboard?.total_runs || 0 }}
+          {{ dashboardState.dashboard.value?.total_runs || 0 }}
         </div>
       </div>
-      
+
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
         <div class="text-sm text-gray-600 mb-1">
           Green (Safe)
         </div>
         <div class="text-2xl font-bold text-green-700">
-          {{ riskCounts.green }}
+          {{ filters.riskCounts.value.green }}
         </div>
       </div>
-      
+
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-amber-500">
         <div class="text-sm text-gray-600 mb-1">
           Yellow + Orange
         </div>
         <div class="text-2xl font-bold text-amber-700">
-          {{ riskCounts.yellow + riskCounts.orange }}
+          {{ filters.riskCounts.value.yellow + filters.riskCounts.value.orange }}
         </div>
       </div>
-      
+
       <div class="bg-white rounded-lg shadow p-4 border-l-4 border-rose-500">
         <div class="text-sm text-gray-600 mb-1">
           Red (Danger)
         </div>
         <div class="text-2xl font-bold text-rose-700">
-          {{ riskCounts.red }}
+          {{ filters.riskCounts.value.red }}
         </div>
       </div>
     </div>
@@ -54,11 +54,11 @@
       <div class="flex flex-wrap gap-4 items-center">
         <!-- Refresh Button -->
         <button
-          :disabled="loading"
+          :disabled="dashboardState.loading.value"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          @click="loadDashboard"
+          @click="dashboardState.loadDashboard"
         >
-          <span v-if="loading">⏳ Loading...</span>
+          <span v-if="dashboardState.loading.value">⏳ Loading...</span>
           <span v-else>🔄 Refresh</span>
         </button>
 
@@ -66,22 +66,14 @@
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-700">Show:</label>
           <select
-            v-model="limit"
+            v-model="dashboardState.limit.value"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            @change="loadDashboard"
+            @change="dashboardState.loadDashboard"
           >
-            <option :value="10">
-              10 runs
-            </option>
-            <option :value="25">
-              25 runs
-            </option>
-            <option :value="50">
-              50 runs
-            </option>
-            <option :value="100">
-              100 runs
-            </option>
+            <option :value="10">10 runs</option>
+            <option :value="25">25 runs</option>
+            <option :value="50">50 runs</option>
+            <option :value="100">100 runs</option>
           </select>
         </div>
 
@@ -89,27 +81,15 @@
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-700">Risk:</label>
           <select
-            v-model="riskFilter"
+            v-model="filters.riskFilter.value"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">
-              All
-            </option>
-            <option value="green">
-              Green
-            </option>
-            <option value="yellow">
-              Yellow
-            </option>
-            <option value="orange">
-              Orange
-            </option>
-            <option value="red">
-              Red
-            </option>
-            <option value="unknown">
-              Unknown
-            </option>
+            <option value="all">All</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="orange">Orange</option>
+            <option value="red">Red</option>
+            <option value="unknown">Unknown</option>
           </select>
         </div>
 
@@ -117,48 +97,38 @@
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-700">Status:</label>
           <select
-            v-model="statusFilter"
+            v-model="filters.statusFilter.value"
             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">
-              All
-            </option>
-            <option value="pending">
-              Pending
-            </option>
-            <option value="running">
-              Running
-            </option>
-            <option value="completed">
-              Completed
-            </option>
-            <option value="error">
-              Error
-            </option>
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="running">Running</option>
+            <option value="completed">Completed</option>
+            <option value="error">Error</option>
           </select>
         </div>
 
         <!-- Last Updated -->
         <div
-          v-if="lastUpdated"
+          v-if="dashboardState.lastUpdated.value"
           class="ml-auto text-sm text-gray-500"
         >
-          Updated: {{ formatTime(lastUpdated) }}
+          Updated: {{ formatTime(dashboardState.lastUpdated.value) }}
         </div>
       </div>
     </div>
 
     <!-- Error Message -->
     <div
-      v-if="error"
+      v-if="dashboardState.error.value"
       class="bg-rose-100 border border-rose-400 text-rose-700 px-4 py-3 rounded-lg mb-6"
     >
-      <strong>Error:</strong> {{ error }}
+      <strong>Error:</strong> {{ dashboardState.error.value }}
     </div>
 
     <!-- Empty State -->
     <div
-      v-if="!loading && filteredRuns.length === 0"
+      v-if="!dashboardState.loading.value && filters.filteredRuns.value.length === 0"
       class="bg-white rounded-lg shadow p-12 text-center"
     >
       <div class="text-6xl mb-4">
@@ -168,12 +138,12 @@
         No Runs Found
       </h3>
       <p class="text-gray-600 mb-4">
-        {{ dashboard?.runs.length === 0 ? 'No job runs in the system yet.' : 'No runs match your current filters.' }}
+        {{ dashboardState.dashboard.value?.runs.length === 0 ? 'No job runs in the system yet.' : 'No runs match your current filters.' }}
       </p>
       <button
-        v-if="riskFilter !== 'all' || statusFilter !== 'all'"
+        v-if="filters.riskFilter.value !== 'all' || filters.statusFilter.value !== 'all'"
         class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-        @click="clearFilters"
+        @click="filters.clearFilters"
       >
         Clear Filters
       </button>
@@ -185,7 +155,7 @@
       class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
     >
       <div
-        v-for="run in filteredRuns"
+        v-for="run in filters.filteredRuns.value"
         :key="run.run_id"
         class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow border-t-4"
         :class="riskBorderClass(run.risk_bucket.id)"
@@ -204,7 +174,7 @@
                 {{ formatDateTime(run.created_at) }}
               </div>
             </div>
-            
+
             <!-- Risk Badge -->
             <span
               class="px-3 py-1 rounded-full text-xs font-semibold ml-2 flex-shrink-0"
@@ -293,14 +263,14 @@
         <div class="p-3 bg-gray-50 border-t border-gray-200 flex gap-2">
           <button
             class="flex-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            @click="openRunDetail(run)"
+            @click="modals.openRunDetail(run)"
           >
             📊 View Details
           </button>
           <button
             v-if="run.has_telemetry && run.metrics"
             class="flex-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-            @click="openRiskActions(run)"
+            @click="modals.openRiskActions(run)"
           >
             ⚙️ Risk Actions
           </button>
@@ -308,9 +278,9 @@
       </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Empty State (duplicate check) -->
     <div
-      v-if="filteredRuns.length === 0 && !loading"
+      v-if="filters.filteredRuns.value.length === 0 && !dashboardState.loading.value"
       class="bg-white rounded-lg shadow p-12 text-center"
     >
       <div class="text-gray-400 text-6xl mb-4">
@@ -320,7 +290,7 @@
         No Saw Runs Found
       </h3>
       <p class="text-gray-600">
-        {{ error ? 'Error loading data. Try refreshing.' : 'No runs match your filters.' }}
+        {{ dashboardState.error.value ? 'Error loading data. Try refreshing.' : 'No runs match your filters.' }}
       </p>
     </div>
   </div>
@@ -328,9 +298,9 @@
   <!-- Run Detail Modal -->
   <Teleport to="body">
     <div
-      v-if="selectedRun"
+      v-if="modals.selectedRun.value"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      @click.self="closeRunDetail"
+      @click.self="modals.closeRunDetail"
     >
       <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
@@ -340,12 +310,12 @@
               Run Details
             </h2>
             <p class="text-sm text-gray-600">
-              {{ selectedRun.run_id }}
+              {{ modals.selectedRun.value.run_id }}
             </p>
           </div>
           <button
             class="text-gray-400 hover:text-gray-600 text-2xl font-bold"
-            @click="closeRunDetail"
+            @click="modals.closeRunDetail"
           >
             ×
           </button>
@@ -358,7 +328,7 @@
             <div>
               <label class="text-sm font-semibold text-gray-600">Created At</label>
               <p class="text-gray-900">
-                {{ formatDateTime(selectedRun.created_at) }}
+                {{ formatDateTime(modals.selectedRun.value.created_at) }}
               </p>
             </div>
             <div>
@@ -366,34 +336,34 @@
               <p>
                 <span
                   class="px-2 py-1 rounded text-sm"
-                  :class="statusBadgeClass(selectedRun.status)"
+                  :class="statusBadgeClass(modals.selectedRun.value.status)"
                 >
-                  {{ selectedRun.status }}
+                  {{ modals.selectedRun.value.status }}
                 </span>
               </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Operation</label>
               <p class="text-gray-900">
-                {{ selectedRun.op_type }}
+                {{ modals.selectedRun.value.op_type }}
               </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Machine</label>
               <p class="text-gray-900">
-                {{ selectedRun.machine_profile }}
+                {{ modals.selectedRun.value.machine_profile }}
               </p>
             </div>
             <div>
               <label class="text-sm font-semibold text-gray-600">Material</label>
               <p class="text-gray-900">
-                {{ selectedRun.material_family }}
+                {{ modals.selectedRun.value.material_family }}
               </p>
             </div>
-            <div v-if="selectedRun.blade_id">
+            <div v-if="modals.selectedRun.value.blade_id">
               <label class="text-sm font-semibold text-gray-600">Blade</label>
               <p class="text-gray-900">
-                {{ selectedRun.blade_id }}
+                {{ modals.selectedRun.value.blade_id }}
               </p>
             </div>
           </div>
@@ -408,43 +378,43 @@
                 <span class="text-gray-700">Risk Level</span>
                 <span
                   class="px-3 py-1 rounded-full text-sm font-semibold"
-                  :class="riskBadgeClass(selectedRun.risk_bucket.id)"
+                  :class="riskBadgeClass(modals.selectedRun.value.risk_bucket.id)"
                 >
-                  {{ selectedRun.risk_bucket.label }}
+                  {{ modals.selectedRun.value.risk_bucket.label }}
                 </span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-700">Risk Score</span>
                 <span
                   class="text-lg font-bold"
-                  :class="riskScoreColor(selectedRun.risk_score)"
+                  :class="riskScoreColor(modals.selectedRun.value.risk_score)"
                 >
-                  {{ selectedRun.risk_score.toFixed(3) }}
+                  {{ modals.selectedRun.value.risk_score.toFixed(3) }}
                 </span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-3">
                 <div
                   class="h-3 rounded-full transition-all"
-                  :class="riskBarClass(selectedRun.risk_bucket.id)"
-                  :style="{ width: `${selectedRun.risk_score * 100}%` }"
+                  :class="riskBarClass(modals.selectedRun.value.risk_bucket.id)"
+                  :style="{ width: `${modals.selectedRun.value.risk_score * 100}%` }"
                 />
               </div>
               <p class="text-sm text-gray-600 italic">
-                {{ selectedRun.risk_bucket.description }}
+                {{ modals.selectedRun.value.risk_bucket.description }}
               </p>
             </div>
           </div>
 
           <!-- Telemetry Metrics -->
           <TelemetryMetricsPanel
-            v-if="selectedRun.has_telemetry && selectedRun.metrics"
-            :metrics="selectedRun.metrics"
+            v-if="modals.selectedRun.value.has_telemetry && modals.selectedRun.value.metrics"
+            :metrics="modals.selectedRun.value.metrics"
           />
 
           <!-- Lane Scale History -->
           <LaneScaleHistoryTable
-            v-if="selectedRun.lane_scale_history.length > 0"
-            :history="selectedRun.lane_scale_history"
+            v-if="modals.selectedRun.value.lane_scale_history.length > 0"
+            :history="modals.selectedRun.value.lane_scale_history"
           />
         </div>
 
@@ -452,14 +422,14 @@
         <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
           <button
             class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
-            @click="closeRunDetail"
+            @click="modals.closeRunDetail"
           >
             Close
           </button>
           <button
-            v-if="selectedRun.has_telemetry && selectedRun.metrics"
+            v-if="modals.selectedRun.value.has_telemetry && modals.selectedRun.value.metrics"
             class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-            @click="openRiskActions(selectedRun)"
+            @click="modals.openRiskActions(modals.selectedRun.value)"
           >
             ⚙️ Risk Actions
           </button>
@@ -471,9 +441,9 @@
   <!-- Risk Actions Modal -->
   <Teleport to="body">
     <div
-      v-if="riskActionsRun"
+      v-if="modals.riskActionsRun.value"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      @click.self="closeRiskActions"
+      @click.self="handleCloseRiskActions"
     >
       <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
@@ -483,12 +453,12 @@
               Risk Actions
             </h2>
             <p class="text-sm text-gray-600">
-              {{ riskActionsRun.run_id }}
+              {{ modals.riskActionsRun.value.run_id }}
             </p>
           </div>
           <button
             class="text-gray-400 hover:text-gray-600 text-2xl font-bold"
-            @click="closeRiskActions"
+            @click="handleCloseRiskActions"
           >
             ×
           </button>
@@ -508,9 +478,9 @@
                 </div>
                 <span
                   class="inline-block px-3 py-1 rounded-full text-sm font-semibold mt-1"
-                  :class="riskBadgeClass(riskActionsRun.risk_bucket.id)"
+                  :class="riskBadgeClass(modals.riskActionsRun.value.risk_bucket.id)"
                 >
-                  {{ riskActionsRun.risk_bucket.label }}
+                  {{ modals.riskActionsRun.value.risk_bucket.label }}
                 </span>
               </div>
               <div>
@@ -519,9 +489,9 @@
                 </div>
                 <div
                   class="text-2xl font-bold mt-1"
-                  :class="riskScoreColor(riskActionsRun.risk_score)"
+                  :class="riskScoreColor(modals.riskActionsRun.value.risk_score)"
                 >
-                  {{ riskActionsRun.risk_score.toFixed(3) }}
+                  {{ modals.riskActionsRun.value.risk_score.toFixed(3) }}
                 </div>
               </div>
             </div>
@@ -534,7 +504,7 @@
             </h3>
             <div class="space-y-3">
               <div
-                v-for="(action, idx) in computedActions"
+                v-for="(action, idx) in riskActions.computedActions.value"
                 :key="idx"
                 class="bg-white rounded-lg p-4 border-l-4"
                 :class="action.severity === 'critical' ? 'border-rose-500' : action.severity === 'warning' ? 'border-amber-500' : 'border-blue-500'"
@@ -557,14 +527,14 @@
                   <button
                     v-if="action.action_type === 'apply_override'"
                     class="ml-3 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-                    @click="applyOverride(action)"
+                    @click="riskActions.applyOverride(action)"
                   >
                     Apply
                   </button>
                 </div>
               </div>
               <div
-                v-if="computedActions.length === 0"
+                v-if="riskActions.computedActions.value.length === 0"
                 class="text-center py-4 text-gray-500"
               >
                 ✅ No actions required - operation within safe parameters
@@ -574,25 +544,25 @@
 
           <!-- Override Confirmation -->
           <div
-            v-if="pendingOverride"
+            v-if="riskActions.pendingOverride.value"
             class="bg-amber-50 border border-amber-300 rounded-lg p-4"
           >
             <h3 class="text-lg font-semibold text-amber-900 mb-2">
               ⚠️ Confirm Override
             </h3>
             <p class="text-sm text-amber-800 mb-3">
-              Apply {{ pendingOverride.suggested_override }} to future operations with similar conditions?
+              Apply {{ riskActions.pendingOverride.value.suggested_override }} to future operations with similar conditions?
             </p>
             <div class="flex gap-3">
               <button
                 class="flex-1 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors"
-                @click="confirmApplyOverride"
+                @click="handleConfirmOverride"
               >
                 ✓ Confirm
               </button>
               <button
                 class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
-                @click="cancelOverride"
+                @click="riskActions.cancelOverride"
               >
                 Cancel
               </button>
@@ -604,7 +574,7 @@
         <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end">
           <button
             class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
-            @click="closeRiskActions"
+            @click="handleCloseRiskActions"
           >
             Close
           </button>
@@ -615,305 +585,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getDashboardRuns, type DashboardSummary, type RunSummaryItem, type RiskBucketId } from '@/api/sawLab'
+/**
+ * SawLabDashboard - Real-time CNC monitoring with risk classification.
+ *
+ * Features:
+ * - Dashboard summary cards (total runs, risk breakdown)
+ * - Filterable run list by risk level and status
+ * - Run detail modal with telemetry metrics
+ * - Risk actions modal with recommended adjustments
+ */
+import { onMounted } from 'vue'
 import RunTelemetryCard from './saw_lab_dashboard/RunTelemetryCard.vue'
 import TelemetryMetricsPanel from './saw_lab_dashboard/TelemetryMetricsPanel.vue'
 import LaneScaleHistoryTable from './saw_lab_dashboard/LaneScaleHistoryTable.vue'
+import {
+  useSawDashboard,
+  useSawDashboardFilters,
+  useSawDashboardModals,
+  useSawRiskActions,
+  riskBorderClass,
+  riskBadgeClass,
+  riskBarClass,
+  riskScoreColor,
+  statusBadgeClass,
+  formatDateTime,
+  formatTime
+} from './saw_lab_dashboard/composables'
 
-// ============================================================================
-// STATE
-// ============================================================================
+// Initialize composables
+const dashboardState = useSawDashboard()
+const filters = useSawDashboardFilters(dashboardState.dashboard)
+const modals = useSawDashboardModals()
+const riskActions = useSawRiskActions(
+  modals.riskActionsRun,
+  (msg: string) => { dashboardState.error.value = msg }
+)
 
-const dashboard = ref<DashboardSummary | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-const lastUpdated = ref<Date | null>(null)
+// Event handlers that need coordination between composables
+function handleCloseRiskActions(): void {
+  modals.closeRiskActions()
+  riskActions.cancelOverride()
+}
 
-// Filters
-const limit = ref(50)
-const riskFilter = ref<RiskBucketId | 'all'>('all')
-const statusFilter = ref('all')
-
-// Modals
-const selectedRun = ref<RunSummaryItem | null>(null)
-const riskActionsRun = ref<RunSummaryItem | null>(null)
-const pendingOverride = ref<{
-  title: string
-  suggested_override: string
-  action_type: string
-} | null>(null)
-
-// ============================================================================
-// COMPUTED
-// ============================================================================
-
-const filteredRuns = computed(() => {
-  if (!dashboard.value) return []
-  
-  let runs = dashboard.value.runs
-  
-  // Filter by risk
-  if (riskFilter.value !== 'all') {
-    runs = runs.filter(r => r.risk_bucket.id === riskFilter.value)
-  }
-  
-  // Filter by status
-  if (statusFilter.value !== 'all') {
-    runs = runs.filter(r => r.status === statusFilter.value)
-  }
-  
-  return runs
-})
-
-const riskCounts = computed(() => {
-  const counts = {
-    unknown: 0,
-    green: 0,
-    yellow: 0,
-    orange: 0,
-    red: 0
-  }
-  
-  dashboard.value?.runs.forEach(run => {
-    counts[run.risk_bucket.id as RiskBucketId]++
-  })
-  
-  return counts
-})
-
-// Computed actions based on run telemetry
-const computedActions = computed(() => {
-  if (!riskActionsRun.value || !riskActionsRun.value.metrics) return []
-  
-  const actions: any[] = []
-  const metrics = riskActionsRun.value.metrics
-  const avgLoad = metrics.avg_spindle_load_pct || 0
-  const maxLoad = metrics.max_spindle_load_pct || 0
-  const avgVibration = metrics.avg_vibration_rms || 0
-  
-  // High load detection
-  if (avgLoad > 80) {
-    actions.push({
-      title: 'High Average Spindle Load Detected',
-      description: `Average load of ${avgLoad.toFixed(1)}% exceeds safe threshold (80%). Reduce feed rate to prevent blade damage.`,
-      severity: 'critical',
-      action_type: 'apply_override',
-      suggested_override: 'Feed rate -20%'
-    })
-  } else if (avgLoad > 70) {
-    actions.push({
-      title: 'Elevated Spindle Load',
-      description: `Average load of ${avgLoad.toFixed(1)}% is approaching limits. Consider reducing feed rate.`,
-      severity: 'warning',
-      action_type: 'apply_override',
-      suggested_override: 'Feed rate -10%'
-    })
-  }
-  
-  // Peak load detection
-  if (maxLoad > 90) {
-    actions.push({
-      title: 'Critical Peak Load',
-      description: `Peak load of ${maxLoad.toFixed(1)}% indicates potential stall conditions. Immediate feed reduction required.`,
-      severity: 'critical',
-      action_type: 'apply_override',
-      suggested_override: 'Feed rate -30%'
-    })
-  }
-  
-  // Low load - can speed up
-  if (avgLoad < 40 && maxLoad < 50) {
-    actions.push({
-      title: 'Low Spindle Load - Optimization Opportunity',
-      description: `Average load of ${avgLoad.toFixed(1)}% suggests feed rate can be safely increased for faster cycle times.`,
-      severity: 'info',
-      action_type: 'apply_override',
-      suggested_override: 'Feed rate +15%'
-    })
-  }
-  
-  // Vibration detection
-  if (avgVibration > 10) {
-    actions.push({
-      title: 'Excessive Vibration Detected',
-      description: `Average vibration of ${avgVibration.toFixed(2)} mm/s RMS indicates blade imbalance or looseness. Inspect blade mounting.`,
-      severity: 'critical',
-      action_type: 'manual_check',
-      suggested_override: null
-    })
-  } else if (avgVibration > 5) {
-    actions.push({
-      title: 'Elevated Vibration',
-      description: `Vibration of ${avgVibration.toFixed(2)} mm/s RMS is above normal. Check blade condition and mounting.`,
-      severity: 'warning',
-      action_type: 'manual_check',
-      suggested_override: null
-    })
-  }
-  
-  return actions
-})
-
-// ============================================================================
-// METHODS
-// ============================================================================
-
-async function loadDashboard() {
-  loading.value = true
-  error.value = null
-  
-  try {
-    dashboard.value = await getDashboardRuns(limit.value)
-    lastUpdated.value = new Date()
-  } catch (err: any) {
-    error.value = err.response?.data?.detail || err.message || 'Failed to load dashboard'
-    console.error('Dashboard load error:', err)
-  } finally {
-    loading.value = false
+async function handleConfirmOverride(): Promise<void> {
+  if (modals.riskActionsRun.value) {
+    await riskActions.confirmApplyOverride(
+      modals.riskActionsRun.value,
+      async () => {
+        await dashboardState.loadDashboard()
+        handleCloseRiskActions()
+      }
+    )
   }
 }
 
-function clearFilters() {
-  riskFilter.value = 'all'
-  statusFilter.value = 'all'
-}
-
-function openRunDetail(run: RunSummaryItem) {
-  selectedRun.value = run
-  riskActionsRun.value = null  // Close risk actions if open
-}
-
-function closeRunDetail() {
-  selectedRun.value = null
-}
-
-function openRiskActions(run: RunSummaryItem) {
-  riskActionsRun.value = run
-  selectedRun.value = null  // Close run detail if open
-  pendingOverride.value = null
-}
-
-function closeRiskActions() {
-  riskActionsRun.value = null
-  pendingOverride.value = null
-}
-
-function applyOverride(action: any) {
-  pendingOverride.value = action
-}
-
-async function confirmApplyOverride() {
-  if (!pendingOverride.value || !riskActionsRun.value) return
-  
-  try {
-    // TODO: Call backend API to apply override
-    console.log('Applying override:', {
-      run_id: riskActionsRun.value.run_id,
-      override: pendingOverride.value.suggested_override,
-      action: pendingOverride.value.title
-    })
-    
-    // Show success message (placeholder)
-    alert(`✓ Override applied: ${pendingOverride.value.suggested_override}`)
-    
-    // Reload dashboard
-    await loadDashboard()
-    
-    // Close modals
-    closeRiskActions()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to apply override'
-    console.error('Override apply error:', err)
-  }
-}
-
-function cancelOverride() {
-  pendingOverride.value = null
-}
-
-// ============================================================================
-// STYLING HELPERS
-// ============================================================================
-
-function riskBorderClass(bucketId: RiskBucketId): string {
-  const classes = {
-    unknown: 'border-gray-400',
-    green: 'border-green-500',
-    yellow: 'border-amber-500',
-    orange: 'border-orange-500',
-    red: 'border-rose-500'
-  }
-  return classes[bucketId]
-}
-
-function riskBadgeClass(bucketId: RiskBucketId): string {
-  const classes = {
-    unknown: 'bg-gray-100 text-gray-700',
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-amber-100 text-amber-800',
-    orange: 'bg-orange-100 text-orange-800',
-    red: 'bg-rose-100 text-rose-800'
-  }
-  return classes[bucketId]
-}
-
-function riskBarClass(bucketId: RiskBucketId): string {
-  const classes = {
-    unknown: 'bg-gray-400',
-    green: 'bg-green-500',
-    yellow: 'bg-amber-500',
-    orange: 'bg-orange-500',
-    red: 'bg-rose-500'
-  }
-  return classes[bucketId]
-}
-
-function riskScoreColor(score: number): string {
-  if (score < 0.3) return 'text-green-700'
-  if (score < 0.6) return 'text-amber-700'
-  if (score < 0.85) return 'text-orange-700'
-  return 'text-rose-700'
-}
-
-function statusBadgeClass(status: string): string {
-  const classes: Record<string, string> = {
-    pending: 'bg-blue-100 text-blue-800',
-    running: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    error: 'bg-rose-100 text-rose-800'
-  }
-  return classes[status] || 'bg-gray-100 text-gray-800'
-}
-
-// ============================================================================
-// FORMATTING HELPERS
-// ============================================================================
-
-function formatDateTime(isoString: string): string {
-  const date = new Date(isoString)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
-
-// ============================================================================
-// LIFECYCLE
-// ============================================================================
-
+// Load on mount
 onMounted(() => {
-  loadDashboard()
+  dashboardState.loadDashboard()
 })
 </script>
 
