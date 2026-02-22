@@ -476,252 +476,114 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import type { CurveBiarcEntity, CurveUnits } from '@/types/curvelab'
 import {
-  autoFixDxf,
-  fetchCurveReport,
-  validateDxf,
-} from "@/api/curvelab";
-import type {
-  AutoFixOption,
-  CurveBiarcEntity,
-  CurvePoint,
-  CurvePreflightResponse,
-  CurveUnits,
-  ValidationIssue,
-  ValidationReport,
-} from "@/types/curvelab";
+  FIX_OPTIONS,
+  useCurveLabState,
+  useCurveLabInline,
+  useCurveLabFile,
+  useCurveLabDownload,
+  useCurveLabHelpers
+} from './composables'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   points: {
     type: Array as () => Array<[number, number]>,
-    default: () => [],
+    default: () => []
   },
   units: {
     type: String as () => CurveUnits,
-    default: "mm",
+    default: 'mm'
   },
   layer: {
     type: String,
-    default: "CURVE",
+    default: 'CURVE'
   },
   biarcEntities: {
     type: Array as () => CurveBiarcEntity[] | null,
-    default: () => [],
+    default: () => []
   },
   dxfBase64: {
     type: String,
-    default: null,
+    default: null
   },
   filename: {
     type: String,
-    default: "curve_preview.dxf",
-  },
-});
-
-const emit = defineEmits(["close", "update:open", "auto-fix"]);
-
-const tolerance = ref(0.1);
-const layer = ref(props.layer);
-
-const inlineBusy = ref(false);
-const inlineResponse = ref<CurvePreflightResponse | null>(null);
-const inlineError = ref<string | null>(null);
-
-const fileBusy = ref(false);
-const fileResponse = ref<ValidationReport | null>(null);
-const fileError = ref<string | null>(null);
-
-const autoFixBusy = ref(false);
-const fixedDownload = ref<string | null>(null);
-const selectedFixes = ref<AutoFixOption[]>([]);
-const workingDxf = ref<string | null>(props.dxfBase64);
-
-const fixOptions: { id: AutoFixOption; label: string; helper: string }[] = [
-  {
-    id: "convert_to_r12",
-    label: "Convert to R12",
-    helper: "Ensures exports target AC1009 for maximum CAM compatibility",
-  },
-  {
-    id: "set_units_mm",
-    label: "Set units to millimeters",
-    helper: "Writes $INSUNITS=mm when file omits unit metadata",
-  },
-  {
-    id: "close_open_polylines",
-    label: "Close open polylines",
-    helper: "Closes paths with <0.1 mm gap so pocketing works",
-  },
-  {
-    id: "merge_duplicate_layers",
-    label: "Merge duplicate layers",
-    helper: "Consolidates inconsistently cased layer names",
-  },
-  {
-    id: "explode_splines",
-    label: "Explode splines",
-    helper: "Converts splines to polylines (experimental)",
-  },
-];
-
-const inlinePoints = computed<CurvePoint[]>(() =>
-  (props.points || []).map(([x, y]) => ({ x, y })),
-);
-
-watch(
-  () => props.layer,
-  (next) => {
-    layer.value = next || "CURVE";
-  },
-);
-
-const hasInlineGeometry = computed(() => inlinePoints.value.length >= 2);
-const inlinePointCount = computed(() => inlinePoints.value.length);
-
-const hasDxf = computed(() => !!workingDxf.value);
-
-watch(
-  () => props.dxfBase64,
-  (next) => {
-    workingDxf.value = next;
-    fixedDownload.value = null;
-  },
-);
-
-const inlineCamReadyLabel = computed(() => {
-  if (!inlineResponse.value) return "";
-  return inlineResponse.value.cam_ready ? "CAM Ready" : "Needs Attention";
-});
-
-const inlineCamReadyClass = computed(() =>
-  inlineResponse.value?.cam_ready
-    ? "bg-emerald-100 text-emerald-700"
-    : "bg-amber-100 text-amber-700",
-);
-
-const fileCamReadyLabel = computed(() => {
-  if (!fileResponse.value) return "";
-  return fileResponse.value.cam_ready ? "CAM Ready" : "Needs Review";
-});
-
-const fileCamReadyClass = computed(() =>
-  fileResponse.value?.cam_ready
-    ? "bg-emerald-100 text-emerald-700"
-    : "bg-amber-100 text-amber-700",
-);
-
-function formatNumber(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "—";
-  return Number(value).toFixed(3).replace(/\.000$/, ".0");
-}
-
-function severityClass(level: ValidationIssue["severity"]): string {
-  if (level === "error") return "text-rose-700";
-  if (level === "warning") return "text-amber-700";
-  return "text-slate-500";
-}
-
-async function runInlineReport() {
-  if (!hasInlineGeometry.value) return;
-  inlineBusy.value = true;
-  inlineError.value = null;
-  try {
-    const res = await fetchCurveReport({
-      points: inlinePoints.value,
-      units: props.units,
-      tolerance_mm: tolerance.value,
-      layer: layer.value,
-      biarc_entities: props.biarcEntities?.length
-        ? (props.biarcEntities as any)
-        : undefined,
-    });
-    inlineResponse.value = res;
-  } catch (err: any) {
-    inlineError.value = err?.message || "Failed to run curve report";
-  } finally {
-    inlineBusy.value = false;
+    default: 'curve_preview.dxf'
   }
-}
+})
 
-async function runFileValidation() {
-  if (!hasDxf.value || !workingDxf.value) return;
-  fileBusy.value = true;
-  fileError.value = null;
-  try {
-    const res = await validateDxf(workingDxf.value, props.filename);
-    fileResponse.value = res;
-  } catch (err: any) {
-    fileError.value = err?.message || "Failed to validate DXF";
-  } finally {
-    fileBusy.value = false;
-  }
-}
+const emit = defineEmits(['close', 'update:open', 'auto-fix'])
 
-async function runAutoFix() {
-  if (!hasDxf.value || !workingDxf.value || !selectedFixes.value.length) return;
-  autoFixBusy.value = true;
-  fileError.value = null;
-  try {
-    const res = await autoFixDxf({
-      dxf_base64: workingDxf.value,
-      filename: props.filename,
-      fixes: selectedFixes.value,
-    });
-    fixedDownload.value = res.fixed_dxf_base64;
-    fileResponse.value = res.validation_report;
-    workingDxf.value = res.fixed_dxf_base64;
-    emit("auto-fix", res);
-  } catch (err: any) {
-    fileError.value = err?.message || "Auto-fix failed";
-  } finally {
-    autoFixBusy.value = false;
-  }
-}
+// State
+const {
+  tolerance,
+  layer,
+  inlineBusy,
+  inlineResponse,
+  inlineError,
+  fileBusy,
+  fileResponse,
+  fileError,
+  autoFixBusy,
+  fixedDownload,
+  selectedFixes,
+  workingDxf,
+  inlinePoints,
+  hasInlineGeometry,
+  inlinePointCount,
+  hasDxf,
+  inlineCamReadyLabel,
+  inlineCamReadyClass,
+  fileCamReadyLabel,
+  fileCamReadyClass
+} = useCurveLabState(props)
 
-function downloadInlineJson() {
-  if (!inlineResponse.value) return;
-  const blob = new Blob([JSON.stringify(inlineResponse.value, null, 2)], {
-    type: "application/json",
-  });
-  triggerDownload(blob, "curvelab_curve_report.json");
-}
+// Constants
+const fixOptions = FIX_OPTIONS
 
-function downloadFileJson() {
-  if (!fileResponse.value) return;
-  const blob = new Blob([JSON.stringify(fileResponse.value, null, 2)], {
-    type: "application/json",
-  });
-  triggerDownload(blob, "curvelab_dxf_report.json");
-}
+// Inline report
+const { runInlineReport } = useCurveLabInline(
+  inlinePoints,
+  hasInlineGeometry,
+  props.units,
+  tolerance,
+  layer,
+  props.biarcEntities,
+  inlineBusy,
+  inlineResponse,
+  inlineError
+)
 
-function downloadFixedDxf() {
-  if (!fixedDownload.value) return;
-  const blob = base64ToBlob(fixedDownload.value, "application/dxf");
-  triggerDownload(blob, `curvelab_fixed_${props.filename}`);
-}
+// File validation
+const { runFileValidation, runAutoFix } = useCurveLabFile(
+  props.filename,
+  hasDxf,
+  workingDxf,
+  selectedFixes,
+  fileBusy,
+  fileResponse,
+  fileError,
+  autoFixBusy,
+  fixedDownload,
+  (event, payload) => emit(event, payload)
+)
 
-function base64ToBlob(base64: string, mime: string): Blob {
-  const byteCharacters = atob(base64);
-  const bytes = new Uint8Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i += 1) {
-    bytes[i] = byteCharacters.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: mime });
-}
+// Downloads
+const { downloadInlineJson, downloadFileJson, downloadFixedDxf } = useCurveLabDownload(
+  props.filename,
+  inlineResponse,
+  fileResponse,
+  fixedDownload
+)
 
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
+// Helpers
+const { formatNumber, severityClass } = useCurveLabHelpers()
 
+// Modal actions
 function close() {
-  emit("update:open", false);
-  emit("close");
+  emit('update:open', false)
+  emit('close')
 }
 </script>
