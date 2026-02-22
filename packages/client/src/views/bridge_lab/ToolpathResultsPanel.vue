@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import CamBackplotViewer from '@/components/CamBackplotViewer.vue'
+import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
 
 interface MachineLimits {
   min_x?: number | null
