@@ -27,7 +27,23 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'vue/multi-word-component-names': 'off',
-    'vue/no-v-html': 'warn'
+    'vue/no-v-html': 'warn',
+
+    // Component complexity limits - encourage composable extraction
+    // Warn at 300 lines, error at 500 lines
+    'max-lines': ['warn', {
+      max: 500,
+      skipBlankLines: true,
+      skipComments: true
+    }],
+
+    // Function complexity - encourage smaller, focused functions
+    'max-lines-per-function': ['warn', {
+      max: 100,
+      skipBlankLines: true,
+      skipComments: true,
+      IIFEs: true
+    }]
   },
   ignorePatterns: [
     'dist/',
