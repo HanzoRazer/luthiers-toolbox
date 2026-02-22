@@ -1,0 +1,270 @@
+/* RMOS Log Viewer Panel Styles */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+/* Header */
+.header {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fafafa;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.titleRow h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filters select,
+.filters input {
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.capSelect {
+  width: 80px;
+}
+
+/* Buttons */
+.btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn:hover {
+  background: #f0f0f0;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSmall {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.btnIcon {
+  padding: 6px 8px;
+}
+
+/* Badge button (new runs) */
+.badgeBtn {
+  padding: 4px 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Overflow row */
+.overflowRow {
+  padding: 8px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.overflowRow:hover {
+  background: #fde68a;
+}
+
+/* Error banner */
+.errorBanner {
+  padding: 8px 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+/* Table container */
+.tableContainer {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Log table */
+.logTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.logTable th,
+.logTable td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.logTable th {
+  background: #f5f5f5;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+  position: sticky;
+  top: 0;
+}
+
+.logTable tbody tr {
+  cursor: pointer;
+}
+
+.logTable tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.rowSelected {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Table cells */
+.cellTime {
+  white-space: nowrap;
+  font-size: 12px;
+  color: #666;
+}
+
+.cellRunId {
+  font-size: 11px;
+}
+
+.cellMono {
+  font-family: ui-monospace, monospace;
+}
+
+.cellScore {
+  text-align: right;
+}
+
+/* Risk level colors */
+.riskGreen {
+  color: #16a34a;
+}
+
+.riskYellow {
+  color: #ca8a04;
+}
+
+.riskRed {
+  color: #dc2626;
+}
+
+/* Sentinel row */
+.sentinelRow td {
+  text-align: center;
+  padding: 16px;
+}
+
+.sentinelCell {
+  color: #666;
+  font-size: 13px;
+}
+
+.sentinelClickable {
+  cursor: pointer;
+}
+
+.sentinelClickable:hover {
+  color: #3b82f6;
+}
+
+.sentinelEnd {
+  color: #999;
+  font-style: italic;
+}
+
+/* Load more row */
+.loadMoreRow {
+  padding: 12px;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state */
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+/* Details panel */
+.detailsPanel {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  background: #fafafa;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.detailsHeader h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.detailsContent {
+  font-size: 13px;
+}
+
+.detailsContent > div {
+  margin-bottom: 4px;
+}
+
+.detailsContent ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+/* Icon */
+.iconArrowUp::before {
+  content: "\2191";
+}
