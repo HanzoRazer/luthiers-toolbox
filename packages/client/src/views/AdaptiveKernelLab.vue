@@ -1,328 +1,83 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { onMounted } from 'vue'
+import LoopsPreviewSvg from './adaptive_kernel/LoopsPreviewSvg.vue'
+import KernelOutputPanel from './adaptive_kernel/KernelOutputPanel.vue'
+
 import {
-  planAdaptive,
-  type AdaptivePlanIn,
-  type AdaptivePlanOut,
-  type Loop,
-} from "@/api/adaptive";
-import LoopsPreviewSvg from "./adaptive_kernel/LoopsPreviewSvg.vue";
-import KernelOutputPanel from "./adaptive_kernel/KernelOutputPanel.vue";
+  useAdaptiveKernelState,
+  useAdaptiveKernelPayload,
+  useAdaptiveKernelPipeline,
+  useAdaptiveKernelPreview
+} from './adaptive_kernel/composables'
 
-const ADAPTIVE_PIPELINE_PRESET_KEY = "ltb_pipeline_adaptive_preset_v1";
+// State
+const {
+  units,
+  toolD,
+  stepover,
+  stepdown,
+  margin,
+  strategy,
+  feedXY,
+  safeZ,
+  zRough,
+  cornerRadiusMin,
+  targetStepover,
+  slowdownFeedPct,
+  useTrochoids,
+  trochoidRadius,
+  trochoidPitch,
+  loopsText,
+  lastRequest,
+  result,
+  errorMsg,
+  busy,
+  showPipelineSnippet,
+  sentToPipeline,
+  showToolpathPreview
+} = useAdaptiveKernelState()
 
-const units = ref<"mm" | "inch">("mm");
-const toolD = ref(6.0);
-const stepover = ref(0.45);
-const stepdown = ref(2.0);
-const margin = ref(0.5);
-const strategy = ref<"Spiral" | "Lanes">("Spiral");
-const feedXY = ref(1200);
-const safeZ = ref(5.0);
-const zRough = ref(-1.5);
+// Payload
+const { loadDemoLoops, buildPayload, runAdaptive } = useAdaptiveKernelPayload(
+  loopsText,
+  units,
+  toolD,
+  stepover,
+  stepdown,
+  margin,
+  strategy,
+  feedXY,
+  safeZ,
+  zRough,
+  cornerRadiusMin,
+  targetStepover,
+  slowdownFeedPct,
+  useTrochoids,
+  trochoidRadius,
+  trochoidPitch,
+  lastRequest,
+  result,
+  errorMsg,
+  busy
+)
 
-const cornerRadiusMin = ref(1.0);
-const targetStepover = ref(0.45);
-const slowdownFeedPct = ref(60.0);
+// Pipeline
+const { pipelineSnippet, sendToPipelineLab } = useAdaptiveKernelPipeline(
+  buildPayload,
+  sentToPipeline,
+  errorMsg
+)
 
-const useTrochoids = ref(false);
-const trochoidRadius = ref(1.5);
-const trochoidPitch = ref(3.0);
-
-const loopsText = ref<string>("");
-const lastRequest = ref<AdaptivePlanIn | null>(null);
-const result = ref<AdaptivePlanOut | null>(null);
-const errorMsg = ref<string | null>(null);
-const busy = ref(false);
-
-const showPipelineSnippet = ref(false);
-const sentToPipeline = ref(false);
-const showToolpathPreview = ref(true);
-
-// Demo rectangle loop (100x60 with one island)
-function loadDemoLoops() {
-  const demo: Loop[] = [
-    {
-      pts: [
-        [0, 0],
-        [100, 0],
-        [100, 60],
-        [0, 60],
-      ],
-    },
-    {
-      pts: [
-        [30, 15],
-        [70, 15],
-        [70, 45],
-        [30, 45],
-      ],
-    },
-  ];
-  loopsText.value = JSON.stringify(demo, null, 2);
-}
-
-function buildPayload(): AdaptivePlanIn {
-  let loops: Loop[];
-  try {
-    const parsed = JSON.parse(loopsText.value || "[]");
-    if (!Array.isArray(parsed)) throw new Error("loops must be an array");
-    loops = parsed;
-  } catch (e: any) {
-    throw new Error(
-      'Invalid loops JSON. It must be an array like: [{"pts": [[0,0],[100,0],...]}]\n' +
-        (e?.message || String(e))
-    );
-  }
-
-  if (!loops.length) {
-    throw new Error("At least one loop is required.");
-  }
-
-  return {
-    loops,
-    units: units.value,
-    tool_d: toolD.value,
-    stepover: stepover.value,
-    stepdown: stepdown.value,
-    margin: margin.value,
-    strategy: strategy.value,
-    smoothing: 0.5,
-    climb: true,
-    feed_xy: feedXY.value,
-    safe_z: safeZ.value,
-    z_rough: zRough.value,
-    corner_radius_min: cornerRadiusMin.value,
-    target_stepover: targetStepover.value,
-    slowdown_feed_pct: slowdownFeedPct.value,
-    use_trochoids: useTrochoids.value,
-    trochoid_radius: trochoidRadius.value,
-    trochoid_pitch: trochoidPitch.value,
-    jerk_aware: false,
-    machine_feed_xy: feedXY.value,
-    machine_rapid: 3000,
-    machine_accel: 800,
-    machine_jerk: 2000,
-    corner_tol_mm: 0.2,
-    machine_profile_id: null,
-    adopt_overrides: false,
-    session_override_factor: null,
-  };
-}
-
-async function runAdaptive() {
-  errorMsg.value = null;
-  busy.value = true;
-  result.value = null;
-  try {
-    const payload = buildPayload();
-    lastRequest.value = payload;
-    const res = await planAdaptive(payload);
-    result.value = res;
-  } catch (e: any) {
-    errorMsg.value = e?.message || String(e);
-  } finally {
-    busy.value = false;
-  }
-}
-
-// Pipeline snippet generation
-const pipelineSnippet = computed<string>(() => {
-  try {
-    const plan = buildPayload();
-
-    // Strip loops for pipeline input (loops come from DXF in pipeline world)
-    const {
-      loops, // eslint-disable-line @typescript-eslint/no-unused-vars
-      ...inputForPipeline
-    } = plan as any;
-
-    const skeleton = {
-      design: {
-        source: "dxf",
-        dxf_path: "workspace/bodies/body01.dxf", // change per job
-        units: plan.units,
-      },
-      context: {
-        machine_profile_id: "GUITAR_CNC_01",
-        post_preset: "GRBL",
-        workspace_id: "body01_session",
-      },
-      ops: [
-        {
-          id: "body_adaptive_pocket",
-          op: "AdaptivePocket",
-          from_layer: "GEOMETRY",
-          input: {
-            tool_d: inputForPipeline.tool_d,
-            stepover: inputForPipeline.stepover,
-            stepdown: inputForPipeline.stepdown,
-            margin: inputForPipeline.margin,
-            strategy: inputForPipeline.strategy,
-            smoothing: inputForPipeline.smoothing,
-            climb: inputForPipeline.climb,
-            feed_xy: inputForPipeline.feed_xy,
-            safe_z: inputForPipeline.safe_z,
-            z_rough: inputForPipeline.z_rough,
-            corner_radius_min: inputForPipeline.corner_radius_min,
-            target_stepover: inputForPipeline.target_stepover,
-            slowdown_feed_pct: inputForPipeline.slowdown_feed_pct,
-            use_trochoids: inputForPipeline.use_trochoids,
-            trochoid_radius: inputForPipeline.trochoid_radius,
-            trochoid_pitch: inputForPipeline.trochoid_pitch,
-            jerk_aware: inputForPipeline.jerk_aware,
-            machine_feed_xy: inputForPipeline.machine_feed_xy,
-            machine_rapid: inputForPipeline.machine_rapid,
-            machine_accel: inputForPipeline.machine_accel,
-            machine_jerk: inputForPipeline.machine_jerk,
-            corner_tol_mm: inputForPipeline.corner_tol_mm,
-            machine_profile_id: inputForPipeline.machine_profile_id,
-            adopt_overrides: inputForPipeline.adopt_overrides,
-            session_override_factor: inputForPipeline.session_override_factor,
-          },
-        },
-      ],
-    };
-
-    return JSON.stringify(skeleton, null, 2);
-  } catch (e: any) {
-    return (
-      "// Unable to build pipeline snippet.\n" +
-      "// Fix loops JSON or parameters first.\n" +
-      "// Error: " +
-      (e?.message || String(e))
-    );
-  }
-});
-
-function sendToPipelineLab() {
-  const snippet = pipelineSnippet.value;
-  if (!snippet || snippet.startsWith("// Unable to build")) {
-    sentToPipeline.value = false;
-    errorMsg.value =
-      "Cannot send to PipelineLab: fix loops / params so the pipeline snippet is valid first.";
-    return;
-  }
-  try {
-    localStorage.setItem(ADAPTIVE_PIPELINE_PRESET_KEY, snippet);
-    sentToPipeline.value = true;
-  } catch (e: any) {
-    sentToPipeline.value = false;
-    errorMsg.value =
-      "Failed to store preset in localStorage: " + (e?.message || String(e));
-  }
-}
-
-// ---------- Simple 2D preview ----------
-
-type PreviewLoop = { pts: [number, number][] };
-
-const previewLoops = computed<PreviewLoop[]>(() => {
-  try {
-    const parsed = JSON.parse(loopsText.value || "[]");
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((l: any) => ({
-      pts: (l.pts || []).map((p: any) => [Number(p[0]), Number(p[1])]) as [
-        number,
-        number
-      ][],
-    }));
-  } catch {
-    return [];
-  }
-});
-
-const previewOverlays = computed(() => result.value?.overlays || []);
-
-const viewBox = computed(() => {
-  const loops = previewLoops.value;
-  if (!loops.length) return { x: 0, y: 0, w: 100, h: 60 };
-
-  const xs: number[] = [];
-  const ys: number[] = [];
-  loops.forEach((l) =>
-    l.pts.forEach(([x, y]) => {
-      xs.push(x);
-      ys.push(y);
-    })
-  );
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const pad = 5;
-  return {
-    x: minX - pad,
-    y: minY - pad,
-    w: maxX - minX + 2 * pad,
-    h: maxY - minY + 2 * pad,
-  };
-});
-
-// Toolpath preview from result.moves
-type ToolpathSegment = {
-  pts: [number, number][];
-  kind: "rapid" | "cut";
-};
-
-const previewToolpathSegments = computed<ToolpathSegment[]>(() => {
-  const r = result.value;
-  if (!r || !Array.isArray(r.moves)) return [];
-
-  const segments: ToolpathSegment[] = [];
-  let current: [number, number][] = [];
-  let currentKind: "rapid" | "cut" | null = null;
-
-  const moves = r.moves as any[];
-
-  for (const mv of moves) {
-    const x = mv.x;
-    const y = mv.y;
-
-    if (typeof x !== "number" || typeof y !== "number") {
-      // break path when there's no XY
-      if (current.length > 1 && currentKind) {
-        segments.push({ pts: current, kind: currentKind });
-      }
-      current = [];
-      currentKind = null;
-      continue;
-    }
-
-    // classify move kind: simple heuristic
-    const code = (mv.code || "").toUpperCase();
-    const z = typeof mv.z === "number" ? mv.z : null;
-
-    let kind: "rapid" | "cut";
-    if (code === "G0" || (z !== null && z > 0)) {
-      kind = "rapid";
-    } else {
-      kind = "cut";
-    }
-
-    // if kind changes, finalize previous segment
-    if (currentKind !== null && kind !== currentKind && current.length > 1) {
-      segments.push({ pts: current, kind: currentKind });
-      current = [];
-    }
-
-    currentKind = kind;
-    current.push([x, y]);
-  }
-
-  if (current.length > 1 && currentKind) {
-    segments.push({ pts: current, kind: currentKind });
-  }
-
-  return segments;
-});
+// Preview
+const { previewLoops, previewOverlays, viewBox, previewToolpathSegments } =
+  useAdaptiveKernelPreview(loopsText, result)
 
 // Initialize with demo loops on mount
 onMounted(() => {
   if (!loopsText.value) {
-    loadDemoLoops();
+    loadDemoLoops()
   }
-});
+})
 </script>
 
 <template>
@@ -559,7 +314,7 @@ onMounted(() => {
               No loops to display. Load demo or paste JSON.
             </div>
           </div>
-          
+
           <div class="flex gap-3 text-[11px] text-gray-500">
             <div class="inline-flex items-center gap-1">
               <span class="inline-block w-4 h-[2px] bg-[#0f766e]" />
