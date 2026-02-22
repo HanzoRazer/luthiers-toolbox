@@ -4,190 +4,105 @@
  *
  * Fretboard inlay pattern designer.
  * Generates dot, diamond, block, and custom inlay patterns with DXF export.
+ *
+ * REFACTORED: Uses composables for cleaner separation of concerns.
  */
-import { ref, computed, watch, onMounted } from "vue";
+import { watch, onMounted } from 'vue'
+import { COMMON_SCALE_LENGTHS } from '@/api/art-studio'
 import {
-  previewInlay,
-  exportInlayDXF,
-  listInlayPresets,
-  getInlayPreset,
-  getFretPositions,
-  downloadBlob,
-  COMMON_SCALE_LENGTHS,
-  type InlayPreviewResponse,
-  type InlayPresetInfo,
-  type InlayPatternType,
-  type FretPositionResponse,
-} from "@/api/art-studio";
+  PATTERN_TYPES,
+  useInlayState,
+  useInlayPresets,
+  useInlayPreview,
+  useInlayFrets
+} from './composables'
 
-// State
-const loading = ref(false);
-const error = ref<string | null>(null);
-const previewResult = ref<InlayPreviewResponse | null>(null);
-const fretData = ref<FretPositionResponse | null>(null);
-const presets = ref<InlayPresetInfo[]>([]);
-const selectedPreset = ref<string | null>(null);
+// =============================================================================
+// COMPOSABLES
+// =============================================================================
 
-// Form inputs
-const patternType = ref<InlayPatternType>("dot");
-const scaleLength = ref(647.7); // Fender scale
-const fretboardWidthNut = ref(43.0);
-const fretboardWidthBody = ref(56.0);
-const numFrets = ref(24);
-const inlaySize = ref(6.0);
-const doubleAt12 = ref(true);
-const doubleSpacing = ref(8.0);
+const {
+  loading,
+  error,
+  previewResult,
+  fretData,
+  presets,
+  selectedPreset,
+  patternType,
+  scaleLength,
+  fretboardWidthNut,
+  fretboardWidthBody,
+  numFrets,
+  inlaySize,
+  doubleAt12,
+  doubleSpacing,
+  selectedFrets,
+  dxfVersion,
+  layerPrefix,
+  selectedScalePreset
+} = useInlayState()
 
-// Fret position checkboxes
-const standardFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
-const selectedFrets = ref<number[]>([...standardFrets]);
+const { refreshPreview, exportDXF } = useInlayPreview(
+  loading,
+  error,
+  previewResult,
+  patternType,
+  selectedFrets,
+  scaleLength,
+  fretboardWidthNut,
+  fretboardWidthBody,
+  numFrets,
+  inlaySize,
+  doubleAt12,
+  doubleSpacing,
+  dxfVersion,
+  layerPrefix
+)
 
-// Export options
-const dxfVersion = ref("R12");
-const layerPrefix = ref("INLAY");
+const { loadPresets, applyPreset } = useInlayPresets(
+  presets,
+  selectedPreset,
+  error,
+  patternType,
+  selectedFrets,
+  scaleLength,
+  fretboardWidthNut,
+  fretboardWidthBody,
+  numFrets,
+  inlaySize,
+  doubleAt12,
+  doubleSpacing,
+  refreshPreview
+)
 
-// Pattern types
-const patternTypes: { value: InlayPatternType; label: string; icon: string }[] =
-  [
-    { value: "dot", label: "Dot", icon: "●" },
-    { value: "diamond", label: "Diamond", icon: "◆" },
-    { value: "block", label: "Block", icon: "■" },
-    { value: "trapezoid", label: "Trapezoid", icon: "⬡" },
-    { value: "custom", label: "Custom", icon: "✱" },
-  ];
+const { loadFretPositions, toggleFret, selectStandardFrets, clearFrets } = useInlayFrets(
+  fretData,
+  selectedFrets,
+  scaleLength,
+  numFrets
+)
 
-// Computed
-const selectedScalePreset = computed({
-  get: () => {
-    const found = COMMON_SCALE_LENGTHS.find(
-      (s) => Math.abs(s.mm - scaleLength.value) < 0.1
-    );
-    return found?.name || null;
-  },
-  set: (name: string | null) => {
-    const found = COMMON_SCALE_LENGTHS.find((s) => s.name === name);
-    if (found) scaleLength.value = found.mm;
-  },
-});
+// =============================================================================
+// WATCHERS
+// =============================================================================
 
-// Methods
-async function loadPresets() {
-  try {
-    presets.value = await listInlayPresets();
-  } catch (e: any) {
-    console.warn("Failed to load presets:", e);
-  }
-}
-
-async function applyPreset() {
-  if (!selectedPreset.value) return;
-  try {
-    const preset = await getInlayPreset(selectedPreset.value);
-    patternType.value = preset.pattern_type;
-    selectedFrets.value = [...preset.fret_positions];
-    scaleLength.value = preset.scale_length_mm;
-    fretboardWidthNut.value = preset.fretboard_width_nut_mm;
-    fretboardWidthBody.value = preset.fretboard_width_body_mm;
-    numFrets.value = preset.num_frets;
-    inlaySize.value = preset.inlay_size_mm;
-    doubleAt12.value = preset.double_at_12;
-    doubleSpacing.value = preset.double_spacing_mm;
-    await refreshPreview();
-  } catch (e: any) {
-    error.value = `Failed to load preset: ${e.message}`;
-  }
-}
-
-async function loadFretPositions() {
-  try {
-    fretData.value = await getFretPositions(scaleLength.value, numFrets.value);
-  } catch (e: any) {
-    console.warn("Failed to load fret positions:", e);
-  }
-}
-
-async function refreshPreview() {
-  loading.value = true;
-  error.value = null;
-  try {
-    previewResult.value = await previewInlay({
-      pattern_type: patternType.value,
-      fret_positions: selectedFrets.value,
-      scale_length_mm: scaleLength.value,
-      fretboard_width_nut_mm: fretboardWidthNut.value,
-      fretboard_width_body_mm: fretboardWidthBody.value,
-      num_frets: numFrets.value,
-      inlay_size_mm: inlaySize.value,
-      double_at_12: doubleAt12.value,
-      double_spacing_mm: doubleSpacing.value,
-    });
-  } catch (e: any) {
-    error.value = e.message || "Preview failed";
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function exportDXF() {
-  loading.value = true;
-  error.value = null;
-  try {
-    const blob = await exportInlayDXF({
-      pattern_type: patternType.value,
-      fret_positions: selectedFrets.value,
-      scale_length_mm: scaleLength.value,
-      fretboard_width_nut_mm: fretboardWidthNut.value,
-      fretboard_width_body_mm: fretboardWidthBody.value,
-      num_frets: numFrets.value,
-      inlay_size_mm: inlaySize.value,
-      double_at_12: doubleAt12.value,
-      double_spacing_mm: doubleSpacing.value,
-      dxf_version: dxfVersion.value,
-      layer_prefix: layerPrefix.value,
-    });
-    downloadBlob(
-      blob,
-      `inlay_${patternType.value}_${scaleLength.value.toFixed(0)}mm.dxf`
-    );
-  } catch (e: any) {
-    error.value = e.message || "Export failed";
-  } finally {
-    loading.value = false;
-  }
-}
-
-function toggleFret(fret: number) {
-  const idx = selectedFrets.value.indexOf(fret);
-  if (idx >= 0) {
-    selectedFrets.value.splice(idx, 1);
-  } else {
-    selectedFrets.value.push(fret);
-    selectedFrets.value.sort((a, b) => a - b);
-  }
-}
-
-function selectStandardFrets() {
-  selectedFrets.value = [...standardFrets];
-}
-
-function clearFrets() {
-  selectedFrets.value = [];
-}
-
-// Watchers
-watch([scaleLength, numFrets], () => loadFretPositions());
+watch([scaleLength, numFrets], () => loadFretPositions())
 
 watch(
   [patternType, scaleLength, inlaySize, doubleAt12],
   () => refreshPreview(),
   { debounce: 300 } as any
-);
+)
+
+// =============================================================================
+// LIFECYCLE
+// =============================================================================
 
 onMounted(() => {
-  loadPresets();
-  loadFretPositions();
-  refreshPreview();
-});
+  loadPresets()
+  loadFretPositions()
+  refreshPreview()
+})
 </script>
 
 <template>
@@ -250,7 +165,7 @@ onMounted(() => {
           </h3>
           <div class="grid grid-cols-5 gap-2">
             <button
-              v-for="pt in patternTypes"
+              v-for="pt in PATTERN_TYPES"
               :key="pt.value"
               class="p-3 rounded-lg border-2 text-center transition-all"
               :class="

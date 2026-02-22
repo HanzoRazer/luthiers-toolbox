@@ -9,7 +9,7 @@
  */
 import { ref } from "vue";
 import ArtStudioRosette from "@/components/art/ArtStudioRosette.vue";
-import ArtStudioInlay from "@/components/art/ArtStudioInlay.vue";
+import ArtStudioInlay from "@/components/art/art_studio_inlay/ArtStudioInlay.vue";
 import ArtStudioBracing from "@/components/art/ArtStudioBracing.vue";
 
 type TabId = "rosette" | "inlay" | "bracing";
