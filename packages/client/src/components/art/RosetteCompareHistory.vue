@@ -64,83 +64,21 @@
       </div>
 
       <!-- Global sparklines (default mode) -->
-      <div
+      <GlobalSparklines
         v-if="!comparePresets"
-        class="flex items-center gap-2 text-[10px] text-gray-600"
-      >
-        <div class="flex items-center gap-1">
-          <svg
-            :width="sparkWidth"
-            :height="sparkHeight"
-            viewBox="0 0 60 20"
-          >
-            <polyline
-              v-if="addedSparkPath"
-              :points="addedSparkPath"
-              fill="none"
-              stroke="#22c55e"
-              stroke-width="1.2"
-            />
-          </svg>
-          <span>Added trend</span>
-        </div>
-        <div class="flex items-center gap-1">
-          <svg
-            :width="sparkWidth"
-            :height="sparkHeight"
-            viewBox="0 0 60 20"
-          >
-            <polyline
-              v-if="removedSparkPath"
-              :points="removedSparkPath"
-              fill="none"
-              stroke="#ef4444"
-              stroke-width="1.2"
-            />
-          </svg>
-          <span>Removed trend</span>
-        </div>
-      </div>
+        :spark-width="sparkWidth"
+        :spark-height="sparkHeight"
+        :added-spark-path="addedSparkPath"
+        :removed-spark-path="removedSparkPath"
+      />
 
       <!-- Per-preset sparklines (compare mode) -->
-      <div
+      <PresetSparklines
         v-else
-        class="flex flex-wrap items-center gap-4 text-[10px] text-gray-600"
-      >
-        <div
-          v-for="preset in presetSparklines"
-          :key="preset.name"
-          class="flex items-center gap-2"
-        >
-          <span class="font-semibold">{{ preset.name }}</span>
-          <svg
-            :width="sparkWidth"
-            :height="sparkHeight"
-            viewBox="0 0 60 20"
-          >
-            <polyline
-              v-if="preset.addedPath"
-              :points="preset.addedPath"
-              fill="none"
-              stroke="#22c55e"
-              stroke-width="1.2"
-            />
-          </svg>
-          <svg
-            :width="sparkWidth"
-            :height="sparkHeight"
-            viewBox="0 0 60 20"
-          >
-            <polyline
-              v-if="preset.removedPath"
-              :points="preset.removedPath"
-              fill="none"
-              stroke="#ef4444"
-              stroke-width="1.2"
-            />
-          </svg>
-        </div>
-      </div>
+        :spark-width="sparkWidth"
+        :spark-height="sparkHeight"
+        :preset-sparklines="presetSparklines"
+      />
 
       <!-- Phase 27.5: Two-preset A/B overlay compare -->
       <div
@@ -243,51 +181,10 @@
         </div>
 
         <!-- Phase 27.6: Numeric delta badges -->
-        <div
+        <PairStatsBadges
           v-if="pairStats"
-          class="mt-2 text-[10px] text-gray-700 flex flex-wrap gap-3"
-        >
-          <div>
-            <span class="font-semibold">Added avg:</span>
-            <span class="ml-1 font-mono">
-              A {{ pairStats.aAdded.toFixed(1) }} ·
-              B {{ pairStats.bAdded.toFixed(1) }}
-            </span>
-            <span
-              class="ml-1 px-1 rounded border"
-              :class="pairStats.deltaAdded >= 0 ? 'border-emerald-500 text-emerald-700' : 'border-rose-500 text-rose-700'"
-            >
-              Δ B–A = {{ formatDelta(pairStats.deltaAdded) }}
-            </span>
-          </div>
-
-          <div>
-            <span class="font-semibold">Removed avg:</span>
-            <span class="ml-1 font-mono">
-              A {{ pairStats.aRemoved.toFixed(1) }} ·
-              B {{ pairStats.bRemoved.toFixed(1) }}
-            </span>
-            <span
-              class="ml-1 px-1 rounded border"
-              :class="pairStats.deltaRemoved >= 0 ? 'border-emerald-500 text-emerald-700' : 'border-rose-500 text-rose-700'"
-            >
-              Δ B–A = {{ formatDelta(pairStats.deltaRemoved) }}
-            </span>
-          </div>
-
-          <div>
-            <span class="font-semibold">Unchanged avg:</span>
-            <span class="ml-1 font-mono">
-              A {{ pairStats.aUnchanged.toFixed(1) }} ·
-              B {{ pairStats.bUnchanged.toFixed(1) }}
-            </span>
-            <span
-              class="ml-1 px-1 rounded border border-gray-400 text-gray-700"
-            >
-              Δ B–A = {{ formatDelta(pairStats.deltaUnchanged) }}
-            </span>
-          </div>
-        </div>
+          :pair-stats="pairStats"
+        />
       </div>
     </div>
 
@@ -299,73 +196,20 @@
     </div>
 
     <!-- History table -->
-    <div
+    <HistoryTable
       v-if="entries.length"
-      class="overflow-x-auto mt-2"
-    >
-      <table class="min-w-full text-[11px] text-left">
-        <thead class="border-b bg-gray-50">
-          <tr>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Time
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap">
-              Baseline
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Base
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              Curr
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right text-emerald-700">
-              +Add
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right text-rose-700">
-              -Rem
-            </th>
-            <th class="px-2 py-1 whitespace-nowrap text-right">
-              =Unch
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(e, idx) in entries"
-            :key="idx"
-            class="border-b last:border-0 hover:bg-gray-50"
-          >
-            <td class="px-2 py-1 whitespace-nowrap">
-              {{ formatTime(e.ts) }}
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap font-mono text-[10px]">
-              {{ e.baseline_id.slice(0, 8) }}…
-            </td>
-            <td class="px-2 py-1 text-right">
-              {{ e.baseline_path_count }}
-            </td>
-            <td class="px-2 py-1 text-right">
-              {{ e.current_path_count }}
-            </td>
-            <td class="px-2 py-1 text-right text-emerald-700">
-              {{ e.added_paths }}
-            </td>
-            <td class="px-2 py-1 text-right text-rose-700">
-              {{ e.removed_paths }}
-            </td>
-            <td class="px-2 py-1 text-right">
-              {{ e.unchanged_paths }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      :entries="entries"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import axios from "axios";
+import GlobalSparklines from "./rosette_compare_history/GlobalSparklines.vue";
+import PresetSparklines from "./rosette_compare_history/PresetSparklines.vue";
+import PairStatsBadges from "./rosette_compare_history/PairStatsBadges.vue";
+import HistoryTable from "./rosette_compare_history/HistoryTable.vue";
 
 interface CompareHistoryEntry {
   ts: string;
