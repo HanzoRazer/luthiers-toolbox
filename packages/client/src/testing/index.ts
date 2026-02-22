@@ -9,3 +9,12 @@ export {
   type Interaction,
   type VerifyResult
 } from './ComposableVerifier'
+
+export {
+  withSetup,
+  withSetupAsync,
+  mockRef,
+  mockFn,
+  type SetupOptions,
+  type SetupResult
+} from './withSetup'

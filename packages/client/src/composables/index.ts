@@ -38,3 +38,38 @@ export type {
   CandidateMinimal,
   UseBulkDecisionOptions,
 } from './useBulkDecision'
+
+// Shared composable types
+export type {
+  // Base interfaces
+  BaseConfig,
+  BaseDeps,
+  BaseState,
+
+  // Common ref types
+  NullableRef,
+  OptionalRef,
+  ReadonlyRef,
+
+  // State patterns
+  LoadingState,
+  AsyncState,
+  FilteredListState,
+  SelectionState,
+  PaginationState,
+  FormState,
+  ModalState,
+
+  // Domain types
+  Move,
+  MachineProfile,
+  Material,
+  Tool,
+  RiskLevel,
+  FeasibilityResult,
+
+  // Utility types
+  ComposableReturn,
+  WritableRefs,
+  UnwrapRefs,
+} from './types'
