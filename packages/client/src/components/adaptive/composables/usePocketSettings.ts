@@ -22,7 +22,7 @@ export interface PocketSettings {
   spindleRpm: number
 }
 
-export interface MachineProfile {
+export interface SettingsMachineProfile {
   id: string
   name: string
   maxFeedXY: number
@@ -73,7 +73,7 @@ export function usePocketSettings() {
 
   // Machine profile
   const selectedMachineId = ref<string | null>(null)
-  const machineProfiles = ref<MachineProfile[]>([])
+  const machineProfiles = ref<SettingsMachineProfile[]>([])
 
   // Computed values
   const stepoverMm = computed(() => (toolD.value * stepoverPct.value) / 100)
