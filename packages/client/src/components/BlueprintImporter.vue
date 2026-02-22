@@ -1,15 +1,14 @@
 <template>
-  <div class="blueprint-importer">
+  <div :class="styles.blueprintImporter">
     <!-- Header -->
-    <div class="header">
+    <div :class="styles.header">
       <h2>Blueprint Importer</h2>
-      <span class="phase-badge">Phase 1</span>
+      <span :class="styles.phaseBadge">Phase 1</span>
     </div>
 
     <!-- Upload Zone -->
     <div
-      class="upload-zone"
-      :class="{ 'drag-over': isDragOver, 'uploading': isUploading }"
+      :class="isDragOver ? styles.uploadZoneDragOver : isUploading ? styles.uploadZoneUploading : styles.uploadZone"
       @drop.prevent="handleDrop"
       @dragover.prevent="isDragOver = true"
       @dragleave="isDragOver = false"
@@ -21,13 +20,13 @@
         style="display: none"
         @change="handleFileSelect"
       >
-      
+
       <div
         v-if="!isUploading && !analysis"
-        class="upload-prompt"
+        :class="styles.uploadPrompt"
       >
         <svg
-          class="upload-icon"
+          :class="styles.uploadIcon"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -40,26 +39,26 @@
             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
           />
         </svg>
-        <p class="upload-text">
+        <p :class="styles.uploadText">
           <strong>Drop blueprint here</strong> or <button
-            class="browse-btn"
+            :class="styles.browseBtn"
             @click="($refs.fileInput as HTMLInputElement)?.click()"
           >
             browse
           </button>
         </p>
-        <p class="upload-hint">
+        <p :class="styles.uploadHint">
           Supports PDF, PNG, JPG (max 20MB)
         </p>
       </div>
 
       <div
         v-if="isUploading"
-        class="upload-progress"
+        :class="styles.uploadProgress"
       >
-        <div class="spinner" />
+        <div :class="styles.spinner" />
         <p>Analyzing with Claude Sonnet 4...</p>
-        <p class="progress-time">
+        <p :class="styles.progressTime">
           {{ uploadProgress }}s elapsed
         </p>
       </div>
@@ -68,12 +67,12 @@
     <!-- Analysis Results -->
     <div
       v-if="analysis && !isUploading"
-      class="analysis-results"
+      :class="styles.analysisResults"
     >
-      <div class="results-header">
+      <div :class="styles.resultsHeader">
         <h3>Analysis Results</h3>
         <button
-          class="btn-secondary"
+          :class="styles.btnSecondary"
           @click="reset"
         >
           New Blueprint
@@ -81,35 +80,35 @@
       </div>
 
       <!-- Scale Info -->
-      <div class="scale-info">
-        <div class="info-card">
-          <span class="label">Detected Scale:</span>
-          <span class="value">{{ analysis.scale || 'Unknown' }}</span>
-          <span :class="['confidence', `confidence-${analysis.scale_confidence}`]">
+      <div :class="styles.scaleInfo">
+        <div :class="styles.infoCard">
+          <span :class="styles.infoLabel">Detected Scale:</span>
+          <span :class="styles.infoValue">{{ analysis.scale || 'Unknown' }}</span>
+          <span :class="analysis.scale_confidence === 'high' ? styles.confidenceHigh : analysis.scale_confidence === 'medium' ? styles.confidenceMedium : styles.confidenceLow">
             {{ analysis.scale_confidence || 'unknown' }}
           </span>
         </div>
         <div
           v-if="analysis.blueprint_type"
-          class="info-card"
+          :class="styles.infoCard"
         >
-          <span class="label">Type:</span>
-          <span class="value">{{ analysis.blueprint_type }}</span>
+          <span :class="styles.infoLabel">Type:</span>
+          <span :class="styles.infoValue">{{ analysis.blueprint_type }}</span>
         </div>
         <div
           v-if="analysis.detected_model"
-          class="info-card"
+          :class="styles.infoCard"
         >
-          <span class="label">Model:</span>
-          <span class="value">{{ analysis.detected_model }}</span>
+          <span :class="styles.infoLabel">Model:</span>
+          <span :class="styles.infoValue">{{ analysis.detected_model }}</span>
         </div>
       </div>
 
       <!-- Dimensions Table -->
-      <div class="dimensions-section">
+      <div :class="styles.dimensionsSection">
         <h4>Detected Dimensions ({{ analysis.dimensions?.length || 0 }})</h4>
-        <div class="dimensions-table">
-          <div class="table-header">
+        <div :class="styles.dimensionsTable">
+          <div :class="styles.tableHeader">
             <span>Label</span>
             <span>Value</span>
             <span>Type</span>
@@ -118,13 +117,12 @@
           <div
             v-for="(dim, idx) in analysis.dimensions?.slice(0, 20)"
             :key="idx"
-            class="table-row"
-            :class="dim.type"
+            :class="dim.type === 'detected' ? styles.tableRowDetected : dim.type === 'estimated' ? styles.tableRowEstimated : styles.tableRow"
           >
-            <span class="dim-label">{{ dim.label }}</span>
-            <span class="dim-value">{{ dim.value }}</span>
-            <span :class="['dim-type', dim.type]">{{ dim.type }}</span>
-            <span :class="['dim-confidence', `confidence-${dim.confidence}`]">
+            <span :class="styles.dimLabel">{{ dim.label }}</span>
+            <span :class="styles.dimValue">{{ dim.value }}</span>
+            <span :class="dim.type === 'detected' ? styles.dimTypeDetected : styles.dimTypeEstimated">{{ dim.type }}</span>
+            <span :class="dim.confidence === 'high' ? styles.confidenceHigh : dim.confidence === 'medium' ? styles.confidenceMedium : styles.confidenceLow">
               {{ dim.confidence }}
             </span>
           </div>
@@ -132,9 +130,9 @@
       </div>
 
       <!-- Export Actions -->
-      <div class="export-actions">
+      <div :class="styles.exportActions">
         <button
-          class="btn-primary"
+          :class="styles.btnPrimary"
           :disabled="isExporting"
           @click="exportSVG"
         >
@@ -154,7 +152,7 @@
           {{ isExporting ? 'Exporting...' : 'Export SVG' }}
         </button>
         <button
-          class="btn-secondary"
+          :class="styles.btnSecondary"
           disabled
           title="Coming in Phase 2"
           @click="exportDXF"
@@ -179,7 +177,7 @@
       <!-- Notes -->
       <div
         v-if="analysis.notes"
-        class="analysis-notes"
+        :class="styles.analysisNotes"
       >
         <h4>Analysis Notes</h4>
         <p>{{ analysis.notes }}</p>
@@ -189,7 +187,7 @@
     <!-- Error Display -->
     <div
       v-if="error"
-      class="error-message"
+      :class="styles.errorMessage"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -208,7 +206,7 @@
         <strong>Error:</strong> {{ error }}
       </div>
       <button
-        class="btn-close"
+        :class="styles.btnClose"
         @click="error = null"
       >
         ×
@@ -220,6 +218,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, onMounted, onUnmounted } from 'vue'
+import styles from './BlueprintImporter.module.css'
 
 // State
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -370,311 +369,3 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-.blueprint-importer {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.phase-badge {
-  background: #3b82f6;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.upload-zone {
-  border: 3px dashed #d1d5db;
-  border-radius: 1rem;
-  padding: 3rem;
-  text-align: center;
-  background: #f9fafb;
-  transition: all 0.3s;
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.upload-zone.drag-over {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.upload-icon {
-  width: 64px;
-  height: 64px;
-  color: #9ca3af;
-  margin-bottom: 1rem;
-}
-
-.upload-text {
-  font-size: 1.125rem;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.browse-btn {
-  color: #3b82f6;
-  text-decoration: underline;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: inherit;
-}
-
-.upload-hint {
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.upload-progress {
-  text-align: center;
-}
-
-.spinner {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.progress-time {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.analysis-results {
-  margin-top: 2rem;
-}
-
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.scale-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.info-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.info-card .label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 600;
-}
-
-.info-card .value {
-  font-size: 1.125rem;
-  color: #111827;
-}
-
-.confidence {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.confidence-high {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.confidence-medium {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.confidence-low {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.dimensions-section {
-  margin-bottom: 2rem;
-}
-
-.dimensions-table {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.table-header {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: #f3f4f6;
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid #e5e7eb;
-  align-items: center;
-}
-
-.table-row.detected {
-  background: #f0fdf4;
-}
-
-.table-row.estimated {
-  background: #fffbeb;
-}
-
-.dim-type {
-  text-transform: capitalize;
-  font-size: 0.875rem;
-}
-
-.dim-type.detected {
-  color: #059669;
-}
-
-.dim-type.estimated {
-  color: #d97706;
-}
-
-.export-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #f9fafb;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary svg,
-.btn-secondary svg {
-  width: 20px;
-  height: 20px;
-}
-
-.analysis-notes {
-  background: #f0f9ff;
-  border-left: 4px solid #3b82f6;
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-.analysis-notes h4 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  color: #1e40af;
-}
-
-.error-message {
-  background: #fee2e2;
-  border-left: 4px solid #dc2626;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: start;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.error-message svg {
-  width: 24px;
-  height: 24px;
-  color: #dc2626;
-  flex-shrink: 0;
-}
-
-.btn-close {
-  margin-left: auto;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #991b1b;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>

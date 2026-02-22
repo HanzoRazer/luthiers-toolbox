@@ -1,0 +1,344 @@
+/**
+ * QuickCutView CSS Module
+ * Simplified DXF to G-code workflow styles
+ */
+
+.quickCutView {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.qcHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.qcHeader h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+}
+
+/* Step Indicator */
+.stepsIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.5;
+}
+
+.stepActive {
+  composes: step;
+  opacity: 1;
+}
+
+.stepDone {
+  composes: step;
+  opacity: 1;
+}
+
+.stepNum {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.stepNumActive {
+  composes: stepNum;
+  background: #2196f3;
+  color: white;
+}
+
+.stepNumDone {
+  composes: stepNum;
+  background: #4caf50;
+  color: white;
+}
+
+.stepLabel {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.stepLine {
+  width: 60px;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 1rem;
+}
+
+.stepLineDone {
+  composes: stepLine;
+  background: #4caf50;
+}
+
+/* Step Content */
+.stepContent {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+/* Upload Zone */
+.uploadZone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.uploadZone:hover {
+  border-color: #2196f3;
+}
+
+.uploadZoneHasFile {
+  composes: uploadZone;
+  border-style: solid;
+  border-color: #4caf50;
+  background: #f0fff0;
+}
+
+.uploadPrompt {
+  color: #666;
+}
+
+.uploadIcon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.fileSelected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.filename {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.filesize {
+  color: #666;
+}
+
+.clearBtn {
+  background: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Config Grid */
+.configGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.configSection {
+  /* config section container */
+}
+
+.configSection h3 {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.configSectionFullWidth {
+  composes: configSection;
+  grid-column: 1 / -1;
+}
+
+.selectInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.numberInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+/* Safety Summary */
+.safetySummary {
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.safetySummaryGreen {
+  composes: safetySummary;
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+}
+
+.safetySummaryYellow {
+  composes: safetySummary;
+  background: #fff8e1;
+  border: 2px solid #ffc107;
+}
+
+.safetySummaryRed {
+  composes: safetySummary;
+  background: #ffebee;
+  border: 2px solid #f44336;
+}
+
+.safetyHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.safetyIcon {
+  font-size: 1.5rem;
+}
+
+.safetyLevel {
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.safetyLabel {
+  color: #666;
+  margin-left: auto;
+}
+
+.safetyMessage {
+  font-size: 0.875rem;
+}
+
+.warningsList {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.warningsList li {
+  margin: 0.25rem 0;
+}
+
+/* G-code Preview */
+.gcodePreview {
+  margin-bottom: 1.5rem;
+}
+
+.gcodePreview h3 {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.gcodeBlock {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  max-height: 250px;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+/* Export Info */
+.exportInfo {
+  background: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.exportInfo p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.runId {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* Actions */
+.stepActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #2196f3;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.btnPrimary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  composes: btn;
+  background: #e0e0e0;
+}
+
+.btnSecondary:hover {
+  background: #d0d0d0;
+}
+
+.error {
+  color: #f44336;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}

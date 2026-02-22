@@ -12,6 +12,7 @@
 import { ref, computed } from 'vue'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import RmosTooltip from '@/components/rmos/RmosTooltip.vue'
+import styles from './QuickCutView.module.css'
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || ''
 
@@ -185,35 +186,34 @@ function reset() {
 </script>
 
 <template>
-  <div class="quick-cut-view">
-    <header class="qc-header">
+  <div :class="styles.quickCutView">
+    <header :class="styles.qcHeader">
       <h1>Quick Cut</h1>
-      <p class="subtitle">DXF to G-code in 3 steps</p>
+      <p :class="styles.subtitle">DXF to G-code in 3 steps</p>
     </header>
 
     <!-- Step Indicator -->
-    <div class="steps-indicator">
-      <div :class="['step', { active: currentStep === 1, done: currentStep > 1 }]">
-        <span class="step-num">1</span>
-        <span class="step-label">Upload</span>
+    <div :class="styles.stepsIndicator">
+      <div :class="currentStep === 1 ? styles.stepActive : currentStep > 1 ? styles.stepDone : styles.step">
+        <span :class="currentStep === 1 ? styles.stepNumActive : currentStep > 1 ? styles.stepNumDone : styles.stepNum">1</span>
+        <span :class="styles.stepLabel">Upload</span>
       </div>
-      <div class="step-line" :class="{ done: currentStep > 1 }"></div>
-      <div :class="['step', { active: currentStep === 2, done: currentStep > 2 }]">
-        <span class="step-num">2</span>
-        <span class="step-label">Configure</span>
+      <div :class="currentStep > 1 ? styles.stepLineDone : styles.stepLine"></div>
+      <div :class="currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepDone : styles.step">
+        <span :class="currentStep === 2 ? styles.stepNumActive : currentStep > 2 ? styles.stepNumDone : styles.stepNum">2</span>
+        <span :class="styles.stepLabel">Configure</span>
       </div>
-      <div class="step-line" :class="{ done: currentStep > 2 }"></div>
-      <div :class="['step', { active: currentStep === 3 }]">
-        <span class="step-num">3</span>
-        <span class="step-label">Export</span>
+      <div :class="currentStep > 2 ? styles.stepLineDone : styles.stepLine"></div>
+      <div :class="currentStep === 3 ? styles.stepActive : styles.step">
+        <span :class="currentStep === 3 ? styles.stepNumActive : styles.stepNum">3</span>
+        <span :class="styles.stepLabel">Export</span>
       </div>
     </div>
 
     <!-- Step 1: Upload DXF -->
-    <div v-if="currentStep === 1" class="step-content">
+    <div v-if="currentStep === 1" :class="styles.stepContent">
       <div
-        class="upload-zone"
-        :class="{ 'has-file': !!dxfFile }"
+        :class="dxfFile ? styles.uploadZoneHasFile : styles.uploadZone"
         @drop="handleDrop"
         @dragover.prevent
       >
@@ -223,23 +223,23 @@ function reset() {
           @change="handleFileUpload"
           :style="{ display: dxfFile ? 'none' : 'block' }"
         />
-        <div v-if="!dxfFile" class="upload-prompt">
-          <p class="upload-icon">📄</p>
+        <div v-if="!dxfFile" :class="styles.uploadPrompt">
+          <p :class="styles.uploadIcon">📄</p>
           <p><strong>Drop DXF here</strong> or click to browse</p>
-          <p class="hint">DXF R12/R2000 format • Closed polylines for pockets</p>
+          <p :class="styles.hint">DXF R12/R2000 format • Closed polylines for pockets</p>
         </div>
-        <div v-else class="file-selected">
-          <span class="filename">{{ dxfFile.name }}</span>
-          <span class="filesize">({{ (dxfFile.size / 1024).toFixed(1) }} KB)</span>
-          <button class="clear-btn" @click="dxfFile = null">×</button>
+        <div v-else :class="styles.fileSelected">
+          <span :class="styles.filename">{{ dxfFile.name }}</span>
+          <span :class="styles.filesize">({{ (dxfFile.size / 1024).toFixed(1) }} KB)</span>
+          <button :class="styles.clearBtn" @click="dxfFile = null">×</button>
         </div>
       </div>
 
-      <p v-if="uploadError" class="error">{{ uploadError }}</p>
+      <p v-if="uploadError" :class="styles.error">{{ uploadError }}</p>
 
-      <div class="step-actions">
+      <div :class="styles.stepActions">
         <button
-          class="btn primary"
+          :class="styles.btnPrimary"
           :disabled="!dxfFile"
           @click="currentStep = 2"
         >
@@ -249,29 +249,29 @@ function reset() {
     </div>
 
     <!-- Step 2: Configure Machine & Parameters -->
-    <div v-if="currentStep === 2" class="step-content">
-      <div class="config-grid">
-        <div class="config-section">
+    <div v-if="currentStep === 2" :class="styles.stepContent">
+      <div :class="styles.configGrid">
+        <div :class="styles.configSection">
           <h3>Machine</h3>
-          <select v-model="selectedMachine" class="select-input">
+          <select v-model="selectedMachine" :class="styles.selectInput">
             <option v-for="m in machines" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
           </select>
-          <p class="hint">{{ machines.find(m => m.id === selectedMachine)?.desc }}</p>
+          <p :class="styles.hint">{{ machines.find(m => m.id === selectedMachine)?.desc }}</p>
         </div>
 
-        <div class="config-section">
+        <div :class="styles.configSection">
           <h3>Material</h3>
-          <select v-model="selectedMaterial" class="select-input">
+          <select v-model="selectedMaterial" :class="styles.selectInput">
             <option v-for="m in materials" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
           </select>
-          <p class="hint">Feed: {{ selectedMaterialData?.feed }} mm/min</p>
+          <p :class="styles.hint">Feed: {{ selectedMaterialData?.feed }} mm/min</p>
         </div>
 
-        <div class="config-section">
+        <div :class="styles.configSection">
           <h3>Tool Diameter (mm)</h3>
           <input
             type="number"
@@ -279,11 +279,11 @@ function reset() {
             min="0.5"
             max="25"
             step="0.5"
-            class="number-input"
+            :class="styles.numberInput"
           />
         </div>
 
-        <div class="config-section">
+        <div :class="styles.configSection">
           <h3>Stepdown (mm)</h3>
           <input
             type="number"
@@ -291,29 +291,29 @@ function reset() {
             min="0.5"
             max="10"
             step="0.5"
-            class="number-input"
+            :class="styles.numberInput"
           />
         </div>
 
-        <div class="config-section full-width">
+        <div :class="styles.configSectionFullWidth">
           <h3>Target Depth (mm)</h3>
           <input
             type="number"
             v-model.number="targetDepth"
             max="0"
             step="0.5"
-            class="number-input"
+            :class="styles.numberInput"
           />
-          <p class="hint">Negative value (e.g., -6 for 6mm deep pocket)</p>
+          <p :class="styles.hint">Negative value (e.g., -6 for 6mm deep pocket)</p>
         </div>
       </div>
 
-      <p v-if="generateError" class="error">{{ generateError }}</p>
+      <p v-if="generateError" :class="styles.error">{{ generateError }}</p>
 
-      <div class="step-actions">
-        <button class="btn secondary" @click="currentStep = 1">Back</button>
+      <div :class="styles.stepActions">
+        <button :class="styles.btnSecondary" @click="currentStep = 1">Back</button>
         <button
-          class="btn primary"
+          :class="styles.btnPrimary"
           :disabled="isGenerating"
           @click="generateGcode"
         >
@@ -323,380 +323,65 @@ function reset() {
     </div>
 
     <!-- Step 3: Review & Export -->
-    <div v-if="currentStep === 3" class="step-content">
+    <div v-if="currentStep === 3" :class="styles.stepContent">
       <!-- Safety Summary -->
-      <div class="safety-summary" :class="riskClass">
-        <div class="safety-header">
+      <div :class="riskLevel === 'GREEN' ? styles.safetySummaryGreen : riskLevel === 'YELLOW' ? styles.safetySummaryYellow : riskLevel === 'RED' ? styles.safetySummaryRed : styles.safetySummary">
+        <div :class="styles.safetyHeader">
           <RiskBadge :level="riskLevel" size="lg" />
-          <span class="safety-label">
+          <span :class="styles.safetyLabel">
             Safety Check
             <RmosTooltip concept="feasibility" :inline="true" />
           </span>
         </div>
 
-        <div v-if="riskLevel === 'GREEN'" class="safety-message">
+        <div v-if="riskLevel === 'GREEN'" :class="styles.safetyMessage">
           All checks passed. Safe to run on machine.
           <RmosTooltip concept="risk-green" :inline="true" />
         </div>
-        <div v-else-if="riskLevel === 'YELLOW'" class="safety-message">
+        <div v-else-if="riskLevel === 'YELLOW'" :class="styles.safetyMessage">
           Review warnings before proceeding. Download available.
           <RmosTooltip concept="risk-yellow" :inline="true" />
         </div>
-        <div v-else-if="riskLevel === 'RED'" class="safety-message">
+        <div v-else-if="riskLevel === 'RED'" :class="styles.safetyMessage">
           Blocked for safety. Review parameters and try again.
           <RmosTooltip concept="risk-red" :inline="true" />
         </div>
 
-        <ul v-if="warnings.length > 0" class="warnings-list">
+        <ul v-if="warnings.length > 0" :class="styles.warningsList">
           <li v-for="(w, i) in warnings" :key="i">{{ w }}</li>
         </ul>
       </div>
 
       <!-- G-code Preview -->
-      <div class="gcode-preview">
+      <div :class="styles.gcodePreview">
         <h3>G-code Preview</h3>
-        <pre class="gcode-block">{{ gcodePreview }}</pre>
+        <pre :class="styles.gcodeBlock">{{ gcodePreview }}</pre>
       </div>
 
       <!-- Export Info -->
-      <div class="export-info">
+      <div :class="styles.exportInfo">
         <p><strong>File:</strong> {{ dxfFile?.name }}</p>
         <p><strong>Machine:</strong> {{ machines.find(m => m.id === selectedMachine)?.name }}</p>
         <p><strong>Material:</strong> {{ materials.find(m => m.id === selectedMaterial)?.name }}</p>
         <p><strong>Tool:</strong> {{ toolDiameter }}mm, {{ stepdown }}mm stepdown</p>
-        <p v-if="result?.run_id" class="run-id">
+        <p v-if="result?.run_id" :class="styles.runId">
           <strong>Run ID:</strong> {{ result.run_id }}
           <RmosTooltip concept="run-id" :inline="true" />
         </p>
       </div>
 
-      <div class="step-actions">
-        <button class="btn secondary" @click="currentStep = 2">Back</button>
+      <div :class="styles.stepActions">
+        <button :class="styles.btnSecondary" @click="currentStep = 2">Back</button>
         <button
-          class="btn primary"
+          :class="styles.btnPrimary"
           :disabled="!canDownload"
           @click="downloadGcode"
         >
           {{ riskLevel === 'RED' ? 'Blocked' : 'Download G-code' }}
         </button>
-        <button class="btn secondary" @click="reset">Start Over</button>
+        <button :class="styles.btnSecondary" @click="reset">Start Over</button>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.quick-cut-view {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.qc-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.qc-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.subtitle {
-  color: #666;
-}
-
-/* Step Indicator */
-.steps-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  opacity: 0.5;
-}
-
-.step.active,
-.step.done {
-  opacity: 1;
-}
-
-.step-num {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.step.active .step-num {
-  background: #2196f3;
-  color: white;
-}
-
-.step.done .step-num {
-  background: #4caf50;
-  color: white;
-}
-
-.step-label {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.step-line {
-  width: 60px;
-  height: 2px;
-  background: #e0e0e0;
-  margin: 0 1rem;
-}
-
-.step-line.done {
-  background: #4caf50;
-}
-
-/* Step Content */
-.step-content {
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 2rem;
-}
-
-/* Upload Zone */
-.upload-zone {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-  transition: border-color 0.2s;
-}
-
-.upload-zone:hover {
-  border-color: #2196f3;
-}
-
-.upload-zone.has-file {
-  border-style: solid;
-  border-color: #4caf50;
-  background: #f0fff0;
-}
-
-.upload-prompt {
-  color: #666;
-}
-
-.upload-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-
-.file-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.filename {
-  font-weight: bold;
-  color: #4caf50;
-}
-
-.filesize {
-  color: #666;
-}
-
-.clear-btn {
-  background: #ff5252;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-/* Config Grid */
-.config-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.config-section h3 {
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: #666;
-}
-
-.config-section.full-width {
-  grid-column: 1 / -1;
-}
-
-.select-input,
-.number-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.hint {
-  font-size: 0.75rem;
-  color: #888;
-  margin-top: 0.25rem;
-}
-
-/* Safety Summary */
-.safety-summary {
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.safety-summary.risk-green {
-  background: #e8f5e9;
-  border: 2px solid #4caf50;
-}
-
-.safety-summary.risk-yellow {
-  background: #fff8e1;
-  border: 2px solid #ffc107;
-}
-
-.safety-summary.risk-red {
-  background: #ffebee;
-  border: 2px solid #f44336;
-}
-
-.safety-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.safety-icon {
-  font-size: 1.5rem;
-}
-
-.safety-level {
-  font-weight: bold;
-  font-size: 1.25rem;
-}
-
-.safety-label {
-  color: #666;
-  margin-left: auto;
-}
-
-.safety-message {
-  font-size: 0.875rem;
-}
-
-.warnings-list {
-  margin-top: 0.75rem;
-  padding-left: 1.25rem;
-  font-size: 0.875rem;
-}
-
-.warnings-list li {
-  margin: 0.25rem 0;
-}
-
-/* G-code Preview */
-.gcode-preview {
-  margin-bottom: 1.5rem;
-}
-
-.gcode-preview h3 {
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: #666;
-}
-
-.gcode-block {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  padding: 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
-  max-height: 250px;
-  font-family: monospace;
-  font-size: 0.8rem;
-}
-
-/* Export Info */
-.export-info {
-  background: white;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-}
-
-.export-info p {
-  margin: 0.25rem 0;
-  font-size: 0.875rem;
-}
-
-.run-id {
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-/* Actions */
-.step-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.btn.primary {
-  background: #2196f3;
-  color: white;
-}
-
-.btn.primary:hover:not(:disabled) {
-  background: #1976d2;
-}
-
-.btn.primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn.secondary {
-  background: #e0e0e0;
-}
-
-.btn.secondary:hover {
-  background: #d0d0d0;
-}
-
-.error {
-  color: #f44336;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-</style>

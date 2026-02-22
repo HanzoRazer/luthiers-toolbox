@@ -1,0 +1,282 @@
+/**
+ * PostEditor CSS Module
+ * Post-processor editor modal styles
+ */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  overflow-y: auto;
+}
+
+.modalDialog {
+  background: white;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dialogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dialogHeader h2 {
+  margin: 0;
+}
+
+.btnClose {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.btnClose:hover {
+  color: #333;
+}
+
+.dialogBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.loading,
+.error {
+  padding: 20px;
+  text-align: center;
+}
+
+.error {
+  color: #f44336;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.formGroup input[type="text"],
+.formGroup textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.formGroup small {
+  display: block;
+  margin-top: 4px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.arrayEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arrayItem {
+  display: flex;
+  gap: 8px;
+}
+
+.arrayItem input {
+  flex: 1;
+}
+
+.btnRemove {
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.btnRemove:hover {
+  background: #d32f2f;
+}
+
+.btnAdd {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btnAdd:hover {
+  background: #45a049;
+}
+
+.metadataFields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metadataRow {
+  display: flex;
+  gap: 10px;
+}
+
+.metadataRow input[type="text"] {
+  flex: 1;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+}
+
+.validationMessages {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.errors {
+  background: #ffebee;
+  color: #c62828;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.warnings {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.validationMessages ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  margin-top: 20px;
+}
+
+.btnCancel,
+.btnValidate,
+.btnSave {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btnCancel {
+  background: #ddd;
+}
+
+.btnCancel:hover {
+  background: #ccc;
+}
+
+.btnValidate {
+  background: #FF9800;
+  color: white;
+}
+
+.btnValidate:hover {
+  background: #F57C00;
+}
+
+.btnSave {
+  background: #4CAF50;
+  color: white;
+}
+
+.btnSave:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.btnSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tokenHelper {
+  margin-top: 30px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.tokenHelper h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.tokenList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.tokenItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.tokenItem code {
+  background: #e0e0e0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.tokenItem span {
+  color: #666;
+}

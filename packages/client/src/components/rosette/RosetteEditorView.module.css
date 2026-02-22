@@ -1,0 +1,323 @@
+/**
+ * RosetteEditorView CSS Module
+ * Ring editor with jump navigation and undo/redo
+ */
+
+.wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.mid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.jumpBtn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #f3bcbc;
+  background: #fdeaea;
+  color: #a00;
+  cursor: pointer;
+}
+
+.jumpBtn:hover {
+  background: #fbd5d5;
+}
+
+.jumpBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.problemCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a00;
+}
+
+.jumpHud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #e6e6e6;
+  background: #fafafa;
+  color: #444;
+}
+
+.jumpHudPulse {
+  composes: jumpHud;
+  animation: hudPulse 260ms ease-out;
+}
+
+/* HUD help tooltip styles */
+.hudHelp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: help;
+  user-select: none;
+}
+
+.hudTooltip {
+  position: absolute;
+  right: 0;
+  top: 24px;
+  min-width: 170px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  font-size: 11px;
+  color: #333;
+  z-index: 20;
+  display: none;
+}
+
+.hudHelp:hover .hudTooltip,
+.hudHelp:focus .hudTooltip,
+.hudHelp:focus-within .hudTooltip {
+  display: block;
+}
+
+.ttTitle {
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.ttRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid #ddd;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #222;
+}
+
+@keyframes hudPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.02);
+    filter: brightness(1.06);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@media (max-width: 1100px) {
+  .wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Undo/Redo button styles */
+.undoBtn {
+  composes: jumpBtn;
+  margin-left: auto;
+}
+
+.redoBtn {
+  composes: jumpBtn;
+  margin-left: 4px;
+}
+
+/* Reset tips button styles */
+.resetTipsBtn {
+  composes: jumpBtn;
+  margin-left: auto;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-color: #d4d4d4;
+  background: #f9f9f9;
+  color: #666;
+}
+
+.resetTipsBtn:hover {
+  background: #ececec;
+  color: #333;
+}
+
+/* Ring nudge section styles */
+.ringNudgeSection {
+  background: #fafafa;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.nudgeTitle {
+  font-size: 11px;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.ringRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.ringRowFocused {
+  composes: ringRow;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+}
+
+.ringLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  min-width: 50px;
+}
+
+.ringWidth {
+  font-size: 11px;
+  font-weight: 700;
+  color: #222;
+  min-width: 55px;
+  text-align: right;
+}
+
+.ringActions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.mini {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+.mini:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.mini:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.miniDist {
+  composes: mini;
+  border-color: #a8d4f0;
+  background: #e8f4fc;
+  color: #0066aa;
+}
+
+.miniDist:hover:not(:disabled) {
+  background: #cce8f7;
+}
+
+/* Subtle shake animation for disabled undo/redo */
+@keyframes subtleShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: subtleShake 220ms ease-in-out;
+}
+
+/* Keyboard hint overlay styles */
+.historyWrap {
+  position: relative;
+}
+
+.hotkeyHint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: 220px;
+  border: 1px solid #ececec;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.hotkeyHintTitle {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.hotkeyHintBody {
+  font-size: 12px;
+  color: #444;
+  line-height: 1.25;
+}
+
+.hotkeyHintClose {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: #777;
+  padding: 4px;
+}

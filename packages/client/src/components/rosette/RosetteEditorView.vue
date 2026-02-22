@@ -1,13 +1,13 @@
 <template>
-  <div class="wrap">
+  <div :class="styles.wrap">
     <PatternLibraryPanel />
-    <div class="mid">
+    <div :class="styles.mid">
       <div
         v-if="store.problematicRingIndices.length > 0"
-        class="toolbar"
+        :class="styles.toolbar"
       >
         <button
-          class="jump-btn"
+          :class="styles.jumpBtn"
           type="button"
           title="Jump to previous problematic ring ([)"
           @click="jumpPrev"
@@ -15,16 +15,16 @@
           Prev
         </button>
         <button
-          class="jump-btn"
+          :class="styles.jumpBtn"
           type="button"
           title="Jump to next problematic ring (])"
           @click="jumpNext"
         >
           Next
         </button>
-        <span class="problem-count">{{ store.problematicRingIndices.length }} problems</span>
+        <span :class="styles.problemCount">{{ store.problematicRingIndices.length }} problems</span>
         <button
-          class="jump-btn"
+          :class="styles.jumpBtn"
           type="button"
           :title="store.jumpSeverity === 'RED_ONLY'
             ? 'Jump filter: RED only (click to include YELLOW)'
@@ -35,45 +35,43 @@
         </button>
         <div
           v-if="store.totalRingCount > 0"
-          class="jump-hud"
-          :class="{ pulse: hudPulse }"
+          :class="[styles.jumpHud, { [styles.jumpHudPulse]: hudPulse }]"
         >
-          <span class="pill">
+          <span :class="styles.pill">
             {{ store.jumpSeverity === "RED_ONLY" ? "Filter: RED only" : "Filter: RED+YELLOW" }}
           </span>
-          <span class="pill">
+          <span :class="styles.pill">
             RED rings: {{ store.redRingCount }} / {{ store.totalRingCount }}
           </span>
           <span
             v-if="store.jumpRingPosition.total > 0"
-            class="pill"
+            :class="styles.pill"
           >
             Focus: {{ store.jumpRingPosition.pos || "—" }} / {{ store.jumpRingPosition.total }}
           </span>
           <!-- Bundle 32.3.8: HUD help tooltip -->
           <span
-            class="hud-help"
+            :class="styles.hudHelp"
             tabindex="0"
             aria-label="Jump hotkeys help"
           >
             ?
             <span
-              class="hud-tooltip"
+              :class="styles.hudTooltip"
               role="tooltip"
             >
-              <div class="tt-title">Jump hotkeys</div>
-              <div class="tt-row"><kbd>[</kbd> Prev problem</div>
-              <div class="tt-row"><kbd>]</kbd> Next problem</div>
-              <div class="tt-row"><kbd>w</kbd> Jump to worst</div>
-              <div class="tt-row"><kbd>Shift</kbd> + <kbd>R</kbd> Toggle filter</div>
+              <div :class="styles.ttTitle">Jump hotkeys</div>
+              <div :class="styles.ttRow"><kbd :class="styles.kbd">[</kbd> Prev problem</div>
+              <div :class="styles.ttRow"><kbd :class="styles.kbd">]</kbd> Next problem</div>
+              <div :class="styles.ttRow"><kbd :class="styles.kbd">w</kbd> Jump to worst</div>
+              <div :class="styles.ttRow"><kbd :class="styles.kbd">Shift</kbd> + <kbd :class="styles.kbd">R</kbd> Toggle filter</div>
             </span>
           </span>
         </div>
         <!-- Bundle 32.4.0: Undo button -->
         <button
           ref="undoBtnRef"
-          class="jump-btn undo-btn"
-          :class="{ shake: shakeUndo }"
+          :class="[styles.jumpBtn, styles.undoBtn, { [styles.shake]: shakeUndo }]"
           type="button"
           :title="undoTitle"
           :disabled="store.historyStack.length === 0"
@@ -84,8 +82,7 @@
         <!-- Bundle 32.4.3.1: Redo button -->
         <button
           ref="redoBtnRef"
-          class="jump-btn redo-btn"
-          :class="{ shake: shakeRedo }"
+          :class="[styles.jumpBtn, styles.redoBtn, { [styles.shake]: shakeRedo }]"
           type="button"
           :title="redoTitle"
           :disabled="store.redoStack.length === 0"
@@ -95,7 +92,7 @@
         </button>
         <!-- Bundle 32.4.18: Reset tips button -->
         <button
-          class="jump-btn reset-tips-btn"
+          :class="[styles.jumpBtn, styles.resetTipsBtn]"
           type="button"
           title="Reset onboarding tips (clears cooldown)"
           @click="resetTips"
@@ -107,23 +104,22 @@
       <!-- Bundle 32.4.0: Ring Nudge Section -->
       <div
         v-if="store.currentParams?.ring_params?.length"
-        class="ring-nudge-section"
+        :class="styles.ringNudgeSection"
       >
-        <div class="nudge-title">
+        <div :class="styles.nudgeTitle">
           Ring Widths
         </div>
         <div
           v-for="(ring, idx) in store.currentParams.ring_params"
           :key="idx"
-          class="ring-row"
+          :class="[styles.ringRow, { [styles.ringRowFocused]: store.focusedRingIndex === idx }]"
           :data-ring-index="idx"
-          :class="{ focused: store.focusedRingIndex === idx }"
         >
-          <span class="ring-label">Ring {{ idx + 1 }}</span>
-          <span class="ring-width">{{ Number(ring.width_mm || 0).toFixed(2) }} mm</span>
-          <div class="ring-actions">
+          <span :class="styles.ringLabel">Ring {{ idx + 1 }}</span>
+          <span :class="styles.ringWidth">{{ Number(ring.width_mm || 0).toFixed(2) }} mm</span>
+          <div :class="styles.ringActions">
             <button
-              class="mini"
+              :class="styles.mini"
               type="button"
               title="Shrink width by 0.10 mm"
               :disabled="store.isRedBlocked"
@@ -132,7 +128,7 @@
               −0.10
             </button>
             <button
-              class="mini"
+              :class="styles.mini"
               type="button"
               title="Grow width by 0.10 mm"
               :disabled="store.isRedBlocked"
@@ -141,7 +137,7 @@
               +0.10
             </button>
             <button
-              class="mini dist"
+              :class="[styles.mini, styles.miniDist]"
               type="button"
               title="Shrink width, distribute to neighbors"
               :disabled="store.isRedBlocked"
@@ -150,7 +146,7 @@
               −0.10↔
             </button>
             <button
-              class="mini dist"
+              :class="[styles.mini, styles.miniDist]"
               type="button"
               title="Grow width, distribute to neighbors"
               :disabled="store.isRedBlocked"
@@ -163,7 +159,7 @@
       </div>
 
       <!-- Bundle 32.4.2 + 32.4.15: History mini-stack panel with keyboard hint overlay -->
-      <div class="historyWrap">
+      <div :class="styles.historyWrap">
         <HistoryStackPanel
           :highlight-idx-from-top="historyHotkeyFlash"
           @hover-hint="showHintFromHover"
@@ -184,17 +180,17 @@
         <!-- Bundle 32.4.15: Keyboard hint overlay -->
         <div
           v-if="showHistoryHotkeyHint && hasHistory"
-          class="hotkeyHint"
+          :class="styles.hotkeyHint"
           role="note"
         >
-          <div class="hotkeyHintTitle">
+          <div :class="styles.hotkeyHintTitle">
             Keyboard tip
           </div>
-          <div class="hotkeyHintBody">
+          <div :class="styles.hotkeyHintBody">
             Try <b>1–5</b> to revert history (1 = newest)
           </div>
           <button
-            class="hotkeyHintClose"
+            :class="styles.hotkeyHintClose"
             type="button"
             aria-label="Dismiss"
             @click="() => hideHint(true)"
@@ -225,6 +221,7 @@ import SnapshotPanel from "./SnapshotPanel.vue";
 import FeasibilityBanner from "./FeasibilityBanner.vue";
 import ToastHost from "@/components/ui/ToastHost.vue";
 import HistoryStackPanel from "./HistoryStackPanel.vue";
+import styles from "./RosetteEditorView.module.css";
 
 const store = useRosetteStore();
 const toast = useUiToastStore();
@@ -540,296 +537,3 @@ watch(
   { deep: true }
 );
 </script>
-
-<style scoped>
-.wrap {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  padding: 12px;
-}
-.mid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.toolbar {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.jump-btn {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid #f3bcbc;
-  background: #fdeaea;
-  color: #a00;
-  cursor: pointer;
-}
-.jump-btn:hover {
-  background: #fbd5d5;
-}
-.problem-count {
-  font-size: 11px;
-  font-weight: 600;
-  color: #a00;
-}
-.jump-hud {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 8px;
-  flex-wrap: wrap;
-}
-.pill {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 999px;
-  border: 1px solid #e6e6e6;
-  background: #fafafa;
-  color: #444;
-}
-.jump-hud.pulse {
-  animation: hudPulse 260ms ease-out;
-}
-
-/* Bundle 32.3.8: HUD help tooltip styles */
-.hud-help {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid #e6e6e6;
-  background: #fff;
-  color: #555;
-  font-size: 12px;
-  font-weight: 900;
-  cursor: help;
-  user-select: none;
-}
-.hud-tooltip {
-  position: absolute;
-  right: 0;
-  top: 24px;
-  min-width: 170px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #e6e6e6;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  font-size: 11px;
-  color: #333;
-  z-index: 20;
-  display: none;
-}
-.hud-help:hover .hud-tooltip,
-.hud-help:focus .hud-tooltip,
-.hud-help:focus-within .hud-tooltip {
-  display: block;
-}
-.tt-title {
-  font-weight: 800;
-  margin-bottom: 6px;
-  color: #111;
-}
-.tt-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-}
-kbd {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 10px;
-  padding: 2px 6px;
-  border: 1px solid #ddd;
-  border-bottom-width: 2px;
-  border-radius: 6px;
-  background: #fafafa;
-  color: #222;
-}
-
-@keyframes hudPulse {
-  0% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  45% {
-    transform: scale(1.02);
-    filter: brightness(1.06);
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-}
-@media (max-width: 1100px) {
-  .wrap {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Bundle 32.4.0: Undo button styles */
-.undo-btn {
-  margin-left: auto;
-}
-.undo-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Bundle 32.4.3.1: Redo button styles */
-.redo-btn {
-  margin-left: 4px;
-}
-.redo-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Bundle 32.4.18: Reset tips button styles */
-.reset-tips-btn {
-  margin-left: auto;
-  font-size: 10px;
-  padding: 4px 8px;
-  border-color: #d4d4d4;
-  background: #f9f9f9;
-  color: #666;
-}
-.reset-tips-btn:hover {
-  background: #ececec;
-  color: #333;
-}
-
-/* Bundle 32.4.0: Ring nudge section styles */
-.ring-nudge-section {
-  background: #fafafa;
-  border: 1px solid #e6e6e6;
-  border-radius: 10px;
-  padding: 10px 12px;
-  max-height: 240px;
-  overflow-y: auto;
-}
-.nudge-title {
-  font-size: 11px;
-  font-weight: 800;
-  color: #333;
-  margin-bottom: 8px;
-}
-.ring-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-}
-.ring-row.focused {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-}
-.ring-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #555;
-  min-width: 50px;
-}
-.ring-width {
-  font-size: 11px;
-  font-weight: 700;
-  color: #222;
-  min-width: 55px;
-  text-align: right;
-}
-.ring-actions {
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-}
-.ring-actions .mini {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-}
-.ring-actions .mini:hover:not(:disabled) {
-  background: #e8e8e8;
-}
-.ring-actions .mini:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.ring-actions .mini.dist {
-  border-color: #a8d4f0;
-  background: #e8f4fc;
-  color: #0066aa;
-}
-.ring-actions .mini.dist:hover:not(:disabled) {
-  background: #cce8f7;
-}
-
-/* Bundle 32.4.13: Subtle shake animation for disabled undo/redo */
-@keyframes subtleShake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  50% { transform: translateX(2px); }
-  75% { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
-}
-
-.shake {
-  animation: subtleShake 220ms ease-in-out;
-}
-
-/* Bundle 32.4.15: Keyboard hint overlay styles */
-.historyWrap {
-  position: relative;
-}
-
-.hotkeyHint {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  max-width: 220px;
-  border: 1px solid #ececec;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 10px 12px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  z-index: 5;
-}
-
-.hotkeyHintTitle {
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.hotkeyHintBody {
-  font-size: 12px;
-  color: #444;
-  line-height: 1.25;
-}
-
-.hotkeyHintClose {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 12px;
-  color: #777;
-  padding: 4px;
-}
-</style>

@@ -1,0 +1,326 @@
+/**
+ * SawSlicePanel CSS Module
+ * Kerf-aware straight cuts with multi-pass depth control
+ */
+
+.sawSlicePanel {
+  padding: 20px;
+}
+
+.panelHeader {
+  margin-bottom: 30px;
+}
+
+.panelHeader h2 {
+  margin: 0 0 5px 0;
+  color: #2c3e50;
+}
+
+.subtitle {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.panelContent {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 30px;
+}
+
+.parametersSection h3,
+.previewSection h3 {
+  margin: 0 0 15px 0;
+  color: #34495e;
+  font-size: 16px;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 5px;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.bladeInfo {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: #3498db;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.btnSecondary {
+  composes: btn;
+  background: #95a5a6;
+  color: white;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #7f8c8d;
+}
+
+.btnSuccess {
+  composes: btn;
+  background: #27ae60;
+  color: white;
+}
+
+.btnSuccess:hover:not(:disabled) {
+  background: #229954;
+}
+
+.btnPrimary:disabled,
+.btnSecondary:disabled,
+.btnSuccess:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.validationResults,
+.learnedParams,
+.gcodePreview,
+.runArtifactLink,
+.svgPreview {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.validationBadge {
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.validationBadgeOk {
+  composes: validationBadge;
+  background: #d4edda;
+  color: #155724;
+}
+
+.validationBadgeWarn {
+  composes: validationBadge;
+  background: #fff3cd;
+  color: #856404;
+}
+
+.validationBadgeError {
+  composes: validationBadge;
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.validationChecks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.checkItemOk {
+  composes: checkItem;
+  background: #d4edda;
+}
+
+.checkItemWarn {
+  composes: checkItem;
+  background: #fff3cd;
+}
+
+.checkItemError {
+  composes: checkItem;
+  background: #f8d7da;
+}
+
+.checkIcon {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.checkName {
+  font-weight: 600;
+  min-width: 150px;
+}
+
+.checkMessage {
+  /* check message text */
+}
+
+.paramComparison {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.paramRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.paramLabel {
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.paramBaseline {
+  color: #7f8c8d;
+}
+
+.paramArrow {
+  color: #3498db;
+}
+
+.paramMerged {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.laneInfo {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #dee2e6;
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.previewStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.gcodeText {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 15px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  margin-bottom: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.previewCanvas {
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 4px;
+}
+
+.legend {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.colorBox {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.runArtifactLink {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.runArtifactLink code {
+  background: #c8e6c9;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.runArtifactLink a {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+}
