@@ -10,7 +10,7 @@
 
 export { default as ArtPresetSelector } from "./ArtPresetSelector.vue";
 export { default as ArtStudioRosette } from "./ArtStudioRosette.vue";
-export { default as ArtStudioInlay } from "./ArtStudioInlay.vue";
+export { default as ArtStudioInlay } from "./art_studio_inlay/ArtStudioInlay.vue";
 export { default as ArtStudioBracing } from "./ArtStudioBracing.vue";
 export { default as ConfidenceBadge } from "./ConfidenceBadge.vue";
 export { default as ConfidenceDetails } from "./ConfidenceDetails.vue";
