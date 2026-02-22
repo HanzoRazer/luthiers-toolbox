@@ -9,7 +9,7 @@ import {
   exportNeckAsJSON,
   type NeckGeometry,
   type NeckParameters
-} from '../../../../utils/neck_generator'
+} from '@/utils/neck_generator'
 
 // ============================================================================
 // Types
