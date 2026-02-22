@@ -85,80 +85,18 @@
         </div>
       </section>
 
-      <section class="calc-card preview-card">
-        <h4>Preview (not to scale)</h4>
-        <svg
-          :viewBox="svgViewBox"
-          preserveAspectRatio="xMidYMid meet"
-          class="preview"
-        >
-          <line
-            :x1="0"
-            :y1="-svgH/2"
-            :x2="0"
-            :y2="svgH/2"
-            stroke="#cbd5f5"
-            stroke-dasharray="2,2"
-            stroke-width="0.3"
-          />
-          <line
-            :x1="scale"
-            y1="-3"
-            :x2="scale"
-            y2="3"
-            stroke="#94a3b8"
-            stroke-width="0.4"
-          />
-          <line
-            :x1="treble.x"
-            :y1="treble.y"
-            :x2="bass.x"
-            :y2="bass.y"
-            stroke="#0ea5e9"
-            stroke-width="0.7"
-          />
-          <polygon
-            :points="slotPolygonPoints"
-            fill="rgba(14,165,233,0.2)"
-            stroke="#0284c7"
-            stroke-width="0.5"
-          />
-          <circle
-            :cx="treble.x"
-            :cy="treble.y"
-            r="0.8"
-            fill="#0ea5e9"
-          />
-          <circle
-            :cx="bass.x"
-            :cy="bass.y"
-            r="0.8"
-            fill="#0ea5e9"
-          />
-        </svg>
-
-        <div class="action-row">
-          <button
-            class="btn"
-            @click="copyJSON"
-          >
-            Copy JSON
-          </button>
-          <button
-            class="btn"
-            @click="downloadSVG"
-          >
-            Download SVG
-          </button>
-          <button
-            class="btn btn-export"
-            :disabled="exporting"
-            @click="exportDXF"
-          >
-            {{ exporting ? 'Exporting…' : 'Export DXF' }}
-          </button>
-        </div>
-      </section>
+      <PreviewCard
+        :svg-view-box="svgViewBox"
+        :svg-h="svgH"
+        :scale="scale"
+        :treble="treble"
+        :bass="bass"
+        :slot-polygon-points="slotPolygonPoints"
+        :exporting="exporting"
+        @copyJSON="copyJSON"
+        @downloadSVG="downloadSVG"
+        @exportDXF="exportDXF"
+      />
     </div>
 
     <details>
@@ -178,6 +116,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { computed, reactive, ref, onMounted, watch } from 'vue'
+import PreviewCard from './bridge_calculator_panel/PreviewCard.vue'
 
 type UnitMode = 'mm' | 'inch'
 
@@ -559,9 +498,6 @@ function fmt(value: number) {
   cursor: not-allowed;
 }
 
-.btn-export {
-  background: #10b981;
-}
 
 .calc-grid {
   display: grid;
@@ -607,19 +543,6 @@ function fmt(value: number) {
   border-radius: 0.375rem;
 }
 
-.preview-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.preview {
-  width: 100%;
-  height: 320px;
-  background: #fff;
-  border: 1px dashed #e2e8f0;
-  border-radius: 0.5rem;
-}
 
 .summary {
   margin-top: 1rem;
@@ -627,12 +550,6 @@ function fmt(value: number) {
   color: #0f172a;
   display: grid;
   gap: 0.25rem;
-}
-
-.action-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
 }
 
 .error-text {
