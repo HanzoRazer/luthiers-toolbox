@@ -8,7 +8,7 @@ import {
   validateParameters,
   type NeckParameters,
   type ValidationWarning
-} from '../../../../utils/neck_generator'
+} from '@/utils/neck_generator'
 import type { NeckPreset, NeckGeometry } from './lesPaulNeckTypes'
 
 // ============================================================================
