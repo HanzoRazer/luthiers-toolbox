@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ArtStudioSidebar from "./ArtStudioSidebar.vue";
-import ArtStudioCanvas from "./ArtStudioCanvas.vue";
+import ArtStudioCanvas from "./art_studio_canvas/ArtStudioCanvas.vue";
 import ArtStudioCalculatorDebugPanel from "./ArtStudioCalculatorDebugPanel.vue";
 
 // Canvas ref for external control
