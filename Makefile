@@ -75,11 +75,11 @@ check-art-studio-scope:
 check-boundaries:
 	@echo "=== Running Architectural Fence Checks ==="
 	@echo "[1/7] External boundary (ToolBox ↔ Analyzer)..."
-	@cd services/api && python -m app.ci.check_boundary_imports --profile toolbox
+	@cd services/api && python -m app.ci.boundary_imports --profile toolbox
 	@echo "[2/7] RMOS ↔ CAM domain boundary..."
-	@cd services/api && python -m app.ci.check_domain_boundaries --profile rmos_cam || true
+	@cd services/api && python -m app.ci.domain_boundaries --profile rmos_cam || true
 	@echo "[3/7] Operation lane compliance..."
-	@cd services/api && python -m app.ci.check_operation_lane_compliance || true
+	@cd services/api && python -m app.ci.operation_lane_compliance || true
 	@echo "[4/7] AI sandbox boundaries..."
 	@python ci/ai_sandbox/check_ai_import_boundaries.py || true
 	@python ci/ai_sandbox/check_ai_forbidden_calls.py || true
