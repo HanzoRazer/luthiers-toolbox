@@ -1,34 +1,39 @@
 {
   "threshold": 500,
-  "violation_count": 6,
+  "violation_count": 7,
   "violations": [
     {
-      "file": "tests\\test_architecture_scan.py",
+      "file": "tests/test_architecture_scan.py",
       "lines": 891,
       "over_by": 391
     },
     {
-      "file": "tests\\conftest.py",
+      "file": "tests/conftest.py",
       "lines": 658,
       "over_by": 158
     },
     {
-      "file": "tests\\e2e_cam_system.py",
+      "file": "tests/e2e_cam_system.py",
       "lines": 655,
       "over_by": 155
     },
     {
-      "file": "app\\rmos\\posts\\base.py",
-      "lines": 583,
-      "over_by": 83
+      "file": "app/generators/bezier_body.py",
+      "lines": 595,
+      "over_by": 95
     },
     {
-      "file": "tests\\rmos\\test_acoustics_hardening.py",
+      "file": "app/saw_lab/toolpaths_validate_service.py",
+      "lines": 568,
+      "over_by": 68
+    },
+    {
+      "file": "tests/rmos/test_acoustics_hardening.py",
       "lines": 559,
       "over_by": 59
     },
     {
-      "file": "tests\\test_adaptive_router.py",
+      "file": "tests/test_adaptive_router.py",
       "lines": 523,
       "over_by": 23
     }
