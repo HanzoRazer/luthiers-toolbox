@@ -237,18 +237,6 @@ def get_probe_setup_sheet() -> str:
 
 
 # =============================================================================
-# Relief Stubs
-# =============================================================================
-
-@router.post("/relief/heightfield_plan")
-def plan_heightfield_relief(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Plan heightfield relief carving."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "plan": None, "message": "Stub: relief planning not yet implemented"}
-
-
-# =============================================================================
 # Posts Stubs
 # =============================================================================
 

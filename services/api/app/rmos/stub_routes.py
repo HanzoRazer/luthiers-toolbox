@@ -213,16 +213,3 @@ def create_safety_override(payload: Dict[str, Any] = None) -> Dict[str, Any]:
         "message": "Stub: override creation not yet implemented",
     }
 
-
-# =============================================================================
-# Presets Stubs
-# =============================================================================
-
-@router.post("/presets/{preset_id}/promote")
-def promote_preset(preset_id: str) -> Dict[str, Any]:
-    """Promote a preset to production."""
-    return {
-        "ok": True,
-        "preset_id": preset_id,
-        "message": "Stub: preset promotion not yet implemented",
-    }
