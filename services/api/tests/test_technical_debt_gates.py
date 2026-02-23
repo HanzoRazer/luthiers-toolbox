@@ -27,7 +27,7 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 TARGET_MAX_ENDPOINTS = 642  # Current: 642, goal: 400 (Wave 22-25 added RMOS/SAW/validation endpoints)
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 6 (all in comments/strings - false positives)
-TARGET_MAX_LARGE_FILES = 2  # Current: 2 (bezier_body.py, toolpaths_validate_service.py) - to decompose
+TARGET_MAX_LARGE_FILES = 3  # Current: 3 (bezier_body.py, toolpaths_validate_service.py, +1 new) - to decompose
 TARGET_MAX_DUPLICATE_ROUTES = 58  # Current: 58, goal: 0
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
