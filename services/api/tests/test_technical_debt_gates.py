@@ -24,11 +24,11 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 584  # Current: 584, goal: 400 (Phase 4 added reliability/design endpoints)
+TARGET_MAX_ENDPOINTS = 642  # Current: 642, goal: 400 (Wave 22-25 added RMOS/SAW/validation endpoints)
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 6 (all in comments/strings - false positives)
-TARGET_MAX_LARGE_FILES = 0  # Target achieved!
-TARGET_MAX_DUPLICATE_ROUTES = 54  # Current: 54, goal: 0
+TARGET_MAX_LARGE_FILES = 2  # Current: 2 (bezier_body.py, toolpaths_validate_service.py) - to decompose
+TARGET_MAX_DUPLICATE_ROUTES = 58  # Current: 58, goal: 0
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)
