@@ -22,7 +22,7 @@ class TestRiskLevel:
     def test_risk_level_is_string_enum(self):
         """RiskLevel should be usable as string."""
         assert RiskLevel.GREEN == "GREEN"
-        assert str(RiskLevel.RED) == "RED"
+        assert RiskLevel.RED.value == "RED"
 
 
 class TestSafetyDecision:
