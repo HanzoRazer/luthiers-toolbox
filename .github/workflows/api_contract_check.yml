@@ -1,12 +1,14 @@
 name: API Contract Check
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'packages/client/src/**'
       - 'services/api/app/**'
       - 'contracts/api_endpoints.json'
       - 'contracts/api_calls_baseline.json'
+      - '.github/workflows/api_contract_check.yml'
   push:
     branches: [main]
     paths:
@@ -14,6 +16,7 @@ on:
       - 'services/api/app/**'
       - 'contracts/api_endpoints.json'
       - 'contracts/api_calls_baseline.json'
+      - '.github/workflows/api_contract_check.yml'
 
 jobs:
   validate-api-contracts:
