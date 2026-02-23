@@ -25,6 +25,15 @@ from .util.logging_request_id import RequestIdFilter
 from .middleware.deprecation import DeprecationHeadersMiddleware
 
 # AI availability (for health endpoint)
+# -----------------------------------------------------------------------------
+# AI CONTEXT ADAPTER (v1)
+#
+# Hard Boundaries:
+# - AI modules provide status/availability checking ONLY in main.py
+# - No AI code paths execute business logic or modify state here
+# - AI-driven features are isolated in .ai/ and ._experimental.ai_* modules
+# - RMOS authority controls what AI suggestions can affect manufacturing
+# -----------------------------------------------------------------------------
 from .ai.availability import get_ai_status
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
