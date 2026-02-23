@@ -369,7 +369,7 @@ def get_job_type_distribution():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/recent")
+@router.get("/analytics/jobs/recent")
 def get_recent_jobs(limit: int = Query(10, ge=1, le=100)):
     """
     Get summary of recent jobs.
