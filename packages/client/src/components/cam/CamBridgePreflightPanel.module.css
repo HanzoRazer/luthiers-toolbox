@@ -1,0 +1,249 @@
+/* CamBridgePreflightPanel CSS Module */
+/* Auto-generated placeholder styles */
+
+.camBridgePreflightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panelHeader {
+  margin-bottom: 0.5rem;
+}
+
+.textSm {
+  font-size: 0.875rem;
+}
+
+.textGray600 {
+  color: #4b5563;
+}
+
+.uploadSection {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.uploadPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.uploadPromptIcon {
+  font-size: 2rem;
+  color: #9ca3af;
+}
+
+.orText {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.uploadButton {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.uploadButton:hover {
+  background: #2563eb;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fileDetails {
+  font-size: 0.875rem;
+}
+
+.clearBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+.dropZone {
+  border: 2px dashed #d1d5db;
+  padding: 2rem;
+  text-align: center;
+  border-radius: 0.5rem;
+}
+
+.dropZoneDragging {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.dropZoneHasFile {
+  border-color: #10b981;
+}
+
+.preflightResults {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.resultsSummary {
+  display: flex;
+  gap: 1rem;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.summaryItemLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.summaryItemValue {
+  font-weight: 600;
+}
+
+.resultsActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btnPrimary {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.btnSecondary {
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.issueSummary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.issueCount {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.issueCountBadge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.issueCountError {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.issueCountWarning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.issueCountInfo {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.issueCountLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.issuesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.issueItem {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.issueItemError {
+  background: #fef2f2;
+  border-left: 3px solid #dc2626;
+}
+
+.issueItemWarning {
+  background: #fffbeb;
+  border-left: 3px solid #d97706;
+}
+
+.issueItemInfo {
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+}
+
+.issueHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.severityBadge {
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+}
+
+.issueDetail {
+  margin-top: 0.25rem;
+}
+
+.issueMessage {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.issueSuggestion {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.statusBadgePassed {
+  color: #10b981;
+}
+
+.statusBadgeFailed {
+  color: #ef4444;
+}
