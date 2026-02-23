@@ -118,12 +118,6 @@ def list_rosette_jobs(
     return {"jobs": [], "total": 0}
 
 
-@router.get("/art/rosette/presets")
-def list_rosette_presets() -> Dict[str, Any]:
-    """List rosette design presets."""
-    return {"presets": [], "total": 0}
-
-
 @router.post("/art/rosette/preview")
 def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     """Generate rosette preview."""
@@ -133,18 +127,6 @@ def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
         "ok": True,
         "preview_url": None,
         "message": "Stub: rosette preview not yet implemented",
-    }
-
-
-@router.post("/art/rosette/save")
-def save_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Save rosette design."""
-    if payload is None:
-        payload = {}
-    return {
-        "ok": True,
-        "rosette_id": None,
-        "message": "Stub: rosette save not yet implemented",
     }
 
 
