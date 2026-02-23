@@ -139,13 +139,13 @@
     <div class="actions flex gap-3">
       <button
         class="btn btn-danger"
-        @click="clearAll"
+        @click="handleClearAll"
       >
         Clear All
       </button>
       <button
         class="btn btn-normal"
-        @click="undo"
+        @click="handleUndo"
       >
         Undo
       </button>
@@ -171,287 +171,176 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { offsetPolycurve, autoFillet, fairCurve, blendClothoid } from '@/utils/curvemath'
+import { ref, onMounted, computed } from "vue";
+import { useCurveHistory, useCurveOperations } from "./composables";
 
-type Point = { x: number; y: number }
-type Mode = 'draw' | 'offset' | 'fillet' | 'fair' | 'clothoid'
+type Mode = "draw" | "offset" | "fillet" | "fair" | "clothoid";
 
 const modes = [
-  { id: 'draw' as Mode, label: '✏️ Draw' },
-  { id: 'offset' as Mode, label: '↔️ Offset' },
-  { id: 'fillet' as Mode, label: '⌓ Fillet' },
-  { id: 'fair' as Mode, label: '〰️ Fair' },
-  { id: 'clothoid' as Mode, label: '⤴️ Clothoid' }
-]
+  { id: "draw" as Mode, label: "✏️ Draw" },
+  { id: "offset" as Mode, label: "↔️ Offset" },
+  { id: "fillet" as Mode, label: "⌓ Fillet" },
+  { id: "fair" as Mode, label: "〰️ Fair" },
+  { id: "clothoid" as Mode, label: "⤴️ Clothoid" },
+];
 
-const mode = ref<Mode>('draw')
-const currentMode = computed(() => modes.find(m => m.id === mode.value))
+const mode = ref<Mode>("draw");
+const currentMode = computed(() => modes.find(m => m.id === mode.value));
 
-const canvas = ref<HTMLCanvasElement | null>(null)
-let ctx: CanvasRenderingContext2D
-let W = 0
-let H = 0
-let dpr = 1
-
-const pts = ref<Point[]>([])
-const stack: Point[][] = []
+// Canvas state
+const canvas = ref<HTMLCanvasElement | null>(null);
+let ctx: CanvasRenderingContext2D;
+let W = 0;
+let H = 0;
+let dpr = 1;
 
 // Parameters
-const offsetDist = ref(10)
-const join = ref<'round' | 'miter' | 'bevel'>('round')
-const filletR = ref(6)
-const lam = ref(10)
-const preserve = ref(true)
-const canvasHeight = ref(400)
+const offsetDist = ref(10);
+const join = ref<"round" | "miter" | "bevel">("round");
+const filletR = ref(6);
+const lam = ref(10);
+const preserve = ref(true);
+const canvasHeight = ref(400);
 
-// Clothoid picking state
-const cPick = ref<{
-  p0?: Point
-  t0?: Point
-  p1?: Point
-  t1?: Point
-}>({})
+// Composables
+const { pts, stack, pushHistory, undo, clearAll, exportJSON, exportDXF } = useCurveHistory();
 
-// History management
-function pushHistory() {
-  stack.push(pts.value.map(p => ({ x: p.x, y: p.y })))
+const {
+  cPick,
+  doOffset: _doOffset,
+  doFillet: _doFillet,
+  doFair: _doFair,
+  resetClothoid,
+  doClothoid,
+  pickClothoidPoint,
+} = useCurveOperations(pts, pushHistory, draw);
+
+// Wrapper functions with current params
+function doOffset() {
+  _doOffset(offsetDist.value, join.value);
 }
 
-function undo() {
-  if (stack.length) {
-    pts.value = stack.pop()!
-    draw()
-  }
+function doFillet() {
+  _doFillet(filletR.value);
 }
 
-function clearAll() {
-  pushHistory()
-  pts.value = []
-  cPick.value = {}
-  draw()
+function doFair() {
+  _doFair(lam.value, preserve.value);
 }
 
-function exportJSON() {
-  const data = JSON.stringify(
-    { points: pts.value.map(p => [p.x, p.y]) },
-    null,
-    2
-  )
-  const blob = new Blob([data], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'curve.json'
-  a.click()
-  URL.revokeObjectURL(url)
+function handleUndo() {
+  undo(draw);
 }
 
-function exportDXF() {
-  // TODO: Implement DXF export via API
-  alert('DXF export coming soon! Use Export JSON for now.')
+function handleClearAll() {
+  clearAll(draw, resetClothoid);
 }
 
 // Canvas setup
 function setup() {
-  const c = canvas.value!
-  dpr = window.devicePixelRatio || 1
-  c.width = c.clientWidth * dpr
-  c.height = c.clientHeight * dpr
-  ctx = c.getContext('2d')!
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-  W = c.clientWidth
-  H = c.clientHeight
-  draw()
+  const c = canvas.value!;
+  dpr = window.devicePixelRatio || 1;
+  c.width = c.clientWidth * dpr;
+  c.height = c.clientHeight * dpr;
+  ctx = c.getContext("2d")!;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  W = c.clientWidth;
+  H = c.clientHeight;
+  draw();
 }
 
 // Drawing
 function draw() {
-  if (!ctx) return
+  if (!ctx) return;
 
   // Clear
-  ctx.clearRect(0, 0, W, H)
+  ctx.clearRect(0, 0, W, H);
 
   // Grid
-  ctx.strokeStyle = '#f1f5f9'
-  ctx.lineWidth = 1
+  ctx.strokeStyle = "#f1f5f9";
+  ctx.lineWidth = 1;
   for (let x = 0; x < W; x += 50) {
-    ctx.beginPath()
-    ctx.moveTo(x, 0)
-    ctx.lineTo(x, H)
-    ctx.stroke()
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
   }
   for (let y = 0; y < H; y += 50) {
-    ctx.beginPath()
-    ctx.moveTo(0, y)
-    ctx.lineTo(W, y)
-    ctx.stroke()
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
   }
 
   // Polyline
   if (pts.value.length > 0) {
-    ctx.strokeStyle = '#1e293b'
-    ctx.lineWidth = 2
-    ctx.beginPath()
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
     pts.value.forEach((p, i) => {
-      if (i === 0) ctx.moveTo(p.x, p.y)
-      else ctx.lineTo(p.x, p.y)
-    })
-    ctx.stroke()
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
 
     // Points
     pts.value.forEach(p => {
-      ctx.fillStyle = '#0ea5e9'
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2)
-      ctx.fill()
-    })
+      ctx.fillStyle = "#0ea5e9";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
 
   // Clothoid picking visualization
-  ctx.fillStyle = '#22c55e'
+  ctx.fillStyle = "#22c55e";
   if (cPick.value.p0) {
-    ctx.beginPath()
-    ctx.arc(cPick.value.p0.x, cPick.value.p0.y, 5, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.beginPath();
+    ctx.arc(cPick.value.p0.x, cPick.value.p0.y, 5, 0, Math.PI * 2);
+    ctx.fill();
   }
   if (cPick.value.p1) {
-    ctx.beginPath()
-    ctx.arc(cPick.value.p1.x, cPick.value.p1.y, 5, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.beginPath();
+    ctx.arc(cPick.value.p1.x, cPick.value.p1.y, 5, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // Tangent vectors
-  ctx.strokeStyle = '#16a34a'
-  ctx.lineWidth = 2
+  ctx.strokeStyle = "#16a34a";
+  ctx.lineWidth = 2;
   if (cPick.value.t0 && cPick.value.p0) {
-    ctx.beginPath()
-    ctx.moveTo(cPick.value.p0.x, cPick.value.p0.y)
-    ctx.lineTo(cPick.value.t0.x, cPick.value.t0.y)
-    ctx.stroke()
+    ctx.beginPath();
+    ctx.moveTo(cPick.value.p0.x, cPick.value.p0.y);
+    ctx.lineTo(cPick.value.t0.x, cPick.value.t0.y);
+    ctx.stroke();
   }
   if (cPick.value.t1 && cPick.value.p1) {
-    ctx.beginPath()
-    ctx.moveTo(cPick.value.p1.x, cPick.value.p1.y)
-    ctx.lineTo(cPick.value.t1.x, cPick.value.t1.y)
-    ctx.stroke()
+    ctx.beginPath();
+    ctx.moveTo(cPick.value.p1.x, cPick.value.p1.y);
+    ctx.lineTo(cPick.value.t1.x, cPick.value.t1.y);
+    ctx.stroke();
   }
 }
 
 // Interaction
 function onClick(evt: MouseEvent) {
-  const r = canvas.value!.getBoundingClientRect()
-  const p = { x: evt.clientX - r.left, y: evt.clientY - r.top }
+  const r = canvas.value!.getBoundingClientRect();
+  const p = { x: evt.clientX - r.left, y: evt.clientY - r.top };
 
-  if (mode.value === 'draw') {
-    pushHistory()
-    pts.value.push(p)
-    draw()
-  } else if (mode.value === 'clothoid') {
-    const c = cPick.value
-    if (!c.p0) {
-      c.p0 = p
-    } else if (!c.t0) {
-      c.t0 = p
-    } else if (!c.p1) {
-      c.p1 = p
-    } else if (!c.t1) {
-      c.t1 = p
-    }
-    draw()
-  }
-}
-
-// Operations
-async function doOffset() {
-  if (pts.value.length < 2) {
-    alert('Need at least 2 points for offset')
-    return
-  }
-  pushHistory()
-  try {
-    const body = await offsetPolycurve(
-      pts.value.map(p => [p.x, p.y]),
-      offsetDist.value,
-      join.value
-    )
-    pts.value = body.polyline.points.map(([x, y]) => ({ x, y }))
-    draw()
-  } catch (err) {
-    alert(`Offset failed: ${err}`)
-  }
-}
-
-async function doFillet() {
-  if (pts.value.length < 3) {
-    alert('Need at least 3 points for fillet')
-    return
-  }
-  pushHistory()
-  try {
-    const body = await autoFillet(
-      pts.value.map(p => [p.x, p.y]),
-      filletR.value,
-      10
-    )
-    pts.value = body.polyline.points.map(([x, y]) => ({ x, y }))
-    draw()
-  } catch (err) {
-    alert(`Fillet failed: ${err}`)
-  }
-}
-
-async function doFair() {
-  if (pts.value.length < 3) {
-    alert('Need at least 3 points for fairing')
-    return
-  }
-  pushHistory()
-  try {
-    const body = await fairCurve(
-      pts.value.map(p => [p.x, p.y]),
-      lam.value,
-      preserve.value
-    )
-    pts.value = body.polyline.points.map(([x, y]) => ({ x, y }))
-    draw()
-  } catch (err) {
-    alert(`Fairing failed: ${err}`)
-  }
-}
-
-function resetClothoid() {
-  cPick.value = {}
-  draw()
-}
-
-async function doClothoid() {
-  const c = cPick.value
-  if (!c.p0 || !c.t0 || !c.p1 || !c.t1) {
-    alert('Pick all 4 points: p0, t0, p1, t1')
-    return
-  }
-
-  pushHistory()
-  try {
-    const p0: [number, number] = [c.p0.x, c.p0.y]
-    const p1: [number, number] = [c.p1.x, c.p1.y]
-    const t0: [number, number] = [c.t0.x - c.p0.x, c.t0.y - c.p0.y]
-    const t1: [number, number] = [c.t1.x - c.p1.x, c.t1.y - c.p1.y]
-
-    const body = await blendClothoid(p0, t0, p1, t1, 1.0)
-    pts.value = body.polyline.points.map(([x, y]) => ({ x, y }))
-    cPick.value = {}
-    draw()
-  } catch (err) {
-    alert(`Clothoid blend failed: ${err}`)
+  if (mode.value === "draw") {
+    pushHistory();
+    pts.value.push(p);
+    draw();
+  } else if (mode.value === "clothoid") {
+    pickClothoidPoint(p);
+    draw();
   }
 }
 
 onMounted(() => {
-  setup()
-  window.addEventListener('resize', setup)
-})
+  setup();
+  window.addEventListener("resize", setup);
+});
 </script>
 
 <style scoped>

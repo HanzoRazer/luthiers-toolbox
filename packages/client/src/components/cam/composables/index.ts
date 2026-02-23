@@ -19,3 +19,8 @@ export * from './useCamPipelinePresets'
 export * from './useCamPipelineExecution'
 export * from './useCamPipelineInspector'
 export * from './useCamPipelineHelpers'
+
+// CamIssuesList
+export * from './useSeverityFilter'
+export * from './useIssuesAnalytics'
+export * from './useIssuesScrubber'
