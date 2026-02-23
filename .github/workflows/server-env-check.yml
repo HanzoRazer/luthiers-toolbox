@@ -29,9 +29,14 @@ jobs:
       - name: Start server (Docker Compose)
         env:
           SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+        continue-on-error: true
         run: |
           docker compose up -d --build api
           docker compose ps
+          sleep 5
+          echo "=== Container status after 5s ==="
+          docker compose ps
+          docker compose logs api --tail=50 || true
 
       - name: Wait for /docs to be ready (up to ~60s)
         run: |
@@ -39,9 +44,18 @@ jobs:
             if curl -fsS "http://localhost:8000/docs" >/dev/null; then
               echo "Server is up"; exit 0
             fi
+            if [ $((i % 5)) -eq 0 ]; then
+              echo "=== Retry $i: Container status ==="
+              docker compose ps || true
+              docker compose logs api --tail=20 || true
+            fi
             sleep 2
           done
           echo "Server did not become ready in time" >&2
+          echo "=== Final container status ==="
+          docker compose ps || true
+          echo "=== Container logs ==="
+          docker compose logs api --tail=100 || true
           exit 1
 
       - name: Verify OpenAPI docs respond 200
@@ -54,10 +68,7 @@ jobs:
 
       - name: Verify CORS allows configured origin
         run: |
-          # Preflight against an API route with Origin= http://localhost:8080
-          RES=$(curl -sS -i -X OPTIONS "http://localhost:8000/math/curve/radius" \
-              -H "Origin: http://localhost:8080" \
-              -H "Access-Control-Request-Method: POST")
+          RES=$(curl -sS -i -X OPTIONS "http://localhost:8000/math/curve/radius"               -H "Origin: http://localhost:8080"               -H "Access-Control-Request-Method: POST")
           echo "$RES"
           echo "$RES" | grep -i "^Access-Control-Allow-Origin: http://localhost:8080" >/dev/null
 
