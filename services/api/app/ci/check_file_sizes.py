@@ -45,6 +45,11 @@ def _find_python_files(root: Path) -> List[Path]:
     return files
 
 
+def _normalize_path(path: str) -> str:
+    """Normalize path separators to forward slashes for cross-platform comparison."""
+    return path.replace("\\", "/")
+
+
 def check_file_sizes(
     root: Path,
     threshold: int = 500,
@@ -60,7 +65,8 @@ def check_file_sizes(
 
     if baseline:
         for v in baseline.get("violations", []):
-            baseline_set.add(v["file"])
+            # Normalize paths for cross-platform comparison (Windows vs Linux CI)
+            baseline_set.add(_normalize_path(v["file"]))
 
     for pyfile in _find_python_files(root):
         try:
@@ -68,7 +74,8 @@ def check_file_sizes(
             line_count = len(lines)
 
             if line_count > threshold:
-                rel_path = str(pyfile.relative_to(root))
+                # Always use forward slashes for consistency
+                rel_path = _normalize_path(str(pyfile.relative_to(root)))
 
                 if rel_path in baseline_set:
                     continue  # Skip baselined violations
