@@ -6,9 +6,10 @@ These return empty/default responses to prevent 404 errors.
 
 Endpoints covered:
 - /ai/advisories/* - AI advisory requests
-- /ai/context/* - AI context building
 - /blueprint/* - Blueprint analysis and conversion
-- /art/rosette/* - Art rosette operations
+- /art/rosette/compare/snapshot - Single snapshot endpoint (snapshots list is real)
+
+Note: Many /art/rosette/* and /ai/context/* endpoints now have real implementations.
 """
 
 from __future__ import annotations
@@ -42,19 +43,6 @@ def request_advisory(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 # =============================================================================
 # AI Context Stubs
 # =============================================================================
-
-@router.post("/ai/context/build")
-def build_ai_context(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Build AI context packet for design assistance."""
-    if payload is None:
-        payload = {}
-    return {
-        "ok": True,
-        "context_id": None,
-        "packet": {},
-        "message": "Stub: AI context building not yet implemented",
-    }
-
 
 # =============================================================================
 # Blueprint Stubs
@@ -110,45 +98,9 @@ def get_blueprint_static(asset_path: str) -> Dict[str, Any]:
 # Art Rosette Stubs
 # =============================================================================
 
-@router.get("/art/rosette/jobs")
-def list_rosette_jobs(
-    limit: int = Query(default=50, ge=1, le=200),
-) -> Dict[str, Any]:
-    """List rosette design jobs."""
-    return {"jobs": [], "total": 0}
-
-
-@router.post("/art/rosette/preview")
-def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate rosette preview."""
-    if payload is None:
-        payload = {}
-    return {
-        "ok": True,
-        "preview_url": None,
-        "message": "Stub: rosette preview not yet implemented",
-    }
-
-
-@router.post("/art/rosette/compare")
-def compare_rosettes(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Compare two rosette designs."""
-    if payload is None:
-        payload = {}
-    return {
-        "ok": True,
-        "diffs": [],
-        "message": "Stub: rosette comparison not yet implemented",
-    }
-
-
 @router.get("/art/rosette/compare/snapshot")
 def get_rosette_compare_snapshot() -> Dict[str, Any]:
     """Get rosette comparison snapshot."""
     return {"snapshot": None}
 
 
-@router.get("/art/rosette/compare/snapshots")
-def list_rosette_compare_snapshots() -> Dict[str, Any]:
-    """List rosette comparison snapshots."""
-    return {"snapshots": [], "total": 0}
