@@ -6,12 +6,14 @@ on:
       - 'packages/client/src/**'
       - 'services/api/app/**'
       - 'contracts/api_endpoints.json'
+      - 'contracts/api_calls_baseline.json'
   push:
     branches: [main]
     paths:
       - 'packages/client/src/**'
       - 'services/api/app/**'
       - 'contracts/api_endpoints.json'
+      - 'contracts/api_calls_baseline.json'
 
 jobs:
   validate-api-contracts:
