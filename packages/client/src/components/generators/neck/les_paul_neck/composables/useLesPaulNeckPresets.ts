@@ -81,7 +81,7 @@ export function useLesPaulNeckPresets(
    */
   async function fetchNeckPresets(): Promise<void> {
     try {
-      const response = await api('/api/presets?kind=neck')
+      const response = await api('/api/neck/presets')
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
       const data = await response.json()
