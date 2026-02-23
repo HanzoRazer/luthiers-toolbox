@@ -271,7 +271,6 @@ rmos_logging_ai.py
 rmos_logs_helper.py
 rmos_presets.py
 rmos_profile_history.py
-rosette_feasibility_scorer.py
 routers_ai_cam_router.py
 routers_instrument_router.py
 saw_calculators_service.py
