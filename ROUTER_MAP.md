@@ -830,7 +830,7 @@ def safe_stem(filename: str, prefix: str = None) -> str:
 
 | Workflow | Fix |
 |----------|-----|
-| `containers.yml` | Changed simulate endpoint to `/api/sim/cam/simulate_gcode` |
+| `containers.yml` | Changed simulate endpoint to `/api/cam/sim/simulate_gcode` |
 | `proxy_parity.yml` | Added debug logging, case-insensitive grep for post-processor checks |
 | `proxy_adaptive.yml` | Added debug logging for container failures |
 
