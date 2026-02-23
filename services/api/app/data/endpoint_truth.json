@@ -93,10 +93,10 @@
         "POST"
       ],
       "name": "rmos_ai_constraint_search",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/rmos/ai/quick-check",
@@ -104,10 +104,10 @@
         "POST"
       ],
       "name": "rmos_ai_quick_check",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/rmos/profiles",
@@ -116,10 +116,10 @@
         "POST"
       ],
       "name": "rmos_profiles",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/rmos/runs/recent",
@@ -139,10 +139,10 @@
         "POST"
       ],
       "name": "rmos_workflow_sessions",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/rmos/workflow/approve",
@@ -150,10 +150,10 @@
         "POST"
       ],
       "name": "rmos_workflow_approve",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/rmos/workflow/reject",
@@ -161,10 +161,10 @@
         "POST"
       ],
       "name": "rmos_workflow_reject",
-      "lane": "RMOS",
+      "lane": "LEGACY",
       "deprecated": true,
       "deprecated_reason": "planned_not_yet_implemented",
-      "required": false
+      "sunset": "2026-12-31"
     },
     {
       "path": "/api/cam/toolpath/roughing/gcode",
