@@ -26,6 +26,15 @@ jobs:
           echo "Wrote .env:"
           cat .env
 
+      - name: Create data directory for SQLite
+        run: |
+          # Docker volume mount will use this host directory
+          # Must exist before docker compose up, otherwise SQLite fails
+          mkdir -p services/api/app/data
+          chmod 777 services/api/app/data
+          echo "Created data directory:"
+          ls -la services/api/app/
+
       - name: Start server (Docker Compose)
         env:
           SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
@@ -68,7 +77,9 @@ jobs:
 
       - name: Verify CORS allows configured origin
         run: |
-          RES=$(curl -sS -i -X OPTIONS "http://localhost:8000/math/curve/radius"               -H "Origin: http://localhost:8080"               -H "Access-Control-Request-Method: POST")
+          RES=$(curl -sS -i -X OPTIONS "http://localhost:8000/math/curve/radius" \
+              -H "Origin: http://localhost:8080" \
+              -H "Access-Control-Request-Method: POST")
           echo "$RES"
           echo "$RES" | grep -i "^Access-Control-Allow-Origin: http://localhost:8080" >/dev/null
 
