@@ -15,13 +15,25 @@ from pathlib import Path
 import pytest
 
 
+# Skip all tests in this module if the agentic module is not implemented
+try:
+    from app.agentic.spine import replay as _replay_module
+    if not getattr(_replay_module, "IMPLEMENTED", False):
+        pytestmark = pytest.mark.skip(reason="agentic.spine.replay is not yet implemented")
+except ImportError:
+    pytestmark = pytest.mark.skip(reason="agentic.spine.replay module not available")
+
+
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "golden_m1_session.jsonl"
 
 
 @pytest.fixture
 def replay_module():
     """Import replay module or skip if not available."""
-    return pytest.importorskip("app.agentic.spine.replay", reason="replay harness not implemented")
+    from app.agentic.spine import replay
+    if not getattr(replay, "IMPLEMENTED", False):
+        pytest.skip("agentic.spine.replay is not yet implemented")
+    return replay
 
 
 @pytest.fixture

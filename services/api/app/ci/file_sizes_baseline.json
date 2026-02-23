@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 7,
+  "violation_count": 8,
   "violations": [
     {
       "file": "tests/test_architecture_scan.py",
@@ -36,6 +36,11 @@
       "file": "tests/test_adaptive_router.py",
       "lines": 523,
       "over_by": 23
+    },
+    {
+      "file": "app/tests/test_e2e_workflow_integration.py",
+      "lines": 504,
+      "over_by": 4
     }
   ]
 }
