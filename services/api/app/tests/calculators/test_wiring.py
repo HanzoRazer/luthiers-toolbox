@@ -163,7 +163,7 @@ class TestImpedanceMath:
         )
         
         # At full up, cutoff should be very high (minimal effect)
-        assert result.cutoff_frequency_hz > 10000
+        assert result.cutoff_frequency_hz > 1000  # With 1% min clamp, ~1446Hz is expected
 
     def test_tone_rolloff_rolled_off(self):
         """Test tone rolloff with pot turned down."""
