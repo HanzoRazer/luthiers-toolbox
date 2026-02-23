@@ -16,9 +16,16 @@ CRITICAL SAFETY RULES:
 """
 
 import datetime
+import logging
+import os
 
 from fastapi import APIRouter, Body, HTTPException, Response
 from datetime import timezone
+
+logger = logging.getLogger(__name__)
+
+# Simulation gate enforcement (default: enabled)
+RMOS_REQUIRE_SIMULATION = os.environ.get("RMOS_REQUIRE_SIMULATION", "1").lower() in ("1", "true", "yes")
 
 from ..geometry_schemas import (
     ExportRequest,
@@ -44,6 +51,61 @@ from ...rmos.runs import (
 )
 
 router = APIRouter(tags=["geometry"])
+
+
+def _check_simulation_gate(body: "GcodeExportIn") -> dict:
+    """
+    Enforce simulation gate for governed G-code exports.
+    
+    SAFETY: Requires simulation verification OR explicit override.
+    See: docs/DESIGN_REVIEW_2026-02-22.md Priority #3
+    
+    Returns:
+        dict with gate_passed, override_used, reason
+    
+    Raises:
+        HTTPException 403 if gate not satisfied
+    """
+    if not RMOS_REQUIRE_SIMULATION:
+        return {"gate_passed": True, "override_used": False, "reason": "gate_disabled"}
+    
+    # Check if simulation was passed
+    if body.simulation_passed:
+        if not body.simulation_hash:
+            logger.warning("simulation_passed=True but no simulation_hash provided")
+        return {"gate_passed": True, "override_used": False, "reason": "simulation_verified"}
+    
+    # Check for explicit override
+    if body.simulation_override:
+        if not body.simulation_override_reason:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "simulation_override_requires_reason",
+                    "message": "simulation_override=True requires simulation_override_reason",
+                    "hint": "Provide a reason for bypassing simulation (e.g., 'emergency repair', 'known-good program')",
+                }
+            )
+        logger.warning(
+            "SIMULATION_OVERRIDE: reason=%s",
+            body.simulation_override_reason,
+        )
+        return {
+            "gate_passed": True,
+            "override_used": True,
+            "reason": body.simulation_override_reason,
+        }
+    
+    # Gate not satisfied
+    raise HTTPException(
+        status_code=403,
+        detail={
+            "error": "simulation_required",
+            "message": "G-code export requires simulation verification before download",
+            "hint": "Run simulation first, then set simulation_passed=True with simulation_hash, OR use simulation_override=True with reason",
+            "docs": "See docs/DESIGN_REVIEW_2026-02-22.md Priority #3",
+        }
+    )
 
 
 @router.post("/export")
@@ -157,7 +219,13 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
 
     Same functionality as /export_gcode but with full RMOS artifact persistence.
     Use this endpoint for production/machine execution.
+    
+    SAFETY GATE: Requires simulation verification OR explicit override.
+    Set RMOS_REQUIRE_SIMULATION=0 to disable (not recommended for production).
     """
+    # Enforce simulation gate
+    gate_result = _check_simulation_gate(body)
+    
     posts = _load_posts()
     hdr = []
     ftr = []
@@ -184,6 +252,15 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
     gcode_hash = sha256_of_text(program)
 
     run_id = create_run_id()
+    
+    # Include simulation gate metadata in artifact
+    simulation_meta = {
+        "simulation_passed": body.simulation_passed,
+        "simulation_hash": body.simulation_hash,
+        "simulation_override": gate_result.get("override_used", False),
+        "simulation_override_reason": body.simulation_override_reason if gate_result.get("override_used") else None,
+    }
+    
     artifact = RunArtifact(
         run_id=run_id,
         created_at_utc=now,
@@ -193,6 +270,7 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
         status="OK",
         request_hash=request_hash,
         gcode_hash=gcode_hash,
+        meta={"simulation_gate": simulation_meta},  # Store simulation verification in meta
     )
     persist_run(artifact)
 
@@ -207,4 +285,7 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
     resp.headers["X-Run-ID"] = run_id
     resp.headers["X-GCode-SHA256"] = gcode_hash
     resp.headers["X-ToolBox-Lane"] = "governed"
+    resp.headers["X-Simulation-Verified"] = "true" if body.simulation_passed else "override"
+    if body.simulation_hash:
+        resp.headers["X-Simulation-Hash"] = body.simulation_hash
     return resp
