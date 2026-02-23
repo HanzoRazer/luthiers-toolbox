@@ -10,9 +10,9 @@ Combines:
 5 routes total covering toolpath operations:
   lookup → validate → lint → download
 """
-from __future__ import annotations
-
-from typing import Any, Dict, Optional
+# NOTE: Intentionally NOT using from __future__ import annotations
+# to avoid Pydantic v2 forward reference resolution issues with FastAPI
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
@@ -293,3 +293,4 @@ def download_toolpaths_gcode(toolpaths_artifact_id: str):
         raise HTTPException(status_code=409, detail="toolpaths artifact has no gcode attachment sha256")
 
     return RedirectResponse(url=f"/api/rmos/attachments/{sha}", status_code=302)
+

@@ -10,8 +10,8 @@ The golden path for converting DXF designs to machine-ready G-code:
 5. GET  /cam/posts - List available post-processors
 """
 
-from __future__ import annotations
-
+# NOTE: Intentionally NOT using from __future__ import annotations
+# to avoid Pydantic v2 forward reference resolution issues with FastAPI
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
