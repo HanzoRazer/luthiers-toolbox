@@ -131,9 +131,18 @@ CORS_ORIGINS = [
     "http://127.0.0.1:4173",
     "https://luthiers-toolboxclient-production-309d.up.railway.app",  # Railway client
 ]
-# Also allow from env var for flexibility
+# Also allow from env vars for flexibility:
+# - CORS_ORIGINS: comma-separated list (docker-compose, CI)
+# - CORS_ALLOWED_ORIGIN: single origin (legacy, backward compat)
+if os.getenv("CORS_ORIGINS"):
+    for origin in os.getenv("CORS_ORIGINS", "").split(","):
+        origin = origin.strip()
+        if origin and origin not in CORS_ORIGINS:
+            CORS_ORIGINS.append(origin)
 if os.getenv("CORS_ALLOWED_ORIGIN"):
-    CORS_ORIGINS.append(os.getenv("CORS_ALLOWED_ORIGIN"))
+    origin = os.getenv("CORS_ALLOWED_ORIGIN", "").strip()
+    if origin and origin not in CORS_ORIGINS:
+        CORS_ORIGINS.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
