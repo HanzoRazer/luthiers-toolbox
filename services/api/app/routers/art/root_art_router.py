@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.services.art_job_store import _load as load_art_jobs, get_job
@@ -12,28 +12,13 @@ from app.services.art_presets_store import (
     list_presets,
 )
 
-# NOTE: Legacy rosette router removed - canonical routes now in:
+# NOTE: Legacy rosette/adaptive/relief routers removed - canonical routes now in:
 # - app.art_studio.api.rosette_jobs_routes (mounted at /api/art/rosette)
 # - app.art_studio.api.rosette_compare_routes (mounted at /api/art/rosette/compare)
 # Removal date: 2026-02-05 (WP-2: API Surface Reduction)
-
-try:  # pragma: no cover - optional adaptive lane
-    from app.routers.art.adaptive_router import router as adaptive_router  # type: ignore
-except (ImportError, ModuleNotFoundError):  # WP-1: optional module import
-    adaptive_router = None
-
-try:  # pragma: no cover - optional relief lane
-    from app.routers.art.relief_router import router as relief_router  # type: ignore
-except (ImportError, ModuleNotFoundError):  # WP-1: optional module import
-    relief_router = None
+# Dead optional imports removed: 2026-02-22 (bloat cleanup)
 
 router = APIRouter(prefix="/api/art", tags=["art"])
-
-if adaptive_router is not None:
-    router.include_router(adaptive_router, prefix="/adaptive")
-
-if relief_router is not None:
-    router.include_router(relief_router, prefix="/relief")
 
 
 @router.get("/jobs", summary="List all Art Studio jobs")

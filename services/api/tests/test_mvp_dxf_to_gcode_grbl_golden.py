@@ -57,7 +57,7 @@ def test_mvp_dxf_to_gcode_grbl_golden_snapshot():
     from fastapi.testclient import TestClient
 
     # Minimal app with only the required router to avoid unrelated startup deps.
-    from app.routers.adaptive_router import router as adaptive_router
+    from app.routers.adaptive import router as adaptive_router
 
     app = FastAPI()
     app.include_router(adaptive_router, prefix="/api")
