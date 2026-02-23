@@ -145,6 +145,7 @@
     "/api/upload/heightmap",
     "/api/v1/dxf/cam/gcode",
     "/api/v1/dxf/validate",
-    "/api/v1/rmos/check"
+    "/api/v1/rmos/check",
+    "/api/vision/generate"
   ]
 }
