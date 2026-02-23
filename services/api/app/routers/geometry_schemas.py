@@ -69,8 +69,41 @@ class ExportRequest(BaseModel):
     )
 
 
-class GcodeExportIn(BaseModel):
-    """Request for G-code export with post-processor headers/footers."""
+class SimulationGateFields(BaseModel):
+    """
+    Mixin fields for simulation gate enforcement.
+
+    SAFETY: G-code export requires simulation verification OR explicit override.
+    See: docs/DESIGN_REVIEW_2026-02-22.md Priority #3
+    """
+    simulation_passed: Optional[bool] = Field(
+        default=None,
+        description="True if G-code was simulated without critical issues"
+    )
+    simulation_hash: Optional[str] = Field(
+        default=None,
+        description="SHA256 of simulation result for verification"
+    )
+    simulation_override: Optional[bool] = Field(
+        default=False,
+        description="Explicitly bypass simulation gate (requires reason)"
+    )
+    simulation_override_reason: Optional[str] = Field(
+        default=None,
+        description="Required reason when simulation_override=True"
+    )
+
+
+class GcodeExportIn(SimulationGateFields):
+    """
+    Request for G-code export with post-processor headers/footers.
+
+    SAFETY GATE: For governed exports, requires one of:
+    - simulation_passed=True with valid simulation_hash
+    - simulation_override=True with simulation_override_reason
+
+    The gate is enforced when RMOS_REQUIRE_SIMULATION=1 (default).
+    """
     gcode: str
     units: Optional[str] = "mm"
     post_id: Optional[str] = None
