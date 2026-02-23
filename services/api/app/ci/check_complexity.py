@@ -51,6 +51,11 @@ def _find_python_files(root: Path) -> List[Path]:
     return files
 
 
+def _normalize_path(path: str) -> str:
+    """Normalize path separators to forward slashes for cross-platform comparison."""
+    return path.replace("\\", "/")
+
+
 def check_complexity(
     root: Path,
     threshold: int = 15,
@@ -66,7 +71,9 @@ def check_complexity(
 
     if baseline:
         for v in baseline.get("violations", []):
-            key = f"{v['file']}:{v['function']}:{v['line']}"
+            # Normalize paths for cross-platform comparison (Windows vs Linux CI)
+            normalized_file = _normalize_path(v['file'])
+            key = f"{normalized_file}:{v['function']}:{v['line']}"
             baseline_set.add(key)
 
     for pyfile in _find_python_files(root):
@@ -76,7 +83,8 @@ def check_complexity(
 
             for block in blocks:
                 if block.complexity > threshold:
-                    rel_path = str(pyfile.relative_to(root))
+                    # Always use forward slashes for consistency
+                    rel_path = _normalize_path(str(pyfile.relative_to(root)))
                     key = f"{rel_path}:{block.name}:{block.lineno}"
 
                     if key in baseline_set:
