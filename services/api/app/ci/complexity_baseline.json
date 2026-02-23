@@ -1,21 +1,7 @@
 {
   "threshold": 15,
-  "violation_count": 150,
+  "violation_count": 148,
   "violations": [
-    {
-      "file": "app\\saw_lab\\toolpaths_validate_service.py",
-      "function": "validate_gcode_static",
-      "complexity": 62,
-      "line": 133,
-      "letter": "F"
-    },
-    {
-      "file": "app\\routers\\cam_post_v155_router.py",
-      "function": "post_v155",
-      "complexity": 59,
-      "line": 145,
-      "letter": "F"
-    },
     {
       "file": "app\\dxf\\preflight_service.py",
       "function": "validate_dxf_file",
@@ -127,6 +113,13 @@
       "complexity": 29,
       "line": 103,
       "letter": "M"
+    },
+    {
+      "file": "app\\ci\\generate_debt_report.py",
+      "function": "generate_report",
+      "complexity": 28,
+      "line": 74,
+      "letter": "F"
     },
     {
       "file": "app\\rmos\\acoustics\\persist_glue.py",
@@ -465,13 +458,6 @@
       "letter": "F"
     },
     {
-      "file": "app\\routers\\pipeline_router.py",
-      "function": "run_pipeline",
-      "complexity": 21,
-      "line": 71,
-      "letter": "F"
-    },
-    {
       "file": "app\\ai_context_adapter\\routes.py",
       "function": "build_context",
       "complexity": 20,
@@ -532,6 +518,13 @@
       "function": "_flatten_entry_for_csv",
       "complexity": 20,
       "line": 29,
+      "letter": "F"
+    },
+    {
+      "file": "app\\saw_lab\\toolpaths_validate_service.py",
+      "function": "_scan_motion_lines",
+      "complexity": 20,
+      "line": 226,
       "letter": "F"
     },
     {
@@ -678,7 +671,7 @@
       "file": "app\\rmos\\posts\\base.py",
       "function": "render_moves_base",
       "complexity": 18,
-      "line": 352,
+      "line": 229,
       "letter": "F"
     },
     {
@@ -826,13 +819,6 @@
       "function": "run_validation",
       "complexity": 17,
       "line": 316,
-      "letter": "F"
-    },
-    {
-      "file": "app\\routers\\cam_post_v155_router.py",
-      "function": "_axis_modal_emit",
-      "complexity": 17,
-      "line": 90,
       "letter": "F"
     },
     {
@@ -1018,10 +1004,10 @@
       "letter": "F"
     },
     {
-      "file": "app\\saw_lab\\execution_complete_router.py",
+      "file": "app\\saw_lab\\execution_lifecycle_router.py",
       "function": "complete_execution",
       "complexity": 16,
-      "line": 47,
+      "line": 199,
       "letter": "F"
     },
     {
