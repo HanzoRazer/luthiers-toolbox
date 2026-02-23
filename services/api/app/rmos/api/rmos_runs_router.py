@@ -1,14 +1,17 @@
 """
-RMOS Runs Router - Artifact Query and Diff API
+RMOS Runs Index Router - Artifact Query and Diff API
 
 Implements RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md and
 RUN_DIFF_VIEWER_CONTRACT_v1.md governance specifications.
 
+NOTE: Moved to /api/rmos/runs-index to avoid conflict with runs_v2 (canonical).
+      The runs_v2 router at /api/rmos/runs is the primary implementation.
+
 Provides:
-- GET /api/rmos/runs - List artifacts with filters + pagination
-- GET /api/rmos/runs/{run_id} - Fetch single artifact
-- GET /api/rmos/runs/{run_id}/download - Download artifact as JSON file
-- GET /api/rmos/runs/diff/{a_id}/{b_id} - Compare two artifacts
+- GET /api/rmos/runs-index - List artifacts with filters + pagination
+- GET /api/rmos/runs-index/{run_id} - Fetch single artifact  
+- GET /api/rmos/runs-index/{run_id}/download - Download artifact as JSON file
+- GET /api/rmos/runs-index/diff/{a_id}/{b_id} - Compare two artifacts
 """
 from __future__ import annotations
 
@@ -24,7 +27,7 @@ from app.rmos.run_artifacts.index import (
     RunIndexRow,
 )
 
-router = APIRouter(prefix="/api/rmos/runs", tags=["RMOS", "Runs"])
+router = APIRouter(prefix="/api/rmos/runs-index", tags=["RMOS", "Runs Index"])
 
 
 # ---------------------------------------------------------------------------
