@@ -31,26 +31,26 @@ from typing import List, Tuple
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from cam.dxf_limits import (
+from app.cam.dxf_limits import (
     MAX_DXF_FILE_SIZE_BYTES,
     ENTERPRISE_MAX_DXF_FILE_SIZE_BYTES,
     MAX_DXF_ENTITIES,
     ENTERPRISE_MAX_DXF_ENTITIES,
     OPERATION_TIMEOUT_SECONDS,
 )
-from cam.dxf_upload_guard import (
+from app.cam.dxf_upload_guard import (
     validate_file_size,
     validate_entity_count,
     DXFValidationError,
 )
-from cam.spatial_hash import SpatialHash
-from cam.graph_algorithms import (
+from app.cam.spatial_hash import SpatialHash
+from app.cam.graph_algorithms import (
     build_adjacency_map_safe,
     find_cycles_iterative,
     GraphOverflowError,
     MAX_RECURSION_DEPTH,
 )
-from cam.async_timeout import run_with_timeout, GeometryTimeout
+from app.cam.async_timeout import run_with_timeout, GeometryTimeout
 
 
 # ============================================================================
@@ -334,11 +334,11 @@ class TestSecurityIntegration:
 
     def test_import_all_security_modules(self):
         """Verify all security modules import successfully."""
-        from cam.dxf_limits import MAX_DXF_FILE_SIZE_BYTES
-        from cam.dxf_upload_guard import read_dxf_with_validation
-        from cam.spatial_hash import SpatialHash
-        from cam.graph_algorithms import build_adjacency_map_safe
-        from cam.async_timeout import run_with_timeout
+        from app.cam.dxf_limits import MAX_DXF_FILE_SIZE_BYTES
+        from app.cam.dxf_upload_guard import read_dxf_with_validation
+        from app.cam.spatial_hash import SpatialHash
+        from app.cam.graph_algorithms import build_adjacency_map_safe
+        from app.cam.async_timeout import run_with_timeout
         
         # All imports should succeed
         assert MAX_DXF_FILE_SIZE_BYTES > 0
