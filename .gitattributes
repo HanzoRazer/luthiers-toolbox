@@ -26,3 +26,4 @@
 *.dxf binary
 *.nc binary
 *.ngc binary
+Makefile text eol=lf
