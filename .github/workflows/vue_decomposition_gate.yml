@@ -1,0 +1,80 @@
+name: Vue Decomposition Gate
+
+on:
+  pull_request:
+    paths:
+      - 'packages/client/src/**/*.vue'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/client/src/**/*.vue'
+  workflow_dispatch:
+
+jobs:
+  decomposition-check:
+    name: Check Vue LOC Limits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Vue Decomposition Analyzer
+        id: analyze
+        run: |
+          python scripts/ci/analyze_vue_decomposition.py packages/client/src --json > decomposition_report.json
+        continue-on-error: true
+
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "## Vue Component Decomposition Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f decomposition_report.json ]; then
+            TOTAL=$(jq '.total_files' decomposition_report.json)
+            VIOLATIONS=$(jq '.violations' decomposition_report.json)
+
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total files scanned | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+            echo "| Files exceeding LOC limits | $VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$VIOLATIONS" -gt 0 ]; then
+              echo "### Top 10 Violations" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| File | LOC | Limit | Over By |" >> $GITHUB_STEP_SUMMARY
+              echo "|------|-----|-------|---------|" >> $GITHUB_STEP_SUMMARY
+              jq -r '.files | sort_by(-.total_loc) | .[0:10] | .[] | "| \(.file | split("/") | last) | \(.total_loc) | \(if .limit_type == "orchestrator" then 400 else 200 end) | \(.reduction_needed) |"' decomposition_report.json >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Limits" >> $GITHUB_STEP_SUMMARY
+              echo "- **Orchestrator** (View/Page/Panel/Dashboard/Lab): 400 LOC max" >> $GITHUB_STEP_SUMMARY
+              echo "- **Child component**: 200 LOC max" >> $GITHUB_STEP_SUMMARY
+              echo "- **Composable**: 150 LOC max" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ All components are within LOC guidelines!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Failed to generate decomposition report" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vue-decomposition-report
+          path: decomposition_report.json
+          retention-days: 30
+
+      - name: Check Result
+        if: steps.analyze.outcome == 'failure'
+        run: |
+          echo "::warning::Vue components exceed LOC limits. See decomposition report for details."
+          # Note: Currently informational only. Uncomment below to make blocking:
+          # exit 1
