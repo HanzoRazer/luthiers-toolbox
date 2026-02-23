@@ -84,7 +84,7 @@
           <PatternTemplates 
             :selected-template="selectedTemplate"
             @template-selected="handleTemplateSelected"
-            @template-applied="applyTemplate"
+            @template-applied="handleTemplateApplied"
           />
         </div>
 
@@ -139,248 +139,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import RosetteCanvas from '../rosette/RosetteCanvas.vue'
 import MaterialPalette from '../rosette/MaterialPalette.vue'
 import PatternTemplates from '../rosette/PatternTemplates.vue'
+import {
+  useRosetteDesignerState,
+  useRosetteDesignerExport,
+  type AnyTemplate,
+} from './composables'
 
-interface RosetteSegment {
-  id: string
-  type: 'strip' | 'circle' | 'arc'
-  points: Array<{ x: number, y: number }>
-  material: string
-  angle?: number
-}
+// State management
+const {
+  dimensions,
+  showGrid,
+  selectedTemplate,
+  selectedMaterial,
+  currentStripWidth,
+  segments,
+  status,
+  statusClass,
+  handleSegmentsChanged,
+  handleTemplateSelected,
+  handleMaterialSelected,
+  applyTemplate,
+} = useRosetteDesignerState()
 
-// Design-focused state (not CAM-focused)
-const dimensions = ref({
-  soundholeDiameter: 100,
-  rosetteWidth: 20,
-  channelDepth: 1.5,
-  symmetryCount: 16
-})
+// Export functions
+const {
+  exportPatternImage,
+  exportDimensionSheet,
+  exportChannelPath,
+} = useRosetteDesignerExport(dimensions, status)
 
-const showGrid = ref(true)
-const selectedTemplate = ref<string | undefined>(undefined)
-const selectedMaterial = ref('maple')
-const currentStripWidth = ref(1.0)
-const segments = ref<RosetteSegment[]>([])
-const status = ref('')
-
-const statusClass = computed(() => {
-  if (status.value.startsWith('✅')) return 'success'
-  if (status.value.startsWith('❌')) return 'error'
-  return 'info'
-})
-
-function handleSegmentsChanged(newSegments: RosetteSegment[]) {
-  segments.value = newSegments
-}
-
-function handleTemplateSelected(templateId: string) {
-  selectedTemplate.value = templateId
-}
-
-function applyTemplate(template: any) {
-  status.value = `✅ Applied ${template.name} template`
-  dimensions.value.symmetryCount = template.segments
-  
-  // Generate segments from template strips
-  const soundholeDiameter = dimensions.value.soundholeDiameter
-  const rosetteWidth = dimensions.value.rosetteWidth
-  const innerRadius = soundholeDiameter / 2
-  const outerRadius = innerRadius + rosetteWidth
-  
-  const generatedSegments: RosetteSegment[] = []
-  
-  template.strips.forEach((strip: any, idx: number) => {
-    const segmentAngle = (2 * Math.PI) / template.segments
-    
-    for (let i = 0; i < template.segments; i++) {
-      const startAngle = i * segmentAngle + (strip.angle || 0) * Math.PI / 180
-      const endAngle = startAngle + segmentAngle * (strip.width || 1)
-      
-      // Create points for this segment (arc approximation)
-      const points: Array<{ x: number, y: number }> = []
-      const steps = 8 // Points per arc
-      
-      // Outer arc
-      for (let s = 0; s <= steps; s++) {
-        const angle = startAngle + (endAngle - startAngle) * (s / steps)
-        points.push({
-          x: 300 + outerRadius * Math.cos(angle), // 300 = canvas center
-          y: 300 + outerRadius * Math.sin(angle)
-        })
-      }
-      
-      // Inner arc (reverse)
-      for (let s = steps; s >= 0; s--) {
-        const angle = startAngle + (endAngle - startAngle) * (s / steps)
-        points.push({
-          x: 300 + innerRadius * Math.cos(angle),
-          y: 300 + innerRadius * Math.sin(angle)
-        })
-      }
-      
-      generatedSegments.push({
-        id: `seg-${idx}-${i}`,
-        type: strip.shape || 'strip',
-        points,
-        material: strip.material,
-        angle: strip.angle || 0
-      })
-    }
-  })
-  
-  segments.value = generatedSegments
-  
-  // Emit to canvas to trigger re-render
-  handleSegmentsChanged(generatedSegments)
-}
-
-function handleMaterialSelected(materialId: string) {
-  selectedMaterial.value = materialId
-}
-
-function exportPatternImage() {
-  try {
-    // Wait a moment for canvas to fully render
-    setTimeout(() => {
-      // Try multiple selectors to find the SVG
-      let canvas = document.querySelector('.canvas-workspace svg') as SVGElement
-      if (!canvas) {
-        canvas = document.querySelector('.rosette-canvas-container svg') as SVGElement
-      }
-      if (!canvas) {
-        canvas = document.querySelector('svg') as SVGElement
-      }
-      if (!canvas) {
-        status.value = '❌ Canvas not found - try applying a template first'
-        console.error('SVG canvas element not found in DOM')
-        console.log('Available elements:', {
-          canvasWorkspace: document.querySelector('.canvas-workspace'),
-          rosetteContainer: document.querySelector('.rosette-canvas-container'),
-          anySvg: document.querySelectorAll('svg').length
-        })
-        return
-      }
-      
-      // Clone the SVG to avoid modifying the original
-      const svgClone = canvas.cloneNode(true) as SVGElement
-      
-      // Ensure proper SVG namespace attributes for standalone file
-      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-      svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-      svgClone.setAttribute('version', '1.1')
-      
-      // Get dimensions if not set
-      if (!svgClone.getAttribute('width')) {
-        svgClone.setAttribute('width', '600')
-      }
-      if (!svgClone.getAttribute('height')) {
-        svgClone.setAttribute('height', '600')
-      }
-      
-      // Serialize SVG to string
-      const svgData = new XMLSerializer().serializeToString(svgClone)
-      
-      // Check if SVG has content
-      if (svgData.length < 100) {
-        status.value = '❌ Canvas appears empty - apply a template first'
-        console.error('SVG content too small:', svgData.length, 'bytes')
-        return
-      }
-      
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      
-      // Create download link
-      const url = URL.createObjectURL(svgBlob)
-      const link = document.createElement('a')
-      link.href = url
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
-      link.download = `rosette-pattern-${timestamp}.svg`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      
-      status.value = '✅ Pattern image exported as SVG'
-      console.log('SVG export successful:', svgData.length, 'bytes')
-    }, 100) // Small delay to ensure rendering is complete
-  } catch (error) {
-    status.value = `❌ Export failed: ${error instanceof Error ? error.message : String(error)}`
-    console.error('Export error:', error)
-  }
-}
-
-function exportDimensionSheet() {
-  status.value = '📄 Dimension sheet export (coming soon)'
-  // TODO: Generate PDF with annotations
-}
-
-function exportChannelPath() {
-  try {
-    if (!dimensions.value.soundholeDiameter || !dimensions.value.rosetteWidth) {
-      status.value = '❌ Please set dimensions first'
-      return
-    }
-    
-    status.value = '🔧 Generating simple circular channel path...'
-    
-    // Calculate channel path (outer radius of rosette)
-    const soundholeRadius = dimensions.value.soundholeDiameter / 2
-    const channelRadius = soundholeRadius + dimensions.value.rosetteWidth
-    const depth = dimensions.value.channelDepth || 1.5
-    const feedRate = 800 // mm/min for routing
-    
-    // Generate simple circular G-code
-    const gcode = [
-      '; Rosette Channel Path - Simple Circular Routing',
-      `; Generated: ${new Date().toISOString()}`,
-      '; WARNING: This is a simplified circular path only',
-      '; Rosettes are typically hand-assembled, not CNC-carved',
-      '',
-      'G21 ; Units in mm',
-      'G90 ; Absolute positioning',
-      'G17 ; XY plane',
-      '',
-      '; Safe Z height',
-      'G0 Z5.0',
-      '',
-      '; Move to start position (X positive, Y=0)',
-      `G0 X${channelRadius.toFixed(3)} Y0.000`,
-      '',
-      '; Plunge to depth',
-      `G1 Z${(-depth).toFixed(3)} F300`,
-      '',
-      '; Circular interpolation (full circle)',
-      `G2 X${channelRadius.toFixed(3)} Y0.000 I${(-channelRadius).toFixed(3)} J0.000 F${feedRate}`,
-      '',
-      '; Retract',
-      'G0 Z5.0',
-      '',
-      'M30 ; Program end',
-      ''
-    ].join('\n')
-    
-    // Create download
-    const blob = new Blob([gcode], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
-    link.download = `rosette-channel-${timestamp}.nc`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-    
-    status.value = '✅ Channel path exported (basic circular toolpath)'
-    console.log('G-code export successful:', gcode.length, 'bytes')
-  } catch (error) {
-    status.value = `❌ Channel path export failed: ${error instanceof Error ? error.message : String(error)}`
-    console.error('G-code export error:', error)
-  }
+function handleTemplateApplied(template: AnyTemplate) {
+  applyTemplate(template)
 }
 </script>
 

@@ -8,3 +8,7 @@ export * from './useCurveLabInline'
 export * from './useCurveLabFile'
 export * from './useCurveLabDownload'
 export * from './useCurveLabHelpers'
+
+// CurveLab standalone (non-modal)
+export * from './useCurveHistory'
+export * from './useCurveOperations'
