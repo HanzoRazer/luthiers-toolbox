@@ -81,36 +81,52 @@ def main() -> int:
         time.sleep(2.0)
         wait_for_server()
 
-        # 1) RMOS Saw slice preview (simple geometry estimation)
-        slice_req = {
-            "geometry": {
-                "type": "circle",
-                "radius_mm": 50.0,
-            },
-            "tool_id": "saw_default",
-            "cut_depth_mm": 3.0,
-            "feed_rate_mm_min": 800.0,
-        }
-        log("Testing RMOS saw slice preview...")
-        slice_res = request("POST", "/api/rmos/saw-ops/slice/preview", slice_req)
-        log(f"Slice preview ok: path_length={slice_res['statistics']['path_length_mm']:.1f}mm")
-
-        # 2) RMOS Pipeline handoff (queues a job)
-        handoff_req = {
-            "pattern_id": "ci_test_pattern",
-            "tool_id": "saw_default",
-            "material_id": "hardwood",
-            "operation_type": "channel",
-            "parameters": {},
-        }
-        log("Testing RMOS pipeline handoff...")
-        handoff_res = request("POST", "/api/rmos/saw-ops/pipeline/handoff", handoff_req)
-        log(f"Handoff ok: job_id={handoff_res['job_id']}, status={handoff_res['status']}")
-
-        # 3) Health check endpoint
+        # 1) Health check endpoint (basic connectivity)
         log("Testing health endpoint...")
-        health_res = request("GET", "/api/health")
+        health_res = request("GET", "/health")
         log(f"Health ok: status={health_res.get('status', 'unknown')}")
+
+        # 2) RMOS v1 Feasibility Check
+        check_req = {
+            "tool_diameter_mm": 6.0,
+            "depth_of_cut_mm": 3.0,
+            "stepover_percent": 40.0,
+            "feed_xy_mm_min": 1000.0,
+            "feed_z_mm_min": 200.0,
+            "spindle_rpm": 18000,
+            "material": "hardwood",
+            "operation": "profile",
+        }
+        log("Testing RMOS v1 feasibility check...")
+        check_res = request("POST", "/api/v1/rmos/check", check_req)
+        decision = check_res.get("data", {}).get("decision", "unknown")
+        log(f"Feasibility check ok: decision={decision}")
+
+        # 3) RMOS v1 Create Run
+        run_req = {
+            "session_id": "ci_test_session",
+            "operation": "profile",
+            "parameters": {
+                "tool_diameter_mm": 6.0,
+                "depth_of_cut_mm": 3.0,
+                "stepover_percent": 40.0,
+                "feed_xy": 1000.0,
+                "feed_z": 200.0,
+                "spindle_rpm": 18000,
+                "material": "hardwood",
+            },
+        }
+        log("Testing RMOS v1 create run...")
+        run_res = request("POST", "/api/v1/rmos/runs", run_req)
+        run_id = run_res.get("data", {}).get("run_id", "unknown")
+        export_allowed = run_res.get("data", {}).get("export_allowed", False)
+        log(f"Create run ok: run_id={run_id}, export_allowed={export_allowed}")
+
+        # 4) RMOS v1 List Rules
+        log("Testing RMOS v1 list rules...")
+        rules_res = request("GET", "/api/v1/rmos/rules")
+        rule_count = len(rules_res.get("data", {}).get("rules", []))
+        log(f"List rules ok: {rule_count} rules defined")
 
         log("RMOS CI smoke test completed SUCCESSFULLY.")
         return 0
