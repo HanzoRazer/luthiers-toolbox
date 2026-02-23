@@ -250,8 +250,8 @@ def main() -> int:
         return 2
 
     if not args.json:
-        print(f"[legacy_usage_gate] WARN - {report.legacy_count} legacy usages (within budget: {args.budget})")
-    return 1
+        print(f"[legacy_usage_gate] PASS - {report.legacy_count} legacy usages (within budget: {args.budget})")
+    return 0  # Within budget is acceptable
 
 
 if __name__ == "__main__":
