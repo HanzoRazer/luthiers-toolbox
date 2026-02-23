@@ -1,0 +1,115 @@
+name: API Wiring Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/**'
+      - 'scripts/ci/check_route_conflicts.py'
+      - 'scripts/ci/scan_stub_endpoints.py'
+      - 'scripts/ci/verify_api_wiring.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/api/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wiring-verification:
+    name: API Wiring Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-wiring-${{ hashFiles('services/api/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-wiring-
+            ${{ runner.os }}-pip-
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: |
+          pip install --upgrade pip
+          if [ -f requirements.lock ]; then
+            pip install -r requirements.lock
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # Ensure test client is available
+          pip install httpx
+
+      - name: Run Route Conflict Check
+        id: route-conflicts
+        working-directory: services/api
+        run: |
+          echo "## Route Conflict Check" >> $GITHUB_STEP_SUMMARY
+          python ../../scripts/ci/check_route_conflicts.py 2>&1 | tee route_conflicts.log
+          if [ ${PIPESTATUS[0]} -eq 0 ]; then
+            echo "✅ No route conflicts detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Route conflicts found - see log" >> $GITHUB_STEP_SUMMARY
+            cat route_conflicts.log >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Run API Wiring Verification
+        id: wiring
+        working-directory: services/api
+        run: |
+          echo "## API Wiring Verification" >> $GITHUB_STEP_SUMMARY
+          python ../../scripts/ci/verify_api_wiring.py 2>&1 | tee wiring.log
+          if [ ${PIPESTATUS[0]} -eq 0 ]; then
+            echo "✅ All wiring checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Wiring verification failed" >> $GITHUB_STEP_SUMMARY
+            cat wiring.log >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Run Stub Endpoint Scan (Informational)
+        id: stubs
+        working-directory: services/api
+        continue-on-error: true
+        run: |
+          echo "## Stub Endpoint Report" >> $GITHUB_STEP_SUMMARY
+          python ../../scripts/ci/scan_stub_endpoints.py --app-root app --min-confidence high 2>&1 | tee stubs.log
+          HIGH_COUNT=$(grep -oP 'High:\s+\K\d+' stubs.log || echo "0")
+          TOTAL=$(grep -oP 'Stub endpoints found:\s+\K\d+' stubs.log || echo "0")
+          echo "📊 Found $TOTAL stub endpoints ($HIGH_COUNT high confidence)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>View stub details</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat stubs.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-wiring-reports
+          path: |
+            services/api/route_conflicts.log
+            services/api/wiring.log
+            services/api/stubs.log
+          retention-days: 7
