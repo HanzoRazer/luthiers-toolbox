@@ -120,6 +120,12 @@ jobs:
           CLIENT_IMAGE=toolbox/client:ci
           PROXY_IMAGE=toolbox/nginx:ci
           EOF
+      - name: Create data directory for SQLite
+        run: |
+          # Docker volume mount will use this host directory
+          # Must exist before docker compose up, otherwise SQLite fails
+          mkdir -p services/api/app/data
+          chmod 777 services/api/app/data
       - name: Build API
         uses: docker/build-push-action@v6
         with:
