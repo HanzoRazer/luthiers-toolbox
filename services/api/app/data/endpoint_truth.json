@@ -310,7 +310,7 @@
       "deprecated": false
     },
     {
-      "path": "/api/sim/cam/simulate_gcode",
+      "path": "/api/cam/sim/simulate_gcode",
       "methods": [
         "POST"
       ],

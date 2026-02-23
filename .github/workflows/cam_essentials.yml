@@ -84,7 +84,7 @@ jobs:
       - name: N5 - Simulation endpoint
         run: |
           echo -n '{"gcode":"G21 G90 G17 F1200\nG0 Z5\nG0 X0 Y0\nG1 Z-1 F300\nG1 X50 Y0\nG0 Z5\n"}' > sim_request.json
-          curl -s -X POST $API_BASE/api/sim/cam/simulate_gcode -H 'Content-Type: application/json' --data-binary @sim_request.json > sim.json
+          curl -s -X POST $API_BASE/api/cam/sim/simulate_gcode -H 'Content-Type: application/json' --data-binary @sim_request.json > sim.json
           if jq -e '.moves | length >= 3' sim.json > /dev/null; then
             echo "N5 Simulation passed"
           else
