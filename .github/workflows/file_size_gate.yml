@@ -5,11 +5,15 @@ on:
     paths:
       - 'services/api/app/**/*.py'
       - 'packages/client/src/**/*.vue'
+      - 'ci/file_size_baseline.json'
+      - 'ci/file_size_gate.py'
   push:
     branches: [main]
     paths:
       - 'services/api/app/**/*.py'
       - 'packages/client/src/**/*.vue'
+      - 'ci/file_size_baseline.json'
+      - 'ci/file_size_gate.py'
 
 jobs:
   file-size-check:
