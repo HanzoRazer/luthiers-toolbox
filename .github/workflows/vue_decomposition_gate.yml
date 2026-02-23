@@ -75,6 +75,5 @@ jobs:
       - name: Check Result
         if: steps.analyze.outcome == 'failure'
         run: |
-          echo "::warning::Vue components exceed LOC limits. See decomposition report for details."
-          # Note: Currently informational only. Uncomment below to make blocking:
-          # exit 1
+          echo "::error::Vue components exceed LOC limits. See decomposition report for details."
+          exit 1
