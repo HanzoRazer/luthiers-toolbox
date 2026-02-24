@@ -53,6 +53,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - FinishingDesigner.vue: 471 → 371 LOC ✅
 - AiImageProperties.vue: 463 → 373 LOC ✅
 - VariantReviewPanel.vue: 445 → 273 LOC ✅
+- ArtPresetCompareAB.vue: 449 → 189 LOC ✅
 
 ---
 
@@ -169,6 +170,9 @@ Created components in `components/rosette/rosette-editor/`:
 
 Created components in `components/rmos/variant-review/`:
 - `VariantCard.vue` - Single advisory variant card for review (SVG preview, rating, notes, promote)
+
+Created components in `components/art/preset-compare/`:
+- `PresetColumn.vue` - Single preset column for A/B comparison (health badge, stats, lineage)
 
 ### 3. Use Composables for Logic
 
