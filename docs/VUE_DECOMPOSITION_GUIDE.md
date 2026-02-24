@@ -44,6 +44,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - PolygonOffsetLab.vue: 506 → 397 LOC ✅
 - AdaptiveBenchLab.vue: 563 → 489 LOC ✅
 - RmosOperationE2EPanel.vue: 501 → 412 LOC ✅
+- CompareOpenPanel.vue: 548 → 495 LOC ✅
 
 ---
 
@@ -125,6 +126,9 @@ Created components in `components/toolbox/adaptive-bench/`:
 
 Created components in `components/rmos/operation-e2e/`:
 - `OperationHistoryPanel.vue` - Operation history list with status badges
+
+Created components in `components/art/snapshot_compare/components/`:
+- `SnapshotCard.vue` - Unified left/right snapshot display card
 
 ### 3. Use Composables for Logic
 
