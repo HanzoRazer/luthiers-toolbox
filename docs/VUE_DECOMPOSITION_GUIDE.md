@@ -17,7 +17,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | ManufacturingCandidateList.vue | 602 | RMOS | Has child components |
 | ArtStudioCalculatorDebugPanel.vue | 602 | Debug | Debug panel, verbose by design |
 | CurveLabModal.vue | 183 | Modal | ✅ Extracted InlineGeometryReport + DxfValidationPanel (-69%) |
-| AdvisoryReviewPanel.vue | 579 | AI | Needs review |
+| AdvisoryReviewPanel.vue | 483 | AI | ✅ Extracted AssetList + RejectModal + AttachModal (-17%) |
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
 | PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
 | ArtStudioInlay.vue | 467 | Art Studio | ✅ Extracted FretPositionTable + InlaySummary + InlayDetails (-18%) |
@@ -32,6 +32,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - CurveLabModal.vue: 590 → 183 LOC ✅
 - ArtStudioInlay.vue: 569 → 467 LOC ✅
 - CamPipelineRunner.vue: 524 → 449 LOC ✅
+- AdvisoryReviewPanel.vue: 580 → 483 LOC ✅
 
 ---
 
