@@ -35,6 +35,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - AdvisoryReviewPanel.vue: 580 → 483 LOC ✅
 - CAMEssentialsLab.vue: 510 → 243 LOC ✅
 - VisionAttachToRunWidget.vue: 477 → 305 LOC ✅
+- AiImageGallery.vue: 496 → 454 LOC ✅
 
 ---
 
@@ -84,6 +85,9 @@ Created components in `features/ai_images/vision_attach/`:
 - `GeneratedAssetsSection.vue` - Asset grid with selection
 - `RunSelectionSection.vue` - Run dropdown with search/create
 - `AttachActionSection.vue` - Final attach action summary
+
+Created components in `features/ai_images/components/`:
+- `AssetQuickOpsPanel.vue` - Quick reject/promote/undo operations
 
 ### 3. Use Composables for Logic
 
