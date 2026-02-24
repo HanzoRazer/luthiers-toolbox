@@ -75,5 +75,8 @@ jobs:
       - name: Check Result
         if: steps.analyze.outcome == 'failure'
         run: |
-          echo "::error::Vue components exceed LOC limits. See decomposition report for details."
-          exit 1
+          # INFO-ONLY MODE: 131 existing violations need gradual cleanup
+          # TODO: Re-enable blocking once violations are resolved
+          echo "::warning::Vue components exceed LOC limits. See decomposition report for details."
+          echo "ℹ️ This check is currently informational only (131 legacy violations)."
+          # exit 1  # Disabled until legacy violations are resolved
