@@ -45,6 +45,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - AdaptiveBenchLab.vue: 563 → 489 LOC ✅
 - RmosOperationE2EPanel.vue: 501 → 412 LOC ✅
 - CompareOpenPanel.vue: 548 → 495 LOC ✅
+- JobIntHistoryPanel.vue: 516 → 410 LOC ✅
 
 ---
 
@@ -129,6 +130,9 @@ Created components in `components/rmos/operation-e2e/`:
 
 Created components in `components/art/snapshot_compare/components/`:
 - `SnapshotCard.vue` - Unified left/right snapshot display card
+
+Created components in `components/cam/job-int-history/`:
+- `CloneToPresetForm.vue` - Clone-to-preset modal form
 
 ### 3. Use Composables for Logic
 
