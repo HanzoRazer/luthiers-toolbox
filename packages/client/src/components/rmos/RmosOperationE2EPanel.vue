@@ -111,40 +111,17 @@
       </div>
     </div>
 
-    <div
+    <OperationHistoryPanel
       v-if="history.length > 0"
-      class="card"
-    >
-      <div class="title">
-        History
-      </div>
-      <div class="history-list">
-        <div
-          v-for="(h, i) in history"
-          :key="i"
-          class="history-item"
-        >
-          <div class="history-header">
-            <strong>{{ h.action }}</strong>
-            <span class="timestamp">{{ h.timestamp }}</span>
-          </div>
-          <div class="history-meta">
-            <code>{{ h.runId }}</code>
-            <span
-              v-if="h.status"
-              class="badge"
-              :class="statusClass(h.status)"
-            >{{ h.status }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+      :history="history"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { rmosOperations } from "@/sdk/rmos/operations";
+import { OperationHistoryPanel } from './operation-e2e';
 
 // ---------------------------------------------------------------------------
 // State
@@ -200,13 +177,6 @@ function parseJsonOrThrow(label: string, text: string): unknown {
   } catch (e) {
     throw new Error(`${label} is not valid JSON`);
   }
-}
-
-function statusClass(status: string): string {
-  if (status === "EXECUTED" || status === "OK") return "status-green";
-  if (status === "PLANNED") return "status-blue";
-  if (status === "BLOCKED") return "status-red";
-  return "status-yellow";
 }
 
 function addHistory(action: string, runId: string, status?: string) {
@@ -438,64 +408,5 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
   font-size: 12px;
-}
-
-.history-list {
-  display: grid;
-  gap: 8px;
-  max-height: 200px;
-  overflow: auto;
-}
-
-.history-item {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.timestamp {
-  opacity: 0.7;
-  font-size: 11px;
-}
-
-.history-meta {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.badge {
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.status-green {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-yellow {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-red {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.status-blue {
-  background: #cce5ff;
-  color: #004085;
 }
 </style>
