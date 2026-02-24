@@ -6,20 +6,7 @@
  * Integrates with the /api/rmos/runs/{run_id}/advisory/variants API.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import StarRating from "@/components/rmos/StarRating.vue";
-import SvgPreview from "@/components/rmos/SvgPreview.vue";
-
-type Variant = {
-  advisory_id: string;
-  mime: string;
-  filename: string;
-  size_bytes: number;
-  preview_blocked: boolean;
-  preview_block_reason?: string | null;
-  rating?: number | null;
-  notes?: string | null;
-  promoted: boolean;
-};
+import { VariantCard, type Variant } from "./variant-review";
 
 const props = defineProps<{
   runId: string;
@@ -108,11 +95,6 @@ async function promote(v: Variant) {
   }
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  return `${Math.round(bytes / 1024)} KB`;
-}
-
 onMounted(refresh);
 watch(() => props.runId, () => refresh());
 </script>
@@ -164,78 +146,19 @@ watch(() => props.runId, () => refresh());
       v-else
       class="variant-grid"
     >
-      <div
+      <VariantCard
         v-for="v in items"
         :key="v.advisory_id"
-        class="variant-card"
-      >
-        <div class="card-header">
-          <code class="advisory-id">{{ v.advisory_id.slice(0, 12) }}...</code>
-          <span class="file-info">{{ v.filename }} - {{ formatSize(v.size_bytes) }}</span>
-        </div>
-
-        <!-- SVG Preview -->
-        <SvgPreview
-          v-if="v.mime === 'image/svg+xml'"
-          :run-id="runId"
-          :advisory-id="v.advisory_id"
-          :api-base="apiBase"
-        />
-        <div
-          v-else
-          class="non-svg-blob"
-        >
-          <span class="subtle">Non-SVG blob: {{ v.mime }}</span>
-        </div>
-
-        <!-- Review Controls -->
-        <div class="review-controls">
-          <div class="rating-row">
-            <label>Rating:</label>
-            <StarRating v-model="v.rating" />
-          </div>
-
-          <textarea
-            v-model="v.notes"
-            class="notes-input"
-            placeholder="Review notes..."
-            rows="3"
-          />
-
-          <div class="action-row">
-            <button
-              class="btn"
-              :disabled="!!saving[v.advisory_id]"
-              @click="saveReview(v)"
-            >
-              {{ saving[v.advisory_id] ? "Saving..." : "Save Review" }}
-            </button>
-
-            <button
-              class="btn btn-primary"
-              :disabled="v.promoted || !!promoting[v.advisory_id]"
-              @click="promote(v)"
-            >
-              {{ v.promoted ? "Promoted" : (promoting[v.advisory_id] ? "Promoting..." : "Promote") }}
-            </button>
-          </div>
-
-          <div
-            v-if="v.preview_blocked"
-            class="preview-warning"
-          >
-            Preview blocked: {{ v.preview_block_reason }}
-          </div>
-
-          <div class="download-link">
-            <a
-              :href="`${apiBase}/rmos/runs/${encodeURIComponent(runId)}/advisory/blobs/${encodeURIComponent(v.advisory_id)}/download`"
-              target="_blank"
-              rel="noreferrer"
-            >Download</a>
-          </div>
-        </div>
-      </div>
+        :variant="v"
+        :run-id="runId"
+        :api-base="apiBase"
+        :saving="!!saving[v.advisory_id]"
+        :promoting="!!promoting[v.advisory_id]"
+        @save="saveReview(v)"
+        @promote="promote(v)"
+        @update:rating="v.rating = $event"
+        @update:notes="v.notes = $event"
+      />
     </div>
 
     <div class="panel-footer">
@@ -308,80 +231,6 @@ watch(() => props.runId, () => refresh());
   padding: 1rem;
 }
 
-.variant-card {
-  border: 1px solid #dee2e6;
-  border-radius: 10px;
-  padding: 1rem;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.advisory-id {
-  font-size: 0.8rem;
-  background: #e9ecef;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.file-info {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.non-svg-blob {
-  border: 1px dashed #dee2e6;
-  border-radius: 8px;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.02);
-  text-align: center;
-}
-
-.review-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rating-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.rating-row label {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.notes-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.notes-input:focus {
-  outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
-}
-
-.action-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .btn {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
@@ -402,39 +251,6 @@ watch(() => props.runId, () => refresh());
 
 .btn-secondary {
   opacity: 0.85;
-}
-
-.btn-primary {
-  background: #0066cc;
-  border-color: #0066cc;
-  color: #fff;
-  font-weight: 500;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0052a3;
-}
-
-.btn-primary:disabled {
-  background: #28a745;
-  border-color: #28a745;
-}
-
-.preview-warning {
-  font-size: 0.8rem;
-  color: #8a5a00;
-  padding: 0.25rem 0.5rem;
-  background: #fff3cd;
-  border-radius: 4px;
-}
-
-.download-link {
-  text-align: right;
-}
-
-.download-link a {
-  font-size: 0.8rem;
-  color: #0066cc;
 }
 
 .panel-footer {
