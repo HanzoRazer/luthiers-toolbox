@@ -50,6 +50,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - ArtStudioSidebar.vue: 564 → 359 LOC ✅
 - RosetteEditorView.vue: 540 → 455 LOC ✅
 - GuitarDesignHub.vue: 462 → 321 LOC ✅
+- FinishingDesigner.vue: 471 → 371 LOC ✅
 
 ---
 
@@ -132,6 +133,13 @@ Created components in `components/toolbox/adaptive-bench/`:
 Created components in `components/toolbox/guitar-design-hub/`:
 - `ToolCard.vue` - Clickable tool card with icon, title, desc, badge
 - `DesignPhaseSection.vue` - Phase category wrapper with slot
+
+Created components in `components/toolbox/finishing/`:
+- `FinishTypesPanel.vue` - Finish type selection cards
+- `LaborInputSection.vue` - Labor calculator inputs
+- `LaborResultsSection.vue` - Labor results display
+- `BurstPreviewCanvas.vue` - Sunburst pattern canvas preview
+- `BurstControlsPanel.vue` - Burst type, colors, params, presets, export
 
 Created components in `components/rmos/operation-e2e/`:
 - `OperationHistoryPanel.vue` - Operation history list with status badges
