@@ -42,6 +42,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - DualSvgDisplay.vue: 453 → 274 LOC ✅
 - MixedMaterialStripFamilyEditor.vue: 409 → 287 LOC ✅
 - PolygonOffsetLab.vue: 506 → 397 LOC ✅
+- AdaptiveBenchLab.vue: 563 → 489 LOC ✅
 
 ---
 
@@ -117,6 +118,9 @@ Created components in `components/rmos/strip-family/`:
 
 Created components in `components/toolbox/polygon-offset/`:
 - `GcodeOutputPanel.vue` - G-code preview with download/copy actions
+
+Created components in `components/toolbox/adaptive-bench/`:
+- `BenchResultsPanel.vue` - Benchmark results stats grid display
 
 ### 3. Use Composables for Logic
 
