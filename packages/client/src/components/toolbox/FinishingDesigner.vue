@@ -146,112 +146,17 @@
       </div>
 
       <div :class="styles.burstDesigner">
-        <div :class="styles.burstControls">
-          <h3>Burst Type</h3>
-          <div :class="styles.burstTypeSelector">
-            <div
-              v-for="type in burstTypes"
-              :key="type.id"
-              :class="[styles.burstTypeCard, { [styles.burstTypeCardActive]: burstType === type.id }]"
-              @click="burstType = type.id"
-            >
-              {{ type.name }}
-            </div>
-          </div>
-
-          <h3>Colors</h3>
-          <div :class="styles.colorInputs">
-            <div :class="styles.colorInput">
-              <label>Center Color</label>
-              <input
-                v-model="centerColor"
-                type="color"
-              >
-              <span>{{ centerColor }}</span>
-            </div>
-            <div
-              v-if="burstType !== 'solid'"
-              :class="styles.colorInput"
-            >
-              <label>Mid Color (optional)</label>
-              <input
-                v-model="midColor"
-                type="color"
-              >
-              <span>{{ midColor }}</span>
-            </div>
-            <div
-              v-if="burstType !== 'solid'"
-              :class="styles.colorInput"
-            >
-              <label>Edge Color</label>
-              <input
-                v-model="edgeColor"
-                type="color"
-              >
-              <span>{{ edgeColor }}</span>
-            </div>
-          </div>
-
-          <h3>Burst Parameters</h3>
-          <div :class="styles.paramInputs">
-            <div :class="styles.paramInput">
-              <label>Fade Start (mm from center)</label>
-              <input
-                v-model.number="fadeStart"
-                type="number"
-                step="5"
-                min="0"
-                max="150"
-              >
-            </div>
-            <div :class="styles.paramInput">
-              <label>Fade End (mm from center)</label>
-              <input
-                v-model.number="fadeEnd"
-                type="number"
-                step="5"
-                min="0"
-                max="200"
-              >
-            </div>
-          </div>
-
-          <h3>Classic Presets</h3>
-          <div :class="styles.burstPresets">
-            <button
-              :class="styles.btnBurst"
-              @click="applyBurstPreset('tobacco')"
-            >
-              Tobacco Sunburst
-            </button>
-            <button
-              :class="styles.btnBurst"
-              @click="applyBurstPreset('cherry')"
-            >
-              Cherry Sunburst
-            </button>
-            <button
-              :class="styles.btnBurst"
-              @click="applyBurstPreset('honeyburst')"
-            >
-              Honeyburst
-            </button>
-            <button
-              :class="styles.btnBurst"
-              @click="applyBurstPreset('lemondrop')"
-            >
-              Lemon Drop
-            </button>
-          </div>
-
-          <button
-            :class="styles.btnExport"
-            @click="exportBurstCSV"
-          >
-            Export CSV for Robotic Spray
-          </button>
-        </div>
+        <BurstControlsPanel
+          :styles="styles"
+          v-model:burst-type="burstType"
+          v-model:center-color="centerColor"
+          v-model:mid-color="midColor"
+          v-model:edge-color="edgeColor"
+          v-model:fade-start="fadeStart"
+          v-model:fade-end="fadeEnd"
+          @apply-preset="applyBurstPreset"
+          @export-csv="exportBurstCSV"
+        />
 
         <BurstPreviewCanvas
           :styles="styles"
@@ -272,6 +177,7 @@ import FinishTypesPanel from './finishing/FinishTypesPanel.vue'
 import LaborInputSection from './finishing/LaborInputSection.vue'
 import LaborResultsSection from './finishing/LaborResultsSection.vue'
 import BurstPreviewCanvas from './finishing/BurstPreviewCanvas.vue'
+import BurstControlsPanel from './finishing/BurstControlsPanel.vue'
 
 // Tab management
 const tabs = [
@@ -427,12 +333,6 @@ const midColor = ref('#d4a574')
 const edgeColor = ref('#8b4513')
 const fadeStart = ref(50)
 const fadeEnd = ref(120)
-
-const burstTypes = [
-  { id: 'solid', name: 'Solid Color' },
-  { id: '2-color', name: '2-Color Burst' },
-  { id: '3-color', name: '3-Color Burst' }
-]
 
 function applyBurstPreset(preset: string) {
   const presets: Record<string, { center: string, mid: string, edge: string }> = {
