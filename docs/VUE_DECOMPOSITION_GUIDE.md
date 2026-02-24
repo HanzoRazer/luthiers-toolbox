@@ -46,6 +46,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - RmosOperationE2EPanel.vue: 501 → 412 LOC ✅
 - CompareOpenPanel.vue: 548 → 495 LOC ✅
 - JobIntHistoryPanel.vue: 516 → 410 LOC ✅
+- BlueprintPresetPanel.vue: 554 → 505 LOC ✅
 
 ---
 
@@ -133,6 +134,9 @@ Created components in `components/art/snapshot_compare/components/`:
 
 Created components in `components/cam/job-int-history/`:
 - `CloneToPresetForm.vue` - Clone-to-preset modal form
+
+Created components in `components/pipeline/blueprint-preset/`:
+- `PipelineStatsGrid.vue` - Pipeline run statistics display
 
 ### 3. Use Composables for Logic
 
