@@ -9,6 +9,9 @@
  */
 import { watch, onMounted } from 'vue'
 import { COMMON_SCALE_LENGTHS } from '@/api/art-studio'
+import FretPositionTable from './FretPositionTable.vue'
+import InlaySummaryPanel from './InlaySummaryPanel.vue'
+import InlayDetailsTable from './InlayDetailsTable.vue'
 import {
   PATTERN_TYPES,
   useInlayState,
@@ -355,48 +358,11 @@ onMounted(() => {
         </div>
 
         <!-- Fret Position Table -->
-        <div
+        <FretPositionTable
           v-if="fretData"
-          class="bg-white border rounded-lg p-4 max-h-[400px] overflow-y-auto"
-        >
-          <h3 class="font-semibold text-gray-800 mb-3">
-            Fret Positions (12-TET)
-          </h3>
-
-          <table class="w-full text-xs">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="py-1 px-2 text-left">
-                  Fret
-                </th>
-                <th class="py-1 px-2 text-right">
-                  Position
-                </th>
-                <th class="py-1 px-2 text-right">
-                  Spacing
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="pos in fretData.positions"
-                :key="pos.fret"
-                class="border-b"
-                :class="selectedFrets.includes(pos.fret) ? 'bg-blue-50' : ''"
-              >
-                <td class="py-1 px-2">
-                  {{ pos.fret }}
-                </td>
-                <td class="py-1 px-2 text-right font-mono">
-                  {{ pos.position_mm.toFixed(2) }}
-                </td>
-                <td class="py-1 px-2 text-right font-mono text-gray-500">
-                  {{ pos.distance_from_previous_mm.toFixed(2) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          :fret-data="fretData"
+          :selected-frets="selectedFrets"
+        />
 
         <!-- Export Options -->
         <div class="bg-white border rounded-lg p-4 space-y-3">
@@ -475,84 +441,17 @@ onMounted(() => {
         </div>
 
         <!-- Inlay Summary -->
-        <div
+        <InlaySummaryPanel
           v-if="previewResult"
-          class="bg-white border rounded-lg p-4"
-        >
-          <h3 class="font-semibold text-gray-800 mb-3">
-            Inlay Summary
-          </h3>
-
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="text-gray-600">Total Inlays:</span>
-              <span class="ml-2 font-bold">{{
-                previewResult.result.inlays.length
-              }}</span>
-            </div>
-            <div>
-              <span class="text-gray-600">Pattern:</span>
-              <span class="ml-2 font-bold capitalize">{{ patternType }}</span>
-            </div>
-            <div>
-              <span class="text-gray-600">Scale Length:</span>
-              <span class="ml-2 font-mono">{{ previewResult.result.scale_length_mm.toFixed(1) }} mm</span>
-            </div>
-            <div>
-              <span class="text-gray-600">Frets:</span>
-              <span class="ml-2">{{ previewResult.result.num_frets }}</span>
-            </div>
-          </div>
-        </div>
+          :result="previewResult.result"
+          :pattern-type="patternType"
+        />
 
         <!-- Inlay Details -->
-        <div
+        <InlayDetailsTable
           v-if="previewResult?.result.inlays?.length"
-          class="bg-white border rounded-lg p-4 max-h-[300px] overflow-y-auto"
-        >
-          <h3 class="font-semibold text-gray-800 mb-3">
-            Inlay Details
-          </h3>
-
-          <table class="w-full text-xs">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="py-1 px-2 text-left">
-                  Fret
-                </th>
-                <th class="py-1 px-2 text-right">
-                  X (mm)
-                </th>
-                <th class="py-1 px-2 text-right">
-                  Y (mm)
-                </th>
-                <th class="py-1 px-2 text-center">
-                  Double
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(inlay, idx) in previewResult.result.inlays"
-                :key="idx"
-                class="border-b"
-              >
-                <td class="py-1 px-2">
-                  {{ inlay.fret }}
-                </td>
-                <td class="py-1 px-2 text-right font-mono">
-                  {{ inlay.center_x_mm.toFixed(2) }}
-                </td>
-                <td class="py-1 px-2 text-right font-mono">
-                  {{ inlay.center_y_mm.toFixed(2) }}
-                </td>
-                <td class="py-1 px-2 text-center">
-                  {{ inlay.is_double ? "●●" : "●" }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          :inlays="previewResult.result.inlays"
+        />
       </div>
     </div>
   </div>
