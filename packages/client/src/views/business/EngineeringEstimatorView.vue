@@ -14,6 +14,8 @@ import type {
   LearningCurveProjection,
 } from "@/types/businessEstimator";
 import EstimatorInputsPanel from "./EstimatorInputsPanel.vue";
+import WbsBreakdownTab from "./WbsBreakdownTab.vue";
+import MaterialsTab from "./MaterialsTab.vue";
 
 // ============================================================================
 // STATE
@@ -210,68 +212,19 @@ runEstimate();
           </div>
 
           <!-- WBS Tab -->
-          <div v-if="activeTab === 'wbs'" class="tab-content">
-            <table class="wbs-table">
-              <thead>
-                <tr>
-                  <th>Task</th>
-                  <th class="num">Base</th>
-                  <th class="num">Adjusted</th>
-                  <th class="num">Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="task in estimate.wbs_tasks" :key="task.task_id">
-                  <td>
-                    <span
-                      class="group-indicator"
-                      :style="{ background: businessEstimator.getGroupColor(task.notes) }"
-                    ></span>
-                    {{ task.task_name }}
-                  </td>
-                  <td class="num">{{ task.base_hours.toFixed(1) }}h</td>
-                  <td class="num">{{ task.adjusted_hours.toFixed(1) }}h</td>
-                  <td class="num">${{ task.labor_cost.toFixed(0) }}</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td><strong>Total</strong></td>
-                  <td class="num">—</td>
-                  <td class="num"><strong>{{ estimate.total_hours.toFixed(1) }}h</strong></td>
-                  <td class="num"><strong>${{ estimate.labor_cost_per_unit.toFixed(0) }}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <WbsBreakdownTab
+            v-if="activeTab === 'wbs'"
+            :tasks="estimate.wbs_tasks"
+            :total-hours="estimate.total_hours"
+            :labor-cost="estimate.labor_cost_per_unit"
+          />
 
           <!-- Materials Tab -->
-          <div v-if="activeTab === 'materials'" class="tab-content">
-            <table class="materials-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th class="num">Base Cost</th>
-                  <th class="num">Waste Factor</th>
-                  <th class="num">Adjusted</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(mat, i) in estimate.material_breakdown" :key="i">
-                  <td>{{ mat.category }}</td>
-                  <td class="num">${{ mat.base_cost.toFixed(0) }}</td>
-                  <td class="num">{{ mat.waste_factor.toFixed(2) }}×</td>
-                  <td class="num">${{ mat.adjusted_cost.toFixed(0) }}</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="3"><strong>Total Materials</strong></td>
-                  <td class="num"><strong>${{ estimate.material_cost_per_unit.toFixed(0) }}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <MaterialsTab
+            v-if="activeTab === 'materials'"
+            :materials="estimate.material_breakdown"
+            :total-material-cost="estimate.material_cost_per_unit"
+          />
 
           <!-- Learning Curve Tab -->
           <div v-if="activeTab === 'learning'" class="tab-content">
@@ -517,51 +470,6 @@ runEstimate();
   color: #f0c060;
 }
 
-.wbs-table,
-.materials-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
-.wbs-table th,
-.materials-table th {
-  text-align: left;
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: #404870;
-  text-transform: uppercase;
-  padding: 8px 4px;
-  border-bottom: 1px solid #1e2438;
-}
-
-.wbs-table td,
-.materials-table td {
-  padding: 6px 4px;
-  border-bottom: 1px solid #13172a;
-  color: #a0a8c0;
-}
-
-.wbs-table .num,
-.materials-table .num {
-  text-align: right;
-  color: #7080a0;
-}
-
-.wbs-table tfoot td,
-.materials-table tfoot td {
-  border-top: 1px solid #2a3040;
-  color: #60e0a0;
-}
-
-.group-indicator {
-  display: inline-block;
-  width: 3px;
-  height: 12px;
-  margin-right: 8px;
-  border-radius: 1px;
-  vertical-align: middle;
-}
 
 .muted {
   color: #506090;
