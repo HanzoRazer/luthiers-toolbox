@@ -165,136 +165,14 @@
               </button>
             </div>
 
-            <div
+            <MaterialEditorCard
               v-for="(mat, idx) in workingFamily.materials"
               :key="idx"
-              :class="styles.materialEditor"
-            >
-              <div :class="styles.materialHeader">
-                <span :class="styles.materialIndex">#{{ idx + 1 }}</span>
-                <button
-                  :class="styles.btnRemove"
-                  @click="removeMaterial(idx)"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div :class="styles.materialFields">
-                <label>Material Type</label>
-                <select
-                  v-model="mat.type"
-                  :class="styles.inputSelect"
-                >
-                  <option value="wood">
-                    Wood
-                  </option>
-                  <option value="metal">
-                    Metal
-                  </option>
-                  <option value="shell">
-                    Shell
-                  </option>
-                  <option value="paper">
-                    Paper
-                  </option>
-                  <option value="foil">
-                    Foil
-                  </option>
-                  <option value="charred">
-                    Charred
-                  </option>
-                  <option value="resin">
-                    Resin
-                  </option>
-                  <option value="composite">
-                    Composite
-                  </option>
-                </select>
-
-                <label>Species / Name</label>
-                <input
-                  v-model="mat.species"
-                  type="text"
-                  :class="styles.inputText"
-                  placeholder="e.g. Rosewood, Abalone, Copper"
-                >
-
-                <label>Thickness (mm)</label>
-                <input
-                  v-model.number="mat.thickness_mm"
-                  type="number"
-                  step="0.01"
-                  :class="styles.inputText"
-                >
-
-                <label>Finish</label>
-                <input
-                  v-model="mat.finish"
-                  type="text"
-                  :class="styles.inputText"
-                  placeholder="e.g. polished, matte, oxidized"
-                >
-
-                <label>CAM Profile (optional)</label>
-                <input
-                  v-model="mat.cam_profile"
-                  type="text"
-                  :class="styles.inputText"
-                  placeholder="e.g. hardwood_fast, metal_slow"
-                >
-
-                <!-- Visual Properties -->
-                <details
-                  v-if="mat.visual"
-                  :class="styles.visualDetails"
-                >
-                  <summary>Visual Properties</summary>
-                  <label>Base Color</label>
-                  <input
-                    v-model="mat.visual.base_color"
-                    type="color"
-                    :class="styles.inputColor"
-                  >
-
-                  <label>Reflectivity (0-1)</label>
-                  <input
-                    v-model.number="mat.visual.reflectivity"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="1"
-                    :class="styles.inputText"
-                  >
-
-                  <label>Iridescence (0-1)</label>
-                  <input
-                    v-model.number="mat.visual.iridescence"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="1"
-                    :class="styles.inputText"
-                  >
-
-                  <label>Texture Map URL</label>
-                  <input
-                    v-model="mat.visual.texture_map"
-                    type="text"
-                    :class="styles.inputText"
-                    placeholder="Optional texture URL"
-                  >
-
-                  <label>Burn Gradient (optional JSON)</label>
-                  <textarea
-                    v-model="(mat.visual as any).burn_gradient"
-                    :class="styles.inputTextarea"
-                    rows="2"
-                    placeholder="{&quot;start&quot;:&quot;#000&quot;,&quot;end&quot;:&quot;#8b4513&quot;}"
-                  />
-                </details>
-              </div>
-            </div>
+              :material="mat"
+              :index="idx"
+              :styles="styles"
+              @remove="removeMaterial(idx)"
+            />
           </div>
 
           <!-- Actions -->
@@ -339,6 +217,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useStripFamilyStore } from '@/stores/useStripFamilyStore'
+import { MaterialEditorCard } from './strip-family'
 import styles from './MixedMaterialStripFamilyEditor.module.css'
 import type { StripFamily, MaterialSpec } from '@/models/strip_family'
 
