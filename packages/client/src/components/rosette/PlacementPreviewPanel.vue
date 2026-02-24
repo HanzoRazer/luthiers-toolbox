@@ -60,133 +60,18 @@
 
     <div class="grid">
       <!-- CONTROLS -->
-      <div class="controls">
-        <div class="row">
-          <label>Host surface</label>
-          <select v-model="host.kind">
-            <option value="rect">
-              Rect
-            </option>
-            <option value="circle">
-              Circle
-            </option>
-            <option value="polygon">
-              Polygon
-            </option>
-          </select>
-        </div>
-
-        <div
-          v-if="host.kind === 'rect'"
-          class="row2"
-        >
-          <div>
-            <label>Width (mm)</label>
-            <input
-              v-model.number="host.width_mm"
-              type="number"
-            >
-          </div>
-          <div>
-            <label>Height (mm)</label>
-            <input
-              v-model.number="host.height_mm"
-              type="number"
-            >
-          </div>
-        </div>
-
-        <div
-          v-if="host.kind === 'circle'"
-          class="row"
-        >
-          <label>Radius (mm)</label>
-          <input
-            v-model.number="host.radius_mm"
-            type="number"
-          >
-        </div>
-
-        <div
-          v-if="host.kind === 'polygon'"
-          class="row"
-        >
-          <label>Polygon (mm)</label>
-          <textarea
-            v-model="polygonText"
-            rows="4"
-            spellcheck="false"
-          />
-        </div>
-
-        <div class="sep" />
-
-        <div class="row2">
-          <div>
-            <label>Scale</label>
-            <input
-              v-model.number="placement.scale"
-              type="number"
-              step="0.05"
-            >
-          </div>
-          <div>
-            <label>Rotate (deg)</label>
-            <input
-              v-model.number="placement.rotate_deg"
-              type="number"
-            >
-          </div>
-        </div>
-
-        <div class="row2">
-          <div>
-            <label>Offset X</label>
-            <input
-              v-model.number="placement.translate_x_mm"
-              type="number"
-            >
-          </div>
-          <div>
-            <label>Offset Y</label>
-            <input
-              v-model.number="placement.translate_y_mm"
-              type="number"
-            >
-          </div>
-        </div>
-
-        <div class="row checkbox">
-          <input
-            id="clip"
-            v-model="placement.clip_to_host"
-            type="checkbox"
-          >
-          <label for="clip">Clip to host</label>
-        </div>
-
-        <div class="row actions">
-          <button
-            :disabled="loading"
-            @click="runPreview"
-          >
-            {{ loading ? "Rendering…" : "Render Preview" }}
-          </button>
-          <button
-            class="ghost"
-            @click="resetDefaults"
-          >
-            Reset
-          </button>
-        </div>
-
-        <div
-          v-if="err"
-          class="err"
-        >
-          {{ err }}
-        </div>
-      </div>
+      <PlacementControlsPanel
+        :host="host"
+        :placement="placement"
+        :polygon-text="polygonText"
+        :loading="loading"
+        :err="err"
+        @update:host="host = $event"
+        @update:placement="placement = $event"
+        @update:polygon-text="polygonText = $event"
+        @run-preview="runPreview"
+        @reset-defaults="resetDefaults"
+      />
 
       <!-- PREVIEW -->
       <div class="preview">
@@ -240,6 +125,7 @@ import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import PresetSaveModal from "./PresetSaveModal.vue";
 import SmallModal from "@/components/ui/SmallModal.vue";
+import { PlacementControlsPanel, type HostConfig, type PlacementConfig } from "./placement-preview";
 
 /* -------------------------
    Types
@@ -266,13 +152,13 @@ const toast = useToastStore();
 const showSaveModal = ref(false);
 const showDeleteModal = ref(false);
 
-const host = ref<any>({
+const host = ref<HostConfig>({
   kind: "rect",
   width_mm: 220,
   height_mm: 220,
 });
 
-const placement = ref<any>({
+const placement = ref<PlacementConfig>({
   translate_x_mm: 0,
   translate_y_mm: 0,
   rotate_deg: 0,
@@ -509,32 +395,6 @@ select {
   gap: 12px;
 }
 
-.controls .row,
-.controls .row2 {
-  margin-bottom: 8px;
-}
-.controls .row2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.sep {
-  height: 1px;
-  background: rgba(0,0,0,0.1);
-  margin: 10px 0;
-}
-
-.checkbox {
-  display: flex;
-  gap: 8px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
 button {
   border-radius: 10px;
   padding: 6px 10px;
@@ -565,9 +425,5 @@ button.star {
   background: rgba(0,0,0,0.02);
   border-radius: 10px;
   padding: 10px;
-}
-.err {
-  color: #b00020;
-  font-size: 12px;
 }
 </style>
