@@ -426,7 +426,7 @@ async def get_wbs_for_instrument(instrument_type: EstimatorInstrumentType):
         )
 
     by_phase = get_wbs_by_phase(instrument_type)
-    total_hours = sum(t.baseline_hours for t in template)
+    total_hours = sum(t.base_hours for t in template)
 
     return {
         "instrument_type": instrument_type.value,
@@ -436,9 +436,9 @@ async def get_wbs_for_instrument(instrument_type: EstimatorInstrumentType):
             phase: [
                 {
                     "task_id": t.task_id,
-                    "name": t.name,
-                    "baseline_hours": t.baseline_hours,
-                    "complexity_key": t.complexity_key,
+                    "name": t.task_name,
+                    "base_hours": t.base_hours,
+                    "complexity_group": t.complexity_group,
                 }
                 for t in tasks
             ]
