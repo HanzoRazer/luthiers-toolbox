@@ -270,6 +270,14 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/tools/AcousticsIngestEvents.vue"),
   },
 
+  // Business: Engineering Cost Estimator (Pro Feature)
+  {
+    path: "/business/estimator",
+    name: "EngineeringEstimator",
+    component: () => import("@/views/business/EngineeringEstimatorView.vue"),
+    meta: { requiresPro: true },
+  },
+
   // AI Images — Visual Analyzer (Production)
   {
     path: "/ai-images",

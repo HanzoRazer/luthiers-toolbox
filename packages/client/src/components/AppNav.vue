@@ -128,6 +128,16 @@
           🎨 AI Images
         </RouterLink>
 
+        <!-- Business Tools (Pro) -->
+        <RouterLink
+          to="/business/estimator"
+          class="px-2 py-1 rounded hover:bg-gray-100"
+          active-class="bg-amber-600 text-white hover:bg-amber-600"
+        >
+          📊 Estimator
+          <span class="text-xs text-amber-600 ml-0.5">PRO</span>
+        </RouterLink>
+
         <!-- Acoustics Dropdown -->
         <div
           class="relative"
