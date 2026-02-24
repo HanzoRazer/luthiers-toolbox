@@ -206,47 +206,7 @@ FUTURE ENHANCEMENTS:
     </div>
 
     <!-- H7.2: show issues (non-breaking) -->
-    <details
-      v-if="normalizationIssues.length"
-      class="mt-2 text-xs"
-    >
-      <summary class="cursor-pointer text-amber-700 hover:underline">
-        CAM intent normalization issues ({{ normalizationIssues.length }})
-      </summary>
-      <div class="mt-2 space-y-2">
-        <div
-          v-for="(entry, idx) in normalizationIssues.slice(0, 50)"
-          :key="idx"
-          class="p-2 border border-amber-200 rounded-lg bg-amber-50"
-        >
-          <div class="font-semibold text-[11px] text-amber-800">
-            {{ entry.path }}
-          </div>
-          <ul class="mt-1 ml-4 list-disc text-[11px] text-amber-700">
-            <li
-              v-for="(iss, j) in entry.issues"
-              :key="j"
-            >
-              <span
-                v-if="iss.code"
-                class="font-mono"
-              >[{{ iss.code }}]</span>
-              {{ iss.message }}
-              <span
-                v-if="iss.path"
-                class="opacity-70"
-              > ({{ iss.path }})</span>
-            </li>
-          </ul>
-        </div>
-        <div
-          v-if="normalizationIssues.length > 50"
-          class="text-[11px] text-gray-500"
-        >
-          Showing first 50 issue groups...
-        </div>
-      </div>
-    </details>
+    <NormalizationIssuesPanel :issues="normalizationIssues" />
 
     <!-- Presets row -->
     <div class="flex flex-wrap items-center gap-2 text-[11px] mt-1">
@@ -371,47 +331,11 @@ FUTURE ENHANCEMENTS:
       <CamPipelineGraph :results="results" />
 
       <!-- Per-op cards -->
-      <div class="space-y-1">
-        <div
-          v-for="(op, idx) in results"
-          :key="idx"
-          class="flex items-start justify-between px-3 py-2 rounded-lg border text-xs bg-gray-50"
-        >
-          <div class="flex flex-col space-y-1">
-            <div class="flex items-center space-x-2">
-              <span
-                class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                :class="op.ok && !op.error ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
-              >
-                {{ op.ok && !op.error ? 'OK' : 'FAIL' }}
-              </span>
-              <span class="font-mono text-[11px] uppercase">
-                {{ op.kind }}
-              </span>
-            </div>
-
-            <p
-              v-if="op.error"
-              class="text-[11px] text-rose-700"
-            >
-              {{ op.error }}
-            </p>
-
-            <button
-              v-if="op.payload"
-              class="text-[10px] underline text-gray-600 text-left"
-              @click="togglePayload(idx)"
-            >
-              {{ openPayloadIndex === idx ? 'Hide payload' : 'Show payload JSON' }}
-            </button>
-          </div>
-
-          <pre
-            v-if="openPayloadIndex === idx && op.payload"
-            class="ml-4 max-h-48 overflow-auto bg-white rounded-md p-2 text-[10px] whitespace-pre-wrap w-full md:w-1/2"
-          >{{ formatPayload(op.payload) }}</pre>
-        </div>
-      </div>
+      <PipelineResultsCards
+        :results="results"
+        :open-payload-index="openPayloadIndex"
+        @toggle-payload="togglePayload"
+      />
     </div>
   </div>
 </template>
@@ -419,6 +343,8 @@ FUTURE ENHANCEMENTS:
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import CamPipelineGraph from '@/components/cam/CamPipelineGraph.vue'
+import NormalizationIssuesPanel from '@/components/cam/NormalizationIssuesPanel.vue'
+import PipelineResultsCards from '@/components/cam/PipelineResultsCards.vue'
 import {
   useCamPipelineState,
   useCamPipelineNormalize,
