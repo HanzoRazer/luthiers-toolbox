@@ -22,23 +22,7 @@
     </div>
 
     <!-- B22.8: Loading skeleton -->
-    <div
-      v-if="isComputingDiff"
-      class="skeleton-container"
-    >
-      <div class="skeleton-pane left">
-        <div class="skeleton-shimmer" />
-        <p class="skeleton-label">
-          Computing diff...
-        </p>
-      </div>
-      <div class="skeleton-pane right">
-        <div class="skeleton-shimmer" />
-        <p class="skeleton-label">
-          Computing diff...
-        </p>
-      </div>
-    </div>
+    <DiffSkeletonLoader v-if="isComputingDiff" />
 
     <!-- Normal display when not computing -->
     <div
@@ -141,53 +125,16 @@
     </div>
     
     <!-- B22.8 skeleton: Layer controls panel -->
-    <div
+    <LayersPanel
       v-if="layers && layers.length > 0 && !isComputingDiff"
-      class="compare-layers-panel"
-    >
-      <h4 class="layers-title">
-        Layers
-      </h4>
-      <ul class="layers-list">
-        <li
-          v-for="layer in layers"
-          :key="layer.id"
-          class="layer-item"
-        >
-          <label class="layer-label">
-            <input
-              type="checkbox"
-              :checked="layer.enabled"
-              class="layer-checkbox"
-              @change="onLayerToggle(layer)"
-            >
-            <span class="layer-name">{{ layer.id }}</span>
-            <span
-              v-if="layer.hasDiff"
-              class="layer-badge layer-badge-diff"
-            >
-              diff
-            </span>
-            <span
-              v-if="!layer.inLeft"
-              class="layer-badge layer-badge-missing"
-            >
-              not in left
-            </span>
-            <span
-              v-if="!layer.inRight"
-              class="layer-badge layer-badge-missing"
-            >
-              not in right
-            </span>
-          </label>
-        </li>
-      </ul>
-    </div>
+      :layers="layers"
+      @toggle-layer="(id, enabled) => emit('toggle-layer', id, enabled)"
+    />
   </div>
 </template>
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch } from 'vue'
+import { DiffSkeletonLoader, LayersPanel } from './dual-svg'
 function isValidMoves(moves: any) {
   if (!Array.isArray(moves)) return false;
   if (moves.length < 2) return false;
@@ -229,10 +176,6 @@ function toPoints(moves: any[]) {
     .join(' ')
 }
 
-// B22.8 skeleton: Layer toggle handler
-function onLayerToggle(layer: { id: string; enabled: boolean }) {
-  emit('toggle-layer', layer.id, !layer.enabled)
-}
 </script>
 <style scoped>
 .dual-svg-display {
@@ -258,62 +201,9 @@ function onLayerToggle(layer: { id: string; enabled: boolean }) {
   font-size: 1.2rem;
 }
 
-/* B22.8: Loading skeleton */
-.skeleton-container {
-  display: flex;
-  gap: 2rem;
-}
-
 .svg-panes-container {
   display: flex;
   gap: 2rem;
-}
-
-.skeleton-pane {
-  flex: 1;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 8px;
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.skeleton-shimmer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    transparent 100%
-  );
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.skeleton-label {
-  position: relative;
-  z-index: 1;
-  color: #999;
-  font-size: 0.9rem;
-  font-style: italic;
 }
 
 .svg-pane {
@@ -378,74 +268,6 @@ function onLayerToggle(layer: { id: string; enabled: boolean }) {
 .legend-color.remove {
   background: #ff4136;
   border: 1px solid #c22b1a;
-}
-
-/* B22.8 skeleton: Layer controls panel */
-.compare-layers-panel {
-  margin-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 1rem;
-}
-
-.layers-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.75rem;
-}
-
-.layers-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.layer-item {
-  padding: 0;
-}
-
-.layer-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
-  transition: background-color 0.15s ease;
-}
-
-.layer-label:hover {
-  background-color: #f9fafb;
-}
-
-.layer-checkbox {
-  cursor: pointer;
-}
-
-.layer-name {
-  font-size: 0.9rem;
-  color: #1f2937;
-}
-
-.layer-badge {
-  margin-left: 0.5rem;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
-  font-weight: 500;
-}
-
-.layer-badge-diff {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.layer-badge-missing {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 svg { width: 100%; height: 100%; }
