@@ -86,223 +86,27 @@
     </div>
 
     <!-- Attempts table -->
-    <div v-if="!loading && logs.length > 0 && filters.view === 'attempts'">
-      <h3 class="text-sm font-semibold mb-2">
-        Attempts ({{ logs.length }})
-      </h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-xs border">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="px-2 py-1 border">
-                Time
-              </th>
-              <th class="px-2 py-1 border">
-                Run ID
-              </th>
-              <th class="px-2 py-1 border">
-                Attempt
-              </th>
-              <th class="px-2 py-1 border">
-                Mode
-              </th>
-              <th class="px-2 py-1 border">
-                Tool
-              </th>
-              <th class="px-2 py-1 border">
-                Material
-              </th>
-              <th class="px-2 py-1 border">
-                Engine
-              </th>
-              <th class="px-2 py-1 border">
-                Score
-              </th>
-              <th class="px-2 py-1 border">
-                Risk
-              </th>
-              <th class="px-2 py-1 border">
-                Acceptable
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in logs"
-              :key="`attempt-${row.run_id}-${(row as any).attempt_index}-${row.timestamp}`"
-            >
-              <td class="px-2 py-1 border whitespace-nowrap">
-                {{ prettyTime(row.timestamp) }}
-              </td>
-              <td class="px-2 py-1 border font-mono text-[10px]">
-                {{ row.run_id }}
-              </td>
-              <td class="px-2 py-1 border text-center">
-                {{ (row as any).attempt_index }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.workflow_mode }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.tool_id || "—" }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.material_id || "—" }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.geometry_engine || "—" }}
-              </td>
-              <td class="px-2 py-1 border text-right">
-                {{ ((row as any).score || 0).toFixed(3) }}
-              </td>
-              <td class="px-2 py-1 border text-center">
-                {{ (row as any).risk_bucket }}
-              </td>
-              <td
-                class="px-2 py-1 border text-center"
-                :class="(row as any).is_acceptable ? 'text-green-600' : 'text-gray-500'"
-              >
-                {{ (row as any).is_acceptable ? "Yes" : "No" }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AttemptsTable
+      v-if="!loading && logs.length > 0 && filters.view === 'attempts'"
+      :rows="(logs as AttemptRow[])"
+    />
 
     <!-- Runs table -->
-    <div v-if="!loading && logs.length > 0 && filters.view === 'runs'">
-      <h3 class="text-sm font-semibold mb-2">
-        Runs ({{ logs.length }})
-      </h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-xs border">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="px-2 py-1 border">
-                Time
-              </th>
-              <th class="px-2 py-1 border">
-                Run ID
-              </th>
-              <th class="px-2 py-1 border">
-                Mode
-              </th>
-              <th class="px-2 py-1 border">
-                Tool
-              </th>
-              <th class="px-2 py-1 border">
-                Material
-              </th>
-              <th class="px-2 py-1 border">
-                Engine
-              </th>
-              <th class="px-2 py-1 border">
-                Attempts
-              </th>
-              <th class="px-2 py-1 border">
-                Max
-              </th>
-              <th class="px-2 py-1 border">
-                Score
-              </th>
-              <th class="px-2 py-1 border">
-                Risk
-              </th>
-              <th class="px-2 py-1 border">
-                Success
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in logs"
-              :key="`run-${row.run_id}-${row.timestamp}`"
-            >
-              <td class="px-2 py-1 border whitespace-nowrap">
-                {{ prettyTime(row.timestamp) }}
-              </td>
-              <td class="px-2 py-1 border font-mono text-[10px]">
-                {{ row.run_id }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.workflow_mode }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.tool_id || "—" }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.material_id || "—" }}
-              </td>
-              <td class="px-2 py-1 border">
-                {{ row.geometry_engine || "—" }}
-              </td>
-              <td class="px-2 py-1 border text-center">
-                {{ (row as any).attempts }}
-              </td>
-              <td class="px-2 py-1 border text-center">
-                {{ (row as any).max_attempts }}
-              </td>
-              <td class="px-2 py-1 border text-right">
-                {{
-                  (row as any).selected_score != null
-                    ? (row as any).selected_score.toFixed(3)
-                    : "—"
-                }}
-              </td>
-              <td class="px-2 py-1 border text-center">
-                {{ (row as any).selected_risk_bucket || "—" }}
-              </td>
-              <td
-                class="px-2 py-1 border text-center"
-                :class="(row as any).success ? 'text-green-600' : 'text-red-600'"
-              >
-                {{ (row as any).success ? "Yes" : "No" }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <RunsTable
+      v-if="!loading && logs.length > 0 && filters.view === 'runs'"
+      :rows="(logs as RunRow[])"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-
-type AttemptRow = {
-  run_id: string;
-  timestamp: string;
-  attempt_index: number;
-  workflow_mode: string;
-  tool_id?: string | null;
-  material_id?: string | null;
-  machine_id?: string | null;
-  geometry_engine?: string | null;
-  score: number;
-  risk_bucket: string;
-  is_acceptable: boolean;
-  design_version?: string | null;
-  ring_count?: number | null;
-  notes?: string | null;
-};
-
-type RunRow = {
-  run_id: string;
-  timestamp: string;
-  workflow_mode: string;
-  max_attempts: number;
-  time_limit_seconds: number;
-  attempts: number;
-  success: boolean;
-  reason: string;
-  selected_score?: number | null;
-  selected_risk_bucket?: string | null;
-  tool_id?: string | null;
-  material_id?: string | null;
-  machine_id?: string | null;
-  geometry_engine?: string | null;
-};
+import {
+  AttemptsTable,
+  RunsTable,
+  type AttemptRow,
+  type RunRow,
+} from "./ai-log-viewer";
 
 type ViewMode = "attempts" | "runs";
 
@@ -353,15 +157,6 @@ async function loadLogs() {
     error.value = "Failed to load logs. Check console for details.";
   } finally {
     loading.value = false;
-  }
-}
-
-function prettyTime(raw: string) {
-  try {
-    const d = new Date(raw);
-    return d.toLocaleString();
-  } catch {
-    return raw;
   }
 }
 
