@@ -40,6 +40,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - CurveLab.vue: 447 → 339 LOC ✅
 - AdaptivePoly.vue: 463 → 412 LOC ✅
 - DualSvgDisplay.vue: 453 → 274 LOC ✅
+- MixedMaterialStripFamilyEditor.vue: 409 → 287 LOC ✅
 
 ---
 
@@ -109,6 +110,9 @@ Created components in `components/toolbox/adaptive-poly/`:
 Created components in `components/compare/dual-svg/`:
 - `DiffSkeletonLoader.vue` - Loading skeleton with shimmer animation
 - `LayersPanel.vue` - Layer toggle controls with diff/missing badges
+
+Created components in `components/rmos/strip-family/`:
+- `MaterialEditorCard.vue` - Single material editor with visual properties
 
 ### 3. Use Composables for Logic
 
