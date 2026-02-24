@@ -129,140 +129,10 @@
       </div>
 
       <!-- Drill Pattern Operation -->
-      <div :class="$style['operation-card']">
-        <div :class="$style['card-header']">
-          <h2>📐 Drill Patterns</h2>
-          <span :class="$style.badge">N10</span>
-        </div>
-        <p>Generate drilling patterns (grid, circle, line)</p>
-
-        <div :class="$style.params">
-          <div :class="$style['param-row']">
-            <label>Pattern:</label>
-            <select v-model="pattern.params.value.type">
-              <option value="grid">Grid</option>
-              <option value="circle">Circle</option>
-              <option value="line">Line</option>
-            </select>
-          </div>
-
-          <!-- Grid Pattern -->
-          <template v-if="pattern.params.value.type === 'grid'">
-            <div :class="$style['param-row']">
-              <label>Rows:</label>
-              <input
-                v-model.number="pattern.params.value.grid.rows"
-                type="number"
-                min="1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>Columns:</label>
-              <input
-                v-model.number="pattern.params.value.grid.cols"
-                type="number"
-                min="1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>X Spacing (mm):</label>
-              <input
-                v-model.number="pattern.params.value.grid.dx"
-                type="number"
-                step="0.1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>Y Spacing (mm):</label>
-              <input
-                v-model.number="pattern.params.value.grid.dy"
-                type="number"
-                step="0.1"
-              >
-            </div>
-          </template>
-
-          <!-- Circle Pattern -->
-          <template v-if="pattern.params.value.type === 'circle'">
-            <div :class="$style['param-row']">
-              <label>Count:</label>
-              <input
-                v-model.number="pattern.params.value.circle.count"
-                type="number"
-                min="1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>Radius (mm):</label>
-              <input
-                v-model.number="pattern.params.value.circle.radius"
-                type="number"
-                step="0.1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>Start Angle (°):</label>
-              <input
-                v-model.number="pattern.params.value.circle.start_angle_deg"
-                type="number"
-                step="1"
-              >
-            </div>
-          </template>
-
-          <!-- Line Pattern -->
-          <template v-if="pattern.params.value.type === 'line'">
-            <div :class="$style['param-row']">
-              <label>Count:</label>
-              <input
-                v-model.number="pattern.params.value.line.count"
-                type="number"
-                min="1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>X Increment (mm):</label>
-              <input
-                v-model.number="pattern.params.value.line.dx"
-                type="number"
-                step="0.1"
-              >
-            </div>
-            <div :class="$style['param-row']">
-              <label>Y Increment (mm):</label>
-              <input
-                v-model.number="pattern.params.value.line.dy"
-                type="number"
-                step="0.1"
-              >
-            </div>
-          </template>
-
-          <div :class="$style['param-row']">
-            <label>Depth (mm):</label>
-            <input
-              v-model.number="pattern.params.value.depth"
-              type="number"
-              step="0.1"
-            >
-          </div>
-          <div :class="$style['param-row']">
-            <label>Feed (mm/min):</label>
-            <input
-              v-model.number="pattern.params.value.feed"
-              type="number"
-              step="10"
-            >
-          </div>
-        </div>
-
-        <button
-          :class="$style['export-btn']"
-          @click="pattern.exportGcode"
-        >
-          Export G-code
-        </button>
-      </div>
+      <PatternOperationCard
+        :pattern="pattern"
+        :styles="$style"
+      />
 
       <!-- Bi-Arc Contour -->
       <div :class="$style['operation-card']">
@@ -308,155 +178,16 @@
       </div>
 
       <!-- Probe Patterns (N09) -->
-      <div :class="$style['operation-card']">
-        <div :class="$style['card-header']">
-          <h2>🎯 Probe Patterns</h2>
-          <span :class="$style.badge">N09</span>
-        </div>
-        <p>Work offset establishment with touch probes</p>
-
-        <div :class="$style.params">
-          <div :class="$style['param-row']">
-            <label>Pattern:</label>
-            <select v-model="probe.params.value.pattern">
-              <option value="corner_outside">Corner (Outside)</option>
-              <option value="corner_inside">Corner (Inside)</option>
-              <option value="boss_circular">Boss (Circular)</option>
-              <option value="hole_circular">Hole (Circular)</option>
-              <option value="surface_z">Surface Z</option>
-            </select>
-          </div>
-          <div :class="$style['param-row']">
-            <label>Probe Feed (mm/min):</label>
-            <input
-              v-model.number="probe.params.value.feed_probe"
-              type="number"
-              step="10"
-            >
-          </div>
-          <div :class="$style['param-row']">
-            <label>Safe Z (mm):</label>
-            <input
-              v-model.number="probe.params.value.safe_z"
-              type="number"
-              step="0.5"
-            >
-          </div>
-          <div
-            v-if="probe.params.value.pattern.includes('circular')"
-            :class="$style['param-row']"
-          >
-            <label>Est. Diameter (mm):</label>
-            <input
-              v-model.number="probe.params.value.diameter"
-              type="number"
-              step="1"
-            >
-          </div>
-          <div :class="$style['param-row']">
-            <label>Work Offset:</label>
-            <select v-model="probe.params.value.work_offset">
-              <option value="1">G54 (1)</option>
-              <option value="2">G55 (2)</option>
-              <option value="3">G56 (3)</option>
-              <option value="4">G57 (4)</option>
-              <option value="5">G58 (5)</option>
-              <option value="6">G59 (6)</option>
-            </select>
-          </div>
-        </div>
-
-        <div :class="$style['button-group']">
-          <button
-            :class="[$style['export-btn'], $style.half]"
-            @click="probe.exportGcode"
-          >
-            Export G-code
-          </button>
-          <button
-            :class="[$style['export-btn'], $style.half, $style.secondary]"
-            @click="probe.exportSVG"
-          >
-            Export Setup Sheet
-          </button>
-        </div>
-      </div>
+      <ProbeOperationCard
+        :probe="probe"
+        :styles="$style"
+      />
 
       <!-- Retract Patterns (N08) -->
-      <div :class="$style['operation-card']">
-        <div :class="$style['card-header']">
-          <h2>↑ Retract Patterns</h2>
-          <span :class="$style.badge">N08</span>
-        </div>
-        <p>Safe retract strategies for tool changes</p>
-
-        <div :class="$style.params">
-          <div :class="$style['param-row']">
-            <label>Strategy:</label>
-            <select v-model="retract.params.value.strategy">
-              <option value="direct">Direct (G0)</option>
-              <option value="ramped">Ramped (Linear)</option>
-              <option value="helical">Helical (Spiral)</option>
-            </select>
-          </div>
-          <div :class="$style['param-row']">
-            <label>Current Z (mm):</label>
-            <input
-              v-model.number="retract.params.value.current_z"
-              type="number"
-              step="0.1"
-            >
-          </div>
-          <div :class="$style['param-row']">
-            <label>Safe Z (mm):</label>
-            <input
-              v-model.number="retract.params.value.safe_z"
-              type="number"
-              step="0.5"
-            >
-          </div>
-          <div
-            v-if="retract.params.value.strategy === 'ramped'"
-            :class="$style['param-row']"
-          >
-            <label>Ramp Feed (mm/min):</label>
-            <input
-              v-model.number="retract.params.value.ramp_feed"
-              type="number"
-              step="10"
-            >
-          </div>
-          <div
-            v-if="retract.params.value.strategy === 'helical'"
-            :class="$style['param-row']"
-          >
-            <label>Helix Radius (mm):</label>
-            <input
-              v-model.number="retract.params.value.helix_radius"
-              type="number"
-              step="0.5"
-            >
-          </div>
-          <div
-            v-if="retract.params.value.strategy === 'helical'"
-            :class="$style['param-row']"
-          >
-            <label>Pitch (mm/rev):</label>
-            <input
-              v-model.number="retract.params.value.helix_pitch"
-              type="number"
-              step="0.1"
-            >
-          </div>
-        </div>
-
-        <button
-          :class="$style['export-btn']"
-          @click="retract.exportGcode"
-        >
-          Export Sample G-code
-        </button>
-      </div>
+      <RetractOperationCard
+        :retract="retract"
+        :styles="$style"
+      />
     </div>
 
     <!-- Info Section -->
@@ -496,6 +227,9 @@ import {
   useProbeOperation,
   useRetractOperation
 } from './cam-essentials'
+import PatternOperationCard from './cam-essentials/PatternOperationCard.vue'
+import ProbeOperationCard from './cam-essentials/ProbeOperationCard.vue'
+import RetractOperationCard from './cam-essentials/RetractOperationCard.vue'
 
 // Initialize all operation composables
 const roughing = useRoughingOperation()
