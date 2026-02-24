@@ -11,16 +11,9 @@ import type {
   EstimateRequest,
   EstimateResult,
   ComplexityFactors,
-  InstrumentType,
-  BuilderExperience,
-  BodyComplexity,
-  BindingComplexity,
-  NeckComplexity,
-  FretboardInlay,
-  FinishType,
-  RosetteComplexity,
   LearningCurveProjection,
 } from "@/types/businessEstimator";
+import EstimatorInputsPanel from "./EstimatorInputsPanel.vue";
 
 // ============================================================================
 // STATE
@@ -47,76 +40,6 @@ const form = ref<EstimateRequest>({
   hourly_rate: 45,
   include_materials: true,
 });
-
-// ============================================================================
-// OPTIONS (for dropdowns)
-// ============================================================================
-
-const instrumentTypes: { value: InstrumentType; label: string }[] = [
-  { value: "acoustic_dreadnought", label: "Acoustic Dreadnought" },
-  { value: "acoustic_om", label: "Acoustic OM" },
-  { value: "acoustic_parlor", label: "Acoustic Parlor" },
-  { value: "classical", label: "Classical" },
-  { value: "electric_solid", label: "Electric Solid Body" },
-  { value: "electric_hollow", label: "Electric Hollow Body" },
-  { value: "electric_semi_hollow", label: "Electric Semi-Hollow" },
-];
-
-const experienceLevels: { value: BuilderExperience; label: string }[] = [
-  { value: "beginner", label: "Beginner (1.5×)" },
-  { value: "intermediate", label: "Intermediate (1.2×)" },
-  { value: "experienced", label: "Experienced (1.0×)" },
-  { value: "master", label: "Master (0.85×)" },
-];
-
-const bodyOptions: { value: BodyComplexity; label: string }[] = [
-  { value: "standard", label: "Standard" },
-  { value: "cutaway_soft", label: "Soft Cutaway" },
-  { value: "cutaway_florentine", label: "Florentine Cutaway" },
-  { value: "cutaway_venetian", label: "Venetian Cutaway" },
-  { value: "arm_bevel", label: "Arm Bevel" },
-  { value: "tummy_cut", label: "Tummy Cut" },
-  { value: "carved_top", label: "Carved Top" },
-];
-
-const bindingOptions: { value: BindingComplexity; label: string }[] = [
-  { value: "none", label: "None" },
-  { value: "single", label: "Single" },
-  { value: "multiple", label: "Multi-ply" },
-  { value: "herringbone", label: "Herringbone" },
-];
-
-const neckOptions: { value: NeckComplexity; label: string }[] = [
-  { value: "standard", label: "Standard" },
-  { value: "volute", label: "Volute" },
-  { value: "scarf_joint", label: "Scarf Joint" },
-  { value: "multi_scale", label: "Multi-Scale" },
-];
-
-const inlayOptions: { value: FretboardInlay; label: string }[] = [
-  { value: "none", label: "None" },
-  { value: "dots", label: "Dots" },
-  { value: "blocks", label: "Blocks" },
-  { value: "trapezoids", label: "Trapezoids" },
-  { value: "custom", label: "Custom" },
-];
-
-const finishOptions: { value: FinishType; label: string }[] = [
-  { value: "oil", label: "Oil (0.5×)" },
-  { value: "wax", label: "Wax (0.45×)" },
-  { value: "shellac_wipe", label: "Shellac Wipe" },
-  { value: "shellac_french_polish", label: "French Polish (2.2×)" },
-  { value: "nitro_solid", label: "Nitro Solid (1.0×)" },
-  { value: "nitro_burst", label: "Nitro Burst (1.45×)" },
-  { value: "poly_solid", label: "Poly Solid (0.75×)" },
-];
-
-const rosetteOptions: { value: RosetteComplexity; label: string }[] = [
-  { value: "none", label: "None" },
-  { value: "simple_rings", label: "Simple Rings" },
-  { value: "mosaic", label: "Mosaic" },
-  { value: "custom_art", label: "Custom Art" },
-];
 
 // ============================================================================
 // COMPUTED
@@ -202,100 +125,7 @@ runEstimate();
 
     <div class="estimator-body">
       <!-- Left: Inputs -->
-      <aside class="inputs-panel">
-        <!-- Instrument Type -->
-        <section class="input-section">
-          <h3>Instrument</h3>
-          <select v-model="form.instrument_type">
-            <option v-for="opt in instrumentTypes" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Experience -->
-        <section class="input-section">
-          <h3>Builder Experience</h3>
-          <select v-model="form.builder_experience">
-            <option v-for="opt in experienceLevels" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Body Complexity -->
-        <section class="input-section">
-          <h3>Body Complexity</h3>
-          <select v-model="form.body_complexity">
-            <option v-for="opt in bodyOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Binding -->
-        <section class="input-section">
-          <h3>Binding</h3>
-          <select v-model="form.binding_body_complexity">
-            <option v-for="opt in bindingOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Neck -->
-        <section class="input-section">
-          <h3>Neck</h3>
-          <select v-model="form.neck_complexity">
-            <option v-for="opt in neckOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Inlay -->
-        <section class="input-section">
-          <h3>Fretboard Inlay</h3>
-          <select v-model="form.fretboard_inlay">
-            <option v-for="opt in inlayOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Finish -->
-        <section class="input-section">
-          <h3>Finish Type</h3>
-          <select v-model="form.finish_type">
-            <option v-for="opt in finishOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Rosette -->
-        <section class="input-section">
-          <h3>Rosette</h3>
-          <select v-model="form.rosette_complexity">
-            <option v-for="opt in rosetteOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </section>
-
-        <!-- Production -->
-        <section class="input-section">
-          <h3>Production</h3>
-          <label class="input-row">
-            <span>Batch Size</span>
-            <input type="number" v-model.number="form.batch_size" min="1" max="100" />
-          </label>
-          <label class="input-row">
-            <span>Labor Rate ($/hr)</span>
-            <input type="number" v-model.number="form.hourly_rate" min="0" step="5" />
-          </label>
-        </section>
-      </aside>
+      <EstimatorInputsPanel v-model="form" />
 
       <!-- Right: Results -->
       <main class="results-panel">
@@ -546,55 +376,6 @@ runEstimate();
   margin: 0 auto;
   padding: 16px;
   gap: 16px;
-}
-
-.inputs-panel {
-  flex: 0 0 280px;
-  border-right: 1px solid #1e2438;
-  padding-right: 16px;
-}
-
-.input-section {
-  margin-bottom: 16px;
-}
-
-.input-section h3 {
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: #4060c0;
-  text-transform: uppercase;
-  margin: 0 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #1e2438;
-}
-
-.input-section select,
-.input-section input {
-  width: 100%;
-  background: #14192a;
-  border: 1px solid #2a3040;
-  color: #e0e8ff;
-  padding: 8px 10px;
-  font-size: 12px;
-  font-family: inherit;
-  border-radius: 3px;
-}
-
-.input-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.input-row span {
-  font-size: 11px;
-  color: #8890a8;
-}
-
-.input-row input {
-  width: 80px;
-  text-align: right;
 }
 
 .results-panel {
