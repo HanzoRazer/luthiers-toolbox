@@ -33,6 +33,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - ArtStudioInlay.vue: 569 → 467 LOC ✅
 - CamPipelineRunner.vue: 524 → 449 LOC ✅
 - AdvisoryReviewPanel.vue: 580 → 483 LOC ✅
+- CAMEssentialsLab.vue: 510 → 243 LOC ✅
 
 ---
 
@@ -72,6 +73,11 @@ Created components in `components/pocket/`:
 - `ToolParametersPanel.vue` - Tool Ø, stepover, stepdown, margin, etc.
 - `ActionButtonsBar.vue` - Plan, Preview NC, Compare, Export buttons
 - `ExportConfigPanel.vue` - Job name, export modes, batch export
+
+Created components in `components/toolbox/cam-essentials/`:
+- `PatternOperationCard.vue` - Drill pattern configuration (grid/circle/line)
+- `ProbeOperationCard.vue` - Touch probe work offset routines
+- `RetractOperationCard.vue` - Safe retract strategies
 
 ### 3. Use Composables for Logic
 
