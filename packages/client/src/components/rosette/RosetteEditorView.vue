@@ -33,41 +33,10 @@
         >
           {{ store.jumpSeverity === "RED_ONLY" ? "RED only" : "RED+YELLOW" }}
         </button>
-        <div
-          v-if="store.totalRingCount > 0"
-          :class="[styles.jumpHud, { [styles.jumpHudPulse]: hudPulse }]"
-        >
-          <span :class="styles.pill">
-            {{ store.jumpSeverity === "RED_ONLY" ? "Filter: RED only" : "Filter: RED+YELLOW" }}
-          </span>
-          <span :class="styles.pill">
-            RED rings: {{ store.redRingCount }} / {{ store.totalRingCount }}
-          </span>
-          <span
-            v-if="store.jumpRingPosition.total > 0"
-            :class="styles.pill"
-          >
-            Focus: {{ store.jumpRingPosition.pos || "—" }} / {{ store.jumpRingPosition.total }}
-          </span>
-          <!-- Bundle 32.3.8: HUD help tooltip -->
-          <span
-            :class="styles.hudHelp"
-            tabindex="0"
-            aria-label="Jump hotkeys help"
-          >
-            ?
-            <span
-              :class="styles.hudTooltip"
-              role="tooltip"
-            >
-              <div :class="styles.ttTitle">Jump hotkeys</div>
-              <div :class="styles.ttRow"><kbd :class="styles.kbd">[</kbd> Prev problem</div>
-              <div :class="styles.ttRow"><kbd :class="styles.kbd">]</kbd> Next problem</div>
-              <div :class="styles.ttRow"><kbd :class="styles.kbd">w</kbd> Jump to worst</div>
-              <div :class="styles.ttRow"><kbd :class="styles.kbd">Shift</kbd> + <kbd :class="styles.kbd">R</kbd> Toggle filter</div>
-            </span>
-          </span>
-        </div>
+        <JumpHUD
+          :styles="styles"
+          :hud-pulse="hudPulse"
+        />
         <!-- Bundle 32.4.0: Undo button -->
         <button
           ref="undoBtnRef"
@@ -102,61 +71,7 @@
       </div>
 
       <!-- Bundle 32.4.0: Ring Nudge Section -->
-      <div
-        v-if="store.currentParams?.ring_params?.length"
-        :class="styles.ringNudgeSection"
-      >
-        <div :class="styles.nudgeTitle">
-          Ring Widths
-        </div>
-        <div
-          v-for="(ring, idx) in store.currentParams.ring_params"
-          :key="idx"
-          :class="[styles.ringRow, { [styles.ringRowFocused]: store.focusedRingIndex === idx }]"
-          :data-ring-index="idx"
-        >
-          <span :class="styles.ringLabel">Ring {{ idx + 1 }}</span>
-          <span :class="styles.ringWidth">{{ Number(ring.width_mm || 0).toFixed(2) }} mm</span>
-          <div :class="styles.ringActions">
-            <button
-              :class="styles.mini"
-              type="button"
-              title="Shrink width by 0.10 mm"
-              :disabled="store.isRedBlocked"
-              @click="store.nudgeRingWidth(idx, -0.1)"
-            >
-              −0.10
-            </button>
-            <button
-              :class="styles.mini"
-              type="button"
-              title="Grow width by 0.10 mm"
-              :disabled="store.isRedBlocked"
-              @click="store.nudgeRingWidth(idx, 0.1)"
-            >
-              +0.10
-            </button>
-            <button
-              :class="[styles.mini, styles.miniDist]"
-              type="button"
-              title="Shrink width, distribute to neighbors"
-              :disabled="store.isRedBlocked"
-              @click="store.nudgeRingWidthDistribute(idx, -0.1)"
-            >
-              −0.10↔
-            </button>
-            <button
-              :class="[styles.mini, styles.miniDist]"
-              type="button"
-              title="Grow width, distribute to neighbors"
-              :disabled="store.isRedBlocked"
-              @click="store.nudgeRingWidthDistribute(idx, 0.1)"
-            >
-              +0.10↔
-            </button>
-          </div>
-        </div>
-      </div>
+      <RingNudgePanel :styles="styles" />
 
       <!-- Bundle 32.4.2 + 32.4.15: History mini-stack panel with keyboard hint overlay -->
       <div :class="styles.historyWrap">
@@ -218,6 +133,7 @@ import PatternLibraryPanel from "./PatternLibraryPanel.vue";
 import GeneratorPicker from "./GeneratorPicker.vue";
 import RosettePreviewPanel from "./RosettePreviewPanel.vue";
 import SnapshotPanel from "./SnapshotPanel.vue";
+import { RingNudgePanel, JumpHUD } from "./rosette-editor";
 import FeasibilityBanner from "./FeasibilityBanner.vue";
 import ToastHost from "@/components/ui/ToastHost.vue";
 import HistoryStackPanel from "./HistoryStackPanel.vue";
