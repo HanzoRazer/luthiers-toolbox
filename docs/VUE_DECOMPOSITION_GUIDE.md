@@ -12,7 +12,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 
 | Component | LOC | Type | Status |
 |-----------|-----|------|--------|
-| EngineeringEstimatorView.vue | 622 | View | ✅ Extracted options + inputs panel (-26%) |
+| EngineeringEstimatorView.vue | 530 | View | ✅ Extracted options + inputs + WBS + Materials (-36%) |
 | GeometryToolbar.vue | 614 | UI | Well-documented, no extraction needed |
 | ManufacturingCandidateList.vue | 602 | RMOS | Has child components |
 | ArtStudioCalculatorDebugPanel.vue | 602 | Debug | Debug panel, verbose by design |
