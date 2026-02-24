@@ -58,6 +58,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - RmosAiLogViewer.vue: 379 → 173 LOC ✅
 - Phase2VectorizationPanel.vue: 404 → 88 LOC ✅
 - Phase3CamPanel.vue: 398 → 85 LOC ✅
+- SawSlicePanel.vue: 559 → 244 LOC ✅
 
 ---
 
