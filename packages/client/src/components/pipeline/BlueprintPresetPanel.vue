@@ -2,16 +2,16 @@
   <div
     class="stage-panel blueprint-preset"
   >
-    <h2>🎨 Blueprint → Adaptive Preset (Phase 27.0)</h2>
+    <h2>Blueprint to Adaptive Preset (Phase 27.0)</h2>
     <p class="stage-description">
-      Upload a blueprint image and run one-click Blueprint → Adaptive pipeline directly.
+      Upload a blueprint image and run one-click Blueprint to Adaptive pipeline directly.
       Generate toolpath preview and send to Art Studio for refinement.
     </p>
 
     <div class="preset-grid">
       <!-- File Upload -->
       <div>
-        <h3 class="section-title">📄 Blueprint Image</h3>
+        <h3 class="section-title">Blueprint Image</h3>
         <input
           type="file"
           accept="image/*"
@@ -22,117 +22,46 @@
           v-if="file"
           class="file-selected"
         >
-          ✅ {{ file.name }}
+          {{ file.name }}
         </div>
       </div>
 
-      <!-- Tool Configuration -->
-      <div>
-        <h3 class="section-title">🔧 Tool Configuration</h3>
-        <div class="tool-grid">
-          <label class="input-label">
-            <span>Tool Ø (mm)</span>
-            <input
-              :value="config.tool_d"
-              type="number"
-              step="0.1"
-              class="input-field"
-              @input="updateConfig('tool_d', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label">
-            <span>Stepover</span>
-            <input
-              :value="config.stepover"
-              type="number"
-              step="0.05"
-              class="input-field"
-              @input="updateConfig('stepover', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label">
-            <span>Stepdown</span>
-            <input
-              :value="config.stepdown"
-              type="number"
-              step="0.1"
-              class="input-field"
-              @input="updateConfig('stepdown', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label">
-            <span>Margin</span>
-            <input
-              :value="config.margin"
-              type="number"
-              step="0.1"
-              class="input-field"
-              @input="updateConfig('margin', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label">
-            <span>Safe Z</span>
-            <input
-              :value="config.safe_z"
-              type="number"
-              step="0.1"
-              class="input-field"
-              @input="updateConfig('safe_z', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label">
-            <span>Z Rough</span>
-            <input
-              :value="config.z_rough"
-              type="number"
-              step="0.1"
-              class="input-field"
-              @input="updateConfig('z_rough', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-          <label class="input-label span-2">
-            <span>Feed XY</span>
-            <input
-              :value="config.feed_xy"
-              type="number"
-              step="10"
-              class="input-field"
-              @input="updateConfig('feed_xy', parseFloat(($event.target as HTMLInputElement).value))"
-            >
-          </label>
-        </div>
-      </div>
+      <!-- Tool Configuration (extracted child component) -->
+      <ToolConfigGrid
+        :config="config"
+        @update:config="emit('update:config', $event)"
+      />
 
       <!-- Actions -->
       <div>
-        <h3 class="section-title">⚡ Actions</h3>
+        <h3 class="section-title">Actions</h3>
         <div class="action-stack">
           <button
             class="btn btn-primary full-width"
             :disabled="!file || running"
             @click="runPipeline"
           >
-            {{ running ? '⏳ Running...' : '🚀 Run Blueprint → Adaptive' }}
+            {{ running ? 'Running...' : 'Run Blueprint to Adaptive' }}
           </button>
           <button
             class="btn btn-art-studio full-width"
             :disabled="!pipelineResponse"
             @click="sendToArtStudio"
           >
-            🎨 Send to Art Studio
+            Send to Art Studio
           </button>
         </div>
         <div
           v-if="lastExport"
           class="export-success"
         >
-          ✅ Sent {{ lastExport }}
+          Sent {{ lastExport }}
         </div>
         <div
           v-if="error"
           class="error-message"
         >
-          ❌ {{ error }}
+          {{ error }}
         </div>
       </div>
 
@@ -142,78 +71,46 @@
         :stats="stats"
       />
 
-      <!-- Toolpath Preview -->
-      <div class="span-2">
-        <h3 class="section-title">🔍 Toolpath Preview</h3>
-        <div class="preview-container">
-          <svg
-            v-if="previewSegments.length"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="xMidYMid meet"
-            class="preview-svg"
-          >
-            <polyline
-              v-for="(seg, idx) in previewSegments"
-              :key="idx"
-              :points="segToPoints(seg)"
-              fill="none"
-              stroke="lime"
-              stroke-width="0.4"
-            />
-          </svg>
-          <div
-            v-else
-            class="preview-placeholder"
-          >
-            Run Blueprint → Adaptive to see toolpath
-          </div>
-        </div>
-        <div
-          v-if="previewSegments.length"
-          class="preview-footer"
-        >
-          {{ previewSegments.length }} segments
-        </div>
-      </div>
+      <!-- Toolpath Preview (extracted child component) -->
+      <ToolpathPreviewSvg
+        :moves="pipelineMoves"
+        placeholder-text="Run Blueprint to Adaptive to see toolpath"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+/**
+ * BlueprintPresetPanel.vue - Blueprint to Adaptive pipeline UI
+ *
+ * REFACTORED: Child components extracted for decomposition:
+ * - ToolConfigGrid: Tool configuration form inputs
+ * - ToolpathPreviewSvg: SVG preview with segment normalization
+ * - PipelineStatsGrid: Stats display grid
+ */
+import { ref } from 'vue'
 import { api } from '@/services/apiBase'
-import { PipelineStatsGrid } from './blueprint-preset'
+import {
+  PipelineStatsGrid,
+  ToolConfigGrid,
+  ToolpathPreviewSvg,
+  type ToolConfig,
+  type MovePoint,
+} from './blueprint-preset'
 
 const ARTSTUDIO_ADAPTIVE_KEY = 'ltb:artstudio:lastAdaptiveRequest'
 
-// Types
-interface BlueprintConfig {
-  tool_d: number
-  stepover: number
-  stepdown: number
-  margin: number
-  safe_z: number
-  z_rough: number
-  feed_xy: number
-}
-
-interface Segment {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-}
-
-// Props
+// Props - use ToolConfig from child component
 interface Props {
-  config: BlueprintConfig
+  config: ToolConfig
 }
 
 const props = defineProps<Props>()
 
 // Emits
 const emit = defineEmits<{
-  'update:config': [config: BlueprintConfig]
+  'update:config': [config: ToolConfig]
 }>()
 
 // Local state
@@ -222,13 +119,8 @@ const running = ref(false)
 const error = ref<string | null>(null)
 const pipelineResponse = ref<any | null>(null)
 const stats = ref<any | null>(null)
-const previewSegments = ref<Segment[]>([])
+const pipelineMoves = ref<MovePoint[]>([])
 const lastExport = ref<string | null>(null)
-
-// Config update helper
-function updateConfig<K extends keyof BlueprintConfig>(key: K, value: BlueprintConfig[K]) {
-  emit('update:config', { ...props.config, [key]: value })
-}
 
 // Handlers
 function onFileChange(e: Event) {
@@ -247,7 +139,7 @@ async function runPipeline() {
   error.value = null
   pipelineResponse.value = null
   stats.value = null
-  previewSegments.value = []
+  pipelineMoves.value = []
 
   try {
     const form = new FormData()
@@ -265,16 +157,14 @@ async function runPipeline() {
       body: form
     })
 
-    if (!res.ok) throw new Error('Blueprint → Adaptive failed')
+    if (!res.ok) throw new Error('Blueprint to Adaptive failed')
 
     const data = await res.json()
     pipelineResponse.value = data
     stats.value = data.plan?.stats || null
-
-    const segs = movesToSegments(data.plan?.moves || [])
-    previewSegments.value = normalizeSegments(segs)
+    pipelineMoves.value = data.plan?.moves || []
   } catch (err: any) {
-    console.error('Blueprint → Adaptive pipeline error', err)
+    console.error('Blueprint to Adaptive pipeline error', err)
     error.value = err?.message || String(err)
   } finally {
     running.value = false
@@ -285,65 +175,19 @@ function sendToArtStudio() {
   const source = pipelineResponse.value?.adaptive_request || null
 
   if (!source) {
-    error.value = 'No Adaptive request available. Run Blueprint → Adaptive first.'
+    error.value = 'No Adaptive request available. Run Blueprint to Adaptive first.'
     return
   }
 
   try {
     localStorage.setItem(ARTSTUDIO_ADAPTIVE_KEY, JSON.stringify(source))
     const ts = new Date().toLocaleTimeString()
-    lastExport.value = `at ${ts}`
+    lastExport.value = 'at ' + ts
     window.location.href = '/art-studio'
   } catch (err) {
     console.error('Failed to export to Art Studio', err)
     error.value = 'Failed to save Adaptive request for Art Studio.'
   }
-}
-
-// Toolpath preview helpers
-function movesToSegments(moves: any[]): Segment[] {
-  const segs: Segment[] = []
-  let last = { x: 0, y: 0, has: false }
-
-  for (const m of moves) {
-    const x = typeof m.x === 'number' ? m.x : last.x
-    const y = typeof m.y === 'number' ? m.y : last.y
-    if (last.has) {
-      segs.push({ x1: last.x, y1: last.y, x2: x, y2: y })
-    }
-    last = { x, y, has: true }
-  }
-  return segs
-}
-
-function normalizeSegments(segs: Segment[]): Segment[] {
-  if (!segs.length) return []
-  let minX = segs[0].x1, maxX = segs[0].x1
-  let minY = segs[0].y1, maxY = segs[0].y1
-
-  for (const s of segs) {
-    minX = Math.min(minX, s.x1, s.x2)
-    maxX = Math.max(maxX, s.x1, s.x2)
-    minY = Math.min(minY, s.y1, s.y2)
-    maxY = Math.max(maxY, s.y1, s.y2)
-  }
-
-  const dx = maxX - minX || 1
-  const dy = maxY - minY || 1
-  const scale = 90 / Math.max(dx, dy)
-  const offsetX = (100 - dx * scale) / 2
-  const offsetY = (100 - dy * scale) / 2
-
-  return segs.map((s) => ({
-    x1: (s.x1 - minX) * scale + offsetX,
-    y1: 100 - ((s.y1 - minY) * scale + offsetY),
-    x2: (s.x2 - minX) * scale + offsetX,
-    y2: 100 - ((s.y2 - minY) * scale + offsetY)
-  }))
-}
-
-function segToPoints(seg: Segment): string {
-  return `${seg.x1},${seg.y1} ${seg.x2},${seg.y2}`
 }
 </script>
 
@@ -384,32 +228,6 @@ function segToPoints(seg: Segment): string {
   color: #4CAF50;
 }
 
-.tool-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.input-label {
-  display: flex;
-  flex-direction: column;
-}
-
-.input-label span {
-  font-size: 0.9em;
-  color: #666;
-}
-
-.input-field {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.span-2 {
-  grid-column: span 2;
-}
-
 .action-stack {
   display: flex;
   flex-direction: column;
@@ -442,37 +260,6 @@ function segToPoints(seg: Segment): string {
   border-radius: 4px;
   color: #c62828;
   font-size: 0.9em;
-}
-
-.preview-container {
-  width: 100%;
-  height: 300px;
-  background: #1a1a1a;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-}
-
-.preview-svg {
-  width: 100%;
-  height: 100%;
-}
-
-.preview-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  font-size: 0.9em;
-}
-
-.preview-footer {
-  margin-top: 10px;
-  text-align: center;
-  font-size: 0.9em;
-  color: #666;
 }
 
 .btn {
