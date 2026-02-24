@@ -21,6 +21,7 @@ export interface BraceBatchState {
     density: number
   }) => void
   removeBrace: (id: number) => void
+  updateBrace: (brace: BraceEntry) => void
   calculateBatch: () => Promise<void>
 }
 
@@ -62,6 +63,13 @@ export function useBraceBatch(
   function removeBrace(id: number): void {
     const idx = braces.value.findIndex((b) => b.id === id)
     if (idx >= 0) braces.value.splice(idx, 1)
+  }
+
+  function updateBrace(brace: BraceEntry): void {
+    const idx = braces.value.findIndex((b) => b.id === brace.id)
+    if (idx >= 0) {
+      braces.value[idx] = { ...brace }
+    }
   }
 
   async function calculateBatch(): Promise<void> {
@@ -108,6 +116,7 @@ export function useBraceBatch(
     batchResult,
     addBrace,
     removeBrace,
+    updateBrace,
     calculateBatch
   }
 }
