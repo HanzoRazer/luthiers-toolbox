@@ -31,6 +31,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - RiskDashboardCrossLab.vue: 948 → ~400 LOC ✅
 - CurveLabModal.vue: 590 → 183 LOC ✅
 - ArtStudioInlay.vue: 569 → 467 LOC ✅
+- CamPipelineRunner.vue: 524 → 449 LOC ✅
 
 ---
 
