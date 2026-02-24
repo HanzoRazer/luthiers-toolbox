@@ -16,7 +16,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | GeometryToolbar.vue | 614 | UI | Well-documented, no extraction needed |
 | ManufacturingCandidateList.vue | 602 | RMOS | Has child components |
 | ArtStudioCalculatorDebugPanel.vue | 602 | Debug | Debug panel, verbose by design |
-| CurveLabModal.vue | 589 | Modal | Template-heavy (81%), could extract |
+| CurveLabModal.vue | 183 | Modal | ✅ Extracted InlineGeometryReport + DxfValidationPanel (-69%) |
 | AdvisoryReviewPanel.vue | 579 | AI | Needs review |
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
 | PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
@@ -29,6 +29,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - PipelineLabView.vue: 1466 → 195 LOC ✅
 - DxfToGcodeView.vue: 1503 → ~500 LOC ✅
 - RiskDashboardCrossLab.vue: 948 → ~400 LOC ✅
+- CurveLabModal.vue: 590 → 183 LOC ✅
 
 ---
 
