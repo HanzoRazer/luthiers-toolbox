@@ -41,6 +41,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - AdaptivePoly.vue: 463 → 412 LOC ✅
 - DualSvgDisplay.vue: 453 → 274 LOC ✅
 - MixedMaterialStripFamilyEditor.vue: 409 → 287 LOC ✅
+- PolygonOffsetLab.vue: 506 → 397 LOC ✅
 
 ---
 
@@ -113,6 +114,9 @@ Created components in `components/compare/dual-svg/`:
 
 Created components in `components/rmos/strip-family/`:
 - `MaterialEditorCard.vue` - Single material editor with visual properties
+
+Created components in `components/toolbox/polygon-offset/`:
+- `GcodeOutputPanel.vue` - G-code preview with download/copy actions
 
 ### 3. Use Composables for Logic
 
