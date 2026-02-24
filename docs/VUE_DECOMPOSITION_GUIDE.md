@@ -15,7 +15,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | EngineeringEstimatorView.vue | 530 | View | ✅ Extracted options + inputs + WBS + Materials (-36%) |
 | GeometryToolbar.vue | 614 | UI | Well-documented, no extraction needed |
 | ManufacturingCandidateList.vue | 602 | RMOS | Has child components |
-| ArtStudioCalculatorDebugPanel.vue | 602 | Debug | Debug panel, verbose by design |
+| ArtStudioCalculatorDebugPanel.vue | 393 | Debug | ✅ Extracted CalculatorResultCards (-35%) |
 | CurveLabModal.vue | 183 | Modal | ✅ Extracted InlineGeometryReport + DxfValidationPanel (-69%) |
 | AdvisoryReviewPanel.vue | 483 | AI | ✅ Extracted AssetList + RejectModal + AttachModal (-17%) |
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
@@ -36,6 +36,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - CAMEssentialsLab.vue: 510 → 243 LOC ✅
 - VisionAttachToRunWidget.vue: 477 → 305 LOC ✅
 - AiImageGallery.vue: 496 → 454 LOC ✅
+- ArtStudioCalculatorDebugPanel.vue: 603 → 393 LOC ✅
 
 ---
 
@@ -88,6 +89,9 @@ Created components in `features/ai_images/vision_attach/`:
 
 Created components in `features/ai_images/components/`:
 - `AssetQuickOpsPanel.vue` - Quick reject/promote/undo operations
+
+Created components in `components/artstudio/calculator-debug/`:
+- `CalculatorResultCards.vue` - Calculator output cards grid
 
 ### 3. Use Composables for Logic
 
