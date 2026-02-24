@@ -105,70 +105,19 @@
         </div>
 
         <!-- N17 Specific: Link Mode -->
-        <div v-if="mode === 'preview'">
-          <label class="block text-xs font-medium text-gray-700 mb-1">
-            Link Mode
-          </label>
-          <div class="flex gap-2">
-            <button
-              :class="[
-                'flex-1 px-2 py-1.5 text-xs rounded border transition-colors',
-                params.link_mode === 'arc'
-                  ? 'bg-gray-700 text-white border-gray-700'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-              ]"
-              :disabled="busy"
-              @click="params.link_mode = 'arc'"
-            >
-              Arc (G2/G3)
-            </button>
-            <button
-              :class="[
-                'flex-1 px-2 py-1.5 text-xs rounded border transition-colors',
-                params.link_mode === 'linear'
-                  ? 'bg-gray-700 text-white border-gray-700'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-              ]"
-              :disabled="busy"
-              @click="params.link_mode = 'linear'"
-            >
-              Linear (G1)
-            </button>
-          </div>
-        </div>
+        <PreviewLinkModePanel
+          v-if="mode === 'preview'"
+          v-model:link-mode="params.link_mode"
+          :busy="busy"
+        />
 
         <!-- N18 Specific: Spiral Parameters -->
-        <div
+        <SpiralParamsPanel
           v-if="mode === 'spiral'"
-          class="grid grid-cols-2 gap-3"
-        >
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
-              Feed Rate (mm/min)
-            </label>
-            <input
-              v-model.number="params.base_feed"
-              type="number"
-              step="50"
-              min="100"
-              class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              :disabled="busy"
-            >
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
-              Cutting Depth (mm)
-            </label>
-            <input
-              v-model.number="params.z"
-              type="number"
-              step="0.1"
-              max="0"
-              class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              :disabled="busy"
-            >
-          </div>
-        </div>
+          v-model:base-feed="params.base_feed"
+          v-model:z="params.z"
+          :busy="busy"
+        />
 
         <!-- Action Buttons -->
         <div class="flex gap-2">
@@ -330,12 +279,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { 
-  generatePolygonOffsetPreview, 
+import {
+  generatePolygonOffsetPreview,
   generatePolygonOffsetGcode,
   generateAdaptiveSpiralGcode,
   type OffsetPreview
 } from '@/api/n17_n18'
+import { PreviewLinkModePanel, SpiralParamsPanel } from './adaptive-poly'
 
 const mode = ref<'preview' | 'spiral'>('preview')
 const polygonInput = ref('[[0,0], [100,0], [100,60], [0,60]]')
