@@ -43,6 +43,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - MixedMaterialStripFamilyEditor.vue: 409 → 287 LOC ✅
 - PolygonOffsetLab.vue: 506 → 397 LOC ✅
 - AdaptiveBenchLab.vue: 563 → 489 LOC ✅
+- RmosOperationE2EPanel.vue: 501 → 412 LOC ✅
 
 ---
 
@@ -121,6 +122,9 @@ Created components in `components/toolbox/polygon-offset/`:
 
 Created components in `components/toolbox/adaptive-bench/`:
 - `BenchResultsPanel.vue` - Benchmark results stats grid display
+
+Created components in `components/rmos/operation-e2e/`:
+- `OperationHistoryPanel.vue` - Operation history list with status badges
 
 ### 3. Use Composables for Logic
 
