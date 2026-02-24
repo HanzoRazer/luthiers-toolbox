@@ -19,7 +19,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | CurveLabModal.vue | 183 | Modal | ✅ Extracted InlineGeometryReport + DxfValidationPanel (-69%) |
 | AdvisoryReviewPanel.vue | 483 | AI | ✅ Extracted AssetList + RejectModal + AttachModal (-17%) |
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
-| PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
+| PlacementPreviewPanel.vue | 429 | Rosette | ✅ Extracted PlacementControlsPanel (-25%) |
 | ArtStudioInlay.vue | 467 | Art Studio | ✅ Extracted FretPositionTable + InlaySummary + InlayDetails (-18%) |
 
 **Previously decomposed (now under threshold):**
@@ -54,6 +54,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - AiImageProperties.vue: 463 → 373 LOC ✅
 - VariantReviewPanel.vue: 445 → 273 LOC ✅
 - ArtPresetCompareAB.vue: 449 → 189 LOC ✅
+- PlacementPreviewPanel.vue: 574 → 429 LOC ✅
 
 ---
 
@@ -173,6 +174,9 @@ Created components in `components/rmos/variant-review/`:
 
 Created components in `components/art/preset-compare/`:
 - `PresetColumn.vue` - Single preset column for A/B comparison (health badge, stats, lineage)
+
+Created components in `components/rosette/placement-preview/`:
+- `PlacementControlsPanel.vue` - Host surface (rect/circle/polygon) and placement controls (scale, rotate, offset)
 
 ### 3. Use Composables for Logic
 
