@@ -52,6 +52,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - GuitarDesignHub.vue: 462 → 321 LOC ✅
 - FinishingDesigner.vue: 471 → 371 LOC ✅
 - AiImageProperties.vue: 463 → 373 LOC ✅
+- VariantReviewPanel.vue: 445 → 273 LOC ✅
 
 ---
 
@@ -165,6 +166,9 @@ Created components in `components/artstudio/sidebar/`:
 Created components in `components/rosette/rosette-editor/`:
 - `RingNudgePanel.vue` - Ring width adjustment controls with distribute
 - `JumpHUD.vue` - Filter status, ring counts, hotkey tooltip
+
+Created components in `components/rmos/variant-review/`:
+- `VariantCard.vue` - Single advisory variant card for review (SVG preview, rating, notes, promote)
 
 ### 3. Use Composables for Logic
 
