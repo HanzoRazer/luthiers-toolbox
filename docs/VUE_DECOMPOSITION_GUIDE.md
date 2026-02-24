@@ -38,6 +38,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - AiImageGallery.vue: 496 → 454 LOC ✅
 - ArtStudioCalculatorDebugPanel.vue: 603 → 393 LOC ✅
 - CurveLab.vue: 447 → 339 LOC ✅
+- AdaptivePoly.vue: 463 → 412 LOC ✅
 
 ---
 
@@ -99,6 +100,10 @@ Created components in `components/curvelab/mode-panels/`:
 - `FilletModePanel.vue` - Fillet radius control
 - `FairModePanel.vue` - Lambda + preserve endpoints controls
 - `ClothoidModePanel.vue` - Reset + blend buttons
+
+Created components in `components/toolbox/adaptive-poly/`:
+- `PreviewLinkModePanel.vue` - N17 arc/linear link mode toggle
+- `SpiralParamsPanel.vue` - N18 feed rate and cutting depth inputs
 
 ### 3. Use Composables for Logic
 
