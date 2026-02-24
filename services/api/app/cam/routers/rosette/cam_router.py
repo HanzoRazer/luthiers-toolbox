@@ -49,8 +49,10 @@ from ....services.rosette_cam_bridge import (
 from ....services.art_jobs_store import create_art_job, get_art_job
 
 # Import run artifact persistence (OPERATION lane requirement)
-from ....rmos.runs import (
+from ....rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -192,11 +194,15 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_toolpath_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -243,12 +249,15 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_toolpath_plan",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            toolpaths_hash=moves_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                toolpaths_sha256=moves_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -273,11 +282,12 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_toolpath_plan",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)
@@ -330,11 +340,15 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_gcode_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -367,12 +381,15 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_gcode_post",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            gcode_hash=gcode_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                gcode_sha256=gcode_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -397,11 +414,12 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="rosette",
+            mode="rosette",
             event_type="rosette_gcode_post",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

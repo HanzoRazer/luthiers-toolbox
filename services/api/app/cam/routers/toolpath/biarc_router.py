@@ -44,8 +44,10 @@ except ImportError:
     HAS_POST_HELPERS = False
 
 # Import run artifact persistence (OPERATION lane requirement)
-from ....rmos.runs import (
+from ....rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -124,11 +126,15 @@ def biarc_gcode(req: BiarcReq) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id="biarc_gcode",
-            workflow_mode="biarc",
+            mode="biarc",
             event_type="biarc_gcode_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -171,12 +177,15 @@ def biarc_gcode(req: BiarcReq) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id="biarc_gcode",
-            workflow_mode="biarc",
+            mode="biarc",
             event_type="biarc_gcode_execution",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            gcode_hash=gcode_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                gcode_sha256=gcode_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -211,11 +220,12 @@ def biarc_gcode(req: BiarcReq) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id="biarc_gcode",
-            workflow_mode="biarc",
+            mode="biarc",
             event_type="biarc_gcode_execution",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

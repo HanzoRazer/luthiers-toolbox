@@ -6,8 +6,10 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 # Import RMOS run artifact persistence (OPERATION lane requirement)
-from ..rmos.runs import (
+from ..rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -141,11 +143,14 @@ def polygon_offset_governed(req: PolyOffsetReq) -> Response:
         run_id=run_id,
         created_at_utc=now,
         tool_id="polygon_offset_gcode",
-        workflow_mode="polygon_offset",
+        mode="polygon_offset",
         event_type="polygon_offset_gcode_execution",
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),
+        hashes=Hashes(
+            feasibility_sha256=request_hash,
+            gcode_sha256=gcode_hash,
+        ),
     )
     persist_run(artifact)
     

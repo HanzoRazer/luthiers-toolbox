@@ -42,8 +42,10 @@ from .helpers import (
 from ...util.exporters import export_dxf, export_svg
 
 # Import RMOS run artifact persistence (OPERATION lane requirement)
-from ...rmos.runs import (
+from ...rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -265,11 +267,14 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
         run_id=run_id,
         created_at_utc=now,
         tool_id="geometry_export_gcode",
-        workflow_mode="geometry_export",
+        mode="geometry_export",
         event_type="geometry_export_gcode_execution",
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),
+        hashes=Hashes(
+            feasibility_sha256=request_hash,
+            gcode_sha256=gcode_hash,
+        ),
         meta={"simulation_gate": simulation_meta},  # Store simulation verification in meta
     )
     persist_run(artifact)

@@ -22,8 +22,10 @@ router = APIRouter()
 
 # Import RMOS run artifact persistence (OPERATION lane requirement)
 from datetime import datetime, timezone
-from ..rmos.runs import (
+from ..rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -383,14 +385,17 @@ def generate_simple_retract_gcode_governed(
         run_id=run_id,
         created_at_utc=now,
         tool_id="retract_gcode",
-        workflow_mode="retract",
+        mode="retract",
         event_type="retract_gcode_execution",
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),
+        hashes=Hashes(
+            feasibility_sha256=request_hash,
+            gcode_sha256=gcode_hash,
+        ),
     )
     persist_run(artifact)
-    
+
     resp = Response(
         content=gcode_text,
         media_type="text/plain",
@@ -466,14 +471,17 @@ def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
         run_id=run_id,
         created_at_utc=now,
         tool_id="retract_download_gcode",
-        workflow_mode="retract",
+        mode="retract",
         event_type="retract_download_gcode_execution",
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),
+        hashes=Hashes(
+            feasibility_sha256=request_hash,
+            gcode_sha256=gcode_hash,
+        ),
     )
     persist_run(artifact)
-    
+
     # Return as downloadable file
     resp = Response(
         content=gcode_text,
