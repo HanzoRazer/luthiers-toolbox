@@ -20,7 +20,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | AdvisoryReviewPanel.vue | 579 | AI | Needs review |
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
 | PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
-| ArtStudioInlay.vue | 568 | Art Studio | Needs review |
+| ArtStudioInlay.vue | 467 | Art Studio | ✅ Extracted FretPositionTable + InlaySummary + InlayDetails (-18%) |
 | ArtStudioSidebar.vue | 563 | Art Studio | Needs review |
 
 **Previously decomposed (now under threshold):**
@@ -30,6 +30,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - DxfToGcodeView.vue: 1503 → ~500 LOC ✅
 - RiskDashboardCrossLab.vue: 948 → ~400 LOC ✅
 - CurveLabModal.vue: 590 → 183 LOC ✅
+- ArtStudioInlay.vue: 569 → 467 LOC ✅
 
 ---
 
