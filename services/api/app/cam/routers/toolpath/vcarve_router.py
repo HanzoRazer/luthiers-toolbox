@@ -46,8 +46,10 @@ from ....toolpath.vcarve_toolpath import (
     VCarveToolpathParams,
     svg_to_naive_gcode,
 )
-from ....rmos.runs import (
+from ....rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -282,10 +284,11 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="vcarve",
+            mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="ERROR",
-            request_hash=request_hash,
+            decision=RunDecision(risk_level="UNKNOWN"),
+            hashes=Hashes(feasibility_sha256=request_hash),
             errors=["SVG text is empty"],
         )
         persist_run(artifact)
@@ -322,11 +325,15 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="vcarve",
+            mode="vcarve",
             event_type="vcarve_gcode_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -362,12 +369,15 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="vcarve",
+            mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            gcode_hash=gcode_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                gcode_sha256=gcode_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -390,11 +400,12 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="vcarve",
+            mode="vcarve",
             event_type="vcarve_gcode_execution",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

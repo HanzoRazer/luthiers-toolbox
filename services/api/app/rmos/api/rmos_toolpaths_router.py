@@ -29,6 +29,8 @@ from typing import Any, Dict, Optional
 
 from app.rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -82,11 +84,15 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode=mode,
+            mode=mode,
             event_type="rmos_toolpaths_blocked",  # OPERATION lane artifact kind
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -119,13 +125,16 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode=mode,
+            mode=mode,
             event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="OK",
             feasibility=feasibility,
-            request_hash=feas_hash,
-            toolpaths_hash=toolpaths_hash,
-            gcode_hash=gcode_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                toolpaths_sha256=toolpaths_hash,
+                gcode_sha256=gcode_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -147,11 +156,12 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode=mode,
+            mode=mode,
             event_type="rmos_toolpaths_execution",  # OPERATION lane artifact kind
             status="ERROR",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

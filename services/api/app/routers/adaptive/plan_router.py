@@ -43,8 +43,10 @@ from ...services.jobint_artifacts import build_jobint_payload
 from ..machines_consolidated_router import get_profile
 
 # Import run artifact persistence (OPERATION lane requirement)
-from ...rmos.runs import (
+from ...rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -112,11 +114,15 @@ def plan(body: PlanIn) -> PlanOut:
             run_id=run_id,
             created_at_utc=now,
             tool_id="adaptive:plan",
-            workflow_mode="adaptive",
+            mode="adaptive",
             event_type="adaptive_plan_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -315,12 +321,15 @@ def plan(body: PlanIn) -> PlanOut:
         run_id=run_id,
         created_at_utc=now,
         tool_id="adaptive:plan",
-        workflow_mode="adaptive",
+        mode="adaptive",
         event_type="adaptive_plan_execution",
         status="OK",
         feasibility=feasibility,
-        request_hash=request_hash,
-        toolpaths_hash=moves_hash,
+        decision=RunDecision(risk_level=risk_level),
+        hashes=Hashes(
+            feasibility_sha256=feas_hash,
+            toolpaths_sha256=moves_hash,
+        ),
     )
     persist_run(artifact)
 

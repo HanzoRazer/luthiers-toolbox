@@ -54,8 +54,10 @@ from ....toolpath.dxf_exporter import (
 )
 
 # RMOS artifact persistence (OPERATION lane requirement)
-from ....rmos.runs import (
+from ....rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -127,11 +129,15 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="relief",
+            mode="relief",
             event_type="relief_dxf_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -152,11 +158,12 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="relief",
+            mode="relief",
             event_type="relief_dxf_export",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=["SVG text is empty"],
         )
         persist_run(artifact)
@@ -198,12 +205,15 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="relief",
+            mode="relief",
             event_type="relief_dxf_export",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            gcode_hash=dxf_hash,  # Using gcode_hash for DXF output
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                gcode_sha256=dxf_hash,  # Using gcode_sha256 for DXF output
+            ),
         )
         persist_run(artifact)
         headers["X-Run-ID"] = run_id
@@ -237,11 +247,12 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
             run_id=run_id,
             created_at_utc=now,
             tool_id=tool_id,
-            workflow_mode="relief",
+            mode="relief",
             event_type="relief_dxf_export",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

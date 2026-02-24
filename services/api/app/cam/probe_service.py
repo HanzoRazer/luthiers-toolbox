@@ -6,8 +6,8 @@ from typing import Any, Dict
 
 from fastapi.responses import Response
 
-from ..rmos.runs import (
-    RunArtifact, persist_run, create_run_id, sha256_of_obj, sha256_of_text,
+from ..rmos.runs_v2 import (
+    RunArtifact, RunDecision, Hashes, persist_run, create_run_id, sha256_of_obj, sha256_of_text,
 )
 
 
@@ -28,11 +28,14 @@ def create_governed_probe_response(
         run_id=run_id,
         created_at_utc=now,
         tool_id=tool_id,
-        workflow_mode="probing",
+        mode="probing",
         event_type=event_type,
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),
+        hashes=Hashes(
+            feasibility_sha256=request_hash,
+            gcode_sha256=gcode_hash,
+        ),
     )
     persist_run(artifact)
 

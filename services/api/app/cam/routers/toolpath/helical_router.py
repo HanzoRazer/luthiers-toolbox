@@ -55,8 +55,10 @@ from ....utils.post_presets import get_dwell_command, get_post_preset
 
 # Import run artifact persistence (OPERATION lane requirement)
 from datetime import datetime, timezone
-from ....rmos.runs import (
+from ....rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -300,11 +302,15 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id="helical:gcode",
-            workflow_mode="helical",
+            mode="helical",
             event_type="helical_gcode_blocked",
             status="BLOCKED",
             feasibility=feasibility,
-            request_hash=feas_hash,
+            decision=RunDecision(
+                risk_level=risk_level,
+                block_reason=f"Blocked by safety policy: {risk_level}",
+            ),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             notes=f"Blocked by safety policy: {risk_level}",
         )
         persist_run(artifact)
@@ -326,11 +332,12 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id="helical:gcode",
-            workflow_mode="helical",
+            mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[msg],
         )
         persist_run(artifact)
@@ -357,12 +364,15 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id="helical:gcode",
-            workflow_mode="helical",
+            mode="helical",
             event_type="helical_gcode_execution",
             status="OK",
             feasibility=feasibility,
-            request_hash=request_hash,
-            gcode_hash=gcode_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(
+                feasibility_sha256=feas_hash,
+                gcode_sha256=gcode_hash,
+            ),
         )
         persist_run(artifact)
 
@@ -382,11 +392,12 @@ def helical_entry(req: HelicalReq) -> Dict[str, Any]:
             run_id=run_id,
             created_at_utc=now,
             tool_id="helical:gcode",
-            workflow_mode="helical",
+            mode="helical",
             event_type="helical_gcode_execution",
             status="ERROR",
             feasibility=feasibility,
-            request_hash=request_hash,
+            decision=RunDecision(risk_level=risk_level),
+            hashes=Hashes(feasibility_sha256=feas_hash),
             errors=[f"{type(e).__name__}: {str(e)}"],
         )
         persist_run(artifact)

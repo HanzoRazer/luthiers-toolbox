@@ -35,9 +35,11 @@ from .schemas import (
     ArtifactQueryResult,
 )
 
-# Import from runs module (v1/v2 abstracted)
-from ..runs import (
+# Import from runs_v2 module
+from ..runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -121,11 +123,14 @@ class DefaultPipelineStore:
             run_id=artifact_id,
             created_at_utc=now,
             tool_id=index_meta.get("tool_type", kind.split("_")[0]),
-            workflow_mode=index_meta.get("workflow_mode", "pipeline"),
+            mode=index_meta.get("workflow_mode", "pipeline"),
             event_type=kind,
             status=status.value,
-            request_hash=request_hash,
-            gcode_hash=output_hash,
+            decision=RunDecision(risk_level="GREEN"),
+            hashes=Hashes(
+                feasibility_sha256=request_hash or "0" * 64,
+                gcode_sha256=output_hash,
+            ),
             notes=f"Pipeline stage: {stage.value}",
             # Store full payload in a way that can be retrieved
             feasibility=payload.get("feasibility"),

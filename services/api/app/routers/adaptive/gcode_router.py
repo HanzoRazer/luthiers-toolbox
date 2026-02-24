@@ -28,8 +28,10 @@ from .helpers import (
 from .plan_router import plan
 
 # Import run artifact persistence (OPERATION lane requirement)
-from ...rmos.runs import (
+from ...rmos.runs_v2 import (
     RunArtifact,
+    RunDecision,
+    Hashes,
     persist_run,
     create_run_id,
     sha256_of_obj,
@@ -112,11 +114,14 @@ def gcode(body: GcodeIn) -> StreamingResponse:
         run_id=run_id,
         created_at_utc=now,
         tool_id="adaptive_gcode",
-        workflow_mode="adaptive",
+        mode="adaptive",
         event_type="adaptive_gcode_execution",
         status="OK",
-        request_hash=request_hash,
-        gcode_hash=gcode_hash,
+        decision=RunDecision(risk_level="GREEN"),  # plan() already validated feasibility
+        hashes=Hashes(
+            feasibility_sha256=request_hash,  # Use request hash as proxy (plan validated)
+            gcode_sha256=gcode_hash,
+        ),
     )
     persist_run(artifact)
 
