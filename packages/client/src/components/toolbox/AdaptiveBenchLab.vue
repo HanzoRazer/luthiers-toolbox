@@ -144,46 +144,10 @@
           v-html="svgContent"
         />
 
-        <div
+        <BenchResultsPanel
           v-if="benchResult"
-          class="bench-results"
-        >
-          <h4>Benchmark Results</h4>
-          <div class="stats-grid">
-            <div class="stat">
-              <div class="stat-label">
-                Total Time
-              </div>
-              <div class="stat-value">
-                {{ benchResult.total_ms.toFixed(2) }} ms
-              </div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">
-                Average Time
-              </div>
-              <div class="stat-value">
-                {{ benchResult.avg_ms.toFixed(3) }} ms
-              </div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">
-                Runs
-              </div>
-              <div class="stat-value">
-                {{ benchResult.runs }}
-              </div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">
-                Geometry
-              </div>
-              <div class="stat-value">
-                {{ benchResult.width }}×{{ benchResult.height }} mm
-              </div>
-            </div>
-          </div>
-        </div>
+          :result="benchResult"
+        />
 
         <div
           v-if="!svgContent && !benchResult && !error"
@@ -217,6 +181,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref } from 'vue'
+import { BenchResultsPanel } from './adaptive-bench'
 
 // Parameters
 const width = ref(100)
@@ -477,44 +442,6 @@ input[type="number"] {
 .svg-viewer :deep(svg) {
   max-width: 100%;
   height: auto;
-}
-
-.bench-results {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-top: 1rem;
-}
-
-.bench-results h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.stat {
-  background: white;
-  padding: 0.75rem;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-bottom: 0.25rem;
-}
-
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #0f172a;
 }
 
 .placeholder {
