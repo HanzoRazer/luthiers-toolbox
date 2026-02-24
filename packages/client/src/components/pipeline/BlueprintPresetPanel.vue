@@ -137,36 +137,10 @@
       </div>
 
       <!-- Stats -->
-      <div v-if="stats">
-        <h3 class="section-title">📊 Stats</h3>
-        <div class="stats-grid">
-          <div class="stat-box">
-            <span class="stat-label">Moves:</span>
-            <strong class="stat-value">{{ stats.move_count }}</strong>
-          </div>
-          <div
-            v-if="stats.length_mm"
-            class="stat-box"
-          >
-            <span class="stat-label">Length:</span>
-            <strong class="stat-value">{{ stats.length_mm }} mm</strong>
-          </div>
-          <div
-            v-if="stats.area_mm2"
-            class="stat-box"
-          >
-            <span class="stat-label">Area:</span>
-            <strong class="stat-value">{{ stats.area_mm2 }} mm²</strong>
-          </div>
-          <div
-            v-if="stats.time_s"
-            class="stat-box"
-          >
-            <span class="stat-label">Time:</span>
-            <strong class="stat-value">{{ stats.time_s }} s</strong>
-          </div>
-        </div>
-      </div>
+      <PipelineStatsGrid
+        v-if="stats"
+        :stats="stats"
+      />
 
       <!-- Toolpath Preview -->
       <div class="span-2">
@@ -208,6 +182,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { api } from '@/services/apiBase'
+import { PipelineStatsGrid } from './blueprint-preset'
 
 const ARTSTUDIO_ADAPTIVE_KEY = 'ltb:artstudio:lastAdaptiveRequest'
 
@@ -467,29 +442,6 @@ function segToPoints(seg: Segment): string {
   border-radius: 4px;
   color: #c62828;
   font-size: 0.9em;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  font-size: 0.9em;
-}
-
-.stat-box {
-  padding: 10px;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.stat-label {
-  color: #666;
-}
-
-.stat-value {
-  display: block;
-  font-size: 1.2em;
-  margin-top: 5px;
 }
 
 .preview-container {
