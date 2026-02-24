@@ -55,6 +55,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - VariantReviewPanel.vue: 445 → 273 LOC ✅
 - ArtPresetCompareAB.vue: 449 → 189 LOC ✅
 - PlacementPreviewPanel.vue: 574 → 429 LOC ✅
+- RmosAiLogViewer.vue: 379 → 173 LOC ✅
 
 ---
 
@@ -177,6 +178,10 @@ Created components in `components/art/preset-compare/`:
 
 Created components in `components/rosette/placement-preview/`:
 - `PlacementControlsPanel.vue` - Host surface (rect/circle/polygon) and placement controls (scale, rotate, offset)
+
+Created components in `components/rmos/ai-log-viewer/`:
+- `AttemptsTable.vue` - AI log attempts table with score, risk, acceptable columns
+- `RunsTable.vue` - AI log runs table with attempts, success, score columns
 
 ### 3. Use Composables for Logic
 
