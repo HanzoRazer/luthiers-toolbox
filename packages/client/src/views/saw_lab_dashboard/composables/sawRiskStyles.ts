@@ -38,16 +38,16 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
   error: 'bg-rose-100 text-rose-800'
 }
 
-export function riskBorderClass(bucketId: RiskBucketId): string {
-  return RISK_BORDER_CLASSES[bucketId] || RISK_BORDER_CLASSES.unknown
+export function riskBorderClass(bucketId: RiskBucketId | string): string {
+  return RISK_BORDER_CLASSES[bucketId as RiskBucketId] || RISK_BORDER_CLASSES.unknown
 }
 
-export function riskBadgeClass(bucketId: RiskBucketId): string {
-  return RISK_BADGE_CLASSES[bucketId] || RISK_BADGE_CLASSES.unknown
+export function riskBadgeClass(bucketId: RiskBucketId | string): string {
+  return RISK_BADGE_CLASSES[bucketId as RiskBucketId] || RISK_BADGE_CLASSES.unknown
 }
 
-export function riskBarClass(bucketId: RiskBucketId): string {
-  return RISK_BAR_CLASSES[bucketId] || RISK_BAR_CLASSES.unknown
+export function riskBarClass(bucketId: RiskBucketId | string): string {
+  return RISK_BAR_CLASSES[bucketId as RiskBucketId] || RISK_BAR_CLASSES.unknown
 }
 
 export function riskScoreColor(score: number): string {

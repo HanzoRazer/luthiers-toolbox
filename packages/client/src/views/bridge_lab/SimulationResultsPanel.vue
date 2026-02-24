@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
 
-interface SimulationResult {
+export interface SimulationResult {
   move_count?: number
   length_mm?: number
   time_s?: number

@@ -60,15 +60,10 @@
 </template>
 
 <script setup lang="ts">
-interface RunMetrics {
-  avg_spindle_load_pct?: number
-  max_spindle_load_pct?: number
-  avg_rpm?: number
-  max_rpm?: number
-  avg_feed_mm_min?: number
-  avg_vibration_rms?: number
-  n_samples: number
-}
+import type { MetricsSummary } from '@/api/sawLab'
+
+// Re-export for convenience
+export type RunMetrics = MetricsSummary
 
 defineProps<{
   metrics: RunMetrics

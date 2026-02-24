@@ -169,116 +169,11 @@
     </section>
 
     <!-- Detail Modal -->
-    <div
+    <EventDetailModal
       v-if="detailEvent"
-      :class="styles.modalOverlay"
-      @click.self="detailEvent = null"
-    >
-      <div :class="styles.modal">
-        <header :class="styles.modalHeader">
-          <h3>Event Detail</h3>
-          <button
-            :class="styles.modalClose"
-            @click="detailEvent = null"
-          >
-            X
-          </button>
-        </header>
-        <div :class="styles.modalBody">
-          <dl :class="styles.detailGrid">
-            <dt>Event ID</dt>
-            <dd><code :class="styles.code">{{ detailEvent.event_id }}</code></dd>
-
-            <dt>Created</dt>
-            <dd>{{ detailEvent.created_at_utc }}</dd>
-
-            <dt>Outcome</dt>
-            <dd>
-              <span :class="getOutcomeBadgeClass(detailEvent.outcome)">
-                {{ getOutcomeIcon(detailEvent.outcome) }} {{ detailEvent.outcome }}
-              </span>
-            </dd>
-
-            <dt>HTTP Status</dt>
-            <dd>{{ detailEvent.http_status || "-" }}</dd>
-
-            <dt>Filename</dt>
-            <dd>{{ detailEvent.uploader_filename || "-" }}</dd>
-
-            <dt>ZIP SHA256</dt>
-            <dd>
-              <code
-                v-if="detailEvent.zip_sha256"
-                :class="styles.sha"
-              >
-                {{ detailEvent.zip_sha256 }}
-              </code>
-              <span v-else>-</span>
-            </dd>
-
-            <dt>Size</dt>
-            <dd>{{ formatSize(detailEvent.zip_size_bytes) }}</dd>
-
-            <dt>Session ID</dt>
-            <dd>{{ detailEvent.session_id || "-" }}</dd>
-
-            <dt>Batch Label</dt>
-            <dd>{{ detailEvent.batch_label || "-" }}</dd>
-
-            <template v-if="detailEvent.run_id">
-              <dt>Run ID</dt>
-              <dd>
-                <router-link :to="`/rmos/run/${detailEvent.run_id}`">
-                  {{ detailEvent.run_id }}
-                </router-link>
-              </dd>
-            </template>
-
-            <template v-if="detailEvent.bundle_id">
-              <dt>Bundle ID</dt>
-              <dd><code :class="styles.code">{{ detailEvent.bundle_id }}</code></dd>
-            </template>
-
-            <template v-if="detailEvent.error">
-              <dt>Error Code</dt>
-              <dd :class="styles.error">
-                {{ detailEvent.error.code }}
-              </dd>
-
-              <dt>Error Message</dt>
-              <dd :class="styles.error">
-                {{ detailEvent.error.message }}
-              </dd>
-
-              <template v-if="detailEvent.error.detail">
-                <dt>Error Detail</dt>
-                <dd>
-                  <pre :class="styles.detailPre">{{ JSON.stringify(detailEvent.error.detail, null, 2) }}</pre>
-                </dd>
-              </template>
-            </template>
-
-            <template v-if="detailEvent.validation">
-              <dt>Validation Passed</dt>
-              <dd :class="detailEvent.validation.passed ? styles.ok : styles.error">
-                {{ detailEvent.validation.passed ? "Yes" : "No" }}
-              </dd>
-
-              <dt>Validation Errors</dt>
-              <dd>{{ detailEvent.validation.errors_count ?? 0 }}</dd>
-
-              <dt>Validation Warnings</dt>
-              <dd>{{ detailEvent.validation.warnings_count ?? 0 }}</dd>
-
-              <template v-if="detailEvent.validation.reason">
-                <dt>Reason</dt>
-                <dd>{{ detailEvent.validation.reason }}</dd>
-              </template>
-            </template>
-          </dl>
-        </div>
-      </div>
-    </div>
+      :event="detailEvent"
+      @close="detailEvent = null"
+    />
   </div>
 </template>
 
@@ -295,6 +190,7 @@ import type {
   IngestEventDetail,
 } from "@/types/rmosAcousticsIngest";
 import styles from "./AcousticsIngestEvents.module.css";
+import EventDetailModal from "./acoustics_ingest/EventDetailModal.vue";
 
 // State
 const events = ref<IngestEventSummary[]>([]);

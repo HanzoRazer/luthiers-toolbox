@@ -95,130 +95,15 @@ Features:
           >2</span>
         </div>
         
-        <div class="adaptive-panel">
-          <h3>Adaptive Pocket Parameters</h3>
-          
-          <div class="param-grid">
-            <div class="param-field">
-              <label>Tool Diameter</label>
-              <input
-                v-model.number="adaptiveParams.tool_d"
-                type="number"
-                step="0.1"
-              >
-              <span class="unit">{{ adaptiveParams.units }}</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Units</label>
-              <select v-model="adaptiveParams.units">
-                <option value="mm">
-                  Millimeters
-                </option>
-                <option value="inch">
-                  Inches
-                </option>
-              </select>
-            </div>
-            
-            <div class="param-field">
-              <label>Geometry Layer</label>
-              <input
-                v-model="adaptiveParams.geometry_layer"
-                type="text"
-              >
-            </div>
-            
-            <div class="param-field">
-              <label>Stepover</label>
-              <input
-                v-model.number="adaptiveParams.stepover"
-                type="number"
-                step="0.05"
-                min="0.1"
-                max="1.0"
-              >
-              <span class="unit">% of tool_d</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Stepdown</label>
-              <input
-                v-model.number="adaptiveParams.stepdown"
-                type="number"
-                step="0.1"
-              >
-              <span class="unit">{{ adaptiveParams.units }}</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Margin</label>
-              <input
-                v-model.number="adaptiveParams.margin"
-                type="number"
-                step="0.1"
-              >
-              <span class="unit">{{ adaptiveParams.units }}</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Strategy</label>
-              <select v-model="adaptiveParams.strategy">
-                <option value="Spiral">
-                  Spiral
-                </option>
-                <option value="Lanes">
-                  Lanes
-                </option>
-              </select>
-            </div>
-            
-            <div class="param-field">
-              <label>Feed XY</label>
-              <input
-                v-model.number="adaptiveParams.feed_xy"
-                type="number"
-                step="100"
-              >
-              <span class="unit">{{ adaptiveParams.units }}/min</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Safe Z</label>
-              <input
-                v-model.number="adaptiveParams.safe_z"
-                type="number"
-                step="0.5"
-              >
-              <span class="unit">{{ adaptiveParams.units }}</span>
-            </div>
-            
-            <div class="param-field">
-              <label>Z Rough</label>
-              <input
-                v-model.number="adaptiveParams.z_rough"
-                type="number"
-                step="0.5"
-              >
-              <span class="unit">{{ adaptiveParams.units }}</span>
-            </div>
-          </div>
-          
-          <button 
-            class="btn-primary" 
-            :disabled="!dxfFile || adaptiveRunning"
-            @click="sendToAdaptive"
-          >
-            {{ adaptiveRunning ? 'Generating Toolpath...' : '🔄 Generate Adaptive Toolpath' }}
-          </button>
-          
-          <!-- Toolpath Results -->
-          <ToolpathResultsPanel
-            :toolpath-result="toolpathResult"
-            :units="adaptiveParams.units"
-            :machine-limits="machineLimits"
-          />
-        </div>
+        <AdaptiveParamsPanel
+          :params="adaptiveParams"
+          :can-generate="!!dxfFile"
+          :running="adaptiveRunning"
+          :toolpath-result="toolpathResult"
+          :machine-limits="machineLimits"
+          @update:params="handleParamsUpdate"
+          @generate="sendToAdaptive"
+        />
       </div>
 
       <!-- Stage 3: Export G-code -->
@@ -257,40 +142,13 @@ Features:
           >4</span>
         </div>
         
-        <div class="simulate-panel">
-          <h3>G-code Simulation</h3>
-          
-          <p class="help-text">
-            Upload exported G-code file to verify toolpath
-          </p>
-          
-          <div class="file-upload">
-            <label class="upload-button">
-              📁 Select G-code File
-              <input
-                type="file"
-                accept=".nc,.gcode,.ngc"
-                hidden
-                @change="onGcodeFileChange"
-              >
-            </label>
-            <span
-              v-if="gcodeFile"
-              class="file-name"
-            >{{ gcodeFile.name }}</span>
-          </div>
-          
-          <button 
-            class="btn-primary" 
-            :disabled="!gcodeFile || simRunning"
-            @click="simulateGcode"
-          >
-            {{ simRunning ? 'Simulating...' : '▶️ Run Simulation' }}
-          </button>
-          
-          <!-- Simulation Results -->
-          <SimulationResultsPanel :sim-result="simResult" />
-        </div>
+        <SimulatePanel
+          :gcode-file="gcodeFile"
+          :running="simRunning"
+          :sim-result="simResult"
+          @file-change="onGcodeFileChange"
+          @simulate="simulateGcode"
+        />
       </div>
     </div>
   </div>
@@ -302,9 +160,9 @@ import BridgeCalculatorPanel from '@/components/bridge_calculator_panel/BridgeCa
 import CamBridgePreflightPanel from '@/components/cam/CamBridgePreflightPanel.vue'
 import CamMachineEnvelopePanel from '@/components/cam/CamMachineEnvelopePanel.vue'
 import CamBridgeToPipelinePanel from '@/components/cam/CamBridgeToPipelinePanel.vue'
-import ToolpathResultsPanel from './bridge_lab/ToolpathResultsPanel.vue'
+import AdaptiveParamsPanel from './bridge_lab/AdaptiveParamsPanel.vue'
 import GcodeExportPanel from './bridge_lab/GcodeExportPanel.vue'
-import SimulationResultsPanel from './bridge_lab/SimulationResultsPanel.vue'
+import SimulatePanel from './bridge_lab/SimulatePanel.vue'
 import {
   useBridgeLabWorkflow,
   useMachineEnvelope,
@@ -353,6 +211,11 @@ const { simRunning, onGcodeFileChange, simulateGcode } = useGcodeSimulation(
 
 // Preflight panel ref
 const preflightPanelRef = ref<{ loadExternalFile: (file: File | null) => void } | null>(null)
+
+// Params update handler for AdaptiveParamsPanel
+function handleParamsUpdate(newParams: typeof adaptiveParams.value): void {
+  Object.assign(adaptiveParams.value, newParams)
+}
 
 // Calculator DXF generated handler
 function onCalculatorDxfGenerated(file: File): void {
@@ -447,105 +310,7 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
-/* Adaptive Panel */
-.adaptive-panel, .export-panel, .simulate-panel {
-  padding: 1.5rem;
-}
-
-.adaptive-panel h3, .export-panel h3, .simulate-panel h3 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.param-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.param-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.param-field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.param-field input, .param-field select {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.param-field .unit {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: -0.25rem;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-primary:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-
-/* Simulate Panel */
-.help-text {
-  margin-bottom: 1rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.file-upload {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.upload-button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: #e5e7eb;
-  color: #1f2937;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s;
-  font-size: 0.875rem;
-}
-
-.upload-button:hover {
-  background: #d1d5db;
-}
-
-.file-name {
-  font-size: 0.875rem;
-  color: #6b7280;
+.mt-3 {
+  margin-top: 1rem;
 }
 </style>

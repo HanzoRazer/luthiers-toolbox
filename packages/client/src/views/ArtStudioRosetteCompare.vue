@@ -1,13 +1,3 @@
-This view:
-
-Loads the saved jobs list from /api/art/rosette/jobs
-
-Lets you pick job A and job B
-
-Calls POST /api/art/rosette/compare
-
-Shows two canvases plus a small diff summary panel
-
 <template>
   <div class="p-4 flex gap-4">
     <!-- Main content area -->

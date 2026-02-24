@@ -211,12 +211,7 @@ function navigateTo(path: string) {
 }
 
 function getStatusColor(status: string): string {
-  switch (status) {
-    case 'Production': return '#16a34a' // green
-    case 'Beta': return '#ea580c' // orange
-    case 'Coming Soon': return '#6b7280' // gray
-    default: return '#6b7280'
-  }
+  return status === 'Production' ? '#16a34a' : status === 'Beta' ? '#ea580c' : '#6b7280'
 }
 </script>
 
