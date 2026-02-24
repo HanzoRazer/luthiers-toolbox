@@ -136,63 +136,18 @@
     <div v-else>
       <!-- Header cards -->
       <div class="list">
-        <div
+        <SnapshotCard
           v-if="left"
-          class="snap"
-        >
-          <div class="left">
-            <div class="nm">
-              Left: {{ left.name || left.snapshot_id }}
-            </div>
-            <div class="meta">
-              {{ left.snapshot_id }} - {{ fmtDate(left.updated_at || left.created_at) }}
-              <span v-if="left.baseline === true"> • BASELINE</span>
-            </div>
-            <div
-              v-if="left.notes"
-              class="meta"
-            >
-              Notes: {{ left.notes }}
-            </div>
-          </div>
-          <div class="actions">
-            <button
-              class="btn"
-              @click="emit('load-snapshot', left.snapshot_id)"
-            >
-              Load
-            </button>
-          </div>
-        </div>
-
-        <div
+          :snapshot="left"
+          label="Left"
+          @load-snapshot="emit('load-snapshot', $event)"
+        />
+        <SnapshotCard
           v-if="right"
-          class="snap"
-        >
-          <div class="left">
-            <div class="nm">
-              Right: {{ right.name || right.snapshot_id }}
-            </div>
-            <div class="meta">
-              {{ right.snapshot_id }} - {{ fmtDate(right.updated_at || right.created_at) }}
-              <span v-if="right.baseline === true"> • BASELINE</span>
-            </div>
-            <div
-              v-if="right.notes"
-              class="meta"
-            >
-              Notes: {{ right.notes }}
-            </div>
-          </div>
-          <div class="actions">
-            <button
-              class="btn"
-              @click="emit('load-snapshot', right.snapshot_id)"
-            >
-              Load
-            </button>
-          </div>
-        </div>
+          :snapshot="right"
+          label="Right"
+          @load-snapshot="emit('load-snapshot', $event)"
+        />
       </div>
 
       <!-- Compare summary -->
@@ -301,6 +256,7 @@
 
 <script setup lang="ts">
 import ConfidenceLegendModal from "@/components/rmos/ConfidenceLegendModal.vue";
+import { SnapshotCard } from "./components";
 import type { ConfLevel } from "@/utils/rmosConfidence";
 
 type AnySnap = any;
@@ -344,14 +300,6 @@ const emit = defineEmits<{
   'clear': []
   'load-snapshot': [snapshotId: string]
 }>()
-
-function fmtDate(s: any) {
-  try {
-    return new Date(String(s)).toLocaleString();
-  } catch {
-    return String(s || "");
-  }
-}
 </script>
 
 <style scoped>
