@@ -51,6 +51,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - RosetteEditorView.vue: 540 → 455 LOC ✅
 - GuitarDesignHub.vue: 462 → 321 LOC ✅
 - FinishingDesigner.vue: 471 → 371 LOC ✅
+- AiImageProperties.vue: 463 → 373 LOC ✅
 
 ---
 
@@ -103,6 +104,8 @@ Created components in `features/ai_images/vision_attach/`:
 
 Created components in `features/ai_images/components/`:
 - `AssetQuickOpsPanel.vue` - Quick reject/promote/undo operations
+- `ImageActionsPanel.vue` - Attach, download, regenerate, delete buttons
+- `ImageSessionStats.vue` - Session count, total cost, provider stats
 
 Created components in `components/artstudio/calculator-debug/`:
 - `CalculatorResultCards.vue` - Calculator output cards grid
