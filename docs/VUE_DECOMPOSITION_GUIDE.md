@@ -8,19 +8,27 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 
 ## Current Status
 
-### Large Components (>800 LOC)
+### Large Components (>500 LOC) - Updated Feb 2026
 
 | Component | LOC | Type | Status |
 |-----------|-----|------|--------|
-| AdaptivePocketLab.vue | 1424 | Lab | ✅ Extracted 6 components (-29%) |
-| ManufacturingCandidateList.vue | 2319 | RMOS | Has child components |
-| RiskDashboardCrossLab.vue | 948 | Dashboard | ✅ COMPLETE (-54% LOC) |
-| ScaleLengthDesigner.vue | 1892 | Toolbox | CSS-heavy, well-structured |
-| DxfToGcodeView.vue | 1503 | View | ✅ Wired components (-344 LOC) |
-| ScientificCalculator.vue | 1562 | Toolbox | Needs review |
-| DesignFirstWorkflowPanel.vue | 1548 | Art Studio | Needs review |
-| PipelineLab.vue | 1466 | Lab | Needs decomposition |
-| BlueprintLab.vue | 1459 | Lab | Needs decomposition |
+| EngineeringEstimatorView.vue | 622 | View | ✅ Extracted options + inputs panel (-26%) |
+| GeometryToolbar.vue | 614 | UI | Well-documented, no extraction needed |
+| ManufacturingCandidateList.vue | 602 | RMOS | Has child components |
+| ArtStudioCalculatorDebugPanel.vue | 602 | Debug | Debug panel, verbose by design |
+| CurveLabModal.vue | 589 | Modal | Template-heavy (81%), could extract |
+| AdvisoryReviewPanel.vue | 579 | AI | Needs review |
+| ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
+| PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
+| ArtStudioInlay.vue | 568 | Art Studio | Needs review |
+| ArtStudioSidebar.vue | 563 | Art Studio | Needs review |
+
+**Previously decomposed (now under threshold):**
+- ScientificCalculator.vue: 1562 → 219 LOC ✅
+- DesignFirstWorkflowPanel.vue: 1548 → 322 LOC ✅
+- PipelineLabView.vue: 1466 → 195 LOC ✅
+- DxfToGcodeView.vue: 1503 → ~500 LOC ✅
+- RiskDashboardCrossLab.vue: 948 → ~400 LOC ✅
 
 ---
 
@@ -355,11 +363,12 @@ Passes type-check.
 
 ## Success Metrics
 
-| Metric | Before | Target |
-|--------|--------|--------|
-| Files >800 LOC | 33 | <15 |
-| Files >1500 LOC | 9 | 0 |
-| Average god object LOC | ~1800 | <600 |
+| Metric | Before | Current | Target |
+|--------|--------|---------|--------|
+| Files >800 LOC | 33 | 1 | 0 |
+| Files >500 LOC | ~50 | 25 | <15 |
+| Files >1500 LOC | 9 | 0 | 0 ✅ |
+| Largest file LOC | ~2300 | 622 | <600 |
 
 ---
 
