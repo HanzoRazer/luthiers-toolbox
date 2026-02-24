@@ -12,6 +12,9 @@
 
 import { onMounted } from 'vue'
 import type { AdvisoryAsset } from './api/advisory'
+import AdvisoryAssetList from './advisory_review/AdvisoryAssetList.vue'
+import RejectModal from './advisory_review/RejectModal.vue'
+import AttachModal from './advisory_review/AttachModal.vue'
 import {
   useAdvisoryReviewState,
   useAdvisoryReviewActions,
@@ -179,128 +182,29 @@ onMounted(loadPending)
     </div>
 
     <!-- Asset List -->
-    <div
+    <AdvisoryAssetList
       v-else
-      class="asset-list"
-    >
-      <div 
-        v-for="asset in pendingAssets" 
-        :key="asset.id"
-        class="asset-card"
-        :class="{ selected: selectedIds.has(asset.id) }"
-      >
-        <label class="checkbox">
-          <input 
-            type="checkbox"
-            :checked="selectedIds.has(asset.id)"
-            @change="toggleSelect(asset.id)"
-          >
-        </label>
-
-        <img
-          :src="asset.imageUrl"
-          :alt="asset.prompt"
-          class="thumbnail"
-        >
-
-        <div class="asset-info">
-          <div class="prompt">
-            {{ asset.prompt }}
-          </div>
-          <div class="meta">
-            <span class="provider">{{ asset.provider }}</span>
-            <span class="category">{{ asset.category }}</span>
-            <span class="cost">${{ asset.cost.toFixed(3) }}</span>
-          </div>
-        </div>
-
-        <div class="asset-actions">
-          <button
-            class="btn approve"
-            title="Approve"
-            @click="handleApprove(asset.id)"
-          >
-            ✓
-          </button>
-          <button
-            class="btn reject"
-            title="Reject"
-            @click="openRejectModal(asset.id)"
-          >
-            ✗
-          </button>
-          <button
-            class="btn attach"
-            title="Attach to Run"
-            @click="openAttachModal(asset.id)"
-          >
-            📎
-          </button>
-        </div>
-      </div>
-    </div>
+      :assets="pendingAssets"
+      :selected-ids="selectedIds"
+      @toggle-select="toggleSelect"
+      @approve="handleApprove"
+      @open-reject="openRejectModal"
+      @open-attach="openAttachModal"
+    />
 
     <!-- Reject Modal -->
-    <div
-      v-if="showRejectModal"
-      class="modal-overlay"
-      @click.self="showRejectModal = false"
-    >
-      <div class="modal">
-        <h3>Reject Asset</h3>
-        <textarea 
-          v-model="rejectionReason"
-          placeholder="Enter rejection reason..."
-          rows="3"
-        />
-        <div class="modal-actions">
-          <button
-            class="btn cancel"
-            @click="showRejectModal = false"
-          >
-            Cancel
-          </button>
-          <button 
-            class="btn reject" 
-            :disabled="!rejectionReason.trim()"
-            @click="confirmReject"
-          >
-            Reject
-          </button>
-        </div>
-      </div>
-    </div>
+    <RejectModal
+      v-model:visible="showRejectModal"
+      v-model:rejection-reason="rejectionReason"
+      @confirm="confirmReject"
+    />
 
     <!-- Attach Modal -->
-    <div
-      v-if="showAttachModal"
-      class="modal-overlay"
-      @click.self="showAttachModal = false"
-    >
-      <div class="modal">
-        <h3>Attach to Run</h3>
-        <input 
-          v-model="targetRunId"
-          placeholder="Enter Run ID..."
-          type="text"
-        >
-        <div class="modal-actions">
-          <button
-            class="btn cancel"
-            @click="showAttachModal = false"
-          >
-            Cancel
-          </button>
-          <button 
-            class="btn primary" 
-            :disabled="!targetRunId.trim()"
-            @click="confirmAttach"
-          >
-            Attach
-          </button>
-        </div>
-      </div>
-    </div>
+    <AttachModal
+      v-model:visible="showAttachModal"
+      v-model:target-run-id="targetRunId"
+      @confirm="confirmAttach"
+    />
   </div>
 </template>
 
