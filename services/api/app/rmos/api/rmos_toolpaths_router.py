@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from typing import Any, Dict, Optional
 
-from app.rmos.runs import (
+from app.rmos.runs_v2 import (
     RunArtifact,
     persist_run,
     create_run_id,
