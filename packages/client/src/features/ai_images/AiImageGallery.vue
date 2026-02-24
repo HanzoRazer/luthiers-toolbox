@@ -10,6 +10,7 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import VariantReviewPanel from './components/VariantReviewPanel.vue'
+import AssetQuickOpsPanel from './components/AssetQuickOpsPanel.vue'
 import { getProviders, listRecentRuns } from './api/visionApi'
 import type { RejectReasonCode } from '@/sdk/rmos/runs'
 
@@ -329,59 +330,17 @@ onMounted(async () => {
           </div>
 
           <!-- micro-follow: per-asset quick reject/promote surface -->
-          <div
+          <AssetQuickOpsPanel
             v-if="selectedRunId && _advisoryIdForAsset(a)"
-            class="assetOps"
-          >
-            <div class="row">
-              <button
-                class="btn small primary"
-                type="button"
-                :disabled="Boolean(promoteDisabledReason(a)) || !!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
-                :title="promoteDisabledReason(a) || 'Promote to manufacturing candidate'"
-                @click="quickPromote(_advisoryIdForAsset(a)!)"
-              >
-                {{ busyByAdvisoryId[_advisoryIdForAsset(a)!] === 'promote' ? 'Promoting…' : 'Quick Promote' }}
-              </button>
-
-              <button
-                v-if="_variantForAsset(a)?.rejected"
-                class="btn small"
-                type="button"
-                :disabled="!!canUndoReject(_variantForAsset(a)) || !!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
-                :title="canUndoReject(_variantForAsset(a)) || 'Clear rejection (Undo Reject)'"
-                @click="undoReject(_advisoryIdForAsset(a)!)"
-              >
-                {{ busyByAdvisoryId[_advisoryIdForAsset(a)!] === 'review' ? 'Clearing…' : 'Undo Reject' }}
-              </button>
-
-              <select
-                class="select small"
-                :disabled="!!busyByAdvisoryId[_advisoryIdForAsset(a)!]"
-                title="Reject this variant (records reason code)"
-                @change="(ev:any) => { const v = ev?.target?.value as RejectReasonCode; if (v) quickReject(_advisoryIdForAsset(a)!, v); ev.target.value=''; }"
-              >
-                <option value="">
-                  Quick Reject…
-                </option>
-                <option value="GEOMETRY_UNSAFE">
-                  GEOMETRY_UNSAFE
-                </option>
-                <option value="TEXT_REQUIRES_OUTLINE">
-                  TEXT_REQUIRES_OUTLINE
-                </option>
-                <option value="AESTHETIC">
-                  AESTHETIC
-                </option>
-                <option value="DUPLICATE">
-                  DUPLICATE
-                </option>
-                <option value="OTHER">
-                  OTHER
-                </option>
-              </select>
-            </div>
-          </div>
+            :advisory-id="_advisoryIdForAsset(a)!"
+            :variant="_variantForAsset(a)"
+            :promote-disabled-reason="promoteDisabledReason(a)"
+            :can-undo-reject-reason="canUndoReject(_variantForAsset(a))"
+            :busy="busyByAdvisoryId[_advisoryIdForAsset(a)!] ?? null"
+            @quick-promote="quickPromote"
+            @undo-reject="undoReject"
+            @quick-reject="quickReject"
+          />
 
           <div
             v-if="openReviewFor === (_variantForAsset(a)?.advisory_id ?? null)"
