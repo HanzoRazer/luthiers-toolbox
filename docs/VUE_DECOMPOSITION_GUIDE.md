@@ -47,6 +47,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - CompareOpenPanel.vue: 548 → 495 LOC ✅
 - JobIntHistoryPanel.vue: 516 → 410 LOC ✅
 - BlueprintPresetPanel.vue: 554 → 505 LOC ✅
+- LiveMonitor.vue: 535 → 440 LOC ✅
 
 ---
 
@@ -137,6 +138,9 @@ Created components in `components/cam/job-int-history/`:
 
 Created components in `components/pipeline/blueprint-preset/`:
 - `PipelineStatsGrid.vue` - Pipeline run statistics display
+
+Created components in `components/rmos/live-monitor/`:
+- `EventMetadataDisplay.vue` - Fragility badge, materials list, lane hint
 
 ### 3. Use Composables for Logic
 
