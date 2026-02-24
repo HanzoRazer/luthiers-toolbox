@@ -37,6 +37,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - VisionAttachToRunWidget.vue: 477 → 305 LOC ✅
 - AiImageGallery.vue: 496 → 454 LOC ✅
 - ArtStudioCalculatorDebugPanel.vue: 603 → 393 LOC ✅
+- CurveLab.vue: 447 → 339 LOC ✅
 
 ---
 
@@ -92,6 +93,12 @@ Created components in `features/ai_images/components/`:
 
 Created components in `components/artstudio/calculator-debug/`:
 - `CalculatorResultCards.vue` - Calculator output cards grid
+
+Created components in `components/curvelab/mode-panels/`:
+- `OffsetModePanel.vue` - Offset distance + join type controls
+- `FilletModePanel.vue` - Fillet radius control
+- `FairModePanel.vue` - Lambda + preserve endpoints controls
+- `ClothoidModePanel.vue` - Reset + blend buttons
 
 ### 3. Use Composables for Logic
 
