@@ -446,4 +446,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="stubs",
     ),
 
+    # -------------------------------------------------------------------------
+    # BUSINESS STARTUP SUITE
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.business.router",
+        prefix="",  # router already has /api/business prefix
+        tags=["Business"],
+        category="business",
+    ),
+
 ]
