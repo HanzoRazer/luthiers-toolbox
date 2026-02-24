@@ -34,6 +34,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - CamPipelineRunner.vue: 524 → 449 LOC ✅
 - AdvisoryReviewPanel.vue: 580 → 483 LOC ✅
 - CAMEssentialsLab.vue: 510 → 243 LOC ✅
+- VisionAttachToRunWidget.vue: 477 → 305 LOC ✅
 
 ---
 
@@ -78,6 +79,11 @@ Created components in `components/toolbox/cam-essentials/`:
 - `PatternOperationCard.vue` - Drill pattern configuration (grid/circle/line)
 - `ProbeOperationCard.vue` - Touch probe work offset routines
 - `RetractOperationCard.vue` - Safe retract strategies
+
+Created components in `features/ai_images/vision_attach/`:
+- `GeneratedAssetsSection.vue` - Asset grid with selection
+- `RunSelectionSection.vue` - Run dropdown with search/create
+- `AttachActionSection.vue` - Final attach action summary
 
 ### 3. Use Composables for Logic
 
