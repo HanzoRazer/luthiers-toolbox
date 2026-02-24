@@ -56,6 +56,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - ArtPresetCompareAB.vue: 449 → 189 LOC ✅
 - PlacementPreviewPanel.vue: 574 → 429 LOC ✅
 - RmosAiLogViewer.vue: 379 → 173 LOC ✅
+- Phase2VectorizationPanel.vue: 404 → 88 LOC ✅
 
 ---
 
@@ -182,6 +183,10 @@ Created components in `components/rosette/placement-preview/`:
 Created components in `components/rmos/ai-log-viewer/`:
 - `AttemptsTable.vue` - AI log attempts table with score, risk, acceptable columns
 - `RunsTable.vue` - AI log runs table with attempts, success, score columns
+
+Created components in `components/blueprint/phase2-vectorization/`:
+- `VectorizationControls.vue` - Pre-vectorization params (scale, thresholds, min area)
+- `VectorizationResults.vue` - Stats grid, preview, and export buttons (SVG/DXF)
 
 ### 3. Use Composables for Logic
 
