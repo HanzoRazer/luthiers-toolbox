@@ -11,6 +11,8 @@
 import { computed } from 'vue';
 import { useAiImageStore } from './useAiImageStore';
 import type { ImageAsset } from './types';
+import ImageActionsPanel from './components/ImageActionsPanel.vue';
+import ImageSessionStats from './components/ImageSessionStats.vue';
 
 // =============================================================================
 // PROPS & EMITS
@@ -204,64 +206,18 @@ function copyPrompt(): void {
       </div>
 
       <!-- Actions Section -->
-      <div class="actions-section">
-        <h4>Actions</h4>
-        
-        <button
-          class="action-btn primary"
-          @click="emit('attach')"
-        >
-          <span>📎</span>
-          <span>Attach to Design</span>
-        </button>
-        
-        <button
-          class="action-btn"
-          @click="emit('download')"
-        >
-          <span>⬇️</span>
-          <span>Download PNG</span>
-        </button>
-        
-        <button
-          class="action-btn"
-          @click="emit('regenerate')"
-        >
-          <span>🔄</span>
-          <span>Regenerate</span>
-        </button>
-        
-        <button
-          class="action-btn danger"
-          @click="emit('delete')"
-        >
-          <span>🗑️</span>
-          <span>Delete</span>
-        </button>
-      </div>
+      <ImageActionsPanel
+        @attach="emit('attach')"
+        @download="emit('download')"
+        @regenerate="emit('regenerate')"
+        @delete="emit('delete')"
+      />
 
       <!-- Session Stats -->
-      <div class="stats-section">
-        <h4>Session Stats</h4>
-        
-        <div class="property-row">
-          <span class="label">Images today</span>
-          <span class="value">{{ store.sessionCount }}</span>
-        </div>
-        
-        <div class="property-row">
-          <span class="label">Total cost</span>
-          <span class="value">${{ store.totalCost.toFixed(2) }}</span>
-        </div>
-        
-        <div
-          v-if="store.providerStats[image.provider]"
-          class="property-row"
-        >
-          <span class="label">{{ providerName }} count</span>
-          <span class="value">{{ store.providerStats[image.provider]?.count ?? 0 }}</span>
-        </div>
-      </div>
+      <ImageSessionStats
+        :provider="image.provider"
+        :provider-name="providerName"
+      />
     </template>
   </div>
 </template>
@@ -414,49 +370,4 @@ h4 {
   margin: 0;
 }
 
-/* Actions */
-.actions-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.actions-section h4 {
-  margin-bottom: 8px;
-}
-
-.action-btn {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.15s;
-}
-
-.action-btn:hover {
-  border-color: var(--accent);
-  background: rgba(79, 195, 247, 0.1);
-}
-
-.action-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #000;
-}
-
-.action-btn.primary:hover {
-  background: var(--accent-hover, #81d4fa);
-}
-
-.action-btn.danger:hover {
-  border-color: #f44336;
-  background: rgba(244, 67, 54, 0.1);
-  color: #f44336;
-}
 </style>
