@@ -162,57 +162,21 @@
       </div>
 
       <!-- Right: Output -->
-      <div class="output-panel">
-        <h3>G-code Preview</h3>
-        
-        <div
-          v-if="error"
-          class="error-banner"
-        >
-          <strong>⚠️ Error:</strong> {{ error }}
-        </div>
-
-        <div
-          v-if="gcode"
-          class="gcode-preview"
-        >
-          <pre>{{ gcodePreview }}</pre>
-        </div>
-
-        <div
-          v-if="gcode"
-          class="actions"
-        >
-          <button
-            class="btn-secondary"
-            @click="download"
-          >
-            Download
-          </button>
-          <button
-            class="btn-secondary"
-            @click="copy"
-          >
-            Copy
-          </button>
-        </div>
-
-        <div
-          v-if="stats"
-          class="stats"
-        >
-          <h4>Statistics</h4>
-          <div><b>Passes:</b> {{ stats.passes }}</div>
-          <div><b>Total Lines:</b> {{ stats.lines }}</div>
-        </div>
-      </div>
+      <GcodeOutputPanel
+        :error="error"
+        :gcode="gcode"
+        :stats="stats"
+        @download="download"
+        @copy="copy"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { GcodeOutputPanel } from './polygon-offset'
 
 // Parameters
 const polygonStr = ref('[[0,0], [100,0], [100,60], [0,60]]')
@@ -235,14 +199,6 @@ const loading = ref(false)
 const error = ref('')
 const gcode = ref('')
 const stats = ref<{ passes: number; lines: number } | null>(null)
-
-// Computed
-const gcodePreview = computed(() => {
-  if (!gcode.value) return ''
-  const lines = gcode.value.split('\n')
-  if (lines.length <= 50) return gcode.value
-  return lines.slice(0, 50).join('\n') + '\n... (' + (lines.length - 50) + ' more lines)'
-})
 
 // Generate G-code
 async function generate() {
@@ -352,7 +308,7 @@ async function copy() {
   gap: 2rem;
 }
 
-.params-panel, .output-panel {
+.params-panel {
   background: #f9f9f9;
   padding: 1.5rem;
   border-radius: 8px;
@@ -431,70 +387,6 @@ input[type="checkbox"] {
 .btn-primary:disabled {
   background: #94a3b8;
   cursor: not-allowed;
-}
-
-.error-banner {
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.gcode-preview {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  padding: 1rem;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  max-height: 500px;
-  overflow-y: auto;
-  margin-bottom: 1rem;
-}
-
-.gcode-preview pre {
-  margin: 0;
-  white-space: pre-wrap;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  background: #64748b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #475569;
-}
-
-.stats {
-  background: #f1f5f9;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #cbd5e1;
-}
-
-.stats h4 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.stats div {
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
 }
 
 @media (max-width: 1024px) {
