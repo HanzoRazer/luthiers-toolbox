@@ -21,7 +21,6 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 | ManufacturingCandidateListV2.vue | 578 | RMOS | Needs review |
 | PlacementPreviewPanel.vue | 573 | Rosette | Balanced (41% template, 44% script) |
 | ArtStudioInlay.vue | 467 | Art Studio | ✅ Extracted FretPositionTable + InlaySummary + InlayDetails (-18%) |
-| ArtStudioSidebar.vue | 563 | Art Studio | Needs review |
 
 **Previously decomposed (now under threshold):**
 - ScientificCalculator.vue: 1562 → 219 LOC ✅
@@ -48,6 +47,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - JobIntHistoryPanel.vue: 516 → 410 LOC ✅
 - BlueprintPresetPanel.vue: 554 → 505 LOC ✅
 - LiveMonitor.vue: 535 → 440 LOC ✅
+- ArtStudioSidebar.vue: 564 → 359 LOC ✅
 
 ---
 
@@ -141,6 +141,9 @@ Created components in `components/pipeline/blueprint-preset/`:
 
 Created components in `components/rmos/live-monitor/`:
 - `EventMetadataDisplay.vue` - Fragility badge, materials list, lane hint
+
+Created components in `components/artstudio/sidebar/`:
+- `InstrumentGeometryForm.vue` - Scale length, fret count, presets, compound radius
 
 ### 3. Use Composables for Logic
 
