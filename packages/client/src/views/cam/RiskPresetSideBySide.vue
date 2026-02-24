@@ -9,101 +9,16 @@
       </p>
 
       <!-- Controls -->
-      <div class="flex flex-wrap items-center gap-3 mb-4 pb-3 border-b text-[11px]">
-        <!-- Pipeline filter -->
-        <label class="flex items-center gap-2">
-          <span class="text-gray-700">Pipeline:</span>
-          <select
-            v-model="pipelineFilter"
-            class="px-2 py-1 border rounded text-[11px] bg-white"
-          >
-            <option value="Any">Any</option>
-            <option value="artstudio_relief_v16">Art Studio Relief</option>
-            <option value="relief_kernel_lab">Relief Kernel Lab</option>
-          </select>
-        </label>
-
-        <!-- Date range -->
-        <label class="flex items-center gap-2">
-          <span class="text-gray-700">From:</span>
-          <input
-            v-model="fromDate"
-            type="date"
-            class="px-2 py-1 border rounded text-[11px] bg-white"
-          >
-        </label>
-        <label class="flex items-center gap-2">
-          <span class="text-gray-700">To:</span>
-          <input
-            v-model="toDate"
-            type="date"
-            class="px-2 py-1 border rounded text-[11px] bg-white"
-          >
-        </label>
-
-        <!-- Preset A -->
-        <label class="flex items-center gap-2">
-          <span class="text-gray-700">Preset A:</span>
-          <select
-            v-model="presetA"
-            class="px-2 py-1 border rounded text-[11px] bg-white"
-          >
-            <option value="Safe">Safe</option>
-            <option value="Standard">Standard</option>
-            <option value="Aggressive">Aggressive</option>
-            <option value="Custom">Custom</option>
-          </select>
-        </label>
-
-        <!-- Preset B -->
-        <label class="flex items-center gap-2">
-          <span class="text-gray-700">Preset B:</span>
-          <select
-            v-model="presetB"
-            class="px-2 py-1 border rounded text-[11px] bg-white"
-          >
-            <option value="Safe">Safe</option>
-            <option value="Standard">Standard</option>
-            <option value="Aggressive">Aggressive</option>
-            <option value="Custom">Custom</option>
-          </select>
-        </label>
-
-        <!-- Reload -->
-        <button
-          type="button"
-          class="text-[11px] px-2 py-1 border rounded bg-gray-50 hover:bg-gray-100"
-          @click="fetchJobs"
-        >
-          Reload
-        </button>
-
-        <!-- Export buttons -->
-        <button
-          type="button"
-          class="text-[11px] px-2 py-1 border rounded bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50"
-          :disabled="exporting"
-          @click="exportCsv('A')"
-        >
-          Export A CSV
-        </button>
-        <button
-          type="button"
-          class="text-[11px] px-2 py-1 border rounded bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50"
-          :disabled="exporting"
-          @click="exportCsv('B')"
-        >
-          Export B CSV
-        </button>
-        <button
-          type="button"
-          class="text-[11px] px-2 py-1 border rounded bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50"
-          :disabled="exporting"
-          @click="exportCsv('Both')"
-        >
-          Export A+B CSV
-        </button>
-      </div>
+      <ControlsPanel
+        v-model:pipeline-filter="pipelineFilter"
+        v-model:from-date="fromDate"
+        v-model:to-date="toDate"
+        v-model:preset-a="presetA"
+        v-model:preset-b="presetB"
+        :exporting="exporting"
+        @reload="fetchJobs"
+        @export="exportCsv"
+      />
 
       <!-- Summary cards -->
       <div class="grid grid-cols-2 gap-4 mb-4">
@@ -191,8 +106,7 @@ import { ref, computed, onMounted } from "vue";
 import CamRiskJobList from "@/components/cam/CamRiskJobList.vue";
 import CamPresetEvolutionTrend from "@/components/cam/CamPresetEvolutionTrend.vue";
 import CamRiskPresetTrend from "@/components/cam/CamRiskPresetTrend.vue";
-
-type PresetName = "Safe" | "Standard" | "Aggressive" | "Custom";
+import ControlsPanel, { type PresetName } from "./risk_preset_compare/ControlsPanel.vue";
 
 interface SeverityCounts {
   critical?: number;

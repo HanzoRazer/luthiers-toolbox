@@ -15,11 +15,13 @@
 import { onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RunComparePanel from '@/components/rmos/RunComparePanel.vue'
-import RiskBadge from '@/components/ui/RiskBadge.vue'
-import OverrideBanner from '@/components/ui/OverrideBanner.vue'
 import WhyPanel from '@/components/rmos/WhyPanel.vue'
+import AdvisoryExplanationPanel from './rmos_run_viewer/AdvisoryExplanationPanel.vue'
+import AttachmentsSection from './rmos_run_viewer/AttachmentsSection.vue'
+import HashesSection from './rmos_run_viewer/HashesSection.vue'
+import RunInfoSection from './rmos_run_viewer/RunInfoSection.vue'
 import styles from './RmosRunViewerView.module.css'
-import { buttons, badges, loaders } from '@/styles/shared'
+import { buttons, loaders } from '@/styles/shared'
 
 import {
   useRmosRunViewerState,
@@ -286,144 +288,39 @@ watch(runId, loadRun)
         </div>
 
         <!-- Phase 5: Advisory Explanation -->
-        <div :class="styles.advisorySection">
-          <div :class="styles.advisoryHead">
-            <h3>Advisory Explanation</h3>
-            <div :class="styles.advisoryActions">
-              <button
-                :class="buttons.btnSm"
-                :disabled="isExplaining"
-                @click="generateAdvisoryExplanation(false)"
-              >
-                {{ assistantExplanationAttachment ? 'Refresh Advisory' : 'Generate Advisory' }}
-              </button>
-              <button
-                :class="buttons.btnSm"
-                :disabled="isExplaining"
-                title="Regenerate even if one exists"
-                @click="generateAdvisoryExplanation(true)"
-              >
-                Regenerate (force)
-              </button>
-            </div>
-          </div>
-          <div
-            v-if="explainError"
-            :class="styles.advisoryError"
-          >
-            {{ explainError }}
-          </div>
-          <div
-            v-else-if="isExplaining"
-            :class="styles.advisoryLoading"
-          >
-            Generating advisory explanation…
-          </div>
-
-          <div
-            v-if="assistantExplanation"
-            :class="styles.advisoryBox"
-          >
-            <div :class="styles.advisorySummary">
-              {{ assistantExplanation.summary }}
-            </div>
-            <div
-              v-if="assistantExplanation.operator_notes?.length"
-              :class="styles.advisorySubsection"
-            >
-              <h4>Operator Notes</h4>
-              <ul>
-                <li
-                  v-for="(n, idx) in assistantExplanation.operator_notes"
-                  :key="idx"
-                >
-                  {{ n }}
-                </li>
-              </ul>
-            </div>
-            <div
-              v-if="assistantExplanation.suggested_actions?.length"
-              :class="styles.advisorySubsection"
-            >
-              <h4>Suggested Actions</h4>
-              <ul>
-                <li
-                  v-for="(a, idx) in assistantExplanation.suggested_actions"
-                  :key="idx"
-                >
-                  {{ a }}
-                </li>
-              </ul>
-            </div>
-            <div :class="styles.advisoryDisclaimer">
-              {{ assistantExplanation.disclaimer }}
-            </div>
-          </div>
-          <div
-            v-else-if="assistantExplanationAttachment"
-            :class="styles.advisoryPlaceholder"
-          >
-            assistant_explanation.json attached (sha: <code>{{ assistantExplanationAttachment.sha256?.slice(0, 12) }}</code>…)
-            — click "Refresh Advisory" to load it.
-          </div>
-          <div
-            v-else
-            :class="styles.advisoryEmpty"
-          >
-            No advisory explanation generated for this run.
-          </div>
-        </div>
+        <AdvisoryExplanationPanel
+          :is-explaining="isExplaining"
+          :error="explainError"
+          :explanation="assistantExplanation"
+          :has-attachment="!!assistantExplanationAttachment"
+          :attachment-sha="assistantExplanationAttachment?.sha256"
+          @generate="generateAdvisoryExplanation"
+        />
       </section>
 
       <!-- Run Info -->
-      <section :class="styles.infoSection">
-        <h2>Run Info</h2>
-        <div :class="styles.infoGrid">
-          <div><strong>Created:</strong> {{ formatDate(run.created_at_utc) }}</div>
-          <div><strong>Event Type:</strong> {{ run.event_type }}</div>
-          <div><strong>Tool ID:</strong> {{ run.tool_id || "---" }}</div>
-          <div><strong>Material ID:</strong> {{ run.material_id || "---" }}</div>
-          <div><strong>Machine ID:</strong> {{ run.machine_id || "---" }}</div>
-          <div><strong>Session:</strong> {{ run.workflow_session_id?.slice(0, 16) || "---" }}</div>
-          <div><strong>Parent Run:</strong> {{ run.parent_run_id?.slice(0, 16) || "---" }}</div>
-          <div><strong>Toolchain:</strong> {{ run.toolchain_id || "---" }}</div>
-          <div><strong>Post Processor:</strong> {{ run.post_processor_id || "---" }}</div>
-          <div><strong>Engine Version:</strong> {{ run.engine_version || "---" }}</div>
-        </div>
-      </section>
+      <RunInfoSection
+        :created-at="run.created_at_utc"
+        :event-type="run.event_type"
+        :tool-id="run.tool_id"
+        :material-id="run.material_id"
+        :machine-id="run.machine_id"
+        :session-id="run.workflow_session_id"
+        :parent-run-id="run.parent_run_id"
+        :toolchain-id="run.toolchain_id"
+        :post-processor-id="run.post_processor_id"
+        :engine-version="run.engine_version"
+        :format-date="formatDate"
+      />
 
       <!-- Hashes -->
-      <section :class="styles.infoSection">
-        <h2>Hashes</h2>
-        <div :class="styles.hashGrid">
-          <div v-if="run.request_hash">
-            <strong>Request:</strong>
-            <code>{{ run.request_hash }}</code>
-          </div>
-          <div v-if="run.toolpaths_hash">
-            <strong>Toolpaths:</strong>
-            <code>{{ run.toolpaths_hash }}</code>
-          </div>
-          <div v-if="run.gcode_hash">
-            <strong>G-code:</strong>
-            <code>{{ run.gcode_hash }}</code>
-          </div>
-          <div v-if="run.geometry_hash">
-            <strong>Geometry:</strong>
-            <code>{{ run.geometry_hash }}</code>
-          </div>
-          <div v-if="run.config_fingerprint">
-            <strong>Config:</strong>
-            <code>{{ run.config_fingerprint }}</code>
-          </div>
-          <div
-            v-if="!run.request_hash && !run.toolpaths_hash && !run.gcode_hash && !run.geometry_hash && !run.config_fingerprint"
-            :class="styles.emptyState"
-          >
-            No hashes recorded
-          </div>
-        </div>
-      </section>
+      <HashesSection
+        :request-hash="run.request_hash"
+        :toolpaths-hash="run.toolpaths_hash"
+        :gcode-hash="run.gcode_hash"
+        :geometry-hash="run.geometry_hash"
+        :config-fingerprint="run.config_fingerprint"
+      />
 
       <!-- Drift Warning -->
       <section
@@ -435,37 +332,11 @@ watch(runId, loadRun)
       </section>
 
       <!-- Attachments -->
-      <section :class="styles.infoSection">
-        <h2>Attachments ({{ run.attachments?.length || 0 }})</h2>
-        <div
-          v-if="run.attachments?.length"
-          :class="styles.attachmentList"
-        >
-          <div
-            v-for="att in run.attachments"
-            :key="att.sha256"
-            :class="styles.attachmentItem"
-          >
-            <span :class="styles.attKind">{{ att.kind }}</span>
-            <span :class="styles.attName">{{ att.filename }}</span>
-            <span :class="styles.attMime">{{ att.mime }}</span>
-            <span :class="styles.attSize">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
-            <button
-              :class="buttons.btnSm"
-              :disabled="loading"
-              @click="downloadAttachment(att)"
-            >
-              Download
-            </button>
-          </div>
-        </div>
-        <div
-          v-else
-          :class="styles.emptyState"
-        >
-          No attachments
-        </div>
-      </section>
+      <AttachmentsSection
+        :attachments="run.attachments"
+        :loading="loading"
+        @download="downloadAttachment"
+      />
 
       <!-- Feasibility Details -->
       <section

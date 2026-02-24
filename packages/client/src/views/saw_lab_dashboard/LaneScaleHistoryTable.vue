@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-interface LaneScaleHistoryItem {
+export interface LaneScaleHistoryItem {
   timestamp?: string
   ts?: string
   lane_scale: number

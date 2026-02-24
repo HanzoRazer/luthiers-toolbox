@@ -18,24 +18,18 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
-import VariantStatusBadge from "@/components/rmos/VariantStatusBadge.vue";
-import RejectVariantButton from "@/components/rmos/RejectVariantButton.vue";
-import UndoRejectButton from "@/components/rmos/UndoRejectButton.vue";
 import BulkRejectModal from "@/components/rmos/BulkRejectModal.vue";
 import BulkPromoteModal from "@/components/rmos/BulkPromoteModal.vue";
+import SvgPathDiffViewer from "@/components/rmos/SvgPathDiffViewer.vue";
+import ManufacturingCandidateList from "@/components/rmos/ManufacturingCandidateList.vue";
+import VariantListPanel from "./run_variants_review/VariantListPanel.vue";
+import SelectedVariantPanel from "./run_variants_review/SelectedVariantPanel.vue";
 import {
   listAdvisoryVariants,
   type AdvisoryVariantSummary,
   type VariantStatus,
   type RiskLevel,
 } from "@/sdk/rmos/runs";
-
-// Optional: keep your existing components if present
-import VariantNotes from "@/components/rmos/VariantNotes.vue";
-import PromoteToManufacturingButton from "@/components/rmos/PromoteToManufacturingButton.vue";
-import PromptLineageViewer from "@/components/rmos/PromptLineageViewer.vue";
-import SvgPathDiffViewer from "@/components/rmos/SvgPathDiffViewer.vue";
-import ManufacturingCandidateList from "@/components/rmos/ManufacturingCandidateList.vue";
 
 const route = useRoute();
 
@@ -201,18 +195,6 @@ const filteredSorted = computed(() => {
   return list;
 });
 
-function variantHoverTitle(v: AdvisoryVariantSummary): string {
-  const status = deriveStatus(v);
-  if (status !== "REJECTED") return v.advisory_id;
-
-  const parts: string[] = [];
-  parts.push(`REJECTED: ${v.rejection_reason_code ?? "—"}`);
-  if (v.rejection_reason_detail) parts.push(`Detail: ${v.rejection_reason_detail}`);
-  if (v.rejection_operator_note) parts.push(`Note: ${v.rejection_operator_note}`);
-  if (v.rejected_at_utc) parts.push(`At: ${v.rejected_at_utc}`);
-  return parts.join("\n");
-}
-
 const selectedVariant = computed(() =>
   variants.value.find((v) => v.advisory_id === selected.value) ?? null
 );
@@ -298,176 +280,32 @@ watch(runId, () => {
       class="grid"
     >
       <!-- LEFT: Variant list -->
-      <div class="panel">
-        <div class="panelTitle">
-          Variants ({{ filteredSorted.length }})
-        </div>
-
-        <div
-          v-if="!filteredSorted.length"
-          class="empty"
-        >
-          <div class="subtle">
-            No variants match current filters.
-          </div>
-          <button
-            class="btn tiny"
-            @click="statusFilter = 'ALL'; riskFilter = 'ALL'; sortBy = 'CREATED_DESC'"
-          >
-            Reset filters
-          </button>
-        </div>
-
-        <div
-          v-else
-          class="list"
-        >
-          <!-- Bulk action bar -->
-          <div
-            v-if="selectedIds.size > 0"
-            class="bulkBar"
-          >
-            <div class="bulkInfo">
-              <strong>{{ selectedIds.size }}</strong> selected
-              <button
-                class="btn tiny secondary"
-                @click="clearSelection"
-              >
-                Clear
-              </button>
-            </div>
-            <div class="bulkActions">
-              <button
-                class="btn tiny primary"
-                :disabled="bulkBusy || !selectedPromotableIds.length"
-                title="Promote selected variants to manufacturing candidates"
-                @click="bulkPromoteOpen = true"
-              >
-                Promote Selected ({{ selectedPromotableIds.length }})
-              </button>
-              <button
-                class="btn tiny danger"
-                :disabled="bulkBusy || !selectedNonRejectedIds.length"
-                title="Rejects selected variants (applies one reason code to all)"
-                @click="bulkRejectOpen = true"
-              >
-                Reject Selected ({{ selectedNonRejectedIds.length }})
-              </button>
-            </div>
-          </div>
-
-          <!-- Select all toggle -->
-          <div class="selectAllRow">
-            <label class="checkLabel">
-              <input
-                type="checkbox"
-                :checked="selectedIds.size === filteredSorted.length && filteredSorted.length > 0"
-                :indeterminate="selectedIds.size > 0 && selectedIds.size < filteredSorted.length"
-                @change="selectedIds.size === filteredSorted.length ? clearSelection() : selectAll()"
-              >
-              <span class="small subtle">Select all ({{ filteredSorted.length }})</span>
-            </label>
-          </div>
-
-          <button
-            v-for="v in filteredSorted"
-            :key="v.advisory_id"
-            class="row"
-            :class="{ on: selected === v.advisory_id, checked: selectedIds.has(v.advisory_id) }"
-            :title="variantHoverTitle(v)"
-            @click="selected = v.advisory_id"
-          >
-            <div
-              class="rowCheck"
-              @click.stop
-            >
-              <input
-                type="checkbox"
-                :checked="selectedIds.has(v.advisory_id)"
-                @change="toggleSelected(v.advisory_id)"
-              >
-            </div>
-            <div class="rowMain">
-              <div class="rowTop">
-                <div class="mono">
-                  {{ v.advisory_id.slice(0, 12) }}…
-                </div>
-                <VariantStatusBadge
-                  :status="deriveStatus(v)"
-                  :risk="(v.risk_level ?? 'UNKNOWN') as any"
-                />
-              </div>
-
-              <div class="rowMeta">
-                <span class="subtle small">Rating: {{ v.rating ?? "—" }}</span>
-                <span class="sep">•</span>
-                <span class="subtle small">Risk: {{ (v.risk_level ?? "UNKNOWN") }}</span>
-                <span class="sep">•</span>
-                <span class="subtle small">Preview: {{ v.has_preview === false ? "No" : "Yes" }}</span>
-              </div>
-            </div>
-
-            <div class="rowActions">
-              <button
-                class="btn tiny secondary"
-                @click.stop="pickCompare(v.advisory_id)"
-              >
-                Pick
-              </button>
-            </div>
-          </button>
-        </div>
-
-        <div class="compareHint subtle small">
-          Compare picks:
-          <span class="mono">{{ compareLeft ? compareLeft.slice(0, 8) + "…" : "—" }}</span>
-          vs
-          <span class="mono">{{ compareRight ? compareRight.slice(0, 8) + "…" : "—" }}</span>
-        </div>
-      </div>
+      <VariantListPanel
+        :variants="filteredSorted"
+        :selected-variant-id="selected"
+        :selected-ids="selectedIds"
+        :bulk-busy="bulkBusy"
+        :promotable-count="selectedPromotableIds.length"
+        :rejectable-count="selectedNonRejectedIds.length"
+        :compare-left="compareLeft"
+        :compare-right="compareRight"
+        @select="selected = $event"
+        @toggle-selected="toggleSelected"
+        @select-all="selectAll"
+        @clear-selection="clearSelection"
+        @reset-filters="statusFilter = 'ALL'; riskFilter = 'ALL'; sortBy = 'CREATED_DESC'"
+        @bulk-promote="bulkPromoteOpen = true"
+        @bulk-reject="bulkRejectOpen = true"
+        @pick-compare="pickCompare"
+      />
 
       <!-- RIGHT: Selected variant actions -->
-      <div
-        v-if="selected"
-        class="panel"
-      >
-        <div class="panelTitle">
-          Selected Variant
-        </div>
-
-        <div class="rowActionsInline">
-          <PromoteToManufacturingButton
-            :run-id="runId"
-            :advisory-id="selected"
-            api-base="/api/rmos"
-          />
-          <RejectVariantButton
-            :run-id="runId"
-            :advisory-id="selected"
-            @rejected="load"
-          />
-          <UndoRejectButton
-            v-if="selectedIsRejected"
-            :run-id="runId"
-            :advisory-id="selected"
-            @cleared="load"
-          />
-        </div>
-
-        <div class="spacer" />
-        <VariantNotes
-          :run-id="runId"
-          :advisory-id="selected"
-          api-base="/api/rmos"
-        />
-
-        <div class="spacer" />
-        <PromptLineageViewer
-          :run-id="runId"
-          :advisory-id="selected"
-          api-base="/api/rmos"
-        />
-      </div>
+      <SelectedVariantPanel
+        :run-id="runId"
+        :advisory-id="selected"
+        :is-rejected="selectedIsRejected"
+        @refresh="load"
+      />
 
       <!-- Compare -->
       <div
@@ -524,39 +362,14 @@ watch(runId, () => {
 .grid { display: grid; grid-template-columns: 380px 1fr; gap: 12px; align-items: start; }
 .panel { border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 12px; padding: 10px; background: white; }
 .panel.wide { grid-column: 1 / -1; }
-.panelTitle { font-weight: 800; margin-bottom: 8px; }
 
-.list { display: flex; flex-direction: column; gap: 8px; }
-.row { display: flex; justify-content: space-between; gap: 8px; text-align: left; padding: 10px; border: 1px solid rgba(0, 0, 0, 0.10); border-radius: 12px; background: white; cursor: pointer; }
-.row.on { border-color: rgba(0, 0, 0, 0.35); }
-.rowMain { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.rowTop { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.rowMeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.sep { opacity: 0.35; }
-
-.rowActions { display: flex; gap: 6px; align-items: center; }
 .btn { padding: 8px 10px; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 10px; background: white; cursor: pointer; }
 .btn.tiny { padding: 4px 8px; font-size: 0.9em; }
 .btn.secondary { opacity: 0.85; }
-.btn.danger { border-color: rgba(176,0,32,0.35); background: rgba(176,0,32,0.06); }
-
-/* Bulk selection */
-.bulkBar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 10px; margin-bottom: 8px; }
-.bulkInfo { display: flex; align-items: center; gap: 8px; }
-.bulkActions { display: flex; gap: 8px; }
-.selectAllRow { margin-bottom: 8px; }
-.checkLabel { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.rowCheck { display: flex; align-items: center; padding-right: 8px; }
-.row.checked { background: rgba(0,0,0,0.03); }
 
 .mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 .subtle { opacity: 0.75; }
-.small { font-size: 12px; }
 .error { color: #b00020; }
-.empty { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 12px; }
-.spacer { height: 10px; }
-.compareHint { margin-top: 10px; }
-.rowActionsInline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 @media (max-width: 1100px) {
   .grid { grid-template-columns: 1fr; }

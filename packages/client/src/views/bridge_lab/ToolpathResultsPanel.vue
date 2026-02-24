@@ -37,15 +37,7 @@
 
 <script setup lang="ts">
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
-
-interface MachineLimits {
-  min_x?: number | null
-  max_x?: number | null
-  min_y?: number | null
-  max_y?: number | null
-  min_z?: number | null
-  max_z?: number | null
-}
+import type { MachineLimits } from './composables/bridgeLabTypes'
 
 interface ToolpathStats {
   move_count?: number

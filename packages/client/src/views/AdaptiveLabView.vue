@@ -131,216 +131,37 @@ FUTURE ENHANCEMENTS:
     <div class="grid md:grid-cols-[1.1fr,1.3fr] gap-4">
       <div class="space-y-3">
         <!-- DXF import -->
-        <div class="border rounded-lg p-3 bg-white space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">
-              DXF → Loops
-            </h3>
-            <span class="text-[10px] text-gray-500">
-              Plan from DXF
-            </span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 text-[11px]">
-            <input
-              type="file"
-              accept=".dxf"
-              class="text-[11px]"
-              @change="onDxfChange"
-            >
-            <select
-              v-model="dxfUnits"
-              class="border rounded px-2 py-1 text-[11px]"
-            >
-              <option value="mm">
-                mm
-              </option>
-              <option value="inch">
-                inch
-              </option>
-            </select>
-            <input
-              v-model="dxfGeometryLayer"
-              placeholder="geometry_layer (optional)"
-              class="border rounded px-2 py-1 text-[11px] w-40"
-            >
-            <button
-              class="px-2 py-1 rounded bg-gray-900 text-white text-[11px] disabled:opacity-50"
-              :disabled="!dxfFile || loadingDxf"
-              @click="importFromDxf"
-            >
-              <span v-if="!loadingDxf">Import DXF → Loops</span>
-              <span v-else>Importing…</span>
-            </button>
-          </div>
-          <p
-            v-if="dxfError"
-            class="text-[11px] text-red-600"
-          >
-            {{ dxfError }}
-          </p>
-          <p
-            v-if="dxfDebug"
-            class="text-[10px] text-gray-500 whitespace-pre-wrap"
-          >
-            {{ dxfDebug }}
-          </p>
-        </div>
+        <DxfImportPanel
+          v-model:units="dxfUnits"
+          v-model:geometry-layer="dxfGeometryLayer"
+          :has-file="!!dxfFile"
+          :loading="loadingDxf"
+          :error="dxfError"
+          :debug="dxfDebug"
+          @file-change="dxfFile = $event"
+          @import="importFromDxf"
+        />
 
         <!-- Adaptive params + run -->
-        <div class="border rounded-lg p-3 bg-white space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">
-              Adaptive Parameters
-            </h3>
-            <button
-              class="px-2 py-1 rounded bg-gray-900 text-white text-[11px] disabled:opacity-50"
-              :disabled="runningAdaptive"
-              @click="runAdaptive"
-            >
-              <span v-if="!runningAdaptive">Run Adaptive Kernel</span>
-              <span v-else>Running…</span>
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 text-[11px]">
-            <label class="flex flex-col gap-1">
-              <span>Tool ⌀</span>
-              <input
-                v-model.number="toolD"
-                type="number"
-                step="0.1"
-                min="0.1"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Stepover (fraction)</span>
-              <input
-                v-model.number="stepover"
-                type="number"
-                step="0.01"
-                min="0.05"
-                max="0.9"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Stepdown</span>
-              <input
-                v-model.number="stepdown"
-                type="number"
-                step="0.1"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Margin</span>
-              <input
-                v-model.number="margin"
-                type="number"
-                step="0.1"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Strategy</span>
-              <select
-                v-model="strategy"
-                class="border rounded px-2 py-1"
-              >
-                <option value="Spiral">Spiral</option>
-                <option value="Lanes">Lanes</option>
-              </select>
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Feed XY</span>
-              <input
-                v-model.number="feedXY"
-                type="number"
-                step="10"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Safe Z</span>
-              <input
-                v-model.number="safeZ"
-                type="number"
-                step="0.1"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-
-            <label class="flex flex-col gap-1">
-              <span>Rough Z</span>
-              <input
-                v-model.number="zRough"
-                type="number"
-                step="0.1"
-                class="border rounded px-2 py-1"
-              >
-            </label>
-          </div>
-
-          <p
-            v-if="adaptiveError"
-            class="text-[11px] text-red-600"
-          >
-            {{ adaptiveError }}
-          </p>
-        </div>
+        <AdaptiveParamsForm
+          :params="adaptiveParamsObject"
+          :running="runningAdaptive"
+          :error="adaptiveError"
+          @update:params="handleParamsUpdate"
+          @run="runAdaptive"
+        />
 
         <!-- Loops JSON editor -->
-        <div class="border rounded-lg p-3 bg-white space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">
-              Loops JSON
-            </h3>
-            <button
-              class="px-2 py-1 rounded border border-gray-300 text-[11px]"
-              @click="loadDemoLoops"
-            >
-              Load demo loops
-            </button>
-          </div>
-          <textarea
-            v-model="loopsJson"
-            class="w-full h-64 border rounded px-2 py-1 text-[11px] font-mono"
-            spellcheck="false"
-          />
-        </div>
+        <LoopsJsonEditor
+          v-model="loopsJson"
+          @load-demo="loadDemoLoops"
+        />
 
         <!-- Send to pipeline -->
-        <div class="border rounded-lg p-3 bg-white flex items-center justify-between text-[11px]">
-          <div>
-            <p class="font-semibold text-gray-700">
-              Send to PipelineLab / CompareLab
-            </p>
-            <p class="text-gray-500">
-              Persist loops snapshot locally to reopen in other labs.
-            </p>
-          </div>
-          <div class="flex gap-2">
-            <button
-              class="px-3 py-1.5 rounded border border-gray-300 text-gray-800"
-              @click="openCompareLab"
-            >
-              Open Compare Lab
-            </button>
-            <button
-              class="px-3 py-1.5 rounded bg-gray-900 text-white"
-              @click="sendToPipeline"
-            >
-              Open PipelineLab
-            </button>
-          </div>
-        </div>
+        <PipelineActions
+          @open-compare="openCompareLab"
+          @open-pipeline="sendToPipeline"
+        />
       </div>
 
       <CamBackplotViewer
@@ -356,9 +177,13 @@ FUTURE ENHANCEMENTS:
 
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
+import DxfImportPanel from './adaptive_lab/DxfImportPanel.vue'
+import AdaptiveParamsForm, { type AdaptiveParams } from './adaptive_lab/AdaptiveParamsForm.vue'
+import LoopsJsonEditor from './adaptive_lab/LoopsJsonEditor.vue'
+import PipelineActions from './adaptive_lab/PipelineActions.vue'
 import { loopsToGeometry } from '@/utils/geometry'
 
 const router = useRouter()
@@ -394,12 +219,6 @@ function persistCompareSnapshot (loops: any[], units: 'mm' | 'inch' = 'mm') {
   } catch (error) {
     console.warn('Unable to persist compare snapshot', error)
   }
-}
-
-function onDxfChange (ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const f = input.files?.[0]
-  if (f) dxfFile.value = f
 }
 
 async function importFromDxf () {
@@ -523,6 +342,29 @@ async function runAdaptive () {
   } finally {
     runningAdaptive.value = false
   }
+}
+
+// Computed object for AdaptiveParamsForm
+const adaptiveParamsObject = computed<AdaptiveParams>(() => ({
+  toolD: toolD.value,
+  stepover: stepover.value,
+  stepdown: stepdown.value,
+  margin: margin.value,
+  strategy: strategy.value,
+  feedXY: feedXY.value,
+  safeZ: safeZ.value,
+  zRough: zRough.value,
+}))
+
+function handleParamsUpdate(params: AdaptiveParams) {
+  toolD.value = params.toolD
+  stepover.value = params.stepover
+  stepdown.value = params.stepdown
+  margin.value = params.margin
+  strategy.value = params.strategy
+  feedXY.value = params.feedXY
+  safeZ.value = params.safeZ
+  zRough.value = params.zRough
 }
 
 function sendToPipeline () {

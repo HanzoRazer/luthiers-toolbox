@@ -147,54 +147,13 @@
         </div>
 
         <!-- Pass list -->
-        <div
+        <PassListPanel
           v-if="passStats?.length"
-          class="border rounded-lg p-3 bg-white space-y-2"
-        >
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-gray-700">
-              Passes
-            </h3>
-            <span class="text-[10px] text-gray-500">{{ passStats.length }} total</span>
-          </div>
-          <div class="max-h-40 overflow-auto text-[11px]">
-            <table class="w-full">
-              <thead>
-                <tr class="text-left text-gray-500">
-                  <th class="px-1 py-1">
-                    #
-                  </th>
-                  <th class="px-1 py-1">
-                    Pts
-                  </th>
-                  <th class="px-1 py-1">
-                    Len ({{ units }})
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(p,i) in passStats"
-                  :key="i"
-                  class="hover:bg-gray-50 cursor-pointer"
-                  @mouseenter="hoverIdx = i"
-                  @mouseleave="hoverIdx = null"
-                  @click="selectedIdx = i"
-                >
-                  <td class="px-1 py-1">
-                    {{ p.idx }}
-                  </td>
-                  <td class="px-1 py-1">
-                    {{ p.pts }}
-                  </td>
-                  <td class="px-1 py-1">
-                    {{ p.length.toFixed(2) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+          :pass-stats="passStats"
+          :units="units"
+          @hover="i => hoverIdx = i"
+          @select="i => selectedIdx = i"
+        />
 
         <div
           v-if="gcode"
@@ -239,6 +198,7 @@ import { api } from '@/services/apiBase';
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import CamOffsetVisualizer from '@/components/cam/CamOffsetVisualizer.vue'
+import PassListPanel, { type PassStat } from './offset_lab/PassListPanel.vue'
 
 type Pt = [number, number]
 type Pass = { idx: number; pts: Pt[] }
@@ -261,7 +221,7 @@ const bbox = ref<BBox | null>(null)
 const meta = ref<any | null>(null)
 const err = ref<string | null>(null)
 const gcode = ref<string>('')
-const passStats = ref<Array<{ idx:number; pts:number; length:number }>>([])
+const passStats = ref<PassStat[]>([])
 const hoverIdx = ref<number|null>(null)
 const selectedIdx = ref<number|null>(null)
 const vizRef = ref<any>(null)

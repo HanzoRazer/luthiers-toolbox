@@ -14,7 +14,7 @@ import type { AssistantExplanation } from './rmosRunViewerTypes'
 export interface RmosRunViewerActionsReturn {
   loadRun: () => Promise<void>
   generateAdvisoryExplanation: (force: boolean) => Promise<void>
-  formatDate: (iso: string) => string
+  formatDate: (iso?: string | null) => string
   handleDownload: () => void
   goToDiff: () => void
   goToDiffWithParent: () => void
@@ -78,7 +78,8 @@ export function useRmosRunViewerActions(
   /**
    * Format ISO date string to locale string.
    */
-  function formatDate(iso: string): string {
+  function formatDate(iso?: string | null): string {
+    if (!iso) return '---'
     try {
       return new Date(iso).toLocaleString()
     } catch {

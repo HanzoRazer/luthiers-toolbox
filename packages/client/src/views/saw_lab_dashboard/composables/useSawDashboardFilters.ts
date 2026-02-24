@@ -17,7 +17,7 @@ export interface RiskCounts {
 }
 
 export interface SawDashboardFiltersState {
-  riskFilter: Ref<RiskBucketId | 'all'>
+  riskFilter: Ref<string>
   statusFilter: Ref<string>
   filteredRuns: ComputedRef<RunSummaryItem[]>
   riskCounts: ComputedRef<RiskCounts>
@@ -31,7 +31,7 @@ export interface SawDashboardFiltersState {
 export function useSawDashboardFilters(
   dashboard: Ref<DashboardSummary | null>
 ): SawDashboardFiltersState {
-  const riskFilter = ref<RiskBucketId | 'all'>('all')
+  const riskFilter = ref<string>('all')
   const statusFilter = ref('all')
 
   const filteredRuns = computed(() => {
