@@ -49,6 +49,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - LiveMonitor.vue: 535 → 440 LOC ✅
 - ArtStudioSidebar.vue: 564 → 359 LOC ✅
 - RosetteEditorView.vue: 540 → 455 LOC ✅
+- GuitarDesignHub.vue: 462 → 321 LOC ✅
 
 ---
 
@@ -127,6 +128,10 @@ Created components in `components/toolbox/polygon-offset/`:
 
 Created components in `components/toolbox/adaptive-bench/`:
 - `BenchResultsPanel.vue` - Benchmark results stats grid display
+
+Created components in `components/toolbox/guitar-design-hub/`:
+- `ToolCard.vue` - Clickable tool card with icon, title, desc, badge
+- `DesignPhaseSection.vue` - Phase category wrapper with slot
 
 Created components in `components/rmos/operation-e2e/`:
 - `OperationHistoryPanel.vue` - Operation history list with status badges
