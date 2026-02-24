@@ -456,4 +456,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="business",
     ),
 
+    # -------------------------------------------------------------------------
+    # ANALYZER (Acoustic Interpretation)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.analyzer.router",
+        prefix="",  # router already has /api/analyzer prefix
+        tags=["Analyzer"],
+        category="analyzer",
+    ),
+
 ]
