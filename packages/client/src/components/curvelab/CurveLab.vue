@@ -23,109 +23,31 @@
     </div>
 
     <!-- Mode-Specific Controls -->
-    <div
+    <OffsetModePanel
       v-if="mode === 'offset'"
-      class="params flex gap-3 items-center flex-wrap"
-    >
-      <label class="param-label">
-        Distance (mm)
-        <input
-          v-model.number="offsetDist"
-          type="number"
-          class="param-input"
-          step="0.5"
-        >
-      </label>
-      <label class="param-label">
-        Join Type
-        <select
-          v-model="join"
-          class="param-select"
-        >
-          <option value="round">Round</option>
-          <option value="miter">Miter</option>
-          <option value="bevel">Bevel</option>
-        </select>
-      </label>
-      <button
-        class="btn btn-primary"
-        @click="doOffset"
-      >
-        Apply Offset
-      </button>
-    </div>
+      v-model:offset-dist="offsetDist"
+      v-model:join="join"
+      @apply="doOffset"
+    />
 
-    <div
+    <FilletModePanel
       v-if="mode === 'fillet'"
-      class="params flex gap-3 items-center flex-wrap"
-    >
-      <label class="param-label">
-        Radius (mm)
-        <input
-          v-model.number="filletR"
-          type="number"
-          class="param-input"
-          step="0.5"
-          min="0.1"
-        >
-      </label>
-      <button
-        class="btn btn-primary"
-        @click="doFillet"
-      >
-        Apply Fillet
-      </button>
-    </div>
+      v-model:fillet-r="filletR"
+      @apply="doFillet"
+    />
 
-    <div
+    <FairModePanel
       v-if="mode === 'fair'"
-      class="params flex gap-3 items-center flex-wrap"
-    >
-      <label class="param-label">
-        λ (Lambda)
-        <input
-          v-model.number="lam"
-          type="number"
-          class="param-input"
-          step="1"
-          min="0"
-        >
-      </label>
-      <label class="param-checkbox">
-        <input
-          v-model="preserve"
-          type="checkbox"
-        >
-        Preserve endpoints
-      </label>
-      <button
-        class="btn btn-primary"
-        @click="doFair"
-      >
-        Apply Fairing
-      </button>
-    </div>
+      v-model:lam="lam"
+      v-model:preserve="preserve"
+      @apply="doFair"
+    />
 
-    <div
+    <ClothoidModePanel
       v-if="mode === 'clothoid'"
-      class="params flex gap-3 items-center flex-wrap"
-    >
-      <span class="text-sm text-gray-700">
-        Pick: p0 (green) → t0 (tangent) → p1 (green) → t1 (tangent)
-      </span>
-      <button
-        class="btn btn-normal"
-        @click="resetClothoid"
-      >
-        Reset
-      </button>
-      <button
-        class="btn btn-primary"
-        @click="doClothoid"
-      >
-        Blend
-      </button>
-    </div>
+      @reset="resetClothoid"
+      @blend="doClothoid"
+    />
 
     <!-- Canvas -->
     <canvas
@@ -173,6 +95,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useCurveHistory, useCurveOperations } from "./composables";
+import {
+  OffsetModePanel,
+  FilletModePanel,
+  FairModePanel,
+  ClothoidModePanel
+} from "./mode-panels";
 
 type Mode = "draw" | "offset" | "fillet" | "fair" | "clothoid";
 
@@ -374,16 +302,6 @@ onMounted(() => {
   border-color: #0284c7;
 }
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border-color: #2563eb;
-}
-
-.btn-primary:hover {
-  background: #2563eb;
-}
-
 .btn-success {
   background: #22c55e;
   color: white;
@@ -402,31 +320,6 @@ onMounted(() => {
 
 .btn-danger:hover {
   background: #dc2626;
-}
-
-.param-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #475569;
-}
-
-.param-input,
-.param-select {
-  border: 1px solid #cbd5e1;
-  padding: 6px 10px;
-  border-radius: 4px;
-  width: 100px;
-  font-size: 14px;
-}
-
-.param-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #475569;
 }
 
 .canvas-drawing {
