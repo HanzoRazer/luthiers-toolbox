@@ -48,6 +48,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - BlueprintPresetPanel.vue: 554 → 505 LOC ✅
 - LiveMonitor.vue: 535 → 440 LOC ✅
 - ArtStudioSidebar.vue: 564 → 359 LOC ✅
+- RosetteEditorView.vue: 540 → 455 LOC ✅
 
 ---
 
@@ -144,6 +145,10 @@ Created components in `components/rmos/live-monitor/`:
 
 Created components in `components/artstudio/sidebar/`:
 - `InstrumentGeometryForm.vue` - Scale length, fret count, presets, compound radius
+
+Created components in `components/rosette/rosette-editor/`:
+- `RingNudgePanel.vue` - Ring width adjustment controls with distribute
+- `JumpHUD.vue` - Filter status, ring counts, hotkey tooltip
 
 ### 3. Use Composables for Logic
 
