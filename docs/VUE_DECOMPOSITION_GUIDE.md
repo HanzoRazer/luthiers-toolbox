@@ -57,6 +57,7 @@ This guide documents the strategy for decomposing large Vue components ("god obj
 - PlacementPreviewPanel.vue: 574 → 429 LOC ✅
 - RmosAiLogViewer.vue: 379 → 173 LOC ✅
 - Phase2VectorizationPanel.vue: 404 → 88 LOC ✅
+- Phase3CamPanel.vue: 398 → 85 LOC ✅
 
 ---
 
@@ -187,6 +188,10 @@ Created components in `components/rmos/ai-log-viewer/`:
 Created components in `components/blueprint/phase2-vectorization/`:
 - `VectorizationControls.vue` - Pre-vectorization params (scale, thresholds, min area)
 - `VectorizationResults.vue` - Stats grid, preview, and export buttons (SVG/DXF)
+
+Created components in `components/blueprint/phase3-cam/`:
+- `CamParametersCard.vue` - Tool diameter, stepover, stepdown, feeds, and generate button
+- `CamResultsCard.vue` - RMOS result stats, warnings, errors, and G-code download
 
 ### 3. Use Composables for Logic
 
