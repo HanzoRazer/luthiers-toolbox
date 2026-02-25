@@ -148,13 +148,29 @@ watch(fraction, (f) => {
 }, { deep: true })
 
 function applyPreset(value: string, unit: string) {
-  const numValue = value.includes('/')
-    ? eval(value.replace('/', ' / '))
-    : parseFloat(value)
+  const numValue = parseFraction(value)
 
   converterFromValue.value = numValue
   converterFromUnit.value = unit
   converterToUnit.value = unit === 'in' ? 'mm' : 'in'
+}
+
+/**
+ * Safely parse a value that may be a fraction string (e.g. "1/4", "3/8")
+ * or a plain number. Replaces eval() to eliminate XSS risk.
+ */
+function parseFraction(value: string): number {
+  if (value.includes('/')) {
+    const parts = value.split('/')
+    if (parts.length === 2) {
+      const numerator = parseFloat(parts[0].trim())
+      const denominator = parseFloat(parts[1].trim())
+      if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+        return numerator / denominator
+      }
+    }
+  }
+  return parseFloat(value)
 }
 
 // ============================================================================

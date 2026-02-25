@@ -1,5 +1,6 @@
 // downloadBlob.ts
 // B22.12: Browser-side file download utilities
+import { REVOKE_URL_DELAY_MS } from '@/constants/timing'
 
 /**
  * Download HTML content as a file in the browser.
@@ -21,7 +22,7 @@ export function downloadHtmlFile(html: string, filename: string): void {
   document.body.removeChild(a);
 
   // Cleanup: revoke object URL after brief delay
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_URL_DELAY_MS);
 }
 
 /**
@@ -44,7 +45,7 @@ export function downloadJsonFile(data: any, filename: string): void {
   a.click();
   document.body.removeChild(a);
 
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_URL_DELAY_MS);
 }
 
 /**
@@ -65,5 +66,5 @@ export function downloadBlob(blob: Blob, filename: string): void {
   a.click();
   document.body.removeChild(a);
 
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_URL_DELAY_MS);
 }

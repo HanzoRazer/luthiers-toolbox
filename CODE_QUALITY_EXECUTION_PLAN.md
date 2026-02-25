@@ -1,0 +1,367 @@
+# Code Quality Execution Plan
+**Created**: 2026-02-25 | **Source**: `CODE_QUALITY_HANDOFF.md`  
+**Scope**: `packages/client/src/` | **Total Issues**: 4,783 (1,469 warning, 3,314 info)  
+**Last Updated**: 2026-02-25
+
+---
+
+## Status Summary
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| **1 — Quick Wins** | **COMPLETED** | useAsyncAction, constants, eval fix — 24 files changed, 14 new tests, 0 regressions |
+| 2 — Duplicate Extraction | Not started | |
+| 3 — Dead CSS | Not started | |
+| 4 — Memory/Safety | Not started | |
+| 5 — TODO Triage | Not started | |
+| 6 — View Hooks | Not started | |
+
+---
+
+## Plan Overview
+
+Six phases, ordered by impact-per-hour. Each phase lists concrete deliverables, affected files, definition of done, and estimated effort. Quick wins first; structural refactors last.
+
+---
+
+## Phase 1 — Quick Wins (Est. 3–4 hours) — COMPLETED
+
+### 1A. Create `composables/useAsyncAction.ts`
+**Impact**: Eliminates 50+ duplicate try/catch/loading blocks across stores and composables.
+
+**Deliverable**: A generic composable that wraps any async function with `loading`, `error`, and `data` refs.
+
+```typescript
+// packages/client/src/composables/useAsyncAction.ts
+import { ref, type Ref } from 'vue'
+
+interface AsyncActionReturn<T> {
+  data: Ref<T | null>
+  error: Ref<Error | null>
+  loading: Ref<boolean>
+  execute: (...args: unknown[]) => Promise<T | null>
+  reset: () => void
+}
+
+export function useAsyncAction<T>(
+  action: (...args: any[]) => Promise<T>
+): AsyncActionReturn<T> {
+  const data = ref<T | null>(null) as Ref<T | null>
+  const error = ref<Error | null>(null) as Ref<Error | null>
+  const loading = ref(false)
+
+  async function execute(...args: unknown[]): Promise<T | null> {
+    loading.value = true
+    error.value = null
+    try {
+      const result = await action(...args)
+      data.value = result
+      return result
+    } catch (e) {
+      error.value = e instanceof Error ? e : new Error(String(e))
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function reset() {
+    data.value = null
+    error.value = null
+    loading.value = false
+  }
+
+  return { data, error, loading, execute, reset }
+}
+```
+
+**Files to refactor** (highest-impact first):
+| File | `loading.value = true` count |
+|------|------------------------------|
+| `stores/artDesignFirstWorkflowStore.ts` | 5 |
+| `stores/useRosetteDesignerStore.ts` | 4 |
+| `components/toolbox/adaptive-bench/useAdaptiveBenchActions.ts` | 3 |
+| `stores/useRmosAnalyticsStore.ts` | 2 |
+| `views/rosette_compare/composables/useRosetteCompareActions.ts` | 3 |
+| `views/saw_lab_dashboard/composables/useSawDashboard.ts` | 1 |
+| `views/rmos_run_viewer/composables/useRmosRunViewerActions.ts` | 1 |
+| `stores/fretSlotsCamStore.ts` | 1 |
+| `stores/useJobLogStore.ts` | 1 |
+| `stores/useLiveMonitorStore.ts` | 1 |
+| `stores/useManufacturingPlanStore.ts` | 1 |
+| `components/cam/composables/useCamPipelineExecution.ts` | 1 |
+| … plus ~25 more in `.vue` files |
+
+**Done when**: `useAsyncAction` is exported from `composables/index.ts`, has unit tests, and at least 10 high-count files are refactored. `grep "loading.value = true" src/` count drops by ≥50%.
+
+### 1B. Create `constants/timing.ts` and `constants/dimensions.ts`
+**Impact**: Names 100+ magic numbers scattered across the entire client.
+
+**Deliverables**:
+```
+packages/client/src/constants/
+  timing.ts        — ANIMATION_DURATION_MS, DEBOUNCE_DELAY_MS, SECOND_MS, TOAST_DURATION_MS
+  dimensions.ts    — FRET_COUNT, MAX_FRETS, SCALE_LENGTH_MM, GRID_COLUMNS
+  index.ts         — barrel export
+```
+
+**Specific values to extract**:
+
+| Literal | Occurrences | Constant | File |
+|---------|-------------|----------|------|
+| `300` | 40+ | `ANIMATION_DURATION_MS` | `timing.ts` |
+| `500` | 35+ | `DEBOUNCE_DELAY_MS` | `timing.ts` |
+| `1000` | 30+ | `SECOND_MS` | `timing.ts` |
+| `260` | 5+ | `SHAKE_DURATION_MS` | `timing.ts` |
+| `1200` | 2+ | `RING_FOCUS_DURATION_MS` | `timing.ts` |
+| `1600` | 1+ | `SUCCESS_TOAST_MS` | `timing.ts` |
+| `2200` | 1+ | `ERROR_TOAST_MS` | `timing.ts` |
+| `3000` | 2+ | `SAVED_INDICATOR_MS` | `timing.ts` |
+| `4500` | 1+ | `DEFAULT_TOAST_MS` | `timing.ts` |
+| `12` | 25+ | `DEFAULT_FRET_COUNT` / `GRID_COLUMNS` | `dimensions.ts` |
+| `22` | 20+ | `MAX_FRETS` | `dimensions.ts` |
+| `650` | 15+ | `DEFAULT_SCALE_LENGTH_MM` | `dimensions.ts` |
+
+**Done when**: Constants files exist, are imported in the barrel, and at least 50 literal replacements have been made. Tests still pass.
+
+### 1C. Replace `eval()` in `ScientificCalculator.vue`
+**Impact**: Eliminates XSS risk. Single-file fix.
+
+**Current** (line 152):
+```typescript
+? eval(value.replace('/', ' / '))
+```
+
+**Fix**: Replace with a safe fraction parser:
+```typescript
+function parseFraction(value: string): number {
+  const parts = value.split('/')
+  if (parts.length === 2) {
+    const numerator = parseFloat(parts[0].trim())
+    const denominator = parseFloat(parts[1].trim())
+    if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+      return numerator / denominator
+    }
+  }
+  return parseFloat(value)
+}
+```
+
+**Done when**: No `eval()` calls in client source. Converter presets still work correctly.
+
+### Phase 1 Completion Log (2026-02-25)
+
+**1A delivered:**
+- `composables/useAsyncAction.ts` — generic async wrapper with loading/error/data refs, callbacks, external-ref binding
+- 14 unit tests (all passing)
+- 5 stores refactored: `useJobLogStore`, `useManufacturingPlanStore`, `useRmosAnalyticsStore`, `useLiveMonitorStore`, `fretSlotsCamStore`
+
+**1B delivered:**
+- `constants/timing.ts` (16 constants), `constants/dimensions.ts` (13 constants), `constants/index.ts` (barrel)
+- Magic numbers replaced in 13 files: Toast, AiImageGallery, AiImagePanel, ToolTable, RosetteEditorView, SnapshotPanel, downloadBlob, useBulkDecision, useBulkDecisionV2, useBulkExport, EngineeringEstimatorView, analytics, InstrumentGeometryForm
+
+**1C delivered:**
+- `eval()` replaced with safe `parseFraction()` in `ScientificCalculator.vue`
+
+**Validation:** 0 type errors across 24 modified files. Full test suite: 372 tests pass, 0 failures.
+
+---
+
+## Phase 2 — Duplicate Code Extraction (Est. 6–8 hours)
+
+### 2A. Extract `composables/useFetchTransform.ts`
+**Impact**: Eliminates 40+ fetch-then-transform patterns.
+
+**Signature**:
+```typescript
+export function useFetchTransform<TRaw, TOut>(
+  fetcher: () => Promise<TRaw>,
+  transform: (raw: TRaw) => TOut
+): { data: Ref<TOut | null>; loading: Ref<boolean>; error: Ref<Error | null>; refresh: () => Promise<void> }
+```
+
+**Target files**: SDK endpoint callers in `views/*/composables/`, `stores/`, `features/*/composables/`.
+
+### 2B. Extract `composables/useFormState.ts`
+**Impact**: Eliminates 30+ repeated ref-initialization patterns for form/errors/touched.
+
+**Signature**:
+```typescript
+export function useFormState<T extends Record<string, unknown>>(
+  defaults: T
+): { form: Ref<T>; errors: Ref<Partial<Record<keyof T, string>>>; touched: Ref<Partial<Record<keyof T, boolean>>>; reset: () => void; isDirty: ComputedRef<boolean> }
+```
+
+### 2C. Consolidate adaptive composables
+**Directory**: `components/adaptive/composables/` (13 files, ~120 duplicates)
+
+**Action**:
+1. Audit all 13 files for shared patterns (loading state, error handling, settings serialization)
+2. Extract shared logic into 2-3 internal helper composables
+3. Re-export from existing `index.ts`
+
+**Target shared patterns**:
+- Settings load/save (appears in `useTrochoidSettings`, `usePocketSettings`, `useAdaptiveFeedPresets`)
+- Toolpath execution + logging (appears in `useToolpathRenderer`, `useToolpathExport`, `useRunLogging`)
+- Machine profile selection (appears in `useMachineProfiles`, `useOptimizer`)
+
+### 2D. Create `components/compare/CompareUtils.ts`
+**Directory**: `components/compare/` (28 files, ~100 duplicates)
+
+**Action**: Extract shared viewport math, diff mode logic, and export formatting into a single utility module. The files `compareViewportMath.ts`, `compareBlinkBehavior.ts`, `compareXrayBehavior.ts`, and `compareLayers.ts` likely have overlapping coordinate-transform and toggle logic.
+
+### 2E. Consolidate rosette composables
+**Directory**: `components/rosette/composables/` (7 files, ~90 duplicates)
+
+**Action**: Merge overlapping workflow/export logic between `useWorkflowActions.ts`, `useWorkflowOverrides.ts`, `useExportSnippets.ts`, and `useClipboardExport.ts`.
+
+### 2F. Unify RMOS composables
+**Directory**: `components/rmos/composables/` (14 files, ~50 duplicates)
+
+**Action**: Merge overlapping selection/filter/keyboard patterns. `useCandidateSelection`, `useCandidateFilters`, `useCandidateKeyboard`, and `useCandidateHelpers` likely share significant selection-state logic.
+
+---
+
+## Phase 3 — Dead CSS Cleanup (Est. 3–4 hours)
+
+### 3A. Audit & clean `ScientificCalculator.vue` (15+ dead selectors)
+**Method**: Compare `<style scoped>` selectors against `<template>`. The component was recently decomposed into sub-components (`CalculatorDisplay`, `BasicCalculatorPad`, etc.) — CSS for removed elements is likely still present.
+
+### 3B. Audit & clean `PipelineLabView.vue` (12+ dead selectors)
+**File**: `views/PipelineLabView.vue`
+
+### 3C. Audit & clean `BlueprintLab.vue` (10+ dead selectors)
+**File**: `views/BlueprintLab.vue` (note: actual filename is `BlueprintLab.vue`, not `BlueprintLabView.vue` as stated in handoff)
+
+### 3D. Audit & clean `ManufacturingCandidateList.vue` (8+ dead selectors)
+**File**: `components/rmos/ManufacturingCandidateList.vue`  
+**Caveat**: Some selectors may target dynamically-generated class names. Mark these with `/* dynamic */` comments rather than deleting.
+
+### 3E. Configure CSS purge in build pipeline
+**Action**: Add PurgeCSS or UnCSS to the Vite build config to catch dead CSS automatically going forward.
+
+---
+
+## Phase 4 — Memory Leak & Safety Audit (Est. 2–3 hours)
+
+### 4A. Audit `setTimeout`/`setInterval` without cleanup
+**Known locations** (24 hits from grep):
+- `IdleDetector.vue` — uses `window.setTimeout` (verify cleanup in `onUnmounted`)
+- `AiImagePanel.vue` — `previewTimeout` (verify `clearTimeout` in `onUnmounted`)
+- `BlueprintImporter.vue` — `setInterval` for progress (verify `clearInterval`)
+- `RosetteEditorView.vue` — 5 separate timers (`flashTimer`, `hintTimer`, shake timers)
+- `ToolTable.vue` — 2 `setTimeout` calls (fire-and-forget for UI feedback — low risk)
+- `EngineeringEstimatorView.vue` — debounce timer (verify cleanup)
+- `AudioAnalyzerRunsLibrary.vue` — debounce timer (verify cleanup)
+
+**Fix pattern**: Ensure every `setTimeout`/`setInterval` has a corresponding `clearTimeout`/`clearInterval` in `onUnmounted` or `onBeforeUnmount`.
+
+### 4B. Audit `addEventListener` without `removeEventListener`
+**Action**: `grep -rn "addEventListener" src/ | grep -v removeEventListener` and verify cleanup.
+
+---
+
+## Phase 5 — TODO/FIXME Triage (Est. 2 hours)
+
+### 5A. Categorize all TODO/FIXME/HACK/XXX comments
+**Action**: Run `grep -rn "TODO\|FIXME\|HACK\|XXX" packages/client/src/` and classify each into:
+- **Actionable**: Has clear fix path → create issue
+- **Stale**: References removed features → delete comment
+- **Aspirational**: Nice-to-have → tag with priority and leave
+
+### 5B. Delete stale TODOs
+Remove comments referencing completed work or removed features.
+
+### 5C. Convert high-priority FIXME/HACK/XXX to tracked issues
+Create GitHub issues for the ~80 FIXME/HACK/XXX items with appropriate labels.
+
+---
+
+## Phase 6 — Structural Dedup in Views (Est. 4–5 hours)
+
+### 6A. Extract view-level hooks (~80 duplicates in `views/`)
+**Action**: Audit view composables across:
+- `views/multi_run_comparison/composables/`
+- `views/rosette_compare/composables/`
+- `views/saw_lab_dashboard/composables/`
+- `views/rmos_run_viewer/composables/`
+- `views/cam/risk_timeline_relief/composables/`
+- `views/art/composables/`
+- `views/compare_lab/composables/`
+
+Extract shared patterns (data fetching, error display, navigation guards) into `composables/` at the root level.
+
+---
+
+## Execution Order & Dependencies
+
+```
+Phase 1A (useAsyncAction) ──┐
+Phase 1B (constants)        ├── Independent, can be parallelized
+Phase 1C (eval fix)         ┘
+        │
+        ▼
+Phase 2A-2F (dedup extraction)  ← Depends on 1A existing (many refactors will use useAsyncAction)
+        │
+        ▼
+Phase 3A-3E (dead CSS)          ← Independent, can run parallel to Phase 2
+        │
+        ▼
+Phase 4A-4B (memory leaks)      ← Independent
+        │
+        ▼
+Phase 5A-5C (TODO triage)       ← Independent
+        │
+        ▼
+Phase 6A (view hooks)           ← Depends on Phase 2 patterns being established
+```
+
+---
+
+## Validation Gates
+
+After **each phase**, run:
+```bash
+cd packages/client
+npm run build          # No compile errors
+npm run test           # All tests pass
+npm run lint           # No new lint violations
+```
+
+After **all phases**, re-run the analyzer:
+```bash
+cd C:/Users/thepr/Downloads/code-analysis-tool
+PYTHONPATH=scripts python -m code_quality C:/Users/thepr/Downloads/luthiers-toolbox/packages/client/src
+```
+
+**Target**: Warnings ≤ 500 (from 1,469), Info ≤ 2,000 (from 3,314).
+
+---
+
+## Risk Mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| Refactoring breaks runtime behavior | Unit tests before & after each extraction. Test commands in `npm run test`. |
+| Dead CSS removal breaks dynamic classes | Mark `/* dynamic */` and skip. Only remove selectors with zero template matches. |
+| `useAsyncAction` doesn't fit all patterns | Allow exceptions. Some stores have complex loading state (multiple loading refs) — leave those for Phase 6. |
+| Constant extraction causes merge conflicts | Do in a single focused PR per constant file. |
+| eval removal breaks fraction presets | Add dedicated test case for fraction strings like `"1/4"`, `"3/8"`, `"7/16"`. |
+
+---
+
+## Estimated Total Effort
+
+| Phase | Hours | Priority |
+|-------|-------|----------|
+| 1 — Quick Wins | 3–4 | **P0** (do first) |
+| 2 — Duplicate Extraction | 6–8 | **P1** |
+| 3 — Dead CSS | 3–4 | **P1** |
+| 4 — Memory/Safety | 2–3 | **P1** |
+| 5 — TODO Triage | 2 | **P2** |
+| 6 — View Hooks | 4–5 | **P2** |
+| **Total** | **20–26** | |
+
+---
+
+*Ready to execute. Start with Phase 1A → 1B → 1C in parallel, then proceed sequentially.*

@@ -6,6 +6,7 @@
  * UI-only component - no business logic duplication.
  */
 import { ref, computed, watch } from "vue";
+import { DEBOUNCE_DELAY_MS } from '@/constants/timing';
 import { businessEstimator } from "@/sdk/endpoints";
 import type {
   EstimateRequest,
@@ -100,7 +101,7 @@ watch(
   form,
   () => {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(runEstimate, 500);
+    debounceTimer = setTimeout(runEstimate, DEBOUNCE_DELAY_MS);
   },
   { deep: true }
 );

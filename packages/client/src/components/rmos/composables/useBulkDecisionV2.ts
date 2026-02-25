@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue'
+import { BULK_PROGRESS_DISMISS_MS } from '@/constants/timing'
 import { decideManufacturingCandidate, type ManufacturingCandidate, type RiskLevel } from '@/sdk/rmos/runs'
 
 type RiskDecision = 'GREEN' | 'YELLOW' | 'RED'
@@ -138,7 +139,7 @@ export function useBulkDecisionV2(
       )
     } finally {
       bulkApplying.value = false
-      window.setTimeout(() => (bulkProgress.value = null), 900)
+      window.setTimeout(() => (bulkProgress.value = null), BULK_PROGRESS_DISMISS_MS)
     }
   }
 
@@ -182,7 +183,7 @@ export function useBulkDecisionV2(
       showToast('Undid last bulk decision')
     } finally {
       bulkApplying.value = false
-      window.setTimeout(() => (bulkProgress.value = null), 900)
+      window.setTimeout(() => (bulkProgress.value = null), BULK_PROGRESS_DISMISS_MS)
     }
   }
 
@@ -256,7 +257,7 @@ export function useBulkDecisionV2(
       )
     } finally {
       bulkApplying.value = false
-      window.setTimeout(() => (bulkProgress.value = null), 900)
+      window.setTimeout(() => (bulkProgress.value = null), BULK_PROGRESS_DISMISS_MS)
     }
   }
 

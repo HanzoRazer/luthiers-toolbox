@@ -3,25 +3,20 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { JobLogEntry } from '@/models/rmos';
 import { api } from '@/services/apiBase';
+import { useAsyncAction } from '@/composables/useAsyncAction';
 
 export const useJobLogStore = defineStore('jobLog', () => {
   const entries = ref<JobLogEntry[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
 
-  async function fetchJobLog() {
-    loading.value = true;
-    error.value = null;
-    try {
+  const { loading, error, execute: fetchJobLog } = useAsyncAction(
+    async () => {
       const res = await api('/api/joblog');
       if (!res.ok) throw new Error(`Failed to fetch joblog: ${res.status}`);
-      entries.value = await res.json();
-    } catch (err: any) {
-      error.value = err?.message ?? String(err);
-    } finally {
-      loading.value = false;
-    }
-  }
+      const data: JobLogEntry[] = await res.json();
+      entries.value = data;
+      return data;
+    },
+  );
 
   return {
     entries,

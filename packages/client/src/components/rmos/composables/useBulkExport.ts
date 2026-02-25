@@ -1,4 +1,5 @@
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { EXPORT_REVOKE_DELAY_MS, BATCH_EXPORT_ITEM_DELAY_MS } from '@/constants/timing'
 import JSZip from 'jszip'
 import { downloadManufacturingCandidateZip, type ManufacturingCandidate } from '@/sdk/rmos/runs'
 
@@ -125,7 +126,7 @@ export function useBulkExport(
     document.body.appendChild(a)
     a.click()
     a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 2500)
+    setTimeout(() => URL.revokeObjectURL(url), EXPORT_REVOKE_DELAY_MS)
   }
 
   async function exportGreenOnlyZips() {
@@ -146,7 +147,7 @@ export function useBulkExport(
         requestId.value = res.requestId ?? requestId.value
         const fname = `rmos_${rid}_candidate_${c.candidate_id}_GREEN.zip`
         downloadBlob(res.blob, fname)
-        await new Promise((r) => setTimeout(r, 250))
+        await new Promise((r) => setTimeout(r, BATCH_EXPORT_ITEM_DELAY_MS))
       }
     } catch (e: any) {
       exportError.value = e?.message ?? String(e)

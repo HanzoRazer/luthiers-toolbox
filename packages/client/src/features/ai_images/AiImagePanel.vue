@@ -9,6 +9,7 @@
  */
 
 import { ref, computed, watch, onMounted } from 'vue';
+import { DEBOUNCE_DELAY_MS } from '@/constants/timing';
 import { useAiImageStore } from './useAiImageStore';
 import AiImageGallery from './AiImageGallery.vue';
 import {
@@ -173,7 +174,7 @@ onMounted(async () => {
 let previewTimeout: number | null = null;
 watch(prompt, () => {
   if (previewTimeout) clearTimeout(previewTimeout);
-  previewTimeout = window.setTimeout(updatePreview, 500);
+  previewTimeout = window.setTimeout(updatePreview, DEBOUNCE_DELAY_MS);
 });
 </script>
 
