@@ -2,7 +2,7 @@
  * Composable for candidate list filtering logic.
  * Extracted from ManufacturingCandidateList.vue
  */
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 
 export type DecisionFilter = 'ALL' | 'UNDECIDED' | 'GREEN' | 'YELLOW' | 'RED'
 export type StatusFilter = 'ALL' | 'PROPOSED' | 'ACCEPTED' | 'REJECTED'
@@ -239,6 +239,14 @@ export function useCandidateFilters(runId: () => string) {
       }
     })
   }
+
+  // Cleanup: cancel pending preferences debounce timer
+  onBeforeUnmount(() => {
+    if (prefsTimer) {
+      window.clearTimeout(prefsTimer)
+      prefsTimer = null
+    }
+  })
 
   return {
     // State

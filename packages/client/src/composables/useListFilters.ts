@@ -4,7 +4,7 @@
  *
  * Extracted & genericized from useCandidateFilters (RMOS domain).
  */
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 
 // ---- Public types ----
 
@@ -212,6 +212,14 @@ export function useListFilters<T extends FilterableRow>(
       return isDesc ? -cmp : cmp
     })
   }
+
+  // Cleanup: cancel pending preferences debounce timer
+  onBeforeUnmount(() => {
+    if (prefsTimer) {
+      window.clearTimeout(prefsTimer)
+      prefsTimer = null
+    }
+  })
 
   return {
     // State

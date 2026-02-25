@@ -7,7 +7,7 @@
  *
  * @package features/ai_images
  */
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { SUCCESS_TOAST_MS, ERROR_TOAST_MS } from '@/constants/timing'
 import VariantReviewPanel from './components/VariantReviewPanel.vue'
@@ -39,15 +39,25 @@ function resolveAssetUrl(url: string | undefined): string {
 }
 
 // Toast helpers
+let _toastOkTimer: number | null = null
+let _toastErrTimer: number | null = null
+
 function _toastOk(msg: string) {
   success.value = msg
-  window.setTimeout(() => (success.value = null), SUCCESS_TOAST_MS)
+  if (_toastOkTimer) clearTimeout(_toastOkTimer)
+  _toastOkTimer = window.setTimeout(() => (success.value = null), SUCCESS_TOAST_MS)
 }
 
 function _toastErr(msg: string) {
   error.value = msg
-  window.setTimeout(() => (error.value = null), ERROR_TOAST_MS)
+  if (_toastErrTimer) clearTimeout(_toastErrTimer)
+  _toastErrTimer = window.setTimeout(() => (error.value = null), ERROR_TOAST_MS)
 }
+
+onBeforeUnmount(() => {
+  if (_toastOkTimer) clearTimeout(_toastOkTimer)
+  if (_toastErrTimer) clearTimeout(_toastErrTimer)
+})
 
 // Gallery state
 const {

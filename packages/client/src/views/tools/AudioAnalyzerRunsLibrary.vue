@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import {
   browseRuns,
   getRun,
@@ -123,6 +123,10 @@ async function selectRun(runId: string) {
 
 onMounted(() => {
   loadRuns();
+});
+
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer);
 });
 </script>
 

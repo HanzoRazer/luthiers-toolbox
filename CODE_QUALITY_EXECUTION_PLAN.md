@@ -12,7 +12,7 @@
 | **1 — Quick Wins** | **COMPLETED** | useAsyncAction, constants, eval fix — 24 files changed, 14 new tests, 0 regressions |
 | **2 — Duplicate Extraction** | **COMPLETED** | useFetchTransform, useFormState, useLocalStorageRef, runLogHelpers, domain consolidation — 17 files changed, 30 new tests, 0 regressions |
 | **3 — Dead CSS** | **COMPLETED** | 57 dead selectors removed from ManufacturingCandidateList.module.css, dead template classes cleaned, CSS audit script added — 5 files changed, 0 regressions |
-| 4 — Memory/Safety | Not started | |
+| **4 — Memory/Safety** | **COMPLETED** | 12 files fixed: 11 timer leaks (setTimeout/setInterval) + 1 addEventListener leak. 0 type errors, 402 tests pass, 0 regressions |
 | 5 — TODO Triage | Not started | |
 | 6 — View Hooks | Not started | |
 
@@ -277,22 +277,35 @@ export function useFormState<T extends Record<string, unknown>>(
 
 ---
 
-## Phase 4 — Memory Leak & Safety Audit (Est. 2–3 hours)
+## Phase 4 — Memory Leak & Safety Audit (Est. 2–3 hours) — COMPLETED
 
-### 4A. Audit `setTimeout`/`setInterval` without cleanup
-**Known locations** (24 hits from grep):
-- `IdleDetector.vue` — uses `window.setTimeout` (verify cleanup in `onUnmounted`)
-- `AiImagePanel.vue` — `previewTimeout` (verify `clearTimeout` in `onUnmounted`)
-- `BlueprintImporter.vue` — `setInterval` for progress (verify `clearInterval`)
-- `RosetteEditorView.vue` — 5 separate timers (`flashTimer`, `hintTimer`, shake timers)
-- `ToolTable.vue` — 2 `setTimeout` calls (fire-and-forget for UI feedback — low risk)
-- `EngineeringEstimatorView.vue` — debounce timer (verify cleanup)
-- `AudioAnalyzerRunsLibrary.vue` — debounce timer (verify cleanup)
+### 4A. Audit `setTimeout`/`setInterval` without cleanup — COMPLETED
+**Audited**: ~60 timer call sites across 40 files. Classified as SAFE (proper cleanup), LEAK (missing cleanup), LOW-RISK (fire-and-forget UI), or N/A (non-component utility).
 
-**Fix pattern**: Ensure every `setTimeout`/`setInterval` has a corresponding `clearTimeout`/`clearInterval` in `onUnmounted` or `onBeforeUnmount`.
+**11 timer leaks fixed:**
 
-### 4B. Audit `addEventListener` without `removeEventListener`
-**Action**: `grep -rn "addEventListener" src/ | grep -v removeEventListener` and verify cleanup.
+| File | Issue | Fix |
+|------|-------|-----|
+| `useSnapshotCompareNavigation.ts` | `liveTimer` 200ms debounce, no `onBeforeUnmount` | Added `onBeforeUnmount` cleanup |
+| `useCandidateFilters.ts` | `prefsTimer` 250ms localStorage debounce, no cleanup | Added `onBeforeUnmount` cleanup |
+| `useLogPolling.ts` | `pollInterval` setInterval, no internal cleanup | Added `onBeforeUnmount(() => stopPolling())` |
+| `RosetteEditorView.vue` | `flashTimer` not cleaned in existing `onBeforeUnmount` | Added `flashTimer` cleanup to existing hook |
+| `Toast.vue` | Timer ID not stored, no cancellation on re-call | Store timer ID, clear on re-call, add `onBeforeUnmount` |
+| `useListFilters.ts` | `prefsTimer` 250ms debounce, no cleanup | Added `onBeforeUnmount` cleanup |
+| `useWebSocket.ts` | Reconnect `setTimeout` ID not stored, can't cancel | Store reconnect timer, clear in `disconnect()` |
+| `AiImageGallery.vue` | Toast timer IDs not stored, no cleanup | Store timer IDs, clear on re-call, add `onBeforeUnmount` |
+| `AiImagePanel.vue` | `previewTimeout` debounce, no `onBeforeUnmount` | Added `onBeforeUnmount` cleanup |
+| `EngineeringEstimatorView.vue` | `debounceTimer` no `onBeforeUnmount` | Added `onBeforeUnmount` cleanup |
+| `AudioAnalyzerRunsLibrary.vue` | `debounceTimer` no `onBeforeUnmount` | Added `onBeforeUnmount` cleanup |
+
+### 4B. Audit `addEventListener` without `removeEventListener` — COMPLETED
+**Audited**: 17 `addEventListener` calls across 14 files. 10 SAFE, 3 N/A, 1 LEAK.
+
+**1 addEventListener leak fixed:**
+
+| File | Issue | Fix |
+|------|-------|-----|
+| `CurveLab.vue` | `window.addEventListener("resize", setup)` in `onMounted`, no cleanup | Added `onBeforeUnmount(() => window.removeEventListener("resize", setup))` |
 
 ---
 

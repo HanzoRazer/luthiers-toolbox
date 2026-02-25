@@ -8,7 +8,7 @@
  * @package features/ai_images
  */
 
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { DEBOUNCE_DELAY_MS } from '@/constants/timing';
 import { useAiImageStore } from './useAiImageStore';
 import AiImageGallery from './AiImageGallery.vue';
@@ -175,6 +175,10 @@ let previewTimeout: number | null = null;
 watch(prompt, () => {
   if (previewTimeout) clearTimeout(previewTimeout);
   previewTimeout = window.setTimeout(updatePreview, DEBOUNCE_DELAY_MS);
+});
+
+onBeforeUnmount(() => {
+  if (previewTimeout) clearTimeout(previewTimeout);
 });
 </script>
 
