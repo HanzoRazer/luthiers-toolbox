@@ -8,7 +8,6 @@ import { onMounted } from 'vue'
 import CamBackplotViewer from '@/components/cam/CamBackplotViewer.vue'
 import CamPipelineRunner from '@/components/cam/CamPipelineRunner.vue'
 import CamIssuesList from '@/components/cam/CamIssuesList.vue'
-import ReliefRiskPresetPanel from '@/components/art/ReliefRiskPresetPanel.vue'
 import type { PipelineOp } from '@/api/pipeline'
 
 import {
@@ -177,8 +176,6 @@ onMounted(() => {
       
       <!-- Preset controls -->
       <section class="mt-2 flex flex-wrap items-center gap-3">
-        <ReliefRiskPresetPanel @update="(p: any) => applyLocalPreset(p)" />
-
         <button
           type="button"
           class="text-xs px-2 py-1 border rounded bg-white hover:bg-gray-50"
