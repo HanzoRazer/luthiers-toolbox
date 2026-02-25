@@ -1,4 +1,9 @@
 /**
+ * @deprecated Use `useUndoStack` instead — this is a near-clone (~95% identical).
+ * Both implement the same bulk-decision + undo-stack logic.  `useUndoStack`
+ * is the canonical implementation; this file is kept temporarily for
+ * backward compatibility but should not be used for new development.
+ *
  * Composable for legacy bulk decision operations with undo stack.
  * This is the original bulk decision system using client-side undo tracking.
  * Note: useBulkDecisionV2 is the newer system with bulkHistory.

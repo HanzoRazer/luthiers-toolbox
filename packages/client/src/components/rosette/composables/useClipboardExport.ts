@@ -14,18 +14,21 @@ import {
   buildPromotionIntentCurl,
   safeFilenameFromSession,
 } from './useExportSnippets'
+import { downloadBlob } from '@/utils/downloadBlob'
+import type { WorkflowOverridesState } from './useWorkflowOverrides'
 
 // ==========================================================================
 // Types
 // ==========================================================================
 
-export interface WorkflowOverrides {
-  toolId: Ref<string>
-  materialId: Ref<string>
-  machineProfileId: Ref<string>
-  camProfileId: Ref<string>
-  riskTolerance: Ref<string>
-}
+/**
+ * Subset of WorkflowOverridesState needed for export URL building.
+ * @deprecated Import WorkflowOverridesState from useWorkflowOverrides instead.
+ */
+export type WorkflowOverrides = Pick<
+  WorkflowOverridesState,
+  'toolId' | 'materialId' | 'machineProfileId' | 'camProfileId' | 'riskTolerance'
+>
 
 export interface ClipboardExportState {
   /** Full export URL with overrides applied */
@@ -127,8 +130,16 @@ export function useClipboardExport(
   }
 
   // ==========================================================================
-  // Copy Actions
+  // Copy Actions — table-driven to eliminate 9x session-guard duplication
   // ==========================================================================
+
+  /** Guard: returns [sessionId, exportUrl] or null if either is missing. */
+  function getSessionAndUrl(): [string, string] | null {
+    const sid = getSessionId()
+    const url = exportUrlPreview.value
+    if (!sid || !url) return null
+    return [sid, url]
+  }
 
   async function copyIntent() {
     const intent = getLastIntent()
@@ -155,80 +166,46 @@ export function useClipboardExport(
     await copyToClipboard(url, 'Export URL copied to clipboard', 'Failed to copy URL')
   }
 
-  async function copyExportPowerShell() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
+  // Snippet copy actions — all require [sid, url] guard
+  type SnippetBuilder = (url: string, sid: string) => string
 
-    const snippet = ['# Promotion intent export (PowerShell)', buildExportPowerShellIwr(url, sid), ''].join(
-      '\n'
-    )
-    await copyToClipboard(snippet, 'Copied PowerShell command.', 'Copy failed.')
+  const snippetCopiers: Record<string, { build: SnippetBuilder; toast: string }> = {
+    powerShell: {
+      build: (url, sid) =>
+        ['# Promotion intent export (PowerShell)', buildExportPowerShellIwr(url, sid), ''].join('\n'),
+      toast: 'Copied PowerShell command.',
+    },
+    python: { build: buildExportPythonRequests, toast: 'Copied Python requests snippet.' },
+    node: { build: buildExportNodeFetch, toast: 'Copied Node fetch snippet.' },
+    gitHubActionsStep: { build: buildExportGitHubActionsStep, toast: 'Copied GitHub Actions step YAML.' },
+    gitHubActionsJob: { build: buildExportGitHubActionsJob, toast: 'Copied GitHub Actions job YAML.' },
+    gitHubActionsWorkflow: {
+      build: buildExportGitHubActionsWorkflow,
+      toast: 'Copied GitHub Actions workflow YAML.',
+    },
+    repoReadyWorkflow: {
+      build: buildRepoReadyWorkflowBundle,
+      toast: 'Repo-ready GitHub Actions workflow copied',
+    },
   }
 
-  async function copyExportPython() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(buildExportPythonRequests(url, sid), 'Copied Python requests snippet.', 'Copy failed.')
+  function makeSnippetCopier(key: string): () => Promise<void> {
+    return async () => {
+      const pair = getSessionAndUrl()
+      if (!pair) return
+      const [sid, url] = pair
+      const { build, toast: successMsg } = snippetCopiers[key]
+      await copyToClipboard(build(url, sid), successMsg, 'Copy failed.')
+    }
   }
 
-  async function copyExportNode() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(buildExportNodeFetch(url, sid), 'Copied Node fetch snippet.', 'Copy failed.')
-  }
-
-  async function copyExportGitHubActionsStep() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(
-      buildExportGitHubActionsStep(url, sid),
-      'Copied GitHub Actions step YAML.',
-      'Copy failed.'
-    )
-  }
-
-  async function copyExportGitHubActionsJob() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(
-      buildExportGitHubActionsJob(url, sid),
-      'Copied GitHub Actions job YAML.',
-      'Copy failed.'
-    )
-  }
-
-  async function copyExportGitHubActionsWorkflow() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(
-      buildExportGitHubActionsWorkflow(url, sid),
-      'Copied GitHub Actions workflow YAML.',
-      'Copy failed.'
-    )
-  }
-
-  async function copyGitHubActionsWorkflowFile() {
-    const sid = getSessionId()
-    const url = exportUrlPreview.value
-    if (!sid || !url) return
-
-    await copyToClipboard(
-      buildRepoReadyWorkflowBundle(url, sid),
-      'Repo-ready GitHub Actions workflow copied',
-      'Failed to copy workflow'
-    )
-  }
+  const copyExportPowerShell = makeSnippetCopier('powerShell')
+  const copyExportPython = makeSnippetCopier('python')
+  const copyExportNode = makeSnippetCopier('node')
+  const copyExportGitHubActionsStep = makeSnippetCopier('gitHubActionsStep')
+  const copyExportGitHubActionsJob = makeSnippetCopier('gitHubActionsJob')
+  const copyExportGitHubActionsWorkflow = makeSnippetCopier('gitHubActionsWorkflow')
+  const copyGitHubActionsWorkflowFile = makeSnippetCopier('repoReadyWorkflow')
 
   async function downloadIntent() {
     const sid = getSessionId()
@@ -242,13 +219,7 @@ export function useClipboardExport(
       }
       const blob = await resp.blob()
       const filename = safeFilenameFromSession(sid)
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(a.href)
+      downloadBlob(blob, filename)
       toast.success(`Downloaded ${filename}`)
     } catch (e: any) {
       toast.error(`Download failed: ${e.message || e}`)

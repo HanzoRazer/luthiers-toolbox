@@ -42,6 +42,15 @@ export type {
 export { useAsyncAction } from './useAsyncAction'
 export type { UseAsyncActionOptions, UseAsyncActionReturn } from './useAsyncAction'
 
+export { useFetchTransform } from './useFetchTransform'
+export type { UseFetchTransformOptions, UseFetchTransformReturn } from './useFetchTransform'
+
+export { useFormState } from './useFormState'
+export type { UseFormStateOptions, UseFormStateReturn } from './useFormState'
+
+export { useLocalStorageRef } from './useLocalStorageRef'
+export type { UseLocalStorageRefOptions } from './useLocalStorageRef'
+
 // Shared composable types
 export type {
   // Base interfaces

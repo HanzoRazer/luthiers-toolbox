@@ -1,5 +1,10 @@
+/**
+ * @deprecated Use `useKeyboardShortcuts` instead — this is a near-clone (~90% identical).
+ * This file is kept temporarily for backward compatibility but will be removed.
+ */
 import { onMounted, onBeforeUnmount, type Ref } from 'vue'
 import type { RiskLevel } from '@/sdk/rmos/runs'
+import { isTypingContext } from '@/utils/keyboard'
 
 export interface KeyboardActions {
   clearSelection: () => void
@@ -10,18 +15,6 @@ export interface KeyboardActions {
   bulkSetDecision: (decision: RiskLevel) => void
   bulkClearDecision: () => void
   exportGreenOnlyZips: () => void
-}
-
-/**
- * Check if user is currently typing in an input field
- */
-function isTypingContext(): boolean {
-  const el = document.activeElement as HTMLElement | null
-  if (!el) return false
-  const tag = (el.tagName || '').toLowerCase()
-  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
-  if ((el as any).isContentEditable) return true
-  return false
 }
 
 /**

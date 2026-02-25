@@ -5,6 +5,7 @@
 import { ref, type Ref } from 'vue'
 import { api } from '@/services/apiBase'
 import type { Move } from './useToolpathRenderer'
+import { serializeMovesToSegments, buildRunLogBody } from './runLogHelpers'
 
 // Live learn clamps (safety)
 const LL_MIN = 0.8 // -20%
@@ -78,33 +79,19 @@ export function useLiveLearning(): LiveLearningState {
     }
 
     try {
-      const segs = moves.map((m, i) => ({
-        idx: i,
-        code: m.code,
-        x: m.x,
-        y: m.y,
-        len_mm: m._len_mm || 0,
-        limit: m.meta?.limit || null,
-        slowdown: m.meta?.slowdown ?? null,
-        trochoid: !!m.meta?.trochoid,
-        radius_mm: m.meta?.radius_mm ?? null,
-        feed_f: m.f ?? null,
-      }))
+      const segs = serializeMovesToSegments(moves)
 
-      const run = {
-        job_name: 'pocket',
-        machine_id: profileId || 'Mach4_Router_4x8',
-        material_id: materialId || 'maple_hard',
-        tool_d: toolD,
-        stepover: stepoverPct / 100,
+      const run = buildRunLogBody({
+        profileId,
+        materialId,
+        toolD,
+        stepoverPct,
         stepdown,
-        post_id: null,
-        feed_xy: feedXY || undefined,
-        rpm: undefined,
-        est_time_s: stats?.time_s_jerk ?? stats?.time_s_classic ?? null,
-        act_time_s: actualSeconds ?? null,
-        notes: null,
-      }
+        feedXY,
+        estTimeJerk: stats?.time_s_jerk,
+        estTimeClassic: stats?.time_s_classic,
+        actualSeconds,
+      })
 
       const r = await api('/api/cam/logs/write', {
         method: 'POST',

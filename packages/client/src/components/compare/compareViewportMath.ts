@@ -51,8 +51,8 @@ export function computeFitTransform(
 }
 
 /**
- * Convenience: "zoom to diff box" is just "fit this bbox".
- * This is here mostly for clarity / future tweaks.
+ * @deprecated Use `computeFitTransform` directly — this is a zero-logic alias.
+ * Kept temporarily for backwards compatibility.
  */
 export function computeZoomToBox(
   diffBox: BBox,
