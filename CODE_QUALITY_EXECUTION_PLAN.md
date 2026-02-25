@@ -14,7 +14,7 @@
 | **3 — Dead CSS** | **COMPLETED** | 57 dead selectors removed from ManufacturingCandidateList.module.css, dead template classes cleaned, CSS audit script added — 5 files changed, 0 regressions |
 | **4 — Memory/Safety** | **COMPLETED** | 12 files fixed: 11 timer leaks (setTimeout/setInterval) + 1 addEventListener leak. 0 type errors, 402 tests pass, 0 regressions |
 | **5 — TODO Triage** | **COMPLETED** | 16 TODOs audited → 2 stubs deleted, 3 stale comments removed, 1 dead function deleted, 6 aspirational kept, 4 actionable documented |
-| 6 — View Hooks | Not started | |
+| **6 — View Hooks** | **COMPLETED** | Consolidated download/CSV utilities: extended downloadBlob.ts with 4 new shared functions, eliminated 10 inline blob-download patterns + 5 csvEscape duplicates across 11 files. Net -94 LOC, 0 regressions |
 
 ---
 
@@ -348,19 +348,39 @@ These have clear implementation paths but are feature work, not quality debt:
 
 ---
 
-## Phase 6 — Structural Dedup in Views (Est. 4–5 hours)
+## Phase 6 — Structural Dedup in Views (Est. 4–5 hours) — COMPLETED
 
-### 6A. Extract view-level hooks (~80 duplicates in `views/`)
-**Action**: Audit view composables across:
-- `views/multi_run_comparison/composables/`
-- `views/rosette_compare/composables/`
-- `views/saw_lab_dashboard/composables/`
-- `views/rmos_run_viewer/composables/`
-- `views/cam/risk_timeline_relief/composables/`
-- `views/art/composables/`
-- `views/compare_lab/composables/`
+### 6A. Consolidate download/export utilities — COMPLETED
+**Analysis**: Vue decomposition analyzer scanned 59 view composables across 13 directories.
+Fingerprinting identified the highest-impact shared pattern: download/export utilities
+duplicated across 10+ sites.
 
-Extract shared patterns (data fetching, error display, navigation guards) into `composables/` at the root level.
+**What was done**:
+- Extended `utils/downloadBlob.ts` with `downloadTextFile`, `downloadCsvFile`, `csvEscape`, `filenameTimestamp`
+- Eliminated 10 inline blob-download implementations across 8 files
+- Consolidated 5 duplicate `csvEscape` implementations → 1 canonical version
+- Removed 2 duplicate `filenameTimestamp` helpers
+- Removed dead `csvEscape` export from `riskFormatters.ts`
+
+**Files changed (11)**:
+- `utils/downloadBlob.ts` — extended with 4 new shared functions
+- `views/art/risk-dashboard/useRiskExports.ts` — removed local downloadBlob + buildFilenameTimestamp
+- `views/art/risk-dashboard/riskFormatters.ts` — removed dead csvEscape export
+- `views/art/composables/useRiskExport.ts` — removed local csvEscape, downloadBlob, buildTimestamp
+- `views/cam/risk_timeline_relief/composables/useRiskTimelineActions.ts` — removed local csvEscape + downloadCsv
+- `views/bridge_lab/composables/useGcodeExport.ts` — replaced inline blob pattern
+- `views/multi_run_comparison/composables/useMultiRunComparisonActions.ts` — replaced inline blob pattern
+- `views/rmos_run_viewer/composables/useRmosRunViewerActions.ts` — replaced 2 inline blob patterns
+- `views/compare_lab/composables/useCompareLabExport.ts` — replaced inner downloadFile
+- `views/cam/RiskPresetSideBySide.vue` — removed local csvEscape + downloadCsv
+- `components/art/rosette_compare_history/composables/useRosetteCompareActions.ts` — removed local csvEscape + inline blob
+
+**Also identified (deferred — product decision needed)**:
+- `useRiskFilters.ts` exists in 2 locations (risk-dashboard/ and composables/) serving V1 vs V2 views
+- `useRiskBuckets.ts` exists in 2 locations serving V1 vs V2 views
+- These are competing refactors, not accidental duplicates — consolidation requires V1/V2 decision
+
+**Result**: -94 LOC net, 0 type errors, 402 tests pass, commit `3c08a212`
 
 ---
 
