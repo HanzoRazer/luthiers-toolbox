@@ -9,6 +9,7 @@
  */
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { SUCCESS_TOAST_MS, ERROR_TOAST_MS } from '@/constants/timing'
 import VariantReviewPanel from './components/VariantReviewPanel.vue'
 import AssetQuickOpsPanel from './components/AssetQuickOpsPanel.vue'
 import { getProviders, listRecentRuns } from './api/visionApi'
@@ -40,12 +41,12 @@ function resolveAssetUrl(url: string | undefined): string {
 // Toast helpers
 function _toastOk(msg: string) {
   success.value = msg
-  window.setTimeout(() => (success.value = null), 1600)
+  window.setTimeout(() => (success.value = null), SUCCESS_TOAST_MS)
 }
 
 function _toastErr(msg: string) {
   error.value = msg
-  window.setTimeout(() => (error.value = null), 2200)
+  window.setTimeout(() => (error.value = null), ERROR_TOAST_MS)
 }
 
 // Gallery state

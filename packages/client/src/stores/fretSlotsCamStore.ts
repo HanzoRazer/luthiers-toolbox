@@ -13,6 +13,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { api } from '@/services/apiBase';
+import { useAsyncAction } from '@/composables/useAsyncAction';
 import type {
   FretSlotsPreviewRequest,
   FretSlotsPreviewResponse,
@@ -44,12 +45,10 @@ export const useFretSlotsCamStore = defineStore("fretSlotsCam", () => {
   const error = ref<string | null>(null);
 
   // Actions
-  async function fetchPreview(req: FretSlotsPreviewRequest): Promise<void> {
-    loading.value = true;
-    error.value = null;
-    lastRequest.value = req;
+  const { execute: fetchPreview } = useAsyncAction(
+    async (req: FretSlotsPreviewRequest) => {
+      lastRequest.value = req;
 
-    try {
       const res = await api("/api/cam/fret_slots/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,15 +63,17 @@ export const useFretSlotsCamStore = defineStore("fretSlotsCam", () => {
       const data = (await res.json()) as FretSlotsPreviewResponse;
       slots.value = data.slots ?? [];
       messages.value = data.messages ?? [];
-    } catch (err: any) {
-      console.error("Failed to fetch fret-slots preview:", err);
-      error.value = err?.message ?? String(err);
-      slots.value = [];
-      messages.value = [];
-    } finally {
-      loading.value = false;
-    }
-  }
+      return data;
+    },
+    {
+      refs: { loading, error },
+      onError: () => {
+        slots.value = [];
+        messages.value = [];
+        return undefined; // use default message
+      },
+    },
+  );
 
   function reset(): void {
     loading.value = false;

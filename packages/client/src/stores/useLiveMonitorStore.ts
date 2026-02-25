@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import type { LiveMonitorEvent } from '@/models/live_monitor'
 import type { DrilldownResponse } from '@/models/live_monitor_drilldown'
 import { api } from '@/services/apiBase';
+import { useAsyncAction } from '@/composables/useAsyncAction'
 
 export const useLiveMonitorStore = defineStore('liveMonitor', () => {
   // Event stream state
@@ -22,8 +23,20 @@ export const useLiveMonitorStore = defineStore('liveMonitor', () => {
 
   // Drill-down state
   const activeDrilldown = ref<DrilldownResponse | null>(null)
-  const drilldownLoading = ref(false)
-  const drilldownError = ref<string | null>(null)
+
+  const {
+    loading: drilldownLoading,
+    error: drilldownError,
+    execute: loadDrilldown,
+  } = useAsyncAction(
+    async (jobId: string) => {
+      const res = await api(`/api/rmos/live-monitor/${jobId}/drilldown`)
+      if (!res.ok) throw new Error(`Drilldown failed: ${res.status}`)
+      const data = (await res.json()) as DrilldownResponse
+      activeDrilldown.value = data
+      return data
+    },
+  )
 
   // Actions
   function addEvent(event: LiveMonitorEvent) {
@@ -43,22 +56,6 @@ export const useLiveMonitorStore = defineStore('liveMonitor', () => {
       pattern: 0,
       material: 0,
       metrics: 0
-    }
-  }
-
-  async function loadDrilldown(jobId: string) {
-    drilldownLoading.value = true
-    drilldownError.value = null
-
-    try {
-      const res = await api(`/api/rmos/live-monitor/${jobId}/drilldown`)
-      if (!res.ok) throw new Error(`Drilldown failed: ${res.status}`)
-      const data = (await res.json()) as DrilldownResponse
-      activeDrilldown.value = data
-    } catch (e: any) {
-      drilldownError.value = String(e.message || e)
-    } finally {
-      drilldownLoading.value = false
     }
   }
 

@@ -2,6 +2,7 @@
  * Analytics Utility for Luthier's Tool Box
  * Integrates Google Analytics 4 and PostHog for user tracking
  */
+import { PERF_TRACK_DELAY_MS } from '@/constants/timing'
 
 // ============================================================================
 // PostHog Integration (DISABLED - Development Mode)
@@ -417,7 +418,7 @@ export function trackPerformance() {
 if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     // Wait for all metrics to be collected
-    setTimeout(trackPerformance, 1000)
+    setTimeout(trackPerformance, PERF_TRACK_DELAY_MS)
   })
 }
 

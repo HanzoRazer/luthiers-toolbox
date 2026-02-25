@@ -6,6 +6,7 @@
  */
 
 import { ref, computed, type Ref } from "vue";
+import { BULK_PROGRESS_DISMISS_MS } from '@/constants/timing';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Types
@@ -171,7 +172,7 @@ export function useBulkDecision(options: UseBulkDecisionOptions) {
       showToast(msg, record.failed_count ? "err" : "ok");
     } finally {
       bulkApplying.value = false;
-      window.setTimeout(() => (bulkProgress.value = null), 900);
+      window.setTimeout(() => (bulkProgress.value = null), BULK_PROGRESS_DISMISS_MS);
     }
   }
 
@@ -242,7 +243,7 @@ export function useBulkDecision(options: UseBulkDecisionOptions) {
       showToast(msg, record.failed_count ? "err" : "ok");
     } finally {
       bulkApplying.value = false;
-      window.setTimeout(() => (bulkProgress.value = null), 900);
+      window.setTimeout(() => (bulkProgress.value = null), BULK_PROGRESS_DISMISS_MS);
     }
   }
 

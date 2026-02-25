@@ -127,6 +127,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { SHAKE_DURATION_MS } from '@/constants/timing';
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useUiToastStore } from "@/stores/uiToastStore";
 import PatternLibraryPanel from "./PatternLibraryPanel.vue";
@@ -168,12 +169,12 @@ function triggerShake(which: "undo" | "redo") {
   if (which === "undo") {
     shakeUndo.value = false; // restart animation
     requestAnimationFrame(() => (shakeUndo.value = true));
-    window.setTimeout(() => (shakeUndo.value = false), 260);
+    window.setTimeout(() => (shakeUndo.value = false), SHAKE_DURATION_MS);
     undoBtnRef.value?.focus?.();
   } else {
     shakeRedo.value = false;
     requestAnimationFrame(() => (shakeRedo.value = true));
-    window.setTimeout(() => (shakeRedo.value = false), 260);
+    window.setTimeout(() => (shakeRedo.value = false), SHAKE_DURATION_MS);
     redoBtnRef.value?.focus?.();
   }
 }
@@ -328,7 +329,7 @@ watch(
   () => store.jumpSeverity,
   () => {
     hudPulse.value = true;
-    window.setTimeout(() => (hudPulse.value = false), 260);
+    window.setTimeout(() => (hudPulse.value = false), SHAKE_DURATION_MS);
   }
 );
 

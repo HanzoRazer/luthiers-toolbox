@@ -39,6 +39,9 @@ export type {
   UseBulkDecisionOptions,
 } from './useBulkDecision'
 
+export { useAsyncAction } from './useAsyncAction'
+export type { UseAsyncActionOptions, UseAsyncActionReturn } from './useAsyncAction'
+
 // Shared composable types
 export type {
   // Base interfaces

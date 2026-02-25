@@ -192,6 +192,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, onMounted } from 'vue'
+import { SAVED_INDICATOR_MS } from '@/constants/timing'
 
 const machines = ref<any[]>([])
 const mid = ref('')
@@ -257,7 +258,7 @@ async function save() {
     if (!r.ok) throw new Error('HTTP ' + r.status)
     saved.value = true
     error.value = ''
-    setTimeout(() => { saved.value = false }, 3000)
+    setTimeout(() => { saved.value = false }, SAVED_INDICATOR_MS)
   } catch (e: any) {
     error.value = 'Save failed: ' + e.message
   }
@@ -278,7 +279,7 @@ async function importCsv(e: Event) {
     if (!r.ok) throw new Error('HTTP ' + r.status)
     await refresh()
     saved.value = true
-    setTimeout(() => { saved.value = false }, 3000)
+    setTimeout(() => { saved.value = false }, SAVED_INDICATOR_MS)
   } catch (e: any) {
     error.value = 'Import failed: ' + e.message
   }

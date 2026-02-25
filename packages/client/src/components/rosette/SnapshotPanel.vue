@@ -131,6 +131,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import { RING_FOCUS_DURATION_MS } from '@/constants/timing';
 import { useRosetteStore } from "@/stores/rosetteStore";
 import { useToastStore } from "@/stores/toastStore";
 import SnapshotComparePanel from "@/components/art/SnapshotComparePanel.vue";
@@ -229,7 +230,7 @@ watch(
     });
 
     el.classList.add("ring-focus");
-    setTimeout(() => el.classList.remove("ring-focus"), 1200);
+    setTimeout(() => el.classList.remove("ring-focus"), RING_FOCUS_DURATION_MS);
   }
 );
 </script>

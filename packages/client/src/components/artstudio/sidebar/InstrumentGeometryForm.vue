@@ -4,6 +4,15 @@
  * Extracted from ArtStudioSidebar.vue
  */
 import { ref } from 'vue'
+import {
+  FENDER_SCALE_LENGTH_MM,
+  GIBSON_SCALE_LENGTH_MM,
+  PRS_SCALE_LENGTH_MM,
+  CLASSICAL_SCALE_LENGTH_MM,
+  CLASSICAL_NUT_WIDTH_MM,
+  CLASSICAL_HEEL_WIDTH_MM,
+  MAX_FRETS,
+} from '@/constants/dimensions'
 
 interface EngineState {
   loading: { instrument: boolean }
@@ -30,16 +39,16 @@ const emit = defineEmits<{
 
 // Preset configurations
 const PRESETS: Record<string, { scale: number; nut: number; heel: number }> = {
-  'fender_25.5': { scale: 647.7, nut: 42.86, heel: 56 },
-  'gibson_24.75': { scale: 628.65, nut: 43.05, heel: 55 },
-  prs_25: { scale: 635, nut: 42.5, heel: 55.5 },
-  classical: { scale: 650, nut: 52, heel: 62 },
+  'fender_25.5': { scale: FENDER_SCALE_LENGTH_MM, nut: 42.86, heel: 56 },
+  'gibson_24.75': { scale: GIBSON_SCALE_LENGTH_MM, nut: 43.05, heel: 55 },
+  prs_25: { scale: PRS_SCALE_LENGTH_MM, nut: 42.5, heel: 55.5 },
+  classical: { scale: CLASSICAL_SCALE_LENGTH_MM, nut: CLASSICAL_NUT_WIDTH_MM, heel: CLASSICAL_HEEL_WIDTH_MM },
 }
 
 // Local state
 const selectedPreset = ref('')
 const scaleLengthMm = ref(648) // 25.5"
-const fretCount = ref(22)
+const fretCount = ref(MAX_FRETS)
 const nutWidthMm = ref(42)
 const heelWidthMm = ref(56)
 const baseRadiusMm = ref<number | undefined>(undefined)
