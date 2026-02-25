@@ -491,88 +491,22 @@ watch(() => props.runId, load)
 </template>
 
 <style scoped>
-.rmos-candidates {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.subtitle {
-  font-size: 12px;
-}
-
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.reqid {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-.error {
-  color: #b00020;
-}
-
-.muted {
-  opacity: 0.75;
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 12px;
-}
-
-.table {
-  display: grid;
-  gap: 6px;
-}
-
-.table.compact .mono {
-  font-size: 11px;
-}
-
-.btn {
-  padding: 6px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 10px;
-  background: white;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
+.rmos-candidates { display: flex; flex-direction: column; gap: 10px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.title { display: flex; flex-direction: column; gap: 4px; }
+.subtitle { font-size: 12px; }
+.meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.reqid { font-size: 12px; opacity: 0.75; }
+.error { color: #b00020; }
+.muted { opacity: 0.75; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 12px; }
+.table { display: grid; gap: 6px; }
+.table.compact .mono { font-size: 11px; }
+.btn { padding: 6px 10px; border: 1px solid rgba(0, 0, 0, 0.16); border-radius: 10px; background: white; cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #323232;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  z-index: 100;
-  font-size: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #323232; color: #fff; padding: 10px 20px; border-radius: 10px;
+  z-index: 100; font-size: 14px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 </style>
