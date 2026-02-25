@@ -37,7 +37,6 @@ from .store_ratelimit import (
 
 # Completeness guard — extracted WP-3
 from .store_completeness import (
-    REQUIRED_INVARIANTS,
     CompletenessViolation,
     check_completeness,
     create_blocked_artifact_for_violations,

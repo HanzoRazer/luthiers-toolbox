@@ -18,9 +18,6 @@ from app.saw_lab.batch_router_helpers import (
     find_setup_ops as _find_setup_ops,
     extract_base_context as _extract_base_context,
     apply_patch_to_context as _apply_patch_to_context_patch,
-    generate_toolpaths_for_ops,
-    compute_rollup_from_logs,
-    store_rollup_for_query as _store_rollup_for_query,
 )
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -40,13 +37,6 @@ from app.saw_lab.batch_router_schemas import (
     BatchPlanResponse,
     BatchApproveRequest,
     BatchApproveResponse,
-    BatchPlanChooseRequest,
-    BatchPlanChooseResponse,
-    BatchToolpathsFromDecisionRequest,
-    BatchToolpathsFromDecisionResponse,
-    BatchToolpathsRequest,
-    BatchOpResult,
-    BatchToolpathsResponse,
     JobLogMetrics,
     JobLogRequest,
     LearningEvent,
@@ -270,12 +260,8 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 
 
 # ---------------------------------------------------------------------------
-# WP-3: Toolpath generation endpoints extracted to batch_router_toolpaths.py
+# WP-3: Toolpath generation endpoints - REMOVED (batch_router_toolpaths.py deleted)
 # ---------------------------------------------------------------------------
-from app.saw_lab.batch_router_toolpaths import router as _toolpaths_router  # noqa: E402
-from app.saw_lab.batch_router_toolpaths import (  # noqa: E402  # re-export for test consumers
-    choose_batch_plan as choose_batch_plan,
-)
-
-router.include_router(_toolpaths_router)
+# Note: batch_router_toolpaths.py was deleted as dormant code.
+# If choose_batch_plan functionality is needed, restore from git history.
 

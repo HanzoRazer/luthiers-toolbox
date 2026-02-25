@@ -14,7 +14,7 @@ MM-6 Integration:
 - Job events now include materials[], worst_fragility_score, fragility_band, lane_hint
 - Enables real-time visibility into material risk as jobs run
 """
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import Dict, List, Set, Any
 import json
 import asyncio

@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 
 from .schemas import ViewerPackV1, InterpretationResult, SpectrumDisplayData
-from .viewer_pack_loader import load_viewer_pack, viewer_pack_from_dict
+from .viewer_pack_loader import load_viewer_pack
 from .spectrum_service import SpectrumService
 from .modal_visualizer import ModalVisualizerService
 from .design_advisor import DesignAdvisorService

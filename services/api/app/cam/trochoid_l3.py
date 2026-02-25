@@ -184,7 +184,7 @@ def insert_trochoids(
     moves: List[Dict[str, Any]],
     trochoid_radius: float,
     trochoid_pitch: float,
-    curvature_slowdown_threshold: float,
+    curvature_slowdown_threshold: float,  # noqa: ARG001 — reserved for API compat
     max_trochoids_per_segment: int = 64,
 ) -> List[Dict[str, Any]]:
     """
