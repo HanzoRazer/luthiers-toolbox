@@ -166,13 +166,15 @@ class SQLiteStoreBase(ABC, Generic[T]):
             patterns = store.get_all(limit=10, offset=10)
         """
         query = f"SELECT * FROM {self.table_name} ORDER BY created_at DESC"
+        params: tuple = ()
         
         if limit:
-            query += f" LIMIT {limit} OFFSET {offset}"
+            query += " LIMIT ? OFFSET ?"
+            params = (int(limit), int(offset))
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, params)
             rows = cursor.fetchall()
         
         return [self._row_to_dict(row) for row in rows]
@@ -282,6 +284,8 @@ class SQLiteStoreBase(ABC, Generic[T]):
         
         return result[0] if result else 0
     
+    _ALLOWED_SEARCH_OPERATORS = frozenset({"LIKE", "=", ">", ">=", "<", "<=", "!=", "IS", "IS NOT"})
+
     def search(self, field: str, value: str, operator: str = "LIKE") -> List[Dict[str, Any]]:
         """
         Search records by field value.
@@ -301,7 +305,13 @@ class SQLiteStoreBase(ABC, Generic[T]):
             # Exact match
             results = store.search("status", "active", "=")
         """
-        query = f"SELECT * FROM {self.table_name} WHERE {field} {operator} ?"
+        # Validate field name: alphanumeric/underscore only (prevent SQL injection)
+        if not field.replace("_", "").isalnum():
+            raise ValueError(f"Invalid field name: {field!r}")
+        op_upper = operator.strip().upper()
+        if op_upper not in self._ALLOWED_SEARCH_OPERATORS:
+            raise ValueError(f"Invalid search operator: {operator!r}")
+        query = f"SELECT * FROM {self.table_name} WHERE {field} {op_upper} ?"
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()

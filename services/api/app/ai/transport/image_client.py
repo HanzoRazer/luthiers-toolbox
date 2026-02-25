@@ -442,7 +442,7 @@ class StubImageClient(ImageClient):
             0xAE, 0x42, 0x60, 0x82,  # CRC
         ])
 
-        prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
+        prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()[:8]
         request_hash = self._compute_request_hash(prompt, "stub", size)
 
         return ImageResponse(

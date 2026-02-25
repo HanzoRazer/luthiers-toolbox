@@ -7,8 +7,14 @@ Environment variables for CLI invocation.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
+
+
+def _default_workdir() -> Path:
+    """Platform-safe default working directory for AI integrator temp files."""
+    return Path(tempfile.gettempdir()) / "rmos-ai"
 
 
 @dataclass(frozen=True)
@@ -21,8 +27,8 @@ class AiIntegratorConfig:
     # Timeout for CLI invocation in seconds
     timeout_sec: int = 60
 
-    # Working directory for temp files
-    workdir: Path = Path("/tmp/rmos-ai")
+    # Working directory for temp files (platform-safe default)
+    workdir: Path = field(default_factory=_default_workdir)
 
     # Maximum concurrent jobs (for future rate limiting)
     max_concurrent_jobs: int = 2
@@ -33,7 +39,7 @@ class AiIntegratorConfig:
         return cls(
             bin_path=os.getenv("AI_INTEGRATOR_BIN", "ai-integrator"),
             timeout_sec=int(os.getenv("AI_INTEGRATOR_TIMEOUT_SEC", "60")),
-            workdir=Path(os.getenv("AI_INTEGRATOR_WORKDIR", "/tmp/rmos-ai")),
+            workdir=Path(os.getenv("AI_INTEGRATOR_WORKDIR", str(_default_workdir()))),
             max_concurrent_jobs=int(os.getenv("AI_INTEGRATOR_MAX_CONCURRENT", "2")),
         )
 
