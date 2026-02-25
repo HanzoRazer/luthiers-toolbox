@@ -1,7 +1,7 @@
 # Code Quality Execution Plan
 **Created**: 2026-02-25 | **Source**: `CODE_QUALITY_HANDOFF.md`  
 **Scope**: `packages/client/src/` | **Total Issues**: 4,783 (1,469 warning, 3,314 info)  
-**Last Updated**: 2026-02-25
+**Last Updated**: 2026-02-26
 
 ---
 
@@ -10,7 +10,7 @@
 | Phase | Status | Notes |
 |-------|--------|-------|
 | **1 — Quick Wins** | **COMPLETED** | useAsyncAction, constants, eval fix — 24 files changed, 14 new tests, 0 regressions |
-| 2 — Duplicate Extraction | Not started | |
+| **2 — Duplicate Extraction** | **COMPLETED** | useFetchTransform, useFormState, useLocalStorageRef, runLogHelpers, domain consolidation — 17 files changed, 30 new tests, 0 regressions |
 | 3 — Dead CSS | Not started | |
 | 4 — Memory/Safety | Not started | |
 | 5 — TODO Triage | Not started | |
@@ -167,7 +167,7 @@ function parseFraction(value: string): number {
 
 ---
 
-## Phase 2 — Duplicate Code Extraction (Est. 6–8 hours)
+## Phase 2 — Duplicate Code Extraction (Est. 6–8 hours) — COMPLETED
 
 ### 2A. Extract `composables/useFetchTransform.ts`
 **Impact**: Eliminates 40+ fetch-then-transform patterns.
@@ -219,6 +219,26 @@ export function useFormState<T extends Record<string, unknown>>(
 **Directory**: `components/rmos/composables/` (14 files, ~50 duplicates)
 
 **Action**: Merge overlapping selection/filter/keyboard patterns. `useCandidateSelection`, `useCandidateFilters`, `useCandidateKeyboard`, and `useCandidateHelpers` likely share significant selection-state logic.
+
+### Phase 2 Completion Log
+
+**Commit**: `244bd54d` | **Date**: 2026-02-26 | **Branch**: `main`
+
+| Sub-task | Deliverable | Impact |
+|----------|-------------|--------|
+| **2A** | `composables/useFetchTransform.ts` + 16 tests | Generic fetch+transform+loading/error composable with `immediate`, `onSuccess`/`onError`, external refs |
+| **2B** | `composables/useFormState.ts` + 14 tests | Generic reactive form state with `form`/`errors`/`touched`/`isDirty`/`reset`/`setField` |
+| **2C** | `composables/useLocalStorageRef.ts` | Replaces 12+ localStorage read/write/watch blocks across 5 adaptive files |
+| **2C** | `adaptive/composables/runLogHelpers.ts` | Extracts `serializeMovesToSegments()` + `buildRunLogBody()` — shared by useLiveLearning & useRunLogging |
+| **2C** | Refactored `useLiveLearning.ts` & `useRunLogging.ts` | Both now use shared helpers instead of duplicated inline code |
+| **2D** | Deprecated `computeZoomToBox` in `compareViewportMath.ts` | Zero-logic alias for `computeFitTransform` — marked `@deprecated` |
+| **2E** | Refactored `useClipboardExport.ts` | Table-driven copy actions eliminate 9x session-guard duplication; uses shared `downloadBlob` util; `WorkflowOverrides` derived via `Pick<>` from `WorkflowOverridesState` |
+| **2F** | Refactored `useClipboardToast.ts` | Now composes `useToast()` internally — removes 20 lines of duplicated timer logic |
+| **2F** | Created `utils/keyboard.ts` | Shared `isTypingContext()` extracted from `useCandidateKeyboard` + `useKeyboardShortcuts` |
+| **2F** | Deprecated `useLegacyBulkDecision.ts` | ~95% clone of `useUndoStack` — marked `@deprecated` |
+| **2F** | Deprecated `useCandidateKeyboard.ts` | ~90% clone of `useKeyboardShortcuts` — marked `@deprecated` |
+
+**Validation**: 0 type errors (`vue-tsc --noEmit` clean), 402 tests pass (30 new), 0 failures.
 
 ---
 
