@@ -1,5 +1,5 @@
 <template>
-  <div class="calculator-grid basic-grid">
+  <div class="basic-grid">
     <button class="btn btn-clear" @click="$emit('clear')">C</button>
     <button class="btn btn-operator" @click="$emit('backspace')">⌫</button>
     <button class="btn btn-operator" @click="$emit('operator', '%')">%</button>
