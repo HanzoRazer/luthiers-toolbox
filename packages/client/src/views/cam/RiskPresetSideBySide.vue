@@ -103,6 +103,7 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 import { ref, computed, onMounted } from "vue";
+import { csvEscape, downloadCsvFile } from '@/utils/downloadBlob';
 import CamRiskJobList from "@/components/cam/CamRiskJobList.vue";
 import CamPresetEvolutionTrend from "@/components/cam/CamPresetEvolutionTrend.vue";
 import CamRiskPresetTrend from "@/components/cam/CamRiskPresetTrend.vue";
@@ -251,24 +252,6 @@ const summaryA = computed(() => summarize(jobsA.value));
 const summaryB = computed(() => summarize(jobsB.value));
 
 // CSV Export
-function csvEscape(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  const s = String(value).replace(/"/g, '""');
-  return /[",\n]/.test(s) ? `"${s}"` : s;
-}
-
-function downloadCsv(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 function buildRows(label: string, list: RiskJob[]): string[] {
   const rows: string[] = [];
   for (const job of list) {
@@ -337,7 +320,7 @@ async function exportCsv(which: "A" | "B" | "Both") {
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `preset_compare_${presetA.value}_vs_${presetB.value}_${pipeLabel}_${dateRange}_${ts}.csv`;
 
-    downloadCsv(csv, filename);
+    downloadCsvFile(csv, filename);
   } catch (err) {
     console.error("Preset comparison CSV export failed:", err);
     alert("CSV export failed. See console for details.");

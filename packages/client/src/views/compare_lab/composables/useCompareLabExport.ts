@@ -2,6 +2,7 @@
  * CompareLab export composable.
  */
 import type { Ref, ComputedRef } from 'vue'
+import { downloadTextFile } from '@/utils/downloadBlob'
 import type { DiffResult, ExportFormat } from './compareLabTypes'
 import { STORAGE_KEYS } from './compareLabTypes'
 
@@ -33,13 +34,7 @@ export function useCompareLabExport(
    * Download a file with given content.
    */
   function downloadFile(content: string, filename: string, mimeType: string): void {
-    const blob = new Blob([content], { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadTextFile(content, filename, mimeType)
   }
 
   /**

@@ -3,24 +3,13 @@
  */
 import axios from 'axios'
 import type { Ref, ComputedRef } from 'vue'
+import { csvEscape, downloadCsvFile } from '@/utils/downloadBlob'
 import type { CompareHistoryEntry } from './rosetteCompareTypes'
 
 export interface RosetteCompareActionsReturn {
   refresh: () => Promise<void>
   exportCsv: () => void
   formatTime: (ts: string) => string
-}
-
-/**
- * Escape value for CSV.
- */
-function csvEscape(val: unknown): string {
-  if (val === null || val === undefined) return ''
-  const s = String(val)
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`
-  }
-  return s
 }
 
 export function useRosetteCompareActions(
@@ -83,8 +72,6 @@ export function useRosetteCompareActions(
     )
 
     const csvContent = [headers.join(','), ...rows].join('\r\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
 
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     const nameParts = [
@@ -95,13 +82,7 @@ export function useRosetteCompareActions(
     ]
     const filename = nameParts.join('_') + '.csv'
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    downloadCsvFile(csvContent, filename)
   }
 
   /**

@@ -3,6 +3,7 @@
  */
 import { ref, type Ref } from 'vue'
 import { api } from '@/services/apiBase'
+import { downloadTextFile } from '@/utils/downloadBlob'
 import { FALLBACK_POSTS, type PostProcessor, type AdaptiveParams } from './bridgeLabTypes'
 
 // ============================================================================
@@ -77,14 +78,8 @@ export function useGcodeExport(
       exportedGcode.value = gcode
 
       // Download file
-      const blob = new Blob([gcode], { type: 'text/plain' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
       const filename = `bridge_${selectedPostId.value.toLowerCase()}_${Date.now()}.nc`
-      a.href = url
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(url)
+      downloadTextFile(gcode, filename)
 
       exportedFilename.value = filename
       currentStage.value = 4

@@ -3,36 +3,13 @@
  */
 import { onMounted, type Ref, type ComputedRef } from 'vue'
 import { api } from '@/services/apiBase'
+import { csvEscape, downloadCsvFile } from '@/utils/downloadBlob'
 import type { RiskJob, PresetFilter } from './riskTimelineTypes'
 
 export interface RiskTimelineActionsReturn {
   fetchJobs: () => Promise<void>
   reload: () => void
   exportCompareCsv: () => Promise<void>
-}
-
-/**
- * Escape value for CSV.
- */
-function csvEscape(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  const s = String(value).replace(/"/g, '""')
-  return /[",\n]/.test(s) ? `"${s}"` : s
-}
-
-/**
- * Download CSV content as file.
- */
-function downloadCsv(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
 }
 
 /**
@@ -170,7 +147,7 @@ export function useRiskTimelineActions(
       const ts = new Date().toISOString().replace(/[:.]/g, '-')
       const filename = `relief_risk_compare_${presetLabel}_${pipeLabel}_${ts}.csv`
 
-      downloadCsv(csv, filename)
+      downloadCsvFile(csv, filename)
     } catch (err) {
       console.error('Compare CSV export failed:', err)
       alert('Compare CSV export failed. See console for details.')
