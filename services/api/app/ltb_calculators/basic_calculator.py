@@ -1,11 +1,54 @@
 """Basic Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
+import ast
+import operator
 from dataclasses import dataclass, field
 from typing import Optional, Callable
 from enum import Enum
 import math
 import re
+
+
+# ---------------------------------------------------------------------------
+# Safe expression evaluator (replaces eval)
+# ---------------------------------------------------------------------------
+
+_SAFE_BIN_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Mod: operator.mod,
+    ast.Pow: operator.pow,
+}
+
+_SAFE_UNARY_OPS = {
+    ast.UAdd: operator.pos,
+    ast.USub: operator.neg,
+}
+
+
+def _safe_eval_basic(expr: str) -> float:
+    """Evaluate a basic arithmetic expression safely using AST walking.
+
+    Supports: numbers, +, -, *, /, %, **, parentheses.
+    Raises ValueError on unsupported syntax.
+    """
+    tree = ast.parse(expr.strip(), mode="eval")
+    return _eval_node(tree.body)
+
+
+def _eval_node(node: ast.AST) -> float:
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.BinOp) and type(node.op) in _SAFE_BIN_OPS:
+        left = _eval_node(node.left)
+        right = _eval_node(node.right)
+        return _SAFE_BIN_OPS[type(node.op)](left, right)
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _SAFE_UNARY_OPS:
+        return _SAFE_UNARY_OPS[type(node.op)](_eval_node(node.operand))
+    raise ValueError(f"Unsupported expression: {ast.dump(node)}")
 
 
 class Operation(Enum):
@@ -312,9 +355,8 @@ class LTBBasicCalculator:
             return 0.0
         
         try:
-            # Use Python's eval with restricted globals for safety
-            # Only allow math operations, no builtins
-            result = eval(expr, {"__builtins__": {}}, {})
+            # Safe AST-based evaluation — no eval()
+            result = _safe_eval_basic(expr)
             
             if isinstance(result, (int, float)):
                 self.state.display = self._format_result(float(result))

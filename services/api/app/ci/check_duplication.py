@@ -71,7 +71,7 @@ def _extract_blocks(code: str, min_lines: int = 6) -> List[Tuple[int, int, str]]
                 if end - start >= min_lines:
                     # Hash the normalized AST structure
                     node_str = _normalize_ast(node)
-                    block_hash = hashlib.md5(node_str.encode()).hexdigest()[:12]
+                    block_hash = hashlib.sha256(node_str.encode()).hexdigest()[:12]
                     blocks.append((start, end, block_hash))
     except SyntaxError:
         pass

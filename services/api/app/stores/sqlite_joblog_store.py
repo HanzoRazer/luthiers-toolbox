@@ -103,13 +103,15 @@ class SQLiteJobLogStore(SQLiteStoreBase):
             WHERE status = ?
             ORDER BY created_at DESC
         """
+        params: tuple = (status,)
         
         if limit:
-            query += f" LIMIT {limit}"
+            query += " LIMIT ?"
+            params = (status, int(limit))
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (status,))
+            cursor.execute(query, params)
             rows = cursor.fetchall()
         
         return [self._row_to_dict(row) for row in rows]
@@ -136,13 +138,15 @@ class SQLiteJobLogStore(SQLiteStoreBase):
             WHERE job_type = ?
             ORDER BY created_at DESC
         """
+        params: tuple = (job_type,)
         
         if limit:
-            query += f" LIMIT {limit}"
+            query += " LIMIT ?"
+            params = (job_type, int(limit))
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (job_type,))
+            cursor.execute(query, params)
             rows = cursor.fetchall()
         
         return [self._row_to_dict(row) for row in rows]

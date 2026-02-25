@@ -25,7 +25,7 @@ def _path_key(path: Dict[str, Any]) -> str:
     for p in pts:
         if isinstance(p, (list, tuple)) and len(p) >= 2:
             flat.append(f"{p[0]:.6f},{p[1]:.6f}")
-    digest = hashlib.sha1("|".join(flat).encode("utf-8")).hexdigest()
+    digest = hashlib.sha256("|".join(flat).encode("utf-8")).hexdigest()
     return digest
 
 

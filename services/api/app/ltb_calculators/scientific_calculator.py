@@ -1,10 +1,44 @@
 """Scientific Calculator - Luthier's ToolBox"""
 
 from __future__ import annotations
+import ast
 import math
-from typing import Optional
+import operator
+from typing import Optional, Callable, Dict, Union
 from .fraction_calculator import LTBFractionCalculator
-from .basic_calculator import CalculatorState, Operation
+from .basic_calculator import CalculatorState, Operation, _SAFE_BIN_OPS, _SAFE_UNARY_OPS
+
+
+# ---------------------------------------------------------------------------
+# Safe scientific expression evaluator (replaces eval)
+# ---------------------------------------------------------------------------
+
+def _eval_scientific(node: ast.AST, ns: Dict[str, Union[Callable, float]]) -> float:
+    """Walk an AST node tree, resolving names/calls against *ns* only."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.BinOp) and type(node.op) in _SAFE_BIN_OPS:
+        return _SAFE_BIN_OPS[type(node.op)](
+            _eval_scientific(node.left, ns),
+            _eval_scientific(node.right, ns),
+        )
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _SAFE_UNARY_OPS:
+        return _SAFE_UNARY_OPS[type(node.op)](_eval_scientific(node.operand, ns))
+    if isinstance(node, ast.Name) and node.id in ns:
+        val = ns[node.id]
+        if callable(val):
+            raise ValueError(f"'{node.id}' is a function — use {node.id}(...)")
+        return float(val)
+    if isinstance(node, ast.Call):
+        if isinstance(node.func, ast.Name) and node.func.id in ns:
+            func = ns[node.func.id]
+            if not callable(func):
+                raise ValueError(f"'{node.func.id}' is not callable")
+            if len(node.args) != 1 or node.keywords:
+                raise ValueError(f"'{node.func.id}' takes exactly 1 argument")
+            arg = _eval_scientific(node.args[0], ns)
+            return float(func(arg))
+    raise ValueError(f"Unsupported expression: {ast.dump(node)}")
 
 
 class LTBScientificCalculator(LTBFractionCalculator):
@@ -315,7 +349,7 @@ class LTBScientificCalculator(LTBFractionCalculator):
         expr = expr.replace('π', 'pi')
         
         # Safe math namespace
-        safe_dict = {
+        safe_dict: Dict[str, Union[Callable, float]] = {
             'sin': lambda x: math.sin(self._to_radians(x) if self.angle_mode == 'deg' else x),
             'cos': lambda x: math.cos(self._to_radians(x) if self.angle_mode == 'deg' else x),
             'tan': lambda x: math.tan(self._to_radians(x) if self.angle_mode == 'deg' else x),
@@ -334,7 +368,9 @@ class LTBScientificCalculator(LTBFractionCalculator):
         }
         
         try:
-            result = eval(expr, {"__builtins__": {}}, safe_dict)
+            # Safe AST-based evaluation — no eval()
+            tree = ast.parse(expr.strip(), mode="eval")
+            result = _eval_scientific(tree.body, safe_dict)
             
             if isinstance(result, (int, float)):
                 self.state.display = self._format_result(float(result))
