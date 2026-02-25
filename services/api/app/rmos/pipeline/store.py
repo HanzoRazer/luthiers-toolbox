@@ -29,7 +29,6 @@ from .schemas import (
     PlanArtifact,
     DecisionArtifact,
     ExecutionArtifact,
-    OpToolpathsArtifact,
     IndexMeta,
     ArtifactQuery,
     ArtifactQueryResult,
@@ -50,7 +49,6 @@ try:
     from ..run_artifacts.store import (
         read_run_artifact,
         query_run_artifacts,
-        list_run_artifacts,
     )
     _HAS_QUERY = True
 except ImportError:

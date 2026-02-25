@@ -20,7 +20,7 @@ import json
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
-from sqlalchemy import select, and_, or_, desc, asc, func
+from sqlalchemy import select, and_, desc, asc, func
 from sqlalchemy.orm import Session
 
 from ..schemas import RunArtifact, AdvisoryInputRef

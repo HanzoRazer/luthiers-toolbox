@@ -27,9 +27,7 @@ from app.vision.schemas import (
     VisionPromptPreviewRequest,
     VisionPromptPreviewResponse,
     VisionVocabularyResponse,
-    SegmentRequest,
     SegmentResponse,
-    PhotoToGcodeRequest,
     PhotoToGcodeResponse,
 )
 from app.vision.segmentation_service import (

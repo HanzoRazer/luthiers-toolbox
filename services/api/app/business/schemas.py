@@ -4,7 +4,6 @@ Business Suite Schemas — Types for financial planning.
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from enum import Enum
-from decimal import Decimal
 
 
 # ============================================================================

@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 
 from .schemas import (
     PricingStrategy,
-    PricingModel,
     CompetitorPrice,
     COGSBreakdown,
 )
