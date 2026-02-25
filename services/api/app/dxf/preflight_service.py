@@ -30,24 +30,73 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
     if not EZDXF_AVAILABLE:
         raise HTTPException(status_code=500, detail="ezdxf library not available")
     
-    try:
-        doc = ezdxf.readfile(str(dxf_path))
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
-        raise HTTPException(status_code=400, detail=f"Failed to read DXF: {str(e)}")
+    doc = _read_dxf(dxf_path)
     
     issues: List[ValidationIssue] = []
-    geometry = GeometrySummary()
-    layers_info: List[LayerInfo] = []
     
-    # Get file stats
+    # File metadata
     filename = dxf_path.name
     filesize = dxf_path.stat().st_size
     dxf_version = doc.dxfversion
     
-    # Check 1: DXF Version (R12 recommended for CAM)
-    if dxf_version != "AC1009":  # R12
+    # Run validation checks
+    units = _check_version_and_units(doc, dxf_version, issues)
+    geometry, layer_entities = _analyze_geometry(doc, issues)
+    layers_info = _analyze_layers(doc, layer_entities)
+    _check_layer_issues(layers_info, issues)
+    
+    if geometry.total == 0:
+        issues.append(ValidationIssue(
+            severity="error",
+            category="geometry",
+            message="No geometry found in DXF file",
+            details="File may be empty or geometry is on frozen/off layers",
+            fix_available=False
+        ))
+    
+    # Generate summary
+    errors = sum(1 for i in issues if i.severity == "error")
+    warnings = sum(1 for i in issues if i.severity == "warning")
+    cam_ready = errors == 0 and warnings <= 2
+    recommendations = _build_recommendations(
+        dxf_version, units, issues, geometry, errors, warnings, cam_ready,
+    )
+    
+    return ValidationReport(
+        filename=filename,
+        filesize_bytes=filesize,
+        dxf_version=dxf_version,
+        units=units,
+        issues=issues,
+        errors_count=errors,
+        warnings_count=warnings,
+        info_count=sum(1 for i in issues if i.severity == "info"),
+        geometry=geometry,
+        layers=layers_info,
+        cam_ready=cam_ready,
+        recommended_actions=recommendations
+    )
+
+
+# ---------------------------------------------------------------------------
+# Sub-validators
+# ---------------------------------------------------------------------------
+
+def _read_dxf(dxf_path: Path) -> "Drawing":
+    """Read and parse a DXF file, raising HTTPException on failure."""
+    try:
+        return ezdxf.readfile(str(dxf_path))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read DXF: {str(e)}")
+
+
+def _check_version_and_units(
+    doc: "Drawing", dxf_version: str, issues: List[ValidationIssue],
+) -> str:
+    """Check DXF version and units, appending issues. Returns units string."""
+    if dxf_version != "AC1009":
         issues.append(ValidationIssue(
             severity="warning",
             category="format",
@@ -57,7 +106,6 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
             fix_description="Convert to R12 format (may lose some features)"
         ))
     
-    # Check 2: Units detection
     try:
         units_code = doc.header.get('$INSUNITS', 0)
         units_map = {0: "unknown", 1: "inch", 4: "mm", 5: "cm"}
@@ -72,71 +120,28 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
                 fix_available=True,
                 fix_description="Set units to mm (most common for lutherie)"
             ))
-    except (KeyError, AttributeError):  # WP-1: narrowed — header access fallback
+    except (KeyError, AttributeError):
         units = "unknown"
     
-    # Check 3: Analyze geometry and layers
+    return units
+
+
+def _analyze_geometry(
+    doc: "Drawing", issues: List[ValidationIssue],
+) -> tuple:
+    """Walk modelspace entities, count types, flag open paths and unsupported types.
+    
+    Returns (GeometrySummary, layer_entities dict).
+    """
     msp = doc.modelspace()
+    geometry = GeometrySummary()
     layer_entities: Dict[str, List[str]] = {}
     
     for entity in msp:
         entity_type = entity.dxftype()
         layer_name = entity.dxf.layer
         
-        # Count by type
-        if entity_type == "LINE":
-            geometry.lines += 1
-        elif entity_type == "ARC":
-            geometry.arcs += 1
-        elif entity_type == "CIRCLE":
-            geometry.circles += 1
-        elif entity_type == "POLYLINE":
-            geometry.polylines += 1
-            # Check if closed
-            if hasattr(entity.dxf, 'flags') and not (entity.dxf.flags & 1):
-                issues.append(ValidationIssue(
-                    severity="warning",
-                    category="geometry",
-                    message=f"Open POLYLINE found on layer {layer_name}",
-                    details="CNC toolpaths require closed paths for pocketing/profiling",
-                    fix_available=True,
-                    fix_description="Close polyline by connecting start/end points"
-                ))
-        elif entity_type == "LWPOLYLINE":
-            geometry.lwpolylines += 1
-            if not entity.closed:
-                issues.append(ValidationIssue(
-                    severity="warning",
-                    category="geometry",
-                    message=f"Open LWPOLYLINE found on layer {layer_name}",
-                    details="CNC toolpaths require closed paths for pocketing/profiling",
-                    fix_available=True,
-                    fix_description="Close lwpolyline by setting closed flag"
-                ))
-        elif entity_type == "SPLINE":
-            geometry.splines += 1
-            issues.append(ValidationIssue(
-                severity="info",
-                category="geometry",
-                message=f"SPLINE found on layer {layer_name}",
-                details="Some CAM software require splines to be exploded to line/arc segments",
-                fix_available=True,
-                fix_description="Explode spline to polyline approximation"
-            ))
-        elif entity_type == "ELLIPSE":
-            geometry.ellipses += 1
-            issues.append(ValidationIssue(
-                severity="warning",
-                category="geometry",
-                message=f"ELLIPSE found on layer {layer_name}",
-                details="Not all CAM software support ellipses directly",
-                fix_available=True,
-                fix_description="Convert ellipse to polyline approximation"
-            ))
-        elif entity_type == "TEXT" or entity_type == "MTEXT":
-            geometry.text += 1
-        else:
-            geometry.other += 1
+        _count_entity(entity_type, layer_name, geometry, issues, entity)
         
         # Track layer entities
         if layer_name not in layer_entities:
@@ -148,7 +153,78 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
                       geometry.polylines + geometry.lwpolylines + geometry.splines +
                       geometry.ellipses + geometry.text + geometry.other)
     
-    # Check 4: Layer analysis
+    return geometry, layer_entities
+
+
+def _count_entity(
+    entity_type: str,
+    layer_name: str,
+    geometry: GeometrySummary,
+    issues: List[ValidationIssue],
+    entity,
+) -> None:
+    """Classify a single entity, increment counters, append issues for open/unsupported types."""
+    if entity_type == "LINE":
+        geometry.lines += 1
+    elif entity_type == "ARC":
+        geometry.arcs += 1
+    elif entity_type == "CIRCLE":
+        geometry.circles += 1
+    elif entity_type == "POLYLINE":
+        geometry.polylines += 1
+        if hasattr(entity.dxf, 'flags') and not (entity.dxf.flags & 1):
+            issues.append(ValidationIssue(
+                severity="warning",
+                category="geometry",
+                message=f"Open POLYLINE found on layer {layer_name}",
+                details="CNC toolpaths require closed paths for pocketing/profiling",
+                fix_available=True,
+                fix_description="Close polyline by connecting start/end points"
+            ))
+    elif entity_type == "LWPOLYLINE":
+        geometry.lwpolylines += 1
+        if not entity.closed:
+            issues.append(ValidationIssue(
+                severity="warning",
+                category="geometry",
+                message=f"Open LWPOLYLINE found on layer {layer_name}",
+                details="CNC toolpaths require closed paths for pocketing/profiling",
+                fix_available=True,
+                fix_description="Close lwpolyline by setting closed flag"
+            ))
+    elif entity_type == "SPLINE":
+        geometry.splines += 1
+        issues.append(ValidationIssue(
+            severity="info",
+            category="geometry",
+            message=f"SPLINE found on layer {layer_name}",
+            details="Some CAM software require splines to be exploded to line/arc segments",
+            fix_available=True,
+            fix_description="Explode spline to polyline approximation"
+        ))
+    elif entity_type == "ELLIPSE":
+        geometry.ellipses += 1
+        issues.append(ValidationIssue(
+            severity="warning",
+            category="geometry",
+            message=f"ELLIPSE found on layer {layer_name}",
+            details="Not all CAM software support ellipses directly",
+            fix_available=True,
+            fix_description="Convert ellipse to polyline approximation"
+        ))
+    elif entity_type in ("TEXT", "MTEXT"):
+        geometry.text += 1
+    else:
+        geometry.other += 1
+
+
+def _analyze_layers(
+    doc: "Drawing", layer_entities: Dict[str, List[str]],
+) -> List[LayerInfo]:
+    """Build LayerInfo list from document layers."""
+    msp = doc.modelspace()
+    layers_info: List[LayerInfo] = []
+    
     for layer in doc.layers:
         layer_name = layer.dxf.name
         entity_count = sum(1 for e in msp if e.dxf.layer == layer_name)
@@ -162,7 +238,13 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
             locked=layer.is_locked()
         ))
     
-    # Check 5: Empty layers
+    return layers_info
+
+
+def _check_layer_issues(
+    layers_info: List[LayerInfo], issues: List[ValidationIssue],
+) -> None:
+    """Check for empty layers and frozen layers with geometry."""
     empty_layers = [l for l in layers_info if l.entity_count == 0]
     if empty_layers:
         issues.append(ValidationIssue(
@@ -174,7 +256,6 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
             fix_description="Remove empty layers to clean up file"
         ))
     
-    # Check 6: Frozen/locked layers with geometry
     frozen_with_geom = [l for l in layers_info if l.frozen and l.entity_count > 0]
     if frozen_with_geom:
         issues.append(ValidationIssue(
@@ -184,23 +265,19 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
             details="Frozen layers may not be visible or selectable in CAM software",
             fix_available=False
         ))
-    
-    # Check 7: No geometry at all
-    if geometry.total == 0:
-        issues.append(ValidationIssue(
-            severity="error",
-            category="geometry",
-            message="No geometry found in DXF file",
-            details="File may be empty or geometry is on frozen/off layers",
-            fix_available=False
-        ))
-    
-    # Generate recommendations
-    recommendations = []
-    errors = sum(1 for i in issues if i.severity == "error")
-    warnings = sum(1 for i in issues if i.severity == "warning")
-    
-    cam_ready = errors == 0 and warnings <= 2
+
+
+def _build_recommendations(
+    dxf_version: str,
+    units: str,
+    issues: List[ValidationIssue],
+    geometry: GeometrySummary,
+    errors: int,
+    warnings: int,
+    cam_ready: bool,
+) -> List[str]:
+    """Build the list of human-readable recommendations."""
+    recommendations: List[str] = []
     
     if not cam_ready:
         if errors > 0:
@@ -224,20 +301,7 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
     if not recommendations:
         recommendations.append("✅ DXF is CAM-ready! No major issues found.")
     
-    return ValidationReport(
-        filename=filename,
-        filesize_bytes=filesize,
-        dxf_version=dxf_version,
-        units=units,
-        issues=issues,
-        errors_count=errors,
-        warnings_count=warnings,
-        info_count=sum(1 for i in issues if i.severity == "info"),
-        geometry=geometry,
-        layers=layers_info,
-        cam_ready=cam_ready,
-        recommended_actions=recommendations
-    )
+    return recommendations
 
 
 # ============================================================================
