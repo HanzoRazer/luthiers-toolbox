@@ -1,7 +1,7 @@
 /**
  * SnapshotComparePanel navigation composable.
  */
-import { watch, type Ref, type ComputedRef } from 'vue'
+import { watch, onBeforeUnmount, type Ref, type ComputedRef } from 'vue'
 import { useToastStore } from '@/stores/toastStore'
 import type { AnySnap, SnapshotItem } from './snapshotCompareTypes'
 
@@ -259,6 +259,14 @@ export function useSnapshotCompareNavigation(
   // Live compare triggers on id change
   watch(() => [leftId.value, rightId.value], () => {
     scheduleLiveCompare()
+  })
+
+  // Cleanup: cancel any pending live-compare debounce timer
+  onBeforeUnmount(() => {
+    if (liveTimer) {
+      window.clearTimeout(liveTimer)
+      liveTimer = null
+    }
   })
 
   return {

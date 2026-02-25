@@ -1,7 +1,7 @@
 /**
  * Composable for RMOS log polling and soft refresh.
  */
-import { ref, type Ref, type ComputedRef } from 'vue'
+import { ref, onBeforeUnmount, type Ref, type ComputedRef } from 'vue'
 import { fetchRecentLogs, checkForNewerRuns, getBackoffMs, type RunLogEntry } from '@/api/rmosLogsClient'
 import type { FilterParams } from './useLogFilters'
 
@@ -128,6 +128,9 @@ export function useLogPolling(options: UseLogPollingOptions): LogPollingState {
   function resetNewRunsCount(): void {
     newRunsCount.value = 0
   }
+
+  // Cleanup: stop polling interval on component teardown
+  onBeforeUnmount(() => stopPolling())
 
   return {
     newRunsCount,

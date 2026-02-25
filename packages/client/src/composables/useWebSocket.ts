@@ -25,6 +25,7 @@ export function useWebSocket() {
   const maxReconnectAttempts = 5
   const reconnectDelay = ref(1000) // Start at 1s, exponential backoff
   const eventHandlers = ref<EventHandler[]>([])
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   const connect = async (baseUrl?: string) => {
     const wsUrl = baseUrl || `ws://${window.location.hostname}:8000/ws/monitor`
@@ -67,7 +68,8 @@ export function useWebSocket() {
           reconnectAttempts.value++
           console.log(`[N10.0] Reconnecting in ${reconnectDelay.value}ms (attempt ${reconnectAttempts.value}/${maxReconnectAttempts})`)
           
-          setTimeout(() => {
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null
             connect(baseUrl)
           }, reconnectDelay.value)
           
@@ -83,6 +85,11 @@ export function useWebSocket() {
   }
   
   const disconnect = () => {
+    // Cancel any pending reconnect timer
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
     if (ws.value) {
       ws.value.close()
       ws.value = null

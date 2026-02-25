@@ -5,7 +5,7 @@
  * Thin wrapper that calls backend API for all estimation logic.
  * UI-only component - no business logic duplication.
  */
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 import { DEBOUNCE_DELAY_MS } from '@/constants/timing';
 import { businessEstimator } from "@/sdk/endpoints";
 import type {
@@ -105,6 +105,8 @@ watch(
   },
   { deep: true }
 );
+
+onBeforeUnmount(() => clearTimeout(debounceTimer));
 
 // Initial load
 loadFactors();

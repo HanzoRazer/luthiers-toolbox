@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useCurveHistory, useCurveOperations } from "./composables";
 import {
   OffsetModePanel,
@@ -268,6 +268,10 @@ function onClick(evt: MouseEvent) {
 onMounted(() => {
   setup();
   window.addEventListener("resize", setup);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", setup);
 });
 </script>
 

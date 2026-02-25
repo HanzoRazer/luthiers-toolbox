@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { DEFAULT_TOAST_MS } from '@/constants/timing'
 const visible = ref(false)
 const msg = ref('')
-function show(m: string, timeout=DEFAULT_TOAST_MS){ msg.value = m; visible.value = true; window.setTimeout(()=>visible.value=false, timeout) }
+let hideTimer: number | null = null
+function show(m: string, timeout = DEFAULT_TOAST_MS) {
+  msg.value = m
+  visible.value = true
+  if (hideTimer) clearTimeout(hideTimer)
+  hideTimer = window.setTimeout(() => (visible.value = false), timeout)
+}
+onBeforeUnmount(() => { if (hideTimer) clearTimeout(hideTimer) })
 defineExpose({ show })
 </script>
 <template>

@@ -349,6 +349,12 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKeyDown);
 
+  // Bundle 32.4.8: Cleanup flash timer
+  if (flashTimer) {
+    window.clearTimeout(flashTimer);
+    flashTimer = null;
+  }
+
   // Bundle 32.4.15: Cleanup hint timer
   if (hintTimer) window.clearTimeout(hintTimer);
   hintTimer = null;
