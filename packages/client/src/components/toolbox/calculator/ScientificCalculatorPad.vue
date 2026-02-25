@@ -1,5 +1,5 @@
 <template>
-  <div class="calculator-grid scientific-grid">
+  <div class="scientific-grid">
     <!-- Mode toggles -->
     <div class="mode-toggles">
       <label class="toggle">
