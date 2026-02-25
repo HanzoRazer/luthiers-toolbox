@@ -473,14 +473,6 @@ export function validateParameters(params: Partial<NeckParameters>): ValidationR
 }
 
 /**
- * Export neck geometry as DXF (placeholder - needs ezdxf equivalent in TS)
- */
-export function exportNeckAsDXF(geometry: NeckGeometry, filename: string): void {
-  console.warn('DXF export not yet implemented in TypeScript. Use Python backend for export.');
-  // TODO: Implement DXF export or call Python backend API
-}
-
-/**
  * Export neck geometry as JSON for backend processing
  */
 export function exportNeckAsJSON(geometry: NeckGeometry): string {

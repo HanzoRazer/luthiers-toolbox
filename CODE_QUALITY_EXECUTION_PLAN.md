@@ -13,7 +13,7 @@
 | **2 — Duplicate Extraction** | **COMPLETED** | useFetchTransform, useFormState, useLocalStorageRef, runLogHelpers, domain consolidation — 17 files changed, 30 new tests, 0 regressions |
 | **3 — Dead CSS** | **COMPLETED** | 57 dead selectors removed from ManufacturingCandidateList.module.css, dead template classes cleaned, CSS audit script added — 5 files changed, 0 regressions |
 | **4 — Memory/Safety** | **COMPLETED** | 12 files fixed: 11 timer leaks (setTimeout/setInterval) + 1 addEventListener leak. 0 type errors, 402 tests pass, 0 regressions |
-| 5 — TODO Triage | Not started | |
+| **5 — TODO Triage** | **COMPLETED** | 16 TODOs audited → 2 stubs deleted, 3 stale comments removed, 1 dead function deleted, 6 aspirational kept, 4 actionable documented |
 | 6 — View Hooks | Not started | |
 
 ---
@@ -309,19 +309,42 @@ export function useFormState<T extends Record<string, unknown>>(
 
 ---
 
-## Phase 5 — TODO/FIXME Triage (Est. 2 hours)
+## Phase 5 — TODO/FIXME Triage (Est. 2 hours) — COMPLETED
 
-### 5A. Categorize all TODO/FIXME/HACK/XXX comments
-**Action**: Run `grep -rn "TODO\|FIXME\|HACK\|XXX" packages/client/src/` and classify each into:
-- **Actionable**: Has clear fix path → create issue
-- **Stale**: References removed features → delete comment
-- **Aspirational**: Nice-to-have → tag with priority and leave
+**Audit**: 16 TODOs found across `packages/client/src/`. Zero FIXME/HACK/XXX comments exist.
 
-### 5B. Delete stale TODOs
-Remove comments referencing completed work or removed features.
+### 5A. Classification Results
 
-### 5C. Convert high-priority FIXME/HACK/XXX to tracked issues
-Create GitHub issues for the ~80 FIXME/HACK/XXX items with appropriate labels.
+| # | File | Classification | Action Taken |
+|---|------|---------------|-------------|
+| 1 | `cnc_production/PresetManagerPanel.vue` | **STUB** | Deleted file + removed import/usage from `CamProductionView.vue` |
+| 2 | `components/art/ReliefRiskPresetPanel.vue` | **STUB** | Deleted file + removed import/usage from `ArtStudioRelief.vue` |
+| 3 | `components/cam/composables/useJobIntHistoryActions.ts:26` | ASPIRATIONAL | Left as-is (future UX: detail modal for history entries) |
+| 4 | `components/curvelab/composables/useCurveHistory.ts:46` | ACTIONABLE | Left — wire `exportDXF()` to backend `/api/geometry/export?fmt=dxf` |
+| 5 | `components/rmos/PromptLineageViewer.vue:6` | ASPIRATIONAL | Left as-is (future: dedicated provenance API) |
+| 6 | `components/rmos/PromptLineageViewer.vue:28` | ASPIRATIONAL | Left as-is (same as #5) |
+| 7 | `components/rmos/SvgPathDiffViewer.vue:23` | ASPIRATIONAL | Left as-is (future: path-level diff highlighting) |
+| 8 | `components/rosette/RosetteCanvas.vue:49` | **STALE** | Deleted dead SVG.js import comment + TODO |
+| 9 | `components/rosette/RosetteCanvas.vue:110` | **STALE** | Deleted stale "Initialize SVG.js" TODO comment |
+| 10 | `components/rosette/RosetteCanvas.vue:267` | ACTIONABLE | Left — draw preview line during mouse drag |
+| 11 | `components/toolbox/composables/useRosetteDesignerExport.ts:101` | ASPIRATIONAL | Left as-is (needs PDF library not in project) |
+| 12 | `sdk/endpoints/artPlacement.ts:4` | STUB (keep) | Left — actively imported by PlacementPreviewPanel, typed contract |
+| 13 | `utils/neck_generator.ts:480` | **STALE** | Deleted unused `exportNeckAsDXF()` function (never imported) |
+| 14 | `views/labs/CompareLab.vue:77` | ASPIRATIONAL | Left as-is (minor state restoration enhancement) |
+| 15 | `views/saw_lab_dashboard/composables/useSawRiskActions.ts:135` | ACTIONABLE | Left — wire override apply to backend learned-overrides API |
+| 16 | `views/PresetHubView.vue:200` | ACTIONABLE | Left — wire `router.push()` to Job Intelligence panel |
+
+### 5B. Stale Cleanup Summary
+- 2 stub files deleted (PresetManagerPanel.vue, ReliefRiskPresetPanel.vue)
+- 2 stale SVG.js comments removed (RosetteCanvas.vue)
+- 1 dead function deleted (`exportNeckAsDXF` — exported but never imported)
+
+### 5C. Remaining Actionable TODOs (4)
+These have clear implementation paths but are feature work, not quality debt:
+1. **CurveLab DXF export** — wire to existing backend geometry export API
+2. **RosetteCanvas preview line** — draw `<line>` element during mouse drag
+3. **Saw Risk override apply** — call learned-overrides API instead of `console.log`
+4. **PresetHub job navigation** — add `router.push()` to Job Intelligence view
 
 ---
 

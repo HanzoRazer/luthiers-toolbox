@@ -46,8 +46,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-// TODO: Uncomment after npm install @svgdotjs/svg.js
-// import { SVG, Svg } from '@svgdotjs/svg.js'
 
 interface RosetteSegment {
   id: string
@@ -107,8 +105,6 @@ watch(() => [props.soundholeDiameter, props.rosetteWidth, props.symmetryCount], 
 function initCanvas() {
   if (!canvasContainer.value) return
   
-  // TODO: Initialize SVG.js canvas after npm install
-  // For now, create a basic SVG element
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('width', '600')
   svg.setAttribute('height', '600')

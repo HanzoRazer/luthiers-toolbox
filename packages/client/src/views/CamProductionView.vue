@@ -33,7 +33,6 @@
           <div class="text-gray-500">
             Pipeline Lab temporarily disabled (file corrupted)
           </div>
-          <PresetManagerPanel />
           <CompareRunsPanel />
         </div>
         
@@ -60,7 +59,6 @@ import AdaptiveLabView from './AdaptiveLabView.vue'
 import ArtStudioUnified from './ArtStudioUnified.vue'
 import MachineListView from './MachineListView.vue'
 import PostListView from './PostListView.vue'
-import PresetManagerPanel from '@/cnc_production/PresetManagerPanel.vue'
 import CompareRunsPanel from '@/cnc_production/CompareRunsPanel.vue'
 
 const activeTool = ref('pipeline')
