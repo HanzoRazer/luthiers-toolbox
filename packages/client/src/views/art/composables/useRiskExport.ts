@@ -4,6 +4,7 @@
  */
 import axios from 'axios'
 import type { Bucket, BucketEntry } from './useRiskBuckets'
+import { csvEscape, downloadBlob, filenameTimestamp } from '@/utils/downloadBlob'
 
 export interface RiskExportState {
   exportCsv: (buckets: Bucket[], since: string, until: string) => void
@@ -13,32 +14,8 @@ export interface RiskExportState {
   downloadSnapshotJson: (since: string, until: string) => Promise<void>
 }
 
-function csvEscape(val: unknown): string {
-  if (val === null || val === undefined) return ''
-  const s = String(val)
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`
-  }
-  return s
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.setAttribute('download', filename)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
-
 function buildWindowPart(since: string, until: string): string {
   return (since ? `_from-${since}` : '') + (until ? `_to-${until}` : '')
-}
-
-function buildTimestamp(): string {
-  return new Date().toISOString().replace(/[:.]/g, '-')
 }
 
 export function useRiskExport(): RiskExportState {
@@ -55,7 +32,7 @@ export function useRiskExport(): RiskExportState {
 
     const csvContent = [headers.join(','), ...rows].join('\r\n')
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const filename = `crosslab_risk_aggregate${buildWindowPart(since, until)}_${buildTimestamp()}.csv`
+    const filename = `crosslab_risk_aggregate${buildWindowPart(since, until)}_${filenameTimestamp()}.csv`
     downloadBlob(blob, filename)
   }
 
@@ -125,7 +102,7 @@ export function useRiskExport(): RiskExportState {
       const jsonData = res.data
       const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' })
       const hintPart = jobFilter ? `_hint-${jobFilter}` : ''
-      const filename = `bucket_report_${bucket.lane}_${bucket.preset}${hintPart}${buildWindowPart(since, until)}_${buildTimestamp()}.json`
+      const filename = `bucket_report_${bucket.lane}_${bucket.preset}${hintPart}${buildWindowPart(since, until)}_${filenameTimestamp()}.json`
       downloadBlob(blob, filename)
     } catch (err) {
       console.error('Failed to download bucket JSON report', err)
@@ -145,7 +122,7 @@ export function useRiskExport(): RiskExportState {
 
       const jsonData = res.data
       const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' })
-      const filename = `risk_snapshot${buildWindowPart(since, until)}_${buildTimestamp()}.json`
+      const filename = `risk_snapshot${buildWindowPart(since, until)}_${filenameTimestamp()}.json`
       downloadBlob(blob, filename)
     } catch (err) {
       console.error('Failed to download global risk snapshot', err)

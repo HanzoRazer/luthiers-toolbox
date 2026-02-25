@@ -3,7 +3,7 @@
  */
 import { type Ref } from 'vue'
 import axios from 'axios'
-import { csvEscape } from './riskFormatters'
+import { csvEscape, downloadBlob, filenameTimestamp } from '@/utils/downloadBlob'
 import type { Bucket, BucketEntry } from '@/components/dashboard'
 
 // ============================================================================
@@ -26,25 +26,6 @@ export interface UseRiskExportsOptions {
   since: Ref<string>
   until: Ref<string>
   setError: (msg: string) => void
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.setAttribute('download', filename)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
-
-function buildFilenameTimestamp(): string {
-  return new Date().toISOString().replace(/[:.]/g, '-')
 }
 
 // ============================================================================
@@ -101,7 +82,7 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
     const csvContent = [headers.join(','), ...rows].join('\r\n')
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
 
-    const stamp = buildFilenameTimestamp()
+    const stamp = filenameTimestamp()
     const windowPart = buildWindowPart()
     const filename = `crosslab_risk_aggregate${windowPart}_${stamp}.csv`
 
@@ -177,7 +158,7 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
 
       const hintPart = jobFilter.value ? `_hint-${jobFilter.value}` : ''
       const windowPart = buildWindowPart()
-      const stamp = buildFilenameTimestamp()
+      const stamp = filenameTimestamp()
       const filename = `bucket_report_${b.lane}_${b.preset}${hintPart}${windowPart}_${stamp}.json`
 
       downloadBlob(blob, filename)
@@ -204,7 +185,7 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
       })
 
       const windowPart = buildWindowPart()
-      const stamp = buildFilenameTimestamp()
+      const stamp = filenameTimestamp()
       const filename = `risk_snapshot${windowPart}_${stamp}.json`
 
       downloadBlob(blob, filename)

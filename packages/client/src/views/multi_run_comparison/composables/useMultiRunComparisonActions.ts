@@ -2,6 +2,7 @@
  * MultiRunComparisonView actions composable.
  */
 import { computed, type Ref, type ComputedRef } from 'vue'
+import { downloadCsvFile } from '@/utils/downloadBlob'
 import type { Preset, ComparisonResult } from './multiRunComparisonTypes'
 
 // ============================================================================
@@ -73,13 +74,7 @@ export function useMultiRunComparisonActions(
 
     const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n')
 
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `multi-run-comparison-${Date.now()}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadCsvFile(csv, `multi-run-comparison-${Date.now()}.csv`)
   }
 
   return {

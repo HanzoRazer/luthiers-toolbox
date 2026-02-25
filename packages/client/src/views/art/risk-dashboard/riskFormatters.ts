@@ -43,17 +43,6 @@ export function formatRelativeMetaTime(ts?: string | null): string {
 // ============================================================================
 // CSV Utilities
 // ============================================================================
-
-export function csvEscape(val: unknown): string {
-  if (val === null || val === undefined) return ''
-  const s = String(val)
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`
-  }
-  return s
-}
-
-// ============================================================================
 // Risk Score
 // ============================================================================
 

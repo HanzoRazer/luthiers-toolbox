@@ -5,6 +5,7 @@ import type { Ref, ComputedRef } from 'vue'
 import type { Router } from 'vue-router'
 import { downloadRun, type RunArtifactDetail } from '@/api/rmosRuns'
 import { runs as rmosRuns } from '@/sdk/rmos'
+import { downloadBlob } from '@/utils/downloadBlob'
 import type { AssistantExplanation } from './rmosRunViewerTypes'
 
 // ============================================================================
@@ -128,18 +129,11 @@ export function useRmosRunViewerActions(
   async function downloadOperatorPack(): Promise<void> {
     if (!runId.value) return
     error.value = null
-    let url: string | null = null
     try {
       const { blob } = await rmosRuns.downloadOperatorPack(runId.value)
-      url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `operator_pack_${runId.value}.zip`
-      a.click()
+      downloadBlob(blob, `operator_pack_${runId.value}.zip`)
     } catch (e: any) {
       error.value = String(e?.message || e)
-    } finally {
-      if (url) URL.revokeObjectURL(url)
     }
   }
 
@@ -149,20 +143,12 @@ export function useRmosRunViewerActions(
   async function downloadAttachment(att: any): Promise<void> {
     if (!att?.sha256) return
     error.value = null
-    let url: string | null = null
     try {
       const { blob } = await rmosRuns.downloadAttachment(att.sha256)
-      url = URL.createObjectURL(blob)
-      const dl = document.createElement('a')
-      dl.href = url
-      // Prefer original filename if present, else sha-based
       const safeName = (att.filename || `${att.sha256}`).replace(/[^\w.\-]+/g, '_')
-      dl.download = safeName
-      dl.click()
+      downloadBlob(blob, safeName)
     } catch (e: any) {
       error.value = String(e?.message || e)
-    } finally {
-      if (url) URL.revokeObjectURL(url)
     }
   }
 
