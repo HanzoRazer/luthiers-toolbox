@@ -4,6 +4,7 @@
  */
 import { onMounted, onBeforeUnmount, type Ref } from 'vue'
 import type { RiskLevel } from '@/sdk/rmos/runs'
+import { isTypingContext } from '@/utils/keyboard'
 
 export interface KeyboardShortcutHandlers {
   clearSelection: () => void
@@ -19,15 +20,6 @@ export interface KeyboardShortcutHandlers {
 
 export interface KeyboardShortcutsState {
   hotkeyHelp: () => string
-}
-
-function isTypingContext(): boolean {
-  const el = document.activeElement as HTMLElement | null
-  if (!el) return false
-  const tag = (el.tagName || '').toLowerCase()
-  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
-  if ((el as HTMLElement & { isContentEditable?: boolean }).isContentEditable) return true
-  return false
 }
 
 export function useKeyboardShortcuts(

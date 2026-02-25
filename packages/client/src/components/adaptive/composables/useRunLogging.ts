@@ -6,6 +6,7 @@ import { computed, type Ref, type ComputedRef } from 'vue'
 import { api } from '@/services/apiBase'
 import type { Move } from './useToolpathRenderer'
 import type { PocketStats } from './usePocketPlanning'
+import { serializeMovesToSegments, buildRunLogBody } from './runLogHelpers'
 
 // ============================================================================
 // Types
@@ -71,33 +72,19 @@ export function useRunLogging(
     }
 
     try {
-      const segs = planOut.value.moves.map((m: any, i: number) => ({
-        idx: i,
-        code: m.code,
-        x: m.x,
-        y: m.y,
-        len_mm: m._len_mm || 0,
-        limit: m.meta?.limit || null,
-        slowdown: m.meta?.slowdown ?? null,
-        trochoid: !!m.meta?.trochoid,
-        radius_mm: m.meta?.radius_mm ?? null,
-        feed_f: m.f ?? null
-      }))
+      const segs = serializeMovesToSegments(planOut.value.moves)
 
-      const run = {
-        job_name: 'pocket',
-        machine_id: profileId.value || 'Mach4_Router_4x8',
-        material_id: deps.materialId.value || 'maple_hard',
-        tool_d: config.toolD.value,
-        stepover: config.stepoverPct.value / 100,
+      const run = buildRunLogBody({
+        profileId: profileId.value,
+        materialId: deps.materialId.value,
+        toolD: config.toolD.value,
+        stepoverPct: config.stepoverPct.value,
         stepdown: config.stepdown.value,
-        post_id: null,
-        feed_xy: config.feedXY.value || undefined,
-        rpm: undefined,
-        est_time_s: planOut.value.stats?.time_s_jerk ?? planOut.value.stats?.time_s_classic ?? null,
-        act_time_s: actualSeconds ?? null,
-        notes: null
-      }
+        feedXY: config.feedXY.value,
+        estTimeJerk: planOut.value.stats?.time_s_jerk,
+        estTimeClassic: planOut.value.stats?.time_s_classic,
+        actualSeconds,
+      })
 
       const r = await api('/api/cam/logs/write', {
         method: 'POST',

@@ -1,22 +1,11 @@
-import { ref, onBeforeUnmount } from 'vue'
+import { useToast } from './useToast'
 
 /**
- * Composable for clipboard operations and toast notifications
+ * Composable for clipboard operations and toast notifications.
+ * Composes useToast internally to avoid duplicating timer/cleanup logic.
  */
 export function useClipboardToast() {
-  const toast = ref<string | null>(null)
-  let toastTimer: number | null = null
-
-  /**
-   * Show a toast message for 2 seconds
-   */
-  function showToast(msg: string, _variant?: 'ok' | 'err') {
-    toast.value = msg
-    if (toastTimer) window.clearTimeout(toastTimer)
-    toastTimer = window.setTimeout(() => {
-      toast.value = null
-    }, 2000)
-  }
+  const { toast, showToast, clearToast } = useToast(2000)
 
   /**
    * Copy text to clipboard with toast feedback
@@ -42,19 +31,10 @@ export function useClipboardToast() {
     }
   }
 
-  /**
-   * Cleanup on unmount
-   */
-  function cleanup() {
-    if (toastTimer) window.clearTimeout(toastTimer)
-  }
-
-  onBeforeUnmount(cleanup)
-
   return {
     toast,
     showToast,
     copyText,
-    cleanup,
+    cleanup: clearToast,
   }
 }
