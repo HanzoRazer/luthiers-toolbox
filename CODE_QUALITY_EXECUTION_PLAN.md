@@ -1,7 +1,7 @@
 # Code Quality Execution Plan
 **Created**: 2026-02-25 | **Source**: `CODE_QUALITY_HANDOFF.md`  
 **Scope**: `packages/client/src/` | **Total Issues**: 4,783 (1,469 warning, 3,314 info)  
-**Last Updated**: 2026-02-26
+**Last Updated**: 2026-02-25
 
 ---
 
@@ -11,7 +11,7 @@
 |-------|--------|-------|
 | **1 — Quick Wins** | **COMPLETED** | useAsyncAction, constants, eval fix — 24 files changed, 14 new tests, 0 regressions |
 | **2 — Duplicate Extraction** | **COMPLETED** | useFetchTransform, useFormState, useLocalStorageRef, runLogHelpers, domain consolidation — 17 files changed, 30 new tests, 0 regressions |
-| 3 — Dead CSS | Not started | |
+| **3 — Dead CSS** | **COMPLETED** | 57 dead selectors removed from ManufacturingCandidateList.module.css, dead template classes cleaned, CSS audit script added — 5 files changed, 0 regressions |
 | 4 — Memory/Safety | Not started | |
 | 5 — TODO Triage | Not started | |
 | 6 — View Hooks | Not started | |
@@ -259,6 +259,21 @@ export function useFormState<T extends Record<string, unknown>>(
 
 ### 3E. Configure CSS purge in build pipeline
 **Action**: Add PurgeCSS or UnCSS to the Vite build config to catch dead CSS automatically going forward.
+
+### Phase 3 Completion Log (commit `ed293794`)
+
+| Sub-task | Deliverable | Notes |
+|----------|-------------|-------|
+| 3A | ScientificCalculator.vue | **Already clean** — 7 selectors, all used. Decomposition into sub-components was done correctly. |
+| 3B | PipelineLabView.vue | **Already clean** — No `<style>` section (uses Tailwind utilities). 0 dead selectors. |
+| 3C | BlueprintLab.vue | **Already clean** — 12 selectors, all used. 0 dead selectors. |
+| 3D | ManufacturingCandidateList.module.css | **57 dead selectors removed** (521→110 lines). CSS module only imported by parent; child components (CandidateRowItem, CandidateFiltersSection, BulkDecisionBar, etc.) define their own styles. Added `.tableCompact` stub with TODO for child re-implementation. |
+| 3D | BasicCalculatorPad.vue, ScientificCalculatorPad.vue | Removed dead `calculator-grid` template class (no matching CSS rule). |
+| 3E | `scripts/audit-dead-css.mjs` | CI-ready dead CSS detector — 577 files scanned, detects dead selectors in scoped styles + CSS Modules. Auto-detects Vue Transition classes, dynamic prefix patterns (`'risk-' + level`), and `/* dynamic */` suppression comments. |
+| 3E | `package.json` | Added `css:audit` and `css:audit:strict` (CI gate with `--fail-on-dead`) npm scripts. |
+| — | Validation | 0 type errors, 402 tests pass, 0 failures |
+
+**Audit baseline**: 814 potentially dead selectors across 62 files (includes false positives from dynamic class bindings). Future phases can use `npm run css:audit` to track progress.
 
 ---
 
