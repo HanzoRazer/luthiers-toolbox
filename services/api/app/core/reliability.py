@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Optional, Set, Type, TypeVar
+from typing import Any, Callable, Optional, Set, TypeVar
 
 logger = logging.getLogger(__name__)
 

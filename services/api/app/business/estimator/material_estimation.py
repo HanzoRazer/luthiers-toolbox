@@ -34,7 +34,6 @@ def estimate_materials(
     # Try to get BOM template if service provided
     if bom_service is not None:
         try:
-            from ..schemas import InstrumentType as BOMInstrumentType
             # Map to BOM instrument type
             bom_type_map = {
                 InstrumentType.ACOUSTIC_DREADNOUGHT: "acoustic_dreadnought",

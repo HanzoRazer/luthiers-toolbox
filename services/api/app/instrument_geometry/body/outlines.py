@@ -23,11 +23,9 @@ except ImportError:
 
 # Import J45 bulge data for arc-accurate toolpaths
 try:
-    from .j45_bulge import J45_BODY_OUTLINE, J45_BODY_OUTLINE_WITH_BULGE, J45_DIMENSIONS
+    from .j45_bulge import J45_BODY_OUTLINE
 except ImportError:
     J45_BODY_OUTLINE = None
-    J45_BODY_OUTLINE_WITH_BULGE = None
-    J45_DIMENSIONS = None
 
 
 # Body outline metadata (dimensions extracted from DXF sources)

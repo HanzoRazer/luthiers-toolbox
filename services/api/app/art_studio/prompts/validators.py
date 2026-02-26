@@ -13,10 +13,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-try:
-    import defusedxml.ElementTree as ET
-except ImportError:  # fallback for environments without defusedxml
-    from xml.etree import ElementTree as ET  # nosec B405
+import defusedxml.ElementTree as ET  # Safe XML parsing (required dep)
 
 logger = logging.getLogger(__name__)
 
