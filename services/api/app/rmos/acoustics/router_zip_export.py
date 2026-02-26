@@ -205,6 +205,91 @@ class ZipExportResponse(BaseModel):
     filename: str
 
 
+def _determine_wanted_shas(body: ZipExportRequest, att_by_sha: Dict[str, Any]) -> List[str]:
+    """Determine requested SHA list, de-duplicated and order-preserved."""
+    if body.sha256s:
+        raw = [(s or "").lower().strip() for s in body.sha256s]
+    else:
+        raw = list(att_by_sha.keys())
+    seen: set[str] = set()
+    out: List[str] = []
+    for s in raw:
+        if s and s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out
+
+
+def _resolve_kind_filters(body: ZipExportRequest):
+    """Normalize kind include/exclude/prefix filters from request body."""
+    include_kinds = _normalize_kind_list(body.include_kinds)
+    exclude_kinds = _normalize_kind_list(body.exclude_kinds)
+    kind_prefixes = _normalize_prefix_list(body.kind_prefixes)
+    if include_kinds is not None:
+        kind_prefixes = None
+    return include_kinds, exclude_kinds, kind_prefixes
+
+
+def _resolve_blobs(
+    wanted: List[str], att_by_sha: Dict[str, Any],
+    include_kinds, exclude_kinds, kind_prefixes,
+    root: Path, max_input: int,
+) -> List[tuple]:
+    """Resolve eligible blobs for zip. Returns list of (sha, member, blob, sz, mime, kind)."""
+    blobs: List[tuple] = []
+    total_in = 0
+    for sha in wanted:
+        if not _SHA_RE.match(sha):
+            continue
+        a = att_by_sha.get(sha)
+        if a is None:
+            continue
+        kind = getattr(a, "kind", None)
+        if not _kind_allowed(kind, include_kinds, exclude_kinds, kind_prefixes):
+            continue
+        relpath = getattr(a, "relpath", "") or ""
+        ext = _sanitize_ext_from_relpath(relpath)
+        if not ext:
+            continue
+        try:
+            blob = _ensure_blob_exists(root, sha, ext)
+        except FileNotFoundError:
+            continue
+        try:
+            sz = int(blob.stat().st_size)
+        except OSError:
+            continue
+        total_in += sz
+        if total_in > max_input:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Total input exceeds limit ({max_input} bytes). "
+                       f"Set RMOS_ACOUSTICS_ZIP_MAX_TOTAL_INPUT_BYTES to adjust.",
+            )
+        member = _safe_zip_member_name(relpath, sha)
+        mime = getattr(a, "mime", "") or ""
+        blobs.append((sha, member, blob, sz, mime, kind))
+    return blobs
+
+
+def _write_zip(blobs: List[tuple], run_id: str, include_manifest: bool, tmp_zip_path: Path) -> tuple[int, list]:
+    """Write blobs into a zip file. Returns (included_count, manifest_entries)."""
+    included = 0
+    manifest_entries: list = []
+    with zipfile.ZipFile(str(tmp_zip_path), mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for sha, member, blob, sz, mime, kind in blobs:
+            zf.write(str(blob), arcname=member)
+            included += 1
+            manifest_entries.append({
+                "sha256": sha, "member": member, "bytes": sz,
+                "mime": mime or None, "kind": kind or None,
+            })
+        if include_manifest:
+            man = {"manifest_version": 1, "run_id": run_id, "included": included, "files": manifest_entries}
+            zf.writestr("manifest.json", json.dumps(man, indent=2, sort_keys=True))
+    return included, manifest_entries
+
+
 @router.post("/runs/{run_id}/attachments/zip", response_model=ZipExportResponse)
 def export_run_attachments_zip(
     request: Request,
@@ -225,16 +310,7 @@ def export_run_attachments_zip(
     if not att_by_sha:
         raise HTTPException(status_code=404, detail="Run has no attachments")
 
-    # Determine requested set
-    wanted: List[str]
-    if body.sha256s:
-        wanted = [(s or "").lower().strip() for s in body.sha256s]
-    else:
-        wanted = list(att_by_sha.keys())
-
-    # De-dupe while preserving order
-    seen = set()
-    wanted = [s for s in wanted if s and (s not in seen and not seen.add(s))]
+    wanted = _determine_wanted_shas(body, att_by_sha)
 
     max_items = _max_zip_items()
     if len(wanted) > max_items:
@@ -244,97 +320,24 @@ def export_run_attachments_zip(
                    f"Set RMOS_ACOUSTICS_ZIP_MAX_ITEMS to adjust.",
         )
 
-    # Normalize kind filters
-    include_kinds = _normalize_kind_list(body.include_kinds)
-    exclude_kinds = _normalize_kind_list(body.exclude_kinds)
-    kind_prefixes = _normalize_prefix_list(body.kind_prefixes)
-
-    # If both include_kinds and kind_prefixes are provided, include_kinds wins (more explicit).
-    if include_kinds is not None:
-        kind_prefixes = None
-
+    include_kinds, exclude_kinds, kind_prefixes = _resolve_kind_filters(body)
     root = _attachments_root()
     max_input = _max_zip_total_input_bytes()
     max_output = _max_zip_output_bytes()
 
-    # Resolve blobs and enforce total input cap
-    blobs: List[tuple[str, str, Path, int, str, Optional[str]]] = []
-    total_in = 0
-
-    for sha in wanted:
-        if not _SHA_RE.match(sha):
-            continue
-        a = att_by_sha.get(sha)
-        if a is None:
-            continue
-
-        kind = getattr(a, "kind", None)
-        if not _kind_allowed(kind, include_kinds, exclude_kinds, kind_prefixes):
-            continue
-
-        relpath = getattr(a, "relpath", "") or ""
-        ext = _sanitize_ext_from_relpath(relpath)
-        if not ext:
-            continue
-
-        try:
-            blob = _ensure_blob_exists(root, sha, ext)
-        except FileNotFoundError:
-            continue
-
-        try:
-            sz = int(blob.stat().st_size)
-        except OSError:  # WP-1: narrowed from except Exception
-            continue
-
-        total_in += sz
-        if total_in > max_input:
-            raise HTTPException(
-                status_code=413,
-                detail=f"Total input exceeds limit ({max_input} bytes). "
-                       f"Set RMOS_ACOUSTICS_ZIP_MAX_TOTAL_INPUT_BYTES to adjust.",
-            )
-
-        member = _safe_zip_member_name(relpath, sha)
-        mime = getattr(a, "mime", "") or ""
-        blobs.append((sha, member, blob, sz, mime, kind))
-
+    blobs = _resolve_blobs(wanted, att_by_sha, include_kinds, exclude_kinds, kind_prefixes, root, max_input)
     if not blobs:
         raise HTTPException(status_code=404, detail="No eligible attachments found to zip")
 
-    # Create zip in a temp file under attachments root (or system temp if desired)
+    # Create zip in a temp file
     tmp_dir = root / ".tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     with tempfile.NamedTemporaryFile(prefix="acoustics_zip_", suffix=".zip", dir=str(tmp_dir), delete=False) as tf:
         tmp_zip_path = Path(tf.name)
 
-    included = 0
-    manifest_entries = []
-
     try:
-        with zipfile.ZipFile(str(tmp_zip_path), mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-            # Add files
-            for sha, member, blob, sz, mime, kind in blobs:
-                zf.write(str(blob), arcname=member)
-                included += 1
-                manifest_entries.append({
-                    "sha256": sha,
-                    "member": member,
-                    "bytes": sz,
-                    "mime": mime or None,
-                    "kind": kind or None,
-                })
-
-            # Optional manifest inside zip
-            if body.include_manifest:
-                man = {
-                    "manifest_version": 1,
-                    "run_id": run_id,
-                    "included": included,
-                    "files": manifest_entries,
-                }
-                zf.writestr("manifest.json", json.dumps(man, indent=2, sort_keys=True))
+        included, manifest_entries = _write_zip(blobs, run_id, body.include_manifest, tmp_zip_path)
 
         # Enforce output size cap
         out_size = int(tmp_zip_path.stat().st_size)
@@ -345,42 +348,29 @@ def export_run_attachments_zip(
                        f"Set RMOS_ACOUSTICS_ZIP_MAX_OUTPUT_BYTES to adjust.",
             )
 
-        # Store ZIP in content-addressed store
         zip_sha, final_path, final_bytes = _store_blob_content_addressed(root, tmp_zip_path, ".zip")
 
-        # Sign URL for download
         token = sign_attachment(
-            sha256=zip_sha,
-            ext=".zip",
-            download=1,
-            ttl_seconds=body.ttl_seconds,
-            client_ip=_client_ip(request),
+            sha256=zip_sha, ext=".zip", download=1,
+            ttl_seconds=body.ttl_seconds, client_ip=_client_ip(request),
         )
         qs = urlencode(token.to_query())
         signed_url = f"/api/rmos/acoustics/attachments/{zip_sha}/signed-download?{qs}"
 
         filename = (body.zip_name or "acoustics_attachments.zip").strip()
-        # avoid weird header injection; keep it simple
         if len(filename) > 128:
             filename = "acoustics_attachments.zip"
         filename = filename.replace("\n", "").replace("\r", "")
 
         return ZipExportResponse(
-            run_id=run_id,
-            requested=len(wanted),
-            included=included,
-            zip_sha256=zip_sha,
-            bytes=int(final_bytes),
-            mime="application/zip",
-            signed_url=signed_url,
-            signed_exp=token.exp,
-            filename=filename,
+            run_id=run_id, requested=len(wanted), included=included,
+            zip_sha256=zip_sha, bytes=int(final_bytes), mime="application/zip",
+            signed_url=signed_url, signed_exp=token.exp, filename=filename,
         )
 
     finally:
-        # tmp_zip_path is either moved into store or still exists; clean up if present
         try:
             if tmp_zip_path.exists():
                 tmp_zip_path.unlink()
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError:
             pass

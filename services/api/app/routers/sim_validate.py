@@ -9,7 +9,7 @@ import csv
 import io
 import math
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ..geometry.arc_utils import (
@@ -122,116 +122,166 @@ def within_envelope(pt: Dict[str, float], env: Dict[str, Tuple[float, float]]) -
     return True
 
 
+def _resolve_next_pos(ms: ModalState, params: Dict[str, float]) -> Tuple[float, float, float]:
+    """Compute next X/Y/Z from modal state and parsed params."""
+    x, y, z = ms.pos['X'], ms.pos['Y'], ms.pos['Z']
+    nx = (x + as_units(ms, params['X'])) if ('X' in params and not ms.abs) else as_units(ms, params['X']) if 'X' in params else x
+    ny = (y + as_units(ms, params['Y'])) if ('Y' in params and not ms.abs) else as_units(ms, params['Y']) if 'Y' in params else y
+    nz = (z + as_units(ms, params['Z'])) if ('Z' in params and not ms.abs) else as_units(ms, params['Z']) if 'Z' in params else z
+    return nx, ny, nz
+
+
+def _sim_rapid(idx: int, x: float, y: float, z: float,
+               nx: float, ny: float, nz: float,
+               clearance_z: float, rapid: float, accel: float,
+               moves: list) -> Tuple[float, float, float, float, float, float]:
+    """Handle G0 rapid: retract → XY move → plunge. Returns (x, y, z, dxy, dz, dt)."""
+    dxy = dz = dt = 0.0
+    if z < clearance_z:
+        d = abs(clearance_z - z)
+        t = trapezoidal_time(d, rapid, accel)
+        dz += d; dt += t
+        moves.append({'line': idx, 'code': 'G0', 'x': x, 'y': y, 'z': clearance_z, 'feed': rapid, 't': t})
+        z = clearance_z
+    if nx != x or ny != y:
+        d = math.hypot(nx - x, ny - y)
+        t = trapezoidal_time(d, rapid, accel)
+        dxy += d; dt += t
+        moves.append({'line': idx, 'code': 'G0', 'x': nx, 'y': ny, 'z': z, 'feed': rapid, 't': t})
+        x, y = nx, ny
+    if nz != z:
+        d = abs(nz - z)
+        t = trapezoidal_time(d, rapid, accel)
+        dz += d; dt += t
+        moves.append({'line': idx, 'code': 'G0', 'x': x, 'y': y, 'z': nz, 'feed': rapid, 't': t})
+        z = nz
+    return x, y, z, dxy, dz, dt
+
+
+def _sim_linear(idx: int, x: float, y: float, z: float,
+                nx: float, ny: float, nz: float,
+                feed: float, accel: float,
+                moves: list) -> Tuple[float, float, float]:
+    """Handle G1 linear cut. Returns (dxy, dz, dt)."""
+    dxy = math.hypot(nx - x, ny - y)
+    dz = abs(nz - z)
+    t = trapezoidal_time(dxy, feed, accel) + trapezoidal_time(dz, feed, accel)
+    moves.append({'line': idx, 'code': 'G1', 'x': nx, 'y': ny, 'z': nz, 'feed': feed, 't': t})
+    return dxy, dz, t
+
+
+def _sim_arc(idx: int, x: float, y: float, z: float,
+             nx: float, ny: float, nz: float,
+             gnum: int, params: Dict[str, float], ms: ModalState,
+             accel: float, moves: list, issues: list) -> Tuple[float, float, float]:
+    """Handle G2/G3 arc. Returns (dxy, dz, dt)."""
+    cw = (gnum == 2)
+    if 'I' in params or 'J' in params:
+        cx, cy = arc_center_from_ijk(ms, (x, y), params)
+    elif 'R' in params:
+        cx, cy = arc_center_from_r(ms, (x, y), (nx, ny), params['R'], cw)
+    else:
+        issues.append({'line': idx, 'severity': 'error', 'type': 'arc_missing_params', 'msg': 'Arc missing IJK or R'})
+        cx, cy = (x, y)
+    length = arc_length(cx, cy, x, y, nx, ny, cw)
+    dz = abs(nz - z)
+    t = trapezoidal_time(length, ms.F, accel) + trapezoidal_time(dz, ms.F, accel)
+    moves.append({'line': idx, 'code': f'G{gnum}', 'x': nx, 'y': ny, 'z': nz,
+                  'i': cx - x, 'j': cy - y, 'cx': cx, 'cy': cy, 'feed': ms.F, 't': t})
+    return length, dz, t
+
+
+def _sim_dwell(idx: int, params: Dict[str, float], moves: list) -> float:
+    """Handle G4 dwell. Returns dt."""
+    p = params.get('P', 0.0)
+    dt = p / 1000.0 if p > 10 else p
+    moves.append({'line': idx, 'code': 'G4', 'p': p, 't': dt})
+    return dt
+
+
+def _parse_line_tokens(ln: str, ms: 'ModalState') -> Tuple[Optional[str], Dict[str, float]]:
+    """Parse a G-code line, update *ms* in-place, return ``(g_word, params)``."""
+    toks = parse_line(ln)
+    word: Optional[str] = None
+    params: Dict[str, float] = {}
+    for t, v in toks:
+        if t[0] in 'GMTFS':
+            ms.apply_modal(t.split()[0] if ' ' in t else t)
+            if t.startswith('G'):
+                word = t
+        else:
+            params[t] = v
+    return word, params
+
+
+def _dispatch_gcode(
+    idx: int, gnum: int,
+    x: float, y: float, z: float,
+    nx: float, ny: float, nz: float,
+    params: Dict[str, float], ms: 'ModalState',
+    clearance_z: float, rapid_mm_min: float, accel: float,
+    moves: list, issues: list,
+) -> Tuple[float, float, float, float, float, float]:
+    """Dispatch a single G-code command. Returns ``(x, y, z, dxy, dz, dt)``."""
+    if gnum == 0:
+        return _sim_rapid(idx, x, y, z, nx, ny, nz, clearance_z, rapid_mm_min, accel, moves)
+    if gnum == 1:
+        dxy, dz, dt = _sim_linear(idx, x, y, z, nx, ny, nz, ms.F, accel, moves)
+        return x, y, z, dxy, dz, dt
+    if gnum in (2, 3):
+        dxy, dz, dt = _sim_arc(idx, x, y, z, nx, ny, nz, gnum, params, ms, accel, moves, issues)
+        return x, y, z, dxy, dz, dt
+    if gnum == 4:
+        dt = _sim_dwell(idx, params, moves)
+        return x, y, z, 0.0, 0.0, dt
+    return x, y, z, 0.0, 0.0, 0.0
+
+
+def _check_move_issues(
+    idx: int, z: float, word: Optional[str],
+    x: float, y: float,
+    nx: float, ny: float, nz: float,
+    env: dict, issues: list,
+) -> None:
+    """Append envelope-violation or unsafe-rapid issues."""
+    next_pos = {'X': nx, 'Y': ny, 'Z': nz}
+    if not within_envelope(next_pos, env):
+        issues.append({'line': idx, 'severity': 'fatal', 'type': 'envelope_violation',
+                       'msg': f'Position out of travel: {next_pos}'})
+    if (z < 0 and word and word.upper().startswith('G')
+            and int(float(word[1:])) == 0 and (nx != x or ny != y)):
+        issues.append({'line': idx, 'severity': 'warn', 'type': 'unsafe_rapid',
+                       'msg': 'XY rapid below Z=0; split applied'})
+
+
 def simulate(gcode: str, accel: float = DEFAULT_ACCEL, clearance_z: float = DEFAULT_CLEAR_Z,
              env: dict = DEFAULT_ENVELOPE, rapid_mm_min: float = DEFAULT_RAPID) -> Dict[str, Any]:
     ms = ModalState()
-    moves, issues = [], []
+    moves: list = []
+    issues: list = []
     total_xy = 0.0
     total_z = 0.0
     total_time = 0.0
 
-    def schedule_linear(code, x0, y0, z0, x1, y1, z1, feed):
-        dxy = math.hypot(x1 - x0, y1 - y0)
-        dz = abs(z1 - z0)
-        t = trapezoidal_time(dxy, feed if feed > 0 else rapid_mm_min, accel) \
-            + trapezoidal_time(dz, feed if feed > 0 else rapid_mm_min, accel)
-        return dxy, dz, t
-
-    lines = gcode.splitlines()
-    for idx, raw in enumerate(lines, start=1):
+    for idx, raw in enumerate(gcode.splitlines(), start=1):
         ln = raw.strip()
         if not ln or ln.startswith('(') or ln.startswith(';'):
             continue
         if not MOVE_RE.search(ln):
             continue
 
-        toks = parse_line(ln)
-        word = None
-        params = {}
-        for t, v in toks:
-            if t[0] in 'GMTFS':
-                ms.apply_modal(t.split()[0] if ' ' in t else t)
-                if t.startswith('G'):
-                    word = t
-            else:
-                params[t] = v
-
-        x = ms.pos['X']
-        y = ms.pos['Y']
-        z = ms.pos['Z']
-        nx = x
-        ny = y
-        nz = z
-        if 'X' in params:
-            nx = (x + as_units(ms, params['X'])) if not ms.abs else as_units(ms, params['X'])
-        if 'Y' in params:
-            ny = (y + as_units(ms, params['Y'])) if not ms.abs else as_units(ms, params['Y'])
-        if 'Z' in params:
-            nz = (z + as_units(ms, params['Z'])) if not ms.abs else as_units(ms, params['Z'])
+        word, params = _parse_line_tokens(ln, ms)
+        x, y, z = ms.pos['X'], ms.pos['Y'], ms.pos['Z']
+        nx, ny, nz = _resolve_next_pos(ms, params)
 
         if word and word.upper().startswith('G'):
             gnum = int(float(word[1:]))
-            if gnum == 0:
-                if z < clearance_z:
-                    dxy, dz, t = schedule_linear('G0', x, y, z, x, y, clearance_z, rapid_mm_min)
-                    total_xy += dxy
-                    total_z += dz
-                    total_time += t
-                    moves.append({'line': idx, 'code': 'G0', 'x': x, 'y': y, 'z': clearance_z, 'feed': rapid_mm_min, 't': t})
-                    z = clearance_z
-                if (nx != x) or (ny != y):
-                    dxy, dz, t = schedule_linear('G0', x, y, z, nx, ny, z, rapid_mm_min)
-                    total_xy += dxy
-                    total_z += dz
-                    total_time += t
-                    moves.append({'line': idx, 'code': 'G0', 'x': nx, 'y': ny, 'z': z, 'feed': rapid_mm_min, 't': t})
-                    x, y = nx, ny
-                if nz != z:
-                    dxy, dz, t = schedule_linear('G0', x, y, z, x, y, nz, rapid_mm_min)
-                    total_xy += dxy
-                    total_z += dz
-                    total_time += t
-                    moves.append({'line': idx, 'code': 'G0', 'x': x, 'y': y, 'z': nz, 'feed': rapid_mm_min, 't': t})
-                    z = nz
+            x, y, z, dxy, dz, dt = _dispatch_gcode(
+                idx, gnum, x, y, z, nx, ny, nz, params, ms,
+                clearance_z, rapid_mm_min, accel, moves, issues)
+            total_xy += dxy; total_z += dz; total_time += dt
 
-            elif gnum == 1:
-                dxy, dz, t = schedule_linear('G1', x, y, z, nx, ny, nz, ms.F)
-                total_xy += dxy
-                total_z += dz
-                total_time += t
-                moves.append({'line': idx, 'code': 'G1', 'x': nx, 'y': ny, 'z': nz, 'feed': ms.F, 't': t})
-
-            elif gnum in (2, 3):
-                cw = (gnum == 2)
-                sx, sy = x, y
-                ex, ey = nx, ny
-                if 'I' in params or 'J' in params:
-                    cx, cy = arc_center_from_ijk(ms, (sx, sy), params)
-                elif 'R' in params:
-                    cx, cy = arc_center_from_r(ms, (sx, sy), (ex, ey), params['R'], cw)
-                else:
-                    issues.append({'line': idx, 'severity': 'error', 'type': 'arc_missing_params', 'msg': 'Arc missing IJK or R'})
-                    cx, cy = (sx, sy)
-                length = arc_length(cx, cy, sx, sy, ex, ey, cw)
-                t = trapezoidal_time(length, ms.F, DEFAULT_ACCEL) + trapezoidal_time(abs(nz - z), ms.F, DEFAULT_ACCEL)
-                total_xy += length
-                total_time += t
-                total_z += abs(nz - z)
-                moves.append({'line': idx, 'code': f'G{gnum}', 'x': nx, 'y': ny, 'z': nz, 'i': cx - sx, 'j': cy - sy, 'cx': cx, 'cy': cy, 'feed': ms.F, 't': t})
-
-            elif gnum in (20, 21, 90, 91, 93, 94, 17, 18, 19, 4):
-                if gnum == 4:
-                    p = params.get('P', 0.0)  # dwell
-                    dt = p / 1000.0 if p > 10 else p
-                    total_time += dt
-                    moves.append({'line': idx, 'code': 'G4', 'p': p, 't': dt})
-
-        next_pos = {'X': nx, 'Y': ny, 'Z': nz}
-        if not within_envelope(next_pos, DEFAULT_ENVELOPE):
-            issues.append({'line': idx, 'severity': 'fatal', 'type': 'envelope_violation', 'msg': f'Position out of travel: {next_pos}'})
-        if z < 0 and word and word.upper().startswith('G') and int(float(word[1:])) == 0 and ((nx != x) or (ny != y)):
-            issues.append({'line': idx, 'severity': 'warn', 'type': 'unsafe_rapid', 'msg': 'XY rapid below Z=0; split applied'})
-
+        _check_move_issues(idx, z, word, x, y, nx, ny, nz, env, issues)
         ms.pos.update({'X': nx, 'Y': ny, 'Z': nz})
 
     summary = {'units': ms.units, 'total_xy': total_xy, 'total_z': total_z, 'est_seconds': total_time}

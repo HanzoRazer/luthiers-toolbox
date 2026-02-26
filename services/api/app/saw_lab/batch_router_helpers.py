@@ -29,45 +29,79 @@ def find_setup_ops(
     return []
 
 
+def _safe_param(source: Dict[str, Any], keys: List[str], default: float) -> float:
+    """Extract a float from *source* trying *keys* in order, falling back to *default*."""
+    for k in keys:
+        val = source.get(k)
+        if val is not None:
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                continue
+    return default
+
+
+def _extract_params_from_dict(
+    d: Dict[str, Any], rpm: float, feed: float, doc: float
+) -> tuple[float, float, float]:
+    """Pull spindle_rpm / feed_rate_mmpm / doc_mm from *d* with alias fallbacks."""
+    rpm = _safe_param(d, ["spindle_rpm", "max_rpm"], rpm)
+    feed = _safe_param(d, ["feed_rate_mmpm", "feed_rate_mm_per_min"], feed)
+    doc = _safe_param(d, ["doc_mm", "depth_of_cut_mm"], doc)
+    return rpm, feed, doc
+
+
+def _extract_from_spec(
+    spec: Dict[str, Any], rpm: float, feed: float, doc: float
+) -> tuple[float, float, float]:
+    """Unwrap a spec payload and extract machining params from items or context."""
+    spec_payload = spec.get("payload") or spec.get("data") or {}
+    if not isinstance(spec_payload, dict):
+        return rpm, feed, doc
+
+    items = spec_payload.get("items") or spec_payload.get("operations") or []
+    if isinstance(items, list) and items and isinstance(items[0], dict):
+        rpm, feed, doc = _extract_params_from_dict(items[0], rpm, feed, doc)
+
+    ctx = spec_payload.get("context")
+    if isinstance(ctx, dict):
+        rpm, feed, doc = _extract_params_from_dict(ctx, rpm, feed, doc)
+
+    return rpm, feed, doc
+
+
+def _extract_from_plan_artifact(
+    plan_artifact_id: str, rpm: float, feed: float, doc: float
+) -> tuple[float, float, float]:
+    """Fetch a plan artifact and extract machining params from its context."""
+    try:
+        from app.rmos.runs_v2.store import get_run
+        plan = get_run(plan_artifact_id)
+        if not plan or not isinstance(plan, dict):
+            return rpm, feed, doc
+        plan_payload = plan.get("payload") or plan.get("data") or {}
+        if not isinstance(plan_payload, dict):
+            return rpm, feed, doc
+        plan_ctx = plan_payload.get("context") or plan_payload.get("saw_context") or {}
+        if isinstance(plan_ctx, dict):
+            rpm, feed, doc = _extract_params_from_dict(plan_ctx, rpm, feed, doc)
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError):
+        pass
+    return rpm, feed, doc
+
+
 def extract_base_context(
     spec: Optional[Dict[str, Any]],
     plan_artifact_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Extract base machining context from spec/plan artifacts."""
-    rpm = 3000.0
-    feed = 600.0
-    doc = 3.0
+    rpm, feed, doc = 3000.0, 600.0, 3.0
 
     if spec and isinstance(spec, dict):
-        spec_payload = spec.get("payload") or spec.get("data") or {}
-        if isinstance(spec_payload, dict):
-            items = spec_payload.get("items") or spec_payload.get("operations") or []
-            if isinstance(items, list) and items:
-                first_item = items[0] if isinstance(items[0], dict) else {}
-                rpm = float(first_item.get("spindle_rpm") or first_item.get("max_rpm") or rpm)
-                feed = float(first_item.get("feed_rate_mmpm") or first_item.get("feed_rate_mm_per_min") or feed)
-                doc = float(first_item.get("doc_mm") or first_item.get("depth_of_cut_mm") or doc)
-
-            ctx = spec_payload.get("context") or {}
-            if isinstance(ctx, dict):
-                rpm = float(ctx.get("spindle_rpm") or ctx.get("max_rpm") or rpm)
-                feed = float(ctx.get("feed_rate_mmpm") or ctx.get("feed_rate_mm_per_min") or feed)
-                doc = float(ctx.get("doc_mm") or doc)
+        rpm, feed, doc = _extract_from_spec(spec, rpm, feed, doc)
 
     if plan_artifact_id:
-        try:
-            from app.rmos.runs_v2.store import get_run
-            plan = get_run(plan_artifact_id)
-            if plan and isinstance(plan, dict):
-                plan_payload = plan.get("payload") or plan.get("data") or {}
-                if isinstance(plan_payload, dict):
-                    plan_ctx = plan_payload.get("context") or plan_payload.get("saw_context") or {}
-                    if isinstance(plan_ctx, dict):
-                        rpm = float(plan_ctx.get("spindle_rpm") or plan_ctx.get("max_rpm") or rpm)
-                        feed = float(plan_ctx.get("feed_rate_mmpm") or plan_ctx.get("feed_rate_mm_per_min") or feed)
-                        doc = float(plan_ctx.get("doc_mm") or doc)
-        except (ImportError, KeyError, ValueError, TypeError, AttributeError):
-            pass
+        rpm, feed, doc = _extract_from_plan_artifact(plan_artifact_id, rpm, feed, doc)
 
     return {
         "spindle_rpm": rpm,

@@ -27,6 +27,85 @@ from .schemas import (
 from .hashing import sha256_of_obj
 
 
+def _parse_created_at(v1_data: Dict[str, Any]) -> datetime:
+    """Parse created_at_utc from v1, defaulting to now."""
+    created_at = v1_data.get("created_at_utc")
+    if isinstance(created_at, str):
+        try:
+            return datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.now(timezone.utc)
+    if created_at is None:
+        return datetime.now(timezone.utc)
+    return created_at
+
+
+def _build_hashes(v1_data: Dict[str, Any], feasibility: Dict[str, Any]) -> Hashes:
+    """Build Hashes model from v1 flat fields."""
+    request_hash = v1_data.get("request_hash")
+    if request_hash and len(request_hash) == 64:
+        feasibility_sha256 = request_hash
+    else:
+        feasibility_sha256 = sha256_of_obj(feasibility) if feasibility else sha256_of_obj({})
+    return Hashes(
+        feasibility_sha256=feasibility_sha256,
+        toolpaths_sha256=v1_data.get("toolpaths_hash"),
+        gcode_sha256=v1_data.get("gcode_hash"),
+        opplan_sha256=v1_data.get("opplan_hash"),
+    )
+
+
+def _build_decision(v1_data: Dict[str, Any], feasibility: Dict[str, Any]) -> RunDecision:
+    """Build RunDecision from v1 nested or flat decision/feasibility fields."""
+    v1_decision = v1_data.get("decision")
+    if isinstance(v1_decision, dict):
+        return RunDecision(
+            risk_level=v1_decision.get("risk_level") or v1_decision.get("risk_bucket") or "UNKNOWN",
+            score=v1_decision.get("score"),
+            block_reason=v1_decision.get("block_reason"),
+            warnings=v1_decision.get("warnings") or [],
+            details=v1_decision.get("details") or {},
+        )
+    return RunDecision(
+        risk_level=feasibility.get("risk_bucket") or feasibility.get("risk_level") or "UNKNOWN",
+        score=feasibility.get("score"),
+        block_reason=feasibility.get("block_reason"),
+        warnings=feasibility.get("warnings") or [],
+        details={},
+    )
+
+
+def _convert_attachments(v1_data: Dict[str, Any]) -> List[RunAttachment]:
+    """Convert v1 attachment dicts to RunAttachment models."""
+    out: List[RunAttachment] = []
+    for att in (v1_data.get("attachments") or []):
+        if isinstance(att, dict):
+            out.append(RunAttachment(
+                sha256=att.get("sha256", ""),
+                kind=att.get("kind", "unknown"),
+                mime=att.get("mime", "application/octet-stream"),
+                filename=att.get("filename", "attachment"),
+                size_bytes=att.get("size_bytes", 0),
+                created_at_utc=att.get("created_at_utc", datetime.now(timezone.utc).isoformat()),
+            ))
+    return out
+
+
+def _convert_advisory_inputs(v1_data: Dict[str, Any]) -> List[AdvisoryInputRef]:
+    """Convert v1 advisory input dicts to AdvisoryInputRef models."""
+    out: List[AdvisoryInputRef] = []
+    for adv in (v1_data.get("advisory_inputs") or []):
+        if isinstance(adv, dict):
+            out.append(AdvisoryInputRef(
+                advisory_id=adv.get("advisory_id", ""),
+                kind=adv.get("kind", "unknown"),
+                engine_id=adv.get("engine_id"),
+                engine_version=adv.get("engine_version"),
+                request_id=adv.get("request_id"),
+            ))
+    return out
+
+
 def convert_v1_to_v2(v1_data: Dict[str, Any]) -> RunArtifact:
     """
     Convert a v1 run artifact dict to a v2 RunArtifact.
@@ -39,103 +118,17 @@ def convert_v1_to_v2(v1_data: Dict[str, Any]) -> RunArtifact:
     Returns:
         RunArtifact (v2 Pydantic model)
     """
-    # Extract run_id (required)
     run_id = v1_data.get("run_id", "")
     if not run_id:
         raise ValueError("run_id is required")
 
-    # Parse created_at_utc
-    created_at = v1_data.get("created_at_utc")
-    if isinstance(created_at, str):
-        try:
-            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-        except ValueError:
-            created_at = datetime.now(timezone.utc)
-    elif created_at is None:
-        created_at = datetime.now(timezone.utc)
-
-    # Build Hashes (handle v1 flat fields)
     feasibility = v1_data.get("feasibility") or {}
-    request_hash = v1_data.get("request_hash")
+    attachments = _convert_attachments(v1_data)
 
-    # Compute feasibility_sha256 if missing
-    if request_hash and len(request_hash) == 64:
-        feasibility_sha256 = request_hash
-    else:
-        feasibility_sha256 = sha256_of_obj(feasibility) if feasibility else sha256_of_obj({})
-
-    hashes = Hashes(
-        feasibility_sha256=feasibility_sha256,
-        toolpaths_sha256=v1_data.get("toolpaths_hash"),
-        gcode_sha256=v1_data.get("gcode_hash"),
-        opplan_sha256=v1_data.get("opplan_hash"),
-    )
-
-    # Build RunDecision (handle v1 nested or flat)
-    v1_decision = v1_data.get("decision")
-    if isinstance(v1_decision, dict):
-        risk_level = v1_decision.get("risk_level") or v1_decision.get("risk_bucket") or "UNKNOWN"
-        score = v1_decision.get("score")
-        block_reason = v1_decision.get("block_reason")
-        warnings = v1_decision.get("warnings") or []
-        details = v1_decision.get("details") or {}
-    else:
-        # Extract from feasibility if available
-        risk_level = feasibility.get("risk_bucket") or feasibility.get("risk_level") or "UNKNOWN"
-        score = feasibility.get("score")
-        block_reason = feasibility.get("block_reason")
-        warnings = feasibility.get("warnings") or []
-        details = {}
-
-    decision = RunDecision(
-        risk_level=risk_level,
-        score=score,
-        block_reason=block_reason,
-        warnings=warnings,
-        details=details,
-    )
-
-    # Build RunOutputs
-    outputs = RunOutputs(
-        gcode_text=v1_data.get("gcode_text"),
-        gcode_path=v1_data.get("gcode_path"),
-        opplan_json=v1_data.get("opplan_json"),
-        opplan_path=v1_data.get("opplan_path"),
-        preview_svg_path=v1_data.get("preview_svg_path"),
-    )
-
-    # Convert attachments
-    v1_attachments = v1_data.get("attachments") or []
-    attachments = []
-    for att in v1_attachments:
-        if isinstance(att, dict):
-            attachments.append(RunAttachment(
-                sha256=att.get("sha256", ""),
-                kind=att.get("kind", "unknown"),
-                mime=att.get("mime", "application/octet-stream"),
-                filename=att.get("filename", "attachment"),
-                size_bytes=att.get("size_bytes", 0),
-                created_at_utc=att.get("created_at_utc", datetime.now(timezone.utc).isoformat()),
-            ))
-
-    # Convert advisory inputs
-    v1_advisory = v1_data.get("advisory_inputs") or []
-    advisory_inputs = []
-    for adv in v1_advisory:
-        if isinstance(adv, dict):
-            advisory_inputs.append(AdvisoryInputRef(
-                advisory_id=adv.get("advisory_id", ""),
-                kind=adv.get("kind", "unknown"),
-                engine_id=adv.get("engine_id"),
-                engine_version=adv.get("engine_version"),
-                request_id=adv.get("request_id"),
-            ))
-
-    # Build the v2 artifact
     artifact = RunArtifact(
         # Identity
         run_id=run_id,
-        created_at_utc=created_at,
+        created_at_utc=_parse_created_at(v1_data),
         # Context
         mode=v1_data.get("mode") or v1_data.get("workflow_mode") or "unknown",
         tool_id=v1_data.get("tool_id") or "unknown",
@@ -145,12 +138,18 @@ def convert_v1_to_v2(v1_data: Dict[str, Any]) -> RunArtifact:
         request_summary=v1_data.get("request_summary") or {},
         # Authoritative
         feasibility=feasibility,
-        decision=decision,
-        hashes=hashes,
+        decision=_build_decision(v1_data, feasibility),
+        hashes=_build_hashes(v1_data, feasibility),
         # Outputs
-        outputs=outputs,
+        outputs=RunOutputs(
+            gcode_text=v1_data.get("gcode_text"),
+            gcode_path=v1_data.get("gcode_path"),
+            opplan_json=v1_data.get("opplan_json"),
+            opplan_path=v1_data.get("opplan_path"),
+            preview_svg_path=v1_data.get("preview_svg_path"),
+        ),
         # Advisory
-        advisory_inputs=advisory_inputs,
+        advisory_inputs=_convert_advisory_inputs(v1_data),
         # Legacy attachments
         attachments=attachments if attachments else None,
         # Metadata
