@@ -245,7 +245,7 @@ class CircuitBreaker:
             raise CircuitOpenError(self.name, remaining)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, _exc_tb):
         if exc_val is None:
             self._record_success()
         elif exc_type is not None:

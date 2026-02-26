@@ -175,7 +175,7 @@ class AttachmentMetaIndex:
 
         self.write(idx)
 
-    def rebuild_from_index(self, run_index: Dict[str, Dict[str, Any]]) -> int:
+    def rebuild_from_index(self, _run_index: Dict[str, Dict[str, Any]]) -> int:
         """
         Optional utility: rebuild meta index *only from _index.json*, if you stored
         enough attachment info there (often you do not).

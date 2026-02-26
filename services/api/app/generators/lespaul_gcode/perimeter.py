@@ -31,7 +31,7 @@ class PerimeterOperationMixin:
                                 tab_count: int = 6,
                                 tab_width_in: float = 0.5,
                                 tab_height_in: float = 0.125,
-                                finish_allowance_in: float = 0.02) -> str:
+                                _finish_allowance_in: float = 0.02) -> str:
         """
         Generate body perimeter cut with holding tabs.
 

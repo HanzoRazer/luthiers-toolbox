@@ -149,7 +149,7 @@ class SpectrumService:
 
         return primary
 
-    def _interpret_mode(self, peak: PeakData, rank: int) -> str:
+    def _interpret_mode(self, peak: PeakData, _rank: int) -> str:
         """
         Provide human-readable interpretation of a mode.
 

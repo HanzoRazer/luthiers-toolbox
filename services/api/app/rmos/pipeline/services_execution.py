@@ -169,7 +169,7 @@ def _execute_single_op(
     spec_artifact_id: Optional[str],
     results: List[ExecutionResult],
     children: List[Dict[str, str]],
-    counters: Dict[str, int],
+    _counters: Dict[str, int],
 ) -> None:
     """Execute a single operation within the pipeline.
 

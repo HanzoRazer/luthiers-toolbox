@@ -134,7 +134,7 @@ def compute_bridge_height_profile(
 def compute_archtop_bridge_placement(
     body_length_mm: float,
     scale_length_mm: float,
-    soundhole_position_mm: float,
+    _soundhole_position_mm: float,
 ) -> Tuple[float, float]:
     """
     Compute recommended bridge placement for an archtop guitar.

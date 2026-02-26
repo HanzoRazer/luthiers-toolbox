@@ -262,7 +262,7 @@ def plan_adaptive(
     corner_tol_mm: float = 0.0,
     machine_profile_id: str | None = None,
     # Override system (reserved for future)
-    adopt_overrides: bool = False,
+    _adopt_overrides: bool = False,
     session_override_factor: float = 1.0,
 ) -> Dict[str, Any]:
     """

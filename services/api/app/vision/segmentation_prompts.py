@@ -97,7 +97,7 @@ Return the OUTER BODY EDGE only. Exclude neck pocket, control cavities, pickups.
 
 def get_segmentation_prompt(
     guitar_category: str = "auto",
-    detail_level: str = "standard"
+    _detail_level: str = "standard"
 ) -> str:
     """
     Get the appropriate segmentation prompt.

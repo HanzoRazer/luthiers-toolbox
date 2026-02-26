@@ -94,7 +94,7 @@ from typing import List, Tuple
 # MATERIAL REMOVAL CALCULATIONS
 # =============================================================================
 
-def rough_mrr_estimate(area_mm2: float, stepdown: float, path_len_mm: float, tool_d: float) -> float:
+def rough_mrr_estimate(area_mm2: float, stepdown: float, _path_len_mm: float, tool_d: float) -> float:
     """
     Crude estimate of material removal rate.
     
