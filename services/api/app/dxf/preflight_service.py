@@ -88,7 +88,7 @@ def _read_dxf(dxf_path: Path) -> "Drawing":
         return ezdxf.readfile(str(dxf_path))
     except HTTPException:
         raise
-    except Exception as e:
+    except (OSError, ValueError) as e:  # WP-1: DXF readfile
         raise HTTPException(status_code=400, detail=f"Failed to read DXF: {str(e)}")
 
 

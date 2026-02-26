@@ -44,7 +44,7 @@ def main() -> int:
     try:
         args = parse_args(sys.argv[1:])
         import_violations, symbol_violations = check_boundaries()
-    except Exception as e:
+    except (SystemExit, OSError, ValueError, ImportError) as e:  # WP-1: CLI main
         print(f"Boundary checker error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()

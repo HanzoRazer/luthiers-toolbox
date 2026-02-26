@@ -12,6 +12,7 @@ The golden path for converting DXF designs to machine-ready G-code:
 
 # NOTE: Intentionally NOT using from __future__ import annotations
 # to avoid Pydantic v2 forward reference resolution issues with FastAPI
+import binascii
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -151,7 +152,7 @@ async def upload_dxf(file: UploadFile = File(...)) -> DxfUploadResponse:
                 "bounds": result.get("bounds"),
             },
         )
-    except Exception as e:
+    except (ValueError, OSError) as e:  # WP-1: DXF validation
         return DxfUploadResponse(
             ok=False,
             error=f"Failed to parse DXF: {str(e)}",
@@ -174,7 +175,7 @@ def validate_dxf(req: DxfValidateRequest) -> DxfValidateResponse:
 
     try:
         dxf_bytes = base64.b64decode(req.dxf_base64)
-    except Exception:
+    except (ValueError, binascii.Error):  # WP-1: base64 decode
         return DxfValidateResponse(
             ok=False,
             error="Invalid base64 encoding",
@@ -202,7 +203,7 @@ def validate_dxf(req: DxfValidateRequest) -> DxfValidateResponse:
             },
             error="Validation failed - see issues" if has_errors else None,
         )
-    except Exception as e:
+    except (ValueError, OSError) as e:  # WP-1: DXF validation
         return DxfValidateResponse(
             ok=False,
             error=f"Validation error: {str(e)}",
@@ -225,7 +226,7 @@ def create_cam_plan(req: CamPlanRequest) -> CamPlanResponse:
 
     try:
         dxf_bytes = base64.b64decode(req.dxf_base64)
-    except Exception:
+    except (ValueError, binascii.Error):  # WP-1: base64 decode
         return CamPlanResponse(
             ok=False,
             error="Invalid base64 encoding",

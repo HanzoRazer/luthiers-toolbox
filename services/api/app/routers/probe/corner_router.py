@@ -34,7 +34,7 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -69,7 +69,7 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -104,5 +104,5 @@ async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))

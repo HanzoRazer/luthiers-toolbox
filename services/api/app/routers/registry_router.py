@@ -9,6 +9,8 @@ Provides API endpoints for accessing edition-based data:
 Registered at: /api/registry/*
 """
 
+import json
+
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
@@ -107,7 +109,7 @@ def get_scale_lengths(
         data = registry.get_scale_lengths()
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:  # WP-1: JSON registry load
         raise HTTPException(status_code=500, detail=f"Failed to load scale lengths: {e}")
     
     scales = data.get("scales", {})
@@ -131,7 +133,7 @@ def get_wood_species(
         data = registry.get_wood_species()
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:  # WP-1: JSON registry load
         raise HTTPException(status_code=500, detail=f"Failed to load wood species: {e}")
     
     species = data.get("species", {})
@@ -166,7 +168,7 @@ def get_empirical_limits(
         )
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:  # WP-1: JSON registry load
         raise HTTPException(status_code=500, detail=f"Failed to load empirical limits: {e}")
     
     limits = data.get("limits", {})
@@ -202,7 +204,7 @@ def get_empirical_limit_by_wood(
         )
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:  # WP-1: JSON registry load
         raise HTTPException(status_code=500, detail=f"Failed to load empirical limits: {e}")
     
     limits = data.get("limits", {})
@@ -234,7 +236,7 @@ def get_fret_formulas(
         data = registry.get_fret_formulas()
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:  # WP-1: JSON registry load
         raise HTTPException(status_code=500, detail=f"Failed to load fret formulas: {e}")
     
     return {

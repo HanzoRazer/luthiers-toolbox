@@ -146,7 +146,7 @@ def load_feature(config: FeatureConfig) -> Optional[Any]:
 
         return router
 
-    except Exception as e:
+    except (ImportError, AttributeError) as e:  # WP-1: feature router import
         error_msg = str(e)
         _failed_features[config.name] = error_msg
         register_failed_feature(config.name, error_msg)

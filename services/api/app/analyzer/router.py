@@ -62,7 +62,7 @@ async def interpret_uploaded_pack(
         pack = load_viewer_pack(file.file)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except (ValueError, KeyError, OSError) as e:  # WP-1: viewer pack parse
         raise HTTPException(
             status_code=400,
             detail=f"Failed to parse viewer pack: {e}"

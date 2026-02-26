@@ -233,7 +233,7 @@ async def import_geometry(request: Request):
             return geometry.dict()
         except HTTPException:  # WP-1: pass through HTTPException
             raise
-        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+        except (ValueError, KeyError, TypeError) as e:  # WP-1: pydantic validation
             raise HTTPException(400, f"Invalid geometry format: {str(e)}")
 
     # Handle file upload

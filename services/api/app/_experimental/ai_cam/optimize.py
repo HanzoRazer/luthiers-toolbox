@@ -142,7 +142,7 @@ class CAMOptimizer:
                             notes=notes,
                         )
                     )
-                except Exception as e:  # WP-1: keep broad — calculator spine can raise anything
+                except (ValueError, ZeroDivisionError, TypeError, KeyError) as e:  # WP-1: cut operation eval
                     candidates.append(
                         OptimizationCandidate(
                             feed_mm_min=round(f, 1),

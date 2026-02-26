@@ -215,7 +215,7 @@ def batch_export(body: BatchExportIn) -> StreamingResponse:
             }
         )
 
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, TypeError, OSError, ZeroDivisionError) as e:  # WP-1: batch export calc
         # Unexpected errors → 500 with logging
         logging.exception(f"batch_export unexpected error: {e}")
         raise HTTPException(

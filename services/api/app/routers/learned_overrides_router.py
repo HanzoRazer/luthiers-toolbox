@@ -115,7 +115,7 @@ def list_lanes(
         return lanes
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list lanes: {str(e)}"
@@ -191,7 +191,7 @@ def set_override(req: SetOverrideRequest):
         return override
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to set override: {str(e)}"
@@ -222,7 +222,7 @@ def update_lane_scale(req: UpdateLaneScaleRequest):
         return {"success": True, "message": f"Lane scale updated to {req.lane_scale}"}
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update lane scale: {str(e)}"
@@ -258,7 +258,7 @@ def merge_parameters(req: MergeParametersRequest):
         )
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to merge parameters: {str(e)}"
@@ -288,7 +288,7 @@ def record_run(req: RecordRunRequest):
         }
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to record run: {str(e)}"
@@ -336,7 +336,7 @@ def get_audit_trail(
         return entries
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get audit trail: {str(e)}"
@@ -362,7 +362,7 @@ def get_statistics():
         return stats
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: store dict ops
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get statistics: {str(e)}"

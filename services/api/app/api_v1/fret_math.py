@@ -150,7 +150,7 @@ def calculate_fret_positions(req: FretPositionsRequest) -> FretPositionsResponse
                 "frets": frets,
             },
         )
-    except Exception as e:
+    except (ValueError, ZeroDivisionError, TypeError) as e:  # WP-1: fret calc
         return FretPositionsResponse(
             ok=False,
             error=f"Calculation error: {str(e)}",
@@ -220,7 +220,7 @@ def calculate_fret_slots(req: FretSlotsRequest) -> FretSlotsResponse:
                 "total_slot_length_mm": round(sum(s["width_mm"] for s in slots), 2),
             },
         )
-    except Exception as e:
+    except (ValueError, ZeroDivisionError, TypeError) as e:  # WP-1: fret calc
         return FretSlotsResponse(
             ok=False,
             error=f"Calculation error: {str(e)}",

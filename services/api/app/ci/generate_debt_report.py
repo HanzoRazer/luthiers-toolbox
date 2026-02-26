@@ -47,7 +47,7 @@ def run_check(module: str, extra_args: List[str] = None) -> Dict[str, Any]:
         return {"error": "Timeout", "exit_code": -1}
     except json.JSONDecodeError as e:
         return {"error": f"JSON parse error: {e}", "exit_code": -1}
-    except Exception as e:
+    except (subprocess.SubprocessError, OSError) as e:  # WP-1: subprocess check
         return {"error": str(e), "exit_code": -1}
 
 
@@ -67,7 +67,7 @@ def get_git_info() -> Dict[str, str]:
         branch = result.stdout.strip() if result.returncode == 0 else "unknown"
 
         return {"commit": commit, "branch": branch}
-    except Exception:
+    except (subprocess.SubprocessError, OSError):  # WP-1: subprocess check
         return {"commit": "unknown", "branch": "unknown"}
 
 

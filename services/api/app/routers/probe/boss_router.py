@@ -35,7 +35,7 @@ async def generate_boss_probe(body: BossProbeIn) -> ProbeOut:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -73,7 +73,7 @@ async def download_boss_probe(body: BossProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -111,5 +111,5 @@ async def download_boss_probe_governed(body: BossProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))

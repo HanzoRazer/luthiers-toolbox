@@ -78,7 +78,7 @@ async def plan_from_dxf(
         loops, warnings = extract_loops_from_dxf(dxf_bytes, layer_name=layer_name)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, KeyError, TypeError, OSError) as e:  # WP-1: DXF loop extraction
         raise HTTPException(
             status_code=400,
             detail=f"Failed to extract loops from DXF: {str(e)}"

@@ -257,7 +257,7 @@ def main(argv: Sequence[str]) -> int:
 
     try:
         res = run_check()
-    except Exception as e:  # WP-1: keep broad — wraps app introspection + file I/O + truth map parsing
+    except (OSError, ValueError, ImportError) as e:  # WP-1: truth gate main
         print(f"[endpoint_truth_gate] ERROR: {e}")
         return 2
 

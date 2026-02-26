@@ -82,9 +82,9 @@ async def load_machine_profile(
             )
         ctx.machine_profile = resp.json()
         return ctx.machine_profile
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except (OSError, ConnectionError, TimeoutError, ValueError, KeyError) as e:  # WP-1: HTTP client + JSON parse
         logger.warning(f"Machine endpoint unavailable: {e}")
         return None
 
@@ -111,9 +111,9 @@ async def load_post_profile(
             )
         ctx.post_profile = resp.json()
         return ctx.post_profile
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise
+    except HTTPException:  # WP-1: pass through HTTPException
+        raise
+    except (OSError, ConnectionError, TimeoutError, ValueError, KeyError) as e:  # WP-1: HTTP client + JSON parse
         logger.warning(f"Post endpoint unavailable: {e}")
         return None
 
