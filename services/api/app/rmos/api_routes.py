@@ -2,6 +2,8 @@
 RMOS 2.0 API Routes
 FastAPI router for feasibility, BOM, and toolpath endpoints.
 """
+import logging
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -20,6 +22,8 @@ try:
     from ..art_studio.schemas import RosetteParamSpec
 except (ImportError, AttributeError, ModuleNotFoundError):
     from .api_contracts import RosetteParamSpec
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -81,10 +85,11 @@ async def check_feasibility(request: FeasibilityRequest):
         
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, RuntimeError) as e:  # WP-3: narrowed from except Exception
+        logger.error("Feasibility computation failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Feasibility computation failed: {str(e)}"
+            detail=f"Feasibility computation failed: {type(e).__name__}: {e}"
         )
 
 @router.post("/bom", response_model=RmosBomResult, tags=["RMOS"])
@@ -117,10 +122,11 @@ async def generate_bom(request: BomRequest):
         
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, RuntimeError) as e:  # WP-3: narrowed from except Exception
+        logger.error("BOM generation failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"BOM generation failed: {str(e)}"
+            detail=f"BOM generation failed: {type(e).__name__}: {e}"
         )
 
 @router.post("/toolpaths", response_model=RmosToolpathPlan, tags=["RMOS"])
@@ -156,9 +162,10 @@ async def generate_toolpaths(request: ToolpathRequest):
         
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, RuntimeError) as e:  # WP-3: narrowed from except Exception
+        logger.error("Toolpath generation failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Toolpath generation failed: {str(e)}"
+            detail=f"Toolpath generation failed: {type(e).__name__}: {e}"
         )
 

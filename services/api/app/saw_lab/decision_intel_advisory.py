@@ -6,7 +6,10 @@ Used by batch_router.py to attach advisory to plan responses.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def get_latest_approved_delta_advisory(
@@ -54,5 +57,6 @@ def get_latest_approved_delta_advisory(
                 "note": "Found approved tuning delta. Use /stamp-plan-link to apply.",
             }
         return None
-    except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-        return None
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+        logger.error("Failed to get latest approved delta advisory for tool=%s, material=%s: %s", tool_id, material_id, e)
+        raise

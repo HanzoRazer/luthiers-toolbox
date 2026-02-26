@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional, Tuple
 
 from .decision_apply_service import apply_decision_to_context
+
+logger = logging.getLogger(__name__)
 
 
 def _as_dict(x: Any) -> Dict[str, Any]:
@@ -200,7 +203,8 @@ def generate_toolpaths_from_decision(
                 "statistics": _as_dict(result).get("statistics"),
             },
         }
-    except Exception as e:  # WP-1: keep broad — saw lab toolpath generation must persist error artifacts
+    except (ImportError, ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError) as e:  # WP-1: narrowed — persist error artifact then fail closed
+        logger.error("Toolpath generation failed for decision %s: %s", batch_decision_artifact_id, e)
         err_payload = {
             "status": "ERROR",
             "error": f"{type(e).__name__}: {e}",
@@ -218,14 +222,10 @@ def generate_toolpaths_from_decision(
             "parent_batch_plan_artifact_id": plan_id,
             "parent_batch_spec_artifact_id": spec_id,
         }
-        toolpaths_id = _persist_artifact(
+        _persist_artifact(
             kind="saw_batch_toolpaths",
             payload=err_payload,
             parent_id=batch_decision_artifact_id,
             session_id=session_id,
         )
-        return {
-            "status": "ERROR",
-            "error": err_payload["error"],
-            "batch_toolpaths_artifact_id": toolpaths_id,
-        }
+        raise

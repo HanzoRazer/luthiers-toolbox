@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .schemas import RunArtifact, AdvisoryInputRef
 from .store import RunStoreV2
+
+logger = logging.getLogger(__name__)
 
 _default_store: Optional[RunStoreV2] = None
 
@@ -264,7 +267,8 @@ def query_recent(
     if cursor:
         try:
             cursor_ts, cursor_id = cursor.split("|", 1)
-        except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+        except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Invalid cursor format: %s", e)
             cursor_ts, cursor_id = None, None
 
     def is_older_than_cursor(r: Dict[str, Any]) -> bool:

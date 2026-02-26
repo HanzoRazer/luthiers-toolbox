@@ -12,6 +12,7 @@ Part of Directional Workflow 2.0 (Mode B: Constraint-First).
 
 from __future__ import annotations
 
+import logging
 import random
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
@@ -19,6 +20,8 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from ..api_contracts import RmosContext, RmosFeasibilityResult, RiskBucket
+
+logger = logging.getLogger(__name__)
 
 
 # Fallback RosetteParamSpec if art_studio not available
@@ -154,6 +157,7 @@ def _evaluate_candidate(
             result=result,
         )
     except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
+        logger.debug("Feasibility logging failed for constraint_search candidate")
         pass  # Don't fail search if logging fails
     
     return result
@@ -218,6 +222,7 @@ def search_constraint_first(
         try:
             result = _evaluate_candidate(design, params)
         except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Candidate evaluation failed at trial %d: %s", trial_idx, e)
             # Skip failed evaluations
             continue
         

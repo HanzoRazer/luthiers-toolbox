@@ -12,12 +12,15 @@ Run-scoped advisory blob operations:
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 import zipfile
 import mimetypes
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, Response
@@ -100,6 +103,7 @@ def _read_head_bytes(sha256: str, max_bytes: int = 4096) -> bytes:
         with open(path, "rb") as f:
             return f.read(max_bytes)
     except OSError:  # WP-1: narrowed from except Exception
+        logger.debug("Failed to read head bytes for sha256=%s", sha256)
         return b""
 
 
@@ -209,6 +213,7 @@ def _svg_preview_is_safe(svg_bytes: bytes) -> Tuple[bool, str, Optional[str]]:
     try:
         text = svg_bytes.decode("utf-8", errors="strict")
     except UnicodeDecodeError:  # WP-1: narrowed from except Exception
+        logger.debug("SVG preview rejected: non-UTF-8 content")
         return (False, "SVG preview requires UTF-8 SVG content", "encoding")
 
     lower = text.lower()
@@ -403,13 +408,13 @@ def download_all_zip(run_id: str, background: BackgroundTasks) -> FileResponse:
         try:
             os.remove(zip_path)
         except OSError:  # WP-1: narrowed from except Exception
-            pass
+            logger.debug("Failed to clean temp zip after HTTPException")
         raise
     except (OSError, ValueError, zipfile.BadZipFile) as e:  # WP-1: narrowed from except Exception
         try:
             os.remove(zip_path)
         except OSError:  # WP-1: narrowed from except Exception
-            pass
+            logger.debug("Failed to clean temp zip after build error")
         raise HTTPException(status_code=500, detail=f"Failed to build zip: {e}")
 
     # Delete after response

@@ -9,10 +9,13 @@ Security: All paths are validated to prevent traversal attacks.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 def _artifact_root() -> Path:
@@ -88,6 +91,7 @@ def list_artifacts() -> List[RunIndexRow]:
             )
         except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: narrowed from except Exception
             # Ignore malformed artifacts in index listing (but keep raw file for forensics)
+            logger.debug("Skipping malformed artifact file: %s", p)
             continue
 
     # Newest first (string ISO sorts ok for same format)

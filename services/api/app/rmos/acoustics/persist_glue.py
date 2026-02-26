@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import uuid
@@ -12,6 +13,8 @@ from typing import Any, Dict, List, Optional
 
 from .importer import ImportPlan
 from .schemas_manifest_v1 import TapToneBundleManifestV1
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -347,8 +350,9 @@ def _update_attachment_meta_index(
 
         idx.write(data)
         return True
-    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
         # Meta index is best-effort; do not fail ingestion
+        logger.warning("Failed to update attachment meta index: %s", e)
         return False
 
 
@@ -406,8 +410,9 @@ def _update_index(*, runs_root: Path, run_obj: Dict[str, Any], run_json_path: Pa
         }
         _json_dump(idx_path, idx_out)
         return True
-    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
         # Index is best-effort; do not fail ingestion because of cache.
+        logger.warning("Failed to update run index: %s", e)
         return False
 
 
@@ -433,8 +438,8 @@ def load_run_artifact(run_id: str) -> Optional[RunArtifact]:
                         if p.exists() and p.is_file():
                             run_json_path = p
                             break
-        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-            pass
+        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
+            logger.debug("Index lookup failed for run %s, falling back to scan: %s", run_id, e)
 
     # 2) Fallback: scan date partitions
     if run_json_path is None:
@@ -455,7 +460,8 @@ def load_run_artifact(run_id: str) -> Optional[RunArtifact]:
 
     try:
         raw = _json_load(run_json_path)
-    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to load run artifact %s: %s", run_id, e)
         return None
 
     attachments = []

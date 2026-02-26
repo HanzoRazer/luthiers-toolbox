@@ -26,6 +26,7 @@ ARTIFACT KINDS:
 from __future__ import annotations
 
 import io
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -67,6 +68,8 @@ from ....rmos.runs_v2 import (
 # Feasibility enforcement
 from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
 from ....rmos.policies import SafetyPolicy
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -241,7 +244,8 @@ async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
 
     except HTTPException:
         raise  # WP-1: pass through
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, OSError) as e:
+        logger.error("Relief DXF export failed: %s", e, exc_info=True)
         run_id = create_run_id()
         artifact = RunArtifact(
             run_id=run_id,

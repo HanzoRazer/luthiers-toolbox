@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import zipfile
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from .batch_tree import list_batch_tree
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_json(obj: Any) -> bytes:
@@ -112,6 +115,7 @@ def build_batch_audit_zip(
                 try:
                     atts = ports.list_attachments(aid) or []
                 except (OSError, RuntimeError, KeyError):  # WP-1: narrowed from except Exception
+                    logger.debug("Failed to list attachments for artifact %s", aid)
                     atts = []
                 for att in atts:
                     if not isinstance(att, dict):
@@ -131,6 +135,7 @@ def build_batch_audit_zip(
                     try:
                         b = ports.get_attachment_bytes(aid, att_key)
                     except (OSError, KeyError):  # WP-1: narrowed from except Exception
+                        logger.debug("Failed to read attachment %s for artifact %s", att_key, aid)
                         continue
                     z.writestr(f"attachments/{aid}/{att_name}", b)
 

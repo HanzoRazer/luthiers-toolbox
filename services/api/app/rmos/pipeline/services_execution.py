@@ -5,7 +5,10 @@ Contains create_execution() and retry_execution() logic.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     PipelineStage,
@@ -182,6 +185,7 @@ def _execute_single_op(
         try:
             feas_result = svc.feasibility_checker.check(design, context)
         except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
+            logger.error("Feasibility recompute failed for op %s: %s", op_id, e, exc_info=True)
             feas_result = {
                 "score": 0.0,
                 "risk_bucket": "ERROR",
@@ -239,6 +243,7 @@ def _execute_single_op(
             if gcode:
                 gcode_hash = sha256_of_obj(gcode)
         except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:  # WP-1: narrowed from except Exception (GOVERNANCE: fail-closed)
+            logger.error("Toolpath generation failed for op %s: %s", op_id, e, exc_info=True)
             op_status = PipelineStatus.ERROR
             errors = [f"{type(e).__name__}: {str(e)}"]
 

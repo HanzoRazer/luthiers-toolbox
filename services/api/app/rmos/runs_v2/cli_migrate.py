@@ -29,9 +29,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def get_v1_path() -> str:
@@ -64,6 +67,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             print(f"  Status: EXISTS")
             print(f"  Artifact count: {len(v1_data)}")
         except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+            logger.error("Failed to load v1 store at %s: %s", v1_path, e)
             print(f"  Status: ERROR - {e}")
     else:
         print(f"  Status: NOT FOUND (no v1 data to migrate)")

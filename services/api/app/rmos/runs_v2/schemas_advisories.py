@@ -14,10 +14,12 @@ Compatibility notes:
 
 from __future__ import annotations
 
+import logging
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, validator
 
+logger = logging.getLogger(__name__)
 
 _SHA256_LEN = 64
 
@@ -50,7 +52,8 @@ def _is_lower_hex(s: str) -> bool:
     try:
         int(s, 16)
         return True
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Hex validation failed for %r: %s", s, e)
         return False
 
 

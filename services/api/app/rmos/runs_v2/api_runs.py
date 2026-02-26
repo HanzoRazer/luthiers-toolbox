@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -21,6 +22,8 @@ from .store import (
 from .diff import build_diff
 from .hashing import summarize_request, compute_feasibility_hash
 from app.rmos.api.response_utils import runs_list_response
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -457,8 +460,8 @@ def delete_run_endpoint(
                 allowed_by_rate_limit=True, client_ip=client_ip, outcome="forbidden", errors=deny_reason,
             )
             append_delete_audit(store_root=store.root, event=event)
-        except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-            pass  # Audit must never block
+        except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Audit logging failed for delete run_id=%s: %s", run_id, e)
         raise HTTPException(status_code=403, detail=deny_reason)
 
     # Attempt delete

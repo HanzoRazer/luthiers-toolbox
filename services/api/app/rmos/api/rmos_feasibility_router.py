@@ -10,10 +10,14 @@ MUST use this same engine.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException
 from typing import Any, Dict, Optional
 
 from app.safety import safety_critical
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -201,8 +205,9 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
                 },
             },
         }
-    except Exception as e:  # WP-1: governance catch-all — fail-open to YELLOW for manufacturing continuity
-        # Fallback on error - return YELLOW (allows with warning)
+    except (ImportError, ValueError, TypeError, AttributeError, KeyError, ZeroDivisionError, OSError) as e:  # WP-3: narrowed — fail-open to YELLOW for manufacturing continuity
+        logger.error("Saw feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
+        # Governance: fail-open to YELLOW so manufacturing is not blocked
         return {
             "mode": "saw",
             "tool_id": tool_id,
@@ -304,8 +309,9 @@ def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) 
                 },
             },
         }
-    except Exception as e:  # WP-1: governance catch-all — fail-open to YELLOW for manufacturing continuity
-        # Fallback on error - return YELLOW (allows with warning)
+    except (ImportError, ValueError, TypeError, AttributeError, KeyError, ZeroDivisionError, OSError) as e:  # WP-3: narrowed — fail-open to YELLOW for manufacturing continuity
+        logger.error("Rosette feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
+        # Governance: fail-open to YELLOW so manufacturing is not blocked
         return {
             "mode": "rosette",
             "tool_id": tool_id,

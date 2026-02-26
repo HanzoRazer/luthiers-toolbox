@@ -30,6 +30,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -57,6 +58,8 @@ from ....rmos.runs_v2 import (
 # Import feasibility functions (Phase 2: server-side enforcement)
 from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
 from ....rmos.policies import SafetyPolicy
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -213,7 +216,8 @@ def biarc_gcode(req: BiarcReq) -> Response:
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError) as e:
+        logger.error("Bi-arc G-code generation failed: %s", e, exc_info=True)
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(

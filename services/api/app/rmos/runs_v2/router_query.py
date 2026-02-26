@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, List, Tuple, Set
 
 import os
 import json
+import logging
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -25,6 +26,8 @@ from .compare import compare_run_artifacts
 
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -56,7 +59,8 @@ class RunsListResponse(BaseModel):
 def _safe_read_json(path: Path) -> Optional[Dict[str, Any]]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to read JSON file %s: %s", path, e)
         return None
 
 

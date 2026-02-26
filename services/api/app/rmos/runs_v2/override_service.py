@@ -13,6 +13,7 @@ Key invariants:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Optional, Tuple
@@ -27,6 +28,8 @@ from .schemas_override import (
 )
 from .attachments import put_json_attachment
 from .store import get_run, update_run
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -308,7 +311,8 @@ def get_override_info(run: RunArtifact) -> Optional[OverrideMetaUpdate]:
         return None
     try:
         return OverrideMetaUpdate.model_validate(override_data)
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to parse override metadata: %s", e)
         return None
 
 

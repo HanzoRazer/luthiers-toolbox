@@ -70,7 +70,8 @@ def _read_json_file(path: Path) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):  # WP-1: narrowed from except Exception
+    except (json.JSONDecodeError, OSError) as e:  # WP-1: narrowed from except Exception
+        _log.warning("Failed to read JSON file %s: %s", path, e)
         return {}
 
 def _write_json_file(path: Path, data: Dict[str, Any]) -> None:
@@ -80,7 +81,8 @@ def _write_json_file(path: Path, data: Dict[str, Any]) -> None:
     try:
         tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, path)
-    except OSError:  # WP-1: narrowed from except Exception
+    except OSError as e:  # WP-1: narrowed from except Exception
+        _log.error("Failed to write JSON file %s: %s", path, e)
         if tmp.exists():
             tmp.unlink()
         raise
@@ -140,7 +142,8 @@ class RunStoreV2:
                     data = json.loads(path.read_text(encoding="utf-8"))
                     artifact = RunArtifact.model_validate(data)
                     index[artifact.run_id] = _extract_index_meta(artifact)
-                except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
+                except (json.JSONDecodeError, ValueError, OSError, KeyError) as e:  # WP-1: narrowed from except Exception
+                    _log.debug("Skipping corrupt artifact %s during rebuild: %s", path, e)
                     continue
 
         self._write_index(index)
@@ -352,8 +355,8 @@ class RunStoreV2:
                         data = json.loads(path.read_text(encoding="utf-8"))
                         artifact = RunArtifact.model_validate(data)
                         artifact = self._load_advisory_links(artifact, path.parent)
-                    except (json.JSONDecodeError, ValueError, OSError, KeyError):  # WP-1: narrowed from except Exception
-                        pass
+                    except (json.JSONDecodeError, ValueError, OSError, KeyError) as e:  # WP-1: narrowed from except Exception
+                        _log.debug("Skipping unreadable artifact for run %s: %s", run_id, e)
 
             # Fall back to full search if partition lookup failed
             if artifact is None:

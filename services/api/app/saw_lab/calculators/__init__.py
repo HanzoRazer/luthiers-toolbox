@@ -15,6 +15,7 @@ All calculators follow the same interface:
 """
 from __future__ import annotations
 
+import logging
 from typing import Dict, List
 
 from ..models import (
@@ -32,6 +33,8 @@ from .saw_bite_load import SawBiteLoadCalculator
 from .saw_kickback import SawKickbackCalculator
 from .saw_cutting_force import SawCuttingForceCalculator
 from .saw_blade_dynamics import SawBladeDynamicsCalculator
+
+logger = logging.getLogger(__name__)
 
 
 class FeasibilityCalculatorBundle:
@@ -105,15 +108,9 @@ class FeasibilityCalculatorBundle:
                 if result.warning:
                     warnings.append(result.warning)
                     
-            except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-                # Calculator failed - add warning and default score
-                warnings.append(f"{name} calculator error: {str(e)}")
-                calculator_results[name] = SawCalculatorResult(
-                    calculator_name=name,
-                    score=50.0,
-                    warning=f"Calculator error: {str(e)}"
-                )
-                weighted_sum += 50.0 * self.WEIGHTS.get(name, 0.1)
+            except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+                logger.error("Calculator %s failed: %s", name, e)
+                raise
         
         # Calculate final score
         final_score = min(100.0, max(0.0, weighted_sum))

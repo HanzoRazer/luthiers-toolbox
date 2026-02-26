@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import logging
 import os
 import tempfile
 import threading
@@ -25,6 +26,8 @@ from fastapi.responses import StreamingResponse
 
 from .store import get_run
 from .attachments import put_json_attachment
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/api/rmos/runs_v2", tags=["RMOS"])
@@ -61,7 +64,8 @@ def _load_overrides_index() -> Dict[str, str]:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to load overrides index: %s", e)
         return {}
 
 

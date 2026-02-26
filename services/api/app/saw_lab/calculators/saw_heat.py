@@ -31,10 +31,13 @@ Physics model:
 """
 from __future__ import annotations
 
+import logging
 import math
 from math import pi
 
 from ..models import SawContext, SawDesign, SawCalculatorResult, MaterialProperties
+
+logger = logging.getLogger(__name__)
 
 
 # Heat partition fractions (typical for wood at moderate speeds)
@@ -213,9 +216,6 @@ class SawHeatCalculator:
                 },
             )
 
-        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-            return SawCalculatorResult(
-                calculator_name="heat",
-                score=50.0,
-                warning=f"Heat calculation error: {str(e)}",
-            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+            logger.error("Heat calculation error: %s", e)
+            raise

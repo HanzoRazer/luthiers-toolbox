@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 from enum import Enum
 from math import pi
+
+logger = logging.getLogger(__name__)
 
 from .context import RmosContext
 from ..calculators.service import (
@@ -203,6 +206,7 @@ def evaluate_feasibility(
         chipload_result = compute_chipload_risk(request)
         assessments.append(normalize_risk_result(chipload_result, "chipload"))
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Chipload check failed: %s", e)
         assessments.append(RiskAssessment(
             category="chipload",
             score=0.0,
@@ -215,6 +219,7 @@ def evaluate_feasibility(
         heat_result = compute_heat_risk(request)
         assessments.append(normalize_risk_result(heat_result, "heat"))
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Heat check failed: %s", e)
         assessments.append(RiskAssessment(
             category="heat",
             score=0.0,
@@ -227,6 +232,7 @@ def evaluate_feasibility(
         deflection_result = compute_deflection_risk(request)
         assessments.append(normalize_risk_result(deflection_result, "deflection"))
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Deflection check failed: %s", e)
         assessments.append(RiskAssessment(
             category="deflection",
             score=0.0,
@@ -239,6 +245,7 @@ def evaluate_feasibility(
         rimspeed_result = compute_rimspeed_risk(request)
         assessments.append(normalize_risk_result(rimspeed_result, "rimspeed"))
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Rimspeed check failed: %s", e)
         assessments.append(RiskAssessment(
             category="rimspeed",
             score=0.0,
@@ -251,6 +258,7 @@ def evaluate_feasibility(
         bom_result = compute_bom_efficiency(request)
         assessments.append(normalize_risk_result(bom_result, "bom_efficiency"))
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("BOM efficiency check failed: %s", e)
         assessments.append(RiskAssessment(
             category="bom_efficiency",
             score=0.0,

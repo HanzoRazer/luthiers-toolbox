@@ -9,6 +9,7 @@ Part of Directional Workflow 2.0 (Mode B: Constraint-First).
 
 from __future__ import annotations
 
+import logging
 from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException
@@ -23,6 +24,8 @@ from ..services.constraint_search import (
 )
 
 router = APIRouter(tags=["RMOS Constraint Search"])
+
+logger = logging.getLogger(__name__)
 
 
 class ConstraintSearchRequest(BaseModel):
@@ -176,7 +179,8 @@ async def search_designs(request: ConstraintSearchRequest) -> ConstraintSearchRe
         results = search_constraint_first(params)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, RuntimeError) as e:  # WP-3: narrowed — HTTP endpoint
+        logger.error("Constraint search failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Search failed: {str(e)}"

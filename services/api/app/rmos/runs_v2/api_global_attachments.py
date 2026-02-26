@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/attachments", tags=["runs"])
@@ -26,6 +29,7 @@ def _read_meta(sha256: str) -> dict:
         try:
             return json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):  # WP-1: narrowed from except Exception
+            logger.debug("Failed to read attachment metadata for sha256=%s", sha256)
             return {}
     return {}
 
@@ -58,6 +62,7 @@ def get_attachment_global(sha256: str):
     try:
         data = data_path.read_bytes()
     except OSError:  # WP-1: narrowed from except Exception
+        logger.error("Failed to read attachment data for sha256=%s", sha256)
         raise HTTPException(status_code=500, detail="failed to read attachment")
 
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}

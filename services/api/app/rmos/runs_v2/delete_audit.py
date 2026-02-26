@@ -13,11 +13,14 @@ Each line is a JSON object with:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 AUDIT_DIRNAME = "_audit"
@@ -83,9 +86,9 @@ def append_delete_audit(
         f.flush()
         try:
             os.fsync(f.fileno())
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError as e:  # WP-1: narrowed from except Exception
             # fsync may fail on some filesystems; audit is best-effort
-            pass
+            logger.debug("fsync failed for audit log (best-effort): %s", e)
 
     return path
 
@@ -153,7 +156,8 @@ def read_audit_lines(
     # Small file expected. If it grows, we can implement a true tail later.
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:  # WP-1: narrowed from except Exception
+    except OSError as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to read audit log: %s", e)
         return []
 
     lines = lines[-max(1, tail):]
@@ -163,7 +167,8 @@ def read_audit_lines(
             continue
         try:
             out.append(json.loads(ln))
-        except (json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+        except (json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
             # keep going; audit file should be append-only and resilient
+            logger.debug("Skipping malformed audit line: %s", e)
             continue
     return out

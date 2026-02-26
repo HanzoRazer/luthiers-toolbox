@@ -19,6 +19,10 @@ from typing import Dict, Any, List, Optional
 from math import pi
 from .api_contracts import RmosContext, RmosFeasibilityResult, RiskBucket
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Import migrated rosette calculator
 try:
     from ..pipelines.rosette import compute as rosette_compute
@@ -186,6 +190,7 @@ def _score_router_feasibility(
         if chipload_result.get("warning"):
             warnings.append(f"Chipload: {chipload_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Chipload calculation failed: %s", e)
         warnings.append(f"Chipload calculation failed: {str(e)}")
         scores.append(50.0)  # Neutral score on error
         weights.append(0.3)
@@ -201,6 +206,7 @@ def _score_router_feasibility(
         if heat_result.get("warning"):
             warnings.append(f"Heat: {heat_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Heat calculation failed: %s", e)
         warnings.append(f"Heat calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.25)
@@ -216,6 +222,7 @@ def _score_router_feasibility(
         if deflection_result.get("warning"):
             warnings.append(f"Deflection: {deflection_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Deflection calculation failed: %s", e)
         warnings.append(f"Deflection calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.2)
@@ -231,6 +238,7 @@ def _score_router_feasibility(
         if rim_speed_result.get("warning"):
             warnings.append(f"Rim Speed: {rim_speed_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Rim speed calculation failed: %s", e)
         warnings.append(f"Rim speed calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.15)
@@ -246,6 +254,7 @@ def _score_router_feasibility(
         if geometry_result.get("warning"):
             warnings.append(f"Geometry: {geometry_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Geometry calculation failed: %s", e)
         warnings.append(f"Geometry calculation failed: {str(e)}")
         scores.append(50.0)
         weights.append(0.1)
@@ -262,6 +271,7 @@ def _score_router_feasibility(
             warnings.append(f"Channel: {channel_result['warning']}")
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         # Non-critical - just log warning, don't affect score
+        logger.warning("Rosette channel calculation failed: %s", e)
         calculator_results["rosette_channel"] = {"error": str(e)}
     
     # Compute weighted average score
@@ -354,6 +364,7 @@ def _check_rosette_channel(design: RosetteParamSpec, ctx: RmosContext) -> Dict[s
             "raw_result": result,
         }
     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Channel calculation error: %s", e)
         return {"score": 50.0, "warning": f"Channel calculation error: {str(e)}", "error": True}
 
 
@@ -412,14 +423,15 @@ def _estimate_efficiency(design: RosetteParamSpec, ctx: RmosContext) -> float:
                     
                     return round((rosette_area / bounding_area) * 100, 2)
             except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
-                pass  # Fall through to basic estimate
+                logger.debug("Rosette compute failed in efficiency estimate, falling through to basic estimate")
         
         # Basic estimate: larger inner diameter = higher waste
         outer_area = pi * (outer_d / 2) ** 2
         inner_area = pi * (inner_d / 2) ** 2
         usable_area = outer_area - inner_area
         return round((usable_area / outer_area) * 100, 2)
-    except (ZeroDivisionError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
+    except (ZeroDivisionError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Efficiency estimate failed, using default 85%%: %s", e)
         return 85.0  # Default assumption
 
 

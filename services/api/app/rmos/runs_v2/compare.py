@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+logger = logging.getLogger(__name__)
 
 JsonDict = Dict[str, Any]
 
@@ -18,7 +20,8 @@ def _as_dict(obj: Any) -> JsonDict:
     if hasattr(obj, "model_dump"):
         try:
             return obj.model_dump()
-        except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
+        except (ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
+            logger.debug("Failed to convert object to dict via model_dump: %s", e)
             return {}
     return {}
 
@@ -31,14 +34,16 @@ def _as_list(obj: Any) -> List[Any]:
     # pydantic list-like
     try:
         return list(obj)
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Failed to convert object to list: %s", e)
         return []
 
 
 def _safe_str(x: Any) -> str:
     try:
         return str(x)
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Failed to convert object to string: %s", e)
         return ""
 
 

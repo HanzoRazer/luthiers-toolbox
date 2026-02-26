@@ -16,12 +16,15 @@ Usage:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from .compat import convert_v1_to_v2, validate_v2_artifact
 from .store import RunStoreV2
@@ -141,6 +144,7 @@ def migrate_v1_to_v2(
         try:
             report.backup_path = backup_v1_store(v1_path)
         except OSError as e:  # WP-1: narrowed from except Exception
+            logger.warning("Backup of v1 store failed: %s", e)
             report.errors.append({"error": "backup_failed", "detail": str(e)})
             if stop_on_error:
                 report.completed_at = datetime.now(timezone.utc)
@@ -150,6 +154,7 @@ def migrate_v1_to_v2(
     try:
         v1_data = load_v1_store(v1_path)
     except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+        logger.error("Failed to load v1 store %s: %s", v1_path, e)
         report.errors.append({"error": "load_failed", "detail": str(e)})
         report.completed_at = datetime.now(timezone.utc)
         return report
@@ -199,6 +204,7 @@ def migrate_v1_to_v2(
             report.migrated += 1
 
         except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Migration conversion failed for run %s: %s", run_id, e)
             report.errors.append({
                 "run_id": run_id,
                 "error": "conversion_failed",
@@ -294,6 +300,7 @@ def rollback_migration(
             shutil.copy2(backup_path, v1_path)
             result["restored_v1"] = True
         except OSError as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to restore v1 from backup: %s", e)
             result["errors"].append(f"Failed to restore v1: {e}")
     else:
         result["errors"].append(f"Backup not found: {backup_path}")
@@ -306,6 +313,7 @@ def rollback_migration(
                 shutil.rmtree(v2_path)
                 result["deleted_v2"] = True
             except OSError as e:  # WP-1: narrowed from except Exception
+                logger.warning("Failed to delete v2 data: %s", e)
                 result["errors"].append(f"Failed to delete v2: {e}")
 
     return result

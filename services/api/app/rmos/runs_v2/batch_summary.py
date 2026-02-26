@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from .batch_tree import list_batch_tree, resolve_batch_root
+
+logger = logging.getLogger(__name__)
 
 
 def _as_dict(x: Any) -> Dict[str, Any]:
@@ -188,7 +191,8 @@ def build_batch_summary(
                 batch_label=batch_label,
                 tool_kind=tool_kind,
             )
-        except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
+        except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to resolve batch root for session=%s batch=%s: %s", session_id, batch_label, e)
             root_id = None
 
     # small "stage" surface for UI cards

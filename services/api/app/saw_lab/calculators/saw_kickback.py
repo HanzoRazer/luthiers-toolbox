@@ -5,7 +5,11 @@ Calculates kickback risk for saw operations.
 """
 from __future__ import annotations
 
+import logging
+
 from ..models import SawContext, SawDesign, SawCalculatorResult
+
+logger = logging.getLogger(__name__)
 
 
 class SawKickbackCalculator:
@@ -128,9 +132,6 @@ class SawKickbackCalculator:
                 }
             )
             
-        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-            return SawCalculatorResult(
-                calculator_name="kickback",
-                score=50.0,
-                warning=f"Kickback calculation error: {str(e)}"
-            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+            logger.error("Kickback calculation error: %s", e)
+            raise

@@ -10,9 +10,12 @@ Preserved from v1 implementation with Pydantic schema updates.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from .schemas import RunAttachment
 from .hashing import sha256_of_obj, sha256_of_text, sha256_of_bytes, sha256_file
@@ -214,7 +217,8 @@ def get_bytes_attachment(sha256: str) -> Optional[bytes]:
         return None
     try:
         return Path(path).read_bytes()
-    except OSError:  # WP-1: narrowed from except Exception
+    except OSError as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to read attachment bytes for sha256=%s: %s", sha256, e)
         return None
 
 
@@ -234,7 +238,8 @@ def load_json_attachment(sha256: str) -> Optional[Dict[str, Any]]:
 
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+    except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Failed to load JSON attachment sha256=%s: %s", sha256, e)
         return None
 
 

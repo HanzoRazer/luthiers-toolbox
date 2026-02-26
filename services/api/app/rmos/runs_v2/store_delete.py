@@ -157,7 +157,8 @@ def execute_delete(
     if check_rate_limit is not None:
         try:
             check_rate_limit(limit_key)
-        except Exception as e:  # WP-1: broad catch intentional — callback may raise arbitrary errors, always re-raises
+        except Exception as e:  # WP-3: broad catch intentional — callback may raise arbitrary errors, always re-raises
+            log.error("Rate-limit check failed for run %s: %s", run_id, e, exc_info=True)
             if isinstance(e, DeleteRateLimitError_cls):
                 _safe_audit(**_akw, index_updated=False, artifact_deleted=False,
                             attachments_deleted=0, errors=f"Rate limited: {e}",
@@ -211,10 +212,17 @@ def execute_delete(
 
     except KeyError:
         raise
-    except Exception as e:  # WP-1: broad catch intentional — ensures audit event is written, always re-raises specific errors
-        if isinstance(e, DeleteRateLimitError_cls):
-            raise
+    except (OSError, json.JSONDecodeError, TypeError, ValueError) as e:  # WP-3: narrowed — audit then fail-closed
+        log.error("Delete operation failed for run %s: %s", run_id, e, exc_info=True)
         error_msg = str(e)
+        _safe_audit(**_akw, index_updated=result["index_updated"],
+                    artifact_deleted=result["artifact_deleted"],
+                    attachments_deleted=result["advisory_links_deleted"],
+                    errors=error_msg,
+                    meta={"cascade": cascade, "partition": result["partition"],
+                          "rate_limit_key": limit_key},
+                    label="error")
+        raise
 
     _safe_audit(**_akw, index_updated=result["index_updated"],
                 artifact_deleted=result["artifact_deleted"],

@@ -9,11 +9,14 @@ If/when you add an LLM provider, do it behind a feature flag and keep this as fa
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from app.rmos.feasibility.rule_registry import FEASIBILITY_RULES
 from app.rmos.runs_v2.schemas import RunArtifact
 from .schemas import AssistantExplanation, AssistantExplanationBasedOn
+
+logger = logging.getLogger(__name__)
 
 
 def _get_rule_summaries(rule_ids: List[str]) -> List[str]:
@@ -84,6 +87,7 @@ def generate_assistant_explanation(
         raw_rules = (run.feasibility or {}).get("rules_triggered", [])
         rule_ids = [str(x).strip().upper() for x in raw_rules if x]
     except (ValueError, TypeError, KeyError, AttributeError):  # WP-1: narrowed from except Exception
+        logger.debug("Failed to extract rules_triggered from run %s", run.run_id)
         rule_ids = []
 
     # Get risk level safely
@@ -121,6 +125,7 @@ def generate_assistant_explanation(
                     f"Plunge feed exceeds XY feed: feed_z={facts['feed_z']} > feed_xy={facts['feed_xy']}."
                 )
         except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+            logger.debug("Could not compare feed_z/feed_xy for run %s", run.run_id)
             pass
 
     # Build suggested actions tied to known rule IDs

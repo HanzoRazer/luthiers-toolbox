@@ -23,6 +23,7 @@ ARTIFACT KINDS:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from typing import Any, Dict, Optional
@@ -39,6 +40,8 @@ from app.rmos.runs_v2 import (
 from .rmos_feasibility_router import compute_feasibility_internal, resolve_mode
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 # Safety policy (hardcoded production invariants per governance contract)
 BLOCK_ON_RED = True
@@ -149,7 +152,8 @@ def rmos_toolpaths(req: Dict[str, Any]) -> Dict[str, Any]:
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — creates ERROR RunArtifact for audit trail
+    except (ValueError, TypeError, KeyError, OSError, RuntimeError) as e:  # WP-3: narrowed — creates ERROR RunArtifact for audit trail
+        logger.error("Toolpath generation failed: %s", e, exc_info=True)
         # ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(

@@ -15,6 +15,7 @@ Integrates with:
 from __future__ import annotations
 
 import hashlib
+import logging
 import time
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List, Tuple
@@ -36,6 +37,8 @@ from .logging_ai import (
     log_ai_constraint_attempt,
     log_ai_constraint_run_summary,
 )
+
+logger = logging.getLogger(__name__)
 
 # Import policy module for constraint clamping
 try:
@@ -85,7 +88,8 @@ def _hash_candidate(design: Any) -> str:
         import json
         serialized = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(serialized.encode()).hexdigest()[:16]
-    except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Candidate hashing fallback to str: %s", e)
         return hashlib.sha256(str(design).encode()).hexdigest()[:16]
 
 
@@ -223,7 +227,7 @@ def run_constraint_first_search(request: AiSearchRequest) -> AiSearchResponse:
         try:
             candidate = generator(prev_design, attempt_idx)
         except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
-            # Log error but continue
+            logger.warning("Candidate generation failed on attempt %d: %s", attempt_count, e)
             continue
         
         # Check for duplicate
@@ -243,6 +247,7 @@ def run_constraint_first_search(request: AiSearchRequest) -> AiSearchResponse:
                 workflow_mode=workflow_mode,
             )
         except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Feasibility scoring failed on attempt %d: %s", attempt_count, e)
             # Score failed - treat as RED
             result = RmosFeasibilityResult(
                 score=0.0,

@@ -9,7 +9,10 @@ Migrated from: _experimental/ai_core/safety.py (December 2025)
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict
+
+logger = logging.getLogger(__name__)
 
 # RMOS contracts
 try:
@@ -71,11 +74,13 @@ def coerce_to_rosette_spec(raw: Dict[str, Any]) -> RosetteParamSpec:
     try:
         return RosetteParamSpec.model_validate(filtered)
     except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+        logger.warning("RosetteParamSpec validation failed, trying defaults")
         # If validation fails, try with just the known defaults
         safe_defaults = {k: v for k, v in defaults.items() if k in known_fields}
         try:
             return RosetteParamSpec.model_validate(safe_defaults)
         except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+            logger.warning("RosetteParamSpec default validation also failed, using constructor")
             # Last resort: return with whatever we can construct
             return RosetteParamSpec(**safe_defaults)
 

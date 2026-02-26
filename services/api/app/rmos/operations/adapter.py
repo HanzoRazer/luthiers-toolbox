@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple
+
+logger = logging.getLogger(__name__)
 
 from pydantic import BaseModel, Field
 
@@ -210,6 +213,7 @@ class OperationAdapter:
             else:
                 warnings.append("No tool adapter configured - G-code generation skipped")
         except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
+            logger.error("G-code generation error for tool %s: %s", request.tool_id, e, exc_info=True)
             warnings.append(f"G-code generation error: {e}")
 
         # Create execution artifact
@@ -338,6 +342,7 @@ class OperationAdapter:
                     "planned_at": datetime.now(timezone.utc).isoformat(),
                 }
         except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
+            logger.error("Plan generation error for tool %s: %s", request.tool_id, e, exc_info=True)
             warnings.append(f"Plan generation error: {e}")
 
         # Determine status

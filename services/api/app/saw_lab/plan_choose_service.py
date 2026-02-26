@@ -9,7 +9,10 @@ Used by batch_router.py to determine whether an override is active.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _get_items(res: Any) -> List[Dict[str, Any]]:
@@ -98,5 +101,6 @@ def find_latest_plan_choose(
         candidates.sort(key=_ts, reverse=True)
         return candidates[0]
 
-    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError):  # WP-1: narrowed from except Exception
-        return None
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError) as e:  # WP-1: narrowed
+        logger.error("Failed to find latest plan-choose (session=%s, batch=%s): %s", session_id, batch_label, e)
+        raise

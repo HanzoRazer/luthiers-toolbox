@@ -9,10 +9,13 @@ Provides non-breaking normalization and validation for CamIntentV1 payloads:
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.rmos.cam.schemas_intent import CamIntentV1, CamModeV1, CamUnitsV1
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)

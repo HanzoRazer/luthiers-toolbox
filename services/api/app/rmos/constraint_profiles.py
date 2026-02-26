@@ -13,6 +13,7 @@ Environment Variables:
 """
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
@@ -33,6 +34,8 @@ except ImportError:
 # ======================
 
 DEFAULT_PROFILE_PATH = Path("config/rmos_constraint_profiles.yaml")
+
+logger = logging.getLogger(__name__)
 
 def get_profile_path() -> Path:
     """Get path to profiles YAML from environment or default."""
@@ -205,10 +208,12 @@ class ProfileStore:
                     profile = ConstraintProfile.from_dict(profile_id, profile_data)
                     self._profiles[profile_id] = profile
                 except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
+                    logger.warning("Skipping invalid profile '%s': %s", profile_id, e)
                     continue  # Skip invalid profiles
             
             return True
-        except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
+        except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to load constraint profiles from %s: %s", self._yaml_path, e)
             return False
     
     def save_to_yaml(self) -> bool:
@@ -236,7 +241,8 @@ class ProfileStore:
                 yaml.dump(data, f, default_flow_style=False, sort_keys=False)
             
             return True
-        except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
+        except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+            logger.error("Failed to save constraint profiles to %s: %s", self._yaml_path, e)
             return False
     
     def get(self, profile_id: str) -> Optional[ConstraintProfile]:

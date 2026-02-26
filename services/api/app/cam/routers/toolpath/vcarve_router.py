@@ -16,6 +16,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 from datetime import datetime, timezone
@@ -57,6 +58,8 @@ from ....rmos.runs_v2 import (
 )
 from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
 from ....rmos.policies import SafetyPolicy
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -393,7 +396,8 @@ async def generate_vcarve_gcode(req: VCarveGCodeRequest) -> Dict[str, Any]:
 
     except HTTPException:
         raise  # WP-1: pass through
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError) as e:
+        logger.error("VCarve G-code generation failed: %s", e, exc_info=True)
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(
