@@ -9,7 +9,6 @@ from .models import CostFact, CostDimension
 from .policy import load_policy
 from .mapper import telemetry_to_cost_facts
 from .store import append_cost_facts, summarize_by_batch, summarize_by_instrument
-from .api import router as cost_router
 
 __all__ = [
     "CostFact",
@@ -19,5 +18,4 @@ __all__ = [
     "append_cost_facts",
     "summarize_by_batch",
     "summarize_by_instrument",
-    "cost_router",
 ]

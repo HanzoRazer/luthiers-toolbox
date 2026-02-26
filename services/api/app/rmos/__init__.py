@@ -81,8 +81,6 @@ from .profile_history import (
 )
 
 # Routers
-from .api_ai_routes import router as ai_router
-from .api_constraint_profiles import router as profiles_router
 from .api_routes import router as rmos_router  # Existing core RMOS router
 
 # Runs Module (Phase D - Audit Trail)
@@ -351,8 +349,6 @@ __all__ = [
     "record_profile_change",
     "get_profile_history",
     # Routers
-    "ai_router",
-    "profiles_router",
     "rmos_router",
     "runs_router",
     # Runs Module (Phase D - v1/v2 conditional)

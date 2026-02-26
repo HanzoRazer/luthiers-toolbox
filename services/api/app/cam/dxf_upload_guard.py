@@ -5,10 +5,11 @@ DXF Upload Guard
 Reusable validation for DXF file uploads.
 Provides file size checking and entity count validation.
 
-Usage in routers:
+Usage in routers::
+
     from app.cam.dxf_upload_guard import validate_dxf_upload, read_dxf_with_validation
 
-    @router.post("/upload")
+    # router.post("/upload")
     async def upload_dxf(file: UploadFile = File(...)):
         dxf_bytes = await read_dxf_with_validation(file)
         # ... process dxf_bytes ...

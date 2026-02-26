@@ -15,8 +15,9 @@ def get_db_session() -> Generator[Any, None, None]:
     
     Currently a stub - returns None until database is configured.
     
-    Usage:
-        @router.get("/items")
+    Usage::
+
+        # router.get("/items")
         def list_items(db = Depends(get_db_session)):
             ...
     """
@@ -30,8 +31,9 @@ def get_current_user() -> Optional[dict]:
     
     Currently a stub - returns None (anonymous) until auth is configured.
     
-    Usage:
-        @router.get("/profile")
+    Usage::
+
+        # router.get("/profile")
         def get_profile(user = Depends(get_current_user)):
             ...
     """

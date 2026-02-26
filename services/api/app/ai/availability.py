@@ -10,10 +10,11 @@ INVARIANTS:
 - All checks happen at runtime (inside request handlers)
 - Returns 503 (Service Unavailable) with clear error envelope
 
-Usage in endpoints:
+Usage in endpoints::
+
     from app.ai.availability import require_ai_available
 
-    @router.post("/ai-endpoint")
+    # router.post("/ai-endpoint")
     async def my_ai_endpoint(request: MyRequest):
         require_ai_available(feature="My AI Feature")
         # ... AI logic here

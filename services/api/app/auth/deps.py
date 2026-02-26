@@ -250,8 +250,9 @@ def require_roles(*allowed_roles: str) -> Callable[..., Principal]:
     """
     Dependency factory for role-based access control.
 
-    Usage:
-        @router.post("/promote")
+    Usage::
+
+        # router.post("/promote")
         def promote(principal: Principal = Depends(require_roles("admin", "operator", "engineer"))):
             ...
 
