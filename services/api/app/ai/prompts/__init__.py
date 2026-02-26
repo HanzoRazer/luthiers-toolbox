@@ -2,20 +2,7 @@
 AI Prompts Layer - Templates and Utilities
 
 Centralized prompt templates and vocabulary management.
+Note: templates.py was removed (dead code — Phase 4 remediation).
 """
 
-from .templates import (
-    PromptTemplate,
-    RosettePromptBuilder,
-    CAMAdvisorPromptBuilder,
-    build_rosette_prompt,
-    build_cam_advisor_prompt,
-)
-
-__all__ = [
-    "PromptTemplate",
-    "RosettePromptBuilder",
-    "CAMAdvisorPromptBuilder",
-    "build_rosette_prompt",
-    "build_cam_advisor_prompt",
-]
+__all__: list = []

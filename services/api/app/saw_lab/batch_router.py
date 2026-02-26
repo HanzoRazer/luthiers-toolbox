@@ -5,19 +5,13 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 
 from app.saw_lab.store import (
     store_artifact,
     get_artifact,
     query_job_logs_by_execution,
     query_accepted_learning_events,
-)
-from app.saw_lab.batch_router_helpers import (
-    extract_plan_snapshot as _extract_plan_snapshot,
-    find_setup_ops as _find_setup_ops,
-    extract_base_context as _extract_base_context,
-    apply_patch_to_context as _apply_patch_to_context_patch,
 )
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
@@ -28,7 +22,6 @@ router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
 # ---------------------------------------------------------------------------
 
 from app.saw_lab.batch_router_schemas import (
-    BatchSpecItem,
     BatchSpecRequest,
     BatchSpecResponse,
     BatchPlanRequest,
@@ -37,14 +30,6 @@ from app.saw_lab.batch_router_schemas import (
     BatchPlanResponse,
     BatchApproveRequest,
     BatchApproveResponse,
-    JobLogMetrics,
-    JobLogRequest,
-    LearningEvent,
-    RollupArtifacts,
-    JobLogResponse,
-    LearningTuningStamp,
-    LearningResolved,
-    LearningInfo,
 )
 
 

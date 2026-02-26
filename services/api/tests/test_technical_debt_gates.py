@@ -37,7 +37,6 @@ ACCEPTABLE_GOD_OBJECTS = {
     "LTBFinancialCalculator",  # HP 12C calculator model
     "LTBFractionCalculator",  # Calculator model
     "LTBScientificCalculator",  # Calculator model
-    "LTBLuthierCalculator",  # Calculator model
     "LTBBasicCalculator",  # Calculator model
     "RunStoreV2",  # Refactored, delegation wrappers remain
     "LearnedOverridesStore",  # Cohesive ML domain store

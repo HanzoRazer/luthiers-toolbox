@@ -14,7 +14,6 @@ import sqlite3
 from datetime import datetime
 
 from .sqlite_base import SQLiteStoreBase
-from ..core.rmos_db import RMOSDatabase
 
 
 # ========== N11.1: Rosette Job Type Constants ==========
@@ -96,26 +95,6 @@ class SQLiteJobLogStore(SQLiteStoreBase):
             'updated_at': data['updated_at']
         }
     
-    def get_by_status(self, status: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Get jobs by status."""
-        query = f"""
-            SELECT * FROM {self.table_name}
-            WHERE status = ?
-            ORDER BY created_at DESC
-        """
-        params: tuple = (status,)
-        
-        if limit:
-            query += " LIMIT ?"
-            params = (status, int(limit))
-        
-        with self.db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-        
-        return [self._row_to_dict(row) for row in rows]
-    
     def get_by_pattern(self, pattern_id: str) -> List[Dict[str, Any]]:
         """Get all jobs for a specific pattern."""
         query = f"""
@@ -127,26 +106,6 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (pattern_id,))
-            rows = cursor.fetchall()
-        
-        return [self._row_to_dict(row) for row in rows]
-    
-    def get_by_job_type(self, job_type: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Get jobs by type."""
-        query = f"""
-            SELECT * FROM {self.table_name}
-            WHERE job_type = ?
-            ORDER BY created_at DESC
-        """
-        params: tuple = (job_type,)
-        
-        if limit:
-            query += " LIMIT ?"
-            params = (job_type, int(limit))
-        
-        with self.db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
             rows = cursor.fetchall()
         
         return [self._row_to_dict(row) for row in rows]
@@ -172,65 +131,9 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         """Alias for get_job() for interface compatibility."""
         return self.get_job(job_id)
 
-    def list(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
-        """Alias for get_all() for interface compatibility."""
-        return self.get_all(limit=limit, offset=offset)
-
-    def list_rosette_cnc_exports(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Return the most recent rosette CNC export jobs (limited)."""
-        query = f"""
-            SELECT * FROM {self.table_name}
-            WHERE job_type = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        """
-        
-        with self.db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, (JOB_TYPE_ROSETTE_CNC_EXPORT, limit))
-            rows = cursor.fetchall()
-        
-        return [self._row_to_dict(row) for row in rows]
-    
     def get_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get most recent jobs across all types."""
         return self.get_all(limit=limit)
-    
-    def get_statistics(self) -> Dict[str, Any]:
-        """Get job statistics."""
-        query = """
-            SELECT
-                COUNT(*) as total_count,
-                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
-                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_count,
-                SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) as running_count,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
-                AVG(CASE WHEN duration_seconds IS NOT NULL THEN duration_seconds END) as avg_duration,
-                COUNT(DISTINCT job_type) as unique_job_types,
-                COUNT(DISTINCT pattern_id) as unique_patterns
-            FROM joblogs
-        """
-        
-        with self.db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query)
-            row = cursor.fetchone()
-        
-        total = row['total_count']
-        completed = row['completed_count']
-        success_rate = (completed / total * 100) if total > 0 else 0
-        
-        return {
-            'total_count': total,
-            'completed_count': completed,
-            'failed_count': row['failed_count'],
-            'running_count': row['running_count'],
-            'pending_count': row['pending_count'],
-            'success_rate': round(success_rate, 2),
-            'avg_duration': row['avg_duration'],
-            'unique_job_types': row['unique_job_types'],
-            'unique_patterns': row['unique_patterns']
-        }
     
     def update_status(self, job_id: str, status: str, 
                       end_time: Optional[str] = None,
@@ -282,59 +185,4 @@ class SQLiteJobLogStore(SQLiteStoreBase):
         # Insert using parent create method
         return self.create(job_data)
 
-    # ========== N10/N14: CNC Export Job Helpers ==========
-    
-    def create_rosette_cnc_export_job(
-        self,
-        pattern_id: Optional[str],
-        ring_id: int,
-        material: str,
-        jig_origin: Dict[str, Any],
-        envelope: Dict[str, Any],
-        parameters_extra: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        """Create a JobLog entry for a rosette CNC export."""
-        params = {
-            "ring_id": ring_id,
-            "material": material,
-            "jig_origin": jig_origin,
-            "envelope": envelope,
-        }
-        if parameters_extra:
-            params.update(parameters_extra)
 
-        return self.create_rosette_job(
-            job_type=JOB_TYPE_ROSETTE_CNC_EXPORT,
-            pattern_id=pattern_id,
-            parameters=params,
-            status="running",
-        )
-
-    def complete_job_with_results(
-        self,
-        job_id: str,
-        status: str,
-        results: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
-        """Generic helper to mark a job as completed / failed with result payload."""
-        end_time = datetime.utcnow().isoformat()
-        
-        # Calculate duration if job has start_time
-        existing_job = self.get(job_id)
-        duration_seconds = None
-        
-        if existing_job and existing_job.get('start_time'):
-            try:
-                start = datetime.fromisoformat(existing_job['start_time'])
-                end = datetime.fromisoformat(end_time)
-                duration_seconds = (end - start).total_seconds()
-            except (ValueError, TypeError):
-                pass  # Keep duration as None if timestamp parsing fails
-
-        return self.update_status(
-            job_id=job_id,
-            status=status,
-            end_time=end_time,
-            duration_seconds=duration_seconds,
-            results=results,
-        )

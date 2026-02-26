@@ -64,27 +64,13 @@ class Registry(RegistryProductsMixin):
         """Get all standard scale lengths (Fender, Gibson, etc.)"""
         return self._load_system_data("references/scale_lengths.json")
     
-    def get_scale_length(self, scale_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific scale length by ID"""
-        scales = self.get_scale_lengths()
-        return scales.get("scales", {}).get(scale_id)
-    
     def get_fret_formulas(self) -> Dict[str, Any]:
         """Get fret calculation formulas (12-TET, temperaments)"""
         return self._load_system_data("references/fret_formulas.json")
     
-    def get_neck_profiles(self) -> Dict[str, Any]:
-        """Get standard neck profiles (C, D, V, asymmetric)"""
-        return self._load_system_data("instruments/neck_profiles.json")
-    
     def get_body_templates(self) -> Dict[str, Any]:
         """Get standard body templates (Strat, LP, J45, etc.)"""
         return self._load_system_data("instruments/body_templates.json")
-    
-    def get_body_template(self, body_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific body template by ID"""
-        templates = self.get_body_templates()
-        return templates.get("bodies", {}).get(body_id)
     
     def get_wood_species(self) -> Dict[str, Any]:
         """Get wood species reference data (no empirical limits)"""
@@ -104,33 +90,10 @@ class Registry(RegistryProductsMixin):
         self._check_entitlement("edition", "tools")
         return self._load_edition_data("tools/router_bits.json")
     
-    def get_tool(self, tool_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific tool by ID, checking user overrides first"""
-        # Check user tools first
-        if self.user_id:
-            user_tool = self._get_user_tool(tool_id)
-            if user_tool:
-                return user_tool
-        
-        # Fall back to edition tools
-        tools = self.get_tools()
-        return tools.get("tools", {}).get(tool_id)
-    
     def get_machines(self) -> Dict[str, Any]:
         """Get machine profiles (Pro/Enterprise only)"""
         self._check_entitlement("edition", "machines")
         return self._load_edition_data("machines/profiles.json")
-    
-    def get_machine(self, machine_id: str) -> Optional[Dict[str, Any]]:
-        """Get a specific machine profile by ID"""
-        # Check user machines first
-        if self.user_id:
-            user_machine = self._get_user_machine(machine_id)
-            if user_machine:
-                return user_machine
-        
-        machines = self.get_machines()
-        return machines.get("machines", {}).get(machine_id)
     
     def get_empirical_limits(self) -> Dict[str, Any]:
         """Get empirical feed/speed limits per wood species (Pro/Enterprise)"""
@@ -142,16 +105,6 @@ class Registry(RegistryProductsMixin):
         limits = self.get_empirical_limits()
         return limits.get("limits", {}).get(species_id)
     
-    def get_cam_presets(self) -> Dict[str, Any]:
-        """Get CAM operation presets (Pro/Enterprise only)"""
-        self._check_entitlement("edition", "cam_presets")
-        return self._load_edition_data("cam_presets/presets.json")
-    
-    def get_post_processors(self) -> Dict[str, Any]:
-        """Get G-code post processor configs (Pro/Enterprise only)"""
-        self._check_entitlement("edition", "posts")
-        return self._load_edition_data("posts/processors.json")
-    
     # WP-3: Standalone product accessors (ltb-parametric, ltb-neck-designer,
     # ltb-headstock-designer, ltb-bridge-designer, ltb-fingerboard-designer,
     # ltb-cnc-blueprints) extracted to RegistryProductsMixin via registry_products.py
@@ -159,146 +112,6 @@ class Registry(RegistryProductsMixin):
     # =========================================================================
     # COMBINED QUERIES (Merges tiers with precedence)
     # =========================================================================
-    
-    def get_material_with_limits(self, species_id: str) -> Optional[Dict[str, Any]]:
-        """Get wood species data combined with empirical limits."""
-        wood = self.get_wood(species_id)
-        if not wood:
-            return None
-        
-        result = dict(wood)
-        
-        # Add empirical limits if entitled
-        try:
-            limits = self.get_empirical_limit(species_id)
-            if limits:
-                result["empirical"] = limits
-        except EntitlementError:
-            # Express edition - no limits available
-            pass
-        
-        return result
-    
-    def get_tool_for_operation(self, 
-                               operation: str, 
-                               material: str,
-                               preferred_diameter: Optional[float] = None) -> Optional[Dict[str, Any]]:
-        """Find best tool for an operation considering material and diameter."""
-        tools = self.get_tools()
-        candidates = []
-        
-        for tool_id, tool in tools.get("tools", {}).items():
-            if operation in tool.get("suitable_for", []):
-                score = 0
-                
-                # Prefer tools rated for this material hardness
-                material_data = self.get_wood(material)
-                if material_data:
-                    tool_hardness = tool.get("max_hardness", 2000)
-                    material_janka = material_data.get("janka_hardness", 1000)
-                    if tool_hardness >= material_janka:
-                        score += 10
-                
-                # Prefer matching diameter
-                if preferred_diameter:
-                    tool_dia = tool.get("diameter_mm", 0)
-                    if abs(tool_dia - preferred_diameter) < 0.5:
-                        score += 5
-                
-                candidates.append((score, tool_id, tool))
-        
-        if candidates:
-            candidates.sort(key=lambda x: -x[0])
-            return candidates[0][2]
-        
-        return None
-    
-    # =========================================================================
-    # USER DATA (CRUD, cloud-synced)
-    # =========================================================================
-    
-    def save_custom_tool(self, tool: Dict[str, Any]) -> str:
-        """Save a user-defined tool to local DB"""
-        self._check_entitlement("user", "my_tools")
-        return self._save_user_data("my_tools", tool)
-    
-    def save_custom_machine(self, machine: Dict[str, Any]) -> str:
-        """Save a user-defined machine profile to local DB"""
-        self._check_entitlement("user", "my_machines")
-        return self._save_user_data("my_machines", machine)
-    
-    def save_custom_profile(self, profile: Dict[str, Any]) -> str:
-        """Save a user-defined neck/body profile to local DB"""
-        self._check_entitlement("user", "custom_profiles")
-        return self._save_user_data("custom_profiles", profile)
-    
-    def save_project(self, project: Dict[str, Any]) -> str:
-        """Save a project to local DB"""
-        self._check_entitlement("user", "projects")
-        return self._save_user_data("projects", project)
-    
-    def get_user_tools(self) -> List[Dict[str, Any]]:
-        """Get all user-defined tools"""
-        self._check_entitlement("user", "my_tools")
-        return self._get_user_data("my_tools")
-    
-    def get_user_machines(self) -> List[Dict[str, Any]]:
-        """Get all user-defined machine profiles"""
-        self._check_entitlement("user", "my_machines")
-        return self._get_user_data("my_machines")
-    
-    def get_user_profiles(self) -> List[Dict[str, Any]]:
-        """Get all user-defined profiles"""
-        self._check_entitlement("user", "custom_profiles")
-        return self._get_user_data("custom_profiles")
-    
-    def get_user_projects(self) -> List[Dict[str, Any]]:
-        """Get all user projects"""
-        self._check_entitlement("user", "projects")
-        return self._get_user_data("projects")
-    
-    # =========================================================================
-    # SYNC (Local SQLite ↔ Cloud PostgreSQL)
-    # =========================================================================
-    
-    def enable_cloud_sync(self, endpoint: str, auth_token: str):
-        """Enable cloud synchronization for user data"""
-        self._sync_state.sync_enabled = True
-        # Implementation would connect to cloud endpoint
-        # For now, just mark as enabled
-    
-    def sync_to_cloud(self) -> bool:
-        """Push pending local changes to cloud"""
-        if not self._sync_state.sync_enabled:
-            return False
-        
-        # Implementation would:
-        # 1. Get changes since last sync
-        # 2. POST to cloud endpoint
-        # 3. Update sync state
-        self._sync_state.last_cloud_sync = datetime.now()
-        self._sync_state.pending_changes = 0
-        return True
-    
-    def sync_from_cloud(self) -> bool:
-        """Pull changes from cloud to local"""
-        if not self._sync_state.sync_enabled:
-            return False
-        
-        # Implementation would:
-        # 1. GET from cloud endpoint
-        # 2. Merge with local data (conflict resolution)
-        # 3. Update sync state
-        return True
-    
-    def get_sync_status(self) -> Dict[str, Any]:
-        """Get current sync status"""
-        return {
-            "enabled": self._sync_state.sync_enabled,
-            "last_local_update": self._sync_state.last_local_update,
-            "last_cloud_sync": self._sync_state.last_cloud_sync,
-            "pending_changes": self._sync_state.pending_changes
-        }
     
     # =========================================================================
     # INTERNAL METHODS
@@ -462,10 +275,6 @@ class Registry(RegistryProductsMixin):
         """Generate a unique ID for data"""
         content = json.dumps(data, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()[:12]
-    
-    def clear_cache(self):
-        """Clear the data cache"""
-        self._cache.clear()
     
     def close(self):
         """Close database connections"""
