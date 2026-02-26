@@ -4,16 +4,17 @@ Edition Middleware - Luthier's ToolBox
 
 Provides edition-aware dependency injection for FastAPI endpoints.
 
-Usage in routers:
+Usage in routers::
+
     from fastapi import Depends
     from ..middleware.edition_middleware import get_edition, require_pro, EditionContext
-    
-    @router.get("/pro-feature")
+
+    # router.get("/pro-feature")
     def pro_feature(ctx: EditionContext = Depends(require_pro)):
         # Only Pro/Enterprise users can access this endpoint
         return {"edition": ctx.edition.value}
-    
-    @router.get("/any-feature")
+
+    # router.get("/any-feature")
     def any_feature(ctx: EditionContext = Depends(get_edition)):
         # All editions can access, but behavior may differ
         if ctx.can_access("empirical"):
@@ -204,8 +205,9 @@ async def get_edition(
         4. LTB_DEFAULT_EDITION env var
         5. Default: pro
     
-    Usage:
-        @router.get("/endpoint")
+    Usage::
+
+        # router.get("/endpoint")
         def endpoint(ctx: EditionContext = Depends(get_edition)):
             if ctx.can_access("empirical_limits"):
                 ...
@@ -257,8 +259,9 @@ async def require_pro(ctx: EditionContext = None) -> EditionContext:
     """
     Dependency that requires Pro or higher edition.
     
-    Usage:
-        @router.get("/pro-only")
+    Usage::
+
+        # router.get("/pro-only")
         def pro_endpoint(ctx: EditionContext = Depends(require_pro)):
             ...
     """
@@ -289,8 +292,9 @@ async def require_enterprise(ctx: EditionContext = None) -> EditionContext:
     """
     Dependency that requires Enterprise edition.
     
-    Usage:
-        @router.get("/enterprise-only")
+    Usage::
+
+        # router.get("/enterprise-only")
         def enterprise_endpoint(ctx: EditionContext = Depends(require_enterprise)):
             ...
     """
@@ -318,8 +322,9 @@ def require_feature(feature: str):
     """
     Factory for feature-specific dependencies.
     
-    Usage:
-        @router.get("/adaptive")
+    Usage::
+
+        # router.get("/adaptive")
         def adaptive(ctx: EditionContext = Depends(require_feature("adaptive_pocketing"))):
             ...
     """
