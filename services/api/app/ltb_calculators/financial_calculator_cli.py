@@ -163,6 +163,73 @@ def run_tests():
 # CLI
 # =============================================================================
 
+def _repl_show(calc: LTBFinancialCalculator) -> None:
+    """Display current TVM register values."""
+    print(f"  N   = {calc.n}")
+    print(f"  I/Y = {calc.i_y}%")
+    print(f"  PV  = {calc.pv}")
+    print(f"  PMT = {calc.pmt}")
+    print(f"  FV  = {calc.fv}")
+    print(f"  Mode: {'BEGIN' if calc.tvm.begin_mode else 'END'}")
+
+
+def _repl_amort(calc: LTBFinancialCalculator) -> None:
+    """Print first 12 periods of amortization schedule."""
+    try:
+        schedule = calc.amortization_schedule()[:12]
+        print(f"  {'Per':>4} {'Payment':>10} {'Principal':>10} {'Interest':>10} {'Balance':>12}")
+        print("  " + "-" * 50)
+        for row in schedule:
+            print(f"  {row.period:4d} {row.payment:10.2f} {row.principal:10.2f} "
+                  f"{row.interest:10.2f} {row.balance:12.2f}")
+        if calc.n and calc.n > 12:
+            print(f"  ... ({int(calc.n) - 12} more periods)")
+    except (ValueError, TypeError, ArithmeticError) as e:
+        print(f"  Error: {e}")
+
+
+_SOLVE_MAP = {
+    'fv': ('FV', 'solve_fv'), 'solvefv': ('FV', 'solve_fv'),
+    'pv': ('PV', 'solve_pv'), 'solvepv': ('PV', 'solve_pv'),
+    'pmt': ('PMT', 'solve_pmt'), 'solvepmt': ('PMT', 'solve_pmt'),
+    'n': ('N', 'solve_n'), 'solven': ('N', 'solve_n'),
+    'rate': ('I/Y', 'solve_rate'), 'solverate': ('I/Y', 'solve_rate'), 'i_y': ('I/Y', 'solve_rate'),
+}
+
+
+def _repl_solve(calc: LTBFinancialCalculator, cmd: str) -> None:
+    """Solve for a TVM variable."""
+    label, method = _SOLVE_MAP[cmd]
+    try:
+        result = getattr(calc, method)()
+        suffix = "%" if label == "I/Y" else ""
+        print(f"  {label} = {result}{suffix}")
+    except (ValueError, TypeError, ArithmeticError) as e:
+        print(f"  Error: {e}")
+
+
+_REG_ALIASES = {
+    'n': 'n', 'i_y': 'i_y', 'iy': 'i_y', 'i': 'i_y', 'rate': 'i_y',
+    'pv': 'pv', 'pmt': 'pmt', 'fv': 'fv',
+}
+
+
+def _repl_assign(calc: LTBFinancialCalculator, user_input: str) -> None:
+    """Parse 'var=value' assignment and set the register."""
+    try:
+        var, val_s = user_input.split('=', 1)
+        var = var.strip().lower()
+        val = float(val_s.strip())
+        reg = _REG_ALIASES.get(var)
+        if not reg:
+            print(f"  Unknown register: {var}")
+            return
+        setattr(calc, reg, val)
+        print(f"  {var.upper()} = {val}")
+    except ValueError as e:
+        print(f"  Error: {e}")
+
+
 def calculator_repl():
     """Interactive financial calculator."""
     calc = LTBFinancialCalculator()
@@ -191,94 +258,18 @@ def calculator_repl():
 
         if cmd in ('q', 'quit', 'exit'):
             break
-
         elif cmd in ('c', 'clear'):
             calc.clear_tvm()
             print("  TVM registers cleared")
-
         elif cmd in ('show', 'status', 'regs'):
-            print(f"  N   = {calc.n}")
-            print(f"  I/Y = {calc.i_y}%")
-            print(f"  PV  = {calc.pv}")
-            print(f"  PMT = {calc.pmt}")
-            print(f"  FV  = {calc.fv}")
-            print(f"  Mode: {'BEGIN' if calc.tvm.begin_mode else 'END'}")
-
+            _repl_show(calc)
         elif cmd == 'amort':
-            try:
-                schedule = calc.amortization_schedule()[:12]  # First 12 periods
-                print(f"  {'Per':>4} {'Payment':>10} {'Principal':>10} {'Interest':>10} {'Balance':>12}")
-                print("  " + "-" * 50)
-                for row in schedule:
-                    print(f"  {row.period:4d} {row.payment:10.2f} {row.principal:10.2f} "
-                          f"{row.interest:10.2f} {row.balance:12.2f}")
-                if calc.n and calc.n > 12:
-                    print(f"  ... ({int(calc.n) - 12} more periods)")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
-        elif cmd in ('fv', 'solvefv'):
-            try:
-                result = calc.solve_fv()
-                print(f"  FV = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
-        elif cmd in ('pv', 'solvepv'):
-            try:
-                result = calc.solve_pv()
-                print(f"  PV = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
-        elif cmd in ('pmt', 'solvepmt'):
-            try:
-                result = calc.solve_pmt()
-                print(f"  PMT = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
-        elif cmd in ('n', 'solven'):
-            try:
-                result = calc.solve_n()
-                print(f"  N = {result}")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
-        elif cmd in ('rate', 'solverate', 'i_y'):
-            try:
-                result = calc.solve_rate()
-                print(f"  I/Y = {result}%")
-            except (ValueError, TypeError, ArithmeticError) as e:
-                print(f"  Error: {e}")
-
+            _repl_amort(calc)
+        elif cmd in _SOLVE_MAP:
+            _repl_solve(calc, cmd)
         elif '=' in user_input:
-            # Register assignment: n=360, i_y=6.5, etc.
-            try:
-                var, val = user_input.split('=', 1)
-                var = var.strip().lower()
-                val = float(val.strip())
-
-                if var == 'n':
-                    calc.n = val
-                elif var in ('i_y', 'iy', 'i', 'rate'):
-                    calc.i_y = val
-                elif var == 'pv':
-                    calc.pv = val
-                elif var == 'pmt':
-                    calc.pmt = val
-                elif var == 'fv':
-                    calc.fv = val
-                else:
-                    print(f"  Unknown register: {var}")
-                    continue
-
-                print(f"  {var.upper()} = {val}")
-            except ValueError as e:
-                print(f"  Error: {e}")
-
+            _repl_assign(calc, user_input)
         else:
-            # Try as expression
             result = calc.evaluate(user_input)
             if calc.error:
                 print(f"  Error: {calc.error}")

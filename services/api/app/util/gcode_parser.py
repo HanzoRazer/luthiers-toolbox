@@ -262,6 +262,68 @@ def _arc_len(center: Tuple[float, float], a: Tuple[float, float], b: Tuple[float
 # G-CODE STATE MACHINE SIMULATOR
 # =============================================================================
 
+def _parse_block_words(blk: Dict[str, Any], u: float) -> Dict[str, Any]:
+    """Extract typed values from a parsed block, applying unit factor *u*."""
+    out: Dict[str, Any] = {'g': None, 'x': None, 'y': None, 'z': None,
+                            'f': None, 'i': None, 'j': None, 'r': None}
+    for letter, val in blk["words"]:
+        if letter == 'G':
+            out['g'] = int(val)
+        elif letter in ('X', 'Y', 'Z', 'I', 'J', 'R'):
+            out[letter.lower()] = val * u
+        elif letter == 'F':
+            out['f'] = val * (u / 1.0)
+    return out
+
+
+def _update_modal_state(modal: Modal, g: int | None, f: float | None) -> None:
+    """Apply G/F words to modal state in-place."""
+    if f is not None:
+        modal["F"] = max(0.1, float(f))
+    if g is not None:
+        if g in (0, 1, 2, 3):
+            modal["G"] = g
+        elif g == 20:
+            modal["units"] = 25.4
+        elif g == 21:
+            modal["units"] = 1.0
+        elif g in (17, 18, 19):
+            modal["plane"] = g
+
+
+def _sim_linear(pos: Tuple[float, float, float],
+                nx: float, ny: float, nz: float,
+                code: int, rapid_mm_min: float,
+                modal_f: float) -> Tuple[float, float, bool]:
+    """Simulate G0/G1 linear move. Returns (dxy, t, is_rapid)."""
+    dxy = _dist((pos[0], pos[1]), (nx, ny))
+    if code == 0:
+        return dxy, dxy / max(1e-6, rapid_mm_min), True
+    return dxy, dxy / max(1e-6, modal_f), False
+
+
+def _sim_arc_xy(pos: Tuple[float, float, float],
+                nx: float, ny: float,
+                code: int, i: float | None, j: float | None,
+                r: float | None, modal_f: float) -> Tuple[float, float]:
+    """Simulate G2/G3 arc in XY plane. Returns (arc_length, t)."""
+    if i is not None and j is not None:
+        c = _arc_center_from_ijk((pos[0], pos[1]), i, j)
+        length = _arc_len(c, (pos[0], pos[1]), (nx, ny), cw=(code == 2))
+    elif r is not None:
+        c_len = _dist((pos[0], pos[1]), (nx, ny))
+        if c_len < 1e-6:
+            length = 2 * math.pi * abs(r)
+        elif c_len > 2 * abs(r):
+            length = c_len
+        else:
+            theta = 2 * math.asin(max(-1.0, min(1.0, c_len / (2 * abs(r)))))
+            length = abs(theta) * abs(r)
+    else:
+        length = _dist((pos[0], pos[1]), (nx, ny))
+    return length, length / max(1e-6, modal_f)
+
+
 def simulate(
     gcode: str,
     *,
@@ -294,125 +356,42 @@ def simulate(
         >>> len(result['points_xy'])
         3
     """
-    # Unit conversion factor (inch to mm)
     u = 1.0 if units.lower().startswith('mm') else 25.4
-    
     prog = parse_lines(gcode)
-    
-    # Modal state
-    modal: Modal = {
-        "G": 0,
-        "F": default_feed_mm_min,
-        "units": u,
-        "plane": 17  # G17 = XY plane
-    }
-    
+
+    modal: Modal = {"G": 0, "F": default_feed_mm_min, "units": u, "plane": 17}
     pos = (0.0, 0.0, 0.0)
     path_xy: List[Tuple[float, float]] = [(pos[0], pos[1])]
-    
-    # Accumulators
-    travel = 0.0
-    cut = 0.0
-    t_rapid = 0.0
-    t_feed = 0.0
-    
+    travel = cut = t_rapid = t_feed = 0.0
+
     for blk in prog:
-        # Parse words in this block
-        g = None
-        x = y = z = f = i = j = r = None
-        
-        for (letter, val) in blk["words"]:
-            if letter == 'G':
-                g = int(val)
-            elif letter == 'X':
-                x = val * u
-            elif letter == 'Y':
-                y = val * u
-            elif letter == 'Z':
-                z = val * u
-            elif letter == 'F':
-                f = val * (u / 1.0)  # Feed rate in units/min
-            elif letter == 'I':
-                i = val * u
-            elif letter == 'J':
-                j = val * u
-            elif letter == 'R':
-                r = val * u
-        
-        # Update modal feed rate
-        if f is not None:
-            modal["F"] = max(0.1, float(f))
-        
-        # Update modal state
-        if g is not None:
-            if g in (0, 1, 2, 3):
-                modal["G"] = g
-            elif g == 20:
-                modal["units"] = 25.4  # Inches
-            elif g == 21:
-                modal["units"] = 1.0  # Millimeters
-            elif g in (17, 18, 19):
-                modal["plane"] = g
-        
+        w = _parse_block_words(blk, u)
+        _update_modal_state(modal, w['g'], w['f'])
         u = modal["units"]
-        
-        # Calculate next position (modal: use current if not specified)
-        nx = pos[0] if x is None else x
-        ny = pos[1] if y is None else y
-        nz = pos[2] if z is None else z
-        
+
+        nx = pos[0] if w['x'] is None else w['x']
+        ny = pos[1] if w['y'] is None else w['y']
+        nz = pos[2] if w['z'] is None else w['z']
+
         code = modal["G"]
-        
-        # Process motion commands
-        # For arcs (G2/G3), allow full circles (start==end) if IJ or R is specified
-        has_arc_params = (i is not None and j is not None) or (r is not None)
+        has_arc_params = (w['i'] is not None and w['j'] is not None) or (w['r'] is not None)
         position_changed = (nx != pos[0] or ny != pos[1] or nz != pos[2])
-        
+
         if code in (0, 1, 2, 3) and (position_changed or (code in (2, 3) and has_arc_params)):
-            if code in (0, 1):  # Linear motion
-                dxy = _dist((pos[0], pos[1]), (nx, ny))
-                
-                if code == 0:  # Rapid
-                    t = dxy / max(1e-6, rapid_mm_min)
-                    t_rapid += t
-                    travel += dxy
-                else:  # Feed (G1)
-                    t = dxy / max(1e-6, modal["F"])
-                    t_feed += t
-                    cut += dxy
-                
-                path_xy.append((nx, ny))
-                pos = (nx, ny, nz)
-                
-            elif code in (2, 3) and modal["plane"] == 17:  # Arc in XY plane
-                if i is not None and j is not None:  # IJ center specification
-                    c = _arc_center_from_ijk((pos[0], pos[1]), i, j)
-                    length = _arc_len(c, (pos[0], pos[1]), (nx, ny), cw=(code == 2))
-                    
-                elif r is not None:  # R radius specification
-                    c_len = _dist((pos[0], pos[1]), (nx, ny))
-                    # For full circles (start==end), R method doesn't apply
-                    if c_len < 1e-6:
-                        # Full circle: calculate from radius
-                        length = 2 * math.pi * abs(r)
-                    elif c_len > 2 * abs(r):
-                        # Invalid radius, use chord length as fallback
-                        length = c_len
-                    else:
-                        # Calculate arc length from radius
-                        theta = 2 * math.asin(max(-1.0, min(1.0, c_len / (2 * abs(r)))))
-                        length = abs(theta) * abs(r)
+            if code in (0, 1):
+                dxy, t, is_rapid = _sim_linear(pos, nx, ny, nz, code, rapid_mm_min, modal["F"])
+                if is_rapid:
+                    t_rapid += t; travel += dxy
                 else:
-                    # No center/radius specified - this is malformed G-code
-                    # Use chord length as defensive fallback (should ideally error)
-                    length = _dist((pos[0], pos[1]), (nx, ny))
-                
-                t = length / max(1e-6, modal["F"])
-                t_feed += t
-                cut += length
+                    t_feed += t; cut += dxy
                 path_xy.append((nx, ny))
                 pos = (nx, ny, nz)
-    
+            elif code in (2, 3) and modal["plane"] == 17:
+                length, t = _sim_arc_xy(pos, nx, ny, code, w['i'], w['j'], w['r'], modal["F"])
+                t_feed += t; cut += length
+                path_xy.append((nx, ny))
+                pos = (nx, ny, nz)
+
     return {
         "travel_mm": travel,
         "cut_mm": cut,

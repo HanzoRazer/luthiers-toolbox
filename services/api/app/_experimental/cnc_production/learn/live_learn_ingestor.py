@@ -114,23 +114,49 @@ def apply_lane_scale(
     )
 
 
+def _safe_avg(vals: list) -> float | None:
+    """Average of a list, or None if empty."""
+    return sum(vals) / len(vals) if vals else None
+
+
+def _safe_max(vals: list) -> float | None:
+    """Max of a list, or None if empty."""
+    return max(vals) if vals else None
+
+
+def _compute_cut_time(cut_samples: list) -> float | None:
+    """Total cutting time in seconds between first and last sample."""
+    if len(cut_samples) < 2:
+        return None
+    try:
+        first_ts = cut_samples[0].timestamp
+        last_ts = cut_samples[-1].timestamp
+        if isinstance(first_ts, datetime) and isinstance(last_ts, datetime):
+            return (last_ts - first_ts).total_seconds()
+    except (TypeError, ValueError, AttributeError):
+        pass
+    return None
+
+
+def _collect_cutting_arrays(cut_samples: list) -> dict:
+    """Extract per-metric arrays from cutting samples."""
+    rpms = [s.rpm_actual for s in cut_samples if s.rpm_actual is not None]
+    feeds = [s.feed_actual_mm_min for s in cut_samples if s.feed_actual_mm_min is not None]
+    loads = [s.spindle_load_percent for s in cut_samples if s.spindle_load_percent is not None]
+    currents = [s.motor_current_amps for s in cut_samples if s.motor_current_amps is not None]
+    temps = [s.temp_c for s in cut_samples if s.temp_c is not None]
+    vibs = [s.vibration_mg for s in cut_samples if s.vibration_mg is not None]
+    vib_rms = [v / 1000.0 * 9.81 for v in vibs]
+    return {"rpms": rpms, "feeds": feeds, "loads": loads, "currents": currents,
+            "temps": temps, "vib_rms": vib_rms}
+
+
 def compute_lane_metrics(telem: SawTelemetryRecord) -> LaneMetrics:
     """
     Aggregate telemetry samples into lane metrics.
     
-    Computes averages and maximums for:
-    - RPM and feed rates
-    - Spindle load percentages
-    - Motor currents
-    - Temperatures
-    - Vibration RMS
-    - Total cutting time
-    
-    Args:
-        telem: Telemetry record with samples list
-    
-    Returns:
-        LaneMetrics with aggregated statistics
+    Computes averages and maximums for RPM, feed rates, spindle load,
+    motor currents, temperatures, vibration RMS, and total cutting time.
     """
     samples = telem.samples
     n = len(samples)
@@ -138,49 +164,27 @@ def compute_lane_metrics(telem: SawTelemetryRecord) -> LaneMetrics:
     if n == 0:
         return LaneMetrics(n_samples=0)
     
-    # Filter to cutting samples only (in_cut=True)
     cut_samples = [s for s in samples if s.in_cut]
     n_cut = len(cut_samples)
     
     if n_cut == 0:
-        # No cutting samples, return basic metrics
         return LaneMetrics(n_samples=n)
     
-    # Compute averages and maxima
-    rpms = [s.rpm_actual for s in cut_samples if s.rpm_actual is not None]
-    feeds = [s.feed_actual_mm_min for s in cut_samples if s.feed_actual_mm_min is not None]
-    loads = [s.spindle_load_percent for s in cut_samples if s.spindle_load_percent is not None]
-    currents = [s.motor_current_amps for s in cut_samples if s.motor_current_amps is not None]
-    temps = [s.temp_c for s in cut_samples if s.temp_c is not None]
-    vibs = [s.vibration_mg for s in cut_samples if s.vibration_mg is not None]
-    
-    # Convert vibration from milli-G to mm/s RMS (approximate)
-    vib_rms = [v / 1000.0 * 9.81 for v in vibs]  # Convert mG to m/s², then to mm/s
-    
-    # Compute time span
-    total_cut_time_s = None
-    if len(cut_samples) >= 2:
-        try:
-            first_ts = cut_samples[0].timestamp
-            last_ts = cut_samples[-1].timestamp
-            if isinstance(first_ts, datetime) and isinstance(last_ts, datetime):
-                total_cut_time_s = (last_ts - first_ts).total_seconds()
-        except (TypeError, ValueError, AttributeError):  # WP-1: narrowed from except Exception
-            pass
+    m = _collect_cutting_arrays(cut_samples)
     
     return LaneMetrics(
         n_samples=n_cut,
-        avg_rpm=sum(rpms) / len(rpms) if rpms else None,
-        avg_feed_mm_min=sum(feeds) / len(feeds) if feeds else None,
-        avg_spindle_load_pct=sum(loads) / len(loads) if loads else None,
-        max_spindle_load_pct=max(loads) if loads else None,
-        avg_motor_current_amps=sum(currents) / len(currents) if currents else None,
-        max_motor_current_amps=max(currents) if currents else None,
-        avg_temp_c=sum(temps) / len(temps) if temps else None,
-        max_temp_c=max(temps) if temps else None,
-        avg_vibration_rms=sum(vib_rms) / len(vib_rms) if vib_rms else None,
-        max_vibration_rms=max(vib_rms) if vib_rms else None,
-        total_cut_time_s=total_cut_time_s,
+        avg_rpm=_safe_avg(m["rpms"]),
+        avg_feed_mm_min=_safe_avg(m["feeds"]),
+        avg_spindle_load_pct=_safe_avg(m["loads"]),
+        max_spindle_load_pct=_safe_max(m["loads"]),
+        avg_motor_current_amps=_safe_avg(m["currents"]),
+        max_motor_current_amps=_safe_max(m["currents"]),
+        avg_temp_c=_safe_avg(m["temps"]),
+        max_temp_c=_safe_max(m["temps"]),
+        avg_vibration_rms=_safe_avg(m["vib_rms"]),
+        max_vibration_rms=_safe_max(m["vib_rms"]),
+        total_cut_time_s=_compute_cut_time(cut_samples),
     )
 
 

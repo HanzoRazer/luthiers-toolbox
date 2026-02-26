@@ -105,30 +105,55 @@ class CompareSummary:
     override_changed: bool
 
 
+def _get_field_dict(run_obj: Any, name: str) -> JsonDict:
+    """Extract a named field from a run object (attr or dict) and normalize to dict."""
+    if hasattr(run_obj, name):
+        return _as_dict(getattr(run_obj, name, None))
+    return _as_dict(_as_dict(run_obj).get(name))
+
+
+def _get_field_list(run_obj: Any, name: str) -> List[Any]:
+    """Extract a named field from a run object (attr or dict) and normalize to list."""
+    if hasattr(run_obj, name):
+        return _as_list(getattr(run_obj, name, None))
+    return _as_list(_as_dict(run_obj).get(name))
+
+
+def _has_override(run_obj: Any, atts: List[JsonDict]) -> bool:
+    """Check if a run has an override attachment or meta.override."""
+    for a in atts:
+        if _safe_str(a.get("kind")).strip() == "override":
+            return True
+    meta = _as_dict(getattr(run_obj, "meta", None) if hasattr(run_obj, "meta") else _as_dict(run_obj).get("meta"))
+    return "override" in meta
+
+
+def _compute_hash_changes(a_hash: JsonDict, b_hash: JsonDict) -> JsonDict:
+    """Compare hash fields and return diff dict with [before, after] for changed hashes."""
+    result: JsonDict = {}
+    for key in ("toolpaths_sha256", "opplan_sha256", "gcode_sha256"):
+        va = _safe_str(a_hash.get(key) or "").strip()
+        vb = _safe_str(b_hash.get(key) or "").strip()
+        result[key] = [va or None, vb or None] if va != vb else None
+    return result
+
+
 def compare_run_artifacts(run_a: Any, run_b: Any) -> JsonDict:
     """
     Produce a structured, deterministic comparison between two RunArtifacts.
     No timestamps, no prose, just facts.
     """
-    ra = run_a
-    rb = run_b
-
-    a_req = _as_dict(getattr(ra, "request_summary", None) if hasattr(ra, "request_summary") else _as_dict(ra).get("request_summary"))
-    b_req = _as_dict(getattr(rb, "request_summary", None) if hasattr(rb, "request_summary") else _as_dict(rb).get("request_summary"))
-
-    a_feat = _as_dict(getattr(ra, "feasibility", None) if hasattr(ra, "feasibility") else _as_dict(ra).get("feasibility"))
-    b_feat = _as_dict(getattr(rb, "feasibility", None) if hasattr(rb, "feasibility") else _as_dict(rb).get("feasibility"))
-
-    a_dec = _as_dict(getattr(ra, "decision", None) if hasattr(ra, "decision") else _as_dict(ra).get("decision"))
-    b_dec = _as_dict(getattr(rb, "decision", None) if hasattr(rb, "decision") else _as_dict(rb).get("decision"))
-
-    a_hash = _as_dict(getattr(ra, "hashes", None) if hasattr(ra, "hashes") else _as_dict(ra).get("hashes"))
-    b_hash = _as_dict(getattr(rb, "hashes", None) if hasattr(rb, "hashes") else _as_dict(rb).get("hashes"))
-
-    a_atts_raw = _as_list(getattr(ra, "attachments", None) if hasattr(ra, "attachments") else _as_dict(ra).get("attachments"))
-    b_atts_raw = _as_list(getattr(rb, "attachments", None) if hasattr(rb, "attachments") else _as_dict(rb).get("attachments"))
-    a_atts = [_as_dict(x) for x in a_atts_raw]
-    b_atts = [_as_dict(x) for x in b_atts_raw]
+    # Extract fields
+    a_req = _get_field_dict(run_a, "request_summary")
+    b_req = _get_field_dict(run_b, "request_summary")
+    a_feat = _get_field_dict(run_a, "feasibility")
+    b_feat = _get_field_dict(run_b, "feasibility")
+    a_dec = _get_field_dict(run_a, "decision")
+    b_dec = _get_field_dict(run_b, "decision")
+    a_hash = _get_field_dict(run_a, "hashes")
+    b_hash = _get_field_dict(run_b, "hashes")
+    a_atts = [_as_dict(x) for x in _get_field_list(run_a, "attachments")]
+    b_atts = [_as_dict(x) for x in _get_field_list(run_b, "attachments")]
 
     # Key outcome fields
     a_risk = _safe_str(a_dec.get("risk_level", "UNKNOWN")).upper()
@@ -136,13 +161,14 @@ def compare_run_artifacts(run_a: Any, run_b: Any) -> JsonDict:
     a_block = _safe_str(a_dec.get("block_reason") or "").strip()
     b_block = _safe_str(b_dec.get("block_reason") or "").strip()
 
-    # Feasibility rule deltas (operator-friendly)
+    # Feasibility rule deltas
     a_rules = _rules_from_feasibility(a_feat)
     b_rules = _rules_from_feasibility(b_feat)
     rules_added = sorted(list(b_rules - a_rules))
     rules_removed = sorted(list(a_rules - b_rules))
 
-    # CAM/gcode changes (hash driven)
+    # Hash-driven artifact changes
+    hash_changes = _compute_hash_changes(a_hash, b_hash)
     a_toolpaths = _safe_str(a_hash.get("toolpaths_sha256") or "").strip()
     b_toolpaths = _safe_str(b_hash.get("toolpaths_sha256") or "").strip()
     a_opplan = _safe_str(a_hash.get("opplan_sha256") or "").strip()
@@ -150,33 +176,19 @@ def compare_run_artifacts(run_a: Any, run_b: Any) -> JsonDict:
     a_gcode = _safe_str(a_hash.get("gcode_sha256") or "").strip()
     b_gcode = _safe_str(b_hash.get("gcode_sha256") or "").strip()
 
-    # Override detection (presence of override attachment or meta.override)
-    def _has_override(run_obj: Any, atts: List[JsonDict]) -> bool:
-        for a in atts:
-            if _safe_str(a.get("kind")).strip() == "override":
-                return True
-        meta = None
-        if hasattr(run_obj, "meta"):
-            meta = getattr(run_obj, "meta", None)
-        else:
-            meta = _as_dict(run_obj).get("meta")
-        meta = _as_dict(meta)
-        return "override" in meta
-
-    a_override = _has_override(ra, a_atts)
-    b_override = _has_override(rb, b_atts)
-
-    # Attachment changes by identity (kind, sha)
+    # Override + attachment changes
+    a_override = _has_override(run_a, a_atts)
+    b_override = _has_override(run_b, b_atts)
     a_idx = _attachments_index(a_atts)
     b_idx = _attachments_index(b_atts)
     only_in_a = sorted(list(a_idx - b_idx))
     only_in_b = sorted(list(b_idx - a_idx))
 
+    # Diffs
     request_diff = _dict_diff(a_req, b_req)
     feasibility_diff = _dict_diff(a_feat, b_feat)
     decision_diff = _dict_diff(a_dec, b_dec)
     hashes_diff = _dict_diff(a_hash, b_hash)
-
     param_diff = _param_diff_from_request_summary(a_req, b_req)
 
     summary = CompareSummary(
@@ -208,12 +220,7 @@ def compare_run_artifacts(run_a: Any, run_b: Any) -> JsonDict:
             "rules_removed": rules_removed,
         },
         "param_diff": param_diff,
-        "artifact_diff": {
-            "toolpaths_sha256": [a_toolpaths or None, b_toolpaths or None] if a_toolpaths != b_toolpaths else None,
-            "opplan_sha256": [a_opplan or None, b_opplan or None] if a_opplan != b_opplan else None,
-            "gcode_sha256": [a_gcode or None, b_gcode or None] if a_gcode != b_gcode else None,
-        },
-        # Optional deep diffs (useful for engineers / debugging)
+        "artifact_diff": hash_changes,
         "request_diff": request_diff,
         "feasibility_deep_diff": feasibility_diff,
         "decision_deep_diff": decision_diff,
