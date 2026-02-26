@@ -53,7 +53,7 @@ async def generate_setup_sheet(body: SetupSheetIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 

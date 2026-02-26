@@ -349,7 +349,7 @@ class LLMClient:
                     time.sleep(e.retry_after)
                     continue
                 raise
-            except Exception as e:  # WP-1: keep broad — AI API retry loop
+            except (OSError, ConnectionError, TimeoutError, KeyError, ValueError) as e:  # WP-1: AI API retry loop
                 last_error = e
                 if attempt < self.config.max_retries - 1:
                     delay = self.config.retry_delay_seconds * (2 ** attempt)
@@ -417,7 +417,7 @@ class LLMClient:
                 response = client.get(f"{self.config.base_url}/models", headers=headers)
                 return response.status_code == 200
             return True
-        except Exception:  # WP-1: keep broad — health probe, any failure = unhealthy
+        except (OSError, ConnectionError, TimeoutError):  # WP-1: health probe
             return False
 
 

@@ -101,7 +101,7 @@ async def blueprint_to_adaptive(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, KeyError, TypeError, ZeroDivisionError) as e:  # WP-1: adaptive CAM plan
         raise HTTPException(
             status_code=500,
             detail=f"Adaptive planner error: {str(e)}"

@@ -122,7 +122,7 @@ class CAMAdvisor:
                         )
                     )
 
-            except Exception as e:  # WP-1: keep broad — calculator spine can raise anything
+            except (ValueError, ZeroDivisionError, KeyError, TypeError) as e:  # WP-1: physics calc
                 advisories.append(
                     CAMAdvisory(
                         severity="info",

@@ -159,7 +159,7 @@ async def vectorize_geometry(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, OSError, KeyError) as e:  # WP-1: vectorization
         logger.error(f"Phase 2 vectorization failed: {e}")
         raise HTTPException(
             status_code=500,

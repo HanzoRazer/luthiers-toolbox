@@ -127,6 +127,6 @@ def safe_import_router(import_fn, name: str):
         router = import_fn()
         register_loaded_feature(name)
         return router
-    except Exception as e:
+    except (ImportError, AttributeError) as e:  # WP-1: dynamic import
         register_failed_feature(name, str(e))
         return None

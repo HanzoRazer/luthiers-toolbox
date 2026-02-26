@@ -128,7 +128,7 @@ async def analyze_blueprint(file: UploadFile = File(...)):
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (RuntimeError, KeyError, TypeError, OSError) as e:  # WP-1: AI analysis
         logger.error(f"Error analyzing blueprint: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
@@ -200,6 +200,6 @@ async def export_to_svg(request: ExportRequest) -> FileResponse:
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, OSError) as e:  # WP-1: SVG export
         logger.error(f"Error exporting SVG: {e}")
         raise HTTPException(status_code=500, detail=f"SVG export failed: {str(e)}")

@@ -52,7 +52,7 @@ def _normalize_ast(node: ast.AST) -> str:
     """Normalize AST node to string, ignoring variable names."""
     try:
         return ast.dump(node, annotate_fields=False)
-    except Exception:
+    except (TypeError, RecursionError):  # WP-1: AST normalize
         return ""
 
 

@@ -134,5 +134,5 @@ async def import_snapshot(
         return store.import_raw(req.snapshot)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: snapshot import
         raise HTTPException(status_code=400, detail=f"Import failed: {str(e)}")

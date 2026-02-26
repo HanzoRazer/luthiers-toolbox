@@ -62,7 +62,7 @@ async def dxf_preflight(
         report = preflight.run_all_checks()
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, KeyError, TypeError, OSError) as e:  # WP-1: DXF preflight
         raise HTTPException(
             status_code=500,
             detail=f"Preflight validation failed: {str(e)}"

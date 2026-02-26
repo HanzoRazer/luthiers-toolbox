@@ -390,5 +390,5 @@ def export_compare_csv(
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, OSError) as e:  # WP-1: CSV export
         raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")

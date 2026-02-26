@@ -60,7 +60,7 @@ def _dxf_to_loops_from_bytes(data: bytes, layer_name: str = "GEOMETRY") -> List[
             os.unlink(tmp_path)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, OSError, KeyError) as exc:  # WP-1: DXF file parse
         raise HTTPException(status_code=400, detail=f"Invalid DXF: {exc}") from exc
 
     msp = doc.modelspace()

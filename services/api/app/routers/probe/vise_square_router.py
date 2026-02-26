@@ -30,7 +30,7 @@ async def generate_vise_square_probe(body: ViseSquareProbeIn) -> ProbeOut:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -64,7 +64,7 @@ async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -98,5 +98,5 @@ async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Respon
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))

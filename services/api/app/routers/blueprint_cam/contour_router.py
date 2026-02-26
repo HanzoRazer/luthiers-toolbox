@@ -73,7 +73,7 @@ async def reconstruct_contours(
         raise HTTPException(status_code=504, detail=str(e))
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, KeyError, TypeError, OSError) as e:  # WP-1: geometry reconstruction
         raise HTTPException(
             status_code=500,
             detail=f"Contour reconstruction failed: {str(e)}"

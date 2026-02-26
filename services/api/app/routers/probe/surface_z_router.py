@@ -29,7 +29,7 @@ async def generate_surface_z_probe(body: SurfaceZProbeIn) -> ProbeOut:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -63,7 +63,7 @@ async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -97,5 +97,5 @@ async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, TypeError, ZeroDivisionError) as e:  # WP-1: probe geometry + formatting
         raise HTTPException(status_code=500, detail=str(e))

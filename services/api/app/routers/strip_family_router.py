@@ -47,7 +47,7 @@ def create_from_template(template_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, TypeError, OSError) as e:  # WP-1: store apply template
         raise HTTPException(status_code=400, detail=str(e))
 
 

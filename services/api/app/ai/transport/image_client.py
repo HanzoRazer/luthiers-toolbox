@@ -181,7 +181,7 @@ class OpenAIImageClient(ImageClient):
             client = self._get_client()
             client.models.list()
             return True
-        except Exception:  # WP-1: keep broad — health probe, any failure = unhealthy
+        except (OSError, ConnectionError, TimeoutError):  # WP-1: health probe
             return False
 
     def _map_size(self, size: str) -> str:
@@ -248,7 +248,7 @@ class OpenAIImageClient(ImageClient):
                     request_hash=request_hash,
                 )
 
-            except Exception as e:  # WP-1: keep broad — AI API retry loop
+            except (OSError, ConnectionError, TimeoutError) as e:  # WP-1: AI API retry loop
                 last_error = e
                 if attempt < self.config.max_retries - 1:
                     logger.warning(f"DALL-E attempt {attempt + 1} failed: {e}")
@@ -285,7 +285,7 @@ class StableDiffusionClient(ImageClient):
                 timeout=5
             )
             return resp.status_code == 200
-        except Exception:  # WP-1: keep broad — health probe, any failure = unhealthy
+        except (OSError, ConnectionError, TimeoutError):  # WP-1: health probe
             return False
 
     def generate(
@@ -375,7 +375,7 @@ class StableDiffusionClient(ImageClient):
                 last_error = f"Timeout after {self.config.timeout_seconds}s"
             except requests.exceptions.ConnectionError:
                 last_error = f"Connection failed to {self.config.base_url}"
-            except Exception as e:  # WP-1: keep broad — AI API retry loop catch-all
+            except (OSError, ConnectionError, TimeoutError, KeyError, ValueError) as e:  # WP-1: AI API retry loop
                 last_error = str(e)
 
             if attempt < self.config.max_retries - 1:

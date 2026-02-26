@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 import tempfile
 from pathlib import Path
 import base64
+import binascii
 import math
 import re
 
@@ -190,7 +191,7 @@ def validate_dxf_base64(request: ValidateBase64Request):
         dxf_bytes = base64.b64decode(request.dxf_base64)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, binascii.Error) as e:  # WP-1: base64 decode
         raise HTTPException(status_code=400, detail=f"Invalid base64: {str(e)}")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf') as tmp:
@@ -229,7 +230,7 @@ async def auto_fix_dxf(request: AutoFixRequest):
         dxf_bytes = base64.b64decode(request.dxf_base64)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, binascii.Error) as e:  # WP-1: base64 decode
         raise HTTPException(status_code=400, detail=f"Invalid base64: {str(e)}")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf', mode='wb') as tmp_in:
