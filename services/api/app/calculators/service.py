@@ -1,8 +1,11 @@
 """RMOS 2.0 Calculator Service"""
+import logging
 from typing import Dict, Any, Optional
 from math import pi
 from ..rmos.api_contracts import RmosContext, RmosBomResult, RmosFeasibilityResult
 from ..data_registry import Registry, Edition
+
+logger = logging.getLogger(__name__)
 
 try:
     from ..art_studio.schemas import RosetteParamSpec
@@ -148,9 +151,8 @@ class CalculatorService:
                     # Registry method not available - use defaults
                     pass
                 except (KeyError, TypeError) as e:
-                    # WP-1: narrowed from except Exception
-                    print(f"Warning: Failed to get empirical limits: {type(e).__name__}: {e}")
-                    pass
+                    logger.error("Failed to get empirical limits: %s: %s", type(e).__name__, e)
+                    raise
             
             # Chipload = feed_rate / (spindle_rpm * flute_count)
             chipload_mm = feed_rate_mm_per_min / (spindle_rpm * flute_count)
@@ -263,8 +265,9 @@ class CalculatorService:
                             min_rpm = speed_clamp.get("min_rpm", 12000)
                             max_rpm = speed_clamp.get("max_rpm", 24000)
                             spindle_rpm = (min_rpm + max_rpm) // 2
-                except (KeyError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-                    pass  # Fall back to default
+                except (KeyError, TypeError, AttributeError) as e:
+                    logger.error("Failed to get empirical limits for rim speed: %s: %s", type(e).__name__, e)
+                    raise
             
             # Rim speed = π * diameter * RPM / 1000 (convert mm to m)
             rim_speed_m_per_min = (pi * design.outer_diameter_mm * spindle_rpm) / 1000

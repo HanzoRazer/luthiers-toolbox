@@ -6,6 +6,7 @@ Records every AI candidate + feasibility result for analysis.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -13,6 +14,8 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
 from .api_contracts import RiskBucket, RmosContext, RmosFeasibilityResult
+
+logger = logging.getLogger(__name__)
 
 # Lazy import for RosetteParamSpec
 try:
@@ -109,6 +112,7 @@ def _infer_geometry_engine(ctx: RmosContext) -> Optional[str]:
         if getattr(ctx, "use_ml_geometry", False):
             return "ml"
     except (AttributeError, TypeError):  # WP-1: narrowed from except Exception
+        logger.debug("Could not infer geometry engine from context")
         pass
     return None
 

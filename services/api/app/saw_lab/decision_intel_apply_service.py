@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from .decision_intelligence_service import append_override_jsonl
 from .schemas_decision_intelligence import TuningDelta
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
@@ -44,8 +47,9 @@ def find_latest_approved_tuning_decision(
     try:
         res = store.list_runs_filtered(kind="saw_lab_tuning_decision", limit=limit)
         items = _get_items(res)
-    except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-        items = []
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+        logger.error("Failed to query tuning decisions for tool=%s, material=%s: %s", tool_id, material_id, e)
+        raise
 
     # Filter by meta keys first (fast, stable)
     candidates: List[Dict[str, Any]] = []
@@ -86,8 +90,9 @@ def find_latest_approved_tuning_decision(
     delta_dict = payload.get("effective_delta") if isinstance(payload, dict) else None
     try:
         delta = TuningDelta(**delta_dict) if isinstance(delta_dict, dict) else None
-    except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-        delta = None
+    except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed
+        logger.error("Failed to parse TuningDelta from %r: %s", delta_dict, e)
+        raise
 
     decision_id = str(best.get("id") or best.get("artifact_id") or "")
     return (decision_id if decision_id else None), delta

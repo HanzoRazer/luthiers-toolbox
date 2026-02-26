@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.core.safety import safety_critical
 
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,8 @@ from .alternative_temperaments import (
     get_ratio_set,
     compute_fret_positions_from_ratios_mm,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -447,16 +450,8 @@ def export_fret_slots_multi(
         try:
             response = export_fret_slots(request)
             results[post.value] = response
-        except (ValueError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception
-            # Create error response
-            results[post.value] = FretSlotExportResponse(
-                gcode=f"(ERROR: {str(e)})",
-                post_processor=post.value,
-                slot_count=0,
-                total_cutting_length_mm=0,
-                estimated_time_min=0,
-                slots=[],
-                warnings=[f"Export failed: {str(e)}"],
-            )
+        except (ValueError, KeyError, TypeError) as e:
+            logger.error("Fret slot export failed for post-processor %s: %s: %s", post.value, type(e).__name__, e)
+            raise
     
     return results

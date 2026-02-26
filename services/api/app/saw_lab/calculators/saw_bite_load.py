@@ -5,7 +5,11 @@ Calculates tooth bite load (chip load per tooth) for saw operations.
 """
 from __future__ import annotations
 
+import logging
+
 from ..models import SawContext, SawDesign, SawCalculatorResult
+
+logger = logging.getLogger(__name__)
 
 
 class SawBiteLoadCalculator:
@@ -98,12 +102,9 @@ class SawBiteLoadCalculator:
                 }
             )
             
-        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-            return SawCalculatorResult(
-                calculator_name="bite_load",
-                score=50.0,
-                warning=f"Bite load calculation error: {str(e)}"
-            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+            logger.error("Bite load calculation error: %s", e)
+            raise
     
     def _get_material_key(self, material_id: str | None) -> str:
         """Map material_id to optimal range key."""

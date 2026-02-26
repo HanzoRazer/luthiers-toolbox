@@ -10,11 +10,14 @@ Event schema: acoustics_ingest_event_v1
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, TypedDict
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Type definitions
@@ -224,7 +227,7 @@ def append_event(root: Optional[Path], event: IngestEvent) -> Path:
         summary = _event_to_summary(event)
         update_recent_index(root, summary)
     except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-        pass  # Non-blocking
+        logger.debug("Best-effort recency index update failed (non-blocking)")
 
     return event_path
 
@@ -263,6 +266,7 @@ def update_recent_index(root: Path, event_summary: IngestEventSummary) -> None:
             data = _json_load(recent_path)
             entries = data.get("entries", []) if isinstance(data, dict) else []
         except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            logger.debug("Failed to load recent index in update_recent_index, starting fresh")
             entries = []
 
     # Remove duplicate if present
@@ -314,6 +318,7 @@ def list_events_recent(
             data = _json_load(recent_path)
             entries = data.get("entries", []) if isinstance(data, dict) else []
         except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            logger.debug("Failed to load recent index in list_events_recent, returning empty")
             entries = []
 
     # Filter by outcome
@@ -368,7 +373,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
                         date_hint = _date_partition(ts)
                     break
         except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-            pass
+            logger.debug("Date hint lookup failed for event %s", event_id)
 
     # Try date hint first
     if date_hint:
@@ -377,7 +382,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
             try:
                 return _json_load(p)
             except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
-                pass
+                logger.debug("Failed to load event %s from date hint path", event_id)
 
     # Fallback: scan date directories (newest first)
     for date_dir in sorted(events_base.iterdir(), reverse=True):
@@ -392,6 +397,7 @@ def get_event(root: Optional[Path], event_id: str) -> Optional[IngestEvent]:
             try:
                 return _json_load(p)
             except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+                logger.debug("Failed to load event %s from %s, continuing scan", event_id, date_dir.name)
                 continue
 
     return None

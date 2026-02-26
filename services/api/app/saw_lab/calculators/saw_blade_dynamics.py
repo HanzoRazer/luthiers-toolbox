@@ -26,9 +26,12 @@ Physics model:
 """
 from __future__ import annotations
 
+import logging
 from math import pi, sqrt
 
 from ..models import SawContext, SawDesign, SawCalculatorResult
+
+logger = logging.getLogger(__name__)
 
 
 # Steel blade properties
@@ -166,9 +169,6 @@ class SawBladeDynamicsCalculator:
                 },
             )
 
-        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-            return SawCalculatorResult(
-                calculator_name="blade_dynamics",
-                score=50.0,
-                warning=f"Blade dynamics calculation error: {str(e)}",
-            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+            logger.error("Blade dynamics calculation error: %s", e)
+            raise

@@ -15,10 +15,13 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import logging
 import os
 import time
 from dataclasses import dataclass
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _secret() -> bytes:
@@ -40,7 +43,8 @@ def _default_ttl_seconds() -> int:
         return 300
     try:
         return max(30, int(v))
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.warning("Invalid TTL value %r, using default: %s", v, e)
         return 300
 
 

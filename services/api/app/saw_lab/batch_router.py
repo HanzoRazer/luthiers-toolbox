@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, Dict, List, Optional
 
@@ -15,6 +16,7 @@ from app.saw_lab.store import (
 )
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -79,8 +81,9 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
             first = items[0]
             if isinstance(first, dict) and first.get("material_id"):
                 material_id = str(first.get("material_id"))
-    except (ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-        material_id = None
+    except (ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+        logger.error("Failed to extract material_id from batch spec items: %s", e)
+        raise
 
     ops = []
     for i, item in enumerate(items):
@@ -186,11 +189,9 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                     advisory=decision_intel_advisory,
                 )
                 tuning_applied = bool(payload.get("tuning_applied"))
-    except (ImportError, KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-        # Never block planning on intelligence lookup
-        decision_intel_advisory = None
-        tuning_applied = False
-        plan_auto_suggest = None
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+        logger.error("Decision intelligence lookup failed during plan creation: %s", e)
+        raise
 
     artifact_id = store_artifact(
         kind="saw_batch_plan",

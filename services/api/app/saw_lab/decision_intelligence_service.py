@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from .schemas_decision_intelligence import DecisionIntelSuggestion, TuningDelta
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
@@ -121,8 +124,9 @@ def append_override_jsonl(event: Dict[str, Any]) -> bool:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(event, sort_keys=True) + "\n")
         return True
-    except (IOError, OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
-        return False
+    except (IOError, OSError, ValueError, TypeError) as e:  # WP-1: narrowed
+        logger.error("Failed to append override JSONL: %s", e)
+        raise
 
 
 @dataclass
@@ -156,8 +160,9 @@ def build_suggestion_for_execution(
             job_logs = res.get("items") or res.get("runs") or []
         elif isinstance(res, list):
             job_logs = res
-    except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-        job_logs = []
+    except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+        logger.error("Failed to query job logs for execution %s: %s", batch_execution_artifact_id, e)
+        raise
 
     # Fallback: filter by session/batch then choose those with matching parent
     if not job_logs and (session_id or batch_label):
@@ -173,8 +178,9 @@ def build_suggestion_for_execution(
                     or (a.get("index_meta") or {}).get("parent_artifact_id") == batch_execution_artifact_id
                 ):
                     job_logs.append(a)
-        except (KeyError, ValueError, TypeError, AttributeError):  # WP-1: narrowed from except Exception
-            pass
+        except (KeyError, ValueError, TypeError, AttributeError) as e:  # WP-1: narrowed
+            logger.error("Failed fallback query for job logs (session=%s, batch=%s): %s", session_id, batch_label, e)
+            raise
 
     signals: List[str] = []
     for jl in job_logs:

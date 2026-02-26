@@ -8,12 +8,15 @@ Date-partitioned like runs_v2.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from .schemas import AdvisoryArtifactV1
+
+logger = logging.getLogger(__name__)
 
 
 def _get_store_dir() -> Path:
@@ -61,7 +64,8 @@ def persist_advisory(artifact: AdvisoryArtifactV1) -> Path:
             encoding="utf-8",
         )
         os.replace(str(tmp_path), str(path))
-    except OSError:  # WP-1: narrowed from except Exception
+    except OSError as e:  # WP-1: narrowed from except Exception
+        logger.error("Failed to persist advisory %s: %s", artifact.advisory_id, e)
         if tmp_path.exists():
             tmp_path.unlink()
         raise
@@ -89,7 +93,8 @@ def load_advisory(advisory_id: str) -> Optional[AdvisoryArtifactV1]:
             try:
                 data = json.loads(artifact_path.read_text(encoding="utf-8"))
                 return AdvisoryArtifactV1.model_validate(data)
-            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+                logger.warning("Failed to load advisory %s: %s", advisory_id, e)
                 return None
 
     return None
@@ -135,7 +140,8 @@ def list_advisories(
                 data = json.loads(artifact_path.read_text(encoding="utf-8"))
                 artifact = AdvisoryArtifactV1.model_validate(data)
                 results.append(artifact)
-            except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+                logger.debug("Skipping unreadable advisory %s: %s", artifact_path, e)
                 continue
 
     return results

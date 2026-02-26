@@ -1,6 +1,7 @@
 """RMOS Pipeline Services - Business Logic for Multi-Stage Execution"""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Protocol
 
@@ -20,6 +21,8 @@ from .store import (
     get_pipeline_store,
 )
 from ..runs import sha256_of_obj
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
@@ -182,6 +185,7 @@ class PipelineService:
                     try:
                         feas_result = self.feasibility_checker.check(op_design, context)
                     except (ZeroDivisionError, ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
+                        logger.warning("Feasibility check failed for op %s: %s", op_id, e)
                         feas_result = {
                             "score": 0.0,
                             "risk_bucket": "ERROR",

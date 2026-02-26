@@ -9,10 +9,13 @@ Wraps the existing feasibility_fusion.evaluate_feasibility() with:
 """
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any, Dict, Optional
 
 from .base import EngineInfo, validate_result_contract
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_import_fusion():
@@ -137,7 +140,8 @@ class BaselineFeasibilityEngineV1:
                         a["risk"] = risk.value
                     out["assessments"].append(a)
 
-        except Exception as e:  # WP-1: governance catch-all — engine must always return a valid result
+        except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, RuntimeError) as e:  # WP-3: narrowed from except Exception — engine must always return a valid result
+            logger.error("Baseline feasibility engine exception: %s", e, exc_info=True)
             out = {
                 "status": "ERROR",
                 "reasons": [f"engine exception: {type(e).__name__}: {e}"],
@@ -156,7 +160,8 @@ class BaselineFeasibilityEngineV1:
         # Contract validation (fail-safe to ERROR)
         try:
             validate_result_contract(out)
-        except Exception as e:  # WP-1: governance catch-all — contract violation must not crash engine
+        except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception — contract violation must not crash engine
+            logger.error("Result contract violation in baseline_v1: %s", e, exc_info=True)
             out = {
                 "status": "ERROR",
                 "reasons": [f"result contract violation: {type(e).__name__}: {e}"],

@@ -11,10 +11,13 @@ Migrated from: _experimental/ai_core/clients.py (December 2025)
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional, Protocol
 
 # Platform transport
 from app.ai.transport import get_llm_client, LLMClient
+
+logger = logging.getLogger(__name__)
 
 
 class AiClient(Protocol):
@@ -54,7 +57,8 @@ class LLMClientAdapter:
                 max_tokens=kwargs.get("max_tokens", 2048),
             )
             return response.content
-        except Exception:  # WP-1: keep broad — external LLM API can raise arbitrary errors
+        except (OSError, ConnectionError, TimeoutError, ValueError, TypeError, KeyError, RuntimeError) as e:  # WP-3: narrowed — external LLM API errors
+            logger.warning("LLM request_text failed: %s", e, exc_info=True)
             return ""
 
 

@@ -5,9 +5,12 @@ Calculates rim (peripheral) speed safety for saw blades.
 """
 from __future__ import annotations
 
+import logging
 import math
 
 from ..models import SawContext, SawDesign, SawCalculatorResult
+
+logger = logging.getLogger(__name__)
 
 
 class SawRimSpeedCalculator:
@@ -95,12 +98,9 @@ class SawRimSpeedCalculator:
                 }
             )
             
-        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed from except Exception
-            return SawCalculatorResult(
-                calculator_name="rim_speed",
-                score=50.0,
-                warning=f"Rim speed calculation error: {str(e)}"
-            )
+        except (ZeroDivisionError, ValueError, TypeError, ArithmeticError, OverflowError) as e:  # WP-1: narrowed
+            logger.error("Rim speed calculation error: %s", e)
+            raise
     
     def _get_material_key(self, material_id: str | None) -> str:
         """Map material_id to safe range key."""

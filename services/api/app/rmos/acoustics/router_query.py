@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,6 +11,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from .persist_glue import INDEX_FILENAME
+
+logger = logging.getLogger(__name__)
 
 # Use same store root as RunStoreV2 for consistency
 STORE_ROOT_DEFAULT = "services/api/data/runs/rmos"
@@ -111,6 +114,7 @@ def get_index(
             try:
                 ca_dt = _parse_iso_utc(ca)
             except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+                logger.debug("Could not parse created_at for run filtering")
                 return False
             if since_dt and ca_dt < since_dt:
                 return False
@@ -167,6 +171,7 @@ def get_run(run_id: str) -> dict[str, Any]:
                             if p.exists() and p.is_file():
                                 return _load_json(p)
         except (OSError, json.JSONDecodeError, KeyError):  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read index for run %s, falling back to partition scan", run_id)
             # ignore and fall back
             pass
 

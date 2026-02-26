@@ -41,6 +41,10 @@ from .rmos_workflow_schemas import (
     TransitionResponse,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 transitions_router = APIRouter()
 
 
@@ -66,7 +70,8 @@ def set_session_design(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in set_session_design: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -97,7 +102,8 @@ def set_session_context(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in set_session_context: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -128,7 +134,8 @@ def request_session_feasibility(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in request_session_feasibility: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -181,7 +188,8 @@ def store_session_feasibility(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in store_session_feasibility: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -221,8 +229,9 @@ def approve_session(
         )
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
         # Approval may be blocked by governance rules
+        logger.warning("Approval blocked for session %s: %s", req.session_id, e)
         raise HTTPException(
             status_code=409,
             detail={
@@ -256,7 +265,8 @@ def reject_session(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in reject_session: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -284,7 +294,8 @@ def request_session_toolpaths(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in request_session_toolpaths: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -331,7 +342,8 @@ def store_session_toolpaths(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in store_session_toolpaths: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -363,7 +375,8 @@ def require_session_revision(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in require_session_revision: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(
@@ -392,7 +405,8 @@ def archive_session(
         STORE.put(session)
     except HTTPException:
         raise  # WP-1: pass through HTTPException
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-3: narrowed from except Exception
+        logger.warning("Transition blocked in archive_session: %s", e)
         raise HTTPException(status_code=409, detail={"error": "TRANSITION_BLOCKED", "message": str(e)})
     
     return TransitionResponse(

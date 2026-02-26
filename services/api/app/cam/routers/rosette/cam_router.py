@@ -33,6 +33,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -62,6 +63,8 @@ from ....rmos.runs_v2 import (
 # Import feasibility functions (Phase 2: server-side enforcement)
 from ....rmos.api.rmos_feasibility_router import compute_feasibility_internal
 from ....rmos.policies import SafetyPolicy
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -275,7 +278,8 @@ def plan_rosette_cam_toolpath(body: RosetteToolpathPlanRequest) -> Dict[str, Any
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError) as e:
+        logger.error("Rosette toolpath planning failed: %s", e, exc_info=True)
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(
@@ -407,7 +411,8 @@ def post_rosette_gcode(body: RosettePostGcodeRequest) -> Dict[str, Any]:
 
     except HTTPException:
         raise  # WP-1: pass through HTTPException (e.g. 409 SAFETY_BLOCKED)
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError) as e:
+        logger.error("Rosette G-code post-processing failed: %s", e, exc_info=True)
         # Create ERROR artifact
         run_id = create_run_id()
         artifact = RunArtifact(
@@ -463,7 +468,8 @@ def create_rosette_cam_job(body: RosetteCamJobCreateRequest) -> RosetteCamJobIdR
 
     except HTTPException:
         raise  # WP-1: pass through
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, OSError) as e:
+        logger.error("Rosette CAM job creation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=400, detail=f"Job creation failed: {str(e)}")
 
 
@@ -496,5 +502,6 @@ def get_rosette_cam_job(job_id: str) -> RosetteCamJobResponse:
 
     except HTTPException:
         raise  # WP-1: pass through
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, OSError) as e:
+        logger.error("Rosette CAM job retrieval failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Job retrieval failed: {str(e)}")

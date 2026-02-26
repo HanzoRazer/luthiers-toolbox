@@ -14,6 +14,7 @@ Storage structure:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
 from datetime import datetime, timezone
@@ -21,6 +22,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 def _get_validation_root() -> Path:
@@ -189,6 +192,7 @@ def list_validation_sessions(
                 data = json.load(fp)
             results.append(ValidationSessionRecord(**data))
         except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            logger.debug("Skipping malformed session file: %s", f)
             continue
 
     return results
@@ -249,6 +253,7 @@ def list_validation_runs(
             if len(results) >= offset + limit:
                 break
         except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            logger.debug("Skipping malformed run file: %s", f)
             continue
 
     return results[offset:offset + limit]

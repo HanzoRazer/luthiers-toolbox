@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -9,6 +10,8 @@ import hashlib
 import zipfile
 from pathlib import Path
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
@@ -69,7 +72,7 @@ def _write_ingest_event_safe(
         )
         append_event(root, event)
     except (OSError, ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
-        pass  # Best-effort: never block import flow
+        logger.debug("Best-effort ingest event write failed (non-blocking)")
 
 
 

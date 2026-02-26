@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def is_execution_metrics_autorollup_enabled() -> bool:
@@ -38,5 +41,6 @@ def maybe_autorollup_execution_metrics(
             batch_label=batch_label,
             tool_kind=tool_kind,
         )
-    except (ImportError, RuntimeError, ValueError, TypeError, OSError):  # WP-1: narrowed from except Exception
-        return None
+    except (ImportError, RuntimeError, ValueError, TypeError, OSError) as e:  # WP-1: narrowed
+        logger.error("Autorollup execution metrics failed for %s: %s", batch_execution_artifact_id, e)
+        raise

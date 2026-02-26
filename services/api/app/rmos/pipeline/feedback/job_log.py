@@ -9,8 +9,11 @@ Auto-triggers learning event and metrics rollup hooks if enabled.
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     JobLog,
@@ -147,6 +150,7 @@ class JobLogService:
                 )
                 learning_emitted = True
             except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
+                logger.warning("Learning hook failed for job_log %s", artifact_id)
                 pass  # Hook failure shouldn't fail the job log
 
         if is_metrics_rollup_hook_enabled(self.tool_type):
@@ -158,6 +162,7 @@ class JobLogService:
                 )
                 rollup_updated = True
             except (OSError, ValueError, TypeError):  # WP-1: narrowed from except Exception
+                logger.warning("Metrics rollup hook failed for execution %s", execution_artifact_id)
                 pass  # Hook failure shouldn't fail the job log
 
         return JobLogResponse(

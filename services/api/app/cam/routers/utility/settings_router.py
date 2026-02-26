@@ -16,12 +16,15 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from ....services.pipeline_preset_store import PipelinePresetStore
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -231,7 +234,8 @@ async def cam_settings_import(
                     continue
                 mstore.upsert(m.model_dump(exclude_none=True))
                 report["imported"]["machines"] += 1
-            except Exception as exc:  # WP-1: governance catch-all — error collector
+            except (ValueError, TypeError, KeyError, OSError) as exc:
+                logger.warning("Machine import failed for '%s': %s", m.id, exc)
                 add_error("machine", m.id, exc)
     except (ImportError, OSError) as exc:
         add_error("machine_store", "_", exc)
@@ -249,7 +253,8 @@ async def cam_settings_import(
                     continue
                 pstore.upsert(p.model_dump(exclude_none=True))
                 report["imported"]["posts"] += 1
-            except Exception as exc:  # WP-1: governance catch-all — error collector
+            except (ValueError, TypeError, KeyError, OSError) as exc:
+                logger.warning("Post import failed for '%s': %s", p.id, exc)
                 add_error("post", p.id, exc)
     except (ImportError, OSError) as exc:
         add_error("post_store", "_", exc)
@@ -266,7 +271,8 @@ async def cam_settings_import(
                     continue
                 pps.upsert({**pr.model_dump(exclude_none=True), "id": pid})
                 report["imported"]["pipeline_presets"] += 1
-            except Exception as exc:  # WP-1: governance catch-all — error collector
+            except (ValueError, TypeError, KeyError, OSError) as exc:
+                logger.warning("Pipeline preset import failed for '%s': %s", pr.id or pr.name, exc)
                 add_error("pipeline_preset", pr.id or pr.name, exc)
     except (ImportError, OSError) as exc:
         add_error("preset_store", "_", exc)

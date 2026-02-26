@@ -20,11 +20,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 # Feasibility engine
 from ..feasibility.engine import compute_feasibility
@@ -263,7 +266,8 @@ def evaluate_scenario(scenario: Dict[str, Any]) -> ValidationResult:
         actual_rules = result.rules_triggered
         actual_export = not result.blocking
 
-    except Exception as e:  # WP-1: governance catch-all — engine error treated as RED for safety
+    except (ValueError, TypeError, KeyError, RuntimeError) as e:  # WP-3: narrowed — engine error treated as RED for safety
+        logger.error("Feasibility engine error in validation harness: %s", e)
         # Engine error - treat as RED with error
         fi = FeasibilityInput(
             tool_d=1, stepover=0.5, stepdown=1, z_rough=-1,

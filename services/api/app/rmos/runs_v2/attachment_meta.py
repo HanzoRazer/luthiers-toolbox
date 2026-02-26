@@ -12,12 +12,15 @@ Invariants:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .schemas import RunArtifact, RunAttachment
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -77,8 +80,9 @@ class AttachmentMetaIndex:
             return {}
         try:
             return json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+        except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
             # If corrupted, fail safe: treat as empty (caller may rebuild later)
+            logger.warning("Failed to read attachment meta index %s: %s", self.path, e)
             return {}
 
     def write(self, data: Dict[str, Dict[str, Any]]) -> None:
@@ -216,7 +220,8 @@ class AttachmentMetaIndex:
 
                 try:
                     raw = json.loads(p.read_text(encoding="utf-8"))
-                except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+                except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+                    logger.debug("Skipping unreadable artifact %s during rebuild: %s", p, e)
                     continue
 
                 # Minimum fields for a run artifact
@@ -238,7 +243,8 @@ class AttachmentMetaIndex:
                         filename = str(a.get("filename", "attachment"))
                         size_bytes = int(a.get("size_bytes", 0) or 0)
                         a_created = str(a.get("created_at_utc", created_at_utc))
-                    except (ValueError, TypeError, KeyError):  # WP-1: narrowed from except Exception
+                    except (ValueError, TypeError, KeyError) as e:  # WP-1: narrowed from except Exception
+                        logger.debug("Skipping malformed attachment in %s: %s", p, e)
                         continue
 
                     attachments_indexed += 1
@@ -366,7 +372,8 @@ class AttachmentRecentIndex:
             }
         try:
             return json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
+        except (OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read recent index %s: %s", self.path, e)
             return {
                 "schema_version": "acoustics_attachment_recent_index_v1",
                 "max_entries": self.max_entries,

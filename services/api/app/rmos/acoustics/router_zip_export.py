@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import re
 import tempfile
@@ -17,6 +18,8 @@ from pydantic import BaseModel, Field
 
 from .persist_glue import ATTACHMENTS_ROOT_DEFAULT, load_run_artifact
 from .signed_urls import sign_attachment
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["rmos", "acoustics"])  # prefix set once in main.py (Issue B fix)
 
@@ -48,7 +51,8 @@ def _max_zip_items() -> int:
         return 200
     try:
         return max(1, int(v))
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Invalid RMOS_ACOUSTICS_ZIP_MAX_ITEMS value, using default: %s", e)
         return 200
 
 
@@ -58,7 +62,8 @@ def _max_zip_total_input_bytes() -> int:
         return 500 * 1024 * 1024  # 500MB
     try:
         return max(1, int(v))
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Invalid RMOS_ACOUSTICS_ZIP_MAX_TOTAL_INPUT_BYTES value, using default: %s", e)
         return 500 * 1024 * 1024
 
 
@@ -68,7 +73,8 @@ def _max_zip_output_bytes() -> int:
         return 500 * 1024 * 1024  # 500MB
     try:
         return max(1, int(v))
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.debug("Invalid RMOS_ACOUSTICS_ZIP_MAX_OUTPUT_BYTES value, using default: %s", e)
         return 500 * 1024 * 1024
 
 
@@ -164,8 +170,8 @@ def _store_blob_content_addressed(root: Path, tmp_file: Path, ext: str) -> tuple
     if final_path.exists():
         try:
             tmp_file.unlink(missing_ok=True)  # py3.11+
-        except OSError:  # WP-1: narrowed from except Exception
-            pass
+        except OSError as e:  # WP-1: narrowed from except Exception
+            logger.debug("Failed to unlink temp file during dedup: %s", e)
         return sha, final_path, int(final_path.stat().st_size)
 
     # Atomic move

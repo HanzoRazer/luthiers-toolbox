@@ -11,8 +11,11 @@ Used by batch_router.py for Decision Intelligence integration.
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
@@ -113,8 +116,9 @@ def find_latest_approved_tuning_decision(
             "state": "APPROVED",
             "created_utc": payload.get("created_utc", ""),
         }
-    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError):  # WP-1: narrowed from except Exception
-        return None
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, IndexError) as e:  # WP-1: narrowed
+        logger.error("Failed to find latest approved tuning decision (session=%s, batch=%s): %s", session_id, batch_label, e)
+        raise
 
 
 def advisory_from_plan_choose_artifact(

@@ -10,6 +10,7 @@ Mount at: /api/rmos/operations
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Header, Request
@@ -24,6 +25,8 @@ from .adapter import (
     PlanResult,
 )
 from .export import export_run_to_zip, get_export_filename, ExportError
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -233,6 +236,7 @@ async def export_operation_zip(
     except ExportError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except (OSError, ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        logger.error("Export failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Export failed: {e}")
 
 

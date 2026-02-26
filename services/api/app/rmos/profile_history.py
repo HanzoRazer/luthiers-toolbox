@@ -13,6 +13,7 @@ Environment Variables:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
@@ -20,6 +21,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import uuid
+
+logger = logging.getLogger(__name__)
 
 
 # ======================
@@ -147,7 +150,8 @@ class ProfileHistoryStore:
             with open(self._jsonl_path, "a", encoding="utf-8") as f:
                 f.write(entry.to_json_line() + "\n")
             return True
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError as e:  # WP-1: narrowed from except Exception
+            logger.error("Failed to append profile history entry: %s", e)
             return False
     
     def record_create(
@@ -276,7 +280,8 @@ class ProfileHistoryStore:
             # Return most recent first, limited
             entries.reverse()
             return entries[:limit]
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read profile history for %s: %s", profile_id, e)
             return entries
     
     def get_all_history(
@@ -314,7 +319,8 @@ class ProfileHistoryStore:
             # Return most recent first, limited
             entries.reverse()
             return entries[:limit]
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read all profile history: %s", e)
             return entries
     
     def get_entry_by_id(self, entry_id: str) -> Optional[ProfileHistoryEntry]:
@@ -336,7 +342,8 @@ class ProfileHistoryStore:
                         continue
             
             return None
-        except OSError:  # WP-1: narrowed from except Exception
+        except OSError as e:  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read profile history entry %s: %s", entry_id, e)
             return None
     
     def get_state_at_entry(self, entry_id: str) -> Optional[Dict[str, Any]]:

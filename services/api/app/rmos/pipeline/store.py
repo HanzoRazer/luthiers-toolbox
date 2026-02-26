@@ -17,6 +17,7 @@ Key Features:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Protocol, Union
@@ -53,6 +54,8 @@ try:
     _HAS_QUERY = True
 except ImportError:
     _HAS_QUERY = False
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
@@ -150,6 +153,7 @@ class DefaultPipelineStore:
         try:
             return read_run_artifact(artifact_id)
         except (OSError, json.JSONDecodeError, KeyError):  # WP-1: narrowed from except Exception
+            logger.warning("Failed to read pipeline artifact %s", artifact_id)
             return None
 
     def query(self, query: ArtifactQuery) -> ArtifactQueryResult:
@@ -190,6 +194,7 @@ class DefaultPipelineStore:
                 offset=query.offset,
             )
         except (OSError, json.JSONDecodeError, KeyError, ValueError):  # WP-1: narrowed from except Exception
+            logger.warning("Pipeline artifact query failed", exc_info=True)
             return ArtifactQueryResult(items=[], total=0)
 
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import os
 from datetime import datetime
 from io import StringIO
@@ -16,6 +17,8 @@ from pathlib import Path
 from typing import Iterator, List, Optional
 
 from .schemas import RunLogEntry, CSV_COLUMNS
+
+logger = logging.getLogger(__name__)
 
 
 def _get_log_dir() -> Path:
@@ -128,7 +131,7 @@ def read_jsonl(path: Optional[Path] = None) -> Iterator[RunLogEntry]:
                 yield RunLogEntry.model_validate(data)
             except (json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
                 # Log error but continue - don't fail on malformed entries
-                print(f"Warning: Skipping malformed line {line_num}: {e}")
+                logger.warning("Skipping malformed JSONL line %d: %s", line_num, e)
 
 
 # =============================================================================

@@ -1,6 +1,7 @@
 """RMOS Variant Review Service"""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -24,6 +25,8 @@ from .schemas_variant_review import (
 )
 from .schemas_manufacturing import ManufacturingCandidate
 from .advisory_variant_state import read_rejection, write_rejection, clear_rejection
+
+logger = logging.getLogger(__name__)
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -148,7 +151,8 @@ def list_variants(run_id: str) -> AdvisoryVariantListResponse:
                 preview_reason = reason
                 # Compute risk based on SVG content
                 _, risk_level, _, _ = _risk_from_svg_for_binding(svg_text)
-            except (UnicodeDecodeError, ValueError):  # WP-1: narrowed from except Exception
+            except (UnicodeDecodeError, ValueError) as e:  # WP-1: narrowed from except Exception
+                logger.warning("SVG preview decode error: %s", e)
                 preview_blocked = True
                 preview_reason = "decode"
                 risk_level = "YELLOW"
@@ -407,6 +411,7 @@ def bulk_promote_variants(
             succeeded += 1
 
         except (OSError, ValueError, TypeError, KeyError) as e:  # WP-1: narrowed
+            logger.warning("Bulk promote failed for advisory %s: %s", advisory_id, e)
             results.append(BulkPromoteItemResult(advisory_id=advisory_id, success=False, error=str(e)))
             failed += 1
 

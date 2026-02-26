@@ -9,6 +9,8 @@ Integrates with:
 """
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from typing import Optional, List
 
@@ -35,6 +37,8 @@ try:
 except (ImportError, AttributeError, ModuleNotFoundError):
     def validate_request_against_policy(request): pass  # type: ignore
     PolicyViolationError = Exception  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -106,10 +110,11 @@ async def constraint_search(
         return response
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError) as e:  # WP-3: narrowed from except Exception
+        logger.error("Constraint search failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Search engine error: {str(e)}",
+            detail=f"Search engine error: {type(e).__name__}: {e}",
         )
 
 
@@ -191,10 +196,11 @@ async def quick_check(
         )
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError) as e:  # WP-3: narrowed from except Exception
+        logger.error("Quick check failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Quick check error: {str(e)}",
+            detail=f"Quick check error: {type(e).__name__}: {e}",
         )
 
 

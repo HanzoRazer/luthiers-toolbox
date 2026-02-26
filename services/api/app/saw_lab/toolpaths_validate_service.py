@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass, field
@@ -10,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.safety import safety_critical
 
+logger = logging.getLogger(__name__)
 
 _RE_FLOAT = re.compile(r"([-+]?\d+(?:\.\d+)?)")
 _RE_M3 = re.compile(r"\bM3\b")
@@ -20,7 +22,8 @@ _RE_M5 = re.compile(r"\bM5\b")
 def _to_float(s: str) -> Optional[float]:
     try:
         return float(s)
-    except (ValueError, TypeError):  # WP-1: narrowed from except Exception
+    except (ValueError, TypeError):  # WP-1: narrowed
+        logger.debug("_to_float: could not parse %r", s)
         return None
 
 
@@ -478,8 +481,9 @@ def _read_attachment_meta(sha256: str) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(meta_path.read_text(encoding="utf-8"))
-    except (IOError, OSError, json.JSONDecodeError, ValueError):  # WP-1: narrowed from except Exception
-        return {}
+    except (IOError, OSError, json.JSONDecodeError, ValueError) as e:  # WP-1: narrowed
+        logger.warning("Failed to read attachment meta for %s: %s", sha256, e)
+        raise
 
 
 @safety_critical
@@ -552,13 +556,9 @@ def validate_toolpaths_artifact_static(
                 if meta:
                     out["summary"]["attachment_meta"] = meta
                 return out
-            except (IOError, OSError, FileNotFoundError, ValueError, UnicodeDecodeError) as e:  # WP-1: narrowed from except Exception
-                return {
-                    "ok": False,
-                    "errors": [f"failed to read gcode attachment: {sha}: {type(e).__name__}: {e}"],
-                    "warnings": [],
-                    "summary": {},
-                }
+            except (IOError, OSError, FileNotFoundError, ValueError, UnicodeDecodeError) as e:  # WP-1: narrowed
+                logger.error("Failed to read gcode attachment %s: %s", sha, e)
+                raise
 
     return {
         "ok": False,
