@@ -79,7 +79,7 @@ def compute_bridge_placement(
 
 def compute_bridge_placement_acoustic(
     spec: InstrumentSpec,
-    soundhole_center_mm: float,
+    _soundhole_center_mm: float,
     body_length_mm: float,
 ) -> BridgePlacement:
     """

@@ -343,7 +343,7 @@ def optimize_feed_stepover(
     safe_z: float,
     bounds: Dict[str, Tuple[float, float]],
     tool: Dict[str, Any],
-    objective: str = "time",  # reserved for future: time, energy, etc.
+    _objective: str = "time",  # reserved for future: time, energy, etc.
     grid: Tuple[int, int] = (6, 6),
     tolerance_chip_mm: float = 0.02,
 ) -> Dict[str, Any]:

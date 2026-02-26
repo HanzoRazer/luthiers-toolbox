@@ -286,7 +286,7 @@ def generate_corner_outside_sheet(part_width: float = 100.0, part_height: float 
 
     return sheet.to_svg_string()
 
-def generate_boss_circular_sheet(boss_diameter: float = 50.0, boss_center_x: float = 0.0, boss_center_y: float = 0.0) -> str:
+def generate_boss_circular_sheet(boss_diameter: float = 50.0, _boss_center_x: float = 0.0, _boss_center_y: float = 0.0) -> str:
     """
     Generate setup sheet for circular boss pattern.
 

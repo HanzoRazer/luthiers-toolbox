@@ -96,7 +96,7 @@ def _merge_adaptive_override(
 def _apply_adaptive_feed(
     moves: List[Dict[str, Any]],
     post: Optional[Dict[str, Any]],
-    base_units: Literal["mm", "inch"]
+    _base_units: Literal["mm", "inch"]
 ) -> List[str]:
     """
     Apply adaptive feed translation based on post processor profile.

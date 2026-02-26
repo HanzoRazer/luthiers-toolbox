@@ -239,7 +239,7 @@ from typing import List, Dict, Tuple
 # VECTOR-BASED POLYGON OFFSETTING (LEGACY L.0)
 # =============================================================================
 
-def _offset_loop(loop: List[Tuple[float,float]], offset: float, round_joints=True) -> List[Tuple[float,float]]:
+def _offset_loop(loop: List[Tuple[float,float]], offset: float, _round_joints=True) -> List[Tuple[float,float]]:
     """
     Very small inward offset: vector normals + miter/round joins. Not robust for self-intersections,
     but good enough for rects/rounded pockets. We iterate this to create offset shells.
@@ -328,7 +328,7 @@ def spiralize(stacks: List[List[Tuple[float,float]]], smoothing: float) -> List[
 # G-CODE GENERATION (LEGACY L.0)
 # =============================================================================
 
-def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: float, safe_z: float, lead_r: float, climb=True):
+def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: float, safe_z: float, _lead_r: float, climb=True):
     moves = []
     # lead-in arc
     if path_pts:

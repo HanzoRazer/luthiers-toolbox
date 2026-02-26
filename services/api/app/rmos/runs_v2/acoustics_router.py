@@ -342,7 +342,7 @@ def browse_attachment_meta(
     limit: int = Query(default=50, ge=1, le=200),
     cursor: Optional[str] = Query(default=None),
     kind: Optional[str] = Query(default=None),
-    mime_prefix: Optional[str] = Query(default=None),
+    _mime_prefix: Optional[str] = Query(default=None),
     include_urls: bool = Query(default=False),
 ) -> BrowseResponse:
     """Browse attachment meta index with filters."""

@@ -46,7 +46,7 @@ def group_by_session(events: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, A
     raise NotImplementedError("agentic.spine.replay.group_by_session is not yet implemented")
 
 
-def select_moment_with_grace(moments: List[Any], grace_period_ms: int = 1000) -> Any:
+def select_moment_with_grace(_moments: List[Any], _grace_period_ms: int = 1000) -> Any:
     """Select the appropriate moment given a grace period.
 
     Not implemented - this is a placeholder.

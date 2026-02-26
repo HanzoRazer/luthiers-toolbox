@@ -43,7 +43,7 @@ class RiskTimelineResponse(BaseModel):
 
 @router.get("/analytics/lane-analytics", response_model=LaneAnalyticsResponse)
 def get_lane_analytics(
-    limit_recent: int = Query(default=100, ge=1, le=1000),
+    _limit_recent: int = Query(default=100, ge=1, le=1000),
 ) -> LaneAnalyticsResponse:
     """Get lane-level analytics for RMOS operations."""
     return LaneAnalyticsResponse(
