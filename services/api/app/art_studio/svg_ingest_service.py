@@ -16,10 +16,7 @@ import re
 from math import cos, hypot, pi, sin
 from typing import Any, Dict, List, Optional, Tuple
 
-try:
-    import defusedxml.ElementTree as ET
-except ImportError:  # fallback for environments without defusedxml
-    from xml.etree import ElementTree as ET  # nosec B405
+import defusedxml.ElementTree as ET  # Safe XML parsing (required dep)
 
 Point2D = Tuple[float, float]
 Polyline = List[Point2D]

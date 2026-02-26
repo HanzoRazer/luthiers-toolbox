@@ -3,7 +3,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Tuple, Optional, Union
-from fractions import Fraction
 import math
 import re
 from .basic_calculator import LTBBasicCalculator

@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
 
-from ..data_registry import Registry, Edition as RegistryEdition, EntitlementError
+from ..data_registry import Registry, EntitlementError
 from ..middleware import get_edition, require_feature, EditionContext
 
 router = APIRouter()

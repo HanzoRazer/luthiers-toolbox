@@ -12,7 +12,6 @@ from app.saw_lab.store import (
     store_artifact,
     get_artifact,
     query_job_logs_by_execution,
-    query_accepted_learning_events,
 )
 
 router = APIRouter(prefix="/api/saw/batch", tags=["saw", "batch"])

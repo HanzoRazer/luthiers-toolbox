@@ -13,7 +13,6 @@ from ..instrument_geometry.neck.fret_math import compute_fret_positions_mm
 
 try:
     import ezdxf
-    from ezdxf import units as dxf_units
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False

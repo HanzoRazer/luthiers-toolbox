@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import
-from app.core.safety import safety_critical Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+from app.core.safety import safety_critical
 
 # Type alias for artifact reader callable
 ArtifactReader = Callable[[str], Any]
