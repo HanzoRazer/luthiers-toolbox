@@ -118,7 +118,7 @@ def calculate_tone_rolloff(
 
 
 def calculate_pickup_load(
-    _pickup_dcr_kohm: float,
+    pickup_dcr_kohm: float,
     pickup_inductance_h: float,
     volume_pot_kohm: float,
     tone_pot_kohm: float,
