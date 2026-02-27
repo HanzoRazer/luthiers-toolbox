@@ -1,0 +1,6 @@
+{
+  "description": "Known route conflicts (existing debt)",
+  "allowed_conflicts": [
+    "POST /api/preview"
+  ]
+}
