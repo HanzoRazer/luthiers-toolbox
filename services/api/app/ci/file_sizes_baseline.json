@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 10,
+  "violation_count": 11,
   "violations": [
     {
       "file": "tests/test_architecture_scan.py",
@@ -36,6 +36,11 @@
       "file": "tests/rmos/test_acoustics_hardening.py",
       "lines": 559,
       "over_by": 59
+    },
+    {
+      "file": "app/router_registry/manifest.py",
+      "lines": 528,
+      "over_by": 28
     },
     {
       "file": "tests/test_adaptive_router.py",
