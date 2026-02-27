@@ -1,6 +1,6 @@
 {
   "threshold": 15,
-  "violation_count": 139,
+  "violation_count": 140,
   "violations": [
     {
       "file": "app/rmos/runs_v2/batch_summary.py",
@@ -973,6 +973,13 @@
       "function": "generate",
       "complexity": 16,
       "line": 291,
+      "letter": "M"
+    },
+    {
+      "file": "app/business/estimator/estimator_service.py",
+      "function": "_calculate_all_factors",
+      "complexity": 16,
+      "line": 256,
       "letter": "M"
     }
   ]
