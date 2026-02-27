@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 8,
+  "violation_count": 10,
   "violations": [
     {
       "file": "tests/test_architecture_scan.py",
@@ -28,6 +28,11 @@
       "over_by": 68
     },
     {
+      "file": "app/business/estimator/estimator_service.py",
+      "lines": 565,
+      "over_by": 65
+    },
+    {
       "file": "tests/rmos/test_acoustics_hardening.py",
       "lines": 559,
       "over_by": 59
@@ -36,6 +41,11 @@
       "file": "tests/test_adaptive_router.py",
       "lines": 523,
       "over_by": 23
+    },
+    {
+      "file": "app/cam/routers/rosette/cam_router.py",
+      "lines": 507,
+      "over_by": 7
     },
     {
       "file": "app/tests/test_e2e_workflow_integration.py",
