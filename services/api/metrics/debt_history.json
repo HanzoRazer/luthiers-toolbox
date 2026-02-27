@@ -103,5 +103,69 @@
     "bare_except": 6,
     "large_files": 3,
     "god_objects": 10
+  },
+  {
+    "timestamp": "2026-02-24T08:03:07.411150",
+    "endpoints": 570,
+    "bare_except": 6,
+    "large_files": 3,
+    "god_objects": 10
+  },
+  {
+    "timestamp": "2026-02-26T05:47:02.789122",
+    "endpoints": 566,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-26T05:52:03.279875",
+    "endpoints": 566,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-26T05:56:46.931130",
+    "endpoints": 566,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-26T13:31:47.312610",
+    "endpoints": 503,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-26T14:14:04.871931",
+    "endpoints": 503,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-26T14:18:05.026293",
+    "endpoints": 503,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 8
+  },
+  {
+    "timestamp": "2026-02-27T07:35:11.517002",
+    "endpoints": 562,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 10,
+    "note": "Intentional restoration of 15 routers incorrectly deleted (validation, decision-intel, temperament, art-studio, etc.)"
+  },
+  {
+    "timestamp": "2026-02-27T07:35:40.249453",
+    "endpoints": 562,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
   }
 ]
