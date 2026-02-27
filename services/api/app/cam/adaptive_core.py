@@ -328,7 +328,7 @@ def spiralize(stacks: List[List[Tuple[float,float]]], smoothing: float) -> List[
 # G-CODE GENERATION (LEGACY L.0)
 # =============================================================================
 
-def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: float, safe_z: float, _lead_r: float, climb=True):
+def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: float, safe_z: float, lead_r: float, climb=True):
     moves = []
     # lead-in arc
     if path_pts:
