@@ -247,7 +247,7 @@ def to_toolpath(
     feed_xy: float,
     z_rough: float,
     safe_z: float,
-    _lead_r: float = 0.0,
+    lead_r: float = 0.0,
 ) -> List[Dict[str, Any]]:
     """Convert XY path points to G-code move sequence."""
     # Validate inputs (fail-safe)
