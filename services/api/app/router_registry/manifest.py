@@ -160,12 +160,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Geometry", "Polygon"],
         category="cam",
     ),
-    RouterSpec(
-        module="app.routers.cam_polygon_offset_router",
-        prefix="/api",
-        tags=["CAM", "Polygon"],
-        category="cam",
-    ),
     # -------------------------------------------------------------------------
     # BLUEPRINT & DXF
     # -------------------------------------------------------------------------
