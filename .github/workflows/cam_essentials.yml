@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      API_BASE: $API_BASE
+      API_BASE: http://127.0.0.1:8000
 
     steps:
       - name: Checkout repository
