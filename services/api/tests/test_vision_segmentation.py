@@ -332,16 +332,8 @@ class TestSegmentationEndpoints:
 class TestSegmentationSchemas:
     """Test segmentation schemas import correctly."""
 
-    def test_segment_request_schema(self):
-        """SegmentRequest schema should be valid."""
-        from app.vision.schemas import SegmentRequest
-        req = SegmentRequest(
-            target_width_mm=400.0,
-            simplify_tolerance_mm=1.0,
-            guitar_category="acoustic",
-            output_format="dxf",
-        )
-        assert req.target_width_mm == 400.0
+    # test_segment_request_schema removed - SegmentRequest schema was dead code
+    # (endpoint uses Form() params, not Request body schema)
 
     def test_segment_response_schema(self):
         """SegmentResponse schema should be valid."""
