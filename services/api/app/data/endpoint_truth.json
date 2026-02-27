@@ -75,8 +75,10 @@
         "POST"
       ],
       "name": "saw_batch_toolpaths",
-      "lane": "OPERATION",
-      "deprecated": false
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "replaced_by_toolpaths_validate",
+      "sunset": "2026-06-30"
     },
     {
       "path": "/api/saw/batch/job-log",
@@ -84,8 +86,10 @@
         "POST"
       ],
       "name": "saw_batch_job_log",
-      "lane": "OPERATION",
-      "deprecated": false
+      "lane": "LEGACY",
+      "deprecated": true,
+      "deprecated_reason": "not_yet_implemented",
+      "sunset": "2026-06-30"
     },
     {
       "path": "/api/rmos/ai/constraint-search",
