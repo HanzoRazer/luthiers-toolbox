@@ -20,7 +20,7 @@ from .store import (
     read_artifact,
     get_pipeline_store,
 )
-from ..runs import sha256_of_obj
+from ..runs_v2 import sha256_of_obj
 
 logger = logging.getLogger(__name__)
 
