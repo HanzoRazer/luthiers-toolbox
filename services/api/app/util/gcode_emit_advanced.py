@@ -101,7 +101,8 @@ def emit_xy_with_arcs(
         u,
         "G90",  # Absolute positioning
         "G17",  # XY plane
-        f"G0 Z{safe_z:.3f}"
+        f"G0 Z{safe_z:.3f}",
+        "M3",  # Spindle on (CW)
     ]
     
     f_lin = f"F{feed:.1f}"
@@ -156,5 +157,5 @@ def emit_xy_with_arcs(
         # Retract
         lines.append(f"G0 Z{safe_z:.3f}")
     
-    lines += ["M30"]
+    lines += ["M5", "M30"]  # Spindle off, program end
     return "\n".join(lines)
