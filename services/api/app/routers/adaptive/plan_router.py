@@ -236,7 +236,7 @@ def _build_moves_with_slowdown(
             moves,
             trochoid_radius=max(0.3, body.trochoid_radius),
             trochoid_pitch=max(0.6, body.trochoid_pitch),
-            curvature_slowdown_threshold=1.0 / max(1.0, 3.0 * body.tool_d),
+            _curvature_slowdown_threshold=1.0 / max(1.0, 3.0 * body.tool_d),
         )
 
     return moves
