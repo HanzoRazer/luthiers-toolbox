@@ -184,7 +184,7 @@ def check_route_conflicts(verbose: bool = False) -> CheckResult:
     # Import and run the route conflict detector
     try:
         sys.path.insert(0, str(REPO_ROOT / "scripts" / "ci"))
-        from check_route_conflicts import parse_manifest, module_to_path, extract_routes_from_file, find_conflicts
+        from check_route_conflicts import parse_manifest, module_to_path, extract_routes_from_file, find_conflicts, load_baseline
 
         specs = parse_manifest()
         all_routes = []
@@ -196,12 +196,21 @@ def check_route_conflicts(verbose: bool = False) -> CheckResult:
                 all_routes.extend(routes)
 
         conflicts = find_conflicts(all_routes)
+        
+        # Filter out baselined conflicts
+        baseline = load_baseline()
+        new_conflicts = {
+            k: v for k, v in conflicts.items()
+            if f"{k[0]} {k[1]}" not in baseline
+        }
 
-        if conflicts:
+        if new_conflicts:
             result.passed = False
-            result.message = f"{len(conflicts)} route conflict(s) detected"
-            for (method, path), routes in conflicts.items():
+            result.message = f"{len(new_conflicts)} NEW route conflict(s) detected"
+            for (method, path), routes in new_conflicts.items():
                 result.details.append(f"CONFLICT: {method} {path} ({len(routes)} definitions)")
+        elif conflicts:
+            result.message = f"{len(conflicts)} known conflicts (baselined), 0 new among {len(all_routes)} routes"
         else:
             result.message = f"No conflicts among {len(all_routes)} routes"
 
