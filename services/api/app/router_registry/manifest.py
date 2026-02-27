@@ -27,6 +27,13 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         required=True,
         category="core",
     ),
+    RouterSpec(
+        module="app.governance.meta_router",
+        prefix="",  # router has /api/_meta prefix
+        tags=["Meta", "Governance"],
+        required=True,  # CI routing truth validation
+        category="core",
+    ),
     # -------------------------------------------------------------------------
     # CAM CORE (11 routers)
     # -------------------------------------------------------------------------
