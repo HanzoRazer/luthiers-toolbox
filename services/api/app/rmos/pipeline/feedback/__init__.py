@@ -46,6 +46,7 @@ from .schemas import (
 
 from .config import (
     FeedbackConfig,
+    get_learned_overrides_path,
     get_feedback_config,
     is_learning_hook_enabled,
     is_metrics_rollup_hook_enabled,
@@ -60,6 +61,8 @@ from .job_log import (
 
 from .learning import (
     LearningService,
+    detect_signals,
+    generate_suggestions,
     emit_learning_event,
     create_learning_decision,
     resolve_learned_multipliers,
@@ -101,12 +104,15 @@ __all__ = [
     "is_learning_hook_enabled",
     "is_metrics_rollup_hook_enabled",
     "is_apply_overrides_enabled",
+    "get_learned_overrides_path",
     # Job Log
     "JobLogService",
     "write_job_log",
     "list_job_logs_for_execution",
     # Learning
     "LearningService",
+    "detect_signals",
+    "generate_suggestions",
     "emit_learning_event",
     "create_learning_decision",
     "resolve_learned_multipliers",

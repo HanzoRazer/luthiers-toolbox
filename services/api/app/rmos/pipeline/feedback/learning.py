@@ -25,7 +25,7 @@ from .config import (
 )
 from ..store import write_artifact, read_artifact, query_artifacts
 from ..schemas import PipelineStage, PipelineStatus, ArtifactQuery
-from ...runs import create_run_id, sha256_of_obj
+from ...runs_v2 import create_run_id, sha256_of_obj
 
 
 def _utc_now_iso() -> str:

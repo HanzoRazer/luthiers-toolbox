@@ -18,7 +18,7 @@ from .schemas import (
     ExecuteResponse,
 )
 from .store import write_artifact, read_artifact
-from ..runs import sha256_of_obj
+from ..runs_v2 import sha256_of_obj
 
 if TYPE_CHECKING:
     from .services import PipelineService
