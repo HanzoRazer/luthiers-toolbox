@@ -32,6 +32,8 @@
   "packages/client/src/views/art/RiskDashboardCrossLab.vue": 2062,
   "packages/client/src/views/tools/AudioAnalyzerLibrary.vue": 828,
   "packages/client/src/views/tools/AudioAnalyzerViewer.vue": 1269,
+  "services/api/app/business/estimator/estimator_service.py": 565,
+  "services/api/app/cam/routers/rosette/cam_router.py": 507,
   "services/api/app/generators/bezier_body.py": 595,
   "services/api/app/saw_lab/toolpaths_validate_service.py": 568,
   "services/api/app/tests/test_e2e_workflow_integration.py": 504
