@@ -13,10 +13,12 @@ from .basic_calculator import LTBBasicCalculator
 from .fraction_calculator import LTBFractionCalculator
 from .scientific_calculator import LTBScientificCalculator
 from .financial_calculator import LTBFinancialCalculator
+from .luthier_calculator import LTBLuthierCalculator
 
 __all__ = [
     'LTBBasicCalculator',
     'LTBFractionCalculator',
     'LTBScientificCalculator',
     'LTBFinancialCalculator',
+    'LTBLuthierCalculator',
 ]
