@@ -167,5 +167,27 @@
     "bare_except": 6,
     "large_files": 4,
     "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T08:29:13.620377",
+    "endpoints": 562,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T14:59:20.052058",
+    "endpoints": 569,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 10,
+    "note": "Restored workflow/sessions/routes.py (+7 endpoints)"
+  },
+  {
+    "timestamp": "2026-02-27T14:59:54.315540",
+    "endpoints": 569,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
   }
 ]
