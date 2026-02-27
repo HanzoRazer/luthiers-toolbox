@@ -54,8 +54,8 @@ jobs:
 
       - name: Ensure data directory is writable
         run: |
-          mkdir -p services/api/app/data
-          chmod 777 services/api/app/data
+          mkdir -p services/api/app/data/runs
+          chmod -R 777 services/api/app/data
           touch services/api/app/data/runs.json
           echo "{}" > services/api/app/data/runs.json
           chmod 666 services/api/app/data/runs.json
