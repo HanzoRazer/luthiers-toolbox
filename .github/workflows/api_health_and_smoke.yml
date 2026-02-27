@@ -41,17 +41,11 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
-      - name: Install deps (prefer requirements.lock)
+      - name: Install deps
         shell: bash
         run: |
-          if [ -f requirements.lock ]; then
-            pip install -r requirements.lock
-          elif [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            echo "No requirements file found. Installing minimal deps."
-            pip install fastapi uvicorn "pydantic>=2" requests
-          fi
+          pip install -r services/api/requirements.txt
+          pip install requests  # For smoke test script
 
       # (Optional) Reuse your existing health target; doesn't fail the build if missing
       - name: Run API health (best-effort)
