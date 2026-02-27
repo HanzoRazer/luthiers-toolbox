@@ -8,7 +8,6 @@ Endpoints covered:
 - /backup/* - Backup management
 - /pocket/adaptive/* - Adaptive pocket operations
 - /drilling/* - Drilling operations
-- /metrics/* - CAM metrics and thermal reports
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
 - /blueprint/* - Blueprint operations
@@ -17,7 +16,6 @@ Endpoints covered:
 - /relief/* - Relief carving
 - /posts/* - Post processors
 - /machines - Machine list
-- /compare/* - CAM diff comparison
 - /bridge/* - Bridge export
 - /logs/* - Log writing
 - /risk/* - Risk reports index
@@ -104,46 +102,6 @@ def generate_drilling_gcode(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 def download_drilling_gcode() -> Dict[str, Any]:
     """Download drilling G-code file."""
     return {"ok": False, "message": "Stub: drilling download not yet implemented"}
-
-
-# =============================================================================
-# Metrics Stubs
-# =============================================================================
-
-@router.get("/metrics/energy")
-def get_energy_metrics() -> Dict[str, Any]:
-    """Get energy consumption metrics."""
-    return {"total_kwh": 0, "by_operation": {}, "timestamp": None}
-
-
-@router.get("/metrics/energy_csv")
-def get_energy_csv() -> str:
-    """Get energy metrics as CSV."""
-    return "operation,kwh\n"
-
-
-@router.get("/metrics/bottleneck_csv")
-def get_bottleneck_csv() -> str:
-    """Get bottleneck analysis as CSV."""
-    return "step,duration_sec,bottleneck\n"
-
-
-@router.get("/metrics/heat_timeseries")
-def get_heat_timeseries() -> Dict[str, Any]:
-    """Get thermal timeseries data."""
-    return {"series": [], "max_temp": 0, "avg_temp": 0}
-
-
-@router.get("/metrics/thermal_report_md")
-def get_thermal_report_md() -> str:
-    """Get thermal report as Markdown."""
-    return "# Thermal Report\n\nNo data available."
-
-
-@router.get("/metrics/thermal_report_bundle")
-def get_thermal_report_bundle() -> Dict[str, Any]:
-    """Get thermal report bundle."""
-    return {"report_md": "", "charts": [], "data": {}}
 
 
 # =============================================================================
@@ -250,18 +208,6 @@ def list_posts() -> List[Dict[str, Any]]:
 def get_post(post_id: str) -> Dict[str, Any]:
     """Get post processor details."""
     return {"post_id": post_id, "name": post_id, "config": {}}
-
-
-# =============================================================================
-# Compare Stubs
-# =============================================================================
-
-@router.post("/compare/diff")
-def compare_diff(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Compare two CAM operations."""
-    if payload is None:
-        payload = {}
-    return {"diffs": [], "summary": "No differences (stub)"}
 
 
 # =============================================================================
