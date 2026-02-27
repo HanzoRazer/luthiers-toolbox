@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from ...energy_model import energy_breakdown
 from ...heat_timeseries import heat_timeseries
 from ....routers.machines_consolidated_router import get_profile
-from ....routers.material_router import get_material
+from ....business.router import get_material
 from ....util.names import safe_stem
 
 router = APIRouter()
@@ -230,7 +230,7 @@ def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
 
     energy_data, ts = _compute_energy_and_heat(body, mat, prof)
 
-    use = energy_data["usage"]
+    use = energy_data["totals"]["heat"]
     bj = body.budgets
 
     chip_state = _thermal_state(use["chip_j"], bj.chip_j)
