@@ -497,4 +497,32 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="analyzer",
     ),
 
+    # -------------------------------------------------------------------------
+    # RMOS VALIDATION (Wave 25 - 30-run protocol)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.rmos.validation.router",
+        prefix="",  # router has /api/rmos/validation prefix
+        tags=["RMOS", "Validation"],
+        category="rmos",
+    ),
+    # -------------------------------------------------------------------------
+    # INSTRUMENT GEOMETRY (Neck Taper)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.instrument_geometry.neck_taper.api_router",
+        prefix="",  # router has /instrument/neck_taper prefix
+        tags=["Instrument", "Neck Taper"],
+        category="instrument",
+    ),
+    # -------------------------------------------------------------------------
+    # WORKFLOW SESSIONS (CRUD)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.workflow.sessions.routes",
+        prefix="",  # router has /api/workflow/sessions prefix
+        tags=["Workflow", "Sessions"],
+        category="workflow",
+    ),
+
 ]
