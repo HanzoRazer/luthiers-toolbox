@@ -278,36 +278,8 @@ class ExecutionArtifact(PipelineArtifactBase):
     retry_reason: Optional[str] = None
 
 
-class OpToolpathsArtifact(PipelineArtifactBase):
-    """
-    OP_TOOLPATHS artifact - Individual operation result.
-
-    Child artifact containing the actual toolpaths/G-code for one operation.
-    """
-    stage: PipelineStage = Field(default=PipelineStage.EXECUTE)
-
-    # Parent references
-    execution_artifact_id: str = Field(..., description="Parent execution artifact ID")
-    decision_artifact_id: str = Field(..., description="Parent decision artifact ID")
-
-    # Operation identification
-    op_id: str = Field(..., description="Operation identifier")
-    setup_key: Optional[str] = None
-
-    # Input snapshot (for deterministic replay)
-    design: Dict[str, Any] = Field(default_factory=dict)
-    context: Dict[str, Any] = Field(default_factory=dict)
-
-    # Feasibility (recomputed server-side)
-    feasibility_recomputed: Dict[str, Any] = Field(default_factory=dict)
-
-    # Output
-    toolpaths: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Toolpath data (moves, gcode, stats)"
-    )
-    gcode: Optional[str] = Field(None, description="Generated G-code")
-    gcode_hash: Optional[str] = Field(None, description="SHA256 of G-code")
+# OpToolpathsArtifact removed - never imported/used (Phase 4 dead code cleanup)
+# Runtime uses dict-based 'toolpaths_artifact' pattern instead
 
 
 # =============================================================================
