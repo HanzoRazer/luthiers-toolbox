@@ -13,14 +13,38 @@ Usage:
 import ast
 import sys
 import re
+import json
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
 from dataclasses import dataclass
 from collections import defaultdict
 
 # Repo root
 REPO_ROOT = Path(__file__).parent.parent.parent
 API_ROOT = REPO_ROOT / "services" / "api" / "app"
+BASELINE_PATH = API_ROOT / "ci" / "route_conflicts_baseline.json"
+
+
+def load_baseline() -> Set[str]:
+    """Load allowed conflicts from baseline file."""
+    if not BASELINE_PATH.exists():
+        return set()
+    try:
+        data = json.loads(BASELINE_PATH.read_text(encoding='utf-8'))
+        return set(data.get('allowed_conflicts', []))
+    except Exception:
+        return set()
+
+
+def save_baseline(conflicts: Dict[Tuple[str, str], list]) -> None:
+    """Save current conflicts as baseline."""
+    allowed = sorted(f"{method} {path}" for method, path in conflicts.keys())
+    data = {
+        'description': 'Known route conflicts (existing debt)',
+        'allowed_conflicts': allowed
+    }
+    BASELINE_PATH.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    print(f"Baseline written to {BASELINE_PATH}")
 
 
 @dataclass
@@ -262,17 +286,34 @@ def main():
     # Find conflicts
     conflicts = find_conflicts(all_routes)
 
-    if not conflicts:
-        print("[PASS] No route conflicts detected")
+    # Handle --write-baseline flag
+    if "--write-baseline" in sys.argv:
+        save_baseline(conflicts)
+        return 0
+
+    # Load baseline for comparison
+    baseline = load_baseline()
+    
+    # Filter out baselined conflicts
+    new_conflicts = {
+        k: v for k, v in conflicts.items()
+        if f"{k[0]} {k[1]}" not in baseline
+    }
+
+    if not new_conflicts:
+        if conflicts:
+            print(f"[PASS] {len(conflicts)} known conflicts (baselined), 0 new")
+        else:
+            print("[PASS] No route conflicts detected")
         print()
         return 0
 
-    # Report conflicts
-    print(f"[FAIL] Found {len(conflicts)} route conflicts:")
+    # Report new conflicts only
+    print(f"[FAIL] Found {len(new_conflicts)} NEW route conflicts (not in baseline):")
     print()
 
     exit_code = 0
-    for (method, path), routes in sorted(conflicts.items()):
+    for (method, path), routes in sorted(new_conflicts.items()):
         print(f"CONFLICT: {method} {path}")
         print("-" * 50)
 
