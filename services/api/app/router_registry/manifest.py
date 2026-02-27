@@ -281,6 +281,36 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Art Studio", "Snapshots v2"],
         category="art_studio",
     ),
+    RouterSpec(
+        module="app.art_studio.api.preview_routes",
+        prefix="/api",
+        tags=["Art Studio", "Preview"],
+        category="art_studio",
+    ),
+    RouterSpec(
+        module="app.art_studio.bracing_router",
+        prefix="/api",
+        tags=["Art Studio", "Bracing"],
+        category="art_studio",
+    ),
+    RouterSpec(
+        module="app.art_studio.inlay_router",
+        prefix="/api",
+        tags=["Art Studio", "Inlay"],
+        category="art_studio",
+    ),
+    RouterSpec(
+        module="app.art_studio.relief_router",
+        prefix="/api",
+        tags=["Art Studio", "Relief"],
+        category="art_studio",
+    ),
+    RouterSpec(
+        module="app.art_studio.vcarve_router",
+        prefix="/api",
+        tags=["Art Studio", "V-Carve"],
+        category="art_studio",
+    ),
     # -------------------------------------------------------------------------
     # VISION
     # -------------------------------------------------------------------------
