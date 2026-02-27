@@ -86,6 +86,7 @@
     "/api/cnc/jobs/${runId}/set-baseline",
     "/api/cnc/jobs/compare",
     "/api/compare/baselines",
+    "/api/compare/baselines/",
     "/api/compare/baselines/${selectedBaselineId.value}",
     "/api/compare/risk_bucket_export",
     "/api/compare/risk_bucket_report",
