@@ -56,6 +56,13 @@ api-test:
 api-verify: check-art-studio-scope check-boundaries api-test
 	@echo "✅ api-verify complete"
 
+# API Smoke Posts - post-processor smoke test for API Health + Smoke workflow
+.PHONY: api-smoke-posts
+api-smoke-posts:
+	@echo "=== API Smoke Posts (v15.5) ==="
+	@bash scripts/smoke/run_api_smoke_posts.sh "$(API_BASE)" "$(API_HOST)" "$(API_PORT)"
+	@echo "=== api-smoke-posts complete ==="
+
 .PHONY: start-api
 start-api:
 	cd services/api && python -m uvicorn app.main:app --reload --port $(API_PORT)
