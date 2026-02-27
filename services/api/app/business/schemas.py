@@ -40,12 +40,7 @@ class LaborCategory(str, Enum):
     ADMIN = "admin"
 
 
-class PricingModel(str, Enum):
-    """Pricing strategy models."""
-    COST_PLUS = "cost_plus"           # COGS + markup %
-    MARKET_BASED = "market_based"     # Competitor pricing
-    VALUE_BASED = "value_based"       # What customer will pay
-    HOURLY_RATE = "hourly_rate"       # Labor hours × rate
+# NOTE: PricingModel enum removed 2026-02-26 (dead code - PricingStrategy used instead)
 
 
 class InstrumentType(str, Enum):

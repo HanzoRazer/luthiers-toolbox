@@ -59,12 +59,7 @@ GuitarCategory = Literal["auto", "acoustic", "electric"]
 OutputFormat = Literal["json", "dxf", "svg", "all"]
 
 
-class SegmentRequest(BaseModel):
-    """Request for guitar body segmentation."""
-    target_width_mm: float = Field(400.0, ge=50.0, le=1000.0, description="Target body width in mm")
-    simplify_tolerance_mm: float = Field(1.0, ge=0.0, le=10.0, description="Simplification tolerance in mm")
-    guitar_category: GuitarCategory = Field("auto", description="Guitar type hint for better detection")
-    output_format: OutputFormat = Field("json", description="Output format(s)")
+# NOTE: SegmentRequest removed 2026-02-26 (dead code - endpoint uses Form() params)
 
 
 class SegmentResponse(BaseModel):
@@ -85,17 +80,7 @@ class SegmentResponse(BaseModel):
     svg_url: Optional[str] = Field(None, description="Download URL for SVG")
 
 
-class PhotoToGcodeRequest(BaseModel):
-    """Request for photo-to-gcode pipeline."""
-    target_width_mm: float = Field(400.0, ge=50.0, le=1000.0, description="Target body width in mm")
-    simplify_tolerance_mm: float = Field(1.0, ge=0.0, le=10.0, description="Simplification tolerance")
-    guitar_category: GuitarCategory = Field("auto", description="Guitar type hint")
-    # CAM parameters
-    tool_diameter_mm: float = Field(6.0, ge=1.0, le=25.0, description="Tool diameter in mm")
-    stepover: float = Field(0.45, ge=0.2, le=0.8, description="Stepover as fraction of tool diameter")
-    stepdown_mm: float = Field(2.0, ge=0.5, le=10.0, description="Stepdown per pass in mm")
-    feed_rate_mm_min: float = Field(1200.0, ge=100.0, le=5000.0, description="Feed rate mm/min")
-    post_processor: str = Field("GRBL", description="Post processor: GRBL, Mach4, LinuxCNC")
+# NOTE: PhotoToGcodeRequest removed 2026-02-26 (dead code - endpoint uses Form() params)
 
 
 class PhotoToGcodeResponse(BaseModel):
