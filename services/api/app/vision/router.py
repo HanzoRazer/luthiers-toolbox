@@ -79,7 +79,7 @@ def list_providers() -> ProvidersResponse:
             configured = bool(getattr(c, "is_configured", True))
         except HTTPException:
             raise
-        except Exception:  # WP-1: governance catch-all — HTTP endpoint
+        except (ValueError, TypeError, RuntimeError, OSError):  # WP-1: governance catch-all — HTTP endpoint
             configured = False
         providers.append({"name": name, "configured": configured})
     return ProvidersResponse(providers=providers)
@@ -98,7 +98,7 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
         client = get_image_client(provider=payload.provider)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, RuntimeError, OSError) as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=409, detail=f"AI_PROVIDER_NOT_CONFIGURED: {payload.provider}") from e
 
     if getattr(client, "is_configured", True) is False:
@@ -117,7 +117,7 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
             )
         except HTTPException:
             raise
-        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+        except (ConnectionError, TimeoutError, ValueError, RuntimeError, OSError) as e:  # WP-1: governance catch-all — HTTP endpoint
             raise HTTPException(status_code=502, detail=f"AI_PROVIDER_UNAVAILABLE: {str(e)}") from e
 
         # Extract from ImageResponse dataclass
@@ -137,7 +137,7 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
             )
         except HTTPException:
             raise
-        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+        except (OSError, ValueError, TypeError) as e:  # WP-1: governance catch-all — HTTP endpoint
             raise HTTPException(status_code=500, detail=f"CAS_WRITE_FAILED: {str(e)}") from e
 
         assets.append(
@@ -215,7 +215,7 @@ async def segment_guitar(
             )
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (OSError, ValueError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return SegmentResponse(ok=False, error=f"Failed to read image: {e}")
 
     # Initialize service
@@ -224,7 +224,7 @@ async def segment_guitar(
         service = GuitarSegmentationService(vision_client)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, RuntimeError, OSError) as e:  # WP-1: governance catch-all — HTTP endpoint
         raise HTTPException(status_code=503, detail=f"Vision service unavailable: {e}")
 
     # Run segmentation
@@ -269,7 +269,7 @@ async def segment_guitar(
             response.dxf_url = _blob_download_url(attachment.sha256)
         except HTTPException:
             raise
-        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+        except (ValueError, TypeError, OSError, RuntimeError) as e:  # WP-1: governance catch-all — HTTP endpoint
             response.notes += f" DXF export failed: {e}"
 
     # Export to SVG if requested
@@ -287,7 +287,7 @@ async def segment_guitar(
             response.svg_url = _blob_download_url(attachment.sha256)
         except HTTPException:
             raise
-        except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+        except (ValueError, TypeError, OSError, RuntimeError) as e:  # WP-1: governance catch-all — HTTP endpoint
             response.notes += f" SVG export failed: {e}"
 
     return response
@@ -323,7 +323,7 @@ async def photo_to_gcode(
             return PhotoToGcodeResponse(ok=False, error="Image too large (max 10MB)")
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (OSError, ValueError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(ok=False, error=f"Failed to read image: {e}")
 
     # Step 1: AI Segmentation
@@ -338,7 +338,7 @@ async def photo_to_gcode(
         )
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, RuntimeError, OSError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(ok=False, error=f"Segmentation failed: {e}")
 
     if isinstance(seg_result, SegmentationError):
@@ -362,7 +362,7 @@ async def photo_to_gcode(
         svg_url = _blob_download_url(attachment.sha256)
     except HTTPException:
         raise
-    except Exception:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, OSError, RuntimeError):  # WP-1: governance catch-all — HTTP endpoint
         pass  # Non-fatal
 
     # Step 3: Generate DXF
@@ -378,7 +378,7 @@ async def photo_to_gcode(
         dxf_url = _blob_download_url(attachment.sha256)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, OSError, RuntimeError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"DXF generation failed: {e}",
@@ -408,7 +408,7 @@ async def photo_to_gcode(
         plan_result = plan(plan_request)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (ValueError, TypeError, KeyError, RuntimeError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"CAM planning failed: {e}",
@@ -471,7 +471,7 @@ async def photo_to_gcode(
         gcode_url = _blob_download_url(attachment.sha256)
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except (KeyError, ValueError, TypeError, OSError, RuntimeError) as e:  # WP-1: governance catch-all — HTTP endpoint
         return PhotoToGcodeResponse(
             ok=False,
             error=f"G-code generation failed: {e}",

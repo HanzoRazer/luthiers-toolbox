@@ -558,5 +558,205 @@
       "stepdown": 1.0
     },
     "created_at": 1771875278.468689
+  },
+  {
+    "id": "rosette_preset_1771919738093",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1771919738.0936859
+  },
+  {
+    "id": "rosette_preset_1771920098290",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1771920098.2904274
+  },
+  {
+    "id": "rosette_preset_1772083921342",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772083921.3430045
+  },
+  {
+    "id": "rosette_preset_1772084749034",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772084749.03443
+  },
+  {
+    "id": "rosette_preset_1772085064309",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772085064.3093448
+  },
+  {
+    "id": "rosette_preset_1772085347112",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772085347.1122527
+  },
+  {
+    "id": "rosette_preset_1772112591496",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772112591.4964952
+  },
+  {
+    "id": "rosette_preset_1772115193550",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772115193.5503585
+  },
+  {
+    "id": "rosette_preset_1772115430820",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772115430.8204093
+  },
+  {
+    "id": "rosette_preset_1772177061360",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772177061.3606923
+  },
+  {
+    "id": "rosette_preset_1772177833617",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772177833.6170626
+  },
+  {
+    "id": "rosette_preset_1772180886831",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772180886.8315969
+  },
+  {
+    "id": "rosette_preset_1772204196560",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772204196.5606587
+  },
+  {
+    "id": "rosette_preset_1772205176762",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772205176.7629857
+  },
+  {
+    "id": "rosette_preset_1772205955031",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772205955.0312538
+  },
+  {
+    "id": "rosette_preset_1772206827279",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772206827.2790651
+  },
+  {
+    "id": "rosette_preset_1772207087442",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772207087.4425745
+  },
+  {
+    "id": "rosette_preset_1772211605476",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772211605.4762888
+  },
+  {
+    "id": "rosette_preset_1772216131021",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772216131.021189
+  },
+  {
+    "id": "rosette_preset_1772247989639",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1772247989.6394727
   }
 ]
