@@ -433,6 +433,15 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     # -------------------------------------------------------------------------
+    # ROSETTE PHOTO BATCH (Wave 27 - Feature Recovery)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.cam.rosette.photo_batch_router",
+        prefix="",  # Router has its own /api/cam/rosette/photo-batch prefix
+        tags=["CAM", "Rosette", "Batch"],
+        category="cam",
+    ),
+    # -------------------------------------------------------------------------
     # CONSOLIDATED AGGREGATORS (Wave 18+19)
     # -------------------------------------------------------------------------
     RouterSpec(
