@@ -189,5 +189,69 @@
     "bare_except": 6,
     "large_files": 4,
     "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T15:15:35.639831",
+    "endpoints": 569,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T15:27:26.537743",
+    "endpoints": 569,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T15:46:00.825245",
+    "endpoints": 573,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T17:01:28.626468",
+    "endpoints": 573,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T17:41:49.771514",
+    "endpoints": 573,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T17:59:31.255378",
+    "endpoints": 573,
+    "bare_except": 6,
+    "large_files": 4,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T18:16:38.288712",
+    "endpoints": 573,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T21:15:11.033270",
+    "endpoints": 589,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9,
+    "note": "Wave 27.1: restored cam_dxf_adaptive, cam_relief, cnc_presets routers (+16 endpoints)"
+  },
+  {
+    "timestamp": "2026-02-28T03:15:42.804288",
+    "endpoints": 589,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9
   }
 ]
