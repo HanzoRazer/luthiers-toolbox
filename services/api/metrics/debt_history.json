@@ -253,5 +253,20 @@
     "bare_except": 6,
     "large_files": 5,
     "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-27T21:24:26.209221",
+    "endpoints": 580,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9,
+    "note": "Removed 9 dead code stubs: backup/*, pocket/adaptive/*, blueprint preflight/to-adaptive/reconstruct-contours"
+  },
+  {
+    "timestamp": "2026-02-28T03:25:10.088235",
+    "endpoints": 580,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9
   }
 ]

@@ -5,85 +5,32 @@ Provides stub endpoints for CAM frontend paths that don't have backend implement
 These return empty/default responses to prevent 404 errors while features are being built.
 
 Endpoints covered:
-- /backup/* - Backup management
-- /pocket/adaptive/* - Adaptive pocket operations
 - /drilling/* - Drilling operations
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
-- /blueprint/* - Blueprint operations
 - /opt/* - Optimization
 - /probe/* - Probe operations
-- /relief/* - Relief carving
 - /posts/* - Post processors
-- /machines - Machine list
 - /bridge/* - Bridge export
 - /logs/* - Log writing
 - /risk/* - Risk reports index
 - /fret_slots/* - Fret slot preview
 - /adaptive2/* - Adaptive v2 operations
+
+REMOVED (real implementations exist):
+- /backup/* - See cam/routers/utility/backup_router.py
+- /pocket/adaptive/* - See routers/adaptive/*.py
+- /blueprint/preflight, to-adaptive, reconstruct-contours - See routers/blueprint_cam/*.py
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, Query, UploadFile, File
-from pydantic import BaseModel
+from fastapi import APIRouter
 
 
 router = APIRouter(tags=["cam", "stubs"])
-
-
-# =============================================================================
-# Backup Stubs
-# =============================================================================
-
-@router.get("/backup/list")
-def list_backups() -> Dict[str, Any]:
-    """List available CAM backups."""
-    return {"backups": [], "total": 0}
-
-
-@router.post("/backup/snapshot")
-def create_backup_snapshot() -> Dict[str, Any]:
-    """Create a new backup snapshot."""
-    return {"ok": True, "snapshot_id": None, "message": "Stub: backup not yet implemented"}
-
-
-# =============================================================================
-# Pocket Adaptive Stubs
-# =============================================================================
-
-@router.post("/pocket/adaptive/plan")
-def plan_adaptive_pocket(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Plan an adaptive pocket operation."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "plan": None, "message": "Stub: use /api/cam/adaptive/* endpoints"}
-
-
-@router.post("/pocket/adaptive/plan_from_dxf")
-def plan_adaptive_from_dxf(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Plan adaptive pocket from DXF file."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "plan": None, "message": "Stub: use /api/cam/adaptive/* endpoints"}
-
-
-@router.post("/pocket/adaptive/gcode")
-def generate_pocket_gcode(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate G-code for adaptive pocket."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "gcode": None, "message": "Stub: use /api/cam/adaptive/* endpoints"}
-
-
-@router.post("/pocket/adaptive/batch_export")
-def batch_export_pockets(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Batch export adaptive pockets."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "files": [], "message": "Stub: batch export not yet implemented"}
 
 
 # =============================================================================
@@ -142,34 +89,6 @@ def get_job_insights() -> Dict[str, Any]:
 def get_job_insight(insight_id: str) -> Dict[str, Any]:
     """Get specific job insight."""
     return {"insight_id": insight_id, "data": None}
-
-
-# =============================================================================
-# Blueprint Stubs
-# =============================================================================
-
-@router.post("/blueprint/preflight")
-def blueprint_preflight(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Run blueprint preflight checks."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "warnings": [], "errors": []}
-
-
-@router.post("/blueprint/reconstruct-contours")
-def reconstruct_contours(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Reconstruct contours from blueprint."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "contours": [], "message": "Stub: contour reconstruction not yet implemented"}
-
-
-@router.post("/blueprint/to-adaptive")
-def blueprint_to_adaptive(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Convert blueprint to adaptive toolpath."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "adaptive_plan": None, "message": "Stub: blueprint-to-adaptive not yet implemented"}
 
 
 # =============================================================================
