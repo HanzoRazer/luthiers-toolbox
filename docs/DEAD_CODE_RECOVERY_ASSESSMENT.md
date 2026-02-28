@@ -8,26 +8,26 @@
 
 ## Executive Summary
 
-During aggressive dead-code cleanup, several functional modules were incorrectly deleted:
-- **7 files remain MISSING** from Phase 4 cleanup
-- **4 routers** still missing from dormant router cleanup
-- **1 CRITICAL BUG**: `app/util/post_injection_helpers.py` has broken import chain
+During aggressive dead-code cleanup, several functional modules were incorrectly deleted.
+**All items have now been restored or fixed (Wave 27.1).**
 
-### Priority Recovery Items
+### Recovery Status (All Complete)
 
-| Priority | File | Lines | Impact |
+| Priority | File | Lines | Status |
 |----------|------|-------|--------|
-| **P0-CRITICAL** | `app/post_injection_helpers.py` | 488 | CAM routers using fallback no-ops — **FIXED** |
-| **P1-HIGH** | `app/routers/cam_dxf_adaptive_router.py` | 147 | DXF → Adaptive pocket workflow broken |
-| **P1-HIGH** | `app/routers/cam_relief_router.py` | 160 | Relief CAM services orphaned (no API) |
-| **P1-HIGH** | `app/cam_core/saw_lab/queue.py` | 265 | Saw Lab batch queue missing |
-| **P2-MEDIUM** | `app/routers/cnc_production/presets_router.py` | 77 | CNC preset CRUD (verify if replaced) |
-| **P2-MEDIUM** | `app/websocket/monitor.py` | 131 | Real-time monitoring unavailable |
-| **P2-MEDIUM** | `app/schemas/job_log.py` | 81 | Job log schema types missing |
-| **P2-MEDIUM** | `app/services/rmos_stores.py` | 130 | Pattern/Job stores orphaned |
-| **P3-LOW** | `app/ai/prompts/templates.py` | 235 | AI prompt templating system |
-| **P3-LOW** | `app/art_studio/services/workflow_schemas.py` | 181 | Workflow request/response models |
-| **OK** | `app/routers/pipeline_router.py` | 108 | Migrated to RMOS pipeline — no action |
+| **P0-CRITICAL** | `app/post_injection_helpers.py` | 488 | ✅ **FIXED** - Import chain repaired |
+| **P1-HIGH** | `app/routers/cam_dxf_adaptive_router.py` | 147 | ✅ **RESTORED** - Wired in manifest |
+| **P1-HIGH** | `app/routers/cam_relief_router.py` | 160 | ✅ **RESTORED** - Wired in manifest |
+| **P1-HIGH** | `app/cam_core/saw_lab/queue.py` | 265 | ✅ **RESTORED** |
+| **P2-MEDIUM** | `app/routers/cnc_production/presets_router.py` | 77 | ✅ **RESTORED** - Wired in manifest |
+| **P2-MEDIUM** | `app/websocket/monitor.py` | 131 | ✅ **RESTORED** |
+| **P2-MEDIUM** | `app/schemas/job_log.py` | 81 | ✅ **RESTORED** |
+| **P2-MEDIUM** | `app/services/rmos_stores.py` | 130 | ✅ **RESTORED** |
+| **P3-LOW** | `app/ai/prompts/templates.py` | 235 | ✅ **RESTORED** |
+| **P3-LOW** | `app/art_studio/services/workflow_schemas.py` | 181 | ✅ **RESTORED** |
+| **OK** | `app/routers/pipeline_router.py` | 108 | ✅ Migrated to RMOS — no action needed |
+
+**Total Restored:** 1,407 lines across 9 files
 
 ---
 
