@@ -17,14 +17,17 @@ During aggressive dead-code cleanup, several functional modules were incorrectly
 
 | Priority | File | Lines | Impact |
 |----------|------|-------|--------|
-| **P0-CRITICAL** | `app/post_injection_helpers.py` | 488 | CAM routers using fallback no-ops |
+| **P0-CRITICAL** | `app/post_injection_helpers.py` | 488 | CAM routers using fallback no-ops — **FIXED** |
+| **P1-HIGH** | `app/routers/cam_dxf_adaptive_router.py` | 147 | DXF → Adaptive pocket workflow broken |
+| **P1-HIGH** | `app/routers/cam_relief_router.py` | 160 | Relief CAM services orphaned (no API) |
 | **P1-HIGH** | `app/cam_core/saw_lab/queue.py` | 265 | Saw Lab batch queue missing |
-| **P1-HIGH** | `app/routers/cam_relief_router.py` | ~80 | Full relief CAM router deleted |
+| **P2-MEDIUM** | `app/routers/cnc_production/presets_router.py` | 77 | CNC preset CRUD (verify if replaced) |
 | **P2-MEDIUM** | `app/websocket/monitor.py` | 131 | Real-time monitoring unavailable |
 | **P2-MEDIUM** | `app/schemas/job_log.py` | 81 | Job log schema types missing |
 | **P2-MEDIUM** | `app/services/rmos_stores.py` | 130 | Pattern/Job stores orphaned |
 | **P3-LOW** | `app/ai/prompts/templates.py` | 235 | AI prompt templating system |
 | **P3-LOW** | `app/art_studio/services/workflow_schemas.py` | 181 | Workflow request/response models |
+| **OK** | `app/routers/pipeline_router.py` | 108 | Migrated to RMOS pipeline — no action |
 
 ---
 
@@ -69,11 +72,32 @@ During aggressive dead-code cleanup, several functional modules were incorrectly
 
 ---
 
-### 3. HIGH: Full CAM Relief Router
+### 3. HIGH: DXF → Adaptive Pocket Router
 
-**Status:** ❌ MISSING (partial replacement exists)
+**Status:** ❌ MISSING
 
-**File Deleted:** `app/routers/cam_relief_router.py` (~80 lines)
+**File Deleted:** `app/routers/cam_dxf_adaptive_router.py` (147 lines)
+
+**Functionality Lost:**
+- `POST /cam/dxf_adaptive_plan_run` - Upload DXF → Extract polylines → Generate adaptive pocket toolpath
+- `_dxf_to_adaptive_request()` - Convert DXF closed polylines to adaptive pocket plan request
+- Bridge between DXF geometry and `/api/cam/pocket/adaptive/plan`
+- Used by BridgeLab UI for direct DXF-to-toolpath workflow
+
+**Current State:**
+- `app/cam/routers/export/__init__.py` tries to import it (gracefully fails to `None`)
+- The DXF → Adaptive workflow is **completely broken**
+- No endpoint exists to convert DXF geometry to adaptive pocket toolpaths
+
+**Recovery:** RESTORE - Real functionality loss affecting BridgeLab UI
+
+---
+
+### 4. HIGH: Full CAM Relief Router
+
+**Status:** ❌ MISSING (services exist but are orphaned)
+
+**File Deleted:** `app/routers/cam_relief_router.py` (160 lines)
 
 **Functionality Lost:**
 - `POST /cam/relief/map_from_heightfield` - heightmap → Z grid conversion
@@ -83,14 +107,56 @@ During aggressive dead-code cleanup, several functional modules were incorrectly
 
 **Current State:**
 - `app/art_studio/relief_router.py` exists but is **PREVIEW ONLY** (no CAM output)
-- It explicitly states: "DXF export moved to CAM: POST /api/cam/toolpath/relief/export-dxf"
-- BUT that CAM endpoint may not exist
+- `app/services/relief_kernels.py` has `plan_relief_roughing()` and `plan_relief_finishing()` — **ORPHANED**
+- These service functions exist but **NO ROUTER CALLS THEM**
+- The services are unreachable via any API endpoint
 
-**Recovery:** Verify if `/api/cam/toolpath/relief/export-dxf` exists, otherwise restore full router
+**Recovery:** RESTORE - Services exist, just need the router to expose them
 
 ---
 
-### 4. MEDIUM: WebSocket Real-Time Monitor
+### 5. MEDIUM: CNC Production Presets Router
+
+**Status:** ❌ MISSING (may have replacement)
+
+**File Deleted:** `app/routers/cnc_production/presets_router.py` (77 lines)
+
+**Functionality Lost:**
+- `GET /cnc/presets` - List all CNC presets
+- `GET /cnc/presets/{id}` - Get preset by ID
+- `POST /cnc/presets` - Create preset
+- `PATCH /cnc/presets/{id}` - Update preset
+- `DELETE /cnc/presets/{id}` - Delete preset
+- Used `preset_store.py` for persistence
+
+**Current State:**
+- `app/services/pipeline_preset_store.py` exists (different pattern)
+- `app/cam/routers/utility/settings_router.py` has some preset management
+- May have been replaced by new preset architecture
+
+**Recovery:** VERIFY if new preset stores cover this use case before restoring
+
+---
+
+### 6. OK: Pipeline Router (Migrated)
+
+**Status:** ✅ MIGRATED - No action needed
+
+**File Deleted:** `app/routers/pipeline_router.py` (108 lines)
+
+**Original Functionality:**
+- `POST /cam/pipeline/run` - DXF upload through full CAM pipeline
+
+**Current State:**
+- Functionality **moved** to `app/rmos/pipeline/services_execution.py`
+- `app/routers/cam_pipeline_preset_run_router.py` wraps it with preset support
+- Pipeline execution now part of RMOS architecture
+
+**Recovery:** None needed - this was an intentional migration
+
+---
+
+### 7. MEDIUM: WebSocket Real-Time Monitor
 
 **Status:** ❌ MISSING
 
