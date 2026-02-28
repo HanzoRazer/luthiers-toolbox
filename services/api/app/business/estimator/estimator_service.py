@@ -8,31 +8,26 @@ Combines:
 - Material yields
 
 To produce parametric cost estimates.
+
+Decomposed modules:
+- risk_assessment.py: Confidence and risk factor evaluation
+- material_estimation.py: Material cost calculation
 """
-from typing import List, Dict, Optional, Any
-from datetime import datetime, timezone
+from typing import List, Dict, Any
 
 from .schemas import (
     EstimateRequest,
     EstimateResult,
     ComplexitySelections,
     WBSTask,
-    LearningCurveProjection,
-    MaterialEstimate,
-    RiskFactor,
     QuoteRequest,
     QuoteResult,
     InstrumentType,
-    BuilderExperience,
-    BindingComplexity,
-    FinishType,
 )
 from .complexity_factors import (
-    BODY_FACTORS,
     BINDING_BODY_FACTORS,
     BINDING_NECK_FACTOR,
     BINDING_HEADSTOCK_FACTOR,
-    NECK_FACTORS,
     FRETBOARD_INLAY_FACTORS,
     HEADSTOCK_INLAY_FACTOR,
     FINISH_FACTORS,
@@ -45,17 +40,17 @@ from .complexity_factors import (
 )
 from .work_breakdown import (
     get_wbs_template,
-    get_wbs_total_hours,
     WBSTaskTemplate,
 )
-from .learning_curve import (
-    generate_learning_curve_projection,
-    crawford_average_time,
+from .learning_curve import generate_learning_curve_projection
+
+# Extracted modules
+from .risk_assessment import (
+    assess_confidence,
+    identify_risks,
+    get_range_factor,
 )
-from .material_yield import (
-    estimate_material_costs,
-    get_yield_factor,
-)
+from .material_estimation import estimate_materials
 
 # Import from parent business module
 from ..bom_service import BOMService
@@ -70,14 +65,13 @@ class EngineeringEstimatorService:
     - Measurable design parameters
     - Historical learning curves
     - Material yield factors
+
+    Risk assessment delegated to: risk_assessment.py
+    Material estimation delegated to: material_estimation.py
     """
 
     # Default blended hourly rate (weighted average across task types)
     DEFAULT_HOURLY_RATE = 45.0
-
-    # Confidence thresholds
-    CONFIDENCE_HIGH_THRESHOLD = 1.15   # Total multiplier < 1.15 = high confidence
-    CONFIDENCE_LOW_THRESHOLD = 1.40    # Total multiplier > 1.40 = low confidence
 
     def __init__(self):
         self.bom_service = BOMService()
@@ -139,11 +133,12 @@ class EngineeringEstimatorService:
             avg_hours = first_unit_hours
             total_hours = first_unit_hours
 
-        # 6. Calculate material costs
-        material_breakdown = self._estimate_materials(
+        # 6. Calculate material costs (delegated to material_estimation module)
+        material_breakdown = estimate_materials(
             request.instrument_type,
             request.complexity,
             request.include_material_waste,
+            bom_service=self.bom_service,
         )
         material_cost_per_unit = sum(m.adjusted_cost for m in material_breakdown)
 
@@ -155,13 +150,13 @@ class EngineeringEstimatorService:
         total_cost_per_unit = labor_cost_per_unit + material_cost_per_unit
         total_project_cost = total_cost_per_unit * request.quantity
 
-        # 9. Assess confidence and risks
+        # 9. Assess confidence and risks (delegated to risk_assessment module)
         combined_multiplier = total_complexity * exp_factor
-        confidence_level = self._assess_confidence(combined_multiplier, request)
-        risk_factors = self._identify_risks(request, combined_multiplier)
+        confidence_level = assess_confidence(combined_multiplier, request)
+        risk_factors = identify_risks(request, combined_multiplier)
 
         # 10. Calculate estimate range
-        range_factor = self._get_range_factor(confidence_level)
+        range_factor = get_range_factor(confidence_level)
         estimate_range_low = total_cost_per_unit * (1 - range_factor)
         estimate_range_high = total_cost_per_unit * (1 + range_factor)
 
@@ -227,7 +222,7 @@ class EngineeringEstimatorService:
         balance_due = total_price - deposit_amount
 
         # Price range based on estimate confidence
-        range_factor = self._get_range_factor(estimate.confidence_level)
+        range_factor = get_range_factor(estimate.confidence_level)
         price_range_low = total_price * (1 - range_factor * 0.5)  # Narrower range for price
         price_range_high = total_price * (1 + range_factor * 0.5)
 
@@ -400,166 +395,3 @@ class EngineeringEstimatorService:
 
         return tasks
 
-    def _estimate_materials(
-        self,
-        instrument_type: InstrumentType,
-        complexity: ComplexitySelections,
-        include_waste: bool,
-    ) -> List[MaterialEstimate]:
-        """Estimate material costs with waste factors."""
-        # Get BOM template if available
-        try:
-            from ..schemas import InstrumentType as BOMInstrumentType
-            # Map to BOM instrument type
-            bom_type_map = {
-                InstrumentType.ACOUSTIC_DREADNOUGHT: "acoustic_dreadnought",
-                InstrumentType.CLASSICAL: "classical",
-            }
-            bom_type = bom_type_map.get(instrument_type)
-
-            if bom_type:
-                bom = self.bom_service.create_bom_from_template(
-                    instrument_type=bom_type,
-                    instrument_name="Estimate",
-                )
-                items = [
-                    {
-                        "material_id": item.material_id,
-                        "unit_cost": item.unit_cost,
-                        "quantity": item.quantity,
-                    }
-                    for item in bom.items
-                ]
-                return estimate_material_costs(items, include_waste)
-        except Exception:
-            pass
-
-        # Fallback: generic estimates by instrument type
-        if instrument_type.value.startswith("acoustic"):
-            return self._acoustic_material_estimate(include_waste)
-        elif "electric" in instrument_type.value or "bass" in instrument_type.value:
-            return self._electric_material_estimate(complexity, include_waste)
-        else:
-            return self._acoustic_material_estimate(include_waste)
-
-    def _acoustic_material_estimate(self, include_waste: bool) -> List[MaterialEstimate]:
-        """Generic acoustic guitar material estimate."""
-        items = [
-            {"material_id": "top_set_premium", "unit_cost": 120, "quantity": 1},
-            {"material_id": "back_set_premium", "unit_cost": 180, "quantity": 1},
-            {"material_id": "neck_blank_quartersawn", "unit_cost": 80, "quantity": 1},
-            {"material_id": "fretboard_ebony", "unit_cost": 45, "quantity": 1},
-            {"material_id": "binding_wood", "unit_cost": 25, "quantity": 1},
-            {"material_id": "brace_stock_spruce", "unit_cost": 20, "quantity": 1},
-            {"material_id": "tuners", "unit_cost": 80, "quantity": 1},
-            {"material_id": "fret_wire", "unit_cost": 15, "quantity": 1},
-            {"material_id": "finish_lacquer", "unit_cost": 60, "quantity": 1},
-            {"material_id": "glue", "unit_cost": 20, "quantity": 1},
-        ]
-        return estimate_material_costs(items, include_waste)
-
-    def _electric_material_estimate(
-        self,
-        complexity: ComplexitySelections,
-        include_waste: bool,
-    ) -> List[MaterialEstimate]:
-        """Generic electric guitar material estimate."""
-        items = [
-            {"material_id": "body_blank", "unit_cost": 100, "quantity": 1},
-            {"material_id": "neck_blank_maple", "unit_cost": 70, "quantity": 1},
-            {"material_id": "fretboard_rosewood", "unit_cost": 35, "quantity": 1},
-            {"material_id": "tuners", "unit_cost": 60, "quantity": 1},
-            {"material_id": "bridge", "unit_cost": 50, "quantity": 1},
-            {"material_id": "fret_wire", "unit_cost": 15, "quantity": 1},
-            {"material_id": "finish_lacquer", "unit_cost": 50, "quantity": 1},
-        ]
-
-        # Add pickups based on complexity
-        if complexity.pickup_count > 0:
-            pickup_cost = 80 * complexity.pickup_count
-            items.append({"material_id": "pickups", "unit_cost": pickup_cost, "quantity": 1})
-            items.append({"material_id": "electronics", "unit_cost": 40, "quantity": 1})
-
-        return estimate_material_costs(items, include_waste)
-
-    def _assess_confidence(
-        self,
-        combined_multiplier: float,
-        request: EstimateRequest,
-    ) -> str:
-        """Assess estimate confidence level."""
-        # Higher multiplier = more complexity = less confidence
-        if combined_multiplier < self.CONFIDENCE_HIGH_THRESHOLD:
-            return "high"
-        elif combined_multiplier > self.CONFIDENCE_LOW_THRESHOLD:
-            return "low"
-        else:
-            return "medium"
-
-    def _identify_risks(
-        self,
-        request: EstimateRequest,
-        combined_multiplier: float,
-    ) -> List[RiskFactor]:
-        """Identify risk factors affecting estimate."""
-        risks = []
-
-        # Beginner builder risk
-        if request.builder_experience == BuilderExperience.BEGINNER:
-            risks.append(RiskFactor(
-                factor="Beginner Experience",
-                impact="high",
-                description="First-time builders may take 2-3x longer than estimated",
-            ))
-
-        # High complexity risk
-        if combined_multiplier > 1.5:
-            risks.append(RiskFactor(
-                factor="High Complexity",
-                impact="medium",
-                description="Multiple complex features increase variability",
-            ))
-
-        # French polish risk
-        if request.complexity.finish == FinishType.SHELLAC_FRENCH_POLISH:
-            risks.append(RiskFactor(
-                factor="French Polish Finish",
-                impact="medium",
-                description="French polish is highly skill-dependent; time varies widely",
-            ))
-
-        # Custom inlay risk
-        from .schemas import FretboardInlay
-        if request.complexity.fretboard_inlay == FretboardInlay.CUSTOM:
-            risks.append(RiskFactor(
-                factor="Custom Inlay",
-                impact="medium",
-                description="Custom inlay design and execution time varies significantly",
-            ))
-
-        # Multi-scale risk
-        from .schemas import NeckComplexity
-        if NeckComplexity.MULTI_SCALE in request.complexity.neck:
-            risks.append(RiskFactor(
-                factor="Multi-Scale Frets",
-                impact="medium",
-                description="Fan fret layout requires precise calculation and execution",
-            ))
-
-        # Large batch risk
-        if request.quantity > 6:
-            risks.append(RiskFactor(
-                factor="Large Batch",
-                impact="low",
-                description="Learning curve projections less certain for batches >6",
-            ))
-
-        return risks
-
-    def _get_range_factor(self, confidence_level: str) -> float:
-        """Get estimate range factor based on confidence."""
-        return {
-            "high": 0.10,    # ±10%
-            "medium": 0.20,  # ±20%
-            "low": 0.35,     # ±35%
-        }.get(confidence_level, 0.25)

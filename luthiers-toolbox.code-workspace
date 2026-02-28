@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../code-analysis-tool"
 		}
 	],
 	"settings": {
