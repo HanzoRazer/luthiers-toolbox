@@ -462,15 +462,5 @@ def convert_photo_to_svg(
     return converter.convert(image_path, output_svg, output_dxf)
 
 
-# ---------------------------------------------------------------------------
-# Re-export batch processing API for backward compatibility
-# ---------------------------------------------------------------------------
-
-from .photo_batch import (  # noqa: E402, F401
-    BatchJob,
-    BatchResult,
-    BatchProcessor,
-    batch_convert,
-    batch_convert_directory,
-)
-
+# NOTE: Batch processing API moved to photo_batch.py
+# Import directly: from app.cam.rosette.photo_batch import BatchProcessor, BatchJob, etc.
