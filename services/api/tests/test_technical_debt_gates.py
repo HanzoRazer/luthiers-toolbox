@@ -24,7 +24,7 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 589  # Wave 27.1: 573→589 after restoring cam_dxf_adaptive, cam_relief, cnc_presets routers
+TARGET_MAX_ENDPOINTS = 580  # 589→580 after removing 9 dead code stubs
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 6 (all in comments/strings - false positives)
 TARGET_MAX_LARGE_FILES = 6  # Current: 6 (bezier_body.py, toolpaths_validate_service.py, estimator_service.py, cam_router.py, test_e2e_workflow_integration.py, manifest.py)
