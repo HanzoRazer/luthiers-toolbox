@@ -105,5 +105,5 @@ This coupling is the differentiator.
 3. Provenance tracking required for all ingested analyzer artifacts
 
 ## Related
-- [FIELDS_AND_POLICY_BOUNDARY.md](../FIELDS_AND_POLICY_BOUNDARY.md)
+- [BOUNDARY_RULES.md](../BOUNDARY_RULES.md) - Cross-repo boundary enforcement
 - tap_tone_pi ADR-001: Measurement-Only Boundary

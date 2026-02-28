@@ -302,4 +302,4 @@ F010:
 
 - [Toolpath Generation](../features/toolpaths.md) - Creating toolpaths
 - [Machine Profiles](machine-profiles.md) - Configure limits
-- [RMOS Rules Reference](../../docs/RMOS_FEASIBILITY_RULES_v1.md) - Full rule documentation
+- See the Safety Rules section above for complete rule documentation
