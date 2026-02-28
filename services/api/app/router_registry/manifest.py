@@ -442,6 +442,30 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     # -------------------------------------------------------------------------
+    # DEAD CODE RECOVERY (Wave 27.1 - Restored Routers)
+    # -------------------------------------------------------------------------
+    # DXF -> Adaptive Pocket workflow (P1-HIGH)
+    RouterSpec(
+        module="app.routers.cam_dxf_adaptive_router",
+        prefix="/api",  # Router has /cam prefix
+        tags=["CAM", "DXF", "Adaptive"],
+        category="cam",
+    ),
+    # Relief CAM router - heightmap, roughing, finishing, simulation (P1-HIGH)
+    RouterSpec(
+        module="app.routers.cam_relief_router",
+        prefix="/api",  # Router has /cam/relief prefix
+        tags=["CAM", "Relief"],
+        category="cam",
+    ),
+    # CNC Production presets CRUD (P2-MEDIUM)
+    RouterSpec(
+        module="app.routers.cnc_production.presets_router",
+        prefix="/api",  # Router has /cnc/presets prefix
+        tags=["CNC", "Presets"],
+        category="cnc",
+    ),
+    # -------------------------------------------------------------------------
     # CONSOLIDATED AGGREGATORS (Wave 18+19)
     # -------------------------------------------------------------------------
     RouterSpec(
