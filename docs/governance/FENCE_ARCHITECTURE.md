@@ -2,7 +2,7 @@
 
 > **Purpose**: Prevent architectural drift through automated boundary enforcement
 > **Status**: Active enforcement across 8 profiles
-> **Registry**: [FENCE_REGISTRY.json](../../FENCE_REGISTRY.json)
+> **Registry**: `FENCE_REGISTRY.json` (repo root)
 > **Last Updated**: 2026-01-08
 
 ---
@@ -354,7 +354,7 @@ Each fence has:
                                                                                                                                                                          --budget 10
                                                                                                                                                                          ```
 
-                                                                                                                                                                         **Documentation**: [docs/ENDPOINT_TRUTH_MAP.md#legacy-route-governance](../ENDPOINT_TRUTH_MAP.md#legacy-route-governance)
+                                                                                                                                                                         **Documentation**: [Legacy deprecation governance documentation
 
                                                                                                                                                                          ---
 
@@ -549,11 +549,11 @@ Each fence has:
 
                                                                                                                                                                                                                                                            | Document | Purpose |
                                                                                                                                                                                                                                                            |----------|---------|
-                                                                                                                                                                                                                                                           | [FENCE_REGISTRY.json](../../FENCE_REGISTRY.json) | Machine-readable boundary definitions |
+                                                                                                                                                                                                                                                           | `FENCE_REGISTRY.json` (repo root) | Machine-readable boundary definitions |
                                                                                                                                                                                                                                                            | [BOUNDARY_RULES.md](../BOUNDARY_RULES.md) | External boundary (ToolBox↔Analyzer) |
                                                                                                                                                                                                                                                            | [OPERATION_EXECUTION_GOVERNANCE_v1.md](../OPERATION_EXECUTION_GOVERNANCE_v1.md) | Operation lane governance |
                                                                                                                                                                                                                                                            | [CNC_SAW_LAB_DEVELOPER_GUIDE.md](../CNC_SAW_LAB_DEVELOPER_GUIDE.md) | Saw Lab reference implementation |
-                                                                                                                                                                                                                                                           | [ENDPOINT_TRUTH_MAP.md](../ENDPOINT_TRUTH_MAP.md) | API surface + lane classifications |
+                                                                                                                                                                                                                                                           | the endpoint routes documentation | API surface + lane classifications |
                                                                                                                                                                                                                                                            | [AI_CODE_BUNDLE_LOCK_POINTS_v1.md](AI_CODE_BUNDLE_LOCK_POINTS_v1.md) | Authoritative router prefixes |
                                                                                                                                                                                                                                                            | [packages/client/src/sdk/endpoints/README.md](../../packages/client/src/sdk/endpoints/README.md) | Frontend SDK patterns |
 

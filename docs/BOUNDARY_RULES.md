@@ -114,4 +114,4 @@ python -m app.ci.check_boundary_imports --profile toolbox
 | `services/api/app/ci/boundary_spec.py` | Reusable BoundarySpec framework |
 | `services/api/app/ci/check_boundary_imports.py` | CLI runner with profile configs |
 
-See also: [ROUTER_MAP.md](../ROUTER_MAP.md) for ToolBox API organization.
+See also: the router registry (`services/api/app/router_registry/manifest.py`) for ToolBox API organization.
