@@ -1,207 +1,382 @@
-# services/api/app/business/schemas.py
 """
-Business Estimator Schemas - Pydantic models for cost estimation.
+Business Suite Schemas — Types for financial planning.
 """
-from __future__ import annotations
-from datetime import datetime
-from enum import Enum
-from uuid import uuid4
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
+from enum import Enum
+
+
+# ============================================================================
+# ENUMS
+# ============================================================================
+
+class MaterialCategory(str, Enum):
+    """Categories of materials in guitar building."""
+    TONEWOOD = "tonewood"
+    HARDWARE = "hardware"
+    STRINGS = "strings"
+    FINISH = "finish"
+    ADHESIVE = "adhesive"
+    ABRASIVE = "abrasive"
+    FRET_WIRE = "fret_wire"
+    BINDING = "binding"
+    INLAY = "inlay"
+    ELECTRONICS = "electronics"
+    CASE = "case"
+    OTHER = "other"
+
+
+class LaborCategory(str, Enum):
+    """Categories of labor in guitar building."""
+    DESIGN = "design"
+    WOOD_PREP = "wood_prep"
+    JOINERY = "joinery"
+    CARVING = "carving"
+    FRETTING = "fretting"
+    FINISHING = "finishing"
+    ASSEMBLY = "assembly"
+    SETUP = "setup"
+    QA = "qa"
+    ADMIN = "admin"
+
+
+# NOTE: PricingModel enum removed 2026-02-26 (dead code - PricingStrategy used instead)
+
 
 class InstrumentType(str, Enum):
+    """Types of instruments for BOM templates."""
     ACOUSTIC_DREADNOUGHT = "acoustic_dreadnought"
     ACOUSTIC_OM = "acoustic_om"
     ACOUSTIC_PARLOR = "acoustic_parlor"
     CLASSICAL = "classical"
     ELECTRIC_SOLID = "electric_solid"
     ELECTRIC_HOLLOW = "electric_hollow"
-    ELECTRIC_SEMI_HOLLOW = "electric_semi_hollow"
     BASS_4 = "bass_4"
     BASS_5 = "bass_5"
     UKULELE = "ukulele"
-
-class BuilderExperience(str, Enum):
-    BEGINNER = "beginner"
-    INTERMEDIATE = "intermediate"
-    EXPERIENCED = "experienced"
-    MASTER = "master"
-
-class BodyComplexity(str, Enum):
-    STANDARD = "standard"
-    CUTAWAY_SOFT = "cutaway_soft"
-    CUTAWAY_FLORENTINE = "cutaway_florentine"
-    CUTAWAY_VENETIAN = "cutaway_venetian"
-    DOUBLE_CUTAWAY = "double_cutaway"
-    ARM_BEVEL = "arm_bevel"
-    TUMMY_CUT = "tummy_cut"
-    CARVED_TOP = "carved_top"
-
-class BindingComplexity(str, Enum):
-    NONE = "none"
-    SINGLE = "single"
-    MULTIPLE = "multiple"
-    HERRINGBONE = "herringbone"
-
-class NeckComplexity(str, Enum):
-    STANDARD = "standard"
-    VOLUTE = "volute"
-    SCARF_JOINT = "scarf_joint"
-    MULTI_SCALE = "multi_scale"
-
-class FretboardInlay(str, Enum):
-    NONE = "none"
-    DOTS = "dots"
-    BLOCKS = "blocks"
-    TRAPEZOIDS = "trapezoids"
+    MANDOLIN = "mandolin"
     CUSTOM = "custom"
 
-class FinishType(str, Enum):
-    OIL = "oil"
-    WAX = "wax"
-    SHELLAC_WIPE = "shellac_wipe"
-    SHELLAC_FRENCH_POLISH = "shellac_french_polish"
-    NITRO_SOLID = "nitro_solid"
-    NITRO_BURST = "nitro_burst"
-    NITRO_VINTAGE = "nitro_vintage"
-    POLY_SOLID = "poly_solid"
-    POLY_BURST = "poly_burst"
 
-class RosetteComplexity(str, Enum):
-    NONE = "none"
-    SIMPLE_RINGS = "simple_rings"
-    MOSAIC = "mosaic"
-    CUSTOM_ART = "custom_art"
+# ============================================================================
+# MATERIALS & BOM
+# ============================================================================
+
+class Material(BaseModel):
+    """A material used in guitar building."""
+    id: str = Field(..., description="Unique identifier")
+    name: str
+    category: MaterialCategory
+    unit: str = Field(..., description="Unit of measure (bd_ft, piece, oz, etc.)")
+    unit_cost: float = Field(..., ge=0, description="Cost per unit in USD")
+    supplier: Optional[str] = None
+    notes: Optional[str] = None
+
+    # For wood
+    species: Optional[str] = None
+    grade: Optional[str] = None  # AAA, AA, A, etc.
+
+
+class BOMItem(BaseModel):
+    """A line item in a Bill of Materials."""
+    material_id: str
+    material_name: str
+    category: MaterialCategory
+    quantity: float = Field(..., gt=0)
+    unit: str
+    unit_cost: float
+    extended_cost: float = Field(..., description="quantity × unit_cost")
+    notes: Optional[str] = None
+
+
+class BillOfMaterials(BaseModel):
+    """Complete Bill of Materials for an instrument."""
+    instrument_type: InstrumentType
+    instrument_name: str
+    created_at: str
+
+    items: List[BOMItem] = []
+
+    # Calculated totals
+    total_materials_cost: float = 0.0
+    total_items: int = 0
+
+    # By category
+    cost_by_category: Dict[str, float] = {}
+
+
+# ============================================================================
+# LABOR
+# ============================================================================
+
+class LaborRate(BaseModel):
+    """Hourly rate for a category of labor."""
+    category: LaborCategory
+    hourly_rate: float = Field(..., ge=0, description="USD per hour")
+    description: Optional[str] = None
+
+
+class LaborEntry(BaseModel):
+    """Time spent on a task."""
+    category: LaborCategory
+    hours: float = Field(..., ge=0)
+    hourly_rate: float
+    total_cost: float = Field(..., description="hours × hourly_rate")
+    task_description: Optional[str] = None
+
+
+class LaborEstimate(BaseModel):
+    """Estimated labor for building an instrument."""
+    instrument_type: InstrumentType
+    entries: List[LaborEntry] = []
+    total_hours: float = 0.0
+    total_labor_cost: float = 0.0
+
+    # By category
+    hours_by_category: Dict[str, float] = {}
+
+
+# ============================================================================
+# COGS (Cost of Goods Sold)
+# ============================================================================
+
+class OverheadItem(BaseModel):
+    """A fixed or variable overhead cost."""
+    name: str
+    monthly_cost: float
+    is_fixed: bool = True  # Fixed vs variable
+    notes: Optional[str] = None
+
+
+class COGSBreakdown(BaseModel):
+    """Complete Cost of Goods Sold analysis."""
+    instrument_name: str
+    calculated_at: str
+
+    # Direct costs
+    materials_cost: float = 0.0
+    labor_cost: float = 0.0
+    direct_costs_total: float = 0.0
+
+    # Overhead allocation
+    overhead_per_unit: float = 0.0
+    overhead_allocation_method: str = "per_unit"  # or "percentage"
+
+    # Total COGS
+    total_cogs: float = 0.0
+
+    # Breakdown
+    materials_breakdown: Optional[BillOfMaterials] = None
+    labor_breakdown: Optional[LaborEstimate] = None
+
+    # Margins at various prices
+    margin_analysis: List[Dict[str, float]] = []
+
+
+# ============================================================================
+# PRICING
+# ============================================================================
+
+class CompetitorPrice(BaseModel):
+    """Competitor pricing data point."""
+    competitor_name: str
+    instrument_type: str
+    price: float
+    quality_tier: str = "mid"  # "entry", "mid", "premium", "custom"
+    source: Optional[str] = None
+    date_observed: Optional[str] = None
+
+
+class PricingStrategy(BaseModel):
+    """Pricing recommendation with analysis."""
+    instrument_name: str
+    cogs: float
+
+    # Different pricing approaches
+    cost_plus_price: float = Field(..., description="COGS + markup")
+    cost_plus_markup_pct: float = 50.0
+
+    market_based_price: Optional[float] = None
+    market_position: Optional[str] = None  # "below", "at", "above"
+
+    value_based_price: Optional[float] = None
+    value_justification: Optional[str] = None
+
+    # Recommended price
+    recommended_price: float
+    recommended_margin: float
+    recommended_margin_pct: float
+
+    # Analysis
+    break_even_units: Optional[float] = None
+    notes: List[str] = []
+
+
+# ============================================================================
+# BREAK-EVEN ANALYSIS
+# ============================================================================
+
+class BreakEvenAnalysis(BaseModel):
+    """Break-even analysis for a product or business."""
+    analysis_name: str
+    calculated_at: str
+
+    # Inputs
+    fixed_costs_monthly: float
+    variable_cost_per_unit: float  # COGS
+    selling_price_per_unit: float
+
+    # Results
+    contribution_margin: float = Field(
+        ..., description="Price - Variable Cost"
+    )
+    contribution_margin_pct: float
+    break_even_units: float = Field(
+        ..., description="Units needed to cover fixed costs"
+    )
+    break_even_revenue: float
+
+    # Scenarios
+    scenarios: List[Dict[str, Any]] = []  # What-if analysis
+
+
+# ============================================================================
+# CASH FLOW
+# ============================================================================
+
+class CashFlowMonth(BaseModel):
+    """Cash flow for a single month."""
+    month: int  # 1-12 or 1-36 for multi-year
+    month_label: str  # "Jan 2026"
+
+    # Inflows
+    revenue: float = 0.0
+    other_income: float = 0.0
+    total_inflows: float = 0.0
+
+    # Outflows
+    materials: float = 0.0
+    labor: float = 0.0
+    overhead: float = 0.0
+    other_expenses: float = 0.0
+    total_outflows: float = 0.0
+
+    # Net
+    net_cash_flow: float = 0.0
+    cumulative_cash_flow: float = 0.0
+
+    # Status
+    is_positive: bool = True
+
+
+class CashFlowProjection(BaseModel):
+    """Multi-month cash flow projection."""
+    projection_name: str
+    created_at: str
+    months: int = 12
+
+    # Starting position
+    starting_cash: float = 0.0
+
+    # Monthly data
+    monthly_data: List[CashFlowMonth] = []
+
+    # Summary
+    total_revenue: float = 0.0
+    total_expenses: float = 0.0
+    net_cash_flow: float = 0.0
+    ending_cash: float = 0.0
+
+    # Key metrics
+    months_to_positive: Optional[int] = None
+    runway_months: Optional[int] = None  # How long cash lasts if no revenue
+    minimum_cash_month: Optional[int] = None
+    minimum_cash_amount: Optional[float] = None
+
+    # Warnings
+    warnings: List[str] = []
+
+
+# ============================================================================
+# BUSINESS PLAN SUMMARY
+# ============================================================================
+
+class BusinessPlanSummary(BaseModel):
+    """High-level business plan summary."""
+    business_name: str
+    created_at: str
+
+    # Products
+    products: List[Dict[str, Any]] = []  # Name, COGS, Price, Annual Volume
+
+    # Financials
+    annual_revenue_target: float
+    annual_cogs: float
+    gross_margin: float
+    gross_margin_pct: float
+
+    # Fixed costs
+    monthly_overhead: float
+    annual_overhead: float
+
+    # Break-even
+    monthly_break_even_revenue: float
+    annual_break_even_revenue: float
+    break_even_units_per_year: Dict[str, float] = {}
+
+    # Cash requirements
+    startup_costs: float = 0.0
+    working_capital_needed: float = 0.0
+    total_funding_needed: float = 0.0
+
+    # Timeline
+    months_to_break_even: Optional[int] = None
+    months_to_profitability: Optional[int] = None
+
+# ============================================================================
+# PRICING GOALS (Phase 6)
+# ============================================================================
 
 class GoalStatus(str, Enum):
+    """Status of a pricing goal."""
     ACTIVE = "active"
     ACHIEVED = "achieved"
     ARCHIVED = "archived"
 
-class EstimateRequest(BaseModel):
-    instrument_type: InstrumentType
-    builder_experience: BuilderExperience
-    body_complexity: list[BodyComplexity] = Field(default_factory=lambda: [BodyComplexity.STANDARD])
-    binding_body_complexity: BindingComplexity = BindingComplexity.NONE
-    neck_complexity: NeckComplexity = NeckComplexity.STANDARD
-    fretboard_inlay: FretboardInlay = FretboardInlay.DOTS
-    finish_type: FinishType = FinishType.OIL
-    rosette_complexity: RosetteComplexity = RosetteComplexity.NONE
-    batch_size: int = Field(default=1, ge=1, le=100)
-    hourly_rate: float = Field(default=50.0, ge=0)
-    include_materials: bool = True
 
 class GoalCreateRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
+    """Request to create a pricing goal."""
+    name: str = Field(..., min_length=1, max_length=100)
     instrument_type: InstrumentType
-    target_cost: float = Field(ge=0)
-    target_hours: float = Field(ge=0)
-    deadline: datetime | None = None
-    notes: str | None = None
+    target_cost: float = Field(..., ge=0)
+    target_hours: float = Field(..., ge=0)
+    deadline: Optional[str] = None
+    notes: Optional[str] = None
+
 
 class GoalUpdateRequest(BaseModel):
-    name: str | None = None
-    target_cost: float | None = Field(default=None, ge=0)
-    target_hours: float | None = Field(default=None, ge=0)
-    status: GoalStatus | None = None
-    deadline: datetime | None = None
-    notes: str | None = None
+    """Request to update a pricing goal."""
+    name: Optional[str] = None
+    target_cost: Optional[float] = Field(default=None, ge=0)
+    target_hours: Optional[float] = Field(default=None, ge=0)
+    status: Optional[GoalStatus] = None
+    deadline: Optional[str] = None
+    notes: Optional[str] = None
 
-class WBSTask(BaseModel):
-    task_id: str
-    task_name: str
-    base_hours: float
-    complexity_multiplier: float
-    adjusted_hours: float
-    labor_cost: float
-    notes: str | None = None
-
-class MaterialEstimate(BaseModel):
-    category: str
-    base_cost: float
-    waste_factor: float
-    adjusted_cost: float
-
-class LearningCurvePoint(BaseModel):
-    unit_number: int
-    hours_per_unit: float
-    cumulative_hours: float
-    cumulative_cost: float
-
-class LearningCurveProjection(BaseModel):
-    first_unit_hours: float
-    learning_rate: float
-    quantity: int
-    points: list[LearningCurvePoint]
-    average_hours_per_unit: float
-    total_hours: float
-    efficiency_gain_pct: float
-
-class RiskFactor(BaseModel):
-    factor: str
-    impact: str
-    description: str
-
-class EstimateResult(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    instrument_type: str
-    quantity: int
-    first_unit_hours: float
-    average_hours_per_unit: float
-    total_hours: float
-    labor_cost_per_unit: float
-    material_cost_per_unit: float
-    total_cost_per_unit: float
-    total_project_cost: float
-    wbs_tasks: list[WBSTask]
-    material_breakdown: list[MaterialEstimate]
-    learning_curve: LearningCurveProjection | None = None
-    complexity_factors_applied: dict[str, float]
-    total_complexity_multiplier: float
-    experience_level: str
-    experience_multiplier: float
-    confidence_level: str
-    risk_factors: list[RiskFactor]
-    estimate_range_low: float
-    estimate_range_high: float
-    notes: list[str]
-
-class EstimateResponse(BaseModel):
-    ok: bool = True
-    estimate: EstimateResult
 
 class Goal(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    """A pricing goal for tracking cost/time targets."""
+    id: str = Field(default_factory=lambda: __import__('uuid').uuid4().hex[:12])
+    created_at: str = Field(default_factory=lambda: __import__('datetime').datetime.utcnow().isoformat())
+    updated_at: str = Field(default_factory=lambda: __import__('datetime').datetime.utcnow().isoformat())
     name: str
     instrument_type: str
     target_cost: float
     target_hours: float
-    current_best_cost: float | None = None
-    current_best_hours: float | None = None
+    current_best_cost: Optional[float] = None
+    current_best_hours: Optional[float] = None
     progress_pct: float = 0.0
     status: GoalStatus = GoalStatus.ACTIVE
-    deadline: datetime | None = None
-    notes: str | None = None
-    estimate_ids: list[str] = Field(default_factory=list)
-
-class GoalResponse(BaseModel):
-    ok: bool = True
-    goal: Goal
-
-class GoalListResponse(BaseModel):
-    ok: bool = True
-    goals: list[Goal]
-    total: int
-
-class EstimateListResponse(BaseModel):
-    ok: bool = True
-    estimates: list[EstimateResult]
-    total: int
-
-class SyncStatusResponse(BaseModel):
-    ok: bool = True
-    synced: bool
-    last_sync: datetime | None = None
-    pending_count: int = 0
+    deadline: Optional[str] = None
+    notes: Optional[str] = None
+    estimate_ids: List[str] = Field(default_factory=list)
