@@ -50,7 +50,7 @@ const MAX_HISTORY = 20;
 const DEFAULT_REQUEST: EstimateRequest = {
   instrument_type: "acoustic_dreadnought",
   builder_experience: "intermediate",
-  body_complexity: "standard",
+  body_complexity: ["standard"],
   binding_body_complexity: "none",
   neck_complexity: "standard",
   fretboard_inlay: "dots",

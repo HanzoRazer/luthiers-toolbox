@@ -81,7 +81,8 @@ export type RosetteComplexity =
 export interface EstimateRequest {
   instrument_type: InstrumentType;
   builder_experience: BuilderExperience;
-  body_complexity: BodyComplexity;
+  /** Body complexity features - supports multi-select (e.g., cutaway + arm bevel) */
+  body_complexity: BodyComplexity | BodyComplexity[];
   binding_body_complexity: BindingComplexity;
   neck_complexity: NeckComplexity;
   fretboard_inlay: FretboardInlay;

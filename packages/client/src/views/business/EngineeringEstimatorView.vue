@@ -31,11 +31,11 @@ const estimate = ref<EstimateResult | null>(null);
 const learningCurve = ref<LearningCurveProjection | null>(null);
 const activeTab = ref<"wbs" | "learning" | "materials" | "summary">("summary");
 
-// Form state
+// Form state (body_complexity is array for multi-select)
 const form = ref<EstimateRequest>({
   instrument_type: "acoustic_dreadnought",
   builder_experience: "intermediate",
-  body_complexity: "standard",
+  body_complexity: ["standard"],
   binding_body_complexity: "none",
   neck_complexity: "standard",
   fretboard_inlay: "dots",
