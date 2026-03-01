@@ -7,6 +7,8 @@
     <!-- M1 Advisory Mode: Coach Bubble + Idle Detection -->
     <CoachBubble />
     <IdleDetector :threshold-ms="8000" />
+    <!-- Global Command Palette (Ctrl+K) -->
+    <CommandPalette />
   </div>
 </template>
 
@@ -15,6 +17,7 @@ import '@/styles/design-tokens.css'
 import AppNav from '@/components/AppNav.vue'
 import CoachBubble from '@/components/agentic/CoachBubble.vue'
 import IdleDetector from '@/components/agentic/IdleDetector.vue'
+import CommandPalette from '@/components/ui/CommandPalette.vue'
 </script>
 
 <style>
