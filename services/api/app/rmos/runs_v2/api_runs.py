@@ -333,7 +333,7 @@ def read_run(run_id: str) -> Dict[str, Any]:
 
 # -- Advisory Blob Browser (run-scoped) ----------------------------------------
 
-@router.get("/{run_id}/advisory/blobs", response_model=AdvisoryBlobListResponse)
+@router.get("/{run_id}/advisory/blobs", response_model=AdvisoryBlobListResponse, summary="List advisory blobs for run")
 def list_run_advisory_blobs(run_id: str):
     """
     List all advisory blobs linked to this run.
@@ -342,7 +342,7 @@ def list_run_advisory_blobs(run_id: str):
     items = list_advisory_blobs(run_id)
     return AdvisoryBlobListResponse(run_id=run_id, count=len(items), items=items)
 
-@router.get("/{run_id}/advisory/blobs/{sha256}/download")
+@router.get("/{run_id}/advisory/blobs/{sha256}/download", summary="Download advisory blob")
 def download_run_advisory_blob(run_id: str, sha256: str):
     """
     Download an advisory blob by sha256.
@@ -350,7 +350,7 @@ def download_run_advisory_blob(run_id: str, sha256: str):
     """
     return download_advisory_blob(run_id, sha256)
 
-@router.get("/{run_id}/advisory/blobs/{sha256}/preview/svg")
+@router.get("/{run_id}/advisory/blobs/{sha256}/preview/svg", summary="Preview SVG advisory blob")
 def preview_run_advisory_svg(run_id: str, sha256: str):
     """
     Inline SVG preview (run-authorized).
@@ -370,7 +370,7 @@ def check_run_advisory_svg_status(run_id: str, sha256: str):
     """
     return check_svg_preview_status(run_id, sha256)
 
-@router.get("/{run_id}/advisory/blobs/download-all.zip")
+@router.get("/{run_id}/advisory/blobs/download-all.zip", summary="Download all advisory blobs as ZIP")
 def download_all_run_advisory_blobs_zip(run_id: str, background_tasks: BackgroundTasks):
     """
     Download all advisory blobs linked to this run as a zip.
