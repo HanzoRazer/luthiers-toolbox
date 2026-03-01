@@ -29,7 +29,7 @@ defineProps<{
           <td>
             <span
               class="group-indicator"
-              :style="{ background: businessEstimator.getGroupColor(task.notes) }"
+              :style="{ background: businessEstimator.getGroupColor(task.task_id) }"
             ></span>
             {{ task.task_name }}
           </td>

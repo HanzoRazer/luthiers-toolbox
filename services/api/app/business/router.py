@@ -29,6 +29,8 @@ from .cogs_service import COGSService
 from .pricing_service import PricingService
 from .breakeven_service import BreakEvenService
 from .cashflow_service import CashFlowService
+from .goals_service import goals_store
+from .schemas import GoalCreateRequest, GoalUpdateRequest, Goal, GoalStatus
 
 # Engineering Estimator
 from .estimator import (
@@ -475,6 +477,60 @@ async def preview_learning_curve(
     )
 
 
+
+# ============================================================================
+# Pricing Goals Endpoints
+# ============================================================================
+
+@router.get("/goals")
+async def list_goals():
+    """List all pricing goals."""
+    goals = goals_store.list_goals()
+    return {"ok": True, "goals": goals, "total": len(goals)}
+
+
+@router.post("/goals")
+async def create_goal(request: GoalCreateRequest):
+    """Create a new pricing goal."""
+    goal = goals_store.create_goal(request)
+    return {"ok": True, "goal": goal}
+
+
+@router.get("/goals/{goal_id}")
+async def get_goal(goal_id: str):
+    """Get a specific goal."""
+    goal = goals_store.get_goal(goal_id)
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"ok": True, "goal": goal}
+
+
+@router.patch("/goals/{goal_id}")
+async def update_goal(goal_id: str, request: GoalUpdateRequest):
+    """Update a goal."""
+    goal = goals_store.update_goal(goal_id, request)
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"ok": True, "goal": goal}
+
+
+@router.delete("/goals/{goal_id}")
+async def delete_goal(goal_id: str):
+    """Delete a goal."""
+    if not goals_store.delete_goal(goal_id):
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"ok": True}
+
+
+@router.post("/goals/{goal_id}/link-estimate/{estimate_id}")
+async def link_estimate_to_goal(goal_id: str, estimate_id: str):
+    """Link an estimate to a goal."""
+    goal = goals_store.link_estimate(goal_id, estimate_id)
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"ok": True, "goal": goal}
+
+
 # ============================================================================
 # Health Check
 # ============================================================================
@@ -485,6 +541,6 @@ async def business_health():
     return {
         "status": "healthy",
         "module": "business",
-        "services": ["bom", "cogs", "pricing", "breakeven", "cashflow", "estimator"],
+        "services": ["bom", "cogs", "pricing", "breakeven", "cashflow", "estimator", "goals"],
         "purpose": "Financial planning for luthiers",
     }

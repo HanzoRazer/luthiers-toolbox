@@ -1,147 +1,165 @@
 // packages/client/src/sdk/endpoints/businessEstimator.ts
 /**
- * Business Engineering Estimator SDK Endpoints
- *
- * Pro feature - parametric cost estimation for instrument builds.
- * All estimation logic runs server-side.
+ * Business Estimator SDK - API client for cost estimation endpoints.
  */
-
-import { apiFetch } from "@/sdk/core/apiFetch";
+import { get, post, patch, del } from "../core/apiFetch";
 import type {
   EstimateRequest,
   EstimateResult,
-  QuoteRequest,
-  QuoteResult,
   ComplexityFactors,
-  WBSTemplate,
   LearningCurveProjection,
-  LearningCurveParams,
-  InstrumentType,
 } from "@/types/businessEstimator";
 
-const BASE = "/api/business";
-
 // ============================================================================
-// PARAMETRIC ESTIMATION
+// TYPES
 // ============================================================================
 
-/**
- * Create a parametric cost estimate for an instrument build.
- *
- * Uses engineering estimation techniques:
- * - Work Breakdown Structure (WBS) templates
- * - Complexity factors for design choices
- * - Learning curve adjustments for batch production
- * - Material yield/waste factors
- */
-export async function createEstimate(
-  request: EstimateRequest
-): Promise<EstimateResult> {
-  return apiFetch(`${BASE}/estimate/parametric`, {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
+export interface EstimateResponse {
+  ok: boolean;
+  estimate: EstimateResult;
 }
 
-/**
- * Generate a customer-facing quote from an estimate.
- */
-export async function generateQuote(
-  request: QuoteRequest
-): Promise<QuoteResult> {
-  return apiFetch(`${BASE}/estimate/quote`, {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
+export interface Goal {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  instrument_type: string;
+  target_cost: number;
+  target_hours: number;
+  current_best_cost: number | null;
+  current_best_hours: number | null;
+  progress_pct: number;
+  status: "active" | "achieved" | "archived";
+  deadline: string | null;
+  notes: string | null;
+  estimate_ids: string[];
+}
+
+export interface GoalResponse {
+  ok: boolean;
+  goal: Goal;
+}
+
+export interface GoalListResponse {
+  ok: boolean;
+  goals: Goal[];
+  total: number;
+}
+
+export interface GoalCreateRequest {
+  name: string;
+  instrument_type: string;
+  target_cost: number;
+  target_hours: number;
+  deadline?: string;
+  notes?: string;
+}
+
+export interface GoalUpdateRequest {
+  name?: string;
+  target_cost?: number;
+  target_hours?: number;
+  status?: "active" | "achieved" | "archived";
+  deadline?: string;
+  notes?: string;
+}
+
+export interface LearningCurveRequest {
+  first_unit_hours: number;
+  quantity: number;
+  learning_rate: number;
+  hourly_rate: number;
 }
 
 // ============================================================================
-// REFERENCE DATA
+// UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Get all complexity factors and their multipliers.
- */
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+const GROUP_COLORS: Record<string, string> = {
+  body: "#4080f0",
+  neck: "#40c080",
+  finish: "#f0a040",
+  assembly: "#c060a0",
+  setup: "#8060c0",
+  default: "#506090",
+};
+
+export function getGroupColor(taskId: string): string {
+  if (taskId.includes("body") || taskId.includes("sides")) return GROUP_COLORS.body;
+  if (taskId.includes("neck") || taskId.includes("fretboard")) return GROUP_COLORS.neck;
+  if (taskId.includes("finish")) return GROUP_COLORS.finish;
+  if (taskId.includes("assembly") || taskId.includes("attach")) return GROUP_COLORS.assembly;
+  if (taskId.includes("setup") || taskId.includes("qc")) return GROUP_COLORS.setup;
+  return GROUP_COLORS.default;
+}
+
+// ============================================================================
+// ESTIMATE ENDPOINTS
+// ============================================================================
+
+export async function createEstimate(request: EstimateRequest): Promise<EstimateResult> {
+  const response = await post<EstimateResponse>(
+    "/business/estimate/parametric",
+    request
+  );
+  return response.estimate;
+}
+
 export async function getComplexityFactors(): Promise<ComplexityFactors> {
-  return apiFetch(`${BASE}/estimate/factors`, {
-    method: "GET",
-  });
+  return get<ComplexityFactors>("/business/estimate/factors");
 }
 
-/**
- * Get the Work Breakdown Structure template for an instrument type.
- */
-export async function getWBSTemplate(
-  instrumentType: InstrumentType
-): Promise<WBSTemplate> {
-  return apiFetch(`${BASE}/estimate/wbs/${instrumentType}`, {
-    method: "GET",
-  });
-}
-
-/**
- * Preview learning curve effect for batch production.
- */
 export async function getLearningCurveProjection(
-  params: LearningCurveParams
+  request: LearningCurveRequest
 ): Promise<LearningCurveProjection> {
-  const searchParams = new URLSearchParams({
-    first_unit_hours: params.first_unit_hours.toString(),
-    quantity: params.quantity.toString(),
-  });
-  if (params.learning_rate !== undefined) {
-    searchParams.set("learning_rate", params.learning_rate.toString());
-  }
-  if (params.hourly_rate !== undefined) {
-    searchParams.set("hourly_rate", params.hourly_rate.toString());
-  }
-  return apiFetch(`${BASE}/estimate/learning-curve?${searchParams}`, {
-    method: "GET",
-  });
+  return post<LearningCurveProjection>(
+    "/business/estimate/learning-curve",
+    request
+  );
 }
 
 // ============================================================================
-// HELPERS
+// GOAL ENDPOINTS
 // ============================================================================
 
-/**
- * Format currency for display.
- */
-export function formatCurrency(value: number, decimals = 0): string {
-  return `$${value.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+export async function listGoals(): Promise<GoalListResponse> {
+  return get<GoalListResponse>("/business/goals");
 }
 
-/**
- * Format hours for display.
- */
-export function formatHours(value: number): string {
-  return `${value.toFixed(1)}h`;
+export async function createGoal(request: GoalCreateRequest): Promise<GoalResponse> {
+  return post<GoalResponse>("/business/goals", request);
 }
 
-/**
- * Format percentage for display.
- */
-export function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
+export async function getGoal(goalId: string): Promise<GoalResponse> {
+  return get<GoalResponse>("/business/goals/" + goalId);
 }
 
-/**
- * Format multiplier for display.
- */
-export function formatMultiplier(value: number): string {
-  return `${value.toFixed(2)}×`;
+export async function updateGoal(
+  goalId: string,
+  request: GoalUpdateRequest
+): Promise<GoalResponse> {
+  return patch<GoalResponse>("/business/goals/" + goalId, request);
 }
 
-/**
- * Get color for task group (for WBS visualization).
- */
-export function getGroupColor(group: string | null): string {
-  const colors: Record<string, string> = {
-    body: "#4a9eff",
-    neck: "#a78bfa",
-    finish: "#fb923c",
-    binding: "#34d399",
-    rosette: "#f472b6",
-  };
-  return colors[group ?? ""] ?? "#6b7280";
+export async function deleteGoal(goalId: string): Promise<void> {
+  await del<void>("/business/goals/" + goalId);
+}
+
+export async function linkEstimateToGoal(
+  goalId: string,
+  estimateId: string
+): Promise<GoalResponse> {
+  return post<GoalResponse>(
+    "/business/goals/" + goalId + "/link-estimate/" + estimateId
+  );
 }

@@ -27,6 +27,8 @@ import EstimatorExportPanel from "./EstimatorExportPanel.vue";
 import EstimatorAnalyticsDashboard from "./EstimatorAnalyticsDashboard.vue";
 import EstimatorComparePanel from "./EstimatorComparePanel.vue";
 import EstimatorTemplatesPanel from "./EstimatorTemplatesPanel.vue";
+import EstimatorGoalsPanel from "./EstimatorGoalsPanel.vue";
+import EstimatorSyncStatus from "./EstimatorSyncStatus.vue";
 import RiskBadge from "@/components/ui/RiskBadge.vue";
 import WhyCard from "@/components/ui/WhyCard.vue";
 
@@ -44,7 +46,7 @@ const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" 
 const showValidation = ref(false);
 const showDiff = ref(false);
 const showSidebar = ref(true);
-const sidebarTab = ref<"presets" | "history" | "templates" | "compare">("presets");
+const sidebarTab = ref<"presets" | "history" | "templates" | "goals">("presets");
 
 // Form state (body_complexity is array for multi-select)
 const form = ref<EstimateRequest>({
@@ -121,7 +123,7 @@ async function runEstimate() {
         first_unit_hours: estimate.value.first_unit_hours,
         quantity: form.value.batch_size,
         learning_rate: 0.85,
-        hourly_rate: form.value.hourly_rate,
+        hourly_rate: form.value.hourly_rate ?? 45,
       });
     } else {
       learningCurve.value = null;
@@ -183,6 +185,7 @@ runEstimate();
       <div class="header-left">
         <h1>Engineering Estimator</h1>
         <p class="subtitle">WBS · Complexity Factors · Learning Curve · Material Yield</p>
+        <EstimatorSyncStatus class="header-sync" />
       </div>
       <div class="header-right" v-if="estimate">
         <div class="price-display">{{ totalPrice }}</div>
@@ -410,6 +413,12 @@ runEstimate();
             >
               Templates
             </button>
+            <button
+              :class="{ active: sidebarTab === 'goals' }"
+              @click="sidebarTab = 'goals'"
+            >
+              Goals
+            </button>
           </div>
           <button type="button" class="sidebar-close" @click="toggleSidebar" title="Hide sidebar">
             ×
@@ -431,6 +440,10 @@ runEstimate();
         <EstimatorTemplatesPanel
           v-if="sidebarTab === 'templates'"
           @load-template="loadPreset"
+        />
+
+        <EstimatorGoalsPanel
+          v-if="sidebarTab === 'goals'"
         />
       </aside>
 
@@ -458,6 +471,7 @@ runEstimate();
 }
 .estimator-header h1 { font-size: 18px; font-weight: 700; letter-spacing: 4px; color: #f0c060; margin: 0; }
 .subtitle { font-size: 9px; letter-spacing: 3px; color: #4060c0; margin: 4px 0 0; text-transform: uppercase; }
+.header-sync { margin-top: 8px; }
 .header-right { text-align: right; }
 .price-display { font-size: 24px; font-weight: 700; color: #60e0a0; }
 .price-label { font-size: 9px; color: #404870; letter-spacing: 2px; text-transform: uppercase; }
