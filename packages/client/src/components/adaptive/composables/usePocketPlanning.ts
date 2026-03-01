@@ -13,12 +13,27 @@ import type { Move, Overlay } from './useToolpathRenderer'
 // Types
 // ============================================================================
 
-/** Stats returned from the planning API - allows arbitrary fields */
+/** Stats returned from the planning API */
 export interface PocketStats {
+  // Time estimates
   time_s_classic?: number
-  time_s_jerk?: number
+  time_s_jerk?: number | null
+  // Length/area/volume
   total_length_mm?: number
-  [key: string]: unknown  // Allow additional API fields
+  length_mm?: number
+  area_mm2?: number
+  volume_mm3?: number
+  // Move counts
+  move_count?: number
+  tight_segments?: number
+  trochoid_arcs?: number
+  // Bottleneck caps (for BottleneckMapPanel)
+  caps?: {
+    feed_cap?: number
+    accel?: number
+    jerk?: number
+    none?: number
+  }
 }
 
 export interface Loop {

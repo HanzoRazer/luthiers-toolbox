@@ -336,8 +336,8 @@ async function handleExportThermalBundle() {
 
 // Handlers — plan/export/logging use composable-provided functions directly
 function handlePreviewNc() { previewNc() }
-function handleExport() { exportProgram(postId.value, strategy.value) }
-function handleBatchExport() { batchExport(postId.value) }
+function handleExport() { exportProgram() }
+function handleBatchExport() { batchExport() }
 async function handleLogRun(actualSeconds?: number) {
   if (!moves.value.length) await plan()
   await logCurrentRun(actualSeconds)
