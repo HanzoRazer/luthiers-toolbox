@@ -275,5 +275,27 @@
     "bare_except": 6,
     "large_files": 5,
     "god_objects": 9
+  },
+  {
+    "timestamp": "2026-02-28T08:20:32.972367",
+    "endpoints": 580,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9
+  },
+  {
+    "timestamp": "2026-03-01T13:40:42.101087",
+    "endpoints": 593,
+    "bare_except": 6,
+    "large_files": 5,
+    "god_objects": 9,
+    "note": "Phase 6 business estimator + goals endpoints"
+  },
+  {
+    "timestamp": "2026-03-01T13:41:10.349329",
+    "endpoints": 593,
+    "bare_except": 6,
+    "large_files": 6,
+    "god_objects": 9
   }
 ]
