@@ -85,3 +85,6 @@ export type {
   WritableRefs,
   UnwrapRefs,
 } from './types'
+
+export { useCommandPalette } from './useCommandPalette'
+export type { Command } from './useCommandPalette'
