@@ -21,6 +21,9 @@ import BackCalcTab from "./BackCalcTab.vue";
 import QuoteTab from "./QuoteTab.vue";
 import EstimatorDiffPanel from "./EstimatorDiffPanel.vue";
 import EstimatorValidationStep from "./EstimatorValidationStep.vue";
+import EstimatorPresetsPanel from "./EstimatorPresetsPanel.vue";
+import EstimatorHistoryPanel from "./EstimatorHistoryPanel.vue";
+import EstimatorExportPanel from "./EstimatorExportPanel.vue";
 import RiskBadge from "@/components/ui/RiskBadge.vue";
 import WhyCard from "@/components/ui/WhyCard.vue";
 
@@ -34,9 +37,11 @@ const factors = ref<ComplexityFactors | null>(null);
 const estimate = ref<EstimateResult | null>(null);
 const previousEstimate = ref<EstimateResult | null>(null);
 const learningCurve = ref<LearningCurveProjection | null>(null);
-const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" | "quote">("summary");
+const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" | "quote" | "export">("summary");
 const showValidation = ref(false);
 const showDiff = ref(false);
+const showSidebar = ref(true);
+const sidebarTab = ref<"presets" | "history">("presets");
 
 // Form state (body_complexity is array for multi-select)
 const form = ref<EstimateRequest>({
@@ -142,6 +147,14 @@ function toggleDiff() {
   showDiff.value = !showDiff.value;
 }
 
+function toggleSidebar() {
+  showSidebar.value = !showSidebar.value;
+}
+
+function loadPreset(request: EstimateRequest) {
+  form.value = { ...request };
+}
+
 // Auto-run estimate when form changes (debounced)
 let debounceTimer: ReturnType<typeof setTimeout>;
 watch(
@@ -217,6 +230,7 @@ runEstimate();
             <button :class="{ active: activeTab === 'learning' }" @click="activeTab = 'learning'">Learning Curve</button>
             <button :class="{ active: activeTab === 'backcalc' }" @click="activeTab = 'backcalc'">Back-Calc</button>
             <button :class="{ active: activeTab === 'quote' }" @click="activeTab = 'quote'">Quote</button>
+            <button :class="{ active: activeTab === 'export' }" @click="activeTab = 'export'">Export</button>
           </div>
 
           <!-- Summary Tab -->
@@ -330,6 +344,13 @@ runEstimate();
             :estimate="estimate"
           />
 
+          <!-- Export Tab -->
+          <EstimatorExportPanel
+            v-if="activeTab === 'export'"
+            :request="form"
+            :estimate="estimate"
+          />
+
           <!-- Diff Panel (collapsible) -->
           <div v-if="previousEstimate && estimate" class="diff-toggle-section">
             <button type="button" class="diff-toggle-btn" @click="toggleDiff">
@@ -351,6 +372,52 @@ runEstimate();
           @back="hideValidation"
         />
       </main>
+
+      <!-- Right Sidebar: Presets & History -->
+      <aside v-if="showSidebar" class="sidebar-panel">
+        <div class="sidebar-header">
+          <div class="sidebar-tabs">
+            <button
+              :class="{ active: sidebarTab === 'presets' }"
+              @click="sidebarTab = 'presets'"
+            >
+              Presets
+            </button>
+            <button
+              :class="{ active: sidebarTab === 'history' }"
+              @click="sidebarTab = 'history'"
+            >
+              History
+            </button>
+          </div>
+          <button type="button" class="sidebar-close" @click="toggleSidebar" title="Hide sidebar">
+            ×
+          </button>
+        </div>
+
+        <EstimatorPresetsPanel
+          v-if="sidebarTab === 'presets'"
+          :current-request="form"
+          @load-preset="loadPreset"
+        />
+
+        <EstimatorHistoryPanel
+          v-if="sidebarTab === 'history'"
+          :current-estimate="estimate"
+          :current-request="form"
+        />
+      </aside>
+
+      <!-- Sidebar Toggle (when collapsed) -->
+      <button
+        v-if="!showSidebar"
+        type="button"
+        class="sidebar-toggle-collapsed"
+        @click="toggleSidebar"
+        title="Show sidebar"
+      >
+        ☰
+      </button>
     </div>
   </div>
 </template>
@@ -447,6 +514,97 @@ runEstimate();
 }
 
 .diff-toggle-btn:hover {
+  border-color: #4060c0;
+  color: #80a0d0;
+}
+
+/* Sidebar */
+.sidebar-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sidebar-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.sidebar-tabs button {
+  padding: 6px 12px;
+  font-size: 9px;
+  font-family: inherit;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: #14192a;
+  border: 1px solid #1e2438;
+  color: #506090;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sidebar-tabs button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.sidebar-tabs button:last-child {
+  border-radius: 0 3px 3px 0;
+  border-left: none;
+}
+
+.sidebar-tabs button.active {
+  background: #1e2438;
+  color: #f0c060;
+  border-color: #4060c0;
+}
+
+.sidebar-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid #2a3040;
+  color: #506090;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sidebar-close:hover {
+  border-color: #c04040;
+  color: #f06060;
+}
+
+.sidebar-toggle-collapsed {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 14px;
+  font-family: inherit;
+  background: #14192a;
+  border: 1px solid #2a3040;
+  color: #6080b0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  z-index: 100;
+}
+
+.sidebar-toggle-collapsed:hover {
   border-color: #4060c0;
   color: #80a0d0;
 }
