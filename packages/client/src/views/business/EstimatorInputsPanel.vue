@@ -1,9 +1,14 @@
 <script setup lang="ts">
 /**
  * EstimatorInputsPanel - Form inputs for Engineering Estimator
- * Extracted from EngineeringEstimatorView.vue
+ *
+ * Phase 2 features:
+ * - Chip multi-select for body complexity
+ * - Progressive disclosure for advanced options
+ * - Persistent draft state via useEstimatorDraft
  */
-import type { EstimateRequest } from "@/types/businessEstimator";
+import { ref, computed, watch, onMounted } from "vue";
+import type { EstimateRequest, BodyComplexity } from "@/types/businessEstimator";
 import {
   instrumentTypes,
   experienceLevels,
@@ -15,6 +20,10 @@ import {
   rosetteOptions,
 } from "./estimatorOptions";
 
+// ============================================================================
+// PROPS & EMITS
+// ============================================================================
+
 const props = defineProps<{
   modelValue: EstimateRequest;
 }>();
@@ -23,8 +32,71 @@ const emit = defineEmits<{
   "update:modelValue": [value: EstimateRequest];
 }>();
 
+// ============================================================================
+// STATE
+// ============================================================================
+
+const ADVANCED_TOGGLE_KEY = "ltb:estimator:showAdvanced:v1";
+const showAdvanced = ref(false);
+
+// Load advanced toggle state from localStorage
+onMounted(() => {
+  try {
+    showAdvanced.value = localStorage.getItem(ADVANCED_TOGGLE_KEY) === "true";
+  } catch {
+    // Ignore
+  }
+});
+
+// Persist advanced toggle state
+watch(showAdvanced, (val) => {
+  try {
+    localStorage.setItem(ADVANCED_TOGGLE_KEY, String(val));
+  } catch {
+    // Ignore
+  }
+});
+
+// ============================================================================
+// COMPUTED
+// ============================================================================
+
+const bodyComplexityArray = computed<BodyComplexity[]>(() => {
+  const bc = props.modelValue.body_complexity;
+  if (Array.isArray(bc)) return bc;
+  return bc ? [bc] : ["standard"];
+});
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+
 function updateField<K extends keyof EstimateRequest>(key: K, value: EstimateRequest[K]) {
   emit("update:modelValue", { ...props.modelValue, [key]: value });
+}
+
+function toggleBodyComplexity(value: BodyComplexity) {
+  const current = bodyComplexityArray.value;
+  const idx = current.indexOf(value);
+
+  let newValue: BodyComplexity[];
+  if (idx >= 0) {
+    // Remove if already selected (but keep at least one)
+    if (current.length > 1) {
+      newValue = current.filter((v) => v !== value);
+    } else {
+      return; // Can't remove the last one
+    }
+  } else {
+    // Add to selection
+    newValue = [...current, value];
+  }
+
+  updateField("body_complexity", newValue);
+}
+
+function isBodySelected(value: BodyComplexity): boolean {
+  return bodyComplexityArray.value.includes(value);
 }
 </script>
 
@@ -50,14 +122,22 @@ function updateField<K extends keyof EstimateRequest>(key: K, value: EstimateReq
       </select>
     </section>
 
-    <!-- Body Complexity -->
+    <!-- Body Complexity - CHIP MULTI-SELECT -->
     <section class="input-section">
       <h3>Body Complexity</h3>
-      <select :value="modelValue.body_complexity" @change="updateField('body_complexity', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in bodyOptions" :key="opt.value" :value="opt.value">
+      <p class="hint">Select all that apply</p>
+      <div class="chip-group">
+        <button
+          v-for="opt in bodyOptions"
+          :key="opt.value"
+          type="button"
+          class="chip"
+          :class="{ 'chip--active': isBodySelected(opt.value) }"
+          @click="toggleBodyComplexity(opt.value)"
+        >
           {{ opt.label }}
-        </option>
-      </select>
+        </button>
+      </div>
     </section>
 
     <!-- Binding -->
@@ -110,30 +190,52 @@ function updateField<K extends keyof EstimateRequest>(key: K, value: EstimateReq
       </select>
     </section>
 
-    <!-- Production -->
-    <section class="input-section">
-      <h3>Production</h3>
-      <label class="input-row">
-        <span>Batch Size</span>
-        <input
-          type="number"
-          :value="modelValue.batch_size"
-          @input="updateField('batch_size', parseInt(($event.target as HTMLInputElement).value) || 1)"
-          min="1"
-          max="100"
-        />
-      </label>
-      <label class="input-row">
-        <span>Labor Rate ($/hr)</span>
-        <input
-          type="number"
-          :value="modelValue.hourly_rate"
-          @input="updateField('hourly_rate', parseFloat(($event.target as HTMLInputElement).value) || 0)"
-          min="0"
-          step="5"
-        />
-      </label>
+    <!-- ADVANCED OPTIONS - Progressive Disclosure -->
+    <section class="input-section advanced-toggle">
+      <button
+        type="button"
+        class="toggle-btn"
+        @click="showAdvanced = !showAdvanced"
+      >
+        <span class="toggle-icon">{{ showAdvanced ? '▾' : '▸' }}</span>
+        Advanced Options
+      </button>
     </section>
+
+    <template v-if="showAdvanced">
+      <!-- Production -->
+      <section class="input-section advanced">
+        <h3>Production</h3>
+        <label class="input-row">
+          <span>Batch Size</span>
+          <input
+            type="number"
+            :value="modelValue.batch_size"
+            @input="updateField('batch_size', parseInt(($event.target as HTMLInputElement).value) || 1)"
+            min="1"
+            max="100"
+          />
+        </label>
+        <label class="input-row">
+          <span>Labor Rate ($/hr)</span>
+          <input
+            type="number"
+            :value="modelValue.hourly_rate"
+            @input="updateField('hourly_rate', parseFloat(($event.target as HTMLInputElement).value) || 0)"
+            min="0"
+            step="5"
+          />
+        </label>
+        <label class="input-row checkbox-row">
+          <input
+            type="checkbox"
+            :checked="modelValue.include_materials"
+            @change="updateField('include_materials', ($event.target as HTMLInputElement).checked)"
+          />
+          <span>Include Material Costs</span>
+        </label>
+      </section>
+    </template>
   </aside>
 </template>
 
@@ -159,7 +261,7 @@ function updateField<K extends keyof EstimateRequest>(key: K, value: EstimateReq
 }
 
 .input-section select,
-.input-section input {
+.input-section input[type="number"] {
   width: 100%;
   background: #14192a;
   border: 1px solid #2a3040;
@@ -182,8 +284,101 @@ function updateField<K extends keyof EstimateRequest>(key: K, value: EstimateReq
   color: #8890a8;
 }
 
-.input-row input {
+.input-row input[type="number"] {
   width: 80px;
   text-align: right;
+}
+
+/* Hint text */
+.hint {
+  font-size: 10px;
+  color: #506090;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+
+/* Chip multi-select */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: inherit;
+  background: #14192a;
+  border: 1px solid #2a3040;
+  color: #8890a8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: #4060c0;
+  color: #c0c8e0;
+}
+
+.chip--active {
+  background: #1a2a50;
+  border-color: #4080f0;
+  color: #80c0ff;
+}
+
+.chip--active:hover {
+  background: #203060;
+}
+
+/* Advanced toggle */
+.advanced-toggle {
+  margin-top: 24px;
+  border-top: 1px solid #1e2438;
+  padding-top: 16px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: #6080b0;
+  font-size: 11px;
+  font-family: inherit;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.toggle-btn:hover {
+  color: #80a0d0;
+}
+
+.toggle-icon {
+  font-size: 10px;
+  width: 12px;
+}
+
+/* Advanced section styling */
+.input-section.advanced {
+  padding-left: 12px;
+  border-left: 2px solid #1e2438;
+}
+
+/* Checkbox row */
+.checkbox-row {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #4080f0;
 }
 </style>
