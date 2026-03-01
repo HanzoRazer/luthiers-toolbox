@@ -14,7 +14,7 @@ async def create_estimate(request: EstimateRequest) -> EstimateResponse:
     try:
         result = compute_estimate(request)
         return EstimateResponse(ok=True, estimate=result)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/goals", response_model=GoalListResponse)

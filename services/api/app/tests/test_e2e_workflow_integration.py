@@ -60,7 +60,7 @@ def db_session(test_db):
     try:
         yield session
         session.commit()
-    except Exception:
+    except Exception:  # WP-3: test fixture — rollback on any error, always re-raises
         session.rollback()
         raise
     finally:
