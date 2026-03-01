@@ -145,6 +145,12 @@ export interface LearningCurveProjection {
   efficiency_gain_pct: number;
 }
 
+export interface RiskFactor {
+  factor: string;
+  impact: "low" | "medium" | "high";
+  description: string;
+}
+
 export interface EstimateResult {
   instrument_type: string;
   quantity: number;
@@ -163,7 +169,7 @@ export interface EstimateResult {
   experience_level: string;
   experience_multiplier: number;
   confidence_level: string;
-  risk_factors: string[];
+  risk_factors: RiskFactor[];
   estimate_range_low: number;
   estimate_range_high: number;
   notes: string[];

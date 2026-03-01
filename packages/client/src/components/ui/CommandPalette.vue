@@ -96,6 +96,7 @@ function categoryLabel(category: string): string {
     navigation: "Navigation",
     tools: "Tools & Labs",
     actions: "Actions",
+    business: "Business",
   };
   return labels[category] || category;
 }

@@ -17,6 +17,8 @@ import type {
 import EstimatorInputsPanel from "./EstimatorInputsPanel.vue";
 import WbsBreakdownTab from "./WbsBreakdownTab.vue";
 import MaterialsTab from "./MaterialsTab.vue";
+import RiskBadge from "@/components/ui/RiskBadge.vue";
+import WhyCard from "@/components/ui/WhyCard.vue";
 
 // ============================================================================
 // STATE
@@ -56,6 +58,22 @@ const totalPrice = computed(() => {
 const priceRange = computed(() => {
   if (!estimate.value) return null;
   return `${businessEstimator.formatCurrency(estimate.value.estimate_range_low)} – ${businessEstimator.formatCurrency(estimate.value.estimate_range_high)}`;
+});
+
+// Map confidence level to risk badge level
+function confidenceToRisk(level: string): 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN' {
+  const map: Record<string, 'GREEN' | 'YELLOW' | 'RED'> = {
+    high: 'GREEN',
+    medium: 'YELLOW',
+    low: 'RED',
+  };
+  return map[level?.toLowerCase()] ?? 'UNKNOWN';
+}
+
+// Extract rule IDs from structured risk factors for WhyCard
+const riskFactorIds = computed(() => {
+  if (!estimate.value?.risk_factors) return [];
+  return estimate.value.risk_factors.map(rf => rf.factor);
 });
 
 // ============================================================================
@@ -191,7 +209,9 @@ runEstimate();
               </div>
               <div class="summary-item">
                 <span class="label">Confidence</span>
-                <span class="value">{{ estimate.confidence_level }}</span>
+                <span class="value">
+                  <RiskBadge :level="confidenceToRisk(estimate.confidence_level)" size="md" />
+                </span>
               </div>
               <div class="summary-item highlight">
                 <span class="label">Total Cost</span>
@@ -206,12 +226,12 @@ runEstimate();
               </ul>
             </div>
 
-            <div v-if="estimate.risk_factors.length" class="risks">
-              <h4>Risk Factors</h4>
-              <ul>
-                <li v-for="(risk, i) in estimate.risk_factors" :key="i">{{ risk }}</li>
-              </ul>
-            </div>
+            <!-- Risk Factors (via WhyCard) -->
+            <WhyCard
+              v-if="estimate.risk_factors.length"
+              :risk-level="confidenceToRisk(estimate.confidence_level)"
+              :rules-triggered="riskFactorIds"
+            />
           </div>
 
           <!-- WBS Tab -->
