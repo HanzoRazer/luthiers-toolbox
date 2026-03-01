@@ -24,6 +24,9 @@ import EstimatorValidationStep from "./EstimatorValidationStep.vue";
 import EstimatorPresetsPanel from "./EstimatorPresetsPanel.vue";
 import EstimatorHistoryPanel from "./EstimatorHistoryPanel.vue";
 import EstimatorExportPanel from "./EstimatorExportPanel.vue";
+import EstimatorAnalyticsDashboard from "./EstimatorAnalyticsDashboard.vue";
+import EstimatorComparePanel from "./EstimatorComparePanel.vue";
+import EstimatorTemplatesPanel from "./EstimatorTemplatesPanel.vue";
 import RiskBadge from "@/components/ui/RiskBadge.vue";
 import WhyCard from "@/components/ui/WhyCard.vue";
 
@@ -37,11 +40,11 @@ const factors = ref<ComplexityFactors | null>(null);
 const estimate = ref<EstimateResult | null>(null);
 const previousEstimate = ref<EstimateResult | null>(null);
 const learningCurve = ref<LearningCurveProjection | null>(null);
-const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" | "quote" | "export">("summary");
+const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" | "quote" | "export" | "analytics" | "compare">("summary");
 const showValidation = ref(false);
 const showDiff = ref(false);
 const showSidebar = ref(true);
-const sidebarTab = ref<"presets" | "history">("presets");
+const sidebarTab = ref<"presets" | "history" | "templates" | "compare">("presets");
 
 // Form state (body_complexity is array for multi-select)
 const form = ref<EstimateRequest>({
@@ -231,6 +234,8 @@ runEstimate();
             <button :class="{ active: activeTab === 'backcalc' }" @click="activeTab = 'backcalc'">Back-Calc</button>
             <button :class="{ active: activeTab === 'quote' }" @click="activeTab = 'quote'">Quote</button>
             <button :class="{ active: activeTab === 'export' }" @click="activeTab = 'export'">Export</button>
+            <button :class="{ active: activeTab === 'analytics' }" @click="activeTab = 'analytics'">Analytics</button>
+            <button :class="{ active: activeTab === 'compare' }" @click="activeTab = 'compare'">Compare</button>
           </div>
 
           <!-- Summary Tab -->
@@ -351,6 +356,16 @@ runEstimate();
             :estimate="estimate"
           />
 
+          <!-- Analytics Tab -->
+          <EstimatorAnalyticsDashboard
+            v-if="activeTab === 'analytics'"
+          />
+
+          <!-- Compare Tab -->
+          <EstimatorComparePanel
+            v-if="activeTab === 'compare'"
+          />
+
           <!-- Diff Panel (collapsible) -->
           <div v-if="previousEstimate && estimate" class="diff-toggle-section">
             <button type="button" class="diff-toggle-btn" @click="toggleDiff">
@@ -389,6 +404,12 @@ runEstimate();
             >
               History
             </button>
+            <button
+              :class="{ active: sidebarTab === 'templates' }"
+              @click="sidebarTab = 'templates'"
+            >
+              Templates
+            </button>
           </div>
           <button type="button" class="sidebar-close" @click="toggleSidebar" title="Hide sidebar">
             ×
@@ -405,6 +426,11 @@ runEstimate();
           v-if="sidebarTab === 'history'"
           :current-estimate="estimate"
           :current-request="form"
+        />
+
+        <EstimatorTemplatesPanel
+          v-if="sidebarTab === 'templates'"
+          @load-template="loadPreset"
         />
       </aside>
 
@@ -558,6 +584,9 @@ runEstimate();
 
 .sidebar-tabs button:last-child {
   border-radius: 0 3px 3px 0;
+}
+
+.sidebar-tabs button:not(:first-child) {
   border-left: none;
 }
 
