@@ -11,11 +11,11 @@ import { useRouter } from "vue-router";
 export interface Command {
   id: string;
   label: string;
-  category: "navigation" | "tools" | "actions" | "recent";
+  category: "navigation" | "tools" | "actions" | "recent" | "business";
   keywords?: string[];
   icon?: string;
   shortcut?: string;
-  action: () => void | Promise<void>;
+  action: () => void | Promise<unknown>;
 }
 
 const isOpen = ref(false);
@@ -199,7 +199,35 @@ export function useCommandPalette() {
       },
     ];
 
-    return [...nav, ...labs, ...tools];
+    const business: Command[] = [
+      {
+        id: "biz-estimator",
+        label: "Engineering Estimator",
+        category: "business",
+        keywords: ["estimate", "cost", "price", "quote", "wbs", "hours", "labor"],
+        icon: "💰",
+        shortcut: "⇧E",
+        action: () => router.push("/business/estimate"),
+      },
+      {
+        id: "biz-calculator",
+        label: "Business Calculator",
+        category: "business",
+        keywords: ["profit", "margin", "pricing", "revenue"],
+        icon: "📊",
+        action: () => router.push("/business"),
+      },
+      {
+        id: "biz-quote",
+        label: "Generate Quote",
+        category: "business",
+        keywords: ["quote", "customer", "proposal", "invoice"],
+        icon: "📄",
+        action: () => router.push("/business/quote"),
+      },
+    ];
+
+    return [...nav, ...labs, ...tools, ...business];
   });
 
   // Fuzzy search filter

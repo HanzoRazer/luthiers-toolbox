@@ -13,11 +13,32 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import '@/styles/design-tokens.css'
 import AppNav from '@/components/AppNav.vue'
 import CoachBubble from '@/components/agentic/CoachBubble.vue'
 import IdleDetector from '@/components/agentic/IdleDetector.vue'
 import CommandPalette from '@/components/ui/CommandPalette.vue'
+
+const router = useRouter()
+
+// Global shortcuts
+function handleGlobalShortcuts(e: KeyboardEvent) {
+  // Ctrl+Shift+E or Cmd+Shift+E: Open Engineering Estimator
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+    e.preventDefault()
+    router.push('/business/estimate')
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalShortcuts)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalShortcuts)
+})
 </script>
 
 <style>
