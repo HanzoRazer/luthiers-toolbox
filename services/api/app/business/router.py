@@ -64,7 +64,7 @@ estimator_service = EngineeringEstimatorService()
 # BOM Endpoints
 # ============================================================================
 
-@router.get("/materials", response_model=List[Material])
+@router.get("/materials", response_model=List[Material], summary="List materials library")
 async def list_materials(
     category: Optional[MaterialCategory] = None,
 ) -> List[Material]:
@@ -72,7 +72,7 @@ async def list_materials(
     return bom_service.list_materials(category)
 
 
-@router.get("/materials/{material_id}", response_model=Material)
+@router.get("/materials/{material_id}", response_model=Material, summary="Get material by ID")
 async def get_material(material_id: str) -> Material:
     """Get a specific material by ID."""
     material = bom_service.get_material(material_id)
@@ -81,14 +81,14 @@ async def get_material(material_id: str) -> Material:
     return material
 
 
-@router.post("/materials", response_model=Material)
+@router.post("/materials", response_model=Material, summary="Add new material")
 async def add_material(material: Material) -> Material:
     """Add a new material to the library."""
     bom_service.add_material(material)
     return material
 
 
-@router.post("/bom/from-template", response_model=BillOfMaterials)
+@router.post("/bom/from-template", response_model=BillOfMaterials, summary="Create BOM from template")
 async def create_bom_from_template(
     instrument_type: InstrumentType,
     instrument_name: str = Query(..., min_length=1),
@@ -107,7 +107,7 @@ async def create_bom_from_template(
     )
 
 
-@router.get("/bom/templates")
+@router.get("/bom/templates", summary="List BOM templates")
 async def list_bom_templates():
     """List available BOM templates."""
     return {
@@ -126,7 +126,7 @@ async def list_bom_templates():
 # COGS Endpoints
 # ============================================================================
 
-@router.post("/cogs/calculate", response_model=COGSBreakdown)
+@router.post("/cogs/calculate", response_model=COGSBreakdown, summary="Calculate COGS")
 async def calculate_cogs(
     bom: BillOfMaterials,
     include_overhead: bool = True,
@@ -142,7 +142,7 @@ async def calculate_cogs(
     )
 
 
-@router.get("/cogs/labor-rates")
+@router.get("/cogs/labor-rates", summary="Get labor rates")
 async def get_labor_rates():
     """Get current labor rates by category."""
     return {
@@ -153,7 +153,7 @@ async def get_labor_rates():
     }
 
 
-@router.put("/cogs/labor-rates/{category}")
+@router.put("/cogs/labor-rates/{category}", summary="Update labor rate")
 async def update_labor_rate(
     category: LaborCategory,
     hourly_rate: float = Query(..., ge=0),
@@ -163,7 +163,7 @@ async def update_labor_rate(
     return {"status": "updated", "category": category.value, "hourly_rate": hourly_rate}
 
 
-@router.get("/cogs/overhead")
+@router.get("/cogs/overhead", summary="Get overhead summary")
 async def get_overhead_summary():
     """Get current overhead configuration."""
     return cogs_service.get_overhead_summary()
@@ -173,7 +173,7 @@ async def get_overhead_summary():
 # Pricing Endpoints
 # ============================================================================
 
-@router.post("/pricing/calculate", response_model=PricingStrategy)
+@router.post("/pricing/calculate", response_model=PricingStrategy, summary="Calculate pricing strategy")
 async def calculate_pricing(
     cogs: float = Query(..., ge=0, description="Cost of Goods Sold"),
     instrument_name: str = Query(..., min_length=1),
@@ -196,7 +196,7 @@ async def calculate_pricing(
     )
 
 
-@router.get("/pricing/competitors")
+@router.get("/pricing/competitors", summary="Get competitor landscape")
 async def get_competitor_summary(
     instrument_type: Optional[str] = None,
 ):
@@ -204,7 +204,7 @@ async def get_competitor_summary(
     return pricing_service.get_competitor_summary(instrument_type)
 
 
-@router.post("/pricing/competitors", response_model=CompetitorPrice)
+@router.post("/pricing/competitors", response_model=CompetitorPrice, summary="Add competitor")
 async def add_competitor(competitor: CompetitorPrice) -> CompetitorPrice:
     """Add a competitor to the pricing database."""
     pricing_service.add_competitor(competitor)
@@ -215,7 +215,7 @@ async def add_competitor(competitor: CompetitorPrice) -> CompetitorPrice:
 # Break-Even Endpoints
 # ============================================================================
 
-@router.post("/breakeven/calculate", response_model=BreakEvenAnalysis)
+@router.post("/breakeven/calculate", response_model=BreakEvenAnalysis, summary="Calculate break-even point")
 async def calculate_break_even(
     fixed_costs_monthly: float = Query(..., ge=0),
     variable_cost_per_unit: float = Query(..., ge=0),
@@ -235,7 +235,7 @@ async def calculate_break_even(
     )
 
 
-@router.post("/breakeven/target-profit")
+@router.post("/breakeven/target-profit", summary="Calculate target profit volume")
 async def calculate_target_profit_volume(
     fixed_costs: float = Query(..., ge=0),
     variable_cost: float = Query(..., ge=0),
@@ -251,7 +251,7 @@ async def calculate_target_profit_volume(
     )
 
 
-@router.post("/breakeven/sensitivity")
+@router.post("/breakeven/sensitivity", summary="Run sensitivity analysis")
 async def run_sensitivity_analysis(
     fixed_costs: float = Query(..., ge=0),
     variable_cost: float = Query(..., ge=0),
@@ -273,7 +273,7 @@ async def run_sensitivity_analysis(
 # Cash Flow Endpoints
 # ============================================================================
 
-@router.post("/cashflow/project", response_model=CashFlowProjection)
+@router.post("/cashflow/project", response_model=CashFlowProjection, summary="Create cash flow projection")
 async def create_cash_flow_projection(
     projection_name: str = Query(..., min_length=1),
     months: int = Query(12, ge=1, le=60),
@@ -301,7 +301,7 @@ async def create_cash_flow_projection(
     )
 
 
-@router.post("/cashflow/startup", response_model=CashFlowProjection)
+@router.post("/cashflow/startup", response_model=CashFlowProjection, summary="Create startup projection")
 async def create_startup_projection(
     projection_name: str = Query(..., min_length=1),
     starting_cash: float = Query(..., ge=0),
@@ -330,7 +330,7 @@ async def create_startup_projection(
     )
 
 
-@router.post("/cashflow/required-capital")
+@router.post("/cashflow/required-capital", summary="Calculate required capital")
 async def calculate_required_capital(
     monthly_overhead: float = Query(..., ge=0),
     months_to_revenue: int = Query(3, ge=0, le=24),
@@ -360,7 +360,7 @@ async def calculate_required_capital(
 # Engineering Cost Estimator Endpoints
 # ============================================================================
 
-@router.post("/estimate/parametric", response_model=EstimateResult)
+@router.post("/estimate/parametric", response_model=EstimateResult, summary="Create parametric estimate")
 async def create_parametric_estimate(request: EstimateRequest) -> EstimateResult:
     """
     Create a parametric cost estimate for an instrument build.
@@ -377,7 +377,7 @@ async def create_parametric_estimate(request: EstimateRequest) -> EstimateResult
     return estimator_service.estimate(request)
 
 
-@router.post("/estimate/quote", response_model=QuoteResult)
+@router.post("/estimate/quote", response_model=QuoteResult, summary="Generate customer quote")
 async def generate_customer_quote(request: QuoteRequest) -> QuoteResult:
     """
     Generate a customer-facing quote from an estimate.
@@ -391,7 +391,7 @@ async def generate_customer_quote(request: QuoteRequest) -> QuoteResult:
     return estimator_service.generate_quote(request)
 
 
-@router.get("/estimate/factors")
+@router.get("/estimate/factors", summary="List complexity factors")
 async def list_complexity_factors():
     """
     List all complexity factors and their multipliers.
@@ -407,7 +407,7 @@ async def list_complexity_factors():
     return estimator_service.get_factors_summary()
 
 
-@router.get("/estimate/wbs/{instrument_type}")
+@router.get("/estimate/wbs/{instrument_type}", summary="Get WBS template")
 async def get_wbs_for_instrument(instrument_type: EstimatorInstrumentType):
     """
     Get the Work Breakdown Structure template for an instrument type.
@@ -449,7 +449,7 @@ async def get_wbs_for_instrument(instrument_type: EstimatorInstrumentType):
     }
 
 
-@router.get("/estimate/learning-curve")
+@router.get("/estimate/learning-curve", summary="Preview learning curve")
 async def preview_learning_curve(
     first_unit_hours: float = Query(..., ge=1, description="Hours for first unit"),
     quantity: int = Query(..., ge=1, le=100, description="Batch size"),
@@ -482,21 +482,21 @@ async def preview_learning_curve(
 # Pricing Goals Endpoints
 # ============================================================================
 
-@router.get("/goals")
+@router.get("/goals", summary="List pricing goals")
 async def list_goals():
     """List all pricing goals."""
     goals = goals_store.list_goals()
     return {"ok": True, "goals": goals, "total": len(goals)}
 
 
-@router.post("/goals")
+@router.post("/goals", summary="Create pricing goal")
 async def create_goal(request: GoalCreateRequest):
     """Create a new pricing goal."""
     goal = goals_store.create_goal(request)
     return {"ok": True, "goal": goal}
 
 
-@router.get("/goals/{goal_id}")
+@router.get("/goals/{goal_id}", summary="Get goal by ID")
 async def get_goal(goal_id: str):
     """Get a specific goal."""
     goal = goals_store.get_goal(goal_id)
@@ -505,7 +505,7 @@ async def get_goal(goal_id: str):
     return {"ok": True, "goal": goal}
 
 
-@router.patch("/goals/{goal_id}")
+@router.patch("/goals/{goal_id}", summary="Update goal")
 async def update_goal(goal_id: str, request: GoalUpdateRequest):
     """Update a goal."""
     goal = goals_store.update_goal(goal_id, request)
@@ -514,7 +514,7 @@ async def update_goal(goal_id: str, request: GoalUpdateRequest):
     return {"ok": True, "goal": goal}
 
 
-@router.delete("/goals/{goal_id}")
+@router.delete("/goals/{goal_id}", summary="Delete goal")
 async def delete_goal(goal_id: str):
     """Delete a goal."""
     if not goals_store.delete_goal(goal_id):
@@ -522,7 +522,7 @@ async def delete_goal(goal_id: str):
     return {"ok": True}
 
 
-@router.post("/goals/{goal_id}/link-estimate/{estimate_id}")
+@router.post("/goals/{goal_id}/link-estimate/{estimate_id}", summary="Link estimate to goal")
 async def link_estimate_to_goal(goal_id: str, estimate_id: str):
     """Link an estimate to a goal."""
     goal = goals_store.link_estimate(goal_id, estimate_id)
@@ -535,7 +535,7 @@ async def link_estimate_to_goal(goal_id: str, estimate_id: str):
 # Health Check
 # ============================================================================
 
-@router.get("/health")
+@router.get("/health", summary="Business module health check")
 async def business_health():
     """Health check for business module."""
     return {

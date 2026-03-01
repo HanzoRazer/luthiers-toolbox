@@ -69,7 +69,7 @@ def _blob_download_url(sha256: str) -> str:
     return f"/api/advisory/blobs/{sha256}/download"
 
 
-@router.get("/providers", response_model=ProvidersResponse)
+@router.get("/providers", response_model=ProvidersResponse, summary="List AI image providers")
 def list_providers() -> ProvidersResponse:
     """List available AI image providers and their configuration status."""
     providers = []
@@ -85,7 +85,7 @@ def list_providers() -> ProvidersResponse:
     return ProvidersResponse(providers=providers)
 
 
-@router.post("/generate", response_model=VisionGenerateResponse)
+@router.post("/generate", response_model=VisionGenerateResponse, summary="Generate images via AI")
 def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResponse:
     """
     Generate images via AI provider and store in CAS.
@@ -157,13 +157,13 @@ def generate(req: Request, payload: VisionGenerateRequest) -> VisionGenerateResp
     return VisionGenerateResponse(assets=assets, request_id=request_id)
 
 
-@router.get("/vocabulary", response_model=VisionVocabularyResponse)
+@router.get("/vocabulary", response_model=VisionVocabularyResponse, summary="Get vocabulary for UI dropdowns")
 def get_vocabulary() -> VisionVocabularyResponse:
     """Return vocabulary lists for UI dropdowns."""
     return VisionVocabularyResponse(vocabulary=vision_vocabulary())
 
 
-@router.post("/prompt", response_model=VisionPromptPreviewResponse)
+@router.post("/prompt", response_model=VisionPromptPreviewResponse, summary="Preview engineered prompt")
 def preview_prompt(payload: VisionPromptPreviewRequest) -> VisionPromptPreviewResponse:
     """Return an engineered prompt preview (no generation)."""
     p = engineer_guitar_prompt(payload.prompt, style=payload.style)
@@ -174,7 +174,7 @@ def preview_prompt(payload: VisionPromptPreviewRequest) -> VisionPromptPreviewRe
     )
 
 
-@router.post("/feedback")
+@router.post("/feedback", summary="Deprecated: use RMOS review/promote")
 def feedback() -> Dict[str, Any]:
     """Deprecated endpoint.
 
@@ -189,7 +189,7 @@ def feedback() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-@router.post("/segment", response_model=SegmentResponse)
+@router.post("/segment", response_model=SegmentResponse, summary="Segment guitar body from image")
 async def segment_guitar(
     file: UploadFile = File(..., description="Guitar image (PNG, JPG, WebP)"),
     target_width_mm: float = Form(400.0, description="Target body width in mm"),
@@ -293,7 +293,7 @@ async def segment_guitar(
     return response
 
 
-@router.post("/photo-to-gcode", response_model=PhotoToGcodeResponse)
+@router.post("/photo-to-gcode", response_model=PhotoToGcodeResponse, summary="Convert photo to G-code")
 async def photo_to_gcode(
     file: UploadFile = File(..., description="Guitar image (PNG, JPG, WebP)"),
     target_width_mm: float = Form(400.0, description="Target body width in mm"),
