@@ -291,6 +291,13 @@ const routes: RouteRecordRaw[] = [
     name: "VisionAttachTest",
     component: () => import("@/views/VisionAttachTestView.vue"),
   },
+
+  // Dev: UI Sandbox — design tokens, component gallery, nav/layout prototypes
+  {
+    path: "/dev/sandbox",
+    name: "DevSandbox",
+    component: () => import("@/views/dev/SandboxView.vue"),
+  },
 ];
 
 const router = createRouter({

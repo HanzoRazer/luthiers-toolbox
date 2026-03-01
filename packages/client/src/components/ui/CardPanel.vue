@@ -5,9 +5,11 @@
  * Reduces repetitive card/section patterns across god objects.
  * Provides consistent styling for bordered sections with optional header.
  */
+import { ref } from 'vue'
+
 defineOptions({ name: 'CardPanel' })
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   title?: string
   collapsible?: boolean
   defaultCollapsed?: boolean
@@ -15,14 +17,6 @@ withDefaults(defineProps<{
   collapsible: false,
   defaultCollapsed: false,
 })
-
-import { ref } from 'vue'
-
-const props = defineProps<{
-  title?: string
-  collapsible?: boolean
-  defaultCollapsed?: boolean
-}>()
 
 const collapsed = ref(props.defaultCollapsed)
 
