@@ -18,10 +18,10 @@
 import { computed } from "vue";
 
 export interface BottleneckCaps {
-  feed_cap: number;
-  accel: number;
-  jerk: number;
-  none: number;
+  feed_cap?: number;
+  accel?: number;
+  jerk?: number;
+  none?: number;
 }
 
 export interface PlanStats {
@@ -47,7 +47,7 @@ interface PieSlice {
 }
 
 const capsPie = computed<PieSlice[]>(() => {
-  const c = props.stats?.caps || { feed_cap: 0, accel: 0, jerk: 0, none: 0 };
+  const c = { feed_cap: 0, accel: 0, jerk: 0, none: 0, ...props.stats?.caps };
   const total = Math.max(1, c.feed_cap + c.accel + c.jerk + c.none);
   return [
     { label: "Feed cap", v: c.feed_cap, color: "#f59e0b" },

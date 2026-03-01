@@ -5,12 +5,12 @@
  */
 
 interface ToolpathStats {
-  length_mm: number
-  area_mm2: number
-  time_s_classic: number
-  time_s_jerk: number | null
-  move_count: number
-  volume_mm3: number
+  length_mm?: number
+  area_mm2?: number
+  time_s_classic?: number
+  time_s_jerk?: number | null
+  move_count?: number
+  volume_mm3?: number
   tight_segments?: number
   trochoid_arcs?: number
 }
@@ -26,18 +26,18 @@ defineProps<{
     class="stats-panel text-sm mt-2 p-2 bg-slate-100 rounded"
   >
     <div class="grid grid-cols-2 gap-2">
-      <div><b>Length:</b> {{ stats.length_mm }} mm</div>
-      <div><b>Area:</b> {{ stats.area_mm2 }} mm²</div>
+      <div><b>Length:</b> {{ stats.length_mm ?? 0 }} mm</div>
+      <div><b>Area:</b> {{ stats.area_mm2 ?? 0 }} mm²</div>
       <div>
         <b>Time (Classic):</b>
-        {{ stats.time_s_classic }} s ({{ (stats.time_s_classic / 60).toFixed(1) }} min)
+        {{ stats.time_s_classic ?? 0 }} s ({{ ((stats.time_s_classic ?? 0) / 60).toFixed(1) }} min)
       </div>
       <div v-if="stats.time_s_jerk !== null">
         <b>Time (Jerk):</b>
-        {{ stats.time_s_jerk }} s ({{ (stats.time_s_jerk / 60).toFixed(1) }} min)
+        {{ stats.time_s_jerk ?? 0 }} s ({{ ((stats.time_s_jerk ?? 0) / 60).toFixed(1) }} min)
       </div>
-      <div><b>Moves:</b> {{ stats.move_count }}</div>
-      <div><b>Volume:</b> {{ stats.volume_mm3 }} mm³</div>
+      <div><b>Moves:</b> {{ stats.move_count ?? 0 }}</div>
+      <div><b>Volume:</b> {{ stats.volume_mm3 ?? 0 }} mm³</div>
       <div><b>Tight Segments:</b> {{ stats.tight_segments || 0 }}</div>
       <div><b>Trochoid Arcs:</b> {{ stats.trochoid_arcs || 0 }}</div>
     </div>
