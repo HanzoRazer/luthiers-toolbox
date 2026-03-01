@@ -47,7 +47,7 @@ class GoalsStore:
         if request.notes is not None:
             goal.notes = request.notes
         
-        goal.updated_at = datetime.utcnow()
+        goal.updated_at = datetime.utcnow().isoformat()
         self._update_progress(goal)
         return goal
     
@@ -63,7 +63,7 @@ class GoalsStore:
             return None
         if estimate_id not in goal.estimate_ids:
             goal.estimate_ids.append(estimate_id)
-        goal.updated_at = datetime.utcnow()
+        goal.updated_at = datetime.utcnow().isoformat()
         return goal
     
     def update_best(self, goal_id: str, cost: float, hours: float) -> Optional[Goal]:
@@ -77,7 +77,7 @@ class GoalsStore:
             goal.current_best_hours = hours
         
         self._update_progress(goal)
-        goal.updated_at = datetime.utcnow()
+        goal.updated_at = datetime.utcnow().isoformat()
         return goal
     
     def _update_progress(self, goal: Goal) -> None:
