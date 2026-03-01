@@ -17,6 +17,10 @@ import type {
 import EstimatorInputsPanel from "./EstimatorInputsPanel.vue";
 import WbsBreakdownTab from "./WbsBreakdownTab.vue";
 import MaterialsTab from "./MaterialsTab.vue";
+import BackCalcTab from "./BackCalcTab.vue";
+import QuoteTab from "./QuoteTab.vue";
+import EstimatorDiffPanel from "./EstimatorDiffPanel.vue";
+import EstimatorValidationStep from "./EstimatorValidationStep.vue";
 import RiskBadge from "@/components/ui/RiskBadge.vue";
 import WhyCard from "@/components/ui/WhyCard.vue";
 
@@ -28,8 +32,11 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const factors = ref<ComplexityFactors | null>(null);
 const estimate = ref<EstimateResult | null>(null);
+const previousEstimate = ref<EstimateResult | null>(null);
 const learningCurve = ref<LearningCurveProjection | null>(null);
-const activeTab = ref<"wbs" | "learning" | "materials" | "summary">("summary");
+const activeTab = ref<"wbs" | "learning" | "materials" | "summary" | "backcalc" | "quote">("summary");
+const showValidation = ref(false);
+const showDiff = ref(false);
 
 // Form state (body_complexity is array for multi-select)
 const form = ref<EstimateRequest>({
@@ -91,7 +98,13 @@ async function loadFactors() {
 async function runEstimate() {
   loading.value = true;
   error.value = null;
+  showValidation.value = false;
   try {
+    // Store previous estimate for diff comparison
+    if (estimate.value) {
+      previousEstimate.value = { ...estimate.value };
+    }
+
     estimate.value = await businessEstimator.createEstimate(form.value);
 
     // Also load learning curve if batch > 1
@@ -111,6 +124,22 @@ async function runEstimate() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleHourlyRateUpdate(rate: number) {
+  form.value.hourly_rate = rate;
+}
+
+function showValidationPreview() {
+  showValidation.value = true;
+}
+
+function hideValidation() {
+  showValidation.value = false;
+}
+
+function toggleDiff() {
+  showDiff.value = !showDiff.value;
 }
 
 // Auto-run estimate when form changes (debounced)
@@ -186,6 +215,8 @@ runEstimate();
             <button :class="{ active: activeTab === 'wbs' }" @click="activeTab = 'wbs'">WBS Breakdown</button>
             <button :class="{ active: activeTab === 'materials' }" @click="activeTab = 'materials'">Materials</button>
             <button :class="{ active: activeTab === 'learning' }" @click="activeTab = 'learning'">Learning Curve</button>
+            <button :class="{ active: activeTab === 'backcalc' }" @click="activeTab = 'backcalc'">Back-Calc</button>
+            <button :class="{ active: activeTab === 'quote' }" @click="activeTab = 'quote'">Quote</button>
           </div>
 
           <!-- Summary Tab -->
@@ -284,7 +315,41 @@ runEstimate();
               </div>
             </template>
           </div>
+
+          <!-- Back-Calc Tab -->
+          <BackCalcTab
+            v-if="activeTab === 'backcalc'"
+            :estimate="estimate"
+            :current-hourly-rate="form.hourly_rate ?? 45"
+            @update-hourly-rate="handleHourlyRateUpdate"
+          />
+
+          <!-- Quote Tab -->
+          <QuoteTab
+            v-if="activeTab === 'quote'"
+            :estimate="estimate"
+          />
+
+          <!-- Diff Panel (collapsible) -->
+          <div v-if="previousEstimate && estimate" class="diff-toggle-section">
+            <button type="button" class="diff-toggle-btn" @click="toggleDiff">
+              {{ showDiff ? '▾ Hide Comparison' : '▸ Compare with Previous' }}
+            </button>
+            <EstimatorDiffPanel
+              v-if="showDiff"
+              :before="previousEstimate"
+              :after="estimate"
+            />
+          </div>
         </template>
+
+        <!-- Validation Preview (shown before running estimate) -->
+        <EstimatorValidationStep
+          v-if="showValidation && !loading && !estimate"
+          :request="form"
+          @proceed="runEstimate"
+          @back="hideValidation"
+        />
       </main>
     </div>
   </div>
@@ -357,5 +422,32 @@ runEstimate();
 .lc-bar .unit-label {
   position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
   font-size: 8px; color: #506090;
+}
+
+/* Diff Toggle Section */
+.diff-toggle-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #1e2438;
+}
+
+.diff-toggle-btn {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: 1px dashed #2a3040;
+  color: #6080b0;
+  font-size: 11px;
+  font-family: inherit;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+}
+
+.diff-toggle-btn:hover {
+  border-color: #4060c0;
+  color: #80a0d0;
 }
 </style>
