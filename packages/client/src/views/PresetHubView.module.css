@@ -56,8 +56,10 @@
   text-align: right;
 }
 
-.tooltipRow .valueCode {
-  composes: value;
+.valueCode {
+  color: #1a1a1a;
+  font-weight: 600;
+  text-align: right;
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 11px;
   background: #f5f5f5;
@@ -65,19 +67,22 @@
   border-radius: 3px;
 }
 
-.tooltipRow .valueSuccess {
-  composes: value;
+.valueSuccess {
   color: #10b981;
+  font-weight: 600;
+  text-align: right;
 }
 
-.tooltipRow .valueWarning {
-  composes: value;
+.valueWarning {
   color: #f59e0b;
+  font-weight: 600;
+  text-align: right;
 }
 
-.tooltipRow .valueNeutral {
-  composes: value;
+.valueNeutral {
   color: #6b7280;
+  font-weight: 600;
+  text-align: right;
 }
 
 .tooltipFooter {
