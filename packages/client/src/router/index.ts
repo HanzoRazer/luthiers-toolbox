@@ -78,6 +78,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/lab/RiskTimelineLab.vue"),
   },
 
+  // Machine Manager
+  {
+    path: "/lab/machines",
+    name: "LabMachines",
+    component: () => import("@/views/lab/MachineManagerView.vue"),
+  },
+
   // CAM Settings (match nav link)
   {
     path: "/settings/cam",
@@ -149,6 +156,28 @@ const routes: RouteRecordRaw[] = [
     path: "/art-studio/v16",
     name: "ArtStudioV16",
     component: () => import("@/views/ArtStudioV16.vue"),
+  },
+  {
+    path: "/art-studio/relief",
+    name: "ArtStudioRelief",
+    component: () => import("@/views/art-studio/ReliefCarvingView.vue"),
+  },
+  {
+    path: "/art-studio/inlay",
+    name: "ArtStudioInlay",
+    component: () => import("@/views/art-studio/InlayDesignerView.vue"),
+  },
+  {
+    path: "/art-studio/vcarve",
+    name: "ArtStudioVCarve",
+    component: () => import("@/views/art-studio/VCarveView.vue"),
+  },
+
+  // Preset Hub
+  {
+    path: "/preset-hub",
+    name: "PresetHub",
+    component: () => import("@/views/PresetHubView.vue"),
   },
 
   // Pipeline Lab
