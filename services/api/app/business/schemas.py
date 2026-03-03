@@ -380,3 +380,18 @@ class Goal(BaseModel):
     deadline: Optional[str] = None
     notes: Optional[str] = None
     estimate_ids: List[str] = Field(default_factory=list)
+
+
+class GoalResponse(BaseModel):
+    """Response wrapper for a single goal."""
+    ok: bool
+    goal: Optional[Goal] = None
+    error: Optional[str] = None
+
+
+class GoalListResponse(BaseModel):
+    """Response wrapper for goal list."""
+    ok: bool
+    goals: List[Goal] = Field(default_factory=list)
+    total: int = 0
+    error: Optional[str] = None

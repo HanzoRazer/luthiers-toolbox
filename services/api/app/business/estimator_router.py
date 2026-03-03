@@ -1,9 +1,19 @@
 # services/api/app/business/estimator_router.py
 """Estimator Router - API endpoints for cost estimation."""
 from __future__ import annotations
+from typing import Optional
 from fastapi import APIRouter, HTTPException
-from .schemas import EstimateRequest, EstimateResponse, GoalCreateRequest, GoalUpdateRequest, Goal, GoalResponse, GoalListResponse
+from pydantic import BaseModel
+from .estimator.schemas import EstimateRequest, EstimateResult
+from .schemas import GoalCreateRequest, GoalUpdateRequest, Goal, GoalResponse, GoalListResponse
 from .estimator_service import compute_estimate
+
+
+class EstimateResponse(BaseModel):
+    """Response wrapper for estimate results."""
+    ok: bool
+    estimate: Optional[EstimateResult] = None
+    error: Optional[str] = None
 from .goals_service import goals_store
 
 router = APIRouter(prefix="/api/business/estimator", tags=["business"])
