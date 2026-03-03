@@ -152,14 +152,14 @@ onMounted(async () => {
   try {
     const res = await getProviders()
     providers.value = res.providers ?? []
-  } catch {}
+  } catch { /* API may be unavailable */ }
   try {
     const res = await listRecentRuns()
     runs.value = (res as any).runs ?? []
     if (!selectedRunId.value && runs.value.length) {
       selectedRunId.value = runs.value[0].run_id as any
     }
-  } catch {}
+  } catch { /* API may be unavailable */ }
   if (selectedRunId.value) await refreshVariants()
 })
 </script>

@@ -5,8 +5,12 @@
       <div class="sidebar-header">
         <span class="sidebar-logo">🎸</span>
         <div>
-          <div class="sidebar-title">Dev Sandbox</div>
-          <div class="sidebar-sub">Production Shop UI Lab</div>
+          <div class="sidebar-title">
+            Dev Sandbox
+          </div>
+          <div class="sidebar-sub">
+            Production Shop UI Lab
+          </div>
         </div>
       </div>
 
@@ -16,7 +20,9 @@
           :key="section.id"
           class="nav-section"
         >
-          <div class="nav-section-label">{{ section.label }}</div>
+          <div class="nav-section-label">
+            {{ section.label }}
+          </div>
           <button
             v-for="item in section.items"
             :key="item.id"
@@ -31,14 +37,21 @@
       </nav>
 
       <div class="sidebar-footer">
-        <RouterLink to="/" class="back-link">← Back to App</RouterLink>
+        <RouterLink
+          to="/"
+          class="back-link"
+        >
+          ← Back to App
+        </RouterLink>
       </div>
     </aside>
 
     <!-- Main content -->
     <main class="sandbox-main">
       <div class="sandbox-toolbar">
-        <h1 class="panel-title">{{ currentPanel?.label }}</h1>
+        <h1 class="panel-title">
+          {{ currentPanel?.label }}
+        </h1>
         <div class="toolbar-meta">
           <span class="meta-chip">Vue 3 + TypeScript</span>
           <span class="meta-chip">Tailwind + CSS Tokens</span>

@@ -285,5 +285,5 @@ def save_metrics_after_tests(request):
     if request.session.testsfailed == 0:
         try:
             save_metrics_snapshot()
-        except Exception:
+        except Exception:  # test-fixture: best-effort metrics save, must not fail suite
             pass  # Don't fail tests if metrics save fails

@@ -93,9 +93,9 @@
         :bass="bass"
         :slot-polygon-points="slotPolygonPoints"
         :exporting="exporting"
-        @copyJSON="copyJSON"
-        @downloadSVG="downloadSVG"
-        @exportDXF="exportDXF"
+        @copy-j-s-o-n="copyJSON"
+        @download-s-v-g="downloadSVG"
+        @export-d-x-f="exportDXF"
       />
     </div>
 

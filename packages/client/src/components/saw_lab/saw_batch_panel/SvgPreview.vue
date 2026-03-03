@@ -1,6 +1,8 @@
 <template>
   <div :class="styles.svgPreview">
-    <h3 :class="styles.sectionTitle">Batch Path Preview</h3>
+    <h3 :class="styles.sectionTitle">
+      Batch Path Preview
+    </h3>
     <svg
       :viewBox="svgViewBox"
       width="100%"

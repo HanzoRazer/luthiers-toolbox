@@ -184,13 +184,24 @@ runEstimate();
     <header class="estimator-header">
       <div class="header-left">
         <h1>Engineering Estimator</h1>
-        <p class="subtitle">WBS · Complexity Factors · Learning Curve · Material Yield</p>
+        <p class="subtitle">
+          WBS · Complexity Factors · Learning Curve · Material Yield
+        </p>
         <EstimatorSyncStatus class="header-sync" />
       </div>
-      <div class="header-right" v-if="estimate">
-        <div class="price-display">{{ totalPrice }}</div>
-        <div class="price-label">Estimated Cost</div>
-        <div class="price-range">{{ priceRange }}</div>
+      <div
+        v-if="estimate"
+        class="header-right"
+      >
+        <div class="price-display">
+          {{ totalPrice }}
+        </div>
+        <div class="price-label">
+          Estimated Cost
+        </div>
+        <div class="price-range">
+          {{ priceRange }}
+        </div>
       </div>
     </header>
 
@@ -201,48 +212,122 @@ runEstimate();
       <!-- Right: Results -->
       <main class="results-panel">
         <!-- Loading -->
-        <div v-if="loading" class="loading">Calculating...</div>
+        <div
+          v-if="loading"
+          class="loading"
+        >
+          Calculating...
+        </div>
 
         <!-- Error -->
-        <div v-else-if="error" class="error">{{ error }}</div>
+        <div
+          v-else-if="error"
+          class="error"
+        >
+          {{ error }}
+        </div>
 
         <!-- Results -->
         <template v-else-if="estimate">
           <!-- KPI Strip -->
           <div class="kpi-strip">
             <div class="kpi">
-              <div class="kpi-value">{{ estimate.total_hours.toFixed(1) }}h</div>
-              <div class="kpi-label">Total Hours</div>
+              <div class="kpi-value">
+                {{ estimate.total_hours.toFixed(1) }}h
+              </div>
+              <div class="kpi-label">
+                Total Hours
+              </div>
             </div>
             <div class="kpi">
-              <div class="kpi-value">${{ estimate.labor_cost_per_unit.toFixed(0) }}</div>
-              <div class="kpi-label">Labor Cost</div>
+              <div class="kpi-value">
+                ${{ estimate.labor_cost_per_unit.toFixed(0) }}
+              </div>
+              <div class="kpi-label">
+                Labor Cost
+              </div>
             </div>
             <div class="kpi">
-              <div class="kpi-value">${{ estimate.material_cost_per_unit.toFixed(0) }}</div>
-              <div class="kpi-label">Materials</div>
+              <div class="kpi-value">
+                ${{ estimate.material_cost_per_unit.toFixed(0) }}
+              </div>
+              <div class="kpi-label">
+                Materials
+              </div>
             </div>
             <div class="kpi">
-              <div class="kpi-value">{{ estimate.total_complexity_multiplier.toFixed(2) }}×</div>
-              <div class="kpi-label">Complexity</div>
+              <div class="kpi-value">
+                {{ estimate.total_complexity_multiplier.toFixed(2) }}×
+              </div>
+              <div class="kpi-label">
+                Complexity
+              </div>
             </div>
           </div>
 
           <!-- Tabs -->
           <div class="tabs">
-            <button :class="{ active: activeTab === 'summary' }" @click="activeTab = 'summary'">Summary</button>
-            <button :class="{ active: activeTab === 'wbs' }" @click="activeTab = 'wbs'">WBS Breakdown</button>
-            <button :class="{ active: activeTab === 'materials' }" @click="activeTab = 'materials'">Materials</button>
-            <button :class="{ active: activeTab === 'learning' }" @click="activeTab = 'learning'">Learning Curve</button>
-            <button :class="{ active: activeTab === 'backcalc' }" @click="activeTab = 'backcalc'">Back-Calc</button>
-            <button :class="{ active: activeTab === 'quote' }" @click="activeTab = 'quote'">Quote</button>
-            <button :class="{ active: activeTab === 'export' }" @click="activeTab = 'export'">Export</button>
-            <button :class="{ active: activeTab === 'analytics' }" @click="activeTab = 'analytics'">Analytics</button>
-            <button :class="{ active: activeTab === 'compare' }" @click="activeTab = 'compare'">Compare</button>
+            <button
+              :class="{ active: activeTab === 'summary' }"
+              @click="activeTab = 'summary'"
+            >
+              Summary
+            </button>
+            <button
+              :class="{ active: activeTab === 'wbs' }"
+              @click="activeTab = 'wbs'"
+            >
+              WBS Breakdown
+            </button>
+            <button
+              :class="{ active: activeTab === 'materials' }"
+              @click="activeTab = 'materials'"
+            >
+              Materials
+            </button>
+            <button
+              :class="{ active: activeTab === 'learning' }"
+              @click="activeTab = 'learning'"
+            >
+              Learning Curve
+            </button>
+            <button
+              :class="{ active: activeTab === 'backcalc' }"
+              @click="activeTab = 'backcalc'"
+            >
+              Back-Calc
+            </button>
+            <button
+              :class="{ active: activeTab === 'quote' }"
+              @click="activeTab = 'quote'"
+            >
+              Quote
+            </button>
+            <button
+              :class="{ active: activeTab === 'export' }"
+              @click="activeTab = 'export'"
+            >
+              Export
+            </button>
+            <button
+              :class="{ active: activeTab === 'analytics' }"
+              @click="activeTab = 'analytics'"
+            >
+              Analytics
+            </button>
+            <button
+              :class="{ active: activeTab === 'compare' }"
+              @click="activeTab = 'compare'"
+            >
+              Compare
+            </button>
           </div>
 
           <!-- Summary Tab -->
-          <div v-if="activeTab === 'summary'" class="tab-content">
+          <div
+            v-if="activeTab === 'summary'"
+            class="tab-content"
+          >
             <div class="summary-grid">
               <div class="summary-item">
                 <span class="label">Instrument</span>
@@ -263,7 +348,10 @@ runEstimate();
               <div class="summary-item">
                 <span class="label">Confidence</span>
                 <span class="value">
-                  <RiskBadge :level="confidenceToRisk(estimate.confidence_level)" size="md" />
+                  <RiskBadge
+                    :level="confidenceToRisk(estimate.confidence_level)"
+                    size="md"
+                  />
                 </span>
               </div>
               <div class="summary-item highlight">
@@ -272,10 +360,18 @@ runEstimate();
               </div>
             </div>
 
-            <div v-if="estimate.notes.length" class="notes">
+            <div
+              v-if="estimate.notes.length"
+              class="notes"
+            >
               <h4>Notes</h4>
               <ul>
-                <li v-for="(note, i) in estimate.notes" :key="i">{{ note }}</li>
+                <li
+                  v-for="(note, i) in estimate.notes"
+                  :key="i"
+                >
+                  {{ note }}
+                </li>
               </ul>
             </div>
 
@@ -303,8 +399,14 @@ runEstimate();
           />
 
           <!-- Learning Curve Tab -->
-          <div v-if="activeTab === 'learning'" class="tab-content">
-            <p v-if="!learningCurve" class="muted">
+          <div
+            v-if="activeTab === 'learning'"
+            class="tab-content"
+          >
+            <p
+              v-if="!learningCurve"
+              class="muted"
+            >
               Set batch size > 1 to see learning curve projection.
             </p>
             <template v-else>
@@ -370,8 +472,15 @@ runEstimate();
           />
 
           <!-- Diff Panel (collapsible) -->
-          <div v-if="previousEstimate && estimate" class="diff-toggle-section">
-            <button type="button" class="diff-toggle-btn" @click="toggleDiff">
+          <div
+            v-if="previousEstimate && estimate"
+            class="diff-toggle-section"
+          >
+            <button
+              type="button"
+              class="diff-toggle-btn"
+              @click="toggleDiff"
+            >
               {{ showDiff ? '▾ Hide Comparison' : '▸ Compare with Previous' }}
             </button>
             <EstimatorDiffPanel
@@ -392,7 +501,10 @@ runEstimate();
       </main>
 
       <!-- Right Sidebar: Presets & History -->
-      <aside v-if="showSidebar" class="sidebar-panel">
+      <aside
+        v-if="showSidebar"
+        class="sidebar-panel"
+      >
         <div class="sidebar-header">
           <div class="sidebar-tabs">
             <button
@@ -420,7 +532,12 @@ runEstimate();
               Goals
             </button>
           </div>
-          <button type="button" class="sidebar-close" @click="toggleSidebar" title="Hide sidebar">
+          <button
+            type="button"
+            class="sidebar-close"
+            title="Hide sidebar"
+            @click="toggleSidebar"
+          >
             ×
           </button>
         </div>
@@ -452,8 +569,8 @@ runEstimate();
         v-if="!showSidebar"
         type="button"
         class="sidebar-toggle-collapsed"
-        @click="toggleSidebar"
         title="Show sidebar"
+        @click="toggleSidebar"
       >
         ☰
       </button>

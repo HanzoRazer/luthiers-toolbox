@@ -1,6 +1,8 @@
 <template>
   <div class="p-3 space-y-3 border rounded">
-    <h3 class="text-lg font-semibold">Adaptive Pocket Lab</h3>
+    <h3 class="text-lg font-semibold">
+      Adaptive Pocket Lab
+    </h3>
 
     <div class="grid md:grid-cols-3 gap-3">
       <div class="space-y-2">
@@ -77,9 +79,6 @@
         />
 
         <OptimizeForMachinePanel
-          :opt-out="optOut"
-          :has-toolpath="moves.length > 0"
-          :has-machine="!!machineId"
           v-model:opt-feed-lo="optFeedLo"
           v-model:opt-feed-hi="optFeedHi"
           v-model:opt-stp-lo="optStpLo"
@@ -88,8 +87,11 @@
           v-model:opt-rpm-hi="optRpmHi"
           v-model:opt-flutes="optFlutes"
           v-model:opt-chip="optChip"
+          :opt-out="optOut"
           v-model:opt-grid-f="optGridF"
+          :has-toolpath="moves.length > 0"
           v-model:opt-grid-s="optGridS"
+          :has-machine="!!machineId"
           v-model:enforce-chip="enforceChip"
           v-model:chip-tol="chipTol"
           :disabled="false"
@@ -112,14 +114,14 @@
       </div>
 
       <HeatTimeSeriesPanel
-        :has-moves="moves.length > 0"
-        :material-id="materialId"
-        :profile-id="machineId"
-        :heat-ts="heatTS"
         v-model:include-csv-links="includeCsvLinks"
         v-model:adopt-overrides="adoptOverrides"
         v-model:live-learn-applied="liveLearnApplied"
         v-model:measured-seconds="measuredSeconds"
+        :has-moves="moves.length > 0"
+        :material-id="materialId"
+        :profile-id="machineId"
+        :heat-ts="heatTS"
         :session-override-factor="sessionOverrideFactor"
         @run-heat-ts="handleRunHeatTS"
         @export-report="handleExportThermalReport"
@@ -137,15 +139,34 @@
           @export-csv="handleExportBottleneckCsv"
         />
 
-        <canvas ref="cv" class="w-full h-[420px] border rounded bg-gray-50" />
+        <canvas
+          ref="cv"
+          class="w-full h-[420px] border rounded bg-gray-50"
+        />
         <ToolpathStatsPanel :stats="stats" />
       </div>
     </div>
 
-    <PreviewNcDrawer :open="ncOpen" :gcode-text="ncText" @close="ncOpen = false" />
-    <CompareAfModes v-model="compareOpen" :request-body="buildBaseExportBody()" @make-default="handleMakeDefault" />
-    <MachineEditorModal v-model="machineEditorOpen" :profile="selMachine" @saved="onMachineSaved" />
-    <CompareMachines v-model="compareMachinesOpen" :machines="machines" :body="buildBaseExportBody()" />
+    <PreviewNcDrawer
+      :open="ncOpen"
+      :gcode-text="ncText"
+      @close="ncOpen = false"
+    />
+    <CompareAfModes
+      v-model="compareOpen"
+      :request-body="buildBaseExportBody()"
+      @make-default="handleMakeDefault"
+    />
+    <MachineEditorModal
+      v-model="machineEditorOpen"
+      :profile="selMachine"
+      @saved="onMachineSaved"
+    />
+    <CompareMachines
+      v-model="compareMachinesOpen"
+      :machines="machines"
+      :body="buildBaseExportBody()"
+    />
     <CompareSettings
       v-model="compareSettingsOpen"
       :baseline-nc="compareData.baselineNc"

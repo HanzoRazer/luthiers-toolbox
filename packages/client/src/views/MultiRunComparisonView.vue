@@ -97,38 +97,70 @@
       <!-- Summary Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Runs Compared</p>
-          <p class="text-2xl font-bold">{{ comparisonResult.runs.length }}</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Runs Compared
+          </p>
+          <p class="text-2xl font-bold">
+            {{ comparisonResult.runs.length }}
+          </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Time</p>
-          <p class="text-2xl font-bold">{{ comparisonResult.avg_time_s ? comparisonResult.avg_time_s.toFixed(1) : 'N/A' }}s</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Time
+          </p>
+          <p class="text-2xl font-bold">
+            {{ comparisonResult.avg_time_s ? comparisonResult.avg_time_s.toFixed(1) : 'N/A' }}s
+          </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Energy</p>
-          <p class="text-2xl font-bold">{{ comparisonResult.avg_energy_j ? comparisonResult.avg_energy_j.toFixed(0) : 'N/A' }}J</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Energy
+          </p>
+          <p class="text-2xl font-bold">
+            {{ comparisonResult.avg_energy_j ? comparisonResult.avg_energy_j.toFixed(0) : 'N/A' }}J
+          </p>
         </div>
         <div class="bg-white border rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-1">Avg Moves</p>
-          <p class="text-2xl font-bold">{{ comparisonResult.avg_move_count || 'N/A' }}</p>
+          <p class="text-sm text-gray-600 mb-1">
+            Avg Moves
+          </p>
+          <p class="text-2xl font-bold">
+            {{ comparisonResult.avg_move_count || 'N/A' }}
+          </p>
         </div>
       </div>
 
       <!-- Time Comparison Chart -->
       <div class="bg-white border rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-3">Time Comparison</h3>
-        <div v-if="chartData.labels.length > 0" class="h-64">
+        <h3 class="text-lg font-semibold mb-3">
+          Time Comparison
+        </h3>
+        <div
+          v-if="chartData.labels.length > 0"
+          class="h-64"
+        >
           <canvas ref="timeChartCanvas" />
         </div>
-        <p v-else class="text-center text-gray-500 py-8">No time data available for charting</p>
+        <p
+          v-else
+          class="text-center text-gray-500 py-8"
+        >
+          No time data available for charting
+        </p>
       </div>
 
       <!-- Actions -->
       <div class="flex gap-4">
-        <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" @click="exportComparisonCSV">
+        <button
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          @click="exportComparisonCSV"
+        >
           Export as CSV
         </button>
-        <button class="px-4 py-2 border rounded hover:bg-gray-50" @click="resetComparison">
+        <button
+          class="px-4 py-2 border rounded hover:bg-gray-50"
+          @click="resetComparison"
+        >
           New Comparison
         </button>
       </div>

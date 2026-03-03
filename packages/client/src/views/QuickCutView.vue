@@ -189,7 +189,9 @@ function reset() {
   <div :class="styles.quickCutView">
     <header :class="styles.qcHeader">
       <h1>Quick Cut</h1>
-      <p :class="styles.subtitle">DXF to G-code in 3 steps</p>
+      <p :class="styles.subtitle">
+        DXF to G-code in 3 steps
+      </p>
     </header>
 
     <!-- Step Indicator -->
@@ -198,12 +200,12 @@ function reset() {
         <span :class="currentStep === 1 ? styles.stepNumActive : currentStep > 1 ? styles.stepNumDone : styles.stepNum">1</span>
         <span :class="styles.stepLabel">Upload</span>
       </div>
-      <div :class="currentStep > 1 ? styles.stepLineDone : styles.stepLine"></div>
+      <div :class="currentStep > 1 ? styles.stepLineDone : styles.stepLine" />
       <div :class="currentStep === 2 ? styles.stepActive : currentStep > 2 ? styles.stepDone : styles.step">
         <span :class="currentStep === 2 ? styles.stepNumActive : currentStep > 2 ? styles.stepNumDone : styles.stepNum">2</span>
         <span :class="styles.stepLabel">Configure</span>
       </div>
-      <div :class="currentStep > 2 ? styles.stepLineDone : styles.stepLine"></div>
+      <div :class="currentStep > 2 ? styles.stepLineDone : styles.stepLine" />
       <div :class="currentStep === 3 ? styles.stepActive : styles.step">
         <span :class="currentStep === 3 ? styles.stepNumActive : styles.stepNum">3</span>
         <span :class="styles.stepLabel">Export</span>
@@ -211,7 +213,10 @@ function reset() {
     </div>
 
     <!-- Step 1: Upload DXF -->
-    <div v-if="currentStep === 1" :class="styles.stepContent">
+    <div
+      v-if="currentStep === 1"
+      :class="styles.stepContent"
+    >
       <div
         :class="dxfFile ? styles.uploadZoneHasFile : styles.uploadZone"
         @drop="handleDrop"
@@ -220,22 +225,42 @@ function reset() {
         <input
           type="file"
           accept=".dxf"
-          @change="handleFileUpload"
           :style="{ display: dxfFile ? 'none' : 'block' }"
-        />
-        <div v-if="!dxfFile" :class="styles.uploadPrompt">
-          <p :class="styles.uploadIcon">📄</p>
+          @change="handleFileUpload"
+        >
+        <div
+          v-if="!dxfFile"
+          :class="styles.uploadPrompt"
+        >
+          <p :class="styles.uploadIcon">
+            📄
+          </p>
           <p><strong>Drop DXF here</strong> or click to browse</p>
-          <p :class="styles.hint">DXF R12/R2000 format • Closed polylines for pockets</p>
+          <p :class="styles.hint">
+            DXF R12/R2000 format • Closed polylines for pockets
+          </p>
         </div>
-        <div v-else :class="styles.fileSelected">
+        <div
+          v-else
+          :class="styles.fileSelected"
+        >
           <span :class="styles.filename">{{ dxfFile.name }}</span>
           <span :class="styles.filesize">({{ (dxfFile.size / 1024).toFixed(1) }} KB)</span>
-          <button :class="styles.clearBtn" @click="dxfFile = null">×</button>
+          <button
+            :class="styles.clearBtn"
+            @click="dxfFile = null"
+          >
+            ×
+          </button>
         </div>
       </div>
 
-      <p v-if="uploadError" :class="styles.error">{{ uploadError }}</p>
+      <p
+        v-if="uploadError"
+        :class="styles.error"
+      >
+        {{ uploadError }}
+      </p>
 
       <div :class="styles.stepActions">
         <button
@@ -249,69 +274,102 @@ function reset() {
     </div>
 
     <!-- Step 2: Configure Machine & Parameters -->
-    <div v-if="currentStep === 2" :class="styles.stepContent">
+    <div
+      v-if="currentStep === 2"
+      :class="styles.stepContent"
+    >
       <div :class="styles.configGrid">
         <div :class="styles.configSection">
           <h3>Machine</h3>
-          <select v-model="selectedMachine" :class="styles.selectInput">
-            <option v-for="m in machines" :key="m.id" :value="m.id">
+          <select
+            v-model="selectedMachine"
+            :class="styles.selectInput"
+          >
+            <option
+              v-for="m in machines"
+              :key="m.id"
+              :value="m.id"
+            >
               {{ m.name }}
             </option>
           </select>
-          <p :class="styles.hint">{{ machines.find(m => m.id === selectedMachine)?.desc }}</p>
+          <p :class="styles.hint">
+            {{ machines.find(m => m.id === selectedMachine)?.desc }}
+          </p>
         </div>
 
         <div :class="styles.configSection">
           <h3>Material</h3>
-          <select v-model="selectedMaterial" :class="styles.selectInput">
-            <option v-for="m in materials" :key="m.id" :value="m.id">
+          <select
+            v-model="selectedMaterial"
+            :class="styles.selectInput"
+          >
+            <option
+              v-for="m in materials"
+              :key="m.id"
+              :value="m.id"
+            >
               {{ m.name }}
             </option>
           </select>
-          <p :class="styles.hint">Feed: {{ selectedMaterialData?.feed }} mm/min</p>
+          <p :class="styles.hint">
+            Feed: {{ selectedMaterialData?.feed }} mm/min
+          </p>
         </div>
 
         <div :class="styles.configSection">
           <h3>Tool Diameter (mm)</h3>
           <input
-            type="number"
             v-model.number="toolDiameter"
+            type="number"
             min="0.5"
             max="25"
             step="0.5"
             :class="styles.numberInput"
-          />
+          >
         </div>
 
         <div :class="styles.configSection">
           <h3>Stepdown (mm)</h3>
           <input
-            type="number"
             v-model.number="stepdown"
+            type="number"
             min="0.5"
             max="10"
             step="0.5"
             :class="styles.numberInput"
-          />
+          >
         </div>
 
         <div :class="styles.configSectionFullWidth">
           <h3>Target Depth (mm)</h3>
           <input
-            type="number"
             v-model.number="targetDepth"
+            type="number"
             max="0"
             step="0.5"
             :class="styles.numberInput"
-          />
-          <p :class="styles.hint">Negative value (e.g., -6 for 6mm deep pocket)</p>
+          >
+          <p :class="styles.hint">
+            Negative value (e.g., -6 for 6mm deep pocket)
+          </p>
         </div>
       </div>
 
-      <p v-if="generateError" :class="styles.error">{{ generateError }}</p>
+      <p
+        v-if="generateError"
+        :class="styles.error"
+      >
+        {{ generateError }}
+      </p>
 
       <div :class="styles.stepActions">
-        <button :class="styles.btnSecondary" @click="currentStep = 1">Back</button>
+        <button
+          :class="styles.btnSecondary"
+          @click="currentStep = 1"
+        >
+          Back
+        </button>
         <button
           :class="styles.btnPrimary"
           :disabled="isGenerating"
@@ -323,32 +381,67 @@ function reset() {
     </div>
 
     <!-- Step 3: Review & Export -->
-    <div v-if="currentStep === 3" :class="styles.stepContent">
+    <div
+      v-if="currentStep === 3"
+      :class="styles.stepContent"
+    >
       <!-- Safety Summary -->
       <div :class="riskLevel === 'GREEN' ? styles.safetySummaryGreen : riskLevel === 'YELLOW' ? styles.safetySummaryYellow : riskLevel === 'RED' ? styles.safetySummaryRed : styles.safetySummary">
         <div :class="styles.safetyHeader">
-          <RiskBadge :level="riskLevel" size="lg" />
+          <RiskBadge
+            :level="riskLevel"
+            size="lg"
+          />
           <span :class="styles.safetyLabel">
             Safety Check
-            <RmosTooltip concept="feasibility" :inline="true" />
+            <RmosTooltip
+              concept="feasibility"
+              :inline="true"
+            />
           </span>
         </div>
 
-        <div v-if="riskLevel === 'GREEN'" :class="styles.safetyMessage">
+        <div
+          v-if="riskLevel === 'GREEN'"
+          :class="styles.safetyMessage"
+        >
           All checks passed. Safe to run on machine.
-          <RmosTooltip concept="risk-green" :inline="true" />
+          <RmosTooltip
+            concept="risk-green"
+            :inline="true"
+          />
         </div>
-        <div v-else-if="riskLevel === 'YELLOW'" :class="styles.safetyMessage">
+        <div
+          v-else-if="riskLevel === 'YELLOW'"
+          :class="styles.safetyMessage"
+        >
           Review warnings before proceeding. Download available.
-          <RmosTooltip concept="risk-yellow" :inline="true" />
+          <RmosTooltip
+            concept="risk-yellow"
+            :inline="true"
+          />
         </div>
-        <div v-else-if="riskLevel === 'RED'" :class="styles.safetyMessage">
+        <div
+          v-else-if="riskLevel === 'RED'"
+          :class="styles.safetyMessage"
+        >
           Blocked for safety. Review parameters and try again.
-          <RmosTooltip concept="risk-red" :inline="true" />
+          <RmosTooltip
+            concept="risk-red"
+            :inline="true"
+          />
         </div>
 
-        <ul v-if="warnings.length > 0" :class="styles.warningsList">
-          <li v-for="(w, i) in warnings" :key="i">{{ w }}</li>
+        <ul
+          v-if="warnings.length > 0"
+          :class="styles.warningsList"
+        >
+          <li
+            v-for="(w, i) in warnings"
+            :key="i"
+          >
+            {{ w }}
+          </li>
         </ul>
       </div>
 
@@ -364,14 +457,25 @@ function reset() {
         <p><strong>Machine:</strong> {{ machines.find(m => m.id === selectedMachine)?.name }}</p>
         <p><strong>Material:</strong> {{ materials.find(m => m.id === selectedMaterial)?.name }}</p>
         <p><strong>Tool:</strong> {{ toolDiameter }}mm, {{ stepdown }}mm stepdown</p>
-        <p v-if="result?.run_id" :class="styles.runId">
+        <p
+          v-if="result?.run_id"
+          :class="styles.runId"
+        >
           <strong>Run ID:</strong> {{ result.run_id }}
-          <RmosTooltip concept="run-id" :inline="true" />
+          <RmosTooltip
+            concept="run-id"
+            :inline="true"
+          />
         </p>
       </div>
 
       <div :class="styles.stepActions">
-        <button :class="styles.btnSecondary" @click="currentStep = 2">Back</button>
+        <button
+          :class="styles.btnSecondary"
+          @click="currentStep = 2"
+        >
+          Back
+        </button>
         <button
           :class="styles.btnPrimary"
           :disabled="!canDownload"
@@ -379,7 +483,12 @@ function reset() {
         >
           {{ riskLevel === 'RED' ? 'Blocked' : 'Download G-code' }}
         </button>
-        <button :class="styles.btnSecondary" @click="reset">Start Over</button>
+        <button
+          :class="styles.btnSecondary"
+          @click="reset"
+        >
+          Start Over
+        </button>
       </div>
     </div>
   </div>

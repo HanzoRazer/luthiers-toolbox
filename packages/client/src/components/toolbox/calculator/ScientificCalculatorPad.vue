@@ -3,60 +3,238 @@
     <!-- Mode toggles -->
     <div class="mode-toggles">
       <label class="toggle">
-        <input v-model="angleModeLocal" type="radio" value="deg">
+        <input
+          v-model="angleModeLocal"
+          type="radio"
+          value="deg"
+        >
         <span>DEG</span>
       </label>
       <label class="toggle">
-        <input v-model="angleModeLocal" type="radio" value="rad">
+        <input
+          v-model="angleModeLocal"
+          type="radio"
+          value="rad"
+        >
         <span>RAD</span>
       </label>
-      <button class="btn-small" @click="$emit('toggleHistory')">History</button>
+      <button
+        class="btn-small"
+        @click="$emit('toggleHistory')"
+      >
+        History
+      </button>
     </div>
 
     <!-- Scientific functions row 1 -->
-    <button class="btn btn-function" @click="$emit('function', 'sin(')">sin</button>
-    <button class="btn btn-function" @click="$emit('function', 'cos(')">cos</button>
-    <button class="btn btn-function" @click="$emit('function', 'tan(')">tan</button>
-    <button class="btn btn-function" @click="$emit('function', 'ln(')">ln</button>
-    <button class="btn btn-function" @click="$emit('function', 'log(')">log</button>
-    <button class="btn btn-function" @click="$emit('function', 'sqrt(')">√</button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'sin(')"
+    >
+      sin
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'cos(')"
+    >
+      cos
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'tan(')"
+    >
+      tan
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'ln(')"
+    >
+      ln
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'log(')"
+    >
+      log
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', 'sqrt(')"
+    >
+      √
+    </button>
 
     <!-- Scientific functions row 2 -->
-    <button class="btn btn-operator" @click="$emit('operator', '^')">^</button>
-    <button class="btn btn-operator" @click="$emit('operator', '(')">(</button>
-    <button class="btn btn-operator" @click="$emit('operator', ')')">)</button>
-    <button class="btn btn-function" @click="$emit('number', 'π')">π</button>
-    <button class="btn btn-function" @click="$emit('number', 'e')">e</button>
-    <button class="btn btn-function" @click="$emit('function', '!')">!</button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '^')"
+    >
+      ^
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '(')"
+    >
+      (
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', ')')"
+    >
+      )
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('number', 'π')"
+    >
+      π
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('number', 'e')"
+    >
+      e
+    </button>
+    <button
+      class="btn btn-function"
+      @click="$emit('function', '!')"
+    >
+      !
+    </button>
 
     <!-- Standard calculator buttons -->
-    <button class="btn btn-clear" @click="$emit('clear')">C</button>
-    <button class="btn btn-operator" @click="$emit('backspace')">⌫</button>
-    <button class="btn btn-operator" @click="$emit('operator', '%')">%</button>
-    <button class="btn btn-operator" @click="$emit('operator', '÷')">÷</button>
-    <button class="btn btn-number" @click="$emit('number', '7')">7</button>
-    <button class="btn btn-number" @click="$emit('number', '8')">8</button>
+    <button
+      class="btn btn-clear"
+      @click="$emit('clear')"
+    >
+      C
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('backspace')"
+    >
+      ⌫
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '%')"
+    >
+      %
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '÷')"
+    >
+      ÷
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '7')"
+    >
+      7
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '8')"
+    >
+      8
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '9')">9</button>
-    <button class="btn btn-operator" @click="$emit('operator', '×')">×</button>
-    <button class="btn btn-number" @click="$emit('number', '4')">4</button>
-    <button class="btn btn-number" @click="$emit('number', '5')">5</button>
-    <button class="btn btn-number" @click="$emit('number', '6')">6</button>
-    <button class="btn btn-operator" @click="$emit('operator', '−')">−</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '9')"
+    >
+      9
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '×')"
+    >
+      ×
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '4')"
+    >
+      4
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '5')"
+    >
+      5
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '6')"
+    >
+      6
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '−')"
+    >
+      −
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '1')">1</button>
-    <button class="btn btn-number" @click="$emit('number', '2')">2</button>
-    <button class="btn btn-number" @click="$emit('number', '3')">3</button>
-    <button class="btn btn-operator" @click="$emit('operator', '+')">+</button>
-    <button class="btn btn-number" @click="$emit('toggleSign')">±</button>
-    <button class="btn btn-number" @click="$emit('number', '0')">0</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '1')"
+    >
+      1
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '2')"
+    >
+      2
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '3')"
+    >
+      3
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '+')"
+    >
+      +
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('toggleSign')"
+    >
+      ±
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '0')"
+    >
+      0
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '.')">.</button>
-    <button class="btn btn-equals" @click="$emit('calculate')">=</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '.')"
+    >
+      .
+    </button>
+    <button
+      class="btn btn-equals"
+      @click="$emit('calculate')"
+    >
+      =
+    </button>
 
     <!-- History dropdown -->
-    <div v-if="showHistory" class="history-dropdown">
-      <div class="history-title">History</div>
+    <div
+      v-if="showHistory"
+      class="history-dropdown"
+    >
+      <div class="history-title">
+        History
+      </div>
       <div
         v-for="(item, i) in history"
         :key="i"
@@ -65,7 +243,12 @@
       >
         {{ item }}
       </div>
-      <div v-if="history.length === 0" class="history-empty">No history yet</div>
+      <div
+        v-if="history.length === 0"
+        class="history-empty"
+      >
+        No history yet
+      </div>
     </div>
   </div>
 </template>

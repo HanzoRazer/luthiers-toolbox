@@ -42,7 +42,7 @@ def test_fret_slots_default_12tet_calls_compute_fret_positions_mm():
 
         try:
             export_fret_slots(request)
-        except Exception:
+        except Exception:  # test-fixture: result irrelevant, only checking mock was called
             pass  # We only care that the right function was called
 
         mock_12tet.assert_called_once()
@@ -71,7 +71,7 @@ def test_fret_slots_custom_ratios_uses_per_fret_ratios():
 
         try:
             export_fret_slots(request)
-        except Exception:
+        except Exception:  # test-fixture: result irrelevant, only checking mock was called
             pass  # We only care that the right function was called
 
         mock_ratios.assert_called_once()

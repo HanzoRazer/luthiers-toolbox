@@ -5,9 +5,17 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 const RosettePipelineView = () => import("@/views/RosettePipelineView.vue");
 
 const routes: RouteRecordRaw[] = [
+  // Dashboard - New home page showing all domains
   {
     path: "/",
     name: "Home",
+    component: () => import("@/views/AppDashboardView.vue"),
+  },
+
+  // Rosette Pipeline - moved from home to /rosette
+  {
+    path: "/rosette",
+    name: "Rosette",
     component: RosettePipelineView,
   },
 

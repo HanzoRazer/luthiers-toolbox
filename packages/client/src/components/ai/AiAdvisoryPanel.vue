@@ -1,8 +1,15 @@
 <template>
   <section class="ai-panel">
     <h3>AI Advisory (Draft)</h3>
-    <div v-if="store.loading">Running…</div>
-    <div v-if="store.error" class="err">{{ store.error }}</div>
+    <div v-if="store.loading">
+      Running…
+    </div>
+    <div
+      v-if="store.error"
+      class="err"
+    >
+      {{ store.error }}
+    </div>
     <pre v-if="store.advisory">{{ store.advisory }}</pre>
     <p class="note">
       Advisory content is informational only and must be reviewed.

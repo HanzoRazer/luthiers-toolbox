@@ -171,9 +171,22 @@ defineExpose({
 <template>
   <div class="guided-workflow">
     <!-- Header -->
-    <header v-if="title || subtitle" class="workflow-header">
-      <h2 v-if="title" class="workflow-title">{{ title }}</h2>
-      <p v-if="subtitle" class="workflow-subtitle">{{ subtitle }}</p>
+    <header
+      v-if="title || subtitle"
+      class="workflow-header"
+    >
+      <h2
+        v-if="title"
+        class="workflow-title"
+      >
+        {{ title }}
+      </h2>
+      <p
+        v-if="subtitle"
+        class="workflow-subtitle"
+      >
+        {{ subtitle }}
+      </p>
     </header>
 
     <!-- Step Indicator -->
@@ -186,7 +199,10 @@ defineExpose({
 
     <!-- Progress Bar -->
     <div class="progress-bar">
-      <div class="progress-bar__fill" :style="{ width: `${progressPercent}%` }" />
+      <div
+        class="progress-bar__fill"
+        :style="{ width: `${progressPercent}%` }"
+      />
     </div>
 
     <!-- Step Content -->
@@ -195,27 +211,44 @@ defineExpose({
         <h3 class="step-title">
           Step {{ currentStep + 1 }}: {{ currentStepConfig.label }}
         </h3>
-        <p v-if="currentStepConfig.description" class="step-description">
+        <p
+          v-if="currentStepConfig.description"
+          class="step-description"
+        >
           {{ currentStepConfig.description }}
         </p>
       </div>
 
       <!-- Error Display -->
-      <div v-if="error" class="error-banner">
+      <div
+        v-if="error"
+        class="error-banner"
+      >
         <span class="error-icon">!</span>
         <span>{{ error }}</span>
-        <button class="error-dismiss" @click="error = null">Dismiss</button>
+        <button
+          class="error-dismiss"
+          @click="error = null"
+        >
+          Dismiss
+        </button>
       </div>
 
       <!-- Dynamic Step Content -->
       <div class="step-body">
-        <slot :name="`step-${currentStep}`" :data="stepData">
+        <slot
+          :name="`step-${currentStep}`"
+          :data="stepData"
+        >
           <component
-            v-if="currentStepConfig.component"
             :is="currentStepConfig.component"
+            v-if="currentStepConfig.component"
             v-model:data="stepData"
           />
-          <div v-else class="step-placeholder">
+          <div
+            v-else
+            class="step-placeholder"
+          >
             <p>Step content for "{{ currentStepConfig.label }}"</p>
           </div>
         </slot>

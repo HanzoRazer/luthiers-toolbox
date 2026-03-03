@@ -35,7 +35,10 @@ function updateParam<K extends keyof CamParams>(key: K, value: CamParams[K]) {
 </script>
 
 <template>
-  <div class="params-section" :class="{ disabled }">
+  <div
+    class="params-section"
+    :class="{ disabled }"
+  >
     <h2>CAM Parameters</h2>
     <div class="params-grid">
       <div class="param">

@@ -146,6 +146,7 @@ const confidenceText = computed(() => {
     case "GREEN": return "High confidence - standard build parameters";
     case "YELLOW": return "Medium confidence - elevated complexity factors";
     case "RED": return "Low confidence - high complexity introduces scheduling risk";
+    default: return "";
   }
 });
 
@@ -191,7 +192,9 @@ const intentBullets = computed(() => {
   <div class="validation-step">
     <header class="step-header">
       <h2>Intent Preview</h2>
-      <p class="subtitle">Review what the system will calculate before proceeding</p>
+      <p class="subtitle">
+        Review what the system will calculate before proceeding
+      </p>
     </header>
 
     <!-- Build Summary -->
@@ -212,7 +215,10 @@ const intentBullets = computed(() => {
         <span class="label">Finish</span>
         <span class="value">{{ finishLabel }}</span>
       </div>
-      <div v-if="(request.batch_size ?? 1) > 1" class="summary-row">
+      <div
+        v-if="(request.batch_size ?? 1) > 1"
+        class="summary-row"
+      >
         <span class="label">Batch</span>
         <span class="value">{{ request.batch_size }} units @ ${{ request.hourly_rate }}/hr</span>
       </div>
@@ -222,7 +228,12 @@ const intentBullets = computed(() => {
     <section class="intent-section">
       <h3>Based on your selections, this estimate will:</h3>
       <ul class="intent-list">
-        <li v-for="(bullet, i) in intentBullets" :key="i">{{ bullet }}</li>
+        <li
+          v-for="(bullet, i) in intentBullets"
+          :key="i"
+        >
+          {{ bullet }}
+        </li>
       </ul>
     </section>
 
@@ -230,9 +241,14 @@ const intentBullets = computed(() => {
     <section class="confidence-section">
       <div class="confidence-row">
         <span class="label">Estimated Confidence:</span>
-        <RiskBadge :level="confidenceLevel" size="md" />
+        <RiskBadge
+          :level="confidenceLevel"
+          size="md"
+        />
       </div>
-      <p class="confidence-text">{{ confidenceText }}</p>
+      <p class="confidence-text">
+        {{ confidenceText }}
+      </p>
       <p class="complexity-note">
         Combined complexity estimate: <strong>{{ estimatedComplexity }}x</strong>
       </p>
@@ -240,10 +256,18 @@ const intentBullets = computed(() => {
 
     <!-- Actions -->
     <footer class="step-actions">
-      <button type="button" class="btn-secondary" @click="emit('back')">
+      <button
+        type="button"
+        class="btn-secondary"
+        @click="emit('back')"
+      >
         Back to Inputs
       </button>
-      <button type="button" class="btn-primary" @click="emit('proceed')">
+      <button
+        type="button"
+        class="btn-primary"
+        @click="emit('proceed')"
+      >
         Run Estimate
       </button>
     </footer>

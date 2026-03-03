@@ -383,10 +383,13 @@ class LTBScientificCalculator(LTBFractionCalculator):
         except ZeroDivisionError:
             self.state.error = "Cannot divide by zero"
             return 0.0
+        except SyntaxError:
+            self.state.error = "Invalid expression"
+            return 0.0
         except ValueError as e:
             self.state.error = f"Math error: {e}"
             return 0.0
-        except (TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
+        except (TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception  # AUDITED 2026-03: + SyntaxError for ast.parse
             self.state.error = f"Error: {str(e)}"
             return 0.0
 

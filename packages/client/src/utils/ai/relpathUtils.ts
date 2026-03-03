@@ -1,7 +1,7 @@
 export function pointIdFromRelpath(relpath: string): string | null {
-  const m = relpath.match(/^spectra\/points\/([^\/]+)\//);
+  const m = relpath.match(/^spectra\/points\/([^/]+)\//);
   if (m?.[1]) return m[1];
-  const m2 = relpath.match(/^audio\/points\/([^\/]+)\.(wav|flac)$/i);
+  const m2 = relpath.match(/^audio\/points\/([^/]+)\.(wav|flac)$/i);
   if (m2?.[1]) return m2[1];
   return null;
 }

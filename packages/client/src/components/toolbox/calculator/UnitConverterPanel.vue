@@ -28,7 +28,11 @@
           class="converter-select"
           @change="$emit('update:fromUnit', ($event.target as HTMLSelectElement).value)"
         >
-          <option v-for="unit in units" :key="unit.key" :value="unit.key">
+          <option
+            v-for="unit in units"
+            :key="unit.key"
+            :value="unit.key"
+          >
             {{ unit.label }}
           </option>
         </select>
@@ -36,26 +40,45 @@
 
       <!-- Swap button -->
       <div class="converter-swap">
-        <button class="btn-swap" @click="$emit('swap')">↕</button>
+        <button
+          class="btn-swap"
+          @click="$emit('swap')"
+        >
+          ↕
+        </button>
       </div>
 
       <!-- To input (readonly) -->
       <div class="converter-input-group">
-        <input :value="toValue.toFixed(6)" type="text" readonly class="converter-input">
+        <input
+          :value="toValue.toFixed(6)"
+          type="text"
+          readonly
+          class="converter-input"
+        >
         <select
           :value="toUnit"
           class="converter-select"
           @change="$emit('update:toUnit', ($event.target as HTMLSelectElement).value)"
         >
-          <option v-for="unit in units" :key="unit.key" :value="unit.key">
+          <option
+            v-for="unit in units"
+            :key="unit.key"
+            :value="unit.key"
+          >
             {{ unit.label }}
           </option>
         </select>
       </div>
 
       <!-- Fraction input (Length only) -->
-      <div v-if="category === 'Length'" class="fraction-input">
-        <div class="fraction-label">Fraction Input:</div>
+      <div
+        v-if="category === 'Length'"
+        class="fraction-input"
+      >
+        <div class="fraction-label">
+          Fraction Input:
+        </div>
         <div class="fraction-fields">
           <input
             :value="fraction.whole"
@@ -89,15 +112,52 @@
 
       <!-- Quick presets -->
       <div class="quick-presets">
-        <div class="preset-label">Common Measurements:</div>
+        <div class="preset-label">
+          Common Measurements:
+        </div>
         <div class="preset-buttons">
-          <button class="btn-preset" @click="$emit('preset', '1/16', 'in')">1/16"</button>
-          <button class="btn-preset" @click="$emit('preset', '1/32', 'in')">1/32"</button>
-          <button class="btn-preset" @click="$emit('preset', '1/64', 'in')">1/64"</button>
-          <button class="btn-preset" @click="$emit('preset', '0.010', 'in')">.010"</button>
-          <button class="btn-preset" @click="$emit('preset', '0.046', 'in')">.046"</button>
-          <button class="btn-preset" @click="$emit('preset', '25.5', 'in')">25.5"</button>
-          <button class="btn-preset" @click="$emit('preset', '24.75', 'in')">24.75"</button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '1/16', 'in')"
+          >
+            1/16"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '1/32', 'in')"
+          >
+            1/32"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '1/64', 'in')"
+          >
+            1/64"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '0.010', 'in')"
+          >
+            .010"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '0.046', 'in')"
+          >
+            .046"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '25.5', 'in')"
+          >
+            25.5"
+          </button>
+          <button
+            class="btn-preset"
+            @click="$emit('preset', '24.75', 'in')"
+          >
+            24.75"
+          </button>
         </div>
       </div>
     </div>

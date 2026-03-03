@@ -210,8 +210,15 @@ onMounted(() => {
   <div class="compare-panel">
     <header class="panel-header">
       <h3>Compare Estimates</h3>
-      <div v-if="!showSelector" class="header-actions">
-        <button type="button" class="btn-back" @click="backToSelector">
+      <div
+        v-if="!showSelector"
+        class="header-actions"
+      >
+        <button
+          type="button"
+          class="btn-back"
+          @click="backToSelector"
+        >
           &larr; Select Different
         </button>
       </div>
@@ -224,13 +231,21 @@ onMounted(() => {
       </p>
 
       <!-- Empty State -->
-      <div v-if="history.length === 0" class="empty-state">
+      <div
+        v-if="history.length === 0"
+        class="empty-state"
+      >
         <p>No estimates in history.</p>
-        <p class="hint">Run some estimates first to enable comparison.</p>
+        <p class="hint">
+          Run some estimates first to enable comparison.
+        </p>
       </div>
 
       <!-- Selection List -->
-      <div v-else class="selection-list">
+      <div
+        v-else
+        class="selection-list"
+      >
         <div
           v-for="entry in history"
           :key="entry.id"
@@ -241,7 +256,10 @@ onMounted(() => {
           }"
           @click="toggleSelection(entry.id)"
         >
-          <div class="selection-index" v-if="isSelected(entry.id)">
+          <div
+            v-if="isSelected(entry.id)"
+            class="selection-index"
+          >
             {{ getSelectionIndex(entry.id) }}
           </div>
           <div class="selection-info">
@@ -260,7 +278,10 @@ onMounted(() => {
       </div>
 
       <!-- Actions -->
-      <div class="selector-actions" v-if="history.length > 0">
+      <div
+        v-if="history.length > 0"
+        class="selector-actions"
+      >
         <button
           type="button"
           class="btn-secondary"
@@ -284,7 +305,7 @@ onMounted(() => {
     <template v-else>
       <!-- Column Headers -->
       <div class="compare-grid">
-        <div class="metric-label header"></div>
+        <div class="metric-label header" />
         <div
           v-for="(entry, idx) in selectedEstimates"
           :key="entry.id"
@@ -294,8 +315,15 @@ onMounted(() => {
           <div class="header-instrument">
             {{ formatInstrumentType(entry.request.instrument_type) }}
           </div>
-          <div class="header-date">{{ formatDate(entry.createdAt) }}</div>
-          <div v-if="overallWinners[idx]" class="winner-badge">Best</div>
+          <div class="header-date">
+            {{ formatDate(entry.createdAt) }}
+          </div>
+          <div
+            v-if="overallWinners[idx]"
+            class="winner-badge"
+          >
+            Best
+          </div>
         </div>
       </div>
 
@@ -305,7 +333,9 @@ onMounted(() => {
         :key="metric.key"
         class="compare-grid metric-row"
       >
-        <div class="metric-label">{{ metric.label }}</div>
+        <div class="metric-label">
+          {{ metric.label }}
+        </div>
         <div
           v-for="(value, idx) in metric.formatted"
           :key="idx"
@@ -318,7 +348,9 @@ onMounted(() => {
 
       <!-- Experience Row -->
       <div class="compare-grid metric-row">
-        <div class="metric-label">Experience</div>
+        <div class="metric-label">
+          Experience
+        </div>
         <div
           v-for="entry in selectedEstimates"
           :key="entry.id"
@@ -330,7 +362,9 @@ onMounted(() => {
 
       <!-- Confidence Row -->
       <div class="compare-grid metric-row">
-        <div class="metric-label">Confidence</div>
+        <div class="metric-label">
+          Confidence
+        </div>
         <div
           v-for="entry in selectedEstimates"
           :key="entry.id"
@@ -342,7 +376,9 @@ onMounted(() => {
 
       <!-- Range Row -->
       <div class="compare-grid metric-row">
-        <div class="metric-label">Range</div>
+        <div class="metric-label">
+          Range
+        </div>
         <div
           v-for="entry in selectedEstimates"
           :key="entry.id"

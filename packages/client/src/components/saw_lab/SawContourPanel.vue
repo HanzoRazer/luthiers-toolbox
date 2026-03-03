@@ -94,45 +94,45 @@
         <!-- Arc Parameters -->
         <ContourArcParams
           v-if="contourType === 'arc'"
-          v-model:centerX="centerX"
-          v-model:centerY="centerY"
+          v-model:center-x="centerX"
+          v-model:center-y="centerY"
           v-model:radius="radius"
-          v-model:startAngle="startAngle"
-          v-model:endAngle="endAngle"
+          v-model:start-angle="startAngle"
+          v-model:end-angle="endAngle"
           :radius-validation="radiusValidation"
-          @update:centerX="onParamChange"
-          @update:centerY="onParamChange"
+          @update:center-x="onParamChange"
+          @update:center-y="onParamChange"
           @update:radius="onParamChange"
-          @update:startAngle="onParamChange"
-          @update:endAngle="onParamChange"
+          @update:start-angle="onParamChange"
+          @update:end-angle="onParamChange"
         />
 
         <!-- Circle Parameters -->
         <ContourCircleParams
           v-if="contourType === 'circle'"
-          v-model:centerX="centerX"
-          v-model:centerY="centerY"
+          v-model:center-x="centerX"
+          v-model:center-y="centerY"
           v-model:radius="radius"
           :radius-validation="radiusValidation"
-          @update:centerX="onParamChange"
-          @update:centerY="onParamChange"
+          @update:center-x="onParamChange"
+          @update:center-y="onParamChange"
           @update:radius="onParamChange"
         />
 
         <!-- Rosette Parameters -->
         <ContourRosetteParams
           v-if="contourType === 'rosette'"
-          v-model:centerX="centerX"
-          v-model:centerY="centerY"
-          v-model:outerRadius="outerRadius"
-          v-model:innerRadius="innerRadius"
-          v-model:petalCount="petalCount"
+          v-model:center-x="centerX"
+          v-model:center-y="centerY"
+          v-model:outer-radius="outerRadius"
+          v-model:inner-radius="innerRadius"
+          v-model:petal-count="petalCount"
           :radius-validation="radiusValidation"
-          @update:centerX="onParamChange"
-          @update:centerY="onParamChange"
-          @update:outerRadius="onParamChange"
-          @update:innerRadius="onParamChange"
-          @update:petalCount="onParamChange"
+          @update:center-x="onParamChange"
+          @update:center-y="onParamChange"
+          @update:outer-radius="onParamChange"
+          @update:inner-radius="onParamChange"
+          @update:petal-count="onParamChange"
         />
 
         <!-- Depth Parameters -->

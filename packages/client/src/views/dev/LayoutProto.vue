@@ -12,23 +12,34 @@
         :class="{ active: activeLayout === layout.id }"
         @click="activeLayout = layout.id"
       >
-        <div class="layout-thumb" v-html="layout.thumb" />
-        <div class="layout-name">{{ layout.label }}</div>
+        <div
+          class="layout-thumb"
+          v-html="layout.thumb"
+        />
+        <div class="layout-name">
+          {{ layout.label }}
+        </div>
       </button>
     </div>
 
     <!-- Previews -->
     <div class="frame-container">
-
       <!-- Two-panel: sidebar + main -->
-      <div v-if="activeLayout === 'sidebar-main'" class="mock-app two-panel">
+      <div
+        v-if="activeLayout === 'sidebar-main'"
+        class="mock-app two-panel"
+      >
         <div class="mock-sidebar">
-          <div class="mock-section-label">Parameters</div>
+          <div class="mock-section-label">
+            Parameters
+          </div>
           <div class="mock-field" />
           <div class="mock-field short" />
           <div class="mock-field" />
           <div class="mock-field short" />
-          <div class="mock-btn primary">Run CAM</div>
+          <div class="mock-btn primary">
+            Run CAM
+          </div>
         </div>
         <div class="mock-main">
           <div class="mock-toolbar">
@@ -47,9 +58,14 @@
       </div>
 
       <!-- Three-panel: list + detail + inspector -->
-      <div v-if="activeLayout === 'three-panel'" class="mock-app three-panel">
+      <div
+        v-if="activeLayout === 'three-panel'"
+        class="mock-app three-panel"
+      >
         <div class="mock-list-panel">
-          <div class="mock-section-label">Runs</div>
+          <div class="mock-section-label">
+            Runs
+          </div>
           <div class="mock-list-item active" />
           <div class="mock-list-item" />
           <div class="mock-list-item" />
@@ -69,7 +85,9 @@
           </div>
         </div>
         <div class="mock-inspector-panel">
-          <div class="mock-section-label">Inspector</div>
+          <div class="mock-section-label">
+            Inspector
+          </div>
           <div class="mock-field" />
           <div class="mock-field short" />
           <div class="mock-field" />
@@ -78,7 +96,10 @@
       </div>
 
       <!-- Dashboard: header + card grid -->
-      <div v-if="activeLayout === 'dashboard'" class="mock-app dashboard-layout">
+      <div
+        v-if="activeLayout === 'dashboard'"
+        class="mock-app dashboard-layout"
+      >
         <div class="mock-toolbar full">
           <div class="mock-breadcrumb" />
           <div class="mock-actions">
@@ -99,29 +120,39 @@
           <div class="mock-card wide" />
         </div>
       </div>
-
     </div>
 
     <!-- Token annotations -->
     <div class="annotation-row">
       <div class="annotation">
-        <div class="annotation-swatch" style="background: var(--color-surface)" />
+        <div
+          class="annotation-swatch"
+          style="background: var(--color-surface)"
+        />
         Surface
       </div>
       <div class="annotation">
-        <div class="annotation-swatch" style="background: var(--color-surface-elevated)" />
+        <div
+          class="annotation-swatch"
+          style="background: var(--color-surface-elevated)"
+        />
         Elevated
       </div>
       <div class="annotation">
-        <div class="annotation-swatch" style="background: var(--color-primary)" />
+        <div
+          class="annotation-swatch"
+          style="background: var(--color-primary)"
+        />
         Primary CTA
       </div>
       <div class="annotation">
-        <div class="annotation-swatch" style="background: var(--color-border); border: 1px solid var(--color-border-light)" />
+        <div
+          class="annotation-swatch"
+          style="background: var(--color-border); border: 1px solid var(--color-border-light)"
+        />
         Border
       </div>
     </div>
-
   </div>
 </template>
 

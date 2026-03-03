@@ -369,7 +369,10 @@ class LTBBasicCalculator:
         except ZeroDivisionError:
             self.state.error = "Cannot divide by zero"
             return 0.0
-        except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception
+        except SyntaxError:
+            self.state.error = "Invalid expression"
+            return 0.0
+        except (ValueError, TypeError, ArithmeticError) as e:  # WP-1: narrowed from except Exception  # AUDITED 2026-03: + SyntaxError for ast.parse
             self.state.error = f"Error: {str(e)}"
             return 0.0
     

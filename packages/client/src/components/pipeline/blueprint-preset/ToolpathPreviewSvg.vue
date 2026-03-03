@@ -77,7 +77,9 @@ const segments = computed(() => {
 
 <template>
   <div class="span-2">
-    <h3 class="section-title">🔍 Toolpath Preview</h3>
+    <h3 class="section-title">
+      🔍 Toolpath Preview
+    </h3>
     <div class="preview-container">
       <svg
         v-if="segments.length"

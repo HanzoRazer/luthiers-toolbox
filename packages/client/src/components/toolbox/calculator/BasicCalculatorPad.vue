@@ -1,29 +1,129 @@
 <template>
   <div class="basic-grid">
-    <button class="btn btn-clear" @click="$emit('clear')">C</button>
-    <button class="btn btn-operator" @click="$emit('backspace')">⌫</button>
-    <button class="btn btn-operator" @click="$emit('operator', '%')">%</button>
-    <button class="btn btn-operator" @click="$emit('operator', '÷')">÷</button>
+    <button
+      class="btn btn-clear"
+      @click="$emit('clear')"
+    >
+      C
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('backspace')"
+    >
+      ⌫
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '%')"
+    >
+      %
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '÷')"
+    >
+      ÷
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '7')">7</button>
-    <button class="btn btn-number" @click="$emit('number', '8')">8</button>
-    <button class="btn btn-number" @click="$emit('number', '9')">9</button>
-    <button class="btn btn-operator" @click="$emit('operator', '×')">×</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '7')"
+    >
+      7
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '8')"
+    >
+      8
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '9')"
+    >
+      9
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '×')"
+    >
+      ×
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '4')">4</button>
-    <button class="btn btn-number" @click="$emit('number', '5')">5</button>
-    <button class="btn btn-number" @click="$emit('number', '6')">6</button>
-    <button class="btn btn-operator" @click="$emit('operator', '−')">−</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '4')"
+    >
+      4
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '5')"
+    >
+      5
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '6')"
+    >
+      6
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '−')"
+    >
+      −
+    </button>
 
-    <button class="btn btn-number" @click="$emit('number', '1')">1</button>
-    <button class="btn btn-number" @click="$emit('number', '2')">2</button>
-    <button class="btn btn-number" @click="$emit('number', '3')">3</button>
-    <button class="btn btn-operator" @click="$emit('operator', '+')">+</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '1')"
+    >
+      1
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '2')"
+    >
+      2
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '3')"
+    >
+      3
+    </button>
+    <button
+      class="btn btn-operator"
+      @click="$emit('operator', '+')"
+    >
+      +
+    </button>
 
-    <button class="btn btn-number" @click="$emit('toggleSign')">±</button>
-    <button class="btn btn-number" @click="$emit('number', '0')">0</button>
-    <button class="btn btn-number" @click="$emit('number', '.')">.</button>
-    <button class="btn btn-equals" @click="$emit('calculate')">=</button>
+    <button
+      class="btn btn-number"
+      @click="$emit('toggleSign')"
+    >
+      ±
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '0')"
+    >
+      0
+    </button>
+    <button
+      class="btn btn-number"
+      @click="$emit('number', '.')"
+    >
+      .
+    </button>
+    <button
+      class="btn btn-equals"
+      @click="$emit('calculate')"
+    >
+      =
+    </button>
   </div>
 </template>
 

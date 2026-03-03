@@ -180,7 +180,7 @@ def create_saw_compare_decision(
             "ticket_id": ticket_id,
         }
 
-    except Exception as e:  # WP-1: keep broad — governance requires ERROR artifact even on unexpected failures
+    except Exception as e:  # WP-1: keep broad — governance requires ERROR artifact even on unexpected failures  # AUDITED 2026-03
         # Governance rule: even failures must persist an ERROR artifact
         decision_id = _write_decision_artifact(
             status="ERROR",

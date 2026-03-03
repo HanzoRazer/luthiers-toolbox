@@ -21,8 +21,12 @@
 
       <div :class="shared.card">
         <div :class="styles.compHeader">
-          <div :class="styles.compTitle">Intonation Compensation Chart</div>
-          <div :class="styles.compSubtitle">For 25.5" scale (Fender) with standard .010-.046 gauges</div>
+          <div :class="styles.compTitle">
+            Intonation Compensation Chart
+          </div>
+          <div :class="styles.compSubtitle">
+            For 25.5" scale (Fender) with standard .010-.046 gauges
+          </div>
         </div>
 
         <div :class="shared.dataGrid">
@@ -70,7 +74,11 @@
       <div :class="shared.card">
         <h3>5 Physical Factors Affecting Compensation</h3>
         <div :class="styles.factorList">
-          <div v-for="factor in factors" :key="factor.title" :class="styles.factorItem">
+          <div
+            v-for="factor in factors"
+            :key="factor.title"
+            :class="styles.factorItem"
+          >
             <strong>{{ factor.title }}</strong>
             <div>{{ factor.description }}</div>
           </div>

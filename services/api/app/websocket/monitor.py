@@ -45,7 +45,7 @@ class ConnectionManager:
         """Send message to specific client."""
         try:
             await websocket.send_json(message)
-        except Exception as e:  # WP-1: keep broad — WebSocket transport
+        except Exception as e:  # WP-1: keep broad — WebSocket transport  # AUDITED 2026-03: logs + disconnects
             logger.error(f"Failed to send to client: {e}")
             self.disconnect(websocket)
             
@@ -67,7 +67,7 @@ class ConnectionManager:
                     
             try:
                 await connection.send_json(message)
-            except Exception as e:  # WP-1: keep broad — WebSocket transport
+            except Exception as e:  # WP-1: keep broad — WebSocket transport  # AUDITED 2026-03: logs + cleans up
                 logger.error(f"Broadcast failed: {e}")
                 disconnected.append(connection)
                 

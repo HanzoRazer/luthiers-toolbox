@@ -1,7 +1,7 @@
 <template>
   <div class="border rounded-md">
     <div class="p-2 border-b flex gap-2 items-center bg-gray-50">
-      <span class="text-sm font-semibold">{{ slot }}</span>
+      <span class="text-sm font-semibold">{{ paneSlot }}</span>
       <select
         v-model="pid"
         class="border px-2 py-1 rounded grow"
@@ -102,7 +102,7 @@ import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
 
 const props = defineProps<{ 
-  slot: string
+  paneSlot: string
   machines: any[]
   body: any 
 }>()

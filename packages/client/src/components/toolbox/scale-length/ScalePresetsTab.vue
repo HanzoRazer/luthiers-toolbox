@@ -12,10 +12,18 @@
         :class="styles.scaleCard"
         @click="$emit('select', preset.id)"
       >
-        <div :class="styles.scaleName">{{ preset.name }}</div>
-        <div :class="styles.scaleValue">{{ preset.value }}</div>
+        <div :class="styles.scaleName">
+          {{ preset.name }}
+        </div>
+        <div :class="styles.scaleValue">
+          {{ preset.value }}
+        </div>
         <div :class="styles.scaleInfo">
-          <div v-for="trait in preset.traits" :key="trait" :class="styles.scaleTrait">
+          <div
+            v-for="trait in preset.traits"
+            :key="trait"
+            :class="styles.scaleTrait"
+          >
             • {{ trait }}
           </div>
         </div>
@@ -52,19 +60,37 @@
         <h3>Real-World Examples</h3>
         <div :class="styles.exampleGrid">
           <div :class="styles.exampleItem">
-            <div :class="styles.exampleScale">Gibson 24.75"</div>
-            <div :class="styles.exampleTension">14.2 lbs</div>
-            <div :class="styles.exampleNote">High E string (.010")</div>
+            <div :class="styles.exampleScale">
+              Gibson 24.75"
+            </div>
+            <div :class="styles.exampleTension">
+              14.2 lbs
+            </div>
+            <div :class="styles.exampleNote">
+              High E string (.010")
+            </div>
           </div>
           <div :class="styles.exampleItem">
-            <div :class="styles.exampleScale">PRS 25.0"</div>
-            <div :class="styles.exampleTension">14.5 lbs</div>
-            <div :class="styles.exampleNote">+2.1% tension</div>
+            <div :class="styles.exampleScale">
+              PRS 25.0"
+            </div>
+            <div :class="styles.exampleTension">
+              14.5 lbs
+            </div>
+            <div :class="styles.exampleNote">
+              +2.1% tension
+            </div>
           </div>
           <div :class="styles.exampleItem">
-            <div :class="styles.exampleScale">Fender 25.5"</div>
-            <div :class="styles.exampleTension">15.1 lbs</div>
-            <div :class="styles.exampleNote">+6.3% tension</div>
+            <div :class="styles.exampleScale">
+              Fender 25.5"
+            </div>
+            <div :class="styles.exampleTension">
+              15.1 lbs
+            </div>
+            <div :class="styles.exampleNote">
+              +6.3% tension
+            </div>
           </div>
         </div>
         <p :class="styles.eduNote">

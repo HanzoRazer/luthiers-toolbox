@@ -1,9 +1,14 @@
 <template>
   <div class="token-explorer">
-
     <!-- Color Groups -->
-    <section class="token-section" v-for="group in colorGroups" :key="group.label">
-      <h2 class="section-title">{{ group.label }}</h2>
+    <section
+      v-for="group in colorGroups"
+      :key="group.label"
+      class="token-section"
+    >
+      <h2 class="section-title">
+        {{ group.label }}
+      </h2>
       <div class="swatch-grid">
         <div
           v-for="token in group.tokens"
@@ -19,8 +24,12 @@
             <span class="copy-hint">Copy</span>
           </div>
           <div class="swatch-meta">
-            <div class="swatch-name">{{ token.label }}</div>
-            <div class="swatch-var">{{ token.name }}</div>
+            <div class="swatch-name">
+              {{ token.label }}
+            </div>
+            <div class="swatch-var">
+              {{ token.name }}
+            </div>
           </div>
         </div>
       </div>
@@ -28,9 +37,15 @@
 
     <!-- Spacing Scale -->
     <section class="token-section">
-      <h2 class="section-title">Spacing Scale</h2>
+      <h2 class="section-title">
+        Spacing Scale
+      </h2>
       <div class="spacing-list">
-        <div v-for="token in spacingTokens" :key="token.name" class="spacing-row">
+        <div
+          v-for="token in spacingTokens"
+          :key="token.name"
+          class="spacing-row"
+        >
           <div class="spacing-label">
             <span class="spacing-name">{{ token.label }}</span>
             <span class="spacing-var">{{ token.name }}</span>
@@ -48,41 +63,63 @@
 
     <!-- Radius Scale -->
     <section class="token-section">
-      <h2 class="section-title">Border Radius</h2>
+      <h2 class="section-title">
+        Border Radius
+      </h2>
       <div class="radius-grid">
-        <div v-for="token in radiusTokens" :key="token.name" class="radius-card">
+        <div
+          v-for="token in radiusTokens"
+          :key="token.name"
+          class="radius-card"
+        >
           <div
             class="radius-box"
             :style="{ borderRadius: `var(${token.name})` }"
           />
-          <div class="radius-label">{{ token.label }}</div>
-          <div class="radius-var">{{ token.name }}</div>
+          <div class="radius-label">
+            {{ token.label }}
+          </div>
+          <div class="radius-var">
+            {{ token.name }}
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Shadow Scale -->
     <section class="token-section">
-      <h2 class="section-title">Shadows</h2>
+      <h2 class="section-title">
+        Shadows
+      </h2>
       <div class="shadow-grid">
-        <div v-for="token in shadowTokens" :key="token.name" class="shadow-card">
+        <div
+          v-for="token in shadowTokens"
+          :key="token.name"
+          class="shadow-card"
+        >
           <div
             class="shadow-box"
             :style="{ boxShadow: `var(${token.name})` }"
           />
-          <div class="shadow-label">{{ token.label }}</div>
-          <div class="shadow-var">{{ token.name }}</div>
+          <div class="shadow-label">
+            {{ token.label }}
+          </div>
+          <div class="shadow-var">
+            {{ token.name }}
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Toast notification -->
     <Transition name="toast">
-      <div v-if="copiedToken" class="copy-toast">
+      <div
+        v-if="copiedToken"
+        class="copy-toast"
+      >
         Copied: {{ copiedToken }}
       </div>
     </Transition>
-
   </div>
 </template>
 

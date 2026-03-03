@@ -37,10 +37,18 @@
                 :class="styles.formInput"
                 @change="$emit('update:formData', { ...formData, kind: ($event.target as HTMLSelectElement).value })"
               >
-                <option value="cam">CAM</option>
-                <option value="export">Export</option>
-                <option value="neck">Neck</option>
-                <option value="combo">Combo</option>
+                <option value="cam">
+                  CAM
+                </option>
+                <option value="export">
+                  Export
+                </option>
+                <option value="neck">
+                  Neck
+                </option>
+                <option value="combo">
+                  Combo
+                </option>
               </select>
             </div>
 

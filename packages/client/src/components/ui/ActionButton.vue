@@ -39,11 +39,18 @@ function onClick(event: MouseEvent) {
     :disabled="disabled || loading"
     @click="onClick"
   >
-    <span v-if="loading" class="spinner" aria-hidden="true" />
+    <span
+      v-if="loading"
+      class="spinner"
+      aria-hidden="true"
+    />
     <span :class="{ 'sr-only': loading && loadingText }">
       <slot />
     </span>
-    <span v-if="loading && loadingText" class="loading-text">
+    <span
+      v-if="loading && loadingText"
+      class="loading-text"
+    >
       {{ loadingText }}
     </span>
   </button>

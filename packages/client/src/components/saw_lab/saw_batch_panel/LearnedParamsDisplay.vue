@@ -1,6 +1,8 @@
 <template>
   <div :class="styles.learnedParams">
-    <h3 :class="styles.sectionTitle">Learned Parameters Applied</h3>
+    <h3 :class="styles.sectionTitle">
+      Learned Parameters Applied
+    </h3>
     <div :class="styles.paramGrid">
       <div :class="styles.paramItem">
         <span :class="styles.paramLabel">RPM:</span>

@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-sm font-semibold text-gray-900">Cross-Lab Preset Risk Dashboard</h1>
+        <h1 class="text-sm font-semibold text-gray-900">
+          Cross-Lab Preset Risk Dashboard
+        </h1>
         <p class="text-[11px] text-gray-600">
           Aggregated compare history across lanes (Rosette, Adaptive, Relief, Pipeline) grouped by lane &amp; preset.
           Time window filters apply to this view and the JSON snapshot download. Filters are URL-synced and can be
@@ -11,7 +13,10 @@
         </p>
       </div>
       <div class="flex items-center gap-2 text-[11px] text-gray-600">
-        <button class="px-3 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-50" @click="handleRefresh">
+        <button
+          class="px-3 py-1 rounded border text-[11px] text-gray-700 hover:bg-gray-50"
+          @click="handleRefresh"
+        >
           Refresh
         </button>
         <button
@@ -75,26 +80,42 @@
     />
 
     <!-- Summary chips -->
-    <div v-if="computedFilteredBuckets.length" class="text-[11px] text-gray-700 flex flex-wrap gap-3">
+    <div
+      v-if="computedFilteredBuckets.length"
+      class="text-[11px] text-gray-700 flex flex-wrap gap-3"
+    >
       <span>Buckets: <span class="font-mono">{{ computedFilteredBuckets.length }}</span></span>
       <span>Entries (sum of bucket counts): <span class="font-mono">{{ computedEntriesCount }}</span></span>
-      <span v-if="since || until" class="text-[10px] text-gray-500">
+      <span
+        v-if="since || until"
+        class="text-[10px] text-gray-500"
+      >
         Window:
         <span v-if="since">from <span class="font-mono">{{ since }}</span></span>
         <span v-if="since && until"> to </span>
         <span v-if="until"><span class="font-mono">{{ until }}</span></span>
       </span>
-      <span v-if="quickRangeMode" class="text-[10px] text-indigo-600">
+      <span
+        v-if="quickRangeMode"
+        class="text-[10px] text-indigo-600"
+      >
         Quick range: <span class="font-mono">{{ currentQuickRangeLabel }}</span>
       </span>
     </div>
 
-    <div v-else class="text-[11px] text-gray-500 italic">
+    <div
+      v-else
+      class="text-[11px] text-gray-500 italic"
+    >
       No buckets match the current filters (or time window).
     </div>
 
     <!-- Buckets table -->
-    <BucketsTable :buckets="computedFilteredBuckets" @select-bucket="handleSelectBucket" @go-to-lab="handleGoToLab" />
+    <BucketsTable
+      :buckets="computedFilteredBuckets"
+      @select-bucket="handleSelectBucket"
+      @go-to-lab="handleGoToLab"
+    />
 
     <!-- Bucket details panel -->
     <BucketDetailsPanel

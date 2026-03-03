@@ -250,7 +250,7 @@ function onPointerMove(e: PointerEvent) {
   world.ty = dragging.ty0 + dy
 }
 function onPointerUp(e: PointerEvent) {
-  try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId) } catch {}
+  try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId) } catch { /* pointer may already be released */ }
   dragging.active = false
 }
 

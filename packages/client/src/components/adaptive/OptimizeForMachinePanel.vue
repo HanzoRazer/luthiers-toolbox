@@ -259,9 +259,15 @@ const canCompare = computed(() => !!props.optOut && !props.disabled)
         <table class="w-full mt-1">
           <thead>
             <tr>
-              <th class="text-left">Feed</th>
-              <th class="text-left">Stp%</th>
-              <th class="text-left">Time</th>
+              <th class="text-left">
+                Feed
+              </th>
+              <th class="text-left">
+                Stp%
+              </th>
+              <th class="text-left">
+                Time
+              </th>
             </tr>
           </thead>
           <tbody>

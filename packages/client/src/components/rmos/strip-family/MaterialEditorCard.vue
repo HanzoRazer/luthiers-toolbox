@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props -- Form editor with v-model on object prop is intentional */
 /**
  * MaterialEditorCard - Single material editor for strip family
  * Extracted from MixedMaterialStripFamilyEditor.vue
@@ -34,14 +35,30 @@ const emit = defineEmits<{
         v-model="material.type"
         :class="styles.inputSelect"
       >
-        <option value="wood">Wood</option>
-        <option value="metal">Metal</option>
-        <option value="shell">Shell</option>
-        <option value="paper">Paper</option>
-        <option value="foil">Foil</option>
-        <option value="charred">Charred</option>
-        <option value="resin">Resin</option>
-        <option value="composite">Composite</option>
+        <option value="wood">
+          Wood
+        </option>
+        <option value="metal">
+          Metal
+        </option>
+        <option value="shell">
+          Shell
+        </option>
+        <option value="paper">
+          Paper
+        </option>
+        <option value="foil">
+          Foil
+        </option>
+        <option value="charred">
+          Charred
+        </option>
+        <option value="resin">
+          Resin
+        </option>
+        <option value="composite">
+          Composite
+        </option>
       </select>
 
       <label>Species / Name</label>

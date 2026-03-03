@@ -1,7 +1,11 @@
 <template>
   <div class="display-container">
-    <div class="expression">{{ expression || '\u00A0' }}</div>
-    <div class="display">{{ display }}</div>
+    <div class="expression">
+      {{ expression || '\u00A0' }}
+    </div>
+    <div class="display">
+      {{ display }}
+    </div>
   </div>
 </template>
 

@@ -105,8 +105,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Instrument Type -->
     <section class="input-section">
       <h3>Instrument</h3>
-      <select :value="modelValue.instrument_type" @change="updateField('instrument_type', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in instrumentTypes" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.instrument_type"
+        @change="updateField('instrument_type', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in instrumentTypes"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -115,8 +122,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Experience -->
     <section class="input-section">
       <h3>Builder Experience</h3>
-      <select :value="modelValue.builder_experience" @change="updateField('builder_experience', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in experienceLevels" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.builder_experience"
+        @change="updateField('builder_experience', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in experienceLevels"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -125,7 +139,9 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Body Complexity - CHIP MULTI-SELECT -->
     <section class="input-section">
       <h3>Body Complexity</h3>
-      <p class="hint">Select all that apply</p>
+      <p class="hint">
+        Select all that apply
+      </p>
       <div class="chip-group">
         <button
           v-for="opt in bodyOptions"
@@ -143,8 +159,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Binding -->
     <section class="input-section">
       <h3>Binding</h3>
-      <select :value="modelValue.binding_body_complexity" @change="updateField('binding_body_complexity', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in bindingOptions" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.binding_body_complexity"
+        @change="updateField('binding_body_complexity', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in bindingOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -153,8 +176,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Neck -->
     <section class="input-section">
       <h3>Neck</h3>
-      <select :value="modelValue.neck_complexity" @change="updateField('neck_complexity', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in neckOptions" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.neck_complexity"
+        @change="updateField('neck_complexity', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in neckOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -163,8 +193,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Inlay -->
     <section class="input-section">
       <h3>Fretboard Inlay</h3>
-      <select :value="modelValue.fretboard_inlay" @change="updateField('fretboard_inlay', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in inlayOptions" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.fretboard_inlay"
+        @change="updateField('fretboard_inlay', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in inlayOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -173,8 +210,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Finish -->
     <section class="input-section">
       <h3>Finish Type</h3>
-      <select :value="modelValue.finish_type" @change="updateField('finish_type', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in finishOptions" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.finish_type"
+        @change="updateField('finish_type', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in finishOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -183,8 +227,15 @@ function isBodySelected(value: BodyComplexity): boolean {
     <!-- Rosette -->
     <section class="input-section">
       <h3>Rosette</h3>
-      <select :value="modelValue.rosette_complexity" @change="updateField('rosette_complexity', ($event.target as HTMLSelectElement).value as any)">
-        <option v-for="opt in rosetteOptions" :key="opt.value" :value="opt.value">
+      <select
+        :value="modelValue.rosette_complexity"
+        @change="updateField('rosette_complexity', ($event.target as HTMLSelectElement).value as any)"
+      >
+        <option
+          v-for="opt in rosetteOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </option>
       </select>
@@ -211,27 +262,27 @@ function isBodySelected(value: BodyComplexity): boolean {
           <input
             type="number"
             :value="modelValue.batch_size"
-            @input="updateField('batch_size', parseInt(($event.target as HTMLInputElement).value) || 1)"
             min="1"
             max="100"
-          />
+            @input="updateField('batch_size', parseInt(($event.target as HTMLInputElement).value) || 1)"
+          >
         </label>
         <label class="input-row">
           <span>Labor Rate ($/hr)</span>
           <input
             type="number"
             :value="modelValue.hourly_rate"
-            @input="updateField('hourly_rate', parseFloat(($event.target as HTMLInputElement).value) || 0)"
             min="0"
             step="5"
-          />
+            @input="updateField('hourly_rate', parseFloat(($event.target as HTMLInputElement).value) || 0)"
+          >
         </label>
         <label class="input-row checkbox-row">
           <input
             type="checkbox"
             :checked="modelValue.include_materials"
             @change="updateField('include_materials', ($event.target as HTMLInputElement).checked)"
-          />
+          >
           <span>Include Material Costs</span>
         </label>
       </section>

@@ -1,21 +1,45 @@
 <template>
   <div class="wf-actions">
-    <button :disabled="busy" class="btn" @click="$emit('ensure')">
+    <button
+      :disabled="busy"
+      class="btn"
+      @click="$emit('ensure')"
+    >
       {{ hasSession ? 'Restart' : 'Start' }}
     </button>
-    <button :disabled="busy || !hasSession" class="btn" @click="$emit('toReview')">
+    <button
+      :disabled="busy || !hasSession"
+      class="btn"
+      @click="$emit('toReview')"
+    >
       Review
     </button>
-    <button :disabled="busy || !hasSession" class="btn" @click="$emit('approve')">
+    <button
+      :disabled="busy || !hasSession"
+      class="btn"
+      @click="$emit('approve')"
+    >
       Approve
     </button>
-    <button :disabled="busy || !hasSession" class="btn ghost" @click="$emit('reject')">
+    <button
+      :disabled="busy || !hasSession"
+      class="btn ghost"
+      @click="$emit('reject')"
+    >
       Reject
     </button>
-    <button :disabled="busy || !hasSession" class="btn ghost" @click="$emit('reopen')">
+    <button
+      :disabled="busy || !hasSession"
+      class="btn ghost"
+      @click="$emit('reopen')"
+    >
       Reopen
     </button>
-    <button :disabled="busy || !canIntent" class="btn primary" @click="$emit('intent')">
+    <button
+      :disabled="busy || !canIntent"
+      class="btn primary"
+      @click="$emit('intent')"
+    >
       Get CAM Handoff Intent
     </button>
     <button

@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import io
+import logging
 from typing import Any, Dict
 
 import ezdxf
 import httpx
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/cam", tags=["cam", "adaptive", "dxf"])
 
@@ -37,7 +40,8 @@ def _dxf_to_adaptive_request(
         doc = ezdxf.read(data_stream)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to parse DXF for adaptive pocket")
         raise HTTPException(status_code=400, detail=f"Failed to parse DXF: {exc}") from exc
 
     msp = doc.modelspace()
@@ -105,7 +109,8 @@ async def dxf_adaptive_plan_run(
         dxf_bytes = await file.read()
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as exc:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to read DXF file")
         raise HTTPException(status_code=400, detail=f"Failed to read DXF file: {exc}") from exc
 
     body = _dxf_to_adaptive_request(

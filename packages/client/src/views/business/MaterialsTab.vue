@@ -17,23 +17,42 @@ defineProps<{
       <thead>
         <tr>
           <th>Category</th>
-          <th class="num">Base Cost</th>
-          <th class="num">Waste Factor</th>
-          <th class="num">Adjusted</th>
+          <th class="num">
+            Base Cost
+          </th>
+          <th class="num">
+            Waste Factor
+          </th>
+          <th class="num">
+            Adjusted
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(mat, i) in materials" :key="i">
+        <tr
+          v-for="(mat, i) in materials"
+          :key="i"
+        >
           <td>{{ mat.category }}</td>
-          <td class="num">${{ mat.base_cost.toFixed(0) }}</td>
-          <td class="num">{{ mat.waste_factor.toFixed(2) }}×</td>
-          <td class="num">${{ mat.adjusted_cost.toFixed(0) }}</td>
+          <td class="num">
+            ${{ mat.base_cost.toFixed(0) }}
+          </td>
+          <td class="num">
+            {{ mat.waste_factor.toFixed(2) }}×
+          </td>
+          <td class="num">
+            ${{ mat.adjusted_cost.toFixed(0) }}
+          </td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="3"><strong>Total Materials</strong></td>
-          <td class="num"><strong>${{ totalMaterialCost.toFixed(0) }}</strong></td>
+          <td colspan="3">
+            <strong>Total Materials</strong>
+          </td>
+          <td class="num">
+            <strong>${{ totalMaterialCost.toFixed(0) }}</strong>
+          </td>
         </tr>
       </tfoot>
     </table>

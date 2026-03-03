@@ -1,15 +1,23 @@
 <template>
   <div class="typography">
-
     <section class="type-section">
-      <h2 class="section-title">Type Scale</h2>
+      <h2 class="section-title">
+        Type Scale
+      </h2>
       <div class="scale-list">
-        <div v-for="token in typeScale" :key="token.name" class="scale-row">
+        <div
+          v-for="token in typeScale"
+          :key="token.name"
+          class="scale-row"
+        >
           <div class="scale-meta">
             <span class="token-name">{{ token.name }}</span>
             <span class="token-value">{{ token.value }}</span>
           </div>
-          <div class="scale-sample" :style="{ fontSize: `var(${token.name})` }">
+          <div
+            class="scale-sample"
+            :style="{ fontSize: `var(${token.name})` }"
+          >
             {{ sampleText }}
           </div>
         </div>
@@ -17,10 +25,14 @@
     </section>
 
     <section class="type-section">
-      <h2 class="section-title">Font Families</h2>
+      <h2 class="section-title">
+        Font Families
+      </h2>
       <div class="family-row">
         <div class="family-card">
-          <div class="family-label">Sans — var(--font-family-sans)</div>
+          <div class="family-label">
+            Sans — var(--font-family-sans)
+          </div>
           <div class="family-sample sans">
             ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
             abcdefghijklmnopqrstuvwxyz<br>
@@ -28,7 +40,9 @@
           </div>
         </div>
         <div class="family-card">
-          <div class="family-label">Mono — var(--font-family-mono)</div>
+          <div class="family-label">
+            Mono — var(--font-family-mono)
+          </div>
           <div class="family-sample mono">
             G00 X12.500 Y-3.250 Z5.000<br>
             G01 F800 X0.000 Y0.000<br>
@@ -39,41 +53,65 @@
     </section>
 
     <section class="type-section">
-      <h2 class="section-title">Font Weights</h2>
+      <h2 class="section-title">
+        Font Weights
+      </h2>
       <div class="weight-list">
-        <div v-for="w in weights" :key="w.name" class="weight-row">
+        <div
+          v-for="w in weights"
+          :key="w.name"
+          class="weight-row"
+        >
           <span class="token-name">{{ w.name }}</span>
-          <span class="weight-sample" :style="{ fontWeight: `var(${w.name})` }">{{ w.label }} — {{ sampleText }}</span>
+          <span
+            class="weight-sample"
+            :style="{ fontWeight: `var(${w.name})` }"
+          >{{ w.label }} — {{ sampleText }}</span>
         </div>
       </div>
     </section>
 
     <section class="type-section">
-      <h2 class="section-title">Real Usage Examples</h2>
+      <h2 class="section-title">
+        Real Usage Examples
+      </h2>
       <div class="usage-grid">
-
         <div class="usage-card">
-          <div class="usage-label">CAM Dashboard Stat</div>
+          <div class="usage-label">
+            CAM Dashboard Stat
+          </div>
           <div class="stat-example">
-            <div class="stat-value">94.2%</div>
-            <div class="stat-label">Toolpath Efficiency</div>
-            <div class="stat-sub">Last 30 runs · Updated 4 min ago</div>
+            <div class="stat-value">
+              94.2%
+            </div>
+            <div class="stat-label">
+              Toolpath Efficiency
+            </div>
+            <div class="stat-sub">
+              Last 30 runs · Updated 4 min ago
+            </div>
           </div>
         </div>
 
         <div class="usage-card">
-          <div class="usage-label">RMOS Candidate Row</div>
+          <div class="usage-label">
+            RMOS Candidate Row
+          </div>
           <div class="candidate-example">
             <div class="candidate-header">
               <span class="candidate-name">Rosette #4 — Sitka v2</span>
               <span class="candidate-risk green">✓ GREEN</span>
             </div>
-            <div class="candidate-meta">run_id: rmos_a1b2c3d4 · 2026-03-01 09:14</div>
+            <div class="candidate-meta">
+              run_id: rmos_a1b2c3d4 · 2026-03-01 09:14
+            </div>
           </div>
         </div>
 
         <div class="usage-card">
-          <div class="usage-label">G-Code Line</div>
+          <div class="usage-label">
+            G-Code Line
+          </div>
           <div class="gcode-example">
             <span class="gcode-line-num">0042</span>
             <span class="gcode-cmd">G01</span>
@@ -84,17 +122,21 @@
         </div>
 
         <div class="usage-card">
-          <div class="usage-label">Section Header</div>
+          <div class="usage-label">
+            Section Header
+          </div>
           <div class="header-example">
-            <h3 class="ex-h3">Scale Length Designer</h3>
-            <p class="ex-body">Configure fret spacing, multi-scale, and string tension for your instrument build.</p>
+            <h3 class="ex-h3">
+              Scale Length Designer
+            </h3>
+            <p class="ex-body">
+              Configure fret spacing, multi-scale, and string tension for your instrument build.
+            </p>
             <span class="ex-link">View documentation →</span>
           </div>
         </div>
-
       </div>
     </section>
-
   </div>
 </template>
 

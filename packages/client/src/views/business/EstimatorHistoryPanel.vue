@@ -230,7 +230,10 @@ defineExpose({
     <header class="panel-header">
       <h3>History</h3>
       <div class="header-actions">
-        <span v-if="history.length > 0" class="entry-count">
+        <span
+          v-if="history.length > 0"
+          class="entry-count"
+        >
           {{ history.length }} estimate{{ history.length !== 1 ? 's' : '' }}
         </span>
         <button
@@ -242,10 +245,18 @@ defineExpose({
           Clear
         </button>
         <template v-if="showClearConfirm">
-          <button type="button" class="btn-confirm-clear" @click="clearHistory">
+          <button
+            type="button"
+            class="btn-confirm-clear"
+            @click="clearHistory"
+          >
             Confirm
           </button>
-          <button type="button" class="btn-cancel-clear" @click="cancelClear">
+          <button
+            type="button"
+            class="btn-cancel-clear"
+            @click="cancelClear"
+          >
             Cancel
           </button>
         </template>
@@ -253,16 +264,29 @@ defineExpose({
     </header>
 
     <!-- Filter -->
-    <div v-if="instrumentTypes.length > 2" class="filter-row">
-      <select v-model="filterInstrument" class="filter-select">
-        <option v-for="type in instrumentTypes" :key="type" :value="type">
+    <div
+      v-if="instrumentTypes.length > 2"
+      class="filter-row"
+    >
+      <select
+        v-model="filterInstrument"
+        class="filter-select"
+      >
+        <option
+          v-for="type in instrumentTypes"
+          :key="type"
+          :value="type"
+        >
           {{ type === 'all' ? 'All Instruments' : formatInstrumentType(type) }}
         </option>
       </select>
     </div>
 
     <!-- Stats -->
-    <div v-if="history.length > 0" class="stats-row">
+    <div
+      v-if="history.length > 0"
+      class="stats-row"
+    >
       <div class="stat">
         <span class="stat-value">{{ formatCurrency(averageCost) }}</span>
         <span class="stat-label">Avg Cost</span>
@@ -274,13 +298,21 @@ defineExpose({
     </div>
 
     <!-- Empty State -->
-    <div v-if="history.length === 0" class="empty-state">
+    <div
+      v-if="history.length === 0"
+      class="empty-state"
+    >
       <p>No estimate history yet.</p>
-      <p class="hint">Run an estimate to start building your history.</p>
+      <p class="hint">
+        Run an estimate to start building your history.
+      </p>
     </div>
 
     <!-- History List -->
-    <div v-else class="history-list">
+    <div
+      v-else
+      class="history-list"
+    >
       <div
         v-for="entry in filteredHistory"
         :key="entry.id"

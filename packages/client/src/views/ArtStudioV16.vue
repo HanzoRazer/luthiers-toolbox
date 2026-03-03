@@ -4,7 +4,7 @@ import SvgCanvas from '@/components/SvgCanvas.vue'
 import ReliefGrid from '@/components/ReliefGrid.vue'
 import { svgNormalize, svgOutline, svgSave, reliefPreview } from '@/api/v16'
 
-const svgText = ref('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"60\"><rect x=\"4\" y=\"4\" width=\"112\" height=\"52\" fill=\"none\" stroke=\"black\"/></svg>')
+const svgText = ref(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60"><rect x="4" y="4" width="112" height="52" fill="none" stroke="black"/></svg>`)
 const outlineJson = ref('')
 const strokeWidth = ref(0.4)
 const svgName = ref('demo_v16')

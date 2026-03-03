@@ -29,7 +29,9 @@ function updateField<K extends keyof ToolConfig>(key: K, value: ToolConfig[K]) {
 
 <template>
   <div>
-    <h3 class="section-title">🔧 Tool Configuration</h3>
+    <h3 class="section-title">
+      🔧 Tool Configuration
+    </h3>
     <div class="tool-grid">
       <label class="input-label">
         <span>Tool Ø (mm)</span>

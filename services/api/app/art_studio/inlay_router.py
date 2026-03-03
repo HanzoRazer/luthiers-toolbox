@@ -9,9 +9,12 @@ Supports dots, diamonds, blocks, and custom shapes.
 
 from __future__ import annotations
 
+import logging
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -166,7 +169,8 @@ def preview_inlay(req: InlayPreviewRequest) -> InlayPreviewResponse:
         
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Inlay preview failed")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -212,7 +216,8 @@ def export_inlay_dxf(req: InlayDXFRequest) -> Response:
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Inlay DXF export failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 

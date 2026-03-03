@@ -19,10 +19,18 @@
           class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           @change="$emit('update:limit', Number(($event.target as HTMLSelectElement).value))"
         >
-          <option :value="10">10 runs</option>
-          <option :value="25">25 runs</option>
-          <option :value="50">50 runs</option>
-          <option :value="100">100 runs</option>
+          <option :value="10">
+            10 runs
+          </option>
+          <option :value="25">
+            25 runs
+          </option>
+          <option :value="50">
+            50 runs
+          </option>
+          <option :value="100">
+            100 runs
+          </option>
         </select>
       </div>
 
@@ -34,12 +42,24 @@
           class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           @change="$emit('update:riskFilter', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="all">All</option>
-          <option value="green">Green</option>
-          <option value="yellow">Yellow</option>
-          <option value="orange">Orange</option>
-          <option value="red">Red</option>
-          <option value="unknown">Unknown</option>
+          <option value="all">
+            All
+          </option>
+          <option value="green">
+            Green
+          </option>
+          <option value="yellow">
+            Yellow
+          </option>
+          <option value="orange">
+            Orange
+          </option>
+          <option value="red">
+            Red
+          </option>
+          <option value="unknown">
+            Unknown
+          </option>
         </select>
       </div>
 
@@ -51,11 +71,21 @@
           class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           @change="$emit('update:statusFilter', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="running">Running</option>
-          <option value="completed">Completed</option>
-          <option value="error">Error</option>
+          <option value="all">
+            All
+          </option>
+          <option value="pending">
+            Pending
+          </option>
+          <option value="running">
+            Running
+          </option>
+          <option value="completed">
+            Completed
+          </option>
+          <option value="error">
+            Error
+          </option>
         </select>
       </div>
 

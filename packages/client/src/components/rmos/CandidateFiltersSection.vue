@@ -94,7 +94,9 @@ function _hotkeyHelp() {
         class="chipsRow"
       >
         <div class="chipsGroup">
-          <div class="small muted">Decision:</div>
+          <div class="small muted">
+            Decision:
+          </div>
           <button
             type="button"
             :class="chipClass(decisionFilter === 'ALL', 'neutral')"
@@ -138,7 +140,9 @@ function _hotkeyHelp() {
         </div>
 
         <div class="chipsGroup">
-          <div class="small muted">Status:</div>
+          <div class="small muted">
+            Status:
+          </div>
           <button
             type="button"
             :class="chipClass(statusFilter === 'ALL', 'neutral')"
@@ -181,11 +185,21 @@ function _hotkeyHelp() {
           :disabled="disabled"
           @change="emit('update:decisionFilter', ($event.target as HTMLSelectElement).value as DecisionFilter)"
         >
-          <option value="ALL">All</option>
-          <option value="UNDECIDED">Undecided</option>
-          <option value="GREEN">GREEN</option>
-          <option value="YELLOW">YELLOW</option>
-          <option value="RED">RED</option>
+          <option value="ALL">
+            All
+          </option>
+          <option value="UNDECIDED">
+            Undecided
+          </option>
+          <option value="GREEN">
+            GREEN
+          </option>
+          <option value="YELLOW">
+            YELLOW
+          </option>
+          <option value="RED">
+            RED
+          </option>
         </select>
       </div>
 
@@ -196,10 +210,18 @@ function _hotkeyHelp() {
           :disabled="disabled"
           @change="emit('update:statusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)"
         >
-          <option value="ALL">All</option>
-          <option value="PROPOSED">PROPOSED</option>
-          <option value="ACCEPTED">ACCEPTED</option>
-          <option value="REJECTED">REJECTED</option>
+          <option value="ALL">
+            All
+          </option>
+          <option value="PROPOSED">
+            PROPOSED
+          </option>
+          <option value="ACCEPTED">
+            ACCEPTED
+          </option>
+          <option value="REJECTED">
+            REJECTED
+          </option>
         </select>
       </div>
 
@@ -211,7 +233,9 @@ function _hotkeyHelp() {
           title="Filter by operator identity"
           @change="emit('update:filterDecidedBy', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="ALL">All</option>
+          <option value="ALL">
+            All
+          </option>
           <option
             v-for="op in decidedByOptions"
             :key="op"
@@ -240,15 +264,33 @@ function _hotkeyHelp() {
           :disabled="disabled"
           @change="emit('update:sortKey', ($event.target as HTMLSelectElement).value as SortKey)"
         >
-          <option value="id">ID (up)</option>
-          <option value="id_desc">ID (down)</option>
-          <option value="created">Created (up)</option>
-          <option value="created_desc">Created (down)</option>
-          <option value="decided_at">Decided at (up)</option>
-          <option value="decided_at_desc">Decided at (down)</option>
-          <option value="decided_by">Decided by (A-Z)</option>
-          <option value="status">Status</option>
-          <option value="decision">Decision</option>
+          <option value="id">
+            ID (up)
+          </option>
+          <option value="id_desc">
+            ID (down)
+          </option>
+          <option value="created">
+            Created (up)
+          </option>
+          <option value="created_desc">
+            Created (down)
+          </option>
+          <option value="decided_at">
+            Decided at (up)
+          </option>
+          <option value="decided_at_desc">
+            Decided at (down)
+          </option>
+          <option value="decided_by">
+            Decided by (A-Z)
+          </option>
+          <option value="status">
+            Status
+          </option>
+          <option value="decision">
+            Decision
+          </option>
         </select>
       </div>
 
@@ -422,8 +464,14 @@ function _hotkeyHelp() {
     </div>
     <div>History</div>
     <div>Status</div>
-    <div class="note">Decision Note</div>
-    <div class="copyCol">Copy</div>
-    <div class="actions">Actions</div>
+    <div class="note">
+      Decision Note
+    </div>
+    <div class="copyCol">
+      Copy
+    </div>
+    <div class="actions">
+      Actions
+    </div>
   </div>
 </template>

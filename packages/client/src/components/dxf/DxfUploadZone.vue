@@ -67,20 +67,38 @@ function openFileBrowser() {
       @change="handleFileSelect"
     >
 
-    <div v-if="!file" class="upload-prompt">
+    <div
+      v-if="!file"
+      class="upload-prompt"
+    >
       <p>
         <strong>Drop DXF here</strong> or
-        <button class="link-btn" :disabled="disabled" @click="openFileBrowser">
+        <button
+          class="link-btn"
+          :disabled="disabled"
+          @click="openFileBrowser"
+        >
           browse
         </button>
       </p>
-      <p class="hint">DXF R12/R2000 format</p>
+      <p class="hint">
+        DXF R12/R2000 format
+      </p>
     </div>
 
-    <div v-else class="file-info">
+    <div
+      v-else
+      class="file-info"
+    >
       <span class="filename">{{ file.name }}</span>
       <span class="filesize">({{ (file.size / 1024).toFixed(1) }} KB)</span>
-      <button class="clear-btn" :disabled="disabled" @click="clearFile">×</button>
+      <button
+        class="clear-btn"
+        :disabled="disabled"
+        @click="clearFile"
+      >
+        ×
+      </button>
     </div>
   </div>
 </template>

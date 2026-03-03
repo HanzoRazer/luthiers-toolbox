@@ -5,47 +5,108 @@
         <h3>AI Advisory (Draft)</h3>
         <div class="meta">
           <span class="pill">informational only</span>
-          <span v-if="artifact?.advisory_id" class="mono">{{ artifact.advisory_id.slice(0, 8) }}…</span>
-          <span v-if="artifact?.created_at_utc" class="mono">{{ artifact.created_at_utc }}</span>
+          <span
+            v-if="artifact?.advisory_id"
+            class="mono"
+          >{{ artifact.advisory_id.slice(0, 8) }}…</span>
+          <span
+            v-if="artifact?.created_at_utc"
+            class="mono"
+          >{{ artifact.created_at_utc }}</span>
         </div>
       </div>
 
-      <details class="engine" v-if="artifact?.engine || artifact?.governance">
+      <details
+        v-if="artifact?.engine || artifact?.governance"
+        class="engine"
+      >
         <summary>Details</summary>
         <pre class="mono">{{ detailsJson }}</pre>
       </details>
     </header>
 
-    <div v-if="!blocks.length" class="empty">
+    <div
+      v-if="!blocks.length"
+      class="empty"
+    >
       No advisory content.
     </div>
 
-    <div v-else class="body">
-      <template v-for="(b, idx) in blocks" :key="idx">
-        <h4 v-if="b.type === 'heading'" class="h" :data-level="b.level">{{ b.text }}</h4>
+    <div
+      v-else
+      class="body"
+    >
+      <template
+        v-for="(b, idx) in blocks"
+        :key="idx"
+      >
+        <h4
+          v-if="b.type === 'heading'"
+          class="h"
+          :data-level="b.level"
+        >
+          {{ b.text }}
+        </h4>
 
-        <p v-else-if="b.type === 'paragraph'" class="p">{{ b.text }}</p>
+        <p
+          v-else-if="b.type === 'paragraph'"
+          class="p"
+        >
+          {{ b.text }}
+        </p>
 
-        <ul v-else-if="b.type === 'bullet_list'" class="ul">
-          <li v-for="(it, i) in b.items" :key="i">{{ it }}</li>
+        <ul
+          v-else-if="b.type === 'bullet_list'"
+          class="ul"
+        >
+          <li
+            v-for="(it, i) in b.items"
+            :key="i"
+          >
+            {{ it }}
+          </li>
         </ul>
 
-        <blockquote v-else-if="b.type === 'quote'" class="q">{{ b.text }}</blockquote>
+        <blockquote
+          v-else-if="b.type === 'quote'"
+          class="q"
+        >
+          {{ b.text }}
+        </blockquote>
 
-        <pre v-else-if="b.type === 'code_block'" class="code"><code>{{ b.code }}</code></pre>
+        <pre
+          v-else-if="b.type === 'code_block'"
+          class="code"
+        ><code>{{ b.code }}</code></pre>
 
-        <div v-else-if="b.type === 'evidence_refs'" class="refs">
-          <div class="refs-title">{{ b.title || "Evidence references" }}</div>
+        <div
+          v-else-if="b.type === 'evidence_refs'"
+          class="refs"
+        >
+          <div class="refs-title">
+            {{ b.title || "Evidence references" }}
+          </div>
           <table class="tbl">
             <thead>
               <tr><th>relpath</th><th>kind</th><th>sha256</th><th>bytes</th></tr>
             </thead>
             <tbody>
-              <tr v-for="(r, i) in b.refs" :key="i">
-                <td class="mono">{{ r.relpath }}</td>
-                <td class="mono">{{ r.kind || '—' }}</td>
-                <td class="mono">{{ (r.sha256 || '—').slice(0, 12) }}…</td>
-                <td class="mono">{{ r.bytes ?? '—' }}</td>
+              <tr
+                v-for="(r, i) in b.refs"
+                :key="i"
+              >
+                <td class="mono">
+                  {{ r.relpath }}
+                </td>
+                <td class="mono">
+                  {{ r.kind || '—' }}
+                </td>
+                <td class="mono">
+                  {{ (r.sha256 || '—').slice(0, 12) }}…
+                </td>
+                <td class="mono">
+                  {{ r.bytes ?? '—' }}
+                </td>
               </tr>
             </tbody>
           </table>

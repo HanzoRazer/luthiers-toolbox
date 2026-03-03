@@ -354,8 +354,18 @@ watch(() => props.runId, load)
         </div>
       </div>
       <div class="meta">
-        <span v-if="requestId" class="reqid" title="X-Request-Id">req: {{ requestId }}</span>
-        <button class="btn" :disabled="loading || exporting" @click="load">Refresh</button>
+        <span
+          v-if="requestId"
+          class="reqid"
+          title="X-Request-Id"
+        >req: {{ requestId }}</span>
+        <button
+          class="btn"
+          :disabled="loading || exporting"
+          @click="load"
+        >
+          Refresh
+        </button>
         <button
           class="btn"
           :disabled="!canExportGreenOnly"
@@ -367,10 +377,30 @@ watch(() => props.runId, load)
       </div>
     </div>
 
-    <p v-if="error" class="error">Error: {{ error }}</p>
-    <p v-if="saveError" class="error">Save error: {{ saveError }}</p>
-    <p v-if="exportError" class="error">Export: {{ exportError }}</p>
-    <p v-if="undoError" class="error">Undo: {{ undoError }}</p>
+    <p
+      v-if="error"
+      class="error"
+    >
+      Error: {{ error }}
+    </p>
+    <p
+      v-if="saveError"
+      class="error"
+    >
+      Save error: {{ saveError }}
+    </p>
+    <p
+      v-if="exportError"
+      class="error"
+    >
+      Export: {{ exportError }}
+    </p>
+    <p
+      v-if="undoError"
+      class="error"
+    >
+      Undo: {{ undoError }}
+    </p>
 
     <ManufacturingSummaryBar
       v-if="!loading && candidates.length > 0"
@@ -389,10 +419,24 @@ watch(() => props.runId, load)
       @export-package="exportGreenOnlyPackageZip"
     />
 
-    <p v-if="loading" class="muted">Loading candidates…</p>
-    <p v-else-if="candidates.length === 0" class="muted">No candidates yet.</p>
+    <p
+      v-if="loading"
+      class="muted"
+    >
+      Loading candidates…
+    </p>
+    <p
+      v-else-if="candidates.length === 0"
+      class="muted"
+    >
+      No candidates yet.
+    </p>
 
-    <div v-else class="table" :class="{ compact }">
+    <div
+      v-else
+      class="table"
+      :class="{ compact }"
+    >
       <CandidateFiltersSection
         v-model:decision-filter="decisionFilter"
         v-model:status-filter="statusFilter"
@@ -436,7 +480,11 @@ watch(() => props.runId, load)
         @undo-last="undoLast"
       />
 
-      <UndoHistoryPanel v-if="undoStack.length > 0" :history="undoStack" :max-items="5" />
+      <UndoHistoryPanel
+        v-if="undoStack.length > 0"
+        :history="undoStack"
+        :max-items="5"
+      />
 
       <BulkDecisionControlsV2
         v-if="selectedIds.size > 0"
@@ -486,7 +534,12 @@ watch(() => props.runId, load)
 
     <ExportPolicyCard v-if="candidates.length > 0" />
 
-    <div v-if="toast" class="toast">{{ toast }}</div>
+    <div
+      v-if="toast"
+      class="toast"
+    >
+      {{ toast }}
+    </div>
   </section>
 </template>
 

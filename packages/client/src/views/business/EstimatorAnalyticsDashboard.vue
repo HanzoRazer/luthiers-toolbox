@@ -257,29 +257,50 @@ onMounted(() => {
     </header>
 
     <!-- Empty State -->
-    <div v-if="totalEstimates === 0" class="empty-state">
+    <div
+      v-if="totalEstimates === 0"
+      class="empty-state"
+    >
       <p>No estimate data available for this period.</p>
-      <p class="hint">Run some estimates to see analytics here.</p>
+      <p class="hint">
+        Run some estimates to see analytics here.
+      </p>
     </div>
 
     <template v-else>
       <!-- KPI Cards -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-value">{{ totalEstimates }}</div>
-          <div class="kpi-label">Estimates</div>
+          <div class="kpi-value">
+            {{ totalEstimates }}
+          </div>
+          <div class="kpi-label">
+            Estimates
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-value">{{ formatCurrency(avgCost) }}</div>
-          <div class="kpi-label">Avg Cost</div>
+          <div class="kpi-value">
+            {{ formatCurrency(avgCost) }}
+          </div>
+          <div class="kpi-label">
+            Avg Cost
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-value">{{ avgHours.toFixed(1) }}h</div>
-          <div class="kpi-label">Avg Hours</div>
+          <div class="kpi-value">
+            {{ avgHours.toFixed(1) }}h
+          </div>
+          <div class="kpi-label">
+            Avg Hours
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-value">{{ avgComplexity.toFixed(2) }}x</div>
-          <div class="kpi-label">Avg Complexity</div>
+          <div class="kpi-value">
+            {{ avgComplexity.toFixed(2) }}x
+          </div>
+          <div class="kpi-label">
+            Avg Complexity
+          </div>
         </div>
       </div>
 
@@ -288,7 +309,10 @@ onMounted(() => {
         <!-- Cost Trend -->
         <div class="chart-card">
           <h4>Cost Trend</h4>
-          <div v-if="trendData.length > 1" class="trend-chart">
+          <div
+            v-if="trendData.length > 1"
+            class="trend-chart"
+          >
             <div
               v-for="point in trendData"
               :key="point.date"
@@ -299,7 +323,12 @@ onMounted(() => {
               <span class="bar-label">{{ formatDate(point.date) }}</span>
             </div>
           </div>
-          <p v-else class="chart-empty">Need more data points</p>
+          <p
+            v-else
+            class="chart-empty"
+          >
+            Need more data points
+          </p>
         </div>
 
         <!-- Cost Breakdown -->
@@ -310,21 +339,21 @@ onMounted(() => {
               <div
                 class="bar-segment labor"
                 :style="{ width: `${costBreakdown.laborPct}%` }"
-              ></div>
+              />
               <div
                 class="bar-segment materials"
                 :style="{ width: `${costBreakdown.materialsPct}%` }"
-              ></div>
+              />
             </div>
             <div class="breakdown-legend">
               <div class="legend-item">
-                <span class="legend-dot labor"></span>
+                <span class="legend-dot labor" />
                 <span class="legend-label">Labor</span>
                 <span class="legend-value">{{ formatCurrency(costBreakdown.labor) }}</span>
                 <span class="legend-pct">({{ costBreakdown.laborPct.toFixed(0) }}%)</span>
               </div>
               <div class="legend-item">
-                <span class="legend-dot materials"></span>
+                <span class="legend-dot materials" />
                 <span class="legend-label">Materials</span>
                 <span class="legend-value">{{ formatCurrency(costBreakdown.materials) }}</span>
                 <span class="legend-pct">({{ costBreakdown.materialsPct.toFixed(0) }}%)</span>
@@ -347,7 +376,10 @@ onMounted(() => {
             >
               <span class="dist-name">{{ formatInstrumentType(item.type) }}</span>
               <div class="dist-bar-container">
-                <div class="dist-bar" :style="{ width: `${item.pct}%` }"></div>
+                <div
+                  class="dist-bar"
+                  :style="{ width: `${item.pct}%` }"
+                />
               </div>
               <span class="dist-count">{{ item.count }}</span>
             </div>
@@ -368,7 +400,7 @@ onMounted(() => {
                 <div
                   class="dist-bar experience"
                   :style="{ width: `${item.pct}%` }"
-                ></div>
+                />
               </div>
               <span class="dist-count">{{ item.count }}</span>
             </div>

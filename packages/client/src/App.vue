@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <AppNav />
+    <!-- Old navigation removed - using dashboard navigation instead -->
     <main class="app-main">
       <router-view />
     </main>
@@ -16,7 +16,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/styles/design-tokens.css'
-import AppNav from '@/components/AppNav.vue'
+// import AppNav from '@/components/AppNav.vue' // Removed - using dashboard navigation
 import CoachBubble from '@/components/agentic/CoachBubble.vue'
 import IdleDetector from '@/components/agentic/IdleDetector.vue'
 import CommandPalette from '@/components/ui/CommandPalette.vue'

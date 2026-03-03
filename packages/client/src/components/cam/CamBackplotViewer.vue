@@ -174,14 +174,9 @@ const emit = defineEmits<{
   (e: 'overlay-hover', payload: { index: number; overlay: BackplotOverlay }): void
 }>()
 
-const stats = computed(() => {
-  // Extract stats from moves metadata if available
-  return null
-})
-
 const timeLabel = computed(() => {
-  if (!stats.value) return '—'
-  const t = (stats.value as any).time_s ?? (stats.value as any).time_jerk_s ?? null
+  if (!props.stats) return '—'
+  const t = (props.stats as any).time_s ?? (props.stats as any).time_jerk_s ?? null
   return typeof t === 'number' ? `${t.toFixed(1)}s` : '—'
 })
 

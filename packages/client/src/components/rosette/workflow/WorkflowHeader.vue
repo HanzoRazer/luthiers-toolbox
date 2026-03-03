@@ -1,7 +1,12 @@
 <template>
   <div class="wf-header">
-    <div class="wf-title">Design-First Workflow</div>
-    <div class="wf-pill" :data-state="state">
+    <div class="wf-title">
+      Design-First Workflow
+    </div>
+    <div
+      class="wf-pill"
+      :data-state="state"
+    >
       {{ state || '—' }}
     </div>
   </div>

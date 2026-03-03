@@ -170,7 +170,7 @@ function printQuote() {
             type="text"
             placeholder="Optional"
             class="text-input"
-          />
+          >
         </label>
 
         <label class="config-field">
@@ -183,7 +183,7 @@ function printQuote() {
               max="100"
               step="5"
               class="number-input"
-            />
+            >
             <span class="unit">%</span>
           </div>
         </label>
@@ -198,7 +198,7 @@ function printQuote() {
               max="90"
               step="7"
               class="number-input"
-            />
+            >
             <span class="unit">days</span>
           </div>
         </label>
@@ -211,7 +211,7 @@ function printQuote() {
           placeholder="Additional notes for the customer..."
           class="notes-input"
           rows="2"
-        ></textarea>
+        />
       </label>
     </section>
 
@@ -249,17 +249,28 @@ function printQuote() {
         {{ showPreview ? '▾ Hide Preview' : '▸ Show Preview' }}
       </button>
 
-      <div v-if="showPreview" class="quote-preview">
+      <div
+        v-if="showPreview"
+        class="quote-preview"
+      >
         <pre>{{ quoteText }}</pre>
       </div>
     </section>
 
     <!-- Actions -->
     <section class="actions-section">
-      <button type="button" class="btn-secondary" @click="copyToClipboard">
+      <button
+        type="button"
+        class="btn-secondary"
+        @click="copyToClipboard"
+      >
         Copy to Clipboard
       </button>
-      <button type="button" class="btn-primary" @click="printQuote">
+      <button
+        type="button"
+        class="btn-primary"
+        @click="printQuote"
+      >
         Print Quote
       </button>
     </section>

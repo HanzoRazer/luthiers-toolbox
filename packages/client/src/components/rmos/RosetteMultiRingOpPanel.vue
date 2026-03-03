@@ -169,7 +169,8 @@
         <textarea
           class="w-full h-48 border rounded px-2 py-1 font-mono text-[10px]"
           readonly
-        >{{ preview.gcode }}</textarea>
+          :value="preview.gcode"
+        />
       </div>
     </div>
 

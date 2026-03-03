@@ -345,7 +345,7 @@ def main() -> int:
     try:
         args = _parse_args(sys.argv[1:])
         repo_root = _repo_root_from_cwd()
-    except Exception as e:  # WP-1: keep broad — top-level CLI catch wraps arg parsing + repo root discovery
+    except Exception as e:  # WP-1: keep broad — top-level CLI catch wraps arg parsing + repo root discovery  # AUDITED 2026-03
         print(f"Pattern scanner error: {e}", file=sys.stderr)
         return 3
 

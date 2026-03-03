@@ -85,7 +85,7 @@ async function runCompare() {
       try {
         const j = await resp.json()
         if (j?.detail) msg = String(j.detail)
-      } catch {}
+      } catch { /* response may not be JSON */ }
       throw new Error(msg)
     }
     compare.value = await resp.json()

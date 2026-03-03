@@ -43,7 +43,7 @@ def safety_critical(func: Callable[P, R]) -> Callable[P, R]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return func(*args, **kwargs)
-        except Exception:  # WP-3: intentional — safety-critical logger must catch all exceptions
+        except Exception:  # WP-3: intentional — safety-critical logger must catch all exceptions  # AUDITED 2026-03: always re-raises
             logger.critical(
                 "SAFETY-CRITICAL FAILURE in %s",
                 func.__qualname__,

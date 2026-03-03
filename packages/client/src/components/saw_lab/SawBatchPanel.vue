@@ -10,7 +10,6 @@
     <div :class="styles.panelContent">
       <!-- Left Column: Batch Setup -->
       <BatchSetupSection
-        :blades="blades"
         v-model:selected-blade-id="selectedBladeId"
         v-model:machine-profile="machineProfile"
         v-model:material-family="materialFamily"
@@ -21,6 +20,7 @@
         v-model:start-y="startY"
         v-model:orientation="orientation"
         v-model:total-depth="totalDepth"
+        :blades="blades"
         v-model:depth-per-pass="depthPerPass"
         v-model:rpm="rpm"
         v-model:feed-ipm="feedIpm"
@@ -39,7 +39,9 @@
       <div :class="styles.batchPreviewSection">
         <!-- Batch Statistics -->
         <div :class="styles.batchStats">
-          <h3 :class="styles.sectionTitle">Batch Statistics</h3>
+          <h3 :class="styles.sectionTitle">
+            Batch Statistics
+          </h3>
           <div :class="styles.statsGrid">
             <div :class="styles.statCard">
               <div :class="styles.statLabel">
@@ -97,7 +99,9 @@
           v-if="validationResult"
           :class="styles.validationResults"
         >
-          <h3 :class="styles.sectionTitle">Validation Results</h3>
+          <h3 :class="styles.sectionTitle">
+            Validation Results
+          </h3>
           <div :class="validationResult.overall_result.toLowerCase() === 'ok' ? styles.validationBadgeOk : validationResult.overall_result.toLowerCase() === 'warn' ? styles.validationBadgeWarn : styles.validationBadgeError">
             {{ validationResult.overall_result }}
           </div>
@@ -127,7 +131,9 @@
           v-if="gcode"
           :class="styles.gcodePreview"
         >
-          <h3 :class="styles.sectionTitle">G-code Preview (First 20 / Last 5 lines)</h3>
+          <h3 :class="styles.sectionTitle">
+            G-code Preview (First 20 / Last 5 lines)
+          </h3>
           <pre :class="styles.gcodeText">{{ gcodePreview }}</pre>
           <button
             :class="styles.btnSecondary"
@@ -142,7 +148,9 @@
           v-if="runId"
           :class="styles.runArtifactLink"
         >
-          <h3 :class="styles.sectionTitle">Run Artifact</h3>
+          <h3 :class="styles.sectionTitle">
+            Run Artifact
+          </h3>
           <p>Job logged with Run ID: <code>{{ runId }}</code></p>
           <router-link
             :to="`/rmos/runs?run_id=${runId}`"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props -- Form editor with v-model on object prop is intentional */
 /**
  * ProbeOperationCard - Probe patterns operation card
  * Extracted from CAMEssentialsLab.vue
@@ -23,11 +24,21 @@ defineProps<{
       <div :class="styles['param-row']">
         <label>Pattern:</label>
         <select v-model="probe.params.value.pattern">
-          <option value="corner_outside">Corner (Outside)</option>
-          <option value="corner_inside">Corner (Inside)</option>
-          <option value="boss_circular">Boss (Circular)</option>
-          <option value="hole_circular">Hole (Circular)</option>
-          <option value="surface_z">Surface Z</option>
+          <option value="corner_outside">
+            Corner (Outside)
+          </option>
+          <option value="corner_inside">
+            Corner (Inside)
+          </option>
+          <option value="boss_circular">
+            Boss (Circular)
+          </option>
+          <option value="hole_circular">
+            Hole (Circular)
+          </option>
+          <option value="surface_z">
+            Surface Z
+          </option>
         </select>
       </div>
       <div :class="styles['param-row']">
@@ -60,12 +71,24 @@ defineProps<{
       <div :class="styles['param-row']">
         <label>Work Offset:</label>
         <select v-model="probe.params.value.work_offset">
-          <option value="1">G54 (1)</option>
-          <option value="2">G55 (2)</option>
-          <option value="3">G56 (3)</option>
-          <option value="4">G57 (4)</option>
-          <option value="5">G58 (5)</option>
-          <option value="6">G59 (6)</option>
+          <option value="1">
+            G54 (1)
+          </option>
+          <option value="2">
+            G55 (2)
+          </option>
+          <option value="3">
+            G56 (3)
+          </option>
+          <option value="4">
+            G57 (4)
+          </option>
+          <option value="5">
+            G58 (5)
+          </option>
+          <option value="6">
+            G59 (6)
+          </option>
         </select>
       </div>
     </div>

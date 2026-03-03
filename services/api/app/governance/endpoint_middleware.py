@@ -120,7 +120,7 @@ class EndpointGovernanceMiddleware(BaseHTTPMiddleware):
             if status in {EndpointStatus.LEGACY, EndpointStatus.SHADOW}:
                 replacement = _get_replacement(endpoint=endpoint, method=method, path_pattern=path_pattern)
                 _warn_once(method=method, path_pattern=path_pattern or (request.url.path or ""), status=status, replacement=replacement)
-        except Exception:  # WP-1: keep broad — middleware must never interfere with request lifecycle
+        except Exception:  # WP-1: keep broad — middleware must never interfere with request lifecycle  # AUDITED 2026-03: non-fatal, logs debug
             logger.debug("Endpoint governance middleware failed (non-fatal).", exc_info=True)
 
         return response

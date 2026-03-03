@@ -7,7 +7,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-[260px,1fr,320px] gap-4">
       <!-- Left: Pattern Library + JobLog -->
       <div class="space-y-4">
-        <RosettePatternLibrary @pattern-selected="onPatternSelected" />
+        <RosettePatternLibraryEnhanced @pattern-selected="onPatternSelected" />
         <JobLogMiniList />
       </div>
 
@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import RosettePatternLibrary from '@/components/rmos/RosettePatternLibrary.vue';
+import RosettePatternLibraryEnhanced from '@/components/rmos/RosettePatternLibraryEnhanced.vue';
 import RosetteTemplateLab from '@/components/rmos/RosetteTemplateLab.vue';
 import RosetteMultiRingOpPanel from '@/components/rmos/RosetteMultiRingOpPanel.vue';
 import RosetteManufacturingPlanPanel from '@/components/rmos/RosetteManufacturingPlanPanel.vue';

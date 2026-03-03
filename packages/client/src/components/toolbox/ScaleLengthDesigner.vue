@@ -2,7 +2,9 @@
   <div class="scale-designer">
     <!-- Header -->
     <div class="designer-header">
-      <h1 class="designer-title">🎸 Scale Length Designer</h1>
+      <h1 class="designer-title">
+        🎸 Scale Length Designer
+      </h1>
       <p class="designer-subtitle">
         Educational tool for understanding guitar scale length physics, string tension, and intonation compensation
       </p>

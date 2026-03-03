@@ -63,22 +63,74 @@ function handleRetry() {
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="isVisible" class="error-overlay" @click.self="handleClose">
-        <div class="error-modal" role="alertdialog" aria-modal="true">
+      <div
+        v-if="isVisible"
+        class="error-overlay"
+        @click.self="handleClose"
+      >
+        <div
+          class="error-modal"
+          role="alertdialog"
+          aria-modal="true"
+        >
           <!-- Header -->
           <header class="error-header">
             <div class="error-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <line
+                  x1="12"
+                  y1="8"
+                  x2="12"
+                  y2="12"
+                />
+                <line
+                  x1="12"
+                  y1="16"
+                  x2="12.01"
+                  y2="16"
+                />
               </svg>
             </div>
-            <h2 class="error-title">{{ errorTitle }}</h2>
-            <button class="close-btn" @click="handleClose" aria-label="Close">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+            <h2 class="error-title">
+              {{ errorTitle }}
+            </h2>
+            <button
+              class="close-btn"
+              aria-label="Close"
+              @click="handleClose"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line
+                  x1="18"
+                  y1="6"
+                  x2="6"
+                  y2="18"
+                />
+                <line
+                  x1="6"
+                  y1="6"
+                  x2="18"
+                  y2="18"
+                />
               </svg>
             </button>
           </header>
@@ -87,29 +139,49 @@ function handleRetry() {
           <div class="error-body">
             <!-- What happened -->
             <div class="error-section">
-              <h3 class="section-label">What happened</h3>
+              <h3 class="section-label">
+                What happened
+              </h3>
               <p class="error-message">
-                <code v-if="errorCode" class="error-code">{{ errorCode }}</code>
+                <code
+                  v-if="errorCode"
+                  class="error-code"
+                >{{ errorCode }}</code>
                 {{ error?.message }}
               </p>
             </div>
 
             <!-- Why (details) -->
-            <div v-if="error?.details" class="error-section">
-              <h3 class="section-label">Details</h3>
+            <div
+              v-if="error?.details"
+              class="error-section"
+            >
+              <h3 class="section-label">
+                Details
+              </h3>
               <pre class="error-details">{{ error.details }}</pre>
             </div>
 
             <!-- How to fix -->
-            <div v-if="error?.hint" class="error-section error-section--hint">
-              <h3 class="section-label">How to fix</h3>
-              <p class="error-hint">{{ error.hint }}</p>
+            <div
+              v-if="error?.hint"
+              class="error-section error-section--hint"
+            >
+              <h3 class="section-label">
+                How to fix
+              </h3>
+              <p class="error-hint">
+                {{ error.hint }}
+              </p>
             </div>
           </div>
 
           <!-- Actions -->
           <footer class="error-footer">
-            <button class="btn btn--secondary" @click="handleClose">
+            <button
+              class="btn btn--secondary"
+              @click="handleClose"
+            >
               Dismiss
             </button>
 

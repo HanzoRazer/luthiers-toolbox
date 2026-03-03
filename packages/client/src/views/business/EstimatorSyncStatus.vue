@@ -43,20 +43,48 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="sync-status" :class="{ synced: state.synced, pending: state.pendingCount > 0 }">
+  <div
+    class="sync-status"
+    :class="{ synced: state.synced, pending: state.pendingCount > 0 }"
+  >
     <div class="status-indicator">
-      <span v-if="syncing" class="spinner"></span>
-      <span v-else-if="state.synced" class="dot green"></span>
-      <span v-else class="dot yellow"></span>
+      <span
+        v-if="syncing"
+        class="spinner"
+      />
+      <span
+        v-else-if="state.synced"
+        class="dot green"
+      />
+      <span
+        v-else
+        class="dot yellow"
+      />
     </div>
     <div class="status-text">
       <span v-if="syncing">Syncing...</span>
-      <span v-else-if="state.error" class="error">{{ state.error }}</span>
+      <span
+        v-else-if="state.error"
+        class="error"
+      >{{ state.error }}</span>
       <span v-else-if="state.pendingCount > 0">{{ state.pendingCount }} pending</span>
       <span v-else>Synced {{ formatTime(state.lastSync) }}</span>
     </div>
-    <button v-if="!syncing" type="button" class="btn-sync" @click="syncNow" title="Sync now">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button
+      v-if="!syncing"
+      type="button"
+      class="btn-sync"
+      title="Sync now"
+      @click="syncNow"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
       </svg>
     </button>

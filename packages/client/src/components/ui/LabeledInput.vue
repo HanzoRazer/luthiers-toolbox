@@ -40,7 +40,10 @@ function onInput(event: Event) {
   <div class="labeled-input">
     <label class="label">
       {{ label }}
-      <span v-if="suffix" class="suffix">{{ suffix }}</span>
+      <span
+        v-if="suffix"
+        class="suffix"
+      >{{ suffix }}</span>
     </label>
 
     <select
@@ -71,7 +74,12 @@ function onInput(event: Event) {
       @input="onInput"
     >
 
-    <p v-if="hint" class="hint">{{ hint }}</p>
+    <p
+      v-if="hint"
+      class="hint"
+    >
+      {{ hint }}
+    </p>
   </div>
 </template>
 

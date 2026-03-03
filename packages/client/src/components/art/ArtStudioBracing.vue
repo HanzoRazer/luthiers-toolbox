@@ -99,7 +99,7 @@ onMounted(() => {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Panel: Single Brace Calculator -->
       <BraceSinglePanel
-        v-model:profileType="profileType"
+        v-model:profile-type="profileType"
         v-model:width="width"
         v-model:height="height"
         v-model:length="length"

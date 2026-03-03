@@ -5,34 +5,56 @@
         class="btn"
         :class="{ disabled: !!disabledReason, running: runState.state === 'running' }"
         :disabled="!!disabledReason || runState.state === 'running'"
-        @click="onClick"
         :title="disabledReason || 'Request an explanation for the current selection'"
+        @click="onClick"
       >
-        <span v-if="runState.state === 'running'" class="spinner" aria-hidden="true"></span>
+        <span
+          v-if="runState.state === 'running'"
+          class="spinner"
+          aria-hidden="true"
+        />
         🧠 Explain selection
       </button>
 
-      <button class="btn subtle" :disabled="runState.state === 'running'" @click="$emit('clear')">
+      <button
+        class="btn subtle"
+        :disabled="runState.state === 'running'"
+        @click="$emit('clear')"
+      >
         Clear
       </button>
     </div>
 
     <div class="status">
       <span class="sel">{{ selSummary }}</span>
-      <span v-if="runState.state === 'success'" class="ok">
+      <span
+        v-if="runState.state === 'success'"
+        class="ok"
+      >
         Draft saved ({{ runState.advisoryId.slice(0, 8) }}…)
       </span>
-      <span v-else-if="runState.state === 'error'" class="err">
+      <span
+        v-else-if="runState.state === 'error'"
+        class="err"
+      >
         {{ runState.message }}
       </span>
-      <span v-else class="hint">
+      <span
+        v-else
+        class="hint"
+      >
         Draft advisory only — review required.
       </span>
     </div>
 
-    <details class="why" v-if="disabledReason">
+    <details
+      v-if="disabledReason"
+      class="why"
+    >
       <summary>Why disabled?</summary>
-      <div class="why-body">{{ disabledReason }}</div>
+      <div class="why-body">
+        {{ disabledReason }}
+      </div>
     </details>
   </div>
 </template>
