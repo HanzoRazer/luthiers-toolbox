@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from ...services.preset_store import load_all_presets, save_all_presets
 
-router = APIRouter(prefix="/cnc/presets", tags=["cnc-production", "presets"])
+router = APIRouter(prefix="/presets", tags=["cnc-production", "presets"])
 
 
 class PresetIn(BaseModel):
