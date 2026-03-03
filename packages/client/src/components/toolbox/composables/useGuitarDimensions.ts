@@ -224,7 +224,7 @@ export function useGuitarDimensions() {
 
     for (const [key, value] of Object.entries(preset)) {
       if (value !== undefined && key in dimensions.value) {
-        ;(dimensions.value as Record<string, number>)[key] = parseFloat((value * factor).toFixed(2))
+        (dimensions.value as Record<string, number>)[key] = parseFloat((value * factor).toFixed(2))
       }
     }
 

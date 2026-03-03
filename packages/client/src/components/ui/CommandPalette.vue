@@ -1,8 +1,17 @@
 <template>
   <Teleport to="body">
     <Transition name="palette">
-      <div v-if="isOpen" class="command-palette-overlay" @click.self="close">
-        <div class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div
+        v-if="isOpen"
+        class="command-palette-overlay"
+        @click.self="close"
+      >
+        <div
+          class="command-palette"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command palette"
+        >
           <!-- Search input -->
           <div class="palette-header">
             <span class="palette-icon">🔍</span>
@@ -15,21 +24,31 @@
               autocomplete="off"
               spellcheck="false"
               @keydown.stop
-            />
+            >
             <kbd class="palette-shortcut">ESC</kbd>
           </div>
 
           <!-- Results -->
-          <div class="palette-results" role="listbox">
+          <div
+            class="palette-results"
+            role="listbox"
+          >
             <template v-if="filteredCommands.length === 0">
-              <div class="palette-empty">No commands found</div>
+              <div class="palette-empty">
+                No commands found
+              </div>
             </template>
 
             <template v-else>
-              <template v-for="(commands, category) in groupedCommands" :key="category">
-                <div class="palette-category">{{ categoryLabel(category) }}</div>
+              <template
+                v-for="(commands, category) in groupedCommands"
+                :key="category"
+              >
+                <div class="palette-category">
+                  {{ categoryLabel(category) }}
+                </div>
                 <button
-                  v-for="(cmd, idx) in commands"
+                  v-for="cmd in commands"
                   :key="cmd.id"
                   class="palette-item"
                   :class="{ selected: isSelected(cmd) }"
@@ -40,7 +59,10 @@
                 >
                   <span class="item-icon">{{ cmd.icon || '→' }}</span>
                   <span class="item-label">{{ cmd.label }}</span>
-                  <span v-if="cmd.shortcut" class="item-shortcut">
+                  <span
+                    v-if="cmd.shortcut"
+                    class="item-shortcut"
+                  >
                     <kbd>{{ cmd.shortcut }}</kbd>
                   </span>
                 </button>

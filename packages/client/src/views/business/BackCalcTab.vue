@@ -118,16 +118,25 @@ function formatRate(value: number): string {
           min="0"
           step="50"
           class="price-input"
-        />
+        >
       </div>
       <div class="quick-targets">
-        <button type="button" @click="targetPrice = breakEvenPrice">
+        <button
+          type="button"
+          @click="targetPrice = breakEvenPrice"
+        >
           Break-even ({{ formatCurrency(breakEvenPrice) }})
         </button>
-        <button type="button" @click="targetPrice = minViablePrice">
+        <button
+          type="button"
+          @click="targetPrice = minViablePrice"
+        >
           +10% ({{ formatCurrency(minViablePrice) }})
         </button>
-        <button type="button" @click="setTargetFromMargin">
+        <button
+          type="button"
+          @click="setTargetFromMargin"
+        >
           +{{ targetMarginPct }}% margin
         </button>
       </div>
@@ -143,7 +152,7 @@ function formatRate(value: number): string {
           min="0"
           max="50"
           step="5"
-        />
+        >
         <span class="margin-value">{{ targetMarginPct }}%</span>
       </div>
       <p class="margin-hint">
@@ -157,7 +166,10 @@ function formatRate(value: number): string {
 
       <div class="result-grid">
         <!-- Profit/Loss -->
-        <div class="result-card" :class="isProfitable ? 'positive' : 'negative'">
+        <div
+          class="result-card"
+          :class="isProfitable ? 'positive' : 'negative'"
+        >
           <span class="result-label">Profit/Loss</span>
           <span class="result-value">
             {{ isProfitable ? '+' : '' }}{{ formatCurrency(profitAtTarget) }}
@@ -168,7 +180,10 @@ function formatRate(value: number): string {
         </div>
 
         <!-- Required Rate -->
-        <div class="result-card" :class="hourlyRateDelta >= 0 ? 'warning' : 'positive'">
+        <div
+          class="result-card"
+          :class="hourlyRateDelta >= 0 ? 'warning' : 'positive'"
+        >
           <span class="result-label">Required Rate</span>
           <span class="result-value">{{ formatRate(requiredHourlyRate) }}</span>
           <span class="result-detail">
@@ -197,7 +212,10 @@ function formatRate(value: number): string {
     </section>
 
     <!-- Action -->
-    <section v-if="requiredHourlyRate > 0 && requiredHourlyRate !== currentHourlyRate" class="action-section">
+    <section
+      v-if="requiredHourlyRate > 0 && requiredHourlyRate !== currentHourlyRate"
+      class="action-section"
+    >
       <button
         type="button"
         class="apply-rate-btn"
@@ -211,7 +229,10 @@ function formatRate(value: number): string {
     </section>
 
     <!-- Warning for below-cost -->
-    <section v-if="targetPrice < breakEvenPrice && targetPrice > 0" class="warning-section">
+    <section
+      v-if="targetPrice < breakEvenPrice && targetPrice > 0"
+      class="warning-section"
+    >
       <div class="warning-banner">
         <span class="warning-icon">!</span>
         <div class="warning-content">

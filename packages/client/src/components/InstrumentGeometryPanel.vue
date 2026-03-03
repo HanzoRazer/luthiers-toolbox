@@ -358,14 +358,30 @@
               <table :class="styles.table">
                 <thead :class="styles.tableHead">
                   <tr>
-                    <th :class="styles.th">Fret #</th>
-                    <th :class="styles.th">Position (mm)</th>
-                    <th :class="styles.th">Width (mm)</th>
-                    <th :class="styles.th">Depth (mm)</th>
-                    <th :class="styles.th">Feed (mm/min)</th>
-                    <th :class="styles.th">RPM</th>
-                    <th :class="styles.th">Time (s)</th>
-                    <th :class="styles.th">Cost ($)</th>
+                    <th :class="styles.th">
+                      Fret #
+                    </th>
+                    <th :class="styles.th">
+                      Position (mm)
+                    </th>
+                    <th :class="styles.th">
+                      Width (mm)
+                    </th>
+                    <th :class="styles.th">
+                      Depth (mm)
+                    </th>
+                    <th :class="styles.th">
+                      Feed (mm/min)
+                    </th>
+                    <th :class="styles.th">
+                      RPM
+                    </th>
+                    <th :class="styles.th">
+                      Time (s)
+                    </th>
+                    <th :class="styles.th">
+                      Cost ($)
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -374,14 +390,30 @@
                     :key="tp.fret_number"
                     :class="[styles.tableRow, tp.fret_number % 12 === 0 && styles.rowHighlight]"
                   >
-                    <td :class="styles.td">{{ tp.fret_number }}</td>
-                    <td :class="styles.td">{{ tp.position_mm.toFixed(2) }}</td>
-                    <td :class="styles.td">{{ tp.width_mm.toFixed(2) }}</td>
-                    <td :class="styles.td">{{ tp.depth_mm.toFixed(2) }}</td>
-                    <td :class="styles.td">{{ tp.feed_rate }}</td>
-                    <td :class="styles.td">{{ tp.spindle_rpm }}</td>
-                    <td :class="styles.td">{{ tp.cut_time_s.toFixed(1) }}</td>
-                    <td :class="styles.td">{{ tp.cost_usd.toFixed(3) }}</td>
+                    <td :class="styles.td">
+                      {{ tp.fret_number }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.position_mm.toFixed(2) }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.width_mm.toFixed(2) }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.depth_mm.toFixed(2) }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.feed_rate }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.spindle_rpm }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.cut_time_s.toFixed(1) }}
+                    </td>
+                    <td :class="styles.td">
+                      {{ tp.cost_usd.toFixed(3) }}
+                    </td>
                   </tr>
                 </tbody>
               </table>

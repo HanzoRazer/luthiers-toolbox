@@ -70,8 +70,12 @@ function getTensionClass(tension: number): string {
               :value="scaleUnit"
               @change="emit('update:scaleUnit', ($event.target as HTMLSelectElement).value as 'in' | 'mm')"
             >
-              <option value="in">inches</option>
-              <option value="mm">mm</option>
+              <option value="in">
+                inches
+              </option>
+              <option value="mm">
+                mm
+              </option>
             </select>
           </div>
         </div>
@@ -83,7 +87,9 @@ function getTensionClass(tension: number): string {
             :key="idx"
             :class="styles.stringRow"
           >
-            <div :class="styles.stringLabel">{{ s.name }}</div>
+            <div :class="styles.stringLabel">
+              {{ s.name }}
+            </div>
             <input
               :value="s.gauge"
               type="number"
@@ -92,7 +98,9 @@ function getTensionClass(tension: number): string {
               max="0.070"
               @input="emit('updateStringGauge', idx, Number(($event.target as HTMLInputElement).value))"
             >
-            <div :class="styles.stringFreq">{{ s.note }} ({{ s.freq }} Hz)</div>
+            <div :class="styles.stringFreq">
+              {{ s.note }} ({{ s.freq }} Hz)
+            </div>
             <div :class="[styles.stringTension, getTensionClass(calculateTension(idx))]">
               {{ calculateTension(idx).toFixed(1) }} lbs
             </div>
@@ -135,16 +143,28 @@ function getTensionClass(tension: number): string {
 
       <div :class="styles.tensionSummary">
         <div :class="styles.summaryCard">
-          <div :class="styles.summaryLabel">Total Tension</div>
-          <div :class="styles.summaryValue">{{ totalTension.toFixed(1) }} lbs</div>
+          <div :class="styles.summaryLabel">
+            Total Tension
+          </div>
+          <div :class="styles.summaryValue">
+            {{ totalTension.toFixed(1) }} lbs
+          </div>
         </div>
         <div :class="styles.summaryCard">
-          <div :class="styles.summaryLabel">Average per String</div>
-          <div :class="styles.summaryValue">{{ averageTension.toFixed(1) }} lbs</div>
+          <div :class="styles.summaryLabel">
+            Average per String
+          </div>
+          <div :class="styles.summaryValue">
+            {{ averageTension.toFixed(1) }} lbs
+          </div>
         </div>
         <div :class="styles.summaryCard">
-          <div :class="styles.summaryLabel">Tension Range</div>
-          <div :class="styles.summaryValue">{{ tensionRange.toFixed(1) }} lbs</div>
+          <div :class="styles.summaryLabel">
+            Tension Range
+          </div>
+          <div :class="styles.summaryValue">
+            {{ tensionRange.toFixed(1) }} lbs
+          </div>
         </div>
       </div>
 

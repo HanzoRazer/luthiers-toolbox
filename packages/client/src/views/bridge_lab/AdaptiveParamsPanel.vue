@@ -20,8 +20,12 @@
           :value="params.units"
           @change="emitUpdate('units', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="mm">Millimeters</option>
-          <option value="inch">Inches</option>
+          <option value="mm">
+            Millimeters
+          </option>
+          <option value="inch">
+            Inches
+          </option>
         </select>
       </div>
 
@@ -75,8 +79,12 @@
           :value="params.strategy"
           @change="emitUpdate('strategy', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="Spiral">Spiral</option>
-          <option value="Lanes">Lanes</option>
+          <option value="Spiral">
+            Spiral
+          </option>
+          <option value="Lanes">
+            Lanes
+          </option>
         </select>
       </div>
 

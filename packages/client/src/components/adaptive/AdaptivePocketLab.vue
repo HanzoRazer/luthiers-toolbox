@@ -88,9 +88,6 @@
         
         <!-- M.2: Optimize for Machine (extracted component) -->
         <OptimizeForMachinePanel
-          :opt-out="optOut"
-          :has-toolpath="moves.length > 0"
-          :has-machine="!!machineId"
           v-model:opt-feed-lo="optFeedLo"
           v-model:opt-feed-hi="optFeedHi"
           v-model:opt-stp-lo="optStpLo"
@@ -99,8 +96,11 @@
           v-model:opt-rpm-hi="optRpmHi"
           v-model:opt-flutes="optFlutes"
           v-model:opt-chip="optChip"
+          :opt-out="optOut"
           v-model:opt-grid-f="optGridF"
+          :has-toolpath="moves.length > 0"
           v-model:opt-grid-s="optGridS"
+          :has-machine="!!machineId"
           v-model:enforce-chip="enforceChip"
           v-model:chip-tol="chipTol"
           :disabled="false"
@@ -125,14 +125,14 @@
 
       <!-- M.3 Heat over Time Card (extracted component) -->
       <HeatTimeSeriesPanel
-        :has-moves="!!planOut?.moves"
-        :material-id="materialId"
-        :profile-id="profileId"
-        :heat-ts="heatTS"
         v-model:include-csv-links="includeCsvLinks"
         v-model:adopt-overrides="adoptOverrides"
         v-model:live-learn-applied="liveLearnApplied"
         v-model:measured-seconds="measuredSeconds"
+        :has-moves="!!planOut?.moves"
+        :material-id="materialId"
+        :profile-id="profileId"
+        :heat-ts="heatTS"
         :session-override-factor="sessionOverrideFactor"
         @run-heat-ts="runHeatTS"
         @export-report="exportThermalReport"

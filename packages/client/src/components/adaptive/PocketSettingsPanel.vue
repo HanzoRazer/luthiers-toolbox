@@ -44,7 +44,9 @@ const emit = defineEmits<{
 
 <template>
   <div class="settings-panel">
-    <h4 class="section-title">Tool Settings</h4>
+    <h4 class="section-title">
+      Tool Settings
+    </h4>
 
     <div class="form-grid">
       <label class="form-label">
@@ -100,7 +102,9 @@ const emit = defineEmits<{
       </label>
     </div>
 
-    <h4 class="section-title">Strategy</h4>
+    <h4 class="section-title">
+      Strategy
+    </h4>
 
     <div class="form-grid">
       <label class="form-label">
@@ -154,7 +158,9 @@ const emit = defineEmits<{
       </label>
     </div>
 
-    <h4 class="section-title">Feeds & Speeds</h4>
+    <h4 class="section-title">
+      Feeds & Speeds
+    </h4>
 
     <div class="form-grid">
       <label class="form-label">
@@ -210,7 +216,9 @@ const emit = defineEmits<{
       </label>
     </div>
 
-    <h4 class="section-title">Geometry</h4>
+    <h4 class="section-title">
+      Geometry
+    </h4>
 
     <div class="form-grid">
       <label class="form-label">

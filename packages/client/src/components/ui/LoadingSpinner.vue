@@ -13,8 +13,17 @@ defineProps<{
 </script>
 
 <template>
-  <div class="spinner-container" :class="`spinner--${size || 'md'}`" role="status">
-    <svg class="spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <div
+    class="spinner-container"
+    :class="`spinner--${size || 'md'}`"
+    role="status"
+  >
+    <svg
+      class="spinner"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle
         class="spinner-track"
         cx="12"
@@ -31,8 +40,14 @@ defineProps<{
         stroke-linecap="round"
       />
     </svg>
-    <span v-if="label" class="spinner-label">{{ label }}</span>
-    <span v-else class="sr-only">Loading...</span>
+    <span
+      v-if="label"
+      class="spinner-label"
+    >{{ label }}</span>
+    <span
+      v-else
+      class="sr-only"
+    >Loading...</span>
   </div>
 </template>
 

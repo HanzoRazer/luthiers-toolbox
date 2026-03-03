@@ -1,9 +1,10 @@
 <template>
   <div class="nav-proto">
-
     <div class="proto-header">
       <div>
-        <h2 class="proto-title">Navigation Redesign</h2>
+        <h2 class="proto-title">
+          Navigation Redesign
+        </h2>
         <p class="proto-desc">
           Current AppNav exposes 30+ routes as flat links. This prototype
           organizes them into 5 workflow domains. Click domains to explore.
@@ -23,7 +24,10 @@
     </div>
 
     <!-- Variant: Top Nav -->
-    <div v-if="activeVariant === 'top'" class="preview-frame">
+    <div
+      v-if="activeVariant === 'top'"
+      class="preview-frame"
+    >
       <nav class="top-nav-proto">
         <div class="nav-brand">
           <span class="brand-icon">🎸</span>
@@ -42,17 +46,33 @@
             <button class="domain-btn">
               <span>{{ domain.icon }}</span>
               {{ domain.label }}
-              <svg class="chevron" viewBox="0 0 16 16" fill="none">
-                <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <svg
+                class="chevron"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
 
-            <div v-if="activeDomain === domain.id" class="domain-menu">
+            <div
+              v-if="activeDomain === domain.id"
+              class="domain-menu"
+            >
               <div class="menu-header">
                 <span class="menu-domain-icon">{{ domain.icon }}</span>
                 <div>
-                  <div class="menu-title">{{ domain.label }}</div>
-                  <div class="menu-desc">{{ domain.description }}</div>
+                  <div class="menu-title">
+                    {{ domain.label }}
+                  </div>
+                  <div class="menu-desc">
+                    {{ domain.description }}
+                  </div>
                 </div>
               </div>
               <div class="menu-links">
@@ -75,7 +95,9 @@
         </div>
 
         <div class="nav-actions">
-          <button class="nav-action-btn">⚙ Settings</button>
+          <button class="nav-action-btn">
+            ⚙ Settings
+          </button>
         </div>
       </nav>
 
@@ -87,7 +109,10 @@
     </div>
 
     <!-- Variant: Sidebar Nav -->
-    <div v-if="activeVariant === 'sidebar'" class="preview-frame sidebar-frame">
+    <div
+      v-if="activeVariant === 'sidebar'"
+      class="preview-frame sidebar-frame"
+    >
       <nav class="sidebar-nav-proto">
         <div class="sidebar-brand">
           <span>🎸</span>
@@ -106,12 +131,25 @@
             >
               <span>{{ domain.icon }}</span>
               <span class="sidebar-domain-label">{{ domain.label }}</span>
-              <svg class="sidebar-chevron" :class="{ rotated: activeDomain === domain.id }" viewBox="0 0 16 16" fill="none">
-                <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <svg
+                class="sidebar-chevron"
+                :class="{ rotated: activeDomain === domain.id }"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
 
-            <div v-if="activeDomain === domain.id" class="sidebar-links">
+            <div
+              v-if="activeDomain === domain.id"
+              class="sidebar-links"
+            >
               <a
                 v-for="link in domain.links"
                 :key="link.label"
@@ -137,8 +175,12 @@
     <!-- Analysis: before/after -->
     <div class="analysis-grid">
       <div class="analysis-card before">
-        <div class="analysis-label">Current AppNav</div>
-        <div class="analysis-count">30+ flat links</div>
+        <div class="analysis-label">
+          Current AppNav
+        </div>
+        <div class="analysis-count">
+          30+ flat links
+        </div>
         <ul class="analysis-list">
           <li>All routes at same hierarchy level</li>
           <li>Dropdown menus for some labs only</li>
@@ -148,8 +190,12 @@
         </ul>
       </div>
       <div class="analysis-card after">
-        <div class="analysis-label">Proposed Architecture</div>
-        <div class="analysis-count">5 domains × N tools</div>
+        <div class="analysis-label">
+          Proposed Architecture
+        </div>
+        <div class="analysis-count">
+          5 domains × N tools
+        </div>
         <ul class="analysis-list">
           <li>Design → CAM → Production → Analytics → Business</li>
           <li>Infinite tools can be added inside domains</li>
@@ -159,7 +205,6 @@
         </ul>
       </div>
     </div>
-
   </div>
 </template>
 

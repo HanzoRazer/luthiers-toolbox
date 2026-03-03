@@ -15,7 +15,11 @@ Endpoints:
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, status
+
+logger = logging.getLogger(__name__)
 
 from ..schemas.relief import (
     ReliefFinishingIn,
@@ -70,7 +74,8 @@ def relief_map_from_heightfield(payload: ReliefMapFromHeightfieldIn) -> ReliefMa
         raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to load heightmap")
         raise HTTPException(status_code=500, detail=f"Failed to load heightmap: {e}")
 
 
@@ -101,7 +106,8 @@ def relief_roughing(payload: ReliefRasterToolpathIn) -> ReliefToolpathOut:
         return plan_relief_roughing(payload)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to plan roughing")
         raise HTTPException(status_code=500, detail=f"Failed to plan roughing: {e}")
 
 
@@ -132,7 +138,8 @@ def relief_finishing(payload: ReliefFinishingIn) -> ReliefToolpathOut:
         return plan_relief_finishing(payload)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to plan finishing")
         raise HTTPException(status_code=500, detail=f"Failed to plan finishing: {e}")
 
 
@@ -172,5 +179,6 @@ def relief_sim_bridge(payload: ReliefSimIn) -> ReliefSimOut:
         return run_relief_sim_bridge(payload)
     except HTTPException:  # WP-1: pass through HTTPException
         raise
-    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # pragma: no cover  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Relief sim bridge failed")
         raise HTTPException(status_code=500, detail=f"Relief sim bridge failed: {e}")

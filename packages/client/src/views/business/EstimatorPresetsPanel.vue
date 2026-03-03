@@ -184,33 +184,53 @@ onMounted(() => {
   <div class="presets-panel">
     <header class="panel-header">
       <h3>Presets</h3>
-      <button type="button" class="btn-save" @click="openSaveDialog">
+      <button
+        type="button"
+        class="btn-save"
+        @click="openSaveDialog"
+      >
         + Save Current
       </button>
     </header>
 
     <!-- Empty State -->
-    <div v-if="presets.length === 0" class="empty-state">
+    <div
+      v-if="presets.length === 0"
+      class="empty-state"
+    >
       <p>No saved presets yet.</p>
-      <p class="hint">Save your current configuration as a preset for quick access later.</p>
+      <p class="hint">
+        Save your current configuration as a preset for quick access later.
+      </p>
     </div>
 
     <!-- Preset List -->
-    <div v-else class="preset-list">
+    <div
+      v-else
+      class="preset-list"
+    >
       <div
         v-for="preset in sortedPresets"
         :key="preset.id"
         class="preset-card"
         :class="{ selected: selectedPresetId === preset.id }"
       >
-        <div class="preset-info" @click="loadPreset(preset)">
-          <div class="preset-name">{{ preset.name }}</div>
+        <div
+          class="preset-info"
+          @click="loadPreset(preset)"
+        >
+          <div class="preset-name">
+            {{ preset.name }}
+          </div>
           <div class="preset-meta">
             {{ formatInstrumentType(preset.request.instrument_type) }}
             <span class="separator">·</span>
             {{ formatDate(preset.updatedAt) }}
           </div>
-          <div v-if="preset.description" class="preset-description">
+          <div
+            v-if="preset.description"
+            class="preset-description"
+          >
             {{ preset.description }}
           </div>
         </div>
@@ -254,7 +274,11 @@ onMounted(() => {
     </div>
 
     <!-- Save Dialog -->
-    <div v-if="showSaveDialog" class="save-dialog-overlay" @click.self="closeSaveDialog">
+    <div
+      v-if="showSaveDialog"
+      class="save-dialog-overlay"
+      @click.self="closeSaveDialog"
+    >
       <div class="save-dialog">
         <h4>Save Preset</h4>
 
@@ -266,7 +290,7 @@ onMounted(() => {
             placeholder="e.g., Dreadnought Standard"
             class="text-input"
             @keydown.enter="saveNewPreset"
-          />
+          >
         </label>
 
         <label class="form-field">
@@ -276,11 +300,15 @@ onMounted(() => {
             placeholder="Notes about this configuration..."
             class="text-input"
             rows="2"
-          ></textarea>
+          />
         </label>
 
         <div class="dialog-actions">
-          <button type="button" class="btn-secondary" @click="closeSaveDialog">
+          <button
+            type="button"
+            class="btn-secondary"
+            @click="closeSaveDialog"
+          >
             Cancel
           </button>
           <button

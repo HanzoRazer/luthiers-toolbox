@@ -86,10 +86,18 @@ const hasHistory = computed(() => props.bulkHistory.length > 0)
         class="border px-2 py-1 rounded text-sm"
         @change="emit('update:bulkDecision', ($event.target as HTMLSelectElement).value as RiskDecision || null)"
       >
-        <option value="">Choose decision…</option>
-        <option value="GREEN">GREEN</option>
-        <option value="YELLOW">YELLOW</option>
-        <option value="RED">RED</option>
+        <option value="">
+          Choose decision…
+        </option>
+        <option value="GREEN">
+          GREEN
+        </option>
+        <option value="YELLOW">
+          YELLOW
+        </option>
+        <option value="RED">
+          RED
+        </option>
       </select>
 
       <input
@@ -154,7 +162,10 @@ const hasHistory = computed(() => props.bulkHistory.length > 0)
       </div>
       <div class="text-xs text-gray-500">
         {{ bulkProgress.done }}/{{ bulkProgress.total }}
-        <span v-if="bulkProgress.fail > 0" class="text-orange-600">
+        <span
+          v-if="bulkProgress.fail > 0"
+          class="text-orange-600"
+        >
           ({{ bulkProgress.fail }} failed)
         </span>
       </div>

@@ -26,11 +26,11 @@
       <div :class="styles.leftPanel">
         <!-- Tool Setup -->
         <DrillToolSetup
-          :styles="styles"
           v-model:tool-type="params.toolType"
           v-model:tool-diameter="params.toolDiameter"
           v-model:spindle-rpm="params.spindleRpm"
           v-model:feed-rate="params.feedRate"
+          :styles="styles"
           @update:tool-type="updatePreview"
           @update:tool-diameter="updatePreview"
           @update:spindle-rpm="updatePreview"
@@ -39,10 +39,10 @@
 
         <!-- Cycle Type -->
         <DrillCycleType
-          :styles="styles"
           v-model:cycle-value="params.cycle"
           v-model:peck-depth="params.peckDepth"
           v-model:thread-pitch="params.threadPitch"
+          :styles="styles"
           @update:cycle-value="updatePreview"
           @update:peck-depth="updatePreview"
           @update:thread-pitch="updatePreview"
@@ -50,10 +50,10 @@
 
         <!-- Depth Settings -->
         <DrillDepthSettings
-          :styles="styles"
           v-model:depth="params.depth"
           v-model:retract="params.retract"
           v-model:safe-z="params.safeZ"
+          :styles="styles"
           @update:depth="updatePreview"
           @update:retract="updatePreview"
           @update:safe-z="updatePreview"
@@ -61,9 +61,9 @@
 
         <!-- Pattern Generator -->
         <DrillPatternSelector
-          :styles="styles"
           v-model:pattern-type="patternType"
           v-model:csv-input="csvInput"
+          :styles="styles"
           :linear-pattern="linearPattern"
           :circular-pattern="circularPattern"
           :grid-pattern="gridPattern"

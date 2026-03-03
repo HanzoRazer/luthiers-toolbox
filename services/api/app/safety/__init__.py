@@ -49,7 +49,7 @@ def safety_critical(func: F) -> F:
             result = func(*args, **kwargs)
             _safety_logger.debug(f"SAFETY_EXIT: {func_name} (success)")
             return result
-        except Exception as e:  # WP-3: intentional — safety logger must catch all, always re-raises
+        except Exception as e:  # WP-3: intentional — safety logger must catch all, always re-raises  # AUDITED 2026-03
             _safety_logger.error(
                 f"SAFETY_FAIL: {func_name} raised {type(e).__name__}: {e}",
                 exc_info=True

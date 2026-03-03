@@ -11,7 +11,9 @@
     <div class="preset-grid">
       <!-- File Upload -->
       <div>
-        <h3 class="section-title">Blueprint Image</h3>
+        <h3 class="section-title">
+          Blueprint Image
+        </h3>
         <input
           type="file"
           accept="image/*"
@@ -34,7 +36,9 @@
 
       <!-- Actions -->
       <div>
-        <h3 class="section-title">Actions</h3>
+        <h3 class="section-title">
+          Actions
+        </h3>
         <div class="action-stack">
           <button
             class="btn btn-primary full-width"

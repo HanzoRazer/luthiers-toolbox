@@ -74,24 +74,24 @@
       <div class="diff-toolbar">
         <!-- B22.8: Disable mode toggles when overlay disabled -->
         <label :title="overlayDisabled ? `Diff disabled: ${diffDisabledReason || ''}` : ''">
-          <input 
-            v-model="localDiffMode" 
-            type="radio" 
+          <input
+            v-model="localDiffMode"
+            type="radio"
             value="overlay"
             :disabled="overlayDisabled"
-          > Overlay
+          /> Overlay
         </label>
         <label :title="overlayDisabled ? `Diff disabled: ${diffDisabledReason || ''}` : ''">
-          <input 
-            v-model="localDiffMode" 
-            type="radio" 
+          <input
+            v-model="localDiffMode"
+            type="radio"
             value="delta"
             :disabled="overlayDisabled"
-          > Delta Only
+          /> Delta Only
         </label>
         <span class="legend">
-          <span class="legend-item"><span class="legend-color add" /> Additions</span>
-          <span class="legend-item"><span class="legend-color remove" /> Removals</span>
+          <span class="legend-item"><span class="legend-color add"></span> Additions</span>
+          <span class="legend-item"><span class="legend-color remove"></span> Removals</span>
         </span>
       </div>
       <h4>Diff Overlay</h4>
@@ -102,7 +102,7 @@
         <g
           v-if="localDiffMode === 'overlay' && diff.overlay_svg"
           v-html="diff.overlay_svg"
-        />
+        ></g>
         <g v-else-if="localDiffMode === 'delta'">
           <polyline
             v-if="diff.additions && diff.additions.length > 1"
@@ -212,7 +212,6 @@ function toPoints(moves: any[]) {
   border: 1px solid #ddd;
   padding: 1rem;
 }
-</style>
 .overlay-pane {
   flex: 1 1 100%;
   margin-top: 2rem;

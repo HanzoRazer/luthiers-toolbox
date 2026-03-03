@@ -30,8 +30,12 @@ import shared from "./scale-length-shared.module.css";
 
       <div :class="shared.card">
         <div :class="styles.compHeader">
-          <div :class="styles.compTitle">Intonation Compensation Chart</div>
-          <div :class="styles.compSubtitle">For 25.5" scale (Fender) with standard .010-.046 gauges</div>
+          <div :class="styles.compTitle">
+            Intonation Compensation Chart
+          </div>
+          <div :class="styles.compSubtitle">
+            For 25.5" scale (Fender) with standard .010-.046 gauges
+          </div>
         </div>
 
         <div :class="styles.compGrid">
@@ -96,7 +100,9 @@ import shared from "./scale-length-shared.module.css";
       <div :class="shared.card">
         <h3>Bridge Placement Formula</h3>
         <div :class="shared.formulaBox">
-          <div :class="shared.formula">Bridge Center = Scale Length + (Low E Compensation ÷ 2)</div>
+          <div :class="shared.formula">
+            Bridge Center = Scale Length + (Low E Compensation ÷ 2)
+          </div>
           <div :class="styles.formulaExample">
             Example: 25.5" + (0.25" ÷ 2) = <strong>25.625"</strong> from nut to bridge center
           </div>

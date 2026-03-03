@@ -44,11 +44,11 @@ const OPERATOR_ID_KEY = "rmos.operator_id";
 const myOperatorId = ref<string>("");
 try {
   myOperatorId.value = String(localStorage.getItem(OPERATOR_ID_KEY) || "");
-} catch { }
+} catch { /* localStorage may be unavailable */ }
 watch(myOperatorId, (v) => {
   try {
     localStorage.setItem(OPERATOR_ID_KEY, String(v || ""));
-  } catch { }
+  } catch { /* localStorage may be unavailable */ }
 });
 
 // Effective operator: prop overrides localStorage

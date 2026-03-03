@@ -150,7 +150,7 @@ export function useLesPaulNeckPresets(
 
         fieldMappings.forEach((field) => {
           if (params[field] !== undefined) {
-            ;(form as any)[field] = params[field]
+            (form as any)[field] = params[field]
           }
         })
 
@@ -198,7 +198,7 @@ export function useLesPaulNeckPresets(
     Object.keys(original).forEach((key) => {
       const typedKey = key as keyof NeckParameters
       if (original[typedKey] !== undefined) {
-        ;(form as any)[typedKey] = original[typedKey]
+        (form as any)[typedKey] = original[typedKey]
       }
     })
 

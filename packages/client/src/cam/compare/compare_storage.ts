@@ -5,10 +5,10 @@ const LS_CANDIDATE_LAST = "compare_last_candidate"
 const LS_TOLERANCE_LAST = "compare_last_tolerance"
 
 export function saveLastBaseline(b: CompareBaseline) {
-  try { localStorage.setItem(LS_BASELINE_LAST, JSON.stringify(b)) } catch {}
+  try { localStorage.setItem(LS_BASELINE_LAST, JSON.stringify(b)) } catch { /* localStorage may be unavailable */ }
 }
 export function saveLastCandidate(c: CompareCandidate) {
-  try { localStorage.setItem(LS_CANDIDATE_LAST, JSON.stringify(c)) } catch {}
+  try { localStorage.setItem(LS_CANDIDATE_LAST, JSON.stringify(c)) } catch { /* localStorage may be unavailable */ }
 }
 export function loadLastBaseline(): CompareBaseline | null {
   try {
@@ -23,7 +23,7 @@ export function loadLastCandidate(): CompareCandidate | null {
   } catch { return null }
 }
 export function saveLastTolerance(tol: number) {
-  try { localStorage.setItem(LS_TOLERANCE_LAST, tol.toString()) } catch {}
+  try { localStorage.setItem(LS_TOLERANCE_LAST, tol.toString()) } catch { /* localStorage may be unavailable */ }
 }
 export function loadLastTolerance(): number | null {
   try {

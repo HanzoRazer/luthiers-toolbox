@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props -- Form editor with v-model on object prop is intentional */
 /**
  * RetractOperationCard - Retract patterns operation card
  * Extracted from CAMEssentialsLab.vue
@@ -23,9 +24,15 @@ defineProps<{
       <div :class="styles['param-row']">
         <label>Strategy:</label>
         <select v-model="retract.params.value.strategy">
-          <option value="direct">Direct (G0)</option>
-          <option value="ramped">Ramped (Linear)</option>
-          <option value="helical">Helical (Spiral)</option>
+          <option value="direct">
+            Direct (G0)
+          </option>
+          <option value="ramped">
+            Ramped (Linear)
+          </option>
+          <option value="helical">
+            Helical (Spiral)
+          </option>
         </select>
       </div>
       <div :class="styles['param-row']">

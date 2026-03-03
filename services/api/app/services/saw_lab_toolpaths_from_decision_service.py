@@ -231,7 +231,7 @@ def generate_toolpaths_from_decision(*, decision_artifact_id: str) -> Dict[str, 
             "status": "OK",
         }
 
-    except Exception as e:  # WP-1: keep broad — governance requires ERROR artifact even on unexpected failures
+    except Exception as e:  # WP-1: keep broad — governance requires ERROR artifact even on unexpected failures  # AUDITED 2026-03
         toolpaths_id = _write_artifact(
             kind="saw_compare_toolpaths",
             status="ERROR",

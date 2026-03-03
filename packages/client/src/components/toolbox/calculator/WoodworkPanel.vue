@@ -14,81 +14,141 @@
     </div>
 
     <!-- Board Feet Calculator -->
-    <div v-if="activeCategory === 'Board Feet'" class="woodwork-panel">
+    <div
+      v-if="activeCategory === 'Board Feet'"
+      class="woodwork-panel"
+    >
       <h3>📏 Board Feet Calculator</h3>
       <div class="input-row">
         <label>Length (in):</label>
-        <input v-model.number="boardFeetLocal.length" type="number">
+        <input
+          v-model.number="boardFeetLocal.length"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Width (in):</label>
-        <input v-model.number="boardFeetLocal.width" type="number">
+        <input
+          v-model.number="boardFeetLocal.width"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Thickness (in):</label>
-        <input v-model.number="boardFeetLocal.thickness" type="number">
+        <input
+          v-model.number="boardFeetLocal.thickness"
+          type="number"
+        >
       </div>
       <div class="result-box">
-        <div class="result-label">Board Feet:</div>
-        <div class="result-value">{{ boardFeetResult.toFixed(2) }} BF</div>
+        <div class="result-label">
+          Board Feet:
+        </div>
+        <div class="result-value">
+          {{ boardFeetResult.toFixed(2) }} BF
+        </div>
       </div>
       <div class="input-row">
         <label>Price ($/BF):</label>
-        <input v-model.number="boardFeetLocal.pricePerBF" type="number">
+        <input
+          v-model.number="boardFeetLocal.pricePerBF"
+          type="number"
+        >
       </div>
       <div class="result-box">
-        <div class="result-label">Total Cost:</div>
-        <div class="result-value">${{ boardCostResult.toFixed(2) }}</div>
+        <div class="result-label">
+          Total Cost:
+        </div>
+        <div class="result-value">
+          ${{ boardCostResult.toFixed(2) }}
+        </div>
       </div>
     </div>
 
     <!-- Wood Volume/Weight -->
-    <div v-if="activeCategory === 'Volume'" class="woodwork-panel">
+    <div
+      v-if="activeCategory === 'Volume'"
+      class="woodwork-panel"
+    >
       <h3>🌲 Wood Volume & Weight</h3>
       <div class="input-row">
         <label>Length (mm):</label>
-        <input v-model.number="woodVolumeLocal.length" type="number">
+        <input
+          v-model.number="woodVolumeLocal.length"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Width (mm):</label>
-        <input v-model.number="woodVolumeLocal.width" type="number">
+        <input
+          v-model.number="woodVolumeLocal.width"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Thickness (mm):</label>
-        <input v-model.number="woodVolumeLocal.thickness" type="number">
+        <input
+          v-model.number="woodVolumeLocal.thickness"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Species:</label>
         <select v-model="woodVolumeLocal.species">
-          <option v-for="(spec, key) in woodSpecies" :key="key" :value="key">
+          <option
+            v-for="(spec, key) in woodSpecies"
+            :key="key"
+            :value="key"
+          >
             {{ spec.name }} (ρ={{ spec.density }} g/cm³)
           </option>
         </select>
       </div>
       <div class="result-box">
-        <div class="result-label">Volume:</div>
-        <div class="result-value">{{ volumeResult.toFixed(1) }} cm³</div>
+        <div class="result-label">
+          Volume:
+        </div>
+        <div class="result-value">
+          {{ volumeResult.toFixed(1) }} cm³
+        </div>
       </div>
       <div class="result-box">
-        <div class="result-label">Weight:</div>
-        <div class="result-value">{{ weightResult.toFixed(1) }} g</div>
+        <div class="result-label">
+          Weight:
+        </div>
+        <div class="result-value">
+          {{ weightResult.toFixed(1) }} g
+        </div>
       </div>
     </div>
 
     <!-- Miter Angles -->
-    <div v-if="activeCategory === 'Angles'" class="woodwork-panel">
+    <div
+      v-if="activeCategory === 'Angles'"
+      class="woodwork-panel"
+    >
       <h3>📐 Miter/Bevel Angle Calculator</h3>
       <div class="input-row">
         <label>Rise (mm):</label>
-        <input v-model.number="miterLocal.rise" type="number">
+        <input
+          v-model.number="miterLocal.rise"
+          type="number"
+        >
       </div>
       <div class="input-row">
         <label>Run (mm):</label>
-        <input v-model.number="miterLocal.run" type="number">
+        <input
+          v-model.number="miterLocal.run"
+          type="number"
+        >
       </div>
       <div class="result-box">
-        <div class="result-label">Angle:</div>
-        <div class="result-value">{{ miterAngleResult.toFixed(2) }}°</div>
+        <div class="result-label">
+          Angle:
+        </div>
+        <div class="result-value">
+          {{ miterAngleResult.toFixed(2) }}°
+        </div>
       </div>
       <div class="helper-text">
         Common uses: Neck angle (0.5-3°), Headstock angle (12-17°), Bridge ramp

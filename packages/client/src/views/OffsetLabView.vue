@@ -299,7 +299,7 @@ function safeSlug(src: string, fallback: string): string {
   // replace spaces with _, strip nasty chars
   return val
     .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_\-]+/g, '')
+    .replace(/[^a-zA-Z0-9_ -]+/g, '')
     .toLowerCase()
 }
 

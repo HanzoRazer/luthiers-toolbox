@@ -157,7 +157,7 @@ def execute_delete(
     if check_rate_limit is not None:
         try:
             check_rate_limit(limit_key)
-        except Exception as e:  # WP-3: broad catch intentional — callback may raise arbitrary errors, always re-raises
+        except Exception as e:  # WP-3: broad catch intentional — callback may raise arbitrary errors, always re-raises  # AUDITED 2026-03
             log.error("Rate-limit check failed for run %s: %s", run_id, e, exc_info=True)
             if isinstance(e, DeleteRateLimitError_cls):
                 _safe_audit(**_akw, index_updated=False, artifact_deleted=False,

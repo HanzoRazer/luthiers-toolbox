@@ -54,10 +54,10 @@ export function useLiveLearning(): LiveLearningState {
 
   function patchBodyWithSessionOverride<T extends Record<string, unknown>>(body: T): T {
     if (liveLearnApplied.value && sessionOverrideFactor.value) {
-      ;(body as Record<string, unknown>).session_override_factor = sessionOverrideFactor.value
+      (body as Record<string, unknown>).session_override_factor = sessionOverrideFactor.value
     }
     if (adoptOverrides.value) {
-      ;(body as Record<string, unknown>).adopt_overrides = true
+      (body as Record<string, unknown>).adopt_overrides = true
     }
     return body
   }

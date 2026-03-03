@@ -25,9 +25,15 @@
           title="Open canonical RMOS run record"
           @click="$emit('viewRun')"
         >
-          View Run <span class="ext" aria-hidden="true">↗</span>
+          View Run <span
+            class="ext"
+            aria-hidden="true"
+          >↗</span>
         </button>
-        <span v-if="!rmosPersisted" class="not-persisted">RMOS not persisted</span>
+        <span
+          v-if="!rmosPersisted"
+          class="not-persisted"
+        >RMOS not persisted</span>
         <button
           v-if="hasExplainability"
           class="btn-link"
@@ -47,10 +53,18 @@
     />
 
     <!-- Warnings -->
-    <div v-if="warnings?.length" class="warnings">
+    <div
+      v-if="warnings?.length"
+      class="warnings"
+    >
       <strong>Warnings:</strong>
       <ul>
-        <li v-for="(w, i) in warnings" :key="i">{{ w }}</li>
+        <li
+          v-for="(w, i) in warnings"
+          :key="i"
+        >
+          {{ w }}
+        </li>
       </ul>
     </div>
 
@@ -110,11 +124,17 @@
       title="Open canonical RMOS run record in a new tab"
       @click="$emit('viewRun')"
     >
-      View Run <span class="ext" aria-hidden="true">↗</span>
+      View Run <span
+        class="ext"
+        aria-hidden="true"
+      >↗</span>
     </button>
 
     <!-- Attachment Hint -->
-    <div v-if="showAttachmentHint" class="attachment-hint">
+    <div
+      v-if="showAttachmentHint"
+      class="attachment-hint"
+    >
       <p>G-code stored as RMOS attachment (too large for inline).</p>
       <p class="attachment-meta">
         Run ID: <code>{{ runId }}</code>

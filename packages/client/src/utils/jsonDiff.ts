@@ -175,7 +175,7 @@ export function groupByTopLevel(diffs: DiffItem[]): Map<string, DiffItem[]> {
   const groups = new Map<string, DiffItem[]>();
 
   for (const d of diffs) {
-    const topKey = d.path.split(/[.\[]/)[0] || "(root)";
+    const topKey = d.path.split(/[.[]/)[0] || "(root)";
     if (!groups.has(topKey)) {
       groups.set(topKey, []);
     }

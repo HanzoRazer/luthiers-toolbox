@@ -1,12 +1,23 @@
 <template>
-  <div v-if="intent" class="wf-intent-preview">
-    <div class="wf-intent-title">Last Promotion Intent</div>
+  <div
+    v-if="intent"
+    class="wf-intent-preview"
+  >
+    <div class="wf-intent-title">
+      Last Promotion Intent
+    </div>
     <pre class="wf-intent-json">{{ JSON.stringify(intent, null, 2) }}</pre>
     <div class="wf-intent-actions">
-      <button class="btn ghost" @click="$emit('copyJson')">
+      <button
+        class="btn ghost"
+        @click="$emit('copyJson')"
+      >
         Copy JSON
       </button>
-      <button class="btn ghost" @click="$emit('copySessionId')">
+      <button
+        class="btn ghost"
+        @click="$emit('copySessionId')"
+      >
         Copy Session ID
       </button>
       <button
@@ -30,7 +41,10 @@
       >
         Download intent
       </button>
-      <button class="btn ghost" @click="$emit('clear')">
+      <button
+        class="btn ghost"
+        @click="$emit('clear')"
+      >
         Clear
       </button>
     </div>

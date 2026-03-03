@@ -1,6 +1,11 @@
 <template>
-  <div v-if="history.length" class="wf-history">
-    <div class="wf-history-title">History ({{ history.length }})</div>
+  <div
+    v-if="history.length"
+    class="wf-history"
+  >
+    <div class="wf-history-title">
+      History ({{ history.length }})
+    </div>
     <div
       v-for="(evt, idx) in displayedHistory"
       :key="idx"
@@ -10,7 +15,10 @@
       <span class="wf-event-transition">
         {{ evt.from_state }} → {{ evt.to_state }}
       </span>
-      <span v-if="evt.note" class="wf-event-note">{{ evt.note }}</span>
+      <span
+        v-if="evt.note"
+        class="wf-event-note"
+      >{{ evt.note }}</span>
     </div>
   </div>
 </template>

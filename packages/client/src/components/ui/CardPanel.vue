@@ -36,7 +36,9 @@ function toggle() {
       @click="toggle"
     >
       <slot name="header">
-        <h3 class="card-title">{{ title }}</h3>
+        <h3 class="card-title">
+          {{ title }}
+        </h3>
       </slot>
       <div class="header-actions">
         <slot name="actions" />

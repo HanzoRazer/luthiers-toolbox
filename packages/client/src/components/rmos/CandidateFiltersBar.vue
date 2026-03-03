@@ -60,11 +60,21 @@ function hotkeyHelp(): string {
         :disabled="disabled"
         @change="emit('update:decisionFilter', ($event.target as HTMLSelectElement).value as DecisionFilter)"
       >
-        <option value="ALL">All decisions</option>
-        <option value="UNDECIDED">Undecided</option>
-        <option value="GREEN">GREEN</option>
-        <option value="YELLOW">YELLOW</option>
-        <option value="RED">RED</option>
+        <option value="ALL">
+          All decisions
+        </option>
+        <option value="UNDECIDED">
+          Undecided
+        </option>
+        <option value="GREEN">
+          GREEN
+        </option>
+        <option value="YELLOW">
+          YELLOW
+        </option>
+        <option value="RED">
+          RED
+        </option>
       </select>
 
       <select
@@ -72,10 +82,18 @@ function hotkeyHelp(): string {
         :disabled="disabled"
         @change="emit('update:statusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)"
       >
-        <option value="ALL">All statuses</option>
-        <option value="PROPOSED">Proposed</option>
-        <option value="ACCEPTED">Accepted</option>
-        <option value="REJECTED">Rejected</option>
+        <option value="ALL">
+          All statuses
+        </option>
+        <option value="PROPOSED">
+          Proposed
+        </option>
+        <option value="ACCEPTED">
+          Accepted
+        </option>
+        <option value="REJECTED">
+          Rejected
+        </option>
       </select>
 
       <input
@@ -92,7 +110,9 @@ function hotkeyHelp(): string {
         :disabled="disabled"
         @change="emit('update:filterDecidedBy', ($event.target as HTMLSelectElement).value)"
       >
-        <option value="ALL">All operators</option>
+        <option value="ALL">
+          All operators
+        </option>
         <option
           v-for="op in decidedByOptions"
           :key="op"

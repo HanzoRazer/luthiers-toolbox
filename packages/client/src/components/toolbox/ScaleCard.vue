@@ -37,8 +37,12 @@ function formatValue(inch: number, mm: number): string {
     @click="emit('select', preset.id)"
     @keydown.enter="emit('select', preset.id)"
   >
-    <div class="scale-name">{{ preset.name }}</div>
-    <div class="scale-value">{{ formatValue(preset.valueInch, preset.valueMm) }}</div>
+    <div class="scale-name">
+      {{ preset.name }}
+    </div>
+    <div class="scale-value">
+      {{ formatValue(preset.valueInch, preset.valueMm) }}
+    </div>
     <div class="scale-info">
       <div
         v-for="(trait, i) in preset.traits"

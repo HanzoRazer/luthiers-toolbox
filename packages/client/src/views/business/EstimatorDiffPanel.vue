@@ -123,13 +123,18 @@ function deltaClass(value: number): string {
 
 <template>
   <div class="diff-panel">
-    <h3 class="diff-title">Estimate Comparison</h3>
+    <h3 class="diff-title">
+      Estimate Comparison
+    </h3>
 
     <!-- Summary Deltas -->
     <div class="delta-grid">
       <div class="delta-item">
         <span class="delta-label">Hours</span>
-        <span class="delta-value" :class="deltaClass(hoursDelta)">
+        <span
+          class="delta-value"
+          :class="deltaClass(hoursDelta)"
+        >
           {{ formatDelta(hoursDelta) }}h
         </span>
         <span class="delta-context">
@@ -139,7 +144,10 @@ function deltaClass(value: number): string {
 
       <div class="delta-item">
         <span class="delta-label">Total Cost</span>
-        <span class="delta-value" :class="deltaClass(costDelta)">
+        <span
+          class="delta-value"
+          :class="deltaClass(costDelta)"
+        >
           {{ formatDelta(costDelta, "$") }}
         </span>
         <span class="delta-context">
@@ -149,7 +157,10 @@ function deltaClass(value: number): string {
 
       <div class="delta-item">
         <span class="delta-label">Labor</span>
-        <span class="delta-value" :class="deltaClass(laborDelta)">
+        <span
+          class="delta-value"
+          :class="deltaClass(laborDelta)"
+        >
           {{ formatDelta(laborDelta, "$") }}
         </span>
         <span class="delta-context">
@@ -159,7 +170,10 @@ function deltaClass(value: number): string {
 
       <div class="delta-item">
         <span class="delta-label">Materials</span>
-        <span class="delta-value" :class="deltaClass(materialDelta)">
+        <span
+          class="delta-value"
+          :class="deltaClass(materialDelta)"
+        >
           {{ formatDelta(materialDelta, "$") }}
         </span>
         <span class="delta-context">
@@ -169,7 +183,10 @@ function deltaClass(value: number): string {
 
       <div class="delta-item">
         <span class="delta-label">Complexity</span>
-        <span class="delta-value" :class="deltaClass(complexityDelta)">
+        <span
+          class="delta-value"
+          :class="deltaClass(complexityDelta)"
+        >
           {{ formatDelta(complexityDelta) }}x
         </span>
         <span class="delta-context">
@@ -179,12 +196,22 @@ function deltaClass(value: number): string {
     </div>
 
     <!-- Changed Complexity Factors -->
-    <div v-if="changedFactors.length > 0" class="diff-section">
+    <div
+      v-if="changedFactors.length > 0"
+      class="diff-section"
+    >
       <h4>Complexity Factor Changes</h4>
       <div class="factor-list">
-        <div v-for="f in changedFactors" :key="f.factor" class="factor-item">
+        <div
+          v-for="f in changedFactors"
+          :key="f.factor"
+          class="factor-item"
+        >
           <span class="factor-name">{{ f.factor }}</span>
-          <span class="factor-change" :class="deltaClass(f.delta)">
+          <span
+            class="factor-change"
+            :class="deltaClass(f.delta)"
+          >
             {{ f.before.toFixed(2) }}x → {{ f.after.toFixed(2) }}x
           </span>
         </div>
@@ -192,7 +219,10 @@ function deltaClass(value: number): string {
     </div>
 
     <!-- Changed WBS Tasks -->
-    <div v-if="changedTasks.length > 0" class="diff-section">
+    <div
+      v-if="changedTasks.length > 0"
+      class="diff-section"
+    >
       <h4>WBS Task Changes</h4>
       <table class="task-table">
         <thead>
@@ -204,11 +234,23 @@ function deltaClass(value: number): string {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="t in changedTasks" :key="t.task_id">
-            <td class="task-name">{{ t.task_name }}</td>
-            <td class="task-hours">{{ t.before_hours.toFixed(1) }}h</td>
-            <td class="task-hours">{{ t.after_hours.toFixed(1) }}h</td>
-            <td class="task-delta" :class="deltaClass(t.delta)">
+          <tr
+            v-for="t in changedTasks"
+            :key="t.task_id"
+          >
+            <td class="task-name">
+              {{ t.task_name }}
+            </td>
+            <td class="task-hours">
+              {{ t.before_hours.toFixed(1) }}h
+            </td>
+            <td class="task-hours">
+              {{ t.after_hours.toFixed(1) }}h
+            </td>
+            <td
+              class="task-delta"
+              :class="deltaClass(t.delta)"
+            >
               {{ formatDelta(t.delta) }}h
             </td>
           </tr>
@@ -217,7 +259,10 @@ function deltaClass(value: number): string {
     </div>
 
     <!-- No Changes -->
-    <div v-if="changedFactors.length === 0 && changedTasks.length === 0" class="no-changes">
+    <div
+      v-if="changedFactors.length === 0 && changedTasks.length === 0"
+      class="no-changes"
+    >
       No significant differences detected.
     </div>
   </div>

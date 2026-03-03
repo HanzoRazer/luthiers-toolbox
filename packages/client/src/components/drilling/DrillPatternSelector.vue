@@ -27,8 +27,8 @@
     <DrillPatternLinear
       v-if="patternType === 'linear'"
       v-model:direction="linearPatternLocal.direction"
-      v-model:startX="linearPatternLocal.startX"
-      v-model:startY="linearPatternLocal.startY"
+      v-model:start-x="linearPatternLocal.startX"
+      v-model:start-y="linearPatternLocal.startY"
       v-model:spacing="linearPatternLocal.spacing"
       v-model:count="linearPatternLocal.count"
       @generate="emit('generate-linear', linearPatternLocal)"
@@ -37,23 +37,23 @@
     <!-- Circular Pattern -->
     <DrillPatternCircular
       v-if="patternType === 'circular'"
-      v-model:centerX="circularPatternLocal.centerX"
-      v-model:centerY="circularPatternLocal.centerY"
+      v-model:center-x="circularPatternLocal.centerX"
+      v-model:center-y="circularPatternLocal.centerY"
       v-model:radius="circularPatternLocal.radius"
       v-model:count="circularPatternLocal.count"
-      v-model:startAngle="circularPatternLocal.startAngle"
+      v-model:start-angle="circularPatternLocal.startAngle"
       @generate="emit('generate-circular', circularPatternLocal)"
     />
 
     <!-- Grid Pattern -->
     <DrillPatternGrid
       v-if="patternType === 'grid'"
-      v-model:startX="gridPatternLocal.startX"
-      v-model:startY="gridPatternLocal.startY"
-      v-model:spacingX="gridPatternLocal.spacingX"
-      v-model:spacingY="gridPatternLocal.spacingY"
-      v-model:countX="gridPatternLocal.countX"
-      v-model:countY="gridPatternLocal.countY"
+      v-model:start-x="gridPatternLocal.startX"
+      v-model:start-y="gridPatternLocal.startY"
+      v-model:spacing-x="gridPatternLocal.spacingX"
+      v-model:spacing-y="gridPatternLocal.spacingY"
+      v-model:count-x="gridPatternLocal.countX"
+      v-model:count-y="gridPatternLocal.countY"
       @generate="emit('generate-grid', gridPatternLocal)"
     />
 

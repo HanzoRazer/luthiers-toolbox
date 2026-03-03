@@ -50,11 +50,21 @@
           <div :class="$style['param-row']">
             <label>Post:</label>
             <select v-model="roughing.params.value.post">
-              <option value="GRBL">GRBL</option>
-              <option value="Mach4">Mach4</option>
-              <option value="LinuxCNC">LinuxCNC</option>
-              <option value="PathPilot">PathPilot</option>
-              <option value="MASSO">MASSO</option>
+              <option value="GRBL">
+                GRBL
+              </option>
+              <option value="Mach4">
+                Mach4
+              </option>
+              <option value="LinuxCNC">
+                LinuxCNC
+              </option>
+              <option value="PathPilot">
+                PathPilot
+              </option>
+              <option value="MASSO">
+                MASSO
+              </option>
             </select>
           </div>
         </div>
@@ -79,8 +89,12 @@
           <div :class="$style['param-row']">
             <label>Cycle:</label>
             <select v-model="drilling.params.value.cycle">
-              <option value="G81">G81 (Simple)</option>
-              <option value="G83">G83 (Peck)</option>
+              <option value="G81">
+                G81 (Simple)
+              </option>
+              <option value="G83">
+                G83 (Peck)
+              </option>
             </select>
           </div>
           <div :class="$style['param-row']">

@@ -17,11 +17,15 @@ Endpoints:
 Target: TXRX Labs January 2026 presentation
 """
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional, Literal, Any
 import json
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/art/rosette/pattern",
@@ -205,7 +209,8 @@ async def list_patterns(
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to list patterns")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to list patterns: {str(e)}"
@@ -255,7 +260,8 @@ async def generate_traditional_pattern(body: TraditionalPatternRequest):
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Traditional pattern generation failed")
         raise HTTPException(
             status_code=500,
             detail=f"Pattern generation failed: {str(e)}"
@@ -304,7 +310,8 @@ async def generate_modern_pattern(body: ModernPatternRequest):
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Modern pattern generation failed")
         raise HTTPException(
             status_code=500,
             detail=f"Pattern generation failed: {str(e)}"
@@ -348,7 +355,8 @@ async def get_pattern_details(pattern_id: str):
 
     except HTTPException:
         raise
-    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint
+    except Exception as e:  # WP-1: governance catch-all — HTTP endpoint  # AUDITED 2026-03
+        logger.exception("Failed to load pattern %s", pattern_id)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to load pattern: {str(e)}"

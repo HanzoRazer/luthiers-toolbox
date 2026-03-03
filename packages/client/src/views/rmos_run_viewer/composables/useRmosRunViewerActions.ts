@@ -145,7 +145,7 @@ export function useRmosRunViewerActions(
     error.value = null
     try {
       const { blob } = await rmosRuns.downloadAttachment(att.sha256)
-      const safeName = (att.filename || `${att.sha256}`).replace(/[^\w.\-]+/g, '_')
+      const safeName = (att.filename || `${att.sha256}`).replace(/[^\w.-]+/g, '_')
       downloadBlob(blob, safeName)
     } catch (e: any) {
       error.value = String(e?.message || e)

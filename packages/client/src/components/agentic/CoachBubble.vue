@@ -55,38 +55,46 @@ const actionIcon = computed(() => {
 
 <template>
   <Transition name="coach-bubble">
-    <div v-if="isVisible" class="coach-bubble" role="complementary" aria-label="Coach suggestion">
+    <div
+      v-if="isVisible"
+      class="coach-bubble"
+      role="complementary"
+      aria-label="Coach suggestion"
+    >
       <div class="coach-bubble__header">
         <span class="coach-bubble__icon">{{ actionIcon }}</span>
         <span class="coach-bubble__title">{{ directive?.title }}</span>
         <button
           class="coach-bubble__dismiss"
-          @click="onDismiss"
           aria-label="Dismiss suggestion"
           title="Dismiss"
+          @click="onDismiss"
         >
           ×
         </button>
       </div>
 
-      <p v-if="directive?.detail" class="coach-bubble__detail">
+      <p
+        v-if="directive?.detail"
+        class="coach-bubble__detail"
+      >
         {{ directive.detail }}
       </p>
 
       <div class="coach-bubble__actions">
         <button
           class="coach-bubble__btn coach-bubble__btn--helpful"
-          @click="onHelpful"
           aria-label="Mark as helpful"
           title="Helpful"
+          @click="onHelpful"
         >
           👍 Helpful
         </button>
         <button
           class="coach-bubble__btn coach-bubble__btn--too-much"
-          @click="onTooMuch"
           aria-label="Too much guidance"
           title="Too much"
+          @click="onTooMuch"
         >
           👎 Too much
         </button>

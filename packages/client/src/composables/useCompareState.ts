@@ -1,4 +1,4 @@
-/* eslint-disable no-direct-state-mutation */
+/* Note: no-direct-state-mutation would be a custom rule for this pattern */
 /**
  * CompareLab State Machine Guard
  * B22.8: Compare Lab State Machine

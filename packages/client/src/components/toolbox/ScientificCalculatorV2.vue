@@ -14,7 +14,10 @@
     </div>
 
     <!-- Shared Display -->
-    <CalculatorDisplay :expression="expression" :display="display" />
+    <CalculatorDisplay
+      :expression="expression"
+      :display="display"
+    />
 
     <!-- Tab Content -->
     <div class="tab-content">

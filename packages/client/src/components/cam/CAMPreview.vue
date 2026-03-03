@@ -272,7 +272,7 @@ async function simulate(){
         current = []
       }
       if (ln.startsWith('G1 X')){
-        const m = ln.match(/X([\d\.-]+) Y([\d\.-]+)/)
+        const m = ln.match(/X([d.-]+) Y([d.-]+)/)
         if (m){
           current.push([parseFloat(m[1]), parseFloat(m[2])])
         }

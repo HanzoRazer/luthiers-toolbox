@@ -162,46 +162,88 @@ function formatInstrumentType(type: string): string {
     <div class="export-grid">
       <!-- JSON Export -->
       <div class="export-card">
-        <div class="export-icon">{ }</div>
+        <div class="export-icon">
+          { }
+        </div>
         <div class="export-info">
-          <div class="export-title">JSON</div>
-          <div class="export-desc">Full data for import/backup</div>
+          <div class="export-title">
+            JSON
+          </div>
+          <div class="export-desc">
+            Full data for import/backup
+          </div>
         </div>
         <div class="export-actions">
-          <button type="button" @click="copyToClipboard(jsonExport, 'JSON')">
+          <button
+            type="button"
+            @click="copyToClipboard(jsonExport, 'JSON')"
+          >
             Copy
           </button>
-          <button type="button" @click="exportJSON">Download</button>
+          <button
+            type="button"
+            @click="exportJSON"
+          >
+            Download
+          </button>
         </div>
       </div>
 
       <!-- CSV Export -->
       <div class="export-card">
-        <div class="export-icon">CSV</div>
+        <div class="export-icon">
+          CSV
+        </div>
         <div class="export-info">
-          <div class="export-title">CSV</div>
-          <div class="export-desc">WBS breakdown for spreadsheets</div>
+          <div class="export-title">
+            CSV
+          </div>
+          <div class="export-desc">
+            WBS breakdown for spreadsheets
+          </div>
         </div>
         <div class="export-actions">
-          <button type="button" @click="copyToClipboard(csvExport, 'CSV')">
+          <button
+            type="button"
+            @click="copyToClipboard(csvExport, 'CSV')"
+          >
             Copy
           </button>
-          <button type="button" @click="exportCSV">Download</button>
+          <button
+            type="button"
+            @click="exportCSV"
+          >
+            Download
+          </button>
         </div>
       </div>
 
       <!-- Summary Export -->
       <div class="export-card">
-        <div class="export-icon">TXT</div>
+        <div class="export-icon">
+          TXT
+        </div>
         <div class="export-info">
-          <div class="export-title">Summary</div>
-          <div class="export-desc">Plain text for notes/docs</div>
+          <div class="export-title">
+            Summary
+          </div>
+          <div class="export-desc">
+            Plain text for notes/docs
+          </div>
         </div>
         <div class="export-actions">
-          <button type="button" @click="copyToClipboard(summaryText, 'Summary')">
+          <button
+            type="button"
+            @click="copyToClipboard(summaryText, 'Summary')"
+          >
             Copy
           </button>
-          <button type="button" @click="exportSummary">Download</button>
+          <button
+            type="button"
+            @click="exportSummary"
+          >
+            Download
+          </button>
         </div>
       </div>
     </div>

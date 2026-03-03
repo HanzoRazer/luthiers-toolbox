@@ -220,32 +220,53 @@ async function copyGcode() {
             type="file"
             accept=".dxf"
             @change="handleFileSelect"
-          />
+          >
           <div :class="styles.fileDropContent">
             <div :class="styles.fileDropIcon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
               </svg>
             </div>
-            <div v-if="uploadedFile" :class="styles.fileDropFile">
+            <div
+              v-if="uploadedFile"
+              :class="styles.fileDropFile"
+            >
               <strong>{{ uploadedFile.name }}</strong>
               <span>{{ (uploadedFile.size / 1024).toFixed(1) }} KB</span>
             </div>
-            <div v-else :class="styles.fileDropText">
+            <div
+              v-else
+              :class="styles.fileDropText"
+            >
               <strong>Drop DXF file here</strong>
               <span>or click to browse</span>
             </div>
           </div>
         </label>
-        <p v-if="uploadError" :class="styles.uploadError">{{ uploadError }}</p>
+        <p
+          v-if="uploadError"
+          :class="styles.uploadError"
+        >
+          {{ uploadError }}
+        </p>
       </div>
     </template>
 
     <!-- Step 2: Validate -->
     <template #step-1>
       <div :class="styles.validationStep">
-        <div v-if="isValidating" :class="styles.loading">
-          <span :class="styles.spinner"></span>
+        <div
+          v-if="isValidating"
+          :class="styles.loading"
+        >
+          <span :class="styles.spinner" />
           Validating geometry...
         </div>
         <div v-else-if="validationResult">
@@ -261,8 +282,15 @@ async function copyGcode() {
               </p>
             </div>
           </div>
-          <ul v-if="validationResult.data?.issues?.length" :class="styles.issuesList">
-            <li v-for="issue in validationResult.data.issues" :key="issue.message" :class="issue.severity === 'error' ? styles.issueError : issue.severity === 'warning' ? styles.issueWarning : styles.issueInfo">
+          <ul
+            v-if="validationResult.data?.issues?.length"
+            :class="styles.issuesList"
+          >
+            <li
+              v-for="issue in validationResult.data.issues"
+              :key="issue.message"
+              :class="issue.severity === 'error' ? styles.issueError : issue.severity === 'warning' ? styles.issueWarning : styles.issueInfo"
+            >
               <span :class="issue.severity === 'error' ? styles.issueSeverityError : issue.severity === 'warning' ? styles.issueSeverityWarning : styles.issueSeverityInfo">{{ issue.severity }}</span>
               <span :class="styles.issueMessage">{{ issue.message }}</span>
             </li>
@@ -278,38 +306,79 @@ async function copyGcode() {
           <div :class="styles.configField">
             <label>Operation</label>
             <select v-model="camParams.operation">
-              <option value="profile">Profile (outline)</option>
-              <option value="pocket">Pocket (area clear)</option>
-              <option value="drill">Drill (point-to-point)</option>
+              <option value="profile">
+                Profile (outline)
+              </option>
+              <option value="pocket">
+                Pocket (area clear)
+              </option>
+              <option value="drill">
+                Drill (point-to-point)
+              </option>
             </select>
           </div>
           <div :class="styles.configField">
             <label>Tool Diameter (mm)</label>
-            <input type="number" v-model.number="camParams.toolDiameter" min="0.1" step="0.5" />
+            <input
+              v-model.number="camParams.toolDiameter"
+              type="number"
+              min="0.1"
+              step="0.5"
+            >
           </div>
           <div :class="styles.configField">
             <label>Cut Depth (mm)</label>
-            <input type="number" v-model.number="camParams.depth" min="0.1" step="0.5" />
+            <input
+              v-model.number="camParams.depth"
+              type="number"
+              min="0.1"
+              step="0.5"
+            >
           </div>
           <div :class="styles.configField">
             <label>Stepover (%)</label>
-            <input type="number" v-model.number="camParams.stepover" min="5" max="100" />
+            <input
+              v-model.number="camParams.stepover"
+              type="number"
+              min="5"
+              max="100"
+            >
           </div>
           <div :class="styles.configField">
             <label>Feed XY (mm/min)</label>
-            <input type="number" v-model.number="camParams.feedXY" min="100" step="100" />
+            <input
+              v-model.number="camParams.feedXY"
+              type="number"
+              min="100"
+              step="100"
+            >
           </div>
           <div :class="styles.configField">
             <label>Feed Z (mm/min)</label>
-            <input type="number" v-model.number="camParams.feedZ" min="50" step="50" />
+            <input
+              v-model.number="camParams.feedZ"
+              type="number"
+              min="50"
+              step="50"
+            >
           </div>
           <div :class="styles.configField">
             <label>Spindle (RPM)</label>
-            <input type="number" v-model.number="camParams.spindle" min="1000" step="1000" />
+            <input
+              v-model.number="camParams.spindle"
+              type="number"
+              min="1000"
+              step="1000"
+            >
           </div>
           <div :class="styles.configField">
             <label>Safe Z (mm)</label>
-            <input type="number" v-model.number="camParams.safeZ" min="1" step="1" />
+            <input
+              v-model.number="camParams.safeZ"
+              type="number"
+              min="1"
+              step="1"
+            >
           </div>
         </div>
       </div>
@@ -318,18 +387,38 @@ async function copyGcode() {
     <!-- Step 4: Safety -->
     <template #step-3>
       <div :class="styles.safetyStep">
-        <div v-if="safetyResult" :class="[styles.safetyResult, safetyResult.decision?.toLowerCase() === 'green' ? styles.safetyResultGreen : safetyResult.decision?.toLowerCase() === 'yellow' ? styles.safetyResultYellow : styles.safetyResultRed]">
-          <div :class="safetyResult.decision?.toLowerCase() === 'green' ? styles.safetyBadgeGreen : safetyResult.decision?.toLowerCase() === 'yellow' ? styles.safetyBadgeYellow : styles.safetyBadgeRed">{{ safetyResult.decision }}</div>
-          <p :class="styles.safetyRecommendation">{{ safetyResult.recommendation }}</p>
+        <div
+          v-if="safetyResult"
+          :class="[styles.safetyResult, safetyResult.decision?.toLowerCase() === 'green' ? styles.safetyResultGreen : safetyResult.decision?.toLowerCase() === 'yellow' ? styles.safetyResultYellow : styles.safetyResultRed]"
+        >
+          <div :class="safetyResult.decision?.toLowerCase() === 'green' ? styles.safetyBadgeGreen : safetyResult.decision?.toLowerCase() === 'yellow' ? styles.safetyBadgeYellow : styles.safetyBadgeRed">
+            {{ safetyResult.decision }}
+          </div>
+          <p :class="styles.safetyRecommendation">
+            {{ safetyResult.recommendation }}
+          </p>
         </div>
-        <ul v-if="safetyResult?.rules_triggered?.length" :class="styles.rulesList">
-          <li v-for="rule in safetyResult.rules_triggered" :key="rule.id" :class="styles.ruleItem">
+        <ul
+          v-if="safetyResult?.rules_triggered?.length"
+          :class="styles.rulesList"
+        >
+          <li
+            v-for="rule in safetyResult.rules_triggered"
+            :key="rule.id"
+            :class="styles.ruleItem"
+          >
             <span :class="styles.ruleId">{{ rule.id }}</span>
             <span :class="styles.ruleMessage">{{ rule.message }}</span>
-            <span v-if="rule.hint" :class="styles.ruleHint">{{ rule.hint }}</span>
+            <span
+              v-if="rule.hint"
+              :class="styles.ruleHint"
+            >{{ rule.hint }}</span>
           </li>
         </ul>
-        <p v-else-if="safetyResult?.decision === 'GREEN'" :class="styles.safetyClear">
+        <p
+          v-else-if="safetyResult?.decision === 'GREEN'"
+          :class="styles.safetyClear"
+        >
           All parameters within safe limits. Ready to generate G-code.
         </p>
       </div>
@@ -339,10 +428,16 @@ async function copyGcode() {
     <template #step-4>
       <div :class="styles.generateStep">
         <div :class="styles.gcodeActions">
-          <button :class="styles.actionBtn" @click="downloadGcode">
+          <button
+            :class="styles.actionBtn"
+            @click="downloadGcode"
+          >
             <span>Download .nc</span>
           </button>
-          <button :class="styles.actionBtnSecondary" @click="copyGcode">
+          <button
+            :class="styles.actionBtnSecondary"
+            @click="copyGcode"
+          >
             <span>Copy to Clipboard</span>
           </button>
         </div>

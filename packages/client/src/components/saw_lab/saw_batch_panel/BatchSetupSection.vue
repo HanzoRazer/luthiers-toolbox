@@ -1,6 +1,8 @@
 <template>
   <div :class="styles.batchSetupSection">
-    <h3 :class="styles.sectionTitle">Batch Configuration</h3>
+    <h3 :class="styles.sectionTitle">
+      Batch Configuration
+    </h3>
 
     <!-- Blade Selection -->
     <div :class="styles.formGroup">

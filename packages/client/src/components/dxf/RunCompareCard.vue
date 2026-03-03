@@ -62,18 +62,38 @@ function pillLabel(k: string) {
       <div class="muted">
         {{ previousRunId?.slice(0, 8) }}… → {{ currentRunId?.slice(0, 8) }}…
       </div>
-      <button class="btn-clear" @click="emit('clear')">Clear</button>
+      <button
+        class="btn-clear"
+        @click="emit('clear')"
+      >
+        Clear
+      </button>
     </div>
 
-    <div v-if="compareError" class="compare-error">
+    <div
+      v-if="compareError"
+      class="compare-error"
+    >
       {{ compareError }}
     </div>
 
-    <div v-else class="compare-content">
+    <div
+      v-else
+      class="compare-content"
+    >
       <!-- Summary chips -->
-      <div v-if="compareSummary" class="pill-row">
-        <template v-for="(v, k) in compareSummary" :key="k">
-          <span v-if="v" class="pill ok">{{ pillLabel(String(k)) }}</span>
+      <div
+        v-if="compareSummary"
+        class="pill-row"
+      >
+        <template
+          v-for="(v, k) in compareSummary"
+          :key="k"
+        >
+          <span
+            v-if="v"
+            class="pill ok"
+          >{{ pillLabel(String(k)) }}</span>
         </template>
         <span
           v-if="Object.values(compareSummary).every((x: any) => !x)"
@@ -84,10 +104,17 @@ function pillLabel(k: string) {
       </div>
 
       <!-- Decision -->
-      <div v-if="compareDecision" class="compare-section">
-        <div class="section-title">Decision</div>
+      <div
+        v-if="compareDecision"
+        class="compare-section"
+      >
+        <div class="section-title">
+          Decision
+        </div>
         <div class="kv-row">
-          <div class="kv-label">Risk</div>
+          <div class="kv-label">
+            Risk
+          </div>
           <div class="kv-value">
             <span class="pill">{{ compareDecision.before?.risk_level }}</span>
             <span class="arrow">→</span>
@@ -98,7 +125,9 @@ function pillLabel(k: string) {
           v-if="compareDecision.before?.block_reason || compareDecision.after?.block_reason"
           class="kv-row"
         >
-          <div class="kv-label">Block reason</div>
+          <div class="kv-label">
+            Block reason
+          </div>
           <div class="kv-value muted">
             {{ compareDecision.before?.block_reason || '—' }}
             <span class="arrow">→</span>
@@ -108,12 +137,22 @@ function pillLabel(k: string) {
       </div>
 
       <!-- Feasibility rules -->
-      <div v-if="compareFeasibility" class="compare-section">
-        <div class="section-title">Feasibility rules</div>
+      <div
+        v-if="compareFeasibility"
+        class="compare-section"
+      >
+        <div class="section-title">
+          Feasibility rules
+        </div>
         <div class="kv-row">
-          <div class="kv-label">Added</div>
+          <div class="kv-label">
+            Added
+          </div>
           <div class="kv-value">
-            <span v-if="(compareFeasibility.rules_added || []).length === 0" class="muted">—</span>
+            <span
+              v-if="(compareFeasibility.rules_added || []).length === 0"
+              class="muted"
+            >—</span>
             <span
               v-for="rid in (compareFeasibility.rules_added || [])"
               :key="rid"
@@ -122,9 +161,14 @@ function pillLabel(k: string) {
           </div>
         </div>
         <div class="kv-row">
-          <div class="kv-label">Removed</div>
+          <div class="kv-label">
+            Removed
+          </div>
           <div class="kv-value">
-            <span v-if="(compareFeasibility.rules_removed || []).length === 0" class="muted">—</span>
+            <span
+              v-if="(compareFeasibility.rules_removed || []).length === 0"
+              class="muted"
+            >—</span>
             <span
               v-for="rid in (compareFeasibility.rules_removed || [])"
               :key="rid"
@@ -136,31 +180,55 @@ function pillLabel(k: string) {
 
       <!-- Parameter changes -->
       <div class="compare-section">
-        <div class="section-title">Parameter changes</div>
-        <div v-if="paramDiffRows.length === 0" class="muted">
+        <div class="section-title">
+          Parameter changes
+        </div>
+        <div
+          v-if="paramDiffRows.length === 0"
+          class="muted"
+        >
           No parameter changes detected.
         </div>
-        <div v-else class="diff-grid">
+        <div
+          v-else
+          class="diff-grid"
+        >
           <div class="diff-row diff-head">
             <div>Field</div>
             <div>Previous</div>
             <div>Current</div>
           </div>
-          <div v-for="row in paramDiffRows" :key="row.key" class="diff-row">
-            <div class="k">{{ row.key }}</div>
-            <div class="vcell">{{ row.a ?? '—' }}</div>
-            <div class="vcell">{{ row.b ?? '—' }}</div>
+          <div
+            v-for="row in paramDiffRows"
+            :key="row.key"
+            class="diff-row"
+          >
+            <div class="k">
+              {{ row.key }}
+            </div>
+            <div class="vcell">
+              {{ row.a ?? '—' }}
+            </div>
+            <div class="vcell">
+              {{ row.b ?? '—' }}
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Deep diff toggle -->
-      <button class="compare-toggle" @click="showDeepCompare = !showDeepCompare">
+      <button
+        class="compare-toggle"
+        @click="showDeepCompare = !showDeepCompare"
+      >
         <span class="chev">{{ showDeepCompare ? '▾' : '▸' }}</span>
         <span>Show deep diffs</span>
         <span class="muted">(request/feasibility/decision/hashes/attachments)</span>
       </button>
-      <pre v-if="showDeepCompare" class="code">{{ JSON.stringify(compareResult, null, 2) }}</pre>
+      <pre
+        v-if="showDeepCompare"
+        class="code"
+      >{{ JSON.stringify(compareResult, null, 2) }}</pre>
     </div>
   </div>
 </template>

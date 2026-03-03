@@ -17,7 +17,9 @@
           </ul>
           <div :class="styles.example">
             <strong>Example: Baritone at 25.5" scale</strong>
-            <div :class="styles.calcResultProblem">Low B string: 12.8 lbs (too floppy!)</div>
+            <div :class="styles.calcResultProblem">
+              Low B string: 12.8 lbs (too floppy!)
+            </div>
           </div>
         </div>
 
@@ -31,7 +33,9 @@
           </ul>
           <div :class="styles.example">
             <strong>Same baritone with multi-scale:</strong>
-            <div :class="styles.calcResultSolution">Low B string: 14.3 lbs (perfect!)</div>
+            <div :class="styles.calcResultSolution">
+              Low B string: 14.3 lbs (perfect!)
+            </div>
           </div>
         </div>
       </div>
@@ -40,14 +44,26 @@
         <h3>Visual: How Fanned Frets Work</h3>
         <div :class="styles.fretVisualization">
           <div :class="styles.fretLineTreble">
-            <div :class="styles.fretLabel">Treble Side (High E)</div>
-            <div :class="styles.fretVisual">|———————————————————| 25.5" scale</div>
-            <div :class="styles.fretTension">15.1 lbs tension</div>
+            <div :class="styles.fretLabel">
+              Treble Side (High E)
+            </div>
+            <div :class="styles.fretVisual">
+              |———————————————————| 25.5" scale
+            </div>
+            <div :class="styles.fretTension">
+              15.1 lbs tension
+            </div>
           </div>
           <div :class="styles.fretLineBass">
-            <div :class="styles.fretLabel">Bass Side (Low E)</div>
-            <div :class="styles.fretVisual">|—————————————————————————| 27.0" scale</div>
-            <div :class="styles.fretTension">14.8 lbs tension (with .046" gauge)</div>
+            <div :class="styles.fretLabel">
+              Bass Side (Low E)
+            </div>
+            <div :class="styles.fretVisual">
+              |—————————————————————————| 27.0" scale
+            </div>
+            <div :class="styles.fretTension">
+              14.8 lbs tension (with .046" gauge)
+            </div>
           </div>
         </div>
         <p :class="styles.diagramNote">
@@ -73,7 +89,9 @@
             <div>{{ row.string }}</div>
             <div>{{ row.single }}</div>
             <div>{{ row.multi }}</div>
-            <div :class="improvementClass(row.level)">{{ row.improvement }}</div>
+            <div :class="improvementClass(row.level)">
+              {{ row.improvement }}
+            </div>
           </div>
         </div>
         <p :class="styles.comparisonNote">
@@ -85,10 +103,20 @@
       <div :class="styles.ergonomicBenefits">
         <h3>Ergonomic Benefits</h3>
         <div :class="styles.benefitGrid">
-          <div v-for="benefit in benefits" :key="benefit.title" :class="styles.benefitCard">
-            <div :class="styles.benefitIcon">{{ benefit.icon }}</div>
-            <div :class="styles.benefitTitle">{{ benefit.title }}</div>
-            <div :class="styles.benefitText">{{ benefit.text }}</div>
+          <div
+            v-for="benefit in benefits"
+            :key="benefit.title"
+            :class="styles.benefitCard"
+          >
+            <div :class="styles.benefitIcon">
+              {{ benefit.icon }}
+            </div>
+            <div :class="styles.benefitTitle">
+              {{ benefit.title }}
+            </div>
+            <div :class="styles.benefitText">
+              {{ benefit.text }}
+            </div>
           </div>
         </div>
       </div>
@@ -103,7 +131,10 @@
           Or go extreme: 28" baritone for drop G# tuning, 22" travel guitar for portability.
           The math is your guide!
         </p>
-        <button :class="shared.btnPrimary" @click="$emit('goToTension')">
+        <button
+          :class="shared.btnPrimary"
+          @click="$emit('goToTension')"
+        >
           Explore Custom Scales in Tension Calculator →
         </button>
       </div>

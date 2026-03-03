@@ -76,7 +76,12 @@
     />
 
     <!-- Error display -->
-    <div v-if="err" class="wf-error">{{ err }}</div>
+    <div
+      v-if="err"
+      class="wf-error"
+    >
+      {{ err }}
+    </div>
 
     <!-- History -->
     <WorkflowHistory :history="session?.history || []" />

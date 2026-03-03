@@ -1,6 +1,8 @@
 <template>
   <div class="overrides">
-    <div class="ovTitle">Download overrides</div>
+    <div class="ovTitle">
+      Download overrides
+    </div>
 
     <select
       :value="toolId"
@@ -8,7 +10,11 @@
       title="Override tool_id"
       @change="$emit('update:toolId', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-for="o in toolOptions" :key="o.id" :value="o.id">
+      <option
+        v-for="o in toolOptions"
+        :key="o.id"
+        :value="o.id"
+      >
         {{ o.label }}
       </option>
     </select>
@@ -19,7 +25,11 @@
       title="Override material_id"
       @change="$emit('update:materialId', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-for="o in materialOptions" :key="o.id" :value="o.id">
+      <option
+        v-for="o in materialOptions"
+        :key="o.id"
+        :value="o.id"
+      >
         {{ o.label }}
       </option>
     </select>
@@ -30,7 +40,11 @@
       title="Override machine_profile_id"
       @change="$emit('update:machineProfileId', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-for="o in machineOptions" :key="o.id" :value="o.id">
+      <option
+        v-for="o in machineOptions"
+        :key="o.id"
+        :value="o.id"
+      >
         {{ o.label }}
       </option>
     </select>
@@ -41,7 +55,11 @@
       title="Override requested_cam_profile_id"
       @change="$emit('update:camProfileId', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-for="o in camProfileOptions" :key="o.id" :value="o.id">
+      <option
+        v-for="o in camProfileOptions"
+        :key="o.id"
+        :value="o.id"
+      >
         {{ o.label }}
       </option>
     </select>
@@ -52,12 +70,20 @@
       title="Override risk_tolerance"
       @change="$emit('update:riskTolerance', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-for="o in riskToleranceOptions" :key="o.id" :value="o.id">
+      <option
+        v-for="o in riskToleranceOptions"
+        :key="o.id"
+        :value="o.id"
+      >
         {{ o.label }}
       </option>
     </select>
 
-    <button class="btn ghost" title="Clear overrides" @click="$emit('clear')">
+    <button
+      class="btn ghost"
+      title="Clear overrides"
+      @click="$emit('clear')"
+    >
       Clear
     </button>
   </div>

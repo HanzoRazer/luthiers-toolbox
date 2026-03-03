@@ -116,10 +116,10 @@
 
       <div :class="styles.laborCalculator">
         <LaborInputSection
-          :styles="styles"
           v-model:hourly-rate="hourlyRate"
           v-model:instrument-type="instrumentType"
           v-model:finish-type="laborFinishType"
+          :styles="styles"
         />
 
         <LaborResultsSection
@@ -147,13 +147,13 @@
 
       <div :class="styles.burstDesigner">
         <BurstControlsPanel
-          :styles="styles"
           v-model:burst-type="burstType"
           v-model:center-color="centerColor"
           v-model:mid-color="midColor"
           v-model:edge-color="edgeColor"
           v-model:fade-start="fadeStart"
           v-model:fade-end="fadeEnd"
+          :styles="styles"
           @apply-preset="applyBurstPreset"
           @export-csv="exportBurstCSV"
         />

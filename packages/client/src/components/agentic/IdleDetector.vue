@@ -66,5 +66,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Renderless component -->
+  <slot />
 </template>

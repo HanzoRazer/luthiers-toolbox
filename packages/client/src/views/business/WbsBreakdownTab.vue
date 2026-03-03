@@ -19,31 +19,52 @@ defineProps<{
       <thead>
         <tr>
           <th>Task</th>
-          <th class="num">Base</th>
-          <th class="num">Adjusted</th>
-          <th class="num">Cost</th>
+          <th class="num">
+            Base
+          </th>
+          <th class="num">
+            Adjusted
+          </th>
+          <th class="num">
+            Cost
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="task in tasks" :key="task.task_id">
+        <tr
+          v-for="task in tasks"
+          :key="task.task_id"
+        >
           <td>
             <span
               class="group-indicator"
               :style="{ background: businessEstimator.getGroupColor(task.task_id) }"
-            ></span>
+            />
             {{ task.task_name }}
           </td>
-          <td class="num">{{ task.base_hours.toFixed(1) }}h</td>
-          <td class="num">{{ task.adjusted_hours.toFixed(1) }}h</td>
-          <td class="num">${{ task.labor_cost.toFixed(0) }}</td>
+          <td class="num">
+            {{ task.base_hours.toFixed(1) }}h
+          </td>
+          <td class="num">
+            {{ task.adjusted_hours.toFixed(1) }}h
+          </td>
+          <td class="num">
+            ${{ task.labor_cost.toFixed(0) }}
+          </td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
           <td><strong>Total</strong></td>
-          <td class="num">—</td>
-          <td class="num"><strong>{{ totalHours.toFixed(1) }}h</strong></td>
-          <td class="num"><strong>${{ laborCost.toFixed(0) }}</strong></td>
+          <td class="num">
+            —
+          </td>
+          <td class="num">
+            <strong>{{ totalHours.toFixed(1) }}h</strong>
+          </td>
+          <td class="num">
+            <strong>${{ laborCost.toFixed(0) }}</strong>
+          </td>
         </tr>
       </tfoot>
     </table>

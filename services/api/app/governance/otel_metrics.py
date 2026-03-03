@@ -53,6 +53,6 @@ def otel_increment_endpoint_hit(*, status: str, method: str, path_pattern: str) 
     }
     try:
         _counter.add(1, attributes=attrs)
-    except Exception:  # WP-1: keep broad — OTEL must never raise to caller
+    except Exception:  # WP-1: keep broad — OTEL must never raise to caller  # AUDITED 2026-03: no-op on failure
         # Never raise to caller
         return

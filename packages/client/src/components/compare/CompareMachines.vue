@@ -23,7 +23,7 @@
         <MachinePane 
           v-for="slot in ['A', 'B', 'C']" 
           :key="slot" 
-          :slot="slot" 
+          :paneSlot="slot" 
           :machines="machines" 
           :body="body"
         />

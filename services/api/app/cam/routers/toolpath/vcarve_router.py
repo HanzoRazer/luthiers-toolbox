@@ -92,7 +92,7 @@ def _parse_svg_polylines(svg: str) -> List[List[Tuple[float, float]]]:
                 x, y = parts
             try:
                 pts.append((float(x), float(y)))
-            except ValueError:  # WP-1: narrowed from except Exception
+            except ValueError:  # WP-1: narrowed from except Exception  # AUDITED 2026-03: float() on split string — ValueError only
                 pass
         if pts:
             pl.append(pts)

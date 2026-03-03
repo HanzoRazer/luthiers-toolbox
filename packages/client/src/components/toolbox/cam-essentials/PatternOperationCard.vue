@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-mutating-props -- Form editor with v-model on object prop is intentional */
 /**
  * PatternOperationCard - Drill pattern operation card
  * Extracted from CAMEssentialsLab.vue
@@ -23,9 +24,15 @@ defineProps<{
       <div :class="styles['param-row']">
         <label>Pattern:</label>
         <select v-model="pattern.params.value.type">
-          <option value="grid">Grid</option>
-          <option value="circle">Circle</option>
-          <option value="line">Line</option>
+          <option value="grid">
+            Grid
+          </option>
+          <option value="circle">
+            Circle
+          </option>
+          <option value="line">
+            Line
+          </option>
         </select>
       </div>
 

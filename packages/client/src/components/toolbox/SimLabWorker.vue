@@ -167,9 +167,9 @@ G0 Z5
     const txt = await res.text()
     let json:any = null
     
-    try { 
-      json = JSON.parse(txt) 
-    } catch {}
+    try {
+      json = JSON.parse(txt)
+    } catch { /* response may not be valid JSON */ }
     
     summary.value = JSON.parse(res.headers.get('X-CAM-Summary') || '{}')
     moves.value = json?.moves || []

@@ -13,24 +13,44 @@
         </span>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Total</div>
-        <div class="kpi-value">{{ totalCount }}</div>
+        <div class="kpi-label">
+          Total
+        </div>
+        <div class="kpi-value">
+          {{ totalCount }}
+        </div>
       </div>
       <div class="kpi kpi-green">
-        <div class="kpi-label">GREEN</div>
-        <div class="kpi-value">{{ greenCount }}</div>
+        <div class="kpi-label">
+          GREEN
+        </div>
+        <div class="kpi-value">
+          {{ greenCount }}
+        </div>
       </div>
       <div class="kpi kpi-muted">
-        <div class="kpi-label">Undecided</div>
-        <div class="kpi-value">{{ undecidedCount }}</div>
+        <div class="kpi-label">
+          Undecided
+        </div>
+        <div class="kpi-value">
+          {{ undecidedCount }}
+        </div>
       </div>
       <div class="kpi kpi-yellow">
-        <div class="kpi-label">YELLOW</div>
-        <div class="kpi-value">{{ yellowCount }}</div>
+        <div class="kpi-label">
+          YELLOW
+        </div>
+        <div class="kpi-value">
+          {{ yellowCount }}
+        </div>
       </div>
       <div class="kpi kpi-red">
-        <div class="kpi-label">RED</div>
-        <div class="kpi-value">{{ redCount }}</div>
+        <div class="kpi-label">
+          RED
+        </div>
+        <div class="kpi-value">
+          {{ redCount }}
+        </div>
       </div>
     </div>
 

@@ -23,15 +23,104 @@ onMounted(() => loadGoals());
 
 <template>
   <div class="goals-panel">
-    <header class="panel-header"><h3>Pricing Goals</h3><button v-if="!showCreateForm" type="button" class="btn-add" @click="showCreateForm = true">+ New Goal</button></header>
-    <div v-if="showCreateForm" class="create-form">
-      <div class="form-row"><label>Goal Name</label><input v-model="newGoal.name" type="text" placeholder="e.g., Master Build" /></div>
-      <div class="form-row"><label>Instrument</label><select v-model="newGoal.instrument_type"><option value="acoustic_dreadnought">Acoustic Dreadnought</option><option value="electric_solid">Electric Solid</option><option value="bass_4">Bass 4-String</option></select></div>
-      <div class="form-row-group"><div class="form-row"><label>Target Cost</label><input v-model.number="newGoal.target_cost" type="number" min="0" /></div><div class="form-row"><label>Target Hours</label><input v-model.number="newGoal.target_hours" type="number" min="0" /></div></div>
-      <div class="form-actions"><button type="button" class="btn-secondary" @click="showCreateForm = false">Cancel</button><button type="button" class="btn-primary" @click="createGoal">Create</button></div>
+    <header class="panel-header">
+      <h3>Pricing Goals</h3><button
+        v-if="!showCreateForm"
+        type="button"
+        class="btn-add"
+        @click="showCreateForm = true"
+      >
+        + New Goal
+      </button>
+    </header>
+    <div
+      v-if="showCreateForm"
+      class="create-form"
+    >
+      <div class="form-row">
+        <label>Goal Name</label><input
+          v-model="newGoal.name"
+          type="text"
+          placeholder="e.g., Master Build"
+        >
+      </div>
+      <div class="form-row">
+        <label>Instrument</label><select v-model="newGoal.instrument_type">
+          <option value="acoustic_dreadnought">
+            Acoustic Dreadnought
+          </option><option value="electric_solid">
+            Electric Solid
+          </option><option value="bass_4">
+            Bass 4-String
+          </option>
+        </select>
+      </div>
+      <div class="form-row-group">
+        <div class="form-row">
+          <label>Target Cost</label><input
+            v-model.number="newGoal.target_cost"
+            type="number"
+            min="0"
+          >
+        </div><div class="form-row">
+          <label>Target Hours</label><input
+            v-model.number="newGoal.target_hours"
+            type="number"
+            min="0"
+          >
+        </div>
+      </div>
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-secondary"
+          @click="showCreateForm = false"
+        >
+          Cancel
+        </button><button
+          type="button"
+          class="btn-primary"
+          @click="createGoal"
+        >
+          Create
+        </button>
+      </div>
     </div>
-    <div v-if="activeGoals.length > 0" class="goals-section"><h4>Active Goals</h4><div v-for="goal in activeGoals" :key="goal.id" class="goal-card"><div class="goal-header"><div class="goal-name">{{ goal.name }}</div><button type="button" class="btn-icon" @click="deleteGoal(goal.id)">&times;</button></div><div class="goal-meta">{{ formatType(goal.instrument_type) }} | Target: ${{ goal.target_cost }} | {{ goal.target_hours }}h</div><div class="progress-bar"><div class="progress-fill" :style="{ width: goal.progress_pct + '%' }"></div></div></div></div>
-    <div v-if="goals.length === 0 && !showCreateForm" class="empty-state"><p>No goals yet.</p></div>
+    <div
+      v-if="activeGoals.length > 0"
+      class="goals-section"
+    >
+      <h4>Active Goals</h4><div
+        v-for="goal in activeGoals"
+        :key="goal.id"
+        class="goal-card"
+      >
+        <div class="goal-header">
+          <div class="goal-name">
+            {{ goal.name }}
+          </div><button
+            type="button"
+            class="btn-icon"
+            @click="deleteGoal(goal.id)"
+          >
+            &times;
+          </button>
+        </div><div class="goal-meta">
+          {{ formatType(goal.instrument_type) }} | Target: ${{ goal.target_cost }} | {{ goal.target_hours }}h
+        </div><div class="progress-bar">
+          <div
+            class="progress-fill"
+            :style="{ width: goal.progress_pct + '%' }"
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="goals.length === 0 && !showCreateForm"
+      class="empty-state"
+    >
+      <p>No goals yet.</p>
+    </div>
   </div>
 </template>
 

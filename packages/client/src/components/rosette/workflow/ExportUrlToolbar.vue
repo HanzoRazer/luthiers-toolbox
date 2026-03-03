@@ -1,6 +1,11 @@
 <template>
-  <div v-if="exportUrl" class="export-url-preview">
-    <div class="export-url-label">Export URL</div>
+  <div
+    v-if="exportUrl"
+    class="export-url-preview"
+  >
+    <div class="export-url-label">
+      Export URL
+    </div>
     <input
       type="text"
       class="export-url-input"
@@ -8,7 +13,11 @@
       readonly
       @click="($event.target as HTMLInputElement)?.select()"
     >
-    <button class="btn ghost" title="Copy URL to clipboard" @click="$emit('copyUrl')">
+    <button
+      class="btn ghost"
+      title="Copy URL to clipboard"
+      @click="$emit('copyUrl')"
+    >
       Copy URL
     </button>
     <button

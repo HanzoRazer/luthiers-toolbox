@@ -53,16 +53,27 @@ function handleStepClick(index: number) {
       @click="handleStepClick(index)"
     >
       <div class="step__number">
-        <span v-if="getStepState(index) === 'completed'" class="step__check">✓</span>
+        <span
+          v-if="getStepState(index) === 'completed'"
+          class="step__check"
+        >✓</span>
         <span v-else>{{ index + 1 }}</span>
       </div>
       <div class="step__content">
-        <div class="step__label">{{ step.label }}</div>
-        <div v-if="step.description" class="step__description">
+        <div class="step__label">
+          {{ step.label }}
+        </div>
+        <div
+          v-if="step.description"
+          class="step__description"
+        >
           {{ step.description }}
         </div>
       </div>
-      <div v-if="index < steps.length - 1" class="step__connector" />
+      <div
+        v-if="index < steps.length - 1"
+        class="step__connector"
+      />
     </div>
   </div>
 </template>

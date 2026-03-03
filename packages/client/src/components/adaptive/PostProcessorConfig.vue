@@ -80,10 +80,18 @@ const emit = defineEmits<{
       class="border px-2 py-1 rounded w-full"
       @change="emit('update:afMode', ($event.target as HTMLSelectElement).value as AfMode)"
     >
-      <option value="inherit">Inherit from post</option>
-      <option value="comment">Comment mode</option>
-      <option value="inline_f">Inline F</option>
-      <option value="mcode">M-code</option>
+      <option value="inherit">
+        Inherit from post
+      </option>
+      <option value="comment">
+        Comment mode
+      </option>
+      <option value="inline_f">
+        Inline F
+      </option>
+      <option value="mcode">
+        M-code
+      </option>
     </select>
 
     <div

@@ -17,7 +17,10 @@ defineProps<{
 </script>
 
 <template>
-  <div class="skeleton-container" :class="`skeleton--${variant || 'text'}`">
+  <div
+    class="skeleton-container"
+    :class="`skeleton--${variant || 'text'}`"
+  >
     <!-- Text lines -->
     <template v-if="variant === 'text' || !variant">
       <div
@@ -35,9 +38,18 @@ defineProps<{
       <div class="skeleton skeleton-card">
         <div class="skeleton-card-image" />
         <div class="skeleton-card-content">
-          <div class="skeleton skeleton-line" style="width: 70%" />
-          <div class="skeleton skeleton-line" style="width: 100%" />
-          <div class="skeleton skeleton-line" style="width: 50%" />
+          <div
+            class="skeleton skeleton-line"
+            style="width: 70%"
+          />
+          <div
+            class="skeleton skeleton-line"
+            style="width: 100%"
+          />
+          <div
+            class="skeleton skeleton-line"
+            style="width: 50%"
+          />
         </div>
       </div>
     </template>

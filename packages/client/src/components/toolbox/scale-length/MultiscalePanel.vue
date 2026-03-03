@@ -30,7 +30,9 @@ const emit = defineEmits<{
           </ul>
           <div :class="styles.example">
             <strong>Example: Baritone at 25.5" scale</strong>
-            <div :class="styles.calcResultProblem">Low B string: 12.8 lbs (too floppy!)</div>
+            <div :class="styles.calcResultProblem">
+              Low B string: 12.8 lbs (too floppy!)
+            </div>
           </div>
         </div>
 
@@ -44,7 +46,9 @@ const emit = defineEmits<{
           </ul>
           <div :class="styles.example">
             <strong>Same baritone with multi-scale:</strong>
-            <div :class="styles.calcResultSolution">Low B string: 14.3 lbs (perfect!)</div>
+            <div :class="styles.calcResultSolution">
+              Low B string: 14.3 lbs (perfect!)
+            </div>
           </div>
         </div>
       </div>
@@ -53,14 +57,26 @@ const emit = defineEmits<{
         <h3>Visual: How Fanned Frets Work</h3>
         <div :class="styles.fretVisualization">
           <div :class="styles.fretLine">
-            <div :class="styles.fretLabel">Treble Side (High E)</div>
-            <div :class="styles.fretVisual">|———————————————————| 25.5" scale</div>
-            <div :class="styles.fretTension">15.1 lbs tension</div>
+            <div :class="styles.fretLabel">
+              Treble Side (High E)
+            </div>
+            <div :class="styles.fretVisual">
+              |———————————————————| 25.5" scale
+            </div>
+            <div :class="styles.fretTension">
+              15.1 lbs tension
+            </div>
           </div>
           <div :class="styles.fretLine">
-            <div :class="styles.fretLabel">Bass Side (Low E)</div>
-            <div :class="styles.fretVisual">|—————————————————————————| 27.0" scale</div>
-            <div :class="styles.fretTension">14.8 lbs tension (with .046" gauge)</div>
+            <div :class="styles.fretLabel">
+              Bass Side (Low E)
+            </div>
+            <div :class="styles.fretVisual">
+              |—————————————————————————| 27.0" scale
+            </div>
+            <div :class="styles.fretTension">
+              14.8 lbs tension (with .046" gauge)
+            </div>
           </div>
         </div>
         <p :class="styles.diagramNote">
@@ -82,37 +98,49 @@ const emit = defineEmits<{
             <div>High E (.010")</div>
             <div>15.1 lbs</div>
             <div>15.1 lbs</div>
-            <div :class="styles.neutral">Same</div>
+            <div :class="styles.neutral">
+              Same
+            </div>
           </div>
           <div :class="styles.comparisonRow">
             <div>B (.013")</div>
             <div>15.2 lbs</div>
             <div>15.4 lbs</div>
-            <div :class="styles.slight">+1.3%</div>
+            <div :class="styles.slight">
+              +1.3%
+            </div>
           </div>
           <div :class="styles.comparisonRow">
             <div>G (.017")</div>
             <div>15.0 lbs</div>
             <div>15.6 lbs</div>
-            <div :class="styles.good">+4%</div>
+            <div :class="styles.good">
+              +4%
+            </div>
           </div>
           <div :class="styles.comparisonRow">
             <div>D (.026")</div>
             <div>14.9 lbs</div>
             <div>16.0 lbs</div>
-            <div :class="styles.good">+7.4%</div>
+            <div :class="styles.good">
+              +7.4%
+            </div>
           </div>
           <div :class="styles.comparisonRow">
             <div>A (.036")</div>
             <div>14.3 lbs</div>
             <div>15.8 lbs</div>
-            <div :class="styles.excellent">+10.5%</div>
+            <div :class="styles.excellent">
+              +10.5%
+            </div>
           </div>
           <div :class="styles.comparisonRow">
             <div>Low E (.046")</div>
             <div>13.8 lbs</div>
             <div>15.7 lbs</div>
-            <div :class="styles.excellent">+13.8%</div>
+            <div :class="styles.excellent">
+              +13.8%
+            </div>
           </div>
         </div>
         <p :class="styles.comparisonNote">
@@ -125,32 +153,48 @@ const emit = defineEmits<{
         <h3>Ergonomic Benefits</h3>
         <div :class="styles.benefitGrid">
           <div :class="styles.benefitCard">
-            <div :class="styles.benefitIcon">🤚</div>
-            <div :class="styles.benefitTitle">Natural Hand Position</div>
+            <div :class="styles.benefitIcon">
+              🤚
+            </div>
+            <div :class="styles.benefitTitle">
+              Natural Hand Position
+            </div>
             <div :class="styles.benefitText">
               Fanned frets follow the natural angle of your hand/wrist, reducing strain during
               extended playing sessions.
             </div>
           </div>
           <div :class="styles.benefitCard">
-            <div :class="styles.benefitIcon">🎯</div>
-            <div :class="styles.benefitTitle">Better Intonation</div>
+            <div :class="styles.benefitIcon">
+              🎯
+            </div>
+            <div :class="styles.benefitTitle">
+              Better Intonation
+            </div>
             <div :class="styles.benefitText">
               Longer bass scales reduce compensation percentage, making intonation more accurate
               across the entire fretboard.
             </div>
           </div>
           <div :class="styles.benefitCard">
-            <div :class="styles.benefitIcon">🔊</div>
-            <div :class="styles.benefitTitle">Balanced Tone</div>
+            <div :class="styles.benefitIcon">
+              🔊
+            </div>
+            <div :class="styles.benefitTitle">
+              Balanced Tone
+            </div>
             <div :class="styles.benefitText">
               Each string has optimal tension for its frequency range, creating a more balanced
               and articulate sound across all strings.
             </div>
           </div>
           <div :class="styles.benefitCard">
-            <div :class="styles.benefitIcon">⚡</div>
-            <div :class="styles.benefitTitle">Extended Range</div>
+            <div :class="styles.benefitIcon">
+              ⚡
+            </div>
+            <div :class="styles.benefitTitle">
+              Extended Range
+            </div>
             <div :class="styles.benefitText">
               Makes 7, 8, and 9-string guitars playable by ensuring low strings have enough tension
               for clarity and definition.
@@ -169,7 +213,10 @@ const emit = defineEmits<{
           Or go extreme: 28" baritone for drop G# tuning, 22" travel guitar for portability.
           The math is your guide!
         </p>
-        <button :class="shared.btnPrimary" @click="emit('goToTension')">
+        <button
+          :class="shared.btnPrimary"
+          @click="emit('goToTension')"
+        >
           Explore Custom Scales in Tension Calculator →
         </button>
       </div>

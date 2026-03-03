@@ -18,7 +18,9 @@ defineProps<{
 
 <template>
   <div>
-    <h3 class="section-title">Stats</h3>
+    <h3 class="section-title">
+      Stats
+    </h3>
     <div class="stats-grid">
       <div class="stat-box">
         <span class="stat-label">Moves:</span>

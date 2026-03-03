@@ -349,7 +349,9 @@ function getComplexityColor(complexity: string): string {
         :key="category.id"
         class="category-section"
       >
-        <h4 class="category-title">{{ category.label }}</h4>
+        <h4 class="category-title">
+          {{ category.label }}
+        </h4>
 
         <div class="template-grid">
           <div
@@ -359,7 +361,9 @@ function getComplexityColor(complexity: string): string {
             @click="loadTemplate(template)"
           >
             <div class="template-header">
-              <div class="template-name">{{ template.name }}</div>
+              <div class="template-name">
+                {{ template.name }}
+              </div>
               <div
                 class="complexity-badge"
                 :style="{ color: getComplexityColor(template.complexity) }"
@@ -367,7 +371,9 @@ function getComplexityColor(complexity: string): string {
                 {{ template.complexity }}
               </div>
             </div>
-            <div class="template-description">{{ template.description }}</div>
+            <div class="template-description">
+              {{ template.description }}
+            </div>
             <div class="template-stats">
               <span class="stat">
                 <span class="stat-icon">⏱</span>

@@ -1,69 +1,123 @@
 <template>
   <div class="gallery">
-
     <!-- ActionButton -->
     <section class="comp-section">
-      <h2 class="section-title">ActionButton</h2>
-      <p class="section-desc">4 variants × 3 sizes × loading + disabled states</p>
+      <h2 class="section-title">
+        ActionButton
+      </h2>
+      <p class="section-desc">
+        4 variants × 3 sizes × loading + disabled states
+      </p>
 
       <div class="row-group">
-        <div class="row-label">Variants</div>
+        <div class="row-label">
+          Variants
+        </div>
         <div class="row-items">
-          <ActionButton variant="primary">Primary</ActionButton>
-          <ActionButton variant="secondary">Secondary</ActionButton>
-          <ActionButton variant="danger">Danger</ActionButton>
-          <ActionButton variant="success">Success</ActionButton>
+          <ActionButton variant="primary">
+            Primary
+          </ActionButton>
+          <ActionButton variant="secondary">
+            Secondary
+          </ActionButton>
+          <ActionButton variant="danger">
+            Danger
+          </ActionButton>
+          <ActionButton variant="success">
+            Success
+          </ActionButton>
         </div>
       </div>
 
       <div class="row-group">
-        <div class="row-label">Sizes</div>
+        <div class="row-label">
+          Sizes
+        </div>
         <div class="row-items">
-          <ActionButton size="sm">Small</ActionButton>
-          <ActionButton size="md">Medium</ActionButton>
-          <ActionButton size="lg">Large</ActionButton>
+          <ActionButton size="sm">
+            Small
+          </ActionButton>
+          <ActionButton size="md">
+            Medium
+          </ActionButton>
+          <ActionButton size="lg">
+            Large
+          </ActionButton>
         </div>
       </div>
 
       <div class="row-group">
-        <div class="row-label">States</div>
+        <div class="row-label">
+          States
+        </div>
         <div class="row-items">
-          <ActionButton :loading="true" loading-text="Processing...">Loading</ActionButton>
-          <ActionButton :disabled="true">Disabled</ActionButton>
+          <ActionButton
+            :loading="true"
+            loading-text="Processing..."
+          >
+            Loading
+          </ActionButton>
+          <ActionButton :disabled="true">
+            Disabled
+          </ActionButton>
         </div>
       </div>
     </section>
 
     <!-- CardPanel -->
     <section class="comp-section">
-      <h2 class="section-title">CardPanel</h2>
-      <p class="section-desc">Container with optional header, actions slot, and collapse</p>
+      <h2 class="section-title">
+        CardPanel
+      </h2>
+      <p class="section-desc">
+        Container with optional header, actions slot, and collapse
+      </p>
 
       <div class="card-demo-grid">
         <CardPanel title="Basic Card">
-          <p class="demo-text">Card body content goes here. Use for grouping related controls or data.</p>
+          <p class="demo-text">
+            Card body content goes here. Use for grouping related controls or data.
+          </p>
         </CardPanel>
 
-        <CardPanel title="Collapsible Card" :collapsible="true">
-          <p class="demo-text">This card can be collapsed by clicking the header.</p>
+        <CardPanel
+          title="Collapsible Card"
+          :collapsible="true"
+        >
+          <p class="demo-text">
+            This card can be collapsed by clicking the header.
+          </p>
         </CardPanel>
 
         <CardPanel title="Card with Actions">
           <template #actions>
-            <ActionButton size="sm" variant="secondary">Edit</ActionButton>
+            <ActionButton
+              size="sm"
+              variant="secondary"
+            >
+              Edit
+            </ActionButton>
           </template>
-          <p class="demo-text">Header slot for actions on the right side.</p>
+          <p class="demo-text">
+            Header slot for actions on the right side.
+          </p>
         </CardPanel>
       </div>
     </section>
 
     <!-- RiskBadge -->
     <section class="comp-section">
-      <h2 class="section-title">RiskBadge</h2>
-      <p class="section-desc">RMOS risk levels — GREEN / YELLOW / RED / UNKNOWN</p>
+      <h2 class="section-title">
+        RiskBadge
+      </h2>
+      <p class="section-desc">
+        RMOS risk levels — GREEN / YELLOW / RED / UNKNOWN
+      </p>
 
       <div class="row-group">
-        <div class="row-label">Levels</div>
+        <div class="row-label">
+          Levels
+        </div>
         <div class="row-items">
           <RiskBadge level="GREEN" />
           <RiskBadge level="YELLOW" />
@@ -73,29 +127,51 @@
       </div>
 
       <div class="row-group">
-        <div class="row-label">Sizes</div>
+        <div class="row-label">
+          Sizes
+        </div>
         <div class="row-items">
-          <RiskBadge level="GREEN" size="sm" />
-          <RiskBadge level="GREEN" size="md" />
-          <RiskBadge level="GREEN" size="lg" />
+          <RiskBadge
+            level="GREEN"
+            size="sm"
+          />
+          <RiskBadge
+            level="GREEN"
+            size="md"
+          />
+          <RiskBadge
+            level="GREEN"
+            size="lg"
+          />
         </div>
       </div>
 
       <div class="row-group">
-        <div class="row-label">No Icon</div>
+        <div class="row-label">
+          No Icon
+        </div>
         <div class="row-items">
-          <RiskBadge level="RED" :show-icon="false" />
+          <RiskBadge
+            level="RED"
+            :show-icon="false"
+          />
         </div>
       </div>
     </section>
 
     <!-- LoadingSpinner -->
     <section class="comp-section">
-      <h2 class="section-title">LoadingSpinner</h2>
-      <p class="section-desc">Animated SVG spinner with optional label</p>
+      <h2 class="section-title">
+        LoadingSpinner
+      </h2>
+      <p class="section-desc">
+        Animated SVG spinner with optional label
+      </p>
 
       <div class="row-group">
-        <div class="row-label">Sizes</div>
+        <div class="row-label">
+          Sizes
+        </div>
         <div class="row-items">
           <LoadingSpinner size="sm" />
           <LoadingSpinner size="md" />
@@ -104,29 +180,47 @@
       </div>
 
       <div class="row-group">
-        <div class="row-label">With Label</div>
+        <div class="row-label">
+          With Label
+        </div>
         <div class="row-items">
-          <LoadingSpinner size="md" label="Processing G-code..." />
+          <LoadingSpinner
+            size="md"
+            label="Processing G-code..."
+          />
         </div>
       </div>
     </section>
 
     <!-- SkeletonLoader -->
     <section class="comp-section">
-      <h2 class="section-title">SkeletonLoader</h2>
-      <p class="section-desc">Shimmer placeholders for async content</p>
+      <h2 class="section-title">
+        SkeletonLoader
+      </h2>
+      <p class="section-desc">
+        Shimmer placeholders for async content
+      </p>
 
       <div class="skeleton-demo-grid">
         <div>
-          <div class="demo-label">Text (3 lines)</div>
-          <SkeletonLoader variant="text" :lines="3" />
+          <div class="demo-label">
+            Text (3 lines)
+          </div>
+          <SkeletonLoader
+            variant="text"
+            :lines="3"
+          />
         </div>
         <div>
-          <div class="demo-label">Card</div>
+          <div class="demo-label">
+            Card
+          </div>
           <SkeletonLoader variant="card" />
         </div>
         <div>
-          <div class="demo-label">Avatar + Button</div>
+          <div class="demo-label">
+            Avatar + Button
+          </div>
           <div style="display: flex; gap: 12px; align-items: center;">
             <SkeletonLoader variant="avatar" />
             <SkeletonLoader variant="button" />
@@ -137,8 +231,12 @@
 
     <!-- LabeledInput -->
     <section class="comp-section">
-      <h2 class="section-title">LabeledInput</h2>
-      <p class="section-desc">Number, text, and select variants with v-model</p>
+      <h2 class="section-title">
+        LabeledInput
+      </h2>
+      <p class="section-desc">
+        Number, text, and select variants with v-model
+      </p>
 
       <div class="input-demo-grid">
         <LabeledInput
@@ -172,8 +270,12 @@
 
     <!-- OverrideBanner -->
     <section class="comp-section">
-      <h2 class="section-title">OverrideBanner</h2>
-      <p class="section-desc">Shown when an RMOS run has a manual override applied</p>
+      <h2 class="section-title">
+        OverrideBanner
+      </h2>
+      <p class="section-desc">
+        Shown when an RMOS run has a manual override applied
+      </p>
 
       <OverrideBanner
         reason="Operator approved: material substitution from Adirondack to Sitka spruce for this batch"
@@ -183,37 +285,84 @@
 
     <!-- SideDrawer -->
     <section class="comp-section">
-      <h2 class="section-title">SideDrawer</h2>
-      <p class="section-desc">Slide-in panel for contextual detail without navigation</p>
+      <h2 class="section-title">
+        SideDrawer
+      </h2>
+      <p class="section-desc">
+        Slide-in panel for contextual detail without navigation
+      </p>
 
       <div class="row-items">
-        <ActionButton variant="secondary" @click="showDrawerRight = true">Open Right Drawer</ActionButton>
-        <ActionButton variant="secondary" @click="showDrawerLeft = true">Open Left Drawer</ActionButton>
+        <ActionButton
+          variant="secondary"
+          @click="showDrawerRight = true"
+        >
+          Open Right Drawer
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          @click="showDrawerLeft = true"
+        >
+          Open Left Drawer
+        </ActionButton>
       </div>
 
-      <SideDrawer :open="showDrawerRight" title="Run Details" @close="showDrawerRight = false">
+      <SideDrawer
+        :open="showDrawerRight"
+        title="Run Details"
+        @close="showDrawerRight = false"
+      >
         <div style="padding: 16px;">
-          <p style="font-size: 13px; color: #6b7280;">Drawer content goes here — run logs, parameter inspection, G-code preview, etc.</p>
-          <RiskBadge level="GREEN" style="margin-top: 12px;" />
+          <p style="font-size: 13px; color: #6b7280;">
+            Drawer content goes here — run logs, parameter inspection, G-code preview, etc.
+          </p>
+          <RiskBadge
+            level="GREEN"
+            style="margin-top: 12px;"
+          />
         </div>
       </SideDrawer>
 
-      <SideDrawer :open="showDrawerLeft" title="Context Panel" side="left" @close="showDrawerLeft = false">
+      <SideDrawer
+        :open="showDrawerLeft"
+        title="Context Panel"
+        side="left"
+        @close="showDrawerLeft = false"
+      >
         <div style="padding: 16px;">
-          <p style="font-size: 13px; color: #6b7280;">Left-side drawer for navigation or filters.</p>
+          <p style="font-size: 13px; color: #6b7280;">
+            Left-side drawer for navigation or filters.
+          </p>
         </div>
       </SideDrawer>
     </section>
 
     <!-- SmallModal -->
     <section class="comp-section">
-      <h2 class="section-title">SmallModal</h2>
-      <p class="section-desc">Confirm and prompt dialogs — replaces browser native dialogs</p>
+      <h2 class="section-title">
+        SmallModal
+      </h2>
+      <p class="section-desc">
+        Confirm and prompt dialogs — replaces browser native dialogs
+      </p>
 
       <div class="row-items">
-        <ActionButton variant="secondary" @click="showConfirm = true">Confirm Dialog</ActionButton>
-        <ActionButton variant="secondary" @click="showPrompt = true">Prompt Dialog</ActionButton>
-        <span v-if="modalResult" class="demo-result">Result: "{{ modalResult }}"</span>
+        <ActionButton
+          variant="secondary"
+          @click="showConfirm = true"
+        >
+          Confirm Dialog
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          @click="showPrompt = true"
+        >
+          Prompt Dialog
+        </ActionButton>
+        <span
+          v-if="modalResult"
+          class="demo-result"
+        >Result: "{{ modalResult }}"</span>
       </div>
 
       <SmallModal
@@ -237,7 +386,6 @@
         @cancel="showPrompt = false"
       />
     </section>
-
   </div>
 </template>
 

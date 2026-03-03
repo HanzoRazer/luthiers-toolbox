@@ -54,13 +54,13 @@
       <UnitConverterPanel
         v-else-if="activeTab === 'Converter'"
         v-model:category="converterCategory"
-        :categories="converterCategories"
         v-model:from-value="converterFromValue"
         v-model:from-unit="converterFromUnit"
-        :to-value="converterToValue"
         v-model:to-unit="converterToUnit"
-        :units="converterUnits"
         v-model:fraction="fraction"
+        :categories="converterCategories"
+        :to-value="converterToValue"
+        :units="converterUnits"
         @swap="swapConverterUnits"
         @preset="applyPreset"
       />
