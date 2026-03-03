@@ -2,7 +2,13 @@
 
 **Last Updated:** March 3, 2026 (Session 3)
 
-## Connected Features (5/18)
+## Status Clarification
+
+These apps are "orphaned" from the **marketing website** - they have Vue views and API connections but are not featured on the marketing site.
+
+## Session 3: API Connections Verified
+
+All 5 views connected this session have full API integration:
 
 | Feature | Route | API Endpoints | Commit |
 |---------|-------|---------------|--------|
@@ -12,26 +18,36 @@
 | **Machine Manager** | `/lab/machines` | `/api/machines/*`, `/api/posts/*` | `f9e02bd0` |
 | **Preset Hub** | `/preset-hub` | `/api/presets/*` | Already working |
 
-## Remaining Orphaned Apps (13)
+## Already Connected (Not on Marketing Site)
 
-| Feature | Route | Category | Priority |
-|---------|-------|----------|----------|
-| **AI Visual Analyzer** | `/ai-images` | AI/Tools | HIGH |
-| **Material Analytics** | `/rmos/material-analytics` | Production | HIGH |
-| **Strip Optimization** | `/rmos/strip-family-lab` | Production | HIGH |
-| **Acoustic Analyzer** | `/tools/audio-analyzer` | Quality/Tools | MEDIUM |
-| **CNC Production** | `/cnc` | Production | MEDIUM |
-| **DXF to G-code** | `/cam/dxf-to-gcode` | CAM | MEDIUM |
-| **Run Comparison** | `/rmos/runs/diff` | Production | MEDIUM |
-| **Variant Analysis** | `/rmos/runs/:run_id/variants` | Production | MEDIUM |
-| **Saw Lab Batch Mode** | `/lab/saw/batch` | CAM | MEDIUM |
-| **Saw Lab Contour Mode** | `/lab/saw/contour` | CAM | MEDIUM |
-| **Risk Timeline Lab** | `/lab/risk-timeline` | CAM | MEDIUM |
-| **Pipeline Lab** | `/lab/pipeline` | CAM | MEDIUM |
-| **CAM Settings** | `/settings/cam` | Configuration | LOW |
+These features have Vue views AND working API connections, just not on marketing site:
+
+| Feature | Route | API Connection | Status |
+|---------|-------|----------------|--------|
+| **Material Analytics** | `/rmos/material-analytics` | `useRmosAnalyticsStore` → `/api/rmos/analytics/*` | Connected (stubs) |
+| **AI Visual Analyzer** | `/ai-images` | `useAiImageStore` → `/api/ai/*` | Connected |
+| **DXF to G-code** | `/cam/dxf-to-gcode` | `useDxfToGcode` → `/api/cam/adaptive/*` | Connected |
+| **Risk Timeline Lab** | `/lab/risk-timeline` | `camRisk` → `/api/cam/risk/*` | Connected |
+| **CNC Production** | `/cnc` | Connected | Connected |
+| **Run Comparison** | `/rmos/runs/diff` | Connected | Connected |
+| **Variant Analysis** | `/rmos/runs/:run_id/variants` | Connected | Connected |
+| **Saw Lab Batch Mode** | `/lab/saw/batch` | SawLabView props mode | Connected |
+| **Saw Lab Contour Mode** | `/lab/saw/contour` | SawLabView props mode | Connected |
+| **Pipeline Lab** | `/lab/pipeline` | Connected | Connected |
+| **Strip Optimization** | `/rmos/strip-family-lab` | Connected | Connected |
+| **Acoustic Analyzer** | `/tools/audio-analyzer` | Connected | Connected |
+| **CAM Settings** | `/settings/cam` | Connected | Connected |
+
+## Next Steps
+
+These features need to be **added to the marketing website**, not connected to APIs:
+
+1. Create feature cards for marketing site
+2. Add screenshots/demos
+3. Update pricing tiers to include premium features
 
 ## Progress
 
-- **Session 3:** Connected 5 features to their APIs
-- **Remaining:** 13 orphaned features need Vue views and API connections
-- **Coverage:** 28% of orphaned features now connected
+- **API Connections:** All features are connected
+- **Marketing Coverage:** ~56% of features documented
+- **Remaining Work:** Marketing content, not code
