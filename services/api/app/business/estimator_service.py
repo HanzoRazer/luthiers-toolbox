@@ -2,7 +2,7 @@
 """Estimator Service - Core calculation logic."""
 from __future__ import annotations
 import math
-from .schemas import (
+from .estimator.schemas import (
     EstimateRequest, EstimateResult, WBSTask, MaterialEstimate,
     LearningCurveProjection, LearningCurvePoint, RiskFactor
 )
