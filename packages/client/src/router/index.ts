@@ -81,6 +81,7 @@ const routes: RouteRecordRaw[] = [
   // Machine Manager
   {
     path: "/lab/machines",
+    alias: "/lab/machine-manager",
     name: "LabMachines",
     component: () => import("@/views/lab/MachineManagerView.vue"),
   },
