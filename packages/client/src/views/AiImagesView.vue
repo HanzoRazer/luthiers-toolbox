@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { api } from '@/services/apiBase';
 /**
- * AI Images View — Production Visual Analyzer Interface
+ * AI Design Studio — AI-Powered Instrument Visualization
  *
- * Main entry point for the AI Image Generation feature.
+ * Design tool for generating guitar concept images with DALL-E.
  * Provides the full workflow: generate → review → attach to run.
  *
  * Route: /ai-images
@@ -118,9 +118,9 @@ function copyAiContext() {
 <template>
   <div class="ai-images-view">
     <header class="view-header">
-      <h1>Visual Analyzer</h1>
+      <h1>AI Design Studio</h1>
       <p class="subtitle">
-        AI-powered guitar design visualization
+        Generate stunning instrument concept images with AI
       </p>
 
       <div class="tab-bar">
