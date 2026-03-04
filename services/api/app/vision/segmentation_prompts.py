@@ -91,6 +91,39 @@ Return the OUTER BODY EDGE only. Exclude neck pocket, control cavities, pickups.
 }"""
 
 
+
+
+OTHER_INSTRUMENT_PROMPT = """Analyze this image of a stringed instrument and extract the body outline as a polygon.
+
+TASK: Trace the outer edge of the instrument BODY only (not the neck, headstock, or fingerboard).
+
+This may be a mandolin, banjo, ukulele, bouzouki, or other stringed instrument - NOT necessarily a guitar.
+
+INSTRUCTIONS:
+1. Identify the body shape (the resonating chamber or soundboard)
+2. Trace the outer perimeter as a series of (x, y) pixel coordinates
+3. Use image coordinates: origin is TOP-LEFT, x increases rightward, y increases downward
+4. Provide 40-100 points to capture curves accurately
+5. Go CLOCKWISE around the body starting from the top-center
+6. The polygon must be closed (last point should be same as first point)
+7. Exclude: neck, headstock, tuners, frets, bridge, strings, controls, soundhole
+
+RESPOND WITH JSON ONLY:
+{
+  "body_outline": [[x1, y1], [x2, y2], ...],
+  "image_width": <detected image width in pixels>,
+  "image_height": <detected image height in pixels>,
+  "confidence": <0.0 to 1.0>,
+  "guitar_type": "mandolin" | "banjo" | "ukulele" | "bouzouki" | "lute" | "other",
+  "notes": "<brief description of what was detected>"
+}
+
+If no instrument body is visible or the image is too unclear:
+{
+  "error": "<description of the issue>",
+  "confidence": 0.0
+}"""
+
 # ---------------------------------------------------------------------------
 # Prompt Selection
 # ---------------------------------------------------------------------------
@@ -103,7 +136,7 @@ def get_segmentation_prompt(
     Get the appropriate segmentation prompt.
 
     Args:
-        guitar_category: "acoustic", "electric", or "auto"
+        guitar_category: "acoustic", "electric", "other", or "auto"
         detail_level: "minimal", "standard", or "detailed"
 
     Returns:
@@ -113,6 +146,8 @@ def get_segmentation_prompt(
         return ACOUSTIC_BODY_PROMPT
     elif guitar_category == "electric":
         return ELECTRIC_BODY_PROMPT
+    elif guitar_category == "other":
+        return OTHER_INSTRUMENT_PROMPT
     else:
         return GUITAR_BODY_SEGMENTATION_PROMPT
 

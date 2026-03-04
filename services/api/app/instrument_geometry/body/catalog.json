@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
   "generated": "2026-03-04",
-  "total_bodies": 19,
+  "total_bodies": 20,
   "categories": {
     "electric": 9,
     "acoustic": 9,
-    "other": 3
+    "other": 4
   },
   "bodies": {
     "stratocaster": {
@@ -219,6 +219,17 @@
       },
       "points": 15,
       "dxf": "electric/mustang_body.dxf",
+      "source": "AI vision extraction from PDF plans"
+    },
+    "mandolin": {
+      "name": "F-Style Mandolin",
+      "category": "other",
+      "dimensions_mm": {
+        "width": 200.0,
+        "height": 90.0
+      },
+      "points": 56,
+      "dxf": "acoustic/mandolin_body.dxf",
       "source": "AI vision extraction from PDF plans"
     }
   },
