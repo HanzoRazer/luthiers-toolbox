@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Hartwell Guitars</title>
+  <meta name="description" content="Portfolio of completed handcrafted acoustic guitars from Hartwell Guitars boutique lutherie studio." />
+  <style>
+    /* ── Design tokens ───────────────────────────────────────── */
+    :root {
+      --color-primary:       #92400e;
+      --color-primary-dark:  #78350f;
+      --color-primary-light: #fef3c7;
+      --color-accent:        #1c1917;
+      --color-surface:       #fffbf7;
+      --color-surface-alt:   #f5f0eb;
+      --color-text:          #1c1917;
+      --color-text-muted:    #78716c;
+      --color-border:        #e7e0d8;
+
+      --font-family-sans: 'Georgia', 'Times New Roman', serif;
+      --font-family-mono: ui-monospace, monospace;
+
+      --font-size-base: 1rem;
+      --font-size-lg:   1.125rem;
+      --font-size-xl:   1.25rem;
+      --font-size-2xl:  1.5rem;
+      --font-size-3xl:  1.875rem;
+      --font-size-4xl:  2.25rem;
+
+      --space-1:  0.25rem;
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-4:  1rem;
+      --space-5:  1.25rem;
+      --space-6:  1.5rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+
+      --radius-sm: 0.25rem;
+      --radius:    0.5rem;
+      --radius-lg: 1rem;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,.15), 0 4px 10px rgba(0,0,0,.08);
+
+      --nav-height: 4.5rem;
+      --max-width:  72rem;
+    }
+
+    /* ── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-family-sans);
+      font-size: var(--font-size-base);
+      color: var(--color-text);
+      background: var(--color-surface);
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+    ul { list-style: none; }
+
+    /* ── Navigation ──────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+    }
+    .nav__inner {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav__brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .nav__brand-name {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      letter-spacing: 0.02em;
+    }
+    .nav__brand-sub {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+    }
+    .nav__link {
+      font-size: var(--font-size-base);
+      color: var(--color-text-muted);
+      transition: color .2s;
+      letter-spacing: 0.03em;
+    }
+    .nav__link:hover,
+    .nav__link--active {
+      color: var(--color-primary);
+    }
+    .nav__link--active {
+      font-weight: 700;
+      position: relative;
+    }
+    .nav__link--active::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      bottom: -2px;
+      height: 2px;
+      background: var(--color-primary);
+      border-radius: 999px;
+    }
+    /* hamburger — mobile */
+    .nav__toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: var(--space-2);
+    }
+    .nav__toggle span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--color-text);
+      border-radius: 2px;
+      transition: transform .3s, opacity .3s;
+    }
+    .nav__toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav__toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .nav__toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    @media (max-width: 640px) {
+      .nav__toggle { display: flex; }
+      .nav__links {
+        display: none;
+        position: absolute;
+        top: var(--nav-height);
+        left: 0; right: 0;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        flex-direction: column;
+        gap: 0;
+        padding: var(--space-4) 0;
+      }
+      .nav__links--open { display: flex; }
+      .nav__link {
+        padding: var(--space-3) var(--space-6);
+        width: 100%;
+      }
+      .nav__link--active::after { display: none; }
+    }
+
+    /* ── Page header ─────────────────────────────────────────── */
+    .page-header {
+      background: var(--color-surface-alt);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-16) var(--space-6) var(--space-12);
+      text-align: center;
+    }
+    .page-header__eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: var(--space-3);
+    }
+    .page-header__title {
+      font-size: var(--font-size-4xl);
+      color: var(--color-primary-dark);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: var(--space-4);
+    }
+    .page-header__desc {
+      max-width: 38rem;
+      margin: 0 auto;
+      color: var(--color-text-muted);
+      font-size: var(--font-size-lg);
+    }
+
+    /* ── Main content ────────────────────────────────────────── */
+    main { flex: 1; }
+
+    .gallery-section {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-12) var(--space-6) var(--space-20);
+    }
+
+    /* ── Filter bar ──────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-bottom: var(--space-10);
+      align-items: center;
+    }
+    .filter-bar__label {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-right: var(--space-2);
+    }
+    .filter-btn {
+      padding: var(--space-2) var(--space-5);
+      border: 1.5px solid var(--color-border);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: var(--font-size-base);
+      transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .filter-btn--active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Instrument grid ─────────────────────────────────────── */
+    .instrument-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: var(--space-8);
+    }
+
+    /* Card */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform .25s, box-shadow .25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .card:focus-visible {
+      outline: 3px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* Photo placeholder */
+    .card__photo {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      background: var(--color-surface-alt);
+      overflow: hidden;
+    }
+    .card__photo-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      color: var(--color-text-muted);
+    }
+    /* Decorative guitar silhouette via CSS */
+    .guitar-icon {
+      width: 70px;
+      opacity: 0.35;
+    }
+    .card__photo-inner span {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Category badge */
+    .card__badge {
+      position: absolute;
+      top: var(--space-3);
+      left: var(--space-3);
+      padding: 2px var(--space-3);
+      border-radius: 999px;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+      font-weight: 700;
+      border: 1px solid rgba(146,64,14,.15);
+    }
+
+    /* Card body */
+    .card__body {
+      padding: var(--space-5) var(--space-5) var(--space-6);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .card__model {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      line-height: 1.25;
+    }
+    .card__woods {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .card__year {
+      margin-top: auto;
+      padding-top: var(--space-4);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* No results */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: var(--space-20) 0;
+      color: var(--color-text-muted);
+    }
+    .no-results p { font-size: var(--font-size-lg); }
+
+    /* ── Lightbox ────────────────────────────────────────────── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(28,25,23,.88);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6);
+    }
+    .lightbox--open { display: flex; }
+
+    .lightbox__panel {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 56rem;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: row;
+      position: relative;
+      animation: lb-in .25s ease;
+    }
+    @keyframes lb-in {
+      from { opacity: 0; transform: scale(.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .lightbox__photo {
+      width: 42%;
+      flex-shrink: 0;
+      background: var(--color-surface-alt);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+      overflow: hidden;
+      min-height: 28rem;
+    }
+    .lightbox__photo-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-4);
+      color: var(--color-text-muted);
+    }
+    .lightbox__photo-inner span {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .lightbox__info {
+      flex: 1;
+      padding: var(--space-10) var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+    .lightbox__eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+    .lightbox__model {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      line-height: 1.2;
+    }
+    .lightbox__spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-5) 0;
+    }
+    .lightbox__spec {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--font-size-base);
+    }
+    .lightbox__spec dt {
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+    }
+    .lightbox__spec dd {
+      font-weight: 600;
+      color: var(--color-text);
+      text-align: right;
+    }
+    .lightbox__note {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+    }
+    .lightbox__close {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: 50%;
+      background: var(--color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background .2s, color .2s;
+      z-index: 1;
+    }
+    .lightbox__close:hover {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+    }
+
+    /* lightbox nav arrows */
+    .lightbox__arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      font-size: 1rem;
+      z-index: 10;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .lightbox__arrow:hover {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
+    .lightbox__arrow--prev { left: calc(-1 * var(--space-12)); }
+    .lightbox__arrow--next { right: calc(-1 * var(--space-12)); }
+
+    @media (max-width: 640px) {
+      .lightbox__panel { flex-direction: column; max-height: 95vh; }
+      .lightbox__photo {
+        width: 100%;
+        min-height: 16rem;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+      .lightbox__info { padding: var(--space-6); }
+      .lightbox__arrow--prev { left: var(--space-2); }
+      .lightbox__arrow--next { right: var(--space-2); }
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .footer {
+      background: var(--color-accent);
+      color: rgba(255,255,255,.7);
+      padding: var(--space-12) var(--space-6);
+    }
+    .footer__inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-10);
+    }
+    .footer__brand-name {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: var(--space-2);
+    }
+    .footer__brand-desc {
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+    .footer__heading {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+      margin-bottom: var(--space-4);
+    }
+    .footer__nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .footer__nav a {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,.65);
+      transition: color .2s;
+    }
+    .footer__nav a:hover { color: #fff; }
+    .footer__contact p {
+      font-size: 0.85rem;
+      line-height: 1.9;
+    }
+    .footer__contact a {
+      color: rgba(255,255,255,.8);
+      transition: color .2s;
+    }
+    .footer__contact a:hover { color: #fff; }
+    .footer__bottom {
+      max-width: var(--max-width);
+      margin: var(--space-10) auto 0;
+      padding-top: var(--space-6);
+      border-top: 1px solid rgba(255,255,255,.1);
+      font-size: 0.75rem;
+      color: rgba(255,255,255,.35);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    @media (max-width: 768px) {
+      .footer__inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .footer__inner { grid-template-columns: 1fr; }
+      .page-header__title { font-size: var(--font-size-3xl); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ─────────────────────────────────────────── -->
+  <header class="nav" role="banner">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Hartwell Guitars home">
+        <span class="nav__brand-name">Hartwell Guitars</span>
+        <span class="nav__brand-sub">Boutique Lutherie</span>
+      </a>
+
+      <button class="nav__toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav id="main-nav" aria-label="Site navigation">
+        <ul class="nav__links">
+          <li><a href="index.html"   class="nav__link">Home</a></li>
+          <li><a href="gallery.html" class="nav__link nav__link--active" aria-current="page">Gallery</a></li>
+          <li><a href="contact.html" class="nav__link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Page header ────────────────────────────────────────── -->
+  <div class="page-header">
+    <p class="page-header__eyebrow">Portfolio</p>
+    <h1 class="page-header__title">The Work</h1>
+    <p class="page-header__desc">Each instrument below was built by hand in our workshop — click any card to explore the full specifications.</p>
+  </div>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main>
+    <section class="gallery-section" aria-label="Instrument gallery">
+
+      <!-- Filter bar -->
+      <div class="filter-bar" role="group" aria-label="Filter instruments by type">
+        <span class="filter-bar__label" aria-hidden="true">Filter:</span>
+        <button class="filter-btn filter-btn--active" data-filter="all"         aria-pressed="true">All</button>
+        <button class="filter-btn" data-filter="steel-string" aria-pressed="false">Steel String</button>
+        <button class="filter-btn" data-filter="classical"    aria-pressed="false">Classical</button>
+        <button class="filter-btn" data-filter="12-string"    aria-pressed="false">12-String</button>
+        <button class="filter-btn" data-filter="electric"     aria-pressed="false">Electric</button>
+      </div>
+
+      <!-- Instrument grid — populated by JS from data array below -->
+      <div class="instrument-grid" id="instrument-grid" aria-live="polite" aria-label="Instruments"></div>
+
+    </section>
+  </main>
+
+  <!-- ── Lightbox ───────────────────────────────────────────── -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Instrument detail" aria-hidden="true">
+    <button class="lightbox__arrow lightbox__arrow--prev" id="lb-prev" aria-label="Previous instrument">&#8592;</button>
+    <button class="lightbox__arrow lightbox__arrow--next" id="lb-next" aria-label="Next instrument">&#8594;</button>
+
+    <div class="lightbox__panel">
+      <button class="lightbox__close" id="lb-close" aria-label="Close lightbox">&#10005;</button>
+
+      <!-- Photo pane -->
+      <div class="lightbox__photo">
+        <div class="lightbox__photo-inner">
+          <!-- Large guitar silhouette -->
+          <svg class="guitar-icon" viewBox="0 0 100 160" fill="none" xmlns="http://www.w3.org/2000/svg" width="120" opacity="0.3" aria-hidden="true">
+            <rect x="44" y="2" width="12" height="40" rx="4" fill="currentColor"/>
+            <rect x="36" y="40" width="28" height="16" rx="3" fill="currentColor"/>
+            <ellipse cx="50" cy="108" rx="32" ry="38" fill="currentColor"/>
+            <ellipse cx="50" cy="82"  rx="20" ry="22" fill="currentColor"/>
+            <line x1="50" y1="56" x2="50" y2="42" stroke="currentColor" stroke-width="4"/>
+            <circle cx="50" cy="105" r="7" fill="var(--color-surface-alt)"/>
+          </svg>
+          <span>Photo on request</span>
+        </div>
+      </div>
+
+      <!-- Info pane -->
+      <div class="lightbox__info">
+        <p class="lightbox__eyebrow" id="lb-category">Steel String</p>
+        <h2 class="lightbox__model" id="lb-model">Model Name</h2>
+        <dl class="lightbox__spec-list">
+          <div class="lightbox__spec">
+            <dt>Top</dt>
+            <dd id="lb-top">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Back &amp; Sides</dt>
+            <dd id="lb-back">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Neck</dt>
+            <dd id="lb-neck">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Fingerboard</dt>
+            <dd id="lb-fretboard">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Year completed</dt>
+            <dd id="lb-year">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Scale length</dt>
+            <dd id="lb-scale">—</dd>
+          </div>
+          <div class="lightbox__spec">
+            <dt>Status</dt>
+            <dd id="lb-status">—</dd>
+          </div>
+        </dl>
+        <p class="lightbox__note" id="lb-note"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <div>
+        <p class="footer__brand-name">Hartwell Guitars</p>
+        <p class="footer__brand-desc">Handcrafted acoustic instruments built to order in our hillside studio. Responsibly sourced tonewoods, traditional joinery, and a lifetime of music.</p>
+      </div>
+      <div>
+        <p class="footer__heading">Navigation</p>
+        <nav class="footer__nav" aria-label="Footer navigation">
+          <a href="index.html">Home</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+      </div>
+      <div class="footer__contact">
+        <p class="footer__heading">Get in touch</p>
+        <p>
+          <a href="mailto:hello@hartwellguitars.com">hello@hartwellguitars.com</a><br/>
+          By appointment only<br/>
+          Current lead time: 18–24 months
+        </p>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>&copy; <span id="footer-year">2024</span> Hartwell Guitars. All rights reserved.</span>
+      <span>Handbuilt with care.</span>
+    </div>
+  </footer>
+
+  <!-- ── JavaScript ─────────────────────────────────────────── -->
+  <script>
+    /* ── 1. Instrument data ─────────────────────────────────── */
+    const instruments = [
+      {
+        id: 1,
+        category: 'steel-string',
+        label: 'Steel String',
+        model: 'HW-000 Rosewood',
+        woods: 'Sitka spruce top · East Indian rosewood back & sides',
+        year: 2024,
+        top: 'Sitka Spruce (AAA)',
+        back: 'East Indian Rosewood',
+        neck: 'Spanish Cedar',
+        fretboard: 'Ebony',
+        scale: '650 mm',
+        status: 'Sold',
+        note: 'A fingerpicker's dream — this 000 body delivers warm midrange depth with sparkling treble definition. Finished with a hand-rubbed French polish.',
+      },
+      {
+        id: 2,
+        category: 'classical',
+        label: 'Classical',
+        model: 'HW-C1 Spruce/Maple',
+        woods: 'European spruce top · Flamed maple back & sides',
+        year: 2024,
+        top: 'European Spruce',
+        back: 'Flamed Maple',
+        neck: 'Spanish Cedar',
+        fretboard: 'Indian Rosewood',
+        scale: '650 mm',
+        status: 'Available',
+        note: 'A bright, projecting voice ideally suited to solo concert performance. The flamed maple contributes a focused, clear sustain.',
+      },
+      {
+        id: 3,
+        category: 'steel-string',
+        label: 'Steel String',
+        model: 'HW-Dreadnought Walnut',
+        woods: 'Adirondack spruce top · Claro walnut back & sides',
+        year: 2023,
+        top: 'Adirondack Spruce',
+        back: 'Claro Walnut',
+        neck: 'Mahogany',
+        fretboard: 'Ebony',
+        scale: '648 mm',
+        status: 'Sold',
+        note: 'Full dreadnought power with the warmth and complexity of claro walnut. Braced for medium-heavy strings and flatpicking.',
+      },
+      {
+        id: 4,
+        category: '12-string',
+        label: '12-String',
+        model: 'HW-J12 Mahogany',
+        woods: 'Sitka spruce top · African mahogany back & sides',
+        year: 2023,
+        top: 'Sitka Spruce',
+        back: 'African Mahogany',
+        neck: 'Mahogany',
+        fretboard: 'Indian Rosewood',
+        scale: '628 mm',
+        status: 'Sold',
+        note: 'A shorter scale 12-string that relieves string tension without sacrificing shimmer. Excellent intonation up the neck.',
+      },
+      {
+        id: 5,
+        category: 'classical',
+        label: 'Classical',
+        model: 'HW-C2 Cedar/Cocobolo',
+        woods: 'Western red cedar top · Cocobolo back & sides',
+        year: 2023,
+        top: 'Western Red Cedar',
+        back: 'Cocobolo',
+        neck: 'Spanish Cedar',
+        fretboard: 'Ebony',
+        scale: '650 mm',
+        status: 'Commission',
+        note: 'A warm, immediately responsive voice — the cedar top speaks freely from pianissimo to forte, with the cocobolo adding harmonic complexity.',
+      },
+      {
+        id: 6,
+        category: 'electric',
+        label: 'Electric',
+        model: 'HW-E1 Archtop',
+        woods: 'Spruce carved top · Figured maple back',
+        year: 2022,
+        top: 'Spruce (Carved)',
+        back: 'Figured Maple',
+        neck: 'Mahogany',
+        fretboard: 'Ebony',
+        scale: '628 mm',
+        status: 'Sold',
+        note: 'A 16" fully hollow archtop with a single floating humbucker. Warm jazz tones with a surprising acoustic volume.',
+      },
+      {
+        id: 7,
+        category: 'steel-string',
+        label: 'Steel String',
+        model: 'HW-OM Koa',
+        woods: 'Engelmann spruce top · Hawaiian koa back & sides',
+        year: 2022,
+        top: 'Engelmann Spruce',
+        back: 'Hawaiian Koa',
+        neck: 'Mahogany',
+        fretboard: 'Ebony',
+        scale: '650 mm',
+        status: 'Sold',
+        note: 'Koa's lively mid-range makes this OM equally adept at fingerstyle and strumming. The grain figure is exceptional.',
+      },
+      {
+        id: 8,
+        category: '12-string',
+        label: '12-String',
+        model: 'HW-J12 Spruce/Rosewood',
+        woods: 'Engelmann spruce top · Brazilian rosewood back & sides',
+        year: 2022,
+        top: 'Engelmann Spruce',
+        back: 'Brazilian Rosewood (reclaimed)',
+        neck: 'Mahogany',
+        fretboard: 'Indian Rosewood',
+        scale: '648 mm',
+        status: 'Sold',
+        note: 'Built using legally sourced reclaimed Brazilian rosewood, this 12-string is rich and complex with extraordinary sustain.',
+      },
+      {
+        id: 9,
+        category: 'steel-string',
+        label: 'Steel String',
+        model: 'HW-Parlour Cedar',
+        woods: 'Western red cedar top · Figured walnut back & sides',
+        year: 2021,
+        top: 'Western Red Cedar',
+        back: 'Figured Walnut',
+        neck: 'Mahogany',
+        fretboard: 'Indian Rosewood',
+        scale: '628 mm',
+        status: 'Sold',
+        note: 'A small-body parlour guitar that sings in the midrange. Lightweight build responds immediately to the softest touch.',
+      },
+      {
+        id: 10,
+        category: 'classical',
+        label: 'Classical',
+        model: 'HW-C3 Spruce/Rosewood',
+        woods: 'European spruce top · East Indian rosewood back & sides',
+        year: 2021,
+        top: 'European Spruce',
+        back: 'East Indian Rosewood',
+        neck: 'Spanish Cedar',
+        fretboard: 'Ebony',
+        scale: '650 mm',
+        status: 'Commission',
+        note: 'A tonally balanced concert classical — clear, even response across all six strings and excellent projection in an unamplified hall.',
+      },
+      {
+        id: 11,
+        category: 'electric',
+        label: 'Electric',
+        model: 'HW-E2 Semi-Hollow',
+        woods: 'Mahogany body · Spruce top cap',
+        year: 2021,
+        top: 'Spruce (Solid Cap)',
+        back: 'Mahogany',
+        neck: 'Maple',
+        fretboard: 'Ebony',
+        scale: '628 mm',
+        status: 'Sold',
+        note: 'A thin semi-hollow with f-holes, two humbuckers, and a set maple neck. Versatile from clean blues to driven rock.',
+      },
+      {
+        id: 12,
+        category: 'steel-string',
+        label: 'Steel String',
+        model: 'HW-Grand Auditorium',
+        woods: 'Adirondack spruce top · Madagascar rosewood back & sides',
+        year: 2020,
+        top: 'Adirondack Spruce (Bearclaw)',
+        back: 'Madagascar Rosewood',
+        neck: 'Mahogany',
+        fretboard: 'Ebony',
+        scale: '650 mm',
+        status: 'Sold',
+        note: 'The bearclaw spruce top gives this grand auditorium exceptional stiffness and a shimmering, complex overtone series.',
+      },
+    ];
+
+    /* ── 2. SVG guitar silhouette (shared) ───────────────────── */
+    const guitarSVG = `
+      <svg viewBox="0 0 100 160" fill="none" xmlns="http://www.w3.org/2000/svg"
+           class="guitar-icon" aria-hidden="true">
+        <rect x="44" y="2"  width="12" height="40" rx="4" fill="currentColor"/>
+        <rect x="36" y="40" width="28" height="16" rx="3" fill="currentColor"/>
+        <ellipse cx="50" cy="108" rx="32" ry="38" fill="currentColor"/>
+        <ellipse cx="50" cy="82"  rx="20" ry="22" fill="currentColor"/>
+        <line x1="50" y1="56" x2="50" y2="42" stroke="currentColor" stroke-width="4"/>
+        <circle cx="50" cy="105" r="7" fill="var(--color-surface-alt)"/>
+      </svg>`;
+
+    /* ── 3. Render cards ─────────────────────────────────────── */
+    const grid = document.getElementById('instrument-grid');
+    let activeFilter = 'all';
+    let visibleInstruments = [];   // subset shown after filtering
+    let currentLbIndex = 0;        // index within visibleInstruments
+
+    function renderGrid(filter) {
+      activeFilter = filter;
+      visibleInstruments = filter === 'all'
+        ? instruments
+        : instruments.filter(i => i.category === filter);
+
+      grid.innerHTML = '';
+
+      if (visibleInstruments.length === 0) {
+        grid.innerHTML = `
+          <div class="no-results" role="status">
+            <p>No instruments found for this category.</p>
+          </div>`;
+        return;
+      }
+
+      visibleInstruments.forEach((instr, idx) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Open detail for ${instr.model}`);
+        card.dataset.index = idx;
+
+        card.innerHTML = `
+          <div class="card__photo">
+            <div class="card__photo-inner">
+              ${guitarSVG}
+              <span>Photo available on request</span>
+            </div>
+            <span class="card__badge">${instr.label}</span>
+          </div>
+          <div class="card__body">
+            <h2 class="card__model">${instr.model}</h2>
+            <p class="card__woods">${instr.woods}</p>
+            <p class="card__year">Completed ${instr.year}</p>
+          </div>`;
+
+        /* open lightbox on click or Enter/Space */
+        card.addEventListener('click', () => openLightbox(idx));
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox(idx);
+          }
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    /* ── 4. Filter buttons ───────────────────────────────────── */
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('filter-btn--active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('filter-btn--active');
+        btn.setAttribute('aria-pressed', 'true');
+        renderGrid(btn.dataset.filter);
+      });
+    });
+
+    /* ── 5. Lightbox ─────────────────────────────────────────── */
+    const lightbox   = document.getElementById('lightbox');
+    const lbClose    = document.getElementById('lb-close');
+    const lbPrev     = document.getElementById('lb-prev');
+    const lbNext     = document.getElementById('lb-next');
+
+    function openLightbox(idx) {
+      currentLbIndex = idx;
+      populateLightbox(visibleInstruments[idx]);
+      lightbox.classList.add('lightbox--open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      lbClose.focus();
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('lightbox--open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      /* return focus to the triggering card */
+      const card = grid.querySelector(`[data-index="${currentLbIndex}"]`);
+      if (card) card.focus();
+    }
+
+    function populateLightbox(instr) {
+      document.getElementById('lb-category').textContent = instr.label;
+      document.getElementById('lb-model').textContent    = instr.model;
+      document.getElementById('lb-top').textContent      = instr.top;
+      document.getElementById('lb-back').textContent     = instr.back;
+      document.getElementById('lb-neck').textContent     = instr.neck;
+      document.getElementById('lb-fretboard').textContent = instr.fretboard;
+      document.getElementById('lb-year').textContent     = instr.year;
+      document.getElementById('lb-scale').textContent    = instr.scale;
+      document.getElementById('lb-status').textContent   = instr.status;
+      document.getElementById('lb-note').textContent     = instr.note;
+
+      /* show / hide nav arrows at boundaries */
+      lbPrev.style.visibility = currentLbIndex === 0 ? 'hidden' : 'visible';
+      lbNext.style.visibility = currentLbIndex === visibleInstruments.length - 1 ? 'hidden' : 'visible';
+    }
+
+    lbClose.addEventListener('click', closeLightbox);
+
+    lbPrev.addEventListener('click', () => {
+      if (currentLbIndex > 0) {
+        currentLbIndex--;
+        populateLightbox(visibleInstruments[currentLbIndex]);
+      }
+    });
+
+    lbNext.addEventListener('click', () => {
+      if (currentLbIndex < visibleInstruments.length - 1) {
+        currentLbIndex++;
+        populateLightbox(visibleInstruments[currentLbIndex]);
+      }
+    });
+
+    /* close on backdrop click */
+    lightbox.addEventListener('click', e => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    /* keyboard: Escape, arrow keys */
+    document.addEventListener('keydown', e => {
+      if (!lightbox.classList.contains('lightbox--open')) return;
+      if (e.key === 'Escape') { closeLightbox(); return; }
+      if (e.key === 'ArrowLeft'  && currentLbIndex > 0) {
+        currentLbIndex--;
+        populateLightbox(visibleInstruments[currentLbIndex]);
+      }
+      if (e.key === 'ArrowRight' && currentLbIndex < visibleInstruments.length - 1) {
+        currentLbIndex++;
+        populateLightbox(visibleInstruments[currentLbIndex]);
+      }
+    });
+
+    /* ── 6. Mobile nav toggle ────────────────────────────────── */
+    const navToggle = document.querySelector('.nav__toggle');
+    const navLinks  = document.querySelector('.nav__links');
+    navToggle.addEventListener('click', () => {
+      const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+      navToggle.setAttribute('aria-expanded', String(!expanded));
+      navLinks.classList.toggle('nav__links--open');
+    });
+
+    /* ── 7. Footer year ──────────────────────────────────────── */
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    /* ── 8. Initial render ───────────────────────────────────── */
+    renderGrid('all');
+  </script>
+</body>
+</html>

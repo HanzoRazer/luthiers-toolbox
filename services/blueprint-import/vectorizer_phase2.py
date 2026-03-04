@@ -101,7 +101,8 @@ def rasterize_pdf(pdf_path: str, page_num: int = 0, dpi: int = 300) -> np.ndarra
 
 class ColorFilter:
     """
-    Color-based layer extraction for technical drawings
+    Color-based layer extraction for technical drawings.
+    Includes auto-threshold detection for varying blueprint styles.
     """
 
     # Common blueprint colors (BGR format for OpenCV)
@@ -119,6 +120,11 @@ class ColorFilter:
         'dark_blue': (139, 0, 0),   # Darker blue variant
     }
 
+    # Blueprint type classifications based on pixel distribution
+    BLUEPRINT_DARK = 'dark'       # Dark lines on white (Selmer, Jazzmaster)
+    BLUEPRINT_FAINT = 'faint'     # Faint/light lines on white (Gibson 335)
+    BLUEPRINT_INVERTED = 'inverted'  # White lines on dark (blueprint style)
+
     def __init__(self, tolerance: int = 30):
         """
         Initialize color filter
@@ -127,6 +133,157 @@ class ColorFilter:
             tolerance: Color matching tolerance (0-255)
         """
         self.tolerance = tolerance
+
+    def analyze_image(self, image: np.ndarray) -> Dict[str, Any]:
+        """
+        Analyze image pixel distribution to determine blueprint type.
+
+        This helps choose the best thresholding strategy for different
+        blueprint styles (dark lines vs faint lines vs inverted).
+
+        Args:
+            image: BGR or grayscale image
+
+        Returns:
+            Dict with analysis results:
+                - blueprint_type: 'dark', 'faint', or 'inverted'
+                - min_pixel: Minimum pixel value
+                - max_pixel: Maximum pixel value
+                - mean_pixel: Mean pixel value
+                - white_ratio: Ratio of white pixels (>250)
+                - dark_ratio: Ratio of dark pixels (<100)
+                - recommended_threshold: Suggested threshold value
+                - recommended_method: 'fixed', 'otsu', or 'adaptive'
+        """
+        # Convert to grayscale if needed
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        total = gray.size
+        min_px = int(gray.min())
+        max_px = int(gray.max())
+        mean_px = float(gray.mean())
+
+        # Count pixels at different levels
+        white_pixels = np.sum(gray > 250)
+        light_pixels = np.sum((gray > 200) & (gray <= 250))
+        mid_pixels = np.sum((gray > 100) & (gray <= 200))
+        dark_pixels = np.sum((gray > 50) & (gray <= 100))
+        black_pixels = np.sum(gray <= 50)
+
+        white_ratio = white_pixels / total
+        light_ratio = light_pixels / total
+        dark_ratio = (dark_pixels + black_pixels) / total
+        black_ratio = black_pixels / total
+
+        # Determine blueprint type
+        if black_ratio > 0.3:
+            # Mostly dark = inverted blueprint (white on black)
+            blueprint_type = self.BLUEPRINT_INVERTED
+            recommended_method = 'fixed'
+            recommended_threshold = 150  # Extract light pixels
+        elif white_ratio > 0.95:
+            # Almost all white = very faint lines
+            blueprint_type = self.BLUEPRINT_FAINT
+            recommended_method = 'otsu'
+            recommended_threshold = 0  # Let Otsu decide
+        elif dark_ratio > 0.02:
+            # Has sufficient dark content = standard dark lines
+            blueprint_type = self.BLUEPRINT_DARK
+            recommended_method = 'fixed'
+            # Calculate threshold based on where dark lines are
+            if min_px < 50:
+                recommended_threshold = 100
+            else:
+                recommended_threshold = min(150, min_px + 50)
+        else:
+            # Light/mid content = faint lines, use adaptive
+            blueprint_type = self.BLUEPRINT_FAINT
+            recommended_method = 'otsu'
+            recommended_threshold = 0
+
+        logger.info(f"Image analysis: type={blueprint_type}, method={recommended_method}, "
+                   f"white={white_ratio*100:.1f}%, dark={dark_ratio*100:.1f}%")
+
+        return {
+            'blueprint_type': blueprint_type,
+            'min_pixel': min_px,
+            'max_pixel': max_px,
+            'mean_pixel': mean_px,
+            'white_ratio': white_ratio,
+            'light_ratio': light_ratio,
+            'dark_ratio': dark_ratio,
+            'black_ratio': black_ratio,
+            'recommended_threshold': recommended_threshold,
+            'recommended_method': recommended_method
+        }
+
+    def auto_threshold(
+        self,
+        image: np.ndarray,
+        gap_close_size: int = 0
+    ) -> np.ndarray:
+        """
+        Automatically determine and apply the best thresholding method.
+
+        Analyzes the image to determine if it has dark lines, faint lines,
+        or is inverted, then applies the appropriate extraction method.
+
+        Args:
+            image: BGR image
+            gap_close_size: Morphological closing kernel size (0 = disabled)
+
+        Returns:
+            Binary mask of detected lines/features
+        """
+        # Analyze image characteristics
+        analysis = self.analyze_image(image)
+        method = analysis['recommended_method']
+        threshold = analysis['recommended_threshold']
+        bp_type = analysis['blueprint_type']
+
+        # Convert to grayscale
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image.copy()
+
+        logger.info(f"Auto-threshold: {bp_type} blueprint, using {method} method")
+
+        if method == 'otsu':
+            # Use Otsu's automatic thresholding
+            _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            logger.info(f"Otsu selected threshold automatically")
+
+        elif method == 'adaptive':
+            # Use adaptive thresholding for variable lighting
+            mask = cv2.adaptiveThreshold(
+                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY_INV, 51, 5
+            )
+
+        elif bp_type == self.BLUEPRINT_INVERTED:
+            # Inverted: extract light pixels on dark background
+            _, mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+
+        else:
+            # Standard: extract dark pixels on light background
+            _, mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
+
+        # Basic cleanup
+        kernel = np.ones((2, 2), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+        # Optional gap closing
+        if gap_close_size > 0:
+            mask = self.close_gaps(mask, gap_close_size)
+
+        pixel_count = cv2.countNonZero(mask)
+        logger.info(f"Auto-threshold extracted {pixel_count} pixels")
+
+        return mask
 
     def create_color_mask(
         self,
@@ -212,7 +369,7 @@ class ColorFilter:
     def extract_dark_lines(
         self,
         image: np.ndarray,
-        threshold: int = 100,
+        threshold: Union[int, str] = 100,
         gap_close_size: int = 0
     ) -> np.ndarray:
         """
@@ -220,14 +377,22 @@ class ColorFilter:
 
         Args:
             image: BGR image
-            threshold: Darkness threshold (0-255, lower = darker)
+            threshold: Darkness threshold (0-255, lower = darker), or 'auto' for
+                       automatic detection based on image analysis
             gap_close_size: Morphological closing kernel size to bridge gaps (0 = disabled)
 
         Returns:
             Binary mask of dark pixels
         """
+        # Use auto-threshold if requested
+        if threshold == 'auto':
+            return self.auto_threshold(image, gap_close_size)
+
         # Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
 
         # Threshold to get dark pixels
         _, mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
@@ -240,7 +405,7 @@ class ColorFilter:
         if gap_close_size > 0:
             mask = self.close_gaps(mask, gap_close_size)
 
-        logger.info(f"Extracted dark lines with {cv2.countNonZero(mask)} pixels")
+        logger.info(f"Extracted dark lines with {cv2.countNonZero(mask)} pixels (threshold={threshold})")
         return mask
 
     def close_gaps(
@@ -954,7 +1119,7 @@ class Phase2Vectorizer:
         select_largest: bool = True,
         extraction_mode: str = 'auto',
         instrument_type: str = 'electric',
-        dark_threshold: int = 100,
+        dark_threshold: Union[int, str] = 100,
         simplify_tolerance: float = 0.1,
         gap_close_size: int = 0
     ) -> Dict[str, Any]:
@@ -976,7 +1141,8 @@ class Phase2Vectorizer:
                 - 'color': Extract by color layers
                 - 'simple': Basic dark line extraction without classification
             instrument_type: 'electric' or 'acoustic' (for 'guitar' mode)
-            dark_threshold: Threshold for dark line extraction (0-255)
+            dark_threshold: Threshold for dark line extraction (0-255), or 'auto' to
+                           automatically detect based on image analysis
             simplify_tolerance: Contour simplification tolerance in mm
             gap_close_size: Morphological closing kernel size to bridge gaps in lines
                 - 0: Disabled (default)
@@ -1164,7 +1330,7 @@ class Phase2Vectorizer:
         image: np.ndarray,
         scale_factor: float,
         instrument_type: str = 'electric',
-        dark_threshold: int = 100,
+        dark_threshold: Union[int, str] = 100,
         simplify_tolerance: float = 0.1,
         gap_close_size: int = 0,
         strict_classification: bool = False
@@ -1185,7 +1351,9 @@ class Phase2Vectorizer:
             image: BGR image array
             scale_factor: Scale correction multiplier
             instrument_type: 'electric' or 'acoustic'
-            dark_threshold: Threshold for dark line extraction (0-255)
+            dark_threshold: Threshold for dark line extraction (0-255), or 'auto' to
+                           automatically detect the best threshold based on image analysis.
+                           Use 'auto' for blueprints with unknown characteristics.
             simplify_tolerance: Douglas-Peucker simplification tolerance in mm
             gap_close_size: Morphological closing kernel size (0 = disabled, 5 = recommended for broken lines)
             strict_classification: If False (default), use broad size categories to capture all features.
@@ -1451,7 +1619,7 @@ def extract_guitar_blueprint(
     page_num: int = 0,
     instrument_type: str = 'electric',
     dpi: int = 400,
-    dark_threshold: int = 100,
+    dark_threshold: Union[int, str] = 'auto',
     simplify_tolerance: float = 0.1,
     gap_close_size: int = 0
 ) -> Dict[str, Any]:
@@ -1467,7 +1635,11 @@ def extract_guitar_blueprint(
         page_num: Page number for PDFs (0-indexed)
         instrument_type: 'electric' or 'acoustic'
         dpi: Resolution for PDF rasterization (400 recommended for detail)
-        dark_threshold: Threshold for line extraction (lower = darker lines only)
+        dark_threshold: Threshold for line extraction, or 'auto' (default) to
+                       automatically detect based on image analysis.
+                       - 'auto': Analyzes image to choose best method (recommended)
+                       - 80-120: For blueprints with dark black lines
+                       - 150-200: For blueprints with lighter/faint lines
         simplify_tolerance: Contour simplification in mm (0.1 = smooth curves)
         gap_close_size: Kernel size for closing gaps in broken lines
             - 0: Disabled (default, for clean blueprints)
@@ -1478,17 +1650,21 @@ def extract_guitar_blueprint(
         Dict with paths to generated files and feature statistics
 
     Example:
-        >>> # Clean blueprint
+        >>> # Auto-detect threshold (recommended)
+        >>> results = extract_guitar_blueprint(
+        ...     'any_blueprint.pdf',
+        ...     output_dir='./output'
+        ... )
+        >>> # Manual threshold for dark lines
         >>> results = extract_guitar_blueprint(
         ...     'jazzmaster_body.pdf',
         ...     output_dir='./output',
-        ...     instrument_type='electric'
+        ...     dark_threshold=100
         ... )
-        >>> # Blueprint with broken lines
+        >>> # Blueprint with broken lines and faint content
         >>> results = extract_guitar_blueprint(
-        ...     'selmer_body.pdf',
+        ...     'gibson_335.pdf',
         ...     output_dir='./output',
-        ...     instrument_type='acoustic',
         ...     gap_close_size=5
         ... )
         >>> print(f"DXF: {results['dxf']}")

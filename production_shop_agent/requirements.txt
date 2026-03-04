@@ -1,0 +1,20 @@
+# Site Generator API - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Claude API
+anthropic>=0.8.0
+
+# HTTP Client (for webhooks)
+httpx>=0.25.0
+
+# Optional: Production server
+gunicorn>=21.2.0
+
+# Optional: Development tools
+python-dotenv>=1.0.0
