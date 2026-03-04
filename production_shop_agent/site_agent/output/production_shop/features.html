@@ -33,6 +33,7 @@
     .tab-btn[data-tab=production].active{background:#7c3aed}
     .tab-btn[data-tab=business].active{background:var(--color-warning);color:var(--color-text)}
     .tab-btn[data-tab=ai].active{background:#6366f1}
+    .tab-btn[data-tab=instruments].active{background:#8b5cf6}
     .tab-panel{display:none}.tab-panel.active{display:block}
     .panel-intro{text-align:center;margin-bottom:var(--space-12)}
     .panel-intro__badge{display:inline-flex;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:var(--space-2) var(--space-3);border-radius:99px;margin-bottom:var(--space-4)}
@@ -43,6 +44,7 @@
     .panel-intro__badge--production{background:rgb(124 58 237/.1);color:#6d28d9}
     .panel-intro__badge--business{background:rgb(245 158 11/.12);color:#b45309}
     .panel-intro__badge--ai{background:rgb(99 102 241/.12);color:#4f46e5}
+    .panel-intro__badge--instruments{background:rgb(139 92 246/.12);color:#7c3aed}
     .panel-intro h2{font-size:1.875rem;font-weight:700;margin-bottom:var(--space-4)}
     .panel-intro p{font-size:1.125rem;color:var(--color-text-muted);max-width:520px;margin:0 auto}
     .feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-6)}
@@ -93,6 +95,7 @@
   <section class="tabs-section"><div class="container">
     <div class="tab-switcher">
       <button class="tab-btn active" data-tab="design">Design</button>
+      <button class="tab-btn" data-tab="instruments">Instruments</button>
       <button class="tab-btn" data-tab="art-studio">Art Studio</button>
       <button class="tab-btn" data-tab="calculators">Calculators</button>
       <button class="tab-btn" data-tab="cam">CAM</button>
@@ -104,7 +107,7 @@
     <!-- DESIGN TAB - 32 Instrument Models -->
     <div class="tab-panel active" id="design">
       <div class="panel-intro">
-        <span class="panel-intro__badge panel-intro__badge--design">32 Instrument Models</span>
+        <span class="panel-intro__badge panel-intro__badge--design">9 Design Tools</span>
         <h2>Parametric Instrument Design</h2>
         <p>Professional-grade instrument geometry with real-time 2D/3D visualization.</p>
       </div>
@@ -120,6 +123,15 @@
         <div class="feature-card"><div class="feature-card__icon icon--design">&#9711;</div><h3 class="feature-card__title">Radius Dish Designer</h3><p class="feature-card__desc">Calculate dimensions for fretboard radius dishes, CNC setup.</p><a href="http://localhost:5174/design-hub" class="feature-card__cta">Try Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127927;</div><h3 class="feature-card__title">Archtop Designer</h3><p class="feature-card__desc">Top/back carving radii calculations with SVG preview.</p><a href="http://localhost:5174/design-hub" class="feature-card__cta">Try Now &rarr;</a></div>
       </div>
+    </div>
+
+    <!-- INSTRUMENTS TAB - 32 Models -->
+    <div class="tab-panel" id="instruments">
+      <div class="panel-intro">
+        <span class="panel-intro__badge panel-intro__badge--instruments">32 Instrument Models</span>
+        <h2>Instrument Library</h2>
+        <p>Professional body outlines for guitars, mandolins, and stringed instruments - ready for CNC.</p>
+      </div>
       <h3 class="category-title">Electric Guitars (16)</h3>
       <div class="feature-grid">
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">Stratocaster</h3><p class="feature-card__desc">Classic double-cutaway with tremolo routing, 3 single-coil pickups, 25.5" scale.</p><a href="http://localhost:5174/design/stratocaster" class="feature-card__cta">Design Now &rarr;</a></div>
@@ -128,7 +140,6 @@
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">SG</h3><p class="feature-card__desc">Lightweight double-cutaway with full upper fret access.</p><a href="http://localhost:5174/design/sg" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">Explorer</h3><p class="feature-card__desc">Angular modernist design with extended lower bout.</p><a href="http://localhost:5174/design/explorer" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">Flying V</h3><p class="feature-card__desc">Iconic V-shape body with balanced playability.</p><a href="http://localhost:5174/design/flying-v" class="feature-card__cta">Design Now &rarr;</a></div>
-
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">Firebird</h3><p class="feature-card__desc">Neck-through with mini-humbuckers, reverse headstock.</p><a href="http://localhost:5174/design/firebird" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">PRS Custom</h3><p class="feature-card__desc">Carved maple top, bird inlays, 25" scale, coil-split.</p><a href="http://localhost:5174/design/prs-custom" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127928;</div><h3 class="feature-card__title">Ibanez JS1000</h3><p class="feature-card__desc">Joe Satriani signature, basswood body, Edge tremolo.</p><a href="http://localhost:5174/design/js1000" class="feature-card__cta">Design Now &rarr;</a></div>
@@ -156,7 +167,6 @@
       </div>
       <h3 class="category-title">Bass & Specialty (4)</h3>
       <div class="feature-grid">
-        
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127929;</div><h3 class="feature-card__title">Jazz Bass</h3><p class="feature-card__desc">Dual single-coils, offset body.</p><a href="http://localhost:5174/design/jazz-bass" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127931;</div><h3 class="feature-card__title">F-Style Mandolin</h3><p class="feature-card__desc">Classic teardrop body, 8-string, carved top with f-holes.</p><a href="http://localhost:5174/design/mandolin" class="feature-card__cta">Design Now &rarr;</a></div>
         <div class="feature-card"><div class="feature-card__icon icon--design">&#127931;</div><h3 class="feature-card__title">Octave Mandolin</h3><p class="feature-card__desc">8-string mandolin family, longer scale for lower register.</p><a href="http://localhost:5174/design/octave-mandolin" class="feature-card__cta">Design Now &rarr;</a></div>

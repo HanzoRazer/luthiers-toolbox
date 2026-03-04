@@ -26,6 +26,7 @@ function getCategoryClass(category: string) {
     case 'finish': return styles.quickTagFinish;
     case 'hardware': return styles.quickTagHardware;
     case 'wood': return styles.quickTagWood;
+    case 'instrument': return styles.quickTagBody;
     default: return styles.quickTag;
   }
 }
@@ -94,18 +95,26 @@ const providerOptions = computed(() => {
 // =============================================================================
 
 const quickTags: QuickTag[] = [
-  { label: 'Les Paul', value: 'les paul', category: 'body' },
-  { label: 'Strat', value: 'stratocaster', category: 'body' },
-  { label: 'Tele', value: 'telecaster', category: 'body' },
-  { label: 'Dreadnought', value: 'dreadnought', category: 'body' },
-  { label: 'ES-335', value: 'es-335', category: 'body' },
-  { label: 'Sunburst', value: 'sunburst', category: 'finish' },
-  { label: 'Black', value: 'black', category: 'finish' },
-  { label: 'Natural', value: 'natural', category: 'finish' },
-  { label: 'Gold HW', value: 'gold hardware', category: 'hardware' },
-  { label: 'Chrome HW', value: 'chrome hardware', category: 'hardware' },
-  { label: 'Flame', value: 'flame maple top', category: 'wood' },
-  { label: 'Quilted', value: 'quilted maple', category: 'wood' },
+  // Guitars
+  { label: 'Les Paul', value: 'les paul guitar', category: 'body' },
+  { label: 'Strat', value: 'stratocaster guitar', category: 'body' },
+  { label: 'Acoustic', value: 'acoustic guitar', category: 'body' },
+  // Other Instruments
+  { label: 'Mandolin', value: 'f-style mandolin', category: 'instrument' },
+  { label: 'Violin', value: 'violin', category: 'instrument' },
+  { label: 'Cello', value: 'cello', category: 'instrument' },
+  { label: 'Lute', value: 'renaissance lute', category: 'instrument' },
+  { label: 'Banjo', value: '5-string banjo', category: 'instrument' },
+  { label: 'Ukulele', value: 'ukulele', category: 'instrument' },
+  { label: 'Harp', value: 'concert harp', category: 'instrument' },
+  // Finishes
+  { label: 'Sunburst', value: 'sunburst finish', category: 'finish' },
+  { label: 'Natural', value: 'natural wood finish', category: 'finish' },
+  { label: 'Vintage', value: 'vintage aged finish', category: 'finish' },
+  // Woods
+  { label: 'Flame Maple', value: 'flame maple top', category: 'wood' },
+  { label: 'Spruce', value: 'spruce top', category: 'wood' },
+  { label: 'Rosewood', value: 'rosewood back and sides', category: 'wood' },
 ];
 
 // =============================================================================
@@ -186,7 +195,7 @@ onBeforeUnmount(() => {
   <div :class="styles.aiImagePanel">
     <!-- Header -->
     <div :class="styles.panelHeader">
-      <span :class="styles.icon">Guitar</span>
+      <span :class="styles.icon">Instrument</span>
       <h2>AI Image Generator</h2>
       <span :class="styles.betaBadge">BETA</span>
       <button
@@ -200,11 +209,11 @@ onBeforeUnmount(() => {
 
     <!-- Prompt Section -->
     <div :class="styles.promptSection">
-      <label :class="styles.sectionLabel">Describe your guitar</label>
+      <label :class="styles.sectionLabel">Describe your instrument</label>
       <textarea
         v-model="prompt"
         :class="styles.promptTextarea"
-        placeholder="emerald green les paul with gold hardware, flame maple top..."
+        placeholder="vintage violin with aged varnish, F-style mandolin sunburst, acoustic guitar flame maple..."
         rows="3"
       />
 
