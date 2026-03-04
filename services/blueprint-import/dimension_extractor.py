@@ -85,6 +85,15 @@ class DimensionParser:
         '13/16': 13/16, '7/8': 7/8, '15/16': 15/16,
     }
 
+    # Valid dimension ranges for guitar/instrument blueprints (in mm)
+    # These help filter out false positives
+    MIN_DIMENSION_MM = 1.0       # Smallest valid dimension (1mm)
+    MAX_DIMENSION_MM = 2000.0    # Largest valid dimension (2 meters)
+
+    # Year range to filter out (common false positives)
+    YEAR_MIN = 1800
+    YEAR_MAX = 2100
+
     # Patterns for dimension matching
     PATTERNS = [
         # Fraction with whole number: "17 3/4" or "17-3/4"
@@ -170,6 +179,50 @@ class DimensionParser:
         else:  # mm or unknown
             return value
 
+    def is_valid_dimension(self, raw_text: str, value_mm: float) -> bool:
+        """
+        Check if a parsed dimension is valid (not a false positive)
+
+        Filters out:
+        - Years (1800-2100)
+        - Values outside reasonable instrument dimension range
+        - Pure integers that look like page numbers, counts, etc.
+        """
+        text = raw_text.strip()
+
+        # Filter out years (4-digit numbers in year range without units)
+        if re.match(r'^\d{4}$', text):
+            try:
+                year = int(text)
+                if self.YEAR_MIN <= year <= self.YEAR_MAX:
+                    logger.debug(f"Filtered year: {text}")
+                    return False
+            except ValueError:
+                pass
+
+        # Filter out values outside reasonable range
+        if value_mm < self.MIN_DIMENSION_MM or value_mm > self.MAX_DIMENSION_MM:
+            logger.debug(f"Filtered out-of-range: {text} -> {value_mm}mm")
+            return False
+
+        # Filter out large round numbers without units (likely not dimensions)
+        # e.g., "1000", "5000" - these are often page numbers, codes, etc.
+        if re.match(r'^\d{4,}$', text) and value_mm > 500:
+            logger.debug(f"Filtered large integer: {text}")
+            return False
+
+        # Filter out single digits (usually not dimensions)
+        if re.match(r'^\d$', text):
+            logger.debug(f"Filtered single digit: {text}")
+            return False
+
+        # Filter out likely serial numbers / codes (long digit sequences)
+        if re.match(r'^\d{5,}$', text):
+            logger.debug(f"Filtered serial/code: {text}")
+            return False
+
+        return True
+
 
 class DimensionExtractor:
     """Extract dimensions from blueprint images using OCR"""
@@ -229,6 +282,10 @@ class DimensionExtractor:
             parsed = self.parser.parse(text)
             if parsed:
                 value_mm, unit = parsed
+
+                # Validate - filter out false positives
+                if not self.parser.is_valid_dimension(text, value_mm):
+                    continue
 
                 # Calculate bounding box
                 pts = np.array(bbox)
